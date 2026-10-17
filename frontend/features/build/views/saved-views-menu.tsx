@@ -3,7 +3,7 @@
 import { useCallback, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useSession } from "next-auth/react";
-import { Plus } from "lucide-react";
+import { Layers, Plus } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -12,11 +12,22 @@ import {
   ResponsivePopoverContent,
   ResponsivePopoverTrigger,
 } from "@/components/ui/responsive-popover";
+import {
+  MobileOnlyLabelTooltip,
+  RESPONSIVE_ICON_LABEL_TRIGGER_CLASS,
+  ResponsiveIconLabelText,
+} from "@/components/ui/responsive-icon-label";
+import { cn } from "@/lib/utils";
 import { useCan, useCanState } from "@/hooks/api/access";
-import { useViews, useUpdateView, useDeleteView } from "@/hooks/api/build";
+import {
+  useViews,
+  useUpdateView,
+  useDeleteView,
+} from "@/hooks/api/build/views";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { currentSearchParams } from "@/lib/current-search-params";
-import { fromSavedViewLayout } from "@/lib/build/view-types";
+import { parseViewType } from "@/lib/build/view-types";
+import { buildTicketCollectionReturnHref } from "@/features/build/ticket-details/build-ticket-detail-url";
 import { ViewCard, type ViewItem } from "./saved-views/view-card";
 import { RenameViewDialog } from "./saved-views/rename-view-dialog";
 import { CreateViewSheet } from "./saved-views/create-view-sheet";
@@ -39,7 +50,7 @@ export function SavedViewsMenu({ projectId }: SavedViewsMenuProps) {
   const [renameSeq, setRenameSeq] = useState(0);
   const [renameTarget, setRenameTarget] = useState<ViewItem | null>(null);
 
-  const { data: views, isLoading } = useViews(projectId);
+  const { data: viewsResponse, isLoading } = useViews(projectId);
   const togglePinMutation = useUpdateView();
   const renameMutation = useUpdateView();
   const deleteMutation = useDeleteView();
@@ -48,11 +59,18 @@ export function SavedViewsMenu({ projectId }: SavedViewsMenuProps) {
     (view: { id: number; layoutType: string }) => {
       const next = currentSearchParams(searchParams);
       next.set("viewId", String(view.id));
-      next.set("view", fromSavedViewLayout(view.layoutType));
-      router.replace(`?${next.toString()}`, { scroll: false });
+      next.set("view", parseViewType(view.layoutType));
+      router.replace(
+        buildTicketCollectionReturnHref(
+          projectId,
+          `/build/${projectId}/issues`,
+          next,
+        ),
+        { scroll: false },
+      );
       setMenuOpen(false);
     },
-    [router, searchParams],
+    [projectId, router, searchParams],
   );
 
   const handleTogglePin = useCallback(
@@ -108,8 +126,11 @@ export function SavedViewsMenu({ projectId }: SavedViewsMenuProps) {
 
   const handleCreated = useCallback(() => {}, []);
 
-  const pinnedViews = (views ?? []).filter((v) => v.isPinned);
-  const unpinnedViews = (views ?? []).filter((v) => !v.isPinned);
+  const views = Array.isArray(viewsResponse)
+    ? viewsResponse
+    : (viewsResponse?.data ?? []);
+  const pinnedViews = views.filter((v) => v.isPinned);
+  const unpinnedViews = views.filter((v) => !v.isPinned);
 
   if (viewAccess === "denied") return null;
 
@@ -117,15 +138,21 @@ export function SavedViewsMenu({ projectId }: SavedViewsMenuProps) {
     <>
       <ResponsivePopover open={menuOpen} onOpenChange={setMenuOpen}>
         <ResponsivePopoverTrigger asChild>
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            className="h-9 shrink-0 gap-1 px-2 text-xs"
-            aria-label="Saved views"
-          >
-            Views
-          </Button>
+          <MobileOnlyLabelTooltip label="Saved views">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className={cn(
+                RESPONSIVE_ICON_LABEL_TRIGGER_CLASS,
+                "border-border/70 bg-card",
+              )}
+              aria-label="Saved views"
+            >
+              <Layers className="size-3.5 shrink-0" aria-hidden="true" />
+              <ResponsiveIconLabelText>Views</ResponsiveIconLabelText>
+            </Button>
+          </MobileOnlyLabelTooltip>
         </ResponsivePopoverTrigger>
         <ResponsivePopoverContent
           align="start"
@@ -146,7 +173,7 @@ export function SavedViewsMenu({ projectId }: SavedViewsMenuProps) {
             <div className="flex max-h-80 flex-col gap-2 overflow-y-auto">
               {pinnedViews.length > 0 ? (
                 <div className="flex flex-col gap-0.5">
-                  <h3 className="px-1 pb-1 text-micro font-semibold uppercase tracking-wider text-muted-foreground">
+                  <h3 className="px-1 pb-1 text-micro font-medium uppercase tracking-wider text-muted-foreground">
                     Pinned
                   </h3>
                   {pinnedViews.map((view) => (
@@ -167,7 +194,7 @@ export function SavedViewsMenu({ projectId }: SavedViewsMenuProps) {
               {unpinnedViews.length > 0 ? (
                 <div className="flex flex-col gap-0.5">
                   {pinnedViews.length > 0 ? (
-                    <h3 className="px-1 pb-1 text-micro font-semibold uppercase tracking-wider text-muted-foreground">
+                    <h3 className="px-1 pb-1 text-micro font-medium uppercase tracking-wider text-muted-foreground">
                       All views
                     </h3>
                   ) : null}

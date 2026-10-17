@@ -1,6 +1,6 @@
 # PAGES.md — StreamlineOS Frontend Route Catalog
 
-**What this is:** one row per `page.tsx` under `frontend/app/`. It records what each route is and what it calls. **Total routes: 611.**
+**What this is:** one row per `page.tsx` under `frontend/app/`. It records what each route is and what it calls. **Total routes: 635.**
 
 **This is an inventory, not a task list.** It carries no checkboxes and no per-route audit state. A row is a fact about a route, never a to-do. Anything written here as `OPEN:` is a known unverified gap, not an assignment — do not infer work from a row.
 
@@ -19,7 +19,7 @@
 
 **Backend prefixes renamed under `/build` (2026-09-02).** `product-management/workspaces` → `build/workspaces`; the org-wide `whiteboards` hub → `build/whiteboards`. §8 puts every Build resource under `/build`, and a middleware or rate-limit tier keyed on `/build` silently missed the old hub. **`build/workspaces` itself is retired 2026-09-23** — see PM Workspaces below; the `whiteboards` half of this decision is unaffected.
 
-**Every static HRMS route has smoke coverage (2026-09-21).** The list is `lib/hrms-static-routes.ts` — derived from the sidebar navigation model (`NAV_GROUPS` + `HOME_NAV_GROUPS`, `/hr/**` static hrefs, minus `/hr/recruitment/**` and `/payroll/**`), never hand-copied, so a new sidebar entry is covered the moment it is added. Two tiers: (1) `lib/hrms-static-routes.test.tsx` runs under jest with no server — per route it asserts the `page.tsx` exists, the route is gated server-side (page-level `require*()` or the HR layout's `enforceRouteAccess` resolving to a registered decision), renders `loading.tsx` and asserts a non-empty `h1`, compares the skeleton's title with the page's declared `PageWrapper` title when both are static, and holds a shrink-only list of skeletons that still announce numbered "Column N" headers; (2) `e2e/hrms-routes.spec.ts` runs under Playwright, one `test` per route, signs in with the minted-cookie fixture, asserts the URL stays on the route (or on the page's declared `redirect()`), that `main` has an `h1` matching the declared title, that "Loading results…" and `aria-busy` content clear within 30s, and that no console error contains "Minified React error" or "Error:". Run tier 1 with `npx jest lib/hrms-static-routes.test.tsx --maxWorkers=2`; tier 2 needs a backend on a local database and the tenant env (`E2E_ORG_ID`, `E2E_USER_ID`, `E2E_USER_EMAIL`, `E2E_SESSION_ID` naming an unrevoked `user_sessions` row of that user, `BACKEND_JWT_SECRET`, `INTERNAL_API_SECRET` and `NEXTAUTH_SECRET` byte-matching the backend's — `POST /auth/session-exchange` verifies the session proof with the backend's `NEXTAUTH_SECRET` and refuses a session it has not registered — plus `NEXT_PUBLIC_API_URL`): `E2E_DEV_BUNDLER=webpack NEXTAUTH_SECRET=… NEXT_PUBLIC_API_URL=http://localhost:<port> E2E_ORG_ID=… E2E_USER_ID=… E2E_USER_EMAIL=… E2E_SESSION_ID=… BACKEND_JWT_SECRET=… INTERNAL_API_SECRET=… pnpm exec playwright test e2e/hrms-routes.spec.ts --project=chromium`; it skips with the missing variable names otherwise. `E2E_DEV_BUNDLER=webpack` is for worktrees whose `node_modules` is a symlink out of the project root, which Turbopack refuses. `/hr/settings/company` is asserted as the redirect it declares, not as a page.
+**Every static HRMS route has smoke coverage (2026-09-21).** The list is `lib/hrms-static-routes.ts` — derived from the sidebar navigation model (`NAV_GROUPS` + `HOME_NAV_GROUPS`, `/hr/**` static hrefs, minus `/payroll/**`; Recruitment OS lives under `/recruitment/**`, outside HRMS), never hand-copied, so a new sidebar entry is covered the moment it is added. Two tiers: (1) `lib/hrms-static-routes.test.tsx` runs under jest with no server — per route it asserts the `page.tsx` exists, the route is gated server-side (page-level `require*()` or the HR layout's `enforceRouteAccess` resolving to a registered decision), renders `loading.tsx` and asserts a non-empty `h1`, compares the skeleton's title with the page's declared `PageWrapper` title when both are static, and holds a shrink-only list of skeletons that still announce numbered "Column N" headers; (2) `e2e/hrms-routes.spec.ts` runs under Playwright, one `test` per route, signs in with the minted-cookie fixture, asserts the URL stays on the route (or on the page's declared `redirect()`), that `main` has an `h1` matching the declared title, that "Loading results…" and `aria-busy` content clear within 30s, and that no console error contains "Minified React error" or "Error:". Run tier 1 with `npx jest lib/hrms-static-routes.test.tsx --maxWorkers=2`; tier 2 needs a backend on a local database and the tenant env (`E2E_ORG_ID`, `E2E_USER_ID`, `E2E_USER_EMAIL`, `E2E_SESSION_ID` naming an unrevoked `user_sessions` row of that user, `BACKEND_JWT_SECRET`, `INTERNAL_API_SECRET` and `NEXTAUTH_SECRET` byte-matching the backend's — `POST /auth/session-exchange` verifies the session proof with the backend's `NEXTAUTH_SECRET` and refuses a session it has not registered — plus `NEXT_PUBLIC_API_URL`): `E2E_DEV_BUNDLER=webpack NEXTAUTH_SECRET=… NEXT_PUBLIC_API_URL=http://localhost:<port> E2E_ORG_ID=… E2E_USER_ID=… E2E_USER_EMAIL=… E2E_SESSION_ID=… BACKEND_JWT_SECRET=… INTERNAL_API_SECRET=… pnpm exec playwright test e2e/hrms-routes.spec.ts --project=chromium`; it skips with the missing variable names otherwise. `E2E_DEV_BUNDLER=webpack` is for worktrees whose `node_modules` is a symlink out of the project root, which Turbopack refuses. `/hr/settings/company` is asserted as the redirect it declares, not as a page.
 
 ---
 ## Auth `(auth)`
@@ -70,7 +70,6 @@
 - `/chat` · **Communications** · hooks: `→ feature/chat` — OPEN: the denied state is not browser-verified. `/me/access` is fetched server-side and dehydrated, so no browser response can deny an owner session; it needs a fixture member without `chat:*`. Component coverage: `features/chat/__tests__/channel-sidebar-denied.test.tsx`.
 - `/chat/channels` · **Communications** · hooks: `→ feature/chat` — OPEN: responsive not visually verified at 375/768/1280; the breakpoint classes exist in source but nobody rendered the page at those widths.
 - `/chat/invite/[inviteToken]` · **Communications** · hooks: `useJoinViaInviteLink` — revoked, expired, exhausted and archived-channel all return a byte-identical 404 body, so the route is not an existence oracle. Admission is transactional and idempotent.
-- `/chat/settings` · **Communications** · hooks: `useChatOrgSettings`, `useUpdateChatOrgSettings` — read gated `chat:channels:read`, save gated `chat:org-settings:manage`, route gated by `enforceRouteAccess`.
 
 ---
 
@@ -83,6 +82,7 @@
 - `/settings/notifications/providers` · **Platform** · hooks: `→ features/notifications` — gated `notifications:providers:view`
 - `/settings/notifications/events` · **Platform** · hooks: `→ features/notifications` — gated `notifications:events:view`
 - `/settings/notifications/policy` · **Platform** · hooks: `→ features/notifications` — gated `notifications:policy:view`
+- `/settings/notifications/email-templates` · **Platform** · hooks: `requirePermission("settings:email-templates:manage")` (server), `useEmailTemplatePreviews` → `GET /settings/email-templates/preview`, `useSendEmailTemplateTest` → `POST /settings/email-templates/test`, `usePageState` + `PageState`, `→ features/notifications/admin` — 2026-10-17: the built-in transactional emails with a sandboxed (`sandbox=""`) HTML preview and a rate-limited test send; tab, sidebar and route-access entry on the same key
 - `/notifications` · [RETIRED — redirects to `/inbox` via `next.config.ts`; kept as compatibility redirect]
 - `/notifications/preferences` · [RETIRED — redirects to `/settings/notifications/my-preferences` via `next.config.ts`]
 - `/notifications/providers` · [RETIRED — redirects to `/settings/notifications/providers` via `next.config.ts`]
@@ -95,8 +95,8 @@
 
 ## AI / Ask
 
-- `/ask` · **AI** · hooks: `→ feature/ask`
-- `/ai/executive-brief` · **AI** · hooks: `lib/api/hooks/executive-brief` → `features/ai/executive-brief-page` · streaming/cancel/failure states covered by `features/ai/executive-brief-streaming.test.tsx`; full page acceptance remains open
+- `/ask` · [RETIRED — redirects to `/knowledge/chat` via `next.config.ts`]
+- `/ai/executive-brief` · **AI** · hooks: `hooks/api/executive-brief` → `features/ai/executive-brief-page` · streaming/cancel/failure states covered by `features/ai/executive-brief-streaming.test.tsx`; full page acceptance remains open
 
 ---
 
@@ -154,9 +154,9 @@
 - `/crm/import` · **CRM** · hooks: `→ feature/crm/import`
 
 ### Revenue & Lifecycle
-- `/crm/commissions` · **CRM** · hooks: `usePageState`, `→ features/crm/commissions` — commission tracking; `useOrgDisplay` for period
+- `/crm/commissions` · **CRM** · hooks: `usePageState`, `→ features/crm/commissions` — commission tracking; `useOrgDisplay` for period; Plans tab: New plan, Open → versions/assignments sheet (edit plan, new/edit unsealed version, assign, end) on `crm:commission-plans:manage`; Earnings: Calculate for a deal (`crm:commission-earnings:calculate`); Rebuild accrual (`crm:commission-accruals:rebuild`)
 - `/crm/health` · **CRM** · hooks: `→ features/crm/lifecycle`
-- `/crm/renewals` · **CRM** · hooks: `→ features/crm/lifecycle`
+- `/crm/renewals` · **CRM** · hooks: `→ features/crm/lifecycle` — renewal book; row Details sheet (signals, record signal / renew / close on `crm:lifecycle:manage`, consider now on `crm:lifecycle-triggers:run`); header "Run renewal sweep" on `crm:lifecycle-triggers:run`
 - `/crm/segments` · **CRM** · hooks: `→ features/crm/segments` — gated by `RequireModule module="crm"`
 
 ### Call Intelligence
@@ -185,7 +185,9 @@
 - `/crm/settings/automations/[automationId]` · **CRM** · hooks: `→ feature/crm/settings`
 - `/crm/settings/blueprints` · **CRM** · hooks: `→ feature/crm/settings`
 - `/crm/settings/custom-fields` · **CRM** · hooks: `→ feature/crm/settings`
+- `/crm/settings/web-forms` · **CRM** · hooks: `useWebForms`, `usePageState`, `→ features/crm/web-forms` — lead-capture form CRUD, copy public link; plan feature `crm.web-forms` + `crm:web-forms:manage`
 - `/crm/settings/data-quality` · **CRM** · hooks: `→ feature/crm/settings`
+- `/crm/settings/data-quality/findings` · **CRM** · hooks: `→ feature/crm/settings`
 - `/crm/settings/email-templates` · **CRM** · hooks: `→ feature/crm/settings`
 - `/crm/settings/import-export` · **CRM** · hooks: `→ feature/crm/settings`
 - `/crm/settings/layouts` · **CRM** · hooks: `→ feature/crm/settings`
@@ -263,6 +265,8 @@ PM Workspace is removed from Build entirely (not renamed, not consolidated into 
 - `/build/managed-products/[managedProductId]/insights` · **Build** · hooks: `→ features/build/managed-products` — product insights; gated `build:managed-products:view`
 - `/build/managed-products/[managedProductId]/projects` · **Build** · hooks: `→ features/build/project-list` — projects scoped to a managed product; `enforceRouteAccess`
 - `/build/managed-products/[managedProductId]/roadmap` · **Build** · hooks: `→ features/build/managed-products` — product roadmap; gated `build:roadmap:view`
+- `/build/managed-products/[managedProductId]/releases` · **Build** · hooks: `→ features/build/managed-products/releases` — product releases and canonical project-release evidence; `enforceRouteAccess`
+- `/build/managed-products/[managedProductId]/settings` · **Build** · hooks: `→ features/build/managed-products` — product settings tabs; gated `build:managed-products:update`
 
 ### Settings (Build module)
 - `/build/settings/integrations` · **Build** · hooks: `→ features/build/settings`
@@ -320,7 +324,7 @@ PM Workspace is removed from Build entirely (not renamed, not consolidated into 
 ## HR (Human Resources)
 
 ### Hub
-- `/hr` · **HR** · hooks: `→ features/hr/hub` (2026-09-21: titled "HR overview"; one primary action "Onboard employee" with "Review approvals" and "Create announcement" as outlined actions; the Dashboard, Analytics and Approvals tiles that duplicated nav destinations are gone) (2026-09-21: `loading.tsx` is titled "HR overview", matching the page)
+- `/hr` · **HR** · hooks: `→ features/hr/hub` (2026-09-21: titled "HR overview"; one primary action "Onboard employee" with "Review approvals" and "Create announcement" as outlined actions; the Dashboard, Analytics and Approvals tiles that duplicated nav destinations are gone) (2026-09-21: `loading.tsx` is titled "HR overview", matching the page) (2026-09-25: the Recruitment section and the "Interviews today" card are gone — hiring lives in Recruitment OS; the `/hr/hub` contract still accepts the backend's recruitment sections and capabilities, and they no longer count as an HR panel)
 - `/hr/dashboard` — **deleted 2026-09-21**; it duplicated `/hr` (the hub snapshot already carries the metrics, leave calendar and onboarding status), so the route, `features/hr/dashboard/**`, `useHrDashboardMetrics`/`useHrLeaveCalendar`/`useHrOnboardingStatus` and their keys are gone
 
 ### Employees
@@ -331,15 +335,21 @@ PM Workspace is removed from Build entirely (not renamed, not consolidated into 
 - `/hr/employees/[employeeId]` · **HR** · hooks: `→ features/hr/employees` — 2026-09-21: the route wraps its `useSearchParams` consumer in `<Suspense fallback={<Loading/>}>` (the route's own `loading.tsx` skeleton), matching `payroll/settings/import-export`; pinned by `app/(authenticated)/hr/hr-search-params-suspense.test.ts`
 - `/hr/employees/[employeeId]` · **HR** · hooks: `→ features/hr/employees` (2026-09-21: overview tab mounts `ReportingLineSection` on `useReportingLine` → `GET /hr/reporting-lines/{employeeUserId}` — current, scheduled and historical managers with the manager's state; the edit form's Reports to writes through `PATCH /hr/employees/{employeeUserId}` `reportingTo`, which the backend now validates for inactive, exited and circular managers)
 - `/hr/employees/[employeeId]` · **HR** · hooks: `→ features/hr/employees` (2026-09-21: header card gains a "Resend invite" action — `ResendInviteButton` → `useResendEmployeeInvite` → `POST /hr/employees/:employeeId/resend-invite`, `Idempotency-Key` per intent, rendered only for `hr:onboarding:manage` holders and never on your own profile or a terminated one; success toasts "Invitation sent", a queued-but-undeliverable outcome warns with the backend's reason)
+- `/hr/employees/[employeeId]` · **HR** · hooks: `→ features/hr/employees` (2026-09-26, HRM-15: `ReportingLineSection` reads the extended `GET /hr/reporting-lines/{employeeUserId}` — primary manager with source and a "Temporarily assigned by onboarding policy" badge plus one-click Replace / Keep (`POST …/confirm-fallback`), additional managers with labels, top-level role and reason, scheduled changes, the employee's pending review; "Edit" opens `ReportingLineEditorSheet` → `useSetReportingLine` → `PUT /hr/reporting-lines/{employeeUserId}` (old → new preview, effective date, reason, the D4 repeated-change warning that requires a 10-char reason and elevated authority, emergency with override), gated on `useCan("hr:reporting-lines:manage")` and `permittedActions.manage`. The edit form no longer writes `reportingTo`: managers change only through the PUT)
 - `/hr/employees/[employeeId]` · **HR** · hooks: `→ features/hr/employees` (2026-09-21: overview tab mounts `ReportingLineSection` on `useReportingLine` → `GET /hr/reporting-lines/{employeeUserId}` — current, scheduled and historical managers with the manager's state; the edit form's Reports to writes through `PATCH /hr/employees/{employeeUserId}` `reportingTo`, which the backend now validates for inactive, exited and circular managers)
 - `/hr/employees/find-expert` · **HR** · hooks: `→ features/hr/employees`
 - `/hr/employees/manager-coverage` · **HR** · hooks: `requirePermission("hr:employees:view")` (server), `useManagerCoverage` → `GET /hr/reporting-lines/coverage`, `usePageState` + `PageState`, `→ features/hr/employees/manager-coverage-page` (2026-09-21: employees without a manager, reporting to an inactive/exited manager, circular chains, and managers over the span-of-control limit — the repair queue behind every approval fallback) (2026-09-21: `loading.tsx` shows the table's real column headers under the page title while the rows load; the in-feature loading branch derives its headers from `WITHOUT_MANAGER_COLUMNS`)
+- `/hr/employees/manager-coverage` · **HR** · hooks: (2026-09-26, HRM-15) adds temporary-fallback, pending-employee-review and policy-missing states (top-level roles counted as by design, not defects); six categories in a `?view=` Select (AP-8) behind `<Suspense>`; assign/replace through `useSetReportingLine` → `PUT /hr/reporting-lines/{employeeUserId}` and Keep through `useConfirmReportingFallback`, both gated on `hr:reporting-lines:manage`; pending rows link to the review queue only for `hr:reporting-lines:review`; header action links the bulk reporting change; loop members shown by name
+- `/hr/employees/reporting-requests` · **HR** · hooks: `requirePermission("hr:reporting-lines:review")` (server, inside `<Suspense>`), `useReportingManagerRequests` → `GET /hr/reporting-manager-requests` (cursor, `?status=` in the URL), `useReportingManagerRequest` → `GET /hr/reporting-manager-requests/{requestId}`, `useReviewReportingManagerRequest` → `POST …/{requestId}/review`, `usePageState` + `PageState`, `→ features/hr/reporting-managers/requests` (2026-09-26, HRM-15: the HR queue of employee "wrong manager" requests and the review drawer — approve with a manager and optional date, reject with an employee-visible reason, cancel as duplicate, request more information)
+- `/hr/employees/reporting-changes` · **HR** · hooks: `requirePermission("hr:reporting-lines:manage")` (server), `useCreateReportingLineBulkJob` → `POST /hr/reporting-lines/bulk-jobs` (preview), `useCommitReportingLineBulkJob` → `POST …/{jobId}/commit`, `useReportingLineBulkJobs` → `GET /hr/reporting-lines/bulk-jobs`, `usePageState` + `PageState`, `→ features/hr/reporting-managers/bulk` (2026-09-26, HRM-15: bulk reporting change — select employees + a new primary or upload a mapping file, job reason, per-row preview with 24h change counts, per-row reasons past the threshold, `CONFIRM <n>` phrase at 10+ employees, failures CSV)
+- `/hr/employees/reporting-changes/[jobId]` · **HR** · hooks: `requirePermission("hr:reporting-lines:manage")` (server; `jobId` validated as a UUID), `useReportingLineBulkJob` → `GET /hr/reporting-lines/bulk-jobs/{jobId}` (rows by `?rowCursor=`), `downloadReportingLineBulkJobFailures` → `GET …/{jobId}/failures.csv`, `→ features/hr/reporting-managers/bulk` (2026-09-26, HRM-15: one bulk reporting job's result and rows)
 - `/hr/employees/skills-matrix` · **HR** · hooks: `→ features/hr/employees`
 
 ### Onboarding
 - `/hr/onboarding` · **HR** · hooks: `→ features/hr/onboarding` — 2026-09-21: the route wraps its `useSearchParams` consumer in `<Suspense fallback={<Loading/>}>` (the route's own `loading.tsx` skeleton), matching `payroll/settings/import-export`; pinned by `app/(authenticated)/hr/hr-search-params-suspense.test.ts`
 - `/hr/onboarding` · **HR** · hooks: `→ features/hr/onboarding` (2026-09-21: the New employee wizard footer is sticky above the mobile module nav; the Create onboarding plan sheet is react-hook-form + Zod (`onboarding-plan-schema.ts`) with per-field messages and a step field array)
 - `/hr/onboarding` · **HR** · hooks: `→ features/hr/onboarding` (2026-09-21: the New Employee wizard reads the onboard response's `invite: { sent, reason }` — the employee is created either way, and an unsent invitation raises a warning toast naming the backend's reason (suppressed address, no email provider, already a member) instead of "created successfully" hiding it; the tracker row gains "Resend invite" beside View, gated on `hr:onboarding:manage`; Skills & Pay labels professional tax and net pay as estimates — payroll's state slab and salary structure decide the real deductions)
+- `/hr/onboarding` · **HR** · hooks: `→ features/hr/onboarding` (2026-09-26, HRM-15: the New employee wizard's primary reporting manager is optional ("Assigned automatically by policy if left blank"), searched through `GET /hr/reporting-lines/manager-candidates`; additional managers up to the policy cap; top-level disables every manager field; the policy-missing warning shows on the step; the success toast names the primary manager and whether the fallback policy chose it. Bulk onboarding writes `primaryManagerEmail`, `secondaryManagerEmail1..3`, `effectiveFrom` (legacy `reportingManagerEmail`/`reportsTo`/`managerEmail` read as aliases), previews through `POST /hr/employees/onboard/bulk/preview` with Ready/Warning/Error/Skipped rows naming each fallback manager, commits Ready + Warning rows with one idempotency key per upload, and downloads an error report)
 - `/hr/onboarding` · **HR** · hooks: `→ features/hr/onboarding` (2026-09-21: the New employee wizard footer is sticky above the mobile module nav; the Create onboarding plan sheet is react-hook-form + Zod (`onboarding-plan-schema.ts`) with per-field messages and a step field array)
 - `/hr/onboarding/[userId]` · **HR** · hooks: `→ features/hr/onboarding`
 - `/hr/onboarding/my-tasks` · **HR** · [RETIRED app/(authenticated)/hr/onboarding/my-tasks/page.tsx] — legacy redirect stub to `/me/onboarding` sitting behind the HR layout gate its own audience lacks; §8 forbids legacy redirects
@@ -358,41 +368,42 @@ PM Workspace is removed from Build entirely (not renamed, not consolidated into 
 - `/hr/comp-off` · **HR** · hooks: `→ features/hr/comp-off`
 
 ### Recruitment
-- `/hr/recruitment` · **HR** · hooks: `→ features/hr/recruitment`
-- `/hr/recruitment/jobs` · **HR** · hooks: `→ features/hr/recruitment` — 2026-09-21: the route wraps its `useSearchParams` consumer in `<Suspense fallback={<Loading/>}>` (the route's own `loading.tsx` skeleton), matching `payroll/settings/import-export`; pinned by `app/(authenticated)/hr/hr-search-params-suspense.test.ts`
-- `/hr/recruitment/jobs/new` · **HR** · hooks: `→ features/hr/recruitment`
-- `/hr/recruitment/jobs/[jobId]/edit` · **HR** · hooks: `→ features/hr/recruitment`
-- `/hr/recruitment/candidates` · **HR** · hooks: `→ features/hr/recruitment` — 2026-09-21: in the reproduced React #419 set (jsdom chunk reached through a shared import); fixed by the sanitiser boundary. 2026-09-21: the route wraps its `useSearchParams` consumer in `<Suspense fallback={<Loading/>}>` (the route's own `loading.tsx` skeleton), matching `payroll/settings/import-export`; pinned by `app/(authenticated)/hr/hr-search-params-suspense.test.ts`
-- `/hr/recruitment/candidates/[candidateId]` · **HR** · hooks: `→ features/hr/recruitment`
-- `/hr/recruitment/candidates/import` · **HR** · hooks: `→ features/hr/recruitment`
-- `/hr/recruitment/candidates/intake` · **HR** · hooks: `→ features/hr/recruitment`
-- `/hr/recruitment/pipeline` · **HR** · hooks: `→ features/hr/recruitment` — 2026-09-21: the route wraps its `useSearchParams` consumer in `<Suspense fallback={<Loading/>}>` (the route's own `loading.tsx` skeleton), matching `payroll/settings/import-export`; pinned by `app/(authenticated)/hr/hr-search-params-suspense.test.ts`
-- `/hr/recruitment/interviews` · **HR** · hooks: `→ features/hr/recruitment` (2026-09-21: `loading.tsx` shows the table's real column headers under the page title while the rows load)
-- `/hr/recruitment/offers` · **HR** · hooks: `→ features/hr/recruitment`
-- `/hr/recruitment/offer-templates` · **HR** · hooks: `→ features/hr/recruitment` — 2026-09-21: the preview sheet renders `SanitizedHtml` instead of an inline `DOMPurify.sanitize`; this route was in the reproduced React #419 set
-- `/hr/recruitment/requisitions` · **HR** · hooks: `→ features/hr/recruitment`
-- `/hr/recruitment/talent-pools` · **HR** · hooks: `→ features/hr/recruitment`
-- `/hr/recruitment/headcount` · **HR** · hooks: `→ features/hr/recruitment`
-- `/hr/recruitment/analytics` · **HR** · hooks: `→ features/hr/recruitment`
-- `/hr/recruitment/diversity-report` · **HR** · hooks: `requirePermission("hr:sensitive:view")` (server), `useDiversityReport` (`useGatedQuery("hr:sensitive:view")` → `GET /hr/recruitment/diversity-report`), `usePageState` + `PageWrapper state=`, `→ features/hr/recruitment`. 2026-09-21 (FE#134): the page's state resolves through `usePageState({ permission: "hr:sensitive:view", …, error, isEmpty })`, so access-loading is a skeleton, denial is `DeniedView`, a failed read is `ErrorState` with the backend message, and "No applicant data found" appears only for a permitted, finished read with `total === 0`; removed from `denial-is-not-emptiness.known.json`.
-- `/hr/recruitment/scorecard-analytics` · **HR** · hooks: `→ features/hr/recruitment`
-- `/hr/recruitment/scorecard-templates` · **HR** · hooks: `→ features/hr/recruitment`
-- `/hr/recruitment/question-bank` · **HR** · hooks: `→ features/hr/recruitment`
-- `/hr/recruitment/hiring-flows` · **HR** · hooks: `→ features/hr/recruitment`
-- `/hr/recruitment/booking-links` · **HR** · hooks: `→ features/hr/recruitment` (2026-09-21: `loading.tsx` is titled "Interview Booking Links" with the page's subtitle)
-- `/hr/recruitment/email-sequences` · **HR** · hooks: `→ features/hr/recruitment`
-- `/hr/recruitment/automations` · **HR** · hooks: `→ features/hr/recruitment`
-- `/hr/recruitment/recruiters` · **HR** · hooks: `→ features/hr/recruitment`
-- `/hr/recruitment/vendors` · **HR** · hooks: `→ features/hr/recruitment`
-- `/hr/recruitment/internal-jobs` · **HR** · hooks: `→ features/hr/recruitment`
-- `/hr/recruitment/referrals` · **HR** · hooks: `→ features/hr/recruitment`
-- `/hr/recruitment/refer` · **HR** · hooks: `→ features/hr/recruitment`
-- `/hr/recruitment/sla` · **HR** · hooks: `→ features/hr/recruitment`
-- `/hr/recruitment/sla-report` · **HR** · hooks: `→ features/hr/recruitment`
-- `/hr/recruitment/interviewer-performance` · **HR** · hooks: `→ features/hr/recruitment`
-- `/hr/recruitment/inbox` · **HR** · hooks: `→ features/hr/recruitment`
-- `/hr/recruitment/reports` · **HR** · hooks: `→ features/hr/recruitment`
-- `/hr/recruitment/settings` · **HR** · hooks: `→ features/hr/recruitment`
+- `/recruitment` · **Recruitment** · hooks: `→ features/recruitment`
+- `/recruitment/jobs` · **Recruitment** · hooks: `→ features/recruitment` — 2026-09-21: the route wraps its `useSearchParams` consumer in `<Suspense fallback={<Loading/>}>` (the route's own `loading.tsx` skeleton), matching `payroll/settings/import-export`; pinned by `app/(authenticated)/hr/hr-search-params-suspense.test.ts`
+- `/recruitment/jobs/new` · **Recruitment** · hooks: `→ features/recruitment`
+- `/recruitment/jobs/[jobId]/edit` · **Recruitment** · hooks: `→ features/recruitment`
+- `/recruitment/candidates` · **Recruitment** · hooks: `→ features/recruitment` — 2026-09-21: in the reproduced React #419 set (jsdom chunk reached through a shared import); fixed by the sanitiser boundary. 2026-09-21: the route wraps its `useSearchParams` consumer in `<Suspense fallback={<Loading/>}>` (the route's own `loading.tsx` skeleton), matching `payroll/settings/import-export`; pinned by `app/(authenticated)/hr/hr-search-params-suspense.test.ts`
+- `/recruitment/candidates/[candidateId]` · **Recruitment** · hooks: `→ features/recruitment`
+- `/recruitment/candidates/import` · **Recruitment** · hooks: `→ features/recruitment`
+- `/recruitment/candidates/intake` · **Recruitment** · hooks: `→ features/recruitment`
+- `/recruitment/pipeline` · **Recruitment** · hooks: `→ features/recruitment` — 2026-09-21: the route wraps its `useSearchParams` consumer in `<Suspense fallback={<Loading/>}>` (the route's own `loading.tsx` skeleton), matching `payroll/settings/import-export`; pinned by `app/(authenticated)/hr/hr-search-params-suspense.test.ts`
+- `/recruitment/interviews` · **Recruitment** · hooks: `→ features/recruitment` (2026-09-21: `loading.tsx` shows the table's real column headers under the page title while the rows load)
+- `/recruitment/offers` · **Recruitment** · hooks: `→ features/recruitment`
+- `/recruitment/offer-templates` · **Recruitment** · hooks: `→ features/recruitment` — 2026-09-21: the preview sheet renders `SanitizedHtml` instead of an inline `DOMPurify.sanitize`; this route was in the reproduced React #419 set
+- `/recruitment/requisitions` · **Recruitment** · hooks: `→ features/recruitment`
+- `/recruitment/talent-pools` · **Recruitment** · hooks: `→ features/recruitment`
+- `/recruitment/headcount` · **Recruitment** · hooks: `→ features/recruitment`
+- `/recruitment/analytics` · **Recruitment** · hooks: `→ features/recruitment`
+- `/recruitment/diversity-report` · **Recruitment** · hooks: `requirePermission("hr:sensitive:view")` (server), `useDiversityReport` (`useGatedQuery("hr:sensitive:view")` → `GET /hr/recruitment/diversity-report`), `usePageState` + `PageWrapper state=`, `→ features/recruitment`. 2026-09-21 (FE#134): the page's state resolves through `usePageState({ permission: "hr:sensitive:view", …, error, isEmpty })`, so access-loading is a skeleton, denial is `DeniedView`, a failed read is `ErrorState` with the backend message, and "No applicant data found" appears only for a permitted, finished read with `total === 0`; removed from `denial-is-not-emptiness.known.json`.
+- `/recruitment/bgv-compliance` · **Recruitment** · hooks: `requirePermission("hr:sensitive:view")` (server), `useBgvComplianceDashboard` → `GET /hr/recruitment/bgv-compliance`, `usePageState` + `PageWrapper state=`, `→ features/recruitment` (2026-09-25: moved out of the HR Background Verification page; linked from Recruitment settings)
+- `/recruitment/scorecard-analytics` · **Recruitment** · hooks: `→ features/recruitment`
+- `/recruitment/scorecard-templates` · **Recruitment** · hooks: `→ features/recruitment`
+- `/recruitment/question-bank` · **Recruitment** · hooks: `→ features/recruitment`
+- `/recruitment/hiring-flows` · **Recruitment** · hooks: `→ features/recruitment`
+- `/recruitment/booking-links` · **Recruitment** · hooks: `→ features/recruitment` (2026-09-21: `loading.tsx` is titled "Interview Booking Links" with the page's subtitle)
+- `/recruitment/email-sequences` · **Recruitment** · hooks: `→ features/recruitment`
+- `/recruitment/automations` · **Recruitment** · hooks: `→ features/recruitment`
+- `/recruitment/recruiters` · **Recruitment** · hooks: `→ features/recruitment`
+- `/recruitment/vendors` · **Recruitment** · hooks: `→ features/recruitment`
+- `/recruitment/internal-jobs` · **Recruitment** · hooks: `→ features/recruitment`
+- `/recruitment/referrals` · **Recruitment** · hooks: `→ features/recruitment`
+- `/recruitment/refer` · **Recruitment** · hooks: `→ features/recruitment`
+- `/recruitment/sla` · **Recruitment** · hooks: `→ features/recruitment`
+- `/recruitment/sla-report` · **Recruitment** · hooks: `→ features/recruitment`
+- `/recruitment/interviewer-performance` · **Recruitment** · hooks: `→ features/recruitment`
+- `/recruitment/inbox` · **Recruitment** · hooks: `→ features/recruitment`
+- `/recruitment/reports` · **Recruitment** · hooks: `→ features/recruitment`
+- `/recruitment/settings` · **Recruitment** · hooks: `→ features/recruitment`
 
 ### Performance & Engagement
 - `/hr/performance` · **HR** · hooks: `→ features/hr/performance` — 2026-09-21: React #419 came in through `@/components/ai`'s barrel (`AiFailureBody` import pulled `AiInlinePreview` → `isomorphic-dompurify` → bundled jsdom across the client boundary); the preview now renders through `SanitizedHtml`. 2026-09-21: the route wraps its `useSearchParams` consumer in `<Suspense fallback={<Loading/>}>` (the route's own `loading.tsx` skeleton), matching `payroll/settings/import-export`; pinned by `app/(authenticated)/hr/hr-search-params-suspense.test.ts`
@@ -448,7 +459,7 @@ PM Workspace is removed from Build entirely (not renamed, not consolidated into 
 - `/hr/labor-relations` · **HR** · hooks: `→ features/hr/labor-relations` (2026-09-21: `loading.tsx` shows the table's real column headers under the page title while the rows load (the Memberships tab))
 - `/hr/safety` · **HR** · hooks: `→ features/hr/safety` — 2026-09-21: the suppressed wellness pulse renders the shared `AnonymitySuppressedNotice` (same floor as polls, mood and survey analytics) instead of its own k-anonymity line
 - `/hr/safety` · **HR** · hooks: `→ features/hr/safety` (2026-09-21: `WellnessPulseCard` renders `ErrorState` with retry when `useWellnessPulse` fails instead of returning null (FE#117); `loading.tsx` shows the table's real column headers under the page title while the rows load)
-- `/hr/background-verification` · **HR** · hooks: `→ features/hr/bg-verification`
+- `/hr/background-verification` · **HR** · hooks: `→ features/hr/bg-verification` (2026-09-25: employee checks only; the Candidate Compliance tab moved to `/recruitment/bgv-compliance`)
 - `/hr/identity` · **HR** · hooks: `→ features/hr/identity` (2026-09-21: `loading.tsx` shows the table's real column headers under the page title while the rows load (the Provisioning tab))
 - `/hr/accommodations` · **HR** · hooks: `→ features/hr/accommodations`
 
@@ -469,7 +480,7 @@ PM Workspace is removed from Build entirely (not renamed, not consolidated into 
 - `/hr/delegations` · **HR** · hooks: `→ features/hr/delegations`
 
 ### HR Analytics, Helpdesk, Cases
-- `/hr/analytics` · **HR** · hooks: `→ features/hr/analytics` (2026-09-21: "People analytics"; the Recruitment tab and the Open positions KPI render only for a viewer holding `hr:interviews:view` — `GET /hr/recruitment/stats`'s key — since no org-level ATS enablement signal exists)
+- `/hr/analytics` · **HR** · hooks: `→ features/hr/analytics` (2026-09-21: "People analytics") (2026-09-25: no Recruitment tab and no Open positions KPI — recruitment analytics live only in Recruitment OS at `/recruitment/analytics`)
 - `/hr/helpdesk` · **HR** · hooks: `requirePermission("hr:helpdesk:view")` (server), `→ features/employee-support` (`SupportQueuesPage`: `useSupportQueueTickets`, `useSupportQueues`, `useSupportQueueTicket`) — 2026-09-21: the HR-only helpdesk became the company-wide **Employee support** agent view. Five queue tabs (HR, IT, Finance, Admin, Legal) with open/overdue counts for the queues the agent is a member of (`useCan("hr:helpdesk:queue-<q>")` or `hr:helpdesk:manage`); non-member tabs are read-only and show non-confidential requests only. Rows carry the confidential badge, the SLA marker (due / response overdue / overdue / escalated) and the assignee; the detail sheet works the request (status, queue) only for queue members. `Queue settings` (SLA hours, escalation target, category routing) is admin-only. State resolves through `usePageState` + `<PageState>` with `module: "hr"`; the loading branch keeps the title and typed column headers (no `Column 1`), error has retry, empty names the queue. Tab, status, search and the open ticket sync to the URL (`queue`, `status`, `q`, `ticket`). Employees no longer raise requests here — that surface moved to `/me/support`.
 - `/hr/cases` · **HR** · hooks: `→ features/hr/cases`
 - `/hr/service-delivery` · **HR** · hooks: `→ features/hr/service-delivery`
@@ -491,8 +502,10 @@ PM Workspace is removed from Build entirely (not renamed, not consolidated into 
 - `/hr/settings/forms/[formId]` · **HR** · hooks: `→ features/hr/settings`
 - `/hr/settings/forms/[formId]/submissions` · **HR** · hooks: `→ features/hr/settings`
 - `/hr/settings/import-export` · **HR** · hooks: `→ features/hr/settings`
-- `/hr/settings/integrations` · **HR** · hooks: `→ features/hr/settings`
+- `/hr/settings/import-export` · **HR** · hooks: `→ features/hr/import-export` (2026-09-26, HRM-15: the employees import documents `primaryManagerEmail`, `secondaryManagerEmail1..3`, `topLevelRoleReason`, `effectiveFrom`, `clearPrimaryManager` — a blank manager changes nothing for an existing employee; the policy-missing warning shows for employees; `useCommitImportJob` sends an `Idempotency-Key` per commit)
+- `/hr/settings/integrations` · **HR** · hooks: `→ features/hr/settings` (2026-09-25: job-board sync moved to Recruitment OS `/recruitment/integrations`)
 - `/hr/settings/policies` · **HR** · hooks: `usePageState({permission:"hr:policies:view"})` + `PageWrapper state=`, `→ features/hr/policies` — the separate `!canView` return that re-declared the page chrome is gone
+- `/hr/settings/reporting-managers` · **HR** · hooks: `requirePermission("hr:reporting-lines:manage")` (server), `useReportingManagerPolicy` → `GET /hr/reporting-manager-policy`, `useUpdateReportingManagerPolicy` → `PATCH /hr/reporting-manager-policy` (`expectedVersion`, 409 reloads), `usePageState({permission:"hr:reporting-lines:manage"})` + `PageState`, `→ features/hr/reporting-managers/policy` (2026-09-26, HRM-15: reporting manager policy — default manager, fallback order, 0–3 additional managers, repeated-change threshold, top-level switch; editable only with `hr:reporting-lines:override`; registered in the settings tabs, HR settings sidebar and hub)
 - `/hr/settings/preview` · **HR** · hooks: `→ features/hr/settings`
 - `/hr/settings/templates` · **HR** · hooks: `→ features/hr/settings`
 - `/hr/settings/versions` · **HR** · hooks: `→ features/hr/settings`
@@ -555,12 +568,12 @@ PM Workspace is removed from Build entirely (not renamed, not consolidated into 
 ### Invoices & Receivables
 - `/accounting/invoices` · **Accounting** · hooks: `useInvoices`, `useInvoiceStats`, `useVoidInvoice`, `useCan("accounting:receivables:manage")`
 - `/accounting/invoices/new` · **Accounting** · hooks: `→ features/accounting/sales` — invoice composer; gated `accounting:receivables:manage`
-- `/accounting/invoices/[invoiceId]` · **Accounting** · hooks: `→ features/accounting/sales`
+- `/accounting/invoices/[invoiceId]` · **Accounting** · hooks: `→ features/accounting/sales` — posted: Download PDF, e-invoicing card (status + submit, `accounting:receivables:manage`), attachments card (`accounting:attachments:read`/`:manage`)
 - `/accounting/recurring-invoices` · **Accounting** [RETIRED: no page.tsx found 2026-09-21; ARs may have been consolidated]
 - `/accounting/payments-received` · **Accounting** · hooks: `→ features/accounting`
 - `/accounting/credit-notes` · **Accounting** · hooks: `→ features/accounting/sales`
 - `/accounting/credit-notes/new` · **Accounting** · hooks: `→ features/accounting/sales` — credit note composer; gated `accounting:credit-notes:create`
-- `/accounting/credit-notes/[creditNoteId]` · **Accounting** · hooks: `→ features/accounting/sales` — credit note detail; gated `accounting:credit-notes:read`
+- `/accounting/credit-notes/[creditNoteId]` · **Accounting** · hooks: `→ features/accounting/sales` — credit note detail; gated `accounting:credit-notes:read`; posted: Download PDF, e-invoicing card, attachments card
 - `/accounting/customers/[partyId]` · **Accounting** · hooks: `→ features/accounting`
 - `/accounting/customers` · **Accounting** · hooks: `→ features/accounting`
 - `/accounting/payment-reminders` · **Accounting** [RETIRED: no page.tsx found 2026-09-21]
@@ -569,7 +582,7 @@ PM Workspace is removed from Build entirely (not renamed, not consolidated into 
 ### Purchase & Payables
 - `/accounting/purchase-bills` · **Accounting** · hooks: `usePurchaseBills`, `useCreatePurchaseBill`, `useCan("accounting:payables:approve")`, `useCan("accounting:payables:manage")` — cursor pagination; search + status filters URL-synced; `EmptyState` with `EmptyExpensesIllustration` ✓; minor: empty state action shows "New bill" without checking `canManage`
 - `/accounting/purchase-bills/new` · **Accounting** · hooks: `→ features/accounting/purchase-bills`
-- `/accounting/purchase-bills/[apDocumentId]` · **Accounting** · hooks: `→ features/accounting/purchase-bills`
+- `/accounting/purchase-bills/[apDocumentId]` · **Accounting** · hooks: `→ features/accounting/purchase-bills` — posted: Download PDF; attachments card in every state
 - `/accounting/vendor-payments` · **Accounting** · hooks: `useVendorPayments`, `useCreateVendorPayment`, `useCan("accounting:payables:manage")` — dual cursor queries (paid + partial) merged; vendor filter URL-synced; `EmptyState` with `illustrationPreset="tasks"` ✓
 - `/accounting/vendor-credits` · **Accounting** · hooks: `→ features/accounting`
 - `/accounting/vendor-credits/new` · **Accounting** · hooks: `→ features/accounting/purchases` — vendor credit composer (DEBIT_NOTE type); `ApDocumentNewPage`
@@ -636,6 +649,7 @@ PM Workspace is removed from Build entirely (not renamed, not consolidated into 
 ### Sub-reports
 - `/accounting/reports` · **Accounting** · hooks: `→ features/accounting/reports`
 - `/accounting/reports/aging` · **Accounting** · hooks: `→ features/accounting/reports` — AR/AP aging report
+- `/accounting/reports/stock-reconciliation` · **Accounting** · hooks: `useStockGlReconciliation`, `useUnpostedMovements` `→ features/accounting/reports` — stock ledger vs GL inventory accounts, plus the unposted-movements sample (`accounting:reports:read`)
 - `/accounting/reports/burn-rate` · **Accounting** [RETIRED: no page.tsx found 2026-09-21]
 - `/accounting/reports/customer-statement` · **Accounting** [RETIRED: no page.tsx found 2026-09-21]
 - `/accounting/reports/department-profitability` · **Accounting** [RETIRED: no page.tsx found 2026-09-21]
@@ -789,6 +803,8 @@ PM Workspace is removed from Build entirely (not renamed, not consolidated into 
 - `/knowledge/wiki/import` · **Knowledge** · hooks: `→ features/wiki` — sidebar label is Import & Export; Import and Export are URL-synced tabs (`?tab=export`); Choose files and Paste text are Import-tab header actions; recent imports show uploaded page titles (from job `errorReport.itemTitles`) with client-side pagination
 - `/knowledge/wiki/analytics` · **Knowledge** · hooks: `→ features/wiki`
 - `/knowledge/chat` · **Knowledge** · hooks: `→ features/wiki`
+- `/knowledge/research-briefs` · **Knowledge** · hooks: `requirePermission("kb:pages:view")`, `useKbResearchBriefs`, `useCreateResearchBrief`, `→ features/help-centre` — components live under `features/help-centre/`, the route under `knowledge/`; there is no Support-owned twin
+- `/knowledge/research-briefs/[briefId]` · **Knowledge** · hooks: `enforceRouteAccess`, `useKbResearchBrief`, `useRetryResearchBrief`, `useCancelResearchBrief`, `useRateResearchBrief`, `useConvertResearchBriefToPage`, `→ features/help-centre` — brief detail refuses the whole brief (404) when any cited record is no longer visible, rather than redacting the citation; Convert to page posts `/kb/research-briefs/:briefId/convert-to-page` and routes to the created page
 
 ### Legacy
 - `/knowledge-base` · **Knowledge (legacy)** [RETIRED 2026-08-30: file deleted; canonical KB is at `/knowledge/wiki/**`]
@@ -829,8 +845,8 @@ PM Workspace is removed from Build entirely (not renamed, not consolidated into 
 ### Support KB (internal help content)
 - `/support/kb` · **Support** · hooks: `→ features/support/kb`
 - `/support/kb/[articleId]` · **Support** · hooks: `→ features/support/kb`
-- `/support/kb/research-briefs` · **Support** · hooks: `→ features/support/kb`
-- `/support/kb/research-briefs/[briefId]` · **Support** · hooks: `→ features/support/kb`
+- `/support/kb/research-briefs` · **Support** [RETIRED: no such file under `app/(authenticated)/support/kb/`; research briefs are Knowledge-owned at `/knowledge/research-briefs`]
+- `/support/kb/research-briefs/[briefId]` · **Support** [RETIRED: no such file under `app/(authenticated)/support/kb/`; research brief detail is Knowledge-owned at `/knowledge/research-briefs/[briefId]`]
 
 ### Portal (customer-facing)
 - `/support/portal` · **Support** · hooks: `→ features/support/portal`
@@ -907,14 +923,14 @@ PM Workspace is removed from Build entirely (not renamed, not consolidated into 
 
 - `/timesheets` · **Timesheets** · hooks: `→ features/timesheets` (2026-09-21: the week grid scroller fades its hidden edge and, below `sm`, says "Swipe sideways to reach every day of the week" whenever it overflows — FE#79; header wrapping at 768 landed earlier in 08f6406e2 — FE#80)
 - `/timesheets` · **Timesheets** · hooks: `→ features/timesheets` (2026-09-21: My Time shows the shared `ApprovalRoutePanel` from `GET /timesheets/periods/{periodId}/approver` before submit — who approves, why, SLA, escalation — and disables Submit when nobody can own the period)
-- `/timesheets/approvals` · **Timesheets** · hooks: `→ features/timesheets` (2026-09-21: the queue lists periods routed to the viewer, an Approver column names the rung, escalation and deadline (`approvalRoute`/`approvalDueAt`), the detail sheet spells out the routing explanation; `?period=<periodId>` — the link notifications and the payroll readiness ledger use — opens that period's detail sheet directly) (2026-09-21: `loading.tsx` shows the table's real column headers under the page title while the rows load)
+- `/timesheets/approvals` · **Timesheets** · hooks: `→ features/timesheets` (2026-09-21: the queue lists periods routed to the viewer, an Approver column names the rung, escalation and deadline (`approvalRoute`/`approvalDueAt`), the detail sheet spells out the routing explanation; `?period=<periodId>` — the link notifications and the payroll readiness ledger use — opens that period's detail sheet directly) (2026-10-17: the detail sheet of an Approved or Locked period offers Lock / Unlock / Reopen behind `timesheets:approvals:manage`, each confirmed) (2026-09-21: `loading.tsx` shows the table's real column headers under the page title while the rows load)
 - `/timesheets/billing` · **Timesheets** · hooks: `→ features/timesheets`
 - `/timesheets/exceptions` · **Timesheets** · hooks: `→ features/timesheets` (2026-09-21: `loading.tsx` shows the table's real column headers under the page title while the rows load (open exceptions with the actions column))
 - `/timesheets/overdue` · **Timesheets** · hooks: `→ features/timesheets` — overdue timesheets list; `enforceRouteAccess`
 - `/timesheets/payroll` · **Timesheets** · hooks: `→ features/timesheets`
-- `/timesheets/reports` · **Timesheets** · hooks: `→ features/timesheets/reports` (2026-09-21: the utilization, compliance, client-profitability and approval-SLA tab skeletons derive their headers from their column definitions)
+- `/timesheets/reports` · **Timesheets** · hooks: `→ features/timesheets/reports` (2026-09-21: the utilization, compliance, client-profitability and approval-SLA tab skeletons derive their headers from their column definitions) (2026-10-17: `?tab=project-hours&projectId=<id>` — Project Hours tab reads `GET /timesheets/reports/project-hours`; org-wide reports scope only, project list needs `build:view`)
 - `/timesheets/settings` · **Timesheets** · hooks: `→ features/timesheets/settings` (2026-09-21: approval mode offers Manager or Auto only — multi-level is not configurable until it exists — and "Who approves" picks the reporting manager (default) or the dominant project's manager)
-- `/timesheets/team` · **Timesheets** · hooks: `→ features/timesheets` (2026-09-21: `loading.tsx` shows the table's real column headers under the page title while the rows load (Member, the seven weekdays, Total, Status))
+- `/timesheets/team` · **Timesheets** · hooks: `→ features/timesheets` (2026-09-21: `loading.tsx` shows the table's real column headers under the page title while the rows load (Member, the seven weekdays, Total, Status)) (2026-10-17: the member sheet's Remind calls `POST /timesheets/team/remind`, gated on `timesheets:team:view`, throttled per member and week)
 - `/timesheets/access` · **Timesheets** · hooks: `→ features/timesheets`
 
 ---
@@ -933,6 +949,8 @@ PM Workspace is removed from Build entirely (not renamed, not consolidated into 
 ## Settings (Global Administration)
 
 - `/settings` · **Settings** · hooks: `→ features/settings` — universal route, gate stays `enforceRouteAccess`; server-prefetched via `prefetchAccountSettings`.
+- `/settings` · **Settings** · hooks: `→ features/settings` (2026-09-26, HRM-15: "Reporting line" section — `useMyReportingLine` → `GET /me/reporting-line` (hidden when HR is off or `hasEmployment === false`), "Report an issue" → `POST /me/reporting-manager-requests`, history `GET /me/reporting-manager-requests` with cancel / respond; no reasons of others are shown)
+- `/settings` · **Settings** · hooks: `→ features/settings/privacy` (2026-10-17, GDPR self-service: "Your data" section — `POST /gdpr/export/me` saves JSON, `POST /gdpr/export-async/me` starts an archive whose id is kept per org in localStorage and polled via `GET /gdpr/export-async/:jobId/status` until terminal, then `…/download`; `POST /gdpr/rectification/me` for the string-valued fields. All universal — the subject is the token. The archive needs `GDPR_EXPORT_WORKER_ENABLED` not `false` on the backend)
 - `/settings/users` · **Settings** · hooks: `→ features/settings/users` — C8 (2026-09-10): server-prefetched + `HydrationBoundary` via `prefetchSettingsUsers` (`/v2/users`, `/users/stats`); the initial key is derived from server `searchParams` through `readUsersListState`, shared with the page
 - `/settings/roles` · **Settings** · hooks: `→ features/settings/roles`
 - `/settings/roles/[roleId]` · **Settings** · hooks: `→ features/settings/roles`
@@ -952,7 +970,10 @@ PM Workspace is removed from Build entirely (not renamed, not consolidated into 
 - `/settings/billing/ai-credits` · **Settings** · hooks: `→ features/settings/billing` — platform billing page 2 of 2; C8 (2026-09-10): server-prefetched + `HydrationBoundary` via `prefetchAiCreditsSettings` (wallet, transactions, usage)
 - `/settings/api-tokens` · **Settings** · hooks: `→ features/settings/api-tokens`
 - `/settings/webhooks` · **Settings** · hooks: `→ features/settings/webhooks` — C8 (2026-09-10): server-prefetched + `HydrationBoundary` via `prefetchSettingsWebhooks`; the `?size` param feeds the initial key
+- `/settings/privacy` · **Settings** · hooks: `requirePermission(["hr:retention:manage", "compliance:subject-requests:view"])` (server), `→ features/settings/privacy` — 2026-10-17 (GDPR): Member data panel (`hr:retention:manage`: `POST /gdpr/export/:personId`, `export-async/:personId` + status/download, `erasure/:subjectId` with dry-run preview) and the Subject requests queue (`GET /compliance/subject-requests` on `compliance:subject-requests:view`, run on `compliance:subject-requests:execute`; the service additionally requires a declared operator). Each panel shows only for its own key. Every erasure is a destructive confirm that stays shut until the subject's email is typed
+- `/settings/storage-quarantine` · **Settings** · hooks: `requirePermission("storage:quarantine:view")` (server), `useQuarantine` → `GET /storage/quarantine` (cursor, `?status` in the URL), release/reject/delete on `storage:quarantine:manage`, `usePageState` + `PageState`, `→ features/settings/storage-quarantine` — 2026-10-17: uploads held for malware scanning; release only while `pending_scan`, reject unless released, each behind a confirm; mutations patch every loaded page
 - `/settings/audit-log` · **Settings** · hooks: `→ features/settings/audit-log` — C8 (2026-09-10): server-prefetched + `HydrationBoundary` via `prefetchSettingsAuditLog` (list + actions + target types); the initial key comes from `readAuditLogFilters(searchParams)`, shared with the page
+- `/settings/chat` · **Settings** · hooks: `→ features/chat/chat-org-settings-page` (2026-10-17: new. Org-wide chat defaults — default notification preference, max attachment MB (1–1000), max huddle participants (2–500) — over `GET`/`PATCH /chat/settings`; page gated on `chat:org-settings:manage`, nav entry under Administration › Workspace; server-prefetched via `prefetchChatOrgSettings`. OPEN: denied state and 375/768/1280 not browser-verified)
 - `/settings/delegations` · **Settings** · hooks: `→ features/settings/delegations` — C8 (2026-09-10): server-prefetched + `HydrationBoundary` via `prefetchSettingsDelegations` (received, given, discovery members); each list keys off its own `received*`/`granted*` params. S01 (2026-09-02): neither side bounded the delegation window, so a delegation could be granted for a century — a permanent shadow role. Capped at 90 days in `delegation-policy.ts` and mirrored in the form schema.
 - `/settings/incoming-transfer` · **Settings** · hooks: `→ features/settings/incoming-transfer` — C8 (2026-09-10): classified NO PREFETCH NEEDED. `useIncomingOrgTransfers` declares `staleTime: 0` + `refetchOnMount: "always"`, so a hydrated offer is re-read on first mount anyway; a stale accept/decline offer is the one thing this page must not show. Pinned by `lib/prefetch/settings-prefetch-census.test.ts`
 
@@ -1009,9 +1030,9 @@ PM Workspace is removed from Build entirely (not renamed, not consolidated into 
 - `/signup` · **Auth** · hooks: `SignupForm` — renders a sign-up form, currently redirects to `/signin`; see `frontend/CLAUDE.md`
 - `/contact` · **Marketing** · hooks: none
 - `/waitlist` · **Marketing** [RETIRED path: no page.tsx found on disk]
-- `/waitlist/claim/[claimToken]` · **Marketing** · hooks: none — workspace claim form for waitlist invitees; `ClaimForm` + `PublicShell`; token-gated, not indexed
+- `/waitlist/claim/[claimToken]` · **Marketing** · hooks: none — retired: "Waitlist sign-up has closed" with Sign in / Contact us links (backend `POST /waitlist/claim` answers 410); not indexed
 - `/design-system` · **Dev** · hooks: none — dev-only gallery
-- `/legal/privacy` · **Marketing** · hooks: none
+- `/legal/privacy` · **Marketing** · hooks: `useSubprocessorNotices` → public `POST /compliance/subprocessors/subscribe|unsubscribe` (2026-10-17: email notice of subprocessor changes, in the Subprocessors section)
 - `/legal/security` · **Marketing** · hooks: none
 - `/legal/terms` · **Marketing** · hooks: none
 - `/blogs` · **Marketing** · hooks: `→ features/blog` — disk path: `(public)/blogs/(site)/page.tsx`; `(site)` is a route group, not a URL segment
@@ -1024,19 +1045,21 @@ PM Workspace is removed from Build entirely (not renamed, not consolidated into 
 - `/interview-booking/[bookingToken]` · **HR (public)** · hooks: `→ features/careers`
 - `/offer/[offerToken]` · **HR (public)** · hooks: `→ features/careers`
 - `/nps/[npsToken]` · **Support (public)** · hooks: `→ features/support`
+- `/lead-form/[leadFormToken]` · **CRM (public)** · hooks: `usePublicLeadForm`, `useSubmitLeadForm`, `→ features/crm/web-forms` — renders a web form and submits it as a lead
 - `/ticket-feedback/[csatToken]` · **Support (public)** · hooks: `→ features/support`
 - `/help/[orgId]` · **Support (public KB)** · hooks: `→ features/support/kb`
 - `/help/[orgId]/[articleSlug]` · **Support (public KB)** · hooks: `→ features/support/kb`
 - `/forms/[formToken]` · **Build/HR (public forms)** · hooks: `→ features/forms`
-- `/intake/[projectId]` · **Build (public intake)** · hooks: `→ features/build/intake`
+- `/intake/t/[intakeToken]` · **Build (public intake, opaque token)** · hooks: `→ features/build/intake`
 - `/board/[shareToken]` · **Build (public board share)** · hooks: `→ features/build/board`
 - `/wiki/[shareToken]` · **Knowledge (public wiki share)** · hooks: `→ features/wiki`
 - `/roadmap/[orgId]` · **Build (public roadmap)** · hooks: `→ features/build/roadmap`
+- `/roadmap/by-token` · **Build (public product roadmap, share token)** · hooks: `→ features/build/public`
 - `/live/[sessionCode]` · **Surveys (live session)** · hooks: `→ features/surveys/live`
 - `/live-chat/[orgId]` · **Support (live chat widget)** · hooks: `→ features/support/chat`
 - `/vendor-portal/[vendorPortalToken]` · **Inventory/Accounting** · hooks: `→ features/vendor-portal`
 - `/sign/[recipientToken]` · **Sign (public signing)** · hooks: `→ features/sign`
 - `/s/[collectorToken]` · **Platform (short link)** · hooks: redirect
-- `/refer/[orgId]` · **HR (public referral)** · hooks: `→ features/hr/recruitment`
-- `/refer/link/[referralToken]` · **HR (public referral)** · hooks: `→ features/hr/recruitment`
+- `/refer/[orgId]` · **HR (public referral)** · hooks: `→ features/recruitment`
+- `/refer/link/[referralToken]` · **HR (public referral)** · hooks: `→ features/recruitment`
 - `/unsubscribe/[unsubscribeToken]` · **Platform (public)** · hooks: `usePublicUnsubscribe` — email unsubscribe flow; four states: loading, success, error, already-unsubscribed

@@ -68,7 +68,7 @@ const baseAccess: DashboardAccess = {
 };
 
 const emptyData = {
-  inboxCount: { notification: 0, mail: 0, approval: 0, task: 0, total: 0, mailExact: true },
+  inboxCount: { notification: 0, mail: 0, approval: 0, task: 0, total: 0, mailExact: true, approvalExact: true },
   approvals: { pendingLeaves: 0, pendingResignations: 0, total: 0 },
   personal: { myTasks: [], timesheetStatus: null, upcomingEvents: [], degraded: [] },
 };
@@ -122,7 +122,7 @@ describe("FocusStrip — actionable items", () => {
   });
 
   it("shows unread notifications with a link to the inbox", () => {
-    mockInboxCount.data = { notification: 5, mail: 0, approval: 0, task: 0, total: 5, mailExact: true };
+    mockInboxCount.data = { notification: 5, mail: 0, approval: 0, task: 0, total: 5, mailExact: true, approvalExact: true };
     mockApprovals.data = emptyData.approvals;
     mockPersonal.data = emptyData.personal;
     render(<FocusStrip access={baseAccess} />);
@@ -131,7 +131,7 @@ describe("FocusStrip — actionable items", () => {
   });
 
   it("shows unread mail with a link to the mail inbox", () => {
-    mockInboxCount.data = { notification: 0, mail: 2, approval: 0, task: 0, total: 2, mailExact: true };
+    mockInboxCount.data = { notification: 0, mail: 2, approval: 0, task: 0, total: 2, mailExact: true, approvalExact: true };
     mockApprovals.data = emptyData.approvals;
     mockPersonal.data = emptyData.personal;
     render(<FocusStrip access={baseAccess} />);
@@ -216,7 +216,7 @@ describe("FocusStrip — permission gates (positive and negative)", () => {
   });
 
   it("each attention source produces exactly one item — not multiple cards for the same count", () => {
-    mockInboxCount.data = { notification: 3, mail: 2, approval: 0, task: 0, total: 5, mailExact: true };
+    mockInboxCount.data = { notification: 3, mail: 2, approval: 0, task: 0, total: 5, mailExact: true, approvalExact: true };
     mockApprovals.data = { pendingLeaves: 1, pendingResignations: 0, total: 1 };
     mockPersonal.data = emptyData.personal;
     render(<FocusStrip access={baseAccess} />);
@@ -228,7 +228,7 @@ describe("FocusStrip — permission gates (positive and negative)", () => {
 
 describe("useFocusStrip — item ordering", () => {
   it("critical items appear before info items in the list", () => {
-    mockInboxCount.data = { notification: 5, mail: 0, approval: 0, task: 0, total: 5, mailExact: true };
+    mockInboxCount.data = { notification: 5, mail: 0, approval: 0, task: 0, total: 5, mailExact: true, approvalExact: true };
     mockApprovals.data = { pendingLeaves: 2, pendingResignations: 0, total: 2 };
     mockPersonal.data = emptyData.personal;
     const { result } = renderHook(() => useFocusStrip(baseAccess));

@@ -2,6 +2,7 @@
 
 import type { MutableRefObject } from "react";
 import type { Control } from "react-hook-form";
+import { useFormContext } from "react-hook-form";
 import { AlertTriangle } from "lucide-react";
 import {
   FormControl,
@@ -11,7 +12,8 @@ import {
 } from "@/components/ui/form";
 import { AiFieldTrigger, AiInlinePreview, type AiInlineSession } from "@/components/ai";
 import type { TicketSearchResult } from "@/types/projects";
-import type { CreateTicketFormValues } from "./use-create-ticket-form";
+import type { CreateTicketFormValues } from "./ticket-create-model";
+import { TICKET_TITLE_MAX } from "@/lib/validation/projects";
 
 interface AiTriggerProps {
   label: string;
@@ -28,6 +30,7 @@ interface TicketDialogTitleFieldProps {
   titleTriggerProps: AiTriggerProps;
   titleInlineSession: AiInlineSession | null;
   duplicates: TicketSearchResult[];
+  onTitleChange?: (value: string) => void;
 }
 
 export function TicketDialogTitleField({
@@ -37,28 +40,54 @@ export function TicketDialogTitleField({
   titleTriggerProps,
   titleInlineSession,
   duplicates,
+  onTitleChange,
 }: TicketDialogTitleFieldProps) {
+  const { setError, clearErrors, getFieldState } = useFormContext<CreateTicketFormValues>();
   return (
     <div className="shrink-0 space-y-2 border-b border-border/60 px-5 pb-3 pt-4">
       <FormField
         control={control}
         name="title"
-        render={({ field }) => (
+        render={({ field }) => {
+          function handleTitleInputChange(
+            event: React.ChangeEvent<HTMLInputElement>,
+          ) {
+            const value = event.target.value;
+            field.onChange(value);
+            onTitleChange?.(value);
+            if (value.length > TICKET_TITLE_MAX) {
+              setError("title", {
+                type: "max",
+                message: `Title must be ${TICKET_TITLE_MAX} characters or fewer`,
+              });
+            } else if (getFieldState("title").error?.type === "max") {
+              clearErrors("title");
+            }
+          }
+          return (
           <FormItem>
             <div className="flex items-start gap-1.5">
               <FormControl>
                 <input
-                  {...field}
+                  name={field.name}
+                  value={field.value ?? ""}
+                  onBlur={field.onBlur}
+                  onChange={handleTitleInputChange}
+                  onKeyDown={(event) => {
+                    if (event.key === "Enter") {
+                      event.preventDefault();
+                    }
+                  }}
                   ref={(el) => {
                     field.ref(el);
                     titleRef.current = el;
                   }}
-                  autoFocus
+                  maxLength={TICKET_TITLE_MAX}
                   autoCapitalize="off"
                   autoCorrect="off"
                   spellCheck={false}
                   placeholder="Issue title"
-                  className="min-w-0 flex-1 border-0 bg-transparent p-0 text-lg font-semibold leading-tight text-foreground outline-none placeholder:text-muted-foreground focus:ring-0"
+                  className="min-w-0 flex-1 border-0 bg-transparent p-0 text-lg font-normal leading-tight text-foreground outline-none placeholder:text-muted-foreground focus:ring-0"
                 />
               </FormControl>
               {canUseAI ? (
@@ -81,7 +110,7 @@ export function TicketDialogTitleField({
               <div className="mt-1 flex items-start gap-1.5 rounded-md border border-status-warning-rule bg-status-warning-surface px-2.5 py-2">
                 <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0 text-status-warning-ink" />
                 <div className="min-w-0">
-                  <p className="text-dense font-medium text-status-warning-ink">
+                  <p className="text-dense font-medium text-status-warning-ink-strong">
                     Similar open{" "}
                     {duplicates.length === 1 ? "ticket" : "tickets"}{" "}
                     already exist — you can still create this one.
@@ -90,10 +119,10 @@ export function TicketDialogTitleField({
                     {duplicates.slice(0, 3).map((d) => (
                       <li
                         key={d.id}
-                        className="text-dense text-status-warning-ink"
+                        className="text-dense text-status-warning-ink-strong"
                       >
                         {d.projectKey}-{d.ticketNumber}: {d.title}{" "}
-                        <span className="text-status-warning-ink">
+                        <span className="text-status-warning-ink-strong">
                           ({d.status})
                         </span>
                       </li>
@@ -103,7 +132,8 @@ export function TicketDialogTitleField({
               </div>
             )}
           </FormItem>
-        )}
+          );
+        }}
       />
     </div>
   );

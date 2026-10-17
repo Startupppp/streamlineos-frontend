@@ -39,6 +39,7 @@ import { TABLE_TITLE_CELL, TEXT_ONE_LINE } from "@/lib/text-overflow";
 import { cn } from "@/lib/utils";
 
 const PAGE_SIZE = 20;
+const WORKER_SKELETON_HEADERS = ["Worker", "Number", "Payee", "Status", "Added", ""] as const;
 
 const STATUS_OPTIONS: { value: WorkerStatus | "ALL"; label: string }[] = [
   { value: "ALL", label: "All statuses" },
@@ -306,8 +307,8 @@ export function WorkersPage() {
               description="You no longer hold workforce access, so worker records cannot be listed. The records themselves are unchanged."
             />
           ) : isLoading || workersQuery.access.pending ? (
-            <DataTableSkeleton rows={12} columns={6} className="flex-1" />
-          ) : isError ? (
+            <DataTableSkeleton rows={12} headers={WORKER_SKELETON_HEADERS} className="flex-1" />
+          ) : isError || workersQuery.access.unavailable ? (
             <ErrorState className={CONTENT_FILL_PANEL} onRetry={handleRetry} />
           ) : rows.length === 0 ? (
             <EmptyState

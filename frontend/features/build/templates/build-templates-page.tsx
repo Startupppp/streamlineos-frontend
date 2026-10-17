@@ -1,110 +1,62 @@
 "use client";
 
-import { useState, useCallback } from "react";
-import { toast } from "sonner";
 import { PlusIcon } from "@animateicons/react/lucide";
-import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
-import { Button } from "@/components/ui/button";
+import { WifiOff } from "lucide-react";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyProjectsIllustration } from "@/components/illustrations";
-import { Skeleton } from "@/components/ui/skeleton";
 import { PageState } from "@/components/shared/page-state";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { PageWrapper } from "@/components/ui/page-wrapper";
+import { InfiniteScrollSentinel } from "@/components/ui/infinite-scroll-sentinel";
 import { RequireModule } from "@/components/auth/require-module";
-import {
-  useProjectTemplates,
-  useDeleteProjectTemplate,
-  type ProjectTemplate,
-} from "@/hooks/api/build";
-import { useCan } from "@/hooks/api/access";
-import { usePageState } from "@/hooks/api/use-page-state";
 import { TemplateCard } from "@/features/build/templates/template-card";
 import { CreateTemplateSheet } from "@/features/build/templates/create-template-sheet";
 import { ApplyTemplateDialog } from "@/features/build/templates/apply-template-dialog";
-import { getErrorMessage } from "@/lib/get-error-message";
+import { BUILD_FILTER_ALL } from "@/features/build/shared/use-build-list-filters";
+import { BuildListToolbar } from "@/features/build/shared/build-list-toolbar";
+import { BuildFilterSelect } from "@/features/build/shared/build-filter-select";
+import { TemplatesGridSkeleton } from "./templates-grid-skeleton";
 import {
   PmPageShell,
   PmSection,
   PmStaggerList,
-  PM_FILL_PANEL,
-  PM_PANEL,
+  CONTENT_FILL_PANEL,
 } from "@/components/pm-chrome";
-import { cn } from "@/lib/utils";
-
-function NewTemplateButton({ onClick }: { onClick: () => void }) {
-  const { iconRef, hoverHandlers } = useAnimatedIcon();
-  return (
-    <Button size="sm" onClick={onClick} {...hoverHandlers}>
-      <PlusIcon ref={iconRef} size={14} className="mr-1" /> New Template
-    </Button>
-  );
-}
-
-function TemplatesGridSkeleton() {
-  return (
-    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-      {Array.from({ length: 9 }).map((_, i) => (
-        <div key={i} className={cn(PM_PANEL, "space-y-3 p-4")}>
-          <div className="flex items-start justify-between gap-2">
-            <div className="space-y-1.5">
-              <Skeleton className="h-4 w-32" />
-              <Skeleton className="h-3 w-48" />
-            </div>
-            <Skeleton className="h-5 w-16 rounded-full" />
-          </div>
-          <Skeleton className="h-3 w-full" />
-          <Skeleton className="h-3 w-full" />
-          <Skeleton className="h-3 w-3/4" />
-          <div className="flex gap-2 pt-1">
-            <Skeleton className="flex-1" />
-            <Skeleton className="h-8 w-8" />
-          </div>
-        </div>
-      ))}
-    </div>
-  );
-}
+import { useBuildTemplatesPage } from "./use-build-templates-page";
+import { TEMPLATE_CATEGORY_OPTIONS } from "./template-categories";
 
 export function BuildTemplatesPage() {
-  const canManage = useCan("build:manage");
-  const { data: templates, isLoading, isError, error, refetch } = useProjectTemplates();
-  const deleteTemplate = useDeleteProjectTemplate();
-  const [createOpen, setCreateOpen] = useState(false);
-  const [applyTarget, setApplyTarget] = useState<ProjectTemplate | null>(null);
-  const [deleteTarget, setDeleteTarget] = useState<ProjectTemplate | null>(null);
-
-  const pageState = usePageState({
-    permission: "build:view",
-    isLoading,
-    isError,
-    error,
-  });
-
-  const handleOpenCreate = useCallback(() => setCreateOpen(true), []);
-  const handleCloseCreate = useCallback(() => setCreateOpen(false), []);
-  const handleApplyTarget = useCallback((t: ProjectTemplate) => setApplyTarget(t), []);
-  const handleCloseApply = useCallback(() => setApplyTarget(null), []);
-  const handleDeleteTarget = useCallback((t: ProjectTemplate) => setDeleteTarget(t), []);
-
-  function handleDeleteDialogChange(open: boolean) {
-    if (!open) setDeleteTarget(null);
-  }
-
-  const handleDelete = useCallback(() => {
-    if (!deleteTarget) return;
-    deleteTemplate.mutate(deleteTarget.id, {
-      onSuccess: () => {
-        toast.success("Template deleted");
-        setDeleteTarget(null);
-      },
-      onError: (e) => toast.error(getErrorMessage(e)),
-    });
-  }, [deleteTarget, deleteTemplate]);
-
-  function handleRetry() {
-    void refetch();
-  }
+  const {
+    canManage,
+    isOnline,
+    searchRef,
+    listFilters,
+    categoryFilter,
+    sortFilter,
+    searchDisplay,
+    hasNextPage,
+    isFetching,
+    isFetchingNextPage,
+    templates,
+    isFiltered,
+    pageState,
+    createOpen,
+    applyTarget,
+    deleteTarget,
+    handleOpenCreate,
+    handleCloseCreate,
+    handleApplyTarget,
+    handleCloseApply,
+    handleDeleteTarget,
+    handleCategoryChange,
+    handleSortChange,
+    handleLoadMore,
+    handleDeleteDialogChange,
+    handleDelete,
+    handleRetry,
+    isDeleting,
+  } = useBuildTemplatesPage();
 
   if (pageState.kind === "loading") {
     return (
@@ -148,35 +100,130 @@ export function BuildTemplatesPage() {
       <PageWrapper
         title="Templates"
         subtitle="Reusable project structures to bootstrap new work"
-        actions={canManage ? <NewTemplateButton onClick={handleOpenCreate} /> : undefined}
+        actions={canManage ? (
+          <AnimatedIconButton type="button" size="sm" className="min-h-11 sm:min-h-8" icon={PlusIcon} iconClassName="mr-1" onClick={handleOpenCreate}>
+            New Template
+          </AnimatedIconButton>
+        ) : undefined}
+        filters={
+          <BuildListToolbar
+            search={{
+              value: searchDisplay,
+              onValueChange: listFilters.setSearch,
+              placeholder: "Search templates…",
+              label: "Search templates",
+              inputRef: searchRef,
+            }}
+            filters={[
+              {
+                id: "category",
+                label: "Category",
+                active: listFilters.isActive("category"),
+                control: (
+                  <BuildFilterSelect
+                    label="Category"
+                    value={categoryFilter}
+                    onValueChange={handleCategoryChange}
+                    options={[
+                      { value: BUILD_FILTER_ALL, label: "All categories" },
+                      ...TEMPLATE_CATEGORY_OPTIONS,
+                    ]}
+                  />
+                ),
+              },
+              {
+                id: "sort",
+                label: "Sort",
+                active: listFilters.isActive("sort"),
+                control: (
+                  <BuildFilterSelect
+                    label="Sort"
+                    value={sortFilter === "newest" ? BUILD_FILTER_ALL : sortFilter}
+                    onValueChange={handleSortChange}
+                    options={[
+                      { value: BUILD_FILTER_ALL, label: "Newest first" },
+                      { value: "name", label: "A – Z" },
+                    ]}
+                  />
+                ),
+              },
+            ]}
+            onClearAll={listFilters.clearAll}
+            collapseActionsOnSearchFocus
+          />
+        }
       >
         <PmPageShell>
           <PmSection index={0} className="flex min-h-0 flex-1 flex-col">
-            {templates && templates.length > 0 ? (
-              <PmStaggerList
-                className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3"
-                role="list"
-                aria-label="Project templates"
+            <div
+              className="flex min-h-0 flex-1 flex-col"
+              aria-busy={isFetching || undefined}
+            >
+              <span className="sr-only" aria-live="polite">
+                {isFetching ? "Updating templates" : `${templates.length} templates shown`}
+              </span>
+            {!isOnline && templates.length > 0 ? (
+              <div
+                className="mb-3 flex shrink-0 items-center gap-2 rounded-md border border-border bg-muted/40 px-3 py-2"
+                role="status"
               >
-                {templates.map((t) => (
-                  <div key={t.id} role="listitem">
-                    <TemplateCard
-                      template={t}
-                      onApply={handleApplyTarget}
-                      onDelete={handleDeleteTarget}
-                    />
-                  </div>
-                ))}
-              </PmStaggerList>
+                <WifiOff className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden="true" />
+                <p className="text-xs text-muted-foreground">
+                  You&apos;re offline — these templates may be out of date.
+                </p>
+              </div>
+            ) : null}
+              {templates.length > 0 ? (
+              <>
+                <PmStaggerList
+                  className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3"
+                  role="list"
+                  aria-label="Project templates"
+                >
+                  {templates.map((t) => (
+                    <div key={t.id} role="listitem">
+                      <TemplateCard
+                        template={t}
+                        canManage={canManage}
+                        onApply={handleApplyTarget}
+                        onDelete={handleDeleteTarget}
+                      />
+                    </div>
+                  ))}
+                </PmStaggerList>
+                <InfiniteScrollSentinel
+                  hasNextPage={!!hasNextPage}
+                  isFetchingNextPage={isFetchingNextPage}
+                  onLoadMore={handleLoadMore}
+                  label="Load more templates"
+                />
+              </>
+            ) : !isOnline ? (
+              <EmptyState
+                className={CONTENT_FILL_PANEL}
+                illustrationPreset="projects"
+                title="You are offline"
+                description="Showing cached data. Reconnect to see the latest templates."
+              />
+            ) : isFiltered ? (
+              <EmptyState
+                className={CONTENT_FILL_PANEL}
+                illustrationPreset="projects"
+                filtersActive
+                filteredTitle="No templates match your search or filters"
+                description="Try another search or clear the active filters."
+                onClearFilters={listFilters.clearAll}
+              />
             ) : (
               <EmptyState
-                className={PM_FILL_PANEL}
+                className={CONTENT_FILL_PANEL}
                 illustration={<EmptyProjectsIllustration className="h-32 w-32" />}
                 title="No templates yet"
                 description="Create a reusable project structure to bootstrap new projects quickly."
                 action={canManage ? { label: "Create your first template", onClick: handleOpenCreate } : undefined}
               />
-            )}
+              )}
+            </div>
           </PmSection>
         </PmPageShell>
 
@@ -193,6 +240,7 @@ export function BuildTemplatesPage() {
           description={`"${deleteTarget?.name ?? ""}" will be permanently deleted. Projects created from it will not be affected.`}
           confirmLabel="Delete"
           destructive
+          isPending={isDeleting}
           onConfirm={handleDelete}
         />
       </PageWrapper>

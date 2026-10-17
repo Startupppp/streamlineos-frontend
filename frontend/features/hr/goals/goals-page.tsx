@@ -8,6 +8,8 @@ import { PageWrapper } from "@/components/ui/page-wrapper";
 import { LoadingState } from "@/components/shared/loading-state";
 import { PageState } from "@/components/shared/page-state";
 import { usePageState } from "@/hooks/api/use-page-state";
+import { useCan } from "@/hooks/api/access";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
 import { useHrGoals, useCreateHrGoal, useUpdateGoal, type HrGoal } from "@/hooks/api/hr";
@@ -43,6 +45,10 @@ export function GoalsPage() {
   const createGoal = useCreateHrGoal();
   const updateGoal = useUpdateGoal();
   const pageState = usePageState({ permission: "hr:performance:view", isLoading, isError, error });
+  const canCreate = useCan("hr:performance:manage");
+  // PATCH /hr/performance/goals/:id is `hr:performance:view` (performance.controller.ts:109).
+  const canUpdate = useCan("hr:performance:view");
+  const editProgress = canUpdate ? handleOpenProgress : undefined;
 
   const filtered = goals.filter(
     (g) => statusFilter === "ALL" || g.status === statusFilter,
@@ -111,8 +117,8 @@ export function GoalsPage() {
       toast.success("Goal created");
       setSheetOpen(false);
       setForm(EMPTY_FORM);
-    } catch {
-      toast.error("Failed to create goal");
+    } catch (err) {
+      toast.error(getErrorMessage(err));
     }
   }
 
@@ -130,8 +136,8 @@ export function GoalsPage() {
       });
       toast.success("Progress updated");
       setProgressGoal(null);
-    } catch {
-      toast.error("Failed to update progress");
+    } catch (err) {
+      toast.error(getErrorMessage(err));
     }
   }
 
@@ -180,7 +186,7 @@ export function GoalsPage() {
       title="Goals & OKRs"
       subtitle="Track your personal and team goals"
       actions={
-        <CreateGoalSheet
+        canCreate && <CreateGoalSheet
           open={sheetOpen}
           onOpenChange={setSheetOpen}
           form={form}
@@ -203,7 +209,7 @@ export function GoalsPage() {
             All Goals ({filtered.length})
           </TabsTrigger>
           <TabsTrigger value="mine">
-            My Goals ({myGoals.length})
+            Open ({myGoals.length})
           </TabsTrigger>
           <TabsTrigger value="completed">
             Completed ({completed.length})
@@ -227,19 +233,19 @@ export function GoalsPage() {
 
         <AnimatePresence mode="wait">
           <TabsContent value="all" className="mt-0 flex min-h-0 flex-1 flex-col">
-            <GoalGrid goals={filtered} onEditProgress={handleOpenProgress} />
+            <GoalGrid goals={filtered} onEditProgress={editProgress} />
           </TabsContent>
           <TabsContent
             value="mine"
             className="mt-0 flex min-h-0 flex-1 flex-col"
           >
-            <GoalGrid goals={myGoals} onEditProgress={handleOpenProgress} />
+            <GoalGrid goals={myGoals} onEditProgress={editProgress} />
           </TabsContent>
           <TabsContent
             value="completed"
             className="mt-0 flex min-h-0 flex-1 flex-col"
           >
-            <GoalGrid goals={completed} onEditProgress={handleOpenProgress} />
+            <GoalGrid goals={completed} onEditProgress={editProgress} />
           </TabsContent>
         </AnimatePresence>
       </Tabs>

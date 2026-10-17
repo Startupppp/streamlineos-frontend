@@ -15,7 +15,9 @@ import {
   Megaphone,
   BellDot,
   LifeBuoy,
+  LogOut,
   Users,
+  Sun,
 } from "lucide-react";
 import type { NavGroup } from "./sidebar-nav-types";
 
@@ -44,13 +46,18 @@ export const HOME_NAV_GROUPS: NavGroup[] = [
         label: "Calendar",
         href: "/calendar",
         icon: CalendarDays,
-        inactivePrefixes: ["/calendar/settings"],
+        inactivePrefixes: ["/calendar/settings", "/calendar/resource-approvals"],
+      },
+      {
+        label: "Calendar resource approvals",
+        href: "/calendar/resource-approvals",
+        icon: ListChecks,
+        requiredPermission: ["calendar:admin:manage", "hr:assets:manage", "inventory:warehouses:manage"],
       },
       {
         label: "Chat",
         href: "/chat",
         icon: MessageSquareText,
-        inactivePrefixes: ["/chat/settings"],
       },
     ],
   },
@@ -59,6 +66,12 @@ export const HOME_NAV_GROUPS: NavGroup[] = [
     product: "home",
     routes: [
       {
+        label: "My Day",
+        href: "/me",
+        icon: Sun,
+        exact: true,
+      },
+      {
         label: "My Team",
         href: "/me/team",
         icon: Users,
@@ -66,22 +79,26 @@ export const HOME_NAV_GROUPS: NavGroup[] = [
       {
         label: "Time Off",
         href: "/me/time-off",
+        modulesAny: ["hrms"],
         icon: CalendarCheck,
         badge: "leaves" as const,
       },
       {
         label: "Attendance",
         href: "/me/attendance",
+        modulesAny: ["hrms"],
         icon: Clock,
       },
       {
         label: "Expenses",
         href: "/me/expenses",
+        modulesAny: ["hrms"],
         icon: Receipt,
       },
       {
         label: "Pay",
         href: "/me/pay",
+        modulesAny: ["payroll"],
         icon: Wallet,
       },
       {
@@ -92,22 +109,32 @@ export const HOME_NAV_GROUPS: NavGroup[] = [
       {
         label: "Onboarding Tasks",
         href: "/me/onboarding",
+        modulesAny: ["hrms"],
         icon: ListChecks,
       },
       {
         label: "Recruitment",
         href: "/me/recruitment",
+        modulesAny: ["hrms"],
         icon: Video,
       },
       {
         label: "Job Openings",
         href: "/me/job-openings",
+        modulesAny: ["hrms"],
         icon: Briefcase,
       },
       {
         label: "My Referrals",
         href: "/me/referrals",
+        modulesAny: ["hrms"],
         icon: Contact2,
+      },
+      {
+        label: "Resignation",
+        href: "/me/resignation",
+        modulesAny: ["hrms"],
+        icon: LogOut,
       },
       {
         label: "Support",
@@ -123,6 +150,7 @@ export const HOME_NAV_GROUPS: NavGroup[] = [
       {
         label: "Announcements",
         href: "/hr/announcements",
+        modulesAny: ["hrms"],
         icon: Megaphone,
       },
       {

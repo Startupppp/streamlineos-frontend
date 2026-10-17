@@ -6,7 +6,34 @@ import { FileText, File } from "lucide-react";
 
 export const MAX_FILES = 10;
 export const MAX_TOTAL_BYTES = 100 * 1024 * 1024;
-export const MAX_FILE_BYTES = 25 * 1024 * 1024;
+export const MAX_FILE_BYTES = 2 * 1024 * 1024;
+
+export const ALLOWED_ATTACHMENT_MIME_TYPES = new Set([
+  "image/jpeg",
+  "image/png",
+  "image/gif",
+  "image/webp",
+  "application/pdf",
+  "application/msword",
+  "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+  "application/vnd.ms-excel",
+  "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+]);
+
+export const ALLOWED_ATTACHMENT_EXTENSIONS = new Set([
+  ".jpg",
+  ".jpeg",
+  ".png",
+  ".gif",
+  ".webp",
+  ".pdf",
+  ".doc",
+  ".docx",
+  ".xls",
+  ".xlsx",
+]);
+
+export const ATTACHMENT_TYPES_LABEL = "JPG, PNG, GIF, WEBP, PDF, DOC, DOCX, XLS, XLSX";
 
 export function formatBytes(bytes: number): string {
   if (bytes < 1024) return `${bytes}B`;

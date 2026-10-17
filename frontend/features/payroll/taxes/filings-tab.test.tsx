@@ -45,6 +45,19 @@ describe("the filings tab distinguishes a failed load from no filings", () => {
     expect(refetch).toHaveBeenCalledTimes(1);
   });
 
+  it("quotes the failed call's request id under the message, so the operator can hand it to support", () => {
+    mockUsePayrollFilings.mockReturnValue({
+      data: undefined,
+      isLoading: false,
+      isError: true,
+      error: new ApiError("Internal server error", 500, "INTERNAL", { correlationId: "req_4c19de" }),
+      refetch,
+    });
+    render(<FilingsTab />);
+
+    expect(screen.getByText("req_4c19de")).toBeInTheDocument();
+  });
+
   it("still shows the empty state when no filing has been prepared", () => {
     mockUsePayrollFilings.mockReturnValue({
       data: { data: [] },

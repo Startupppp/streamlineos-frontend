@@ -1,5 +1,7 @@
 "use client";
 
+import { DatePicker } from "@/components/ui/date-picker";
+
 import { useState, useCallback } from "react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { StatCardGridSkeleton } from "@/components/ui/stat-card";
@@ -20,12 +22,12 @@ export function AiReportClient() {
   const [filters, setFilters] = useState<DateFilters>({});
   const { data, isLoading, isError, error, refetch } = useSupportAiReport(filters);
 
-  const handleDateFrom = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    setFilters((prev) => ({ ...prev, dateFrom: e.target.value || undefined }));
+  const handleDateFrom = useCallback((value: string) => {
+    setFilters((prev) => ({ ...prev, dateFrom: value || undefined }));
   }, []);
 
-  const handleDateTo = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    setFilters((prev) => ({ ...prev, dateTo: e.target.value || undefined }));
+  const handleDateTo = useCallback((value: string) => {
+    setFilters((prev) => ({ ...prev, dateTo: value || undefined }));
   }, []);
 
   const handleClear = useCallback(() => setFilters({}), []);
@@ -44,20 +46,26 @@ export function AiReportClient() {
       <div className="flex flex-1 min-h-0 flex-col gap-4">
         <div className={FILTER_TOOLBAR_ROW}>
           <label htmlFor="ai-report-date-from" className="text-xs text-muted-foreground shrink-0">From</label>
-          <input
+          <DatePicker
             id="ai-report-date-from"
-            type="date"
+            ariaLabel="From"
             value={filters.dateFrom ?? ""}
             onChange={handleDateFrom}
-            className="h-9 rounded-md border border-input bg-card px-2 text-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+            placeholder="From"
+            dateFormat="dd MMM yyyy"
+            clearable
+            className="w-40"
           />
           <label htmlFor="ai-report-date-to" className="text-xs text-muted-foreground shrink-0">To</label>
-          <input
+          <DatePicker
             id="ai-report-date-to"
-            type="date"
+            ariaLabel="To"
             value={filters.dateTo ?? ""}
             onChange={handleDateTo}
-            className="h-9 rounded-md border border-input bg-card px-2 text-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+            placeholder="To"
+            dateFormat="dd MMM yyyy"
+            clearable
+            className="w-40"
           />
           {(filters.dateFrom || filters.dateTo) && (
             <Button variant="ghost" size="sm" className="h-9 text-sm" onClick={handleClear}>

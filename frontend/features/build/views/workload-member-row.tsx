@@ -1,8 +1,8 @@
-﻿"use client";
+"use client";
 
 import { memo } from "react";
 import { motion } from "framer-motion";
-import { format, isSameDay, parseISO } from "date-fns";
+import { isSameDay } from "date-fns";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   Tooltip,
@@ -10,15 +10,11 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { ChevronDown, ChevronRight, ExternalLink } from "lucide-react";
-import Link from "next/link";
+import { ChevronDown, ChevronRight } from "lucide-react";
 import { cn, resolveImageUrl } from "@/lib/utils";
 import type { KanbanTicket } from "../shared/types";
 import { getUserDisplayName, getUserInitials } from "@/lib/person-display";
-import { stopEvent, InlineAssignee } from "./card-inline-fields";
-import { TicketQuickActions } from "./ticket-quick-actions";
-import { getTicketDetailHref } from "@/components/shared/format-ticket-key";
-import { TruncatedText } from "@/components/ui/truncated-text";
+import { WorkloadTicketList } from "./workload-ticket-list";
 import { isMemberOverCapacity, type MemberCapacityData } from "./workload-types";
 
 interface WorkloadMember {
@@ -40,17 +36,34 @@ interface WorkloadMemberRowProps {
   projectId: number;
   projectKey?: string | null;
   expanded: boolean;
+  focused?: boolean;
   motionDelay: number;
   reducedMotion: boolean | null;
   onToggle: (id: string) => void;
   capacityData?: MemberCapacityData;
 }
 
+function formatEstimateHours(capacityData: MemberCapacityData | undefined): string {
+  if (capacityData == null || capacityData.estimateHours === null) return "—";
+  return `${capacityData.estimateHours}h`;
+}
+
+function formatAllocationPercent(capacityData: MemberCapacityData | undefined): string {
+  if (capacityData == null || capacityData.allocationPercent === null) return "—";
+  return `${capacityData.allocationPercent}%`;
+}
+
+function formatVarianceHours(capacityData: MemberCapacityData | undefined): string {
+  if (capacityData == null || capacityData.varianceHours === null) return "—";
+  const variance = capacityData.varianceHours;
+  return variance > 0 ? `+${variance}h` : `${variance}h`;
+}
+
 function getUtilizationClass(count: number): string {
   if (count === 0) return "bg-muted";
-  if (count <= 2) return "bg-status-success-surface text-status-success-ink";
-  if (count <= 4) return "bg-status-warning-surface text-status-warning-ink";
-  return "bg-status-danger-surface text-status-danger-ink";
+  if (count <= 2) return "bg-status-success-surface text-status-success-ink-strong";
+  if (count <= 4) return "bg-status-warning-surface text-status-warning-ink-strong";
+  return "bg-status-danger-surface text-status-danger-ink-strong";
 }
 
 export const WorkloadMemberRow = memo(function WorkloadMemberRow({
@@ -64,6 +77,7 @@ export const WorkloadMemberRow = memo(function WorkloadMemberRow({
   projectId,
   projectKey,
   expanded,
+  focused = false,
   motionDelay,
   reducedMotion,
   onToggle,
@@ -79,9 +93,11 @@ export const WorkloadMemberRow = memo(function WorkloadMemberRow({
       transition={{ delay: motionDelay, duration: 0.2, ease: "easeOut" }}
     >
       <div
+        data-testid="workload-member-row"
         className={cn(
           "flex items-center border-b cursor-pointer hover:bg-muted/30 transition-colors",
           expanded && "bg-muted/40",
+          focused && "ring-2 ring-inset ring-primary/40",
           overCapacity && "border-l-2 border-l-red-400",
         )}
         role="button"
@@ -114,7 +130,7 @@ export const WorkloadMemberRow = memo(function WorkloadMemberRow({
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <span className="ml-auto h-4 w-4 rounded-full bg-status-danger-surface text-status-danger-ink text-micro flex items-center justify-center font-bold shrink-0">
+                  <span className="ml-auto h-4 w-4 rounded-full bg-status-danger-surface text-status-danger-ink-strong text-micro flex items-center justify-center font-medium shrink-0">
                     {overdue}
                   </span>
                 </TooltipTrigger>
@@ -132,8 +148,8 @@ export const WorkloadMemberRow = memo(function WorkloadMemberRow({
               <TooltipTrigger asChild>
                 <span
                   className={cn(
-                    "text-sm font-semibold",
-                    overCapacity ? "text-status-danger-ink" : total > 3 ? "text-status-warning-ink" : "text-foreground",
+                    "text-sm font-medium",
+                    overCapacity ? "text-status-danger-ink-strong" : total > 3 ? "text-status-warning-ink-strong" : "text-foreground",
                   )}
                 >
                   {total}
@@ -158,6 +174,55 @@ export const WorkloadMemberRow = memo(function WorkloadMemberRow({
           </span>
         </div>
 
+        <div className="w-20 shrink-0 px-2 py-3 text-center">
+          <span className="text-sm tabular-nums text-muted-foreground">
+            {capacityData != null ? `${capacityData.leaveDays}d` : "—"}
+          </span>
+        </div>
+
+        <div className="w-24 shrink-0 px-2 py-3 text-center">
+          <span
+            data-testid="workload-allocation"
+            className={cn(
+              "text-sm tabular-nums",
+              capacityData?.allocationPercent != null && capacityData.allocationPercent > 100
+                ? "text-status-danger-ink-strong font-medium"
+                : "text-muted-foreground",
+            )}
+          >
+            {formatAllocationPercent(capacityData)}
+          </span>
+        </div>
+
+        <div className="w-24 shrink-0 px-2 py-3 text-center">
+          <span
+            data-testid="workload-estimate"
+            className="text-sm tabular-nums text-muted-foreground"
+          >
+            {formatEstimateHours(capacityData)}
+          </span>
+        </div>
+
+        <div className="w-20 shrink-0 px-2 py-3 text-center">
+          <span className="text-sm tabular-nums text-muted-foreground">
+            {capacityData != null ? `${capacityData.loggedHours}h` : "—"}
+          </span>
+        </div>
+
+        <div className="w-24 shrink-0 px-2 py-3 text-center">
+          <span
+            data-testid="workload-variance"
+            className={cn(
+              "text-sm tabular-nums",
+              capacityData?.varianceHours != null && capacityData.varianceHours > 0
+                ? "text-status-danger-ink-strong font-medium"
+                : "text-muted-foreground",
+            )}
+          >
+            {formatVarianceHours(capacityData)}
+          </span>
+        </div>
+
         {ticketsByDay.map(({ count }, i) => {
           const day = days[i];
           return (
@@ -171,7 +236,7 @@ export const WorkloadMemberRow = memo(function WorkloadMemberRow({
             {count > 0 && (
               <span
                 className={cn(
-                  "h-5 w-5 rounded text-micro font-semibold flex items-center justify-center",
+                  "h-5 w-5 rounded text-micro font-medium flex items-center justify-center",
                   getUtilizationClass(count),
                 )}
               >
@@ -183,78 +248,13 @@ export const WorkloadMemberRow = memo(function WorkloadMemberRow({
         })}
       </div>
 
-      {memberTickets.length > 0 && (
-        <div
-          className={cn(
-            "grid transition-[grid-template-rows] ease-in-out",
-            reducedMotion ? "duration-0" : "duration-200",
-            expanded ? "grid-rows-[1fr]" : "grid-rows-[0fr]",
-          )}
-        >
-          <div className="overflow-hidden bg-muted/20">
-            {memberTickets.slice(0, 10).map((ticket) => (
-              <div
-                key={ticket.id}
-                className="group/workload flex min-w-0 items-center gap-2 border-b border-border/40 px-8 py-2"
-              >
-                <span className="w-12 shrink-0 font-mono text-xs text-muted-foreground">
-                  #{ticket.ticketNumber}
-                </span>
-                <TruncatedText text={ticket.title} className="min-w-0 flex-1 text-xs text-foreground" />
-                {ticket.points != null && (
-                  <span className="shrink-0 text-micro tabular-nums text-muted-foreground">
-                    {ticket.points}pt
-                  </span>
-                )}
-                {ticket.dueDate && (
-                  <span className="text-micro text-muted-foreground shrink-0">
-                    Due {format(parseISO(ticket.dueDate), "MMM d")}
-                  </span>
-                )}
-                <Link
-                  href={
-                    ticket.ticketNumber != null
-                      ? getTicketDetailHref(projectId, projectKey, ticket.ticketNumber)
-                      : `/build/${projectId}`
-                  }
-                  onMouseDown={stopEvent}
-                  onClick={stopEvent}
-                  className="shrink-0 opacity-0 group-hover/workload:opacity-100 transition-opacity p-1 rounded hover:bg-muted"
-                  aria-label="Open ticket"
-                >
-                  <ExternalLink className="h-3 w-3 text-muted-foreground" />
-                </Link>
-                <span
-                  onMouseDown={stopEvent}
-                  onClick={stopEvent}
-                  onKeyDown={stopEvent}
-                  className="shrink-0 opacity-0 group-hover/workload:opacity-100 transition-opacity"
-                >
-                  <InlineAssignee
-                    ticketId={ticket.id}
-                    projectId={projectId}
-                    currentAssigneeId={ticket.assigneeId}
-                    assignee={ticket.assignee}
-                  />
-                </span>
-                <span
-                  onMouseDown={stopEvent}
-                  onClick={stopEvent}
-                  onKeyDown={stopEvent}
-                  className="shrink-0 opacity-0 group-hover/workload:opacity-100 transition-opacity"
-                >
-                  <TicketQuickActions ticketId={ticket.id} projectId={projectId} />
-                </span>
-              </div>
-            ))}
-            {memberTickets.length > 10 && (
-              <div className="px-8 py-1.5 text-xs text-muted-foreground">
-                +{memberTickets.length - 10} more tickets
-              </div>
-            )}
-          </div>
-        </div>
-      )}
+      <WorkloadTicketList
+        memberTickets={memberTickets}
+        projectId={projectId}
+        projectKey={projectKey}
+        expanded={expanded}
+        reducedMotion={reducedMotion}
+      />
     </motion.div>
   );
 });

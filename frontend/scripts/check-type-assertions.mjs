@@ -130,7 +130,6 @@ const DOUBLE_CAST_LEDGER = new Map([
   // -- external: a browser global the DOM lib types nominally --
   ["feedbucket-widget/src/network-capture.ts", { count: 1, seam: "external", test: "scripts/__tests__/assertion-seam-contracts.test.ts::installs a constructor that is still an XMLHttpRequest, and installs it once", invariant: "installs a PatchedXHR subclass over `window.XMLHttpRequest`. `typeof XMLHttpRequest` is the DOM lib's constructor type including its static members, which a locally-declared subclass never satisfies nominally even when it satisfies it structurally. Monkey-patching a browser global is outside the type system by construction; the patch is feature-detected and the original constructor is retained for pass-through." }],
 
-
 ]);
 
 /**
@@ -168,7 +167,6 @@ const DOUBLE_CAST_LEDGER = new Map([
  *       fix above and is 0 now; no ledger, no permitted count.
  */
 const RAW_JSON_LEDGER = new Map([
-  ["features/build/forms/public-form-api.ts", { count: 1, seam: "external", test: "features/build/forms/public-form-envelope.test.ts::fetchPublicForm keeps the backend message on a failure", invariant: "the error branch only: a failed public-form response is read for its `message` before being thrown as an Error. Read as `Record<string, unknown>` and every field is typeof-guarded before use. The SUCCESS branch of this file goes through `parseApiResponse` with `publicFormDefinitionContract`, which is what unwraps the envelope." }],
   ["features/build/intake/public-intake-api.ts", { count: 1, seam: "external", test: "scripts/__tests__/assertion-seam-contracts.test.ts::(negative) falls back to the generic message when the body's message is not a string or a string array", invariant: "the error branch only, same shape as public-form-api.ts: `Record<string, unknown>` with a typeof guard on every read. The success branch goes through `parseApiResponse` with `intakeSubmitResponseContract`." }],
 ]);
 
@@ -263,7 +261,18 @@ const CEILING_LEDGER_PATH = fileURLToPath(new URL("./assertion-ceiling-ledger.js
 // assertions when `unwrapBackend<T>` stopped taking a type parameter and its two
 // call sites narrowed through Zod instead. The tree really is one lower, so the
 // tripwire moves with it rather than reporting a broken counter.
-const CEILING_FLOOR_TOTAL = 498;
+// Lowered 499 -> 458 on 2026-09-26: 41 assertions narrowed at the use site
+// across lib/, hooks/api/, features/hr, features/recruitment, notifications,
+// timesheets, inventory and the Plate editor -- `ElementApi.isElementList` and
+// `ElementApi.isElement` replaced the casts in the value converter, and the
+// eight `as Partial<TElement>` in the combobox were redundant outright.
+// Lowered 458 -> 423 on 2026-09-29: 11 assertions narrowed -- `as Record<>` in
+// portals-gallery replaced with type annotation; `as ChangeEvent<HTMLInputElement>`
+// in use-board-url-state-test-harness removed by widening the hook parameter;
+// `as "view"|"comment"|"edit"` in page-grants-sheet narrowed via ACCESS_OPTIONS.find;
+// 7 `jest.requireMock() as {}` in product-scope-pages.test-harness replaced with
+// `: {}` declaration-style annotations.
+const CEILING_FLOOR_TOTAL = 403;
 
 function loadCeilingLedger() {
   try {

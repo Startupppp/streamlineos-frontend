@@ -3,33 +3,25 @@
 import { type ReactNode } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import {
-  Drawer,
-  DrawerContent,
-  DrawerHeader,
-  DrawerTitle,
-  DrawerTrigger,
-} from "@/components/ui/drawer";
 import { Command, CommandInput } from "@/components/ui/command";
-import { Button } from "@/components/ui/button";
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { ArrowLeft } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { FilterCategorySubmenu } from "./filter-category-submenu";
 import { FilterFlatSearch } from "./filter-flat-search";
 import { FilterAssigneeLeading } from "./filter-option-leading";
+import { AssigneeFilterSubmenu } from "./assignee-filter-submenu";
 import {
   FilterTriggerButton,
-  MobileFilterSearch,
   FilterCategoryList,
 } from "@/components/list-view";
-import { pmSnappy, stepSlide, stepSlideReduced } from "@/lib/motion-presets";
+import { pmSnappy } from "@/lib/motion-presets";
 import { useFilterCommandMenuState } from "./use-filter-command-menu-state";
+import { FilterCommandMenuMobile } from "./filter-command-menu-mobile";
 import type { FilterCommandMenuProps } from "./filter-command-menu-types";
 
 export type { FilterState } from "@/components/list-view";
@@ -38,6 +30,11 @@ export type { FilterCommandMenuProps } from "./filter-command-menu-types";
 export function FilterCommandMenu({
   activeFilterCount,
   defaultOpen,
+  presentation = "default",
+  simplifySingleOptionCategories = true,
+  triggerLabel = "Add filter",
+  iconOnly = false,
+  desktopIconOnly = false,
   statusItems,
   statusConfig,
   members,
@@ -90,6 +87,7 @@ export function FilterCommandMenu({
     categoryListProps,
   } = useFilterCommandMenuState({
     defaultOpen,
+    simplifySingleOptionCategories,
     assigneeLeading: resolveAssigneeLeading(),
     statusItems,
     statusConfig,
@@ -112,83 +110,30 @@ export function FilterCommandMenu({
   });
 
   if (isMobile) {
-    const slideVariants = shouldReduceMotion ? stepSlideReduced : stepSlide;
-
     return (
-      <Drawer open={open} onOpenChange={handleOpenChange}>
-        <DrawerTrigger asChild>
-          <FilterTriggerButton activeFilterCount={activeFilterCount} />
-        </DrawerTrigger>
-        <DrawerContent className="flex max-h-[min(92dvh,40rem)] flex-col gap-0 overflow-hidden rounded-t-xl border bg-card p-0 shadow-2xl">
-          <DrawerHeader className="shrink-0 border-b border-border px-3 py-3 text-left">
-            <div className="flex items-center gap-2">
-              {activeCategory && !isSearching ? (
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon"
-                  className="h-8 w-8 shrink-0"
-                  aria-label="Back to filter categories"
-                  onClick={handleBackToCategories}
-                >
-                  <ArrowLeft className="h-4 w-4" />
-                </Button>
-              ) : null}
-              <DrawerTitle className="text-sm font-semibold text-foreground">
-                {isSearching ? "Search filters" : drillTitle}
-              </DrawerTitle>
-              {activeFilterCount > 0 && !activeCategory ? (
-                <span className="ml-auto inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1.5 text-dense font-semibold text-primary-foreground">
-                  {activeFilterCount}
-                </span>
-              ) : null}
-            </div>
-          </DrawerHeader>
-
-          <div className="flex min-h-0 flex-1 flex-col touch-pan-y" {...swipeHandlers}>
-            <AnimatePresence initial={false} mode="wait" custom={navDirection}>
-              <motion.div
-                key={mobilePanelKey}
-                custom={navDirection}
-                variants={slideVariants}
-                initial="initial"
-                animate="animate"
-                exit="exit"
-                transition={pmSnappy}
-                className="flex min-h-0 flex-1 flex-col"
-              >
-                {isSearching ? (
-                  <div className="min-h-0 flex-1 overflow-hidden">
-                    <FilterFlatSearch
-                      search={search}
-                      onSearchChange={handleSearchChange}
-                      showTypeFilter={showTypeFilter}
-                      showAssigneeFilter={showAssigneeFilter}
-                      {...sharedProps}
-                    />
-                  </div>
-                ) : activeCategory ? (
-                  <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain pb-[max(0.75rem,env(safe-area-inset-bottom))]">
-                    <FilterCategorySubmenu
-                      category={activeCategory}
-                      onClose={handleBackToCategories}
-                      showTitle={false}
-                      className="w-full min-w-0"
-                      listClassName="max-h-none overflow-visible p-1.5"
-                      {...sharedProps}
-                    />
-                  </div>
-                ) : (
-                  <div className="flex min-h-0 flex-1 flex-col pb-[max(0.75rem,env(safe-area-inset-bottom))]">
-                    <MobileFilterSearch value={search} onValueChange={handleSearchChange} />
-                    <FilterCategoryList {...categoryListProps} dense={false} />
-                  </div>
-                )}
-              </motion.div>
-            </AnimatePresence>
-          </div>
-        </DrawerContent>
-      </Drawer>
+      <FilterCommandMenuMobile
+        activeFilterCount={activeFilterCount}
+        triggerLabel={triggerLabel}
+        presentation={presentation}
+        iconOnly={iconOnly}
+        desktopIconOnly={desktopIconOnly}
+        showTypeFilter={showTypeFilter}
+        showAssigneeFilter={showAssigneeFilter}
+        open={open}
+        handleOpenChange={handleOpenChange}
+        activeCategory={activeCategory}
+        isSearching={isSearching}
+        drillTitle={drillTitle}
+        shouldReduceMotion={shouldReduceMotion}
+        navDirection={navDirection}
+        mobilePanelKey={mobilePanelKey}
+        swipeHandlers={swipeHandlers}
+        search={search}
+        handleSearchChange={handleSearchChange}
+        sharedProps={sharedProps}
+        categoryListProps={categoryListProps}
+        handleBackToCategories={handleBackToCategories}
+      />
     );
   }
 
@@ -198,11 +143,26 @@ export function FilterCommandMenu({
         <Tooltip>
           <TooltipTrigger asChild>
             <PopoverTrigger asChild>
-              <FilterTriggerButton activeFilterCount={activeFilterCount} />
+              <FilterTriggerButton
+                activeFilterCount={activeFilterCount}
+                label={triggerLabel}
+                showLabelOnMobile={presentation === "all-work"}
+                iconOnly={iconOnly}
+                desktopIconOnly={desktopIconOnly}
+                className={cn(
+                  presentation === "all-work" &&
+                    !iconOnly &&
+                    (desktopIconOnly
+                      ? "h-9 w-full flex-1 justify-center rounded-lg px-3 max-lg:!w-full max-lg:!flex-1 lg:size-9 lg:min-w-0 lg:flex-none lg:px-0"
+                      : "h-9 w-auto min-w-28 rounded-lg border-border/80 bg-muted/45 px-3 font-medium shadow-sm hover:border-primary/35 hover:bg-muted/70"),
+                )}
+              />
             </PopoverTrigger>
           </TooltipTrigger>
           <TooltipContent side="bottom" className="text-xs md:hidden">
-            {activeFilterCount > 0 ? `Add filter (${activeFilterCount} active)` : "Add filter"}
+            {activeFilterCount > 0
+              ? `${triggerLabel} (${activeFilterCount} active)`
+              : triggerLabel}
           </TooltipContent>
         </Tooltip>
       </TooltipProvider>
@@ -210,7 +170,11 @@ export function FilterCommandMenu({
         align="start"
         sideOffset={8}
         collisionPadding={16}
-        className="w-auto max-w-[min(560px,var(--radix-popover-content-available-width))] overflow-hidden rounded-xl border border-border bg-card p-0 shadow-lg"
+        className={cn(
+          "w-auto max-w-[min(560px,var(--radix-popover-content-available-width))] overflow-hidden rounded-xl border border-border bg-card p-0 shadow-lg",
+          presentation === "all-work" &&
+            "w-[min(32rem,calc(100vw-2rem))] max-w-[min(32rem,var(--radix-popover-content-available-width))] rounded-xl border-border/80 shadow-xl",
+        )}
       >
         {isSearching ? (
           <FilterFlatSearch
@@ -221,8 +185,13 @@ export function FilterCommandMenu({
             {...sharedProps}
           />
         ) : (
-          <div className="flex max-h-[min(480px,var(--radix-popover-content-available-height))]">
-            <div className="flex w-[200px] shrink-0 flex-col border-r border-border">
+          <div className="flex max-h-[min(420px,var(--radix-popover-content-available-height))] min-w-0">
+            <div
+              className={cn(
+                "flex w-[200px] shrink-0 flex-col border-r border-border",
+                presentation === "all-work" && "w-44 bg-muted/15",
+              )}
+            >
               <Command
                 shouldFilter={false}
                 className={cn(
@@ -236,6 +205,7 @@ export function FilterCommandMenu({
               >
                 <CommandInput
                   placeholder="Filter by…"
+                  aria-label="Search filter options"
                   className="h-10 text-sm"
                   value={search}
                   onValueChange={handleSearchChange}
@@ -254,18 +224,28 @@ export function FilterCommandMenu({
                   animate={shouldReduceMotion ? { opacity: 1 } : { opacity: 1, x: 0 }}
                   exit={shouldReduceMotion ? { opacity: 0 } : { opacity: 0, x: -4 }}
                   transition={pmSnappy}
-                  className="min-w-0 overflow-y-auto bg-muted/15 outline-none"
+                  className="min-w-0 flex-1 overflow-y-auto bg-card outline-none"
                 >
-                  <FilterCategorySubmenu
-                    category={resolvedCategory}
-                    onClose={handleSubmenuClose}
-                    showTitle
-                    className="w-[280px]"
-                    {...sharedProps}
-                  />
+                  {resolvedCategory === "assignee" ? (
+                    <AssigneeFilterSubmenu
+                      selectedAssignees={sharedProps.selectedAssignees}
+                      onToggleAssignee={sharedProps.onToggleAssignee}
+                      onClose={handleSubmenuClose}
+                      showTitle
+                      className={cn("w-[280px]", presentation === "all-work" && "w-full min-w-0")}
+                    />
+                  ) : (
+                    <FilterCategorySubmenu
+                      category={resolvedCategory}
+                      onClose={handleSubmenuClose}
+                      showTitle
+                      className={cn("w-[280px]", presentation === "all-work" && "w-full min-w-0")}
+                      {...sharedProps}
+                    />
+                  )}
                 </motion.div>
               ) : (
-                <div className="flex w-[280px] items-center justify-center px-6 py-10 text-center text-sm text-muted-foreground">
+                <div className="flex min-w-[280px] flex-1 items-center justify-center px-6 py-10 text-center text-sm text-muted-foreground">
                   Select a filter to refine tickets.
                 </div>
               )}

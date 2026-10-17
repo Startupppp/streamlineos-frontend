@@ -11,7 +11,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { AiFieldTrigger, AiInlinePreview, type AiInlineSession } from "@/components/ai";
 import { AttachmentPreview } from "./ticket-attachment-preview";
 import { TicketRelatedLinksEditor, type RelatedLinkDraft } from "./ticket-related-links-editor";
-import type { CreateTicketFormValues } from "./use-create-ticket-form";
+import type { CreateTicketFormValues } from "./ticket-create-model";
 
 const TiptapEditorDynamic = dynamic(
   () =>
@@ -135,7 +135,7 @@ export function TicketDialogDescriptionSection({
 
       {(showLinksEditor || relatedLinks.length > 0) && (
         <div className="mt-3">
-          <p className="mb-1.5 text-dense font-medium text-muted-foreground">
+          <p className="mb-1.5 text-dense font-normal text-muted-foreground">
             Related links
           </p>
           <TicketRelatedLinksEditor

@@ -8,6 +8,13 @@ import {
   DrawerDescription,
   DrawerTitle,
 } from "@/components/ui/drawer";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 
 /**
  * S15 found that every controlled `Dialog` and `Sheet` in the product dropped
@@ -69,6 +76,21 @@ function DrawerHarness() {
   );
 }
 
+function DialogHarness() {
+  const [open, setOpen] = useState(false);
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <button type="button">Open dialog</button>
+      </DialogTrigger>
+      <DialogContent>
+        <DialogTitle>Conversation action</DialogTitle>
+        <DialogDescription>Complete a chat action.</DialogDescription>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 describe("a confirmation opened from a row action returns focus to it", () => {
   it("restores focus to the opener when dismissed with Escape", async () => {
     const user = userEvent.setup();
@@ -116,5 +138,19 @@ describe("a drawer opened from a filter button returns focus to it", () => {
     await user.keyboard("{Escape}");
     await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
     await waitFor(() => expect(document.activeElement).toBe(opener));
+  });
+});
+
+describe("a responsive dialog always exposes an explicit close action", () => {
+  it("renders a labelled close button without a responsive hidden utility", async () => {
+    const user = userEvent.setup();
+    render(<DialogHarness />);
+    await user.click(screen.getByRole("button", { name: "Open dialog" }));
+
+    const close = await screen.findByRole("button", { name: "Close" });
+    expect(close.className.split(/\s+/)).not.toContain("hidden");
+
+    await user.click(close);
+    await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
   });
 });

@@ -1,118 +1,53 @@
-﻿"use client";
+"use client";
 
 import { useEffect } from "react";
 import { useRegisterDirtyState } from "@/components/shared/dirty-state-context";
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import {
-  incidentFormSchema,
-  type IncidentFormValues,
-} from "@/features/build/incidents/incident-schema";
+import { incidentFormSchema, type IncidentFormValues } from "@/features/build/incidents/incident-schema";
 import {
   Sheet,
+  SheetClose,
   SheetContent,
+  SheetDescription,
+  SheetFooter,
   SheetHeader,
   SheetTitle,
-  SheetFooter,
-  SheetClose,
-  SheetBody,
 } from "@/components/ui/sheet";
-import {
-  Form,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormControl,
-  FormMessage,
-} from "@/components/ui/form";
+import { Form } from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
-import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectTrigger,
-  SelectValue,
-  SelectContent,
-  SelectItem,
-} from "@/components/ui/select";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
-import dynamic from "next/dynamic";
-
-const TiptapEditor = dynamic(
-  () => import("@/components/editor/tiptap-editor").then((m) => ({ default: m.TiptapEditor })),
-  {
-    ssr: false,
-    loading: () => (
-      <div className="rounded-md border border-input bg-background animate-pulse min-h-[120px]" />
-    ),
-  },
-);
-import {
-  useCreateIncident,
-  useUpdateIncident,
-} from "@/hooks/api/build/incidents";
+import { useCreateIncident, useUpdateIncident } from "@/hooks/api/build/incident-mutations";
 import { useProject } from "@/hooks/api/build/projects";
-import { ProjectMemberSelect } from "@/components/members/project-member-select";
-import { TicketCombobox } from "@/features/build/shared/ticket-combobox";
+import { useReleases } from "@/hooks/api/build/releases";
 import type {
-  Incident,
-  IncidentSeverity,
-  IncidentStatus,
-} from "@/types/projects";
-
-const SEVERITIES: IncidentSeverity[] = ["critical", "high", "medium", "low"];
-const STATUSES: IncidentStatus[] = [
-  "detected",
-  "investigating",
-  "mitigating",
-  "resolved",
-  "postmortem",
-  "closed",
-];
-const STATUS_LABELS: Record<IncidentStatus, string> = {
-  detected: "Detected",
-  investigating: "Investigating",
-  mitigating: "Mitigating",
-  resolved: "Resolved",
-  postmortem: "Post-mortem",
-  closed: "Closed",
-};
-
-const DEFAULT_VALUES: IncidentFormValues = {
-  title: "",
-  description: "",
-  severity: "medium",
-  status: "detected",
-  impact: "",
-  ownerId: "",
-  detectedAt: "",
-  responseDueAt: "",
-  resolutionDueAt: "",
-  linkedTicketId: "",
-};
-
-function toLocalDt(iso: string | null): string {
-  if (!iso) return "";
-  return iso.slice(0, 16);
-}
+  IncidentsCreateIncidentResponse,
+  IncidentsGetIncidentResponse,
+} from "@/contracts/build-contracts.generated";
+import {
+  SEVERITIES,
+  STATUSES,
+  NO_RELEASE,
+  DEFAULT_VALUES,
+  toLocalDt,
+} from "./incident-sheet-constants";
+import { IncidentSheetFields } from "./incident-sheet-fields";
 
 interface IncidentSheetProps {
   projectId: number;
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  editIncident: Incident | null;
+  editIncident: IncidentsCreateIncidentResponse | IncidentsGetIncidentResponse | null;
 }
 
-export function IncidentSheet({
-  projectId,
-  open,
-  onOpenChange,
-  editIncident,
-}: IncidentSheetProps) {
+export function IncidentSheet({ projectId, open, onOpenChange, editIncident }: IncidentSheetProps) {
   const create = useCreateIncident();
   const update = useUpdateIncident();
   const { data: project } = useProject(projectId);
+  const releasesPage = useReleases(projectId);
+  const releases = releasesPage.data?.data ?? [];
   const projectKey = project?.key ?? "";
 
   const form = useForm<IncidentFormValues>({
@@ -120,9 +55,7 @@ export function IncidentSheet({
     defaultValues: DEFAULT_VALUES,
   });
   useRegisterDirtyState(open && form.formState.isDirty);
-
-  const INCIDENT_SEVERITIES = ["critical", "high", "medium", "low"] as const;
-  const INCIDENT_STATUSES = ["detected", "investigating", "mitigating", "resolved", "postmortem", "closed"] as const;
+  const selectedStatus = useWatch({ control: form.control, name: "status" });
 
   useEffect(() => {
     if (!open) return;
@@ -130,10 +63,12 @@ export function IncidentSheet({
       form.reset({
         title: editIncident.title,
         description: editIncident.description ?? "",
-        severity: INCIDENT_SEVERITIES.find((v) => v === editIncident.severity) ?? "medium",
-        status: INCIDENT_STATUSES.find((v) => v === editIncident.status) ?? "detected",
+        severity: SEVERITIES.find((value) => value === editIncident.severity) ?? "medium",
+        status: STATUSES.find((value) => value === editIncident.status) ?? "detected",
         impact: editIncident.impact ?? "",
         ownerId: editIncident.ownerId ?? "",
+        rootCause: editIncident.rootCause ?? "",
+        customerComms: editIncident.customerComms ?? "",
         detectedAt: toLocalDt(editIncident.detectedAt),
         responseDueAt: toLocalDt(editIncident.responseDueAt),
         resolutionDueAt: toLocalDt(editIncident.resolutionDueAt),
@@ -141,6 +76,8 @@ export function IncidentSheet({
           editIncident.linkedTicketId != null
             ? String(editIncident.linkedTicketId)
             : "",
+        releaseId: editIncident.releaseId != null ? String(editIncident.releaseId) : "",
+        followUpWaiverReason: "",
       });
     } else {
       form.reset(DEFAULT_VALUES);
@@ -148,6 +85,16 @@ export function IncidentSheet({
   }, [open, editIncident, form]);
 
   function handleSubmit(values: IncidentFormValues) {
+    const followUpActions = editIncident && "followUpActions" in editIncident
+      ? editIncident.followUpActions
+      : [];
+    const unresolvedFollowUps = followUpActions.filter(
+      (action) => action.status === "open" || action.status === "in_progress",
+    ).length;
+    if (editIncident && values.status === "closed" && unresolvedFollowUps > 0 && !values.followUpWaiverReason.trim()) {
+      form.setError("followUpWaiverReason", { message: "Explain why unresolved follow-ups can be waived" });
+      return;
+    }
     const input = {
       projectId,
       title: values.title,
@@ -156,6 +103,8 @@ export function IncidentSheet({
       status: values.status,
       impact: values.impact || undefined,
       ownerId: values.ownerId || undefined,
+      rootCause: values.rootCause || undefined,
+      customerComms: values.customerComms || undefined,
       detectedAt: values.detectedAt
         ? new Date(values.detectedAt).toISOString()
         : undefined,
@@ -168,14 +117,21 @@ export function IncidentSheet({
       linkedTicketId: values.linkedTicketId
         ? Number(values.linkedTicketId)
         : undefined,
+      releaseId: values.releaseId && values.releaseId !== NO_RELEASE
+        ? Number(values.releaseId)
+        : undefined,
     };
 
     if (editIncident) {
       update.mutate(
-        { ...input, incidentId: editIncident.id },
+        {
+          ...input,
+          incidentId: editIncident.id,
+          followUpWaiverReason: values.followUpWaiverReason.trim() || undefined,
+        },
         {
           onSuccess: () => {
-            toast.success("Incident updated");
+            toast.success("IncidentsCreateIncidentResponse updated");
             onOpenChange(false);
           },
           onError: (e) => toast.error(getErrorMessage(e)),
@@ -184,7 +140,7 @@ export function IncidentSheet({
     } else {
       create.mutate(input, {
         onSuccess: () => {
-          toast.success("Incident created");
+          toast.success("IncidentsCreateIncidentResponse created");
           onOpenChange(false);
         },
         onError: (e) => toast.error(getErrorMessage(e)),
@@ -199,8 +155,13 @@ export function IncidentSheet({
       <SheetContent className="p-0 flex flex-col w-full sm:max-w-xl">
         <SheetHeader className="px-5 py-4 border-b shrink-0">
           <SheetTitle>
-            {editIncident ? "Edit Incident" : "New Incident"}
+            {editIncident ? "Edit IncidentsCreateIncidentResponse" : "New IncidentsCreateIncidentResponse"}
           </SheetTitle>
+          <SheetDescription>
+            {editIncident
+              ? "Update the incident details, ownership, and response milestones."
+              : "Record the impact, owner, and response timeline for this incident."}
+          </SheetDescription>
         </SheetHeader>
 
         <Form {...form}>
@@ -209,227 +170,29 @@ export function IncidentSheet({
             onSubmit={form.handleSubmit(handleSubmit)}
             className="flex flex-col flex-1 min-h-0"
           >
-            <SheetBody className="px-5 py-4 space-y-4">
-              <FormField
-                control={form.control}
-                name="title"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-dense">Title <span className="text-destructive">*</span></FormLabel>
-                    <FormControl>
-                      <Input
-                        {...field}
-                        className="text-dense"
-                        placeholder="Short incident summary"
-                      />
-                    </FormControl>
-                    <FormMessage className="text-micro" />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="description"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-dense">Description</FormLabel>
-                    <FormControl>
-                      <TiptapEditor
-                        content={field.value}
-                        output="html"
-                        onChangeHtml={field.onChange}
-                        placeholder="What happened?"
-                        minHeightClassName="min-h-[80px]"
-                        menuMode="static"
-                      />
-                    </FormControl>
-                    <FormMessage className="text-micro" />
-                  </FormItem>
-                )}
-              />
-
-              <div className="grid grid-cols-2 gap-3">
-                <FormField
-                  control={form.control}
-                  name="severity"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-dense">Severity</FormLabel>
-                      <Select value={field.value} onValueChange={field.onChange}>
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {SEVERITIES.map((s) => (
-                            <SelectItem key={s} value={s} className="capitalize">
-                              {s}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage className="text-micro" />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="status"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-dense">Status</FormLabel>
-                      <Select value={field.value} onValueChange={field.onChange}>
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {STATUSES.map((s) => (
-                            <SelectItem key={s} value={s}>
-                              {STATUS_LABELS[s]}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage className="text-micro" />
-                    </FormItem>
-                  )}
-                />
-              </div>
-
-              <FormField
-                control={form.control}
-                name="impact"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-dense">Impact</FormLabel>
-                    <FormControl>
-                      <Input
-                        {...field}
-                        className="text-dense"
-                        placeholder="Who / what is affected?"
-                      />
-                    </FormControl>
-                    <FormMessage className="text-micro" />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="ownerId"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-dense">Owner</FormLabel>
-                    <ProjectMemberSelect
-                      projectId={projectId}
-                      mode="single"
-                      value={field.value}
-                      onChange={(v) => field.onChange(v ?? "")}
-                      allowUnassigned
-                      placeholder="Unassigned"
-                      className="text-dense"
-                    />
-                    <FormMessage className="text-micro" />
-                  </FormItem>
-                )}
-              />
-
-              <div className="grid grid-cols-3 gap-3">
-                <FormField
-                  control={form.control}
-                  name="detectedAt"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-dense">Detected at</FormLabel>
-                      <FormControl>
-                        <Input
-                          {...field}
-                          type="datetime-local"
-                          className="text-dense"
-                        />
-                      </FormControl>
-                      <FormMessage className="text-micro" />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="responseDueAt"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-dense">Response due</FormLabel>
-                      <FormControl>
-                        <Input
-                          {...field}
-                          type="datetime-local"
-                          className="text-dense"
-                        />
-                      </FormControl>
-                      <FormMessage className="text-micro" />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="resolutionDueAt"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-dense">Resolution due</FormLabel>
-                      <FormControl>
-                        <Input
-                          {...field}
-                          type="datetime-local"
-                          className="text-dense"
-                        />
-                      </FormControl>
-                      <FormMessage className="text-micro" />
-                    </FormItem>
-                  )}
-                />
-              </div>
-
-              <FormField
-                control={form.control}
-                name="linkedTicketId"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-dense">Linked Ticket</FormLabel>
-                    <FormControl>
-                      <TicketCombobox
-                        projectId={projectId}
-                        projectKey={projectKey}
-                        value={field.value}
-                        onChange={field.onChange}
-                        placeholder="Link a ticket…"
-                        allowClear
-                        className="text-dense"
-                      />
-                    </FormControl>
-                    <FormMessage className="text-micro" />
-                  </FormItem>
-                )}
-              />
-            </SheetBody>
+            <IncidentSheetFields
+              control={form.control}
+              projectId={projectId}
+              projectKey={projectKey}
+              releases={releases}
+              editIncident={editIncident}
+              selectedStatus={selectedStatus}
+            />
 
             <SheetFooter className="px-5 py-3 border-t shrink-0">
               <div className="grid w-full grid-cols-2 gap-2">
                 <SheetClose asChild>
-                  <Button variant="outline" size="sm" className="text-dense">
+                  <Button variant="outline" size="sm">
                     Cancel
                   </Button>
                 </SheetClose>
                 <LoadingButton
                   type="submit"
                   size="sm"
-                  className="text-dense"
                   isPending={isPending}
                   loadingText="Saving…"
                 >
-                  {editIncident ? "Save Changes" : "Create Incident"}
+                  {editIncident ? "Save Changes" : "Create IncidentsCreateIncidentResponse"}
                 </LoadingButton>
               </div>
             </SheetFooter>

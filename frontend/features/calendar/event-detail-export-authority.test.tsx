@@ -1,7 +1,10 @@
 import { render, screen } from "@testing-library/react";
 import React from "react";
 import { EventDetailSheet } from "./event-detail-sheet";
+
+jest.mock("./calendar-source-action-panel", () => ({ CalendarSourceActionPanel: () => null }));
 import type { CalendarListItem } from "@/hooks/api/calendar";
+import { calendarProjectionFields } from "./calendar-projection-fixtures";
 
 jest.mock("sonner", () => ({ toast: { error: jest.fn(), success: jest.fn() } }));
 
@@ -58,6 +61,7 @@ const baseEvent: CalendarListItem = {
   source: "event",
   category: "meeting",
   color: "blue",
+  ...calendarProjectionFields("event-1", "2026-09-12T10:00:00Z", "2026-09-12T11:00:00Z"),
 };
 
 describe("EventDetailSheet — export control matches the backend export authority", () => {

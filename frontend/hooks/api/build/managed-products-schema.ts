@@ -1,48 +1,53 @@
-import { z } from "zod";
+import { useQueryClient } from "@tanstack/react-query";
+import {
+  managedProductsGetManagedProductResponseSchema,
+  managedProductsListManagedProductsResponseSchema,
+  managedProductsGetProductInsightsResponseSchema,
+  managedProductsBulkUpdateManagedProductsResponseSchema,
+  type ManagedProductsGetManagedProductResponse,
+  type ManagedProductsGetProductInsightsResponse,
+} from "@/contracts/build-contracts.generated";
+import { lazyContract } from "@/lib/api-envelope";
+import { apiClient } from "@/lib/api-client";
+import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
-export const managedProductRowContract = z.object({
-  id: z.number().int(),
-  orgId: z.string(),
-  name: z.string(),
-  key: z.string(),
-  description: z.string().nullable(),
-  status: z.enum(["active", "archived"]),
-  ownerId: z.string().nullable(),
-  vision: z.string().nullable(),
-  missionStatement: z.string().nullable(),
-  targetCustomer: z.string().nullable(),
-  differentiators: z.string().nullable(),
-  currentPhase: z.string().nullable(),
-  targetLaunchDate: z.string().nullable(),
-  successMetrics: z.unknown(),
-  ownerMembershipId: z.number().int().nullable(),
-  deletedAt: z.string().nullable(),
-  createdAt: z.string(),
-  updatedAt: z.string(),
-});
+export const managedProductRowContract = managedProductsGetManagedProductResponseSchema;
+export const managedProductPageContract = managedProductsListManagedProductsResponseSchema;
+export const managedProductInsightsContract = managedProductsGetProductInsightsResponseSchema;
+export const managedProductBulkResultContract = managedProductsBulkUpdateManagedProductsResponseSchema;
 
-export const managedProductPageContract = z.object({
-  data: z.array(managedProductRowContract),
-  pagination: z.object({
-    limit: z.number().int(),
-    hasMore: z.boolean(),
-    nextCursor: z.string().nullable(),
-  }),
-});
+export type ManagedProductOwner = NonNullable<ManagedProductsGetManagedProductResponse["owner"]>;
+export type ManagedProductInsights = ManagedProductsGetProductInsightsResponse;
 
-export const managedProductInsightsContract = z.object({
-  linkedProjectCount: z.number().int(),
-  projectsByStatus: z.object({
-    active: z.number().int(),
-    completed: z.number().int(),
-    archived: z.number().int(),
-  }),
-  submissionsByStatus: z.object({
-    open: z.number().int(),
-    in_progress: z.number().int(),
-    resolved: z.number().int(),
-    archived: z.number().int(),
-  }),
-});
+interface BulkUpdateManagedProductsInput {
+  ids: number[];
+  action: "update_status";
+  status: "active" | "archived";
+}
 
-export type ManagedProductInsights = z.infer<typeof managedProductInsightsContract>;
+const managedProductBulkResultContractLazy = lazyContract(() =>
+  import("@/contracts/build-contracts.generated").then(
+    (m) => m.managedProductsBulkUpdateManagedProductsResponseSchema,
+  ),
+);
+
+export function useBulkUpdateManagedProducts() {
+  const qc = useQueryClient();
+  return useAuthorizedMutation("build:managed-products:update", {
+    mutationKey: ["projects", "managed-products", "bulk"],
+    mutationFn: (input: BulkUpdateManagedProductsInput) =>
+      apiClient.post(
+        "/build/managed-products/bulk",
+        input,
+        undefined,
+        managedProductBulkResultContractLazy,
+      ),
+    onSuccess: () => {
+      qc.invalidateQueries({
+        queryKey: buildWorkQueryKeys.projects.managedProducts.list(),
+        refetchType: "none",
+      });
+    },
+  });
+}

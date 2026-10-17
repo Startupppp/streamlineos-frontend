@@ -1,50 +1,84 @@
 ﻿"use client";
 
+import { useState } from "react";
 import { useRegisterDirtyState } from "@/components/shared/dirty-state-context";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { roadmapItemSchema, parseRiceField, type RoadmapItemFormValues } from "./roadmap-schema";
-import {
-  Form,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormControl,
-  FormMessage,
-} from "@/components/ui/form";
+import { Form } from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Switch } from "@/components/ui/switch";
 import {
   Sheet,
   SheetContent,
+  SheetDescription,
   SheetHeader,
   SheetTitle,
   SheetFooter,
   SheetBody,
 } from "@/components/ui/sheet";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
+import { useSubmitGuard } from "@/hooks/common/use-submit-guard";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { isApiError, getApiErrorCode } from "@/lib/api-envelope";
+import { knowledgeAndSurveysQueryKeys } from "@/lib/query-keys/knowledge-and-surveys";
 import {
   useCreateRoadmapItem,
   useUpdateRoadmapItem,
 } from "@/hooks/api/build/roadmap";
-import { ROADMAP_STATUS_OPTIONS } from "./roadmap-constants";
-import { RoadmapDeliveryProgress } from "./roadmap-delivery-progress";
-import { RoadmapRiceFormFields } from "./roadmap-rice-form-fields";
 import type { ScorableRoadmapItem } from "./roadmap-item-card";
+import { TicketConflictDialog } from "@/features/build/ticket-details/ticket-conflict-dialog";
+import type { TicketConflictFieldDiff } from "@/features/build/ticket-details/ticket-conflict-diff";
+import { RoadmapItemFormFields } from "./roadmap-item-form-fields";
+
+const CONFLICT_EMPTY = "Not set";
+
+function displayConflictValue(value: unknown): string {
+  if (value === null || value === undefined || value === "") return CONFLICT_EMPTY;
+  if (typeof value === "boolean") return value ? "Yes" : "No";
+  return String(value);
+}
+
+function buildRoadmapConflictDiffs(
+  values: RoadmapItemFormValues,
+  riceValues: { reach: number | null; impact: number | null; confidence: number | null; effort: number | null },
+  baseline: ScorableRoadmapItem,
+): TicketConflictFieldDiff[] {
+  const pairs: Array<{ key: string; label: string; server: unknown; pending: unknown }> = [
+    { key: "title", label: "Title", server: baseline.title, pending: values.title.trim() },
+    { key: "description", label: "Description", server: baseline.description ?? null, pending: values.description.trim() || null },
+    { key: "outcome", label: "Outcome", server: baseline.outcome ?? null, pending: values.outcome.trim() || null },
+    { key: "status", label: "Status", server: baseline.status, pending: values.status },
+    { key: "horizon", label: "Horizon", server: baseline.horizon, pending: values.horizon },
+    { key: "category", label: "Category", server: baseline.category ?? null, pending: values.category.trim() || null },
+    { key: "targetQuarter", label: "Target quarter", server: baseline.targetQuarter ?? null, pending: values.targetQuarter.trim() || null },
+    { key: "targetStart", label: "Target start", server: baseline.targetStart ?? null, pending: values.targetStart || null },
+    { key: "targetEnd", label: "Target end", server: baseline.targetEnd ?? null, pending: values.targetEnd || null },
+    { key: "projectId", label: "Delivery project", server: baseline.projectId, pending: values.projectId ? Number(values.projectId) : null },
+    { key: "goalId", label: "Goal", server: baseline.goalId, pending: values.goalId ? Number(values.goalId) : null },
+    { key: "releaseId", label: "Release", server: baseline.releaseId, pending: values.releaseId ? Number(values.releaseId) : null },
+    { key: "teamId", label: "Team", server: baseline.teamId, pending: values.teamId ? Number(values.teamId) : null },
+    { key: "isPublic", label: "Public", server: baseline.isPublic, pending: values.isPublic },
+    { key: "reach", label: "Reach", server: baseline.reach, pending: riceValues.reach },
+    { key: "impact", label: "Impact", server: baseline.impact, pending: riceValues.impact },
+    { key: "confidence", label: "Confidence", server: baseline.confidence, pending: riceValues.confidence },
+    { key: "effort", label: "Effort", server: baseline.effort, pending: riceValues.effort },
+  ];
+  return pairs
+    .filter(({ server, pending }) => String(server ?? "") !== String(pending ?? ""))
+    .map(({ key, label, server, pending }) => ({
+      key,
+      label,
+      serverValue: displayConflictValue(server),
+      pendingValue: displayConflictValue(pending),
+    }));
+}
 
 interface RoadmapItemSheetProps {
   item?: ScorableRoadmapItem;
+  managedProductId?: number;
+  defaultHorizon?: "now" | "next" | "later";
   onClose: () => void;
 }
 
@@ -52,21 +86,40 @@ function riceDefault(value: number | null | undefined): string {
   return value === null || value === undefined ? "" : String(value);
 }
 
-export function RoadmapItemSheet({ item, onClose }: RoadmapItemSheetProps) {
+export function RoadmapItemSheet({ item, managedProductId, defaultHorizon, onClose }: RoadmapItemSheetProps) {
+  const queryClient = useQueryClient();
   const isEdit = !!item;
   const create = useCreateRoadmapItem();
   const update = useUpdateRoadmapItem();
   const isPending = create.isPending || update.isPending;
+  const [conflictFields, setConflictFields] = useState<TicketConflictFieldDiff[] | null>(null);
+
+  function handleKeepMine() {
+    setConflictFields(null);
+  }
+
+  function handleDiscardConflict() {
+    setConflictFields(null);
+  }
 
   const form = useForm<RoadmapItemFormValues, unknown, RoadmapItemFormValues>({
     resolver: zodResolver(roadmapItemSchema),
     defaultValues: {
       title: item?.title ?? "",
       description: item?.description ?? "",
+      outcome: item?.outcome ?? "",
       status: (["planned", "in_progress", "completed", "cancelled"] as const).find((v) => v === item?.status) ?? "planned",
+      horizon: (["now", "next", "later"] as const).find((v) => v === item?.horizon) ?? defaultHorizon ?? "later",
       category: item?.category ?? "",
       targetQuarter: item?.targetQuarter ?? "",
-      isPublic: item?.isPublic ?? true,
+      targetStart: item?.targetStart ?? "",
+      targetEnd: item?.targetEnd ?? "",
+      projectId: item?.projectId === null || item?.projectId === undefined ? "" : String(item.projectId),
+      epicTicketId: item?.epicTicketId === null || item?.epicTicketId === undefined ? "" : String(item.epicTicketId),
+      goalId: item?.goalId === null || item?.goalId === undefined ? "" : String(item.goalId),
+      releaseId: item?.releaseId === null || item?.releaseId === undefined ? "" : String(item.releaseId),
+      teamId: item?.teamId === null || item?.teamId === undefined ? "" : String(item.teamId),
+      isPublic: item?.isPublic ?? false,
       reach: riceDefault(item?.reach),
       impact: riceDefault(item?.impact),
       confidence: riceDefault(item?.confidence),
@@ -75,7 +128,7 @@ export function RoadmapItemSheet({ item, onClose }: RoadmapItemSheetProps) {
   });
   useRegisterDirtyState(form.formState.isDirty);
 
-  function handleSave(values: RoadmapItemFormValues) {
+  function handleSave(values: RoadmapItemFormValues, settle: () => void) {
     const rice = {
       reach: parseRiceField(values.reach),
       impact: parseRiceField(values.impact),
@@ -85,32 +138,78 @@ export function RoadmapItemSheet({ item, onClose }: RoadmapItemSheetProps) {
     const payload = {
       title: values.title.trim(),
       description: values.description.trim() || undefined,
+      outcome: values.outcome.trim() || undefined,
       status: values.status,
+      horizon: values.horizon,
       category: values.category.trim() || undefined,
       targetQuarter: values.targetQuarter.trim() || undefined,
+      targetStart: values.targetStart || null,
+      targetEnd: values.targetEnd || null,
+      projectId: values.projectId ? Number(values.projectId) : null,
+      goalId: values.goalId ? Number(values.goalId) : null,
+      releaseId: values.releaseId ? Number(values.releaseId) : null,
+      teamId: values.teamId ? Number(values.teamId) : null,
       isPublic: values.isPublic,
     };
     if (isEdit) {
       update.mutate(
         {
           roadmapItemId: item.id,
+          version: item.version,
           title: payload.title,
           description: payload.description ?? null,
+          outcome: payload.outcome ?? null,
           status: payload.status,
+          horizon: payload.horizon,
           category: payload.category ?? null,
           targetQuarter: payload.targetQuarter ?? null,
+          targetStart: payload.targetStart,
+          targetEnd: payload.targetEnd,
+          projectId: payload.projectId,
+          goalId: payload.goalId,
+          releaseId: payload.releaseId,
+          teamId: payload.teamId,
+          epicTicketId: values.projectId && values.epicTicketId ? Number(values.epicTicketId) : null,
           isPublic: payload.isPublic,
           ...rice,
         },
         {
           onSuccess: () => { toast.success("Roadmap item updated"); onClose(); },
-          onError: (e) => toast.error(getErrorMessage(e)),
+          onError: (e) => {
+            if (isApiError(e) && getApiErrorCode(e) === "PROJECTS_TICKET_CONFLICT") {
+              void queryClient.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.roadmap.items(), exact: true });
+              const diffs = item ? buildRoadmapConflictDiffs(values, rice, item) : [];
+              if (diffs.length > 0) {
+                setConflictFields(diffs);
+              } else {
+                toast.warning("This roadmap item was modified by another user. Your changes were not saved.");
+              }
+              return;
+            }
+            toast.error(getErrorMessage(e));
+          },
+          onSettled: settle,
         },
       );
     } else {
       create.mutate(
         {
-          ...payload,
+          title: payload.title,
+          managedProductId,
+          description: payload.description,
+          outcome: payload.outcome,
+          status: payload.status,
+          horizon: payload.horizon,
+          category: payload.category,
+          targetQuarter: payload.targetQuarter,
+          targetStart: payload.targetStart ?? undefined,
+          targetEnd: payload.targetEnd ?? undefined,
+          projectId: payload.projectId ?? undefined,
+          epicTicketId: values.epicTicketId ? Number(values.epicTicketId) : undefined,
+          goalId: payload.goalId ?? undefined,
+          releaseId: payload.releaseId ?? undefined,
+          teamId: payload.teamId ?? undefined,
+          isPublic: payload.isPublic,
           reach: rice.reach ?? undefined,
           impact: rice.impact ?? undefined,
           confidence: rice.confidence ?? undefined,
@@ -119,122 +218,32 @@ export function RoadmapItemSheet({ item, onClose }: RoadmapItemSheetProps) {
         {
           onSuccess: () => { toast.success("Roadmap item created"); onClose(); },
           onError: (e) => toast.error(getErrorMessage(e)),
+          onSettled: settle,
         },
       );
     }
   }
 
+  const submitGuard = useSubmitGuard(
+    (values: RoadmapItemFormValues) => new Promise<void>((settle) => { handleSave(values, settle); }),
+  );
+
   return (
+    <>
     <Sheet open onOpenChange={onClose}>
       <SheetContent className="w-full sm:max-w-lg p-0 flex flex-col gap-0">
         <SheetHeader className="shrink-0 px-6 py-4 border-b text-left gap-1">
           <SheetTitle>{isEdit ? "Edit Roadmap Item" : "New Roadmap Item"}</SheetTitle>
+          <SheetDescription>
+            {isEdit
+              ? "Update the item details, delivery status, visibility, and priority score."
+              : "Add an item to the roadmap with a clear outcome and delivery horizon."}
+          </SheetDescription>
         </SheetHeader>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(handleSave)} className="flex flex-col flex-1 min-h-0">
+          <form onSubmit={form.handleSubmit(submitGuard.submit)} className="flex flex-col flex-1 min-h-0">
             <SheetBody className="px-6 py-5 space-y-4">
-              <FormField
-                control={form.control}
-                name="title"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Title <span className="text-destructive">*</span></FormLabel>
-                    <FormControl>
-                      <Input {...field} placeholder="e.g. Dark mode support" />
-                    </FormControl>
-                    <FormMessage className="text-xs" />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="description"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Description</FormLabel>
-                    <FormControl>
-                      <Textarea {...field} rows={4} />
-                    </FormControl>
-                    <FormMessage className="text-xs" />
-                  </FormItem>
-                )}
-              />
-              <div className="grid grid-cols-2 gap-3">
-                <FormField
-                  control={form.control}
-                  name="status"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Status</FormLabel>
-                      <Select value={field.value} onValueChange={field.onChange}>
-                        <FormControl>
-                          <SelectTrigger><SelectValue /></SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {ROADMAP_STATUS_OPTIONS.map((o) => (
-                            <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage className="text-xs" />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="targetQuarter"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Target Quarter</FormLabel>
-                      <FormControl>
-                        <Input {...field} placeholder="e.g. Q3 2026" />
-                      </FormControl>
-                      <FormMessage className="text-xs" />
-                    </FormItem>
-                  )}
-                />
-              </div>
-              <FormField
-                control={form.control}
-                name="category"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Category</FormLabel>
-                    <FormControl>
-                      <Input {...field} placeholder="e.g. Integrations" />
-                    </FormControl>
-                    <FormMessage className="text-xs" />
-                  </FormItem>
-                )}
-              />
-              <RoadmapRiceFormFields
-                control={form.control}
-                prioritization={item?.prioritization}
-                tierWeighting={item?.tierWeighting}
-              />
-              {isEdit ? <RoadmapDeliveryProgress roadmapItemId={item.id} /> : null}
-              <FormField
-                control={form.control}
-                name="isPublic"
-                render={({ field }) => (
-                  <FormItem>
-                    <div className="flex items-center justify-between rounded-lg border border-border bg-muted/30 px-3 py-2.5">
-                      <div>
-                        <p className="text-sm font-medium text-foreground">Public</p>
-                        <p className="text-xs text-muted-foreground">Show this item on the public board</p>
-                      </div>
-                      <FormControl>
-                        <Switch
-                          checked={field.value}
-                          onCheckedChange={field.onChange}
-                          className="border border-border data-[state=unchecked]:bg-input"
-                        />
-                      </FormControl>
-                    </div>
-                    <FormMessage className="text-xs" />
-                  </FormItem>
-                )}
-              />
+              <RoadmapItemFormFields control={form.control} isEdit={isEdit} item={item} managedProductId={managedProductId} />
             </SheetBody>
             <SheetFooter className="shrink-0 px-6 py-4 border-t flex-row gap-2 justify-end">
               <Button type="button" variant="outline" className="flex-1" onClick={onClose}>Cancel</Button>
@@ -246,5 +255,12 @@ export function RoadmapItemSheet({ item, onClose }: RoadmapItemSheetProps) {
         </Form>
       </SheetContent>
     </Sheet>
+    <TicketConflictDialog
+      open={conflictFields !== null}
+      fields={conflictFields ?? []}
+      onKeepMine={handleKeepMine}
+      onDiscard={handleDiscardConflict}
+    />
+    </>
   );
 }

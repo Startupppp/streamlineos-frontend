@@ -23,7 +23,7 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { LoadingButton } from "@/components/ui/loading-button";
-import { useDeleteProject } from "@/hooks/api/build";
+import { useDeleteProject } from "@/hooks/api/build/projects";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { clearLastProjectId } from "@/lib/projects/last-project";
 import {
@@ -101,7 +101,7 @@ export function DeleteProjectDialog({
           <AlertDialogTitle>Delete project?</AlertDialogTitle>
           <AlertDialogDescription>
             This action cannot be undone. This will permanently delete{" "}
-            <span className="font-semibold text-foreground">{projectName}</span>{" "}
+            <span className="font-medium text-foreground">{projectName}</span>{" "}
             and all of its tickets and data. Type the project name to confirm.
           </AlertDialogDescription>
         </AlertDialogHeader>
@@ -117,7 +117,7 @@ export function DeleteProjectDialog({
                 <FormItem>
                   <FormLabel>
                     Type{" "}
-                    <span className="font-mono font-semibold text-foreground">
+                    <span className="font-mono font-normal text-foreground">
                       {projectName}
                     </span>{" "}
                     to confirm

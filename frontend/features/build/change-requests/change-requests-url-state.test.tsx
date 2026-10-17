@@ -15,6 +15,7 @@ jest.mock("next/navigation", () => ({
 jest.mock("@/hooks/api/build/change-requests", () => ({
   useChangeRequests: jest.fn(),
   useDeleteChangeRequest: jest.fn(),
+  useUpdateChangeRequest: jest.fn(),
 }));
 
 jest.mock("@/hooks/api/access", () => ({
@@ -26,8 +27,8 @@ jest.mock("@/hooks/api/entitlements", () => ({
   useEntitlements: () => ({ data: undefined }),
 }));
 
-jest.mock("@/hooks/api/organization", () => ({
-  useOrgMembers: jest.fn(),
+jest.mock("@/hooks/api/build/build-members", () => ({
+  useBuildMembers: jest.fn(),
 }));
 
 jest.mock("sonner", () => ({ toast: { success: jest.fn(), error: jest.fn() } }));
@@ -191,7 +192,7 @@ jest.mock("@/components/pm-chrome", () => ({
   PmSection: ({ children }: { children: React.ReactNode }) => (
     <div>{children}</div>
   ),
-  PM_FILL_PANEL: "",
+  CONTENT_FILL_PANEL: "",
 }));
 
 jest.mock("@/components/ui/content-fill-panel", () => ({
@@ -207,15 +208,17 @@ jest.mock("lucide-react", () => ({
 import {
   useChangeRequests,
   useDeleteChangeRequest,
+  useUpdateChangeRequest,
 } from "@/hooks/api/build/change-requests";
 import { useCan, useAccess } from "@/hooks/api/access";
-import { useOrgMembers } from "@/hooks/api/organization";
+import { useBuildMembers } from "@/hooks/api/build/build-members";
 
 const mockUseChangeRequests = useChangeRequests as jest.Mock;
 const mockUseDeleteChangeRequest = useDeleteChangeRequest as jest.Mock;
+const mockUseUpdateChangeRequest = useUpdateChangeRequest as jest.Mock;
 const mockUseCan = useCan as jest.Mock;
 const mockUseAccess = useAccess as jest.Mock;
-const mockUseOrgMembers = useOrgMembers as jest.Mock;
+const mockUseBuildMembers = useBuildMembers as jest.Mock;
 
 const ACCESS_GRANTED = {
   data: {
@@ -247,7 +250,11 @@ beforeEach(() => {
     mutate: jest.fn(),
     isPending: false,
   });
-  mockUseOrgMembers.mockReturnValue(
+  mockUseUpdateChangeRequest.mockReturnValue({
+    mutate: jest.fn(),
+    isPending: false,
+  });
+  mockUseBuildMembers.mockReturnValue(
     baseQueryResult({ data: { data: [] } }),
   );
 });
@@ -480,5 +487,30 @@ describe("ChangeRequestsPage — URL state for q (server-side text search)", () 
       1,
       expect.objectContaining({ status: "submitted", impact: "High", q: "roof" }),
     );
+  });
+});
+
+describe("BUG-045 — changeRequestFormSchema.estimateHours must reject negative values with a per-field error", () => {
+  const { changeRequestFormSchema } = jest.requireActual("./change-request-schema") as typeof import("./change-request-schema");
+  const base = { title: "Scope change", description: "", impact: "", status: "submitted", budgetRs: "", timelineDays: "", approvalOwnerId: "none", decisionComment: "" };
+
+  it("rejects a negative estimate so the frontend shows a per-field error rather than a silent backend 400", () => {
+    const result = changeRequestFormSchema.safeParse({ ...base, estimateHours: "-1" });
+    expect(result.success).toBe(false);
+  });
+
+  it("accepts an empty estimate so the field is still optional and blank forms submit correctly", () => {
+    const result = changeRequestFormSchema.safeParse({ ...base, estimateHours: "" });
+    expect(result.success).toBe(true);
+  });
+
+  it("accepts a zero estimate confirming the boundary is exclusive of negative not exclusive of zero", () => {
+    const result = changeRequestFormSchema.safeParse({ ...base, estimateHours: "0" });
+    expect(result.success).toBe(true);
+  });
+
+  it("accepts a positive estimate so valid estimates still pass", () => {
+    const result = changeRequestFormSchema.safeParse({ ...base, estimateHours: "8.5" });
+    expect(result.success).toBe(true);
   });
 });

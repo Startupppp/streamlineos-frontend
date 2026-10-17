@@ -27,6 +27,7 @@ describe("PublicPageContent — the editor writes indent lists, so the reader mu
     const item = screen.getByText("first point").closest("li");
     expect(item).not.toBeNull();
     expect(item?.closest("ul")).not.toBeNull();
+    expect(item).toHaveClass("text-base", "leading-7");
   });
 
   it("numbers a numbered list from the stored listStart rather than restarting at one", () => {
@@ -71,5 +72,16 @@ describe("PublicPageContent — the editor writes indent lists, so the reader mu
 
     expect(screen.getByText("just prose").closest("p")).not.toBeNull();
     expect(screen.getByText("just prose").closest("li")).toBeNull();
+    expect(screen.getByText("just prose").closest("p")).toHaveClass("text-base", "leading-7");
+  });
+
+  it("uses the same reading size for TipTap paragraphs and lists", () => {
+    render(<PublicPageContent content={{ type: "doc", content: [
+      { type: "paragraph", content: [{ type: "text", text: "TipTap prose" }] },
+      { type: "bulletList", content: [{ type: "listItem", content: [{ type: "text", text: "TipTap item" }] }] },
+    ] }} />);
+
+    expect(screen.getByText("TipTap prose").closest("p")).toHaveClass("text-base", "leading-7");
+    expect(screen.getByText("TipTap item").closest("li")).toHaveClass("text-base", "leading-7");
   });
 });

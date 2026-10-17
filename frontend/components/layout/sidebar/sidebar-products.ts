@@ -31,7 +31,7 @@ export const PRODUCT_HREF_EXCEPTIONS: Readonly<
 > = {
   administration: "/settings",
   documents: "/knowledge/chat",
-  recruitment: "/hr/recruitment",
+  recruitment: "/recruitment",
 };
 
 // Products with no manifest module counterpart (not in any module's productKey set).
@@ -156,7 +156,7 @@ if (process.env.NODE_ENV !== "production") {
 export const PRODUCT_DESCRIPTIONS: Record<ProductKey, string> = {
   home: "Overview & activity",
   crm: "Leads, deals & contacts",
-  hrms: "People & payroll",
+  hrms: "People",
   recruitment: "Jobs, candidates & hiring",
   build: "Projects, issues & delivery",
   timesheets: "Track, approve & bill time",

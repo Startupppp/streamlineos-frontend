@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useMemo } from "react";
+import { memo, useCallback, useMemo } from "react";
 import dynamic from "next/dynamic";
 import { format, differenceInCalendarDays } from "date-fns";
 import { toast } from "sonner";
@@ -8,7 +8,7 @@ import { toast } from "sonner";
 import { EmptyState } from "@/components/ui/empty-state";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { Skeleton } from "@/components/ui/skeleton";
-import { LoadingButton } from "@/components/ui/loading-button";
+import { InfiniteScrollSentinel } from "@/components/ui/infinite-scroll-sentinel";
 import { PAGE_BODY_EMPTY_CLASS } from "@/components/ui/content-fill-panel";
 
 const LeaveBalanceDonut = dynamic(
@@ -20,12 +20,14 @@ import type { LeaveBalance, LeaveRequest, ApprovedLeave } from "./leaves-shared"
 import { BalanceCard, balanceCardConfig, DEFAULT_CARD_CONFIG, priorityConfig } from "./leaves-shared";
 import { LeaveCalendarWidget } from "./leave-calendar-widget";
 import { RequestActionCell } from "./leave-request-action-cell";
-import { useCancelLeave, useApproveLeaveDedicated, useRejectLeaveDedicated, useRevertLeave } from "@/hooks/api/hr";
+import { useCancelLeave } from "@/hooks/api/hr";
 import { cn } from "@/lib/utils";
+import { useT } from "@/lib/i18n/i18n";
+
 import { getErrorMessage } from "@/lib/get-error-message";
-import { useCan } from "@/hooks/api/access";
 import { useLeavePolicy } from "@/hooks/api/hr";
 import { TruncatedText } from "@/components/ui/truncated-text";
+import { getUserDisplayName } from "@/lib/person-display";
 
 interface LeavesTabContentProps {
   balances: LeaveBalance[];
@@ -48,7 +50,7 @@ export function LeavesTabContent({
   isLoadingMore = false,
   onLoadMore,
 }: LeavesTabContentProps) {
-  const isAdmin = useCan("hr:employees:manage");
+  const t = useT();
   const { data: policy } = useLeavePolicy();
   const allowedLeaveTypeNames = useMemo(
     () => new Set(policy?.leaveTypes.map((t) => t.name) ?? []),
@@ -57,46 +59,7 @@ export function LeavesTabContent({
 
   const currentYear = new Date().getFullYear();
 
-  const approveMutation = useApproveLeaveDedicated();
-  const rejectMutation = useRejectLeaveDedicated();
-  const revertMutation = useRevertLeave();
   const cancelMutation = useCancelLeave();
-
-  const handleApproveRequest = useCallback(
-    (id: number) => {
-      approveMutation.mutate(
-        { leaveId: id },
-        {
-          onSuccess: () => toast.success("Leave request approved"),
-          onError: (err) => toast.error(getErrorMessage(err)),
-        },
-      );
-    },
-    [approveMutation],
-  );
-
-  const handleRejectRequest = useCallback(
-    (id: number, reason?: string) => {
-      rejectMutation.mutate(
-        { leaveId: id, reason: reason ?? "" },
-        {
-          onSuccess: () => toast.success("Leave request rejected"),
-          onError: (err) => toast.error(getErrorMessage(err)),
-        },
-      );
-    },
-    [rejectMutation],
-  );
-
-  const handleRevertRequest = useCallback(
-    (id: number) => {
-      revertMutation.mutate(id, {
-        onSuccess: () => toast.success("Leave request reverted to pending"),
-        onError: (err) => toast.error(getErrorMessage(err)),
-      });
-    },
-    [revertMutation],
-  );
 
   const handleCancelRequest = useCallback(
     (id: number) => {
@@ -132,10 +95,9 @@ export function LeavesTabContent({
               </div>
               <div className="min-w-0">
                 <TruncatedText
-                  text={typeName.replace(" Leave", "")}
+                  text={typeName}
                   className="text-sm font-semibold leading-tight text-foreground"
                 />
-                <p className="text-micro text-muted-foreground">Leave</p>
               </div>
             </div>
           );
@@ -232,7 +194,10 @@ export function LeavesTabContent({
                   statusBadgeClass,
                 )}
               >
-                {status.charAt(0) + status.slice(1).toLowerCase()}
+                {/* V-046. A decided row said only "Approved"/"Rejected" while
+                    `my()` already hydrates the approver — the one thing the
+                    reader wants to know. */}
+                {decidedByLabel(status, row.approver)}
               </span>
               {row.managerComment && (
                 <TruncatedText
@@ -259,11 +224,7 @@ export function LeavesTabContent({
           <div className="flex justify-end">
             <RequestActionCell
               request={row}
-              isAdmin={isAdmin}
-              isSelf
-              onApprove={handleApproveRequest}
-              onReject={handleRejectRequest}
-              onRevert={handleRevertRequest}
+              isCancelling={cancelMutation.isPending && cancelMutation.variables === row.id}
               onCancel={handleCancelRequest}
             />
           </div>
@@ -271,7 +232,7 @@ export function LeavesTabContent({
         headerClassName: "text-right",
       },
     ],
-    [isAdmin, handleApproveRequest, handleRejectRequest, handleRevertRequest, handleCancelRequest],
+    [cancelMutation.isPending, cancelMutation.variables, handleCancelRequest],
   );
 
   return (
@@ -297,7 +258,9 @@ export function LeavesTabContent({
           >
             {balances
               .filter(
-                (bal) => bal.typeName && allowedLeaveTypeNames.has(bal.typeName),
+                // useLeavePolicy needs hr:leaves:view; a self-service caller
+                // without it gets no policy and must still see their balances.
+                (bal) => bal.typeName && (!policy || allowedLeaveTypeNames.has(bal.typeName)),
               )
               .map((bal, index) => (
                 <li key={`${bal.leaveTypeId}-${index}`}>
@@ -320,38 +283,129 @@ export function LeavesTabContent({
       {myLeaveRequests.length === 0 ? (
         <EmptyState
           illustrationPreset="calendar"
-          title="No leave requests"
-          description="You haven't submitted any leave requests yet."
+          title={t("timeOff.noRequestsTitle")}
+          description={t("timeOff.noRequestsDescription")}
           action={
             onRequestLeave
-              ? { label: "Request leave", onClick: onRequestLeave }
+              ? { label: t("timeOff.requestLeave"), onClick: onRequestLeave }
               : undefined
           }
           className={PAGE_BODY_EMPTY_CLASS}
         />
       ) : (
         <div className="flex h-full min-h-0 w-full flex-1 flex-col" aria-live="polite">
-          <DataTable
-            data={myLeaveRequests}
-            columns={columns}
-            getRowKey={(row) => row.id}
-            minWidth="600px"
-            className="min-h-0 w-full flex-1"
-          />
-          {hasMore && onLoadMore ? (
-            <div className="flex justify-center border-t border-border/70 py-3">
-              <LoadingButton
-                variant="outline"
-                size="sm"
-                isPending={isLoadingMore}
-                onClick={onLoadMore}
-              >
-                Load older requests
-              </LoadingButton>
-            </div>
+          <ul
+            className="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto md:hidden"
+            aria-label="My leave requests"
+          >
+            {myLeaveRequests.map((row) => (
+              <li key={row.id}>
+                <LeaveRequestMobileItem
+                  row={row}
+                  isCancelling={cancelMutation.isPending && cancelMutation.variables === row.id}
+                  onCancel={handleCancelRequest}
+                />
+              </li>
+            ))}
+          </ul>
+          <div className="hidden min-h-0 w-full flex-1 flex-col md:flex">
+            <DataTable
+              data={myLeaveRequests}
+              columns={columns}
+              getRowKey={(row) => row.id}
+              minWidth="600px"
+              className="min-h-0 w-full flex-1"
+            />
+          </div>
+          {onLoadMore ? (
+            <InfiniteScrollSentinel
+              hasNextPage={hasMore}
+              isFetchingNextPage={isLoadingMore}
+              onLoadMore={onLoadMore}
+              label="Load older requests"
+            />
           ) : null}
         </div>
       )}
     </div>
   );
+}
+
+interface LeaveRequestMobileItemProps {
+  row: LeaveRequest;
+  isCancelling: boolean;
+  onCancel: (id: number) => void;
+}
+
+const LeaveRequestMobileItem = memo(function LeaveRequestMobileItem({
+  row,
+  isCancelling,
+  onCancel,
+}: LeaveRequestMobileItemProps) {
+  const typeName = row.leaveType?.name ?? "Leave";
+  const config = balanceCardConfig[typeName] ?? DEFAULT_CARD_CONFIG;
+  const Icon = config.icon;
+  const start = new Date(row.startDate);
+  const end = new Date(row.endDate);
+  const days = differenceInCalendarDays(end, start) + 1;
+  const periodStr =
+    days === 1
+      ? format(start, "MMM d")
+      : `${format(start, "MMM d")} – ${format(end, "MMM d")}`;
+  const status = row.status ?? "PENDING";
+  const statusBadgeClass =
+    status === "PENDING"
+      ? "bg-status-warning-surface text-status-warning-ink border-status-warning-rule"
+      : status === "APPROVED"
+        ? "bg-status-success-surface text-status-success-ink border-status-success-rule"
+        : status === "CANCELLED"
+          ? "bg-muted text-muted-foreground border-border"
+          : "bg-status-danger-surface text-status-danger-ink border-status-danger-rule";
+
+  return (
+    <div className="rounded-xl border border-border bg-card p-3">
+      <div className="flex items-start gap-2.5">
+        <div
+          className={cn(
+            "flex h-8 w-7 shrink-0 items-center justify-center rounded-lg",
+            config.iconBg,
+          )}
+        >
+          <Icon className={cn("h-3.5 w-3.5", config.iconColor)} aria-hidden="true" />
+        </div>
+        <div className="min-w-0 flex-1">
+          <TruncatedText
+            text={typeName}
+            className="text-sm font-semibold leading-tight text-foreground"
+          />
+          <p className="text-xs text-muted-foreground">
+            {periodStr} · <span className="tabular-nums">{days}d</span>
+          </p>
+        </div>
+        <span
+          className={cn(
+            "inline-flex shrink-0 items-center rounded-full border px-2 py-0.5 text-micro font-semibold",
+            statusBadgeClass,
+          )}
+        >
+          {decidedByLabel(status, row.approver)}
+        </span>
+      </div>
+      <div className="mt-2 flex justify-end">
+        <RequestActionCell request={row} isCancelling={isCancelling} onCancel={onCancel} />
+      </div>
+    </div>
+  );
+});
+
+export function decidedByLabel(
+  status: string,
+  approver: { name?: string | null; firstName?: string | null; lastName?: string | null } | null | undefined,
+): string {
+  const label = status.charAt(0) + status.slice(1).toLowerCase();
+  if (status !== "APPROVED" && status !== "REJECTED") return label;
+  const name = approver ? getUserDisplayName(approver) : null;
+  return name && name !== "Unassigned" && name !== "Unknown"
+    ? `${label} by ${name}`
+    : label;
 }

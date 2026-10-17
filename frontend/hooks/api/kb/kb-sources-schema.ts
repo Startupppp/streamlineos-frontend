@@ -11,6 +11,7 @@ const kbSourceListItemContract = z.object({
   chunkCount: z.number().int(),
   errorMessage: z.string().nullable(),
   spaceId: z.number().int().nullable(),
+  createdById: z.string().nullable().optional(),
   createdAt: z.string(),
 });
 

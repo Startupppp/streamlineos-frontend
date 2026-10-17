@@ -1,6 +1,7 @@
 "use client";
 
 import type { ChangeEvent } from "react";
+import Link from "next/link";
 import { UseFormReturn } from "react-hook-form";
 import { z } from "zod";
 import { onboardEmployeeInputSchema } from "../../../lib/validation/hr";
@@ -14,7 +15,7 @@ import {
   FormLabel,
   FormMessage,
 } from "../../ui/form";
-import { latinNameFieldChange, digitsOnlyFieldChange } from "./restricted-field-change";
+import { personNameFieldChange, digitsOnlyFieldChange } from "./restricted-field-change";
 
 type FormValues = z.infer<typeof onboardEmployeeInputSchema>;
 
@@ -49,7 +50,7 @@ export function StepBanking({ form }: StepBankingProps) {
             <FormItem>
               <FormLabel>Account Holder Name</FormLabel>
               <FormControl>
-                <Input placeholder="Name as per bank records" {...field} onChange={latinNameFieldChange(field.onChange)} />
+                <Input placeholder="Name as per bank records" {...field} onChange={personNameFieldChange(field.onChange)} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -62,7 +63,7 @@ export function StepBanking({ form }: StepBankingProps) {
             <FormItem>
               <FormLabel>Bank Name</FormLabel>
               <FormControl>
-                <Input placeholder="e.g. Chase, HDFC" {...field} onChange={latinNameFieldChange(field.onChange)} />
+                <Input placeholder="e.g. Chase, HDFC" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -75,7 +76,7 @@ export function StepBanking({ form }: StepBankingProps) {
             <FormItem>
               <FormLabel>Branch Name</FormLabel>
               <FormControl>
-                <Input placeholder="e.g. Down Town Branch" {...field} onChange={latinNameFieldChange(field.onChange)} />
+                <Input placeholder="e.g. Down Town Branch" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -159,6 +160,16 @@ export function StepBanking({ form }: StepBankingProps) {
           )}
         />
       </div>
+      <p className="text-xs leading-relaxed text-muted-foreground">
+        Not sure whether PF or ESI applies to this hire?{" "}
+        <Link
+          href="/hr/compliance"
+          className="font-medium text-primary underline underline-offset-2"
+        >
+          Review statutory requirements
+        </Link>{" "}
+        — both can be left blank now and filled in later.
+      </p>
     </>
   );
 }

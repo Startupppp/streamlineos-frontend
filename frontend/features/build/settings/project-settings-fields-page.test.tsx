@@ -1,0 +1,263 @@
+import { render, screen, act } from "@testing-library/react";
+import type { AccessState } from "@/lib/rbac/gate";
+import { ProjectSettingsFieldsPage } from "./project-settings-fields-page";
+
+let mockAccessState: AccessState = "denied";
+let mockDebouncedSearch = "";
+const mockUsePageState = jest.fn();
+let mockCustomFields: Array<{
+  id: number;
+  name: string;
+  type: string;
+  options: string[] | null;
+  required: boolean;
+}> = [];
+
+jest.mock("@/hooks/api/access", () => ({
+  useCan: (_permission: string) => mockAccessState === "granted",
+  useCanState: (_permission: string): AccessState => mockAccessState,
+}));
+
+jest.mock("@/hooks/common/use-online-status", () => ({
+  useOnlineStatus: jest.fn(() => true),
+}));
+
+jest.mock("@/hooks/api/use-page-state", () => ({
+  usePageState: (opts: unknown) => {
+    mockUsePageState(opts);
+    if (mockAccessState === "denied") return "denied";
+    if (mockAccessState === "loading") return "loading";
+    return "ready";
+  },
+}));
+
+jest.mock("@/hooks/api/build/custom-fields", () => ({
+  useProjectCustomFields: () => ({ data: mockCustomFields, isLoading: false }),
+}));
+
+jest.mock("@/features/build/settings/custom-fields-settings", () => ({
+  CustomFieldsSettings: () => <div data-testid="custom-fields-settings" />,
+}));
+
+jest.mock("@/features/build/shared/use-build-list-filters", () => ({
+  useBuildListFilters: () => ({
+    search: mockDebouncedSearch,
+    debouncedSearch: mockDebouncedSearch,
+    cursor: null,
+    setSearch: jest.fn(),
+    setCursor: jest.fn(),
+    value: () => "all",
+    isActive: () => false,
+    setValue: jest.fn(),
+    clearAll: jest.fn(),
+    activeCount: 0,
+    isFiltered: false,
+    resetKey: "",
+    isPending: false,
+  }),
+}));
+
+const mockUseBuildListKeyboard = jest.fn();
+
+jest.mock("@/hooks/common/use-build-list-keyboard", () => ({
+  useBuildListKeyboard: (...args: unknown[]) => mockUseBuildListKeyboard(...args),
+}));
+
+jest.mock("@/features/build/shared/build-list-toolbar", () => ({
+  BuildListToolbar: () => null,
+}));
+
+jest.mock("@/components/shared/shortcut-help-dialog", () => ({
+  ShortcutHelpDialog: ({ open }: { open: boolean }) =>
+    open ? <div data-testid="shortcut-help-dialog" /> : null,
+}));
+
+jest.mock("@/components/pm-chrome", () => ({
+  PmPageShell: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+  PmPanel: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+  PmSection: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+  CONTENT_FILL_PANEL: "",
+}));
+
+jest.mock("@/components/shared/page-state", () => ({
+  PageState: ({
+    resolution,
+    children,
+    loading,
+  }: {
+    resolution: string;
+    children: React.ReactNode;
+    loading?: React.ReactNode;
+  }) => {
+    if (resolution === "denied") return <div data-testid="no-permission" />;
+    if (resolution === "loading") return <div data-testid="page-loading">{loading}</div>;
+    return <div>{children}</div>;
+  },
+}));
+
+beforeEach(() => {
+  mockAccessState = "denied";
+  mockDebouncedSearch = "";
+  mockCustomFields = [];
+  mockUseBuildListKeyboard.mockClear();
+  mockUseBuildListKeyboard.mockReturnValue({ focusedIndex: null, setFocusedIndex: jest.fn() });
+});
+
+describe("ProjectSettingsFieldsPage — keyboard shortcuts (Requirement C3)", () => {
+  it("wires useBuildListKeyboard with onClearSelection so Esc clears the search filter", () => {
+    mockAccessState = "granted";
+    render(<ProjectSettingsFieldsPage projectId={1} />);
+    expect(mockUseBuildListKeyboard).toHaveBeenCalledWith(
+      expect.objectContaining({ onClearSelection: expect.any(Function) }),
+    );
+  });
+
+  it("passes searchInputRef to useBuildListKeyboard so the / key focuses the search input", () => {
+    mockAccessState = "granted";
+    render(<ProjectSettingsFieldsPage projectId={1} />);
+    expect(mockUseBuildListKeyboard).toHaveBeenCalledWith(
+      expect.objectContaining({ searchInputRef: expect.anything() }),
+    );
+  });
+});
+
+describe("ProjectSettingsFieldsPage — access control (BLD-X-FE-SETTINGS-FIELDS-001)", () => {
+  it("renders NoPermissionState when access is denied — PageState gates on build:view", () => {
+    render(<ProjectSettingsFieldsPage projectId={1} />);
+    expect(screen.getByTestId("no-permission")).toBeInTheDocument();
+    expect(screen.queryByTestId("custom-fields-settings")).not.toBeInTheDocument();
+  });
+
+  it("renders custom fields when access is granted", () => {
+    mockAccessState = "granted";
+    render(<ProjectSettingsFieldsPage projectId={1} />);
+    expect(screen.queryByTestId("no-permission")).not.toBeInTheDocument();
+    expect(screen.getByTestId("custom-fields-settings")).toBeInTheDocument();
+  });
+
+  it("fails closed on loading — custom fields hidden while access is in flight", () => {
+    mockAccessState = "loading";
+    render(<ProjectSettingsFieldsPage projectId={1} />);
+    expect(screen.queryByTestId("custom-fields-settings")).not.toBeInTheDocument();
+  });
+
+  it("shows the loading skeleton while access is being resolved", () => {
+    mockAccessState = "loading";
+    render(<ProjectSettingsFieldsPage projectId={1} />);
+    expect(screen.getByTestId("page-loading")).toBeInTheDocument();
+  });
+});
+
+describe("ProjectSettingsFieldsPage — keyboard shortcuts (extended)", () => {
+  it("passes onCreate to useBuildListKeyboard so the c key can trigger the create form", () => {
+    mockAccessState = "granted";
+    render(<ProjectSettingsFieldsPage projectId={1} />);
+    expect(mockUseBuildListKeyboard).toHaveBeenCalledWith(
+      expect.objectContaining({ onCreate: expect.any(Function) }),
+    );
+  });
+
+  it("passes onEdit to useBuildListKeyboard so the e key can open the edit dialog for the focused field", () => {
+    mockAccessState = "granted";
+    render(<ProjectSettingsFieldsPage projectId={1} />);
+    expect(mockUseBuildListKeyboard).toHaveBeenCalledWith(
+      expect.objectContaining({ onEdit: expect.any(Function) }),
+    );
+  });
+
+  it("passes itemCount equal to the filtered field count when a search term is active", () => {
+    mockAccessState = "granted";
+    mockCustomFields = [
+      { id: 1, name: "Story Points", type: "number", options: null, required: false },
+      { id: 2, name: "Priority Label", type: "select", options: ["P0"], required: false },
+    ];
+    mockDebouncedSearch = "story";
+    render(<ProjectSettingsFieldsPage projectId={1} />);
+    expect(mockUseBuildListKeyboard).toHaveBeenCalledWith(
+      expect.objectContaining({ itemCount: 1 }),
+    );
+  });
+
+  it("passes itemCount equal to the total field count when no search is active", () => {
+    mockAccessState = "granted";
+    mockCustomFields = [
+      { id: 1, name: "Story Points", type: "number", options: null, required: false },
+      { id: 2, name: "Priority Label", type: "select", options: ["P0"], required: false },
+    ];
+    mockDebouncedSearch = "";
+    render(<ProjectSettingsFieldsPage projectId={1} />);
+    expect(mockUseBuildListKeyboard).toHaveBeenCalledWith(
+      expect.objectContaining({ itemCount: 2 }),
+    );
+  });
+
+  it("passes itemCount of 0 when search term matches no field names", () => {
+    mockAccessState = "granted";
+    mockCustomFields = [
+      { id: 1, name: "Story Points", type: "number", options: null, required: false },
+    ];
+    mockDebouncedSearch = "xyz";
+    render(<ProjectSettingsFieldsPage projectId={1} />);
+    expect(mockUseBuildListKeyboard).toHaveBeenCalledWith(
+      expect.objectContaining({ itemCount: 0 }),
+    );
+  });
+
+  it("passes onShortcutHelp to useBuildListKeyboard so the ? key can open the help overlay", () => {
+    mockAccessState = "granted";
+    render(<ProjectSettingsFieldsPage projectId={1} />);
+    expect(mockUseBuildListKeyboard).toHaveBeenCalledWith(
+      expect.objectContaining({ onShortcutHelp: expect.any(Function) }),
+    );
+  });
+
+  it("ShortcutHelpDialog is not shown on initial render — paired with the open test below", () => {
+    mockAccessState = "granted";
+    render(<ProjectSettingsFieldsPage projectId={1} />);
+    expect(screen.queryByTestId("shortcut-help-dialog")).not.toBeInTheDocument();
+  });
+
+  it("the onShortcutHelp callback passed to the keyboard hook opens the ShortcutHelpDialog when called", async () => {
+    mockAccessState = "granted";
+    render(<ProjectSettingsFieldsPage projectId={1} />);
+    const capturedOptions = mockUseBuildListKeyboard.mock.calls[0][0] as { onShortcutHelp: () => void };
+    expect(typeof capturedOptions.onShortcutHelp).toBe("function");
+    await act(async () => { capturedOptions.onShortcutHelp(); });
+    expect(screen.getByTestId("shortcut-help-dialog")).toBeInTheDocument();
+  });
+});
+
+describe("ProjectSettingsFieldsPage — offline state", () => {
+  let useOnlineStatusMock: jest.Mock;
+
+  beforeEach(() => {
+    useOnlineStatusMock = (
+      jest.requireMock("@/hooks/common/use-online-status") as {
+        useOnlineStatus: jest.Mock;
+      }
+    ).useOnlineStatus;
+    useOnlineStatusMock.mockReturnValue(true);
+    mockAccessState = "granted";
+  });
+
+  it("shows the offline banner when the device is offline and the page is ready", () => {
+    useOnlineStatusMock.mockReturnValue(false);
+    render(<ProjectSettingsFieldsPage projectId={1} />);
+    expect(screen.getByText(/you are offline/i)).toBeInTheDocument();
+  });
+
+  it("does not show the offline banner when the device is online", () => {
+    render(<ProjectSettingsFieldsPage projectId={1} />);
+    expect(screen.queryByText(/you are offline/i)).not.toBeInTheDocument();
+  });
+});
+
+describe("ProjectSettingsFieldsPage — permission key (Criterion 3)", () => {
+  it("passes build:view to usePageState, the key its own GET endpoint requires", () => {
+    mockAccessState = "granted";
+    render(<ProjectSettingsFieldsPage projectId={1} />);
+    expect(mockUsePageState).toHaveBeenCalledWith(
+      expect.objectContaining({ permission: "build:view" }),
+    );
+  });
+});

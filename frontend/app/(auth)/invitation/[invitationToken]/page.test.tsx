@@ -1,6 +1,7 @@
 import type { HTMLAttributes, PropsWithChildren } from "react";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { ApiError } from "@/lib/api-envelope";
 
 jest.mock("framer-motion", () => {
   function MotionDiv({
@@ -40,9 +41,22 @@ jest.mock("sonner", () => ({
 }));
 
 const acceptMutation = { mutate: jest.fn(), isPending: false };
+const claimMutation = { mutate: jest.fn(), isPending: false };
 const declineMutation = { mutate: jest.fn(), isPending: false };
+/**
+ * Added to the page when the invitation email OTP landed and never stubbed here,
+ * so every test in this file threw on render (BUG-HRMS-010). Succeeding by default
+ * is the code being sent; a test that cares drives the code step itself.
+ */
+const requestOtpMutation = {
+  mutate: jest.fn((_variables: { token: string }, callbacks: { onSuccess: () => void }) => {
+    callbacks.onSuccess();
+  }),
+  isPending: false,
+};
 
 const invitation = {
+  id: "inv-1",
   email: "new.joiner@acme.test",
   organizationName: "Acme Corp",
   role: "MEMBER",
@@ -57,8 +71,10 @@ jest.mock("@/hooks/common/auth-hooks", () => ({
     error: invitationError.value,
     isPending: false,
   }),
+  useClaimInvitation: () => claimMutation,
   useAcceptInvitation: () => acceptMutation,
   useDeclineInvitation: () => declineMutation,
+  useRequestInvitationOtp: () => requestOtpMutation,
   useSessionClaimsRefresh: () => jest.fn(),
   signInWithMagicToken: jest.fn(),
 }));
@@ -84,7 +100,7 @@ describe("InvitationPage — a rejected name tells the invitee why", () => {
     const firstName = screen.getByRole("textbox", { name: /first name/i });
     await user.click(firstName);
     await user.paste(OVER_LIMIT_NAME);
-    await user.click(screen.getByRole("button", { name: /accept invitation/i }));
+    await user.click(screen.getByRole("button", { name: /continue/i }));
 
     const message = await screen.findByRole("alert");
     expect(message).toBeVisible();
@@ -93,6 +109,7 @@ describe("InvitationPage — a rejected name tells the invitee why", () => {
     const describedBy = firstName.getAttribute("aria-describedby") ?? "";
     expect(describedBy.split(/\s+/)).toContain(message.id);
     expect(firstName).toHaveAttribute("aria-invalid", "true");
+    expect(requestOtpMutation.mutate).not.toHaveBeenCalled();
     expect(acceptMutation.mutate).not.toHaveBeenCalled();
   });
 
@@ -102,19 +119,19 @@ describe("InvitationPage — a rejected name tells the invitee why", () => {
 
     const firstName = screen.getByRole("textbox", { name: /first name/i });
     await user.type(firstName, "Priya");
-    await user.click(screen.getByRole("button", { name: /accept invitation/i }));
+    await user.click(screen.getByRole("button", { name: /continue/i }));
 
     expect(screen.queryByRole("alert")).toBeNull();
     expect(firstName).toHaveAttribute("aria-invalid", "false");
-    expect(acceptMutation.mutate).toHaveBeenCalledTimes(1);
+    expect(requestOtpMutation.mutate).toHaveBeenCalledTimes(1);
   });
 
-  it("disables the accept control while the acceptance is in flight", () => {
-    acceptMutation.isPending = true;
+  it("disables the control while the verification code is being sent", () => {
+    requestOtpMutation.isPending = true;
     render(<InvitationPage />);
 
     expect(
-      screen.getByRole("button", { name: /accepting invitation/i }),
+      screen.getByRole("button", { name: /sending verification code/i }),
     ).toBeDisabled();
   });
 });
@@ -153,14 +170,17 @@ describe("InvitationPage — an existing account opening the invitation", () => 
     expect(screen.getByRole("button", { name: /sign in & join/i })).toBeEnabled();
   });
 
-  it("accepts once for a signed-in invited account", async () => {
+  it("calls the claim mutation directly for a signed-in invited account without requesting an OTP", async () => {
     const user = userEvent.setup();
     sessionState.data = { user: { email: invitation.email } };
     render(<InvitationPage />);
 
     await user.click(screen.getByRole("button", { name: /accept & join/i }));
 
-    expect(acceptMutation.mutate).toHaveBeenCalledTimes(1);
+    expect(claimMutation.mutate).toHaveBeenCalledTimes(1);
+    expect(claimMutation.mutate).toHaveBeenCalledWith(invitation.id, expect.anything());
+    expect(requestOtpMutation.mutate).not.toHaveBeenCalled();
+    expect(acceptMutation.mutate).not.toHaveBeenCalled();
   });
 
   it("disables the control while an acceptance is in flight", () => {
@@ -177,18 +197,92 @@ describe("InvitationPage — an unusable invitation", () => {
     jest.clearAllMocks();
     sessionState.data = null;
     invitation.userExists = false;
-    invitationError.value = new Error("Invalid or expired invitation");
+    invitationError.value = null;
   });
 
   afterEach(() => {
     invitationError.value = null;
   });
 
-  it("explains that the link may have expired and offers a way forward", () => {
+  it("shows a generic unavailable state for non-404 errors", () => {
+    invitationError.value = new Error("Service unavailable");
     render(<InvitationPage />);
 
     expect(screen.getByText(/invitation unavailable/i)).toBeVisible();
-    expect(screen.getByText(/expired or was replaced/i)).toBeVisible();
     expect(screen.getByRole("button", { name: /go to sign in/i })).toBeEnabled();
+  });
+
+  it("shows the link-unavailable copy for a 404 and tells the invitee to check for a newer email", () => {
+    invitationError.value = new ApiError("Invalid or expired invitation", 404);
+    render(<InvitationPage />);
+
+    expect(screen.getByText(/invitation link unavailable/i)).toBeVisible();
+    expect(screen.getByText(/expired.*already used.*replaced/i)).toBeVisible();
+    expect(screen.getByText(/check your inbox/i)).toBeVisible();
+    expect(screen.getByRole("button", { name: /go to sign in/i })).toBeEnabled();
+  });
+
+  it("does not show the 404 error copy for a pending invite that validates successfully", () => {
+    render(<InvitationPage />);
+
+    expect(screen.queryByText(/invitation link unavailable/i)).toBeNull();
+    expect(screen.queryByText(/invitation unavailable/i)).toBeNull();
+  });
+});
+
+describe("InvitationPage — HRMS-005 invariant: link validity and status agreement", () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    sessionState.data = null;
+    invitation.userExists = false;
+    invitationError.value = null;
+  });
+
+  afterEach(() => {
+    invitationError.value = null;
+  });
+
+  it("shows the acceptance form for a pending unexpired invite, not an error state", () => {
+    render(<InvitationPage />);
+
+    expect(screen.getByRole("textbox", { name: /first name/i })).toBeInTheDocument();
+    expect(screen.queryByText(/invitation.*unavailable/i)).toBeNull();
+    expect(screen.queryByText(/expired/i)).toBeNull();
+  });
+
+  it("never uses the word 'expired' when a consumed token returns 404", () => {
+    invitationError.value = new ApiError("Invalid or expired invitation", 404);
+    render(<InvitationPage />);
+
+    const heading = screen.getByRole("heading", { level: 1 });
+    expect(heading.textContent).not.toMatch(/expired/i);
+    expect(screen.queryByRole("button", { name: /continue/i })).toBeNull();
+  });
+});
+
+describe("InvitationPage — unauthenticated user accepts inline without a signin redirect", () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    acceptMutation.isPending = false;
+    declineMutation.isPending = false;
+    sessionState.data = null;
+    invitation.userExists = true;
+    invitationError.value = null;
+  });
+
+  afterEach(() => {
+    invitation.userExists = false;
+  });
+
+  it("requests OTP directly rather than navigating to the signin page", async () => {
+    const user = userEvent.setup();
+    render(<InvitationPage />);
+
+    await user.click(screen.getByRole("button", { name: /sign in & join/i }));
+
+    expect(requestOtpMutation.mutate).toHaveBeenCalledTimes(1);
+    expect(mockPush).not.toHaveBeenCalledWith(
+      expect.stringContaining("/signin"),
+    );
   });
 });

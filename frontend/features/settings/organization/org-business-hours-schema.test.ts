@@ -48,6 +48,33 @@ describe("businessHoursSchema", () => {
     ).toBe(true);
   });
 
+  it("rejects an enabled day where closing time is not after opening time", () => {
+    expect(
+      businessHoursSchema.safeParse({
+        ...DEFAULT_BUSINESS_HOURS,
+        monday: { open: "18:00", close: "09:00", enabled: true },
+      }).success,
+    ).toBe(false);
+  });
+
+  it("rejects an enabled day where opening and closing times are equal", () => {
+    expect(
+      businessHoursSchema.safeParse({
+        ...DEFAULT_BUSINESS_HOURS,
+        monday: { open: "09:00", close: "09:00", enabled: true },
+      }).success,
+    ).toBe(false);
+  });
+
+  it("accepts a disabled day even when times would be out of order", () => {
+    expect(
+      businessHoursSchema.safeParse({
+        ...DEFAULT_BUSINESS_HOURS,
+        saturday: { open: "18:00", close: "09:00", enabled: false },
+      }).success,
+    ).toBe(true);
+  });
+
   it("rejects a non-boolean enabled flag", () => {
     expect(
       businessHoursSchema.safeParse({

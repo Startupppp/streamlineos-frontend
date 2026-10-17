@@ -20,9 +20,9 @@ export const PIE_COLORS = [...CHART_COLORS];
 export const CHART_SEMANTIC = {
   primary: "var(--chart-1)",
   accent: "var(--chart-2)",
-  success: "#10b981",
-  warning: "#f59e0b",
-  danger: "#ef4444",
+  success: "var(--status-success-fill)",
+  warning: "var(--status-warning-fill)",
+  danger: "var(--status-danger-fill)",
 } as const;
 
 export const chartTooltipStyle = {
@@ -30,7 +30,7 @@ export const chartTooltipStyle = {
   background: "var(--card)",
   border: "1px solid var(--border)",
   borderRadius: 8,
-  boxShadow: "0 4px 14px rgba(15, 23, 42, 0.08)",
+  boxShadow: "var(--shadow-card)",
 };
 
 export const chartGridProps = {

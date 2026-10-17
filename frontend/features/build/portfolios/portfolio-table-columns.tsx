@@ -32,7 +32,7 @@ export const PORTFOLIO_TABLE_HEADERS = [
   "Actions",
 ] as const;
 
-export type PortfolioOwnerLookup = (ownerId: string | null) => NamedUser | null;
+type PortfolioOwnerLookup = (ownerId: string | null) => NamedUser | null;
 
 interface PortfolioRowHandlers {
   canManage: boolean;
@@ -41,7 +41,7 @@ interface PortfolioRowHandlers {
   onDelete: (row: Portfolio) => void;
 }
 
-export function PortfolioRowActions({
+function PortfolioRowActions({
   portfolio,
   onEdit,
   onDelete,

@@ -170,20 +170,16 @@ export default function ProductCatalogPage() {
         ) : products.length === 0 ? (
           <EmptyState
             illustration={<EmptyProductsIllustration />}
-            title={query ? "No products match that search" : "No products yet"}
+            title="No products yet"
+            filtersActive={Boolean(query)}
+            filteredTitle="No products match that search"
+            onClearFilters={handleClearSearch}
             description={
               query
                 ? `Nothing in the catalogue matches "${query}". Clear the search to see everything.`
                 : "A product is a line you can put on a quote — its price, its tax and the currency it sells in."
             }
-            action={
-              query
-                ? { label: "Clear search", onClick: handleClearSearch }
-                : canManage
-                  ? { label: "New product", onClick: handleOpenCreate }
-                  : undefined
-            }
-            actionVariant={query ? "outline" : undefined}
+            action={canManage ? { label: "New product", onClick: handleOpenCreate } : undefined}
             className={CONTENT_FILL_PANEL}
           />
         ) : (

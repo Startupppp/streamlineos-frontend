@@ -21,9 +21,12 @@ interface PipCardProps {
   pip: PIP;
   onOpenEdit(pip: PIP): void;
   onUpdateStatus(id: number, status: string): void;
+  /** `hr:performance:manage` — PATCH /hr/performance/pip/:id. */
+  canManage: boolean;
+  isUpdating: boolean;
 }
 
-export function PipCard({ pip, onOpenEdit, onUpdateStatus }: PipCardProps) {
+export function PipCard({ pip, onOpenEdit, onUpdateStatus, canManage, isUpdating }: PipCardProps) {
   const handleEdit = useCallback(() => onOpenEdit(pip), [pip, onOpenEdit]);
   const handleComplete = useCallback(
     () => onUpdateStatus(pip.id, "COMPLETED"),
@@ -46,7 +49,7 @@ export function PipCard({ pip, onOpenEdit, onUpdateStatus }: PipCardProps) {
         <div className="flex items-start justify-between gap-3">
           <div className="flex items-center gap-2 min-w-0">
             <Avatar className="w-7 shrink-0">
-              <AvatarImage src={resolveImageUrl(pip.user?.image ?? null)} />
+              <AvatarImage src={resolveImageUrl(pip.user?.image ?? null)} alt="" />
               <AvatarFallback className="text-micro bg-primary/10 text-primary">
                 {pip.user?.name?.[0] ?? "?"}
               </AvatarFallback>
@@ -81,6 +84,7 @@ export function PipCard({ pip, onOpenEdit, onUpdateStatus }: PipCardProps) {
             >
               {pip.status ?? "ACTIVE"}
             </Badge>
+            {canManage && (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <AnimatedIconButton
@@ -98,11 +102,11 @@ export function PipCard({ pip, onOpenEdit, onUpdateStatus }: PipCardProps) {
                 </DropdownMenuItem>
                 {isActionable && (
                   <>
-                    <DropdownMenuItem onClick={handleComplete}>
+                    <DropdownMenuItem disabled={isUpdating} onClick={handleComplete}>
                       <CheckCircle2 className="h-3.5 w-3.5 mr-1.5" />
                       Mark Completed
                     </DropdownMenuItem>
-                    <DropdownMenuItem onClick={handleExtend}>
+                    <DropdownMenuItem disabled={isUpdating} onClick={handleExtend}>
                       <Calendar className="h-3.5 w-3.5 mr-1.5" />
                       Extend
                     </DropdownMenuItem>
@@ -114,6 +118,7 @@ export function PipCard({ pip, onOpenEdit, onUpdateStatus }: PipCardProps) {
                 )}
               </DropdownMenuContent>
             </DropdownMenu>
+            )}
           </div>
         </div>
         {pip.reason && (

@@ -85,7 +85,7 @@ export function VarianceTab({ runId }: VarianceTabProps) {
 
       <div className="rounded-md border border-border overflow-hidden">
         <div className="px-3 py-2 border-b bg-muted/30">
-          <span className="text-dense font-semibold text-foreground">Top Earners This Run</span>
+          <span className="text-dense font-semibold text-foreground">Biggest Changes This Run</span>
         </div>
         {topMovers.length === 0 ? (
           <div className="px-3 py-4 text-dense text-muted-foreground text-center">
@@ -101,9 +101,15 @@ export function VarianceTab({ runId }: VarianceTabProps) {
               )}
             >
               <TruncatedText text={emp.userName ?? emp.userId ?? ""} className="text-foreground font-medium min-w-0 flex-1" />
-              <span className="font-mono tabular-nums text-foreground">
-                {formatMoney(emp.net)}
-              </span>
+              {Number(emp.net) < 0 ? (
+                <span className="font-mono tabular-nums text-destructive">
+                  {formatMoney(emp.net)} · Negative net, blocked
+                </span>
+              ) : (
+                <span className="font-mono tabular-nums text-foreground">
+                  {formatMoney(emp.net)}
+                </span>
+              )}
             </div>
           ))
         )}

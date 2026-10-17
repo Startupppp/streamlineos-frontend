@@ -5,6 +5,7 @@ import type {
   InvitationValidation,
   MagicLinkSignInOutcome,
 } from "@/hooks/common/auth-hooks";
+import { ApiError } from "@/lib/api-envelope";
 
 interface AcceptInvitationData {
   ok: true;
@@ -22,9 +23,19 @@ interface AcceptCallbacks {
   onError: (error: unknown) => void;
 }
 
+interface RequestOtpCallbacks {
+  onSuccess: () => void;
+  onError: (error: unknown) => void;
+}
+
 interface DeclineCallbacks {
   onSuccess: () => void;
   onError: (error: unknown) => void;
+}
+
+interface ClaimCallbacks {
+  onSuccess?: (data: { ok: true; autoLoginToken: string; skippedGrants?: unknown[] }) => Promise<void>;
+  onError?: (error: unknown) => void;
 }
 
 interface FakeSession {
@@ -40,7 +51,18 @@ interface NavigationRecorder {
 const routerPush = jest.fn<void, [string]>();
 const acceptMutate =
   jest.fn<void, [AcceptInvitationVariables, AcceptCallbacks]>();
+const claimMutate = jest.fn<void, [string, ClaimCallbacks]>();
 const declineMutate = jest.fn<void, [{ token: string }, DeclineCallbacks]>();
+/**
+ * Added when the invitation email OTP landed and never stubbed, so every test in
+ * this file threw on render — the whole invitation flow went uncovered through the
+ * release QA found broken (BUG-HRMS-010). Succeeding by default is the OTP being
+ * sent; the code step is then driven explicitly.
+ */
+const requestOtpMutate =
+  jest.fn<void, [{ token: string }, RequestOtpCallbacks]>((_variables, callbacks) => {
+    callbacks.onSuccess();
+  });
 const refreshSessionClaims = jest.fn<Promise<null>, []>();
 const signInWithMagicToken =
   jest.fn<Promise<MagicLinkSignInOutcome>, [string]>();
@@ -48,6 +70,7 @@ const toastSuccess = jest.fn<void, [string]>();
 const toastError = jest.fn<void, [string]>();
 
 const VALID_INVITATION: InvitationValidation = {
+  id: "inv-valid-1",
   email: "new.joiner@acme.test",
   organizationName: "Acme Corp",
   role: "MEMBER",
@@ -60,7 +83,7 @@ const validation: {
   isPending: boolean;
 } = { data: VALID_INVITATION, error: null, isPending: false };
 
-const pendingState = { accept: false, decline: false };
+const pendingState = { accept: false, decline: false, requestOtp: false };
 
 let currentSession: FakeSession | null = null;
 
@@ -107,6 +130,7 @@ jest.mock("@/hooks/common/auth-hooks", () => ({
     error: validation.error,
     isPending: validation.isPending,
   }),
+  useClaimInvitation: () => ({ mutate: claimMutate, isPending: false }),
   useAcceptInvitation: () => ({
     mutate: acceptMutate,
     isPending: pendingState.accept,
@@ -114,6 +138,10 @@ jest.mock("@/hooks/common/auth-hooks", () => ({
   useDeclineInvitation: () => ({
     mutate: declineMutate,
     isPending: pendingState.decline,
+  }),
+  useRequestInvitationOtp: () => ({
+    mutate: requestOtpMutate,
+    isPending: pendingState.requestOtp,
   }),
   useSessionClaimsRefresh: () => refreshSessionClaims,
 }));
@@ -139,13 +167,30 @@ function declineResolves() {
   });
 }
 
+const EMAIL_OTP = "424242";
+
+/**
+ * Acceptance is two steps now: the invitee identifies themselves, the API sends a
+ * code to the invited mailbox, and the code is what actually accepts. The link
+ * alone is a bearer token, so it is no longer accepted as proof of who holds it.
+ */
+async function enterEmailCode() {
+  const user = userEvent.setup();
+  await user.type(
+    screen.getByRole("textbox", { name: /verification code/i }),
+    EMAIL_OTP,
+  );
+  await user.click(screen.getByRole("button", { name: /verify & create account/i }));
+}
+
 async function submitNewJoinerForm() {
   const user = userEvent.setup();
   await user.type(
     screen.getByRole("textbox", { name: /first name/i }),
     "Priya",
   );
-  await user.click(screen.getByRole("button", { name: /accept invitation/i }));
+  await user.click(screen.getByRole("button", { name: /continue/i }));
+  await enterEmailCode();
 }
 
 beforeAll(() => {
@@ -171,14 +216,19 @@ beforeEach(() => {
   validation.isPending = false;
   pendingState.accept = false;
   pendingState.decline = false;
+  pendingState.requestOtp = false;
   acceptMutate.mockImplementation(() => {});
+  claimMutate.mockImplementation(() => {});
   declineMutate.mockImplementation(() => {});
+  requestOtpMutate.mockImplementation((_variables, callbacks) => {
+    callbacks.onSuccess();
+  });
   refreshSessionClaims.mockResolvedValue(null);
   signInWithMagicToken.mockResolvedValue({ status: "failed" });
 });
 
 describe("InvitationPage — accepting as a new joiner", () => {
-  it("signs the invited account in once and lands on employee onboarding", async () => {
+  it("signs the invited account in once and resolves its authorized landing", async () => {
     acceptResolvesWith("invite-login-1");
     signInWithMagicToken.mockResolvedValue({ status: "signed-in" });
 
@@ -186,11 +236,11 @@ describe("InvitationPage — accepting as a new joiner", () => {
     await submitNewJoinerForm();
 
     await waitFor(() =>
-      expect(navigation.href).toBe("/employee-onboarding"),
+      expect(navigation.href).toBe("/post-invite"),
     );
     expect(acceptMutate).toHaveBeenCalledTimes(1);
     expect(acceptMutate).toHaveBeenCalledWith(
-      { token: "invite-token-1", firstName: "Priya", lastName: undefined },
+      { token: "invite-token-1", firstName: "Priya", lastName: undefined, emailOtp: EMAIL_OTP },
       expect.anything(),
     );
     expect(signInWithMagicToken).toHaveBeenCalledTimes(1);
@@ -266,7 +316,15 @@ describe("InvitationPage — accepting as a new joiner", () => {
 });
 
 describe("InvitationPage — accepting as an existing account", () => {
-  it("accepts with the token alone and lands on the dashboard once", async () => {
+  /**
+   * BUG-HRMS-010. This used to accept on the token alone. `accept` is a public
+   * route, so it cannot see that the caller is signed in — a signed-in invitee is
+   * indistinguishable from anyone else holding the link — and it therefore
+   * requires a code on every path. The one-click version could only ever be
+   * refused with a 400, so an invitee who already had an account could never
+   * join, whatever the state of the OTP route.
+   */
+  it("verifies the invited mailbox before joining, then resolves its authorized landing once", async () => {
     validation.data = { ...VALID_INVITATION, userExists: true };
     currentSession = { user: { email: "existing@acme.test" } };
     acceptResolvesWith("invite-login-existing");
@@ -276,9 +334,17 @@ describe("InvitationPage — accepting as an existing account", () => {
     const user = userEvent.setup();
     await user.click(screen.getByRole("button", { name: /accept & join/i }));
 
-    await waitFor(() => expect(navigation.href).toBe("/dashboard"));
-    expect(acceptMutate).toHaveBeenCalledWith(
+    expect(requestOtpMutate).toHaveBeenCalledWith(
       { token: "invite-token-1" },
+      expect.anything(),
+    );
+    expect(acceptMutate).not.toHaveBeenCalled();
+
+    await enterEmailCode();
+
+    await waitFor(() => expect(navigation.href).toBe("/post-invite"));
+    expect(acceptMutate).toHaveBeenCalledWith(
+      { token: "invite-token-1", emailOtp: EMAIL_OTP },
       expect.anything(),
     );
     expect(signInWithMagicToken).toHaveBeenCalledTimes(1);
@@ -294,6 +360,7 @@ describe("InvitationPage — accepting as an existing account", () => {
     render(<InvitationPage />);
     const user = userEvent.setup();
     await user.click(screen.getByRole("button", { name: /accept & join/i }));
+    await enterEmailCode();
 
     await waitFor(() => expect(routerPush).toHaveBeenCalledWith("/signin"));
     expect(navigation.href).toBe("");
@@ -314,16 +381,22 @@ describe("InvitationPage — accepting as an existing account", () => {
     expect(within(warning).getByText("someone.else@acme.test")).toBeVisible();
   });
 
-  it("two accept events in the same render consume the invitation once", () => {
+  it("two code submissions in the same render consume the invitation once", async () => {
     validation.data = { ...VALID_INVITATION, userExists: true };
     currentSession = { user: { email: "existing@acme.test" } };
 
     render(<InvitationPage />);
-    const accept = screen.getByRole("button", { name: /accept & join/i });
-    fireEvent.click(accept);
-    fireEvent.click(accept);
+    const user = userEvent.setup();
+    await user.click(screen.getByRole("button", { name: /accept & join/i }));
+    await user.type(
+      screen.getByRole("textbox", { name: /verification code/i }),
+      EMAIL_OTP,
+    );
+    const verify = screen.getByRole("button", { name: /verify & create account/i });
+    fireEvent.click(verify);
+    fireEvent.click(verify);
 
-    expect(acceptMutate).toHaveBeenCalledTimes(1);
+    await waitFor(() => expect(acceptMutate).toHaveBeenCalledTimes(1));
   });
 });
 
@@ -394,5 +467,42 @@ describe("InvitationPage — the invitation cannot be used", () => {
     expect(
       screen.queryByRole("heading", { name: /invitation unavailable/i }),
     ).toBeNull();
+  });
+});
+
+async function acceptWithError(error: unknown) {
+  validation.data = { ...VALID_INVITATION, userExists: true };
+  currentSession = { user: { email: VALID_INVITATION.email } };
+  claimMutate.mockImplementation((_id, cb) => { cb.onError?.(error); });
+  render(<InvitationPage />);
+  const u = userEvent.setup();
+  await u.click(screen.getByRole("button", { name: /accept & join/i }));
+}
+
+describe("InvitationPage — specific acceptance error states (BT-618d66782f9e)", () => {
+  it("shows 'Already a member' state on ALREADY_MEMBER code without a toast (BT-618d66782f9e)", async () => {
+    await acceptWithError(new ApiError("You are already a member of this organization", 409, "ALREADY_MEMBER"));
+    await waitFor(() => expect(screen.getByRole("heading", { name: /already a member/i })).toBeVisible());
+    expect(toastError).not.toHaveBeenCalled();
+  });
+  it("shows 'Already a member' state on bare 409 status without a code — fallback (BT-618d66782f9e)", async () => {
+    await acceptWithError(new ApiError("You are already a member of this organization", 409));
+    await waitFor(() => expect(screen.getByRole("heading", { name: /already a member/i })).toBeVisible());
+    expect(toastError).not.toHaveBeenCalled();
+  });
+  it("shows 'Account suspended' state on ACCOUNT_SUSPENDED code (BT-618d66782f9e)", async () => {
+    await acceptWithError(new ApiError("This account is suspended", 403, "ACCOUNT_SUSPENDED"));
+    await waitFor(() => expect(screen.getByRole("heading", { name: /account suspended/i })).toBeVisible());
+    expect(toastError).not.toHaveBeenCalled();
+  });
+  it("shows 'Organization at capacity' state on ORG_AT_CAPACITY code (BT-618d66782f9e)", async () => {
+    await acceptWithError(new ApiError("This organization has reached its member limit", 403, "ORG_AT_CAPACITY"));
+    await waitFor(() => expect(screen.getByRole("heading", { name: /organization at capacity/i })).toBeVisible());
+    expect(toastError).not.toHaveBeenCalled();
+  });
+  it("falls back to a toast for unclassified errors — control (BT-618d66782f9e)", async () => {
+    await acceptWithError(new Error("Something went wrong"));
+    await waitFor(() => expect(toastError).toHaveBeenCalled());
+    expect(screen.queryByRole("heading", { name: /already a member/i })).toBeNull();
   });
 });

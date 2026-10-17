@@ -17,7 +17,7 @@ jest.mock("next/dynamic", () => (_fn: () => Promise<{ default: React.ComponentTy
   };
 });
 
-jest.mock("@/hooks/api/build", () => ({
+jest.mock("@/hooks/api/build/meetings", () => ({
   useUpdateMeeting: () => ({
     mutate: jest.fn(),
     isPending: false,

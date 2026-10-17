@@ -2,6 +2,7 @@
 
 import { memo, useCallback } from "react";
 import { cn } from "@/lib/utils";
+import { SURFACE_CARD_INTERACTIVE } from "@/lib/ui-surface-chrome";
 import { formatShortDate } from "@/lib/date-utils";
 import { Badge } from "@/components/ui/badge";
 import { CheckIcon, XIcon, CopyIcon } from "@animateicons/react/lucide";
@@ -33,6 +34,14 @@ const REQUEST_TYPE_LABEL: Record<string, string> = {
   other: "Other",
 };
 
+const SOURCE_LABEL: Record<string, string> = {
+  manual: "Manual",
+  web_form: "Form",
+  email: "Email",
+  feedbucket: "Feedbucket",
+  portal_client: "Portal",
+};
+
 interface IntakeItem {
   id: number;
   title: string;
@@ -41,9 +50,10 @@ interface IntakeItem {
   createdAt?: string | Date | null;
   submitterEmail?: string | null;
   submitterName?: string | null;
-  priority?: "low" | "medium" | "high" | "urgent" | null;
-  requestType?: "bug" | "feature" | "task" | "question" | "other" | null;
+  priority?: string | null;
+  requestType?: string | null;
   declineReason?: string | null;
+  source?: string | null;
 }
 
 interface IntakeItemCardProps {
@@ -62,11 +72,11 @@ export const IntakeItemCard = memo(function IntakeItemCard({ item, canManage, on
   const submitterDisplay = item.submitterName ?? item.submitterEmail ?? null;
 
   return (
-    <div className={cn(PM_PANEL, "flex overflow-hidden transition-[border-color,box-shadow] duration-200 hover:border-primary/35 hover:shadow-md")}>
+    <div className={cn(PM_PANEL, "flex overflow-hidden", SURFACE_CARD_INTERACTIVE)}>
       <div className={cn("w-1 shrink-0", STATUS_LEFT_COLOR[item.status] ?? "bg-border")} />
       <div className="min-w-0 flex-1 px-4 py-3">
         <div className="mb-1 flex flex-wrap items-center gap-2">
-          <TruncatedText text={item.title} className="text-sm font-semibold" />
+          <TruncatedText text={item.title} className="text-sm font-medium" />
           <Badge
             variant={STATUS_BADGE_VARIANT[item.status] ?? "outline"}
             className="text-xs font-medium px-1.5 py-0.5 rounded-md"
@@ -74,13 +84,18 @@ export const IntakeItemCard = memo(function IntakeItemCard({ item, canManage, on
             {item.status.charAt(0).toUpperCase() + item.status.slice(1)}
           </Badge>
           {item.requestType && (
-            <Badge variant="outline" className="text-xs font-medium px-1.5 py-0.5 rounded-md">
+            <Badge variant="outline" className="text-xs font-normal px-1.5 py-0.5 rounded-md">
               {REQUEST_TYPE_LABEL[item.requestType] ?? item.requestType}
             </Badge>
           )}
           {item.priority && (
             <PriorityBadge priority={item.priority} showLabel size="sm" />
           )}
+          {item.source ? (
+            <Badge variant="outline" className="text-xs font-normal px-1.5 py-0.5 rounded-md">
+              {SOURCE_LABEL[item.source] ?? item.source}
+            </Badge>
+          ) : null}
         </div>
         {item.description != null ? (
           <p className={cn(TEXT_TWO_LINES, "text-sm text-muted-foreground")}>
@@ -104,6 +119,7 @@ export const IntakeItemCard = memo(function IntakeItemCard({ item, canManage, on
             size="sm"
             className="text-xs h-7"
             onClick={handleAccept}
+            aria-label="Accept — move to work queue"
           >
             Accept
           </AnimatedIconButton>
@@ -115,6 +131,7 @@ export const IntakeItemCard = memo(function IntakeItemCard({ item, canManage, on
             variant="outline"
             className="text-xs h-7"
             onClick={handleDecline}
+            aria-label="Decline — remove from intake"
           >
             Decline
           </AnimatedIconButton>

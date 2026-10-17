@@ -4,7 +4,7 @@ import { useMemo } from "react";
 import { Zap } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { statusToneClasses } from "@/lib/design-tokens";
-import type { ScoringRule } from "@/hooks/api/crm-settings";
+import type { ScoringRule } from "@/hooks/api/crm/settings/scoring-rules";
 
 /**
  * What these rules would score a typical lead.

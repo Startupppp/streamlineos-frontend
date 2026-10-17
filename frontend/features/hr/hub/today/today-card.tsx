@@ -1,5 +1,6 @@
 "use client";
 
+import { Button } from "@/components/ui/button";
 import { AlertCircle, RefreshCcw } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -26,18 +27,20 @@ export function ErrorRetry({
 }) {
   return (
     <div className="flex items-center gap-2 text-xs">
-      <AlertCircle className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+      <AlertCircle className="h-3.5 w-3.5 shrink-0 text-muted-foreground" aria-hidden="true" />
       <span className="flex-1 text-muted-foreground truncate">
         {getErrorMessage(error)}
       </span>
-      <button
+      <Button
         type="button"
+        variant="link"
+        size="sm"
         onClick={onRetry}
-        className="shrink-0 flex items-center gap-0.5 text-status-info-ink hover:underline"
+        className="h-auto shrink-0 gap-1 p-0 text-xs text-status-info-ink"
       >
-        <RefreshCcw className="h-3 w-3" />
+        <RefreshCcw className="h-3 w-3" aria-hidden="true" />
         Retry
-      </button>
+      </Button>
     </div>
   );
 }
@@ -51,7 +54,7 @@ export function AvatarInitials({
 }) {
   return (
     <Avatar className="h-6 w-6 shrink-0">
-      <AvatarImage src={resolveImageUrl(image)} />
+      <AvatarImage src={resolveImageUrl(image)} alt="" />
       <AvatarFallback className="text-micro">
         {getUserInitials({ name })}
       </AvatarFallback>

@@ -1,22 +1,34 @@
 import { render, screen } from "@testing-library/react";
 import type { ReactNode } from "react";
 import { ApiError } from "@/lib/api-envelope";
-import type { Incident } from "@/types/projects";
+import type { IncidentsCreateIncidentResponse, IncidentsGetIncidentResponse } from "@/contracts/build-contracts.generated";
 import { getSlaState } from "./sla";
 
 const mockUseIncident = jest.fn();
 const mockUseDeleteIncident = jest.fn();
-const mockUseOrgMembers = jest.fn();
+const mockUseProjectMembers = jest.fn();
+const mockUseReleases = jest.fn();
+const mockUseTicket = jest.fn();
 const mockUseCan = jest.fn();
 const mockUseAccess = jest.fn();
 
 jest.mock("@/hooks/api/build/incidents", () => ({
   useIncident: (...args: unknown[]) => mockUseIncident(...args),
+}));
+jest.mock("@/hooks/api/build/incident-mutations", () => ({
   useDeleteIncident: () => mockUseDeleteIncident(),
 }));
 
-jest.mock("@/hooks/api/organization", () => ({
-  useOrgMembers: (...args: unknown[]) => mockUseOrgMembers(...args),
+jest.mock("@/hooks/api/build/project-members", () => ({
+  useProjectMembers: (...args: unknown[]) => mockUseProjectMembers(...args),
+}));
+
+jest.mock("@/hooks/api/build/releases", () => ({
+  useReleases: (...args: unknown[]) => mockUseReleases(...args),
+}));
+
+jest.mock("@/hooks/api/build/ticket-queries", () => ({
+  useTicket: (...args: unknown[]) => mockUseTicket(...args),
 }));
 
 jest.mock("@/hooks/api/access", () => ({
@@ -39,8 +51,8 @@ jest.mock("@animateicons/react/lucide", () => ({
 }));
 
 jest.mock("@/components/ui/page-wrapper", () => ({
-  PageWrapper: ({ children, title }: { children: ReactNode; title?: ReactNode }) => (
-    <div>{title ? <h1>{title}</h1> : null}{children}</div>
+  PageWrapper: ({ children, title, badge }: { children: ReactNode; title?: ReactNode; badge?: ReactNode }) => (
+    <div>{title ? <h1>{title}</h1> : null}{badge}{children}</div>
   ),
 }));
 
@@ -64,6 +76,14 @@ jest.mock("./incident-sheet", () => ({
   IncidentSheet: () => null,
 }));
 
+jest.mock("./incident-decisions", () => ({
+  IncidentDecisions: () => null,
+}));
+
+jest.mock("./incident-follow-ups", () => ({
+  IncidentFollowUps: () => null,
+}));
+
 import { IncidentDetailPage } from "./incident-detail-page";
 
 const ACCESS_GRANTED = {
@@ -83,11 +103,14 @@ function baseQuery(overrides = {}) {
     isError: false,
     error: undefined,
     refetch: jest.fn(),
+    fetchNextPage: jest.fn(),
+    hasNextPage: false,
+    isFetchingNextPage: false,
     ...overrides,
   };
 }
 
-function baseIncident(overrides: Partial<Incident> = {}): Incident {
+function baseIncident(overrides: Partial<IncidentsCreateIncidentResponse> = {}): IncidentsCreateIncidentResponse {
   return {
     id: 1,
     orgId: "org_1",
@@ -107,9 +130,33 @@ function baseIncident(overrides: Partial<Incident> = {}): Incident {
     responseDueAt: null,
     resolutionDueAt: null,
     linkedTicketId: null,
+    releaseId: null,
+    createdBy: null,
     deletedAt: null,
     createdAt: "2026-01-01T00:00:00.000Z",
     updatedAt: "2026-01-01T00:00:00.000Z",
+    ...overrides,
+  };
+}
+
+function releasePage(items: Array<{ id: number; name: string; version: string }>) {
+  return {
+    data: items,
+    pagination: { limit: 50, hasMore: false, nextCursor: null },
+  };
+}
+
+function baseIncidentDetail(overrides: Partial<IncidentsGetIncidentResponse> = {}): IncidentsGetIncidentResponse {
+  return {
+    ...baseIncident(),
+    updates: [],
+    decisions: [],
+    followUpActions: [],
+    childrenPagination: {
+      updates: { limit: 100, hasMore: false, nextCursor: null },
+      decisions: { limit: 100, hasMore: false, nextCursor: null },
+      followUpActions: { limit: 100, hasMore: false, nextCursor: null },
+    },
     ...overrides,
   };
 }
@@ -119,7 +166,9 @@ beforeEach(() => {
   mockUseCan.mockReturnValue(true);
   mockUseAccess.mockReturnValue(ACCESS_GRANTED);
   mockUseIncident.mockReturnValue(baseQuery());
-  mockUseOrgMembers.mockReturnValue(baseQuery({ data: { data: [], total: 0 } }));
+  mockUseProjectMembers.mockReturnValue(baseQuery({ data: [] }));
+  mockUseReleases.mockReturnValue(baseQuery({ data: releasePage([]) }));
+  mockUseTicket.mockReturnValue(baseQuery({ data: null }));
   mockUseDeleteIncident.mockReturnValue({ mutate: jest.fn(), isPending: false });
 });
 
@@ -153,6 +202,17 @@ describe("IncidentDetailPage page-state gating", () => {
     );
   });
 
+  it("reads the linked release out of the cursor envelope useReleases now returns, not off the envelope itself", () => {
+    mockUseIncident.mockReturnValue(
+      baseQuery({ data: baseIncidentDetail({ id: 1, releaseId: 7 }) }),
+    );
+    mockUseReleases.mockReturnValue(
+      baseQuery({ data: releasePage([{ id: 7, name: "Autumn", version: "2.4.0" }]) }),
+    );
+    render(<IncidentDetailPage projectId={1} incidentId={1} />);
+    expect(screen.getByText("Autumn (2.4.0)")).toBeInTheDocument();
+  });
+
   it("renders the not-found empty state only once access is granted and the incident is genuinely absent", () => {
     mockUseIncident.mockReturnValue(baseQuery());
     render(<IncidentDetailPage projectId={1} incidentId={999} />);
@@ -160,9 +220,17 @@ describe("IncidentDetailPage page-state gating", () => {
   });
 
   it("renders the incident once access is granted and data has loaded", () => {
-    mockUseIncident.mockReturnValue(baseQuery({ data: baseIncident() }));
+    mockUseIncident.mockReturnValue(baseQuery({ data: baseIncidentDetail() }));
     render(<IncidentDetailPage projectId={1} incidentId={1} />);
     expect(screen.getByRole("heading", { name: "Payments outage" })).toBeInTheDocument();
+  });
+
+  it("renders the incident's severity, SLA status and owner when data is loaded", () => {
+    mockUseIncident.mockReturnValue(baseQuery({ data: baseIncidentDetail() }));
+    render(<IncidentDetailPage projectId={1} incidentId={1} />);
+    expect(screen.getByText("critical")).toBeInTheDocument();
+    expect(screen.getByText("Detected")).toBeInTheDocument();
+    expect(screen.getByText("Unassigned")).toBeInTheDocument();
   });
 });
 
@@ -206,5 +274,26 @@ describe("getSlaState", () => {
   it("treats an unparsable due date as not breached instead of a NaN comparison", () => {
     const incident = baseIncident({ responseDueAt: "not-a-date" });
     expect(getSlaState(incident, new Date("2026-06-01T00:00:00.000Z")).responseBreached).toBe(false);
+  });
+});
+
+describe("IncidentDetailPage communications field (BT-0a862ab1ed4d)", () => {
+  it("renders the customerComms value when it is set", () => {
+    mockUseIncident.mockReturnValue(
+      baseQuery({ data: baseIncidentDetail({ customerComms: "Sent status email to all customers" }) }),
+    );
+    render(<IncidentDetailPage projectId={1} incidentId={1} />);
+    expect(screen.getByText("Sent status email to all customers")).toBeInTheDocument();
+  });
+
+  it("renders 'Not set' placeholder when customerComms is null", () => {
+    mockUseIncident.mockReturnValue(
+      baseQuery({ data: baseIncidentDetail({ customerComms: null }) }),
+    );
+    render(<IncidentDetailPage projectId={1} incidentId={1} />);
+    const customerCommsSection = screen.getByText(/customer comms/i, { selector: "p" });
+    const container = customerCommsSection.closest("div.space-y-1");
+    expect(container).not.toBeNull();
+    expect(container!.querySelector("span.italic")).toBeInTheDocument();
   });
 });

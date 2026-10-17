@@ -52,7 +52,7 @@ describe("every authenticated route resolves through the registry", () => {
 
   it("every universal route reaches a real page — catches phantom roots like a declared /home with nothing behind it", () => {
     const phantoms = UNIVERSAL_ROUTES.filter((route) =>
-      route.subtree
+      route.subtree || route.universalDescendants
         ? !servedPaths.some(
             (path) => path === route.path || path.startsWith(`${route.path}/`),
           )

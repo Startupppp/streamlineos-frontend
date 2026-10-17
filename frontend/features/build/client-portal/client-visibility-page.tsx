@@ -1,11 +1,14 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback } from "react";
+import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import {
-  useClientVisibility,
+  useClientVisibilityTicketsInfinite,
+  useClientVisibilityMilestonesInfinite,
   useUpdateTicketVisibility,
   useUpdateMilestoneVisibility,
 } from "@/hooks/api/build/client-portal";
+import { InfiniteScrollSentinel } from "@/components/ui/infinite-scroll-sentinel";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -30,11 +33,19 @@ import { getErrorMessage } from "@/lib/get-error-message";
 import { cn } from "@/lib/utils";
 import { usePageState } from "@/hooks/api/use-page-state";
 import { PageState } from "@/components/shared/page-state";
+import { useOnlineStatus } from "@/hooks/common/use-online-status";
 
-type VisibilityTab = "tickets" | "milestones";
+const VISIBILITY_TABS = ["tickets", "milestones"] as const;
+type VisibilityTab = (typeof VISIBILITY_TABS)[number];
+
+function isVisibilityTab(value: string | null): value is VisibilityTab {
+  return value !== null && VISIBILITY_TABS.some((t) => t === value);
+}
 
 interface ClientVisibilityPageProps {
   projectId: number;
+  sectionParamKey?: string;
+  standalone?: boolean;
 }
 
 function TicketRow({
@@ -48,8 +59,7 @@ function TicketRow({
 
   function handleChange(checked: boolean) {
     update.mutate(
-      { ticketId: ticket.id, clientVisible: checked },
-      { onError: (e) => toast.error(getErrorMessage(e)) },
+      { ticketId: ticket.id, clientVisible: checked, version: ticket.version },
     );
   }
 
@@ -101,30 +111,49 @@ function MilestoneRow({
   );
 }
 
-export function ClientVisibilityPage({ projectId }: ClientVisibilityPageProps) {
-  const { data, isLoading, isError, error, refetch } = useClientVisibility(projectId);
-  const [activeTab, setActiveTab] = useState<VisibilityTab>("tickets");
+export function ClientVisibilityPage({ projectId, sectionParamKey = "section", standalone = true }: ClientVisibilityPageProps) {
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const pathname = usePathname();
+
+  const sectionParam = searchParams.get(sectionParamKey);
+  const activeTab: VisibilityTab = isVisibilityTab(sectionParam) ? sectionParam : "tickets";
+
+  const ticketsQuery = useClientVisibilityTicketsInfinite(projectId);
+  const milestonesQuery = useClientVisibilityMilestonesInfinite(projectId);
+
+  const activeQuery = activeTab === "tickets" ? ticketsQuery : milestonesQuery;
+
+  const isOnline = useOnlineStatus();
 
   const pageState = usePageState({
     permission: "build:clientvisibility:manage",
-    isLoading,
-    isError,
-    error,
+    isLoading: activeQuery.isLoading,
+    isError: activeQuery.isError,
+    error: activeQuery.error,
   });
 
-  const ticketCount = data?.tickets.length ?? 0;
-  const milestoneCount = data?.milestones.length ?? 0;
+  const ticketCount = ticketsQuery.items.length;
+  const milestoneCount = milestonesQuery.items.length;
 
-  const VISIBILITY_TABS = ["tickets", "milestones"] as const;
+  const handleTabChange = useCallback(
+    (value: string) => {
+      if (!isVisibilityTab(value)) return;
+      const next = new URLSearchParams(searchParams.toString());
+      if (value === "tickets") {
+        next.delete(sectionParamKey);
+      } else {
+        next.set(sectionParamKey, value);
+      }
+      const query = next.toString();
+      router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false });
+    },
+    [searchParams, router, pathname, sectionParamKey],
+  );
 
-  function handleTabChange(value: string) {
-    const found = VISIBILITY_TABS.find((t) => t === value);
-    if (found) setActiveTab(found);
-  }
-
-  function handleRetry() {
-    void refetch();
-  }
+  const handleRetry = useCallback(() => {
+    void activeQuery.refetch();
+  }, [activeQuery]);
 
   const visibilitySkeleton = (
     <div className="flex flex-col gap-2">
@@ -134,6 +163,126 @@ export function ClientVisibilityPage({ projectId }: ClientVisibilityPageProps) {
     </div>
   );
 
+  const visibilityContent = (
+    <>
+      <Alert className="w-fit max-w-full bg-muted py-2">
+        <Info className="size-4" />
+        <AlertTitle>Visibility rules</AlertTitle>
+        <AlertDescription>
+          Only enabled tickets and milestones appear in the client portal.
+        </AlertDescription>
+      </Alert>
+      {!isOnline && (
+        <p className="mt-2 rounded-md bg-muted/50 px-4 py-2 text-sm text-muted-foreground">
+          You&apos;re offline — results may not be up to date
+        </p>
+      )}
+
+      <PageState
+        resolution={pageState}
+        loading={visibilitySkeleton}
+        onRetry={handleRetry}
+        className="flex min-h-0 flex-1 flex-col"
+      >
+        <Tabs value={activeTab} onValueChange={handleTabChange} className="flex min-h-0 flex-1 flex-col gap-3">
+          <PageTabsToolbar
+            tabsDensity="labeled"
+            tabs={
+              <TabsList>
+                <TabsTrigger value="tickets">
+                  Tickets
+                  {ticketCount > 0 ? (
+                    <Badge variant="secondary" className="ml-1.5 h-5 px-1.5 text-xs">
+                      {ticketCount}
+                    </Badge>
+                  ) : null}
+                </TabsTrigger>
+                <TabsTrigger value="milestones">
+                  Milestones
+                  {milestoneCount > 0 ? (
+                    <Badge variant="secondary" className="ml-1.5 h-5 px-1.5 text-xs">
+                      {milestoneCount}
+                    </Badge>
+                  ) : null}
+                </TabsTrigger>
+              </TabsList>
+            }
+          />
+
+          <TabsContent value="tickets" className="mt-0 flex min-h-0 flex-1 flex-col">
+            {!ticketsQuery.isLoading && ticketsQuery.items.length === 0 ? (
+              <EmptyState
+                illustrationPreset="ticket"
+                title="No tickets"
+                description="This project has no tickets yet."
+                compact
+                className={CONTENT_FILL_PANEL}
+              />
+            ) : (
+              <PmPanel className="flex min-h-0 flex-1 flex-col overflow-hidden p-0">
+                <div className="flex shrink-0 items-center gap-3 border-b border-border bg-secondary px-3 py-2 text-micro font-medium uppercase tracking-wider text-secondary-foreground">
+                  <span className="w-16 shrink-0">ID</span>
+                  <span className="flex-1">Title</span>
+                  <span className="w-16 shrink-0">Type</span>
+                  <span className="w-10 shrink-0 text-right">Visible</span>
+                </div>
+                <ScrollArea fill hideScrollbar>
+                  {ticketsQuery.items.map((ticket) => (
+                    <TicketRow key={ticket.id} ticket={ticket} projectId={projectId} />
+                  ))}
+                  <InfiniteScrollSentinel
+                    hasNextPage={ticketsQuery.hasMore}
+                    isFetchingNextPage={ticketsQuery.isFetchingNextPage}
+                    onLoadMore={() => void ticketsQuery.fetchNextPage()}
+                    label="Load more tickets"
+                  />
+                </ScrollArea>
+              </PmPanel>
+            )}
+          </TabsContent>
+
+          <TabsContent value="milestones" className="mt-0 flex min-h-0 flex-1 flex-col">
+            {!milestonesQuery.isLoading && milestonesQuery.items.length === 0 ? (
+              <EmptyState
+                illustrationPreset="calendar"
+                title="No milestones"
+                description="This project has no milestones yet."
+                compact
+                className={CONTENT_FILL_PANEL}
+              />
+            ) : (
+              <PmPanel className="flex min-h-0 flex-1 flex-col overflow-hidden p-0">
+                <div className="flex shrink-0 items-center gap-3 border-b border-border bg-secondary px-3 py-2 text-micro font-medium uppercase tracking-wider text-secondary-foreground">
+                  <span className="flex-1">Name</span>
+                  <span className="w-10 shrink-0 text-right">Visible</span>
+                </div>
+                <ScrollArea fill hideScrollbar>
+                  {milestonesQuery.items.map((milestone) => (
+                    <MilestoneRow
+                      key={milestone.id}
+                      milestone={milestone}
+                      projectId={projectId}
+                    />
+                  ))}
+                  <InfiniteScrollSentinel
+                    hasNextPage={milestonesQuery.hasMore}
+                    isFetchingNextPage={milestonesQuery.isFetchingNextPage}
+                    onLoadMore={() => void milestonesQuery.fetchNextPage()}
+                    label="Load more milestones"
+                  />
+                </ScrollArea>
+              </PmPanel>
+            )}
+          </TabsContent>
+        </Tabs>
+      </PageState>
+    </>
+  );
+
+  if (!standalone) {
+    return <div className="flex min-h-0 flex-1 flex-col gap-3">{visibilityContent}</div>;
+  }
+
   return (
     <PageWrapper
       title="Client Portal"
@@ -141,102 +290,7 @@ export function ClientVisibilityPage({ projectId }: ClientVisibilityPageProps) {
     >
       <PmPageShell>
         <PmSection index={0}>
-          <Alert className="w-fit max-w-full bg-muted py-2">
-            <Info className="size-4" />
-            <AlertTitle>Visibility rules</AlertTitle>
-            <AlertDescription>
-              Only enabled tickets and milestones appear in the client portal.
-            </AlertDescription>
-          </Alert>
-        </PmSection>
-
-        <PmSection index={1}>
-          <PageState
-            resolution={pageState}
-            loading={visibilitySkeleton}
-            onRetry={handleRetry}
-            className="flex min-h-0 flex-1 flex-col"
-          >
-            <Tabs value={activeTab} onValueChange={handleTabChange} className="flex min-h-0 flex-1 flex-col gap-3">
-              <PageTabsToolbar
-                tabsDensity="labeled"
-                tabs={
-                  <TabsList>
-                    <TabsTrigger value="tickets">
-                      Tickets
-                      {ticketCount > 0 ? (
-                        <Badge variant="secondary" className="ml-1.5 h-5 px-1.5 text-xs">
-                          {ticketCount}
-                        </Badge>
-                      ) : null}
-                    </TabsTrigger>
-                    <TabsTrigger value="milestones">
-                      Milestones
-                      {milestoneCount > 0 ? (
-                        <Badge variant="secondary" className="ml-1.5 h-5 px-1.5 text-xs">
-                          {milestoneCount}
-                        </Badge>
-                      ) : null}
-                    </TabsTrigger>
-                  </TabsList>
-                }
-              />
-
-              <TabsContent value="tickets" className="mt-0 flex min-h-0 flex-1 flex-col">
-                {(data?.tickets ?? []).length === 0 ? (
-                  <EmptyState
-                    illustrationPreset="ticket"
-                    title="No tickets"
-                    description="This project has no tickets yet."
-                    compact
-                    className={CONTENT_FILL_PANEL}
-                  />
-                ) : (
-                  <PmPanel className="flex min-h-0 flex-1 flex-col overflow-hidden p-0">
-                    <div className="flex shrink-0 items-center gap-3 border-b border-border bg-secondary px-3 py-2 text-micro font-bold uppercase tracking-wider text-secondary-foreground">
-                      <span className="w-16 shrink-0">ID</span>
-                      <span className="flex-1">Title</span>
-                      <span className="w-16 shrink-0">Type</span>
-                      <span className="w-10 shrink-0 text-right">Visible</span>
-                    </div>
-                    <ScrollArea fill hideScrollbar>
-                      {data?.tickets.map((ticket) => (
-                        <TicketRow key={ticket.id} ticket={ticket} projectId={projectId} />
-                      ))}
-                    </ScrollArea>
-                  </PmPanel>
-                )}
-              </TabsContent>
-
-              <TabsContent value="milestones" className="mt-0 flex min-h-0 flex-1 flex-col">
-                {(data?.milestones ?? []).length === 0 ? (
-                  <EmptyState
-                    illustrationPreset="calendar"
-                    title="No milestones"
-                    description="This project has no milestones yet."
-                    compact
-                    className={CONTENT_FILL_PANEL}
-                  />
-                ) : (
-                  <PmPanel className="flex min-h-0 flex-1 flex-col overflow-hidden p-0">
-                    <div className="flex shrink-0 items-center gap-3 border-b border-border bg-secondary px-3 py-2 text-micro font-bold uppercase tracking-wider text-secondary-foreground">
-                      <span className="flex-1">Name</span>
-                      <span className="w-10 shrink-0 text-right">Visible</span>
-                    </div>
-                    <ScrollArea fill hideScrollbar>
-                      {data?.milestones.map((milestone) => (
-                        <MilestoneRow
-                          key={milestone.id}
-                          milestone={milestone}
-                          projectId={projectId}
-                        />
-                      ))}
-                    </ScrollArea>
-                  </PmPanel>
-                )}
-              </TabsContent>
-            </Tabs>
-          </PageState>
+          {visibilityContent}
         </PmSection>
       </PmPageShell>
     </PageWrapper>

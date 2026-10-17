@@ -3,9 +3,8 @@
 import { useFormContext } from "react-hook-form";
 import * as z from "zod";
 import { format } from "date-fns";
-import { CalendarIcon, Shield, Globe } from "lucide-react";
+import { Shield, Globe } from "lucide-react";
 import { XIcon, PlusIcon } from "@animateicons/react/lucide";
-import { Button } from "@/components/ui/button";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import {
@@ -16,11 +15,10 @@ import { Textarea } from "@/components/ui/textarea";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Calendar } from "@/components/ui/calendar";
+import { DatePicker } from "@/components/ui/date-picker";
 import { Switch } from "@/components/ui/switch";
-import { cn } from "@/lib/utils";
 import { Combobox } from "@/components/ui/combobox";
+import { parseDateOnly } from "@/lib/date-constraints";
 
 export const formSchema = z.object({
   name: z
@@ -50,7 +48,7 @@ function TagRemoveButton({ tag, onClick }: { tag: string; onClick: (e: React.Mou
       data-tag={tag}
       onClick={onClick}
       aria-label={`Remove tag ${tag}`}
-      className="text-muted-foreground hover:text-foreground transition-colors"
+      className="rounded-sm text-muted-foreground hover:text-foreground transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
       {...hoverHandlers}
     >
       <XIcon ref={iconRef} size={12} />
@@ -101,7 +99,12 @@ export function DocumentFormFields({
 
   return (
     <div className="space-y-4">
-      {filesCount <= 1 && (
+      {filesCount > 1 ? (
+        <div className="space-y-1">
+          <p className="text-xs font-semibold text-foreground/80 uppercase tracking-wider">Document Name</p>
+          <p className="text-sm text-muted-foreground">Each file is saved under its own file name.</p>
+        </div>
+      ) : (
         <FormField
           control={form.control}
           name="name"
@@ -237,47 +240,42 @@ export function DocumentFormFields({
       <FormField
         control={form.control}
         name="expiryDate"
-        render={({ field }) => (
-          <FormItem className="flex flex-col">
-            <FormLabel className="text-xs font-semibold text-foreground/80 uppercase tracking-wider">
-              Expiry Date
-            </FormLabel>
-            <Popover>
-              <PopoverTrigger asChild>
-                <FormControl>
-                  <Button
-                    variant="outline"
-                    className={cn("justify-start text-left font-normal", !field.value && "text-muted-foreground")}
-                  >
-                    <CalendarIcon className="mr-2 h-4 w-4 opacity-50" />
-                    {field.value ? format(field.value, "PPP") : <span>No expiry date</span>}
-                  </Button>
-                </FormControl>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0" align="start">
-                <Calendar
-                  mode="single"
-                  selected={field.value}
-                  onSelect={field.onChange}
-                  disabled={(date) => date < new Date()}
-                  initialFocus
+        render={({ field }) => {
+          function handleExpiryChange(value: string) {
+            field.onChange(parseDateOnly(value));
+          }
+          return (
+            <FormItem className="flex flex-col">
+              <FormLabel className="text-xs font-semibold text-foreground/80 uppercase tracking-wider">
+                Expiry Date
+              </FormLabel>
+              <FormControl>
+                <DatePicker
+                  value={field.value ? format(field.value, "yyyy-MM-dd") : ""}
+                  onChange={handleExpiryChange}
+                  placeholder="No expiry date"
+                  dateFormat="PPP"
+                  clearable
+                  disablePast
+                  ariaLabel="Expiry Date"
                 />
-              </PopoverContent>
-            </Popover>
-            <FormDescription className="text-dense">
-              Set an expiry date for contracts or certificates
-            </FormDescription>
-            <FormMessage />
-          </FormItem>
-        )}
+              </FormControl>
+              <FormDescription className="text-dense">
+                Set an expiry date for contracts or certificates
+              </FormDescription>
+              <FormMessage />
+            </FormItem>
+          );
+        }}
       />
 
       <div className="space-y-2">
-        <label className="text-xs font-semibold text-foreground/80 uppercase tracking-wider">
+        <label htmlFor="doc-tags-input" className="text-xs font-semibold text-foreground/80 uppercase tracking-wider">
           Tags
         </label>
         <div className="flex gap-2">
           <Input
+            id="doc-tags-input"
             placeholder="Add a tag..."
             value={tagInput}
             onChange={onTagInputChange}

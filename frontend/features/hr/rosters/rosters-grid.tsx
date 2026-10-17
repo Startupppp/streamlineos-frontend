@@ -5,7 +5,11 @@ import { motion, AnimatePresence } from "framer-motion";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { ChevronDownIcon, ChevronUpIcon } from "@animateicons/react/lucide";
 import { EmptyState } from "@/components/ui/empty-state";
-import { ErrorState } from "@/components/shared/error-state";
+import { PageState } from "@/components/shared/page-state";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { LoadingButton } from "@/components/ui/loading-button";
+import { usePageState } from "@/hooks/api/use-page-state";
+import { useHrShifts } from "@/hooks/api/hr/shifts";
 import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
 import { ChartEmptyState } from "@/components/charts/chart-empty-state";
 import { Badge } from "@/components/ui/badge";
@@ -36,8 +40,15 @@ interface RosterCardProps {
 function RosterCard({ roster, canManage }: RosterCardProps) {
   const [expanded, setExpanded] = useState(false);
   const [assignOpen, setAssignOpen] = useState(false);
-  const { data: entries } = useRosterEntries(expanded ? roster.id : 0);
+  const [confirmPublishOpen, setConfirmPublishOpen] = useState(false);
+  const { data: entries, isLoading: entriesLoading } = useRosterEntries(expanded ? roster.id : 0);
   const publishRoster = usePublishRoster();
+  // Entries carry a shiftId; show the shift's name, never "Shift #12" (FE-85).
+  const { data: shifts } = useHrShifts();
+  const shiftNameById = useMemo(
+    () => new Map((shifts ?? []).map((shift) => [shift.id, shift.name])),
+    [shifts],
+  );
 
   const entryUserIds = useMemo(
     () => [...new Set((entries ?? []).map((e) => e.userId))],
@@ -62,9 +73,17 @@ function RosterCard({ roster, canManage }: RosterCardProps) {
     setAssignOpen(true);
   }
 
+  function handleOpenPublish() {
+    setConfirmPublishOpen(true);
+  }
+
+  // Publishing shows the week to every rostered employee; confirm it (FE-83).
   function handlePublish() {
     publishRoster.mutate(roster.id, {
-      onSuccess: () => toast.success("Roster published"),
+      onSuccess: () => {
+        toast.success(`Published ${roster.name}`);
+        setConfirmPublishOpen(false);
+      },
       onError: (err) => toast.error(getErrorMessage(err)),
     });
   }
@@ -82,12 +101,12 @@ function RosterCard({ roster, canManage }: RosterCardProps) {
           </Badge>
           {canManage && roster.status === "DRAFT" && (
             <>
-              <Button size="sm" variant="outline" className="text-xs" onClick={handleOpenAssign}>
+              <Button size="sm" variant="outline" onClick={handleOpenAssign}>
                 Assign
               </Button>
-              <Button size="sm" variant="outline" className="text-xs" onClick={handlePublish} disabled={publishRoster.isPending}>
+              <LoadingButton size="sm" variant="outline" onClick={handleOpenPublish} isPending={publishRoster.isPending}>
                 Publish
-              </Button>
+              </LoadingButton>
             </>
           )}
           <AnimatedIconButton
@@ -95,7 +114,6 @@ function RosterCard({ roster, canManage }: RosterCardProps) {
             iconSize={16}
             variant="ghost"
             size="icon"
-            className="w-7"
             onClick={handleToggle}
             aria-label={expanded ? `Collapse ${roster.name}` : `Expand ${roster.name}`}
           />
@@ -112,14 +130,19 @@ function RosterCard({ roster, canManage }: RosterCardProps) {
             className="overflow-hidden"
           >
             <div className="border-t border-border p-4">
-              {!entries?.length ? (
+              {entriesLoading ? (
+                <div className="space-y-2">
+                  <Skeleton className="h-6 w-full" />
+                  <Skeleton className="h-6 w-5/6" />
+                </div>
+              ) : !entries?.length ? (
                 canManage ? (
                   <div className="flex flex-col items-center gap-2 py-8 text-center">
                     <p className="text-sm font-medium text-foreground">Nobody is rostered yet</p>
                     <p className="max-w-xs text-xs text-muted-foreground">
                       Add an employee against a day in this week, then publish the roster so they can see it.
                     </p>
-                    <Button size="sm" className="mt-1 text-xs" onClick={handleOpenAssign}>
+                    <Button size="sm" className="mt-1" onClick={handleOpenAssign}>
                       Assign an employee
                     </Button>
                   </div>
@@ -135,7 +158,7 @@ function RosterCard({ roster, canManage }: RosterCardProps) {
                         {entry.isDayOff ? (
                           <Badge variant="secondary" className="text-micro">Day Off</Badge>
                         ) : (
-                          entry.shiftId ? `Shift #${entry.shiftId}` : "—"
+                          entry.shiftId ? (shiftNameById.get(entry.shiftId) ?? "Unknown shift") : "—"
                         )}
                       </span>
                     </div>
@@ -146,6 +169,19 @@ function RosterCard({ roster, canManage }: RosterCardProps) {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {canManage && roster.status === "DRAFT" && (
+        <ConfirmDialog
+          open={confirmPublishOpen}
+          onOpenChange={setConfirmPublishOpen}
+          title={`Publish ${roster.name}?`}
+          description="Everyone on this roster can see their shifts for the week once it is published."
+          confirmLabel="Publish"
+          isPending={publishRoster.isPending}
+          keepOpenOnConfirm
+          onConfirm={handlePublish}
+        />
+      )}
 
       {canManage && (
         <AssignRosterEntrySheet
@@ -168,24 +204,26 @@ export function RostersGrid({ canManage }: Props) {
     void refetch();
   }, [refetch]);
 
-  if (isLoading) {
-    return (
-      <div className="space-y-3">
-        {Array.from({ length: 4 }).map((_, i) => (
-          <Skeleton key={i} className="h-20 rounded-2xl" />
-        ))}
-      </div>
-    );
-  }
+  // No route guard and useRosters is gated on hr:attendance:view: a denied
+  // caller read "No rosters yet" (FE-47).
+  const pageState = usePageState({ permission: "hr:attendance:view", isLoading, isError, error });
 
-  if (isError) {
+  if (pageState.kind !== "ready" && pageState.kind !== "empty") {
     return (
-      <ErrorState
+      <PageState
+        resolution={pageState}
         className="flex-1"
-        title="Couldn't load rosters"
-        description={getErrorMessage(error)}
         onRetry={handleRetry}
-      />
+        loading={
+          <div className="space-y-3">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <Skeleton key={i} className="h-20 rounded-2xl" />
+            ))}
+          </div>
+        }
+      >
+        {null}
+      </PageState>
     );
   }
 

@@ -34,6 +34,9 @@ const teamProjectItemListContract = lazyContract(() =>
 const teamMemberRowContract = lazyContract(() =>
   import("@/hooks/api/build/teams-schema").then((m) => m.teamMemberRowContract),
 );
+const teamMemberPageContract = lazyContract(() =>
+  import("@/hooks/api/build/teams-schema").then((m) => m.teamMemberPageContract),
+);
 const teamProjectRowContract = lazyContract(() =>
   import("@/hooks/api/build/teams-schema").then((m) => m.teamProjectRowContract),
 );
@@ -53,11 +56,15 @@ export function useProjectTeams(params?: {
   cursor?: string;
   search?: string;
   pageSize?: number;
+  leadId?: string;
+  memberId?: string;
 }) {
   const query: Record<string, string> = {};
   if (params?.cursor) query["cursor"] = params.cursor;
   if (params?.pageSize) query["pageSize"] = String(params.pageSize);
   if (params?.search) query["search"] = params.search;
+  if (params?.leadId) query["leadId"] = params.leadId;
+  if (params?.memberId) query["memberId"] = params.memberId;
   return useGatedQuery<TeamListResponse>("build:teams:view", {
     queryKey: buildWorkQueryKeys.projects.teams.list(Object.keys(query).length ? query : undefined),
     queryFn: ({ signal }) => apiClient.get<TeamListResponse>("/build/teams", query, signal, teamPageContract),
@@ -71,6 +78,35 @@ export function useProjectTeam(teamId: number) {
     queryFn: ({ signal }) => apiClient.get<ProjectTeamDetail>(`/build/teams/${teamId}`, undefined, signal, teamDetailContract),
     enabled: !!teamId,
     staleTime: 60_000,
+    throwOnError: false,
+  });
+}
+
+export function useTeamMembers(
+  teamId: number,
+  cursor?: string,
+  pageSize = 50,
+  filters?: { q?: string; leadId?: string; memberId?: string },
+) {
+  const query: Record<string, string> = {};
+  if (cursor) query["cursor"] = cursor;
+  if (pageSize !== 50) query["pageSize"] = String(pageSize);
+  if (filters?.q) query["q"] = filters.q;
+  if (filters?.leadId) query["leadId"] = filters.leadId;
+  if (filters?.memberId) query["memberId"] = filters.memberId;
+  const params = Object.keys(query).length ? query : undefined;
+  return useGatedQuery<import("@/hooks/api/build/teams-schema").TeamMemberPage>("build:teams:view", {
+    queryKey: buildWorkQueryKeys.projects.teams.members(teamId, params),
+    queryFn: ({ signal }) =>
+      apiClient.get<import("@/hooks/api/build/teams-schema").TeamMemberPage>(
+        `/build/teams/${teamId}/members`,
+        params,
+        signal,
+        teamMemberPageContract,
+      ),
+    enabled: !!teamId,
+    staleTime: 30_000,
+    throwOnError: false,
   });
 }
 
@@ -80,8 +116,14 @@ export function useCreateProjectTeam() {
     mutationKey: [...buildWorkQueryKeys.projects.teams.all, "create"],
     mutationFn: (data: CreateTeamInput) =>
       apiClient.post<ProjectTeam>("/build/teams", data, undefined, teamRowContract),
-    onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.teams.all });
+    onSuccess: (newTeam) => {
+      qc.setQueriesData<TeamListResponse>(
+        { queryKey: buildWorkQueryKeys.projects.teams.list() },
+        (prev) => {
+          if (!prev) return prev;
+          return { ...prev, data: [newTeam, ...prev.data] };
+        },
+      );
     },
   });
 }

@@ -4,7 +4,7 @@ import { portalApiClient, getPortalToken } from "@/lib/portal-api-client";
 import { directoryAndOwnershipQueryKeys } from "@/lib/query-keys/directory-and-ownership";
 import type { PortalProjectOverview } from "@/features/portal/lib/portal-types";
 
-const backendPortalProjectOverviewSchema = z.object({
+export const backendPortalProjectOverviewSchema = z.object({
   project: z.object({
     id: z.number().int(),
     name: z.string(),
@@ -20,6 +20,9 @@ const backendPortalProjectOverviewSchema = z.object({
       canViewAttachments: z.boolean(),
       canViewComments: z.boolean(),
       canSubmitChangeRequests: z.boolean(),
+      canViewApprovals: z.boolean(),
+      canViewInvoices: z.boolean(),
+      canViewRequests: z.boolean(),
     })
     .optional(),
   milestones: z.array(
@@ -39,19 +42,32 @@ const backendPortalProjectOverviewSchema = z.object({
       dueDate: z.string().nullable(),
     }),
   ),
-  attachments: z.array(
+  deliverables: z.array(
     z.object({
       id: z.number().int(),
-      filename: z.string(),
-      url: z.string(),
+      name: z.string(),
+      version: z.string(),
+      releaseDate: z.string().nullable(),
+      status: z.string(),
     }),
   ),
-  comments: z.array(
+  approvals: z.array(
     z.object({
       id: z.number().int(),
-      body: z.string(),
-      authorName: z.string().nullable(),
-      createdAt: z.string(),
+      title: z.string(),
+      status: z.string(),
+      dueAt: z.string().nullable(),
+    }),
+  ),
+  invoices: z.array(
+    z.object({
+      id: z.string(),
+      documentNumber: z.string().nullable(),
+      issueDate: z.string(),
+      dueDate: z.string().nullable(),
+      grossMinor: z.number().int(),
+      currency: z.string(),
+      status: z.string(),
     }),
   ),
 });

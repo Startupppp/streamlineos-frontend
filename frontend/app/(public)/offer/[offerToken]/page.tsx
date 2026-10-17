@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { publicGetNoStore, type PublicOffer } from "@/lib/public-fetch";
 import { ApiError } from "@/lib/api-envelope";
+import { CtcBreakdownPanel } from "@/components/shared/ctc-breakdown-panel";
 
 import { OfferActionIsland } from "@/features/careers/components/offer-action-island";
 
@@ -12,7 +13,7 @@ type Props = { params: Promise<{ offerToken: string }> };
 
 function ExpiredState() {
   return (
-    <main className="min-h-dvh bg-background flex items-center justify-center px-4">
+    <main className="candidate-surface min-h-dvh bg-background flex items-center justify-center px-4">
       <Card className="w-full max-w-md text-center">
         <CardContent className="py-10">
           <svg className="h-10 w-10 mx-auto mb-4 text-muted-foreground opacity-60" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -32,7 +33,7 @@ function AlreadyRespondedState({ offer }: { offer: PublicOffer }) {
   const countered = offer.offerStatus === "COUNTERED";
 
   return (
-    <main className="min-h-dvh bg-background flex items-center justify-center px-4">
+    <main className="candidate-surface min-h-dvh bg-background flex items-center justify-center px-4">
       <Card className="w-full max-w-md text-center">
         <CardContent className="py-10">
           <div className={`w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-4 ${accepted ? "bg-status-success-surface" : declined ? "bg-status-danger-surface" : countered ? "bg-status-info-surface" : "bg-muted"}`}>
@@ -64,25 +65,29 @@ function AlreadyRespondedState({ offer }: { offer: PublicOffer }) {
   );
 }
 
+async function fetchOfferData(token: string): Promise<PublicOffer | null | "expired"> {
+  try {
+    return await publicGetNoStore<PublicOffer>(`/public/offer/${token}`, undefined, publicOfferDetailContract);
+  } catch (e) {
+    if (e instanceof ApiError && e.status === 410) return "expired";
+    throw e;
+  }
+}
+
 export default async function OfferAcceptancePage({ params }: Props) {
   const { offerToken } = await params;
 
-  let offer: PublicOffer | null;
-  try {
-    offer = await publicGetNoStore<PublicOffer>(`/public/offer/${offerToken}`, undefined, publicOfferDetailContract);
-  } catch (e) {
-    if (e instanceof ApiError && e.status === 410) return <ExpiredState />;
-    throw e;
-  }
-
-  if (!offer) return notFound();
+  const offerResult = await fetchOfferData(offerToken);
+  if (offerResult === "expired") return <ExpiredState />;
+  if (!offerResult) return notFound();
+  const offer = offerResult;
 
   if (offer.offerStatus !== "SENT" && offer.offerStatus !== "VIEWED") {
     return <AlreadyRespondedState offer={offer} />;
   }
 
   return (
-    <main className="min-h-dvh bg-background">
+    <main className="candidate-surface min-h-dvh bg-background">
       <div className="max-w-lg mx-auto px-4 py-12">
         <Card>
           <CardHeader className="pb-3">
@@ -100,7 +105,16 @@ export default async function OfferAcceptancePage({ params }: Props) {
             <CardDescription>Please review the details below and respond.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-5">
-            <OfferActionIsland offer={offer} token={offerToken} />
+            {/*
+              Passed as children so it renders between the offer's terms and the
+              Accept button, where a candidate reads it — and stays server-side
+              while doing so. This page is opened from an email on a phone, and
+              the breakdown is the reason it was opened: it belongs in the first
+              HTML rather than behind a hydration the connection may not finish.
+            */}
+            <OfferActionIsland offer={offer} token={offerToken}>
+              <CtcBreakdownPanel preview={offer.ctcPreview} currency={offer.currency} />
+            </OfferActionIsland>
           </CardContent>
         </Card>
       </div>

@@ -68,6 +68,18 @@ export interface ApiOracle {
   dispose(): Promise<void>;
 }
 
+type SuccessEnvelope = { success: true; data: unknown };
+
+function isSuccessEnvelope(body: unknown): body is SuccessEnvelope {
+  return (
+    typeof body === "object" &&
+    body !== null &&
+    "success" in body &&
+    body.success === true &&
+    "data" in body
+  );
+}
+
 export async function apiOracle(): Promise<ApiOracle> {
   const { apiUrl } = tenantEnv();
   const token = await backendToken();
@@ -76,11 +88,14 @@ export async function apiOracle(): Promise<ApiOracle> {
     extraHTTPHeaders: { Authorization: `Bearer ${token}` },
   });
 
-  function unwrap<T>(body: { success?: boolean; data?: T }): T {
+  function unwrap<T>(body: unknown): T {
     // The backend wraps success responses as `{ success, data }`; a few
     // endpoints return the payload bare. Unwrapping only the wrapped shape
     // keeps both working.
-    return body?.success === true && "data" in body ? (body.data as T) : (body as T);
+    if (isSuccessEnvelope(body)) {
+      return body.data as T;
+    }
+    return body as T;
   }
 
   return {

@@ -72,17 +72,18 @@ describe("HRMS static route smoke list", () => {
         ),
     );
     expect(unaccounted).toEqual([]);
-    expect(hrHrefs.some((href) => href.startsWith("/hr/recruitment"))).toBe(true);
+    // Recruitment OS is its own product under /recruitment, never an HRMS route.
+    expect(hrHrefs.some((href) => href.startsWith("/hr/recruitment"))).toBe(false);
   });
 
-  it("excludes recruitment, payroll and dynamic segments by rule, not by hand", () => {
-    expect(isHrmsStaticSmokeRoute("/hr/recruitment")).toBe(false);
-    expect(isHrmsStaticSmokeRoute("/hr/recruitment/jobs")).toBe(false);
+  it("excludes Recruitment OS, payroll and dynamic segments by rule, not by hand", () => {
+    expect(isHrmsStaticSmokeRoute("/recruitment")).toBe(false);
+    expect(isHrmsStaticSmokeRoute("/recruitment/jobs")).toBe(false);
     expect(isHrmsStaticSmokeRoute("/payroll/runs")).toBe(false);
     expect(isHrmsStaticSmokeRoute("/hr/employees/[employeeId]")).toBe(false);
     expect(isHrmsStaticSmokeRoute("/hr/employees")).toBe(true);
     expect(isHrmsStaticSmokeRoute("/hr")).toBe(true);
-    expect(HRMS_STATIC_ROUTES.some((route) => route.startsWith("/hr/recruitment"))).toBe(false);
+    expect(HRMS_STATIC_ROUTES.some((route) => route.startsWith("/recruitment"))).toBe(false);
     expect(HRMS_STATIC_ROUTES.some((route) => route.startsWith("/payroll"))).toBe(false);
   });
 });
@@ -128,13 +129,6 @@ describe.each(HRMS_STATIC_ROUTES.map((route) => [route] as const))(
       expect(heading.textContent?.trim()).not.toBe("");
     });
 
-    it("titles its loading skeleton with the page's own declared title, when both are static strings", () => {
-      const loadingTitle = declaredLoadingTitle(route);
-      const pageTitle = declaredPageTitle(route);
-      if (loadingTitle === null || pageTitle === null) return;
-      expect(loadingTitle).toBe(pageTitle);
-    });
-
     it("announces typed skeleton headers, not numbered columns — the known list may only shrink, and an entry that stops matching must be removed", async () => {
       if (!files.loading) return;
       const Loading = await loadRouteComponent(files.loading);
@@ -146,5 +140,20 @@ describe.each(HRMS_STATIC_ROUTES.map((route) => [route] as const))(
       if (known) expect(numbered).toContain("Column 1");
       else expect(numbered).toEqual([]);
     });
+  },
+);
+
+const STATIC_TITLE_PAIRS = HRMS_STATIC_ROUTES.map(
+  (route) => [route, declaredLoadingTitle(route), declaredPageTitle(route)] as const,
+).filter(([, loadingTitle, pageTitle]) => loadingTitle !== null && pageTitle !== null);
+
+it("finds at least one HRMS route whose loading and page titles are both static strings", () => {
+  expect(STATIC_TITLE_PAIRS.length).toBeGreaterThan(0);
+});
+
+it.each(STATIC_TITLE_PAIRS)(
+  "HRMS static route %s titles its loading skeleton with the page's own declared title",
+  (_route, loadingTitle, pageTitle) => {
+    expect(loadingTitle).toBe(pageTitle);
   },
 );

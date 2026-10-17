@@ -1,5 +1,7 @@
 "use client";
 
+import { DatePicker } from "@/components/ui/date-picker";
+
 import type { UseFormReturn } from "react-hook-form";
 import {
   FormControl,
@@ -158,7 +160,7 @@ export function InvoiceDetailsFields({
             <FormItem>
               <FormLabel>Due date</FormLabel>
               <FormControl>
-                <Input {...field} type="date" />
+                <DatePicker value={field.value ?? ""} onChange={field.onChange} placeholder="Pick a date" dateFormat="dd MMM yyyy" clearable />
               </FormControl>
               <FormMessage />
             </FormItem>

@@ -17,7 +17,7 @@ import type { InboxGroupedVirtualListProps } from "./inbox-grouped-virtual-list"
 import { getErrorMessage } from "@/lib/get-error-message";
 import { toSearchParams } from "@/lib/route-search-params";
 import { normalizeBuildDeepLink } from "@/lib/build/normalize-build-deep-link";
-import { Inbox } from "lucide-react";
+import { EmptyInboxIllustration } from "@/components/illustrations";
 import type { Notification } from "@/types/notifications";
 import type {
   NotificationInboxItem,
@@ -41,6 +41,7 @@ import { InboxDegradedBanner } from "./inbox-degraded-banner";
 import { InboxToolbar } from "./inbox-toolbar";
 import { BulkActionsBar } from "./inbox-bulk-actions";
 import type { InboxVirtualListProps } from "./inbox-virtual-list";
+import { isPermissionKey } from "@/contracts/permission-key.generated";
 
 const InboxVirtualList = dynamic<InboxVirtualListProps>(() =>
   import("./inbox-virtual-list").then((m) => m.InboxVirtualList),
@@ -60,7 +61,6 @@ export function InboxShell() {
     selectedKeys,
     handleViewChange,
     handleSearchChange,
-    handleUnreadOnlyChange,
     handleCategoryChange,
     handlePriorityChange,
     handleKindOverrideChange,
@@ -180,16 +180,16 @@ export function InboxShell() {
 
   const handleApprovalClick = useCallback(
     (item: BuildApprovalInboxItem) => {
-      if (item.deepLink !== null) {
-        router.push(normalizeBuildDeepLink(item.deepLink));
-        return;
-      }
       if (item.sourceModule === "build") {
         if (item.projectId !== null) {
-          router.push(`/build/approvals?${toSearchParams({ projectId: String(item.projectId) }).toString()}`);
+          router.push(`/build/approvals?${toSearchParams({ projectId: String(item.projectId), approvalId: String(item.id) }).toString()}`);
         } else {
           router.push("/build/approvals");
         }
+        return;
+      }
+      if (item.deepLink !== null) {
+        router.push(normalizeBuildDeepLink(item.deepLink));
         return;
       }
       router.push("/inbox?view=approvals");
@@ -231,7 +231,6 @@ export function InboxShell() {
           availableModules={availableModules}
           onViewChange={handleViewChange}
           onSearchChange={handleSearchChange}
-          onUnreadOnlyChange={handleUnreadOnlyChange}
           onCategoryChange={handleCategoryChange}
           onPriorityChange={handlePriorityChange}
           onKindOverrideChange={handleKindOverrideChange}
@@ -258,7 +257,7 @@ export function InboxShell() {
         ) : deniedPermission ? (
           <NoPermissionState
             className="flex-1"
-            permission={deniedPermission}
+            permission={isPermissionKey(deniedPermission) ? deniedPermission : undefined}
             description="This inbox view is not available to your role. Other views still work."
           />
         ) : (
@@ -286,9 +285,8 @@ export function InboxShell() {
             {clientFilteredItems.length === 0 ? (
               <EmptyState
                 className="flex-1 min-h-0"
-                illustration={
-                  <Inbox className="h-8 w-8 text-muted-foreground/40" />
-                }
+                // Fill the md illustration box; a 32px icon left a blank gap above the title.
+                illustration={<EmptyInboxIllustration />}
                 title="All caught up"
                 description={emptyStateDescription}
               />

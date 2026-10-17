@@ -1,9 +1,9 @@
 "use client";
 
-import { useCallback, useEffect, useState, useTransition, type MouseEvent } from "react";
+import { useCallback, useEffect, useRef, useState, useTransition, type MouseEvent } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { ExternalLink } from "lucide-react";
+import { ExternalLink, Plus } from "lucide-react";
 import { EllipsisIcon } from "@animateicons/react/lucide";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import {
@@ -19,6 +19,16 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { DataTableSkeleton } from "@/components/ui/data-table-skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
 import { PageWrapper } from "@/components/ui/page-wrapper";
@@ -35,7 +45,7 @@ import { RecordList, type RecordValue } from "@/components/renderer";
 import { DensityToggle, useDensity } from "@/components/renderer/density-toggle";
 import { useTenantLayout } from "@/components/renderer/use-tenant-layout";
 import { CLIENT_LAYOUT } from "@/lib/renderer/crm/client-layout";
-import { useClientAccounts } from "@/hooks/api/crm/clients";
+import { useClientAccounts, useCreateClient } from "@/hooks/api/crm/clients";
 import { useOrgDisplay } from "@/hooks/api/org-display";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import { usePageState } from "@/hooks/api/use-page-state";
@@ -98,11 +108,78 @@ function ClientRowActions({ clientId, leadId }: { clientId: number; leadId: numb
   );
 }
 
+function CreateClientDialog({
+  open,
+  onOpenChange,
+}: {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+}) {
+  const [name, setName] = useState("");
+  const inputRef = useRef<HTMLInputElement>(null);
+  const createClient = useCreateClient();
+
+  useEffect(() => {
+    if (open) {
+      setName("");
+      setTimeout(() => inputRef.current?.focus(), 50);
+    }
+  }, [open]);
+
+  function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!name.trim()) return;
+    createClient.mutate(
+      { name: name.trim() },
+      {
+        onSuccess: () => onOpenChange(false),
+      },
+    );
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>New Client</DialogTitle>
+        </DialogHeader>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <Input
+            ref={inputRef}
+            placeholder="Client name"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            maxLength={200}
+          />
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => onOpenChange(false)}
+            >
+              Cancel
+            </Button>
+            <LoadingButton
+              type="submit"
+              isPending={createClient.isPending}
+              loadingText="Creating…"
+              disabled={!name.trim()}
+            >
+              Create
+            </LoadingButton>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 export function ClientListPage() {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const [, startTransition] = useTransition();
+  const [createOpen, setCreateOpen] = useState(false);
 
   const layout = useTenantLayout(CLIENT_LAYOUT);
   const money = useOrgDisplay();
@@ -198,9 +275,17 @@ export function ClientListPage() {
     );
 
   return (
+    <>
+    <CreateClientDialog open={createOpen} onOpenChange={setCreateOpen} />
     <PageWrapper
       title="Clients"
       subtitle="Accounts converted from a won lead"
+      actions={
+        <Button size="sm" onClick={() => setCreateOpen(true)}>
+          <Plus className="mr-1.5 h-3.5 w-3.5" />
+          New Client
+        </Button>
+      }
       filters={
         <div className={FILTER_TOOLBAR_ROW}>
           <SearchInput
@@ -263,5 +348,6 @@ export function ClientListPage() {
         )}
       </div>
     </PageWrapper>
+    </>
   );
 }

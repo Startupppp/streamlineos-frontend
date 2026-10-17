@@ -1,11 +1,12 @@
 "use client";
 
-import { useCallback, useState, type ChangeEvent } from "react";
+import { useCallback, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { toast } from "sonner";
-import { useCreateView, useUpdateView } from "@/hooks/api/build";
+import { useCreateView, useUpdateView } from "@/hooks/api/build/views";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { currentSearchParams } from "@/lib/current-search-params";
+import { buildTicketCollectionReturnHref } from "@/features/build/ticket-details/build-ticket-detail-url";
 import type { DisplayOptions } from "@/features/build/shared/types";
 import { type SaveViewMeta } from "./save-view-dialog";
 import { toSavedViewLayout } from "@/lib/build/view-types";
@@ -62,7 +63,14 @@ export function useBoardSavedViews({
             ) {
               const next = currentSearchParams(searchParams);
               next.set("viewId", String(created.id));
-              router.replace(`?${next.toString()}`, { scroll: false });
+              router.replace(
+                buildTicketCollectionReturnHref(
+                  projectId,
+                  `/build/${projectId}/issues`,
+                  next,
+                ),
+                { scroll: false },
+              );
             }
           },
           onError: (err) => toast.error(getErrorMessage(err)),
@@ -100,7 +108,7 @@ export function useBoardSavedViews({
   }, [activeView, updateView, projectId, filters, layoutType, displayOptions]);
 
   const handleSaveViewNameChange = useCallback(
-    (e: ChangeEvent<HTMLInputElement>) => setSaveViewName(e.target.value),
+    (e: { target: { value: string } }) => setSaveViewName(e.target.value),
     [],
   );
 

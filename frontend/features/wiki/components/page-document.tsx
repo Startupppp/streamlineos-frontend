@@ -1,10 +1,17 @@
 "use client";
 
-import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { KbAlertCircleIcon, KbImageIcon } from "@/features/wiki/lib/kb-icons";
+import { KbAlertCircleIcon } from "@/features/wiki/lib/kb-icons";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { apiClient } from "@/lib/api-client";
@@ -17,6 +24,7 @@ import { getErrorMessage } from "@/lib/get-error-message";
 import { KbPageNotFound } from "./kb-page-not-found";
 import PageEditConflict from "./page-edit-conflict";
 import { usePageAutosave, type PageAutosavePatch } from "./use-page-autosave";
+import { usePagePresentationUpdate } from "./use-page-presentation-update";
 import { uploadKbMedia } from "@/features/wiki/lib/upload-kb-media";
 import { withoutPendingUploads } from "@/components/editor/plate/upload-media";
 import {
@@ -24,19 +32,24 @@ import {
   useUpdateKbPage,
   useRecordKbPageVisit,
 } from "@/hooks/api/kb";
-import { useCan } from "@/hooks/api/access";
+import { useCan, useCanState } from "@/hooks/api/access";
+import { NoPermissionState } from "@/components/shared/no-permission-state";
 import { pageHref } from "@/lib/knowledge-routes";
 import PageCover from "./page-cover";
 import { PageCoverPickerDialog } from "./page-cover-picker";
 import PageIconPicker from "./page-icon-picker";
 import PageDocumentHeader from "./page-document-header";
 import PageRightPanel from "./page-right-panel";
+import { PageDocumentPropertyActions } from "./page-document-property-actions";
+import { PageDocumentMetaFooter } from "./page-document-meta-footer";
+import { PageDocumentOutline } from "./page-document-outline";
 import {
   normalizePlateValue,
   getPlainText,
   plainTextToPlateValue,
   prependPlateValue,
 } from "@/components/editor/plate/plate-value-convert";
+import "../wiki-document.css";
 
 const PlateDocumentEditor = dynamic(
   () => import("@/components/editor/plate/plate-document-editor"),
@@ -73,18 +86,27 @@ async function fetchPageLinks(query: string) {
 interface PageDocumentProps {
   pageId: number;
   onNavigateToPage?: (targetPageId: number) => void;
+  projectId?: number;
 }
 
 function nextReload(current: number): number {
   return current + 1;
 }
 
-export default function PageDocument({ pageId, onNavigateToPage }: PageDocumentProps) {
+export default function PageDocument({ pageId, onNavigateToPage, projectId }: PageDocumentProps) {
   const router = useRouter();
   const { data: page, isLoading, isError, error, refetch } = useKbPage(pageId);
+  // Pages imported before content was written on import carry only
+  // contentText; show it as plain paragraphs instead of an empty document.
+  const storedContent = useMemo(
+    () => page?.content ?? (page?.contentText ? plainTextToPlateValue(page.contentText) : null),
+    [page?.content, page?.contentText],
+  );
   const updatePage = useUpdateKbPage();
   const recordVisit = useRecordKbPageVisit();
+  const canUpdate = useCan("kb:pages:update");
   const canManage = useCan("kb:pages:manage");
+  const viewAccess = useCanState("kb:pages:view");
 
   const [titleDraft, setTitleDraft] = useState<{
     pageId: number;
@@ -96,6 +118,8 @@ export default function PageDocument({ pageId, onNavigateToPage }: PageDocumentP
   const [editorDraft, setEditorDraft] = useState<unknown>(null);
   const visitedRef = useRef<number | null>(null);
   const titleRef = useRef<HTMLTextAreaElement>(null);
+  const editorContainerRef = useRef<HTMLDivElement>(null);
+  const editorSnapshotRef = useRef<string | null>(null);
   const [toolbarHost, setToolbarHost] = useState<HTMLDivElement | null>(null);
 
   const handleSavePage = useCallback(
@@ -112,13 +136,21 @@ export default function PageDocument({ pageId, onNavigateToPage }: PageDocumentP
     toast.error("Failed to save page", { description: getErrorMessage(error) });
   }, []);
 
-  const { saveState, conflict, schedule, discardLocalEdits, keepLocalEdits } = usePageAutosave({
+  const { saveState, conflict, savedAt, isOffline, pendingFields, schedule, retry, discardLocalEdits, keepLocalEdits } = usePageAutosave({
     pageId,
     contentRevision: page?.contentRevision,
     save: handleSavePage,
     onConflict: handleConflict,
     onSaveError: handleSaveFailure,
   });
+  const {
+    pendingPresentation,
+    isRetryingPresentation,
+    handleCoverChange,
+    handleIconChange,
+    handleRetryPresentation,
+    discardPresentation,
+  } = usePagePresentationUpdate({ pageId, page, canManage, updatePage, refetch });
 
   const localTitle =
     titleDraft?.pageId === pageId ? titleDraft.value : (page?.title ?? "");
@@ -138,6 +170,7 @@ export default function PageDocument({ pageId, onNavigateToPage }: PageDocumentP
 
   useEffect(() => {
     setEditorDraft(null);
+    editorSnapshotRef.current = null;
   }, [pageId]);
 
   const handleNavigateToPage = useCallback(
@@ -153,15 +186,28 @@ export default function PageDocument({ pageId, onNavigateToPage }: PageDocumentP
 
   const handleDiscardMine = useCallback(() => {
     setIsReloading(true);
-    function applyServerVersion() {
-      discardLocalEdits();
-      setTitleDraft(null);
-      setEditorDraft(null);
-      setReloadNonce(nextReload);
-      setIsReloading(false);
-    }
-    void refetch().then(applyServerVersion, applyServerVersion);
-  }, [discardLocalEdits, refetch]);
+    void refetch()
+      .then((result) => {
+        if (
+          !result.isSuccess ||
+          !result.data ||
+          (conflict?.currentContentRevision !== null &&
+            conflict?.currentContentRevision !== undefined &&
+            result.data.contentRevision < conflict.currentContentRevision)
+        ) {
+          toast.error("Couldn't load the latest page version. Your edits are still here.");
+          return;
+        }
+        discardLocalEdits();
+        setTitleDraft(null);
+        setEditorDraft(null);
+        editorSnapshotRef.current = null;
+        setReloadNonce(nextReload);
+      }, () => {
+        toast.error("Couldn't load the latest page version. Your edits are still here.");
+      })
+      .finally(() => setIsReloading(false));
+  }, [conflict?.currentContentRevision, discardLocalEdits, refetch]);
 
   const handleUploadFile = useCallback(
     (file: File) => uploadKbMedia(file, pageId),
@@ -182,8 +228,16 @@ export default function PageDocument({ pageId, onNavigateToPage }: PageDocumentP
   }
 
   function handleEditorChange(value: unknown, plainText: string) {
+    const content = withoutPendingUploads(value);
+    const snapshot = `${plainText}\u0000${JSON.stringify(content)}`;
+    if (editorSnapshotRef.current === null) {
+      const loaded = normalizePlateValue(storedContent);
+      editorSnapshotRef.current = `${getPlainText(loaded)}\u0000${JSON.stringify(withoutPendingUploads(loaded))}`;
+    }
+    if (snapshot === editorSnapshotRef.current) return;
+    editorSnapshotRef.current = snapshot;
     setEditorDraft(value);
-    schedule({ content: withoutPendingUploads(value), contentText: plainText });
+    schedule({ content, contentText: plainText });
   }
 
   function applyEditorValue(next: unknown, plainText: string) {
@@ -198,9 +252,31 @@ export default function PageDocument({ pageId, onNavigateToPage }: PageDocumentP
     applyEditorValue(next, text);
   }
 
+  const currentContentText = useMemo(
+    () => getPlainText(normalizePlateValue(editorDraft ?? storedContent)),
+    [editorDraft, storedContent],
+  );
+
+  const handleCompareVersions = useCallback(async () => {
+    const result = await refetch();
+    if (
+      !result.isSuccess ||
+      !result.data ||
+      (conflict?.currentContentRevision !== null &&
+        conflict?.currentContentRevision !== undefined &&
+        result.data.contentRevision < conflict.currentContentRevision)
+    ) {
+      throw new Error("The latest page version is unavailable");
+    }
+    return {
+      title: result.data.title,
+      body: getPlainText(normalizePlateValue(result.data.content)),
+    };
+  }, [conflict?.currentContentRevision, refetch]);
+
   function handleInsertSummary(text: string) {
     const summary = plainTextToPlateValue(text);
-    const body = normalizePlateValue(editorDraft ?? page?.content);
+    const body = normalizePlateValue(editorDraft ?? storedContent);
     const next = prependPlateValue(summary, body);
     applyEditorValue(next, getPlainText(next));
   }
@@ -213,29 +289,11 @@ export default function PageDocument({ pageId, onNavigateToPage }: PageDocumentP
     setCoverPickerOpen(open);
   }
 
-  function handleCoverChange(coverImage: string | null) {
-    updatePage.mutate(
-      { pageId, coverImage },
-      {
-        onSuccess: () =>
-          toast.success(coverImage ? "Cover updated" : "Cover removed"),
-        onError: () => toast.error("Failed to update cover"),
-      },
-    );
-  }
-
   function handleToolbarHost(node: HTMLDivElement | null) {
     setToolbarHost(node);
   }
 
-  function handleIconChange(icon: string | null) {
-    updatePage.mutate(
-      { pageId, icon },
-      { onError: () => toast.error("Failed to update icon") }
-    );
-  }
-
-  if (isLoading) {
+  if (viewAccess === "loading" || isLoading) {
     return (
       <div className="w-full px-3 py-4 space-y-4">
         <Skeleton className="h-4 w-3/4" />
@@ -245,17 +303,21 @@ export default function PageDocument({ pageId, onNavigateToPage }: PageDocumentP
     );
   }
 
+  if (viewAccess === "denied") {
+    return <NoPermissionState permission="kb:pages:view" />;
+  }
+
   if (isError || !page) {
     return <KbPageNotFound error={error} onRetry={refetch} />;
   }
 
-  const isEditable = !page.isLocked || canManage;
+  const isEditable = canUpdate && page.canEdit === true && (!page.isLocked || canManage);
   const wordCount = (page.contentText ?? "")
     .split(/\s+/)
     .filter(Boolean).length;
 
   return (
-    <div className="flex min-h-full flex-col">
+    <div className="wiki-document flex min-h-full flex-col">
       <PageCover
         coverImage={page.coverImage}
         isEditable={isEditable}
@@ -271,34 +333,78 @@ export default function PageDocument({ pageId, onNavigateToPage }: PageDocumentP
 
       <div className="flex min-w-0 flex-1">
         <div className="flex min-w-0 flex-1 flex-col">
-          <div className="sticky top-0 z-40 border-b border-border bg-background">
-            <div className="mx-auto w-full max-w-[46rem] px-4 py-2 sm:px-6">
+          <div className="wiki-document-chrome sticky top-0 z-40 border-b">
+            <div className="mx-auto w-full max-w-[46rem] px-4 py-2.5 sm:px-8">
               <PageDocumentHeader
                 page={page}
                 pageId={pageId}
                 saveState={saveState}
+                savedAt={savedAt}
+                isOffline={isOffline}
+                onRetrySave={retry}
                 isEditable={isEditable}
                 onNavigate={handleNavigateToPage}
+                currentContent={currentContentText}
                 onApplyImprovement={handleApplyImprovement}
                 onInsertSummary={handleInsertSummary}
                 onOpenCover={handleOpenCover}
+                projectId={projectId}
               />
             </div>
             {isEditable ? (
               <div
                 ref={handleToolbarHost}
-                className="mx-auto w-full max-w-[46rem] px-4 sm:px-6"
+                className="mx-auto w-full max-w-[46rem] border-t border-border/50 px-4 sm:px-8"
               />
             ) : null}
           </div>
 
-          <div className="mx-auto w-full min-w-0 max-w-[46rem] px-4 pb-24 pt-6 sm:px-6">
-            <div className="mb-6 flex items-start gap-2">
-              <PageIconPicker
-                icon={page.icon}
-                isEditable={isEditable}
-                onIconChange={handleIconChange}
-              />
+          <div className="wiki-document-body mx-auto mb-8 w-full min-w-0 max-w-[46rem] flex-1 px-4 py-4 sm:px-8">
+            {pendingPresentation && (
+              <div role="alert" className="mb-5 flex flex-wrap items-center gap-2 rounded-lg border border-status-warning-rule bg-status-warning-surface p-3 text-sm text-status-warning-ink">
+                <span className="min-w-0 flex-1">
+                  The page changed before your {pendingPresentation.field === "icon" ? "icon" : "cover"} change was saved. Your choice is ready to retry.
+                </span>
+                <Button size="sm" onClick={handleRetryPresentation} disabled={isRetryingPresentation || !isEditable}>
+                  {isRetryingPresentation ? "Retrying…" : `Retry ${pendingPresentation.field === "icon" ? "icon" : "cover"} change`}
+                </Button>
+                <Button size="sm" variant="outline" onClick={discardPresentation} disabled={isRetryingPresentation}>
+                  Discard choice
+                </Button>
+              </div>
+            )}
+            {conflict ? (
+              <div className="mb-5">
+                <PageEditConflict
+                  key={`${pageId}:${conflict.currentContentRevision}`}
+                  conflict={conflict}
+                  isReloading={isReloading}
+                  pendingFields={pendingFields}
+                  localTitle={localTitle}
+                  localBody={currentContentText}
+                  onKeepMine={keepLocalEdits}
+                  onDiscardMine={handleDiscardMine}
+                  onCompare={handleCompareVersions}
+                />
+              </div>
+            ) : null}
+
+            {page.isLocked && !canManage ? (
+              <div className="mb-5 flex items-center gap-2 rounded-xl border border-border bg-muted/60 px-3 py-2 text-sm text-muted-foreground">
+                <KbAlertCircleIcon className="h-4 w-4 shrink-0" />
+                <span>This page is locked and is read-only.</span>
+              </div>
+            ) : null}
+
+            <div className="group/title mb-2 flex items-center gap-2">
+              {page.icon ? (
+                <PageIconPicker
+                  icon={page.icon}
+                  isEditable={isEditable}
+                  onIconChange={handleIconChange}
+                  variant="inline"
+                />
+              ) : null}
               <textarea
                 ref={titleRef}
                 value={localTitle}
@@ -306,54 +412,52 @@ export default function PageDocument({ pageId, onNavigateToPage }: PageDocumentP
                 onKeyDown={handleTitleKeyDown}
                 onMouseDown={handleTitleMouseDown}
                 placeholder="Untitled"
-                className="min-w-0 flex-1 resize-none overflow-hidden border-0 bg-transparent text-left text-2xl font-semibold leading-tight text-foreground outline-none placeholder:text-muted-foreground sm:text-3xl"
+                className="min-w-0 flex-1 resize-none overflow-hidden border-0 bg-transparent py-0 text-left text-3xl font-semibold leading-tight tracking-tight text-foreground outline-none placeholder:text-muted-foreground"
                 rows={1}
                 style={{ height: "auto" }}
                 readOnly={!isEditable}
                 aria-label="Page title"
               />
-            </div>
-            {isEditable && !page.coverImage ? (
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                className="mb-4 h-8 px-2 text-muted-foreground"
-                onClick={handleOpenCover}
-              >
-                <KbImageIcon className="mr-1.5 h-4 w-4" />
-                Add cover
-              </Button>
-            ) : null}
-
-            {conflict && (
-              <PageEditConflict
-                conflict={conflict}
-                isReloading={isReloading}
-                onKeepMine={keepLocalEdits}
-                onDiscardMine={handleDiscardMine}
+              <PageDocumentPropertyActions
+                icon={page.icon}
+                hasCover={Boolean(page.coverImage)}
+                isEditable={isEditable}
+                onIconChange={handleIconChange}
+                onOpenCover={handleOpenCover}
               />
-            )}
+            </div>
 
-            {page.isLocked && !canManage && (
-              <div className="mb-4 flex items-center gap-2 rounded-lg border border-border bg-muted px-3 py-2 text-sm text-muted-foreground">
-                <KbAlertCircleIcon className="h-4 w-4 shrink-0" />
-                <span>This page is locked and is read-only.</span>
-              </div>
-            )}
+            <div className="mb-4 mt-2">
+              <PageDocumentMetaFooter
+                status={page.status}
+                trustState={page.trustState}
+                visibility={page.visibility}
+                nextReviewAt={page.nextReviewAt}
+                updatedAt={page.updatedAt}
+                lastEditedById={page.lastEditedById}
+                ownerUserId={page.ownerUserId}
+              />
+            </div>
 
-            <PlateDocumentEditor
-              value={editorDraft ?? page.content ?? undefined}
-              contentKey={`${pageId}:${reloadNonce}`}
-              editable={isEditable}
-              placeholder="Start writing…"
-              onChange={handleEditorChange}
-              fetchMentionUsers={fetchMentionUsers}
-              fetchPageLinks={fetchPageLinks}
-              onNavigateToPage={handleNavigateToPage}
-              uploadFile={isEditable ? handleUploadFile : undefined}
-              toolbarHost={toolbarHost}
+            <PageDocumentOutline
+              content={editorDraft ?? storedContent}
+              containerRef={editorContainerRef}
             />
+
+            <div ref={editorContainerRef} className="min-w-0">
+              <PlateDocumentEditor
+                value={editorDraft ?? storedContent ?? undefined}
+                contentKey={`${pageId}:${reloadNonce}`}
+                editable={isEditable}
+                placeholder="Start writing…"
+                onChange={handleEditorChange}
+                fetchMentionUsers={fetchMentionUsers}
+                fetchPageLinks={fetchPageLinks}
+                onNavigateToPage={handleNavigateToPage}
+                uploadFile={isEditable ? handleUploadFile : undefined}
+                toolbarHost={toolbarHost}
+              />
+            </div>
           </div>
         </div>
 

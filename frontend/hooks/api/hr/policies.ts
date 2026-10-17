@@ -19,6 +19,7 @@ import type {
   HrPolicyType,
   HrPolicyStatus,
 } from "@/types/hr/policies";
+import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
 
 const hrPolicyListC = lazyContract(() =>
   import("@/hooks/api/hr/policies-schema").then((m) => m.hrPolicyListContract),
@@ -162,6 +163,7 @@ export function usePolicyConflicts(policyId: number) {
       ),
     enabled: canView && hrEnabled && policyId > 0,
     staleTime: 30_000,
+    ...INLINE_READ_ERROR,
   });
 }
 

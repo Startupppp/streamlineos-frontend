@@ -12,7 +12,7 @@ export function OrgStorageScopeProvider({
   children,
 }: {
   scope: string;
-  children: ReactNode;
+  children?: ReactNode;
 }) {
   return (
     <OrgStorageScopeContext.Provider value={scope}>

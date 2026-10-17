@@ -208,24 +208,32 @@ describe("chat poll reconciliation — server positions, not the browser clock",
       "@/features/chat/use-chat-poll-reconciliation"
     );
     const refetchHistory = jest.fn().mockResolvedValue({ isError: false });
+    const nextChannelNewest = "2026-01-02T11:00:00.000Z";
     const { result, rerender } = renderHook(
-      ({ channelId }: { channelId: number }) =>
+      ({ channelId, newestLoadedAt }: { channelId: number; newestLoadedAt: string }) =>
         useChatPollReconciliation({
           channelId,
-          newestLoadedAt: SERVER_NEWEST,
+          newestLoadedAt,
           isRealtimeConnected: false,
           isHistoryLoading: false,
           refetchHistory,
         }),
-      { wrapper: makeWrapper(freshClient()), initialProps: { channelId: 1 } },
+      {
+        wrapper: makeWrapper(freshClient()),
+        initialProps: { channelId: 1, newestLoadedAt: SERVER_NEWEST },
+      },
     );
 
     await waitFor(() =>
       expect(result.current.position).toEqual({ kind: "cursor", cursor: 77 }),
     );
 
-    rerender({ channelId: 2 });
-    expect(result.current.position).toEqual({ kind: "since", since: SERVER_NEWEST });
+    rerender({ channelId: 2, newestLoadedAt: nextChannelNewest });
+    expect(result.current.position).toEqual({ kind: "since", since: nextChannelNewest });
+
+    await waitFor(() =>
+      expect(pollParams()).toContainEqual({ since: nextChannelNewest }),
+    );
   });
 });
 

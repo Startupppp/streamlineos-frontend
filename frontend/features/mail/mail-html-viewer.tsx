@@ -1,119 +1,92 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
+import { useEffect, useRef } from "react";
 import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
-import { useSanitizedHtml } from "@/hooks/common/use-sanitized-html";
-import type { SanitizeHtmlPolicy } from "@/lib/sanitize-html";
-
-const BLOCKED_ATTR = "data-blocked-src";
-
-const ALLOWED_TAGS = [
-  "a", "abbr", "b", "blockquote", "br", "caption", "cite", "code", "col",
-  "colgroup", "dd", "del", "dfn", "div", "dl", "dt", "em", "figcaption",
-  "figure", "h1", "h2", "h3", "h4", "h5", "h6", "hr", "i", "img", "ins",
-  "kbd", "li", "mark", "ol", "p", "pre", "q", "s", "samp", "small",
-  "span", "strong", "sub", "sup", "table", "tbody", "td", "tfoot", "th",
-  "thead", "time", "tr", "u", "ul", "var",
-];
-
-const ALLOWED_ATTR = [
-  "align", "alt", "border", "cellpadding", "cellspacing", "class",
-  "colspan", "height", "href", "rowspan", "src", "style", "target",
-  "title", "valign", "width",
-  BLOCKED_ATTR,
-];
-
-function isRemoteUrl(src: string): boolean {
-  return src.startsWith("http://") || src.startsWith("https://") || src.startsWith("//");
-}
-
-const blockRemoteImage: NonNullable<SanitizeHtmlPolicy["afterSanitizeAttributes"]> = (node) => {
-  if (node.tagName !== "IMG") return;
-  const src = node.getAttribute("src") ?? "";
-  if (!isRemoteUrl(src)) return;
-  node.setAttribute(BLOCKED_ATTR, src);
-  node.removeAttribute("src");
-  node.setAttribute("alt", node.getAttribute("alt") ?? "remote image");
-};
-
-const MAIL_POLICY: SanitizeHtmlPolicy = {
-  config: {
-    ALLOWED_TAGS,
-    ALLOWED_ATTR,
-    FORCE_BODY: true,
-    ALLOW_UNKNOWN_PROTOCOLS: false,
-  },
-};
-
-const MAIL_POLICY_BLOCKING_REMOTE_IMAGES: SanitizeHtmlPolicy = {
-  ...MAIL_POLICY,
-  afterSanitizeAttributes: blockRemoteImage,
-};
-
-function hardenLinks(html: string): string {
-  return html.replace(
-    /<a(\s)/gi,
-    '<a target="_blank" rel="noopener noreferrer"$1',
-  );
-}
-
-function countBlockedImages(html: string): number {
-  const matches = html.match(new RegExp(BLOCKED_ATTR, "g"));
-  return matches?.length ?? 0;
-}
 
 interface MailHtmlViewerProps {
-  html: string;
+  safeHtml: string;
   className?: string;
 }
 
-export function MailHtmlViewer({ html, className }: MailHtmlViewerProps) {
-  const [allowImages, setAllowImages] = useState(false);
+export function MailHtmlViewer({ safeHtml, className }: MailHtmlViewerProps) {
+  const bodyRef = useRef<HTMLDivElement>(null);
 
-  const sanitizedBody = useSanitizedHtml(
-    html,
-    allowImages ? MAIL_POLICY : MAIL_POLICY_BLOCKING_REMOTE_IMAGES,
-  );
+  useEffect(() => {
+    const body = bodyRef.current;
+    if (!body) return;
 
-  const sanitized = useMemo(
-    () => (sanitizedBody === null ? "" : hardenLinks(sanitizedBody)),
-    [sanitizedBody],
-  );
+    body.querySelectorAll("td").forEach((cell) => {
+      const children = Array.from(cell.childNodes).filter(
+        (node) =>
+          node.nodeType !== Node.TEXT_NODE || Boolean(node.textContent?.trim()),
+      );
+      if (
+        children.length === 1 &&
+        children[0] instanceof Element &&
+        ["TABLE", "DIV"].includes(children[0].tagName)
+      ) {
+        cell.dataset.mailLayoutCell = "true";
+      }
+    });
+    const rowImages = new WeakMap<HTMLTableRowElement, Set<string>>();
+    const cleanups = Array.from(body.querySelectorAll("img")).map((image) => {
+      const row = image.closest("tr");
+      const src = image.getAttribute("src");
+      if (row && src) {
+        const seen = rowImages.get(row) ?? new Set<string>();
+        if (seen.has(src)) {
+          image.dataset.mailDuplicateImage = "true";
+          const cell = image.closest("td");
+          if (
+            cell &&
+            cell.querySelectorAll("img").length === 1 &&
+            !cell.textContent?.trim()
+          ) {
+            cell.dataset.mailDuplicateImageCell = "true";
+          }
+        }
+        seen.add(src);
+        rowImages.set(row, seen);
+      }
+      const markLoaded = () => {
+        image.dataset.mailImageState = "loaded";
+      };
+      const markFailed = () => {
+        image.dataset.mailImageState = "failed";
+      };
 
-  const blockedCount = useMemo(
-    () => (allowImages ? 0 : countBlockedImages(sanitized)),
-    [sanitized, allowImages],
-  );
+      image.addEventListener("load", markLoaded);
+      image.addEventListener("error", markFailed);
+      if (image.complete) {
+        if (image.naturalWidth > 0) markLoaded();
+        else markFailed();
+      }
 
-  const handleLoadImages = useCallback(() => setAllowImages(true), []);
+      return () => {
+        image.removeEventListener("load", markLoaded);
+        image.removeEventListener("error", markFailed);
+      };
+    });
+
+    return () => {
+      cleanups.forEach((cleanup) => cleanup());
+    };
+  }, [safeHtml]);
 
   return (
-    <div className={cn("min-w-0", className)}>
-      {blockedCount > 0 && (
-        <div className="flex items-center gap-2 mb-3 px-3 py-1.5 rounded-md bg-muted/60 border border-border/40 text-dense text-muted-foreground">
-          <span>
-            {blockedCount} remote image{blockedCount > 1 ? "s" : ""} blocked
-          </span>
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            className="h-6 text-dense px-2 text-primary hover:text-primary"
-            onClick={handleLoadImages}
-          >
-            Load images
-          </Button>
-        </div>
-      )}
+    <div className={cn("w-full min-w-0 max-w-full", className)}>
       <div
-        className="mail-html-frame overflow-x-auto rounded-lg border border-border/50 bg-white text-foreground shadow-sm"
+        className="mail-html-frame @container w-full min-w-0 max-w-full overflow-x-hidden rounded-lg border border-border/50 bg-white text-foreground shadow-sm"
         style={{ colorScheme: "light" }}
       >
-        <div
-          className="mail-html-body prose prose-sm max-w-none px-4 py-3 text-label leading-relaxed text-foreground break-words [&_a]:text-primary [&_a]:underline [&_img]:max-w-full [&_img]:h-auto [&_img]:rounded [&_table]:max-w-full [&_table]:overflow-x-auto [&_td]:align-top [&_th]:align-top [&_blockquote]:border-l-2 [&_blockquote]:border-border [&_blockquote]:pl-3 [&_blockquote]:text-muted-foreground"
-          dangerouslySetInnerHTML={{ __html: sanitized }}
-        />
+        <div className="w-full min-w-0 max-w-full overflow-hidden px-3 py-3 sm:px-4">
+          <div
+            ref={bodyRef}
+            className="mail-html-body min-w-0 max-w-none text-label leading-relaxed text-foreground break-words [overflow-wrap:anywhere] @max-[640px]:[&_table]:!w-full @max-[640px]:[&_table]:!min-w-0 @max-[640px]:[&_table]:!max-w-full @max-[640px]:[&_tbody]:block @max-[640px]:[&_tr]:block @max-[640px]:[&_td]:block @max-[640px]:[&_td]:!w-full @max-[640px]:[&_td]:!max-w-full @max-[640px]:[&_td]:!box-border @max-[640px]:[&_td[data-mail-layout-cell=true]]:!p-0 @max-[640px]:[&_td[data-mail-duplicate-image-cell=true]]:hidden @max-[640px]:[&_th]:block @max-[640px]:[&_th]:!w-full @max-[640px]:[&_div]:!max-w-full @max-[640px]:[&_img[data-mail-duplicate-image=true]]:hidden [&_*]:max-w-full [&_a]:text-primary [&_a]:underline [&_img]:!max-w-full [&_img]:!h-auto [&_img]:rounded [&_img[data-mail-image-state=failed]]:hidden [&_table]:!max-w-full [&_table]:!min-w-0 [&_td]:align-top [&_td]:break-words [&_th]:align-top [&_th]:break-words [&_blockquote]:border-l-2 [&_blockquote]:border-border [&_blockquote]:pl-3 [&_blockquote]:text-muted-foreground"
+            style={{ width: "100%" }}
+            dangerouslySetInnerHTML={{ __html: safeHtml }}
+          />
+        </div>
       </div>
     </div>
   );

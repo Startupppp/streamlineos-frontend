@@ -93,6 +93,8 @@ export function useCreateWorkerProfile(workerId: string) {
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: payrollQueryKeys.payroll.worker(workerId) });
       void qc.invalidateQueries({ queryKey: [...payrollQueryKeys.payroll.all, "employees"] });
+      void qc.invalidateQueries({ queryKey: payrollQueryKeys.payroll.peopleAll });
+      void qc.invalidateQueries({ queryKey: payrollQueryKeys.payroll.readinessAll });
     },
   });
 }
@@ -145,6 +147,8 @@ export function useCreateProfile(employeeUserId: string) {
       void qc.invalidateQueries({ queryKey: payrollQueryKeys.payroll.employee(employeeUserId) });
       void qc.invalidateQueries({ queryKey: payrollQueryKeys.payroll.employeeHistory(employeeUserId) });
       void qc.invalidateQueries({ queryKey: [...payrollQueryKeys.payroll.all, "employees"] });
+      void qc.invalidateQueries({ queryKey: payrollQueryKeys.payroll.peopleAll });
+      void qc.invalidateQueries({ queryKey: payrollQueryKeys.payroll.readinessAll });
     },
   });
 }

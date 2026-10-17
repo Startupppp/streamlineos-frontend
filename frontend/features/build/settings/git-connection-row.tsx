@@ -1,7 +1,7 @@
 ﻿"use client";
 
 import { memo, useState, useCallback } from "react";
-import { ChevronDown, GitBranch, Github, Gitlab } from "lucide-react";
+import { ChevronDown, GitBranch, Github, Gitlab, CheckCircle2, AlertCircle } from "lucide-react";
 import { Trash2Icon, CopyIcon, EyeIcon, EyeOffIcon } from "@animateicons/react/lucide";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { Badge } from "@/components/ui/badge";
@@ -97,12 +97,19 @@ export const ConnectionRow = memo(function ConnectionRow({
             />
           </div>
           <div className="min-w-0">
-            <TruncatedText text={displayName} className="text-sm font-semibold" />
-            <TruncatedText text={connection.repoUrl} className="mt-0.5 text-xs text-muted-foreground" />
+            <TruncatedText text={displayName} className="text-sm font-medium" />
+            {connection.repoName && connection.repoName !== connection.repoUrl ? (
+              <TruncatedText text={connection.repoUrl} className="mt-0.5 text-xs text-muted-foreground" />
+            ) : null}
           </div>
         </div>
         <div className="flex shrink-0 items-center gap-3">
           <div className="flex items-center gap-2">
+            {connection.lastErrorAt && (!connection.lastEventAt || new Date(connection.lastErrorAt) > new Date(connection.lastEventAt)) ? (
+              <AlertCircle className="h-3.5 w-3.5 text-destructive" aria-label="Last event failed" />
+            ) : connection.lastEventAt ? (
+              <CheckCircle2 className="h-3.5 w-3.5 text-green-600 dark:text-green-400" aria-label="Receiving events" />
+            ) : null}
             <Badge
               variant={connection.isActive ? "default" : "secondary"}
               className="text-micro"

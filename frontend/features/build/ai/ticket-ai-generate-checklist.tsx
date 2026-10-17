@@ -156,7 +156,7 @@ export function TicketAiGenerateChecklistAction({
             <>
               <AiFieldPopoverScrollBody>
                 <div className="space-y-3">
-                  <p className="text-sm font-semibold text-foreground">{generated.title}</p>
+                  <p className="text-sm font-medium text-foreground">{generated.title}</p>
                   <ul className="space-y-1.5">
                     {items.map((item, index) => (
                       <li key={index}>

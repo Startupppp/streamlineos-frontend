@@ -1,52 +1,36 @@
 "use client";
 
 import { getErrorMessage } from "@/lib/get-error-message";
-import { useState, useCallback, useRef, type ChangeEvent } from "react";
+import { useState, useCallback } from "react";
 import {
   useReimbursements,
-  useCreateReimbursement,
   useProcessReimbursement,
   type Reimbursement,
 } from "@/hooks/api/hr";
-import { useUploadFile } from "@/hooks/api/use-upload-file";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { DataTable } from "@/components/ui/data-table";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { HrSheet } from "@/components/shared/hr-sheet";
 import { ConfirmSheet } from "@/components/ui/confirm-sheet";
 import { EmptyState } from "@/components/ui/empty-state";
-import { TruncatedText } from "@/components/ui/truncated-text";
+import { PageState } from "@/components/shared/page-state";
+import { LoadingState } from "@/components/shared/loading-state";
 import { toast } from "sonner";
-import { format } from "date-fns";
-import { Plus, Receipt, CheckCircle2, XCircle, Upload, FileText, X } from "lucide-react";
+import { Plus } from "lucide-react";
 import { useSession } from "next-auth/react";
 import { useCan } from "@/hooks/api/access";
-import { cn } from "@/lib/utils";
-import {
-  CATEGORIES,
-  MAX_RECEIPT_BYTES,
-  isValidOtherLabel,
-} from "./reimbursement-status";
+import { useOrgDisplay } from "@/hooks/api/org-display";
+import { usePageState } from "@/hooks/api/use-page-state";
 import { buildReimbursementColumns } from "./reimbursement-columns";
 import { ReimbursementRequestSheet } from "./reimbursement-request-sheet";
 
-
 export function ReimbursementsPage() {
   const { data: session } = useSession();
-  const { data: items, isLoading, isError, refetch } = useReimbursements();
-  const create = useCreateReimbursement();
+  const { data: items, isLoading, isError, error, refetch } = useReimbursements();
   const process = useProcessReimbursement();
-  const uploadFile = useUploadFile();
+  // PATCH /hr/reimbursements/:id re-checks hr:expenses:approve in-handler.
   const isAdmin = useCan("hr:expenses:approve");
+  const money = useOrgDisplay();
+  const pageState = usePageState({ permission: "hr:payroll:view", module: "payroll", isLoading, isError, error });
 
   const [sheetOpen, setSheetOpen] = useState(false);
   const [rejectId, setRejectId] = useState<number | null>(null);
@@ -83,24 +67,12 @@ export function ReimbursementsPage() {
 
   function handleRetry() { void refetch(); }
 
-  if (isError) {
-    return (
-      <PageWrapper title="Reimbursements" subtitle="Submit and track expense reimbursements">
-        <div className="flex flex-col items-center justify-center py-20 gap-4">
-          <div className="text-center">
-            <p className="text-sm font-semibold text-foreground">Failed to load reimbursements</p>
-            <p className="text-xs text-muted-foreground mt-1">Something went wrong. Please try again.</p>
-          </div>
-          <Button variant="outline" size="sm" onClick={handleRetry}>Try Again</Button>
-        </div>
-      </PageWrapper>
-    );
-  }
-
   const reimbursementColumns = buildReimbursementColumns({
     currentUserId: session?.user?.id,
     isAdmin,
     isProcessing: process.isPending,
+    processingId: process.variables?.reimbursementId ?? null,
+    money,
     onApprove: handleApprove,
     onStartReject: setRejectId,
   });
@@ -116,20 +88,21 @@ export function ReimbursementsPage() {
         </Button>
       }
     >
-      <DataTable<Reimbursement>
-        data={items ?? []}
-        columns={reimbursementColumns}
-        getRowKey={(r) => r.id}
-        isLoading={isLoading}
-        className="flex-1 min-h-0"
-        emptyState={
-          <EmptyState
-            illustrationPreset="expenses"
-            title="No reimbursement requests"
-            description="Submit expense reimbursement requests for approval."
-          />
-        }
-      />
+      <PageState resolution={pageState} loading={<LoadingState variant="table" />} onRetry={handleRetry} className="flex-1">
+        <DataTable<Reimbursement>
+          data={items ?? []}
+          columns={reimbursementColumns}
+          getRowKey={(r) => r.id}
+          className="flex-1 min-h-0"
+          emptyState={
+            <EmptyState
+              illustrationPreset="expenses"
+              title="No reimbursement requests"
+              description="Submit expense reimbursement requests for approval."
+            />
+          }
+        />
+      </PageState>
 
       <ReimbursementRequestSheet open={sheetOpen} onOpenChange={setSheetOpen} />
 

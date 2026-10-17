@@ -1,162 +1,85 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
+import { useCallback } from "react";
 import { Clock, ListChecks } from "lucide-react";
-import { toast } from "sonner";
-import { useApprovalInbox, useDecideApproval } from "@/hooks/api/build";
-import { useCan } from "@/hooks/api/access";
-import { usePageState } from "@/hooks/api/use-page-state";
-import { PageState } from "@/components/shared/page-state";
-import { useOrgMembers } from "@/hooks/api/organization";
 import { PageWrapper } from "@/components/ui/page-wrapper";
-import { StatCard, StatCardGrid, StatCardGridSkeleton } from "@/components/ui/stat-card";
-import { DataTable, DataTableSkeleton } from "@/components/ui/data-table";
+import {
+  StatCard,
+  StatCardGrid,
+  StatCardGridSkeleton,
+} from "@/components/ui/stat-card";
 import { EmptyState } from "@/components/ui/empty-state";
+import { DateRangePicker } from "@/components/ui/date-range-picker";
 import { DecideDialog } from "./decide-dialog";
+import { ApprovalBulkActionBar } from "./approval-bulk-action-bar";
+import { BuildListSurface } from "@/features/build/shared/build-list-surface";
 import { BuildListToolbar } from "@/features/build/shared/build-list-toolbar";
 import { BuildFilterSelect } from "@/features/build/shared/build-filter-select";
-import {
-  BUILD_FILTER_ALL,
-  useBuildListFilters,
-} from "@/features/build/shared/use-build-list-filters";
-import { STATUS_OPTIONS } from "./approvals-constants";
-import type {
-  ApprovalInboxItem,
-  DecideApprovalInput,
-} from "@/types/projects";
-import { getErrorMessage } from "@/lib/get-error-message";
+import { ENTITY_OPTIONS, STATUS_OPTIONS } from "./approvals-constants";
+import type { ApprovalInboxItem } from "@/types/projects";
 import {
   PmPageShell,
   PmSection,
-  PM_FILL_PANEL,
+  CONTENT_FILL_PANEL,
 } from "@/components/pm-chrome";
 import {
   INBOX_TABLE_HEADERS,
-  type DecideTarget,
-  buildApprovalsInboxColumns,
   ApprovalsInboxMobileCard,
 } from "./approvals-inbox-columns";
-
-const FILTER_DEFINITIONS = [
-  { param: "status", options: STATUS_OPTIONS.map((o) => o.value) },
-] as const;
+import { useApprovalsInboxPage } from "./use-approvals-inbox-page";
 
 export function ApprovalsInboxPage() {
-  const canDecide = useCan("build:approvals:decide");
-
-  const listFilters = useBuildListFilters({
-    filters: FILTER_DEFINITIONS,
-    withSearch: false,
-  });
-
-  const { data, isLoading, isError, error, refetch } = useApprovalInbox();
-  const { data: membersRes } = useOrgMembers(1, 100);
-  const members = useMemo(() => membersRes?.data ?? [], [membersRes]);
-
-  const [decideTarget, setDecideTarget] = useState<DecideTarget | null>(null);
-  const decideApproval = useDecideApproval(decideTarget?.projectId ?? 0);
-
-  const statusValue = listFilters.value("status");
-
-  const pending = useMemo(
-    () =>
-      (data ?? []).filter(
-        (a) => a.status === "pending" || a.status === "requested",
-      ).length,
-    [data],
-  );
-  const overdue = useMemo(() => {
-    const now = new Date();
-    return (data ?? []).filter(
-      (a) =>
-        a.dueAt &&
-        new Date(a.dueAt) < now &&
-        a.status !== "approved" &&
-        a.status !== "rejected" &&
-        a.status !== "cancelled",
-    ).length;
-  }, [data]);
-
-  const filteredItems = useMemo(() => {
-    const all = data ?? [];
-    if (statusValue === BUILD_FILTER_ALL) return all;
-    return all.filter((a) => a.status === statusValue);
-  }, [data, statusValue]);
-
-  const memberName = useCallback(
-    (userId: string | null): string => {
-      if (!userId) return "—";
-      const m = members.find((row) => row.userId === userId);
-      return m?.name ?? m?.email ?? "Unknown";
-    },
-    [members],
-  );
-
-  const ownerOf = useCallback(
-    (userId: string | null) => {
-      if (!userId) return null;
-      const m = members.find((row) => row.userId === userId);
-      return m ? { name: m.name ?? undefined, email: m.email } : null;
-    },
-    [members],
-  );
-
-  const handleDecideClick = useCallback((item: ApprovalInboxItem) => {
-    setDecideTarget({
-      approvalId: item.id,
-      projectId: item.projectId ?? 0,
-      title: item.title,
-    });
-  }, []);
-
-  const handleDecideConfirm = useCallback(
-    (input: DecideApprovalInput) => {
-      if (!decideTarget) return;
-      decideApproval.mutate(
-        { approvalId: decideTarget.approvalId, ...input },
-        {
-          onSuccess: () => {
-            toast.success("Decision submitted");
-            setDecideTarget(null);
-          },
-          onError: (e) => toast.error(getErrorMessage(e)),
-        },
-      );
-    },
-    [decideTarget, decideApproval],
-  );
-
-  const handleRetry = useCallback(() => {
-    void refetch();
-  }, [refetch]);
-
-  const handleDecideDialogChange = useCallback((open: boolean) => {
-    if (!open) setDecideTarget(null);
-  }, []);
-
-  const handleStatusChange = useCallback(
-    (value: string) => listFilters.setValue("status", value),
-    [listFilters],
-  );
-
-  const columns = useMemo(
-    () => buildApprovalsInboxColumns({ canDecide, memberName, onDecide: handleDecideClick }),
-    [canDecide, memberName, handleDecideClick],
-  );
-
-  const renderMobileCard = useCallback(
-    (row: ApprovalInboxItem) => (
-      <ApprovalsInboxMobileCard row={row} ownerOf={ownerOf} />
-    ),
-    [ownerOf],
-  );
-
-  const pageState = usePageState({
-    permission: "build:approvals:view",
+  const {
+    canDecide,
+    canManage,
+    searchInputRef,
+    isOnline,
+    listFilters,
+    statusFilter,
+    typeFilter,
+    fromFilter,
+    toFilter,
+    searchDisplay,
     isLoading,
     isError,
     error,
-  });
+    pageNumber,
+    hasPrevious,
+    hasMore,
+    filteredItems,
+    queueTarget,
+    decideTarget,
+    selection,
+    setSelection,
+    isBulkPending,
+    pending,
+    overdue,
+    ownerOf,
+    columns,
+    handleDecideClick,
+    handleRetry,
+    handleDecideDialogChange,
+    handleReturnFocus,
+    handleStatusChange,
+    handleTypeChange,
+    handleDateRangeChange,
+    handleClearSelection,
+    isRowSelectable,
+    handleNextPage,
+    handlePreviousPage,
+    handleBulkCancel,
+  } = useApprovalsInboxPage();
+
+  const renderMobileCard = useCallback(
+    (row: ApprovalInboxItem) => (
+      <ApprovalsInboxMobileCard
+        row={row}
+        ownerOf={ownerOf}
+        onDecide={canDecide ? handleDecideClick : undefined}
+      />
+    ),
+    [canDecide, handleDecideClick, ownerOf],
+  );
 
   return (
     <PageWrapper
@@ -172,13 +95,45 @@ export function ApprovalsInboxPage() {
               control: (
                 <BuildFilterSelect
                   label="Status"
-                  value={statusValue}
+                  value={statusFilter}
                   onValueChange={handleStatusChange}
                   options={STATUS_OPTIONS}
                 />
               ),
             },
+            {
+              id: "type",
+              label: "Type",
+              active: listFilters.isActive("type"),
+              control: (
+                <BuildFilterSelect
+                  label="Type"
+                  value={typeFilter}
+                  onValueChange={handleTypeChange}
+                  options={ENTITY_OPTIONS}
+                />
+              ),
+            },
+            {
+              id: "dateRange",
+              label: "Date",
+              active:
+                listFilters.isActive("from") || listFilters.isActive("to"),
+              control: (
+                <DateRangePicker
+                  from={fromFilter === "all" ? undefined : fromFilter}
+                  to={toFilter === "all" ? undefined : toFilter}
+                  onChange={handleDateRangeChange}
+                />
+              ),
+            },
           ]}
+          search={{
+            value: searchDisplay,
+            onValueChange: listFilters.setSearch,
+            placeholder: "Search approvals…",
+            inputRef: searchInputRef,
+          }}
           onClearAll={listFilters.clearAll}
         />
       }
@@ -190,14 +145,14 @@ export function ApprovalsInboxPage() {
           ) : (
             <StatCardGrid cols={2}>
               <StatCard
-                label="Pending"
+                label="Pending on page"
                 value={pending}
                 icon={ListChecks}
                 tone="amber"
                 index={0}
               />
               <StatCard
-                label="Overdue"
+                label="Overdue on page"
                 value={overdue}
                 icon={Clock}
                 tone="red"
@@ -208,47 +163,81 @@ export function ApprovalsInboxPage() {
         </PmSection>
 
         <PmSection index={1} className="flex min-h-0 flex-1 flex-col">
-          <PageState
-            resolution={pageState}
-            loading={
-              <DataTableSkeleton mobileCards
-                rows={12}
-                headers={INBOX_TABLE_HEADERS}
-                className="flex-1"
-              />
-            }
+          {!isOnline && (
+            <p className="text-sm text-muted-foreground px-4 py-2 bg-muted/50 rounded-md mb-2">
+              You&apos;re offline — results may not be up to date
+            </p>
+          )}
+          {canManage && (
+            <ApprovalBulkActionBar
+              selectedCount={selection.size}
+              isPending={isBulkPending}
+              onCancelSelected={handleBulkCancel}
+              onClear={handleClearSelection}
+            />
+          )}
+          <BuildListSurface<ApprovalInboxItem>
+            permission="build:approvals:view"
+            rows={filteredItems}
+            columns={columns}
+            isLoading={isLoading}
+            isError={isError}
+            error={error}
+            isFiltered={listFilters.isFiltered}
+            getRowKey={(row) => `${row.projectId}-${row.id}`}
+            minWidth="680px"
+            mobileCard={renderMobileCard}
+            loadingHeaders={INBOX_TABLE_HEADERS}
+            loadingRows={12}
+            selection={{
+              selected: selection,
+              onChange: setSelection,
+              isRowSelectable,
+              getRowLabel: (row) => row.title,
+            }}
+            pagination={{
+              mode: "cursor",
+              pageSize: 25,
+              pageNumber,
+              hasPrevious,
+              hasMore,
+              onNext: handleNextPage,
+              onPrevious: handlePreviousPage,
+            }}
             empty={
               <EmptyState
-                className={PM_FILL_PANEL}
+                className={CONTENT_FILL_PANEL}
                 illustrationPreset="approval"
                 title="No approvals waiting"
                 description="You have no pending approvals across your projects."
-                filtersActive={listFilters.isFiltered}
+              />
+            }
+            filteredEmpty={
+              <EmptyState
+                className={CONTENT_FILL_PANEL}
+                illustrationPreset="approval"
+                title="No approvals match your filters"
+                description="Try adjusting the filters to see more approvals."
                 onClearFilters={listFilters.clearAll}
               />
             }
             onRetry={handleRetry}
-            className={PM_FILL_PANEL}
-          >
-            <DataTable
-              data={filteredItems}
-              columns={columns}
-              getRowKey={(row) => `${row.projectId}-${row.id}`}
-              pagination={{ pageSize: 25 }}
-              minWidth="680px"
-              mobileCard={renderMobileCard}
-              className={PM_FILL_PANEL}
-            />
-          </PageState>
+          />
         </PmSection>
       </PmPageShell>
 
       <DecideDialog
         open={!!decideTarget}
         onOpenChange={handleDecideDialogChange}
-        onConfirm={handleDecideConfirm}
-        isPending={decideApproval.isPending}
-        approvalTitle={decideTarget?.title}
+        projectId={decideTarget?.projectId ?? 0}
+        approvalId={decideTarget?.approvalId ?? 0}
+        revision={
+          queueTarget?.projectId === decideTarget?.projectId &&
+          queueTarget?.approvalId === decideTarget?.approvalId
+            ? queueTarget?.revision
+            : undefined
+        }
+        onCloseAutoFocus={handleReturnFocus}
       />
     </PageWrapper>
   );

@@ -7,7 +7,7 @@ export function formatModuleName(icon: string | null | undefined, name: string):
   return `${icon} ${trimmed}`;
 }
 
-export function parseModuleName(fullName: string): { icon: string | null; name: string } {
+function parseModuleName(fullName: string): { icon: string | null; name: string } {
   const trimmed = fullName.trim();
   const match = trimmed.match(LEADING_EMOJI_PATTERN);
   if (match?.[1] && match[2]) {

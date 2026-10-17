@@ -145,8 +145,6 @@ export type OrgTreeRoot =
   | OrgTreeDepartment
   | OrgTreeTeam;
 
-export type OrgTreeNode = OrgTreeRoot;
-
 export interface OrgHierarchyOverview {
   businessUnits: number;
   branches: number;

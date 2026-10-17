@@ -204,6 +204,7 @@ export function PortfolioFormSheet({
                 <FormLabel>Owner (optional)</FormLabel>
                 <FormControl>
                   <MemberPicker
+                    directory="build"
                     mode="single"
                     value={field.value || undefined}
                     onChange={(id) => field.onChange(id ?? "")}

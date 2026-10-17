@@ -113,7 +113,7 @@ export function useQuickActions(): {
       items.push({
         label: "Projects",
         icon: Briefcase,
-        href: "/build",
+        href: "/build/projects",
         baseScore: 5,
       });
     }

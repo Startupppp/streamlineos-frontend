@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useRef } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import {
   keepPreviousData,
   useMutation,
@@ -10,28 +10,35 @@ import {
 import type { Session } from "next-auth";
 import type { SignInResponse } from "next-auth/react";
 import { getSession, signIn, signOut, useSession } from "next-auth/react";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import {
   apiClient,
   clearBackendTokenCache,
   clearImpersonation,
+  endSession,
   setAutoSignOutSuppressed,
 } from "@/lib/api-client";
+import { publishLogout, subscribeLogout } from "@/lib/auth-broadcast";
 import { clearGateCookies } from "@/lib/onboarding-gate";
+import type { SkippedGrant } from "@/hooks/common/auth-schema";
 import { clearStreamToken } from "@/features/notifications/use-notification-events";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { platformCoreQueryKeys } from "@/lib/query-keys/platform-core";
 import { lazyContract } from "@/lib/api-envelope";
+import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
 import type { UserOrganization } from "@/hooks/api/organization-schema";
 import { toast } from "sonner";
 
-/**
- * Deferred: the org switcher in the shell header imports this module, so a
- * value import here reached Zod from every authenticated route. Both are still
- * handed to the seam in the contract slot — `POST /organization/switch` in
- * particular sets the session's active org, and failing it open is a
- * cross-tenant outcome, so its contract is not optional.
- */
+function discardOfflineCalendarAccess() {
+  try { sessionStorage.removeItem("streamline-calendar-offline-session-identity"); }
+  catch {}
+  try { localStorage.removeItem("streamline-calendar-offline-identity"); }
+  catch {}
+  void import("@/lib/offline/calendar-offline-cache")
+    .then((module) => module.clearOfflineCalendarSnapshot())
+    .catch(() => undefined);
+}
+
 const organizationsContract = lazyContract(() =>
   import("@/hooks/api/organization-schema").then(
     (m) => m.userOrganizationsContract,
@@ -46,7 +53,14 @@ const verifyEmailContract = lazyContract(() =>
   import("@/hooks/common/auth-schema").then((m) => m.verifyEmailContract),
 );
 const invitationValidateContract = lazyContract(() =>
-  import("@/hooks/common/auth-schema").then((m) => m.invitationValidateContract),
+  import("@/hooks/common/auth-schema").then(
+    (m) => m.invitationValidateContract,
+  ),
+);
+const requestInvitationOtpContract = lazyContract(() =>
+  import("@/hooks/common/auth-schema").then(
+    (m) => m.requestInvitationOtpContract,
+  ),
 );
 const acceptInvitationContract = lazyContract(() =>
   import("@/hooks/common/auth-schema").then((m) => m.acceptInvitationContract),
@@ -55,10 +69,22 @@ const declineInvitationContract = lazyContract(() =>
   import("@/hooks/common/auth-schema").then((m) => m.declineInvitationContract),
 );
 const resendVerificationContract = lazyContract(() =>
-  import("@/hooks/common/auth-schema").then((m) => m.resendVerificationContract),
+  import("@/hooks/common/auth-schema").then(
+    (m) => m.resendVerificationContract,
+  ),
 );
 const logoutContract = lazyContract(() =>
   import("@/hooks/common/auth-schema").then((m) => m.logoutContract),
+);
+const pendingInvitationsForMeContract = lazyContract(() =>
+  import("@/hooks/common/auth-schema").then(
+    (m) => m.pendingInvitationsForMeContract,
+  ),
+);
+const claimInvitationResponseContract = lazyContract(() =>
+  import("@/hooks/common/auth-schema").then(
+    (m) => m.claimInvitationResponseContract,
+  ),
 );
 
 export type MagicLinkSignInOutcome =
@@ -82,6 +108,7 @@ async function probeSession(): Promise<SessionProbe> {
 }
 
 const CREDENTIALS_CALLBACK_ECHO_PATH = "/dashboard";
+export const CREDENTIALS_SIGN_IN_TIMEOUT_MS = 45_000;
 
 async function confirmSessionEstablished(): Promise<MagicLinkSignInOutcome> {
   const established = await probeSession();
@@ -96,14 +123,22 @@ async function attemptCredentialsSignIn(
   magicToken: string,
 ): Promise<MagicLinkSignInOutcome> {
   let result: SignInResponse | undefined;
+  let timer: ReturnType<typeof setTimeout> | undefined;
   try {
-    result = await signIn("credentials", {
-      magicToken,
-      redirect: false,
-      callbackUrl: CREDENTIALS_CALLBACK_ECHO_PATH,
-    });
+    result = await Promise.race([
+      signIn("credentials", {
+        magicToken,
+        redirect: false,
+        callbackUrl: CREDENTIALS_CALLBACK_ECHO_PATH,
+      }),
+      new Promise<never>((_, reject) => {
+        timer = setTimeout(() => reject(new Error("sign-in timed out")), CREDENTIALS_SIGN_IN_TIMEOUT_MS);
+      }),
+    ]);
   } catch {
     return confirmSessionEstablished();
+  } finally {
+    clearTimeout(timer);
   }
   if (!result?.ok || result.error) return { status: "failed" };
   return { status: "signed-in" };
@@ -133,6 +168,7 @@ export function useVerifyEmail() {
 }
 
 export interface InvitationValidation {
+  id: string;
   email: string;
   organizationName: string;
   role: string;
@@ -143,10 +179,31 @@ export function useValidateInvitation(token: string) {
   return useQuery<InvitationValidation>({
     queryKey: platformCoreQueryKeys.invitation.token(token),
     queryFn: ({ signal }) =>
-      apiClient.get("/organization/invitations/validate", { token }, signal, invitationValidateContract),
+      apiClient.get(
+        "/organization/invitations/validate",
+        { token },
+        signal,
+        invitationValidateContract,
+      ),
     staleTime: 60_000,
     enabled: !!token,
     retry: false,
+    // The page draws its own "Invitation expired" card for a revoked link's 404;
+    // the provider default would throw it to the route boundary instead.
+    ...INLINE_READ_ERROR,
+  });
+}
+
+export function useRequestInvitationOtp() {
+  return useMutation({
+    mutationKey: ["auth", "request-invitation-otp"],
+    mutationFn: (variables: { token: string }) =>
+      apiClient.post<{ ok: true }>(
+        "/organization/invitations/request-otp",
+        variables,
+        undefined,
+        requestInvitationOtpContract,
+      ),
   });
 }
 
@@ -157,8 +214,9 @@ export function useAcceptInvitation() {
       token: string;
       firstName?: string;
       lastName?: string;
+      emailOtp?: string;
     }) =>
-      apiClient.post<{ ok: true; autoLoginToken: string }>(
+      apiClient.post<{ ok: true; autoLoginToken: string; skippedGrants: SkippedGrant[] }>(
         "/organization/invitations/accept",
         variables,
         undefined,
@@ -209,16 +267,23 @@ export function useSignOut() {
     mutationFn: async (): Promise<SignOutOutcome> => {
       let serverRevocationCompleted = false;
       try {
-        await apiClient.post("/auth/logout", undefined, undefined, logoutContract);
+        await apiClient.post(
+          "/auth/logout",
+          undefined,
+          undefined,
+          logoutContract,
+        );
         serverRevocationCompleted = true;
       } catch {
         serverRevocationCompleted = false;
       }
       clearImpersonation();
+      discardOfflineCalendarAccess();
       clearBackendTokenCache();
       clearStreamToken();
       queryClient.clear();
       await signOut({ redirect: false });
+      publishLogout();
       return { localSignOutCompleted: true, serverRevocationCompleted };
     },
     onSuccess: (outcome) => {
@@ -237,7 +302,7 @@ export function useGetOrganizations(enabled = true) {
     queryKey: platformCoreQueryKeys.organization.all,
     queryFn: ({ signal }) =>
       apiClient.get("/organization", undefined, signal, organizationsContract),
-    staleTime: 60_000,
+    staleTime: 5 * 60_000,
     enabled: status === "authenticated" && enabled,
     placeholderData: keepPreviousData,
     refetchOnWindowFocus: false,
@@ -291,10 +356,59 @@ const SWITCH_UNCONFIRMED_MESSAGE =
 
 const AUTO_SIGN_OUT_SUPPRESSION_MS = 4000;
 
+const AUTH_ONLY_SEGMENTS = new Set([
+  "signin",
+  "signup",
+  "verify",
+  "org-setup",
+  "employee-onboarding",
+]);
+
+function sectionRootFromPathname(pathname: string): string {
+  const first = pathname.split("/")[1];
+  if (!first || AUTH_ONLY_SEGMENTS.has(first)) return "/dashboard";
+  return `/${first}`;
+}
+
+export function useMyPendingInvitations(enabled = true) {
+  const { status } = useSession();
+  return useQuery({
+    queryKey: ["auth", "pending-invitations-for-me"],
+    queryFn: ({ signal }) =>
+      apiClient.get(
+        "/organization/invitations/pending-for-me",
+        undefined,
+        signal,
+        pendingInvitationsForMeContract,
+      ),
+    staleTime: 60_000,
+    enabled: status === "authenticated" && enabled,
+    ...INLINE_READ_ERROR,
+  });
+}
+
+export function useClaimInvitation() {
+  return useMutation({
+    mutationKey: ["auth", "claim-invitation"],
+    mutationFn: (invitationId: string) =>
+      apiClient.post(
+        `/organization/invitations/${invitationId}/claim`,
+        {},
+        undefined,
+        claimInvitationResponseContract,
+      ),
+  });
+}
+
+export function useLogoutBroadcastListener(): void {
+  useEffect(() => subscribeLogout(endSession), []);
+}
+
 export function useSwitchOrg() {
   const refreshSessionClaims = useSessionClaimsRefresh();
   const queryClient = useQueryClient();
   const router = useRouter();
+  const pathname = usePathname();
   const switchGenerationRef = useRef(0);
   return useMutation({
     mutationKey: ["organization", "switch"],
@@ -308,12 +422,13 @@ export function useSwitchOrg() {
     onMutate: async () => {
       switchGenerationRef.current += 1;
       const generation = switchGenerationRef.current;
+      const sectionRoot = sectionRootFromPathname(pathname);
       setAutoSignOutSuppressed(true);
       clearImpersonation();
       clearStreamToken();
       clearGateCookies();
       await queryClient.cancelQueries();
-      return { generation };
+      return { generation, sectionRoot };
     },
     onSuccess: async (data, _orgId, onMutateResult) => {
       const refreshed = await refreshSessionClaims({ orgId: data.orgId });
@@ -322,8 +437,9 @@ export function useSwitchOrg() {
         toast.error(SWITCH_UNCONFIRMED_MESSAGE);
         return;
       }
+      discardOfflineCalendarAccess();
       queryClient.clear();
-      router.replace("/dashboard");
+      router.replace(onMutateResult.sectionRoot);
       router.refresh();
     },
     onError: (error) => {

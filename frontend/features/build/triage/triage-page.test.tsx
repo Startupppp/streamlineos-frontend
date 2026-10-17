@@ -1,12 +1,37 @@
 import React from "react";
-import { render, screen } from "@testing-library/react";
+import { act, fireEvent, render, screen } from "@testing-library/react";
 import { TriagePage } from "./triage-page";
 import { ApiError } from "@/lib/api-envelope";
+import type { UseBuildListFiltersOptions } from "@/features/build/shared/use-build-list-filters";
 
-jest.mock("@/hooks/api", () => ({
+let mockRealFilters = false;
+let mockSearchParams = new URLSearchParams();
+const mockRouter = { push: jest.fn(), replace: jest.fn() };
+
+const mockBuildListFilters = {
+  search: "",
+  debouncedSearch: "",
+  cursor: null,
+  setSearch: jest.fn(),
+  setCursor: jest.fn(),
+  clearAll: jest.fn(),
+  resetKey: "",
+  value: jest.fn(() => ""),
+  setValue: jest.fn(),
+  isActive: jest.fn(() => false),
+  activeCount: 0,
+  isFiltered: false,
+  isPending: false,
+};
+
+jest.mock("@/hooks/api/build/projects", () => ({
   useProject: jest.fn(),
+}));
+
+jest.mock("@/hooks/api/build/tickets", () => ({
   useTickets: jest.fn(),
   useUpdateTicket: jest.fn(),
+  useBulkUpdateTickets: jest.fn(),
 }));
 
 jest.mock("@/hooks/api/entitlements", () => ({
@@ -21,7 +46,24 @@ jest.mock("@/hooks/api/access", () => ({
 jest.mock("sonner", () => ({ toast: { success: jest.fn(), error: jest.fn() } }));
 
 jest.mock("next/navigation", () => ({
-  useRouter: () => ({ push: jest.fn() }),
+  useRouter: () => mockRouter,
+  usePathname: () => "/build/1/triage",
+  useSearchParams: () => mockSearchParams,
+}));
+
+jest.mock("@/features/build/shared/use-build-list-filters", () => ({
+  ...jest.requireActual("@/features/build/shared/use-build-list-filters"),
+  useBuildListFilters: (options: UseBuildListFiltersOptions) => mockRealFilters
+    ? jest.requireActual<typeof import("@/features/build/shared/use-build-list-filters")>("@/features/build/shared/use-build-list-filters").useBuildListFilters(options)
+    : mockBuildListFilters,
+}));
+
+jest.mock("@/components/ui/table-pagination", () => ({
+  TablePagination: () => <div data-testid="table-pagination" />,
+}));
+
+jest.mock("@/features/build/shared/build-list-toolbar", () => ({
+  BuildListToolbar: ({ onClearAll }: { onClearAll: () => void }) => <div data-testid="build-list-toolbar"><button onClick={onClearAll}>Clear triage filters</button></div>,
 }));
 
 jest.mock("next/link", () => ({
@@ -32,10 +74,10 @@ jest.mock("next/link", () => ({
 }));
 
 jest.mock("@/components/ui/page-wrapper", () => ({
-  PageWrapper: ({ children, title }: { children: React.ReactNode; title?: string }) => (
+  PageWrapper: ({ children, title, filters }: { children: React.ReactNode; title?: string; filters?: React.ReactNode }) => (
     <div>
       {title ? <h1>{title}</h1> : null}
-      {children}
+      {filters}{children}
     </div>
   ),
 }));
@@ -65,21 +107,84 @@ jest.mock("@/components/ui/skeleton", () => ({
 }));
 
 jest.mock("./triage-row", () => ({
-  TriageRow: () => <div data-testid="triage-row" />,
+  TriageRow: ({
+    ticket,
+    onAccept,
+    onDecline,
+    isSelected,
+  }: {
+    ticket: { id: number };
+    onAccept?: (id: number) => void;
+    onDecline?: (id: number) => void;
+    isSelected?: boolean;
+  }) => (
+    <div data-testid="triage-row" data-selected={String(isSelected)}>
+      <button type="button" data-testid="accept-btn" onClick={() => onAccept?.(ticket.id)}>Accept</button>
+      <button type="button" data-testid="decline-btn" onClick={() => onDecline?.(ticket.id)}>Decline</button>
+    </div>
+  ),
+}));
+
+jest.mock("@/hooks/common/use-build-list-keyboard", () => ({
+  useBuildListKeyboard: jest.fn(() => ({ focusedIndex: null, setFocusedIndex: jest.fn() })),
+}));
+
+jest.mock("@/hooks/api/build/project-members", () => ({
+  useProjectMembers: jest.fn(() => ({ data: [] })),
+}));
+
+jest.mock("@/hooks/api/build/cycles", () => ({
+  useCycles: jest.fn(() => ({ data: [] })),
+}));
+
+const mockRemoveTicketFromCollections = jest.fn();
+jest.mock("@/hooks/api/build/ticket-cache", () => ({
+  removeTicketFromCollections: (...args: unknown[]) => mockRemoveTicketFromCollections(...args),
+}));
+
+const mockQueryClient = {};
+jest.mock("@tanstack/react-query", () => ({
+  ...jest.requireActual("@tanstack/react-query"),
+  useQueryClient: () => mockQueryClient,
+}));
+
+jest.mock("@/features/build/shared/bulk-action-bar", () => ({
+  BulkActionBar: ({
+    onBulkStatus,
+    onBulkPriority,
+    onBulkAssignee,
+    onBulkCycle,
+  }: {
+    onBulkStatus?: (v: string) => void;
+    onBulkPriority?: (v: string) => void;
+    onBulkAssignee?: (v: string) => void;
+    onBulkCycle?: (v: string) => void;
+  }) => (
+    <div data-testid="bulk-action-bar">
+      <button type="button" data-testid="bulk-status-btn" onClick={() => onBulkStatus?.("IN_PROGRESS")}>Status</button>
+      <button type="button" data-testid="bulk-priority-btn" onClick={() => onBulkPriority?.("HIGH")}>Priority</button>
+      <button type="button" data-testid="bulk-assignee-btn" onClick={() => onBulkAssignee?.("user-1")}>Assignee</button>
+      <button type="button" data-testid="bulk-cycle-btn" onClick={() => onBulkCycle?.("2")}>Cycle</button>
+    </div>
+  ),
 }));
 
 jest.mock("@/components/shared/format-ticket-key", () => ({
   getTicketDetailHref: jest.fn(() => "/build/1/tickets/1"),
 }));
 
-import { useProject, useTickets, useUpdateTicket } from "@/hooks/api";
+import { useProject } from "@/hooks/api/build/projects";
+import { useTickets, useUpdateTicket, useBulkUpdateTickets } from "@/hooks/api/build/tickets";
 import { useCan, useAccess } from "@/hooks/api/access";
+import { useBuildListKeyboard } from "@/hooks/common/use-build-list-keyboard";
 
 const mockUseProject = useProject as jest.Mock;
 const mockUseTickets = useTickets as jest.Mock;
 const mockUseUpdateTicket = useUpdateTicket as jest.Mock;
 const mockUseCan = useCan as jest.Mock;
 const mockUseAccess = useAccess as jest.Mock;
+const mockUseBuildListKeyboard = useBuildListKeyboard as jest.Mock;
+const mockUseBulkUpdateTickets = useBulkUpdateTickets as jest.Mock;
 
 const ACCESS_GRANTED = {
   data: { isOrgOwner: false, scopes: { "build:tickets:view": "all" }, modules: {} },
@@ -103,6 +208,11 @@ function baseTicketsResult(overrides = {}) {
 }
 
 beforeEach(() => {
+  mockRealFilters = false;
+  mockSearchParams = new URLSearchParams();
+  mockRouter.replace.mockClear();
+  mockBuildListFilters.value.mockReturnValue("all");
+  mockBuildListFilters.isFiltered = false;
   mockUseCan.mockReturnValue(true);
   mockUseAccess.mockReturnValue(ACCESS_GRANTED);
   mockUseProject.mockReturnValue({ data: { key: "PROJ" } });
@@ -110,6 +220,8 @@ beforeEach(() => {
     baseTicketsResult({ data: { data: [], pagination: { hasMore: false } } }),
   );
   mockUseUpdateTicket.mockReturnValue({ mutate: jest.fn(), isPending: false });
+  mockUseBuildListKeyboard.mockReturnValue({ focusedIndex: null, setFocusedIndex: jest.fn() });
+  mockUseBulkUpdateTickets.mockReturnValue({ mutate: jest.fn(), isPending: false });
 });
 
 it("shows a skeleton while the access snapshot is in flight, not an empty or denied state", () => {
@@ -148,4 +260,237 @@ it("shows the denial view, not an empty submissions list, when the user lacks bu
   expect(screen.getByText(/access restricted/i)).toBeInTheDocument();
   expect(screen.queryByTestId("empty-state")).not.toBeInTheDocument();
   expect(screen.queryByText(/nothing to triage/i)).not.toBeInTheDocument();
+});
+
+it("renders the error state with the backend message on query failure, preserving the request context", () => {
+  mockUseTickets.mockReturnValue(
+    baseTicketsResult({
+      isError: true,
+      error: new Error("Could not connect to build service"),
+    }),
+  );
+  render(<TriagePage projectId={1} />);
+  const errorEl = screen.getByTestId("error-state");
+  expect(errorEl.textContent).toContain("Could not connect to build service");
+  expect(screen.queryByTestId("empty-state")).not.toBeInTheDocument();
+});
+
+it("renders an empty state when there are no submissions, so triage-empty is distinguishable from a denied state", () => {
+  render(<TriagePage projectId={1} />);
+  expect(screen.queryByTestId("error-state")).not.toBeInTheDocument();
+  expect(screen.queryByTestId("no-permission")).not.toBeInTheDocument();
+});
+
+it("labels an empty filtered result as no matches and offers filter clearing", () => {
+  mockBuildListFilters.isFiltered = true;
+  mockUseTickets.mockReturnValue(
+    baseTicketsResult({ data: { data: [], pagination: { hasMore: false } } }),
+  );
+  render(<TriagePage projectId={1} />);
+  expect(screen.getByText("No results match your filters")).toBeInTheDocument();
+});
+
+it("renders triage rows when submissions are present, confirming the ready state renders content", () => {
+  const submission = { ...SUBMISSION, status: "TRIAGE" };
+  mockUseTickets.mockReturnValue(
+    baseTicketsResult({
+      data: { data: [submission], pagination: { hasMore: false } },
+    }),
+  );
+  render(<TriagePage projectId={1} />);
+  expect(screen.getByTestId("triage-row")).toBeInTheDocument();
+  expect(screen.queryByTestId("error-state")).not.toBeInTheDocument();
+});
+
+it("wires useBuildListKeyboard enabled only when triage is in the ready state, not during loading or denial", () => {
+  const submission = { ...SUBMISSION, status: "TRIAGE" };
+  mockUseTickets.mockReturnValue(
+    baseTicketsResult({ data: { data: [submission], pagination: { hasMore: false } } }),
+  );
+  render(<TriagePage projectId={1} />);
+  const calls = mockUseBuildListKeyboard.mock.calls;
+  const lastArgs = calls[calls.length - 1]?.[0];
+  expect(lastArgs?.enabled).toBe(true);
+  expect(typeof lastArgs?.onOpen).toBe("function");
+  expect(lastArgs?.itemCount).toBe(1);
+});
+
+it("renders a checkbox per row when the user has build:tickets:update permission", () => {
+  const submission = { ...SUBMISSION, status: "TRIAGE" };
+  mockUseTickets.mockReturnValue(
+    baseTicketsResult({ data: { data: [submission], pagination: { hasMore: false } } }),
+  );
+  const { container } = render(<TriagePage projectId={1} />);
+  const checkbox = container.querySelector('button[role="checkbox"], input[type="checkbox"]');
+  expect(checkbox).toBeInTheDocument();
+});
+
+const SUBMISSION = {
+  id: 99, orgId: "org-1", projectId: 1, title: "Bug: button broken",
+  type: "BUG", status: "TRIAGE", priority: "HIGH", ticketNumber: 99,
+  epicId: null, reporterId: "user-1", points: null, storyPoints: null,
+  link: null, rank: "1000", parentTicketId: null, originalEstimate: null,
+  timeSpent: null, startDate: null, dueDate: null, moduleId: null, cycleId: null,
+  sequenceId: "PROJ-99", estimate: null, createdAt: "2026-09-01", updatedAt: "2026-09-01",
+};
+
+it("selecting a row then clicking bulk-status invokes useBulkUpdateTickets mutate with status and the selected ticket id", async () => {
+  const bulkMutate = jest.fn();
+  mockUseBulkUpdateTickets.mockReturnValue({ mutate: bulkMutate, isPending: false });
+  mockUseTickets.mockReturnValue(
+    baseTicketsResult({ data: { data: [SUBMISSION], pagination: { hasMore: false } } }),
+  );
+  const { container } = render(<TriagePage projectId={1} />);
+  const checkbox = container.querySelector('button[role="checkbox"], input[type="checkbox"]');
+  expect(checkbox).toBeInTheDocument();
+  await act(async () => { fireEvent.click(checkbox!); });
+  expect(screen.getByTestId("bulk-action-bar")).toBeInTheDocument();
+  await act(async () => { fireEvent.click(screen.getByTestId("bulk-status-btn")); });
+  expect(bulkMutate).toHaveBeenCalledWith(
+    { ticketIds: [99], status: "IN_PROGRESS" },
+    expect.objectContaining({ onSuccess: expect.any(Function), onError: expect.any(Function) }),
+  );
+});
+
+it("selecting a row then clicking bulk-priority invokes useBulkUpdateTickets mutate with priority and the selected ticket id", async () => {
+  const bulkMutate = jest.fn();
+  mockUseBulkUpdateTickets.mockReturnValue({ mutate: bulkMutate, isPending: false });
+  mockUseTickets.mockReturnValue(
+    baseTicketsResult({ data: { data: [SUBMISSION], pagination: { hasMore: false } } }),
+  );
+  const { container } = render(<TriagePage projectId={1} />);
+  const checkbox = container.querySelector('button[role="checkbox"], input[type="checkbox"]');
+  await act(async () => { fireEvent.click(checkbox!); });
+  await act(async () => { fireEvent.click(screen.getByTestId("bulk-priority-btn")); });
+  expect(bulkMutate).toHaveBeenCalledWith(
+    { ticketIds: [99], priority: "HIGH" },
+    expect.objectContaining({ onSuccess: expect.any(Function), onError: expect.any(Function) }),
+  );
+});
+
+it("selecting a row then clicking bulk-assignee invokes useBulkUpdateTickets mutate with assigneeId and the selected ticket id", async () => {
+  const bulkMutate = jest.fn();
+  mockUseBulkUpdateTickets.mockReturnValue({ mutate: bulkMutate, isPending: false });
+  mockUseTickets.mockReturnValue(
+    baseTicketsResult({ data: { data: [SUBMISSION], pagination: { hasMore: false } } }),
+  );
+  const { container } = render(<TriagePage projectId={1} />);
+  const checkbox = container.querySelector('button[role="checkbox"], input[type="checkbox"]');
+  await act(async () => { fireEvent.click(checkbox!); });
+  await act(async () => { fireEvent.click(screen.getByTestId("bulk-assignee-btn")); });
+  expect(bulkMutate).toHaveBeenCalledWith(
+    { ticketIds: [99], assigneeId: "user-1" },
+    expect.objectContaining({ onSuccess: expect.any(Function), onError: expect.any(Function) }),
+  );
+});
+
+it("selecting a row then clicking bulk-cycle invokes useBulkUpdateTickets mutate with cycleId and the selected ticket id", async () => {
+  const bulkMutate = jest.fn();
+  mockUseBulkUpdateTickets.mockReturnValue({ mutate: bulkMutate, isPending: false });
+  mockUseTickets.mockReturnValue(
+    baseTicketsResult({ data: { data: [SUBMISSION], pagination: { hasMore: false } } }),
+  );
+  const { container } = render(<TriagePage projectId={1} />);
+  const checkbox = container.querySelector('button[role="checkbox"], input[type="checkbox"]');
+  await act(async () => { fireEvent.click(checkbox!); });
+  await act(async () => { fireEvent.click(screen.getByTestId("bulk-cycle-btn")); });
+  expect(bulkMutate).toHaveBeenCalledWith(
+    { ticketIds: [99], cycleId: 2 },
+    expect.objectContaining({ onSuccess: expect.any(Function), onError: expect.any(Function) }),
+  );
+});
+
+describe("BUG-037 — triage list excludes epics and cycle-assigned tickets, and removes accepted/declined items immediately", () => {
+  const epicTicket = {
+    ...SUBMISSION, id: 200, type: "EPIC", cycleId: null, ticketNumber: 200,
+  };
+  const cycleAssignedTicket = {
+    ...SUBMISSION, id: 201, type: "BUG", cycleId: 5, ticketNumber: 201,
+  };
+
+  beforeEach(() => {
+    mockRemoveTicketFromCollections.mockClear();
+  });
+
+  it("epic-type ticket is not rendered in the triage list even when its status is TODO", () => {
+    mockUseTickets.mockReturnValue(
+      baseTicketsResult({ data: { data: [epicTicket], pagination: { hasMore: false } } }),
+    );
+    render(<TriagePage projectId={1} />);
+    expect(screen.queryByTestId("triage-row")).not.toBeInTheDocument();
+  });
+
+  it("cycle-assigned ticket is not rendered in the triage list even when its status is TODO", () => {
+    mockUseTickets.mockReturnValue(
+      baseTicketsResult({ data: { data: [cycleAssignedTicket], pagination: { hasMore: false } } }),
+    );
+    render(<TriagePage projectId={1} />);
+    expect(screen.queryByTestId("triage-row")).not.toBeInTheDocument();
+  });
+
+  it("regular TODO ticket with no cycleId passes through the filter and is rendered", () => {
+    mockUseTickets.mockReturnValue(
+      baseTicketsResult({ data: { data: [SUBMISSION], pagination: { hasMore: false } } }),
+    );
+    render(<TriagePage projectId={1} />);
+    expect(screen.getByTestId("triage-row")).toBeInTheDocument();
+  });
+
+  it("accept onSuccess calls removeTicketFromCollections so the row disappears immediately without a refetch", async () => {
+    let capturedOnSuccess: (() => void) | undefined;
+    const mutateFn = jest.fn((_vars: unknown, opts: { onSuccess: () => void }) => {
+      capturedOnSuccess = opts.onSuccess;
+    });
+    mockUseUpdateTicket.mockReturnValue({ mutate: mutateFn, isPending: false });
+    mockUseTickets.mockReturnValue(
+      baseTicketsResult({ data: { data: [SUBMISSION], pagination: { hasMore: false } } }),
+    );
+    render(<TriagePage projectId={1} />);
+    await act(async () => { fireEvent.click(screen.getByTestId("accept-btn")); });
+    expect(mutateFn).toHaveBeenCalled();
+    await act(async () => { capturedOnSuccess?.(); });
+    expect(mockRemoveTicketFromCollections).toHaveBeenCalledWith(
+      mockQueryClient, 1, SUBMISSION.id,
+    );
+  });
+
+  it("decline onSuccess calls removeTicketFromCollections with the correct projectId and ticketId", async () => {
+    let capturedOnSuccess: (() => void) | undefined;
+    const mutateFn = jest.fn((_vars: unknown, opts: { onSuccess: () => void }) => {
+      capturedOnSuccess = opts.onSuccess;
+    });
+    mockUseUpdateTicket.mockReturnValue({ mutate: mutateFn, isPending: false });
+    mockUseTickets.mockReturnValue(
+      baseTicketsResult({ data: { data: [SUBMISSION], pagination: { hasMore: false } } }),
+    );
+    render(<TriagePage projectId={1} />);
+    await act(async () => { fireEvent.click(screen.getByTestId("decline-btn")); });
+    expect(mutateFn).toHaveBeenCalled();
+    await act(async () => { capturedOnSuccess?.(); });
+    expect(mockRemoveTicketFromCollections).toHaveBeenCalledWith(
+      mockQueryClient, 1, SUBMISSION.id,
+    );
+  });
+});
+
+it.each([
+  ["ownerId=user-1&sort=priority&status=BACKLOG&cursor=next", "user-1", "priority", "BACKLOG", "next"],
+  ["ownerId=user-2&sort=updated", "user-2", "updated", "TODO", undefined],
+  ["sort=unknown", undefined, "created", "TODO", undefined],
+  ["", undefined, "created", "TODO", undefined],
+])("passes canonical URL filters into the ticket query: %s", (url, owner, order, status, cursor) => {
+  mockRealFilters = true;
+  mockSearchParams = new URLSearchParams(url);
+  render(<TriagePage projectId={1} />);
+  expect(mockUseTickets).toHaveBeenLastCalledWith(1, expect.objectContaining({
+    assigneeId: owner, orderBy: order, status, cursor, orderDir: "asc", limit: 50,
+  }));
+});
+
+it("clears registered facets and cursor while retaining unrelated URL state", () => {
+  mockRealFilters = true;
+  mockSearchParams = new URLSearchParams("ownerId=user-1&sort=priority&status=TODO&cursor=next&view=board");
+  render(<TriagePage projectId={1} />);
+  fireEvent.click(screen.getByRole("button", { name: "Clear triage filters" }));
+  expect(mockRouter.replace).toHaveBeenCalledWith("/build/1/triage?view=board", { scroll: false });
 });

@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, fireEvent } from "@testing-library/react";
 import type { TicketComment } from "@/types/projects";
 import { CommentItem } from "./comment-item";
 
@@ -28,7 +28,7 @@ const COMMENT: TicketComment = {
 
 const noop = () => {};
 
-function renderItem(currentUserId: string) {
+function renderItem(currentUserId: string, onSaveEdit: (id: number, content: string) => void = noop) {
   return render(
     <CommentItem
       comment={COMMENT}
@@ -45,7 +45,7 @@ function renderItem(currentUserId: string) {
       onReact={noop}
       onUnreact={noop}
       canInteract
-      onSaveEdit={noop}
+      onSaveEdit={onSaveEdit}
       onDelete={noop}
       isSavingEdit={false}
       isDeletingComment={false}
@@ -64,5 +64,33 @@ describe("CommentItem — destructive actions", () => {
     renderItem("viewer-2");
 
     expect(screen.queryByRole("button", { name: "Delete comment" })).toBeNull();
+  });
+});
+
+describe("CommentItem — edit mode", () => {
+  it("does not call onSaveEdit when Escape is pressed", () => {
+    const onSaveEdit = jest.fn();
+    renderItem("author-1", onSaveEdit);
+
+    fireEvent.click(screen.getByRole("button", { name: "Edit comment" }));
+
+    const editField = screen.getByTestId("comment-edit-field");
+    fireEvent.keyDown(editField, { key: "Escape", bubbles: true });
+
+    expect(onSaveEdit).not.toHaveBeenCalled();
+    expect(screen.queryByTestId("comment-edit-field")).toBeNull();
+  });
+
+  it("closes edit mode on Ctrl+Enter without calling onSaveEdit when content is unchanged", () => {
+    const onSaveEdit = jest.fn();
+    renderItem("author-1", onSaveEdit);
+
+    fireEvent.click(screen.getByRole("button", { name: "Edit comment" }));
+
+    const editField = screen.getByTestId("comment-edit-field");
+    fireEvent.keyDown(editField, { key: "Enter", ctrlKey: true, bubbles: true });
+
+    expect(onSaveEdit).not.toHaveBeenCalled();
+    expect(screen.queryByTestId("comment-edit-field")).toBeNull();
   });
 });

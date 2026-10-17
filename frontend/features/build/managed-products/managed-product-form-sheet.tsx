@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useRegisterDirtyState } from "@/components/shared/dirty-state-context";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -9,33 +9,33 @@ import {
   type CreateManagedProductFormValues,
   editManagedProductSchema,
   type EditManagedProductFormValues,
+  toCreateManagedProductInput,
+  toEditManagedProductInput,
 } from "@/features/build/managed-products/managed-product-schema";
-import {
-  Form,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormControl,
-  FormMessage,
-} from "@/components/ui/form";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
-import { FormSheetChrome, MemberPicker } from "@/components/shared";
+import { FormSheetChrome } from "@/components/shared";
 import type {
   ManagedProduct,
   CreateManagedProductInput,
-  UpdateManagedProductInput,
 } from "@/types/projects";
-import { upperCaseFieldChange } from "@/lib/case-field";
+import { useUpdateManagedProduct } from "@/hooks/api/build/managed-products";
+import { isApiError } from "@/lib/api-envelope";
+import { getErrorMessage } from "@/lib/get-error-message";
+import { toast } from "sonner";
+import type { TicketConflictFieldDiff } from "@/features/build/ticket-details/ticket-conflict-diff";
+import { TicketConflictDialog } from "@/features/build/ticket-details/ticket-conflict-dialog";
+import { ManagedProductCreateFields } from "./managed-product-create-fields";
+import { ManagedProductEditFields } from "./managed-product-edit-fields";
 
 const CREATE_DEFAULTS: CreateManagedProductFormValues = {
   name: "",
   key: "",
   description: "",
   ownerId: "",
+  segments: [],
+  tags: [],
+  successMetrics: [],
 };
 
 const EDIT_DEFAULTS: EditManagedProductFormValues = {
@@ -43,6 +43,9 @@ const EDIT_DEFAULTS: EditManagedProductFormValues = {
   description: "",
   ownerId: "",
   status: "active",
+  segments: [],
+  tags: [],
+  successMetrics: [],
 };
 
 const MANAGED_PRODUCT_STATUSES = ["active", "archived"] as const;
@@ -53,6 +56,17 @@ function toEditForm(p: ManagedProduct): EditManagedProductFormValues {
     description: p.description ?? "",
     ownerId: p.ownerId ?? "",
     status: MANAGED_PRODUCT_STATUSES.find((v) => v === p.status) ?? "active",
+    lifecycle: p.lifecycle ?? undefined,
+    health: p.health ?? undefined,
+    teamId: p.teamId ?? undefined,
+    segments: p.segments,
+    tags: p.tags,
+    northStarMetric: p.northStarMetric ?? undefined,
+    successMetrics: p.successMetrics ?? [],
+    vision: p.vision ?? undefined,
+    missionStatement: p.missionStatement ?? undefined,
+    targetCustomer: p.targetCustomer ?? undefined,
+    differentiators: p.differentiators ?? undefined,
   };
 }
 
@@ -72,8 +86,8 @@ interface EditProps {
   mode: "edit";
   defaultValues: ManagedProduct;
   onSubmitCreate?: never;
-  onSubmitEdit: (input: UpdateManagedProductInput & { managedProductId: number }) => void;
-  isPending?: boolean;
+  onSubmitEdit?: never;
+  isPending?: never;
 }
 
 type Props = CreateProps | EditProps;
@@ -84,9 +98,15 @@ export function ManagedProductFormSheet({
   mode,
   defaultValues,
   onSubmitCreate,
-  onSubmitEdit,
   isPending,
 }: Props) {
+  const updateProduct = useUpdateManagedProduct();
+  const [conflictFields, setConflictFields] = useState<
+    TicketConflictFieldDiff[] | null
+  >(null);
+  const submitPending =
+    mode === "edit" ? updateProduct.isPending : (isPending ?? false);
+
   const createForm = useForm<CreateManagedProductFormValues>({
     resolver: zodResolver(createManagedProductSchema),
     defaultValues: CREATE_DEFAULTS,
@@ -98,7 +118,9 @@ export function ManagedProductFormSheet({
   });
 
   const activeFormIsDirty =
-    mode === "create" ? createForm.formState.isDirty : editForm.formState.isDirty;
+    mode === "create"
+      ? createForm.formState.isDirty
+      : editForm.formState.isDirty;
 
   useRegisterDirtyState(open && activeFormIsDirty);
 
@@ -113,22 +135,75 @@ export function ManagedProductFormSheet({
 
   function handleCreateSubmit(v: CreateManagedProductFormValues) {
     if (!onSubmitCreate) return;
-    onSubmitCreate({
-      name: v.name,
-      key: v.key,
-      ...(v.description ? { description: v.description } : {}),
-      ...(v.ownerId ? { ownerId: v.ownerId } : {}),
-    });
+    onSubmitCreate(toCreateManagedProductInput(v));
   }
 
   function handleEditSubmit(v: EditManagedProductFormValues) {
-    if (!onSubmitEdit || !defaultValues) return;
-    onSubmitEdit({
+    if (!defaultValues) return;
+    const input = {
       managedProductId: defaultValues.id,
-      name: v.name,
-      description: v.description || null,
-      ownerId: v.ownerId || null,
-      status: v.status,
+      ...toEditManagedProductInput(v, defaultValues.version),
+    };
+    updateProduct.mutate(input, {
+      onSuccess: () => {
+        toast.success("Managed product updated");
+        onOpenChange(false);
+      },
+      onError: (e) => {
+        if (isApiError(e) && e.status === 409) {
+          type Comparison = {
+            key: string;
+            label: string;
+            serverValue: string;
+            pendingValue: string;
+          };
+          const comparisons: Comparison[] = [
+            {
+              key: "name",
+              label: "Name",
+              serverValue: defaultValues.name,
+              pendingValue: v.name,
+            },
+            {
+              key: "status",
+              label: "Status",
+              serverValue: defaultValues.status,
+              pendingValue: v.status,
+            },
+            {
+              key: "description",
+              label: "Description",
+              serverValue: defaultValues.description ?? "",
+              pendingValue: v.description ?? "",
+            },
+          ];
+          const diffs: TicketConflictFieldDiff[] = [];
+          for (const { key, label, serverValue, pendingValue } of comparisons) {
+            if (serverValue !== pendingValue) {
+              diffs.push({
+                key,
+                label,
+                serverValue: serverValue || "Not set",
+                pendingValue: pendingValue || "Not set",
+              });
+            }
+          }
+          setConflictFields(
+            diffs.length > 0
+              ? diffs
+              : [
+                  {
+                    key: "version",
+                    label: "Version",
+                    serverValue: "changed on server",
+                    pendingValue: "stale",
+                  },
+                ],
+          );
+          return;
+        }
+        toast.error(getErrorMessage(e));
+      },
     });
   }
 
@@ -136,7 +211,19 @@ export function ManagedProductFormSheet({
     onOpenChange(false);
   }
 
-  const formId = mode === "edit" ? "managed-product-edit-form" : "managed-product-create-form";
+  function handleKeepMine() {
+    setConflictFields(null);
+  }
+
+  function handleDiscardConflict() {
+    setConflictFields(null);
+    onOpenChange(false);
+  }
+
+  const formId =
+    mode === "edit"
+      ? "managed-product-edit-form"
+      : "managed-product-create-form";
 
   const footer = (
     <div className="grid w-full grid-cols-2 gap-2">
@@ -147,7 +234,7 @@ export function ManagedProductFormSheet({
         type="submit"
         form={formId}
         size="sm"
-        isPending={isPending}
+        isPending={submitPending}
         loadingText="Saving…"
       >
         {mode === "edit" ? "Save Changes" : "Create Product"}
@@ -164,81 +251,17 @@ export function ManagedProductFormSheet({
         description="Update managed product details."
         footer={footer}
       >
-        <Form {...editForm}>
-          <form
-            id={formId}
-            onSubmit={editForm.handleSubmit(handleEditSubmit)}
-            className="space-y-4"
-            noValidate
-          >
-            <FormField
-              control={editForm.control}
-              name="name"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Name</FormLabel>
-                  <FormControl>
-                    <Input {...field} placeholder="Product name" />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={editForm.control}
-              name="status"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Status</FormLabel>
-                  <Select value={field.value} onValueChange={field.onChange}>
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      <SelectItem value="active">Active</SelectItem>
-                      <SelectItem value="archived">Archived</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={editForm.control}
-              name="description"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Description (optional)</FormLabel>
-                  <FormControl>
-                    <Textarea {...field} rows={3} placeholder="Describe this product…" />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={editForm.control}
-              name="ownerId"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Owner (optional)</FormLabel>
-                  <FormControl>
-                    <MemberPicker
-                      mode="single"
-                      value={field.value || undefined}
-                      onChange={(id) => field.onChange(id ?? "")}
-                      allowUnassigned
-                      placeholder="Select owner"
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </form>
-        </Form>
+        <ManagedProductEditFields
+          form={editForm}
+          formId={formId}
+          onSubmit={handleEditSubmit}
+        />
+        <TicketConflictDialog
+          open={conflictFields !== null}
+          fields={conflictFields ?? []}
+          onKeepMine={handleKeepMine}
+          onDiscard={handleDiscardConflict}
+        />
       </FormSheetChrome>
     );
   }
@@ -251,77 +274,11 @@ export function ManagedProductFormSheet({
       description="Create a product to link projects and track delivery."
       footer={footer}
     >
-      <Form {...createForm}>
-        <form
-          id={formId}
-          onSubmit={createForm.handleSubmit(handleCreateSubmit)}
-          className="space-y-4"
-          noValidate
-        >
-          <FormField
-            control={createForm.control}
-            name="name"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Name</FormLabel>
-                <FormControl>
-                  <Input {...field} placeholder="Product name" />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={createForm.control}
-            name="key"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Key</FormLabel>
-                <FormControl>
-                  <Input
-                    {...field}
-                    placeholder="PROD"
-                    onChange={upperCaseFieldChange(field.onChange)}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={createForm.control}
-            name="description"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Description (optional)</FormLabel>
-                <FormControl>
-                  <Textarea {...field} rows={3} placeholder="Describe this product…" />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={createForm.control}
-            name="ownerId"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Owner (optional)</FormLabel>
-                <FormControl>
-                  <MemberPicker
-                    mode="single"
-                    value={field.value || undefined}
-                    onChange={(id) => field.onChange(id ?? "")}
-                    allowUnassigned
-                    placeholder="Select owner"
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        </form>
-      </Form>
+      <ManagedProductCreateFields
+        form={createForm}
+        formId={formId}
+        onSubmit={handleCreateSubmit}
+      />
     </FormSheetChrome>
   );
 }

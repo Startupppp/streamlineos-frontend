@@ -112,6 +112,53 @@ function claimsEmptiness(source: string): boolean {
   return /EmptyState|No .{0,30} yet|isEmpty/.test(source);
 }
 
+function permissionResolvingComponents(): string[] {
+  const names: string[] = [];
+  for (const base of ["components", "features"]) {
+    for (const file of walk(path.join(ROOT, base))) {
+      const source = fs.readFileSync(file, "utf8");
+      if (!/<PageState\b/.test(source)) continue;
+      if (!/usePageState\(\{\s*permission\s*,/.test(source)) continue;
+      for (const match of source.matchAll(
+        /^export function ([A-Z][A-Za-z0-9]*)\s*(?:<[^>(]*>)?\(\s*\{[^}]*\bpermission\s*,/gm,
+      )) {
+        names.push(match[1] as string);
+      }
+    }
+  }
+  return names;
+}
+
+const PERMISSION_RESOLVING_COMPONENTS = permissionResolvingComponents();
+
+function openingTagProps(source: string, from: number): string {
+  let depth = 0;
+  let quote: string | null = null;
+  for (let index = from; index < source.length; index += 1) {
+    const char = source[index];
+    if (quote !== null) {
+      if (char === quote) quote = null;
+      continue;
+    }
+    if (depth === 0 && (char === '"' || char === "'")) quote = char;
+    else if (char === "{") depth += 1;
+    else if (char === "}") depth -= 1;
+    else if (char === ">" && depth === 0) return source.slice(from, index);
+  }
+  return source.slice(from);
+}
+
+function rendersPermissionResolvingComponent(
+  source: string,
+  components: readonly string[],
+): boolean {
+  return components.some((name) =>
+    [...source.matchAll(new RegExp(`<${name}\\b(?:<[^<>]*>)?`, "g"))].some((match) =>
+      /\bpermission=/.test(openingTagProps(source, (match.index ?? 0) + match[0].length)),
+    ),
+  );
+}
+
 /**
  * There are two ways to state a refusal here, not one, and this only knew about
  * the first.
@@ -134,8 +181,12 @@ function claimsEmptiness(source: string): boolean {
  * property of a route the component knows nothing about, and a second caller
  * mounting the same component elsewhere would silently lose it.
  */
-function handlesDenial(source: string): boolean {
+function handlesDenial(
+  source: string,
+  components: readonly string[] = PERMISSION_RESOLVING_COMPONENTS,
+): boolean {
   if (source.includes("NoPermissionState")) return true;
+  if (rendersPermissionResolvingComponent(source, components)) return true;
   if (/<PageState\b/.test(source)) return true;
   if (/usePageState\(/.test(source)) return true;
   if (/useCanState\(/.test(source) && /["']denied["']/.test(source)) return true;
@@ -242,6 +293,46 @@ describe("the deals list denies on the permission that actually gates its data",
       "utf8",
     );
     expect(deniedPermissionKeys(source)).toContain(dealsReadKey);
+  });
+});
+
+describe("a shared surface that resolves its own permission prop through PageState is a refusal", () => {
+  it("derives BuildListSurface from source as one, because it calls usePageState with the permission it is given and renders PageState", () => {
+    expect(PERMISSION_RESOLVING_COMPONENTS).toContain("BuildListSurface");
+  });
+
+  it("accepts a page that renders that surface with the permission its rows are gated on", () => {
+    const source = `
+      const { data } = useReleases(projectId);
+      <BuildListSurface<Release>
+        rows={data ?? []}
+        onRowClick={(row) => open(row.id)}
+        permission="build:view"
+        empty={<EmptyState title="No releases yet" />}
+      />
+    `;
+    expect(claimsEmptiness(source)).toBe(true);
+    expect(handlesDenial(source, ["BuildListSurface"])).toBe(true);
+  });
+
+  it("still reports a page whose permission prop sits on some other element than the resolving surface", () => {
+    const source = `
+      const { data } = useReleases(projectId);
+      <BuildListSurface<Release> rows={data ?? []} empty={<EmptyState title="No releases yet" />} />
+      <AccessHint permission="build:view" />
+    `;
+    expect(claimsEmptiness(source)).toBe(true);
+    expect(handlesDenial(source, ["BuildListSurface"])).toBe(false);
+  });
+
+  it("still reports a page that renders a component which does not resolve a permission", () => {
+    const source = `
+      const { data } = useReleases(projectId);
+      <DataTable permission="build:view" data={data ?? []} />
+      <EmptyState title="No releases yet" />
+    `;
+    expect(claimsEmptiness(source)).toBe(true);
+    expect(handlesDenial(source, ["BuildListSurface"])).toBe(false);
   });
 });
 

@@ -1,13 +1,9 @@
 import { render, screen } from "@testing-library/react";
 import { ChangelogTab } from "./changelog-tab";
-import {
-  useChangelog,
-  useUpdateChangelogEntry,
-  useDeleteChangelogEntry,
-} from "@/hooks/api/build/roadmap";
+import { useChangelog } from "@/hooks/api/build/changelog";
 import { usePageState } from "@/hooks/api/use-page-state";
 
-jest.mock("@/hooks/api/build/roadmap", () => ({
+jest.mock("@/hooks/api/build/changelog", () => ({
   useChangelog: jest.fn(),
   useUpdateChangelogEntry: jest.fn(() => ({ mutate: jest.fn(), isPending: false })),
   useDeleteChangelogEntry: jest.fn(() => ({ mutate: jest.fn(), isPending: false })),
@@ -99,7 +95,7 @@ jest.mock("@/components/pm-chrome", () => ({
   PmStaggerList: ({ children }: { children: React.ReactNode }) => (
     <div>{children}</div>
   ),
-  PM_FILL_PANEL: "",
+  CONTENT_FILL_PANEL: "",
   PM_PANEL: "",
 }));
 

@@ -12,6 +12,8 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { LoadingButton } from "@/components/ui/loading-button";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { useCan } from "@/hooks/api/access";
 import {
   Tabs,
   TabsList,
@@ -46,6 +48,8 @@ export function CaseDetailSheet({ caseId, open, onOpenChange }: Props) {
   const { data: hrCase, isLoading, isError, error, refetch } = useHrCase(caseId);
   const startInvestigation = useStartInvestigation(caseId);
   const updateCase = useUpdateCase(caseId);
+  // Both transitions hit hr:cases:manage endpoints (hr-cases.controller.ts).
+  const canManage = useCan("hr:cases:manage");
   const [activeTab, setActiveTab] = useState<"details" | "notes" | "documents">("details");
 
   const handleRetry = useCallback(() => {
@@ -168,7 +172,7 @@ export function CaseDetailSheet({ caseId, open, onOpenChange }: Props) {
                   <Separator />
 
                   <div className="flex flex-wrap gap-3">
-                    {hrCase.status === "open" && (
+                    {canManage && hrCase.status === "open" && (
                       <LoadingButton
                         size="sm"
                         variant="outline"
@@ -178,15 +182,23 @@ export function CaseDetailSheet({ caseId, open, onOpenChange }: Props) {
                         Start Investigation
                       </LoadingButton>
                     )}
-                    {hrCase.status === "under_investigation" && (
-                      <LoadingButton
-                        size="sm"
-                        variant="outline"
+                    {canManage && hrCase.status === "under_investigation" && (
+                      <ConfirmDialog
+                        trigger={
+                          <LoadingButton
+                            size="sm"
+                            variant="outline"
+                            isPending={updateCase.isPending}
+                          >
+                            Mark Resolved
+                          </LoadingButton>
+                        }
+                        title={`Resolve ${hrCase.caseNumber}?`}
+                        description="The case closes as resolved and leaves the open queue."
+                        confirmLabel="Mark resolved"
                         isPending={updateCase.isPending}
-                        onClick={handleMarkResolved}
-                      >
-                        Mark Resolved
-                      </LoadingButton>
+                        onConfirm={handleMarkResolved}
+                      />
                     )}
                   </div>
                 </TabsContent>

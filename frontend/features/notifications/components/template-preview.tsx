@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/dialog";
 import {
   usePreviewTemplate,
-} from "@/hooks/api/notifications";
+} from "@/hooks/api/notifications-templates";
 import type {
   NotificationTemplate,
 } from "@/types/notifications";

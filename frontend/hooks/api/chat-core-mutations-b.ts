@@ -1,6 +1,7 @@
 "use client";
 
-import { useQueryClient } from "@tanstack/react-query";
+import { useQueryClient, type InfiniteData } from "@tanstack/react-query";
+import { useSession } from "next-auth/react";
 import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
 import { collaborationQueryKeys } from "@/lib/query-keys/collaboration";
@@ -11,6 +12,7 @@ import type {
   CreatePublicChannelInput,
   CreatePrivateChannelInput,
   UpdateChannelInput,
+  MessagesPage,
 } from "@/types/chat";
 import type { ChatChannelDetailWire } from "@/hooks/api/chat-extra-schema";
 import type { PresenceClearAfter, PresenceStatus } from "@/lib/presence";
@@ -161,6 +163,35 @@ export function useRemoveChannelMember() {
   });
 }
 
+/**
+ * Promote or demote a channel member. The response is a bare `{ ok }`, so the
+ * channel detail cache is patched with the role the caller asked for rather
+ * than refetched (FE-133); the server refuses non-admin callers with 403.
+ */
+export function useUpdateChannelMemberRole() {
+  const queryClient = useQueryClient();
+  return useAuthorizedMutation("chat:channels:write", {
+    mutationKey: ["chat", "channels", "member-role"],
+    mutationFn: ({ channelId, userId, role }: { channelId: number; userId: string; role: "ADMIN" | "MEMBER" }) =>
+      apiClient.patch<{ ok: boolean }>(
+        `/chat/channels/${channelId}/members/${userId}/role`,
+        { role },
+        undefined,
+        chatOkContract,
+      ),
+    onSuccess: (_, { channelId, userId, role }) => {
+      queryClient.setQueryData<ChatChannelDetailWire>(
+        collaborationQueryKeys.chat.channel(channelId),
+        (prev) =>
+          prev && {
+            ...prev,
+            members: prev.members.map((m) => (m.user?.id === userId ? { ...m, role } : m)),
+          },
+      );
+    },
+  });
+}
+
 export function useUpdateChannel() {
   const queryClient = useQueryClient();
   return useAuthorizedMutation("chat:channels:write", {
@@ -207,19 +238,43 @@ export function useSetPresenceStatus() {
 
 export function useToggleReaction(channelId: number) {
   const queryClient = useQueryClient();
+  const { data: session } = useSession();
+  const userId = session?.user?.id;
+  const messagesKey = collaborationQueryKeys.chat.messages(channelId);
   return useAuthorizedMutation("chat:messages:write", {
     mutationKey: ["chat", "messages", "toggle-reaction"],
-    mutationFn: ({ messageId, emoji }: { messageId: number; emoji: string }) =>
-      apiClient.post<{ reactions: Record<string, string[]> }>(
-        `/chat/channels/${channelId}/messages/${messageId}/reactions`,
-        { emoji },
-        undefined,
-        chatReactionsContract,
-      ),
-    onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: collaborationQueryKeys.chat.messages(channelId),
-      });
+    // The backend POST is add-only, so a toggle on an emoji the viewer already
+    // reacted with has to be the DELETE, or the reaction can never be removed.
+    mutationFn: ({ messageId, emoji }: { messageId: number; emoji: string }) => {
+      const message = queryClient
+        .getQueryData<InfiniteData<MessagesPage>>(messagesKey)
+        ?.pages.flatMap((page) => page.messages)
+        .find((m) => m.id === messageId);
+      return userId !== undefined && message?.reactions?.[emoji]?.includes(userId)
+        ? apiClient.delete<{ reactions: Record<string, string[]> }>(
+            `/chat/channels/${channelId}/messages/${messageId}/reactions/${encodeURIComponent(emoji)}`,
+            undefined,
+            undefined,
+            chatReactionsContract,
+          )
+        : apiClient.post<{ reactions: Record<string, string[]> }>(
+            `/chat/channels/${channelId}/messages/${messageId}/reactions`,
+            { emoji },
+            undefined,
+            chatReactionsContract,
+          );
+    },
+    // Both routes answer the message's full reaction map; write it in place.
+    onSuccess: ({ reactions }, { messageId }) => {
+      queryClient.setQueryData<InfiniteData<MessagesPage>>(messagesKey, (old) =>
+        old && {
+          ...old,
+          pages: old.pages.map((page) => ({
+            ...page,
+            messages: page.messages.map((m) => (m.id === messageId ? { ...m, reactions } : m)),
+          })),
+        },
+      );
     },
   });
 }

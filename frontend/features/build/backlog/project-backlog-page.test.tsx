@@ -1,84 +1,78 @@
 import React from "react";
 import { render, screen } from "@testing-library/react";
+import type { BuildListSurfaceProps } from "@/features/build/shared/build-list-surface";
+import type { Ticket } from "@/types/projects";
+import { ApiError } from "@/lib/api-envelope";
+
+const mockReplace = jest.fn();
+const mockPush = jest.fn();
+const mockRequestLeave = jest.fn((action: () => void) => action());
+const mockSearchParamsContainer = { current: new URLSearchParams() };
 
 jest.mock("next/navigation", () => ({
-  useRouter: () => ({ replace: jest.fn(), push: jest.fn() }),
-  useSearchParams: () => new URLSearchParams(),
+  useRouter: () => ({ replace: mockReplace, push: mockPush }),
+  usePathname: () => "/build/1/backlog",
+  useSearchParams: () => mockSearchParamsContainer.current,
   notFound: jest.fn(() => null),
+}));
+
+jest.mock("@/components/shared/dirty-state-context", () => ({
+  useNavigationLeave: () => mockRequestLeave,
 }));
 
 jest.mock("sonner", () => ({
   toast: { success: jest.fn(), error: jest.fn() },
 }));
 
+const mockUseCan = jest.fn((_key: string) => false);
+const mockAccessScopes: { current: Record<string, string> } = {
+  current: { "build:view": "all" },
+};
 jest.mock("@/hooks/api/access", () => ({
-  useCan: jest.fn(() => false),
+  useCan: (key: string) => mockUseCan(key),
+  useAccess: () => ({
+    data: { isOrgOwner: false, scopes: mockAccessScopes.current, modules: {} },
+    isLoading: false,
+    isError: false,
+    error: null,
+  }),
+}));
+
+jest.mock("@/hooks/api/entitlements", () => ({
+  useEntitlements: () => ({ data: undefined }),
 }));
 
 const mockUseProject = jest.fn();
-const mockUseCycles = jest.fn((..._args: unknown[]) => ({ data: [] }));
-jest.mock("@/hooks/api", () => ({
+jest.mock("@/hooks/api/build/projects", () => ({
   useProject: (...args: unknown[]) => mockUseProject(...args),
+}));
+
+const mockUseCycles = jest.fn((..._args: unknown[]) => ({ data: [] }));
+jest.mock("@/hooks/api/build/cycles", () => ({
   useCycles: (...args: unknown[]) => mockUseCycles(...args),
 }));
 
 const mockUseProjectBoardTickets = jest.fn();
-jest.mock("@/hooks/api/build", () => ({
+jest.mock("@/hooks/api/build/tickets", () => ({
   useProjectBoardTickets: (...args: unknown[]) => mockUseProjectBoardTickets(...args),
   useBulkUpdateTickets: jest.fn(() => ({ mutate: jest.fn(), isPending: false })),
 }));
 
-const usePageState = jest.fn();
-jest.mock("@/hooks/api/use-page-state", () => ({
-  usePageState: (...args: unknown[]) => usePageState(...args),
+type CapturedSurface = BuildListSurfaceProps<Ticket>;
+let capturedSurface: CapturedSurface | null = null;
+jest.mock("@/features/build/shared/build-list-surface", () => ({
+  BuildListSurface: (props: CapturedSurface) => {
+    capturedSurface = props;
+    return <div data-testid="build-list-surface" />;
+  },
 }));
 
-jest.mock("@/components/shared/page-state", () => ({
-  PageState: ({
-    resolution,
-    loading,
-    empty,
-    children,
-  }: {
-    resolution: { kind: string; permission?: string | null };
-    loading: React.ReactNode;
-    empty?: React.ReactNode;
-    children: React.ReactNode;
-  }) => {
-    if (resolution.kind === "loading") return <>{loading}</>;
-    if (
-      resolution.kind === "denied" ||
-      resolution.kind === "module-disabled" ||
-      resolution.kind === "module-denied" ||
-      resolution.kind === "plan-required"
-    )
-      return (
-        <div
-          data-testid="denied-state"
-          data-permission={resolution.kind === "denied" ? (resolution as { permission?: string | null }).permission : undefined}
-        />
-      );
-    if (resolution.kind === "error") return <div data-testid="error-state" />;
-    if (resolution.kind === "empty") return <>{empty ?? children}</>;
-    return <>{children}</>;
-  },
+jest.mock("@/features/build/shared/bulk-action-bar", () => ({
+  BulkActionBar: () => <div data-testid="bulk-action-bar" />,
 }));
 
 jest.mock("@/features/build/shared/project-load-fallback", () => ({
   ProjectLoadFallback: () => <div data-testid="project-load-fallback" />,
-}));
-
-jest.mock("@/components/ui/data-table", () => ({
-  DataTable: () => <div data-testid="data-table" />,
-  DataTableSkeleton: () => <div data-testid="data-table-skeleton" />,
-}));
-
-jest.mock("@/components/ui/empty-state", () => ({
-  EmptyState: () => <div data-testid="empty-state" />,
-}));
-
-jest.mock("@/features/build/backlog/bulk-action-bar", () => ({
-  BulkActionBar: () => null,
 }));
 
 jest.mock("@/features/build/tickets/create-ticket-dialog", () => ({
@@ -95,16 +89,39 @@ jest.mock("@/components/ui/page-wrapper", () => ({
 
 jest.mock("@/components/pm-chrome", () => ({
   PmPageShell: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
-  PmPanel: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
   PM_TOOLBAR: "",
 }));
 
-jest.mock("@/lib/get-error-message", () => ({
-  getErrorMessage: (e: unknown) => String(e),
+jest.mock("@/components/ui/infinite-scroll-sentinel", () => ({
+  InfiniteScrollSentinel: ({
+    hasNextPage,
+    onLoadMore,
+  }: {
+    hasNextPage: boolean;
+    isFetchingNextPage: boolean;
+    onLoadMore: () => void;
+    label: string;
+  }) =>
+    hasNextPage ? (
+      <button type="button" onClick={onLoadMore} aria-label="Load more tickets">
+        Load more
+      </button>
+    ) : null,
 }));
 
+jest.mock("@/components/ui/data-table", () => ({
+  DataTableSkeleton: () => <div data-testid="data-table-skeleton" />,
+}));
+
+jest.mock("@/components/ui/empty-state", () => ({
+  EmptyState: ({ title }: { title: string }) => (
+    <div data-testid="empty-state">{title}</div>
+  ),
+}));
+
+const mockBuildTicketDetailUrl = jest.fn((..._args: unknown[]) => null);
 jest.mock("@/features/build/ticket-details/build-ticket-detail-url", () => ({
-  buildTicketDetailUrl: jest.fn(() => null),
+  buildTicketDetailUrl: (...args: unknown[]) => mockBuildTicketDetailUrl(...args),
 }));
 
 import { ProjectBacklogPage } from "./project-backlog-page";
@@ -117,45 +134,110 @@ const READY_PROJECT = {
   refetch: jest.fn(),
 };
 
+const TICKET = { id: 1, title: "T-1", status: "TODO", type: "TASK", cycleId: null } as Ticket;
+
 const READY_TICKETS = {
-  data: [{ id: 1, title: "T-1", status: "TODO", type: "TASK" }],
+  data: [TICKET],
   isLoading: false,
   isError: false,
   error: undefined,
   refetch: jest.fn(),
+  isTruncated: false,
+  fetchNextPage: jest.fn(),
+  isFetchingNextPage: false,
 };
 
 beforeEach(() => {
-  usePageState.mockReturnValue({ kind: "ready" });
+  jest.clearAllMocks();
+  capturedSurface = null;
+  mockRequestLeave.mockImplementation((action: () => void) => action());
+  mockBuildTicketDetailUrl.mockReturnValue(null);
+  mockSearchParamsContainer.current = new URLSearchParams();
   mockUseProject.mockReturnValue(READY_PROJECT);
   mockUseProjectBoardTickets.mockReturnValue(READY_TICKETS);
+  mockUseCan.mockReturnValue(false);
+  mockAccessScopes.current = { "build:view": "all" };
 });
 
 function renderPage() {
   return render(<ProjectBacklogPage projectId="1" />);
 }
 
-describe("ProjectBacklogPage — usePageState inputs", () => {
-  it("passes build:tickets:view as the permission key", () => {
+describe("ProjectBacklogPage — surface declarations", () => {
+  it("passes build:tickets:view as the permission key to BuildListSurface", () => {
     renderPage();
-    expect(usePageState).toHaveBeenCalledWith(
-      expect.objectContaining({ permission: "build:tickets:view" }),
-    );
+    expect(capturedSurface?.permission).toBe("build:tickets:view");
   });
 
-  it("passes isLoading true when tickets query is still loading", () => {
+  it("passes the ticket rows from the query to BuildListSurface", () => {
+    renderPage();
+    expect(capturedSurface?.rows).toEqual([TICKET]);
+  });
+
+  it("passes isLoading from the tickets query to BuildListSurface", () => {
     mockUseProjectBoardTickets.mockReturnValue({
       ...READY_TICKETS,
-      data: undefined,
+      data: [],
       isLoading: true,
     });
     renderPage();
-    expect(usePageState).toHaveBeenCalledWith(
-      expect.objectContaining({ isLoading: true }),
-    );
+    expect(capturedSurface?.isLoading).toBe(true);
   });
 
-  it("renders the loading skeleton instead of notFound when the project query is in flight", () => {
+  it("passes isError and error from the tickets query to BuildListSurface (FE-41)", () => {
+    const err = new Error("network");
+    mockUseProjectBoardTickets.mockReturnValue({
+      ...READY_TICKETS,
+      data: [],
+      isLoading: false,
+      isError: true,
+      error: err,
+    });
+    renderPage();
+    expect(capturedSurface?.isError).toBe(true);
+    expect(capturedSurface?.error).toBe(err);
+  });
+
+  it("passes isFiltered true when the search query param is present", () => {
+    mockSearchParamsContainer.current = new URLSearchParams("q=login");
+    renderPage();
+    expect(capturedSurface?.isFiltered).toBe(true);
+  });
+
+  it("passes isFiltered false when no filter params are present", () => {
+    renderPage();
+    expect(capturedSurface?.isFiltered).toBe(false);
+  });
+
+  it("provides an empty prop containing the no-tickets-yet title", () => {
+    renderPage();
+    const { getByText } = render(capturedSurface?.empty as React.ReactElement);
+    expect(getByText("No tickets yet")).toBeDefined();
+  });
+
+  it("provides a filteredEmpty prop for the filtered-empty state", () => {
+    renderPage();
+    expect(capturedSurface?.filteredEmpty).toBeDefined();
+  });
+
+  it("activates the filtered-empty copy and clear-filters action", () => {
+    renderPage();
+    const emptyState = capturedSurface?.filteredEmpty as React.ReactElement<{
+      filtersActive?: boolean;
+      onClearFilters?: () => void;
+    }>;
+    expect(emptyState.props.filtersActive).toBe(true);
+    expect(emptyState.props.onClearFilters).toEqual(expect.any(Function));
+  });
+
+  it("passes minWidth 640px to BuildListSurface", () => {
+    renderPage();
+    expect(capturedSurface?.minWidth).toBe("640px");
+  });
+});
+
+describe("ProjectBacklogPage — project loading guard", () => {
+  it("shows the skeleton while the project query is in flight, before the surface mounts", () => {
     mockUseProject.mockReturnValue({
       ...READY_PROJECT,
       data: undefined,
@@ -163,81 +245,16 @@ describe("ProjectBacklogPage — usePageState inputs", () => {
     });
     renderPage();
     expect(screen.getByTestId("data-table-skeleton")).toBeDefined();
+    expect(screen.queryByTestId("build-list-surface")).toBeNull();
   });
 
-  it("passes isError true and the error object when tickets query fails", () => {
-    const err = new Error("network");
-    mockUseProjectBoardTickets.mockReturnValue({
-      ...READY_TICKETS,
-      data: undefined,
-      isLoading: false,
-      isError: true,
-      error: err,
-    });
+  it("mounts the surface once the project has loaded", () => {
     renderPage();
-    expect(usePageState).toHaveBeenCalledWith(
-      expect.objectContaining({ isError: true, error: err }),
-    );
-  });
-
-  it("passes isEmpty true when the filtered ticket list is empty", () => {
-    mockUseProjectBoardTickets.mockReturnValue({
-      ...READY_TICKETS,
-      data: [],
-    });
-    renderPage();
-    expect(usePageState).toHaveBeenCalledWith(
-      expect.objectContaining({ isEmpty: true }),
-    );
-  });
-
-  it("passes isEmpty false when tickets are present", () => {
-    renderPage();
-    expect(usePageState).toHaveBeenCalledWith(
-      expect.objectContaining({ isEmpty: false }),
-    );
-  });
-});
-
-describe("ProjectBacklogPage — PageState resolution rendering", () => {
-  it("renders the skeleton when resolution is loading, not the data table", () => {
-    usePageState.mockReturnValue({ kind: "loading" });
-    renderPage();
-    expect(screen.getByTestId("data-table-skeleton")).toBeDefined();
-    expect(screen.queryByTestId("data-table")).toBeNull();
-  });
-
-  it("renders the data table when resolution is ready, not the skeleton", () => {
-    usePageState.mockReturnValue({ kind: "ready" });
-    renderPage();
-    expect(screen.getByTestId("data-table")).toBeDefined();
+    expect(screen.getByTestId("build-list-surface")).toBeDefined();
     expect(screen.queryByTestId("data-table-skeleton")).toBeNull();
   });
 
-  it("renders denied-state when resolution is denied, not the data table", () => {
-    usePageState.mockReturnValue({ kind: "denied", permission: "build:tickets:view" });
-    renderPage();
-    expect(screen.getByTestId("denied-state")).toBeDefined();
-    expect(screen.queryByTestId("data-table")).toBeNull();
-  });
-
-  it("renders error-state when resolution is error, not the data table", () => {
-    usePageState.mockReturnValue({ kind: "error", error: new Error("fail") });
-    renderPage();
-    expect(screen.getByTestId("error-state")).toBeDefined();
-    expect(screen.queryByTestId("data-table")).toBeNull();
-  });
-
-  it("renders empty-state when resolution is empty, not the data table", () => {
-    usePageState.mockReturnValue({ kind: "empty" });
-    renderPage();
-    expect(screen.getByTestId("empty-state")).toBeDefined();
-    expect(screen.queryByTestId("data-table")).toBeNull();
-  });
-});
-
-describe("ProjectBacklogPage — project error path", () => {
-  it("renders ProjectLoadFallback when the project query errors, not PageState output", () => {
+  it("shows ProjectLoadFallback when the project query errors, not the surface", () => {
     mockUseProject.mockReturnValue({
       data: undefined,
       isLoading: false,
@@ -247,13 +264,144 @@ describe("ProjectBacklogPage — project error path", () => {
     });
     renderPage();
     expect(screen.getByTestId("project-load-fallback")).toBeDefined();
-    expect(screen.queryByTestId("denied-state")).toBeNull();
-    expect(screen.queryByTestId("data-table")).toBeNull();
+    expect(screen.queryByTestId("build-list-surface")).toBeNull();
   });
 
-  it("renders page content when the project query succeeds, not the fallback", () => {
+  it("mounts the surface when the project succeeds, not the fallback", () => {
     renderPage();
     expect(screen.queryByTestId("project-load-fallback")).toBeNull();
-    expect(screen.getByTestId("data-table")).toBeDefined();
+    expect(screen.getByTestId("build-list-surface")).toBeDefined();
+  });
+
+  it("routes a 404 project read to the not-found fallback rather than the project-unavailable empty state", () => {
+    mockUseProject.mockReturnValue({
+      data: undefined,
+      isLoading: false,
+      isError: true,
+      error: new ApiError("Project not found", 404, "NOT_FOUND"),
+      refetch: jest.fn(),
+    });
+    renderPage();
+    expect(screen.getByTestId("project-load-fallback")).toBeDefined();
+    expect(screen.queryByText("Project unavailable")).toBeNull();
+  });
+
+  it("tells a caller without build:view they lack access rather than that the project is unavailable", () => {
+    mockAccessScopes.current = {};
+    mockUseProject.mockReturnValue({ ...READY_PROJECT, data: undefined });
+    renderPage();
+    expect(screen.getByText("Access Restricted")).toBeDefined();
+    expect(screen.queryByText("Project unavailable")).toBeNull();
+    expect(screen.queryByTestId("build-list-surface")).toBeNull();
+  });
+
+  it("still says the project is unavailable to a caller holding build:view whose project read came back empty", () => {
+    mockUseProject.mockReturnValue({ ...READY_PROJECT, data: null });
+    renderPage();
+    expect(screen.getByText("Project unavailable")).toBeDefined();
+    expect(screen.queryByText("Access Restricted")).toBeNull();
+  });
+});
+
+describe("ProjectBacklogPage — BulkActionBar gating", () => {
+  it("hides BulkActionBar when canUpdate is false", () => {
+    mockUseCan.mockReturnValue(false);
+    renderPage();
+    expect(screen.queryByTestId("bulk-action-bar")).toBeNull();
+  });
+
+  it("hides BulkActionBar when canUpdate is true but nothing is selected (selection.size === 0)", () => {
+    mockUseCan.mockReturnValue(true);
+    renderPage();
+    expect(screen.queryByTestId("bulk-action-bar")).toBeNull();
+  });
+});
+
+describe("ProjectBacklogPage — filter forwarding", () => {
+  it("forwards filter params to the server query", () => {
+    mockSearchParamsContainer.current = new URLSearchParams(
+      "q=login&status=TODO,DONE&priority=HIGH&type=TASK",
+    );
+    renderPage();
+    expect(mockUseProjectBoardTickets).toHaveBeenCalledWith(
+      1,
+      expect.objectContaining({
+        q: "login",
+        status: "TODO,DONE",
+        priority: "HIGH",
+        type: "TASK",
+      }),
+    );
+  });
+
+  it("omits undefined filter values from the server query", () => {
+    renderPage();
+    const callArgs = mockUseProjectBoardTickets.mock.calls[0]?.[1] as Record<string, unknown>;
+    expect(callArgs).toBeDefined();
+    expect(callArgs.q).toBeUndefined();
+    expect(callArgs.status).toBeUndefined();
+  });
+
+  it("sends only production-supported non-EPIC types by default", () => {
+    renderPage();
+    const callArgs = mockUseProjectBoardTickets.mock.calls[0]?.[1] as Record<string, unknown>;
+    expect(callArgs?.type).toBe("TASK,BUG,STORY");
+  });
+
+  it("uses the user-selected type filter instead of the default when types are chosen", () => {
+    mockSearchParamsContainer.current = new URLSearchParams("type=BUG");
+    renderPage();
+    const callArgs = mockUseProjectBoardTickets.mock.calls[0]?.[1] as Record<string, unknown>;
+    expect(callArgs?.type).toBe("BUG");
+  });
+});
+
+describe("ProjectBacklogPage — production ticket query contract", () => {
+  it("does not send the unsupported unscheduled query key", () => {
+    renderPage();
+    const callArgs = mockUseProjectBoardTickets.mock.calls[0]?.[1] as Record<string, unknown>;
+    expect(callArgs).not.toHaveProperty("unscheduled");
+  });
+});
+
+describe("ProjectBacklogPage — Type and Cycle columns", () => {
+  it("includes a Type column in the column definitions", () => {
+    renderPage();
+    const columnKeys = (capturedSurface?.columns as Array<{ key: string }> | undefined)?.map(
+      (c) => c.key,
+    );
+    expect(columnKeys).toContain("type");
+  });
+
+  it("includes a Cycle column in the column definitions", () => {
+    renderPage();
+    const columnKeys = (capturedSurface?.columns as Array<{ key: string }> | undefined)?.map(
+      (c) => c.key,
+    );
+    expect(columnKeys).toContain("cycle");
+  });
+});
+
+describe("ProjectBacklogPage — server sort on the columns the endpoint can order by", () => {
+  it("offers Created and Priority as server sort fields and keeps rank ascending by default", () => {
+    renderPage();
+    expect(capturedSurface?.sortState?.fields).toEqual(["created", "priority"]);
+    expect(capturedSurface?.sortState?.field).toBeNull();
+    const callArgs = mockUseProjectBoardTickets.mock.calls[0]?.[1] as Record<string, unknown>;
+    expect(callArgs).toMatchObject({ orderBy: "rank", orderDir: "asc" });
+  });
+
+  it("sends the URL sort to the ticket query and writes a header click back to the URL", () => {
+    mockSearchParamsContainer.current = new URLSearchParams("sort=priority&dir=desc&cursor=abc");
+    renderPage();
+    const callArgs = mockUseProjectBoardTickets.mock.calls[0]?.[1] as Record<string, unknown>;
+    expect(callArgs).toMatchObject({ orderBy: "priority", orderDir: "desc" });
+    expect(capturedSurface?.sortState?.field).toBe("priority");
+    capturedSurface?.sortState?.onChange("created", "asc");
+    const url = String(mockReplace.mock.calls.at(-1)?.[0] ?? "");
+    const params = new URLSearchParams(url.slice(url.indexOf("?") + 1));
+    expect(params.get("sort")).toBe("created");
+    expect(params.get("dir")).toBe("asc");
+    expect(params.has("cursor")).toBe(false);
   });
 });

@@ -8,6 +8,7 @@ import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
 
 const legalHoldListContract = lazyContract(() =>
   import("@/features/hr/governance/hooks/legal-holds-schema").then((m) => m.legalHoldListContract),
@@ -42,7 +43,7 @@ export interface LegalHold {
 
 const HOLDS_KEY = ["hr", "governance", "legal-holds"] as const;
 
-export function useLegalHolds(params?: { status?: string; subjectUserId?: string; page?: number; limit?: number }) {
+export function useLegalHolds(params?: { status?: string; subjectUserId?: string; cursor?: string; limit?: number }) {
   const canViewHolds = useCan("hr:legalhold:view");
   return useQuery({
     queryKey: [...humanResourcesQueryKeys.hr.hrLegalHoldsBase, params],
@@ -50,7 +51,7 @@ export function useLegalHolds(params?: { status?: string; subjectUserId?: string
       const p: Record<string, unknown> = {};
       if (params?.status) p["status"] = params.status;
       if (params?.subjectUserId) p["subjectUserId"] = params.subjectUserId;
-      if (params?.page) p["page"] = params.page;
+      if (params?.cursor) p["cursor"] = params.cursor;
       if (params?.limit) p["limit"] = params.limit;
       return apiClient.get("/hr/governance/legal-holds", p, signal, legalHoldListContract);
     },
@@ -66,6 +67,7 @@ export function useHoldItems(holdId: number | undefined) {
     queryFn: ({ signal }) => apiClient.get(`/hr/governance/legal-holds/${holdId}/items`, undefined, signal, holdItemListContract),
     enabled: canViewHolds && holdId !== undefined,
     staleTime: 30_000,
+    ...INLINE_READ_ERROR,
   });
 }
 

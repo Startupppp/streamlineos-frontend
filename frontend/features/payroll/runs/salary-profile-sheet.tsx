@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -32,46 +32,39 @@ import { Input } from "@/components/ui/input";
 import { DatePicker } from "@/components/ui/date-picker";
 import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
-import { Combobox, type ComboboxOption } from "@/components/ui/combobox";
-import { useOrgMembers } from "@/hooks/api/organization";
-import { useWorkers } from "@/hooks/api/directory/workers";
-import { useModuleEnabled, useCan } from "@/hooks/api/access";
 import { useCreateProfile, useCreateWorkerProfile, usePatchProfile, usePatchWorkerProfile } from "@/hooks/api/payroll/employees";
 import { usePayrollWorkforceLabel } from "@/features/payroll/lib/payroll-workforce-label";
 import { usePayrollPolicyCurrent } from "@/hooks/api/payroll/policies";
-import type { ProfileDetail } from "@/hooks/api/payroll/employees-schema";
+import type { ProfileComponent, ProfileDetail } from "@/hooks/api/payroll/employees-schema";
+import type { PayrollPerson } from "@/hooks/api/payroll/people-schema";
+import { PayrollPersonPicker, personKey } from "./payroll-person-picker";
+import { SalaryBreakupPreview } from "@/features/payroll/salary-structures/salary-breakup-preview";
+import { SALARY_PREVIEW_CTC } from "@/hooks/api/payroll/salary-preview";
+import { PAYROLL_AMOUNT_MAX } from "@/lib/validation/payroll-bounds";
+import { getErrorMessage } from "@/lib/get-error-message";
+import { ProfileComponentsField } from "@/features/payroll/employees/profile-components-field";
+
+const ANNUAL_CTC_MAX = PAYROLL_AMOUNT_MAX * 12;
 
 const profileSchema = z.object({
   effectiveFrom: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Required: YYYY-MM-DD"),
-  annualCtc: z.string().regex(/^\d+(\.\d{1,2})?$/, "Positive decimal required"),
+  annualCtc: z
+    .string()
+    .regex(/^\d+(\.\d{1,2})?$/, "Enter a positive number without letters or symbols (e.g. 1200000)")
+    .refine(
+      (v) => parseFloat(v) <= ANNUAL_CTC_MAX,
+      `Annual CTC cannot exceed ₹${ANNUAL_CTC_MAX.toLocaleString("en-IN")}`,
+    ),
   workerType: z.enum(["EMPLOYEE", "CONTRACTOR", "CONSULTANT", "INTERN", "EOR"]),
   currency: z.string().length(3),
   payoutCurrency: z.string().refine((v) => !v || v.length === 3, "Must be a 3-letter currency code"),
   taxRegime: z.enum(["OLD", "NEW", "none"]),
   costCenter: z.string().max(100),
+  componentIds: z.array(z.number()),
 });
 type ProfileForm = z.infer<typeof profileSchema>;
 
-function formatPayrollSubject(userId: string): string {
-  return `user:${userId}`;
-}
-
-function formatWorkerPayrollSubject(workerId: string): string {
-  return `worker:${workerId}`;
-}
-
-function parsePayrollSubject(value: string): { userId: string | null; workerId: string | null } {
-  if (value.startsWith("worker:")) {
-    return { userId: null, workerId: value.slice("worker:".length) };
-  }
-  if (value.startsWith("user:")) {
-    return { userId: value.slice("user:".length), workerId: null };
-  }
-  if (value.length > 0) {
-    return { userId: value, workerId: null };
-  }
-  return { userId: null, workerId: null };
-}
+const NO_COMPONENTS: readonly ProfileComponent[] = [];
 
 interface SalaryProfileSheetProps {
   employeeUserId?: string;
@@ -79,6 +72,7 @@ interface SalaryProfileSheetProps {
   open: boolean;
   onClose: () => void;
   existingProfile?: ProfileDetail | null;
+  existingComponents?: readonly ProfileComponent[];
 }
 
 export function SalaryProfileSheet({
@@ -87,19 +81,17 @@ export function SalaryProfileSheet({
   open,
   onClose,
   existingProfile,
+  existingComponents = NO_COMPONENTS,
 }: SalaryProfileSheetProps) {
-  const [pickedSubject, setPickedSubject] = useState("");
+  const [picked, setPicked] = useState<PayrollPerson | null>(null);
 
   const showPicker = !employeeUserId && !workerId;
-  const parsedPicker = parsePayrollSubject(pickedSubject);
-  const resolvedUserId = employeeUserId ?? parsedPicker.userId ?? "";
-  const resolvedWorkerId = workerId ?? parsedPicker.workerId ?? "";
+  const pickedPayee = picked?.payee ?? null;
+  const resolvedUserId = employeeUserId ?? (pickedPayee?.kind === "user" ? pickedPayee.userId : "");
+  const resolvedWorkerId = workerId ?? (pickedPayee?.kind === "worker" ? pickedPayee.workerId : "");
 
   const isEdit = !!existingProfile;
   const workforceLabel = usePayrollWorkforceLabel();
-  const hrEnabled = useModuleEnabled("hr");
-  const canViewWorkers = useCan("directory:workers:view");
-  const usePayeeDirectory = showPicker && !hrEnabled && canViewWorkers;
   const { data: policyData } = usePayrollPolicyCurrent();
   const policyCurrency = policyData?.policy?.currency ?? "INR";
   const taxRegimeApplicable = policyData?.taxRegimeApplicable ?? true;
@@ -108,51 +100,6 @@ export function SalaryProfileSheet({
   const patchMutation = usePatchProfile(resolvedUserId);
   const createWorkerMutation = useCreateWorkerProfile(resolvedWorkerId);
   const patchWorkerMutation = usePatchWorkerProfile(resolvedWorkerId);
-
-  const { data: membersData } = useOrgMembers(1, 100, undefined, {
-    enabled: showPicker && open && (hrEnabled || !canViewWorkers),
-    staleTime: 2 * 60_000,
-  });
-
-  const { data: payeesData } = useWorkers({
-    limit: 100,
-    status: "ACTIVE",
-  });
-
-  const memberOptions = useMemo<ComboboxOption[]>(() => {
-    if (usePayeeDirectory) {
-      const payeeOptions = (payeesData?.data ?? [])
-        .filter((worker) => worker.isPayee)
-        .map((worker) => {
-          const label =
-            worker.displayName ??
-            [worker.firstName, worker.lastName].filter(Boolean).join(" ") ??
-            worker.workEmail ??
-            "Payee";
-          const value = worker.userId
-            ? formatPayrollSubject(worker.userId)
-            : formatWorkerPayrollSubject(worker.workerId);
-          return {
-            value,
-            label,
-            sublabel: worker.workEmail ?? undefined,
-          };
-        });
-
-      const seen = new Set<string>();
-      return payeeOptions.filter((option) => {
-        if (seen.has(option.value)) return false;
-        seen.add(option.value);
-        return true;
-      });
-    }
-
-    return (membersData?.data ?? []).map((m) => ({
-      value: formatPayrollSubject(m.userId),
-      label: m.name ?? m.email,
-      sublabel: m.email,
-    }));
-  }, [usePayeeDirectory, membersData?.data, payeesData?.data]);
 
   const form = useForm<ProfileForm>({
     resolver: zodResolver(profileSchema),
@@ -164,14 +111,23 @@ export function SalaryProfileSheet({
       payoutCurrency: "",
       taxRegime: "none",
       costCenter: "",
+      componentIds: [],
     },
   });
 
-  const [prevOpen, setPrevOpen] = useState(open);
-    if (open !== prevOpen) {
-    setPrevOpen(open);
-    if (open && !employeeUserId && !workerId) setPickedSubject("");
+  const [showBreakup, setShowBreakup] = useState(false);
+  const annualCtcValue = form.watch("annualCtc");
+  const taxRegimeValue = form.watch("taxRegime");
+  const workerTypeValue = form.watch("workerType");
+  const canPreviewBreakup = Boolean(resolvedUserId || resolvedWorkerId) && SALARY_PREVIEW_CTC.test(annualCtcValue);
+
+  function handleToggleBreakup() {
+    setShowBreakup((shown) => !shown);
   }
+
+  useEffect(() => {
+    if (open && !employeeUserId && !workerId) setPicked(null);
+  }, [employeeUserId, open, workerId]);
 
   useEffect(() => {
     if (open) {
@@ -183,9 +139,10 @@ export function SalaryProfileSheet({
         payoutCurrency: existingProfile?.payoutCurrency ?? "",
         taxRegime: (existingProfile?.taxRegime as "OLD" | "NEW" | undefined) ?? "none",
         costCenter: existingProfile?.costCenter ?? "",
+        componentIds: existingComponents.map((c) => c.componentId),
       });
     }
-  }, [open, existingProfile, form, policyCurrency]);
+  }, [open, existingProfile, existingComponents, form, policyCurrency]);
 
   function handleSubmit(values: ProfileForm) {
     if (!resolvedUserId && !resolvedWorkerId) {
@@ -193,8 +150,25 @@ export function SalaryProfileSheet({
       return;
     }
 
-    const payload = {
-      effectiveFrom: values.effectiveFrom,
+    const components = values.componentIds.map((componentId) => {
+      const kept = existingComponents.find((c) => c.componentId === componentId);
+      return kept
+        ? {
+            componentId,
+            calcMethodOverride: kept.calcMethodOverride ?? undefined,
+            amount: kept.amount ?? undefined,
+            percent: kept.percent ?? undefined,
+            formulaOverride: kept.formulaOverride ?? undefined,
+          }
+        : { componentId };
+    });
+    if (isEdit && components.length === 0 && existingComponents.length > 0) {
+      form.setError("componentIds", { message: "Keep at least one component on this profile" });
+      return;
+    }
+
+    const sharedFields = {
+      components,
       annualCtc: values.annualCtc,
       workerType: values.workerType,
       currency: values.currency,
@@ -208,15 +182,15 @@ export function SalaryProfileSheet({
         toast.success("Profile updated");
         onClose();
       };
-      const onError = () => toast.error("Failed to update profile");
+      const onError = (err: unknown) => toast.error(getErrorMessage(err));
       if (resolvedWorkerId && !resolvedUserId) {
         patchWorkerMutation.mutate(
-          { profileId: existingProfile.id, body: payload },
+          { profileId: existingProfile.id, body: sharedFields },
           { onSuccess, onError },
         );
       } else {
         patchMutation.mutate(
-          { profileId: existingProfile.id, body: payload },
+          { profileId: existingProfile.id, body: sharedFields },
           { onSuccess, onError },
         );
       }
@@ -225,11 +199,12 @@ export function SalaryProfileSheet({
         toast.success("Profile created");
         onClose();
       };
-      const onError = () => toast.error("Failed to create profile");
+      const onError = (err: unknown) => toast.error(getErrorMessage(err));
+      const createPayload = { effectiveFrom: values.effectiveFrom, ...sharedFields };
       if (resolvedWorkerId && !resolvedUserId) {
-        createWorkerMutation.mutate(payload, { onSuccess, onError });
+        createWorkerMutation.mutate(createPayload, { onSuccess, onError });
       } else {
-        createMutation.mutate(payload, { onSuccess, onError });
+        createMutation.mutate(createPayload, { onSuccess, onError });
       }
     }
   }
@@ -257,12 +232,11 @@ export function SalaryProfileSheet({
               {showPicker && (
                 <FormItem>
                   <FormLabel>{workforceLabel.singular} *</FormLabel>
-                  <Combobox
-                    options={memberOptions}
-                    value={pickedSubject}
-                    onChange={setPickedSubject}
-                    placeholder={`Select ${workforceLabel.singularLower}…`}
-                    searchPlaceholder="Search by name or email…"
+                  <PayrollPersonPicker
+                    enabled={open}
+                    selectedKey={picked ? personKey(picked) : null}
+                    onPick={setPicked}
+                    label={workforceLabel.plural}
                   />
                 </FormItem>
               )}
@@ -290,6 +264,41 @@ export function SalaryProfileSheet({
                     <FormControl>
                       <Input {...field} placeholder="e.g. 1200000.00" />
                     </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              {canPreviewBreakup ? (
+                <div className="space-y-2">
+                  <Button
+                    type="button"
+                    variant="link"
+                    size="sm"
+                    className="h-auto p-0 text-xs"
+                    aria-expanded={showBreakup}
+                    onClick={handleToggleBreakup}
+                  >
+                    {showBreakup ? "Hide monthly breakup" : "See monthly breakup"}
+                  </Button>
+                  {showBreakup ? (
+                    <SalaryBreakupPreview
+                      annualCtc={annualCtcValue}
+                      regime={taxRegimeValue === "none" ? undefined : taxRegimeValue}
+                      workerType={workerTypeValue}
+                    />
+                  ) : null}
+                </div>
+              ) : null}
+              <FormField
+                control={form.control}
+                name="componentIds"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Salary components</FormLabel>
+                    <p className="text-dense text-muted-foreground">
+                      Payroll runs pay exactly the components ticked here.
+                    </p>
+                    <ProfileComponentsField value={field.value} onChange={field.onChange} />
                     <FormMessage />
                   </FormItem>
                 )}
@@ -394,7 +403,7 @@ export function SalaryProfileSheet({
               <LoadingButton
                 type="submit"
                 size="sm"
-                disabled={showPicker && !pickedSubject}
+                disabled={showPicker && !pickedPayee}
                 isPending={isPending}
                 loadingText={isEdit ? "Updating…" : "Creating…"}
               >

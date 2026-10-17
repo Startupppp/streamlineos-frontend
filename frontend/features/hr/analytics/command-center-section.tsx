@@ -36,6 +36,8 @@ import { TruncatedText } from "@/components/ui/truncated-text";
 import { useOrgDisplay } from "@/hooks/api/org-display";
 import { formatMoneyCompact } from "@/lib/format-utils";
 import { activationProps } from "@/lib/keyboard-activation";
+import { ErrorState } from "@/components/shared/error-state";
+import { getErrorMessage } from "@/lib/get-error-message";
 
 const JoinsExitsChart = dynamic(
   () => import("./command-center-charts").then((m) => ({ default: m.JoinsExitsChart })),
@@ -118,7 +120,13 @@ export function CommandCenterSection({ departmentId }: CommandCenterSectionProps
     [display],
   );
 
-  const { data: kpis, isLoading: kpisLoading } = useHrCommandCenter(departmentId);
+  const {
+    data: kpis,
+    isLoading: kpisLoading,
+    isError: kpisIsError,
+    error: kpisError,
+    refetch: refetchKpis,
+  } = useHrCommandCenter(departmentId);
   const { data: attrition, isLoading: attritionLoading } = useHrAttritionPlus(departmentId);
   const { data: leaveTrends, isLoading: leaveLoading } = useHrLeaveTrends(departmentId);
   const { data: engagement, isLoading: engagementLoading } = useHrEngagement();
@@ -156,7 +164,7 @@ export function CommandCenterSection({ departmentId }: CommandCenterSectionProps
     [leaveTrends],
   );
 
-  const leaveTypeColors = ["#1d4ed8", "#06b6d4", "#60a5fa", "#8b5cf6", "#10b981"];
+  const leaveTypeColors = ["var(--chart-1)", "var(--chart-2)", "var(--chart-3)", "var(--chart-4)", "var(--status-success-fill)"];
 
   function handleAttritionDrilldown() {
     openDrilldown("attrition", "Attrition");
@@ -174,7 +182,22 @@ export function CommandCenterSection({ departmentId }: CommandCenterSectionProps
     openDrilldown("cases", "Compliance Cases");
   }
 
+  function handleRetryKpis(): void {
+    void refetchKpis();
+  }
+
   if (kpisLoading) return <SectionSkeleton rows={8} />;
+
+  if (kpisIsError || !kpis) {
+    return (
+      <ErrorState
+        title="Couldn't load the command centre"
+        description={getErrorMessage(kpisError)}
+        error={kpisError}
+        onRetry={handleRetryKpis}
+      />
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -247,7 +270,7 @@ export function CommandCenterSection({ departmentId }: CommandCenterSectionProps
               <JoinsExitsChart data={attrition.joinsVsExits} />
               <div className="mt-2 flex justify-end">
                 <Button variant="ghost" size="sm" onClick={handleAttritionDrilldown}>
-                  View Details
+                  View attrition details
                 </Button>
               </div>
             </>
@@ -268,7 +291,7 @@ export function CommandCenterSection({ departmentId }: CommandCenterSectionProps
               />
               <div className="mt-2 flex justify-end">
                 <Button variant="ghost" size="sm" onClick={handleLeaveDrilldown}>
-                  View Details
+                  View leave details
                 </Button>
               </div>
             </>
@@ -285,7 +308,7 @@ export function CommandCenterSection({ departmentId }: CommandCenterSectionProps
               <MoodTrendChart data={engagement.moodByMonth} />
               <div className="mt-2 flex justify-end">
                 <Button variant="ghost" size="sm" onClick={handleEngagementDrilldown}>
-                  View Details
+                  View mood details
                 </Button>
               </div>
             </>
@@ -298,14 +321,7 @@ export function CommandCenterSection({ departmentId }: CommandCenterSectionProps
           ) : !perfDist?.distribution.length ? (
             <EmptyChart label="No performance data" />
           ) : (
-            <>
-              <PerformanceDistChart data={perfDist.distribution} />
-              <div className="mt-2 flex justify-end">
-                <Button variant="ghost" size="sm" onClick={handleAttritionDrilldown}>
-                  View Attrition Details
-                </Button>
-              </div>
-            </>
+            <PerformanceDistChart data={perfDist.distribution} />
           )}
         </AnalyticsChartCard>
       </div>
@@ -330,7 +346,7 @@ export function CommandCenterSection({ departmentId }: CommandCenterSectionProps
               </div>
               <div className="mt-3 flex justify-end">
                 <Button variant="ghost" size="sm" onClick={handleComplianceDrilldown}>
-                  View Details
+                  View compliance details
                 </Button>
               </div>
             </>
@@ -344,14 +360,7 @@ export function CommandCenterSection({ departmentId }: CommandCenterSectionProps
             ) : !payrollCost?.monthly.length ? (
               <EmptyChart label="No payroll data" />
             ) : (
-              <>
-                <PayrollCostChart data={payrollCost.monthly} formatCurrency={formatCurrency} />
-                <div className="mt-2 flex justify-end">
-                  <Button variant="ghost" size="sm" onClick={handleLeaveDrilldown}>
-                    View Leave Details
-                  </Button>
-                </div>
-              </>
+              <PayrollCostChart data={payrollCost.monthly} formatCurrency={formatCurrency} />
             )}
           </AnalyticsChartCard>
         ) : null}

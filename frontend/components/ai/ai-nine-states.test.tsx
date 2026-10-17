@@ -170,6 +170,39 @@ describe("the nine AI boundary states each render a defined surface", () => {
     );
     expect(screen.getByText(/half an answer/)).toBeInTheDocument();
   });
+
+  it("shows an empty panel instead of draft framing when the result is empty", () => {
+    render(
+      <AiActionResultBody
+        state={{
+          status: "ready",
+          result: {
+            text: "This project has no tickets yet. Add tasks to unlock AI features.",
+            empty: {
+              title: "No issues to summarize",
+              description:
+                "This project has no tickets yet. Create an issue to generate a health summary.",
+            },
+          },
+        }}
+      />,
+    );
+    expect(screen.getByText(/No issues to summarize/i)).toBeInTheDocument();
+    expect(
+      screen.getByText(/Create an issue to generate a health summary/i),
+    ).toBeInTheDocument();
+    expect(screen.queryByText(/AI-generated draft/i)).toBeNull();
+  });
+
+  it("keeps Stop available while loading so an in-flight request can be cancelled", async () => {
+    const onCancel = jest.fn();
+    render(
+      <AiActionResultBody state={{ status: "loading" }} onCancel={onCancel} />,
+    );
+    expect(screen.getByText(/Working…/i)).toBeInTheDocument();
+    await userEvent.click(screen.getByRole("button", { name: /stop/i }));
+    expect(onCancel).toHaveBeenCalledTimes(1);
+  });
 });
 
 function inlineSession(

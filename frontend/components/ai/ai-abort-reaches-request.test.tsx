@@ -59,7 +59,6 @@ function summarizeAction(
 async function openAndRun() {
   const user = userEvent.setup();
   await user.click(screen.getByRole("button", { name: /AI/i }));
-  await user.click(await screen.findByText("summarize"));
 }
 
 describe("a buffered AI action's cancel reaches the outgoing request", () => {

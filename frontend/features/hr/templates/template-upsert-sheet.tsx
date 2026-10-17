@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import {
   Sheet,
   SheetContent,
+  SheetDescription,
   SheetHeader,
   SheetTitle,
   SheetBody,
@@ -194,6 +195,7 @@ export function TemplateUpsertSheet({ open, onClose, template }: TemplateUpsertS
       <SheetContent side="right" className="flex w-full flex-col gap-0 overflow-hidden p-0 sm:max-w-2xl">
         <SheetHeader className="shrink-0 border-b border-border px-6 py-4">
           <SheetTitle className="text-sm">{isEdit ? "Edit Template" : "New Template"}</SheetTitle>
+          <SheetDescription className="sr-only">Create or edit an HR template for letters, checklists, reviews, surveys, or notifications.</SheetDescription>
         </SheetHeader>
         <Form {...form}>
           <form

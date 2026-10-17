@@ -12,6 +12,7 @@ export interface CompOffRecord {
   orgId: string;
   userId: string;
   earnedDays: string;
+  usedDays: string;
 }
 
 export function useCompOff() {

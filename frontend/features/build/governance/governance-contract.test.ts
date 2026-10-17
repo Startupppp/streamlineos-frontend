@@ -1,4 +1,10 @@
-import { riskRowContract, riskPageContract, riskStatsContract } from "@/hooks/api/build/governance-schema";
+import {
+  riskRowContract,
+  riskPageContract,
+  riskStatsContract,
+  decisionRowContract,
+  decisionPageContract,
+} from "@/hooks/api/build/governance-schema";
 
 const BASE_RISK_ROW = {
   id: 1,
@@ -109,5 +115,80 @@ describe("riskStatsContract keeps the register tiles describing the whole regist
 
   it("rejects a bare array, so the old first-page-derived tile shape cannot pass as the aggregate", () => {
     expect(riskStatsContract.safeParse([BASE_RISK_ROW]).success).toBe(false);
+  });
+});
+
+const BASE_DECISION_ROW = {
+  id: 1,
+  orgId: "org_1",
+  projectId: 10,
+  decisionNumber: 1,
+  title: "Adopt keyset pagination",
+  context: null,
+  decision: null,
+  optionsConsidered: null,
+  status: "proposed",
+  ownerId: null,
+  decidedAt: null,
+  revisitAt: null,
+  linkedTicketId: null,
+  createdBy: null,
+  createdAt: "2026-01-01T00:00:00.000Z",
+  updatedAt: "2026-01-01T00:00:00.000Z",
+  deletedAt: null,
+};
+
+describe("decisionRowContract status matches the decision_status Postgres enum", () => {
+  it.each(["proposed", "accepted", "superseded", "revisit"] as const)(
+    "accepts %s as a real decision status value",
+    (status) => {
+      expect(decisionRowContract.safeParse({ ...BASE_DECISION_ROW, status }).success).toBe(true);
+    },
+  );
+
+  it("rejects an out-of-enum status rather than rendering an undefined status badge", () => {
+    expect(
+      decisionRowContract.safeParse({ ...BASE_DECISION_ROW, status: "rejected" }).success,
+    ).toBe(false);
+  });
+
+  it("rejects a lowercase-mismatched status, pinning the wire casing to the enum", () => {
+    expect(
+      decisionRowContract.safeParse({ ...BASE_DECISION_ROW, status: "Proposed" }).success,
+    ).toBe(false);
+  });
+});
+
+describe("decisionPageContract is the keyset page envelope the backend now returns", () => {
+  it("parses a page carrying the rows, the hasMore flag and a numeric nextCursor", () => {
+    const result = decisionPageContract.safeParse({
+      data: [BASE_DECISION_ROW],
+      hasMore: true,
+      nextCursor: 7,
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it("accepts a null nextCursor on the last page, so the infinite scroll sentinel knows to stop", () => {
+    const result = decisionPageContract.safeParse({
+      data: [BASE_DECISION_ROW],
+      hasMore: false,
+      nextCursor: null,
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it("rejects the old bare array so a backend regression to the unpaginated shape fails loudly instead of rendering an empty log", () => {
+    const result = decisionPageContract.safeParse([BASE_DECISION_ROW]);
+    expect(result.success).toBe(false);
+  });
+
+  it("rejects a page missing hasMore so an absent pagination flag cannot silently prevent the next page from loading", () => {
+    const { hasMore: _hasMore, ...withoutHasMore } = {
+      data: [BASE_DECISION_ROW],
+      hasMore: false,
+      nextCursor: null,
+    };
+    expect(decisionPageContract.safeParse(withoutHasMore).success).toBe(false);
   });
 });

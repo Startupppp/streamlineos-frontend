@@ -83,3 +83,31 @@ describe("uploadKbMedia — idempotency key identifies the upload, not the attem
     expect(keySentOnCall(1)).not.toBe(keySentOnCall(0));
   });
 });
+
+describe("uploadKbMedia — duplicate drops and rejected types", () => {
+  beforeEach(() => {
+    upload.mockReset();
+  });
+
+  it("KB-B-006: shares one request for the same file dropped twice while in flight", async () => {
+    let resolve: (value: unknown) => void = () => undefined;
+    upload.mockReturnValueOnce(new Promise((r) => { resolve = r; }));
+    const file = makeFile("dup.png");
+
+    const first = uploadKbMedia(file, 12);
+    const second = uploadKbMedia(file, 12);
+    resolve({ key: "k", name: "dup.png" });
+
+    await expect(first).resolves.toEqual({ key: "k", name: "dup.png" });
+    await expect(second).resolves.toEqual({ key: "k", name: "dup.png" });
+    expect(upload).toHaveBeenCalledTimes(1);
+  });
+
+  it("KB-B-007: names the extension and lists the allowed types instead of a raw MIME", async () => {
+    const exe = new File(["MZ"], "setup.exe", { type: "application/x-msdownload" });
+    await expect(uploadKbMedia(exe, 12)).rejects.toThrow(
+      /^\.exe files can't be uploaded\. You can upload images \(JPEG, PNG, GIF, WebP\).*documents \(PDF/,
+    );
+    expect(upload).not.toHaveBeenCalled();
+  });
+});

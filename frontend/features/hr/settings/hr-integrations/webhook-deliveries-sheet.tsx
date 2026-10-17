@@ -7,6 +7,7 @@ import { RotateCcw } from "lucide-react";
 import {
   Sheet,
   SheetContent,
+  SheetDescription,
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
@@ -18,6 +19,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { ErrorState } from "@/components/shared/error-state";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { useCanState } from "@/hooks/api/access";
+import { NoPermissionState } from "@/components/shared/no-permission-state";
 import {
   useHrWebhookDeliveries,
   useRedeliverHrWebhook,
@@ -123,6 +126,7 @@ function DeliveryRow({
 export function WebhookDeliveriesSheet({ open, onOpenChange, subscription }: Props) {
   const { data: deliveries, isLoading, isError, error, refetch } = useHrWebhookDeliveries(subscription.id);
 
+  const manageAccess = useCanState("hr:integrations:manage");
   const handleRetry = useCallback(() => { void refetch(); }, [refetch]);
 
   return (
@@ -132,6 +136,7 @@ export function WebhookDeliveriesSheet({ open, onOpenChange, subscription }: Pro
           <SheetTitle>
             <TruncatedText text={`Deliveries — ${subscription.name}`} className="min-w-0" />
           </SheetTitle>
+          <SheetDescription className="sr-only">Delivery history and retry options for this webhook subscription.</SheetDescription>
           <TruncatedText
             text={subscription.url}
             className="text-xs text-muted-foreground font-mono min-w-0"
@@ -139,7 +144,9 @@ export function WebhookDeliveriesSheet({ open, onOpenChange, subscription }: Pro
         </SheetHeader>
 
         <ScrollArea className="flex-1">
-          {isLoading ? (
+          {manageAccess === "denied" ? (
+            <NoPermissionState permission="hr:integrations:manage" compact />
+          ) : isLoading || manageAccess === "loading" ? (
             <div className="px-4 py-3 space-y-3">
               {Array.from({ length: 5 }).map((_, i) => (
                 <Skeleton key={i} className="h-14 w-full rounded-md" />
@@ -152,6 +159,7 @@ export function WebhookDeliveriesSheet({ open, onOpenChange, subscription }: Pro
                 className="border-0 bg-transparent shadow-none"
                 title="Couldn't load deliveries"
                 description={getErrorMessage(error)}
+                error={error}
                 onRetry={handleRetry}
               />
             </div>

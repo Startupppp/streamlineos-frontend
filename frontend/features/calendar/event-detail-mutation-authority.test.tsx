@@ -1,7 +1,10 @@
 import { render, screen } from "@testing-library/react";
 import React from "react";
 import { EventDetailSheet } from "./event-detail-sheet";
+
+jest.mock("./calendar-source-action-panel", () => ({ CalendarSourceActionPanel: () => null }));
 import type { CalendarEventDetail, CalendarListItem } from "@/hooks/api/calendar";
+import { calendarProjectionFields } from "./calendar-projection-fixtures";
 
 jest.mock("sonner", () => ({ toast: { error: jest.fn(), success: jest.fn() } }));
 
@@ -24,6 +27,7 @@ jest.mock("./event-detail-content", () => ({
 }));
 
 jest.mock("./event-create-dialog", () => ({ EventCreateDialog: () => null }));
+jest.mock("./calendar-source-action-panel", () => ({ CalendarSourceActionPanel: () => null }));
 
 jest.mock("@/hooks/api/calendar", () => ({
   parseCalendarEventId: (id: string) => {
@@ -60,6 +64,7 @@ const baseEvent: CalendarListItem = {
   source: "event",
   category: "meeting",
   color: "blue",
+  ...calendarProjectionFields("event-1", "2026-09-12T10:00:00Z", "2026-09-12T11:00:00Z"),
 };
 
 function detailFixture(overrides: Partial<CalendarEventDetail>): CalendarEventDetail {
@@ -134,6 +139,9 @@ describe("EventDetailSheet — mutation controls follow the backend's creator-on
   it("fails CLOSED while the detail read is still in flight", () => {
     setDetail(null, true);
     render(<EventDetailSheet event={baseEvent} onClose={jest.fn()} />);
+    expect(screen.getByRole("dialog", { name: "Team sync" })).toHaveAttribute("data-slot", "sheet-content");
+    expect(document.querySelector("[data-slot='dialog-content']")).toBeNull();
+    expect(document.querySelector("[data-slot='skeleton']")).toBeNull();
     expect(screen.queryByRole("button", { name: /delete/i })).toBeNull();
     expect(screen.queryByRole("button", { name: /^edit$/i })).toBeNull();
     expect(screen.getByTestId("event-detail-content").dataset["canUpdate"]).toBe("false");

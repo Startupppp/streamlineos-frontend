@@ -45,6 +45,21 @@ export function EventSyncStatus({ eventId }: EventSyncStatusProps) {
           {data.lastError}
         </p>
       ) : null}
+      {data.repairAction === "reconnect" ? (
+        <p className="text-xs text-muted-foreground">
+          Reconnect this account in Calendar accounts, then the pending change will resume automatically.
+        </p>
+      ) : null}
+      {data.repairAction === "change_event" ? (
+        <p className="text-xs text-muted-foreground">
+          This provider cannot represent the requested change. Adjust the event or choose another calendar account.
+        </p>
+      ) : null}
+      {data.repairAction === "review_conflict" ? (
+        <p className="text-xs text-muted-foreground">
+          The provider copy changed after this event was loaded. Reload it before deciding which version to keep.
+        </p>
+      ) : null}
       {data.retryable ? (
         <LoadingButton
           size="sm"

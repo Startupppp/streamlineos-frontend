@@ -1,7 +1,6 @@
 "use client";
 
 import { useCallback, useMemo, useState } from "react";
-import { motion } from "framer-motion";
 import { format } from "date-fns";
 import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -15,6 +14,8 @@ import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { CursorPageControls } from "@/components/ui/cursor-page-controls";
 import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
 import { useCan } from "@/hooks/api/access";
+import { PageState } from "@/components/shared/page-state";
+import { usePageState } from "@/hooks/api/use-page-state";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { DevicesTable } from "@/features/hr/enterprise/comp/devices-table";
 import { DeviceSheet } from "@/features/hr/enterprise/comp/device-sheet";
@@ -218,6 +219,14 @@ function AllSyncLogsTab() {
 
 export function DevicesPage() {
   const canManage = useCan("hr:biometric:manage");
+  // All three tabs read hr:biometric:manage-gated queries; a denied read looks
+  // like "No sync logs yet" unless denial is resolved first (FE-47).
+  const pageState = usePageState({
+    permission: "hr:biometric:manage",
+    isLoading: false,
+    isError: false,
+    error: null,
+  });
   const [addOpen, setAddOpen] = useState(false);
   const [editDevice, setEditDevice] = useState<TimeDevice | null>(null);
 
@@ -246,12 +255,8 @@ export function DevicesPage() {
         ) : undefined
       }
     >
-      <motion.div
-        initial={{ opacity: 0, y: 16 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.22, ease: "easeOut" }}
-        className="flex min-h-0 flex-1 flex-col"
-      >
+      <div className="flex min-h-0 flex-1 flex-col">
+        <PageState resolution={pageState} loading={<SyncLogsSkeleton />} className="flex-1">
         <Tabs defaultValue="devices" className="flex min-h-0 flex-1 flex-col">
           <TabsList className="shrink-0">
             <TabsTrigger value="devices">Devices</TabsTrigger>
@@ -275,7 +280,8 @@ export function DevicesPage() {
             <AllSyncLogsTab />
           </TabsContent>
         </Tabs>
-      </motion.div>
+        </PageState>
+      </div>
 
       <DeviceSheet open={addOpen} onOpenChange={setAddOpen} />
       <DeviceSheet

@@ -13,9 +13,10 @@ import { cn } from "@/lib/utils";
 interface LinkRowProps {
   link: GoalDetail["links"][number];
   onRemove: (id: number) => void;
+  canManage: boolean;
 }
 
-export function LinkRow({ link, onRemove }: LinkRowProps) {
+export function LinkRow({ link, onRemove, canManage }: LinkRowProps) {
   const { iconRef, hoverHandlers } = useAnimatedIcon();
 
   function handleRemove() {
@@ -41,16 +42,18 @@ export function LinkRow({ link, onRemove }: LinkRowProps) {
           </Badge>
         ) : null}
       </div>
-      <Button
-        size="icon"
-        variant="ghost"
-        aria-label="Remove link"
-        className="h-6 w-6 shrink-0 text-muted-foreground hover:text-destructive"
-        onClick={handleRemove}
-        {...hoverHandlers}
-      >
-        <XIcon ref={iconRef} size={14} />
-      </Button>
+      {canManage ? (
+        <Button
+          size="icon"
+          variant="ghost"
+          aria-label="Remove link"
+          className="h-6 w-6 shrink-0 text-muted-foreground hover:text-destructive"
+          onClick={handleRemove}
+          {...hoverHandlers}
+        >
+          <XIcon ref={iconRef} size={14} />
+        </Button>
+      ) : null}
     </div>
   );
 }

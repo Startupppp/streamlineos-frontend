@@ -1,10 +1,13 @@
 "use client";
 
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import {
+  useInfiniteQuery,
+  useQueryClient,
+  type InfiniteData,
+} from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
 import type {
-  KnowledgeGap,
   DraftedKnowledgeGap,
   ListKnowledgeGapsResponse,
   DetectGapsResponse,
@@ -12,7 +15,9 @@ import type {
 } from "@/features/support/lib/knowledge-gap.types";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { queryKeyBase } from "@/lib/query-keys/base";
-import { useGatedQuery } from "@/hooks/api/gated-query";
+import { usePermissionGate } from "@/hooks/api/access";
+import { gated } from "@/hooks/api/gated-query";
+import { NO_ID_CURSOR_YET } from "@/hooks/api/cursor-page-param";
 
 const gapListResponseC = lazyContract(() =>
   import("./knowledge-gap-schema").then((m) => m.gapListResponseContract),
@@ -29,19 +34,34 @@ const dismissGapResponseC = lazyContract(() =>
 
 export const knowledgeGapsKeys = {
   all: [...queryKeyBase, "support", "knowledge-gaps"] as const,
-  list: (cursor?: number) =>
-    [...knowledgeGapsKeys.all, "list", cursor ?? null] as const,
+  list: () => [...knowledgeGapsKeys.all, "list"] as const,
 };
 
-export function useKnowledgeGaps(cursor?: number) {
-  return useGatedQuery<ListKnowledgeGapsResponse, Error>("support:knowledge-gaps:view", {
-    queryKey: knowledgeGapsKeys.list(cursor),
-    queryFn: ({ signal }) =>
-      apiClient.get<ListKnowledgeGapsResponse>("/support/knowledge-gaps", {
-        ...(cursor !== undefined ? { cursor: String(cursor) } : {}),
-      }, signal, gapListResponseC),
-    staleTime: 30_000,
-  });
+export type KnowledgeGapPages = InfiniteData<
+  ListKnowledgeGapsResponse,
+  number | undefined
+>;
+
+export function useKnowledgeGaps() {
+  const access = usePermissionGate("support:knowledge-gaps:view");
+  return gated(
+    useInfiniteQuery({
+      queryKey: knowledgeGapsKeys.list(),
+      queryFn: ({ pageParam, signal }) =>
+        apiClient.get<ListKnowledgeGapsResponse>(
+          "/support/knowledge-gaps",
+          pageParam !== undefined ? { cursor: String(pageParam) } : {},
+          signal,
+          gapListResponseC,
+        ),
+      getNextPageParam: (lastPage: ListKnowledgeGapsResponse) =>
+        lastPage.nextCursor ?? undefined,
+      initialPageParam: NO_ID_CURSOR_YET,
+      staleTime: 30_000,
+      enabled: access.allowed,
+    }),
+    access,
+  );
 }
 
 export function useDetectGaps() {
@@ -76,29 +96,42 @@ export function useDismissGap() {
   return useAuthorizedMutation<
     DraftedKnowledgeGap,
     Error,
-    { gapId: number },
-    { snapshots: Array<[readonly unknown[], ListKnowledgeGapsResponse]> }
+    { gapId: number; reason?: string },
+    { snapshots: Array<[readonly unknown[], KnowledgeGapPages]> }
   >("support:knowledge-gaps:manage", {
     mutationKey: ["support", "knowledge-gaps", "dismiss"],
-    mutationFn: ({ gapId }) =>
+    mutationFn: ({ gapId, reason }) =>
       apiClient.patch<DraftedKnowledgeGap>(`/support/knowledge-gaps/${gapId}`, {
         action: "dismiss",
+        ...(reason !== undefined && reason !== "" ? { reason } : {}),
       }, undefined, dismissGapResponseC),
-    onMutate: async ({ gapId }) => {
+    onMutate: async ({ gapId, reason }) => {
       await queryClient.cancelQueries({ queryKey: knowledgeGapsKeys.all });
-      const snapshots: Array<[readonly unknown[], ListKnowledgeGapsResponse]> = [];
+      const snapshots: Array<[readonly unknown[], KnowledgeGapPages]> = [];
       queryClient
-        .getQueriesData<ListKnowledgeGapsResponse>({
+        .getQueriesData<KnowledgeGapPages>({
           queryKey: knowledgeGapsKeys.all,
         })
         .forEach(([key, data]) => {
           if (!data) return;
           snapshots.push([key, data]);
-          queryClient.setQueryData<ListKnowledgeGapsResponse>(key, {
+          queryClient.setQueryData<KnowledgeGapPages>(key, {
             ...data,
-            gaps: data.gaps.map((g) =>
-              g.id === gapId ? { ...g, status: "DISMISSED" as const } : g,
-            ),
+            pages: data.pages.map((page) => ({
+              ...page,
+              gaps: page.gaps.map((g) =>
+                g.id === gapId
+                  ? {
+                      ...g,
+                      status: "DISMISSED" as const,
+                      dismissalReason:
+                        reason !== undefined && reason !== ""
+                          ? reason
+                          : g.dismissalReason,
+                    }
+                  : g,
+              ),
+            })),
           });
         });
       return { snapshots };

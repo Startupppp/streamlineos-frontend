@@ -1,6 +1,8 @@
 import React from "react";
-import { render, screen, act } from "@testing-library/react";
+import { render, screen, act, fireEvent, waitFor } from "@testing-library/react";
 import { ActivityFeed } from "./activity-feed";
+import { ApiError } from "@/lib/api-envelope";
+import type { StagedCommentDraft } from "@/hooks/api/build/comment-draft-commands";
 
 jest.mock("next-auth/react", () => ({
   useSession: () => ({ data: { user: { id: "user-1", name: "Tester", image: null } } }),
@@ -24,6 +26,14 @@ jest.mock("@/hooks/api/access", () => ({
   useAccess: () => ({ data: null, refetch: jest.fn() }),
 }));
 
+const mockToastError = jest.fn();
+jest.mock("sonner", () => ({
+  toast: {
+    error: (...args: unknown[]) => mockToastError(...args),
+    success: jest.fn(),
+  },
+}));
+
 type ActionLike = {
   key: string;
   label: string;
@@ -39,15 +49,41 @@ jest.mock("@/components/ai/ai-actions-menu", () => ({
 }));
 
 const mockMutateAsync = jest.fn();
-jest.mock("@/hooks/api/build/comment-drafts", () => ({
-  useUpsertCommentDraft: () => ({ mutate: jest.fn() }),
+const mockUploadFile = jest.fn();
+const mockDeleteFile = jest.fn();
+const mockAddAttachment = jest.fn();
+const mockAddComment = jest.fn();
+const mockStage = jest.fn<StagedCommentDraft, [{ ticketId: number; body: string }]>();
+const mockFlush = jest.fn();
+let mockDraftLoadError: Error | null = null;
+jest.mock("@/hooks/api/build/comment-draft-commands", () => ({
+  useUpsertCommentDraft: () => ({ stageEdit: mockStage, flushStaged: mockFlush, isOnline: true, isPending: false, error: null, receipt: null }),
   useDeleteCommentDraftByTicket: () => ({ mutate: jest.fn() }),
+}));
+jest.mock("@/hooks/api/build/comment-drafts-read", () => ({
+  useTicketCommentDraft: () => ({
+    owner: { scope: "authenticated:org-1:user-1", key: "authenticated:org-1:user-1:session-1", identity: { userId: "user-1", orgId: "org-1", sessionId: "session-1" } },
+    fresh: false, data: undefined, dataUpdatedAt: 0, isFetching: false, isError: mockDraftLoadError !== null, error: mockDraftLoadError, refetch: jest.fn(),
+  }),
+}));
+jest.mock("@/hooks/api/build/comment-drafts", () => ({
   useGenerateCommentDraft: () => ({ mutateAsync: mockMutateAsync, isPending: false }),
 }));
 
-jest.mock("@/hooks/api/build", () => ({
-  useAddComment: () => ({ mutate: jest.fn(), isPending: false }),
+jest.mock("@/hooks/api/build/ticket-sub-resources", () => ({
+  useAddComment: () => ({ mutate: jest.fn(), mutateAsync: mockAddComment, isPending: false }),
+  useAddAttachment: () => ({ mutateAsync: mockAddAttachment, isPending: false }),
 }));
+jest.mock("@/hooks/api/build/project-files", () => {
+  const actual = jest.requireActual("@/hooks/api/build/project-files");
+  return {
+    MAX_PROJECT_FILE_BYTES: actual.MAX_PROJECT_FILE_BYTES,
+    PROJECT_FILE_TYPES_LABEL: actual.PROJECT_FILE_TYPES_LABEL,
+    isAllowedProjectFileType: actual.isAllowedProjectFileType,
+    useUploadProjectFile: () => ({ mutateAsync: mockUploadFile, isPending: false }),
+    useDeleteProjectFile: () => ({ mutateAsync: mockDeleteFile, isPending: false }),
+  };
+});
 jest.mock("@/hooks/api/build/tickets", () => ({
   useCreateTicket: () => ({ mutate: jest.fn(), isPending: false }),
 }));
@@ -60,7 +96,7 @@ jest.mock("@/hooks/api/build/reactions", () => ({
   useRemoveReaction: () => ({ mutate: jest.fn() }),
 }));
 jest.mock("@/features/build/comments/mention-textarea", () => ({
-  MentionTextarea: ({ value, onChange, ...rest }: { value: string; onChange: (v: string) => void; [k: string]: unknown }) => (
+  MentionTextarea: ({ value, onChange, wrapperClassName: _wrapperClassName, users: _users, ...rest }: { value: string; onChange: (v: string) => void; wrapperClassName?: string; users?: unknown[]; [k: string]: unknown }) => (
     <textarea data-testid="comment-textarea" value={value} onChange={(e) => onChange(e.target.value)} {...(rest as object)} />
   ),
 }));
@@ -89,6 +125,18 @@ function renderFeed(canAi = false, canUpdate = false) {
 beforeEach(() => {
   capturedActions = [];
   mockMutateAsync.mockReset();
+  mockDraftLoadError = null;
+  mockUploadFile.mockReset().mockResolvedValue({ id: 91 });
+  mockDeleteFile.mockReset().mockResolvedValue(undefined);
+  mockAddAttachment.mockReset().mockResolvedValue({ id: 501 });
+  mockAddComment.mockReset();
+  localStorage.clear();
+  mockFlush.mockReset().mockResolvedValue(null);
+  mockStage.mockReset().mockImplementation(({ ticketId, body }) => ({
+    scope: "authenticated:org-1:user-1", key: "authenticated:org-1:user-1:session-1",
+    identity: { userId: "user-1", orgId: "org-1", sessionId: "session-1" },
+    entry: { kind: "upsert", ticketId, body, revision: "00000000-0000-4000-8000-000000000001" },
+  }));
 });
 
 it("does not render the AI draft menu when build:ai:use is denied", () => {
@@ -99,6 +147,96 @@ it("does not render the AI draft menu when build:ai:use is denied", () => {
 it("renders the AI draft menu when build:ai:use is granted", () => {
   renderFeed(true);
   expect(screen.getByTestId("ai-draft-menu")).toBeInTheDocument();
+});
+
+it("offers a file picker without restricting MIME types when file management is granted", () => {
+  mockUseCan.mockImplementation((key: string) => key === "build:tickets:update" || key === "build:files:manage");
+  render(<ActivityFeed {...defaultProps} />);
+  const input = document.querySelector('input[type="file"]');
+  expect(input).not.toBeNull();
+  expect(input).toHaveAttribute("type", "file");
+  expect(input).toHaveAttribute("multiple");
+  expect(input).not.toHaveAttribute("accept");
+});
+
+it("uploads an accepted file through the project file owner and attaches it to the current ticket", async () => {
+  mockUseCan.mockImplementation((key: string) => key === "build:tickets:update" || key === "build:files:manage");
+  render(<ActivityFeed {...defaultProps} />);
+  const input = document.querySelector('input[type="file"]') as HTMLInputElement;
+  const screenshot = new File(["png"], "walkthrough.png", { type: "image/png" });
+  fireEvent.change(input, { target: { files: [screenshot] } });
+  await waitFor(() => expect(mockUploadFile).toHaveBeenCalledWith(screenshot));
+  expect(mockAddAttachment).toHaveBeenCalledWith({ ticketId: 1, projectId: 1, fileId: 91 });
+});
+
+it("removes an uploaded project file when creating its ticket attachment fails", async () => {
+  mockUseCan.mockImplementation((key: string) => key === "build:tickets:update" || key === "build:files:manage");
+  mockAddAttachment.mockRejectedValueOnce(new Error("Attachment unavailable"));
+  render(<ActivityFeed {...defaultProps} />);
+  const input = document.querySelector('input[type="file"]') as HTMLInputElement;
+  const file = new File(["data"], "evidence.pdf", { type: "application/pdf" });
+  fireEvent.change(input, { target: { files: [file] } });
+  await waitFor(() => expect(mockDeleteFile).toHaveBeenCalledWith(91));
+});
+
+it("names the rejected file instead of uploading a type the server refuses", async () => {
+  mockUseCan.mockImplementation((key: string) => key === "build:tickets:update" || key === "build:files:manage");
+  mockToastError.mockClear();
+  mockUploadFile.mockClear();
+  render(<ActivityFeed {...defaultProps} />);
+  const input = document.querySelector('input[type="file"]') as HTMLInputElement;
+  const installer = new File(["MZ"], "setup.exe", { type: "application/x-msdownload" });
+  fireEvent.change(input, { target: { files: [installer] } });
+  await waitFor(() =>
+    expect(mockToastError).toHaveBeenCalledWith(
+      "setup.exe is not an accepted file type. Accepted: PDF, JPG, PNG, GIF, WEBP, TXT, CSV, DOC, DOCX, XLS, XLSX.",
+    ),
+  );
+  expect(mockUploadFile).not.toHaveBeenCalled();
+});
+
+it("refuses a 0-byte attachment with a message rather than uploading nothing", async () => {
+  mockUseCan.mockImplementation((key: string) => key === "build:tickets:update" || key === "build:files:manage");
+  mockToastError.mockClear();
+  mockUploadFile.mockClear();
+  render(<ActivityFeed {...defaultProps} />);
+  const input = document.querySelector('input[type="file"]') as HTMLInputElement;
+  const blank = new File([], "blank.pdf", { type: "application/pdf" });
+  fireEvent.change(input, { target: { files: [blank] } });
+  await waitFor(() =>
+    expect(mockToastError).toHaveBeenCalledWith("blank.pdf is empty"),
+  );
+  expect(mockUploadFile).not.toHaveBeenCalled();
+});
+
+it("replaces saved status with an inline failure and retries through a native button", async () => {
+  jest.useFakeTimers();
+  mockFlush.mockRejectedValueOnce(new Error("Storage unavailable"));
+  renderFeed(false, true);
+  fireEvent.change(screen.getByTestId("comment-textarea"), { target: { value: "Keep this draft" } });
+  await act(async () => { jest.advanceTimersByTime(1200); await Promise.resolve(); });
+  const alert = await screen.findByRole("alert");
+  expect(alert).toHaveTextContent("Failed to save.");
+  expect(screen.queryByText("Saved")).toBeNull();
+  const retry = screen.getByRole("button", { name: "Retry saving draft" });
+  expect(retry).not.toHaveAttribute("data-slot", "button");
+  mockFlush.mockResolvedValueOnce(null);
+  fireEvent.click(retry);
+  await act(async () => { await Promise.resolve(); });
+  await waitFor(() => expect(screen.queryByText("Failed to save.")).toBeNull());
+  jest.useRealTimers();
+});
+
+it("renders saved-draft load failure as one compact row with a native ghost retry", () => {
+  mockDraftLoadError = new Error("Unavailable");
+  const { container } = renderFeed(false, true);
+  const alert = screen.getByRole("alert");
+  expect(alert).toHaveTextContent("Couldn't load the saved draft");
+  expect(alert).not.toHaveClass("flex-wrap");
+  expect(alert.querySelector("span")).toHaveClass("truncate");
+  const retry = screen.getByRole("button", { name: "Retry" });
+  expect(retry).not.toHaveAttribute("data-slot", "button");
+  expect(container.querySelector('[data-slot="button"]')).not.toHaveTextContent("Retry");
 });
 
 it("successful generation puts text in the composer and does not post a comment", async () => {
@@ -123,6 +261,8 @@ it("successful generation puts text in the composer and does not post a comment"
 
   expect(screen.getByTestId("comment-textarea")).toHaveValue("AI-written comment text");
   expect(mockMutateAsync).toHaveBeenCalledTimes(1);
+  expect(mockStage).toHaveBeenCalledWith({ ticketId: 1, body: "AI-written comment text" });
+  expect(mockFlush).not.toHaveBeenCalled();
 });
 
 it("run() returns aiUsage from the generated draft so AiUsageChip can render the spend", async () => {
@@ -146,4 +286,58 @@ it("run() propagates a 402 error so getErrorMessage can surface insufficient-cre
   renderFeed(true);
 
   await expect(capturedActions[0].run()).rejects.toThrow("Insufficient AI credits");
+});
+
+it("shows the server error message when upload returns 400 for an allowed file type", async () => {
+  mockUseCan.mockImplementation((key: string) => key === "build:tickets:update" || key === "build:files:manage");
+  mockToastError.mockClear();
+  mockUploadFile.mockRejectedValueOnce(new ApiError("File content rejected by server", 400));
+  render(<ActivityFeed {...defaultProps} />);
+  const input = document.querySelector('input[type="file"]') as HTMLInputElement;
+  const report = new File(["data"], "report.pdf", { type: "application/pdf" });
+  fireEvent.change(input, { target: { files: [report] } });
+  await waitFor(() =>
+    expect(mockToastError).toHaveBeenCalledWith("File content rejected by server"),
+  );
+  expect(mockToastError).not.toHaveBeenCalledWith(expect.stringContaining("Try again"));
+});
+
+describe("B-003 — posting a comment twice in one tick", () => {
+  it("sends exactly one request when Post comment is clicked twice before the first settles", async () => {
+    let settle: (value: unknown) => void = () => {};
+    mockAddComment.mockImplementation(
+      () => new Promise((resolve) => { settle = resolve; }),
+    );
+    renderFeed(false, true);
+
+    fireEvent.change(screen.getByTestId("comment-textarea"), {
+      target: { value: "One comment only" },
+    });
+    const post = screen.getByRole("button", { name: "Post comment" });
+
+    fireEvent.click(post);
+    fireEvent.click(post);
+
+    expect(mockAddComment).toHaveBeenCalledTimes(1);
+
+    await act(async () => {
+      settle({ id: 1 });
+    });
+  });
+
+  it("accepts a second comment once the first has settled, so the guard is not a one-shot latch", async () => {
+    mockAddComment.mockResolvedValue({ id: 1 });
+    renderFeed(false, true);
+
+    const textarea = screen.getByTestId("comment-textarea");
+    const post = screen.getByRole("button", { name: "Post comment" });
+
+    fireEvent.change(textarea, { target: { value: "First" } });
+    await act(async () => { fireEvent.click(post); });
+
+    fireEvent.change(textarea, { target: { value: "Second" } });
+    await act(async () => { fireEvent.click(post); });
+
+    expect(mockAddComment).toHaveBeenCalledTimes(2);
+  });
 });

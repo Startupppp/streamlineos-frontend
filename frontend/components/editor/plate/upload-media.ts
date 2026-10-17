@@ -30,9 +30,18 @@ function isNodeLike(node: unknown): node is { type?: unknown; children?: unknown
   return typeof node === "object" && node !== null;
 }
 
+// Editor-only nodes: an upload in flight, or an open slash/mention/emoji
+// combobox (KB-B-033 saved and published a stray "/" slash_input).
+const TRANSIENT_NODE_TYPES: ReadonlySet<unknown> = new Set([
+  PLACEHOLDER_NODE_TYPE,
+  "slash_input",
+  "mention_input",
+  "emoji_input",
+]);
+
 function keepPersistedNode(node: unknown): unknown[] {
   if (!isNodeLike(node)) return [node];
-  if (node.type === PLACEHOLDER_NODE_TYPE) return [];
+  if (TRANSIENT_NODE_TYPES.has(node.type)) return [];
   if (!Array.isArray(node.children)) return [node];
   const children = node.children.flatMap(keepPersistedNode);
   return [{ ...node, children: children.length > 0 ? children : [{ text: "" }] }];

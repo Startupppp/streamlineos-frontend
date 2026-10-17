@@ -31,7 +31,23 @@ const BATCH_FORMATS = [
   "GENERIC_CSV",
   "ACH_CSV",
   "SEPA_CSV",
+  "HDFC_BULK_CSV",
+  "ICICI_BULK_CSV",
+  "SBI_BULK_CSV",
+  "AXIS_BULK_CSV",
 ] as const satisfies readonly BatchFormat[];
+
+const FORMAT_LABEL: Record<BatchFormat, string> = {
+  NEFT_CSV: "NEFT CSV",
+  RTGS_CSV: "RTGS CSV",
+  ACH_CSV: "ACH CSV",
+  SEPA_CSV: "SEPA CSV",
+  GENERIC_CSV: "Generic CSV",
+  HDFC_BULK_CSV: "HDFC net banking bulk CSV",
+  ICICI_BULK_CSV: "ICICI net banking bulk CSV",
+  SBI_BULK_CSV: "SBI net banking bulk CSV",
+  AXIS_BULK_CSV: "Axis net banking bulk CSV",
+};
 
 function getRecommendedFormat(currency: string | undefined): BatchFormat {
   if (currency === "INR") return "NEFT_CSV";
@@ -136,9 +152,9 @@ export function GeneratePayoutDialog({
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    {(["NEFT_CSV", "RTGS_CSV", "ACH_CSV", "SEPA_CSV", "GENERIC_CSV"] as const).map((f) => (
+                    {BATCH_FORMATS.map((f) => (
                       <SelectItem key={f} value={f}>
-                        {f.replace("_CSV", " CSV").replace("_", " ")}
+                        {FORMAT_LABEL[f]}
                         {f === recommendedFormat && (
                           <span className="ml-1.5 text-micro text-muted-foreground">(recommended)</span>
                         )}

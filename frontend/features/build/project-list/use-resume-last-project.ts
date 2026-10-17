@@ -1,9 +1,10 @@
 "use client";
 
 import { useEffect, useSyncExternalStore } from "react";
-import { isApiError } from "@/lib/api-client";
+import { isApiError } from "@/lib/api-envelope";
 import { useProject } from "@/hooks/api/build/projects";
 import {
+  LAST_PROJECT_CHANGED_EVENT,
   LAST_PROJECT_COOKIE_NAME,
   clearLastProjectId,
   parseLastProjectId,
@@ -17,8 +18,9 @@ function getLastProjectId(): number | null {
   return parseLastProjectId(cookie?.split("=")[1]);
 }
 
-function subscribeToLastProject(): () => void {
-  return () => {};
+function subscribeToLastProject(callback: () => void): () => void {
+  window.addEventListener(LAST_PROJECT_CHANGED_EVENT, callback);
+  return () => window.removeEventListener(LAST_PROJECT_CHANGED_EVENT, callback);
 }
 
 function getServerLastProjectId(): null {
@@ -31,7 +33,11 @@ export function useResumeLastProject(): BuildHeaderAction | null {
     getLastProjectId,
     getServerLastProjectId,
   );
-  const { data: project, isError, error } = useProject(projectId ?? 0);
+  const { data: project, isError, error } = useProject(projectId ?? 0, {
+    throwOnError: false,
+    retry: (failureCount, err) =>
+      failureCount < 3 && !(isApiError(err) && (err.status === 404 || err.status === 403)),
+  });
 
   useEffect(() => {
     const gone =
@@ -44,9 +50,12 @@ export function useResumeLastProject(): BuildHeaderAction | null {
   }, [isError, error, project]);
 
   if (!projectId || !project || project.status !== "ACTIVE") return null;
+  const resumeName = `Resume ${project.name}`;
   return {
     id: "resume",
-    label: `Resume ${project.name}`,
+    label: resumeName,
+    ariaLabel: resumeName,
+    title: resumeName,
     href: `/build/${project.id}`,
   };
 }

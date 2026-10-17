@@ -1,0 +1,224 @@
+"use client";
+
+import { useEffect, useEffectEvent, useMemo, useRef } from "react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { boardCollectionSearchParams } from "@/features/build/ticket-details/build-ticket-detail-url";
+import {
+  BUILD_LIST_CURSOR_PARAM,
+  buildListSearchParams,
+  parsePriorityParam,
+  parseTicketTypeParam,
+} from "../shared/use-build-list-url-state";
+import type { TicketOrderBy, TicketOrderDir } from "@/hooks/api/build/ticket-queries";
+import { useOrgStorageScope } from "@/lib/org-scoped-storage";
+import {
+  buildIssuesFilterQuery,
+  loadIssuesFilterQuery,
+  saveIssuesFilterQuery,
+} from "./use-issues-query-store";
+
+const VALID_ORDER_BY = new Set<string>(["created", "updated", "priority", "dueDate", "rank"]);
+const VALID_ORDER_DIR = new Set<string>(["asc", "desc"]);
+
+const DISPLAY_ORDER_ALIASES: Readonly<Record<string, TicketOrderBy>> = { manual: "rank" };
+
+function isTicketOrderBy(v: string): v is TicketOrderBy {
+  return VALID_ORDER_BY.has(v);
+}
+
+function isTicketOrderDir(v: string): v is TicketOrderDir {
+  return VALID_ORDER_DIR.has(v);
+}
+
+export function parseBoardOrderBy(v: string | null): TicketOrderBy | undefined {
+  if (!v) return undefined;
+  const aliased = DISPLAY_ORDER_ALIASES[v];
+  if (aliased !== undefined) return aliased;
+  return isTicketOrderBy(v) ? v : undefined;
+}
+
+export function parseBoardOrderDir(v: string | null): TicketOrderDir | undefined {
+  if (!v) return undefined;
+  return isTicketOrderDir(v) ? v : undefined;
+}
+
+function projectIdFromPath(pathname: string): number {
+  const match = pathname.match(/^\/build\/(\d+)(?:\/|$)/);
+  return match ? Number(match[1]) : 0;
+}
+
+export function useBoardFilterParams() {
+  const rawSearchParams = useSearchParams();
+  const router = useRouter();
+  const pathname = usePathname();
+  const projectId = projectIdFromPath(pathname);
+  const scope = useOrgStorageScope();
+  const searchParams = useMemo(
+    () => boardCollectionSearchParams(projectId, pathname, rawSearchParams),
+    [projectId, pathname, rawSearchParams],
+  );
+
+  const q = searchParams.get("q") ?? "";
+  const filterStatus = searchParams.get("status") ?? "";
+  const rawPriority = searchParams.get("priority");
+  const rawType = searchParams.get("type");
+  const filterPriority = parsePriorityParam(rawPriority) ?? "";
+  const filterType = parseTicketTypeParam(rawType) ?? "";
+  const filterAssigneeId = searchParams.get("assigneeId") ?? "";
+  const filterLabels = searchParams.get("labels") ?? "";
+  const filterCycle = searchParams.get("cycle") ?? "";
+  const filterModule = searchParams.get("module") ?? "";
+  const dueDateFrom = searchParams.get("dueDateFrom") ?? "";
+  const dueDateTo = searchParams.get("dueDateTo") ?? "";
+  const filterSeverity = searchParams.get("severity") ?? "";
+  const filterQaState = searchParams.get("qaState") ?? "";
+  const sortOrderBy = parseBoardOrderBy(searchParams.get("orderBy"));
+  const sortOrderDir = parseBoardOrderDir(searchParams.get("orderDir"));
+  const cursor = searchParams.get(BUILD_LIST_CURSOR_PARAM) ?? "";
+
+  const boardFilters = useMemo(
+    () => ({
+      q: q || undefined,
+      status: filterStatus || undefined,
+      priority: filterPriority || undefined,
+      type: filterType || undefined,
+      assigneeId: filterAssigneeId || undefined,
+      labels: filterLabels || undefined,
+      cycle: filterCycle || undefined,
+      module: filterModule || undefined,
+      dueDateFrom: dueDateFrom || undefined,
+      dueDateTo: dueDateTo || undefined,
+      orderBy: sortOrderBy,
+      orderDir: sortOrderDir,
+      cursor: cursor || undefined,
+    }),
+    [
+      cursor,
+      q,
+      filterStatus,
+      filterPriority,
+      filterType,
+      filterAssigneeId,
+      filterLabels,
+      filterCycle,
+      filterModule,
+      dueDateFrom,
+      dueDateTo,
+      sortOrderBy,
+      sortOrderDir,
+    ],
+  );
+
+  useEffect(() => {
+    if (/\/tickets\//.test(pathname)) return;
+    const updates: Record<string, string | null> = {};
+    let changed = false;
+    if (rawPriority && !filterPriority) {
+      updates.priority = null;
+      changed = true;
+    }
+    if (rawType && !filterType) {
+      updates.type = null;
+      changed = true;
+    }
+    if (!changed) return;
+    const next = buildListSearchParams(searchParams, updates, {
+      resetCursor: true,
+    });
+    const query = next.toString();
+    router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false });
+  }, [filterPriority, filterType, pathname, rawPriority, rawType, router, searchParams]);
+
+  const issuesPath = `/build/${projectId}/issues`;
+  const isOnIssuesPath = pathname === issuesPath;
+  const currentFilterQuery = buildIssuesFilterQuery(rawSearchParams);
+  const wasOnIssuesRef = useRef(false);
+
+  const restoreIssuesFilters = useEffectEvent((stored: string) => {
+    router.replace(`${issuesPath}?${stored}`, { scroll: false });
+  });
+
+  useEffect(() => {
+    if (!isOnIssuesPath) {
+      wasOnIssuesRef.current = false;
+      return;
+    }
+    if (!wasOnIssuesRef.current) {
+      wasOnIssuesRef.current = true;
+      if (currentFilterQuery) {
+        saveIssuesFilterQuery(projectId, currentFilterQuery, scope);
+        return;
+      }
+      const stored = loadIssuesFilterQuery(projectId, scope);
+      if (stored) {
+        restoreIssuesFilters(stored);
+      }
+      return;
+    }
+    saveIssuesFilterQuery(projectId, currentFilterQuery, scope);
+  }, [currentFilterQuery, isOnIssuesPath, projectId, scope]);
+
+  const hasActiveFilters = !!(
+    q ||
+    filterStatus ||
+    filterPriority ||
+    filterType ||
+    filterAssigneeId ||
+    filterLabels ||
+    filterCycle ||
+    filterModule ||
+    dueDateFrom ||
+    dueDateTo ||
+    filterSeverity ||
+    filterQaState
+  );
+
+  const activeFilters = useMemo(() => {
+    const filters: Record<string, string> = {};
+    if (q) filters.q = q;
+    if (filterStatus) filters.status = filterStatus;
+    if (filterPriority) filters.priority = filterPriority;
+    if (filterType) filters.type = filterType;
+    if (filterAssigneeId) filters.assigneeId = filterAssigneeId;
+    if (filterLabels) filters.labels = filterLabels;
+    if (filterCycle) filters.cycle = filterCycle;
+    if (filterModule) filters.module = filterModule;
+    if (dueDateFrom) filters.dueDateFrom = dueDateFrom;
+    if (dueDateTo) filters.dueDateTo = dueDateTo;
+    if (filterSeverity) filters.severity = filterSeverity;
+    if (filterQaState) filters.qaState = filterQaState;
+    return filters;
+  }, [
+    q,
+    filterStatus,
+    filterPriority,
+    filterType,
+    filterAssigneeId,
+    filterLabels,
+    filterCycle,
+    filterModule,
+    dueDateFrom,
+    dueDateTo,
+    filterSeverity,
+    filterQaState,
+  ]);
+
+  return {
+    q,
+    cursor,
+    filterStatus,
+    filterPriority,
+    filterType,
+    filterAssigneeId,
+    filterLabels,
+    filterCycle,
+    filterModule,
+    filterSeverity,
+    filterQaState,
+    sortOrderBy,
+    sortOrderDir,
+    boardFilters,
+    activeFilters,
+    hasActiveFilters,
+  };
+}

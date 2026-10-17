@@ -82,7 +82,7 @@ export default function CrmHubPage() {
     contactsLoading ||
     winLossLoading ||
     tasksLoading;
-  const error = statsError ?? dealsError;
+  const error = dealsError ?? null;
 
   const wonCount = winLoss?.summary.won ?? 0;
   const lostCount = winLoss?.summary.lost ?? 0;

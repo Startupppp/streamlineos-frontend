@@ -2,16 +2,15 @@
 
 import { useCallback } from "react";
 import { formatDistanceToNow, format } from "date-fns";
-import { Bot } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { TruncatedText } from "@/components/ui/truncated-text";
-import type { AgentToken } from "@/hooks/api/build/agent-tokens";
+import type { AgentToken } from "@/hooks/api/build/agent-tokens-schema";
 import { PM_ROW } from "@/components/pm-chrome";
 import { cn } from "@/lib/utils";
 
-export function tokenStatus(token: AgentToken): "active" | "revoked" | "expired" {
+function tokenStatus(token: AgentToken): "active" | "revoked" | "expired" {
   if (token.revokedAt) return "revoked";
   if (token.expiresAt && new Date(token.expiresAt) < new Date()) return "expired";
   return "active";
@@ -34,7 +33,7 @@ function StatusBadge({ status }: { status: "active" | "revoked" | "expired" }) {
     return (
       <Badge
         variant="outline"
-        className="border-status-success-rule bg-status-success-surface text-status-success-ink"
+        className="border-status-success-rule bg-status-success-surface text-status-success-ink-strong"
       >
         Active
       </Badge>
@@ -44,7 +43,7 @@ function StatusBadge({ status }: { status: "active" | "revoked" | "expired" }) {
     return (
       <Badge
         variant="outline"
-        className="border-destructive/40 bg-status-danger-surface text-status-danger-ink"
+        className="border-destructive/40 bg-status-danger-surface text-status-danger-ink-strong"
       >
         Revoked
       </Badge>
@@ -53,7 +52,7 @@ function StatusBadge({ status }: { status: "active" | "revoked" | "expired" }) {
   return (
     <Badge
       variant="outline"
-      className="border-status-warning-rule bg-status-warning-surface text-status-warning-ink"
+      className="border-status-warning-rule bg-status-warning-surface text-status-warning-ink-strong"
     >
       Expired
     </Badge>
@@ -63,9 +62,10 @@ function StatusBadge({ status }: { status: "active" | "revoked" | "expired" }) {
 interface TokenRowProps {
   token: AgentToken;
   onRevoke: (id: number) => void;
+  canRevoke: boolean;
 }
 
-export function TokenRow({ token, onRevoke }: TokenRowProps) {
+export function TokenRow({ token, onRevoke, canRevoke }: TokenRowProps) {
   const status = tokenStatus(token);
   const handleRevoke = useCallback(() => onRevoke(token.id), [onRevoke, token.id]);
 
@@ -85,7 +85,7 @@ export function TokenRow({ token, onRevoke }: TokenRowProps) {
           <span>Expires {expiryLabel(token.expiresAt)}</span>
         </div>
       </div>
-      {status === "active" ? (
+      {status === "active" && canRevoke ? (
         <Button
           variant="ghost"
           size="sm"
@@ -118,22 +118,6 @@ export function TokenListSkeleton() {
           <Skeleton className="h-7 w-14 shrink-0 rounded" />
         </div>
       ))}
-    </div>
-  );
-}
-
-export function TokensEmptyHint() {
-  return (
-    <div className="flex items-start gap-3 rounded-lg border border-dashed border-border/70 bg-muted/40 px-3 py-3">
-      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-muted">
-        <Bot className="h-4 w-4 text-muted-foreground" aria-hidden />
-      </div>
-      <div className="min-w-0 pt-0.5">
-        <p className="text-sm font-medium text-foreground">No tokens yet</p>
-        <p className="mt-0.5 text-xs leading-relaxed text-muted-foreground">
-          Use New token above to connect an AI agent to your projects.
-        </p>
-      </div>
     </div>
   );
 }

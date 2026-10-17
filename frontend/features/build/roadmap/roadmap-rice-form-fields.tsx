@@ -1,13 +1,7 @@
 "use client";
 
 import type { Control } from "react-hook-form";
-import {
-  FormField,
-  FormItem,
-  FormLabel,
-  FormControl,
-  FormMessage,
-} from "@/components/ui/form";
+import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -16,7 +10,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import type { RoadmapPrioritization, RoadmapTierWeighting } from "@/hooks/api/build/roadmap";
+import type { RoadmapPrioritization, RoadmapTierWeighting } from "@/hooks/api/build/roadmap-schema";
 import type { RoadmapItemFormValues } from "./roadmap-schema";
 import { RICE_IMPACT_OPTIONS, ROADMAP_TIER_UNWEIGHTED_LABEL } from "./roadmap-constants";
 import { RoadmapPriorityScore } from "./roadmap-priority-score";
@@ -77,13 +71,17 @@ export function RoadmapRiceFormFields({
           render={({ field }) => (
             <FormItem>
               <FormLabel>Impact</FormLabel>
-              <Select value={field.value} onValueChange={field.onChange}>
+              <Select value={field.value} onValueChange={(v) => v && field.onChange(v)}>
                 <FormControl>
-                  <SelectTrigger><SelectValue placeholder="Unscored" /></SelectTrigger>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Unscored" />
+                  </SelectTrigger>
                 </FormControl>
                 <SelectContent>
                   {RICE_IMPACT_OPTIONS.map((o) => (
-                    <SelectItem key={o.value} value={String(o.value)}>{o.label}</SelectItem>
+                    <SelectItem key={o.value} value={String(o.value)}>
+                      {o.label}
+                    </SelectItem>
                   ))}
                 </SelectContent>
               </Select>

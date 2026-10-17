@@ -1,178 +1,60 @@
 "use client";
 
 import Link from "next/link";
-import { Lock, Zap, ToggleLeft } from "lucide-react";
+import type { ReactNode } from "react";
+import { ToggleLeft } from "lucide-react";
+import { StateIllustration } from "@/components/illustrations/state-illustration";
 import { Button } from "@/components/ui/button";
-import { Progress } from "@/components/ui/progress";
 import { cn } from "@/lib/utils";
 import type { PageStateResolution } from "@/lib/page-state/resolve-page-state";
-import { humanizeLimitKey, humanizeModuleKey, type GateStateProps } from "./page-state-shared";
+import { humanizeModuleKey, type GateStateProps } from "./page-state-shared";
 import { NoPermissionState } from "./no-permission-state";
+import { EnableModuleButton } from "./enable-module-button";
 import { ModuleDeniedView, PlanRequiredView } from "./page-state-plan-views";
 
 export { ModuleDeniedView, PlanRequiredView };
 
-interface QuotaExceededViewProps extends GateStateProps {
-  limitKey: string;
-  used: number;
-  limit: number;
-  upgradePath?: string;
-  onRetry?: () => void;
+interface NotFoundViewProps {
+  title?: string;
+  description?: string;
+  action?: ReactNode;
+  compact?: boolean;
+  className?: string;
 }
 
-export function QuotaExceededView({
-  limitKey,
-  used,
-  limit,
-  upgradePath,
-  onRetry,
-  compact,
+export function NotFoundView({
+  title = "Not found",
+  description = "This doesn't exist, or you don't have access to it.",
+  action,
+  compact = false,
   className,
-}: QuotaExceededViewProps) {
-  const label = humanizeLimitKey(limitKey);
-  const pct = Math.min(100, Math.round((used / limit) * 100));
-  const path = upgradePath ?? "/settings/billing?tab=plan";
-
+}: NotFoundViewProps) {
   return (
     <div
       className={cn(
-        "flex flex-col items-center justify-center text-center rounded-xl border border-dashed",
-        "border-status-warning-rule bg-status-warning-surface",
-        compact ? "py-6 px-4" : "min-h-full w-full flex-1 py-12 px-6",
+        "flex flex-col items-center justify-center text-center",
+        compact ? "py-6 px-4" : "min-h-full w-full flex-1 py-16 px-6",
         className,
       )}
       role="status"
-      aria-label={`${label} limit reached`}
+      aria-label={title}
     >
-      <div
-        className={cn(
-          "rounded-lg bg-status-warning-surface flex items-center justify-center mb-4",
-          compact ? "h-9 w-9" : "h-12 w-12",
-        )}
-      >
-        <Zap className={cn("text-status-warning-ink", compact ? "h-4 w-4" : "h-6 w-6")} />
-      </div>
-
-      <h3
-        className={cn(
-          "font-semibold text-foreground",
-          compact ? "text-sm" : "text-sm",
-        )}
-      >
-        {label} limit reached
-      </h3>
-
+      <StateIllustration
+        preset="search"
+        className={cn("opacity-80", compact ? "h-16 w-16 mb-3" : "h-28 w-28 mb-5")}
+      />
+      <h2 className={cn("font-semibold text-foreground", compact ? "text-sm" : "text-base")}>
+        {title}
+      </h2>
       <p
         className={cn(
-          "text-muted-foreground mt-1 max-w-xs leading-relaxed",
-          compact ? "text-xs" : "text-sm mt-1.5",
+          "text-muted-foreground mt-1.5 max-w-sm leading-relaxed",
+          compact ? "text-xs" : "text-sm",
         )}
       >
-        You&apos;ve used {used} of {limit} {label.toLowerCase()}.
-        Upgrade your plan to add more.
+        {description}
       </p>
-
-      <div className={cn("w-full max-w-xs", compact ? "mt-3" : "mt-4")}>
-        <div className="flex justify-between text-xs text-muted-foreground mb-1">
-          <span>Used</span>
-          <span className="tabular-nums font-medium">
-            {used} / {limit}
-          </span>
-        </div>
-        <Progress
-          value={pct}
-          aria-label={`${label} usage`}
-          className="h-1.5 [&>div]:bg-status-warning-fill"
-        />
-      </div>
-
-      <div className={cn("flex items-center gap-2", compact ? "mt-4" : "mt-5")}>
-        <Button asChild size={compact ? "sm" : "default"}>
-          <Link href={path}>Upgrade plan</Link>
-        </Button>
-        {onRetry && (
-          <Button
-            variant="outline"
-            size={compact ? "sm" : "default"}
-            onClick={onRetry}
-          >
-            Try again
-          </Button>
-        )}
-      </div>
-    </div>
-  );
-}
-
-interface FeatureLockedViewProps extends GateStateProps {
-  feature: string;
-  requiredPlan: string;
-  onRetry?: () => void;
-}
-
-export function FeatureLockedView({
-  feature,
-  requiredPlan,
-  onRetry,
-  compact,
-  className,
-}: FeatureLockedViewProps) {
-  const planLabel =
-    requiredPlan.charAt(0).toUpperCase() + requiredPlan.slice(1).toLowerCase();
-
-  return (
-    <div
-      className={cn(
-        "flex flex-col items-center justify-center text-center rounded-xl border border-dashed",
-        "border-status-info-rule bg-status-info-surface",
-        compact ? "py-6 px-4" : "min-h-full w-full flex-1 py-12 px-6",
-        className,
-      )}
-      role="status"
-      aria-label={`Feature not available: ${feature}`}
-    >
-      <div
-        className={cn(
-          "rounded-lg bg-status-info-surface flex items-center justify-center mb-4",
-          compact ? "h-9 w-9" : "h-12 w-12",
-        )}
-      >
-        <Lock className={cn("text-status-info-ink", compact ? "h-4 w-4" : "h-6 w-6")} />
-      </div>
-
-      <h3
-        className={cn(
-          "font-semibold text-foreground",
-          compact ? "text-sm" : "text-sm",
-        )}
-      >
-        Feature not available
-      </h3>
-
-      <p
-        className={cn(
-          "text-muted-foreground mt-1 max-w-xs leading-relaxed",
-          compact ? "text-xs" : "text-sm mt-1.5",
-        )}
-      >
-        <span className="font-medium text-foreground">{feature}</span> requires the{" "}
-        <span className="font-medium text-foreground">{planLabel}</span> plan or higher.
-      </p>
-
-      <div className={cn("flex items-center gap-2", compact ? "mt-4" : "mt-5")}>
-        <Button asChild size={compact ? "sm" : "default"}>
-          <Link href="/settings/billing?tab=plan">View plans</Link>
-        </Button>
-        {onRetry && (
-          <Button
-            variant="outline"
-            size={compact ? "sm" : "default"}
-            onClick={onRetry}
-          >
-            Try again
-          </Button>
-        )}
-      </div>
+      {action ? <div className={compact ? "mt-4" : "mt-6"}>{action}</div> : null}
     </div>
   );
 }
@@ -225,7 +107,8 @@ export function ModuleDisabledView({ moduleKey, compact, className }: ModuleDisa
         enabled for your organisation. An administrator can turn it on in settings.
       </p>
 
-      <div className={cn(compact ? "mt-4" : "mt-5")}>
+      <div className={cn("flex flex-col items-center gap-3", compact ? "mt-4" : "mt-5")}>
+        <EnableModuleButton moduleKey={moduleKey} moduleName={moduleName} compact={compact} />
         <Button asChild variant="outline" size={compact ? "sm" : "default"}>
           <Link href="/settings/modules">Manage Modules</Link>
         </Button>

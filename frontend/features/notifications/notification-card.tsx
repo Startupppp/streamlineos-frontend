@@ -15,7 +15,7 @@ import {
 } from "@/lib/notification-types";
 import { formatRelativeTime } from "./format-relative-time";
 import { distinctNotificationBody } from "@/lib/notification-copy";
-import { NotificationCardActions } from "./notification-card-actions";
+import { NotificationCardActions } from "@/components/shared/notification-card-actions";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { CARD_ACTIVATOR_CLASS, propagationShield } from "@/lib/keyboard-activation";
 
@@ -207,7 +207,7 @@ function NotificationCardInner({
           <Badge
             variant="outline"
             className={cn(
-              "h-5 shrink-0 px-2 py-0.5 text-[10px] border-border/70",
+              "h-5 shrink-0 px-2 py-0.5 text-micro border-border/70",
               secondaryInk,
             )}
           >

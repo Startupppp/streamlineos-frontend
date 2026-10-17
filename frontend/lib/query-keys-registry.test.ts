@@ -16,11 +16,12 @@ describe("query key registry facade", () => {
       "detail",
       21,
     ]);
-    expect(queryKeys.projects.ticket(34)).toEqual([
+    expect(queryKeys.projects.ticket(12, 34)).toEqual([
       "streamlineos",
       "projects",
       "tickets",
       "detail",
+      12,
       34,
     ]);
     expect(queryKeys.notifications.template(55)).toEqual([

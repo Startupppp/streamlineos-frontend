@@ -1,41 +1,66 @@
 "use client";
 
+import { useGuardedCreateKbPage } from "@/features/wiki/hooks/use-guarded-create-kb-page";
 import { useRouter } from "next/navigation";
-import { toast } from "sonner";
 import { Skeleton } from "@/components/ui/skeleton";
 import { LoadingButton } from "@/components/ui/loading-button";
+import { ErrorState } from "@/components/shared/error-state";
+import { InfiniteScrollSentinel } from "@/components/ui/infinite-scroll-sentinel";
 import { useCan } from "@/hooks/api/access";
-import { useCreateKbPage } from "@/hooks/api/kb";
+import { useKbPageTreeInfinite } from "@/hooks/api/kb";
 import { pageHref } from "@/lib/knowledge-routes";
 import { KbPlusIcon } from "@/features/wiki/lib/kb-icons";
 import PageTreeItem from "./page-tree-item";
 import type { KbPageTreeNode } from "@/hooks/api/kb/page-types";
+import { getErrorMessage } from "@/lib/get-error-message";
+import { isApiError } from "@/lib/api-envelope";
 
 interface PageTreeProps {
-  nodes: KbPageTreeNode[];
-  isLoading: boolean;
   onCloseMobile?: () => void;
+  spaceId?: number;
+  projectId?: number;
+  baseHref?: string;
 }
 
-export default function PageTree({ nodes, isLoading, onCloseMobile }: PageTreeProps) {
+export default function PageTree({
+  onCloseMobile,
+  spaceId,
+  projectId,
+  baseHref,
+}: PageTreeProps) {
   const router = useRouter();
-  const createPage = useCreateKbPage();
+  const createPage = useGuardedCreateKbPage((page) => {
+    router.push(baseHref ? `${baseHref}/${page.id}` : pageHref(page.id));
+    onCloseMobile?.();
+  });
   const canCreate = useCan("kb:pages:create");
+
+  const {
+    data,
+    isLoading,
+    isError,
+    isFetchNextPageError,
+    error,
+    refetch,
+    hasNextPage,
+    isFetchingNextPage,
+    fetchNextPage,
+  } = useKbPageTreeInfinite({ spaceId, projectId });
+
+  const rootNodes: KbPageTreeNode[] = data?.pages.flatMap((p) => p.data) ?? [];
+  const accessLost = isApiError(error) && (error.status === 401 || error.status === 403 || error.status === 404);
 
   function handleNewPage() {
     if (!canCreate) return;
-    createPage.mutate(
-      {},
-      {
-        onSuccess: (page) => {
-          router.push(pageHref(page.id));
-          onCloseMobile?.();
-        },
-        onError: () => {
-          toast.error("Failed to create page");
-        },
-      }
-    );
+    void createPage.submit({ spaceId, projectId });
+  }
+
+  function handleRetry() {
+    if (isFetchNextPageError) {
+      void fetchNextPage();
+      return;
+    }
+    void refetch();
   }
 
   if (isLoading) {
@@ -52,11 +77,19 @@ export default function PageTree({ nodes, isLoading, onCloseMobile }: PageTreePr
     );
   }
 
-  const rootNodes = nodes
-    .filter((n) => n.parentPageId === null)
-    .sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0));
+  if (isError && (rootNodes.length === 0 || accessLost)) {
+    return (
+      <ErrorState
+        compact
+        title="Couldn't load pages"
+        description={getErrorMessage(error)}
+        error={error}
+        onRetry={handleRetry}
+      />
+    );
+  }
 
-  if (rootNodes.length === 0) {
+  if (rootNodes.length === 0 && !hasNextPage) {
     return (
       <div className="pr-2 pl-0 py-4 flex flex-col items-center gap-2">
         <p className="text-xs text-muted-foreground text-center">No pages yet</p>
@@ -66,7 +99,7 @@ export default function PageTree({ nodes, isLoading, onCloseMobile }: PageTreePr
             variant="outline"
             className="h-7 text-xs"
             onClick={handleNewPage}
-            isPending={createPage.isPending}
+            isPending={createPage.isSubmitting}
             loadingText="Creating…"
           >
             <KbPlusIcon className="h-3.5 w-3.5" />
@@ -83,11 +116,29 @@ export default function PageTree({ nodes, isLoading, onCloseMobile }: PageTreePr
         <PageTreeItem
           key={node.id}
           node={node}
-          allNodes={nodes}
           depth={0}
           onCloseMobile={onCloseMobile}
+          spaceId={spaceId}
+          projectId={projectId}
+          baseHref={baseHref}
         />
       ))}
+      {isError ? (
+        <ErrorState
+          compact
+          title={isFetchNextPageError ? "Couldn't load more pages" : "Couldn't refresh pages"}
+          description={getErrorMessage(error)}
+          error={error}
+          onRetry={handleRetry}
+        />
+      ) : (
+        <InfiniteScrollSentinel
+          hasNextPage={hasNextPage}
+          isFetchingNextPage={isFetchingNextPage}
+          onLoadMore={fetchNextPage}
+          label="Load more pages"
+        />
+      )}
     </div>
   );
 }

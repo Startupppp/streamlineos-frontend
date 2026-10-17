@@ -2,11 +2,11 @@
 
 import { useCallback } from "react";
 import { EmptyState } from "@/components/ui/empty-state";
-import { ErrorState } from "@/components/shared/error-state";
+import { PageState } from "@/components/shared/page-state";
+import { usePageState } from "@/hooks/api/use-page-state";
 import { StatCard, StatCardGrid, StatCardGridSkeleton } from "@/components/ui/stat-card";
 import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
 import { useCompOffBalance } from "@/hooks/api/hr/overtime";
-import { getErrorMessage } from "@/lib/get-error-message";
 import { TrendingUp, CheckCircle2, Calendar } from "lucide-react";
 
 export function CompOffPanel() {
@@ -16,18 +16,19 @@ export function CompOffPanel() {
     void refetch();
   }, [refetch]);
 
-  if (isLoading) {
-    return <StatCardGridSkeleton cols={3} count={3} />;
-  }
+  // Gated on hr:attendance:view: a denied caller read "No comp-off balance" (FE-47).
+  const pageState = usePageState({ permission: "hr:attendance:view", isLoading, isError, error });
 
-  if (isError) {
+  if (pageState.kind !== "ready" && pageState.kind !== "empty") {
     return (
-      <ErrorState
+      <PageState
+        resolution={pageState}
         className={CONTENT_FILL_PANEL}
-        title="Couldn't load comp-off balance"
-        description={getErrorMessage(error)}
         onRetry={handleRetry}
-      />
+        loading={<StatCardGridSkeleton cols={3} count={3} />}
+      >
+        {null}
+      </PageState>
     );
   }
 

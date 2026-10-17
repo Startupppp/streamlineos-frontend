@@ -108,11 +108,15 @@ export function AddMemberDialog({
             <p className="text-sm font-medium">User</p>
             <MemberPicker
               moduleKey={moduleKey}
+              includeRevoked
               value={selectedUserId}
               onChange={handleUserChange}
               enabled={open}
               placeholder="Select a user…"
             />
+            <p className="text-dense text-muted-foreground">
+              Revoked members are labeled. Adding one restores module access.
+            </p>
           </div>
 
           {allGroups.length > 0 ? (

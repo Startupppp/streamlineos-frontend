@@ -5,6 +5,7 @@ import type { filingCapabilitiesResponseContract } from "@/hooks/api/payroll/fil
 
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
+import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
 import { lazyContract } from "@/lib/api-envelope";
 import { payrollQueryKeys } from "@/lib/query-keys/payroll";
 import { useCan } from "@/hooks/api/access";
@@ -32,7 +33,7 @@ const payrollFilingC = lazyContract(() =>
   ),
 );
 
-export type FilingType = "PF_ECR" | "ESI" | "PT" | "TDS_24Q" | "FORM16" | "LWF";
+export type FilingType = "PF_ECR" | "PF_ECR_TXT" | "ESI" | "PT" | "TDS_24Q" | "FORM16" | "LWF";
 
 export type FilingStatus =
   | "DRAFT"
@@ -98,6 +99,7 @@ export function usePayrollFilings() {
       apiClient.get("/payroll/filings", undefined, signal, payrollFilingListC),
     staleTime: 60_000,
     enabled: canView,
+    ...INLINE_READ_ERROR,
   });
 }
 
@@ -187,7 +189,7 @@ export function useAttachAcknowledgement() {
   });
 }
 
-export async function downloadFilingExport(filingId: number): Promise<void> {
+export async function downloadFilingExport(filingId: number, filingType: FilingType): Promise<void> {
   const blob = await apiClient.download(`/payroll/filings/${filingId}/export`);
-  downloadBlob(blob, `filing_${filingId}.csv`);
+  downloadBlob(blob, `filing_${filingId}.${filingType === "PF_ECR_TXT" ? "txt" : "csv"}`);
 }

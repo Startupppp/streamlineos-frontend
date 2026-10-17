@@ -1,25 +1,8 @@
+import { DB_ENUMS } from "@/contracts/db-enums.generated";
+
 export type NotificationType = "INFO" | "SUCCESS" | "WARNING" | "ERROR";
 export type NotificationPriority = "LOW" | "NORMAL" | "HIGH" | "CRITICAL";
-export const NOTIFICATION_CATEGORY_VALUES = [
-  "SECURITY",
-  "CRM",
-  "HRMS",
-  "BILLING",
-  "AI",
-  "PROJECTS",
-  "WORKFLOW",
-  "MARKETING",
-  "SYSTEM",
-  "CHAT",
-  "PAYROLL",
-  "RECRUITMENT",
-  "KNOWLEDGE",
-  "SIGN",
-  "INVENTORY",
-  "SURVEYS",
-  "CALENDAR",
-  "SUPPORT",
-] as const;
+export const NOTIFICATION_CATEGORY_VALUES = DB_ENUMS.notification_category;
 
 export type NotificationCategory =
   (typeof NOTIFICATION_CATEGORY_VALUES)[number];
@@ -33,6 +16,7 @@ export type NotificationSection =
   | "APPROVALS"
   | "BROADCASTS"
   | "ARCHIVED"
+  | "SNOOZED"
   | "SYSTEM"
   | "PINNED";
 export type NotificationChannel =
@@ -62,7 +46,10 @@ export interface NotificationTicketAssignee {
 
 export interface NotificationTicketContext {
   ticketId: number;
+  projectId: number;
+  projectName: string;
   ticketKey: string;
+  ticketTitle: string;
   priority: string | null;
   status: string | null;
   type: string | null;
@@ -82,7 +69,7 @@ export interface Notification {
   entityId?: string | null;
   reason?: string | null;
   title: string;
-  message: string | null;
+  message: string;
   link: string | null;
   isRead: boolean;
   pinned: boolean;
@@ -99,6 +86,7 @@ export interface UnreadCount {
 }
 
 export interface NotificationListParams {
+  ids?: readonly number[];
   section?: NotificationSection;
   category?: NotificationCategory;
   priority?: NotificationPriority;

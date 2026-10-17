@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, fireEvent } from "@testing-library/react";
 import * as mockInboxModules from "./inbox-test-mocks";
 import { ProjectSubmissionsInbox } from "./project-submissions-inbox";
 
@@ -24,17 +24,25 @@ jest.mock("@/hooks/api/feedbucket", () => ({
 
 const mockUseCan = jest.fn().mockReturnValue(false);
 
-jest.mock("@/hooks/api/access", () => ({ useCan: (key: string) => mockUseCan(key) }));
+jest.mock("@/hooks/api/entitlements", () => ({
+  useEntitlements: () => ({ data: undefined }),
+}));
+
+jest.mock("@/hooks/api/access", () => ({
+  useCan: (key: string) => mockUseCan(key),
+  useAccess: () => ({ data: { isOrgOwner: true, scopes: {}, modules: {} }, isLoading: false }),
+}));
 jest.mock("@/hooks/common/use-animated-icon", () => mockInboxModules.animatedIconModule);
 jest.mock("date-fns", () => mockInboxModules.dateFnsModule);
 jest.mock("sonner", () => ({ toast: { success: jest.fn(), error: jest.fn() } }));
 jest.mock("@/lib/utils", () => mockInboxModules.utilsModule);
 jest.mock("@/components/ui/data-table", () => mockInboxModules.dataTableModule);
-jest.mock("./submission-bulk-toolbar", () => mockInboxModules.bulkToolbarModule);
+jest.mock("@/components/shared/submission-bulk-toolbar", () => mockInboxModules.bulkToolbarModule);
 jest.mock("@/components/ui/search-input", () => mockInboxModules.searchInputModule);
 jest.mock("@/components/ui/user-combobox", () => mockInboxModules.userComboboxModule);
 jest.mock("@/components/ui/empty-state", () => mockInboxModules.emptyStateModule);
 jest.mock("@/components/shared", () => mockInboxModules.sharedModule);
+jest.mock("@/components/shared/error-state", () => mockInboxModules.errorStateLeafModule);
 jest.mock("@/components/ui/skeleton", () => mockInboxModules.skeletonModule);
 jest.mock("@/components/ui/confirm-dialog", () => mockInboxModules.confirmDialogModule);
 jest.mock("@/components/illustrations", () => mockInboxModules.illustrationsModule);
@@ -172,5 +180,19 @@ describe("ProjectSubmissionsInbox — selection gating", () => {
     renderWithRows();
 
     expect(screen.queryByTestId("bulk-toolbar")).not.toBeInTheDocument();
+  });
+});
+
+describe("ProjectSubmissionsInbox — keyboard shortcuts", () => {
+  it("navigates to submission detail on Enter after j selects the first row so keyboard users can open a submission without a mouse", () => {
+    mockUseFeedbucketSubmissions.mockReturnValue(
+      baseInboxQueryResult({ data: makeCursorPage([SAMPLE_SUBMISSION_ROW]) }),
+    );
+    render(<ProjectSubmissionsInbox widgetId={1} projectId={7} />);
+
+    fireEvent.keyDown(document, { key: "j" });
+    fireEvent.keyDown(document, { key: "Enter" });
+
+    expect(mockRouterPush).toHaveBeenCalledWith("/build/7/feedbucket/1");
   });
 });

@@ -34,7 +34,7 @@ function SourceRow({ source, isPending, onToggle }: SourceRowProps) {
 
   return (
     <div className="flex items-center justify-between gap-3 rounded-md px-2 py-1.5 hover:bg-muted/50">
-      <span className="text-xs text-foreground">{source.label}</span>
+      <span className="text-sm font-normal text-foreground">{source.label}</span>
       <Switch
         checked={source.enabled}
         onCheckedChange={handleCheckedChange}
@@ -72,7 +72,7 @@ export function SourceFailureBanner({
       )}
     >
       <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0 text-status-warning-ink-strong" />
-      <p className="text-dense text-status-warning-ink-strong">
+      <p className="text-sm font-normal text-status-warning-ink-strong">
         Some events could not be loaded:{" "}
         {failures.map((f) => f.label).join(", ")}
       </p>
@@ -123,7 +123,7 @@ export function CalendarSourcePanel({ failures = [] }: CalendarSourcePanelProps)
         className="w-72 p-3"
         align="end"
       >
-        <p className="mb-2 text-xs font-semibold text-foreground">Event sources</p>
+        <p className="mb-2 text-sm font-medium text-foreground">Event sources</p>
 
         <SourceFailureBanner failures={failures} className="mb-2" />
 
@@ -163,7 +163,7 @@ export function CalendarSourcePanel({ failures = [] }: CalendarSourcePanelProps)
           />
         ) : (
           <div className="flex min-h-[6rem] flex-1 items-center justify-center">
-            <p className="text-xs text-muted-foreground">No sources available.</p>
+            <p className="text-sm font-normal text-muted-foreground">No sources available.</p>
           </div>
         )}
       </ResponsivePopoverContent>

@@ -202,7 +202,13 @@ export function PositionsTable() {
             illustrationPreset="person"
             illustrationSize="md"
             title="No positions yet"
-            description={filtersActive ? undefined : "Create positions to track roles, incumbents, and org structure."}
+            description={
+              filtersActive
+                ? undefined
+                : canManage
+                  ? "Create positions to track roles, incumbents, and org structure."
+                  : "Nobody has created a position yet. Ask an HR administrator to add one."
+            }
             filtersActive={filtersActive}
             onClearFilters={handleClearFilters}
             action={!filtersActive && canManage ? { label: "Create position", onClick: handleOpenCreate } : undefined}

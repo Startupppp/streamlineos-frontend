@@ -11,6 +11,7 @@ import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { useSession } from "next-auth/react";
 import { apiClient, isApiError } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
+import { getClockLocation } from "@/lib/geo/get-clock-location";
 import { collaborationQueryKeys } from "@/lib/query-keys/collaboration";
 import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
 import { useCan, useModuleEnabled } from "@/hooks/api/access";
@@ -26,6 +27,7 @@ import type {
   TeamAttendanceStatusResponse,
 } from "@/types/hr";
 import { activeAttendancePollInterval } from "@/lib/query-request-policies";
+import { invalidateCalendarProjectionWindows } from "@/lib/calendar-projection-cache";
 
 const attendanceStatusC = lazyContract(() =>
   import("@/hooks/api/hr/attendance-schema").then((m) => m.attendanceStatusContract),
@@ -69,6 +71,10 @@ export interface AttendanceRegularization {
   rejectionReason: string | null;
   createdAt: string;
   updatedAt: string;
+  requesterName?: string;
+  requesterImage?: string | null;
+  originalCheckIn?: string | null;
+  originalCheckOut?: string | null;
 }
 
 export interface CreateRegularizationInput {
@@ -95,6 +101,7 @@ export function useHrAttendanceStatus(
   const { data: session } = useSession();
   const orgId = session?.orgId;
   const canAttendance = useCan("self:attendance");
+  const hrEnabled = useModuleEnabled("hr");
   const { enabled: optEnabled, ...restOptions } = options ?? {};
   return useQuery({
     queryKey: humanResourcesQueryKeys.hr.attendanceStatus(),
@@ -104,7 +111,7 @@ export function useHrAttendanceStatus(
     refetchInterval: (query) => activeAttendancePollInterval(query.state.data),
     refetchIntervalInBackground: false,
     ...restOptions,
-    enabled: !!orgId && canAttendance && (optEnabled ?? true),
+    enabled: !!orgId && hrEnabled && canAttendance && (optEnabled ?? true),
   });
 }
 
@@ -112,6 +119,7 @@ export function useHrAttendanceHistory(cursor: string | undefined, limit: number
   const { data: session } = useSession();
   const orgId = session?.orgId;
   const canAttendance = useCan("self:attendance");
+  const hrEnabled = useModuleEnabled("hr");
   const params = cursor ? { cursor, limit } : { limit };
   return useQuery({
     queryKey: humanResourcesQueryKeys.hr.attendanceHistory(params),
@@ -134,7 +142,7 @@ export function useHrAttendanceHistory(cursor: string | undefined, limit: number
     },
     staleTime: 60_000,
     placeholderData: keepPreviousData,
-    enabled: !!orgId && canAttendance,
+    enabled: !!orgId && hrEnabled && canAttendance,
   });
 }
 
@@ -145,13 +153,16 @@ export function useHrCheckIn(
   >,
 ) {
   const qc = useQueryClient();
-  const { data: session } = useSession();
-  const orgId = session?.orgId ?? "";
   const statusKey = humanResourcesQueryKeys.hr.attendanceStatus();
   return useMutation({
     mutationKey: ["hr", "attendance", "check-in"],
-    mutationFn: (data: CheckInInput) =>
-      apiClient.post<{ success: boolean }>("/me/attendance/check-in", data, undefined, checkInOutC),
+    mutationFn: async (data: CheckInInput) =>
+      apiClient.post<{ success: boolean }>(
+        "/me/attendance/check-in",
+        { ...data, location: data.location ?? (await getClockLocation()) },
+        undefined,
+        checkInOutC,
+      ),
     onMutate: async () => {
       await qc.cancelQueries({ queryKey: statusKey, exact: true });
       const previous = qc.getQueryData<AttendanceStatusResult>(statusKey);
@@ -208,7 +219,10 @@ export function useHrCheckIn(
         exact: true,
       });
     },
-    onSuccess: options?.onSuccess,
+    onSuccess: (...args) => {
+      invalidateCalendarProjectionWindows(qc);
+      options?.onSuccess?.(...args);
+    },
   });
 }
 
@@ -219,8 +233,6 @@ export function useHrCheckOut(
   >,
 ) {
   const qc = useQueryClient();
-  const { data: session } = useSession();
-  const orgId = session?.orgId ?? "";
   const statusKey = humanResourcesQueryKeys.hr.attendanceStatus();
   return useMutation({
     mutationKey: ["hr", "attendance", "check-out"],
@@ -264,7 +276,10 @@ export function useHrCheckOut(
         exact: true,
       });
     },
-    onSuccess: options?.onSuccess,
+    onSuccess: (...args) => {
+      invalidateCalendarProjectionWindows(qc);
+      options?.onSuccess?.(...args);
+    },
   });
 }
 
@@ -275,7 +290,6 @@ export function useHrToggleBreak(
   >,
 ) {
   const qc = useQueryClient();
-  const { data: session } = useSession();
   const statusKey = humanResourcesQueryKeys.hr.attendanceStatus();
   return useMutation({
     mutationKey: ["hr", "attendance", "toggle-break"],
@@ -297,18 +311,28 @@ export function useHrToggleBreak(
         queryKey: [...humanResourcesQueryKeys.hr.all, "monthlyAttendance"],
       });
     },
-    onSuccess: options?.onSuccess,
+    onSuccess: (...args) => {
+      invalidateCalendarProjectionWindows(qc);
+      options?.onSuccess?.(...args);
+    },
     onError: options?.onError,
   });
 }
 
 export function useHrMonthlyAttendance(params: GetMonthlyAttendanceInput) {
+  const { data: session } = useSession();
+  const orgId = session?.orgId ?? "";
+  const actorUserId = session?.user?.id ?? "";
   const canSelf = useCan("self:attendance");
   const canManage = useCan("hr:attendance:view");
   const hrEnabled = useModuleEnabled("hr");
   const isOtherUser = params.userId !== undefined;
   return useQuery({
-    queryKey: humanResourcesQueryKeys.hr.monthlyAttendance(params),
+    queryKey: humanResourcesQueryKeys.hr.monthlyAttendance({
+      ...params,
+      orgId,
+      actorUserId,
+    }),
     queryFn: ({ signal }) => {
       const qParams = { year: params.year, month: params.month, ...(params.userId ? { userId: params.userId } : {}) };
       if (isOtherUser)
@@ -316,7 +340,7 @@ export function useHrMonthlyAttendance(params: GetMonthlyAttendanceInput) {
       return apiClient.get<AttendanceLog[]>("/me/attendance/monthly", qParams, signal, attendanceRowListC);
     },
     staleTime: 2 * 60_000,
-    enabled: isOtherUser ? hrEnabled && canManage : canSelf,
+    enabled: Boolean(orgId && actorUserId) && (isOtherUser ? hrEnabled && canManage : canSelf),
   });
 }
 

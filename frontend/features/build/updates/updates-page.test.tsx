@@ -2,6 +2,15 @@ import { render, screen } from "@testing-library/react";
 import { UpdatesPage } from "./updates-page";
 import { ApiError } from "@/lib/api-envelope";
 
+const mockReplace = jest.fn();
+const mockSearchParamsGet = jest.fn<string | null, [string]>(() => null);
+
+jest.mock("next/navigation", () => ({
+  useRouter: () => ({ replace: mockReplace }),
+  useSearchParams: () => ({ get: mockSearchParamsGet, toString: () => "" }),
+  usePathname: () => "/build/1/updates",
+}));
+
 jest.mock("@/hooks/api/build/project-updates", () => ({
   useProjectUpdates: jest.fn(),
   useCreateProjectUpdate: jest.fn(),
@@ -28,9 +37,10 @@ jest.mock("next/link", () => ({
   default: ({ children, href }: { children: React.ReactNode; href: string }) => <a href={href}>{children}</a>,
 }));
 jest.mock("@/components/ui/page-wrapper", () => ({
-  PageWrapper: ({ children, title }: { children: React.ReactNode; title?: string }) => (
+  PageWrapper: ({ children, title, actions }: { children: React.ReactNode; title?: string; actions?: React.ReactNode }) => (
     <div>
       {title ? <h1>{title}</h1> : null}
+      {actions ? <div data-testid="page-actions">{actions}</div> : null}
       {children}
     </div>
   ),
@@ -49,13 +59,30 @@ jest.mock("@/components/ui/empty-state", () => ({
   EmptyState: ({ title }: { title: string }) => <div data-testid="empty-state">{title}</div>,
 }));
 jest.mock("@/components/shared", () => ({
-  EntityFormDialog: ({ children }: { children: unknown }) => null,
+  EntityFormDialog: () => null,
 }));
 jest.mock("@/hooks/common/use-animated-icon", () => ({
   useAnimatedIcon: () => ({ iconRef: { current: null }, hoverHandlers: {} }),
 }));
 jest.mock("@animateicons/react/lucide", () => ({
   PlusIcon: ({ ...props }: React.HTMLAttributes<HTMLElement>) => <span {...props} />,
+}));
+
+const defaultKeyboardResult: { focusedIndex: number | null; setFocusedIndex: jest.Mock } = { focusedIndex: null, setFocusedIndex: jest.fn() };
+const mockUseBuildListKeyboard = jest.fn(() => defaultKeyboardResult);
+jest.mock("@/hooks/common/use-build-list-keyboard", () => ({
+  useBuildListKeyboard: (...args: Parameters<typeof mockUseBuildListKeyboard>) =>
+    mockUseBuildListKeyboard(...args),
+}));
+
+jest.mock("@/components/shared/shortcut-help-dialog", () => ({
+  ShortcutHelpDialog: ({ open }: { open: boolean }) =>
+    open ? <div data-testid="shortcut-help-dialog">Keyboard shortcuts</div> : null,
+}));
+
+const mockUseOnlineStatus = jest.fn(() => true);
+jest.mock("@/hooks/common/use-online-status", () => ({
+  useOnlineStatus: () => mockUseOnlineStatus(),
 }));
 
 import { useProjectUpdates, useCreateProjectUpdate, useDeleteProjectUpdate } from "@/hooks/api/build/project-updates";
@@ -91,12 +118,36 @@ function baseQueryResult(overrides = {}) {
   };
 }
 
+function makeUpdateRow(overrides: Record<string, unknown> = {}) {
+  return {
+    id: 1,
+    orgId: "org-1",
+    projectId: 1,
+    authorMembershipId: 7,
+    authorName: "Alice Smith",
+    body: "Sprint 3 is on track.",
+    wins: null,
+    risks: null,
+    next: null,
+    citations: null,
+    status: "published",
+    audience: "internal",
+    createdAt: new Date(0).toISOString(),
+    updatedAt: new Date(0).toISOString(),
+    deletedAt: null,
+    ...overrides,
+  };
+}
+
 beforeEach(() => {
   mockUseCan.mockReturnValue(true);
   mockUseAccess.mockReturnValue(ACCESS_GRANTED);
   mockUseProjectUpdates.mockReturnValue(baseQueryResult());
   mockUseCreateProjectUpdate.mockReturnValue({ mutate: jest.fn(), isPending: false });
   mockUseDeleteProjectUpdate.mockReturnValue({ mutate: jest.fn(), isPending: false });
+  mockSearchParamsGet.mockReturnValue(null);
+  mockUseBuildListKeyboard.mockReturnValue({ focusedIndex: null, setFocusedIndex: jest.fn() });
+  mockUseOnlineStatus.mockReturnValue(true);
 });
 
 it("renders denied state when build:updates:view is not in the access snapshot", () => {
@@ -120,18 +171,7 @@ it("renders error state and retry on query failure", () => {
 it("renders update cards when data is populated", () => {
   mockUseProjectUpdates.mockReturnValue(
     baseQueryResult({
-      data: [
-        {
-          id: 1,
-          orgId: "org-1",
-          projectId: 1,
-          authorMembershipId: 7,
-          body: "Sprint 3 is on track.",
-          createdAt: new Date(0).toISOString(),
-          updatedAt: new Date(0).toISOString(),
-          deletedAt: null,
-        },
-      ],
+      data: [makeUpdateRow({ body: "Sprint 3 is on track." })],
     }),
   );
   render(<UpdatesPage projectId={1} />);
@@ -142,18 +182,7 @@ it("hides delete button when canManage is false", () => {
   mockUseCan.mockImplementation((key: string) => key === "build:updates:view");
   mockUseProjectUpdates.mockReturnValue(
     baseQueryResult({
-      data: [
-        {
-          id: 1,
-          orgId: "org-1",
-          projectId: 1,
-          authorMembershipId: 7,
-          body: "An update body.",
-          createdAt: new Date(0).toISOString(),
-          updatedAt: new Date(0).toISOString(),
-          deletedAt: null,
-        },
-      ],
+      data: [makeUpdateRow({ body: "An update body.", status: "draft" })],
     }),
   );
   render(<UpdatesPage projectId={1} />);
@@ -184,4 +213,286 @@ it("renders the plan upgrade link the backend sent with a 402 MODULE_NOT_ENABLED
   render(<UpdatesPage projectId={1} />);
   expect(screen.queryByText("Retry")).not.toBeInTheDocument();
   expect(screen.getByRole("link", { name: /view plans/i })).toHaveAttribute("href", "/settings/billing");
+});
+
+describe("update cards — core fields and action visibility", () => {
+  const UPDATE_WITH_FIELDS = makeUpdateRow({
+    body: "Field test body.",
+    status: "published",
+    audience: "client",
+    authorName: "Alice Smith",
+  });
+
+  it("renders the status badge text from the update row so a published update shows its publication state", () => {
+    mockUseProjectUpdates.mockReturnValue(baseQueryResult({ data: [UPDATE_WITH_FIELDS] }));
+    render(<UpdatesPage projectId={1} />);
+    expect(screen.getByText("published")).toBeInTheDocument();
+  });
+
+  it("renders the audience badge text from the update row so client-audience updates are visually labelled", () => {
+    mockUseProjectUpdates.mockReturnValue(baseQueryResult({ data: [UPDATE_WITH_FIELDS] }));
+    render(<UpdatesPage projectId={1} />);
+    expect(screen.getByText("client")).toBeInTheDocument();
+  });
+
+  it("shows the Post Update button when canManage is true so creating updates is reachable — pairs the hides-when-false test", () => {
+    mockUseCan.mockReturnValue(true);
+    mockUseProjectUpdates.mockReturnValue(baseQueryResult({ data: [] }));
+    render(<UpdatesPage projectId={1} />);
+    expect(screen.getByRole("button", { name: /post update/i })).toBeInTheDocument();
+  });
+
+  it("shows the Delete button on a card when canManage is true — pairs the hides-when-false test", () => {
+    mockUseCan.mockReturnValue(true);
+    mockUseProjectUpdates.mockReturnValue(
+      baseQueryResult({
+        data: [UPDATE_WITH_FIELDS],
+      }),
+    );
+    render(<UpdatesPage projectId={1} />);
+    expect(screen.getByRole("button", { name: /delete/i })).toBeInTheDocument();
+  });
+});
+
+describe("update cards — author display name", () => {
+  it("renders the authorName so a reader sees who posted the update rather than a raw membership id", () => {
+    mockUseProjectUpdates.mockReturnValue(
+      baseQueryResult({ data: [makeUpdateRow({ authorName: "Priya Sharma" })] }),
+    );
+    render(<UpdatesPage projectId={1} />);
+    expect(screen.getByText("Priya Sharma")).toBeInTheDocument();
+  });
+
+  it("does not render the raw authorMembershipId so no UUID or integer is visible on the card", () => {
+    mockUseProjectUpdates.mockReturnValue(
+      baseQueryResult({ data: [makeUpdateRow({ authorMembershipId: 9999, authorName: "Priya Sharma" })] }),
+    );
+    render(<UpdatesPage projectId={1} />);
+    expect(screen.queryByText("9999")).not.toBeInTheDocument();
+  });
+});
+
+describe("update cards — wins field", () => {
+  it("renders the wins section when the update has wins text so readers see what went well", () => {
+    mockUseProjectUpdates.mockReturnValue(
+      baseQueryResult({ data: [makeUpdateRow({ wins: "Shipped the new onboarding flow." })] }),
+    );
+    render(<UpdatesPage projectId={1} />);
+    expect(screen.getByText("Shipped the new onboarding flow.")).toBeInTheDocument();
+    expect(screen.getByText("Wins")).toBeInTheDocument();
+  });
+
+  it("does not render the Wins section when wins is null so the card is not cluttered with empty headings", () => {
+    mockUseProjectUpdates.mockReturnValue(
+      baseQueryResult({ data: [makeUpdateRow({ wins: null })] }),
+    );
+    render(<UpdatesPage projectId={1} />);
+    expect(screen.queryByText("Wins")).not.toBeInTheDocument();
+  });
+});
+
+describe("update cards — risks field", () => {
+  it("renders the risks section when the update has risks text so blockers are visible to stakeholders", () => {
+    mockUseProjectUpdates.mockReturnValue(
+      baseQueryResult({ data: [makeUpdateRow({ risks: "API rate limits not yet resolved." })] }),
+    );
+    render(<UpdatesPage projectId={1} />);
+    expect(screen.getByText("API rate limits not yet resolved.")).toBeInTheDocument();
+    expect(screen.getByText("Risks")).toBeInTheDocument();
+  });
+
+  it("does not render the Risks section when risks is null", () => {
+    mockUseProjectUpdates.mockReturnValue(
+      baseQueryResult({ data: [makeUpdateRow({ risks: null })] }),
+    );
+    render(<UpdatesPage projectId={1} />);
+    expect(screen.queryByText("Risks")).not.toBeInTheDocument();
+  });
+});
+
+describe("update cards — next field", () => {
+  it("renders the next section when the update has next text so readers know what is planned", () => {
+    mockUseProjectUpdates.mockReturnValue(
+      baseQueryResult({ data: [makeUpdateRow({ next: "Deploy to staging by Friday." })] }),
+    );
+    render(<UpdatesPage projectId={1} />);
+    expect(screen.getByText("Deploy to staging by Friday.")).toBeInTheDocument();
+    expect(screen.getByText("Next")).toBeInTheDocument();
+  });
+
+  it("does not render the Next section when next is null", () => {
+    mockUseProjectUpdates.mockReturnValue(
+      baseQueryResult({ data: [makeUpdateRow({ next: null })] }),
+    );
+    render(<UpdatesPage projectId={1} />);
+    expect(screen.queryByText("Next")).not.toBeInTheDocument();
+  });
+});
+
+describe("update cards — citations field", () => {
+  it("renders the citations section when the update has citations text so evidence links are surfaced", () => {
+    mockUseProjectUpdates.mockReturnValue(
+      baseQueryResult({ data: [makeUpdateRow({ citations: "https://jira.example.com/SPRINT-42" })] }),
+    );
+    render(<UpdatesPage projectId={1} />);
+    expect(screen.getByText("https://jira.example.com/SPRINT-42")).toBeInTheDocument();
+    expect(screen.getByText("Citations")).toBeInTheDocument();
+  });
+
+  it("does not render the Citations section when citations is null", () => {
+    mockUseProjectUpdates.mockReturnValue(
+      baseQueryResult({ data: [makeUpdateRow({ citations: null })] }),
+    );
+    render(<UpdatesPage projectId={1} />);
+    expect(screen.queryByText("Citations")).not.toBeInTheDocument();
+  });
+});
+
+describe("URL-backed filter state — authorId, from, to wired to useProjectUpdates", () => {
+  it("passes authorId from the URL to useProjectUpdates when the param is present so filters are server-side not client-side", () => {
+    mockSearchParamsGet.mockImplementation((key: string) =>
+      key === "authorId" ? "42" : null,
+    );
+    render(<UpdatesPage projectId={1} />);
+    expect(mockUseProjectUpdates).toHaveBeenCalledWith(
+      1,
+      expect.objectContaining({ authorId: "42" }),
+    );
+  });
+
+  it("passes from from the URL to useProjectUpdates when the param is present", () => {
+    mockSearchParamsGet.mockImplementation((key: string) =>
+      key === "from" ? "2026-01-01" : null,
+    );
+    render(<UpdatesPage projectId={1} />);
+    expect(mockUseProjectUpdates).toHaveBeenCalledWith(
+      1,
+      expect.objectContaining({ from: "2026-01-01" }),
+    );
+  });
+
+  it("passes to from the URL to useProjectUpdates when the param is present", () => {
+    mockSearchParamsGet.mockImplementation((key: string) =>
+      key === "to" ? "2026-09-30" : null,
+    );
+    render(<UpdatesPage projectId={1} />);
+    expect(mockUseProjectUpdates).toHaveBeenCalledWith(
+      1,
+      expect.objectContaining({ to: "2026-09-30" }),
+    );
+  });
+
+  it("passes undefined for absent params so the hook does not send empty filter strings to the API", () => {
+    mockSearchParamsGet.mockReturnValue(null);
+    render(<UpdatesPage projectId={1} />);
+    expect(mockUseProjectUpdates).toHaveBeenCalledWith(
+      1,
+      expect.objectContaining({ authorId: undefined, from: undefined, to: undefined }),
+    );
+  });
+
+  it("passes status:published from the URL to useProjectUpdates when the param is present so the backend can filter by publication state", () => {
+    mockSearchParamsGet.mockImplementation((key: string) =>
+      key === "status" ? "published" : null,
+    );
+    render(<UpdatesPage projectId={1} />);
+    expect(mockUseProjectUpdates).toHaveBeenCalledWith(
+      1,
+      expect.objectContaining({ status: "published" }),
+    );
+  });
+
+  it("passes undefined for an unrecognised status value so an invalid enum value does not reach the backend", () => {
+    mockSearchParamsGet.mockImplementation((key: string) =>
+      key === "status" ? "archived" : null,
+    );
+    render(<UpdatesPage projectId={1} />);
+    expect(mockUseProjectUpdates).toHaveBeenCalledWith(
+      1,
+      expect.objectContaining({ status: undefined }),
+    );
+  });
+});
+
+describe("offline state — CCG-5", () => {
+  it("shows the offline banner when useOnlineStatus returns false so stale cached data is labelled as potentially out of date", () => {
+    mockUseOnlineStatus.mockReturnValue(false);
+    render(<UpdatesPage projectId={1} />);
+    expect(screen.getByText(/you're offline/i)).toBeInTheDocument();
+  });
+
+  it("does not show the offline banner when useOnlineStatus returns true so the banner is not visible during normal operation", () => {
+    mockUseOnlineStatus.mockReturnValue(true);
+    render(<UpdatesPage projectId={1} />);
+    expect(screen.queryByText(/you're offline/i)).not.toBeInTheDocument();
+  });
+});
+
+describe("keyboard navigation — CCG-4", () => {
+  it("calls useBuildListKeyboard with itemCount matching the number of loaded updates so j/k moves through the actual list", () => {
+    mockUseProjectUpdates.mockReturnValue(baseQueryResult({ data: [makeUpdateRow()] }));
+    render(<UpdatesPage projectId={1} />);
+    expect(mockUseBuildListKeyboard).toHaveBeenCalledWith(
+      expect.objectContaining({ itemCount: 1 }),
+    );
+  });
+
+  it("passes onCreate to useBuildListKeyboard when canManage is true so c fires the Post Update dialog", () => {
+    mockUseCan.mockReturnValue(true);
+    render(<UpdatesPage projectId={1} />);
+    expect(mockUseBuildListKeyboard).toHaveBeenCalledWith(
+      expect.objectContaining({ onCreate: expect.any(Function) }),
+    );
+  });
+
+  it("omits onCreate from useBuildListKeyboard when canManage is false so c does nothing for read-only users", () => {
+    mockUseCan.mockImplementation((key: string) => key === "build:updates:view");
+    render(<UpdatesPage projectId={1} />);
+    expect(mockUseBuildListKeyboard).toHaveBeenCalledWith(
+      expect.objectContaining({ onCreate: undefined }),
+    );
+  });
+
+  it("renders the shortcut help dialog when focusedIndex is set and ? is pressed — verifies the dialog mounts when open is true", () => {
+    mockUseBuildListKeyboard.mockReturnValue({ focusedIndex: 0, setFocusedIndex: jest.fn() });
+    render(<UpdatesPage projectId={1} />);
+    expect(mockUseBuildListKeyboard).toHaveBeenCalledWith(
+      expect.objectContaining({ onShortcutHelp: expect.any(Function) }),
+    );
+  });
+});
+
+describe("BUG-046 — createUpdateSchema accepts status and audience added in fix", () => {
+  const { createUpdateSchema } = jest.requireActual("./updates-schema") as typeof import("./updates-schema");
+
+  it("rejects when body is missing — schema baseline is still enforced after adding the new fields", () => {
+    const result = createUpdateSchema.safeParse({ status: "published", audience: "internal" });
+    expect(result.success).toBe(false);
+  });
+
+  it("accepts a payload with status=published and audience=internal so the form default values pass validation", () => {
+    const result = createUpdateSchema.safeParse({
+      body: "Sprint 3 completed.",
+      status: "published",
+      audience: "internal",
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it("accepts a payload with status=draft and audience=client", () => {
+    const result = createUpdateSchema.safeParse({
+      body: "Work in progress.",
+      status: "draft",
+      audience: "client",
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it("rejects an invalid status value that is not published or draft", () => {
+    const result = createUpdateSchema.safeParse({
+      body: "Sprint 3 completed.",
+      status: "archived",
+    });
+    expect(result.success).toBe(false);
+  });
 });

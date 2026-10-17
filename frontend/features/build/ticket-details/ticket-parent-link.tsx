@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { CornerLeftUp } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { TruncatedText } from "@/components/ui/truncated-text";
-import { useTicket } from "@/hooks/api";
+import { useTicket } from "@/hooks/api/build/tickets";
 import { cn } from "@/lib/utils";
 import { getTicketDetailHref } from "@/components/shared/format-ticket-key";
 import { useNavigationLeave } from "@/components/shared/dirty-state-context";

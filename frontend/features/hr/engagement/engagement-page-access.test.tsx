@@ -122,7 +122,10 @@ jest.mock("@/features/hr/engagement/campaigns-tab", () => ({
 }));
 
 jest.mock("@/lib/api-envelope", () => ({
+  ...jest.requireActual("@/lib/api-envelope"),
   lazyContract: () => undefined,
+  isApiError: () => false,
+  getCorrelationId: () => undefined,
 }));
 
 jest.mock("@/lib/api-client", () => ({

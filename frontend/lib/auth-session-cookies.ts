@@ -23,7 +23,8 @@ export function signInPathForMissingSession(callbackUrl?: string): string {
     callbackUrl &&
     callbackUrl.startsWith("/") &&
     !callbackUrl.startsWith("//") &&
-    !callbackUrl.includes("\\")
+    !callbackUrl.includes("\\") &&
+    !callbackUrl.startsWith("/signin")
   ) {
     params.set("callbackUrl", callbackUrl);
   }

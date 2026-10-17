@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import type { MouseEvent, ReactNode } from "react";
 import type { RowData } from "@tanstack/react-table";
 
 declare module "@tanstack/react-table" {
@@ -62,7 +62,7 @@ type ServerPagination = {
  * can report a real total stays on `"server"`. The fields the other two modes
  * carry are typed `never` so the three cannot be mixed.
  */
-type CursorPagination = {
+type CursorPaginationBase = {
   mode: "cursor";
   pageSize: number;
   /**
@@ -71,23 +71,35 @@ type CursorPagination = {
    */
   pageNumber?: number;
   hasMore: boolean;
-  hasPrevious: boolean;
   onNext: () => void;
-  onPrevious: () => void;
   onPageSizeChange?: (pageSize: number) => void;
   pageSizeOptions?: readonly number[];
   page?: never;
   total?: never;
   onPageChange?: never;
 };
+type CursorPagination = CursorPaginationBase &
+  (
+    | {
+        cursorVariant?: "paged";
+        hasPrevious: boolean;
+        onPrevious: () => void;
+      }
+    | {
+        cursorVariant: "load-more";
+        hasPrevious?: never;
+        onPrevious?: never;
+      }
+  );
 
 export interface DataTableProps<T> {
   data: T[];
   columns: DataTableColumn<T>[];
   getRowKey: (row: T, index: number) => string | number;
   onRowClick?: (row: T) => void;
+  onRowContextMenu?: (row: T, event: MouseEvent) => void;
   selection?: {
-    selected: Set<string | number>;
+    selected: ReadonlySet<string | number>;
     onChange: (sel: Set<string | number>) => void;
     isRowSelectable?: (row: T) => boolean;
     /**
@@ -101,10 +113,17 @@ export interface DataTableProps<T> {
   };
   pagination?: ClientPagination | ServerPagination | CursorPagination;
   isLoading?: boolean;
+  onStalledRetry?: () => void;
   emptyState?: ReactNode;
   footer?: ReactNode;
   minWidth?: string;
   className?: string;
+  /**
+   * Names the table's scroll area and makes it a single keyboard stop, so a
+   * keyboard user can scroll a table wider than its container. Leave unset to
+   * keep the default (the inner table container is the labelled region).
+   */
+  scrollRegionLabel?: string;
   rowClassName?: (row: T, index: number) => string;
   search?: {
     value: string;
@@ -118,6 +137,8 @@ export interface DataTableProps<T> {
    * below the `sm` breakpoint to avoid horizontal page overflow at 375/390px.
    */
   mobileCard?: (row: T, index: number) => ReactNode;
+  /** Breakpoint at which `mobileCard` gives way to the table. Defaults to `sm`. */
+  mobileCardBreakpoint?: "sm" | "xl";
 }
 
 export type { ClientPagination, ServerPagination, CursorPagination };

@@ -20,11 +20,13 @@ import { OrgDataPrivacySection } from "@/features/settings/organization/org-data
 import { OrgDangerZoneSection } from "@/features/settings/organization/org-danger-zone-section";
 import { OrgIncomingTransferSection } from "@/features/settings/organization/org-incoming-transfer-section";
 import { OrgSecuritySection } from "@/features/settings/organization/org-security-section";
+import { CompanionPolicySection } from "@/features/settings/companion/companion-policy-section";
 
 export function OrganizationSettingsPage() {
   const { data: org, isLoading, isError, error, refetch } = useOrgSettings();
 
   const canEdit = useCan("settings:manage");
+  const canManageCompanion = useCan("ai:companion:manage");
 
   const handleRetry = useCallback(() => void refetch(), [refetch]);
 
@@ -70,6 +72,8 @@ export function OrganizationSettingsPage() {
         <OrgSecuritySection org={org} canEdit={canEdit} />
 
         {canEdit && <OrgConfigSection org={org} canEdit={canEdit} />}
+
+        {canManageCompanion && <CompanionPolicySection />}
 
         <OrgIncomingTransferSection />
 

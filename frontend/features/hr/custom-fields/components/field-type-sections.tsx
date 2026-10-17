@@ -1,5 +1,7 @@
 "use client";
 
+import { DatePicker } from "@/components/ui/date-picker";
+
 import { type UseFormReturn } from "react-hook-form";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -47,7 +49,6 @@ export function FieldTypeSections({ form, watchedFieldType }: FieldTypeSectionsP
                   <Input
                     type="number"
                     {...form.register("validationMinLength")}
-                    className="text-xs"
                     placeholder="0"
                     min={0}
                   />
@@ -57,7 +58,6 @@ export function FieldTypeSections({ form, watchedFieldType }: FieldTypeSectionsP
                   <Input
                     type="number"
                     {...form.register("validationMaxLength")}
-                    className="text-xs"
                     placeholder="500"
                     min={1}
                   />
@@ -71,7 +71,6 @@ export function FieldTypeSections({ form, watchedFieldType }: FieldTypeSectionsP
                   <Input
                     type="number"
                     {...form.register("validationMinValue")}
-                    className="text-xs"
                   />
                 </div>
                 <div className="space-y-1">
@@ -79,7 +78,6 @@ export function FieldTypeSections({ form, watchedFieldType }: FieldTypeSectionsP
                   <Input
                     type="number"
                     {...form.register("validationMaxValue")}
-                    className="text-xs"
                   />
                 </div>
               </>
@@ -88,18 +86,24 @@ export function FieldTypeSections({ form, watchedFieldType }: FieldTypeSectionsP
               <>
                 <div className="space-y-1">
                   <Label className="text-dense text-muted-foreground">Date From</Label>
-                  <Input
-                    type="date"
-                    {...form.register("validationDateMin")}
-                    className="text-xs"
+                  <DatePicker
+                    ariaLabel="Date From"
+                    value={form.watch("validationDateMin") ?? ""}
+                    onChange={(value) => form.setValue("validationDateMin", value, { shouldDirty: true, shouldValidate: true })}
+                    placeholder="From"
+                    dateFormat="dd MMM yyyy"
+                    clearable
                   />
                 </div>
                 <div className="space-y-1">
                   <Label className="text-dense text-muted-foreground">Date To</Label>
-                  <Input
-                    type="date"
-                    {...form.register("validationDateMax")}
-                    className="text-xs"
+                  <DatePicker
+                    ariaLabel="Date To"
+                    value={form.watch("validationDateMax") ?? ""}
+                    onChange={(value) => form.setValue("validationDateMax", value, { shouldDirty: true, shouldValidate: true })}
+                    placeholder="To"
+                    dateFormat="dd MMM yyyy"
+                    clearable
                   />
                 </div>
               </>

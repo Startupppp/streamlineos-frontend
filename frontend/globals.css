@@ -9,20 +9,17 @@
 }
 
 @utility h-safe-bottom {
-  height: calc(4rem + env(safe-area-inset-bottom));
+  height: calc(2.75rem + env(safe-area-inset-bottom));
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans:
-    var(--font-geist), "Geist", ui-sans-serif, system-ui, -apple-system,
-    BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  --font-display:
-    var(--font-geist), "Geist", ui-sans-serif, system-ui, sans-serif;
-  --font-serif: var(--font-geist), "Geist", Georgia, "Times New Roman", serif;
+  --font-sans: var(--app-font-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--app-font-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-serif: var(--app-font-sans), Georgia, "Times New Roman", serif;
   --font-mono:
-    var(--font-geist-mono), ui-monospace, SFMono-Regular, "Cascadia Code",
+    var(--app-font-mono), ui-monospace, SFMono-Regular, "Cascadia Code",
     "Consolas", monospace;
   --color-gold: var(--gold);
   --color-blue: var(--blue);
@@ -59,10 +56,10 @@
   --color-popover: var(--popover);
   --color-card-foreground: var(--card-foreground);
   --color-card: var(--card);
-  /* Below `sm`, for controls too small for a 6px corner: a checkbox reads as a
-     circle at 6px, and a heatmap cell loses its grid. Added because both were
-     already being written by hand. */
-  --radius-2xs: calc(var(--radius) - 8px);
+  /* Surface roles used by shared controls and nested work items. */
+  --color-surface-inset: var(--muted);
+  --color-surface-raised: var(--popover);
+  --radius-2xs: max(2px, calc(var(--radius) - 8px));
   --radius-xs: calc(var(--radius) - 6px);
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
@@ -70,33 +67,67 @@
   --radius-xl: calc(var(--radius) + 4px);
 }
 
+@theme inline {
+  --color-journal-paper: var(--journal-paper);
+  --color-journal-surface: var(--journal-surface);
+  --color-journal-sage: var(--journal-sage);
+  --color-journal-ink: var(--journal-ink);
+  --color-journal-muted: var(--journal-muted);
+  --color-journal-rule: var(--journal-rule);
+  --color-journal-accent: var(--journal-accent);
+  --color-journal-accent-ink: var(--journal-accent-ink);
+  --font-journal:
+    var(--font-journal-serif), "Iowan Old Style", Georgia, "Times New Roman",
+    serif;
+}
+
 :root {
-  --font-geist: "Geist", ui-sans-serif, system-ui, sans-serif;
+  --journal-paper: #f8f7f2;
+  --journal-surface: #ffffff;
+  --journal-sage: #eef0e8;
+  --journal-ink: #263c32;
+  --journal-muted: #59635b;
+  --journal-rule: #daddd4;
+  --journal-accent: #a97450;
+  --journal-accent-ink: #7d5232;
+}
+
+:root {
+  --font-geist-sans: "Geist", ui-sans-serif, system-ui, sans-serif;
   --font-geist-mono: "Geist Mono", ui-monospace, SFMono-Regular, monospace;
+  --app-font-sans: var(--font-geist-sans), "Geist";
+  --app-font-mono: var(--font-geist-mono), "Geist Mono";
 
   --radius: 0.625rem;
 
-  /* â”€â”€â”€ Surface â”€â”€â”€ */
-  --background: #f8fafc; /* page canvas â€” slate-50, near pure white with the barest cool hint for card lift */
-  --foreground: #0b1220; /* primary ink */
+  /* Harbor: a cool canvas, crisp work surfaces, and blue action hierarchy. */
+  --background: #f4f7fb;
+  --foreground: #172638;
   --card: #ffffff;
-  --card-foreground: #0b1220;
+  --card-foreground: #172638;
   --popover: #ffffff;
-  --popover-foreground: #0b1220;
-  --muted: #f1f5f9; /* slate-100 â€” muted surfaces */
-  --muted-foreground: #556377; /* slate-500/600 midpoint - 5.58:1 on --muted, 5.84:1 on --background, 6.11:1 on --card (WCAG AA normal text); slate-500 #64748b measured 4.34:1 on --muted */
-  --border: #cbd5e1; /* slate-300: visible but still quiet on white and slate-50 */
-  --input: #cbd5e1;
-  --ring: #3b82f6; /* blue-500 focus ring - 3.52:1 on --background, meets WCAG 2.2 SC 1.4.11 (3:1); slate-400 was 2.45:1 */
-
+  --popover-foreground: #172638;
+  --muted: #edf2f7;
+  --muted-foreground: #526479;
+  --border: #d6e0ea;
+  --input: #c7d4e2;
   /* â”€â”€â”€ CTA & Action (Ink-style â€” Linear/Stripe feel) â”€â”€â”€ */
   --primary: #0b1220; /* slate-900 â€” primary CTAs */
   --primary-foreground: #ffffff;
+  --ring: var(--primary, #0b1220);
 
   /* â”€â”€â”€ Accent (neutral hover wash â€” used by shadcn dropdown/menu/command item hover) â”€â”€â”€ */
-  --accent: color-mix(in srgb, var(--primary) 10%, var(--muted)); /* selected and active surfaces follow the chosen palette */
+  --accent: color-mix(
+    in srgb,
+    var(--primary) 10%,
+    var(--muted)
+  ); /* selected and active surfaces follow the chosen palette */
   --accent-foreground: #0f172a; /* slate-900 â€” readable on neutral wash */
-  --secondary: color-mix(in srgb, var(--foreground) 6%, var(--muted)); /* neutral table and calendar headers */
+  --secondary: color-mix(
+    in srgb,
+    var(--foreground) 6%,
+    var(--muted)
+  ); /* neutral table and calendar headers */
   --secondary-foreground: #0b1220;
 
   /* â”€â”€â”€ Status / Semantic â”€â”€â”€ */
@@ -120,11 +151,11 @@
   --border-glass: rgba(30, 64, 175, 0.1);
 
   /* â”€â”€â”€ Charts â”€â”€â”€ */
-  --chart-1: #1d4ed8;
-  --chart-2: #06b6d4;
-  --chart-3: #60a5fa;
-  --chart-4: #8b5cf6;
-  --chart-5: #ec4899;
+  --chart-1: #1856a3;
+  --chart-2: #087e85;
+  --chart-3: #a45b13;
+  --chart-4: #7547a6;
+  --chart-5: #b34065;
 
   /* â”€â”€â”€ Dashboard sidebar (white panel â€” matches landing card surfaces) â”€â”€â”€ */
   --sidebar: #ffffff;
@@ -134,7 +165,7 @@
   --sidebar-accent: color-mix(in srgb, var(--sidebar-primary) 8%, transparent);
   --sidebar-accent-foreground: #0b1220;
   --sidebar-border: #cbd5e1;
-  --sidebar-ring: #3b82f6; /* blue-500 - 3.68:1 on the white sidebar; blue-400 was 2.54:1 */
+  --sidebar-ring: var(--sidebar-primary, #0b1220);
 
   /* â”€â”€â”€ Cinematic dark canvas (only used on auth right-panel and rare dark sections) â”€â”€â”€ */
   --bg-deep: #03060f;
@@ -146,38 +177,33 @@
 }
 
 .dark {
-  /* â”€â”€â”€ Surface (neutral zinc blacks â€” Ink stays monochrome in dark) â”€â”€â”€ */
-  --background: #0a0a0b; /* page canvas */
-  --foreground: #f4f4f5;
-  --card: #131316; /* elevated panel â€” clearly lifted from bg */
-  --card-foreground: #f4f4f5;
-  --popover: #18181b;
-  --popover-foreground: #f4f4f5;
-  --muted: #1c1c1f;
-  --muted-foreground: #a1a1aa;
-  --border: rgba(
-    255,
-    255,
-    255,
-    0.3
-  ); /* clearly visible against dark surfaces */
-  --input: rgba(255, 255, 255, 0.22);
-  --ring: #d4d4d8;
+  /* Blue charcoal keeps data panels distinct without a black void. */
+  --background: #0d1726;
+  --foreground: #eef4fb;
+  --card: #142337;
+  --card-foreground: #eef4fb;
+  --popover: #1a2b42;
+  --popover-foreground: #eef4fb;
+  --muted: #203248;
+  --muted-foreground: #afc0d3;
+  --border: #34475d;
+  --input: #41546b;
 
   /* â”€â”€â”€ CTA & Action â€” invert ink to white for dark â”€â”€â”€ */
   --primary: #f4f4f5;
   --primary-foreground: #0a0a0b;
+  --ring: var(--primary, #f4f4f5);
   --secondary-foreground: #f4f4f5;
   --accent-foreground: #f4f4f5;
   --destructive: #dc2626;
   --destructive-foreground: #ffffff;
 
   /* â”€â”€â”€ Charts (slightly punchier in dark for legibility) â”€â”€â”€ */
-  --chart-1: #3b82f6;
-  --chart-2: #06b6d4;
-  --chart-3: #60a5fa;
-  --chart-4: #8b5cf6;
-  --chart-5: #ec4899;
+  --chart-1: #86b9f5;
+  --chart-2: #5fd1d0;
+  --chart-3: #f0bb72;
+  --chart-4: #c1a3ee;
+  --chart-5: #f294ae;
 
   /* â”€â”€â”€ Sidebar (deepest layer â€” same dark-on-dark Linear/Vercel pattern) â”€â”€â”€ */
   --sidebar: #0e0e10;
@@ -187,10 +213,128 @@
   --sidebar-accent: color-mix(in srgb, var(--sidebar-primary) 12%, transparent);
   --sidebar-accent-foreground: #fafafa;
   --sidebar-border: rgba(255, 255, 255, 0.22);
-  --sidebar-ring: #d4d4d8;
+  --sidebar-ring: var(--sidebar-primary, #f4f4f5);
 
   --gold: #3b82f6;
   --blue: #1d4ed8;
+}
+
+/*
+ * Authenticated shell: Maia / Mist base / Mist theme, adapted for dense work surfaces.
+ * Keep the canvas, card and inset rungs distinct and use accessible focus rings.
+ */
+html.app-neutral,
+.calendar-public-theme {
+  --app-font-sans: var(--font-plex-sans, "IBM Plex Sans"), "IBM Plex Sans";
+  --app-font-mono: var(--font-plex-mono, "IBM Plex Mono"), "IBM Plex Mono";
+  --radius: 0.45rem;
+  --background: #f7f9f9;
+  --foreground: #090b0c;
+  --card: #ffffff;
+  --card-foreground: #090b0c;
+  --popover: #ffffff;
+  --popover-foreground: #090b0c;
+  --muted: #f1f3f3;
+  --muted-foreground: #536367;
+  --border: #dbe1e3;
+  --input: #cbd4d6;
+  --secondary: #f4f4f5;
+  --secondary-foreground: #18181b;
+  --accent: #f1f3f3;
+  --accent-foreground: #161b1d;
+  --sidebar: #f9fbfb;
+  --sidebar-foreground: #090b0c;
+  --sidebar-accent: #f1f3f3;
+  --sidebar-accent-foreground: #161b1d;
+  --sidebar-border: #dbe1e3;
+  --chart-1: #536367;
+  --chart-2: #394449;
+  --chart-3: #64777d;
+  --chart-4: #22292b;
+  --chart-5: #48545a;
+  --bg-glass: rgba(255, 255, 255, 0.78);
+  --border-glass: rgba(28, 25, 23, 0.08);
+}
+
+html.app-neutral:not([class*="theme-"]),
+.calendar-public-theme {
+  --primary: #22292b;
+  --primary-foreground: #ffffff;
+  --ring: #536367;
+  --sidebar-primary: #22292b;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-ring: #536367;
+  --brand-deep: #22292b;
+  --brand-core: #48545a;
+  --brand-bright: #77888d;
+  --brand-cyan: #b5c2c5;
+  --gradient-signature: linear-gradient(
+    135deg,
+    #22292b 0%,
+    #48545a 55%,
+    #b5c2c5 100%
+  );
+  --gold: #48545a;
+  --blue: #394449;
+}
+
+html.app-neutral.dark,
+html.dark .calendar-public-theme {
+  --background: #090b0c;
+  --foreground: #f9fbfb;
+  --card: #161b1d;
+  --card-foreground: #f9fbfb;
+  --popover: #1c2326;
+  --popover-foreground: #f9fbfb;
+  --muted: #22292b;
+  --muted-foreground: #9ca8ab;
+  --border: #394449;
+  --input: #48545a;
+  --secondary: #27272a;
+  --secondary-foreground: #fafafa;
+  --accent: #22292b;
+  --accent-foreground: #f9fbfb;
+  --sidebar: #13191b;
+  --sidebar-foreground: #f9fbfb;
+  --sidebar-accent: #22292b;
+  --sidebar-accent-foreground: #f9fbfb;
+  --sidebar-border: #394449;
+  --chart-1: #9ca8ab;
+  --chart-2: #cad3d5;
+  --chart-3: #87999e;
+  --chart-4: #e7ecec;
+  --chart-5: #b5c2c5;
+  --bg-glass: rgba(12, 10, 9, 0.78);
+  --border-glass: rgba(250, 250, 249, 0.12);
+}
+
+html.app-neutral.dark:not([class*="theme-"]),
+html.dark .calendar-public-theme {
+  --primary: #e7ecec;
+  --primary-foreground: #090b0c;
+  --ring: #b5c2c5;
+  --sidebar-primary: #e7ecec;
+  --sidebar-primary-foreground: #090b0c;
+  --sidebar-ring: #b5c2c5;
+  --brand-deep: #e7ecec;
+  --brand-core: #b5c2c5;
+  --brand-bright: #87999e;
+  --brand-cyan: #87999e;
+  --gradient-signature: linear-gradient(
+    135deg,
+    #e7ecec 0%,
+    #b5c2c5 55%,
+    #87999e 100%
+  );
+  --gold: #b5c2c5;
+  --blue: #cad3d5;
+}
+
+/* A metric inside a panel needs its own plane; the same card fill disappears
+   against its parent in dark mode. Featured metrics retain their action color. */
+:where([data-slot="card"], [data-slot="content-fill-panel"])
+  [data-slot="stat-card"]:not([data-featured="true"]) {
+  background: var(--muted);
 }
 
 /* â”€â”€â”€ Shadow override for dark mode â€” light glass-highlight instead of dark drop â”€â”€â”€ */
@@ -269,14 +413,37 @@
 
 /* â”€â”€â”€ Shadows â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 
-
-
 /* â”€â”€â”€ Hover effects â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .press-scale {
   transition: transform 0.1s ease;
 }
 .press-scale:active {
   transform: scale(0.97);
+}
+
+.button-motion {
+  transition-property:
+    color, background-color, border-color, box-shadow, transform;
+  transition-duration: 150ms;
+  transition-timing-function: ease-out;
+}
+@media (hover: hover) {
+  .button-motion:not(:disabled):hover {
+    transform: translateY(-1px);
+  }
+}
+.button-motion:not(:disabled):active {
+  transform: translateY(0) scale(0.97);
+  transition-duration: 80ms;
+}
+@media (prefers-reduced-motion: reduce) {
+  .button-motion {
+    transition-property: color, background-color, border-color, box-shadow;
+  }
+  .button-motion:not(:disabled):hover,
+  .button-motion:not(:disabled):active {
+    transform: none;
+  }
 }
 
 /* â”€â”€â”€ Backgrounds â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
@@ -332,8 +499,15 @@
 }
 
 @keyframes caret-blink {
-  0%,70%,100% { opacity: 1; }
-  20%,50% { opacity: 0; }
+  0%,
+  70%,
+  100% {
+    opacity: 1;
+  }
+  20%,
+  50% {
+    opacity: 0;
+  }
 }
 
 .animate-caret-blink {
@@ -483,23 +657,27 @@
   animation: brand-sweep 8s ease-in-out infinite;
 }
 
-
 .logo-gradient-static {
   animation: none;
   background: linear-gradient(135deg, var(--brand-core), var(--brand-cyan));
   background-size: 100% 100%;
 }
 
-
 @keyframes goal-everything-border {
   0% {
-    background-position: 0 0, 0% 50%;
+    background-position:
+      0 0,
+      0% 50%;
   }
   50% {
-    background-position: 0 0, 100% 50%;
+    background-position:
+      0 0,
+      100% 50%;
   }
   100% {
-    background-position: 0 0, 0% 50%;
+    background-position:
+      0 0,
+      0% 50%;
   }
 }
 
@@ -536,8 +714,12 @@ button.goal-everything-chip {
     );
   background-origin: border-box;
   background-clip: padding-box, border-box;
-  background-size: 100% 100%, 280% 100%;
-  background-position: 0 0, 0% 50%;
+  background-size:
+    100% 100%,
+    280% 100%;
+  background-position:
+    0 0,
+    0% 50%;
   animation: goal-everything-border 2s ease-in-out infinite;
 }
 
@@ -568,8 +750,12 @@ button.goal-everything-chip[aria-checked="true"] {
       color-mix(in srgb, var(--brand-cyan) 12%, var(--card)) 100%
     ),
     linear-gradient(var(--brand-core), var(--brand-core));
-  background-size: 100% 100%, 100% 100%;
-  background-position: 0 0, 0 0;
+  background-size:
+    100% 100%,
+    100% 100%;
+  background-position:
+    0 0,
+    0 0;
 }
 
 button.goal-everything-chip[aria-checked="true"]::before {
@@ -595,9 +781,18 @@ button.goal-everything-chip[aria-checked="true"]::before {
         color-mix(in srgb, var(--brand-core) 14%, var(--card)) 0%,
         color-mix(in srgb, var(--brand-cyan) 12%, var(--card)) 100%
       ),
-      linear-gradient(135deg, var(--brand-deep), var(--brand-core), var(--brand-cyan));
-    background-size: 100% 100%, 100% 100%;
-    background-position: 0 0, 0 0;
+      linear-gradient(
+        135deg,
+        var(--brand-deep),
+        var(--brand-core),
+        var(--brand-cyan)
+      );
+    background-size:
+      100% 100%,
+      100% 100%;
+    background-position:
+      0 0,
+      0 0;
   }
 
   button.goal-everything-chip::before {
@@ -843,7 +1038,7 @@ button.goal-everything-chip[aria-checked="true"]::before {
   box-sizing: border-box;
   min-height: 40px;
   padding: 10px 6px;
-  font-size: 12px;
+  font-size: 0.875rem;
   font-weight: 600;
   line-height: 1.25;
   color: var(--muted-foreground);
@@ -914,13 +1109,17 @@ button.goal-everything-chip[aria-checked="true"]::before {
   .rbc-time-view
   .rbc-time-header
   .rbc-header.rbc-today
-  .calendar-week-day-header-date,
-.calendar-container
-  .rbc-time-view
-  .rbc-time-header
-  .rbc-header.rbc-today
-  .calendar-week-day-header-weekday {
-  color: inherit;
+  .calendar-week-day-header-date {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: auto;
+  min-width: 1.375rem;
+  height: 1.375rem;
+  padding: 0 0.25rem;
+  border-radius: 9999px;
+  background: var(--primary);
+  color: var(--primary-foreground);
 }
 
 .calendar-container
@@ -928,7 +1127,8 @@ button.goal-everything-chip[aria-checked="true"]::before {
   .rbc-time-header
   .rbc-header.rbc-today
   .calendar-week-day-header-weekday {
-  opacity: 0.75;
+  color: var(--primary);
+  opacity: 1;
 }
 
 .calendar-container .rbc-month-row {
@@ -981,14 +1181,15 @@ button.goal-everything-chip[aria-checked="true"]::before {
 }
 
 .calendar-container .rbc-time-view .rbc-header.rbc-today {
-  background: var(--primary);
-  color: var(--primary-foreground);
+  background-color: transparent;
+  color: var(--foreground);
   border-bottom-color: var(--primary);
 }
 
 .calendar-container .rbc-date-cell {
   padding: 4px 6px;
-  font-size: 12px;
+  font-size: 0.875rem;
+  font-weight: 500;
   color: var(--foreground);
 }
 
@@ -1028,9 +1229,27 @@ button.goal-everything-chip[aria-checked="true"]::before {
   cursor: pointer;
 }
 
+.calendar-container .rbc-event,
+.calendar-container .rbc-event-label,
+.calendar-container .rbc-event-content {
+  font-size: 0.875rem;
+  font-weight: 400;
+  line-height: 1.25;
+}
+
+.calendar-virtual-scroll {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.calendar-virtual-scroll::-webkit-scrollbar {
+  display: none;
+  width: 0;
+  height: 0;
+}
+
 .calendar-container .rbc-event {
   border-radius: 4px;
-  font-size: 12px;
   padding: 1px 6px;
   border: none;
 }
@@ -1040,7 +1259,7 @@ button.goal-everything-chip[aria-checked="true"]::before {
 }
 
 .calendar-container .rbc-show-more {
-  font-size: 11px;
+  font-size: 0.75rem;
   color: var(--primary);
   font-weight: 500;
   background: transparent;
@@ -1048,7 +1267,8 @@ button.goal-everything-chip[aria-checked="true"]::before {
 }
 
 .calendar-container .rbc-time-slot {
-  font-size: 11px;
+  font-size: 0.75rem;
+  font-weight: 500;
   color: var(--muted-foreground);
 }
 
@@ -1118,7 +1338,7 @@ button.goal-everything-chip[aria-checked="true"]::before {
   .calendar-container .rbc-header {
     min-height: 36px;
     padding: 8px 4px;
-    font-size: 10px;
+    font-size: 0.75rem;
   }
 
   .calendar-container
@@ -1132,7 +1352,7 @@ button.goal-everything-chip[aria-checked="true"]::before {
 
   .calendar-container .rbc-time-view .rbc-time-header .rbc-header {
     padding: 6px 4px;
-    font-size: 10px;
+    font-size: 0.75rem;
   }
 
   .calendar-container
@@ -1140,7 +1360,7 @@ button.goal-everything-chip[aria-checked="true"]::before {
     .rbc-time-header
     .rbc-header
     .calendar-week-day-header-date {
-    font-size: 11px;
+    font-size: 0.875rem;
   }
 
   .calendar-container
@@ -1148,7 +1368,7 @@ button.goal-everything-chip[aria-checked="true"]::before {
     .rbc-time-header
     .rbc-header
     .calendar-week-day-header-weekday {
-    font-size: 9px;
+    font-size: 0.75rem;
   }
 
   .calendar-container
@@ -1156,12 +1376,12 @@ button.goal-everything-chip[aria-checked="true"]::before {
     .rbc-time-header
     .rbc-header
     .calendar-day-header {
-    font-size: 11px;
+    font-size: 0.875rem;
   }
 
   .calendar-container .rbc-date-cell {
     padding: 2px 3px;
-    font-size: 10px;
+    font-size: 0.75rem;
   }
 
   .calendar-container .rbc-date-cell.rbc-now a,
@@ -1171,22 +1391,30 @@ button.goal-everything-chip[aria-checked="true"]::before {
   }
 
   .calendar-container .rbc-header.rbc-today {
-    font-size: 10px;
+    font-size: 0.75rem;
+  }
+
+  .calendar-container
+    .rbc-time-view
+    .rbc-header.rbc-today
+    .calendar-week-day-header-date {
+    min-width: 1.125rem;
+    height: 1.125rem;
   }
 
   .calendar-container .rbc-event {
-    font-size: 10px;
+    font-size: 0.75rem;
     padding: 0 3px;
-    line-height: 1.2;
+    line-height: 1.25;
   }
 
   .calendar-container .rbc-show-more {
-    font-size: 9px;
+    font-size: 0.75rem;
     padding: 0 2px;
   }
 
   .calendar-container .rbc-time-slot {
-    font-size: 10px;
+    font-size: 0.75rem;
   }
 }
 
@@ -1194,7 +1422,7 @@ button.goal-everything-chip[aria-checked="true"]::before {
   .calendar-container .rbc-header {
     min-height: 38px;
     padding: 9px 5px;
-    font-size: 11px;
+    font-size: 0.875rem;
   }
 
   .calendar-container
@@ -1215,7 +1443,7 @@ button.goal-everything-chip[aria-checked="true"]::before {
     .rbc-time-header
     .rbc-header
     .calendar-week-day-header-date {
-    font-size: 12px;
+    font-size: 0.875rem;
   }
 
   .calendar-container
@@ -1223,7 +1451,7 @@ button.goal-everything-chip[aria-checked="true"]::before {
     .rbc-time-header
     .rbc-header
     .calendar-week-day-header-weekday {
-    font-size: 9px;
+    font-size: 0.75rem;
   }
 
   .calendar-container
@@ -1231,16 +1459,16 @@ button.goal-everything-chip[aria-checked="true"]::before {
     .rbc-time-header
     .rbc-header
     .calendar-day-header {
-    font-size: 12px;
+    font-size: 0.875rem;
   }
 
   .calendar-container .rbc-date-cell {
     padding: 3px 4px;
-    font-size: 11px;
+    font-size: 0.875rem;
   }
 
   .calendar-container .rbc-event {
-    font-size: 11px;
+    font-size: 0.875rem;
   }
 }
 
@@ -1396,30 +1624,70 @@ button.goal-everything-chip[aria-checked="true"]::before {
    10% wash of the 500 and ink lifts to 400 — the pattern the codebase already
    applies by hand, made automatic. */
 .dark {
-  --status-success-surface: color-mix(in oklab, var(--color-emerald-500, #10b981) 10%, transparent);
+  --status-success-surface: color-mix(
+    in oklab,
+    var(--color-emerald-500, #10b981) 10%,
+    transparent
+  );
   --status-success-ink: var(--color-emerald-400, #34d399);
   --status-success-ink-strong: var(--color-emerald-300, #6ee7b7);
-  --status-success-rule: color-mix(in oklab, var(--color-emerald-500, #10b981) 30%, transparent);
+  --status-success-rule: color-mix(
+    in oklab,
+    var(--color-emerald-500, #10b981) 30%,
+    transparent
+  );
 
-  --status-warning-surface: color-mix(in oklab, var(--color-amber-500, #f59e0b) 10%, transparent);
+  --status-warning-surface: color-mix(
+    in oklab,
+    var(--color-amber-500, #f59e0b) 10%,
+    transparent
+  );
   --status-warning-ink: var(--color-amber-400, #fbbf24);
   --status-warning-ink-strong: var(--color-amber-300, #fcd34d);
-  --status-warning-rule: color-mix(in oklab, var(--color-amber-500, #f59e0b) 30%, transparent);
+  --status-warning-rule: color-mix(
+    in oklab,
+    var(--color-amber-500, #f59e0b) 30%,
+    transparent
+  );
 
-  --status-danger-surface: color-mix(in oklab, var(--color-red-500, #ef4444) 10%, transparent);
+  --status-danger-surface: color-mix(
+    in oklab,
+    var(--color-red-500, #ef4444) 10%,
+    transparent
+  );
   --status-danger-ink: var(--color-red-400, #f87171);
   --status-danger-ink-strong: var(--color-red-300, #fca5a5);
-  --status-danger-rule: color-mix(in oklab, var(--color-red-500, #ef4444) 30%, transparent);
+  --status-danger-rule: color-mix(
+    in oklab,
+    var(--color-red-500, #ef4444) 30%,
+    transparent
+  );
 
-  --status-info-surface: color-mix(in oklab, var(--color-blue-500, #3b82f6) 10%, transparent);
+  --status-info-surface: color-mix(
+    in oklab,
+    var(--color-blue-500, #3b82f6) 10%,
+    transparent
+  );
   --status-info-ink: var(--color-blue-400, #60a5fa);
   --status-info-ink-strong: var(--color-blue-300, #93c5fd);
-  --status-info-rule: color-mix(in oklab, var(--color-blue-500, #3b82f6) 30%, transparent);
+  --status-info-rule: color-mix(
+    in oklab,
+    var(--color-blue-500, #3b82f6) 30%,
+    transparent
+  );
 
-  --status-neutral-surface: color-mix(in oklab, var(--color-slate-500, #64748b) 10%, transparent);
+  --status-neutral-surface: color-mix(
+    in oklab,
+    var(--color-slate-500, #64748b) 10%,
+    transparent
+  );
   --status-neutral-ink: var(--color-slate-400, #94a3b8);
   --status-neutral-ink-strong: var(--color-slate-300, #cbd5e1);
-  --status-neutral-rule: color-mix(in oklab, var(--color-slate-500, #64748b) 30%, transparent);
+  --status-neutral-rule: color-mix(
+    in oklab,
+    var(--color-slate-500, #64748b) 30%,
+    transparent
+  );
 }
 
 /* ─── Density ───
@@ -1454,7 +1722,8 @@ button.goal-everything-chip[aria-checked="true"]::before {
      defined first and consumed nowhere, so the product was the truth and the
      token was the aspiration; correcting the token means the migration changes
      nothing visible. */
-  --elevation-card: 0 1px 2px rgba(15, 23, 42, 0.04), 0 12px 32px -14px rgba(15, 23, 42, 0.12);
+  --elevation-card:
+    0 1px 2px rgba(15, 23, 42, 0.04), 0 12px 32px -14px rgba(15, 23, 42, 0.12);
   --elevation-raised: 0 4px 12px -2px rgb(11 18 32 / 0.1);
 
   /* A control that lifts off the page — the primary button. Neutral, because it
@@ -1470,15 +1739,16 @@ button.goal-everything-chip[aria-checked="true"]::before {
      hand-written `.shadow-noir` in 49 places, with its dark twin in a separate
      `.dark .shadow-noir` rule — which is exactly the split a token removes. */
   --elevation-noir:
-    0 1px 2px rgba(15, 23, 42, 0.04),
-    0 8px 24px -10px rgba(15, 23, 42, 0.12),
+    0 1px 2px rgba(15, 23, 42, 0.04), 0 8px 24px -10px rgba(15, 23, 42, 0.12),
     0 0 0 1px rgba(15, 23, 42, 0.04);
 }
 
 .dark {
   --elevation-panel: 0 1px 2px 0 rgb(0 0 0 / 0.4);
-  --elevation-card: inset 0 1px 0 0 rgb(255 255 255 / 0.04), 0 2px 8px -2px rgb(0 0 0 / 0.5);
-  --elevation-raised: inset 0 1px 0 0 rgb(255 255 255 / 0.06), 0 8px 24px -6px rgb(0 0 0 / 0.6);
+  --elevation-card:
+    inset 0 1px 0 0 rgb(255 255 255 / 0.04), 0 2px 8px -2px rgb(0 0 0 / 0.5);
+  --elevation-raised:
+    inset 0 1px 0 0 rgb(255 255 255 / 0.06), 0 8px 24px -6px rgb(0 0 0 / 0.6);
 
   /* Deeper on a dark ground, where a light shadow is invisible. */
   --elevation-control: 0 8px 22px -10px rgb(0 0 0 / 0.6);
@@ -1489,10 +1759,8 @@ button.goal-everything-chip[aria-checked="true"]::before {
      lifts rather than darkens: a dark ring on a dark ground is invisible. */
   --elevation-noir:
     0 1px 0 rgba(255, 255, 255, 0.04) inset,
-    0 8px 24px -12px rgba(0, 0, 0, 0.6),
-    0 0 0 1px rgba(255, 255, 255, 0.04);
+    0 8px 24px -12px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.04);
 }
-
 
 /* ─── Solid fills ───
    A surface is a pale wash behind quiet text; a fill is a solid colour with
@@ -1617,72 +1885,199 @@ button.goal-everything-chip[aria-checked="true"]::before {
 }
 
 .dark {
-  --category-blue-surface: color-mix(in oklab, var(--color-blue-500, #3b82f6) 12%, transparent);
+  --category-blue-surface: color-mix(
+    in oklab,
+    var(--color-blue-500, #3b82f6) 12%,
+    transparent
+  );
   --category-blue-ink: var(--color-blue-300, #93c5fd);
-  --category-blue-rule: color-mix(in oklab, var(--color-blue-500, #3b82f6) 30%, transparent);
+  --category-blue-rule: color-mix(
+    in oklab,
+    var(--color-blue-500, #3b82f6) 30%,
+    transparent
+  );
   --category-blue-fill: var(--color-blue-400, #60a5fa);
-  --category-emerald-surface: color-mix(in oklab, var(--color-emerald-500, #10b981) 12%, transparent);
+  --category-emerald-surface: color-mix(
+    in oklab,
+    var(--color-emerald-500, #10b981) 12%,
+    transparent
+  );
   --category-emerald-ink: var(--color-emerald-300, #6ee7b7);
-  --category-emerald-rule: color-mix(in oklab, var(--color-emerald-500, #10b981) 30%, transparent);
+  --category-emerald-rule: color-mix(
+    in oklab,
+    var(--color-emerald-500, #10b981) 30%,
+    transparent
+  );
   --category-emerald-fill: var(--color-emerald-400, #34d399);
-  --category-violet-surface: color-mix(in oklab, var(--color-violet-500, #8b5cf6) 12%, transparent);
+  --category-violet-surface: color-mix(
+    in oklab,
+    var(--color-violet-500, #8b5cf6) 12%,
+    transparent
+  );
   --category-violet-ink: var(--color-violet-300, #c4b5fd);
-  --category-violet-rule: color-mix(in oklab, var(--color-violet-500, #8b5cf6) 30%, transparent);
+  --category-violet-rule: color-mix(
+    in oklab,
+    var(--color-violet-500, #8b5cf6) 30%,
+    transparent
+  );
   --category-violet-fill: var(--color-violet-400, #a78bfa);
-  --category-amber-surface: color-mix(in oklab, var(--color-amber-500, #f59e0b) 12%, transparent);
+  --category-amber-surface: color-mix(
+    in oklab,
+    var(--color-amber-500, #f59e0b) 12%,
+    transparent
+  );
   --category-amber-ink: var(--color-amber-300, #fcd34d);
-  --category-amber-rule: color-mix(in oklab, var(--color-amber-500, #f59e0b) 30%, transparent);
+  --category-amber-rule: color-mix(
+    in oklab,
+    var(--color-amber-500, #f59e0b) 30%,
+    transparent
+  );
   --category-amber-fill: var(--color-amber-400, #fbbf24);
-  --category-rose-surface: color-mix(in oklab, var(--color-rose-500, #f43f5e) 12%, transparent);
+  --category-rose-surface: color-mix(
+    in oklab,
+    var(--color-rose-500, #f43f5e) 12%,
+    transparent
+  );
   --category-rose-ink: var(--color-rose-300, #fda4af);
-  --category-rose-rule: color-mix(in oklab, var(--color-rose-500, #f43f5e) 30%, transparent);
+  --category-rose-rule: color-mix(
+    in oklab,
+    var(--color-rose-500, #f43f5e) 30%,
+    transparent
+  );
   --category-rose-fill: var(--color-rose-400, #fb7185);
-  --category-cyan-surface: color-mix(in oklab, var(--color-cyan-500, #06b6d4) 12%, transparent);
+  --category-cyan-surface: color-mix(
+    in oklab,
+    var(--color-cyan-500, #06b6d4) 12%,
+    transparent
+  );
   --category-cyan-ink: var(--color-cyan-300, #67e8f9);
-  --category-cyan-rule: color-mix(in oklab, var(--color-cyan-500, #06b6d4) 30%, transparent);
+  --category-cyan-rule: color-mix(
+    in oklab,
+    var(--color-cyan-500, #06b6d4) 30%,
+    transparent
+  );
   --category-cyan-fill: var(--color-cyan-400, #22d3ee);
-  --category-pink-surface: color-mix(in oklab, var(--color-pink-500, #ec4899) 12%, transparent);
+  --category-pink-surface: color-mix(
+    in oklab,
+    var(--color-pink-500, #ec4899) 12%,
+    transparent
+  );
   --category-pink-ink: var(--color-pink-300, #f9a8d4);
-  --category-pink-rule: color-mix(in oklab, var(--color-pink-500, #ec4899) 30%, transparent);
+  --category-pink-rule: color-mix(
+    in oklab,
+    var(--color-pink-500, #ec4899) 30%,
+    transparent
+  );
   --category-pink-fill: var(--color-pink-400, #f472b6);
-  --category-slate-surface: color-mix(in oklab, var(--color-slate-500, #64748b) 12%, transparent);
+  --category-slate-surface: color-mix(
+    in oklab,
+    var(--color-slate-500, #64748b) 12%,
+    transparent
+  );
   --category-slate-ink: var(--color-slate-300, #cbd5e1);
-  --category-slate-rule: color-mix(in oklab, var(--color-slate-500, #64748b) 30%, transparent);
+  --category-slate-rule: color-mix(
+    in oklab,
+    var(--color-slate-500, #64748b) 30%,
+    transparent
+  );
   --category-slate-fill: var(--color-slate-400, #94a3b8);
-  --category-sky-surface: color-mix(in oklab, var(--color-sky-500, #0ea5e9) 12%, transparent);
+  --category-sky-surface: color-mix(
+    in oklab,
+    var(--color-sky-500, #0ea5e9) 12%,
+    transparent
+  );
   --category-sky-ink: var(--color-sky-300, #7dd3fc);
-  --category-sky-rule: color-mix(in oklab, var(--color-sky-500, #0ea5e9) 30%, transparent);
+  --category-sky-rule: color-mix(
+    in oklab,
+    var(--color-sky-500, #0ea5e9) 30%,
+    transparent
+  );
   --category-sky-fill: var(--color-sky-400, #38bdf8);
-  --category-teal-surface: color-mix(in oklab, var(--color-teal-500, #14b8a6) 12%, transparent);
+  --category-teal-surface: color-mix(
+    in oklab,
+    var(--color-teal-500, #14b8a6) 12%,
+    transparent
+  );
   --category-teal-ink: var(--color-teal-300, #5eead4);
-  --category-teal-rule: color-mix(in oklab, var(--color-teal-500, #14b8a6) 30%, transparent);
+  --category-teal-rule: color-mix(
+    in oklab,
+    var(--color-teal-500, #14b8a6) 30%,
+    transparent
+  );
   --category-teal-fill: var(--color-teal-400, #2dd4bf);
-  --category-green-surface: color-mix(in oklab, var(--color-green-500, #22c55e) 12%, transparent);
+  --category-green-surface: color-mix(
+    in oklab,
+    var(--color-green-500, #22c55e) 12%,
+    transparent
+  );
   --category-green-ink: var(--color-green-300, #86efac);
-  --category-green-rule: color-mix(in oklab, var(--color-green-500, #22c55e) 30%, transparent);
+  --category-green-rule: color-mix(
+    in oklab,
+    var(--color-green-500, #22c55e) 30%,
+    transparent
+  );
   --category-green-fill: var(--color-green-400, #4ade80);
-  --category-orange-surface: color-mix(in oklab, var(--color-orange-500, #f97316) 12%, transparent);
+  --category-orange-surface: color-mix(
+    in oklab,
+    var(--color-orange-500, #f97316) 12%,
+    transparent
+  );
   --category-orange-ink: var(--color-orange-300, #fdba74);
-  --category-orange-rule: color-mix(in oklab, var(--color-orange-500, #f97316) 30%, transparent);
+  --category-orange-rule: color-mix(
+    in oklab,
+    var(--color-orange-500, #f97316) 30%,
+    transparent
+  );
   --category-orange-fill: var(--color-orange-400, #fb923c);
-  --category-indigo-surface: color-mix(in oklab, var(--color-indigo-500, #6366f1) 12%, transparent);
+  --category-indigo-surface: color-mix(
+    in oklab,
+    var(--color-indigo-500, #6366f1) 12%,
+    transparent
+  );
   --category-indigo-ink: var(--color-indigo-300, #a5b4fc);
-  --category-indigo-rule: color-mix(in oklab, var(--color-indigo-500, #6366f1) 30%, transparent);
+  --category-indigo-rule: color-mix(
+    in oklab,
+    var(--color-indigo-500, #6366f1) 30%,
+    transparent
+  );
   --category-indigo-fill: var(--color-indigo-400, #818cf8);
-  --category-fuchsia-surface: color-mix(in oklab, var(--color-fuchsia-500, #d946ef) 12%, transparent);
+  --category-fuchsia-surface: color-mix(
+    in oklab,
+    var(--color-fuchsia-500, #d946ef) 12%,
+    transparent
+  );
   --category-fuchsia-ink: var(--color-fuchsia-300, #f0abfc);
-  --category-fuchsia-rule: color-mix(in oklab, var(--color-fuchsia-500, #d946ef) 30%, transparent);
+  --category-fuchsia-rule: color-mix(
+    in oklab,
+    var(--color-fuchsia-500, #d946ef) 30%,
+    transparent
+  );
   --category-fuchsia-fill: var(--color-fuchsia-400, #e879f9);
-  --category-lime-surface: color-mix(in oklab, var(--color-lime-500, #84cc16) 12%, transparent);
+  --category-lime-surface: color-mix(
+    in oklab,
+    var(--color-lime-500, #84cc16) 12%,
+    transparent
+  );
   --category-lime-ink: var(--color-lime-300, #bef264);
-  --category-lime-rule: color-mix(in oklab, var(--color-lime-500, #84cc16) 30%, transparent);
+  --category-lime-rule: color-mix(
+    in oklab,
+    var(--color-lime-500, #84cc16) 30%,
+    transparent
+  );
   --category-lime-fill: var(--color-lime-400, #a3e635);
-  --category-red-surface: color-mix(in oklab, var(--color-red-500, #ef4444) 12%, transparent);
+  --category-red-surface: color-mix(
+    in oklab,
+    var(--color-red-500, #ef4444) 12%,
+    transparent
+  );
   --category-red-ink: var(--color-red-300, #fca5a5);
-  --category-red-rule: color-mix(in oklab, var(--color-red-500, #ef4444) 30%, transparent);
+  --category-red-rule: color-mix(
+    in oklab,
+    var(--color-red-500, #ef4444) 30%,
+    transparent
+  );
   --category-red-fill: var(--color-red-400, #f87171);
 }
-
 
 /* ─── Gradient stops ───
    The stops, not the gradient.
@@ -1700,24 +2095,64 @@ button.goal-everything-chip[aria-checked="true"]::before {
 :root {
   --gradient-success-from: var(--color-emerald-500, #10b981);
   --gradient-success-to: var(--color-emerald-400, #34d399);
-  --gradient-success-wash-from: color-mix(in oklab, var(--color-emerald-500, #10b981) 15%, transparent);
-  --gradient-success-wash-to: color-mix(in oklab, var(--color-emerald-500, #10b981) 5%, transparent);
+  --gradient-success-wash-from: color-mix(
+    in oklab,
+    var(--color-emerald-500, #10b981) 15%,
+    transparent
+  );
+  --gradient-success-wash-to: color-mix(
+    in oklab,
+    var(--color-emerald-500, #10b981) 5%,
+    transparent
+  );
   --gradient-warning-from: var(--color-amber-500, #f59e0b);
   --gradient-warning-to: var(--color-amber-400, #fbbf24);
-  --gradient-warning-wash-from: color-mix(in oklab, var(--color-amber-500, #f59e0b) 15%, transparent);
-  --gradient-warning-wash-to: color-mix(in oklab, var(--color-amber-500, #f59e0b) 5%, transparent);
+  --gradient-warning-wash-from: color-mix(
+    in oklab,
+    var(--color-amber-500, #f59e0b) 15%,
+    transparent
+  );
+  --gradient-warning-wash-to: color-mix(
+    in oklab,
+    var(--color-amber-500, #f59e0b) 5%,
+    transparent
+  );
   --gradient-danger-from: var(--color-red-500, #ef4444);
   --gradient-danger-to: var(--color-red-400, #f87171);
-  --gradient-danger-wash-from: color-mix(in oklab, var(--color-red-500, #ef4444) 15%, transparent);
-  --gradient-danger-wash-to: color-mix(in oklab, var(--color-red-500, #ef4444) 5%, transparent);
+  --gradient-danger-wash-from: color-mix(
+    in oklab,
+    var(--color-red-500, #ef4444) 15%,
+    transparent
+  );
+  --gradient-danger-wash-to: color-mix(
+    in oklab,
+    var(--color-red-500, #ef4444) 5%,
+    transparent
+  );
   --gradient-info-from: var(--color-blue-500, #3b82f6);
   --gradient-info-to: var(--color-blue-400, #60a5fa);
-  --gradient-info-wash-from: color-mix(in oklab, var(--color-blue-500, #3b82f6) 15%, transparent);
-  --gradient-info-wash-to: color-mix(in oklab, var(--color-blue-500, #3b82f6) 5%, transparent);
+  --gradient-info-wash-from: color-mix(
+    in oklab,
+    var(--color-blue-500, #3b82f6) 15%,
+    transparent
+  );
+  --gradient-info-wash-to: color-mix(
+    in oklab,
+    var(--color-blue-500, #3b82f6) 5%,
+    transparent
+  );
   --gradient-neutral-from: var(--color-slate-500, #64748b);
   --gradient-neutral-to: var(--color-slate-400, #94a3b8);
-  --gradient-neutral-wash-from: color-mix(in oklab, var(--color-slate-500, #64748b) 15%, transparent);
-  --gradient-neutral-wash-to: color-mix(in oklab, var(--color-slate-500, #64748b) 5%, transparent);
+  --gradient-neutral-wash-from: color-mix(
+    in oklab,
+    var(--color-slate-500, #64748b) 15%,
+    transparent
+  );
+  --gradient-neutral-wash-to: color-mix(
+    in oklab,
+    var(--color-slate-500, #64748b) 5%,
+    transparent
+  );
   --gradient-gold-to: #d4a544;
   --color-surface-soft-base: #f4f7fc;
 }
@@ -1725,24 +2160,64 @@ button.goal-everything-chip[aria-checked="true"]::before {
 .dark {
   --gradient-success-from: var(--color-emerald-400, #34d399);
   --gradient-success-to: var(--color-emerald-500, #10b981);
-  --gradient-success-wash-from: color-mix(in oklab, var(--color-emerald-500, #10b981) 22%, transparent);
-  --gradient-success-wash-to: color-mix(in oklab, var(--color-emerald-500, #10b981) 8%, transparent);
+  --gradient-success-wash-from: color-mix(
+    in oklab,
+    var(--color-emerald-500, #10b981) 22%,
+    transparent
+  );
+  --gradient-success-wash-to: color-mix(
+    in oklab,
+    var(--color-emerald-500, #10b981) 8%,
+    transparent
+  );
   --gradient-warning-from: var(--color-amber-400, #fbbf24);
   --gradient-warning-to: var(--color-amber-500, #f59e0b);
-  --gradient-warning-wash-from: color-mix(in oklab, var(--color-amber-500, #f59e0b) 22%, transparent);
-  --gradient-warning-wash-to: color-mix(in oklab, var(--color-amber-500, #f59e0b) 8%, transparent);
+  --gradient-warning-wash-from: color-mix(
+    in oklab,
+    var(--color-amber-500, #f59e0b) 22%,
+    transparent
+  );
+  --gradient-warning-wash-to: color-mix(
+    in oklab,
+    var(--color-amber-500, #f59e0b) 8%,
+    transparent
+  );
   --gradient-danger-from: var(--color-red-400, #f87171);
   --gradient-danger-to: var(--color-red-500, #ef4444);
-  --gradient-danger-wash-from: color-mix(in oklab, var(--color-red-500, #ef4444) 22%, transparent);
-  --gradient-danger-wash-to: color-mix(in oklab, var(--color-red-500, #ef4444) 8%, transparent);
+  --gradient-danger-wash-from: color-mix(
+    in oklab,
+    var(--color-red-500, #ef4444) 22%,
+    transparent
+  );
+  --gradient-danger-wash-to: color-mix(
+    in oklab,
+    var(--color-red-500, #ef4444) 8%,
+    transparent
+  );
   --gradient-info-from: var(--color-blue-400, #60a5fa);
   --gradient-info-to: var(--color-blue-500, #3b82f6);
-  --gradient-info-wash-from: color-mix(in oklab, var(--color-blue-500, #3b82f6) 22%, transparent);
-  --gradient-info-wash-to: color-mix(in oklab, var(--color-blue-500, #3b82f6) 8%, transparent);
+  --gradient-info-wash-from: color-mix(
+    in oklab,
+    var(--color-blue-500, #3b82f6) 22%,
+    transparent
+  );
+  --gradient-info-wash-to: color-mix(
+    in oklab,
+    var(--color-blue-500, #3b82f6) 8%,
+    transparent
+  );
   --gradient-neutral-from: var(--color-slate-400, #94a3b8);
   --gradient-neutral-to: var(--color-slate-500, #64748b);
-  --gradient-neutral-wash-from: color-mix(in oklab, var(--color-slate-500, #64748b) 22%, transparent);
-  --gradient-neutral-wash-to: color-mix(in oklab, var(--color-slate-500, #64748b) 8%, transparent);
+  --gradient-neutral-wash-from: color-mix(
+    in oklab,
+    var(--color-slate-500, #64748b) 22%,
+    transparent
+  );
+  --gradient-neutral-wash-to: color-mix(
+    in oklab,
+    var(--color-slate-500, #64748b) 8%,
+    transparent
+  );
 }
 
 /* ─── Utility exposure ───
@@ -1900,4 +2375,178 @@ button.goal-everything-chip[aria-checked="true"]::before {
   --shadow-accent-strong: var(--elevation-accent-strong);
   --shadow-card: var(--elevation-card);
   --shadow-raised: var(--elevation-raised);
+}
+
+@media (max-width: 639px) {
+  .candidate-surface input:not([type="checkbox"]):not([type="radio"]),
+  .candidate-surface select,
+  .candidate-surface textarea {
+    font-size: 1rem;
+    min-height: 2.75rem;
+  }
+
+  .candidate-surface textarea {
+    /* A textarea's own rows decide its height; only the floor is raised. */
+    min-height: 5.5rem;
+  }
+
+  .candidate-surface button:not([data-slot="checkbox"]),
+  .candidate-surface a[role="button"] {
+    min-height: 2.75rem;
+  }
+
+  /*
+    The consent box. Still under 44px, because a checkbox that size next to one
+    line of text looks broken — the label is `htmlFor`-bound and is itself the
+    larger target, so the pair clears the floor even though the box does not.
+  */
+  .candidate-surface [data-slot="checkbox"] {
+    inline-size: 1.5rem;
+    block-size: 1.5rem;
+  }
+
+  .candidate-surface label[for] {
+    min-height: 1.5rem;
+  }
+}
+
+/* Journal article body. The HTML comes from the blog admin's renderer (sanitised again on the
+   server); these rules must style everything that renderer emits. Measure ~70 characters. */
+.journal-article {
+  font-family: var(--font-journal);
+  font-size: 1.125rem;
+  line-height: 1.75;
+  color: var(--journal-ink);
+  max-width: 70ch;
+}
+@media (min-width: 768px) {
+  .journal-article {
+    font-size: 1.25rem;
+    line-height: 1.7;
+  }
+}
+.journal-article > * + * {
+  margin-top: 1.25em;
+}
+.journal-article h2,
+.journal-article h3,
+.journal-article h4 {
+  line-height: 1.25;
+  margin-top: 2em;
+  scroll-margin-top: 2rem;
+  font-weight: 600;
+}
+.journal-article h2 {
+  font-size: 1.6em;
+}
+.journal-article h3 {
+  font-size: 1.3em;
+}
+.journal-article h4 {
+  font-size: 0.85em;
+  font-family: var(--font-sans);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+.journal-article a {
+  color: var(--journal-ink);
+  text-decoration: underline;
+  text-decoration-color: var(--journal-accent);
+  text-decoration-thickness: 2px;
+  text-underline-offset: 3px;
+}
+.journal-article a:hover {
+  text-decoration-color: var(--journal-ink);
+}
+.journal-article ul {
+  list-style: disc;
+  padding-left: 1.4em;
+}
+.journal-article ol {
+  list-style: decimal;
+  padding-left: 1.4em;
+}
+.journal-article li + li {
+  margin-top: 0.4em;
+}
+.journal-article li > p {
+  margin: 0;
+}
+.journal-article blockquote {
+  border-left: 3px solid var(--journal-accent);
+  padding-left: 1.1em;
+  font-style: italic;
+  color: var(--journal-muted);
+}
+.journal-article pre {
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  line-height: 1.6;
+  background: var(--journal-sage);
+  padding: 1em 1.25em;
+  border-radius: 4px;
+  overflow-x: auto;
+  white-space: pre;
+}
+.journal-article :not(pre) > code {
+  font-family: var(--font-mono);
+  font-size: 0.85em;
+  background: var(--journal-sage);
+  padding: 0.1em 0.35em;
+  border-radius: 3px;
+  overflow-wrap: anywhere;
+}
+.journal-article hr {
+  border: 0;
+  border-top: 1px solid var(--journal-rule);
+  margin: 2.5em 0;
+}
+.journal-article figure {
+  margin: 2em 0;
+}
+.journal-article figure img {
+  width: 100%;
+  height: auto;
+  border-radius: 3px;
+  background: var(--journal-sage);
+}
+.journal-article figcaption {
+  font-family: var(--font-sans);
+  font-size: 0.875rem;
+  color: var(--journal-muted);
+  margin-top: 0.6em;
+}
+.journal-article .table-scroll {
+  overflow-x: auto;
+}
+.journal-article table {
+  border-collapse: collapse;
+  width: 100%;
+  font-family: var(--font-sans);
+  font-size: 0.9375rem;
+  line-height: 1.5;
+}
+.journal-article th,
+.journal-article td {
+  border: 1px solid var(--journal-rule);
+  padding: 0.55em 0.8em;
+  text-align: left;
+  vertical-align: top;
+}
+.journal-article th {
+  background: var(--journal-sage);
+  font-weight: 600;
+}
+.journal-article aside.callout {
+  background: var(--journal-sage);
+  border-left: 3px solid var(--journal-ink);
+  padding: 1em 1.25em;
+  font-family: var(--font-sans);
+  font-size: 1rem;
+}
+.journal-article aside.callout[data-tone="warning"] {
+  border-left-color: var(--journal-accent);
+}
+.journal-article aside.callout > * + * {
+  margin-top: 0.75em;
 }

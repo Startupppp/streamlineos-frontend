@@ -2,9 +2,22 @@
 
 import { useCallback, useState, useMemo } from "react";
 import { cn } from "@/lib/utils";
-import { Skeleton } from "@/components/ui/skeleton";
 import { SearchInput } from "@/components/ui/search-input";
-import { Inbox, Send, Archive, Trash2, Star, AlertCircle, WifiOff } from "lucide-react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Inbox,
+  Send,
+  Archive,
+  Trash2,
+  Star,
+  AlertCircle,
+} from "lucide-react";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import { useOnlineStatus } from "@/hooks/common/use-online-status";
 import {
@@ -14,9 +27,17 @@ import {
 } from "@/hooks/api/mail";
 import { useCan } from "@/hooks/api/access";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { PageState } from "@/components/shared/page-state";
+import { usePageState } from "@/hooks/api/use-page-state";
 import { toast } from "sonner";
 import { groupMailMessages } from "./mail-group-messages";
+import { MAIL_LIST_BOTTOM_PADDING_CLASS } from "./mail-presentation";
 import { MailVirtualList } from "./mail-virtual-list";
+import { MailListRowsSkeleton } from "./mail-shell-skeletons";
+import {
+  MailThreadBriefSheet,
+  type MailThreadBriefState,
+} from "./mail-thread-brief-sheet";
 import type { MailListAction } from "./mail-message-row";
 import type {
   MailFolder,
@@ -37,6 +58,12 @@ const FOLDER_NAV: {
   { key: "trash", label: "Trash", icon: Trash2 },
 ];
 
+const MAIL_VIEW_OPTIONS = [
+  { value: "all", label: "All messages" },
+  { value: "unread", label: "Unread" },
+  { value: "attachments", label: "With attachments" },
+] as const;
+
 function MailFolderButton({
   folder,
   active,
@@ -47,7 +74,10 @@ function MailFolderButton({
   onSelect: (folder: MailFolder) => void;
 }) {
   const Icon = folder.icon;
-  const handleClick = useCallback(() => onSelect(folder.key), [onSelect, folder.key]);
+  const handleClick = useCallback(
+    () => onSelect(folder.key),
+    [onSelect, folder.key],
+  );
   return (
     <button
       type="button"
@@ -83,6 +113,10 @@ export function MailListPane({
 }: MailListPaneProps) {
   const [activeFolder, setActiveFolder] = useState<MailFolder>("inbox");
   const [search, setSearch] = useState("");
+  const [view, setView] = useState("all");
+  const [threadBriefOpen, setThreadBriefOpen] = useState(false);
+  const [threadBriefState, setThreadBriefState] =
+    useState<MailThreadBriefState>({ status: "loading" });
   const debouncedSearch = useDebouncedValue(search, 300);
   const mailAction = useMailAction();
   const threadSummary = useMailThreadSummary();
@@ -92,33 +126,58 @@ export function MailListPane({
   const {
     data,
     isLoading,
+    isFetched,
+    isFetching,
     isError,
     error,
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
-  } = useMailMessages({
-    folder: activeFolder,
-    accountId: selectedAccountId,
-    q: debouncedSearch || undefined,
-  });
-
-  const allMessages = useMemo(
-    () => data?.pages.flatMap((p) => p.messages) ?? [],
-    [data],
+    refetch,
+  } = useMailMessages(
+    {
+      folder: activeFolder,
+      accountId: selectedAccountId,
+      q: debouncedSearch || undefined,
+    },
+    { enabled: accounts.length > 0 },
   );
+
+  const pages = useMemo(() => data?.pages ?? [], [data]);
+  const visibleMessages = useMemo(() => {
+    const seen = new Set<string>();
+    const loadedMessages = pages
+      .flatMap((page) => page.messages)
+      .filter((message) => {
+        const key = `${message.accountId}:${message.id}`;
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      });
+    return loadedMessages.filter((message) =>
+      view === "unread"
+        ? !message.isRead
+        : view === "attachments"
+          ? message.hasAttachments
+          : true,
+    );
+  }, [pages, view]);
   const accountErrors = useMemo(() => {
-    const byAccount = new Map<number, MailListResponse["accountErrors"][number]>();
+    const byAccount = new Map<
+      number,
+      MailListResponse["accountErrors"][number]
+    >();
     for (const page of data?.pages ?? [])
-      for (const failure of page.accountErrors) byAccount.set(failure.accountId, failure);
+      for (const failure of page.accountErrors)
+        byAccount.set(failure.accountId, failure);
     return [...byAccount.values()];
   }, [data]);
   const groups = useMemo(
     () =>
       activeFolder === "inbox" && !debouncedSearch
-        ? groupMailMessages(allMessages)
-        : [{ key: "earlier" as const, label: "", messages: allMessages }],
-    [allMessages, activeFolder, debouncedSearch],
+        ? groupMailMessages(visibleMessages)
+        : [{ key: "earlier" as const, label: "", messages: visibleMessages }],
+    [visibleMessages, activeFolder, debouncedSearch],
   );
 
   const handleAction = useCallback(
@@ -144,24 +203,22 @@ export function MailListPane({
   );
 
   const handleAiBrief = useCallback(
-    (accountId: number, threadId: string) => {
-      toast.promise(
-        threadSummary.mutateAsync({ accountId, threadId }).then((data) => {
-          const items = data.actionItems.length
-            ? `\n\nActions:\n${data.actionItems.map((i) => `• ${i}`).join("\n")}`
-            : "";
-          return `${data.summary}${items}`;
-        }),
-        {
-          loading: "Briefing thread…",
-          success: (text) => ({
-            message: "Thread brief",
-            description:
-              text.length > 280 ? `${text.slice(0, 280)}…` : text,
-          }),
-          error: (err) => getErrorMessage(err),
-        },
-      );
+    async (accountId: number, threadId: string) => {
+      setThreadBriefState({ status: "loading" });
+      setThreadBriefOpen(true);
+      try {
+        const result = await threadSummary.mutateAsync({ accountId, threadId });
+        setThreadBriefState({
+          status: "ready",
+          summary: result.summary,
+          actionItems: result.actionItems,
+        });
+      } catch (error) {
+        setThreadBriefState({
+          status: "error",
+          message: getErrorMessage(error),
+        });
+      }
     },
     [threadSummary],
   );
@@ -171,17 +228,31 @@ export function MailListPane({
     setSearch("");
   }, []);
 
-  /**
-   * Offline, the next page cannot arrive. Asking for it anyway spends the
-   * scroll's one load-more trigger on a request that fails, and the failure is
-   * indistinguishable from the end of the mailbox once the user reconnects.
-   */
-  const handleLoadMore = useCallback(() => {
-    if (!isOnline) return;
-    void fetchNextPage();
-  }, [fetchNextPage, isOnline]);
+  const handleSearchChange = useCallback((value: string) => {
+    setSearch(value);
+  }, []);
 
-  const handleSearchClear = useCallback(() => setSearch(""), []);
+  const handleViewChange = useCallback((value: string) => {
+    setView(value);
+  }, []);
+
+  const handleNextPage = useCallback(async () => {
+    if (!hasNextPage || !isOnline || isFetchingNextPage) return;
+    await fetchNextPage();
+  }, [fetchNextPage, hasNextPage, isFetchingNextPage, isOnline]);
+
+  const handleRetry = useCallback(() => {
+    void refetch();
+  }, [refetch]);
+
+  const initialLoading =
+    isLoading || isFetched === false || (isFetching && pages.length === 0);
+  const listPageState = usePageState({
+    isLoading: initialLoading,
+    isError,
+    error,
+    isEmpty: visibleMessages.length === 0 && !hasNextPage,
+  });
 
   if (accounts.length === 0) {
     return (
@@ -198,16 +269,39 @@ export function MailListPane({
 
   return (
     <div className="flex flex-col h-full min-h-0">
-      <div className="px-3 pt-2.5 pb-2 border-b border-border/40 shrink-0 space-y-2">
-        <SearchInput
-          value={search}
-          onValueChange={setSearch}
-          onClear={handleSearchClear}
-          placeholder="Search — from:, subject, or plain words…"
-          className="h-9"
-        />
+      <div className="shrink-0 border-b border-border/40">
+        <div
+          data-slot="mail-toolbar"
+          className="flex flex-row flex-nowrap items-center gap-2 overflow-x-hidden px-2 py-1.5"
+        >
+          <SearchInput
+            value={search}
+            onValueChange={handleSearchChange}
+            onClear={() => handleSearchChange("")}
+            placeholder="Search mail…"
+            aria-label="Search mail"
+            className="min-w-0 flex-1 focus-visible:ring-1 focus-visible:ring-offset-0"
+          />
+          <div className="w-36 min-w-28 shrink-0 sm:w-40">
+            <Select value={view} onValueChange={handleViewChange}>
+              <SelectTrigger
+                aria-label="Filter loaded mail"
+                className="h-9 w-full text-sm"
+              >
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {MAIL_VIEW_OPTIONS.map((opt) => (
+                  <SelectItem key={opt.value} value={opt.value}>
+                    {opt.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
         <nav
-          className="flex gap-1 overflow-x-auto scrollbar-hide pb-0.5 -mx-0.5 px-0.5"
+          className="flex gap-1 overflow-x-auto px-2 pb-1.5 scrollbar-hide"
           aria-label="Mail folders"
         >
           {FOLDER_NAV.map((folder) => (
@@ -264,64 +358,47 @@ export function MailListPane({
         </div>
       )}
 
-      {isLoading ? (
-        <div className="flex-1 min-h-0 overflow-y-auto">
-          {[...Array(8)].map((_, i) => (
-            <div key={i} className="px-3 py-2.5 border-b border-border/20">
-              <div className="flex items-start justify-between gap-2 mb-1">
-                <Skeleton className="h-3.5 w-28 rounded" />
-                <Skeleton className="h-3 w-10 rounded shrink-0" />
-              </div>
-              <Skeleton className="h-3.5 w-full rounded mb-1" />
-              <Skeleton className="h-3 w-4/5 rounded" />
-            </div>
-          ))}
-        </div>
-      ) : isError && !isOnline ? (
-        <div className="flex-1 min-h-0 flex flex-col items-center justify-center gap-2 py-8 px-4 text-center">
-          <WifiOff className="h-6 w-6 text-muted-foreground" aria-hidden />
-          <p className="text-label font-medium text-foreground/80">
-            You&apos;re offline
-          </p>
-          <p className="text-dense text-muted-foreground">
-            Mail will load again once you reconnect.
-          </p>
-        </div>
-      ) : isError ? (
-        <div className="flex-1 min-h-0 flex flex-col items-center justify-center gap-2 py-8 px-4 text-center">
-          <p className="text-sm text-muted-foreground">
-            {getErrorMessage(error)}
-          </p>
-        </div>
-      ) : allMessages.length === 0 ? (
-        <div className="flex-1 min-h-0 flex flex-col items-center justify-center px-4 py-10 text-center">
-          <p className="text-label font-medium text-foreground/80">
-            {debouncedSearch
-              ? "No messages found"
-              : `No messages in ${activeFolder}`}
-          </p>
-          {debouncedSearch ? (
-            <p className="mt-1 text-dense text-muted-foreground">
-              Try from:, a name, or fewer words.
+      <PageState
+        resolution={listPageState}
+        loading={<MailListRowsSkeleton />}
+        empty={
+          <div className="flex h-full min-h-0 flex-col items-center justify-center px-4 py-10 text-center">
+            <p className="text-label font-medium text-foreground/80">
+              {view !== "all"
+                ? "No matching loaded messages"
+                : debouncedSearch
+                  ? "No messages found"
+                  : `No messages in ${activeFolder}`}
             </p>
-          ) : null}
-        </div>
-      ) : (
-        <div className="flex-1 min-h-0">
+            {debouncedSearch ? (
+              <p className="mt-1 text-dense text-muted-foreground">
+                Try from:, a name, or fewer words.
+              </p>
+            ) : null}
+          </div>
+        }
+        onRetry={handleRetry}
+      >
+        <div className={cn("flex-1 min-h-0", MAIL_LIST_BOTTOM_PADDING_CLASS)}>
           <MailVirtualList
             groups={groups}
-            hasNextPage={hasNextPage ?? false}
-            isFetchingNextPage={isFetchingNextPage}
             selectedMessageId={selectedMessageId}
             activeFolder={activeFolder}
             canAi={canAi}
+            hasNextPage={Boolean(hasNextPage)}
+            isFetchingNextPage={isFetchingNextPage}
             onSelect={onSelectMessage}
             onAction={handleAction}
             onAiBrief={handleAiBrief}
-            onLoadMore={handleLoadMore}
+            onLoadMore={handleNextPage}
           />
         </div>
-      )}
+      </PageState>
+      <MailThreadBriefSheet
+        open={threadBriefOpen}
+        onOpenChange={setThreadBriefOpen}
+        state={threadBriefState}
+      />
     </div>
   );
 }

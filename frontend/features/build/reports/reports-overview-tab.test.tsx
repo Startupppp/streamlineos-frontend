@@ -21,8 +21,25 @@ jest.mock("@/hooks/api/entitlements", () => ({
   useEntitlements: () => ({ data: undefined }),
 }));
 
-jest.mock("@/hooks/api/build", () => ({
-  useProjectAnalytics: (projectId: number) => useProjectAnalytics(projectId),
+jest.mock("@/hooks/api/build/project-analytics", () => ({
+  useProjectAnalytics: (projectId: number, params?: unknown) => useProjectAnalytics(projectId, params),
+}));
+
+let mockSearch = new URLSearchParams();
+const mockReplace = jest.fn();
+jest.mock("next/navigation", () => ({
+  useSearchParams: () => mockSearch,
+  useRouter: () => ({ replace: mockReplace }),
+  usePathname: () => "/build/1/reports",
+}));
+
+jest.mock("@/features/build/shared/build-filter-select", () => ({
+  BuildFilterSelect: ({ label, value, onValueChange }: { label: string; value: string; onValueChange: (v: string) => void }) => (
+    <select aria-label={label} value={value} onChange={(event) => onValueChange(event.target.value)}>
+      <option value="12w">Last 12 weeks</option>
+      <option value="30d">Last 30 days</option>
+    </select>
+  ),
 }));
 
 jest.mock("@/features/build/analytics/analytics-kpi-strip", () => ({
@@ -71,6 +88,7 @@ function settled<T>(data: T) {
 
 beforeEach(() => {
   jest.clearAllMocks();
+  mockSearch = new URLSearchParams();
   useAccess.mockReturnValue(accessGranted);
   useProjectAnalytics.mockReturnValue(settled(ANALYTICS));
 });
@@ -150,5 +168,22 @@ describe("ReportsOverviewTab — the four remaining page states (FE-40/41)", () 
     expect(screen.getByTestId("chart-assignee")).toBeInTheDocument();
     expect(screen.getByTestId("chart-velocity")).toBeInTheDocument();
     expect(screen.getByTestId("chart-estimate")).toBeInTheDocument();
+  });
+});
+
+describe("ReportsOverviewTab — volume range lives in the URL (FE-86)", () => {
+  it("reads the default 12-week window without sending a range — paired with the explicit range test", () => {
+    render(<ReportsOverviewTab projectId={1} />);
+    expect(useProjectAnalytics).toHaveBeenLastCalledWith(1, undefined);
+    expect(screen.getByRole("combobox", { name: "Volume range" })).toHaveValue("12w");
+  });
+
+  it("sends the range from ?volumeRange= and writes changes back to the URL", async () => {
+    mockSearch = new URLSearchParams("tab=overview&volumeRange=30d");
+    const user = userEvent.setup();
+    render(<ReportsOverviewTab projectId={1} />);
+    expect(useProjectAnalytics).toHaveBeenLastCalledWith(1, { range: "30d" });
+    await user.selectOptions(screen.getByRole("combobox", { name: "Volume range" }), "12w");
+    expect(mockReplace).toHaveBeenCalledWith("/build/1/reports?tab=overview", { scroll: false });
   });
 });

@@ -25,7 +25,7 @@ interface UseMailInboxSummarySheetReturn {
   triggerSummary: (accountId: number | "all") => void;
 }
 
-export function useMailInboxSummarySheet(): UseMailInboxSummarySheetReturn {
+export function useMailInboxSummarySheet(selectedAccountId: number | "all" = "all"): UseMailInboxSummarySheetReturn {
   const inboxSummaryMutation = useMailInboxSummary();
 
   const triggerSummary = useCallback(
@@ -49,6 +49,7 @@ export function useMailInboxSummarySheet(): UseMailInboxSummarySheetReturn {
   );
 
   const summaryState: MailInboxSummaryState = (() => {
+    if ((inboxSummaryMutation.variables?.accountId ?? "all") !== selectedAccountId) return { status: "idle" };
     if (inboxSummaryMutation.isPending) return { status: "loading" };
     if (inboxSummaryMutation.isError) {
       const err = inboxSummaryMutation.error;

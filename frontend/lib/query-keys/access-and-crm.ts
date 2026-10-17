@@ -222,7 +222,11 @@ export const accessAndCrmQueryKeys = {
         ? ([...base, "crmSettings", "slaBreachedLeads"] as const)
         : ([...base, "crmSettings", "slaBreachedLeads", params] as const),
     territories: () => [...base, "crmSettings", "territories"] as const,
+    webForms: () => [...base, "crmSettings", "webForms"] as const,
   },
+
+  /** A public lead form, read by token by a visitor who belongs to no tenant. */
+  publicLeadForm: (leadFormToken: string) => [...base, "publicLeadForm", leadFormToken] as const,
 
   crmLifecycle: {
     all: [...base, "crmLifecycle"] as const,
@@ -234,6 +238,9 @@ export const accessAndCrmQueryKeys = {
       params === undefined
         ? ([...base, "crmLifecycle", "healthRoster"] as const)
         : ([...base, "crmLifecycle", "healthRoster", params] as const),
+    /** One contract with its signal history. */
+    detail: (customerLifecycleId: string) =>
+      [...base, "crmLifecycle", "detail", customerLifecycleId] as const,
   },
 
   crmOrganizations: {
@@ -373,25 +380,6 @@ export const accessAndCrmQueryKeys = {
       params === undefined
         ? ([...base, "crmActivities", "list"] as const)
         : ([...base, "crmActivities", "list", params] as const),
-  },
-
-  blog: {
-    all: [...base, "blog"] as const,
-    feed: <P>(params?: P) =>
-      params === undefined
-        ? ([...base, "blog", "feed"] as const)
-        : ([...base, "blog", "feed", params] as const),
-  },
-
-  blogAdmin: {
-    all: [...base, "blogAdmin"] as const,
-    posts: (params?: QueryKeyParams) =>
-      params === undefined
-        ? ([...base, "blogAdmin", "posts"] as const)
-        : ([...base, "blogAdmin", "posts", params] as const),
-    post: (postId: string) =>
-      [...base, "blogAdmin", "post", postId] as const,
-    categories: () => [...base, "blogAdmin", "categories"] as const,
   },
 
   publicBooking: {

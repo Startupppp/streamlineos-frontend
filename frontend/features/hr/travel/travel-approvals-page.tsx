@@ -3,7 +3,7 @@
 import { memo, useState, useCallback, useMemo } from "react";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
-import { CheckCircle2, XCircle, MapPin, Calendar, DollarSign, Plane, User } from "lucide-react";
+import { CheckCircle2, XCircle, MapPin, Calendar, Wallet, Plane, User } from "lucide-react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
@@ -11,7 +11,10 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
-import { ErrorState } from "@/components/shared/error-state";
+import { PageState } from "@/components/shared/page-state";
+import { usePageState } from "@/hooks/api/use-page-state";
+import { useOrgDisplay } from "@/hooks/api/org-display";
+import { formatMoney, type MoneyDisplay } from "@/lib/format-utils";
 import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
 import { useMotionVariants } from "@/lib/motion-variants";
 import {
@@ -68,10 +71,12 @@ function RejectInline({
   id,
   onReject,
   isRejecting,
+  disabled,
 }: {
   id: number;
   onReject: (id: number, reason: string) => void;
   isRejecting: boolean;
+  disabled: boolean;
 }) {
   const [expanded, setExpanded] = useState(false);
   const [reason, setReason] = useState("");
@@ -91,9 +96,8 @@ function RejectInline({
 
   function handleConfirm(): void {
     if (!reason.trim()) return;
+    // Stays open: the card leaves the list on success; on failure the reason is kept for a retry.
     onReject(id, reason.trim());
-    setExpanded(false);
-    setReason("");
   }
 
   if (!expanded) {
@@ -103,6 +107,7 @@ function RejectInline({
         variant="outline"
         className="gap-1 text-xs border-destructive/30 text-destructive hover:bg-destructive/10"
         onClick={handleExpand}
+        disabled={disabled}
       >
         <XCircle className="h-3.5 w-3.5" />
         Reject
@@ -113,7 +118,7 @@ function RejectInline({
   return (
     <div className="flex items-center gap-1.5">
       <Input
-        className="text-xs"
+        aria-label="Reason for rejection"
         placeholder="Reason for rejection..."
         value={reason}
         onChange={handleReasonChange}
@@ -124,12 +129,12 @@ function RejectInline({
         variant="destructive"
         className="text-xs shrink-0"
         onClick={handleConfirm}
-        disabled={!reason.trim()}
+        disabled={!reason.trim() || disabled}
         isPending={isRejecting}
       >
         Confirm
       </LoadingButton>
-      <Button size="sm" variant="ghost" className="text-xs shrink-0" onClick={handleCancel}>
+      <Button size="sm" variant="ghost" className="text-xs shrink-0" onClick={handleCancel} disabled={isRejecting}>
         Cancel
       </Button>
     </div>
@@ -157,6 +162,7 @@ const TravelApprovalCard = memo(function TravelApprovalCard({
   isManagerApproving,
   isFinanceApproving,
   isRejecting,
+  money,
 }: {
   request: TravelRequest;
   requesterName: string;
@@ -167,8 +173,10 @@ const TravelApprovalCard = memo(function TravelApprovalCard({
   isManagerApproving: boolean;
   isFinanceApproving: boolean;
   isRejecting: boolean;
+  money: MoneyDisplay;
 }) {
   const { fadeUp } = useMotionVariants();
+  const isBusy = isManagerApproving || isFinanceApproving || isRejecting;
 
   function handleManagerApprove(): void {
     onManagerApprove(request.id);
@@ -207,8 +215,8 @@ const TravelApprovalCard = memo(function TravelApprovalCard({
                   </div>
                   {request.estimatedCost && (
                     <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                      <DollarSign className="h-3 w-3" />
-                      <span>₹{Number(request.estimatedCost).toLocaleString("en-IN")}</span>
+                      <Wallet className="h-3 w-3" />
+                      <span className="tabular-nums">{formatMoney(request.estimatedCost, money)}</span>
                     </div>
                   )}
                 </div>
@@ -220,6 +228,7 @@ const TravelApprovalCard = memo(function TravelApprovalCard({
                   size="sm"
                   className="gap-1 text-xs"
                   onClick={handleManagerApprove}
+                  disabled={isBusy}
                   isPending={isManagerApproving}
                 >
                   <CheckCircle2 className="h-3.5 w-3.5" />
@@ -230,13 +239,14 @@ const TravelApprovalCard = memo(function TravelApprovalCard({
                   size="sm"
                   className="gap-1 text-xs"
                   onClick={handleFinanceApprove}
+                  disabled={isBusy}
                   isPending={isFinanceApproving}
                 >
                   <CheckCircle2 className="h-3.5 w-3.5" />
-                  Finance Approve
+                  Finance approve
                 </LoadingButton>
               )}
-              <RejectInline id={request.id} onReject={onReject} isRejecting={isRejecting} />
+              <RejectInline id={request.id} onReject={onReject} isRejecting={isRejecting} disabled={isBusy && !isRejecting} />
             </div>
           </div>
         </CardContent>
@@ -258,6 +268,8 @@ export function TravelApprovalsPage() {
   const managerApprove = useManagerApproveTravelRequest();
   const financeApprove = useFinanceApproveTravelRequest();
   const reject = useRejectTravelRequest();
+  const money = useOrgDisplay();
+  const pageState = usePageState({ permission: "hr:travel:manage", module: "hr", isLoading, isError, error });
 
   const memberById = useMemo(() => {
     const map = new Map<string, NamedUser>();
@@ -270,7 +282,7 @@ export function TravelApprovalsPage() {
   const resolveMemberName = useCallback(
     (userId: string) => {
       const member = memberById.get(userId);
-      return member ? getUserDisplayName(member) : userId;
+      return member ? getUserDisplayName(member) : "Unknown member";
     },
     [memberById],
   );
@@ -322,7 +334,7 @@ export function TravelApprovalsPage() {
     [reject],
   );
 
-  if (isLoading) return <ApprovalsLoading />;
+  if (pageState.kind === "loading") return <ApprovalsLoading />;
 
   const pendingManager = requests?.filter((r) => r.status === "PENDING") ?? [];
   const pendingFinance = requests?.filter((r) => r.status === "MANAGER_APPROVED") ?? [];
@@ -334,14 +346,8 @@ export function TravelApprovalsPage() {
       subtitle="Review pending travel requests"
       badge={undefined}
     >
-      {isError ? (
-        <ErrorState
-          className="flex-1"
-          title="Couldn't load travel approvals"
-          description={getErrorMessage(error)}
-          onRetry={handleRetry}
-        />
-      ) : isEmpty ? (
+      <PageState resolution={pageState} loading={null} onRetry={handleRetry} className="flex-1">
+      {isEmpty ? (
         <EmptyState
           illustrationPreset="travel"
           title="No pending approvals"
@@ -368,9 +374,10 @@ export function TravelApprovalsPage() {
                     onManagerApprove={handleManagerApprove}
                     onFinanceApprove={handleFinanceApprove}
                     onReject={handleReject}
-                    isManagerApproving={managerApprove.isPending}
-                    isFinanceApproving={financeApprove.isPending}
-                    isRejecting={reject.isPending}
+                    isManagerApproving={managerApprove.isPending && managerApprove.variables === r.id}
+                    isFinanceApproving={financeApprove.isPending && financeApprove.variables === r.id}
+                    isRejecting={reject.isPending && reject.variables?.travelId === r.id}
+                    money={money}
                   />
                 ))}
               </div>
@@ -389,9 +396,10 @@ export function TravelApprovalsPage() {
                     onManagerApprove={handleManagerApprove}
                     onFinanceApprove={handleFinanceApprove}
                     onReject={handleReject}
-                    isManagerApproving={managerApprove.isPending}
-                    isFinanceApproving={financeApprove.isPending}
-                    isRejecting={reject.isPending}
+                    isManagerApproving={managerApprove.isPending && managerApprove.variables === r.id}
+                    isFinanceApproving={financeApprove.isPending && financeApprove.variables === r.id}
+                    isRejecting={reject.isPending && reject.variables?.travelId === r.id}
+                    money={money}
                   />
                 ))}
               </div>
@@ -399,6 +407,7 @@ export function TravelApprovalsPage() {
           )}
         </motion.div>
       )}
+      </PageState>
     </PageWrapper>
   );
 }

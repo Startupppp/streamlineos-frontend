@@ -73,6 +73,19 @@ describe("resolvePageState", () => {
       .toBe("denied");
   });
 
+  it("renders a missing or unreachable record as not-found, never as an empty state", () => {
+    expect(pageStateFromError(new ApiError("Not found", 404, "NOT_FOUND"))).toEqual({
+      kind: "not-found",
+    });
+  });
+
+  it("resolves a 404 read to not-found even when the list it left behind is empty", () => {
+    const error = new ApiError("Project not found", 404, "NOT_FOUND");
+    expect(
+      resolvePageState({ ...idle, access: "granted", isError: true, error, isEmpty: true }),
+    ).toEqual({ kind: "not-found" });
+  });
+
   it("degrades a malformed denial payload rather than throwing inside a render", () => {
     const error = new ApiError("nope", 402, "MODULE_NOT_ENABLED", { moduleKey: 7 });
     expect(pageStateFromError(error)).toEqual({ kind: "module-disabled", moduleKey: "" });
@@ -101,6 +114,13 @@ describe("resolvePageState — the branch order below denial", () => {
       .toEqual({ kind: "loading" });
   });
 
+  it("separates an empty filtered result from an empty collection", () => {
+    expect(resolvePageState({ ...granted, isEmpty: true, hasActiveFilters: true }))
+      .toEqual({ kind: "filtered-empty" });
+    expect(resolvePageState({ ...granted, isEmpty: false, hasActiveFilters: true }))
+      .toEqual({ kind: "ready" });
+  });
+
   it("prefers an error to an empty result, so a failure is not read as no data", () => {
     const error = new Error("boom");
     expect(resolvePageState({ ...granted, isError: true, error, isEmpty: true }))
@@ -109,5 +129,34 @@ describe("resolvePageState — the branch order below denial", () => {
 
   it("shows the data when there is data and the caller may see it", () => {
     expect(resolvePageState({ ...granted, isEmpty: false })).toEqual({ kind: "ready" });
+  });
+});
+
+describe("a 401 is the session ending, not a page that failed to load", () => {
+  it("resolves session-expired rather than the generic error that reads as a bug", () => {
+    expect(
+      resolvePageState({
+        isLoading: false,
+        isError: true,
+        error: new ApiError("Unauthorized", 401, "UNAUTHORIZED"),
+      }),
+    ).toEqual({ kind: "session-expired" });
+  });
+
+  it("outranks loading, because a gated page whose access call 401d waits on a skeleton forever", () => {
+    expect(
+      resolvePageState({
+        access: "loading",
+        isLoading: true,
+        isError: true,
+        error: new ApiError("Unauthorized", 401, "UNAUTHORIZED"),
+      }),
+    ).toEqual({ kind: "session-expired" });
+  });
+
+  it("leaves 403 as a denial, so an in-tenant permission miss is not mistaken for a dead session", () => {
+    expect(pageStateFromError(new ApiError("Forbidden", 403, "FORBIDDEN"))).toMatchObject({
+      kind: "denied",
+    });
   });
 });

@@ -1,6 +1,5 @@
 "use client";
 
-import { memo, useCallback, useMemo, useState } from "react";
 import dynamic from "next/dynamic";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
@@ -9,48 +8,20 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { LoadingState } from "@/components/shared/loading-state";
 import { ErrorState } from "@/components/shared/error-state";
 import { EmptyState } from "@/components/ui/empty-state";
-import { EmptyUploadIllustration } from "@/components/illustrations";
-import { cn } from "@/lib/utils";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import {
-  Plus,
-  Trash2,
-  StickyNote,
-  Lock,
-  Globe,
-  PanelLeftClose,
-  PanelLeftOpen,
-} from "lucide-react";
-import {
-  useWhiteboards,
-  useWhiteboard,
-  useCreateWhiteboard,
-  useDeleteWhiteboard,
-  useUpdateWhiteboard,
-  type WhiteboardSummary,
-  type ExcalidrawSceneData,
-} from "@/hooks/api/build";
-import { useCan } from "@/hooks/api/access";
-import { usePageState } from "@/hooks/api/use-page-state";
+import { PanelLeftClose, PanelLeftOpen, Plus } from "lucide-react";
 import { PageState } from "@/components/shared/page-state";
-import { toast } from "sonner";
 import { CreateBoardDialog } from "./create-board-dialog";
-import { useWhiteboardAutosave } from "./use-whiteboard-autosave";
 import { WhiteboardToolbar } from "./whiteboard-toolbar";
 import { ShareDialog } from "./share-dialog";
-import { computeStoredVersion } from "./scene-utils";
 import {
   PmPageShell,
   PmPanel,
-  PM_FILL_PANEL,
-  PM_ROW,
+  CONTENT_FILL_PANEL,
 } from "@/components/pm-chrome";
-import { TEXT_ONE_LINE } from "@/lib/text-overflow";
-import { TruncatedText } from "@/components/ui/truncated-text";
-import { getErrorMessage } from "@/lib/get-error-message";
-import { useRegisterDirtyState } from "@/components/shared/dirty-state-context";
-
-const BOARDS_COLLAPSED_KEY = "streamlineos:whiteboard:boards-collapsed";
+import { InfiniteScrollSentinel } from "@/components/ui/infinite-scroll-sentinel";
+import { BoardItem, MobileBoardChip } from "./whiteboard-board-item";
+import { useWhiteboardPage } from "./use-whiteboard-page";
 
 const ExcalidrawCanvas = dynamic(
   () => import("./excalidraw-canvas").then((m) => m.ExcalidrawCanvas),
@@ -64,250 +35,48 @@ const ExcalidrawCanvas = dynamic(
   },
 );
 
-interface BoardItemProps {
-  board: WhiteboardSummary;
-  isSelected: boolean;
-  canManage: boolean;
-  onSelect: (id: number) => void;
-  onDelete: (board: WhiteboardSummary) => void;
-}
-
-const BoardItem = memo(function BoardItem({
-  board,
-  isSelected,
-  canManage,
-  onSelect,
-  onDelete,
-}: BoardItemProps) {
-  const handleSelect = useCallback(
-    () => onSelect(board.id),
-    [onSelect, board.id],
-  );
-  const handleDelete = useCallback(
-    (event: React.MouseEvent<HTMLButtonElement>) => {
-      event.stopPropagation();
-      onDelete(board);
-    },
-    [onDelete, board],
-  );
-  function handleKeyDown(e: React.KeyboardEvent) {
-    if (e.key === "Enter") handleSelect();
-  }
-
-  const visibilityIcon =
-    board.visibility === "private" ? (
-      <Lock
-        className="h-3 w-3 shrink-0 text-muted-foreground"
-        aria-label="Private"
-      />
-    ) : board.visibility === "public" ? (
-      <Globe
-        className="h-3 w-3 shrink-0 text-muted-foreground"
-        aria-label="Public"
-      />
-    ) : null;
-
-  return (
-    <li>
-      <div
-        role="button"
-        tabIndex={0}
-        onClick={handleSelect}
-        onKeyDown={handleKeyDown}
-        className={cn(
-          PM_ROW,
-          "cursor-pointer border-0 last:border-b-0 text-sm",
-          isSelected ? "bg-primary/10 text-primary" : "text-muted-foreground",
-        )}
-      >
-        <StickyNote className="h-3.5 w-3.5 shrink-0" />
-        <div className="min-w-0 flex-1">
-          <p className="flex min-w-0 items-center gap-1 font-medium">
-            <TruncatedText text={board.name} />
-            {visibilityIcon}
-          </p>
-          <p className={cn("text-dense text-muted-foreground", TEXT_ONE_LINE)}>
-            {board.elementCount} {board.elementCount === 1 ? "item" : "items"}
-          </p>
-        </div>
-        {canManage && (
-          <Button
-            size="icon"
-            variant="ghost"
-            className="h-6 w-6 shrink-0 opacity-0 group-hover:opacity-100 text-destructive hover:text-destructive hover:bg-destructive/10"
-            onClick={handleDelete}
-            aria-label="Delete board"
-          >
-            <Trash2 className="h-3 w-3" />
-          </Button>
-        )}
-      </div>
-    </li>
-  );
-});
-
-const MobileBoardChip = memo(function MobileBoardChip({
-  board,
-  isSelected,
-  onSelect,
-}: {
-  board: WhiteboardSummary;
-  isSelected: boolean;
-  onSelect: (id: number) => void;
-}) {
-  const handleClick = useCallback(
-    () => onSelect(board.id),
-    [onSelect, board.id],
-  );
-  return (
-    <button
-      onClick={handleClick}
-      className={cn(
-        "px-3 py-1.5 rounded-md text-sm font-medium whitespace-nowrap transition-colors",
-        isSelected
-          ? "bg-primary/10 text-primary"
-          : "text-muted-foreground hover:bg-muted",
-      )}
-    >
-      {board.name}
-    </button>
-  );
-});
-
 interface WhiteboardPageProps {
   projectId: number;
   initialBoardId: number | null;
 }
 
-export function WhiteboardPage({
-  projectId,
-  initialBoardId,
-}: WhiteboardPageProps) {
-  const canManage = useCan("build:whiteboards:manage");
+export function WhiteboardPage({ projectId, initialBoardId }: WhiteboardPageProps) {
   const {
-    data: boards,
-    isLoading,
-    isError,
-    error,
-    refetch,
-  } = useWhiteboards(projectId);
-  const pageState = usePageState({
-    permission: "build:view",
-    isLoading,
-    isError,
-    error,
-  });
-  const createBoard = useCreateWhiteboard(projectId);
-  const deleteBoard = useDeleteWhiteboard(projectId);
-
-  const [chosenBoardId, setChosenBoardId] = useState<number | null>(
-    initialBoardId,
-  );
-  const [createOpen, setCreateOpen] = useState(false);
-  const [deleteTarget, setDeleteTarget] = useState<WhiteboardSummary | null>(
-    null,
-  );
-  const [listCollapsed, setListCollapsed] = useState<boolean>(() => {
-    if (typeof window === "undefined") return false;
-    return localStorage.getItem(BOARDS_COLLAPSED_KEY) === "true";
-  });
-
-  const selectedBoard = useMemo(() => {
-    if (!boards || boards.length === 0) return null;
-    return boards.find((b) => b.id === chosenBoardId) ?? boards[0];
-  }, [boards, chosenBoardId]);
-
-  const {
-    data: detail,
-    isLoading: detailLoading,
-    isError: detailError,
-    refetch: refetchDetail,
-  } = useWhiteboard(projectId, selectedBoard?.id ?? chosenBoardId ?? null);
-  const updateBoard = useUpdateWhiteboard(projectId);
-  const [isFullscreen, setIsFullscreen] = useState(false);
-  const [shareOpen, setShareOpen] = useState(false);
-
-  const initialVersion = computeStoredVersion(detail?.data.elements ?? []);
-
-  const handleSaveAsync = useCallback(
-    async (boardId: number, data: ExcalidrawSceneData) => {
-      await updateBoard.mutateAsync({ whiteboardId: boardId, data });
-    },
-    [updateBoard],
-  );
-  const handleSaveError = useCallback(
-    () => toast.error("Failed to save board"),
-    [],
-  );
-
-  const {
-    status: saveStatus,
+    canManage,
+    boards,
+    pageState,
+    selectedBoard,
+    detail,
+    detailLoading,
+    detailError,
+    saveStatus,
     handleSceneChange,
     manualSave,
-  } = useWhiteboardAutosave({
-    boardId: selectedBoard?.id ?? null,
-    access: detail?.access ?? "view",
-    initialVersion,
-    saveAsync: handleSaveAsync,
-    onSaveError: handleSaveError,
-  });
-
-  useRegisterDirtyState(saveStatus === "dirty");
-
-  const handleToggleFullscreen = useCallback(
-    () => setIsFullscreen((prev) => !prev),
-    [],
-  );
-  const handleExitFullscreen = useCallback(() => setIsFullscreen(false), []);
-  const handleOpenShare = useCallback(() => setShareOpen(true), []);
-  const handleShareOpenChange = useCallback(
-    (open: boolean) => setShareOpen(open),
-    [],
-  );
-  const handleDetailRetry = useCallback(() => refetchDetail(), [refetchDetail]);
-  const handleBoardSelect = useCallback(
-    (id: number) => setChosenBoardId(id),
-    [],
-  );
-  const handleBoardDelete = useCallback(
-    (board: WhiteboardSummary) => setDeleteTarget(board),
-    [],
-  );
-  const handleDeleteDialogOpenChange = useCallback((open: boolean) => {
-    if (!open) setDeleteTarget(null);
-  }, []);
-  const handleOpenCreate = useCallback(() => setCreateOpen(true), []);
-  const handleRefetch = useCallback(() => refetch(), [refetch]);
-  const handleToggleList = useCallback(() => {
-    setListCollapsed((prev) => {
-      const next = !prev;
-      localStorage.setItem(BOARDS_COLLAPSED_KEY, String(next));
-      return next;
-    });
-  }, []);
-
-  function handleCreate(name: string) {
-    createBoard.mutate(name, {
-      onSuccess: (board) => {
-        toast.success("Board created");
-        setChosenBoardId(board.id);
-        setCreateOpen(false);
-      },
-      onError: (error) => toast.error(getErrorMessage(error)),
-    });
-  }
-
-  function handleConfirmDelete() {
-    if (!deleteTarget) return;
-    deleteBoard.mutate(deleteTarget.id, {
-      onSuccess: () => {
-        toast.success("Board deleted");
-        if (chosenBoardId === deleteTarget.id) setChosenBoardId(null);
-        setDeleteTarget(null);
-      },
-      onError: (error) => toast.error(getErrorMessage(error)),
-    });
-  }
+    isFullscreen,
+    shareOpen,
+    listCollapsed,
+    createOpen,
+    deleteTarget,
+    hasNextPage,
+    isFetchingNextPage,
+    isCreatePending,
+    isDeletePending,
+    handleLoadMoreBoards,
+    handleToggleFullscreen,
+    handleExitFullscreen,
+    handleOpenShare,
+    handleShareOpenChange,
+    handleDetailRetry,
+    handleBoardSelect,
+    handleBoardDelete,
+    handleDeleteDialogOpenChange,
+    handleOpenCreate,
+    handleCreateOpenChange,
+    handleRefetch,
+    handleToggleList,
+    handleCreate,
+    handleConfirmDelete,
+  } = useWhiteboardPage({ projectId, initialBoardId });
 
   const visibilityBadge =
     selectedBoard?.visibility === "private"
@@ -364,6 +133,7 @@ export function WhiteboardPage({
   return (
     <PageWrapper
       title={selectedBoard?.name ?? "Whiteboard"}
+      subtitle={selectedBoard ? undefined : "Visual brainstorming for this project"}
       badge={visibilityBadge}
       leading={leadingToggle}
       noInternalScroll
@@ -380,13 +150,13 @@ export function WhiteboardPage({
             resolution={pageState}
             loading={null}
             onRetry={handleRefetch}
-            className={PM_FILL_PANEL}
+            className={CONTENT_FILL_PANEL}
           >
             {null}
           </PageState>
         ) : !boards || boards.length === 0 ? (
           <EmptyState
-            illustration={<EmptyUploadIllustration />}
+            illustrationPreset="documents"
             title="Create your first board"
             description="Whiteboards let your team brainstorm visually with sticky notes, shapes, arrows, and freehand drawing."
             action={
@@ -394,7 +164,7 @@ export function WhiteboardPage({
                 ? { label: "New Board", onClick: handleOpenCreate }
                 : undefined
             }
-            className={PM_FILL_PANEL}
+            className={CONTENT_FILL_PANEL}
           />
         ) : (
           <div className="flex min-h-0 flex-1 gap-3">
@@ -404,7 +174,7 @@ export function WhiteboardPage({
                 solid
               >
                 <div className="mb-1 flex shrink-0 items-center px-1">
-                  <span className="text-xs font-medium text-muted-foreground">
+                  <span className="text-xs font-normal text-muted-foreground">
                     Boards
                   </span>
                 </div>
@@ -421,6 +191,12 @@ export function WhiteboardPage({
                       />
                     ))}
                   </ul>
+                  <InfiniteScrollSentinel
+                    hasNextPage={hasNextPage ?? false}
+                    isFetchingNextPage={isFetchingNextPage}
+                    onLoadMore={handleLoadMoreBoards}
+                    label="Load more boards"
+                  />
                 </ScrollArea>
               </PmPanel>
             ) : null}
@@ -453,12 +229,9 @@ export function WhiteboardPage({
                   />
                 )
               ) : (
-                <PmPanel
-                  className="flex flex-1 items-center justify-center"
-                  solid
-                >
+                <PmPanel className="flex flex-1 items-center justify-center" solid>
                   <EmptyState
-                    illustration={<EmptyUploadIllustration />}
+                    illustrationPreset="documents"
                     title="Select a board"
                     description="Choose a board from the list to start editing."
                     compact
@@ -473,9 +246,9 @@ export function WhiteboardPage({
       {canManage && (
         <CreateBoardDialog
           open={createOpen}
-          onOpenChange={setCreateOpen}
+          onOpenChange={handleCreateOpenChange}
           onCreate={handleCreate}
-          isPending={createBoard.isPending}
+          isPending={isCreatePending}
         />
       )}
 
@@ -497,7 +270,7 @@ export function WhiteboardPage({
         description={`"${deleteTarget?.name ?? ""}" and all of its content will be permanently deleted.`}
         confirmLabel="Delete"
         destructive
-        isPending={deleteBoard.isPending}
+        isPending={isDeletePending}
         keepOpenOnConfirm
         onConfirm={handleConfirmDelete}
       />

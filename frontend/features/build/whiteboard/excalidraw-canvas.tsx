@@ -8,7 +8,7 @@ import { Minimize2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAppTheme } from "@/components/theme/app-theme-provider";
 import type { ExcalidrawProps } from "@excalidraw/excalidraw/types";
-import type { WhiteboardDetail } from "@/hooks/api/build";
+import type { WhiteboardDetail } from "@/hooks/api/build/whiteboards";
 import { isExcalidrawScene } from "./scene-utils";
 import type { SaveStatus } from "./use-whiteboard-autosave";
 
@@ -61,11 +61,11 @@ export function ExcalidrawCanvas({
     >
       {isFullscreen && (
         <div className="flex h-10 shrink-0 items-center gap-2 border-b border-border px-3">
-          <span className="flex-1 truncate text-sm font-semibold text-foreground">
+          <span className="flex-1 truncate text-sm font-medium text-foreground">
             {detail.name}
           </span>
           {saveStatus === "dirty" && (
-            <span className="text-xs text-status-warning-ink font-medium">Unsaved</span>
+            <span className="text-xs text-status-warning-ink-strong font-medium">Unsaved</span>
           )}
           {saveStatus === "saving" && (
             <span className="text-xs text-muted-foreground">Saving…</span>

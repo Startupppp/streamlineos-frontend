@@ -1,51 +1,43 @@
 "use client";
 
-import { useQuery, useQueryClient, type UseQueryOptions } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
 import { collaborationQueryKeys } from "@/lib/query-keys/collaboration";
 import { useCan } from "@/hooks/api/access";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
-import type { ChatOrgSettingsWire } from "@/hooks/api/chat-schema/channel-settings-schema";
+import { getErrorMessage } from "@/lib/get-error-message";
+import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
+import type { ChatOrgSettings } from "@/hooks/api/chat-schema/channel-settings-schema";
 
-const chatOrgSettingsContract = lazyContract(() =>
-  import("@/hooks/api/chat-schema").then((m) => m.chatOrgSettingsContract),
+const chatOrgSettingsC = lazyContract(() =>
+  import("@/hooks/api/chat-schema/channel-settings-schema").then((m) => m.chatOrgSettingsContract),
 );
 
-export type ChatOrgSettings = ChatOrgSettingsWire;
-
-export interface UpdateChatOrgSettingsInput {
-  defaultNotificationPreference?: ChatOrgSettings["defaultNotificationPreference"];
-  maxAttachmentSizeMb?: number;
-  maxHuddleParticipants?: number;
-}
-
-export function useChatOrgSettings(
-  options?: Omit<UseQueryOptions<ChatOrgSettings, Error>, "queryKey" | "queryFn">,
-) {
+/** Org-wide chat defaults. Readable by any chat reader; the settings page itself is admin-only. */
+export function useChatOrgSettings() {
   const canRead = useCan("chat:channels:read");
-  return useQuery<ChatOrgSettings, Error>({
+  return useQuery({
+    ...INLINE_READ_ERROR,
     queryKey: collaborationQueryKeys.chat.orgSettings(),
-    queryFn: ({ signal }) =>
-      apiClient.get<ChatOrgSettings>("/chat/settings", undefined, signal, chatOrgSettingsContract),
-    staleTime: 5 * 60 * 1000,
-    ...options,
-    enabled: canRead && (options?.enabled ?? true),
+    queryFn: ({ signal }) => apiClient.get<ChatOrgSettings>("/chat/settings", undefined, signal, chatOrgSettingsC),
+    staleTime: 5 * 60_000,
+    enabled: canRead,
   });
 }
 
+type UpdateChatOrgSettingsInput = Partial<Omit<ChatOrgSettings, "orgId">>;
+
 export function useUpdateChatOrgSettings() {
-  const queryClient = useQueryClient();
-  return useAuthorizedMutation<ChatOrgSettings, Error, UpdateChatOrgSettingsInput>(
-    "chat:org-settings:manage",
-    {
-      mutationKey: ["chat", "orgSettings", "update"],
-      mutationFn: (input) =>
-        apiClient.patch<ChatOrgSettings>("/chat/settings", input, undefined, chatOrgSettingsContract),
-      onSuccess: (settings) => {
-        queryClient.setQueryData(collaborationQueryKeys.chat.orgSettings(), settings);
-        queryClient.invalidateQueries({ queryKey: collaborationQueryKeys.chat.orgSettings() });
-      },
+  const qc = useQueryClient();
+  return useAuthorizedMutation<ChatOrgSettings, Error, UpdateChatOrgSettingsInput>("chat:org-settings:manage", {
+    mutationKey: ["chat", "orgSettings", "update"],
+    mutationFn: (input) => apiClient.patch<ChatOrgSettings>("/chat/settings", input, undefined, chatOrgSettingsC),
+    onSuccess: (settings) => {
+      qc.setQueryData(collaborationQueryKeys.chat.orgSettings(), settings);
+      toast.success("Chat settings saved");
     },
-  );
+    onError: (error) => toast.error(getErrorMessage(error)),
+  });
 }

@@ -1,4 +1,8 @@
 import type { ReactNode } from "react";
+import type {
+  UseBuildListKeyboardOptions,
+  UseBuildListKeyboardReturn,
+} from "@/hooks/common/use-build-list-keyboard";
 import {
   mockReplace,
   mockPush,
@@ -6,7 +10,6 @@ import {
   mockUseAllWork,
   mockSearchParamsContainer,
   mockDefaultDisplayOptions,
-  mockMakeCursorPaginationStub,
   MockMyWorkContentStub,
   mockPageWrapperStub,
   mockPageTabsToolbarStub,
@@ -16,7 +19,17 @@ import {
   accessDenied,
   defaultAllWork,
   withData,
+  withDataCursor,
 } from "./my-work-page-test-harness";
+
+const mockRequestLeave = jest.fn((action: () => void) => action());
+const mockUseAfterLoad = jest.fn((): boolean => false);
+const mockUseBuildListKeyboard = jest.fn(
+  (_options: UseBuildListKeyboardOptions): UseBuildListKeyboardReturn => ({
+    focusedIndex: null,
+    setFocusedIndex: jest.fn(),
+  }),
+);
 
 jest.mock("next/navigation", () => ({
   useRouter: () => ({
@@ -25,6 +38,14 @@ jest.mock("next/navigation", () => ({
   }),
   usePathname: () => "/build/my-work",
   useSearchParams: () => mockSearchParamsContainer.current,
+}));
+
+jest.mock("@/components/shared/dirty-state-context", () => ({
+  useNavigationLeave: () => mockRequestLeave,
+}));
+
+jest.mock("@/hooks/common/use-build-list-keyboard", () => ({
+  useBuildListKeyboard: (options: UseBuildListKeyboardOptions) => mockUseBuildListKeyboard(options),
 }));
 
 jest.mock("@/hooks/api/access", () => ({
@@ -50,11 +71,16 @@ jest.mock("@/hooks/api/build/custom-states", () => ({
 }));
 
 jest.mock("@/hooks/common/use-after-load", () => ({
-  useAfterLoad: () => false,
+  useAfterLoad: () => mockUseAfterLoad(),
 }));
 
 jest.mock("@/hooks/common/use-online-status", () => ({
   useOnlineStatus: jest.fn(() => true),
+}));
+
+jest.mock("@/hooks/common/use-mobile", () => ({
+  useIsMobile: () => false,
+  useIsBelowLg: () => false,
 }));
 
 jest.mock("@/features/build/views/use-display-options", () => ({
@@ -62,23 +88,29 @@ jest.mock("@/features/build/views/use-display-options", () => ({
 }));
 
 jest.mock("@/features/build/shared/ticket-filter-bar", () => ({
-  TicketFilterBar: () => <div data-testid="filter-bar" />,
+  TicketFilterBar: ({
+    showSearch = true,
+    showFilters = true,
+    trailing,
+  }: {
+    showSearch?: boolean;
+    showFilters?: boolean;
+    trailing?: ReactNode;
+  }) => (
+    <div data-testid={showSearch ? "search-filter-bar" : "filter-only-bar"}>
+      {showFilters ? <button type="button" aria-label="Filters" /> : null}
+      {showSearch ? <input type="search" aria-label="Search tickets" /> : null}
+      {trailing}
+    </div>
+  ),
 }));
 
-jest.mock("@/features/build/views/view-switcher", () => ({
-  ViewSwitcher: () => <div data-testid="view-switcher" />,
-}));
-
-jest.mock("@/features/build/views/display-options-panel", () => ({
-  DisplayOptionsPanel: () => null,
+jest.mock("@/features/build/inbox/inbox-drafts-panel", () => ({
+  InboxDraftsPanel: () => <div data-testid="drafts-panel" />,
 }));
 
 jest.mock("./grouping-sidebar", () => ({
   GroupingSidebar: () => null,
-}));
-
-jest.mock("./my-work-sort-control", () => ({
-  MyWorkSortControl: () => <div data-testid="sort-control" />,
 }));
 
 jest.mock("./my-work-content", () => ({
@@ -142,18 +174,106 @@ jest.mock("sonner", () => ({
   toast: { success: jest.fn(), error: jest.fn() },
 }));
 
-jest.mock("@/hooks/common/use-cursor-pagination", () => ({
-  useCursorPagination: () => mockMakeCursorPaginationStub(),
-}));
-
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import { MyWorkPage } from "./my-work-page";
 
 beforeEach(() => {
   jest.clearAllMocks();
+  mockRequestLeave.mockImplementation((action: () => void) => action());
   mockUseAccess.mockReturnValue(accessGranted);
+  mockUseAfterLoad.mockReturnValue(false);
   mockSearchParamsContainer.current = new URLSearchParams();
   mockUseAllWork.mockReturnValue(defaultAllWork());
+});
+
+describe("MyWorkPage — unsaved-work navigation", () => {
+  it("routes keyboard ticket opens through the shared leave guard", () => {
+    mockUseAllWork.mockReturnValue(withData());
+
+    render(<MyWorkPage />);
+
+    const options = mockUseBuildListKeyboard.mock.calls[0]?.[0];
+    expect(options).toBeDefined();
+    let pendingNavigation: (() => void) | undefined;
+    mockRequestLeave.mockImplementation((action: () => void) => {
+      pendingNavigation = action;
+    });
+
+    options?.onOpen(0);
+
+    expect(mockRequestLeave).toHaveBeenCalledTimes(1);
+    expect(mockPush).not.toHaveBeenCalled();
+
+    pendingNavigation?.();
+    expect(mockPush).toHaveBeenCalledWith("/build/42/tickets/ENG-1?returnTo=%2Fbuild%2Fmy-work");
+  });
+});
+
+describe("MyWorkPage — sections", () => {
+  it("renders the existing drafts panel without starting ticket list requests", async () => {
+    mockSearchParamsContainer.current = new URLSearchParams("section=drafts");
+
+    render(<MyWorkPage />);
+
+    expect(await screen.findByTestId("drafts-panel")).toBeInTheDocument();
+    expect(screen.queryByTestId("content-ready")).toBeNull();
+    expect(mockUseAllWork).not.toHaveBeenCalled();
+    expect(screen.getByRole("link", { name: "Drafts" })).toHaveAttribute("aria-current", "page");
+    expect(screen.getByTestId("page-wrapper-actions")).toContainElement(
+      screen.getByRole("navigation", { name: "My Work sections" }),
+    );
+  });
+
+  it("keeps ticket list state in the URL while switching sections through the leave guard", () => {
+    mockSearchParamsContainer.current = new URLSearchParams(
+      "status=TODO&cursor=c1&draftCursors=%5B%22draft-cursor%22%5D",
+    );
+    render(<MyWorkPage />);
+
+    let pendingNavigation: (() => void) | undefined;
+    mockRequestLeave.mockImplementation((action: () => void) => {
+      pendingNavigation = action;
+    });
+    fireEvent.click(screen.getByRole("link", { name: "Drafts" }));
+
+    expect(mockPush).not.toHaveBeenCalled();
+    pendingNavigation?.();
+    expect(mockPush).toHaveBeenCalledWith(
+      "/build/my-work?status=TODO&cursor=c1&section=drafts",
+      { scroll: false },
+    );
+  });
+
+  it("clears draft pagination when returning to tickets while preserving ticket state", () => {
+    mockSearchParamsContainer.current = new URLSearchParams(
+      "section=drafts&status=TODO&cursor=ticket-cursor&draftCursors=%5B%22draft-cursor%22%5D",
+    );
+    render(<MyWorkPage />);
+
+    fireEvent.click(screen.getByRole("link", { name: "Tickets" }));
+
+    expect(mockPush).toHaveBeenCalledWith(
+      "/build/my-work?status=TODO&cursor=ticket-cursor",
+      { scroll: false },
+    );
+    expect(screen.getByTestId("page-wrapper-actions")).toContainElement(
+      screen.getByRole("navigation", { name: "My Work sections" }),
+    );
+  });
+
+  it("keeps a filtered My Work return URL on keyboard ticket opening", () => {
+    mockSearchParamsContainer.current = new URLSearchParams("relation=created&q=release&unsafe=value");
+    mockUseAllWork.mockReturnValue(withData());
+    render(<MyWorkPage />);
+
+    const options = mockUseBuildListKeyboard.mock.calls[0]?.[0];
+    expect(options).toBeDefined();
+    options?.onOpen(0);
+
+    expect(mockPush).toHaveBeenCalledWith(
+      "/build/42/tickets/ENG-1?returnTo=%2Fbuild%2Fmy-work%3Fq%3Drelease%26relation%3Dcreated",
+    );
+  });
 });
 
 describe("MyWorkPage — access is three-valued, not a boolean", () => {
@@ -212,6 +332,44 @@ describe("MyWorkPage — URL param round-trips", () => {
     );
     expect(call?.[0]).toMatchObject({ cursor: "abc123" });
   });
+
+  it("relation=created enables the created-tab query and disables the assigned-tab query", () => {
+    mockSearchParamsContainer.current = new URLSearchParams("relation=created");
+    render(<MyWorkPage />);
+    const createdCall = mockUseAllWork.mock.calls.find(
+      ([f]: [{ scope?: string }]) => f?.scope === "created",
+    );
+    expect(createdCall?.[0]).toMatchObject({ scope: "created" });
+    expect(createdCall?.[1]?.enabled).toBe(true);
+    const assignedCall = mockUseAllWork.mock.calls.find(
+      ([f]: [{ scope?: string }]) => f?.scope === "mine",
+    );
+    expect(assignedCall?.[1]?.enabled).toBe(false);
+  });
+
+  it("relation=subscribed enables the subscribed-tab query with scope: subscribed", () => {
+    mockSearchParamsContainer.current = new URLSearchParams("relation=subscribed");
+    render(<MyWorkPage />);
+    const subscribedCall = mockUseAllWork.mock.calls.find(
+      ([f]: [{ scope?: string }]) => f?.scope === "subscribed",
+    );
+    expect(subscribedCall?.[0]).toMatchObject({ scope: "subscribed" });
+    expect(subscribedCall?.[1]?.enabled).toBe(true);
+    const assignedCall = mockUseAllWork.mock.calls.find(
+      ([f]: [{ scope?: string }]) => f?.scope === "mine",
+    );
+    expect(assignedCall?.[1]?.enabled).toBe(false);
+  });
+
+  it("legacy tab=watching is normalised to relation=subscribed so old deep-links keep working", () => {
+    mockSearchParamsContainer.current = new URLSearchParams("tab=watching");
+    render(<MyWorkPage />);
+    const subscribedCall = mockUseAllWork.mock.calls.find(
+      ([f]: [{ scope?: string }]) => f?.scope === "subscribed",
+    );
+    expect(subscribedCall?.[0]).toMatchObject({ scope: "subscribed" });
+    expect(subscribedCall?.[1]?.enabled).toBe(true);
+  });
 });
 
 describe("MyWorkPage — state renders the correct surface", () => {
@@ -265,5 +423,63 @@ describe("MyWorkPage — pagination resets on filter change", () => {
       ([f]: [{ cursor?: string }]) => f?.cursor === undefined,
     );
     expect(callWithoutCursor).toBeTruthy();
+  });
+});
+
+describe("MyWorkPage — Previous walks back one page instead of jumping to the first", () => {
+  function syncUrlFromLastReplace() {
+    const calls = mockReplace.mock.calls;
+    const last = calls[calls.length - 1] as [string] | undefined;
+    const url = last?.[0] ?? "/build/my-work";
+    const query = url.includes("?") ? url.slice(url.indexOf("?") + 1) : "";
+    mockSearchParamsContainer.current = new URLSearchParams(query);
+  }
+
+  it("sends the previous cursor from the walked trail, not a cleared cursor", () => {
+    mockUseAllWork.mockReturnValue(withDataCursor("c1"));
+    const view = render(<MyWorkPage />);
+
+    expect(screen.getByTestId("page-number").textContent).toBe("1");
+    expect(screen.getByTestId("has-previous").textContent).toBe("false");
+
+    screen.getByTestId("next-page").click();
+    syncUrlFromLastReplace();
+    expect(mockSearchParamsContainer.current.get("cursor")).toBe("c1");
+    mockUseAllWork.mockReturnValue(withDataCursor("c2"));
+    view.rerender(<MyWorkPage />);
+
+    expect(screen.getByTestId("page-number").textContent).toBe("2");
+
+    screen.getByTestId("next-page").click();
+    syncUrlFromLastReplace();
+    expect(mockSearchParamsContainer.current.get("cursor")).toBe("c2");
+    mockUseAllWork.mockReturnValue(withDataCursor("c3"));
+    view.rerender(<MyWorkPage />);
+
+    expect(screen.getByTestId("page-number").textContent).toBe("3");
+
+    screen.getByTestId("previous-page").click();
+    syncUrlFromLastReplace();
+    expect(mockSearchParamsContainer.current.get("cursor")).toBe("c1");
+    view.rerender(<MyWorkPage />);
+    expect(screen.getByTestId("page-number").textContent).toBe("2");
+  });
+
+  it("drops a stale cursor when the work scope changes so one scope's keyset never pages another", async () => {
+    mockSearchParamsContainer.current = new URLSearchParams("cursor=c9");
+    mockUseAllWork.mockReturnValue(withDataCursor("c10"));
+    render(<MyWorkPage />);
+
+    const trigger = screen.getByRole("combobox", { name: "Work scope" });
+    fireEvent.keyDown(trigger, { key: "Enter" });
+    fireEvent.click(await screen.findByRole("option", { name: "Created" }));
+
+    const calls = mockReplace.mock.calls;
+    const last = calls[calls.length - 1] as [string] | undefined;
+    expect(last?.[0]).toBeDefined();
+    const url = last?.[0] ?? "";
+    expect(url).toContain("relation=created");
+    expect(url).not.toContain("tab=");
+    expect(url).not.toContain("cursor=");
   });
 });

@@ -1,13 +1,4 @@
 import { differenceInDays, format, isPast } from "date-fns";
-import type { ProjectListItem } from "@/types/projects/projects";
-
-export const statusStripe: Record<string, string> = {
-  ACTIVE: "border-l-emerald-500",
-  PLANNING: "border-l-blue-500",
-  COMPLETED: "border-l-slate-400",
-  ON_HOLD: "border-l-amber-500",
-  ARCHIVED: "border-l-slate-400 dark:border-l-slate-600",
-};
 
 export const statusDotColors: Record<string, string> = {
   ACTIVE: "bg-status-success-fill",
@@ -18,24 +9,24 @@ export const statusDotColors: Record<string, string> = {
 };
 
 export const avatarTints: Record<string, string> = {
-  ACTIVE: "bg-status-success-surface text-status-success-ink ring-status-success-rule",
-  PLANNING: "bg-status-info-surface text-status-info-ink ring-status-info-rule",
+  ACTIVE: "bg-status-success-surface text-status-success-ink-strong ring-status-success-rule",
+  PLANNING: "bg-status-info-surface text-status-info-ink-strong ring-status-info-rule",
   COMPLETED: "bg-muted text-muted-foreground ring-border",
-  ON_HOLD: "bg-status-warning-surface text-status-warning-ink ring-status-warning-rule",
+  ON_HOLD: "bg-status-warning-surface text-status-warning-ink-strong ring-status-warning-rule",
   ARCHIVED: "bg-muted text-muted-foreground ring-border",
 };
 
 type DateTone = "muted" | "soon" | "overdue";
 
-export interface DateMeta {
+interface DateMeta {
   label: string;
   tone: DateTone;
 }
 
 export const dateToneClasses: Record<DateTone, string> = {
   muted: "text-muted-foreground",
-  soon: "text-status-warning-ink",
-  overdue: "text-status-danger-ink",
+  soon: "text-status-warning-ink-strong",
+  overdue: "text-status-danger-ink-strong",
 };
 
 export function resolveDateMeta(
@@ -60,11 +51,4 @@ export function resolveDateMeta(
     return { label: format(new Date(startDate), "'Started' MMM d"), tone: "muted" };
   }
   return null;
-}
-
-export function buildTeamMembers(project: ProjectListItem) {
-  if (project.manager && !project.members.some((member) => member.id === project.manager?.id)) {
-    return [project.manager, ...project.members];
-  }
-  return project.members;
 }

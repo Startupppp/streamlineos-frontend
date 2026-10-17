@@ -122,7 +122,8 @@ export function MailAiComposeToolbar({
   );
 
   const handleInstructionChange = useCallback(
-    (e: React.ChangeEvent<HTMLTextAreaElement>) => setInstruction(e.target.value),
+    (e: React.ChangeEvent<HTMLTextAreaElement>) =>
+      setInstruction(e.target.value),
     [],
   );
 
@@ -156,7 +157,7 @@ export function MailAiComposeToolbar({
   return (
     <div
       className={cn(
-        "flex flex-wrap items-center gap-1",
+        "flex flex-nowrap items-center gap-1 overflow-x-auto scrollbar-hide",
         className,
       )}
     >

@@ -1,7 +1,9 @@
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
-import { ACCESS_MANAGED_MODULES } from "@/lib/rbac/permissions/module-access";
+import { delegableModuleIds } from "@/test-utils/permission-catalog";
 import { resolveRouteAccess } from "@/lib/rbac/route-access/route-access";
+
+const ACCESS_MANAGED_MODULES = delegableModuleIds();
 
 /**
  * Modules whose access ladder the backend delegates but which have no
@@ -29,7 +31,7 @@ const RELOCATED_ACCESS_PAGE: Readonly<Record<string, RelocatedAccessPage>> = {
     segments: ["build", "settings", "access"],
     route: "/build/settings/access",
     reason:
-      "Build administers membership and module access from one organisation-scoped settings surface, so its access screen sits at /build/settings/access beside /build/settings/client-access and /build/settings/integrations rather than at /build/access. Recorded in docs/build-module/01-ia-navigation.md:66,155 and docs/specs/build/module/02a-cross-scope-pages-prd.md:45. The legacy /build/access path survives only as a next.config redirect, which Next.js resolves before filesystem routing.",
+      "Build administers membership and module access from one organisation-scoped settings surface, so its access screen sits at /build/settings/access beside /build/settings/client-access and /build/settings/integrations rather than at /build/access. Recorded in docs/build-module/01-ia-navigation.md:66,155 and docs/build-module/acceptance/module/02a-cross-scope-pages-prd.md:45. The legacy /build/access path survives only as a next.config redirect, which Next.js resolves before filesystem routing.",
   },
 };
 
@@ -131,9 +133,7 @@ describe("module access route policy", () => {
   it("no exemption outlives the gap it describes", () => {
     const stale = Object.keys(NO_ACCESS_PAGE).filter(
       (moduleKey) =>
-        !ACCESS_MANAGED_MODULES.includes(
-          moduleKey as (typeof ACCESS_MANAGED_MODULES)[number],
-        ) || existsSync(pagePath(moduleKey)),
+        !ACCESS_MANAGED_MODULES.includes(moduleKey) || existsSync(pagePath(moduleKey)),
     );
     expect(stale).toEqual([]);
   });
@@ -148,9 +148,7 @@ describe("module access route policy", () => {
   it("no relocation outlives the module it describes", () => {
     const stale = Object.keys(RELOCATED_ACCESS_PAGE).filter(
       (moduleKey) =>
-        !ACCESS_MANAGED_MODULES.includes(
-          moduleKey as (typeof ACCESS_MANAGED_MODULES)[number],
-        ) || NO_ACCESS_PAGE[moduleKey] !== undefined,
+        !ACCESS_MANAGED_MODULES.includes(moduleKey) || NO_ACCESS_PAGE[moduleKey] !== undefined,
     );
     expect(stale).toEqual([]);
   });

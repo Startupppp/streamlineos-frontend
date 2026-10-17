@@ -4,7 +4,9 @@ import { WifiOff } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PAUSED_LABEL, PAUSED_MESSAGE } from "@/components/shared/loading-state";
+import { StalledReadNotice } from "@/components/shared/stalled-read-notice";
 import { useOnlineStatus } from "@/hooks/common/use-online-status";
+import { PANEL_STALLED_AFTER_MS, useStalledAfter } from "@/hooks/common/use-stalled-after";
 import {
   Table,
   TableBody,
@@ -25,15 +27,18 @@ type DataTableSkeletonProps = {
   rows?: number;
   className?: string;
   mobileCards?: boolean;
+  onStalledRetry?: () => void;
 } & ({ headers: readonly string[]; columns?: never } | { headers?: never; columns?: number });
 
 export function DataTableSkeleton({
   rows = 12,
   className,
   mobileCards = false,
+  onStalledRetry,
   ...shape
 }: DataTableSkeletonProps) {
   const isOnline = useOnlineStatus();
+  const stalled = useStalledAfter(isOnline && !!onStalledRetry, PANEL_STALLED_AFTER_MS);
   const headers = shape.headers ?? null;
   const columns = headers ? headers.length : (shape.columns ?? 4);
 
@@ -51,6 +56,9 @@ export function DataTableSkeleton({
           {PAUSED_MESSAGE}
         </p>
       )}
+      {stalled && onStalledRetry ? (
+        <StalledReadNotice subject="results" onRetry={onStalledRetry} className="m-2" />
+      ) : null}
       {mobileCards ? (
         <div className="flex flex-col gap-2 p-2 sm:hidden">
           {Array.from({ length: 6 }).map((_, cardIdx) => (
@@ -68,19 +76,18 @@ export function DataTableSkeleton({
           ))}
         </div>
       ) : null}
-      <Table containerClassName={mobileCards ? "hidden sm:block" : undefined}>
+      {/* Without real headers the grid is pure placeholder: hide it from assistive tech
+          (the status line above announces the load) rather than invent "Column N" names. */}
+      <Table
+        containerClassName={mobileCards ? "hidden sm:block" : undefined}
+        containerFocusable={headers !== null}
+        aria-hidden={headers ? undefined : true}
+      >
         <TableHeader className="bg-muted/50 border-b border-border">
           <TableRow className="hover:bg-transparent">
             {Array.from({ length: columns }).map((_, colIdx) => (
               <TableHead key={colIdx} className="px-2 py-2">
-                {headers ? (
-                  headers[colIdx]
-                ) : (
-                  <>
-                    <Skeleton className="h-3.5 w-16" aria-hidden="true" />
-                    <span className="sr-only">Column {colIdx + 1}</span>
-                  </>
-                )}
+                {headers ? headers[colIdx] : <Skeleton className="h-3.5 w-16" />}
               </TableHead>
             ))}
           </TableRow>

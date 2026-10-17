@@ -1,14 +1,18 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback } from "react";
 import { toast } from "sonner";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { LoadingButton } from "@/components/ui/loading-button";
+import { InfiniteScrollSentinel } from "@/components/ui/infinite-scroll-sentinel";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ErrorState } from "@/components/shared/error-state";
+import { PageState } from "@/components/shared/page-state";
+import { ErrorReference } from "@/components/shared/error-reference";
 import { EmptyState } from "@/components/ui/empty-state";
 import { useCan } from "@/hooks/api/access";
+import { usePageState } from "@/hooks/api/use-page-state";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { isApiError } from "@/lib/api-envelope";
 import {
   useKnowledgeGaps,
   useDetectGaps,
@@ -44,11 +48,33 @@ function GapListSkeletons() {
 }
 
 export function KnowledgeGapsPage() {
-  const [cursor, setCursor] = useState<number | undefined>(undefined);
-  const { data, isLoading, isError, refetch } = useKnowledgeGaps(cursor);
+  const {
+    data,
+    isLoading,
+    isError,
+    isFetchNextPageError,
+    error,
+    refetch,
+    fetchNextPage,
+    hasNextPage,
+    isFetching,
+    isFetchingNextPage,
+  } = useKnowledgeGaps();
   const detectMutation = useDetectGaps();
   const draftMutation = useDraftGap();
   const dismissMutation = useDismissGap();
+
+  const gaps = data?.pages.flatMap((page) => page.gaps) ?? [];
+  const accessLost = isApiError(error) && (error.status === 401 || error.status === 403 || error.status === 404);
+  const inlineReadError = isError && gaps.length > 0 && !accessLost;
+
+  const pageState = usePageState({
+    permission: "support:knowledge-gaps:view",
+    isLoading,
+    isError: isError && !inlineReadError,
+    error,
+    isEmpty: !isLoading && !isError && gaps.length === 0,
+  });
 
   function handleDetect() {
     detectMutation.mutate(void 0, {
@@ -67,9 +93,9 @@ export function KnowledgeGapsPage() {
     );
   }
 
-  function handleDismiss(gapId: number) {
+  function handleDismiss(gapId: number, reason?: string) {
     dismissMutation.mutate(
-      { gapId },
+      { gapId, reason },
       { onError: (err) => toast.error(getErrorMessage(err)) },
     );
   }
@@ -78,13 +104,13 @@ export function KnowledgeGapsPage() {
     void refetch();
   }
 
-  function handleLoadMore() {
-    if (data?.nextCursor) setCursor(data.nextCursor);
-  }
+  const handleLoadMore = useCallback(() => {
+    void fetchNextPage();
+  }, [fetchNextPage]);
 
   const canManage = useCan("support:knowledge-gaps:manage");
 
-  const detectAction = canManage ? (
+  const detectAction = canManage && (pageState.kind === "ready" || pageState.kind === "empty") ? (
     <LoadingButton
       size="sm"
       variant="outline"
@@ -102,28 +128,26 @@ export function KnowledgeGapsPage() {
       subtitle="Repeated unresolved questions that need KB articles"
       actions={detectAction}
     >
-      {isLoading && <GapListSkeletons />}
-
-      {!isLoading && isError && (
-        <ErrorState
-          title="Failed to load knowledge gaps"
-          description="We couldn't load gap data. Please try again."
-          onRetry={handleRetry}
-        />
-      )}
-
-      {!isLoading && !isError && data && data.gaps.length === 0 && (
-        <EmptyState
-          illustrationPreset="search"
-          title="No knowledge gaps detected yet"
-          description="Run detection to find repeated unresolved questions that need KB articles."
-          action={{ label: "Detect Gaps", onClick: handleDetect }}
-        />
-      )}
-
-      {!isLoading && !isError && data && data.gaps.length > 0 && (
+      <PageState
+        resolution={pageState}
+        className="flex-1"
+        onRetry={handleRetry}
+        loading={<GapListSkeletons />}
+        empty={
+          <EmptyState
+            illustrationPreset="search"
+            title="No knowledge gaps detected yet"
+            description="Run detection to find repeated unresolved questions that need KB articles."
+            action={
+              canManage
+                ? { label: "Detect Gaps", onClick: handleDetect }
+                : undefined
+            }
+          />
+        }
+      >
         <div className="flex flex-1 min-h-0 flex-col gap-3">
-          {data.gaps.map((gap) => (
+          {gaps.map((gap) => (
             <KnowledgeGapCard
               key={gap.id}
               gap={gap}
@@ -133,15 +157,29 @@ export function KnowledgeGapsPage() {
               isDismissing={dismissMutation.isPending && dismissMutation.variables?.gapId === gap.id}
             />
           ))}
-          {data.nextCursor !== null && (
-            <div className="flex justify-center pt-2">
-              <LoadingButton variant="outline" size="sm" isPending={isLoading} onClick={handleLoadMore}>
-                Load more
+          {inlineReadError && (
+            <div role="alert" className="space-y-2 text-sm text-destructive">
+              <p>{isFetchNextPageError ? "Could not load more knowledge gaps." : "Could not refresh knowledge gaps."} {getErrorMessage(error)}</p>
+              <ErrorReference error={error} />
+              <LoadingButton
+                type="button"
+                variant="outline"
+                isPending={Boolean(isFetchNextPageError ? isFetchingNextPage : isFetching)}
+                loadingText="Retrying…"
+                onClick={isFetchNextPageError ? handleLoadMore : handleRetry}
+              >
+                {isFetchNextPageError ? "Retry loading knowledge gaps" : "Retry refreshing knowledge gaps"}
               </LoadingButton>
             </div>
           )}
+          <InfiniteScrollSentinel
+            hasNextPage={Boolean(hasNextPage) && !inlineReadError}
+            isFetchingNextPage={isFetchingNextPage}
+            onLoadMore={handleLoadMore}
+            label="Load more knowledge gaps"
+          />
         </div>
-      )}
+      </PageState>
     </PageWrapper>
   );
 }

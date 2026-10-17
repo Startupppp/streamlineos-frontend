@@ -1,12 +1,11 @@
 "use client";
 
-import { useMemo } from "react";
 import { toast } from "sonner";
-import { UserCombobox } from "@/components/ui/user-combobox";
+import { MemberPicker } from "@/components/members/member-picker";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useUpdateFeedbucketWidget } from "@/hooks/api/feedbucket";
 import type { FeedbucketWidget, FeedbucketSubmissionType } from "@/types/feedbucket";
-import type { OrgMember } from "@/hooks/api/organization-schema";
+import type { DirectoryMember } from "@/hooks/api/members/use-member-directory";
 
 const SUBMISSION_TYPES: { type: FeedbucketSubmissionType; label: string }[] = [
   { type: "bug", label: "Bug" },
@@ -19,17 +18,18 @@ const SUBMISSION_TYPES: { type: FeedbucketSubmissionType; label: string }[] = [
 
 interface WidgetAssigneeRulesProps {
   widget: FeedbucketWidget;
-  members: OrgMember[];
+  members: DirectoryMember[];
+  membershipIdToUserId: Map<number, string>;
+  disabled?: boolean;
 }
 
-export function WidgetAssigneeRules({ widget, members }: WidgetAssigneeRulesProps) {
+export function WidgetAssigneeRules({
+  widget,
+  members,
+  membershipIdToUserId,
+  disabled = false,
+}: WidgetAssigneeRulesProps) {
   const updateWidget = useUpdateFeedbucketWidget();
-
-  const membershipIdToUserId = useMemo(() => {
-    const map = new Map<number, string>();
-    for (const m of members) map.set(m.membershipId, m.userId);
-    return map;
-  }, [members]);
 
   function resolvedUserIdForType(type: FeedbucketSubmissionType): string {
     const membershipId = widget.assigneeRules?.[type];
@@ -66,12 +66,13 @@ export function WidgetAssigneeRules({ widget, members }: WidgetAssigneeRulesProp
       <div className="space-y-2">
         {SUBMISSION_TYPES.map(({ type, label }) => (
           <div key={type} className="flex items-center gap-3">
-            <span className="w-20 shrink-0 text-xs font-medium text-muted-foreground">{label}</span>
+            <span className="w-20 shrink-0 text-xs font-normal text-muted-foreground">{label}</span>
             <div className="flex-1 min-w-0">
               <AssigneeRuleRow
                 type={type}
                 value={resolvedUserIdForType(type)}
-                disabled={updateWidget.isPending}
+                candidates={members}
+                disabled={disabled || updateWidget.isPending}
                 onChange={handleRuleChange}
               />
             </div>
@@ -85,17 +86,19 @@ export function WidgetAssigneeRules({ widget, members }: WidgetAssigneeRulesProp
 interface AssigneeRuleRowProps {
   type: FeedbucketSubmissionType;
   value: string;
+  candidates: DirectoryMember[];
   disabled: boolean;
   onChange: (type: FeedbucketSubmissionType, userId: string) => Promise<void>;
 }
 
-function AssigneeRuleRow({ type, value, disabled, onChange }: AssigneeRuleRowProps) {
-  function handleChange(userId: string) {
-    void onChange(type, userId);
+function AssigneeRuleRow({ type, value, candidates, disabled, onChange }: AssigneeRuleRowProps) {
+  function handleChange(userId: string | null) {
+    void onChange(type, userId ?? "");
   }
 
   return (
-    <UserCombobox
+    <MemberPicker
+      candidates={candidates}
       value={value}
       onChange={handleChange}
       placeholder="Unassigned"

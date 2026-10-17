@@ -1,0 +1,152 @@
+import fs from "node:fs";
+import path from "node:path";
+
+const WIKI_SRC = path.resolve(__dirname, "..");
+
+function walk(dir: string, found: string[] = []): string[] {
+  if (!fs.existsSync(dir)) return found;
+  for (const entry of fs.readdirSync(dir)) {
+    const full = path.join(dir, entry);
+    if (fs.statSync(full).isDirectory()) walk(full, found);
+    else if (/\.tsx?$/.test(entry) && !/\.(test|spec)\.tsx?$/.test(entry))
+      found.push(full);
+  }
+  return found;
+}
+
+const FORBIDDEN_STORAGE_PATTERNS: RegExp[] = [
+  /localStorage\.setItem\s*\(\s*['"`]content['"`]/,
+  /localStorage\.setItem\s*\(\s*['"`]contentText['"`]/,
+  /sessionStorage\.setItem\s*\(\s*['"`]content['"`]/,
+  /sessionStorage\.setItem\s*\(\s*['"`]contentText['"`]/,
+];
+
+const PAGE_BODY_EXPORT_PATTERNS: RegExp[] = [
+  /exportPageToHtml\s*\(/,
+  /slateToHtml\s*\(/,
+  /serializeSlateNode\s*\(/,
+];
+
+describe("Wiki page body must not reach Web Storage", () => {
+  const sourceFiles = walk(WIKI_SRC);
+
+  it("collects at least one wiki source file — scanner is not vacuous", () => {
+    expect(sourceFiles.length).toBeGreaterThan(0);
+  });
+
+  it("(a) no localStorage.setItem or sessionStorage.setItem writes the content or contentText key", () => {
+    const violations: string[] = [];
+    for (const file of sourceFiles) {
+      const src = fs.readFileSync(file, "utf-8");
+      for (const pattern of FORBIDDEN_STORAGE_PATTERNS) {
+        if (pattern.test(src)) {
+          violations.push(`${path.relative(WIKI_SRC, file)}: ${pattern.toString()}`);
+        }
+      }
+    }
+    expect(violations).toHaveLength(0);
+  });
+
+  it("(b) orgScopedStorage writes in wiki source do not use a content or contentText key", () => {
+    const violations: string[] = [];
+    const orgStoragePattern =
+      /orgScopedStorage\s*\.\s*\w+\s*\(\s*['"`][^'"`,]*content[^'"`,]*['"`]/i;
+    for (const file of sourceFiles) {
+      const src = fs.readFileSync(file, "utf-8");
+      if (orgStoragePattern.test(src)) {
+        violations.push(path.relative(WIKI_SRC, file));
+      }
+    }
+    expect(violations).toHaveLength(0);
+  });
+
+  it("(c) client-side HTML serialization is no longer the export path — export goes through the API", () => {
+    const violations: string[] = [];
+    for (const file of sourceFiles) {
+      const rel = path.relative(WIKI_SRC, file).replace(/\\/g, "/");
+      const src = fs.readFileSync(file, "utf-8");
+      for (const pattern of PAGE_BODY_EXPORT_PATTERNS) {
+        if (pattern.test(src)) {
+          violations.push(`${rel}: ${pattern.toString()}`);
+        }
+      }
+    }
+    expect(violations).toHaveLength(0);
+  });
+
+  it("(d) export now lives in the hooks layer, holds no client-side serializer, and invalidates the export-job history it creates", () => {
+    const wikiExportFile = path.join(WIKI_SRC, "lib", "export-page.ts");
+    expect(fs.existsSync(wikiExportFile)).toBe(false);
+    const exportFile = path.resolve(
+      __dirname,
+      "../../../hooks/api/kb/export-page.ts",
+    );
+    expect(fs.existsSync(exportFile)).toBe(true);
+    const src = fs.readFileSync(exportFile, "utf-8");
+    expect(src).not.toMatch(/function serializeLeaf/);
+    expect(src).not.toMatch(/function slateToHtml/);
+    expect(src).toMatch(/apiClient\.post/);
+    expect(src).toMatch(/kb\.exportJobs\(\)/);
+  });
+
+  it("(e) logout transition — use-page-autosave.ts is storage-silent: pending content is flushed to the server on unmount and not persisted to localStorage or sessionStorage", () => {
+    const autosaveFile = path.join(WIKI_SRC, "components", "use-page-autosave.ts");
+    expect(fs.existsSync(autosaveFile)).toBe(true);
+    const src = fs.readFileSync(autosaveFile, "utf-8");
+    expect(src).not.toMatch(/localStorage\./);
+    expect(src).not.toMatch(/sessionStorage\./);
+  });
+
+  it("(f) org-switch transition — org-scoped-storage.tsx is a pure context provider: the scope-change on org switch does not read or write localStorage or sessionStorage", () => {
+    const storageLib = path.resolve(__dirname, "../../../lib/org-scoped-storage.tsx");
+    expect(fs.existsSync(storageLib)).toBe(true);
+    const src = fs.readFileSync(storageLib, "utf-8");
+    expect(src).not.toMatch(/localStorage\./);
+    expect(src).not.toMatch(/sessionStorage\./);
+  });
+
+  const STORAGE_ACCESS_PATTERN =
+    /(?:localStorage|sessionStorage)\s*\.\s*(?:setItem|getItem|removeItem)\s*\(\s*([A-Za-z_$][\w$]*|['"`][^'"`]*['"`])/g;
+  const ALLOWED_STORAGE_KEYS = ["wiki-nav-groups", "wiki-right-panel-collapsed"];
+
+  function collectStorageKeys(): string[] {
+    const keys = new Set<string>();
+    for (const file of sourceFiles) {
+      const src = fs.readFileSync(file, "utf-8");
+      for (const match of src.matchAll(STORAGE_ACCESS_PATTERN)) {
+        const token = match[1];
+        if (/^['"`]/.test(token)) {
+          keys.add(token.slice(1, -1));
+          continue;
+        }
+        const declared = new RegExp(
+          `const\\s+${token}\\s*(?::[^=]*)?=\\s*['"\`]([^'"\`]*)['"\`]`,
+        ).exec(src);
+        keys.add(declared === null ? token : declared[1]);
+      }
+    }
+    return [...keys].sort();
+  }
+
+  it("(h) the complete set of Web Storage keys reachable from wiki source is the allowlist, so a page body cannot be persisted under a key whose name this scan does not already pattern-match", () => {
+    expect(collectStorageKeys()).toEqual(ALLOWED_STORAGE_KEYS);
+  });
+
+  it("(h) control: the extractor resolves both allowlisted keys to their literals, so the equality above cannot pass by finding nothing at all", () => {
+    const keys = collectStorageKeys();
+    expect(keys).toHaveLength(ALLOWED_STORAGE_KEYS.length);
+    expect(keys.every((key) => key.startsWith("wiki-"))).toBe(true);
+  });
+
+  it("(g) access-revocation transition — no wiki source writes localStorage or sessionStorage with a dynamic or org-scoped key: a mid-session 403 cannot cause page content to persist in storage", () => {
+    const dynamicKeyPattern = /(?:localStorage|sessionStorage)\.setItem\s*\(\s*(?:`[^`]*\$\{|orgScopedStorageKey)/;
+    const violations: string[] = [];
+    for (const file of sourceFiles) {
+      const src = fs.readFileSync(file, "utf-8");
+      if (dynamicKeyPattern.test(src)) {
+        violations.push(path.relative(WIKI_SRC, file));
+      }
+    }
+    expect(violations).toHaveLength(0);
+  });
+});

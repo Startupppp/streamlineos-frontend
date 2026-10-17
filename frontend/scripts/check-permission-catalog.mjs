@@ -10,8 +10,8 @@
  * The facts are now vendored as `contracts/permission-catalog.json`, following
  * the `contracts/openapi.json` precedent. A vendored copy that silently goes
  * stale is WORSE than no copy, because it turns "the backend renamed a key" into
- * a green run. So this gate is the load-bearing half, and it has three rules,
- * two of which need nothing but this repository:
+ * a green run. So this gate is the load-bearing half, and it has five rules,
+ * three of which need nothing but this repository:
  *
  *   1. WELL-FORMED (hermetic). Floors and shape. An empty, truncated or
  *      hand-edited artifact cannot satisfy the suites' "a silent empty sweep
@@ -45,14 +45,24 @@ import {
 import {
   buildCatalog,
   extractDelegableModuleIds,
+  extractUniversalMemberGrants,
   extractMemberDefaultPermissions,
+  extractModuleAccessPermissionObjects,
   extractOwnerOnlyOperations,
+  extractPermissionObjects,
   extractPermissionNames,
   isPermissionKey,
   openApiPermissions,
+  runtimeAgreementFailures,
   serializeCatalog,
+  serializePermissionKeyTs,
+  tsUnionAgreementFailures,
 } from "./permission-catalog-extract.mjs";
-import { readBackendCatalog } from "./generate-permission-catalog.mjs";
+import {
+  readBackendCatalog,
+  readBackendRuntimePermissions,
+  PERMISSION_KEY_TS_PATH,
+} from "./generate-permission-catalog.mjs";
 
 const FRONTEND_ROOT = fileURLToPath(new URL("..", import.meta.url));
 const CATALOG_PATH = join(FRONTEND_ROOT, "contracts", "permission-catalog.json");
@@ -63,6 +73,7 @@ const FLOORS = {
   delegableModuleIds: 5,
   memberDefaultPermissions: 20,
   ownerOnlyOperations: 1,
+  roleTemplatePermissions: 20,
 };
 
 function isSortedUnique(values) {
@@ -73,7 +84,7 @@ function isSortedUnique(values) {
 /** Rule 1. Returns a list of failures; empty means well-formed. */
 export function wellFormedFailures(catalog) {
   const failures = [];
-  for (const field of ["permissions", "delegableModuleIds", "memberDefaultPermissions"]) {
+  for (const field of ["permissions", "delegableModuleIds", "memberDefaultPermissions", "roleTemplatePermissions"]) {
     const values = catalog[field];
     if (!Array.isArray(values)) {
       failures.push(`${field} is not an array`);
@@ -100,6 +111,19 @@ export function wellFormedFailures(catalog) {
     if (orphans.length > 0)
       failures.push(`memberDefaultPermissions has ${orphans.length} key(s) absent from permissions: ${orphans.slice(0, 5).join(", ")}`);
   }
+
+  const details = catalog.permissionDetails;
+  if (details === null || typeof details !== "object" || Array.isArray(details)) {
+    failures.push("permissionDetails is not an object");
+  } else if (Array.isArray(catalog.permissions)) {
+    const missingDetail = catalog.permissions.filter((name) => {
+      const d = details[name];
+      return !d || typeof d.resource !== "string" || typeof d.action !== "string" || typeof d.description !== "string";
+    });
+    if (missingDetail.length > 0)
+      failures.push(`permissionDetails is missing or incomplete for ${missingDetail.length} key(s): ${missingDetail.slice(0, 5).join(", ")}`);
+  }
+
   return failures;
 }
 
@@ -113,7 +137,7 @@ export function contractAgreementFailures(catalog, openApiDocument) {
     .map((name) => `x-permission "${name}" is bound to an operation but is not in the catalogue`);
 }
 
-function runSelfTest() {
+async function runSelfTest() {
   let passed = 0;
   const failures = [];
   const assert = (label, condition) => {
@@ -157,16 +181,96 @@ function runSelfTest() {
     !memberDefaults.includes("hr:employees:manage"),
   );
 
+  const grants = extractUniversalMemberGrants(
+    `${roleDefaults} export const UNIVERSAL_MEMBER_PERMISSION_GRANTS = [{ permissionKey: "hr:leaves:view", scope: "own" }] as const;`,
+  );
+  assert("a universal member grant yields its baseline scope", grants["hr:leaves:view"] === "own");
+  const scopedCatalog = (roleDefaultsSource) =>
+    buildCatalog({
+      permissionSources: [
+        ["{", '  name: "kb:pages:view",', '  resource: "kb:pages",', '  action: "view",', '  description: "d",', "}"].join("\n"),
+      ],
+      moduleRegistrySource: registrySource,
+      roleDefaultsSource,
+      ownerOnlyOperationsSource: "",
+      roleTemplateSources: [],
+    }).permissionDetails["kb:pages:view"];
+  assert(
+    "a universal member grant's scope reaches the catalogued metadata as baselineScope",
+    scopedCatalog(`const UNIVERSAL_MEMBER_PERMISSION_GRANTS = [{ permissionKey: "kb:pages:view", scope: "all" }];`)
+      ?.baselineScope === "all",
+  );
+  assert("a key with no universal grant carries no baselineScope", scopedCatalog("")?.baselineScope === undefined);
+
   const ownerOnly = extractOwnerOnlyOperations(
     `{ "org.delete": { risk: "high", reason: "Destroys the tenant." } }`,
   );
   assert("owner-only ids map to their reason", ownerOnly["org.delete"] === "Destroys the tenant.");
+
+  const [apostrophe] = extractPermissionObjects(
+    [
+      "{",
+      "  /* It was declared `scopable: true` once. */",
+      '  name: "hr:timesheets:manage",',
+      '  resource: "hr:timesheets",',
+      '  action: "manage",',
+      `  description: "Edit everyone's timesheets",`,
+      "}",
+    ].join("\n"),
+  );
+  assert(
+    "an apostrophe inside a double-quoted description is kept, not truncated",
+    apostrophe?.description === "Edit everyone's timesheets",
+  );
+  assert("a field named inside a comment is not read as metadata", apostrophe?.scopable === undefined);
+  assert("an unflagged key carries no sensitivity", apostrophe?.sensitive === undefined);
+
+  const [sensitive] = extractPermissionObjects(
+    [
+      "{",
+      '  name: "payroll:bank:view",',
+      '  resource: "payroll:bank",',
+      '  action: "view",',
+      '  description: "View unmasked bank details",',
+      "  sensitive: true,",
+      "}",
+    ].join("\n"),
+  );
+  assert("a key flagged sensitive in the backend stays sensitive in the contract", sensitive?.sensitive === true);
+
+  const accessObjects = extractModuleAccessPermissionObjects(
+    [
+      "ACCESS_MANAGED_MODULES.flatMap((moduleKey) => [",
+      "  {",
+      "    name: `${moduleKey}:access:view`,",
+      "    resource: `${moduleKey}:access`,",
+      '    action: "view",',
+      "    description: `View access for the ${moduleKey} module`,",
+      "  },",
+      "]);",
+    ].join("\n"),
+    ["hr", "crm"],
+  );
+  assert(
+    "module-access metadata is expanded from the backend template for every delegable module",
+    accessObjects.length === 2 &&
+      accessObjects[1].name === "crm:access:view" &&
+      accessObjects[1].description === "View access for the crm module",
+  );
+
+  const ROLE_TEMPLATE_SOURCE = [
+    "export const HR_TEMPLATES = [",
+    `  { slug: "hr_viewer", permissions: ["hr:access:view", 'crm:access:view', "ghost:key:view"] },`,
+    '  // { slug: "retired", permissions: ["hr:access:manage"] },',
+    "];",
+  ].join("\n");
 
   const catalog = buildCatalog({
     permissionSources: [permissionSource],
     moduleRegistrySource: registrySource,
     roleDefaultsSource: roleDefaults,
     ownerOnlyOperationsSource: `{ "org.delete": { reason: "Destroys the tenant." } }`,
+    roleTemplateSources: [ROLE_TEMPLATE_SOURCE],
   });
   assert(
     "generated module-access keys are folded in",
@@ -174,22 +278,33 @@ function runSelfTest() {
   );
   assert("the artifact is sorted and unique", isSortedUnique(catalog.permissions));
   assert(
+    "role-template grants are folded in from either quote style, ignoring unknown keys and commented-out templates",
+    JSON.stringify(catalog.roleTemplatePermissions) === JSON.stringify(["crm:access:view", "hr:access:view"]),
+  );
+  assert(
     "serialisation is stable, so byte-for-byte is a meaningful claim",
     serializeCatalog(catalog) === serializeCatalog(buildCatalog({
       permissionSources: [permissionSource],
       moduleRegistrySource: registrySource,
       roleDefaultsSource: roleDefaults,
       ownerOnlyOperationsSource: `{ "org.delete": { reason: "Destroys the tenant." } }`,
+      roleTemplateSources: [ROLE_TEMPLATE_SOURCE],
     })),
   );
 
+  const healthyPermissions = Array.from({ length: 500 }, (_, i) => `m${String(i).padStart(4, "0")}:a:view`).sort();
   const healthy = {
-    permissions: Array.from({ length: 500 }, (_, i) => `m${String(i).padStart(4, "0")}:a:view`).sort(),
+    permissions: healthyPermissions,
+    permissionDetails: Object.fromEntries(
+      healthyPermissions.map((k) => [k, { resource: "m:r", action: "view", description: "d" }]),
+    ),
     delegableModuleIds: ["a", "b", "c", "d", "e", "f"],
     memberDefaultPermissions: [],
     ownerOnlyOperations: { "org.delete": "reason" },
+    roleTemplatePermissions: [],
   };
   healthy.memberDefaultPermissions = healthy.permissions.slice(0, 25);
+  healthy.roleTemplatePermissions = healthy.permissions.slice(0, 25);
   assert("a healthy artifact is well-formed", wellFormedFailures(healthy).length === 0);
   assert(
     "an EMPTY catalogue is rejected — the silent-empty-sweep defect",
@@ -204,8 +319,57 @@ function runSelfTest() {
     wellFormedFailures({ ...healthy, delegableModuleIds: ["a", "a", "b", "c", "d", "e"] }).length > 0,
   );
   assert(
+    "an EMPTY role-template grant list is rejected — a template sweep that matched no file",
+    wellFormedFailures({ ...healthy, roleTemplatePermissions: [] }).length > 0,
+  );
+  assert(
     "a member default with no catalogue entry is rejected",
     wellFormedFailures({ ...healthy, memberDefaultPermissions: ["ghost:key:view"] }).length > 0,
+  );
+  assert(
+    "missing permissionDetails is rejected",
+    wellFormedFailures({ ...healthy, permissionDetails: undefined }).length > 0,
+  );
+  assert(
+    "permissionDetails with missing metadata for a key is rejected",
+    wellFormedFailures({ ...healthy, permissionDetails: {} }).length > 0,
+  );
+
+  const twoKeys = ["a:b:manage", "a:b:view"];
+  const twoDetails = {
+    "a:b:manage": { resource: "a:b", action: "manage", description: "m" },
+    "a:b:view": { resource: "a:b", action: "view", description: "v", sensitive: true },
+  };
+  const twoCatalog = { permissions: twoKeys, permissionDetails: twoDetails };
+  const tsSource = serializePermissionKeyTs(twoCatalog);
+  assert(
+    "the generated adapter carries each key's metadata, sensitivity included",
+    tsSource.includes('"a:b:view": { resource: "a:b", action: "view", description: "v", sensitive: true },'),
+  );
+  assert("TS adapter matches the catalogue it was serialised from", tsUnionAgreementFailures(twoCatalog, tsSource).length === 0);
+  assert(
+    "a stale TS union with an extra key is caught hermetically",
+    tsUnionAgreementFailures({ permissions: ["a:b:view"], permissionDetails: twoDetails }, tsSource).length > 0,
+  );
+  assert(
+    "a stale TS union missing a key is caught hermetically",
+    tsUnionAgreementFailures({ permissions: [...twoKeys, "a:b:delete"], permissionDetails: twoDetails }, tsSource).length > 0,
+  );
+  const unflagged = { ...twoDetails, "a:b:view": { resource: "a:b", action: "view", description: "v" } };
+  assert(
+    "stale metadata behind an identical union is caught hermetically",
+    tsUnionAgreementFailures({ permissions: twoKeys, permissionDetails: unflagged }, tsSource).length > 0,
+  );
+
+  const runtimeRows = twoKeys.map((name) => ({ name, ...twoDetails[name] }));
+  assert("a catalogue equal to the backend runtime agrees with it", runtimeAgreementFailures(twoCatalog, runtimeRows).length === 0);
+  assert(
+    "a runtime-derived baselineScope the vendored copy lacks is caught",
+    runtimeAgreementFailures(twoCatalog, [{ ...runtimeRows[0], baselineScope: "all" }, runtimeRows[1]]).length === 1,
+  );
+  assert(
+    "a runtime key the vendored copy lacks is caught",
+    runtimeAgreementFailures(twoCatalog, [...runtimeRows, { name: "a:b:delete" }]).length === 1,
   );
 
   const doc = { paths: { "/hr/leaves": { get: { "x-permission": "hr:leaves:view" } } } };
@@ -232,6 +396,10 @@ function runSelfTest() {
   process.exit(0);
 }
 
+function readVendored(path) {
+  return readFileSync(path, "utf8").replaceAll("\r\n", "\n");
+}
+
 function main() {
   if (!existsSync(CATALOG_PATH)) {
     console.error(
@@ -239,8 +407,14 @@ function main() {
     );
     process.exit(1);
   }
+  if (!existsSync(PERMISSION_KEY_TS_PATH)) {
+    console.error(
+      "contracts/permission-key.generated.ts is missing. Run `pnpm generate:permission-catalog` with the backend checked out beside this repository and commit the result.",
+    );
+    process.exit(1);
+  }
 
-  const vendored = readFileSync(CATALOG_PATH, "utf8");
+  const vendored = readVendored(CATALOG_PATH);
   let catalog;
   try {
     catalog = JSON.parse(vendored);
@@ -248,6 +422,8 @@ function main() {
     console.error(`contracts/permission-catalog.json is not valid JSON: ${String(error)}`);
     process.exit(1);
   }
+
+  const vendoredTs = readVendored(PERMISSION_KEY_TS_PATH);
 
   let failed = false;
 
@@ -259,7 +435,8 @@ function main() {
   } else {
     console.log(
       `Rule 1 — well-formed: ${catalog.permissions.length} permissions, ${catalog.delegableModuleIds.length} delegable modules, ` +
-        `${catalog.memberDefaultPermissions.length} member defaults, ${Object.keys(catalog.ownerOnlyOperations).length} owner-only operations.`,
+        `${catalog.memberDefaultPermissions.length} member defaults, ${Object.keys(catalog.ownerOnlyOperations).length} owner-only operations, ` +
+        `${Object.keys(catalog.permissionDetails ?? {}).length} metadata entries.`,
     );
   }
 
@@ -279,21 +456,32 @@ function main() {
     }
   }
 
+  const tsAgreement = tsUnionAgreementFailures(catalog, vendoredTs);
+  if (tsAgreement.length > 0) {
+    console.error("Rule 3 — permission-key.generated.ts is not byte-identical to a serialisation of permission-catalog.json:");
+    for (const reason of tsAgreement) console.error(`  ${reason}`);
+    console.error("  Regenerate with `pnpm generate:permission-catalog` and commit the result.");
+    failed = true;
+  } else {
+    console.log(`Rule 3 — permission-key.generated.ts is byte-identical to a serialisation of the JSON catalogue (${catalog.permissions.length} keys).`);
+  }
+
   if (!backendAvailable) {
     if (failed) {
-      console.error(`Rule 3 — NOT RUN. ${backendUnreachableReason()}`);
+      console.error(`Rule 4 — NOT RUN. ${backendUnreachableReason()}`);
       process.exit(1);
     }
     reportBackendUnreachable(
       "check-permission-catalog",
-      "rule 3 (byte-for-byte regeneration against the backend)",
+      "rules 4-5 (byte-for-byte regeneration and runtime agreement against the backend)",
     );
     return;
   }
 
-  const regenerated = serializeCatalog(readBackendCatalog());
+  const freshCatalog = readBackendCatalog();
+  const regenerated = serializeCatalog(freshCatalog);
   if (regenerated !== vendored) {
-    console.error("Rule 3 — DRIFT: contracts/permission-catalog.json is not what the backend produces now.");
+    console.error("Rule 4 — DRIFT: contracts/permission-catalog.json is not what the backend produces now.");
     console.error("  Run `pnpm generate:permission-catalog` and commit the result.");
     const fresh = JSON.parse(regenerated);
     const added = fresh.permissions.filter((name) => !catalog.permissions.includes(name));
@@ -302,12 +490,20 @@ function main() {
     if (removed.length > 0) console.error(`  vendored copy has ${removed.length} permission(s) the backend no longer declares: ${removed.slice(0, 10).join(", ")}`);
     failed = true;
   } else {
-    console.log("Rule 3 — byte-identical to a fresh regeneration from the backend.");
+    console.log("Rule 4 — contracts/permission-catalog.json is byte-identical to a fresh regeneration from the backend.");
+  }
+  const runtimeDisagreements = runtimeAgreementFailures(catalog, readBackendRuntimePermissions());
+  if (runtimeDisagreements.length > 0) {
+    console.error(`Rule 5 — the vendored catalogue disagrees with the backend's evaluated PERMISSIONS (${runtimeDisagreements.length}):`);
+    for (const reason of runtimeDisagreements.slice(0, 25)) console.error(`  ${reason}`);
+    failed = true;
+  } else {
+    console.log("Rule 5 — every vendored key and its metadata equal the backend's evaluated PERMISSIONS, baselineScope included.");
   }
 
   if (failed) process.exit(1);
-  console.log("\nPermission catalogue: vendored copy is current.");
+  console.log("\nPermission catalogue: vendored copies are current.");
 }
 
-if (process.argv.includes("--self-test")) runSelfTest();
+if (process.argv.includes("--self-test")) runSelfTest().catch((e) => { console.error(e); process.exit(1); });
 else main();

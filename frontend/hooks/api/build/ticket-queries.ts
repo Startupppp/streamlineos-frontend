@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo } from "react";
+import { useMemo } from "react";
 import { useInfiniteQuery, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { UseQueryOptions } from "@tanstack/react-query";
 import { useCan } from "@/hooks/api/access";
@@ -27,8 +27,7 @@ import type {
 } from "@/types/projects";
 import { NO_CURSOR_YET } from "@/hooks/api/cursor-page-param";
 
-export const BOARD_PAGE_SIZE = 100;
-const BOARD_AUTOLOAD_LIMIT = 500;
+const BOARD_PAGE_SIZE = 100;
 
 export function useTickets(
   projectId: number,
@@ -42,10 +41,12 @@ export function useTickets(
       apiClient.get<CursorPageResponse<Ticket>>(`/build/${projectId}/tickets`, filters ? { ...filters } : undefined, signal, ticketListPageLazy),
     enabled: canView && !!projectId,
     staleTime: 30_000,
-    placeholderData: (prev) => prev,
     ...options,
   });
 }
+
+export type TicketOrderBy = "created" | "updated" | "priority" | "dueDate" | "rank";
+export type TicketOrderDir = "asc" | "desc";
 
 export type BoardFilters = {
   q?: string;
@@ -56,28 +57,22 @@ export type BoardFilters = {
   labels?: string;
   cycle?: string;
   module?: string;
+  dueDateFrom?: string;
+  dueDateTo?: string;
+  orderBy?: TicketOrderBy;
+  orderDir?: TicketOrderDir;
+  cursor?: string;
 };
 
 export function useProjectBoardTickets(projectId: number, filters?: BoardFilters) {
   const canView = useCan("build:tickets:view");
-  const hasFilters = !!(
-    filters?.q ||
-    filters?.status ||
-    filters?.priority ||
-    filters?.type ||
-    filters?.assigneeId ||
-    filters?.labels ||
-    filters?.cycle ||
-    filters?.module
-  );
-
   const query = useInfiniteQuery({
     queryKey: buildWorkQueryKeys.projects.tickets({ projectId, view: "board", ...filters }),
     queryFn: ({ pageParam , signal }) => {
       const params: Record<string, unknown> = {
         limit: BOARD_PAGE_SIZE,
-        orderBy: "rank",
-        orderDir: "asc",
+        orderBy: filters?.orderBy ?? "rank",
+        orderDir: filters?.orderDir ?? "asc",
         ...(pageParam !== undefined ? { cursor: pageParam } : {}),
       };
       if (filters?.q) params.search = filters.q;
@@ -88,34 +83,26 @@ export function useProjectBoardTickets(projectId: number, filters?: BoardFilters
       if (filters?.labels) params.labelIds = filters.labels;
       if (filters?.cycle) params.cycleId = filters.cycle;
       if (filters?.module) params.moduleIds = filters.module;
+      if (filters?.dueDateFrom) params.dueDateFrom = filters.dueDateFrom;
+      if (filters?.dueDateTo) params.dueDateTo = filters.dueDateTo;
       return apiClient.get<CursorPageResponse<Ticket>>(`/build/${projectId}/tickets`, params, signal, ticketListPageLazy);
     },
-    initialPageParam: NO_CURSOR_YET,
+    initialPageParam: filters?.cursor ?? NO_CURSOR_YET,
     getNextPageParam: (last) => last.pagination.nextCursor ?? undefined,
     enabled: canView && !!projectId,
     staleTime: 30_000,
-    placeholderData: (prev) => prev,
   });
 
   const data = useMemo(
     () => query.data?.pages.flatMap((p) => p.data ?? []) ?? [],
     [query.data],
   );
-  const { hasNextPage, isFetchingNextPage, fetchNextPage } = query;
-
-  useEffect(() => {
-    if (hasFilters) return;
-    if (!hasNextPage || isFetchingNextPage) return;
-    if (data.length >= BOARD_AUTOLOAD_LIMIT) return;
-    void fetchNextPage();
-  }, [hasFilters, hasNextPage, isFetchingNextPage, fetchNextPage, data.length]);
-
   return {
     ...query,
     data,
     total: data.length,
     loadedCount: data.length,
-    isTruncated: hasNextPage,
+    isTruncated: query.hasNextPage,
   };
 }
 
@@ -126,7 +113,7 @@ export function useTicket(
 ) {
   const canView = useCan("build:tickets:view");
   return useQuery<Ticket | null>({
-    queryKey: buildWorkQueryKeys.projects.ticket(ticketId),
+    queryKey: buildWorkQueryKeys.projects.ticket(projectId, ticketId),
     queryFn: ({ signal }) =>
       apiClient.get<Ticket | null>(`/build/${projectId}/tickets/${ticketId}`, undefined, signal, ticketDetailLazy),
     enabled: canView && !!ticketId && !!projectId,
@@ -149,7 +136,7 @@ export function useTicketByKey(
         `/build/${projectId}/tickets/key/${ticketNumber}`, undefined, signal, ticketDetailLazy,
       );
       if (ticket) {
-        queryClient.setQueryData(buildWorkQueryKeys.projects.ticket(ticket.id), ticket);
+        queryClient.setQueryData(buildWorkQueryKeys.projects.ticket(projectId, ticket.id), ticket);
       }
       return ticket;
     },
@@ -180,12 +167,23 @@ export function useSubtasks(
   });
 }
 
-export function useTicketColumnCounts(projectId: number) {
+export function useTicketColumnCounts(projectId: number, filters?: BoardFilters) {
   const canView = useCan("build:tickets:view");
+  const params: Record<string, unknown> = {};
+  if (filters?.q) params.search = filters.q;
+  if (filters?.status) params.status = filters.status;
+  if (filters?.priority) params.priority = filters.priority;
+  if (filters?.type) params.type = filters.type;
+  if (filters?.assigneeId) params.assigneeId = filters.assigneeId;
+  if (filters?.labels) params.labelIds = filters.labels;
+  if (filters?.cycle) params.cycleId = filters.cycle;
+  if (filters?.module) params.moduleIds = filters.module;
+  if (filters?.dueDateFrom) params.dueDateFrom = filters.dueDateFrom;
+  if (filters?.dueDateTo) params.dueDateTo = filters.dueDateTo;
   return useQuery<Record<string, number>>({
-    queryKey: buildWorkQueryKeys.projects.columnCounts(projectId),
+    queryKey: buildWorkQueryKeys.projects.columnCounts(projectId, params),
     queryFn: ({ signal }) =>
-      apiClient.get<Record<string, number>>(`/build/${projectId}/tickets/column-counts`, undefined, signal, columnCountsLazy),
+      apiClient.get<Record<string, number>>(`/build/${projectId}/tickets/column-counts`, params, signal, columnCountsLazy),
     enabled: canView && projectId > 0,
     staleTime: 30_000,
   });

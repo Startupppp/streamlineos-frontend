@@ -16,6 +16,7 @@ import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { Trash2Icon } from "@animateicons/react/lucide";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { cn } from "@/lib/utils";
 import { PM_ROW } from "@/components/pm-chrome";
 import { TEXT_ONE_LINE } from "@/lib/text-overflow";
@@ -27,17 +28,17 @@ export interface ViewItem {
   name: string;
   layoutType: string;
   isPinned: boolean;
-  filters?: Record<string, unknown> | null;
+  filters?: unknown;
   visibility?: "private" | "shared";
   createdBy?: string;
 }
 
 const LAYOUT_META: Record<string, { icon: React.ReactNode; label: string; color: string }> = {
   board: { icon: <Kanban className="h-4 w-4" />, label: "Board", color: "text-muted-foreground bg-muted" },
-  list: { icon: <List className="h-4 w-4" />, label: "List", color: "text-status-info-ink bg-status-info-surface" },
-  table: { icon: <LayoutGrid className="h-4 w-4" />, label: "Table", color: "text-status-success-ink bg-status-success-surface" },
-  calendar: { icon: <Calendar className="h-4 w-4" />, label: "Calendar", color: "text-status-warning-ink bg-status-warning-surface" },
-  gantt: { icon: <GitBranch className="h-4 w-4" />, label: "Timeline", color: "text-status-danger-ink bg-status-danger-surface" },
+  list: { icon: <List className="h-4 w-4" />, label: "List", color: "text-status-info-ink-strong bg-status-info-surface" },
+  table: { icon: <LayoutGrid className="h-4 w-4" />, label: "Table", color: "text-status-success-ink-strong bg-status-success-surface" },
+  calendar: { icon: <Calendar className="h-4 w-4" />, label: "Calendar", color: "text-status-warning-ink-strong bg-status-warning-surface" },
+  gantt: { icon: <GitBranch className="h-4 w-4" />, label: "Timeline", color: "text-status-danger-ink-strong bg-status-danger-surface" },
 };
 
 interface ViewCardProps {
@@ -49,6 +50,8 @@ interface ViewCardProps {
   onRename: (view: ViewItem) => void;
   onDelete: (viewId: number) => void;
   canManage: boolean;
+  isSelected?: boolean;
+  onToggleSelect?: (viewId: number, selected: boolean) => void;
 }
 
 export const ViewCard = memo(function ViewCard({
@@ -60,6 +63,8 @@ export const ViewCard = memo(function ViewCard({
   onRename,
   onDelete,
   canManage,
+  isSelected,
+  onToggleSelect,
 }: ViewCardProps) {
   const handleNavigate = useCallback(() => onNavigate(view), [onNavigate, view]);
   const handleStopPropagation = useCallback(
@@ -73,7 +78,14 @@ export const ViewCard = memo(function ViewCard({
   const handleRename = useCallback(() => onRename(view), [onRename, view]);
   const handleDelete = useCallback(() => onDelete(view.id), [onDelete, view.id]);
 
-  const filterCount = view.filters ? Object.keys(view.filters).length : 0;
+  const handleToggleSelect = useCallback(
+    (checked: boolean | "indeterminate") => {
+      if (onToggleSelect) onToggleSelect(view.id, checked === true);
+    },
+    [onToggleSelect, view.id],
+  );
+
+  const filterCount = view.filters && typeof view.filters === "object" ? Object.keys(view.filters).length : 0;
   const meta = LAYOUT_META[view.layoutType] ?? LAYOUT_META["board"];
   const isOwner = canManage && (!view.createdBy || view.createdBy === currentUserId);
   const isPrivate = view.visibility === "private";
@@ -95,7 +107,7 @@ export const ViewCard = memo(function ViewCard({
         </button>
         <div className="flex items-center gap-1 shrink-0">
           {isPinned && (
-            <Badge variant="outline" className="text-micro bg-status-warning-surface text-status-warning-ink border-status-warning-rule">
+            <Badge variant="outline" className="text-micro bg-status-warning-surface text-status-warning-ink-strong border-status-warning-rule">
               Pinned
             </Badge>
           )}
@@ -139,6 +151,14 @@ export const ViewCard = memo(function ViewCard({
           />
         )}
         <ArrowRight className="h-4 w-4 text-muted-foreground ml-1" />
+        {onToggleSelect !== undefined ? (
+          <Checkbox
+            checked={isSelected ?? false}
+            onCheckedChange={handleToggleSelect}
+            aria-label={`Select ${view.name}`}
+            className="ml-1"
+          />
+        ) : null}
       </div>
     </div>
   );

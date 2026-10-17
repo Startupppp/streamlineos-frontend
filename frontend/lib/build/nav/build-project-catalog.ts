@@ -72,7 +72,8 @@ export function buildProjectCatalog(basePath: string): BuildScopeCatalog {
         label: "Cycles",
         href: `${basePath}/cycles`,
         icon: Calendar,
-        requiredPermission: "build:sprints:view",
+        searchTerms: ["sprint", "sprints", "iteration", "iterations"],
+        requiredPermission: "build:cycles:view",
       },
       {
         id: "project-releases",
@@ -188,14 +189,15 @@ export function buildProjectCatalog(basePath: string): BuildScopeCatalog {
         label: "Chat",
         href: `${basePath}/chat`,
         icon: MessageCircle,
-        requiredPermission: "build:view",
+        requiredPermission: "chat:channels:read",
       },
       {
         id: "project-wiki",
         label: "Wiki",
         href: `${basePath}/wiki`,
         icon: BookOpenText,
-        requiredPermission: "build:view",
+        requiredPermission: "kb:pages:view",
+        requiredOrgModule: "kb",
       },
       {
         id: "project-whiteboard",
@@ -248,7 +250,7 @@ export function buildProjectCatalog(basePath: string): BuildScopeCatalog {
       },
       {
         id: "project-modules",
-        label: "Modules",
+        label: "Workstreams",
         href: `${basePath}/modules`,
         icon: PackageOpen,
         requiredPermission: "build:view",

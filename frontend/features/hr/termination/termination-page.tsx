@@ -7,7 +7,8 @@ import { Plus } from "lucide-react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ErrorState } from "@/components/shared/error-state";
+import { PageState } from "@/components/shared/page-state";
+import { usePageState } from "@/hooks/api/use-page-state";
 import { ConfirmSheet } from "@/components/ui/confirm-sheet";
 import { TerminationList } from "./termination-list";
 import { TerminationFormSheet } from "./termination-form-sheet";
@@ -17,9 +18,15 @@ import {
   useHrEmployees,
   type TerminationStatus,
 } from "@/hooks/api/hr";
+import { statusToneClasses } from "@/lib/design-tokens";
+import { useTerminationCandidate } from "@/hooks/api/hr/termination";
 import { useTerminationActions } from "./use-termination-actions";
 
 type StatusFilter = "ALL" | TerminationStatus;
+
+/** What `PATCH /hr/termination/:id/complete` does (termination-separation.service). */
+const COMPLETION_EFFECTS =
+  "removes the employee's access to this organization, ends their employment record, opens a draft final settlement, creates asset-return records for their assigned assets and starts the exit checklist.";
 
 export function TerminationPage() {
   const canApproveExit = useCan("hr:exit:approve");
@@ -36,21 +43,35 @@ export function TerminationPage() {
     isLoading,
     isFetching,
     isError,
+    error,
     refetch,
   } = useTerminations({
     cursor,
     status: statusFilter === "ALL" ? undefined : statusFilter,
   });
   const terminations = useMemo(() => terminationsData?.data ?? [], [terminationsData]);
-  const { data: employeesData } = useHrEmployees({ limit: 100 });
+  const { data: employeesData } = useHrEmployees({ limit: 100, isActive: "current" });
 
   const employees = useMemo(() => employeesData?.data ?? [], [employeesData]);
+  const candidate = useTerminationCandidate(employeeUserIdParam);
+  const prefilledEmployee = candidate.data;
+  const prefillMissing = employeeUserIdParam !== null && candidate.isError;
 
-  const actions = useTerminationActions({ terminations, employees, employeeUserIdParam });
+  const actions = useTerminationActions({
+    canApproveExit,
+    terminations,
+    employees,
+    employeeUserIdParam,
+    prefillMissing,
+  });
+  const missingTone = statusToneClasses("warning");
 
   const handleRetry = useCallback(() => {
     void refetch();
   }, [refetch]);
+  // FE-41: the old branch printed "Something went wrong" for every failure,
+  // discarding the 402 upgrade path and the backend message.
+  const pageState = usePageState({ permission: "hr:exit:manage", isLoading, isError, error });
 
   const handleStatusFilterChange = useCallback((value: StatusFilter) => {
     setStatusFilter(value);
@@ -69,25 +90,25 @@ export function TerminationPage() {
       setCursorHistory((history) => [...history, nextCursor]);
   }, [terminationsData?.pagination.nextCursor]);
 
-  if (isLoading || isError) {
+  if (pageState.kind !== "ready" && pageState.kind !== "empty") {
     return (
       <PageWrapper
         title="Termination Management"
         subtitle="Manage employee terminations"
       >
-        {isLoading ? (
-          <div className="flex min-h-0 flex-1 flex-col gap-3">
-            {Array.from({ length: 10 }).map((_, skeletonIndex) => (
-              <Skeleton key={skeletonIndex} className="h-20 rounded-2xl" />
-            ))}
-          </div>
-        ) : (
-          <ErrorState
-            title="Failed to load terminations"
-            description="Something went wrong. Please try again."
-            onRetry={handleRetry}
-          />
-        )}
+        <PageState
+          resolution={pageState}
+          onRetry={handleRetry}
+          loading={
+            <div className="flex min-h-0 flex-1 flex-col gap-3">
+              {Array.from({ length: 10 }).map((_, skeletonIndex) => (
+                <Skeleton key={skeletonIndex} className="h-20 rounded-2xl" />
+              ))}
+            </div>
+          }
+        >
+          {null}
+        </PageState>
       </PageWrapper>
     );
   }
@@ -105,6 +126,14 @@ export function TerminationPage() {
         ) : undefined
       }
     >
+      {prefillMissing ? (
+        <div
+          role="alert"
+          className={`mb-3 rounded-lg border px-3 py-2 text-dense ${missingTone.surface} ${missingTone.rule} ${missingTone.ink}`}
+        >
+          Employee not found. The link you followed names an employee who does not exist or whom you cannot access, so no termination was started.
+        </div>
+      ) : null}
       <TerminationList
         terminations={terminations}
         statusCounts={terminationsData?.statusCounts}
@@ -135,6 +164,7 @@ export function TerminationPage() {
         submitDisabled={!actions.canSubmitCreate}
         onSubmit={actions.handleCreateSubmit}
         employees={employees}
+        prefilledEmployee={prefilledEmployee ?? null}
         selectedEmployeeUserId={actions.selectedEmployeeUserId}
         onSelectedEmployeeUserIdChange={actions.setSelectedEmployeeUserId}
         selectedReason={actions.selectedReason}
@@ -149,6 +179,19 @@ export function TerminationPage() {
         onSeveranceAmountChange={actions.handleSeveranceAmountChange}
         internalNotes={actions.internalNotes}
         onInternalNotesChange={actions.handleInternalNotesChange}
+        saveAsDraft={actions.saveAsDraft}
+        onSaveAsDraftChange={actions.setSaveAsDraft}
+      />
+
+      <ConfirmSheet
+        open={actions.confirmCreateOpen}
+        onOpenChange={actions.handleConfirmCreateOpenChange}
+        title="Approve this termination now?"
+        description={`It is approved immediately, with no second reviewer. You then send the termination letter; completing it on or after the effective date ${COMPLETION_EFFECTS} Turn on "Save as draft" to keep it for review instead.`}
+        confirmLabel="Create & Approve"
+        destructive
+        onConfirm={actions.performCreate}
+        isPending={actions.createIsPending}
       />
 
       <ConfirmSheet
@@ -183,7 +226,7 @@ export function TerminationPage() {
         open={actions.emailRecord !== null}
         onOpenChange={actions.handleEmailRecordClose}
         title="Send Termination Email"
-        description={`Send termination email to ${actions.emailRecord?.employee?.name ?? "this employee"}? The employee will be officially notified. Account deactivation will happen when you mark the termination as Complete.`}
+        description={`Send termination email to ${actions.emailRecord?.employee?.name ?? "this employee"}? The employee will be officially notified. If the effective date has arrived, sending it also completes the termination, which ${COMPLETION_EFFECTS}`}
         confirmLabel="Send Email"
         onConfirm={actions.handleSendEmailConfirm}
         isPending={actions.sendEmailIsPending}
@@ -193,7 +236,7 @@ export function TerminationPage() {
         open={actions.completeTerminationId !== null}
         onOpenChange={actions.handleCompleteSheetOpenChange}
         title="Complete Termination"
-        description="This will deactivate the employee's account, initiate the final settlement, and create asset return records. This action cannot be undone."
+        description={`Completing it ${COMPLETION_EFFECTS} Their sign-in to other organizations is not affected. This action cannot be undone.`}
         confirmLabel="Complete Termination"
         destructive
         onConfirm={actions.handleCompleteConfirm}

@@ -13,6 +13,36 @@ function isCapabilityError(error: unknown): boolean {
   return error.statusCode === 401 || error.statusCode === 403;
 }
 
+/**
+ * Events only the SERVER may author. A chat token grants `publish` on the caller's
+ * chat and huddle channels (the browser publishes `typing` and `huddle:chat`), so any
+ * member could otherwise publish a forged `message`, `reaction:updated` or huddle
+ * frame. The backend publishes over REST with the API key and no `clientId`; Ably
+ * stamps every browser publish with the token's `clientId`, which cannot be forged.
+ */
+const SERVER_AUTHORED_EVENTS: ReadonlySet<string> = new Set([
+  "message",
+  "message:updated",
+  "message:deleted",
+  "reaction:updated",
+  "huddle:started",
+  "huddle:user_joined",
+  "huddle:user_left",
+  "huddle:ended",
+  "huddle:state_updated",
+  "huddle:kicked",
+  "notification:message",
+  "notification:mention",
+]);
+
+/** True when a server-authored event arrives with a `clientId`, i.e. a browser published it. */
+export function isForgedServerFrame(
+  event: string,
+  clientId: string | null | undefined,
+): boolean {
+  return SERVER_AUTHORED_EVENTS.has(event) && clientId !== undefined && clientId !== null;
+}
+
 export async function safeSubscribe(
   channel: RealtimeChannel,
   event: string,

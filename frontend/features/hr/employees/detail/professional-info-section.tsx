@@ -12,7 +12,6 @@ import {
 import { Input } from "@/components/ui/input";
 import { DatePicker } from "@/components/ui/date-picker";
 import { DepartmentCombobox } from "@/components/hr/department-combobox";
-import { UserCombobox } from "@/components/ui/user-combobox";
 import { Briefcase } from "lucide-react";
 import type { EmployeeFormValues } from "@/features/hr/employees/detail/employee-form-schema";
 
@@ -24,17 +23,7 @@ function joiningDateChange(
   };
 }
 
-interface ProfessionalInfoSectionProps {
-  employeeUserId: string;
-}
-
-function reportingToChange(onChange: (value: string | null) => void): (value: string) => void {
-  return function handleReportingToChange(value) {
-    onChange(value === "" ? null : value);
-  };
-}
-
-export function ProfessionalInfoSection({ employeeUserId }: ProfessionalInfoSectionProps) {
+export function ProfessionalInfoSection() {
   const { control } = useFormContext<EmployeeFormValues>();
 
   return (
@@ -71,29 +60,12 @@ export function ProfessionalInfoSection({ employeeUserId }: ProfessionalInfoSect
                   onValueChange={(value) => field.onChange(value ?? undefined)}
                   placeholder="Select Department"
                 />
-        <FormField
-          control={control}
-          name="reportingTo"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Reports to</FormLabel>
-              <FormControl>
-                <UserCombobox
-                  value={field.value ?? ""}
-                  onChange={reportingToChange(field.onChange)}
-                  placeholder="Select reporting manager"
-                  excludeUserId={employeeUserId}
-                  allowUnassigned
-                />
               </FormControl>
-              <FormDescription>
-                Changing the manager takes effect today and is kept in the reporting-line history.
-              </FormDescription>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-              </FormControl>
+              {/* FormControl renders a Slot, which only accepts one child. The note
+                  has to sit beside the field or the Edit tab throws Children.only. */}
+              <p className="text-xs text-muted-foreground md:col-span-2">
+                Reporting managers are changed from the Reporting line card on the Overview tab.
+              </p>
               <FormDescription>
                 Organizational unit (e.g. Engineering, Sales)
               </FormDescription>

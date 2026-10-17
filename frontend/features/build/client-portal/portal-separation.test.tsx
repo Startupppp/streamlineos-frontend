@@ -4,6 +4,16 @@ import { PortalListPage } from "./portal-list-page";
 import { PortalDashboardPage } from "./portal-dashboard-page";
 import { ApiError } from "@/lib/api-envelope";
 
+jest.mock("next/navigation", () => ({
+  useRouter: () => ({ replace: jest.fn() }),
+  useSearchParams: () => ({ get: () => null, toString: () => "" }),
+  usePathname: () => "/build/1/client-portal",
+}));
+
+jest.mock("@/hooks/common/use-online-status", () => ({
+  useOnlineStatus: () => true,
+}));
+
 jest.mock("framer-motion", () => ({
   motion: {
     div: ({ children, ...rest }: React.HTMLAttributes<HTMLDivElement>) => (
@@ -32,7 +42,7 @@ jest.mock("@/components/pm-chrome", () => ({
   PmStaggerList: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
   PM_ROW: "pm-row-class",
   PM_PANEL: "pm-panel-class",
-  PM_FILL_PANEL: "pm-fill-panel-class",
+  CONTENT_FILL_PANEL: "pm-fill-panel-class",
 }));
 
 jest.mock("@/components/ui/page-wrapper", () => ({
@@ -111,21 +121,66 @@ jest.mock("@/hooks/api/entitlements", () => ({
   useEntitlements: () => ({ data: undefined }),
 }));
 
-const mockUseClientVisibility = jest.fn();
+const mockUseTicketsInfinite = jest.fn();
+const mockUseMilestonesInfinite = jest.fn();
 const mockUseUpdateTicketVisibility = jest.fn();
 const mockUseUpdateMilestoneVisibility = jest.fn();
 const mockUsePortalProjects = jest.fn();
 const mockUsePortalProjectOverview = jest.fn();
 const mockUsePortalChangeRequests = jest.fn();
+const mockUsePortalPreviewRequests = jest.fn();
+
+const emptyInfiniteResult = () => ({
+  items: [],
+  hasMore: false,
+  isLoading: false,
+  isError: false,
+  error: undefined,
+  isFetchingNextPage: false,
+  fetchNextPage: jest.fn(),
+  refetch: jest.fn(),
+});
+
+const mockUsePortalPreviewMilestones = jest.fn();
+const mockUsePortalPreviewTasks = jest.fn();
+const mockUsePortalPreviewDeliverables = jest.fn();
+const mockUsePortalPreviewApprovals = jest.fn();
+const mockUsePortalPreviewInvoices = jest.fn();
 
 jest.mock("@/hooks/api/build/client-portal", () => ({
-  useClientVisibility: (...args: [number]) => mockUseClientVisibility(...args),
+  useClientVisibilityTicketsInfinite: (...args: [number]) => mockUseTicketsInfinite(...args),
+  useClientVisibilityMilestonesInfinite: (...args: [number]) => mockUseMilestonesInfinite(...args),
   useUpdateTicketVisibility: (...args: [number]) => mockUseUpdateTicketVisibility(...args),
   useUpdateMilestoneVisibility: (...args: [number]) => mockUseUpdateMilestoneVisibility(...args),
   usePortalProjects: () => mockUsePortalProjects(),
   usePortalProjectOverview: (...args: [number]) => mockUsePortalProjectOverview(...args),
   usePortalChangeRequests: (...args: [number]) => mockUsePortalChangeRequests(...args),
+  usePortalPreviewFiles: () => emptyChildPage(),
+  usePortalPreviewUpdates: () => emptyChildPage(),
+  usePortalPreviewRequests: (...args: [number]) => mockUsePortalPreviewRequests(...args),
+  usePortalPreviewMilestones: () => mockUsePortalPreviewMilestones(),
+  usePortalPreviewTasks: () => mockUsePortalPreviewTasks(),
+  usePortalPreviewDeliverables: () => mockUsePortalPreviewDeliverables(),
+  usePortalPreviewApprovals: () => mockUsePortalPreviewApprovals(),
+  usePortalPreviewInvoices: () => mockUsePortalPreviewInvoices(),
   useSubmitPortalChangeRequest: jest.fn(() => ({ mutate: jest.fn(), isPending: false })),
+}));
+
+function emptyChildPage() {
+  return {
+    items: [],
+    isLoading: false,
+    isError: false,
+    error: null,
+    hasMore: false,
+    isFetchingNextPage: false,
+    fetchNextPage: jest.fn(),
+    refetch: jest.fn(),
+  };
+}
+
+jest.mock("@/components/ui/infinite-scroll-sentinel", () => ({
+  InfiniteScrollSentinel: () => null,
 }));
 
 const ACCESS_GRANTED_MANAGE = {
@@ -166,12 +221,18 @@ beforeEach(() => {
   jest.clearAllMocks();
   mockUseAccess.mockReturnValue(ACCESS_GRANTED_MANAGE);
   mockUseCan.mockReturnValue(true);
-  mockUseClientVisibility.mockReturnValue(noData());
+  mockUseTicketsInfinite.mockReturnValue(emptyInfiniteResult());
+  mockUseMilestonesInfinite.mockReturnValue(emptyInfiniteResult());
   mockUseUpdateTicketVisibility.mockReturnValue({ mutate: jest.fn(), isPending: false });
   mockUseUpdateMilestoneVisibility.mockReturnValue({ mutate: jest.fn(), isPending: false });
   mockUsePortalProjects.mockReturnValue(noData());
   mockUsePortalProjectOverview.mockReturnValue(noData());
   mockUsePortalChangeRequests.mockReturnValue({ data: [], isLoading: false, isError: false, error: undefined, refetch: jest.fn() });
+  mockUsePortalPreviewMilestones.mockReturnValue(emptyChildPage());
+  mockUsePortalPreviewTasks.mockReturnValue(emptyChildPage());
+  mockUsePortalPreviewDeliverables.mockReturnValue(emptyChildPage());
+  mockUsePortalPreviewApprovals.mockReturnValue(emptyChildPage());
+  mockUsePortalPreviewInvoices.mockReturnValue(emptyChildPage());
 });
 
 describe("BSN-03-052 — internal management and external portal identity separation", () => {
@@ -184,31 +245,22 @@ describe("BSN-03-052 — internal management and external portal identity separa
       expect(screen.getByText("Access Restricted")).toBeInTheDocument();
     });
 
-    it("renders management content and calls the visibility hook when permission is granted", () => {
+    it("renders management content and calls the visibility hooks when permission is granted", () => {
       mockUseAccess.mockReturnValue(ACCESS_GRANTED_MANAGE);
       mockUseCan.mockReturnValue(true);
-      mockUseClientVisibility.mockReturnValue({
-        data: { tickets: [], milestones: [] },
-        isLoading: false,
-        isError: false,
-        error: undefined,
-        refetch: jest.fn(),
-      });
+      mockUseTicketsInfinite.mockReturnValue(emptyInfiniteResult());
+      mockUseMilestonesInfinite.mockReturnValue(emptyInfiniteResult());
       render(<ClientVisibilityPage projectId={1} />);
-      expect(mockUseClientVisibility).toHaveBeenCalledWith(1);
+      expect(mockUseTicketsInfinite).toHaveBeenCalledWith(1);
+      expect(mockUseMilestonesInfinite).toHaveBeenCalledWith(1);
       expect(screen.queryByText("Access Restricted")).not.toBeInTheDocument();
     });
 
     it("does not call any external portal data hook so internal preview cannot acquire portal-client data", () => {
       mockUseAccess.mockReturnValue(ACCESS_GRANTED_MANAGE);
       mockUseCan.mockReturnValue(true);
-      mockUseClientVisibility.mockReturnValue({
-        data: { tickets: [], milestones: [] },
-        isLoading: false,
-        isError: false,
-        error: undefined,
-        refetch: jest.fn(),
-      });
+      mockUseTicketsInfinite.mockReturnValue(emptyInfiniteResult());
+      mockUseMilestonesInfinite.mockReturnValue(emptyInfiniteResult());
       render(<ClientVisibilityPage projectId={1} />);
       expect(mockUsePortalProjectOverview).not.toHaveBeenCalled();
       expect(mockUsePortalProjects).not.toHaveBeenCalled();
@@ -240,6 +292,30 @@ describe("BSN-03-052 — internal management and external portal identity separa
       expect(screen.getByText(/No projects/i)).toBeInTheDocument();
     });
 
+    it("states the empty surface without implying that projects exist which this client may not see", () => {
+      mockUseAccess.mockReturnValue(ACCESS_GRANTED_PORTAL_ONLY);
+      mockUseCan.mockImplementation((p: string) => p === "build:portal:view");
+      mockUsePortalProjects.mockReturnValue({
+        data: [],
+        isLoading: false,
+        isError: false,
+        error: undefined,
+        refetch: jest.fn(),
+      });
+      const { container } = render(<PortalListPage />);
+      const copy = container.textContent ?? "";
+      for (const disclosure of [
+        /do(?:n't| not) have access/i,
+        /hidden/i,
+        /excluded/i,
+        /cannot see/i,
+        /not (?:been )?shared with you/i,
+        /no longer/i,
+      ]) {
+        expect(copy).not.toMatch(disclosure);
+      }
+    });
+
     it("does not call the internal management hook so an external client cannot access management data", () => {
       mockUseAccess.mockReturnValue(ACCESS_GRANTED_PORTAL_ONLY);
       mockUseCan.mockImplementation((p: string) => p === "build:portal:view");
@@ -252,7 +328,7 @@ describe("BSN-03-052 — internal management and external portal identity separa
       });
       render(<PortalListPage />);
       expect(mockUsePortalProjects).toHaveBeenCalled();
-      expect(mockUseClientVisibility).not.toHaveBeenCalled();
+      expect(mockUseTicketsInfinite).not.toHaveBeenCalled();
       expect(mockUseUpdateTicketVisibility).not.toHaveBeenCalled();
       expect(mockUseUpdateMilestoneVisibility).not.toHaveBeenCalled();
     });
@@ -278,16 +354,14 @@ describe("BSN-03-052 — internal management and external portal identity separa
       mockUseAccess.mockReturnValue(ACCESS_GRANTED_PORTAL_ONLY);
       mockUseCan.mockImplementation((p: string) => p === "build:portal:view");
       mockUsePortalProjectOverview.mockReturnValue(noData());
-      mockUsePortalChangeRequests.mockReturnValue({
-        data: undefined,
-        isLoading: false,
+      mockUsePortalPreviewRequests.mockReturnValue({
+        ...emptyChildPage(),
         isError: true,
         error: new ApiError("Build module not enabled", 402, "MODULE_NOT_ENABLED", {
           moduleKey: "build",
           reason: "not-in-plan",
           upgradePath: "/settings/billing",
         }),
-        refetch: jest.fn(),
       });
       render(<PortalDashboardPage projectId={1} />);
       expect(screen.queryByText(/Something went wrong/i)).not.toBeInTheDocument();

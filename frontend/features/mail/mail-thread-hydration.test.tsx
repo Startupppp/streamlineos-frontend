@@ -1,9 +1,11 @@
-import { render, screen, fireEvent } from "@testing-library/react";
+import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { queryKeys } from "@/lib/query-keys";
 import { MailShell } from "./mail-shell";
 import { MailReadingPane } from "./mail-reading-pane";
+import { MailReadingToolbar } from "./mail-reading-toolbar";
 import type { MailMessageDetail, MailMessageSummary } from "@/types/mail";
 
 const LIST_ROW: MailMessageSummary = {
@@ -29,6 +31,8 @@ const SEEDED_DETAIL: MailMessageDetail = {
   attachments: [],
 };
 
+let mockMobile = false;
+
 let threadResult: {
   data: MailMessageDetail[] | undefined;
   isLoading: boolean;
@@ -36,6 +40,7 @@ let threadResult: {
   isError: boolean;
   error: unknown;
   refetch: () => void;
+  isFetchedAfterMount: boolean;
 };
 
 jest.mock("next/navigation", () => ({
@@ -53,6 +58,11 @@ jest.mock("@/hooks/api/access", () => ({
   }),
 }));
 
+jest.mock("@/hooks/common/use-mobile", () => ({
+  useIsMobile: () => mockMobile,
+  useIsBelowLg: () => mockMobile,
+}));
+
 jest.mock("@/hooks/api/integrations", () => ({
   useFinalizeIntegrationConnection: () => ({ mutate: jest.fn() }),
   useIntegrationConnections: () => ({
@@ -64,6 +74,10 @@ jest.mock("@/hooks/api/integrations", () => ({
   useInitiateIntegrationConnection: () => ({ mutateAsync: jest.fn() }),
   useDisconnectIntegration: () => ({ isPending: false, mutateAsync: jest.fn() }),
   useSetPrimaryIntegration: () => ({ mutateAsync: jest.fn() }),
+}));
+
+jest.mock("@/hooks/api/inbox", () => ({
+  useUnifiedInboxCount: () => ({ data: undefined }),
 }));
 
 jest.mock("@/hooks/api/mail", () => ({
@@ -98,6 +112,7 @@ jest.mock("@/hooks/api/mail", () => ({
     isError: false,
     error: null,
     refetch: jest.fn(),
+    isFetchedAfterMount: false,
   }),
   useMailThreadSummary: () => ({ mutateAsync: jest.fn(), isPending: false }),
   useMailAiDraft: () => ({ mutateAsync: jest.fn(), isPending: false }),
@@ -124,13 +139,17 @@ function renderShell() {
   return queryClient;
 }
 
-function renderReadingPane() {
+function renderReadingPane(onReply = jest.fn()) {
   return render(
     <TooltipProvider>
-      <MailReadingPane selectedMessage={LIST_ROW} onReply={jest.fn()} />
+      <MailReadingPane selectedMessage={LIST_ROW} onReply={onReply} />
     </TooltipProvider>,
   );
 }
+
+beforeEach(() => {
+  mockMobile = false;
+});
 
 describe("MailShell — opening a message seeds the thread cache", () => {
   beforeEach(() => {
@@ -141,6 +160,7 @@ describe("MailShell — opening a message seeds the thread cache", () => {
       isError: false,
       error: null,
       refetch: jest.fn(),
+      isFetchedAfterMount: false,
     };
   });
 
@@ -176,16 +196,37 @@ describe("MailReadingPane — a seeded thread renders its chrome, not a full ske
       isError: false,
       error: null,
       refetch: jest.fn(),
+      isFetchedAfterMount: false,
     };
 
     renderReadingPane();
 
     expect(screen.getByText("Quarterly plan")).toBeInTheDocument();
+    const bodySkeleton = screen.getByTestId("mail-body-skeleton");
+    expect(bodySkeleton).toBeInTheDocument();
+    expect(bodySkeleton).toHaveClass("bg-card", "border-border/50");
+    expect(bodySkeleton.querySelector(".skeleton-shimmer")).toHaveClass("bg-muted");
+    expect(screen.queryByText("No content")).not.toBeInTheDocument();
+  });
+
+  it("keeps the body placeholder visible while a cached body-less message refetches", () => {
+    threadResult = {
+      data: [SEEDED_DETAIL],
+      isLoading: false,
+      isFetching: true,
+      isError: false,
+      error: null,
+      refetch: jest.fn(),
+      isFetchedAfterMount: true,
+    };
+
+    renderReadingPane();
+
     expect(screen.getByTestId("mail-body-skeleton")).toBeInTheDocument();
     expect(screen.queryByText("No content")).not.toBeInTheDocument();
   });
 
-  it("a genuinely empty message says so once the fetch has settled", () => {
+  it("a body-less message shows its snippet once the fetch has settled", () => {
     threadResult = {
       data: [SEEDED_DETAIL],
       isLoading: false,
@@ -193,6 +234,25 @@ describe("MailReadingPane — a seeded thread renders its chrome, not a full ske
       isError: false,
       error: null,
       refetch: jest.fn(),
+      isFetchedAfterMount: true,
+    };
+
+    renderReadingPane();
+
+    expect(screen.getAllByText("A snippet").length).toBeGreaterThan(0);
+    expect(screen.queryByText("No content")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("mail-body-skeleton")).not.toBeInTheDocument();
+  });
+
+  it("a genuinely empty message says so once the fetch has settled", () => {
+    threadResult = {
+      data: [{ ...SEEDED_DETAIL, snippet: "" }],
+      isLoading: false,
+      isFetching: false,
+      isError: false,
+      error: null,
+      refetch: jest.fn(),
+      isFetchedAfterMount: true,
     };
 
     renderReadingPane();
@@ -209,11 +269,89 @@ describe("MailReadingPane — a seeded thread renders its chrome, not a full ske
       isError: false,
       error: null,
       refetch: jest.fn(),
+      isFetchedAfterMount: true,
     };
 
     renderReadingPane();
 
     expect(screen.queryByTestId("mail-body-skeleton")).not.toBeInTheDocument();
     expect(await screen.findByText("the real body")).toBeInTheDocument();
+  });
+
+  it("keeps Reply direct and consolidates secondary actions on mobile", () => {
+    mockMobile = true;
+    threadResult = {
+      data: [SEEDED_DETAIL],
+      isLoading: false,
+      isFetching: false,
+      isError: false,
+      error: null,
+      refetch: jest.fn(),
+      isFetchedAfterMount: true,
+    };
+    const onReply = jest.fn();
+
+    renderReadingPane(onReply);
+
+    const reply = screen.getByRole("button", { name: "Reply" });
+    expect(reply).toHaveClass("size-9", "p-0");
+    expect(reply).not.toHaveTextContent("Reply");
+    fireEvent.click(reply);
+    expect(onReply).toHaveBeenCalledTimes(1);
+    expect(screen.getByRole("button", { name: "More message actions" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Archive" })).toBeNull();
+  });
+
+  it("closes the mobile overflow drawer after a secondary action runs", async () => {
+    mockMobile = true;
+    const user = userEvent.setup();
+    const onToggleStar = jest.fn();
+    render(
+      <MailReadingToolbar
+        message={LIST_ROW}
+        onReply={jest.fn()}
+        onArchive={jest.fn()}
+        onTrash={jest.fn()}
+        onMarkUnread={jest.fn()}
+        onToggleStar={onToggleStar}
+        canAi={false}
+        aiActions={[]}
+      />,
+    );
+
+    await user.click(screen.getByRole("button", { name: "More message actions" }));
+    fireEvent.click(screen.getByRole("button", { name: "Star" }));
+
+    expect(onToggleStar).toHaveBeenCalledTimes(1);
+    await waitFor(() =>
+      expect(screen.queryByRole("button", { name: "Mark as unread" })).toBeNull(),
+    );
+  });
+
+  it("opens mobile AI actions in a drawer rather than an off-screen submenu", async () => {
+    mockMobile = true;
+    const user = userEvent.setup();
+    render(
+      <MailReadingToolbar
+        message={LIST_ROW}
+        onReply={jest.fn()}
+        onArchive={jest.fn()}
+        onTrash={jest.fn()}
+        onMarkUnread={jest.fn()}
+        onToggleStar={jest.fn()}
+        canAi
+        aiActions={[
+          { key: "summary", label: "Summarize thread", run: jest.fn().mockResolvedValue({ text: "Summary" }) },
+          { key: "reply", label: "Draft reply", run: jest.fn().mockResolvedValue({ text: "Draft" }) },
+        ]}
+      />,
+    );
+
+    await user.click(screen.getByRole("button", { name: "More message actions" }));
+    fireEvent.click(screen.getByRole("button", { name: "AI assist" }));
+
+    expect(screen.getByRole("dialog", { name: "AI assist" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Summarize thread" })).toBeInTheDocument();
+    expect(screen.queryByRole("menu", { name: "AI assist" })).not.toBeInTheDocument();
   });
 });

@@ -2,9 +2,10 @@ import { warmScreenshotCache } from "./screenshot";
 import { unwrapEnvelope } from "./api";
 import { FeedbucketWidget } from "./ui";
 
-async function getAiAssistConfig(apiBase: string, embedKey: string): Promise<boolean> {
+async function getAiAssistConfig(apiBase: string, embedKey: string): Promise<boolean | null> {
   try {
     const res = await fetch(`${apiBase}/public/feedbucket/${embedKey}/config`);
+    if (res.status === 404) return null;
     if (!res.ok) return false;
     const json: unknown = unwrapEnvelope(await res.json());
     if (json === null || typeof json !== "object") return false;
@@ -31,5 +32,6 @@ async function bootstrapWidget(
   embedKey: string,
 ): Promise<void> {
   const aiAssistEnabled = await getAiAssistConfig(apiBase, embedKey);
+  if (aiAssistEnabled === null) return;
   new FeedbucketWidget(hostEl, apiBase, embedKey, aiAssistEnabled);
 }

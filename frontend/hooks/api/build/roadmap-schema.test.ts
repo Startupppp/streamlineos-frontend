@@ -28,6 +28,8 @@ const UNWEIGHTED_TIER = {
   unweightedReason: "no_linked_feedback",
   linkedFeedbackCount: 0,
   linkedAccountCount: 0,
+  linkedRevenue: null,
+  revenueKnownAccountCount: 0,
 };
 
 function baseRoadmapItem(status: string) {
@@ -36,24 +38,44 @@ function baseRoadmapItem(status: string) {
     orgId: "org-1",
     title: "Ship the thing",
     description: null,
+    outcome: null,
     status,
+    horizon: "later" as const,
     category: null,
     isPublic: true,
     projectId: null,
+    managedProductId: null,
     epicTicketId: null,
     targetQuarter: null,
+    targetStart: null,
+    targetEnd: null,
     sortOrder: 0,
     votes: 0,
+    version: 1,
     reach: null,
     impact: null,
     confidence: null,
     effort: null,
+    ownerMembershipId: null,
+    owner: null,
+    goalId: null,
+    releaseId: null,
+    teamId: null,
+    opportunityId: null,
+    decisionSnapshot: null,
+    goal: null,
+    release: null,
+    team: null,
+    opportunity: null,
     createdBy: null,
     createdAt: "2026-09-16T00:00:00.000Z",
     updatedAt: "2026-09-16T00:00:00.000Z",
     deletedAt: null,
     prioritization: UNSCORED_PRIORITIZATION,
     tierWeighting: UNWEIGHTED_TIER,
+    delivery: { source: "none" as const, total: 0, done: 0, percent: null },
+    allowedActions: [],
+    sourceFreshness: null,
   };
 }
 
@@ -70,6 +92,8 @@ function baseFeedbackPost(status: string) {
     submittedByEmail: null,
     crmContactId: null,
     crmOrganizationId: null,
+    accountValueSnapshot: null,
+    accountTierSnapshot: null,
     linkedRoadmapItemId: null,
     duplicateOfId: null,
     mergedAt: null,
@@ -105,6 +129,49 @@ it("accepts every roadmap_status value the roadmap_items pgEnum actually holds",
 
 it("rejects a roadmap status outside the roadmap_status pgEnum instead of accepting any string", () => {
   expect(() => roadmapItemContract.parse(baseRoadmapItem("archived"))).toThrow(ZodError);
+});
+
+it("rejects a roadmap item missing version — version is required for stale-write detection on updates", () => {
+  const raw: Record<string, unknown> = { ...baseRoadmapItem("planned") };
+  delete raw.version;
+  expect(() => roadmapItemContract.parse(raw)).toThrow(ZodError);
+});
+
+it("rejects a roadmap row missing outcome — a missing outcome column cannot silently decode as an item with no outcome", () => {
+  const raw: Record<string, unknown> = { ...baseRoadmapItem("planned") };
+  delete raw.outcome;
+  expect(() => roadmapItemContract.parse(raw)).toThrow(ZodError);
+});
+
+it("accepts outcome: null so a row with no outcome set parses cleanly", () => {
+  expect(() => roadmapItemContract.parse(baseRoadmapItem("planned"))).not.toThrow();
+});
+
+it("accepts outcome: a string so a row with an outcome set parses cleanly", () => {
+  const raw = { ...baseRoadmapItem("planned"), outcome: "All users can export data" };
+  expect(roadmapItemContract.parse(raw).outcome).toBe("All users can export data");
+});
+
+it("rejects a roadmap row missing owner — a missing owner field cannot silently decode", () => {
+  const raw: Record<string, unknown> = { ...baseRoadmapItem("planned") };
+  delete raw.owner;
+  expect(() => roadmapItemContract.parse(raw)).toThrow(ZodError);
+});
+
+it("accepts owner: null so an unassigned item parses cleanly", () => {
+  expect(roadmapItemContract.parse(baseRoadmapItem("planned")).owner).toBeNull();
+});
+
+it("accepts a populated owner object and preserves all display fields", () => {
+  const raw = {
+    ...baseRoadmapItem("planned"),
+    ownerMembershipId: 42,
+    owner: { name: null, firstName: "Alice", lastName: "Smith", email: "alice@example.com", image: null },
+  };
+  const parsed = roadmapItemContract.parse(raw);
+  expect(parsed.ownerMembershipId).toBe(42);
+  expect(parsed.owner?.firstName).toBe("Alice");
+  expect(parsed.owner?.email).toBe("alice@example.com");
 });
 
 it("parses a GET /build/roadmap page whose rows carry status, matching the full row .returning() sends", () => {
@@ -229,6 +296,8 @@ it("keeps the weighted score and the tier that produced it on a parsed row", () 
       unweightedReason: null,
       linkedFeedbackCount: 3,
       linkedAccountCount: 2,
+      linkedRevenue: 1500,
+      revenueKnownAccountCount: 2,
     },
   };
   const parsed = roadmapItemContract.parse(weighted);
@@ -292,11 +361,15 @@ it("parses a GET /build/changelog page whose rows carry type, matching the full 
   expect(() => changelogPageContract.parse(page)).not.toThrow();
 });
 
-it("accepts the flat projectId/key/ticketsCreated shape applyTemplate actually returns, not the nested project/tickets shape its backend ResponseSchema declares", () => {
+it("accepts the flat projectId/key/ticketsCreated shape the applyTemplate wire contract now declares", () => {
   const result = applyTemplateResultContract.parse({
     projectId: 42,
     key: "PRJ-001",
     ticketsCreated: 3,
+    customFieldsCreated: 0,
+    savedViewsCreated: 0,
   });
-  expect(result).toEqual({ projectId: 42, key: "PRJ-001", ticketsCreated: 3 });
+  expect(result.projectId).toBe(42);
+  expect(result.key).toBe("PRJ-001");
+  expect(result.ticketsCreated).toBe(3);
 });

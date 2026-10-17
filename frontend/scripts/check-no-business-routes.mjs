@@ -38,6 +38,14 @@ const ALLOWED_ROUTES = new Map([
       properties: ["session", "read-only"],
     },
   ],
+  [
+    `api${sep}version${sep}route.ts`,
+    {
+      reason:
+        "Deployment identity probe. Returns the running build's commit SHA (VERCEL_GIT_COMMIT_SHA, else NEXT_PUBLIC_APP_VERSION) with no-store, so a release can be confirmed live before a QA finding is triaged against it. GET only; it reads no session, holds no business rule and touches no database or backend.",
+      properties: ["read-only"],
+    },
+  ],
 ]);
 
 const SESSION_RE = /\bgetServerAuth\b|\bgetServerSession\b|\bauth\(\)/;

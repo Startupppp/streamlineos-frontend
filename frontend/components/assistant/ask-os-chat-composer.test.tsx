@@ -1,3 +1,4 @@
+import { createRef } from "react";
 import { render, screen } from "@testing-library/react";
 import { AskOsChatComposer } from "./ask-os-chat-composer";
 import { ASK_OS_MAX_MESSAGE_CHARS } from "./ask-os-request-policy";
@@ -5,13 +6,30 @@ import { ASK_OS_MAX_MESSAGE_CHARS } from "./ask-os-request-policy";
 const composerProps = {
   isStreaming: false,
   onInputChange: jest.fn(),
+  onVoiceTranscript: jest.fn(),
   onSelectPersona: jest.fn(),
   onStop: jest.fn(),
   onSubmit: jest.fn(),
   selectedPersona: null,
+  speech: {
+    cancel: jest.fn(),
+    interimTranscript: "",
+    message: null,
+    reset: jest.fn(),
+    start: jest.fn(),
+    state: "idle" as const,
+    stop: jest.fn(),
+    supported: false,
+  },
 };
 
 describe("Ask OS composer validation", () => {
+  it("exposes the message field so the panel can move focus to it on open", () => {
+    const inputRef = createRef<HTMLInputElement>();
+    render(<AskOsChatComposer {...composerProps} inputRef={inputRef} error={null} input="" />);
+    expect(inputRef.current).toBe(screen.getByPlaceholderText("Ask anything about your organization…"));
+  });
+
   it("keeps a server validation refusal on the input instead of a thread retry", () => {
     render(
       <AskOsChatComposer
@@ -43,5 +61,16 @@ describe("Ask OS composer validation", () => {
 
     expect(screen.getByRole("alert")).toHaveTextContent("Message is too long");
     expect(screen.getByRole("button", { name: "Send" })).toBeDisabled();
+  });
+
+  it("keeps typed input available when browser voice recognition is unavailable", () => {
+    render(<AskOsChatComposer {...composerProps} error={null} input="Draft text" />);
+
+    expect(screen.getByRole("button", { name: "Start voice input" })).toBeDisabled();
+    expect(screen.getByText("Voice input isn’t available in this browser. You can keep typing."))
+      .toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Start voice input" }))
+      .toHaveAccessibleDescription("Voice input isn’t available in this browser. You can keep typing.");
+    expect(screen.getByPlaceholderText("Ask anything about your organization…")).toHaveValue("Draft text");
   });
 });

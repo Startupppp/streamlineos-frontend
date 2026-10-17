@@ -13,7 +13,7 @@ import {
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { apiClient } from "@/lib/api-client";
-import { lazyContract } from "@/lib/api-envelope";
+import { lazyContract, isApiError } from "@/lib/api-envelope";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { formatCurrencyFull } from "@/lib/format-utils";
 import type { PublicOffer } from "@/lib/public-fetch";
@@ -25,9 +25,16 @@ const publicOfferRespondContract = lazyContract(() =>
 interface Props {
   offer: PublicOffer;
   token: string;
+  /**
+   * Read-only content the server rendered, slotted between the terms and the
+   * Accept button. Kept as children rather than pulled in here so the
+   * compensation breakdown stays in the first HTML: this page arrives from an
+   * email link on a phone, and the numbers are why it was opened.
+   */
+  children?: React.ReactNode;
 }
 
-export function OfferActionIsland({ offer, token }: Props) {
+export function OfferActionIsland({ offer, token, children }: Props) {
   const router = useRouter();
   const [responding, setResponding] = useState(false);
   const [declineOpen, setDeclineOpen] = useState(false);
@@ -52,6 +59,19 @@ export function OfferActionIsland({ offer, token }: Props) {
       setCounterOpen(false);
       router.refresh();
     } catch (e) {
+      /**
+       * 409 is the conditional claim losing: someone — or this same candidate
+       * on a second tab or a re-submitted request — already responded. The
+       * truth is then whatever the offer now says, so re-render the page
+       * rather than reporting a generic conflict over a stale form.
+       */
+      if (isApiError(e) && e.status === 409) {
+        setDeclineOpen(false);
+        setCounterOpen(false);
+        toast.info("This offer has already been responded to.");
+        router.refresh();
+        return;
+      }
       toast.error(getErrorMessage(e) || "Unable to respond to this offer. Try again.");
     } finally {
       setResponding(false);
@@ -107,6 +127,8 @@ export function OfferActionIsland({ offer, token }: Props) {
           </div>
         )}
       </div>
+
+      {children}
 
       {offer.notes && (
         <div className="rounded-lg border px-4 py-3 text-sm text-muted-foreground">

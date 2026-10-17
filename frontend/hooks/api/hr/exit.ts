@@ -3,6 +3,7 @@ import type { z } from "zod";
 import type {
   exitChecklistItemContract,
   exitChecklistOwnerContract,
+  offboardingChecklistRowContract,
   resignationContract,
   resignationDetailContract,
   resignationProgressContract,
@@ -15,14 +16,17 @@ import { lazyContract } from "@/lib/api-envelope";
 import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
 import { useCan, useModuleEnabled } from "@/hooks/api/access";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import { useGatedQuery } from "@/hooks/api/gated-query";
 import { useAuthorizedIdempotentMutation } from "@/hooks/api/inventory/use-idempotent-mutation";
 import { IDEMPOTENCY_HEADER } from "@/lib/idempotency-key";
+import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
 
 export type Resignation = z.infer<typeof resignationContract>;
 export type ResignationDetail = z.infer<typeof resignationDetailContract>;
 export type ResignationProgress = z.infer<typeof resignationProgressContract>;
 export type ExitChecklistItem = z.infer<typeof exitChecklistItemContract>;
 export type ExitChecklistOwner = z.infer<typeof exitChecklistOwnerContract>;
+export type OffboardingChecklistRow = z.infer<typeof offboardingChecklistRowContract>;
 
 export interface PaginatedResignations {
   data: Resignation[];
@@ -38,7 +42,9 @@ interface ResignationListParams {
 const exitKeys = {
   all: [...humanResourcesQueryKeys.hr.all, "exit"] as const,
   lists: () => [...exitKeys.all, "list"] as const,
+  mine: () => [...exitKeys.all, "mine"] as const,
   list: (params?: ResignationListParams) => [...exitKeys.lists(), params] as const,
+  offboardingChecklists: () => [...exitKeys.all, "offboarding-checklists"] as const,
   detail: (resignationId: number) => [...exitKeys.all, "detail", resignationId] as const,
   progress: (resignationId: number) =>
     [...exitKeys.all, "progress", resignationId] as const,
@@ -62,6 +68,9 @@ const _successContract = lazyContract(() =>
 const _resignationProgressContract = lazyContract(() =>
   import("@/hooks/api/hr/exit-schema").then((m) => m.resignationProgressContract),
 );
+const _offboardingChecklistSummaryListContract = lazyContract(() =>
+  import("@/hooks/api/hr/exit-schema").then((m) => m.offboardingChecklistSummaryListContract),
+);
 
 export function useResignations(params?: ResignationListParams) {
   const canExit = useCan("hr:exit:view");
@@ -82,11 +91,68 @@ export function useResignations(params?: ResignationListParams) {
   });
 }
 
-export function useCreateResignation() {
+export interface ResignationSubmission {
+  reason: string;
+  reasonCategory?: string;
+  lastWorkingDate: string;
+  noticePeriodDays?: number;
+  willingForExitInterview?: boolean;
+  companyFeedback?: string;
+  resignationLetterUrl?: string;
+}
+
+export function useOffboardingChecklists() {
+  const canExit = useCan("hr:exit:view");
+  const hrEnabled = useModuleEnabled("hr");
+  return useQuery({
+    queryKey: exitKeys.offboardingChecklists(),
+    queryFn: ({ signal }) =>
+      apiClient.get(
+        "/hr/exit/offboarding-checklists",
+        undefined,
+        signal,
+        _offboardingChecklistSummaryListContract,
+      ),
+    staleTime: 2 * 60_000,
+    enabled: hrEnabled && canExit,
+    ...INLINE_READ_ERROR,
+  });
+}
+
+export function useMyResignations() {
+  return useGatedQuery("self:resignation", {
+    queryKey: exitKeys.mine(),
+    queryFn: ({ signal }) => apiClient.get("/me/resignations", undefined, signal, _resignationListContract),
+    staleTime: 60_000,
+  });
+}
+
+export function useSubmitMyResignation() {
   const qc = useQueryClient();
-  return useAuthorizedMutation("hr:exit:create", {
-    mutationKey: ["hr", "exit", "create"],
+  return useAuthorizedIdempotentMutation<Resignation, Error, ResignationSubmission>("self:resignation", {
+    mutationKey: ["me", "resignations", "create"],
+    mutationFn: (data, idempotencyKey) =>
+      apiClient.post("/me/resignations", data, { headers: { [IDEMPOTENCY_HEADER]: idempotencyKey } }, _resignationContract),
+    onSuccess: () => qc.invalidateQueries({ queryKey: exitKeys.all }),
+  });
+}
+
+export function useWithdrawMyResignation() {
+  const qc = useQueryClient();
+  return useAuthorizedMutation("self:resignation", {
+    mutationKey: ["me", "resignations", "withdraw"],
+    mutationFn: ({ resignationId }: { resignationId: number }) =>
+      apiClient.patch(`/me/resignations/${resignationId}/withdraw`, {}, undefined, _successContract),
+    onSuccess: () => qc.invalidateQueries({ queryKey: exitKeys.all }),
+  });
+}
+
+export function useAdminRecordResignation() {
+  const qc = useQueryClient();
+  return useAuthorizedMutation("hr:exit:manage", {
+    mutationKey: ["hr", "exit", "admin-record"],
     mutationFn: (data: {
+      targetUserId: string;
       reason: string;
       reasonCategory?: string;
       lastWorkingDate: string;
@@ -94,7 +160,7 @@ export function useCreateResignation() {
       willingForExitInterview?: boolean;
       companyFeedback?: string;
       resignationLetterUrl?: string;
-    }) => apiClient.post("/hr/exit", data, undefined, _resignationContract),
+    }) => apiClient.post("/hr/exit/admin-record", data, undefined, _resignationContract),
     onSuccess: () => qc.invalidateQueries({ queryKey: exitKeys.all }),
   });
 }

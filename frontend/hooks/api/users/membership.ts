@@ -1,8 +1,8 @@
 "use client";
 
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import type { UseQueryOptions } from "@tanstack/react-query";
-import { useCan } from "@/hooks/api/access";
+import { signalAccessInvalidation, useCan } from "@/hooks/api/access";
 import { apiClient } from "@/lib/api-client";
 import { usersAndCommerceQueryKeys } from "@/lib/query-keys/users-and-commerce";
 import type {
@@ -12,6 +12,7 @@ import type {
 } from "./types";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { lazyContract } from "@/lib/api-envelope";
+import { useSession } from "next-auth/react";
 
 const loginHistoryContract = lazyContract(() =>
   import("@/hooks/api/users/extended-users-schema").then((m) => m.loginHistoryContract),
@@ -62,6 +63,7 @@ export const useUserMembership = (
 
 export const useUpdateUserMembership = () => {
   const queryClient = useQueryClient();
+  const { data: session } = useSession();
   return useAuthorizedMutation<
     { success: boolean },
     Error,
@@ -74,6 +76,7 @@ export const useUpdateUserMembership = () => {
       void queryClient.invalidateQueries({ queryKey: usersAndCommerceQueryKeys.users.membership(userId) });
       void queryClient.invalidateQueries({ queryKey: usersAndCommerceQueryKeys.users.detail(userId) });
       void queryClient.invalidateQueries({ queryKey: usersAndCommerceQueryKeys.users.all });
+      if (session?.orgId) signalAccessInvalidation(session.orgId);
     },
   });
 };

@@ -20,6 +20,7 @@ export function mapAllWorkTicketToKanban(t: AllWorkTicket): KanbanTicket {
     rank: t.rank ?? undefined,
     epicId: t.epicId ?? undefined,
     assigneeId: t.assigneeId ?? undefined,
+    version: t.version,
     cycleId: t.cycleId ?? null,
     dueDate: t.dueDate ?? null,
     startDate: t.startDate ?? null,
@@ -35,6 +36,14 @@ export function mapAllWorkTicketToKanban(t: AllWorkTicket): KanbanTicket {
           image: t.assignee.image ?? null,
         }
       : null,
+    project:
+      t.projectId !== null && t.projectKey !== null
+        ? {
+            id: t.projectId,
+            key: t.projectKey,
+            name: t.projectName ?? t.projectKey,
+          }
+        : null,
     labels: (t.labels ?? []).map((l) => ({
       label: { id: l.id, name: l.name, color: l.color ?? null },
     })),

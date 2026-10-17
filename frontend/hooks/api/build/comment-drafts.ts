@@ -1,161 +1,89 @@
-﻿"use client";
+"use client";
 
-import { useCallback, useEffect } from "react";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
+import type { InfiniteData, QueryKey } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
-import { lazyContract } from "@/lib/api-envelope";
+import { ApiError, lazyContract } from "@/lib/api-envelope";
 import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
 import { useCan } from "@/hooks/api/access";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
-import { useOnlineStatus } from "@/hooks/common/use-online-status";
-import { bufferDraft, drainBuffer } from "./comment-draft-offline-buffer";
-import type { GeneratedCommentDraft } from "./comment-drafts-schema";
-
-export interface CommentDraftAssignee {
-  id: string;
-  name: string | null;
-  firstName: string | null;
-  lastName: string | null;
-  image: string | null;
-}
-
-export interface CommentDraftTicket {
-  id: number;
-  ticketNumber: number;
-  title: string;
-  status: string;
-  priority: string | null;
-  type: string;
-  projectId: number | null;
-  projectKey: string | null;
-  projectName: string | null;
-  assignee: CommentDraftAssignee | null;
-}
-
-export interface CommentDraft {
-  id: number;
-  ticketId: number;
-  body: string;
-  createdAt: string;
-  updatedAt: string;
-  ticket?: CommentDraftTicket;
-}
-
-export interface CommentDraftListItem extends CommentDraft {
-  ticket: CommentDraftTicket;
-}
-
+import type { CommentDraftsGenerateDraftResponse, CommentDraftsListMineResponse } from "@/contracts/build-contracts.generated";
+import { applyCommentDraftReceipt } from "./comment-draft-command-cache";
 
 const commentDraftListContract = lazyContract(() =>
-  import("@/hooks/api/build/comment-drafts-schema").then((m) => m.commentDraftListContract),
-);
-const commentDraftContract = lazyContract(() =>
-  import("@/hooks/api/build/comment-drafts-schema").then((m) => m.commentDraftContract),
+  import("@/contracts/build-contracts.generated").then((m) => m.commentDraftsListMineResponseSchema),
 );
 const commentDraftDeletedContract = lazyContract(() =>
-  import("@/hooks/api/build/comment-drafts-schema").then((m) => m.commentDraftDeletedContract),
+  import("@/contracts/build-contracts.generated").then((m) => m.commentDraftsDeleteOneResponseSchema),
 );
 const generatedCommentDraftContract = lazyContract(() =>
-  import("@/hooks/api/build/comment-drafts-schema").then((m) => m.generatedCommentDraftSchema),
+  import("@/contracts/build-contracts.generated").then((m) => m.commentDraftsGenerateDraftResponseSchema),
 );
 
-export function useMyCommentDrafts() {
+type DraftPages = InfiniteData<CommentDraftsListMineResponse>;
+interface DraftDeletionContext {
+  ticketId: number | undefined;
+  removed: { key: QueryKey; drafts: CommentDraftsListMineResponse["data"] }[];
+}
+
+export function useMyCommentDrafts(cursor?: string) {
   const canView = useCan("build:tickets:view");
-  return useQuery<CommentDraftListItem[]>({
-    queryKey: buildWorkQueryKeys.projects.commentDrafts.mine(),
-    queryFn: ({ signal }) => apiClient.get<CommentDraftListItem[]>("/build/comment-drafts/mine", undefined, signal, commentDraftListContract),
+  return useInfiniteQuery<CommentDraftsListMineResponse, Error, DraftPages, ReturnType<typeof buildWorkQueryKeys.projects.commentDrafts.mine>, string | null>({
+    queryKey: buildWorkQueryKeys.projects.commentDrafts.mine(cursor),
+    queryFn: ({ pageParam, signal }) =>
+      apiClient.get<CommentDraftsListMineResponse>(
+        "/build/comment-drafts/mine",
+        pageParam !== null ? { cursor: pageParam } : undefined,
+        signal,
+        commentDraftListContract,
+      ),
+    initialPageParam: cursor ?? null,
+    maxPages: 1,
+    getNextPageParam: (lastPage) => lastPage.pagination.nextCursor ?? undefined,
     enabled: canView,
     staleTime: 60_000,
   });
 }
 
-export function useUpsertCommentDraft() {
-  const qc = useQueryClient();
-  const isOnline = useOnlineStatus();
-  const mutation = useAuthorizedMutation("build:tickets:view", {
-    meta: { buildCacheSync: false },
-    mutationKey: ["projects", "comment-drafts", "upsert"],
-    mutationFn: ({ ticketId, body }: { ticketId: number; body: string }) =>
-      apiClient.put<CommentDraft>(`/build/comment-drafts/tickets/${ticketId}`, { body }, undefined, commentDraftContract),
-    onSuccess: (draft) => {
-      const listKey = buildWorkQueryKeys.projects.commentDrafts.mine();
-      const current = qc.getQueryData<CommentDraftListItem[]>(listKey);
-      const index = current?.findIndex((d) => d.ticketId === draft.ticketId) ?? -1;
-      const cached = index === -1 ? undefined : current?.[index];
-      const ticket = draft.ticket ?? cached?.ticket;
-
-      if (!current || !ticket) {
-        void qc.invalidateQueries({ queryKey: listKey });
-        return;
-      }
-
-      const merged: CommentDraftListItem = { ...cached, ...draft, ticket };
-      const next = [...current];
-      if (index === -1) next.unshift(merged);
-      else next[index] = merged;
-      qc.setQueryData(listKey, next);
-    },
-  });
-
-  const { mutate: mutationMutate } = mutation;
-
-  useEffect(() => {
-    if (!isOnline) return;
-    const pending = drainBuffer();
-    for (const item of pending) {
-      mutationMutate(item);
-    }
-  }, [isOnline, mutationMutate]);
-
-  const mutate = useCallback(
-    (args: { ticketId: number; body: string }) => {
-      if (!isOnline) {
-        bufferDraft(args.ticketId, args.body);
-        return;
-      }
-      mutationMutate(args);
-    },
-    [isOnline, mutationMutate],
-  );
-
-  return { ...mutation, mutate };
-}
-
 export function useDeleteCommentDraft() {
   const qc = useQueryClient();
-  return useAuthorizedMutation("build:tickets:view", {
+  return useAuthorizedMutation<{ deleted: boolean }, Error, number, DraftDeletionContext>("build:tickets:view", {
     meta: { buildCacheSync: false },
     mutationKey: ["projects", "comment-drafts", "delete"],
-    mutationFn: (draftId: number) =>
-      apiClient.delete<{ deleted: boolean }>(`/build/comment-drafts/${draftId}`, undefined, undefined, commentDraftDeletedContract),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.commentDrafts.mine() });
+    mutationFn: async (draftId: number) => {
+      const result = await apiClient.delete<{ deleted: boolean }>(`/build/comment-drafts/${draftId}`, undefined, undefined, commentDraftDeletedContract);
+      if (!result.deleted) throw new ApiError("The draft deletion was not confirmed.", undefined, "INVALID_RESPONSE");
+      return result;
     },
-  });
-}
-
-export function useDeleteCommentDraftByTicket() {
-  const qc = useQueryClient();
-  return useAuthorizedMutation("build:tickets:view", {
-    meta: { buildCacheSync: false },
-    mutationKey: ["projects", "comment-drafts", "delete-by-ticket"],
-    mutationFn: (ticketId: number) =>
-      apiClient.delete<{ deleted: boolean }>(`/build/comment-drafts/tickets/${ticketId}`, undefined, undefined, commentDraftDeletedContract),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.commentDrafts.mine() });
+    onMutate: async (draftId) => {
+      const key = buildWorkQueryKeys.projects.commentDrafts.mine();
+      await qc.cancelQueries({ queryKey: key });
+      const removed = qc.getQueriesData<DraftPages>({ queryKey: key }).map(([queryKey, previous]) => ({
+        key: queryKey, drafts: previous?.pages.flatMap((page) => page.data.filter((draft) => draft.id === draftId)) ?? [],
+      }));
+      qc.setQueriesData<DraftPages>({ queryKey: key }, (previous) => previous ? {
+          ...previous,
+          pages: previous.pages.map((page) => ({
+            ...page,
+            data: page.data.filter((d) => d.id !== draftId),
+          })),
+        } : previous);
+      return { ticketId: removed.find((entry) => entry.drafts.length)?.drafts[0]?.ticketId, removed };
     },
-  });
-}
-
-export function useDeleteAllCommentDrafts() {
-  const qc = useQueryClient();
-  return useAuthorizedMutation("build:tickets:view", {
-    meta: { buildCacheSync: false },
-    mutationKey: ["projects", "comment-drafts", "delete-all"],
-    mutationFn: () =>
-      apiClient.delete<{ deleted: boolean }>("/build/comment-drafts/mine", undefined, undefined, commentDraftDeletedContract),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.commentDrafts.mine() });
+    onSuccess: (_result, _draftId, context) => {
+      if (context?.ticketId) qc.removeQueries({ queryKey: buildWorkQueryKeys.projects.commentDrafts.byTicket(context.ticketId), exact: true });
+      void qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.agentPulseAll(), refetchType: "none" });
+    },
+    onError: (_err, _vars, ctx) => {
+      if (!ctx?.removed.length) return;
+      for (const entry of ctx.removed) {
+        if (!entry.drafts.length) continue;
+        qc.setQueryData<DraftPages>(entry.key, (current) => current ? {
+          ...current, pages: current.pages.map((page) => ({ ...page, data: [
+            ...entry.drafts.filter((draft) => !page.data.some((item) => item.id === draft.id)), ...page.data,
+          ] })),
+        } : current);
+      }
     },
   });
 }
@@ -165,14 +93,14 @@ export function useGenerateCommentDraft() {
   return useAuthorizedMutation("build:ai:use", {
     mutationKey: ["projects", "comment-drafts", "generate"],
     mutationFn: ({ ticketId, signal }: { ticketId: number; signal?: AbortSignal }) =>
-      apiClient.post<GeneratedCommentDraft>(
+      apiClient.post<CommentDraftsGenerateDraftResponse>(
         `/build/comment-drafts/tickets/${ticketId}/generate-draft`,
         undefined,
         signal ? { signal } : undefined,
         generatedCommentDraftContract,
       ),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.commentDrafts.mine() });
+    onSuccess: (data) => {
+      applyCommentDraftReceipt(qc, data.ticketId, data);
     },
   });
 }

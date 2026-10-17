@@ -3,6 +3,7 @@ import { ApiError } from "@/lib/api-envelope";
 import {
   INLINE_READ_ERROR,
   isTransientNetworkError,
+  projectReadErrorReachesBoundary,
   readErrorReachesBoundary,
 } from "@/lib/query-error-policy";
 
@@ -91,6 +92,26 @@ describe("which read failures reach the route error boundary", () => {
           nothingRendered,
         ),
       ).toBe(false);
+  });
+});
+
+describe("project lookup failures", () => {
+  it("keeps a missing project inline so shell lookups cannot crash an invalid project route", () => {
+    expect(
+      projectReadErrorReachesBoundary(
+        new ApiError("Project not found", 404, "PROJECTS_NOT_FOUND"),
+        nothingRendered,
+      ),
+    ).toBe(false);
+  });
+
+  it("still sends an unavailable project service to the route error boundary", () => {
+    expect(
+      projectReadErrorReachesBoundary(
+        new ApiError("Unavailable", 503, "BACKEND_UNREACHABLE"),
+        nothingRendered,
+      ),
+    ).toBe(true);
   });
 });
 

@@ -25,6 +25,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { HrSheet } from "@/components/shared/hr-sheet";
+import { ErrorState } from "@/components/shared/error-state";
 import {
   useEngagementPolls,
   useCreatePoll,
@@ -35,7 +36,8 @@ import {
 } from "@/hooks/api/hr/engagement";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useCan } from "@/hooks/api/access";
-import { ErrorState } from "@/components/shared/error-state";
+import { PageState } from "@/components/shared/page-state";
+import { usePageState } from "@/hooks/api/use-page-state";
 import { AnonymitySuppressedNotice } from "@/components/shared/anonymity-suppressed-notice";
 
 const pollSchema = z.object({
@@ -70,7 +72,13 @@ function PollCard({
 }) {
   const [showResults, setShowResults] = useState(false);
   const [voted, setVoted] = useState(false);
-  const { data: results } = usePollResults(showResults ? poll.id : 0);
+  const {
+    data: results,
+    isLoading: resultsLoading,
+    isError: resultsFailed,
+    error: resultsError,
+    refetch: refetchResults,
+  } = usePollResults(showResults ? poll.id : 0);
   const vote = useVotePoll();
   const updatePoll = useUpdatePoll();
 
@@ -88,6 +96,10 @@ function PollCard({
     },
     [poll.id, vote],
   );
+
+  const handleResultsRetry = useCallback(() => {
+    void refetchResults();
+  }, [refetchResults]);
 
   const handleToggleStatus = useCallback(() => {
     const nextStatus = poll.status === "active" ? "closed" : "active";
@@ -156,7 +168,25 @@ function PollCard({
         </div>
       </div>
 
-      {showResults && results?.suppressed ? (
+      {showResults && resultsFailed ? (
+        <ErrorState
+          compact
+          title="Couldn't load poll results"
+          description={getErrorMessage(resultsError)}
+          error={resultsError}
+          onRetry={handleResultsRetry}
+        />
+      ) : showResults && resultsLoading ? (
+        <div className="space-y-2" role="status" aria-label="Loading poll results">
+          {Array.from({ length: 3 }).map((_, i) => (
+            <Skeleton key={i} className="h-6 rounded-md" />
+          ))}
+        </div>
+      ) : showResults && results === undefined ? (
+        <p className="text-dense text-muted-foreground" role="status">
+          The results for this poll could not be determined.
+        </p>
+      ) : showResults && results?.suppressed ? (
         <AnonymitySuppressedNotice minResponses={results.minResponses} responses={results.totalVotes} />
       ) : showResults && results ? (
         <div className="space-y-2">
@@ -203,6 +233,8 @@ function PollCard({
 
 export function PollsTab() {
   const { data: polls, isLoading, isError, error, refetch } = useEngagementPolls();
+  const pageState = usePageState({ permission: "hr:engagement:view", isLoading, isError, error });
+  const handleRetry = useCallback(() => void refetch(), [refetch]);
   const canManage = useCan("hr:engagement:manage");
   const createPoll = useCreatePoll();
 
@@ -253,16 +285,21 @@ export function PollsTab() {
     [createPoll, handleReset],
   );
 
-  if (isLoading) {
+  if (pageState.kind !== "ready" && pageState.kind !== "empty") {
     return (
-      <div className="space-y-3">
-        {Array.from({ length: 12 }).map((_, i) => <Skeleton key={i} className="h-28 rounded-lg" />)}
-      </div>
+      <PageState
+        resolution={pageState}
+        onRetry={handleRetry}
+        className="flex-1"
+        loading={
+          <div className="space-y-3">
+            {Array.from({ length: 12 }).map((_, i) => <Skeleton key={i} className="h-28 rounded-lg" />)}
+          </div>
+        }
+      >
+        {null}
+      </PageState>
     );
-  }
-
-  if (isError) {
-    return <ErrorState className="flex-1" title="Couldn't load polls" description={getErrorMessage(error)} onRetry={() => void refetch()} />;
   }
 
   return (

@@ -1,33 +1,37 @@
 "use client";
 
-import { useState, useCallback, useMemo } from "react";
-import { Plus } from "lucide-react";
+import { useCallback, useMemo } from "react";
+import { Plus, WifiOff } from "lucide-react";
 import { Tag, CheckCircle2, Archive, Clock } from "lucide-react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
-import { DataTable, DataTableSkeleton } from "@/components/ui/data-table";
 import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
 import { EmptyState } from "@/components/ui/empty-state";
-import { PageState } from "@/components/shared/page-state";
-import { usePageState } from "@/hooks/api/use-page-state";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import {
-  useReleases,
-  useDeleteRelease,
-  type Release,
-} from "@/hooks/api/build/releases";
-import { useCan } from "@/hooks/api/access";
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { ReleaseFormSheet } from "./release-form-sheet";
-import { toast } from "sonner";
-import { getErrorMessage } from "@/lib/get-error-message";
-import { PmPageShell, PmSection, PM_FILL_PANEL } from "@/components/pm-chrome";
+import type { Release } from "@/types/projects";
+import {
+  PmPageShell,
+  PmSection,
+  CONTENT_FILL_PANEL,
+} from "@/components/pm-chrome";
 import { BuildHeaderActions } from "@/features/build/shared/build-header-actions";
 import { BuildListToolbar } from "@/features/build/shared/build-list-toolbar";
-import { useBuildListFilters } from "@/features/build/shared/use-build-list-filters";
+import { BuildFilterSelect } from "@/features/build/shared/build-filter-select";
+import { DateRangePicker } from "@/components/ui/date-range-picker";
+import { BuildListSurface } from "@/features/build/shared/build-list-surface";
 import {
   RELEASES_TABLE_HEADERS,
   ReleaseMobileCard,
   buildReleasesColumns,
 } from "./releases-table-columns";
+import { RELEASE_STATUS_OPTIONS } from "./releases-page-model";
+import { useReleasesPage } from "./use-releases-page";
 
 interface ReleasesPageProps {
   projectId: number;
@@ -35,81 +39,39 @@ interface ReleasesPageProps {
 
 export function ReleasesPage({ projectId }: ReleasesPageProps) {
   const {
-    data: releases,
+    listFilters,
+    pager,
+    searchInputRef,
+    statusFilterValue,
+    fromValue,
+    toValue,
+    releases,
+    pagination,
+    stats,
     isLoading,
     isError,
     error,
-    refetch,
-  } = useReleases(projectId);
-
-  const pageState = usePageState({
-    permission: "build:view",
-    isLoading,
-    isError,
-    error,
-  });
-
-  const canManage = useCan("build:manage");
-  const deleteRelease = useDeleteRelease(projectId);
-
-  const listFilters = useBuildListFilters();
-
-  const [sheetOpen, setSheetOpen] = useState(false);
-  const [editTarget, setEditTarget] = useState<Release | null>(null);
-  const [deleteTarget, setDeleteTarget] = useState<Release | null>(null);
-
-  const search = listFilters.debouncedSearch.trim().toLowerCase();
-  const displayed = useMemo(() => {
-    const list = releases ?? [];
-    if (!search) return list;
-    return list.filter((r) => r.name.toLowerCase().includes(search));
-  }, [releases, search]);
-
-  const stats = useMemo(() => {
-    const list = releases ?? [];
-    return {
-      total: list.length,
-      released: list.filter((r) => r.status === "released").length,
-      draft: list.filter((r) => r.status === "draft").length,
-      archived: list.filter((r) => r.status === "archived").length,
-    };
-  }, [releases]);
-
-  const handleOpenCreate = useCallback(() => {
-    setEditTarget(null);
-    setSheetOpen(true);
-  }, []);
-
-  const handleOpenEdit = useCallback((r: Release) => {
-    setEditTarget(r);
-    setSheetOpen(true);
-  }, []);
-
-  const handleCloseSheet = useCallback(() => {
-    setSheetOpen(false);
-    setEditTarget(null);
-  }, []);
-
-  const handleDeleteTarget = useCallback((r: Release) => setDeleteTarget(r), []);
-
-  const handleAlertOpenChange = useCallback((open: boolean) => {
-    if (!open) setDeleteTarget(null);
-  }, []);
-
-  const handleConfirmDelete = useCallback(() => {
-    if (!deleteTarget) return;
-    deleteRelease.mutate(deleteTarget.id, {
-      onSuccess: () => {
-        toast.success("Release deleted");
-        setDeleteTarget(null);
-      },
-      onError: (err) => toast.error(getErrorMessage(err)),
-    });
-  }, [deleteTarget, deleteRelease]);
-
-  const handleRetry = useCallback(() => {
-    void refetch();
-  }, [refetch]);
+    canManage,
+    isOnline,
+    sheetOpen,
+    editTarget,
+    deleteTarget,
+    contextTarget,
+    deleteRelease,
+    handleOpenCreate,
+    handleOpenEdit,
+    handleCloseSheet,
+    handleDeleteTarget,
+    handleAlertOpenChange,
+    handleConfirmDelete,
+    handleRetry,
+    handleRowContextMenu,
+    handleContextMenuOpenChange,
+    handleContextEdit,
+    handleContextDelete,
+    handleStatusFilterChange,
+    handleDateRangeChange,
+  } = useReleasesPage(projectId);
 
   const columns = useMemo(
     () =>
@@ -144,7 +106,37 @@ export function ReleasesPage({ projectId }: ReleasesPageProps) {
             onValueChange: listFilters.setSearch,
             placeholder: "Search releases…",
             label: "Search releases",
+            inputRef: searchInputRef,
           }}
+          filters={[
+            {
+              id: "status",
+              label: "Status",
+              active: listFilters.isActive("status"),
+              control: (
+                <BuildFilterSelect
+                  label="Status"
+                  value={statusFilterValue}
+                  onValueChange={handleStatusFilterChange}
+                  options={RELEASE_STATUS_OPTIONS}
+                />
+              ),
+            },
+            {
+              id: "date-range",
+              label: "Date range",
+              active:
+                listFilters.isActive("from") || listFilters.isActive("to"),
+              control: (
+                <DateRangePicker
+                  from={fromValue}
+                  to={toValue}
+                  onChange={handleDateRangeChange}
+                  placeholder="Filter by release date…"
+                />
+              ),
+            },
+          ]}
           onClearAll={listFilters.clearAll}
         />
       }
@@ -167,61 +159,73 @@ export function ReleasesPage({ projectId }: ReleasesPageProps) {
       }
     >
       <PmPageShell>
+        {!isOnline ? (
+          <div className="flex shrink-0 items-center gap-2 border-b border-border/60 bg-muted/40 px-4 py-2">
+            <WifiOff className="h-4 w-4 shrink-0 text-muted-foreground" />
+            <p className="text-xs text-muted-foreground">
+              You&apos;re offline — results may not be up to date.
+            </p>
+          </div>
+        ) : null}
         <PmSection index={0}>
           <StatCardGrid cols={4}>
-            <StatCard label="Total" value={stats.total} icon={Tag} tone="default" index={0} />
-            <StatCard
-              label="Released"
-              value={stats.released}
-              icon={CheckCircle2}
-              tone="emerald"
-              index={1}
-            />
+            <StatCard label="This page" value={stats.total} icon={Tag} tone="default" index={0} />
+            <StatCard label="Released" value={stats.released} icon={CheckCircle2} tone="emerald" index={1} />
             <StatCard label="Draft" value={stats.draft} icon={Clock} tone="amber" index={2} />
-            <StatCard
-              label="Archived"
-              value={stats.archived}
-              icon={Archive}
-              tone="default"
-              index={3}
-            />
+            <StatCard label="Archived" value={stats.archived} icon={Archive} tone="default" index={3} />
           </StatCardGrid>
         </PmSection>
 
         <PmSection index={1} className="flex min-h-0 flex-1 flex-col">
-          <PageState
-            resolution={pageState}
-            loading={
-              <DataTableSkeleton mobileCards
-                rows={8}
-                headers={RELEASES_TABLE_HEADERS}
-                className="flex-1"
-              />
-            }
+          <BuildListSurface<Release>
+            permission="build:view"
+            rows={releases}
+            columns={columns}
+            isLoading={isLoading}
+            isError={isError}
+            error={error}
+            isFiltered={listFilters.isFiltered}
+            getRowKey={(r) => r.id}
+            onRowClick={canManage ? handleOpenEdit : undefined}
+            onRowContextMenu={handleRowContextMenu}
+            mobileCard={renderMobileCard}
+            pagination={{
+              mode: "cursor",
+              pageSize: 25,
+              pageNumber: pager.pageNumber,
+              hasMore: pagination?.hasMore ?? false,
+              hasPrevious: pager.hasPrevious,
+              onNext: () => pager.goNext(pagination?.nextCursor),
+              onPrevious: pager.goPrevious,
+            }}
             empty={
               <EmptyState
                 illustrationPreset="projects"
                 title="No releases yet"
                 description="Create your first release to track shipped features and versions."
-                filtersActive={listFilters.isFiltered}
-                onClearFilters={listFilters.clearAll}
-                action={{ label: "New Release", onClick: handleOpenCreate }}
-                className={PM_FILL_PANEL}
+                action={
+                  canManage
+                    ? { label: "New Release", onClick: handleOpenCreate }
+                    : undefined
+                }
+                className={CONTENT_FILL_PANEL}
               />
             }
+            filteredEmpty={
+              <EmptyState
+                illustrationPreset="projects"
+                title="No releases match your filters"
+                filtersActive
+                filteredTitle="No releases match your filters"
+                description="Try adjusting the filters to see more releases."
+                onClearFilters={listFilters.clearAll}
+                className={CONTENT_FILL_PANEL}
+              />
+            }
+            loadingHeaders={RELEASES_TABLE_HEADERS}
+            loadingRows={8}
             onRetry={handleRetry}
-            className={PM_FILL_PANEL}
-          >
-            <DataTable
-              className={PM_FILL_PANEL}
-              data={displayed}
-              columns={columns}
-              getRowKey={(r) => r.id}
-              onRowClick={handleOpenEdit}
-              mobileCard={renderMobileCard}
-              pagination={{ pageSize: 25 }}
-            />
-          </PageState>
+          />
         </PmSection>
 
         {sheetOpen ? (
@@ -231,6 +235,35 @@ export function ReleasesPage({ projectId }: ReleasesPageProps) {
             onClose={handleCloseSheet}
           />
         ) : null}
+
+        <DropdownMenu
+          open={contextTarget !== null}
+          onOpenChange={handleContextMenuOpenChange}
+        >
+          <DropdownMenuTrigger asChild>
+            <span
+              aria-hidden
+              tabIndex={-1}
+              className="fixed h-0 w-0"
+              style={
+                contextTarget === null
+                  ? undefined
+                  : { left: contextTarget.x, top: contextTarget.y }
+              }
+            />
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="start">
+            <DropdownMenuItem onSelect={handleContextEdit}>
+              Edit
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              variant="destructive"
+              onSelect={handleContextDelete}
+            >
+              Delete
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
 
         <ConfirmDialog
           open={!!deleteTarget}

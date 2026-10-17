@@ -58,16 +58,16 @@ export function EssTotalRewardsSection() {
 
   return (
     <section id="total-rewards" className="flex min-h-0 w-full flex-1 flex-col gap-3 overflow-y-auto">
-      <p className="shrink-0 text-dense text-muted-foreground">
+      <p className="min-w-0 shrink-0 break-words text-dense text-muted-foreground">
         FY {data.financialYear} · as of {data.asOf} · {data.summary.completeness}
       </p>
 
       <div
         role="status"
-        className="flex shrink-0 gap-2.5 rounded-xl border border-status-warning-rule bg-status-warning-surface px-3 py-2.5"
+        className="flex w-full min-w-0 shrink-0 gap-2.5 rounded-xl border border-status-warning-rule bg-status-warning-surface px-3 py-2.5"
       >
         <Info className="mt-0.5 h-4 w-4 shrink-0 text-status-warning-ink" />
-        <p className="text-dense leading-snug text-status-warning-ink">
+        <p className="min-w-0 flex-1 whitespace-normal break-words text-dense leading-snug text-status-warning-ink [overflow-wrap:anywhere]">
           {data.honestyNote}
         </p>
       </div>
@@ -174,7 +174,7 @@ export function EssTotalRewardsSection() {
       )}
 
       {data.summary.missing.length > 0 && (
-        <p className="text-micro text-muted-foreground">
+        <p className="min-w-0 break-words text-micro text-muted-foreground">
           Incomplete sources: {data.summary.missing.join(", ").replace(/_/g, " ")}
         </p>
       )}

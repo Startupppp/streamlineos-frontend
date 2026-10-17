@@ -192,6 +192,12 @@ export function PartiesPage() {
     setDebouncedSearch(value);
   }
 
+  function handleClearFilters() {
+    handleSearchChange("");
+    setPartyTypeFilter("ALL");
+    setRoleFilter("ALL");
+  }
+
   function handlePartyTypeChange(value: string) {
     setPartyTypeFilter(value as PartyTypeFilter);
     setPage(1);
@@ -337,19 +343,16 @@ export function PartiesPage() {
             <EmptyState
               className={CONTENT_FILL_PANEL}
               illustrationPreset="companies"
-              title={isFiltered ? "No matching parties" : "No parties yet"}
+              title="No parties yet"
+              filtersActive={isFiltered}
+              filteredTitle="No matching parties"
+              onClearFilters={handleClearFilters}
               description={
                 isFiltered
                   ? "Try adjusting your search or filter."
                   : "Add customers, vendors and partners to keep your business relationships in one place."
               }
-              action={
-                isFiltered
-                  ? undefined
-                  : canCreate
-                    ? { label: "Add Party", onClick: handleOpenCreate }
-                    : undefined
-              }
+              action={canCreate ? { label: "Add Party", onClick: handleOpenCreate } : undefined}
             />
           ) : (
             <>

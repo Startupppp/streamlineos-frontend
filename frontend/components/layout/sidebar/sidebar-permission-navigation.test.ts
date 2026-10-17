@@ -83,13 +83,14 @@ describe("permission-aware product navigation", () => {
       "/hr/employees",
       "/hr/attendance",
       "/hr/leaves",
+      "/hr/devices",
       "/hr/access",
     ]);
     for (const href of [
       "/hr/analytics",
       "/hr/workforce",
       "/hr/performance",
-      "/hr/recruitment",
+      "/recruitment",
       "/hr/announcements",
       "/hr/settings/policies",
       "/hr/settings/workflows",

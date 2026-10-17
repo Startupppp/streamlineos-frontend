@@ -1,0 +1,93 @@
+/**
+ * V-034. The deferral gate itself is correct and tested. These cover the two
+ * things it left unsaid: an administrator who deferred is never reminded, and
+ * a member redirected into the wizard is never told why.
+ */
+import { render, screen } from "@testing-library/react";
+import {
+  DeferredOnboardingReminder,
+  MemberOnboardingNote,
+} from "./onboarding-standing-notices";
+
+const session = jest.fn();
+jest.mock("next-auth/react", () => ({ useSession: () => session() }));
+
+const DEFERRED_COOKIE = "onboarding-deferred--usr-admin--org-qa";
+
+function signedIn(overrides: Record<string, unknown> = {}) {
+  session.mockReturnValue({
+    data: {
+      orgId: "org-qa",
+      user: { id: "usr-admin", role: "ORG_ADMIN" },
+      userOnboardingCompletedAt: null,
+      ...overrides,
+    },
+  });
+}
+
+function setCookie(value: string) {
+  document.cookie = value;
+}
+
+beforeEach(() => {
+  session.mockReset();
+  document.cookie = `${DEFERRED_COOKIE}=; path=/; max-age=0`;
+});
+
+describe("DeferredOnboardingReminder — /hr does not forget a deferred wizard", () => {
+  it("reminds an administrator who skipped and has still not finished", () => {
+    signedIn();
+    setCookie(`${DEFERRED_COOKIE}=1; path=/`);
+
+    render(<DeferredOnboardingReminder />);
+
+    expect(screen.getByText(/add bank details to receive salary/i)).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /add now/i })).toHaveAttribute(
+      "href",
+      "/employee-onboarding",
+    );
+  });
+
+  it("says nothing once the wizard has actually been completed", () => {
+    signedIn({ userOnboardingCompletedAt: "2026-09-01T00:00:00.000Z" });
+    setCookie(`${DEFERRED_COOKIE}=1; path=/`);
+
+    const { container } = render(<DeferredOnboardingReminder />);
+
+    expect(container).toBeEmptyDOMElement();
+  });
+
+  it("says nothing to someone who never deferred", () => {
+    signedIn();
+
+    const { container } = render(<DeferredOnboardingReminder />);
+
+    expect(container).toBeEmptyDOMElement();
+  });
+});
+
+describe("MemberOnboardingNote — explains why the HR wizard runs", () => {
+  it("shows every non-owner at the wizard why they are there and that it can be done later", () => {
+    signedIn();
+
+    render(<MemberOnboardingNote />);
+
+    expect(screen.getByText(/so HR has your details/i)).toBeInTheDocument();
+  });
+
+  it("also shows for a MEMBER, since the wizard gate is now HR-scoped not role-scoped", () => {
+    signedIn({ user: { id: "usr-member", role: "MEMBER" } });
+
+    render(<MemberOnboardingNote />);
+
+    expect(screen.getByText(/so HR has your details/i)).toBeInTheDocument();
+  });
+
+  it("is not shown to an org owner who follows the org-setup path instead — FE-122 negative", () => {
+    signedIn({ user: { id: "usr-owner", role: "OWNER", isOrgOwner: true } });
+
+    const { container } = render(<MemberOnboardingNote />);
+
+    expect(container).toBeEmptyDOMElement();
+  });
+});

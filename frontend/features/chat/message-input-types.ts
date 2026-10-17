@@ -1,5 +1,5 @@
 import type { Message } from "./chat-types";
-import type { TicketSearchResult } from "@/hooks/api/build";
+import type { TicketSearchResult } from "@/types/projects";
 
 export type PendingAttachment = {
   fileName: string;

@@ -10,9 +10,18 @@ import { buildWorkQueryKeys } from "./query-keys/build-work";
 import { accountingAndSupportQueryKeys } from "./query-keys/accounting-and-support";
 import { authenticatedScope } from "./query-scope";
 import { subscribeBuildCacheSync } from "./build-cache-sync";
+import { platformCoreQueryKeys } from "./query-keys/platform-core";
 
 let mockOrgId = "org-a";
-jest.mock("@/lib/api-client", () => ({ apiClient: { get: jest.fn(async () => []) } }));
+jest.mock("@/lib/api-client", () => ({
+  apiClient: {
+    get: jest.fn(async (url: string) =>
+      url.endsWith("/automations")
+        ? { data: [], pagination: { limit: 20, hasMore: false, nextCursor: null } }
+        : [],
+    ),
+  },
+}));
 jest.mock("next-auth/react", () => ({
   useSession: () => ({ status: "authenticated", data: { orgId: mockOrgId, user: { id: "member-a" } } }),
 }));
@@ -90,7 +99,7 @@ it("tab B refetches a successful Build mutation with no matching cache entry in 
   const tabA = connect();
   const tabB = connect();
   const { mutation, read } = mutationIn(tabA.client);
-  const queryKey = buildWorkQueryKeys.projects.ticket(42);
+  const queryKey = buildWorkQueryKeys.projects.ticket(9, 42);
   const queryFn = jest.fn(async () => read());
   const observer = new QueryObserver(tabB.client, { queryKey, queryFn, staleTime: Infinity });
   cleanups.push(observer.subscribe(() => {}));
@@ -109,7 +118,7 @@ it("marks inactive Build and report caches stale without touching another tenant
   const tabB = connect();
   const otherOrg = connect(authenticatedScope("org-b", "member-a"));
   const otherUser = connect(authenticatedScope("org-a", "member-b"));
-  const ticketKey = buildWorkQueryKeys.projects.ticket(42);
+  const ticketKey = buildWorkQueryKeys.projects.ticket(9, 42);
   const reportKey = buildWorkQueryKeys.projectReports.velocity(9);
   const unrelatedKey = accountingAndSupportQueryKeys.accounting.all;
   for (const { client } of [tabB, otherOrg, otherUser]) {
@@ -156,7 +165,7 @@ it("refetches peer custom-field definitions, ticket values and project automatio
 it("does not signal a failed mutation or receive messages after provider cleanup", async () => {
   const tabA = connect();
   const tabB = connect();
-  const queryKey = buildWorkQueryKeys.projects.ticket(42);
+  const queryKey = buildWorkQueryKeys.projects.ticket(9, 42);
   tabB.client.setQueryData(queryKey, "Before");
   const failed = mutationIn(tabA.client, true);
   await act(async () => {
@@ -174,7 +183,7 @@ it("ignores invalid payloads and unauthenticated scopes", () => {
   connect("unauthenticated");
   connect(authenticatedScope("", "member-a"));
   expect(TabChannel.channels.size).toBe(1);
-  const queryKey = buildWorkQueryKeys.projects.ticket(42);
+  const queryKey = buildWorkQueryKeys.projects.ticket(9, 42);
   tab.client.setQueryData(queryKey, "Before");
   for (const channel of TabChannel.channels)
     channel.dispatchEvent(new MessageEvent("message", { data: { ticket: "untrusted" } }));
@@ -184,7 +193,7 @@ it("ignores invalid payloads and unauthenticated scopes", () => {
 it("uses storage events when BroadcastChannel is unavailable and survives denied storage", async () => {
   Object.defineProperty(globalThis, "BroadcastChannel", { value: undefined, configurable: true });
   const tab = connect();
-  const queryKey = buildWorkQueryKeys.projects.ticket(42);
+  const queryKey = buildWorkQueryKeys.projects.ticket(9, 42);
   tab.client.setQueryData(queryKey, "Before");
   const key = `streamlineos:build-cache:${scope}`;
   window.dispatchEvent(new StorageEvent("storage", { key, newValue: "build:changed" }));
@@ -198,10 +207,68 @@ it("uses storage events when BroadcastChannel is unavailable and survives denied
   await waitFor(() => expect(mutation.result.current.data).toBe("After"));
 });
 
+it("throttles focus and visibility refreshes to active Build queries when BroadcastChannel exists", async () => {
+  const tab = connect();
+  const buildKey = buildWorkQueryKeys.projects.ticket(9, 42);
+  const unrelatedKey = accountingAndSupportQueryKeys.accounting.all;
+  const buildQueryFn = jest.fn(async () => "Build");
+  const unrelatedQueryFn = jest.fn(async () => "Accounting");
+  const buildObserver = new QueryObserver(tab.client, {
+    queryKey: buildKey,
+    queryFn: buildQueryFn,
+    staleTime: Infinity,
+  });
+  const unrelatedObserver = new QueryObserver(tab.client, {
+    queryKey: unrelatedKey,
+    queryFn: unrelatedQueryFn,
+    staleTime: Infinity,
+  });
+  cleanups.push(buildObserver.subscribe(() => {}));
+  cleanups.push(unrelatedObserver.subscribe(() => {}));
+  await waitFor(() => expect(buildQueryFn).toHaveBeenCalledTimes(1));
+  await waitFor(() => expect(unrelatedQueryFn).toHaveBeenCalledTimes(1));
+  expect(TabChannel.channels.size).toBe(1);
+  const now = jest.spyOn(Date, "now").mockReturnValue(20_000);
+  jest.spyOn(document, "visibilityState", "get").mockReturnValue("visible");
+
+  window.dispatchEvent(new Event("focus"));
+
+  await waitFor(() => expect(buildQueryFn).toHaveBeenCalledTimes(2));
+  expect(unrelatedQueryFn).toHaveBeenCalledTimes(1);
+
+  now.mockReturnValue(20_001);
+  document.dispatchEvent(new Event("visibilitychange"));
+  await act(async () => {});
+  expect(buildQueryFn).toHaveBeenCalledTimes(2);
+
+  now.mockReturnValue(35_001);
+  document.dispatchEvent(new Event("visibilitychange"));
+  await waitFor(() => expect(buildQueryFn).toHaveBeenCalledTimes(3));
+  expect(unrelatedQueryFn).toHaveBeenCalledTimes(1);
+});
+
+it("refetches the Build unread count when the window regains focus", async () => {
+  const tab = connect();
+  const unreadCountKey = platformCoreQueryKeys.notifications.unreadCount("build");
+  const unreadCountQueryFn = jest.fn(async () => ({ count: 1 }));
+  const observer = new QueryObserver(tab.client, {
+    queryKey: unreadCountKey,
+    queryFn: unreadCountQueryFn,
+    staleTime: Infinity,
+  });
+  cleanups.push(observer.subscribe(() => {}));
+  await waitFor(() => expect(unreadCountQueryFn).toHaveBeenCalledTimes(1));
+
+  jest.spyOn(Date, "now").mockReturnValue(20_000);
+  window.dispatchEvent(new Event("focus"));
+
+  await waitFor(() => expect(unreadCountQueryFn).toHaveBeenCalledTimes(2));
+});
+
 it("notifies peers when the server commits but a local success callback throws", async () => {
   const tabA = connect();
   const tabB = connect();
-  const queryKey = buildWorkQueryKeys.projects.ticket(42);
+  const queryKey = buildWorkQueryKeys.projects.ticket(9, 42);
   tabA.client.setQueryData(queryKey, "Before");
   tabB.client.setQueryData(queryKey, "Before");
   const { mutation, read } = mutationIn(tabA.client, false, () => { throw new Error("UI callback failed"); });
@@ -231,7 +298,7 @@ it("falls back to storage when the browser refuses to open a channel", async () 
 it.each(["unmount", "scope-switch"])("notifies the original scope after sender %s with a mutation in flight", async (change) => {
   const originalPeer = connect();
   const nextOrgPeer = connect(authenticatedScope("org-b", "member-a"));
-  const queryKey = buildWorkQueryKeys.projects.ticket(42);
+  const queryKey = buildWorkQueryKeys.projects.ticket(9, 42);
   originalPeer.client.setQueryData(queryKey, "Before");
   nextOrgPeer.client.setQueryData(queryKey, "Before");
   let commit = () => {};
@@ -263,7 +330,7 @@ it.each(["unmount", "scope-switch"])("notifies the original scope after sender %
 it("a private draft autosave does not make every other tab refetch the Build cache", async () => {
   const tabA = connect();
   const tabB = connect();
-  const queryKey = buildWorkQueryKeys.projects.ticket(42);
+  const queryKey = buildWorkQueryKeys.projects.ticket(9, 42);
   tabB.client.setQueryData(queryKey, "Before");
   function Wrapper({ children }: { children: ReactNode }) {
     return <QueryClientProvider client={tabA.client}>{children}</QueryClientProvider>;

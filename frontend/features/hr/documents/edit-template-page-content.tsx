@@ -5,8 +5,8 @@ import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
-import { ErrorState } from "@/components/shared/error-state";
-import { getErrorMessage } from "@/lib/get-error-message";
+import { PageState } from "@/components/shared/page-state";
+import { usePageState } from "@/hooks/api/use-page-state";
 import { useDocumentTemplate } from "@/hooks/api/hr/document-templates";
 import { TemplateEditor } from "@/features/hr/documents/template-editor";
 
@@ -53,7 +53,7 @@ function EditTemplateSkeleton() {
             <Skeleton className="h-4 w-24" />
           </CardHeader>
           <CardContent>
-            <Skeleton className="h-[420px] w-full rounded-md" />
+            <Skeleton className="h-105 w-full rounded-md" />
           </CardContent>
         </Card>
       </div>
@@ -67,18 +67,16 @@ export function EditTemplatePageContent({ id }: EditTemplatePageContentProps) {
   const handleRetry = useCallback(() => {
     void refetch();
   }, [refetch]);
+  const pageState = usePageState({ permission: "hr:documents:view", isLoading, isError, error });
 
-  if (isLoading) return <EditTemplateSkeleton />;
+  if (pageState.kind === "loading") return <EditTemplateSkeleton />;
 
-  if (isError) {
+  if (pageState.kind !== "ready" && pageState.kind !== "empty") {
     return (
       <PageWrapper title="Edit Template" backHref="/hr/documents/templates">
-        <ErrorState
-          className="flex-1"
-          title="Couldn't load template"
-          description={getErrorMessage(error)}
-          onRetry={handleRetry}
-        />
+        <PageState resolution={pageState} loading={null} onRetry={handleRetry} className="flex-1">
+          {null}
+        </PageState>
       </PageWrapper>
     );
   }

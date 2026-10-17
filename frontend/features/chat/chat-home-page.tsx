@@ -3,21 +3,26 @@
 import { useState, useCallback, useRef, useEffect } from "react";
 import dynamic from "next/dynamic";
 import { useSession } from "next-auth/react";
-import { useRouter, useSearchParams, type ReadonlyURLSearchParams } from "next/navigation";
+import {
+  useRouter,
+  useSearchParams,
+  type ReadonlyURLSearchParams,
+} from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import { cn } from "@/lib/utils";
 import { ChannelSidebar } from "@/features/chat/channel-sidebar";
 import { EmptyChatState } from "@/features/chat/empty-chat-state";
 import { useChatSidebarCollapse } from "@/features/chat/chat-shell";
-import { getChatConversationListPaneClassName } from "@/features/chat/chat-shell-layout";
+import {
+  getChatConversationListPaneClassName,
+  getChatMessagePaneClassName,
+} from "@/features/chat/chat-shell-layout";
 import {
   ChatOverlayFallback,
   ChatPanelFallback,
 } from "@/features/chat/chat-lazy-fallbacks";
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
-import { useShellVariant } from "@/components/layout/shell-variant-context";
 import { PageWrapper } from "@/components/ui/page-wrapper";
-import * as VisuallyHidden from "@radix-ui/react-visually-hidden";
+import { useIsChatPanelNarrow } from "@/features/chat/use-chat-mobile";
 
 const ChatAblySuite = dynamic(
   () =>
@@ -32,7 +37,10 @@ const MessagePanel = dynamic(
     import("@/features/chat/message-panel").then((m) => ({
       default: m.MessagePanel,
     })),
-  { ssr: false, loading: () => <ChatPanelFallback label="Loading conversation" /> },
+  {
+    ssr: false,
+    loading: () => <ChatPanelFallback label="Loading conversation" />,
+  },
 );
 
 const ChannelInfoPanel = dynamic(
@@ -40,7 +48,10 @@ const ChannelInfoPanel = dynamic(
     import("@/features/chat/channel-info-panel").then((m) => ({
       default: m.ChannelInfoPanel,
     })),
-  { ssr: false, loading: () => <ChatPanelFallback label="Loading channel info" /> },
+  {
+    ssr: false,
+    loading: () => <ChatPanelFallback label="Loading channel info" />,
+  },
 );
 
 const NewDMDialog = dynamic(
@@ -48,7 +59,10 @@ const NewDMDialog = dynamic(
     import("@/features/chat/new-dm-dialog").then((m) => ({
       default: m.NewDMDialog,
     })),
-  { ssr: false, loading: () => <ChatOverlayFallback label="Loading new message" /> },
+  {
+    ssr: false,
+    loading: () => <ChatOverlayFallback label="Loading new message" />,
+  },
 );
 
 const NewGroupDialog = dynamic(
@@ -56,11 +70,20 @@ const NewGroupDialog = dynamic(
     import("@/features/chat/new-group-dialog").then((m) => ({
       default: m.NewGroupDialog,
     })),
-  { ssr: false, loading: () => <ChatOverlayFallback label="Loading new channel" /> },
+  {
+    ssr: false,
+    loading: () => <ChatOverlayFallback label="Loading new channel" />,
+  },
 );
 
 function readChannelParam(params: ReadonlyURLSearchParams): number | null {
   const raw = params.get("channel");
+  const parsed = raw ? Number(raw) : NaN;
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : null;
+}
+
+function readMessageParam(params: ReadonlyURLSearchParams): number | null {
+  const raw = params.get("message");
   const parsed = raw ? Number(raw) : NaN;
   return Number.isFinite(parsed) && parsed > 0 ? parsed : null;
 }
@@ -81,32 +104,39 @@ export function ChatHomePage() {
     channelId: number;
     type: "huddle";
   } | null>(null);
-  const [emptyDMOpen, setEmptyDMOpen] = useState(false);
+  const [emptyDMOpen, setEmptyDMOpen] = useState(
+    () => searchParams.get("dm") === "1",
+  );
   const [emptyGroupOpen, setEmptyGroupOpen] = useState(false);
   const [showSearchFocus, setShowSearchFocus] = useState(false);
   const { sidebarCollapsed, handleToggleSidebar } = useChatSidebarCollapse();
-  const isMobile = useShellVariant() === "mobile";
+  const isPanelNarrow = useIsChatPanelNarrow();
 
-  const writeChannelParam = useCallback((channelId: number | null) => {
-    const next = new URLSearchParams(searchParams.toString());
-    if (channelId === null) next.delete("channel");
-    else next.set("channel", String(channelId));
-    const query = next.toString();
-    router.replace(`/chat${query ? `?${query}` : ""}`, { scroll: false });
-  }, [searchParams, router]);
+  const writeChannelParam = useCallback(
+    (channelId: number | null) => {
+      const next = new URLSearchParams(searchParams.toString());
+      if (channelId === null) next.delete("channel");
+      else next.set("channel", String(channelId));
+      const query = next.toString();
+      router.replace(`/chat${query ? `?${query}` : ""}`, { scroll: false });
+    },
+    [searchParams, router],
+  );
 
-  const handleSelectChannel = useCallback((channelId: number) => {
-    setActiveChannelId(channelId);
-    setShowMobileList(false);
-    writeChannelParam(channelId);
-  }, [writeChannelParam]);
+  const handleSelectChannel = useCallback(
+    (channelId: number) => {
+      setActiveChannelId(channelId);
+      setShowMobileList(false);
+      writeChannelParam(channelId);
+    },
+    [writeChannelParam],
+  );
 
   const consumedDmParamRef = useRef(false);
   useEffect(() => {
     if (consumedDmParamRef.current) return;
     if (searchParams.get("dm") !== "1") return;
     consumedDmParamRef.current = true;
-    setEmptyDMOpen(true);
     const next = new URLSearchParams(searchParams.toString());
     next.delete("dm");
     const query = next.toString();
@@ -137,12 +167,15 @@ export function ChatHomePage() {
     writeChannelParam(null);
   }, [writeChannelParam]);
 
-  const handleOpenChannelSettings = useCallback((channelId: number) => {
-    setActiveChannelId(channelId);
-    setShowMobileList(false);
-    setShowInfoPanel(true);
-    writeChannelParam(channelId);
-  }, [writeChannelParam]);
+  const handleOpenChannelSettings = useCallback(
+    (channelId: number) => {
+      setActiveChannelId(channelId);
+      setShowMobileList(false);
+      setShowInfoPanel(true);
+      writeChannelParam(channelId);
+    },
+    [writeChannelParam],
+  );
 
   const handleStartCallFromSidebar = useCallback(
     (channelId: number, type: "huddle") => {
@@ -154,7 +187,10 @@ export function ChatHomePage() {
     [writeChannelParam],
   );
 
-  const handleAutoStartHandled = useCallback(() => setPendingCallAction(null), []);
+  const handleAutoStartHandled = useCallback(
+    () => setPendingCallAction(null),
+    [],
+  );
 
   useEffect(() => {
     window.dispatchEvent(
@@ -175,40 +211,42 @@ export function ChatHomePage() {
     };
   }, []);
 
-  const panelChildren = activeChannelId && currentUserId ? (
-    <MessagePanel
-      channelId={activeChannelId}
-      currentUserId={currentUserId}
-      onBack={handleBack}
-      onToggleInfo={handleToggleInfo}
-      showInfoPanel={showInfoPanel}
-      autoStartCall={
-        pendingCallAction?.channelId === activeChannelId
-          ? pendingCallAction.type
-          : null
-      }
-      onAutoStartHandled={handleAutoStartHandled}
-      isSidebarCollapsed={sidebarCollapsed}
-      onToggleSidebar={handleToggleSidebar}
-    />
-  ) : (
-    <EmptyChatState
-      onNewDM={handleNewDM}
-      onNewChannel={handleNewChannel}
-      onSearch={handleSearch}
-      isSidebarCollapsed={sidebarCollapsed}
-      onToggleSidebar={handleToggleSidebar}
-    />
-  );
+  const panelChildren =
+    activeChannelId && currentUserId ? (
+      <MessagePanel
+        channelId={activeChannelId}
+        currentUserId={currentUserId}
+        onBack={handleBack}
+        onToggleInfo={handleToggleInfo}
+        showInfoPanel={showInfoPanel}
+        autoStartCall={
+          pendingCallAction?.channelId === activeChannelId
+            ? pendingCallAction.type
+            : null
+        }
+        onAutoStartHandled={handleAutoStartHandled}
+        isSidebarCollapsed={sidebarCollapsed}
+        onToggleSidebar={handleToggleSidebar}
+        scrollToMessageId={readMessageParam(searchParams)}
+      />
+    ) : (
+      <EmptyChatState
+        onNewDM={handleNewDM}
+        onNewChannel={handleNewChannel}
+        onSearch={handleSearch}
+        isSidebarCollapsed={sidebarCollapsed}
+        onToggleSidebar={handleToggleSidebar}
+      />
+    );
 
   return (
     <PageWrapper
       noInternalScroll
-      title={<VisuallyHidden.Root>Chat</VisuallyHidden.Root>}
       contentClassName="!px-0"
       className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden"
     >
       <div className="flex flex-1 min-h-0 min-w-0 bg-background">
+        <h1 className="sr-only">Chat</h1>
         <div
           className={getChatConversationListPaneClassName(
             sidebarCollapsed,
@@ -222,22 +260,18 @@ export function ChatHomePage() {
             autoFocusSearch={showSearchFocus}
             onSearchFocused={handleSearchFocused}
             isCollapsed={sidebarCollapsed}
+            onToggleSidebar={handleToggleSidebar}
             onStartCall={handleStartCallFromSidebar}
             onOpenSettings={handleOpenChannelSettings}
           />
         </div>
 
-        <div
-          className={cn(
-            "relative z-10 flex-1 flex flex-col min-w-0",
-            isMobile && showMobileList && "hidden",
-          )}
-        >
+        <div className={getChatMessagePaneClassName(showMobileList)}>
           <ChatAblySuite
             activeChannelId={activeChannelId}
             currentUserId={currentUserId}
           >
-            {isMobile && showMobileList ? null : panelChildren}
+            {panelChildren}
           </ChatAblySuite>
         </div>
 
@@ -248,7 +282,7 @@ export function ChatHomePage() {
               animate={{ width: 320, opacity: 1 }}
               exit={{ width: 0, opacity: 0 }}
               transition={{ duration: 0.2, ease: "easeInOut" }}
-              className="hidden lg:flex flex-col border-l border-border/40 bg-card/50 overflow-hidden shrink-0"
+              className="hidden lg:flex flex-col border-l border-border bg-card overflow-hidden shrink-0"
             >
               <ChannelInfoPanel
                 channelId={activeChannelId}
@@ -261,9 +295,9 @@ export function ChatHomePage() {
           )}
         </AnimatePresence>
 
-        {activeChannelId && (
+        {activeChannelId && isPanelNarrow && (
           <Sheet open={showInfoPanel} onOpenChange={setShowInfoPanel}>
-            <SheetContent className="flex w-full flex-col gap-0 overflow-hidden p-0 lg:hidden">
+            <SheetContent className="flex w-full flex-col gap-0 overflow-hidden p-0">
               <SheetTitle className="sr-only">Channel info</SheetTitle>
               <ChannelInfoPanel
                 channelId={activeChannelId}

@@ -30,6 +30,7 @@ import { getErrorMessage } from "@/lib/get-error-message";
 import { usePayrollRuns, useRunPublications, usePublishPayslips, downloadPayslipPdf } from "@/hooks/api/payroll";
 
 import { useOrgMembersByIds } from "@/hooks/api/organization";
+import { useCan } from "@/hooks/api/access";
 import { getUserDisplayName, type NamedUser } from "@/lib/person-display";
 import type { PublicationStatus } from "@/types/payroll";
 import type { PublicationItem } from "@/hooks/api/payroll/publications-schema";
@@ -65,7 +66,9 @@ function PublishDialog({
       { runId },
       {
         onSuccess: (data) => {
-          toast.success(`Published ${data.published}/${data.total} payslips`);
+          toast.success(
+            `Published ${data.published}/${data.total} payslips${data.heldCount > 0 ? `. ${data.heldCount} on hold.` : ""}`,
+          );
           onOpenChange(false);
         },
         onError: (err) => {
@@ -83,7 +86,7 @@ function PublishDialog({
           <DialogTitle>Publish Payslips</DialogTitle>
           <DialogDescription>
             Publish all{employeeCount != null ? ` ${employeeCount}` : ""} employees&apos; payslips
-            for {formatMonth(month)}?
+            for {formatMonth(month)}? Employees on hold are skipped.
           </DialogDescription>
         </DialogHeader>
         <DialogFooter>
@@ -107,6 +110,7 @@ export function PublicationsTab({ canManage }: PublicationsTabProps) {
   const { data: runsData, isLoading: runsLoading } = usePayrollRuns({ limit: 50 });
   const [publishOpen, setPublishOpen] = useState(false);
   const [downloadingIds, setDownloadingIds] = useState<Set<number>>(new Set());
+  const canViewRuns = useCan("payroll:runs:view");
 
   const eligibleRuns = useMemo(
     () => (runsData?.data ?? []).filter((r) => PUBLISHABLE_STATUSES.includes(r.status)),
@@ -262,7 +266,11 @@ export function PublicationsTab({ canManage }: PublicationsTabProps) {
             <EmptyState
               illustration={<EmptyTransferIllustration />}
               title="No payslips published yet"
-              description="Publish payslips to make them available to employees."
+              description={
+                selectedRun?.status === "LOCKED"
+                  ? "Payslips can be published once this run is marked paid."
+                  : "Publish payslips to make them available to employees."
+              }
             />
           }
         />
@@ -270,8 +278,10 @@ export function PublicationsTab({ canManage }: PublicationsTabProps) {
 
       {activeRunId === 0 && !runsLoading && (
         <EmptyState
-          title="No eligible runs"
-          description="Lock a payroll run to publish payslips."
+          illustration={<EmptyTransferIllustration />}
+          title="No payslips yet"
+          description="Payslips appear after a payroll run is approved and locked. Once the run is marked paid, publish them here to send each employee their payslip."
+          action={canViewRuns ? { label: "Go to Run payroll", href: "/payroll/runs" } : undefined}
         />
       )}
 

@@ -83,7 +83,7 @@ describe("lifecycle mutation rollback on error", () => {
     expect(restored?.[0]?.archivedAt).toBeNull();
   });
 
-  it("useArchiveNotification restores unread count on error for unread notification", async () => {
+  it("useArchiveNotification preserves the server-owned unread count on error", async () => {
     const flatKey = queryKeys.notifications.list({});
     client.setQueryData<Notification[]>(flatKey, [makeNotif(201, false)]);
     client.setQueryData<UnreadCount>(queryKeys.notifications.unreadCount(), { count: 3 });
@@ -101,7 +101,7 @@ describe("lifecycle mutation rollback on error", () => {
     expect(count?.count).toBe(3);
   });
 
-  it("useDeleteNotification restores notification presence on error", async () => {
+  it("useDeleteNotification invalidates authoritative lists without reinserting a stale row on error", async () => {
     const flatKey = queryKeys.notifications.list({});
     client.setQueryData<Notification[]>(flatKey, [makeNotif(202, false), makeNotif(203, true)]);
     client.setQueryData<UnreadCount>(queryKeys.notifications.unreadCount(), { count: 1 });
@@ -116,8 +116,9 @@ describe("lifecycle mutation rollback on error", () => {
     });
 
     const restored = client.getQueryData<Notification[]>(flatKey);
-    expect(restored).toHaveLength(2);
-    expect(restored?.[0]?.id).toBe(202);
+    expect(restored).toHaveLength(1);
+    expect(restored?.[0]?.id).toBe(203);
+    expect(client.getQueryState(flatKey)?.isInvalidated).toBe(true);
     const restoredCount = client.getQueryData<UnreadCount>(queryKeys.notifications.unreadCount());
     expect(restoredCount?.count).toBe(1);
   });
@@ -173,5 +174,89 @@ describe("lifecycle mutation rollback on error", () => {
 
     const restored = client.getQueryData<Notification[]>(flatKey);
     expect(restored?.[0]?.archivedAt).toBe(archivedAt);
+  });
+});
+
+describe("snooze and unarchive preserve server-owned badge values", () => {
+  let client: QueryClient;
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+    client = makeClient();
+    withInjectedClient(client);
+  });
+
+  it("useSnoozeNotification changes the row without deriving a count from cached rows", async () => {
+    const flatKey = queryKeys.notifications.list({});
+    client.setQueryData<Notification[]>(flatKey, [makeNotif(210, false)]);
+    client.setQueryData<UnreadCount>(queryKeys.notifications.unreadCount(), { count: 3 });
+
+    const { result } = renderHook(() => useSnoozeNotification(), { wrapper: wrapper(client) });
+
+    await act(async () => {
+      result.current.mutate({ notificationId: 210, snoozedUntil: "2026-12-31T00:00:00.000Z" });
+      await new Promise((resolve) => setTimeout(resolve, 0));
+    });
+
+    const count = client.getQueryData<UnreadCount>(queryKeys.notifications.unreadCount());
+    expect(count?.count).toBe(3);
+    expect(client.getQueryData<Notification[]>(flatKey)?.[0]?.snoozedUntil).toBe("2026-12-31T00:00:00.000Z");
+    expect(client.getQueryState(queryKeys.notifications.unreadCount())?.isInvalidated).toBe(true);
+  });
+
+  it("useSnoozeNotification preserves unread badge on mutation error", async () => {
+    const flatKey = queryKeys.notifications.list({});
+    client.setQueryData<Notification[]>(flatKey, [makeNotif(211, false)]);
+    client.setQueryData<UnreadCount>(queryKeys.notifications.unreadCount(), { count: 3 });
+
+    apiClientMock().patch.mockRejectedValueOnce(new Error("Network error"));
+
+    const { result } = renderHook(() => useSnoozeNotification(), { wrapper: wrapper(client) });
+
+    await act(async () => {
+      result.current.mutate({ notificationId: 211, snoozedUntil: "2026-12-31T00:00:00.000Z" });
+      await new Promise((resolve) => setTimeout(resolve, 50));
+    });
+
+    const count = client.getQueryData<UnreadCount>(queryKeys.notifications.unreadCount());
+    expect(count?.count).toBe(3);
+  });
+
+  it("useUnarchiveNotification clears archive without deriving a count from cached rows", async () => {
+    const flatKey = queryKeys.notifications.list({});
+    const archivedUnread = { ...makeNotif(212, false), archivedAt: "2026-01-01T00:00:00.000Z" };
+    client.setQueryData<Notification[]>(flatKey, [archivedUnread]);
+    client.setQueryData<UnreadCount>(queryKeys.notifications.unreadCount(), { count: 1 });
+
+    const { result } = renderHook(() => useUnarchiveNotification(), { wrapper: wrapper(client) });
+
+    await act(async () => {
+      result.current.mutate(212);
+      await new Promise((resolve) => setTimeout(resolve, 0));
+    });
+
+    const count = client.getQueryData<UnreadCount>(queryKeys.notifications.unreadCount());
+    expect(count?.count).toBe(1);
+    expect(client.getQueryData<Notification[]>(flatKey)?.[0]?.archivedAt).toBeNull();
+    expect(client.getQueryState(queryKeys.notifications.unreadCount())?.isInvalidated).toBe(true);
+  });
+
+  it("useUnarchiveNotification preserves unread badge on mutation error", async () => {
+    const flatKey = queryKeys.notifications.list({});
+    const archivedUnread = { ...makeNotif(213, false), archivedAt: "2026-01-01T00:00:00.000Z" };
+    client.setQueryData<Notification[]>(flatKey, [archivedUnread]);
+    client.setQueryData<UnreadCount>(queryKeys.notifications.unreadCount(), { count: 1 });
+
+    apiClientMock().patch.mockRejectedValueOnce(new Error("Network error"));
+
+    const { result } = renderHook(() => useUnarchiveNotification(), { wrapper: wrapper(client) });
+
+    await act(async () => {
+      result.current.mutate(213);
+      await new Promise((resolve) => setTimeout(resolve, 50));
+    });
+
+    const count = client.getQueryData<UnreadCount>(queryKeys.notifications.unreadCount());
+    expect(count?.count).toBe(1);
   });
 });

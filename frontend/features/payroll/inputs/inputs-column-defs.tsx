@@ -5,9 +5,9 @@ import { LoadingButton } from "@/components/ui/loading-button";
 import { type DataTableColumn } from "@/components/ui/data-table";
 import { SourceRefsPopover } from "./source-refs-popover";
 import {
-  type PayrollInputSnapshot,
+  type PayrollSnapshotItem,
   type PayrollAdjustmentListItem,
-} from "@/hooks/api/payroll/payroll-inputs";
+} from "@/hooks/api/payroll/payroll-inputs-schema";
 import { getUserDisplayName } from "@/lib/person-display";
 import { formatCurrencyFull } from "@/lib/format-utils";
 
@@ -27,7 +27,14 @@ function payloadCount(payload: unknown, key: string): number {
   return Array.isArray(value) ? value.length : 0;
 }
 
-export function resolveDisplayName(row: PayrollInputSnapshot | PayrollAdjustmentListItem): string {
+function excludedReasons(payload: unknown): string[] {
+  if (!isRecord(payload) || !Array.isArray(payload.excludedItems)) return [];
+  return payload.excludedItems.flatMap((item) =>
+    isRecord(item) && typeof item.reason === "string" ? [item.reason] : [],
+  );
+}
+
+export function resolveDisplayName(row: PayrollSnapshotItem | PayrollAdjustmentListItem): string {
   return getUserDisplayName({
     name: row.userName,
     firstName: row.userFirstName,
@@ -36,7 +43,7 @@ export function resolveDisplayName(row: PayrollInputSnapshot | PayrollAdjustment
   });
 }
 
-export const attendanceColumns: DataTableColumn<PayrollInputSnapshot>[] = [
+export const attendanceColumns: DataTableColumn<PayrollSnapshotItem>[] = [
   {
     key: "employee",
     header: "Employee",
@@ -85,7 +92,7 @@ export const attendanceColumns: DataTableColumn<PayrollInputSnapshot>[] = [
   },
 ];
 
-export const leaveColumns: DataTableColumn<PayrollInputSnapshot>[] = [
+export const leaveColumns: DataTableColumn<PayrollSnapshotItem>[] = [
   {
     key: "employee",
     header: "Employee",
@@ -127,7 +134,7 @@ export const leaveColumns: DataTableColumn<PayrollInputSnapshot>[] = [
   },
 ];
 
-export const overtimeColumns: DataTableColumn<PayrollInputSnapshot>[] = [
+export const overtimeColumns: DataTableColumn<PayrollSnapshotItem>[] = [
   {
     key: "employee",
     header: "Employee",
@@ -157,7 +164,7 @@ export const overtimeColumns: DataTableColumn<PayrollInputSnapshot>[] = [
   },
 ];
 
-export const reimbursementColumns: DataTableColumn<PayrollInputSnapshot>[] = [
+export const reimbursementColumns: DataTableColumn<PayrollSnapshotItem>[] = [
   {
     key: "employee",
     header: "Employee",
@@ -177,6 +184,16 @@ export const reimbursementColumns: DataTableColumn<PayrollInputSnapshot>[] = [
     className: "text-right",
     cell: (row) => {
       return formatCurrencyFull(payloadNumber(row.payload, "totalAmount"), "INR", "en-IN", 0);
+    },
+  },
+  {
+    key: "excluded",
+    header: "Not paid via payroll",
+    className: "max-w-64",
+    cell: (row) => {
+      const reasons = excludedReasons(row.payload);
+      if (reasons.length === 0) return null;
+      return <span className="text-micro text-status-warning-ink">{reasons.join("; ")}</span>;
     },
   },
   {

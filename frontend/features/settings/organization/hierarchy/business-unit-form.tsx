@@ -45,7 +45,7 @@ export function BusinessUnitForm({
           name="name"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Name</FormLabel>
+              <FormLabel>Name <span className="text-destructive">*</span></FormLabel>
               <FormControl>
                 <Input placeholder="e.g. Technology" {...field} />
               </FormControl>
@@ -63,7 +63,7 @@ export function BusinessUnitForm({
 
             return (
               <FormItem>
-                <FormLabel>Code</FormLabel>
+                <FormLabel>Code <span className="text-destructive">*</span></FormLabel>
                 <FormControl>
                   <Input
                     placeholder="e.g. TECH"

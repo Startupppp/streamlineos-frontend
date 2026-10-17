@@ -1,3 +1,4 @@
+import { ZodError } from "zod";
 import {
   projectAutomationListContract,
   projectReleaseRowContract,
@@ -12,18 +13,34 @@ const AUTOMATION = {
   triggerEvent: "ticket.created",
   conditions: [{ field: "type", operator: "equals", value: "BUG" }],
   actions: [{ type: "set_assignee", value: "user-1" }],
+  createdBy: "user-7",
+  createdByUser: {
+    name: "Dana Reyes",
+    firstName: "Dana",
+    lastName: "Reyes",
+    email: "dana@example.com",
+  },
+  lastRunAt: null,
+  lastFailureAt: null,
   createdAt: "2026-09-15T10:00:00.000Z",
   updatedAt: "2026-09-15T10:00:00.000Z",
 };
 
 const RELEASE = {
   id: 5,
+  orgId: "org-1",
   projectId: 3,
   name: "v1.2",
   version: "1.2.0",
+  rowVersion: 1,
   description: null,
   status: "draft",
   releaseDate: null,
+  publishedAt: null,
+  readiness: null,
+  riskLevel: null,
+  createdBy: null,
+  deletedAt: null,
   ticketCount: 0,
   createdAt: "2026-09-15T10:00:00.000Z",
   updatedAt: "2026-09-15T10:00:00.000Z",
@@ -38,21 +55,47 @@ const CUSTOM_STATE = {
   order: 1,
   type: "unstarted",
   wipLimit: null,
+  createdAt: "2026-09-15T10:00:00.000Z",
+  updatedAt: "2026-09-15T10:00:00.000Z",
 };
+
+const AUTOMATION_PAGINATION = { limit: 50, hasMore: false, nextCursor: null };
+
+function automationPage(rows: unknown[]) {
+  return { data: rows, pagination: AUTOMATION_PAGINATION };
+}
 
 describe("automation list rows carry what the card renders", () => {
   it("parses a row with its conditions and actions", () => {
-    const parsed = projectAutomationListContract.parse([AUTOMATION]);
+    const parsed = projectAutomationListContract.parse(
+      automationPage([AUTOMATION]),
+    );
 
-    expect(parsed[0].conditions).toHaveLength(1);
-    expect(parsed[0].actions).toHaveLength(1);
-    expect(parsed[0].projectId).toBe(3);
+    expect(parsed.data[0].conditions).toHaveLength(1);
+    expect(parsed.data[0].actions).toHaveLength(1);
+    expect(parsed.data[0].projectId).toBe(3);
   });
 
   it("parses an automation with no conditions", () => {
-    const parsed = projectAutomationListContract.parse([{ ...AUTOMATION, conditions: [] }]);
+    const parsed = projectAutomationListContract.parse(
+      automationPage([{ ...AUTOMATION, conditions: [] }]),
+    );
 
-    expect(parsed[0].conditions).toEqual([]);
+    expect(parsed.data[0].conditions).toEqual([]);
+  });
+
+  it("rejects a bare array, because the endpoint returns a cursor envelope and a contract that accepted both would decode a truncated first page as the whole list", () => {
+    expect(() => projectAutomationListContract.parse([AUTOMATION])).toThrow(ZodError);
+  });
+
+  it("carries the cursor forward, because a page whose nextCursor is stripped ends infinite scroll after one page", () => {
+    const parsed = projectAutomationListContract.parse({
+      data: [AUTOMATION],
+      pagination: { limit: 50, hasMore: true, nextCursor: "c2" },
+    });
+
+    expect(parsed.pagination.nextCursor).toBe("c2");
+    expect(parsed.pagination.hasMore).toBe(true);
   });
 });
 
@@ -78,9 +121,17 @@ describe("custom state type accepts every value the state_group column can hold"
     expect(projectCustomStateListContract.parse([{ ...CUSTOM_STATE, type: null }])[0].type).toBeNull();
   });
 
-  it("accepts an absent type", () => {
+  it.each(["createdAt", "updatedAt"])("rejects a missing %s projection", (field) => {
+    const incomplete = Object.fromEntries(Object.entries(CUSTOM_STATE).filter(([key]) => key !== field));
+    const parsed = projectCustomStateListContract.safeParse([incomplete]);
+    expect(parsed.success).toBe(false);
+    if (parsed.success) throw new Error("Missing timestamp was accepted");
+    expect(parsed.error.issues.map((issue) => issue.path)).toEqual([[0, field]]);
+  });
+
+  it("rejects an absent type, because the backend always projects the column and an optional contract would decode a dropped projection as an untyped state", () => {
     const { type: _type, ...withoutType } = CUSTOM_STATE;
 
-    expect(() => projectCustomStateListContract.parse([withoutType])).not.toThrow();
+    expect(() => projectCustomStateListContract.parse([withoutType])).toThrow(ZodError);
   });
 });

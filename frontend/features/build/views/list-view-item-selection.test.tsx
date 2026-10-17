@@ -1,6 +1,8 @@
 import React from "react";
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+
+let mockTicketQuickActionsClassName: string | undefined;
 
 jest.mock("framer-motion", () => ({
   motion: {
@@ -41,16 +43,18 @@ jest.mock("../shared/ticket-type-icon", () => ({
   TicketTypeIcon: () => null,
 }));
 
-jest.mock("./card-inline-fields", () => ({
-  InlineStatus: () => null,
-  InlinePriority: () => null,
-  InlineAssignee: () => null,
-  InlineEstimate: () => null,
+jest.mock("./card-field-status", () => ({ InlineStatus: () => null }));
+jest.mock("./card-field-priority", () => ({ InlinePriority: () => null }));
+jest.mock("./card-field-assignee", () => ({ InlineAssignee: () => null }));
+jest.mock("./card-field-estimate", () => ({ InlineEstimate: () => null }));
+
+jest.mock("./card-inline-type-cycle", () => ({
+  InlineType: () => null,
 }));
 
 jest.mock("./card-inline-extra-fields", () => ({
-  InlineType: () => null,
   InlineLabels: () => null,
+  InlineModule: () => null,
 }));
 
 jest.mock("./card-inline-date-fields", () => ({
@@ -58,7 +62,10 @@ jest.mock("./card-inline-date-fields", () => ({
 }));
 
 jest.mock("./ticket-quick-actions", () => ({
-  TicketQuickActions: () => null,
+  TicketQuickActions: ({ className, open }: { className?: string; open?: boolean }) => {
+    mockTicketQuickActionsClassName = className;
+    return open ? <div data-testid="row-menu-open" /> : null;
+  },
 }));
 
 jest.mock("@/components/shared/ticket-status-badge", () => ({
@@ -101,6 +108,7 @@ jest.mock("@/components/ui/avatar", () => ({
 }));
 
 import { ListViewItem } from "./list-view-item";
+import { ModuleNamesProvider } from "./module-names-context";
 import type { Ticket } from "./list-view-shared";
 
 const TICKET: Ticket = {
@@ -108,7 +116,27 @@ const TICKET: Ticket = {
   title: "Fix the bug",
   status: "TODO",
   type: "TASK",
+  version: 2,
 };
+
+describe("ListViewItem — All Work responsive hierarchy", () => {
+  it("reserves a full mobile line for the title and exposes its complete accessible name", () => {
+    render(
+      <ListViewItem
+        ticket={{ ...TICKET, title: "A long ticket title that must remain readable" }}
+        onClick={jest.fn()}
+        layout="work-index"
+      />,
+    );
+
+    const title = screen.getByRole("button", {
+      name: "Open A long ticket title that must remain readable",
+    });
+    expect(title.className).toContain("w-full");
+    expect(title.className).toContain("basis-full");
+    expect(title.className).toContain("sm:w-auto");
+  });
+});
 
 describe("ListViewItem — checkbox visibility", () => {
   it("does not render a checkbox when onSelect is not provided", () => {
@@ -230,5 +258,176 @@ describe("ListViewItem — keyboard focus is visible and announced", () => {
     );
 
     expect(container.querySelector("[aria-current]")).toBeNull();
+  });
+});
+
+describe("ListViewItem — cycle and module metadata", () => {
+  it("shows the cycle name badge when showCycle is true and the ticket has a cycle", () => {
+    const ticket: Ticket = {
+      ...TICKET,
+      cycleId: 3,
+      cycle: { id: 3, name: "Sprint 7", status: "active", startDate: "2026-01-01", endDate: "2026-01-14" },
+    };
+    render(
+      <ListViewItem
+        ticket={ticket}
+        onClick={jest.fn()}
+        displayOptions={{ showCycle: true } as never}
+      />,
+    );
+    expect(screen.getByText("Sprint 7")).toBeDefined();
+  });
+
+  it("hides the cycle name badge when showCycle is false", () => {
+    const ticket: Ticket = {
+      ...TICKET,
+      cycleId: 3,
+      cycle: { id: 3, name: "Sprint 7", status: "active", startDate: "2026-01-01", endDate: "2026-01-14" },
+    };
+    render(
+      <ListViewItem
+        ticket={ticket}
+        onClick={jest.fn()}
+        displayOptions={{ showCycle: false } as never}
+      />,
+    );
+    expect(screen.queryByText("Sprint 7")).toBeNull();
+  });
+
+  it("shows the module by name, never by id, when the board knows the module", () => {
+    const ticket: Ticket = { ...TICKET, moduleId: 11 };
+    render(
+      <ModuleNamesProvider modules={[{ id: 11, name: "Payments" }]}>
+        <ListViewItem ticket={ticket} onClick={jest.fn()} />
+      </ModuleNamesProvider>,
+    );
+    expect(screen.getByText("Payments")).toBeDefined();
+    expect(screen.queryByText("M-11")).toBeNull();
+  });
+
+  it("shows no module badge for a moduleId the board has no name for, rather than printing the id", () => {
+    const ticket: Ticket = { ...TICKET, moduleId: 11 };
+    render(
+      <ModuleNamesProvider modules={[{ id: 4, name: "Payments" }]}>
+        <ListViewItem ticket={ticket} onClick={jest.fn()} />
+      </ModuleNamesProvider>,
+    );
+    expect(screen.queryByText("Payments")).toBeNull();
+    expect(screen.queryByText(/11/)).toBeNull();
+  });
+
+  it("does not show a module badge when moduleId is null", () => {
+    render(<ListViewItem ticket={TICKET} onClick={jest.fn()} />);
+    expect(screen.queryByText(/M-\d+/)).toBeNull();
+  });
+});
+
+describe("ListViewItem — the assignee set, not only the first assignee", () => {
+  const THREE_ASSIGNEES: Ticket = {
+    ...TICKET,
+    assignees: [
+      { user: { id: "u1", name: "Ada Lovelace" } },
+      { user: { id: "u2", name: "Grace Hopper" } },
+      { user: { id: "u3", name: "Alan Turing" } },
+    ],
+  };
+
+  it("counts the assignees beyond the first one", () => {
+    render(<ListViewItem ticket={THREE_ASSIGNEES} onClick={jest.fn()} />);
+    expect(screen.getByText("+2")).toBeDefined();
+  });
+
+  it("shows no overflow count for a single assignee, so the count is the set size and not a constant", () => {
+    render(
+      <ListViewItem
+        ticket={{ ...TICKET, assignees: [{ user: { id: "u1", name: "Ada Lovelace" } }] }}
+        onClick={jest.fn()}
+      />,
+    );
+    expect(screen.queryByText(/^\+\d+$/)).toBeNull();
+  });
+
+  it("shows no overflow count when the row carries no assignee set at all", () => {
+    render(<ListViewItem ticket={TICKET} onClick={jest.fn()} />);
+    expect(screen.queryByText(/^\+\d+$/)).toBeNull();
+  });
+});
+
+describe("ListViewItem — rank is surfaced as the drag handle, not as a printed lexorank", () => {
+  it("offers the reorder handle when the row is manually orderable", () => {
+    render(
+      <ListViewItem
+        ticket={{ ...TICKET, rank: "0|hzzzzz:" }}
+        onClick={jest.fn()}
+        dragHandleProps={{} as never}
+      />,
+    );
+    expect(screen.getByLabelText("Drag to reorder")).toBeDefined();
+  });
+
+  it("never prints the lexorank string, which is an internal ordering key", () => {
+    render(<ListViewItem ticket={{ ...TICKET, rank: "0|hzzzzz:" }} onClick={jest.fn()} />);
+    expect(screen.queryByText("0|hzzzzz:")).toBeNull();
+    expect(screen.queryByLabelText("Drag to reorder")).toBeNull();
+  });
+});
+
+describe("ListViewItem — row actions remain visible with focus", () => {
+  it("reveals the drag handle for focus within the row without changing hover behavior", () => {
+    render(
+      <ListViewItem
+        ticket={TICKET}
+        onClick={jest.fn()}
+        dragHandleProps={{
+          "data-rfd-drag-handle-draggable-id": "42",
+          "data-rfd-drag-handle-context-id": "list",
+          role: "button",
+          "aria-describedby": "drag-description",
+          tabIndex: 0,
+          draggable: false,
+          onDragStart: jest.fn(),
+        }}
+      />,
+    );
+
+    const dragHandle = screen.getByLabelText("Drag to reorder");
+    expect(dragHandle).toHaveClass("opacity-0");
+    expect(dragHandle).toHaveClass("group-hover:opacity-100");
+    expect(dragHandle).toHaveClass("group-focus-within:opacity-100");
+  });
+
+  it("reveals quick actions for focus within the row without changing hover behavior", () => {
+    render(<ListViewItem ticket={TICKET} onClick={jest.fn()} projectId={7} />);
+
+    expect(mockTicketQuickActionsClassName?.split(" ")).toEqual(
+      expect.arrayContaining([
+        "opacity-0",
+        "translate-x-1",
+        "group-hover:translate-x-0",
+        "group-hover:opacity-100",
+        "group-focus-within:translate-x-0",
+        "group-focus-within:opacity-100",
+      ]),
+    );
+  });
+});
+
+describe("ListViewItem — right click opens the row's own action menu", () => {
+  function renderRow() {
+    return render(<ListViewItem ticket={TICKET} onClick={jest.fn()} />);
+  }
+
+  it("keeps the menu closed until the row is right clicked", () => {
+    renderRow();
+    expect(screen.queryByTestId("row-menu-open")).toBeNull();
+  });
+
+  it("opens the menu on contextmenu and suppresses the browser menu", () => {
+    const { container } = renderRow();
+    const row = container.firstElementChild;
+    if (row === null) throw new Error("the list row rendered nothing");
+    const notPrevented = fireEvent.contextMenu(row);
+    expect(notPrevented).toBe(false);
+    expect(screen.getByTestId("row-menu-open")).toBeInTheDocument();
   });
 });

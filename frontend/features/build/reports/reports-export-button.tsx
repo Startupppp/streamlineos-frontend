@@ -14,22 +14,23 @@ interface ReportsExportButtonProps {
 export function ReportsExportButton({ projectId }: ReportsExportButtonProps) {
   const canView = useCan("build:view");
   const { data } = useVelocityReport(projectId);
+  const cycles = data?.pages.flatMap((p) => p.data) ?? [];
 
   const handleExport = useCallback(() => {
-    if (!data?.length) return;
+    if (cycles.length === 0) return;
     exportToCsv(
       "velocity-report.csv",
-      data.map((sprint) => ({
-        sprint_name: sprint.name,
-        start_date: sprint.startDate,
-        end_date: sprint.endDate,
-        committed_points: sprint.committedPoints,
-        completed_points: sprint.completedPoints,
-        committed_count: sprint.committedCount,
-        completed_count: sprint.completedCount,
+      cycles.map((cycle) => ({
+        cycle_name: cycle.name,
+        start_date: cycle.startDate,
+        end_date: cycle.endDate,
+        committed_points: cycle.committedPoints,
+        completed_points: cycle.completedPoints,
+        committed_count: cycle.committedCount,
+        completed_count: cycle.completedCount,
       })),
     );
-  }, [data]);
+  }, [cycles]);
 
   if (!canView) return null;
 
@@ -38,7 +39,7 @@ export function ReportsExportButton({ projectId }: ReportsExportButtonProps) {
       variant="outline"
       size="sm"
       onClick={handleExport}
-      disabled={!data?.length}
+      disabled={cycles.length === 0}
     >
       <Download className="h-4 w-4" />
       Export velocity CSV

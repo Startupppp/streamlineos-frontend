@@ -1,7 +1,11 @@
 "use client";
 
 import { useCallback, useMemo } from "react";
-import { useProjectAnalytics } from "@/hooks/api/build";
+import { useSearchParams } from "next/navigation";
+import { keepPreviousData } from "@tanstack/react-query";
+import { useProjectAnalytics } from "@/hooks/api/build/project-analytics";
+import { parseEnum, useUrlFilters } from "@/lib/url-state/use-url-filters";
+import { BuildFilterSelect } from "@/features/build/shared/build-filter-select";
 import { usePageState } from "@/hooks/api/use-page-state";
 import { PageState } from "@/components/shared/page-state";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -27,15 +31,39 @@ import {
   buildVelocityData,
   buildEstimateData,
 } from "@/features/build/analytics/analytics-chart-data";
-import { PmSection, PM_FILL_PANEL } from "@/components/pm-chrome";
+import { PmSection, CONTENT_FILL_PANEL } from "@/components/pm-chrome";
 
 interface ReportsOverviewTabProps {
   projectId: number;
 }
 
+const VOLUME_RANGES = ["12w", "90d", "30d", "7d"] as const;
+type VolumeRange = (typeof VOLUME_RANGES)[number];
+const DEFAULT_VOLUME_RANGE = "12w" satisfies VolumeRange;
+const VOLUME_RANGE_OPTIONS = [
+  { value: "12w", label: "Last 12 weeks" },
+  { value: "90d", label: "Last 90 days" },
+  { value: "30d", label: "Last 30 days" },
+  { value: "7d", label: "Last 7 days" },
+] as const satisfies readonly { value: VolumeRange; label: string }[];
+
 export function ReportsOverviewTab({ projectId }: ReportsOverviewTabProps) {
+  const searchParams = useSearchParams();
+  const { update } = useUrlFilters();
+  const volumeRange = parseEnum(searchParams.get("volumeRange"), VOLUME_RANGES, DEFAULT_VOLUME_RANGE);
+  const analyticsParams = useMemo(
+    () => (volumeRange === DEFAULT_VOLUME_RANGE ? undefined : { range: volumeRange }),
+    [volumeRange],
+  );
   const { data: analytics, isLoading, isError, error, refetch } =
-    useProjectAnalytics(projectId);
+    useProjectAnalytics(projectId, analyticsParams, { placeholderData: keepPreviousData });
+
+  const handleVolumeRangeChange = useCallback(
+    (next: string) => {
+      update({ volumeRange: next === DEFAULT_VOLUME_RANGE ? null : next });
+    },
+    [update],
+  );
 
   const pageState = usePageState({
     permission: "build:view",
@@ -60,7 +88,7 @@ export function ReportsOverviewTab({ projectId }: ReportsOverviewTabProps) {
     <>
       <PageState
         resolution={pageState}
-        className={PM_FILL_PANEL}
+        className={CONTENT_FILL_PANEL}
         onRetry={handleRetry}
         loading={
           <>
@@ -74,7 +102,7 @@ export function ReportsOverviewTab({ projectId }: ReportsOverviewTabProps) {
         }
         empty={
           <EmptyState
-            className={PM_FILL_PANEL}
+            className={CONTENT_FILL_PANEL}
             illustrationPreset="chart"
             title="No analytics yet"
             description="Analytics will appear once your project has tickets."
@@ -92,7 +120,18 @@ export function ReportsOverviewTab({ projectId }: ReportsOverviewTabProps) {
             <ChartShell title="Priority Breakdown">
               <PriorityBreakdownChart data={priorityData} />
             </ChartShell>
-            <ChartShell title="Volume Over Time">
+            <ChartShell
+              title="Volume Over Time"
+              actions={
+                <BuildFilterSelect
+                  label="Volume range"
+                  value={volumeRange}
+                  onValueChange={handleVolumeRangeChange}
+                  options={VOLUME_RANGE_OPTIONS}
+                  className="h-8 md:min-w-36"
+                />
+              }
+            >
               <VolumeOverTimeChart data={volumeData} />
             </ChartShell>
             <ChartShell title="Completion by Assignee">

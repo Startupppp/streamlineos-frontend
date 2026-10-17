@@ -1,5 +1,6 @@
-﻿"use client";
+"use client";
 
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { checkInSchema, type CheckInFormValues } from "./goal-form-schema";
@@ -18,6 +19,13 @@ import {
   FormControl,
   FormMessage,
 } from "@/components/ui/form";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Input } from "@/components/ui/input";
@@ -30,17 +38,19 @@ import { TEXT_ONE_LINE } from "@/lib/text-overflow";
 
 interface CheckInDialogProps {
   goalId: number;
-  keyResult: KeyResult;
+  keyResults: KeyResult[];
   onClose: () => void;
 }
 
-export function CheckInDialog({ goalId, keyResult, onClose }: CheckInDialogProps) {
+export function CheckInDialog({ goalId, keyResults, onClose }: CheckInDialogProps) {
   const checkIn = useCheckIn(goalId);
+  const [selectedIndex, setSelectedIndex] = useState(0);
+  const keyResult = keyResults[selectedIndex] ?? keyResults[0];
 
   const form = useForm<CheckInFormValues>({
     resolver: zodResolver(checkInSchema),
     defaultValues: {
-      newValue: String(keyResult.currentValue),
+      newValue: String(keyResult?.currentValue ?? ""),
       note: "",
     },
   });
@@ -49,7 +59,17 @@ export function CheckInDialog({ goalId, keyResult, onClose }: CheckInDialogProps
     if (!open) onClose();
   }
 
+  function handleKrChange(value: string) {
+    const index = Number(value);
+    setSelectedIndex(index);
+    const kr = keyResults[index];
+    if (kr) {
+      form.reset({ newValue: String(kr.currentValue), note: "" });
+    }
+  }
+
   function handleSubmit(values: CheckInFormValues) {
+    if (!keyResult) return;
     checkIn.mutate(
       {
         keyResultId: keyResult.id,
@@ -66,6 +86,8 @@ export function CheckInDialog({ goalId, keyResult, onClose }: CheckInDialogProps
     );
   }
 
+  if (!keyResult) return null;
+
   return (
     <Dialog open onOpenChange={handleOpenChange}>
       <DialogContent className="max-w-md">
@@ -74,6 +96,23 @@ export function CheckInDialog({ goalId, keyResult, onClose }: CheckInDialogProps
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4 py-2">
+            {keyResults.length > 1 ? (
+              <div className="space-y-1.5">
+                <label className="text-sm font-medium">Key result</label>
+                <Select value={String(selectedIndex)} onValueChange={handleKrChange}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {keyResults.map((kr, i) => (
+                      <SelectItem key={kr.id} value={String(i)}>
+                        {kr.title}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            ) : null}
             <FormField
               control={form.control}
               name="newValue"

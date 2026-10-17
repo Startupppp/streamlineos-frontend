@@ -1,0 +1,157 @@
+import { render, screen, cleanup } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+import { KbConversationList } from "./kb-conversation-list";
+
+type IntersectionCallback = (entries: IntersectionObserverEntry[]) => void;
+
+const observers: {
+  callback: IntersectionCallback;
+  options: IntersectionObserverInit | undefined;
+  observed: Element[];
+  disconnected: boolean;
+}[] = [];
+
+class FakeIntersectionObserver {
+  constructor(callback: IntersectionCallback, options?: IntersectionObserverInit) {
+    this.entry = { callback, options, observed: [], disconnected: false };
+    observers.push(this.entry);
+  }
+  private entry: (typeof observers)[number];
+  observe(element: Element) {
+    this.entry.observed.push(element);
+  }
+  disconnect() {
+    this.entry.disconnected = true;
+  }
+  unobserve() {}
+}
+
+function intersect(index = 0) {
+  const observer = observers[index];
+  if (!observer) throw new Error("no observer was created");
+  observer.callback([{ isIntersecting: true } as IntersectionObserverEntry]);
+}
+
+jest.mock("@/features/wiki/lib/kb-icons", () => ({
+  KbMessageCircleIcon: ({ className }: { className?: string }) => <span className={className} />,
+  KbMoreHorizontalIcon: ({ className }: { className?: string }) => <span className={className} />,
+  KbPenLineIcon: ({ className }: { className?: string }) => <span className={className} />,
+  KbSearchIcon: ({ className }: { className?: string }) => <span className={className} />,
+  KbTrash2Icon: ({ className }: { className?: string }) => <span className={className} />,
+  KbXIcon: ({ className }: { className?: string }) => <span className={className} />,
+}));
+
+jest.mock("@/components/layout/sidebar/sidebar-animated-nav", () => ({
+  SidebarAnimatedNavIcon: ({ className }: { className?: string }) => <span className={className} />,
+  useAnimatedNavIconHover: () => ({
+    iconRef: { current: null },
+    animatedNavHoverHandlers: {},
+  }),
+}));
+
+const baseProps = {
+  conversations: [
+    {
+      id: 1,
+      title: "First conversation",
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    },
+  ],
+  isFetchingNextPage: false,
+  hasNextPage: false,
+  onLoadMore: jest.fn(),
+  onSelect: jest.fn(),
+  onNewChat: jest.fn(),
+  onRename: jest.fn(),
+  onDelete: jest.fn(),
+  onClose: jest.fn(),
+  search: "",
+  onSearchChange: jest.fn(),
+  activeConversationId: null,
+};
+
+beforeEach(() => {
+  observers.length = 0;
+  Reflect.set(globalThis, "IntersectionObserver", FakeIntersectionObserver);
+  jest.clearAllMocks();
+});
+
+afterEach(() => {
+  cleanup();
+  Reflect.deleteProperty(globalThis, "IntersectionObserver");
+});
+
+describe("KbConversationList search input layout — flex shrink (FE-182)", () => {
+  it("search input carries min-w-0 so it can shrink below its content width inside a flex row, because without it the input overflows the container when the sidebar is narrow", () => {
+    render(<KbConversationList {...baseProps} />);
+
+    const input = screen.getByPlaceholderText("Search conversations…");
+    expect(input.classList.contains("min-w-0")).toBe(true);
+  });
+});
+
+describe("KbConversationList row actions", () => {
+  it("keeps the menu visible on touch widths and reveals it on desktop keyboard focus", async () => {
+    const user = userEvent.setup();
+    render(<KbConversationList {...baseProps} />);
+
+    const menu = screen.getByRole("button", { name: "More options" });
+    expect(menu).toHaveClass("h-8", "w-8", "lg:opacity-0", "lg:group-focus-within:opacity-100", "lg:focus-visible:opacity-100");
+    expect(menu).not.toHaveClass("opacity-0");
+
+    await user.tab();
+    await user.tab();
+    await user.tab();
+    await user.tab();
+    await user.tab();
+    await user.tab();
+    expect(menu).toHaveFocus();
+
+    await user.keyboard("{Enter}");
+    expect(await screen.findByRole("menuitem", { name: "Rename" })).toBeInTheDocument();
+    expect(screen.getByRole("menuitem", { name: "Delete" })).toBeInTheDocument();
+  });
+});
+
+describe("KbConversationList sentinel", () => {
+  it("calls onLoadMore when the sentinel scrolls into view instead of requiring a button click", () => {
+    const onLoadMore = jest.fn();
+
+    render(
+      <KbConversationList
+        {...baseProps}
+        hasNextPage
+        onLoadMore={onLoadMore}
+      />,
+    );
+
+    expect(onLoadMore).not.toHaveBeenCalled();
+    intersect();
+    expect(onLoadMore).toHaveBeenCalledTimes(1);
+  });
+
+  it("exposes an accessible load-more control with the sentinel label", () => {
+    render(
+      <KbConversationList
+        {...baseProps}
+        hasNextPage
+        onLoadMore={jest.fn()}
+      />,
+    );
+
+    expect(screen.getByRole("button", { name: "Load more conversations" })).toBeInTheDocument();
+  });
+
+  it("does not set up a sentinel observer when there is no next page", () => {
+    render(
+      <KbConversationList
+        {...baseProps}
+        hasNextPage={false}
+        onLoadMore={jest.fn()}
+      />,
+    );
+
+    expect(observers).toHaveLength(0);
+  });
+});

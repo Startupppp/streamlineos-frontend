@@ -40,19 +40,46 @@ describe("Home employee navigation", () => {
 
     expect(homeRoutes.map((route) => route.href)).toContain("/dashboard");
     expect(homeRoutes.map((route) => route.href)).toContain("/me/documents");
-    expect(homeRoutes.map((route) => route.href)).toContain("/me/onboarding");
+    expect(homeRoutes.map((route) => route.href)).not.toContain("/me/onboarding");
+    expect(homeRoutes.map((route) => route.href)).not.toContain("/me/time-off");
     expect(homeRoutes.map((route) => route.href)).not.toContain("/directory/workers");
     expect(knowledgeRoutes.map((route) => route.href)).toEqual(
       expect.arrayContaining(["/knowledge/chat", "/knowledge/wiki"]),
     );
   });
 
-  it("shows permissioned self-service in Home regardless of module enablement", () => {
+  it("hides HR and payroll self-service in Home when those modules are off", () => {
     const groups = getNavGroupsForProduct(
       "home",
       "MEMBER",
       scopesOf(EMPLOYEE_PERMISSIONS),
       ["build"],
+    );
+    const routes = groups.flatMap((group) => flattenNavRoutes(group.routes));
+    const hrefs = routes.map((route) => route.href);
+
+    expect(hrefs).toEqual(
+      expect.arrayContaining([
+        "/me/documents",
+        "/dashboard",
+      ]),
+    );
+    expect(hrefs).not.toContain("/me/time-off");
+    expect(hrefs).not.toContain("/me/attendance");
+    expect(hrefs).not.toContain("/me/expenses");
+    expect(hrefs).not.toContain("/me/pay");
+    expect(hrefs).not.toContain("/me/onboarding");
+    expect(hrefs).not.toContain("/me/recruitment");
+    expect(hrefs).not.toContain("/hr/announcements");
+    expect(routes.find((route) => route.href === "/me/documents")?.module).toBeUndefined();
+  });
+
+  it("shows HR and payroll self-service in Home when those modules are enabled", () => {
+    const groups = getNavGroupsForProduct(
+      "home",
+      "MEMBER",
+      scopesOf(EMPLOYEE_PERMISSIONS),
+      ["build", "hr", "payroll"],
     );
     const routes = groups.flatMap((group) => flattenNavRoutes(group.routes));
     const hrefs = routes.map((route) => route.href);
@@ -68,10 +95,9 @@ describe("Home employee navigation", () => {
         "/me/recruitment",
       ]),
     );
-    expect(hrefs).not.toContain("/hr/recruitment/interviews");
+    expect(hrefs).not.toContain("/recruitment/interviews");
     expect(hrefs).not.toContain("/build/my-work");
     expect(hrefs).not.toContain("/build");
-    expect(routes.find((route) => route.href === "/me/documents")?.module).toBeUndefined();
   });
 
   it("keeps employee self-service routes in the Home product", () => {
@@ -85,6 +111,15 @@ describe("Home employee navigation", () => {
     expect(getProductFromPathname("/directory")).toBe("home");
     expect(getProductFromPathname("/directory/person-1")).toBe("home");
     expect(getProductFromPathname("/directory/workers")).toBe("home");
+  });
+});
+
+describe("Build route product selection", () => {
+  it("keeps Build entry and specialist project paths in Build without matching lookalikes", () => {
+    expect(getProductFromPathname("/build")).toBe("build");
+    expect(getProductFromPathname("/build/projects")).toBe("build");
+    expect(getProductFromPathname("/build/42/chat")).toBe("build");
+    expect(getProductFromPathname("/build-lookalike")).toBe("home");
   });
 });
 describe("Administration information architecture", () => {

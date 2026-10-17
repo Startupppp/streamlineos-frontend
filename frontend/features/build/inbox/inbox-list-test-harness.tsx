@@ -18,7 +18,7 @@ export function makeNotifications(count: number): Notification[] {
     sourceModule: "build",
     eventKey: "build.ticket.mention",
     title: `notification-${i + 1}`,
-    message: null,
+    message: "",
     link: null,
     isRead: false,
     pinned: false,
@@ -36,13 +36,13 @@ export function buildPages(
 ) {
   let issued = 0;
   const pages = counts.map((count) => {
-    const page = makeNotifications(count).map((n) => ({
+    const data = makeNotifications(count).map((n) => ({
       ...n,
       id: n.id + issued,
       title: `notification-${n.id + issued}`,
     }));
     issued += count;
-    return page;
+    return { data, hasMore: false, nextCursor: null };
   });
   return {
     data: { pages, pageParams: [] },

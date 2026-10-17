@@ -14,7 +14,7 @@ import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Combobox } from "@/components/ui/combobox";
 import type { ComboboxOption } from "@/components/ui/combobox";
-import { useFeedbackPosts, useMergeFeedbackPost } from "@/hooks/api/build/roadmap";
+import { useFeedbackPosts, useMergeFeedbackPost } from "@/hooks/api/build/feedback-posts";
 import type { FeedbackPost } from "@/types/projects";
 import { getErrorMessage } from "@/lib/get-error-message";
 

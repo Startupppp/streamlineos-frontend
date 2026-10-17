@@ -7,9 +7,10 @@ import { useQueryParamOpen } from "@/hooks/common/use-query-param-open";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import { MailIcon } from "@animateicons/react/lucide";
 import { toast } from "sonner";
+import { describeInviteFailure } from "@/features/directory/users/invite-error-message";
 
 import { PageWrapper } from "@/components/ui/page-wrapper";
-import { usePermissionGate, useCanManageOrganizationMembership } from "@/hooks/api/access";
+import { useAccess, usePermissionGate, useCanManageOrganizationMembership } from "@/hooks/api/access";
 import { NoPermissionState } from "@/components/shared/no-permission-state";
 import { SearchInput } from "@/components/ui/search-input";
 import {
@@ -22,6 +23,11 @@ import {
 import { FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/shared/error-state";
+import { StalledReadNotice } from "@/components/shared/stalled-read-notice";
+import {
+  PANEL_STALLED_AFTER_MS,
+  useStalledAfter,
+} from "@/hooks/common/use-stalled-after";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { DataTable } from "@/components/ui/data-table";
 import { useCursorPager } from "@/components/ui/table-pagination";
@@ -64,8 +70,16 @@ export function UserInvitationsPanel() {
     setOpen: openInvite,
   } = useQueryParamOpen("create");
   const [cancellationInvitationId, setCancellationInvitationId] = useState<string | null>(null);
+  /**
+   * BUG-HRMS-004. Copying a join link REISSUES it, which kills the link already in
+   * the recipient's inbox. That was a tooltip on an icon button: one click, no
+   * confirmation, and the invitee's emailed link stopped working with nobody told.
+   * Asked before the reissue, not reported after it.
+   */
+  const [joinLinkInvitationId, setJoinLinkInvitationId] = useState<string | null>(null);
   const canManageMembership = useCanManageOrganizationMembership();
   const invitationsGate = usePermissionGate("settings:organization:manage");
+  const { refetch: refetchAccess } = useAccess();
   const canViewInvitations = invitationsGate.allowed;
   const canInvite = canManageMembership;
   const canCancelInvitation = canManageMembership;
@@ -101,8 +115,18 @@ export function UserInvitationsPanel() {
     variables: copyingJoinLinkInvitationId,
   } = useReissueInvitationJoinLink();
 
+  const handleCopyJoinLinkRequest = useCallback(
+    (invitationId: string) => setJoinLinkInvitationId(invitationId),
+    [],
+  );
+
+  const handleJoinLinkDialogChange = useCallback((open: boolean) => {
+    if (!open) setJoinLinkInvitationId(null);
+  }, []);
+
   const handleCopyJoinLink = useCallback(
     (invitationId: string) => {
+      setJoinLinkInvitationId(null);
       void reissueJoinLink(invitationId)
         .then(async (link) => {
           try {
@@ -121,6 +145,10 @@ export function UserInvitationsPanel() {
     },
     [reissueJoinLink],
   );
+  const handleJoinLinkConfirm = useCallback(() => {
+    if (joinLinkInvitationId !== null) handleCopyJoinLink(joinLinkInvitationId);
+  }, [joinLinkInvitationId, handleCopyJoinLink]);
+
   const { mutate: cancel, isPending: isCancelling } = useCancelInvitation();
   const {
     mutate: changeRole,
@@ -168,16 +196,32 @@ export function UserInvitationsPanel() {
   const handleResend = useCallback(
     (invitationId: string, kind: "resend" | "reinvite" = "resend") =>
       resend(invitationId, {
-        onSuccess: () =>
-          toast.success(kind === "reinvite" ? "Invitation re-sent" : "Invitation resent"),
-        onError: (e) => {
-          const message = getErrorMessage(e);
-          toast.error(
-            message.includes("not found")
-              ? "This invitation can no longer be resent."
-              : message,
-          );
+        onSuccess: (result) => {
+          if (result.deliveryQueued) {
+            toast.success(
+              kind === "reinvite"
+                ? "Re-invitation link issued; email queued"
+                : "Invitation link renewed; email queued",
+              { description: "Delivery is not yet confirmed. Check status before assuming it arrived." },
+            );
+            return;
+          }
+          const reason = result.deliveryFailureReason?.toLowerCase() ?? "";
+          const description = reason.includes("suppress")
+            ? "This address is suppressed after a bounce or unsubscribe. Review the suppression before another email attempt."
+            : reason.includes("provider")
+              ? "No email provider is configured. Configure delivery before resending, or review the join link option."
+              : "Check email delivery settings before resending, or review the join link option.";
+          toast.warning("Invitation link renewed, but email was not queued", {
+            description,
+            action: {
+              label: "Review link option",
+              onClick: () => setJoinLinkInvitationId(invitationId),
+            },
+          });
         },
+        onError: (e) =>
+          toast.error(describeInviteFailure("resend", getErrorMessage(e))),
       }),
     [resend],
   );
@@ -193,7 +237,7 @@ export function UserInvitationsPanel() {
         { invitationId, role },
         {
           onSuccess: () => toast.success("Invitation role updated"),
-          onError: (err) => toast.error(getErrorMessage(err)),
+          onError: (err) => toast.error(describeInviteFailure("invite", getErrorMessage(err))),
         },
       );
     },
@@ -204,16 +248,11 @@ export function UserInvitationsPanel() {
     if (!cancellationInvitationId) return;
     cancel(cancellationInvitationId, {
       onSuccess: () => {
-        toast.success("Invitation cancelled");
+        toast.success("Invitation revoked");
         setCancellationInvitationId(null);
       },
       onError: (e) => {
-        const message = getErrorMessage(e);
-        toast.error(
-          message.includes("not found") || message.includes("already accepted")
-            ? "This invitation can no longer be cancelled."
-            : message,
-        );
+        toast.error(describeInviteFailure("cancel", getErrorMessage(e)));
         setCancellationInvitationId(null);
       },
     });
@@ -227,9 +266,17 @@ export function UserInvitationsPanel() {
     (v: boolean) => setInviteOpen(v),
     [setInviteOpen],
   );
+  const invitationsStalled = useStalledAfter(
+    isLoading || invitationsGate.pending,
+    PANEL_STALLED_AFTER_MS,
+  );
+
   const handleRetry = useCallback(() => {
     void refetch();
   }, [refetch]);
+  const handleRetryAccess = useCallback(() => {
+    void refetchAccess();
+  }, [refetchAccess]);
   const handleClearFilters = useCallback(() => {
     setLocalSearch("");
     updateParams({ q: null, status: null });
@@ -266,7 +313,7 @@ export function UserInvitationsPanel() {
         isCancelling,
         onRoleChange: handleRoleChange,
         onResend: handleResend,
-        onCopyJoinLink: handleCopyJoinLink,
+        onCopyJoinLink: handleCopyJoinLinkRequest,
         isCopyingJoinLink,
         copyingJoinLinkInvitationId,
         onCancelRequest: handleCancelRequest,
@@ -277,7 +324,7 @@ export function UserInvitationsPanel() {
       changingRoleVariables?.invitationId,
       copyingJoinLinkInvitationId,
       handleCancelRequest,
-      handleCopyJoinLink,
+      handleCopyJoinLinkRequest,
       handleResend,
       handleRoleChange,
       isCopyingJoinLink,
@@ -291,19 +338,16 @@ export function UserInvitationsPanel() {
   const emptyState = (
     <EmptyState
       illustrationPreset="mail"
-      title={hasFilters ? "No results" : "No invitations yet"}
+      title="No invitations yet"
+      filtersActive={hasFilters}
+      filteredTitle="No results"
+      onClearFilters={handleClearFilters}
       description={
         hasFilters
           ? "No invitations match your filters."
           : "Invite your first team member to get started."
       }
-      action={
-        hasFilters
-          ? { label: "Clear filters", onClick: handleClearFilters }
-          : canInvite
-            ? { label: "Invite User", onClick: handleOpenInvite }
-            : undefined
-      }
+      action={canInvite ? { label: "Invite User", onClick: handleOpenInvite } : undefined}
       className="border-0 bg-transparent"
     />
   );
@@ -330,6 +374,7 @@ export function UserInvitationsPanel() {
         filters={
           <PageTabsToolbar
             collapseBelow="lg"
+            filtersAlwaysVisible
             tabs={<PeopleSectionTabs />}
             search={
               <SearchInput
@@ -366,6 +411,19 @@ export function UserInvitationsPanel() {
               description="You do not have permission to view this organization's invitations."
               className="flex-1"
             />
+          ) : invitationsGate.unavailable ? (
+            /*
+             * SETTINGS-004. The list is gated on /me/access, so a failed access
+             * read left the table in `isLoading` with nothing to retry — a tab
+             * that says "Loading results…" forever while the header above it
+             * counts pending invites. An access read that failed is a failure,
+             * not a wait, and says so.
+             */
+            <ErrorState
+              title="Failed to load invitations"
+              description="Your access could not be checked, so invitations cannot be listed."
+              onRetry={handleRetryAccess}
+            />
           ) : isError ? (
             <ErrorState
               title="Failed to load invitations"
@@ -373,6 +431,20 @@ export function UserInvitationsPanel() {
               onRetry={handleRetry}
             />
           ) : (
+            <>
+              {invitationsStalled && (
+                /*
+                 * CHAT-F-002. The two error branches above are right and were out
+                 * of reach: a read against an unreachable API holds `isLoading` for
+                 * up to ~61s, so the table showed its loading rows under a header
+                 * counting pending invites and nothing said why.
+                 */
+                <StalledReadNotice
+                  className="mb-3"
+                  subject="invitations"
+                  onRetry={handleRetry}
+                />
+              )}
             <DataTable
               className="flex-1 min-h-0"
               data={rows}
@@ -391,6 +463,7 @@ export function UserInvitationsPanel() {
                 pageSizeOptions: STANDARD_PAGE_SIZE_OPTIONS,
               }}
             />
+            </>
           )}
         </div>
       </PageWrapper>
@@ -398,6 +471,15 @@ export function UserInvitationsPanel() {
       {canManageMembership ? (
         <UserInviteDialog open={inviteOpen} onOpenChange={handleInviteChange} />
       ) : null}
+      <ConfirmDialog
+        open={joinLinkInvitationId !== null}
+        onOpenChange={handleJoinLinkDialogChange}
+        title="Replace the invitation link?"
+        description="Copying a link issues a new one. The link already emailed to this person will stop working, so send them the new one. Their existing link keeps working if you cancel here."
+        confirmLabel="Copy a new link"
+        isPending={isCopyingJoinLink}
+        onConfirm={handleJoinLinkConfirm}
+      />
       <ConfirmDialog
         open={cancellationInvitationId !== null}
         onOpenChange={handleCancelDialogChange}

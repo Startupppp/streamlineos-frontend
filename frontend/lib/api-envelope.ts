@@ -36,6 +36,10 @@ export function isApiError(error: unknown): error is ApiError {
   return error instanceof ApiError;
 }
 
+export function isWriteConflict(error: unknown): error is ApiError {
+  return isApiError(error) && error.status === 409 && error.code !== "PROJECT_LOCKED";
+}
+
 export function getApiErrorCode(error: unknown): string | undefined {
   return isApiError(error) ? error.code : undefined;
 }
@@ -293,7 +297,19 @@ export async function parseApiResponse<T>(
   if (!res.ok) throw await apiErrorFromResponse(res, resource, requestId);
   if (res.status === 204)
     return applyContract<T>(undefined, contract, resource, res.status, requestId);
-  const body = await res.json();
+  let body: unknown;
+  try {
+    body = await res.json();
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Invalid JSON";
+    throw new ApiError(
+      `${message} (${resource})`,
+      res.status,
+      "INVALID_JSON",
+      undefined,
+      resource,
+    );
+  }
   return applyContract<T>(
     unwrapEnvelope(body),
     contract,

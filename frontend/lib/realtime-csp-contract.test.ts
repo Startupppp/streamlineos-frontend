@@ -155,6 +155,13 @@ describe("every connection the Ably client opens is permitted", () => {
   });
 });
 
+describe("Companion live voice", () => {
+  it.each(POLICIES)("%s permits the WebRTC SDP exchange with OpenAI", (_name, csp) => {
+    expect(connectSrcPermits(csp, "https://api.openai.com/v1/realtime/calls", PAGE_ORIGIN)).toBe(true);
+    expect(connectSrcPermits(csp, "https://unrelated.example/v1/realtime/calls", PAGE_ORIGIN)).toBe(false);
+  });
+});
+
 describe("the Ably sources are what permits those connections", () => {
   it.each(POLICIES)("%s refuses every Ably endpoint once they are struck out", (_name, csp) => {
     const atHead = withoutAblySources(csp);

@@ -1,14 +1,15 @@
 ﻿"use client";
 
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
 import { useCan } from "@/hooks/api/access";
 import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
 import { accountingAndSupportQueryKeys } from "@/lib/query-keys/accounting-and-support";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import { NO_CURSOR_YET } from "@/hooks/api/cursor-page-param";
 
-const whiteboardListContract = lazyContract(() =>
-  import("@/hooks/api/build/workspace-schema").then((m) => m.whiteboardListContract),
+const whiteboardResponseContract = lazyContract(() =>
+  import("@/hooks/api/build/workspace-schema").then((m) => m.whiteboardResponseContract),
 );
 const whiteboardDetailContract = lazyContract(() =>
   import("@/hooks/api/build/workspace-schema").then((m) => m.whiteboardDetailContract),
@@ -18,9 +19,6 @@ const whiteboardSharingUpdateContract = lazyContract(() =>
 );
 const whiteboardSharesContract = lazyContract(() =>
   import("@/hooks/api/build/workspace-schema").then((m) => m.whiteboardSharesContract),
-);
-const successContract = lazyContract(() =>
-  import("@/hooks/api/build/workspace-schema").then((m) => m.successContract),
 );
 const noContentLazy = lazyContract(() =>
   import("@/hooks/api/cursor-page-schema").then((m) => m.noContentContract),
@@ -48,16 +46,16 @@ export interface WhiteboardSummary {
   updatedAt: string | null;
 }
 
-export interface WhiteboardShareEntry {
+interface WhiteboardShareEntry {
   userId: string;
   role: WhiteboardShareRole;
   name: string | null;
   email: string | null;
 }
 
-export interface WhiteboardSharing {
+interface WhiteboardSharing {
   visibility: WhiteboardVisibility;
-  publicAccess: WhiteboardShareRole;
+  publicAccess: WhiteboardShareRole | null;
   shareToken: string | null;
   linkExpiresAt: string | null;
   allowExport: boolean;
@@ -65,16 +63,16 @@ export interface WhiteboardSharing {
 
 export interface WhiteboardDetail {
   id: number;
-  projectId: number;
+  projectId: number | null;
   name: string;
-  data: ExcalidrawSceneData;
+  data: unknown;
   visibility: WhiteboardVisibility;
   access: WhiteboardAccess;
   sharing: WhiteboardSharing | null;
   shares: WhiteboardShareEntry[] | null;
   createdBy: string | null;
-  createdAt: string | null;
-  updatedAt: string | null;
+  createdAt: string;
+  updatedAt: string;
 }
 
 interface UpdateWhiteboardInput {
@@ -83,7 +81,7 @@ interface UpdateWhiteboardInput {
   data?: ExcalidrawSceneData;
 }
 
-export interface UpdateWhiteboardSharingInput {
+interface UpdateWhiteboardSharingInput {
   whiteboardId: number;
   visibility?: WhiteboardVisibility;
   publicAccess?: WhiteboardShareRole;
@@ -91,16 +89,32 @@ export interface UpdateWhiteboardSharingInput {
   allowExport?: boolean;
 }
 
-export interface SetWhiteboardSharesInput {
+interface SetWhiteboardSharesInput {
   whiteboardId: number;
   shares: Array<{ userId: string; role: WhiteboardShareRole }>;
 }
 
 export function useWhiteboards(projectId: number) {
   const canView = useCan("build:view");
-  return useQuery({
+  return useInfiniteQuery({
     queryKey: accountingAndSupportQueryKeys.whiteboards.list(projectId),
-    queryFn: ({ signal }) => apiClient.get<WhiteboardSummary[]>(`/build/${projectId}/whiteboards`, undefined, signal, whiteboardListContract),
+    queryFn: async ({ pageParam, signal }) => {
+      const params: Record<string, string> = {};
+      if (pageParam !== undefined) params["cursor"] = pageParam;
+      const response = await apiClient.get<
+        WhiteboardSummary[] | { data: WhiteboardSummary[]; pagination: { limit: number; hasMore: boolean; nextCursor: string | null } }
+      >(
+        `/build/${projectId}/whiteboards`,
+        Object.keys(params).length > 0 ? params : undefined,
+        signal,
+        whiteboardResponseContract,
+      );
+      return Array.isArray(response)
+        ? { data: response, pagination: { limit: response.length || 100, hasMore: false, nextCursor: null } }
+        : response;
+    },
+    initialPageParam: NO_CURSOR_YET,
+    getNextPageParam: (lastPage) => lastPage.pagination.nextCursor ?? undefined,
     enabled: canView && !!projectId,
     staleTime: 30_000,
   });

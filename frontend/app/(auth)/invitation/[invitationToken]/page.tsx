@@ -6,49 +6,61 @@ import { useForm } from "react-hook-form";
 import { useSession } from "next-auth/react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/button";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import { LoadingButton } from "@/components/ui/loading-button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 import {
   signInWithMagicToken,
   useAcceptInvitation,
+  useClaimInvitation,
   useDeclineInvitation,
+  useRequestInvitationOtp,
   useValidateInvitation,
 } from "@/hooks/common/auth-hooks";
 import { useConfirmedSessionClaimsRefresh } from "@/hooks/common/use-confirmed-session-claims-refresh";
-import { motion } from "framer-motion";
-import { useMotionVariants } from "@/lib/motion-variants";
-import { ArrowRight } from "lucide-react";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { isApiError, getApiErrorCode } from "@/lib/api-envelope";
 import {
   InvitationCard,
   InvitationHero,
-  InvitationDetails,
-  DeclineInvitationDialog,
   CardContent,
 } from "@/components/auth/invitation-card";
 import {
   invitationAcceptSchema,
+  invitationOtpSchema,
   type InvitationAcceptFormValues,
+  type InvitationOtpFormValues,
   canonicalEmail,
 } from "./invitation-accept-schema";
+
+import {
+  InvitationAlreadyMemberState,
+  InvitationSuspendedState,
+  InvitationAtCapacityState,
+} from "@/features/auth/components/invitation-acceptance-error";
+import { persistPartialGrants } from "@/features/auth/components/post-invite-transition";
+import { InvitationExistingUserStep } from "@/features/auth/components/invitation-existing-user-step";
+import { InvitationOtpStep } from "@/features/auth/components/invitation-otp-step";
+import { InvitationNewUserStep } from "@/features/auth/components/invitation-new-user-step";
 
 const INVITATION_SIGN_IN_UNCONFIRMED_MESSAGE =
   "We could not confirm the sign-in for the invited account. Please sign in with that email to finish joining.";
 const INVITATION_SIGN_IN_FAILED_MESSAGE =
   "That sign-in link is no longer valid. Please sign in with the invited email address.";
 
+type AcceptanceBlocker = "already-member" | "suspended" | "at-capacity";
+
+function classifyAcceptanceError(error: unknown): AcceptanceBlocker | null {
+  if (!isApiError(error)) return null;
+  const code = getApiErrorCode(error);
+  if (code === "ALREADY_MEMBER" || code === "MEMBERSHIP_ARCHIVED")
+    return "already-member";
+  if (code === "ACCOUNT_SUSPENDED") return "suspended";
+  if (code === "ORG_AT_CAPACITY") return "at-capacity";
+  if (error.status === 409) return "already-member";
+  return null;
+}
+
 export default function InvitationPage() {
-  const { staggerContainer, fadeUp } = useMotionVariants();
   const router = useRouter();
   const params = useParams();
   const invitationToken =
@@ -56,7 +68,7 @@ export default function InvitationPage() {
   const { data: session } = useSession();
   const beginClaimsRefresh = useConfirmedSessionClaimsRefresh();
 
-  const form = useForm<InvitationAcceptFormValues>({
+  const nameForm = useForm<InvitationAcceptFormValues>({
     resolver: zodResolver(invitationAcceptSchema),
     defaultValues: {
       firstName: "",
@@ -64,8 +76,18 @@ export default function InvitationPage() {
     },
   });
 
+  const otpForm = useForm<InvitationOtpFormValues>({
+    resolver: zodResolver(invitationOtpSchema),
+    defaultValues: { emailOtp: "" },
+  });
+
   const [declineOpen, setDeclineOpen] = useState(false);
   const [isCompletingAcceptance, setIsCompletingAcceptance] = useState(false);
+  const [otpStep, setOtpStep] = useState(false);
+  const [pendingNameValues, setPendingNameValues] =
+    useState<InvitationAcceptFormValues | null>(null);
+  const [acceptanceBlocker, setAcceptanceBlocker] =
+    useState<AcceptanceBlocker | null>(null);
   const acceptingRef = useRef(false);
 
   const {
@@ -75,7 +97,9 @@ export default function InvitationPage() {
   } = useValidateInvitation(isCompletingAcceptance ? "" : invitationToken);
 
   const acceptInvitation = useAcceptInvitation();
+  const claimInvitation = useClaimInvitation();
   const declineInvitation = useDeclineInvitation();
+  const requestInvitationOtp = useRequestInvitationOtp();
 
   const openDecline = useCallback(() => setDeclineOpen(true), []);
 
@@ -116,93 +140,209 @@ export default function InvitationPage() {
     [router],
   );
 
-  const submitNewUser = useCallback(
+  const submitNameStep = useCallback(
     (values: InvitationAcceptFormValues) => {
+      if (!invitationToken) {
+        toast.error("Invalid invitation");
+        return;
+      }
+      setPendingNameValues(values);
+      requestInvitationOtp.mutate(
+        { token: invitationToken },
+        {
+          onSuccess: () => {
+            setOtpStep(true);
+          },
+          onError: (error) => {
+            toast.error(getErrorMessage(error));
+          },
+        },
+      );
+    },
+    [invitationToken, requestInvitationOtp],
+  );
+
+  const handleNameFormSubmit = useCallback(
+    (event: FormEvent<HTMLFormElement>) => {
+      event.preventDefault();
+      void nameForm.handleSubmit(submitNameStep)(event);
+    },
+    [nameForm, submitNameStep],
+  );
+
+  const completeExistingUserAccept = useCallback(
+    (emailOtp: string) => {
+      if (acceptingRef.current) return;
+      if (!invitationToken) return;
+      acceptingRef.current = true;
+      const claimsRun = beginClaimsRefresh();
+      acceptInvitation.mutate(
+        { token: invitationToken, emailOtp },
+        {
+          onSuccess: async (data) => {
+            setIsCompletingAcceptance(true);
+            toast.success(
+              `Joined ${invitation?.organizationName ?? "organization"}!`,
+            );
+            if (data?.autoLoginToken) {
+              persistPartialGrants(data.skippedGrants ?? []);
+              await autoLoginWithToken(data.autoLoginToken, "/post-invite");
+              return;
+            }
+            const confirmed = await claimsRun.confirmOrWarn();
+            if (!confirmed) {
+              router.push("/signin");
+              return;
+            }
+            persistPartialGrants(data.skippedGrants ?? []);
+            router.push("/post-invite");
+          },
+          onError: (error) => {
+            acceptingRef.current = false;
+            const blocker = classifyAcceptanceError(error);
+            if (blocker) {
+              setAcceptanceBlocker(blocker);
+            } else {
+              toast.error(getErrorMessage(error));
+            }
+          },
+        },
+      );
+    },
+    [
+      invitationToken,
+      router,
+      acceptInvitation,
+      invitation,
+      beginClaimsRefresh,
+      autoLoginWithToken,
+    ],
+  );
+
+  const submitOtpStep = useCallback(
+    (values: InvitationOtpFormValues) => {
       if (acceptingRef.current) return;
       if (!invitationToken || !invitation) {
         toast.error("Invalid invitation");
+        return;
+      }
+      // An existing account joins the org it was invited to; a new one is created
+      // first. Both verify the same code, so the two branches meet here.
+      if (invitation.userExists) {
+        completeExistingUserAccept(values.emailOtp);
         return;
       }
       acceptingRef.current = true;
       acceptInvitation.mutate(
         {
           token: invitationToken,
-          firstName: values.firstName || undefined,
-          lastName: values.lastName || undefined,
+          firstName: pendingNameValues?.firstName || undefined,
+          lastName: pendingNameValues?.lastName || undefined,
+          emailOtp: values.emailOtp,
         },
         {
           onSuccess: async (data) => {
             setIsCompletingAcceptance(true);
             toast.success("Account created! Signing you in...");
             if (data?.autoLoginToken) {
-              await autoLoginWithToken(
-                data.autoLoginToken,
-                "/employee-onboarding",
-              );
+              persistPartialGrants(data.skippedGrants ?? []);
+              await autoLoginWithToken(data.autoLoginToken, "/post-invite");
             } else {
               router.push("/signin");
             }
           },
           onError: (error) => {
             acceptingRef.current = false;
-            toast.error(getErrorMessage(error));
+            const blocker = classifyAcceptanceError(error);
+            if (blocker) {
+              setAcceptanceBlocker(blocker);
+            } else {
+              toast.error(getErrorMessage(error));
+            }
           },
         },
       );
     },
-    [invitationToken, invitation, acceptInvitation, router, autoLoginWithToken],
+    [
+      invitationToken,
+      invitation,
+      acceptInvitation,
+      pendingNameValues,
+      router,
+      autoLoginWithToken,
+      completeExistingUserAccept,
+    ],
   );
 
-  const handleNewUserSubmit = useCallback(
+  const handleOtpFormSubmit = useCallback(
     (event: FormEvent<HTMLFormElement>) => {
       event.preventDefault();
-      void form.handleSubmit(submitNewUser)(event);
+      void otpForm.handleSubmit(submitOtpStep)(event);
     },
-    [form, submitNewUser],
+    [otpForm, submitOtpStep],
   );
+
+  const handleResendOtp = useCallback(() => {
+    if (!invitationToken) return;
+    requestInvitationOtp.mutate(
+      { token: invitationToken },
+      {
+        onSuccess: () => {
+          otpForm.reset({ emailOtp: "" });
+          toast.success("A new verification code was sent.");
+        },
+        onError: (error) => {
+          toast.error(getErrorMessage(error));
+        },
+      },
+    );
+  }, [invitationToken, requestInvitationOtp, otpForm]);
 
   const handleExistingUserAccept = useCallback(() => {
     if (acceptingRef.current) return;
-    if (!invitationToken) return;
-    if (!session) {
-      router.push(`/signin?callbackUrl=/invitation/${invitationToken}`);
-      return;
-    }
-    acceptingRef.current = true;
-    const claimsRun = beginClaimsRefresh();
-    acceptInvitation.mutate(
-      { token: invitationToken },
-      {
+    const sessionEmail = session?.user?.email;
+    const isSignedInAsInvited =
+      !!session &&
+      !!invitation &&
+      sessionEmail !== undefined &&
+      sessionEmail !== null &&
+      canonicalEmail(sessionEmail) === canonicalEmail(invitation.email);
+    if (isSignedInAsInvited) {
+      acceptingRef.current = true;
+      claimInvitation.mutate(invitation.id, {
         onSuccess: async (data) => {
           setIsCompletingAcceptance(true);
-          toast.success(
-            `Joined ${invitation?.organizationName ?? "organization"}!`,
-          );
-          if (data?.autoLoginToken) {
-            await autoLoginWithToken(data.autoLoginToken, "/dashboard");
-            return;
-          }
-          const confirmed = await claimsRun.confirmOrWarn();
-          if (!confirmed) {
-            acceptingRef.current = false;
-            setIsCompletingAcceptance(false);
-            return;
-          }
-          router.push("/dashboard");
+          toast.success(`Joined ${invitation.organizationName}!`);
+          persistPartialGrants(data.skippedGrants ?? []);
+          await autoLoginWithToken(data.autoLoginToken, "/post-invite");
         },
         onError: (error) => {
           acceptingRef.current = false;
+          const blocker = classifyAcceptanceError(error);
+          if (blocker) setAcceptanceBlocker(blocker);
+          else toast.error(getErrorMessage(error));
+        },
+      });
+      return;
+    }
+    if (!invitationToken) return;
+    requestInvitationOtp.mutate(
+      { token: invitationToken },
+      {
+        onSuccess: () => {
+          setOtpStep(true);
+        },
+        onError: (error) => {
           toast.error(getErrorMessage(error));
         },
       },
     );
   }, [
     invitationToken,
+    requestInvitationOtp,
     session,
-    router,
-    acceptInvitation,
     invitation,
-    beginClaimsRefresh,
+    claimInvitation,
     autoLoginWithToken,
   ]);
 
@@ -225,19 +365,40 @@ export default function InvitationPage() {
     );
   }
 
+  if (acceptanceBlocker === "already-member") {
+    return <InvitationAlreadyMemberState onGoToSignIn={goToSignIn} />;
+  }
+
+  if (acceptanceBlocker === "suspended") {
+    return <InvitationSuspendedState onGoToSignIn={goToSignIn} />;
+  }
+
+  if (acceptanceBlocker === "at-capacity") {
+    return <InvitationAtCapacityState onGoToSignIn={goToSignIn} />;
+  }
+
   if (invitationError || !invitation) {
+    const isExpired =
+      invitationError !== null &&
+      isApiError(invitationError) &&
+      invitationError.status === 404;
     return (
       <div className="w-full max-w-[480px]">
         <InvitationCard>
           <InvitationHero
-            title="Invitation unavailable"
-            description={getErrorMessage(invitationError)}
+            title={isExpired ? "Invitation link unavailable" : "Invitation unavailable"}
+            description={
+              isExpired
+                ? "This invitation link has expired, was already used, or was replaced by a newer one."
+                : getErrorMessage(invitationError)
+            }
             verified={false}
           />
           <CardContent className="px-6 py-5">
             <p className="mb-4 text-center text-sm text-muted-foreground">
-              Ask an organization administrator to send a new invitation if this
-              link has expired or was replaced.
+              {isExpired
+                ? "Check your inbox for a newer invitation email, or ask an administrator to resend it."
+                : "Ask an organization administrator to send a new invitation."}
             </p>
             <Button className="w-full" onClick={goToSignIn}>
               Go to sign in
@@ -248,185 +409,59 @@ export default function InvitationPage() {
     );
   }
 
-  if (invitation.userExists) {
+  if (invitation.userExists && !otpStep) {
     const sessionEmail = session?.user?.email;
     const signedInAsOtherAccount =
       sessionEmail !== undefined &&
       sessionEmail !== null &&
       canonicalEmail(sessionEmail) !== canonicalEmail(invitation.email);
-
     return (
-      <motion.div
-        className="w-full max-w-[480px]"
-        variants={staggerContainer}
-        initial="hidden"
-        animate="visible"
-      >
-        <motion.div variants={fadeUp}>
-          <InvitationCard>
-            <InvitationHero
-              title="You're invited"
-              description={`Join ${invitation.organizationName} with your existing StreamlineOS account.`}
-            />
-            <CardContent className="space-y-5 px-6 pb-6 pt-5">
-              <InvitationDetails
-                organizationName={invitation.organizationName}
-                role={invitation.role}
-                invitedEmail={invitation.email}
-                accountEmail={session?.user?.email}
-              />
-              {signedInAsOtherAccount && (
-                <p className="rounded-lg border border-status-warning-rule bg-status-warning-surface px-3 py-2 text-xs text-status-warning-ink">
-                  You are currently signed in as{" "}
-                  <span className="font-medium">{sessionEmail}</span>. Accepting
-                  will sign you in as the invited account instead.
-                </p>
-              )}
-              <div className="space-y-2">
-                <LoadingButton
-                  className="h-11 w-full gap-2 font-medium"
-                  onClick={handleExistingUserAccept}
-                  isPending={acceptInvitation.isPending}
-                >
-                  {session ? "Accept & join" : "Sign in & join"}
-                  <ArrowRight className="h-4 w-4" />
-                </LoadingButton>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  className="h-10 w-full text-muted-foreground hover:text-foreground"
-                  onClick={openDecline}
-                  disabled={
-                    acceptInvitation.isPending || declineInvitation.isPending
-                  }
-                >
-                  Decline invitation
-                </Button>
-              </div>
-            </CardContent>
-          </InvitationCard>
-        </motion.div>
-        <DeclineInvitationDialog
-          open={declineOpen}
-          onOpenChange={setDeclineOpen}
-          organizationName={invitation.organizationName}
-          isPending={declineInvitation.isPending}
-          onConfirm={confirmDecline}
-        />
-      </motion.div>
+      <InvitationExistingUserStep
+        organizationName={invitation.organizationName}
+        invitedEmail={invitation.email}
+        role={invitation.role}
+        sessionEmail={sessionEmail}
+        isSignedIn={!!session}
+        signedInAsOtherAccount={signedInAsOtherAccount}
+        isAcceptPending={
+          acceptInvitation.isPending || claimInvitation.isPending
+        }
+        isDeclinePending={declineInvitation.isPending}
+        declineOpen={declineOpen}
+        onSetDeclineOpen={setDeclineOpen}
+        onAccept={handleExistingUserAccept}
+        onDecline={openDecline}
+        onConfirmDecline={confirmDecline}
+      />
+    );
+  }
+
+  if (otpStep) {
+    return (
+      <InvitationOtpStep
+        invitedEmail={invitation.email}
+        otpForm={otpForm}
+        onSubmit={handleOtpFormSubmit}
+        onResend={handleResendOtp}
+        isVerifyPending={acceptInvitation.isPending}
+        isResendPending={requestInvitationOtp.isPending}
+      />
     );
   }
 
   return (
-    <motion.div
-      className="w-full max-w-[480px]"
-      variants={staggerContainer}
-      initial="hidden"
-      animate="visible"
-    >
-      <motion.div variants={fadeUp}>
-        <InvitationCard>
-          <InvitationHero
-            title="You're invited"
-            description={`Create your account to join ${invitation.organizationName}.`}
-          />
-          <CardContent className="px-5 pb-5 pt-4 sm:px-6 sm:pb-6 sm:pt-5">
-            <InvitationDetails
-              organizationName={invitation.organizationName}
-              role={invitation.role}
-              invitedEmail={invitation.email}
-            />
-
-            <Form {...form}>
-              <form
-                onSubmit={handleNewUserSubmit}
-                className="mt-4 space-y-3.5"
-                aria-busy={acceptInvitation.isPending}
-              >
-                <div className="grid grid-cols-1 gap-3 min-[420px]:grid-cols-2">
-                  <FormField
-                    control={form.control}
-                    name="firstName"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-foreground text-xs font-medium">
-                          First name
-                        </FormLabel>
-                        <FormControl>
-                          <Input
-                            {...field}
-                            value={field.value ?? ""}
-                            type="text"
-                            placeholder="Your first name"
-                            autoComplete="given-name"
-                            disabled={acceptInvitation.isPending}
-                            className="text-sm"
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="lastName"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-foreground text-xs font-medium">
-                          Last name
-                        </FormLabel>
-                        <FormControl>
-                          <Input
-                            {...field}
-                            value={field.value ?? ""}
-                            type="text"
-                            placeholder="Your last name"
-                            autoComplete="family-name"
-                            disabled={acceptInvitation.isPending}
-                            className="text-sm"
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-
-                <div className="space-y-1.5 pt-0.5">
-                  <LoadingButton
-                    type="submit"
-                    className="h-11 w-full gap-2 font-medium"
-                    isPending={acceptInvitation.isPending}
-                    loadingText="Accepting invitation..."
-                  >
-                    Accept invitation
-                    <ArrowRight className="h-4 w-4" />
-                  </LoadingButton>
-
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    className="h-10 w-full text-muted-foreground hover:text-foreground"
-                    onClick={openDecline}
-                    disabled={
-                      acceptInvitation.isPending || declineInvitation.isPending
-                    }
-                  >
-                    Decline invitation
-                  </Button>
-                </div>
-              </form>
-            </Form>
-          </CardContent>
-        </InvitationCard>
-      </motion.div>
-      <DeclineInvitationDialog
-        open={declineOpen}
-        onOpenChange={setDeclineOpen}
-        organizationName={invitation.organizationName}
-        isPending={declineInvitation.isPending}
-        onConfirm={confirmDecline}
-      />
-    </motion.div>
+    <InvitationNewUserStep
+      organizationName={invitation.organizationName}
+      invitedEmail={invitation.email}
+      role={invitation.role}
+      nameForm={nameForm}
+      onSubmit={handleNameFormSubmit}
+      isOtpPending={requestInvitationOtp.isPending}
+      isDeclinePending={declineInvitation.isPending}
+      declineOpen={declineOpen}
+      onSetDeclineOpen={setDeclineOpen}
+      onDecline={openDecline}
+      onConfirmDecline={confirmDecline}
+    />
   );
 }

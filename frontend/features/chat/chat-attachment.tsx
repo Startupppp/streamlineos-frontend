@@ -123,7 +123,7 @@ function AttachmentFile({
         "flex items-center gap-3 px-3 py-2.5 rounded-xl border transition-colors min-w-0 max-w-full",
         isOwn
           ? "bg-primary-foreground/10 border-primary-foreground/15 hover:bg-primary-foreground/15"
-          : "bg-background border-border/50 hover:bg-muted/30 shadow-sm",
+          : "bg-surface-inset border-border/50 hover:bg-muted/80 shadow-sm",
       )}
     >
       <div

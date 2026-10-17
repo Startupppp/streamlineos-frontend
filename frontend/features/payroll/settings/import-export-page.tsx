@@ -6,7 +6,7 @@ import { PAYROLL_IMPORT_EXPORT_ENTITIES } from "@/features/payroll/settings/impo
 
 export function PayrollImportExportContent() {
   return (
-    <PageWrapper title="Import / Export" subtitle="Export payroll register data">
+    <PageWrapper title="Export" subtitle="Export payroll register data">
       <ImportExportGrid entities={PAYROLL_IMPORT_EXPORT_ENTITIES} />
     </PageWrapper>
   );

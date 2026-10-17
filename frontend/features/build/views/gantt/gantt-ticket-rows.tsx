@@ -1,11 +1,11 @@
 "use client";
 
-import { type KeyboardEvent, type MouseEvent } from "react";
+import { type KeyboardEvent, type MouseEvent, useRef } from "react";
 import { getStatusHexColor } from "@/components/shared/ticket-status-badge";
 import type { BarGeometry } from "./gantt-geometry";
 import type { GanttRowBand } from "./gantt-row-window";
 
-export interface GanttRowTicket {
+interface GanttRowTicket {
   id: number;
   title: string;
   status: string;
@@ -29,12 +29,6 @@ function ticketLabel(ticket: GanttRowTicket): string {
   return ticket.sequenceId ?? `#${ticket.ticketNumber ?? ticket.id}`;
 }
 
-/**
- * Only the rows inside the scrolled band are mounted. The band is a slice of
- * the same array in the same order, and each row still carries its position in
- * the whole timeline, so a screen reader reports "row 214 of 500" rather than
- * the window's own numbering.
- */
 export function GanttTicketRows({
   tickets,
   band,
@@ -46,12 +40,24 @@ export function GanttTicketRows({
   labelFontSize,
   onTicketClick,
 }: GanttTicketRowsProps) {
+  const pointerDownPos = useRef<{ x: number; y: number } | null>(null);
+
   function activate(target: SVGGElement) {
     const id = Number(target.dataset.ticketId);
     if (id) onTicketClick(id);
   }
 
+  function handleMouseDown(event: MouseEvent<SVGGElement>) {
+    pointerDownPos.current = { x: event.clientX, y: event.clientY };
+  }
+
   function handleRowClick(event: MouseEvent<SVGGElement>) {
+    const down = pointerDownPos.current;
+    if (down) {
+      const dx = event.clientX - down.x;
+      const dy = event.clientY - down.y;
+      if (dx * dx + dy * dy > 16) return;
+    }
     activate(event.currentTarget);
   }
 
@@ -80,6 +86,7 @@ export function GanttTicketRows({
             aria-label={`${label} ${ticket.title}`}
             tabIndex={0}
             data-ticket-id={ticket.id}
+            onMouseDown={handleMouseDown}
             onClick={handleRowClick}
             onKeyDown={handleRowKeyDown}
             className="cursor-pointer"
@@ -104,16 +111,19 @@ export function GanttTicketRows({
               {`${label} ${shortTitle}`}
             </text>
             {geo.visible ? (
-              <rect
-                x={geo.x}
-                y={y + 6}
-                width={geo.width}
-                height={rowHeight - 12}
-                rx={4}
-                fill={getStatusHexColor(ticket.status)}
-                opacity={0.85}
-                {...(isCp ? { stroke: "var(--destructive)", strokeWidth: 2 } : {})}
-              />
+              <g>
+                <title>Click to open. Change dates in the ticket.</title>
+                <rect
+                  x={geo.x}
+                  y={y + 6}
+                  width={geo.width}
+                  height={rowHeight - 12}
+                  rx={4}
+                  fill={getStatusHexColor(ticket.status)}
+                  opacity={0.85}
+                  {...(isCp ? { stroke: "var(--destructive)", strokeWidth: 2 } : {})}
+                />
+              </g>
             ) : null}
           </g>
         );

@@ -19,6 +19,10 @@ export const UNIVERSAL_ROUTES: readonly UniversalRoute[] = [
     reason: "Home. Every active member keeps the cross-module read projection.",
   },
   {
+    path: "/post-invite",
+    reason: "Authenticated invitation landing resolves the fresh effective access before redirecting.",
+  },
+  {
     path: "/me",
     subtree: true,
     reason:
@@ -48,10 +52,6 @@ export const UNIVERSAL_ROUTES: readonly UniversalRoute[] = [
       "One unified calendar serves everyone; module event sources are toggles inside it, not separate surfaces.",
   },
   {
-    path: "/announcements",
-    reason: "Company announcements are readable by every active member.",
-  },
-  {
     path: "/hr/announcements",
     reason:
       "The announcements surface lives under the HR prefix but is company-wide reading, not HR administration.",
@@ -60,14 +60,6 @@ export const UNIVERSAL_ROUTES: readonly UniversalRoute[] = [
     path: "/directory",
     reason:
       "People directory root is platform core. Individual profiles and workforce administration resolve through the navigation registry, keeping fail-closed for any new administrative descendants.",
-  },
-  {
-    path: "/kb",
-    reason: "Knowledge Base reading is platform core.",
-  },
-  {
-    path: "/docs",
-    reason: "Knowledge Base reading is platform core.",
   },
   {
     path: "/knowledge",

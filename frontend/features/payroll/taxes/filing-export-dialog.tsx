@@ -179,7 +179,9 @@ export function FilingExportDialog({
             {ruleBundle ? ` · rule ${ruleBundle}` : ""}. {honestyLabel}.
             {exportType === "FORM16"
               ? " Form 16 full certificate is not generated — period summary only."
-              : ""}
+              : exportType === "PF_ECR_TXT"
+                ? " EPFO ECR 2.0 text file. Members without a UAN are left out and listed in the export notes."
+                : ""}
           </p>
         </div>
         <DialogFooter>

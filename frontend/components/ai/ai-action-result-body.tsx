@@ -4,9 +4,11 @@ import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { AiDraftCard } from "./ai-draft-card";
+import { AiAdvisoryNotice } from "./ai-advisory-notice";
 import { AiDraftText } from "./ai-draft-text";
 import { AiQuotaEmptyState } from "./ai-quota-empty-state";
 import { AiPermissionDenied } from "./ai-permission-denied";
+import { EmptyState } from "@/components/ui/empty-state";
 import {
   AiCancelledNotice,
   AiOfflineNotice,
@@ -16,14 +18,21 @@ import {
 import { AiCancelledOutput, AiStreamingOutput } from "./ai-partial-output";
 import { AiFieldPopoverFooter } from "./ai-field-popover-layout";
 import type { AiFailureState } from "./ai-error-state";
-import type { Citation } from "./ai-citation-chips";
+import { AiCitationChips, type Citation } from "./ai-citation-chips";
 import type { AiUsageMeta } from "./ai-usage-chip";
 
 export interface AiActionResult {
   text: string;
+  /**
+   * A caveat the reader must see beside the output — "this is an estimate, a
+   * human decides". Kept out of `text` so it renders as its own notice with the
+   * product's warning icon rather than as a glyph inside the draft (ticket 03).
+   */
+  advisory?: string;
   citations?: Citation[];
   confidence?: number;
   aiUsage?: AiUsageMeta | null;
+  empty?: { title: string; description: string };
 }
 
 export type AiActionResultState =
@@ -61,11 +70,9 @@ export function AiActionResultBody({
   if (state.status === "loading") {
     return (
       <div className="space-y-2" role="status" aria-live="polite" aria-busy>
-        {isRetryAttempt(state.attempt) ? (
-          <p className="text-dense text-muted-foreground">
-            {retryingLabel(state.attempt)}
-          </p>
-        ) : null}
+        <p className="text-dense text-muted-foreground">
+          {isRetryAttempt(state.attempt) ? retryingLabel(state.attempt) : "Working…"}
+        </p>
         <Skeleton className={compact ? "h-3 w-3/4" : "h-4 w-3/4"} />
         <Skeleton className={compact ? "h-3 w-full" : "h-4 w-full"} />
         <Skeleton className={compact ? "h-3 w-5/6" : "h-4 w-5/6"} />
@@ -170,8 +177,28 @@ export function AiActionResultBody({
     );
   }
 
+  if (state.result.empty) {
+    const panel = state.result.empty;
+    return (
+      <EmptyState
+        bare compact={compact} illustrationSize="xs"
+        title={panel.title} description={panel.description} className={compact ? undefined : "min-h-full flex-1 py-8"}
+      />
+    );
+  }
+
   if (contentOnly) {
-    return <AiDraftText text={state.result.text} />;
+    const citations = state.result.citations;
+    const advisory = state.result.advisory;
+    if (!citations?.length && !advisory)
+      return <AiDraftText text={state.result.text} />;
+    return (
+      <div className="space-y-3">
+        <AiDraftText text={state.result.text} />
+        {advisory ? <AiAdvisoryNotice advisory={advisory} /> : null}
+        {citations?.length ? <AiCitationChips citations={citations} /> : null}
+      </div>
+    );
   }
 
   return (
@@ -185,6 +212,9 @@ export function AiActionResultBody({
       className={compact ? "shadow-none" : undefined}
     >
       <AiDraftText text={state.result.text} />
+      {state.result.advisory ? (
+        <AiAdvisoryNotice advisory={state.result.advisory} className="mt-3" />
+      ) : null}
     </AiDraftCard>
   );
 }

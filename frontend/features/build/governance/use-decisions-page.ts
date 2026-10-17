@@ -1,0 +1,284 @@
+import { useCallback, useMemo, useState } from "react";
+import { toast } from "sonner";
+import { Plus } from "lucide-react";
+import {
+  useProjectDecisions,
+  useCreateDecision,
+  useUpdateDecision,
+  useDeleteDecision,
+  GOVERNANCE_PAGE_SIZE,
+} from "@/hooks/api/build/governance";
+import { useProjectMembers } from "@/hooks/api/build/project-members";
+import { useCan } from "@/hooks/api/access";
+import type {
+  Decision,
+  CreateDecisionInput,
+  UpdateDecisionInput,
+} from "@/types/projects";
+import { useBuildCursorPager } from "@/features/build/shared/use-build-cursor-pager";
+import { getErrorMessage } from "@/lib/get-error-message";
+import { getValidationFieldErrors, type ValidationFieldError } from "@/lib/api-envelope";
+import { getUserDisplayName, type NamedUser } from "@/lib/person-display";
+import {
+  BUILD_FILTER_ALL,
+  useBuildListFilters,
+} from "@/features/build/shared/use-build-list-filters";
+import { useBuildListKeyboard } from "@/hooks/common/use-build-list-keyboard";
+import { buildDecisionColumns } from "./decisions-table-columns";
+
+export const STATUS_OPTIONS = [
+  { value: BUILD_FILTER_ALL, label: "All statuses" },
+  { value: "proposed", label: "Proposed" },
+  { value: "accepted", label: "Accepted" },
+  { value: "superseded", label: "Superseded" },
+  { value: "revisit", label: "Revisit" },
+];
+
+const FILTER_DEFINITIONS = [
+  {
+    param: "status",
+    options: STATUS_OPTIONS.map((o) => o.value),
+  },
+  {
+    param: "ownerId",
+  },
+] as const;
+
+export function useDecisionsPage(projectId: number) {
+  const canManage = useCan("build:decisions:manage");
+  const listFilters = useBuildListFilters({ filters: FILTER_DEFINITIONS });
+
+  const [sheetOpen, setSheetOpen] = useState(false);
+  const [editDecision, setEditDecision] = useState<Decision | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<Decision | null>(null);
+  const [decisionFieldErrors, setDecisionFieldErrors] = useState<readonly ValidationFieldError[]>([]);
+
+  const { cursor, pageNumber, hasPrevious, goNext, goPrevious } = useBuildCursorPager(
+    listFilters.resetKey,
+  );
+
+  const statusValue = listFilters.value("status");
+  const ownerIdValue = listFilters.value("ownerId");
+  const { data, isLoading, isError, error, refetch } = useProjectDecisions(
+    projectId,
+    {
+      status: statusValue !== BUILD_FILTER_ALL ? statusValue : undefined,
+      ownerId: ownerIdValue !== BUILD_FILTER_ALL ? ownerIdValue : undefined,
+      cursor: cursor === undefined ? undefined : Number(cursor),
+      search: listFilters.debouncedSearch.trim() || undefined,
+    },
+  );
+  const { data: membersPage } = useProjectMembers(projectId);
+  const members = useMemo(() => membersPage?.data ?? [], [membersPage]);
+
+  const ownerOptions = useMemo(
+    () => [
+      { value: BUILD_FILTER_ALL, label: "All owners" },
+      ...members.map((m) => ({
+        value: String(m.id),
+        label: m.name ?? m.email ?? String(m.id),
+      })),
+    ],
+    [members],
+  );
+
+  const createDecision = useCreateDecision(projectId);
+  const updateDecision = useUpdateDecision(projectId);
+  const deleteDecision = useDeleteDecision(projectId);
+
+  const memberName = useCallback(
+    (userId: string | null): string => {
+      if (!userId) return "—";
+      const m = members.find((x) => x.id === userId);
+      return getUserDisplayName(m) || userId;
+    },
+    [members],
+  );
+
+  const ownerOf = useCallback(
+    (userId: string | null): NamedUser | null => {
+      if (!userId) return null;
+      const m = members.find((x) => x.id === userId);
+      return m ? { name: m.name ?? undefined, email: m.email } : null;
+    },
+    [members],
+  );
+
+  const allDecisions = useMemo(() => data?.data ?? [], [data]);
+
+  const handleCreate = useCallback(
+    (input: CreateDecisionInput) => {
+      createDecision.mutate(input, {
+        onSuccess: () => {
+          setDecisionFieldErrors([]);
+          toast.success("Decision logged");
+          setSheetOpen(false);
+        },
+        onError: (e) => {
+          const fieldErrors = getValidationFieldErrors(e);
+          if (fieldErrors.length > 0) {
+            setDecisionFieldErrors(fieldErrors);
+          } else {
+            toast.error(getErrorMessage(e));
+          }
+        },
+      });
+    },
+    [createDecision],
+  );
+
+  const handleUpdate = useCallback(
+    (input: UpdateDecisionInput & { decisionId: number }) => {
+      updateDecision.mutate(input, {
+        onSuccess: () => {
+          setDecisionFieldErrors([]);
+          toast.success("Decision updated");
+          setEditDecision(null);
+        },
+        onError: (e) => {
+          const fieldErrors = getValidationFieldErrors(e);
+          if (fieldErrors.length > 0) {
+            setDecisionFieldErrors(fieldErrors);
+          } else {
+            toast.error(getErrorMessage(e));
+          }
+        },
+      });
+    },
+    [updateDecision],
+  );
+
+  const handleDeleteConfirm = useCallback(() => {
+    if (!deleteTarget) return;
+    deleteDecision.mutate(deleteTarget.id, {
+      onSuccess: () => {
+        toast.success("Decision deleted");
+        setDeleteTarget(null);
+      },
+      onError: (e) => toast.error(getErrorMessage(e)),
+    });
+  }, [deleteDecision, deleteTarget]);
+
+  const handleStatusChange = useCallback(
+    (value: string) => listFilters.setValue("status", value),
+    [listFilters],
+  );
+
+  const handleOwnerChange = useCallback(
+    (value: string) => listFilters.setValue("ownerId", value),
+    [listFilters],
+  );
+
+  const handleNewDecision = useCallback(() => setSheetOpen(true), []);
+
+  const handleEditRow = useCallback((d: Decision) => setEditDecision(d), []);
+  const handleDeleteRow = useCallback((d: Decision) => setDeleteTarget(d), []);
+
+  const handleEditDecisionByIndex = useCallback(
+    (index: number) => {
+      if (allDecisions[index]) handleEditRow(allDecisions[index]);
+    },
+    [allDecisions, handleEditRow],
+  );
+  const handleOpenFocused = useCallback(
+    (index: number) => {
+      setEditDecision(allDecisions[index]);
+      setSheetOpen(true);
+    },
+    [allDecisions],
+  );
+  const handleClearKeyboardSelection = useCallback(() => {}, []);
+  useBuildListKeyboard({
+    itemCount: allDecisions.length,
+    onOpen: handleOpenFocused,
+    onEdit: canManage ? handleEditDecisionByIndex : undefined,
+    onCreate: canManage ? handleNewDecision : undefined,
+    onClearSelection: handleClearKeyboardSelection,
+    enabled: !sheetOpen && !editDecision && !deleteTarget,
+  });
+
+  const handleRetry = useCallback(() => {
+    void refetch();
+  }, [refetch]);
+
+  const handleNextPage = useCallback(() => {
+    goNext(data?.nextCursor == null ? null : String(data.nextCursor));
+  }, [goNext, data]);
+
+  const handleAlertOpenChange = useCallback((open: boolean) => {
+    if (!open) setDeleteTarget(null);
+  }, []);
+
+  const handleSheetOpenChange = useCallback((open: boolean) => {
+    if (!open) {
+      setSheetOpen(false);
+      setEditDecision(null);
+    }
+  }, []);
+
+  const columns = useMemo(
+    () =>
+      buildDecisionColumns({
+        canManage,
+        memberName,
+        ownerOf,
+        onEdit: handleEditRow,
+        onDelete: handleDeleteRow,
+      }),
+    [canManage, memberName, ownerOf, handleEditRow, handleDeleteRow],
+  );
+
+  const headerActions = useMemo(
+    () =>
+      canManage
+        ? [
+            {
+              id: "create",
+              label: "New Decision",
+              icon: Plus,
+              primary: true as const,
+              onSelect: handleNewDecision,
+            },
+          ]
+        : [],
+    [canManage, handleNewDecision],
+  );
+
+  return {
+    canManage,
+    listFilters,
+    sheetOpen,
+    editDecision,
+    deleteTarget,
+    decisionFieldErrors,
+    pageNumber,
+    hasPrevious,
+    goPrevious,
+    statusValue,
+    ownerIdValue,
+    ownerOptions,
+    allDecisions,
+    data,
+    isLoading,
+    isError,
+    error,
+    createIsPending: createDecision.isPending,
+    updateIsPending: updateDecision.isPending,
+    columns,
+    headerActions,
+    ownerOf,
+    handleCreate,
+    handleUpdate,
+    handleDeleteConfirm,
+    handleStatusChange,
+    handleOwnerChange,
+    handleNewDecision,
+    handleEditRow,
+    handleDeleteRow,
+    handleRetry,
+    handleNextPage,
+    handleAlertOpenChange,
+    handleSheetOpenChange,
+    GOVERNANCE_PAGE_SIZE,
+  };
+}

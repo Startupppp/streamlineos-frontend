@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo, useRef } from "react";
 import { format, parseISO, isValid } from "date-fns";
 import { CalendarIcon } from "lucide-react";
 import type { DateRange } from "react-day-picker";
@@ -36,11 +36,12 @@ export function DateRangePicker({
   align = "start",
 }: DateRangePickerProps) {
   const [open, setOpen] = useState(false);
+  const triggerRef = useRef<HTMLButtonElement>(null);
 
-  const selectedRange: DateRange | undefined =
-    from || to
-      ? { from: parseDateStr(from), to: parseDateStr(to) }
-      : undefined;
+  const selectedRange = useMemo<DateRange | undefined>(
+    () => (from || to ? { from: parseDateStr(from), to: parseDateStr(to) } : undefined),
+    [from, to],
+  );
 
   const handleSelect = useCallback(
     (range: DateRange | undefined) => {
@@ -52,6 +53,20 @@ export function DateRangePicker({
     [onChange],
   );
 
+  const handleOpenChange = useCallback((o: boolean) => setOpen(o), []);
+
+  const handleOpenAutoFocus = useCallback((e: Event) => {
+    e.preventDefault();
+    if (!(e.currentTarget instanceof HTMLElement)) return;
+    const dayButton = e.currentTarget.querySelector<HTMLElement>('button[name="day"][tabindex="0"]');
+    dayButton?.focus();
+  }, []);
+
+  const handleCloseAutoFocus = useCallback((e: Event) => {
+    e.preventDefault();
+    triggerRef.current?.focus();
+  }, []);
+
   const label = (() => {
     const f = parseDateStr(from);
     const t = parseDateStr(to);
@@ -61,9 +76,11 @@ export function DateRangePicker({
   })();
 
   return (
-    <Popover open={open} onOpenChange={setOpen}>
+    <Popover open={open} onOpenChange={handleOpenChange} modal>
       <PopoverTrigger asChild>
         <Button
+          ref={triggerRef}
+          type="button"
           variant="outline"
           disabled={disabled}
           className={cn(
@@ -77,7 +94,12 @@ export function DateRangePicker({
           {label}
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-auto p-0" align={align}>
+      <PopoverContent
+        className="w-auto p-0"
+        align={align}
+        onOpenAutoFocus={handleOpenAutoFocus}
+        onCloseAutoFocus={handleCloseAutoFocus}
+      >
         <Calendar
           mode="range"
           selected={selectedRange}

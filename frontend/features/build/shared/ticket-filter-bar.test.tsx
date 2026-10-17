@@ -14,22 +14,18 @@ jest.mock("next/navigation", () => ({
 
 jest.mock("next/dynamic", () => () => () => null);
 
-// The bar's only data dependencies. Stubbing them keeps the session and query
-// providers out of a test about chips and URL state.
-jest.mock("@/hooks/api/build/advanced", () => ({
+
+
+jest.mock("@/hooks/api/build/cycles", () => ({
   useCycles: (...args: [number, Record<string, unknown>?]) => mockUseCycles(...args),
 }));
 jest.mock("@/hooks/api/build/projects", () => ({
   useProjectLabels: (...args: [number?, Record<string, unknown>?]) => mockUseProjectLabels(...args),
 }));
 
-/**
- * Overflow is deliberately not asserted here. It is decided by layout, jsdom
- * performs none, and an assertion that cannot fail is worse than an absent one.
- * That criterion is only holdable in a browser.
- */
 
-function renderWith(query: string) {
+
+function renderWith(query: string, presentation: "default" | "all-work" = "default") {
   mockSearchParams = new URLSearchParams(query);
   window.history.replaceState({}, "", query ? `/build/tickets?${query}` : "/build/tickets");
   return render(
@@ -37,6 +33,7 @@ function renderWith(query: string) {
       statuses={[{ name: "OPEN" }, { name: "DONE" }]}
       members={[{ id: "u1", name: "Priya", firstName: "Priya", lastName: null }]}
       projectId={42}
+      presentation={presentation}
     />,
   );
 }
@@ -65,6 +62,187 @@ describe("ticket filter bar", () => {
     renderWith("");
 
     expect(screen.queryByLabelText(/remove .* filter/i)).not.toBeInTheDocument();
+  });
+
+  it("uses one explicit Filters trigger for the All Work presentation", () => {
+    renderWith("status=OPEN", "all-work");
+
+    expect(screen.getByRole("button", { name: "Filters (1 active)" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /add filter/i })).not.toBeInTheDocument();
+  });
+
+  it("supports an icon-only filter row without rendering its own search or chips", () => {
+    mockSearchParams = new URLSearchParams("status=OPEN");
+    window.history.replaceState({}, "", "/build/tickets?status=OPEN");
+    render(
+      <TicketFilterBar
+        statuses={[{ name: "OPEN" }, { name: "DONE" }]}
+        presentation="all-work"
+        showSearch={false}
+        showChips={false}
+        iconOnlyFilters
+      />,
+    );
+
+    const filters = screen.getByRole("button", { name: "Filters (1 active)" });
+    expect(filters).toHaveClass("size-9", "p-0");
+    expect(filters).not.toHaveTextContent("Filters");
+    expect(filters.querySelector("span")).toHaveClass("-right-1", "-top-1");
+    expect(screen.queryByRole("searchbox")).not.toBeInTheDocument();
+    expect(screen.queryByLabelText(/remove .* filter/i)).not.toBeInTheDocument();
+  });
+
+  it("keeps the All Work filter trigger labeled on smaller screens and compact at desktop", () => {
+    render(
+      <TicketFilterBar
+        presentation="all-work"
+        showSearch={false}
+        showChips={false}
+        desktopIconOnlyFilters
+      />,
+    );
+
+    const filters = screen.getByRole("button", { name: "Filters" });
+    expect(filters).toHaveClass("max-lg:!w-full", "lg:size-9", "lg:p-0");
+    expect(screen.getByText("Filters")).toHaveClass("lg:hidden");
+  });
+
+  it("collapses an empty expandable search after blur", () => {
+    const onSearchExpandedChange = jest.fn();
+    render(
+      <TicketFilterBar
+        showFilters={false}
+        showChips={false}
+        fillSearch
+        collapsibleSearch
+        searchExpanded
+        onSearchExpandedChange={onSearchExpandedChange}
+      />,
+    );
+
+    fireEvent.blur(screen.getByRole("searchbox"));
+
+    expect(onSearchExpandedChange).toHaveBeenCalledWith(false);
+  });
+
+  it("keeps an expandable search open after blur when it has a query", () => {
+    const onSearchExpandedChange = jest.fn();
+    render(
+      <TicketFilterBar
+        showFilters={false}
+        showChips={false}
+        fillSearch
+        collapsibleSearch
+        searchExpanded
+        onSearchExpandedChange={onSearchExpandedChange}
+      />,
+    );
+
+    const search = screen.getByRole("searchbox");
+    fireEvent.change(search, { target: { value: "onboarding" } });
+    fireEvent.blur(search);
+
+    expect(onSearchExpandedChange).not.toHaveBeenCalledWith(false);
+  });
+
+  it("supports a growing search row with only its responsive options action", () => {
+    const { container } = render(
+      <TicketFilterBar
+        showFilters={false}
+        showChips={false}
+        fillSearch
+        trailing={<button type="button" aria-label="More options" />}
+      />,
+    );
+
+    expect(screen.getByRole("searchbox")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "More options" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /filters|add filter/i })).not.toBeInTheDocument();
+    expect(container.querySelector('[data-slot="search-input"]')).toHaveClass("w-full");
+  });
+
+  it("separates My Work search and keeps all mobile actions on one scrollable row", () => {
+    mockSearchParams = new URLSearchParams("status=OPEN");
+    window.history.replaceState({}, "", "/build/tickets?status=OPEN");
+    const { container } = render(
+      <TicketFilterBar
+        statuses={[{ name: "OPEN" }, { name: "DONE" }]}
+        presentation="all-work"
+        mobileSearchFirst
+        mobileSearchFirstBreakpoint="lg"
+        hideChipsBelow="lg"
+        trailing={<button type="button">Sort</button>}
+      />,
+    );
+
+    const searchRow = container.querySelector(".order-1");
+    const actionsRow = container.querySelector(
+      "[class*=flex-nowrap][class*=overflow-x-auto]",
+    );
+    const chips = container.querySelector(".max-lg\\:hidden");
+
+    expect(searchRow).toContainElement(screen.getByRole("searchbox"));
+    expect(actionsRow).toContainElement(screen.getByRole("button", { name: "Filters (1 active)" }));
+    expect(actionsRow).toContainElement(screen.getByRole("button", { name: "Sort" }));
+    expect(actionsRow).toHaveClass("flex-nowrap", "overflow-x-auto");
+    expect(actionsRow).toHaveClass("lg:contents");
+    expect(actionsRow).not.toHaveClass("sm:contents");
+    expect(chips).toHaveClass("max-lg:hidden");
+  });
+
+  it("wraps the action row onto a second line instead of scrolling it when the caller asks for it", () => {
+    mockSearchParams = new URLSearchParams();
+    window.history.replaceState({}, "", "/build/tickets");
+    const { container } = render(
+      <TicketFilterBar
+        statuses={[{ name: "OPEN" }, { name: "DONE" }]}
+        mobileSearchFirst
+        mobileSearchFirstBreakpoint="lg"
+        wrapActions
+        showDoneToggle
+        leading={<button type="button">Board</button>}
+      />,
+    );
+
+    const actionsRow = container.querySelector("[class*=flex-wrap][class*=order-2]");
+
+    expect(actionsRow).toContainElement(screen.getByRole("button", { name: /add filter/i }));
+    expect(actionsRow).toContainElement(screen.getByRole("button", { name: "Board" }));
+    expect(actionsRow).toHaveClass("flex-wrap", "lg:contents");
+    expect(actionsRow?.className).not.toContain("overflow-x-auto");
+    expect(actionsRow?.className).not.toContain("flex-nowrap");
+    // B-029: the filter group inside the row wraps too, not just the row.
+    const filterGroup = container.querySelector("[class*=order-3]");
+    expect(filterGroup).toHaveClass("flex-wrap", "min-w-0");
+    expect(filterGroup).not.toHaveClass("shrink-0");
+  });
+
+  it("gives My Work a compact mobile hierarchy with search and filters together", () => {
+    mockSearchParams = new URLSearchParams("status=OPEN");
+    window.history.replaceState({}, "", "/build/tickets?status=OPEN");
+    const { container } = render(
+      <TicketFilterBar
+        statuses={[{ name: "OPEN" }, { name: "DONE" }]}
+        presentation="all-work"
+        mobileSearchFirst
+        mobileSearchFirstBreakpoint="lg"
+        mobileCompactToolbar
+        leading={<button type="button">Sort</button>}
+        trailing={<button type="button">Views</button>}
+      />,
+    );
+
+    const rows = container.querySelectorAll(":scope > div > div > div");
+    const searchAndFilters = rows.item(0);
+    const utilityRow = rows.item(1);
+
+    expect(searchAndFilters).toContainElement(screen.getByRole("searchbox"));
+    expect(searchAndFilters).toContainElement(
+      screen.getByRole("button", { name: "Filters (1 active)" }),
+    );
+    expect(utilityRow).toContainElement(screen.getByRole("button", { name: "Sort" }));
+    expect(utilityRow).toContainElement(screen.getByRole("button", { name: "Views" }));
+    expect(utilityRow).toHaveClass("overflow-x-auto", "lg:contents");
   });
 
   it("defers cycle and label reads until filter options are requested", () => {
@@ -116,5 +294,30 @@ describe("ticket filter bar", () => {
     const control = screen.getByLabelText(/remove open filter/i);
     expect(control.tagName).toBe("BUTTON");
     expect(control).toHaveAttribute("type", "button");
+  });
+
+  it("gives the chip's remove control a design-token focus ring so the control stays visible when the chip row wraps", () => {
+    renderWith("status=OPEN");
+
+    const control = screen.getByLabelText(/remove open filter/i);
+    expect(control.className).toContain("focus-visible:ring-ring");
+    expect(control.className).toContain("focus-visible:ring-1");
+  });
+
+  it("wraps filter chips instead of scrolling them off the row, and keeps each chip from shrinking", () => {
+    const { container } = renderWith("status=OPEN");
+
+    const strip = [...container.querySelectorAll(".flex-wrap")].find((el) =>
+      el.className.includes("[&>*]:shrink-0"),
+    );
+    expect(strip).toBeTruthy();
+    expect(strip?.className).not.toContain("overflow-x-auto");
+  });
+
+  it("caps the search field at the 200-character search limit and says so instead of truncating silently", () => {
+    renderWith("");
+    const input = screen.getByPlaceholderText("Search...");
+    expect(input).toHaveAttribute("maxLength", "200");
+    expect(input).toHaveAttribute("title", "Search is limited to 200 characters");
   });
 });

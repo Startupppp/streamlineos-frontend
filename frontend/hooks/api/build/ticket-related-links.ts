@@ -1,16 +1,24 @@
 "use client";
-﻿
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+
+import { useQueryClient } from "@tanstack/react-query";
 import type { UseMutationOptions } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import { useGatedQuery } from "@/hooks/api/gated-query";
+
+const noContentContract = lazyContract(() =>
+  import("@/hooks/api/cursor-page-schema").then((m) => m.noContentContract),
+);
 
 const relatedLinkCreateLazy = lazyContract(() =>
   import("@/hooks/api/build/build-tickets-subresource-schema").then((m) => m.relatedLinkCreateContract),
 );
+const relatedLinkListLazy = lazyContract(() =>
+  import("@/hooks/api/build/build-tickets-subresource-schema").then((m) => m.relatedLinkListContract),
+);
 
-export interface TicketRelatedLink {
+interface TicketRelatedLink {
   id: number;
   orgId: string;
   projectId: number;
@@ -25,6 +33,18 @@ export interface TicketRelatedLink {
 
 const relatedLinksKey = (projectId: number, ticketId: number) =>
   ["projects", projectId, "tickets", ticketId, "related-links"] as const;
+
+export function useTicketRelatedLinks(projectId: number, ticketId: number) {
+  return useGatedQuery("build:tickets:view", {
+    queryKey: relatedLinksKey(projectId, ticketId),
+    queryFn: ({ signal }) =>
+      apiClient.get<TicketRelatedLink[]>(
+        `/build/${projectId}/tickets/${ticketId}/related-links`, undefined, signal, relatedLinkListLazy,
+      ),
+    enabled: projectId > 0 && ticketId > 0,
+    staleTime: 30_000,
+  });
+}
 
 interface AddLinkVars {
   projectId: number;
@@ -43,7 +63,35 @@ export function useAddRelatedLink(
     mutationFn: ({ projectId, ticketId, url, label }) =>
       apiClient.post<TicketRelatedLink>(`/build/${projectId}/tickets/${ticketId}/related-links`, { url, label }, undefined, relatedLinkCreateLazy),
     onSuccess: (data, variables, onMutateResult, context) => {
-      queryClient.invalidateQueries({ queryKey: relatedLinksKey(variables.projectId, variables.ticketId) });
+      queryClient.setQueryData<TicketRelatedLink[]>(
+        relatedLinksKey(variables.projectId, variables.ticketId),
+        (old) => (old ? [...old, data] : [data]),
+      );
+      options?.onSuccess?.(data, variables, onMutateResult, context);
+    },
+  });
+}
+
+interface RemoveLinkVars {
+  projectId: number;
+  ticketId: number;
+  linkId: number;
+}
+
+export function useRemoveRelatedLink(
+  options?: UseMutationOptions<void, unknown, RemoveLinkVars>,
+) {
+  const queryClient = useQueryClient();
+  return useAuthorizedMutation<void, unknown, RemoveLinkVars>("build:tickets:update", {
+    ...options,
+    mutationKey: ["projects", "tickets", "related-links", "remove"],
+    mutationFn: ({ projectId, ticketId, linkId }) =>
+      apiClient.delete<void>(`/build/${projectId}/tickets/${ticketId}/related-links/${linkId}`, undefined, undefined, noContentContract),
+    onSuccess: (data, variables, onMutateResult, context) => {
+      queryClient.setQueryData<TicketRelatedLink[]>(
+        relatedLinksKey(variables.projectId, variables.ticketId),
+        (old) => (old ? old.filter((l) => l.id !== variables.linkId) : []),
+      );
       options?.onSuccess?.(data, variables, onMutateResult, context);
     },
   });

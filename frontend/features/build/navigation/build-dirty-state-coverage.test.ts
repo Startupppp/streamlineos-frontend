@@ -40,7 +40,6 @@ function buildSummaries(): FileSummary[] {
     return files.some(
       (candidate) =>
         candidate.absPath !== absPath &&
-        candidate.absPath.endsWith(".tsx") &&
         importsThisModule.test(candidate.source) &&
         REGISTRATION_CALL.test(candidate.source),
     );
@@ -80,11 +79,18 @@ const TRANSIENT_ACTION_NO_DRAFT: readonly string[] = [
   "sidebar/delete-project-dialog.tsx",
   "settings/agent-token-create-dialog.tsx",
   "templates/apply-template-dialog.tsx",
+  "managed-products/add-product-member-dialog.tsx",
+];
+
+const PUBLIC_ROUTE_NO_SCOPE_SWITCHER: readonly string[] = [
+  "forms/public-form-view.tsx",
+  "intake/public-intake-token-view.tsx",
 ];
 
 const ALL_EXPLICIT_EXCLUSIONS = new Set([
   ...COVERED_BY_ANCESTOR_REGISTRATION,
   ...TRANSIENT_ACTION_NO_DRAFT,
+  ...PUBLIC_ROUTE_NO_SCOPE_SWITCHER,
 ]);
 
 describe("BSN-04-A03 every Build RHF form owner registers with the shared dirty-state guard, so switching scope prompts rather than silently discarding a draft", () => {
@@ -99,6 +105,31 @@ describe("BSN-04-A03 every Build RHF form owner registers with the shared dirty-
   it("finds more registered surfaces than named exclusions, so the test cannot be trivially satisfied by excluding everything", () => {
     expect(registeredSurfaces.length).toBeGreaterThan(ALL_EXPLICIT_EXCLUSIONS.size);
   });
+
+  it.each(PUBLIC_ROUTE_NO_SCOPE_SWITCHER)(
+    "%s is mounted only from app/(public), which is what earns it the no-scope-switcher exclusion",
+    (relPath) => {
+      const componentFile = relPath.split("/").pop()?.replace(/\.tsx$/, "") ?? "";
+      const appDir = resolve(process.cwd(), "app");
+      const importers: string[] = [];
+      const walk = (dir: string) => {
+        for (const entry of readdirSync(dir, { withFileTypes: true })) {
+          const next = join(dir, entry.name);
+          if (entry.isDirectory()) {
+            walk(next);
+            continue;
+          }
+          if (!entry.name.endsWith(".tsx")) continue;
+          if (readFileSync(next, "utf8").includes(componentFile)) {
+            importers.push(next.replace(/\\/g, "/"));
+          }
+        }
+      };
+      walk(appDir);
+      expect(importers.length).toBeGreaterThan(0);
+      expect(importers.filter((f) => !f.includes("/app/(public)/"))).toEqual([]);
+    },
+  );
 
   it("every RHF form owner not in a named exclusion set calls useRegisterDirtyState, so a scope switch prompts rather than discarding typed content", () => {
     const ungated = unregisteredSurfaces.filter(
@@ -157,6 +188,12 @@ describe("BSN-04-A03 every Build RHF form owner registers with the shared dirty-
   it("apply-template-dialog is excluded because it is a template selection with no authored draft text that a scope switch would discard", () => {
     expect(TRANSIENT_ACTION_NO_DRAFT).toContain(
       "templates/apply-template-dialog.tsx",
+    );
+  });
+
+  it("add-product-member-dialog is excluded because it accepts a member selection and role only, submitted immediately with no authored draft content that a scope switch would discard", () => {
+    expect(TRANSIENT_ACTION_NO_DRAFT).toContain(
+      "managed-products/add-product-member-dialog.tsx",
     );
   });
 });

@@ -15,7 +15,9 @@ import { DatePicker } from "@/components/ui/date-picker";
 import { Textarea } from "@/components/ui/textarea";
 import { LoadingState } from "@/components/shared/loading-state";
 import { EmptyState } from "@/components/ui/empty-state";
-import { ErrorState } from "@/components/shared/error-state";
+import { PageState } from "@/components/shared/page-state";
+import { usePageState } from "@/hooks/api/use-page-state";
+import { useCan } from "@/hooks/api/access";
 import { EmptyTeamIllustration } from "@/components/illustrations";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { HrSheet } from "@/components/shared/hr-sheet";
@@ -41,6 +43,16 @@ export function MeetingsTab() {
   const createMeeting = useCreateOneOnOne();
   const updateMeeting = useUpdateOneOnOne();
   const deleteMeeting = useDeleteOneOnOne();
+  // Every 1-on-1 write is `hr:performance:view` on the backend (performance.controller.ts:178-202).
+  const canWrite = useCan("hr:performance:view");
+  const pageState = usePageState({
+    permission: "hr:performance:view",
+    isLoading,
+    isError,
+    error,
+    isEmpty: !meetings?.length,
+  });
+  const handleRetry = useCallback(() => void refetch(), [refetch]);
   const [sheetOpen, setSheetOpen] = useState(false);
   const [deleteId, setDeleteId] = useState<number | null>(null);
   const [empId, setEmpId] = useState("");
@@ -161,42 +173,43 @@ export function MeetingsTab() {
     });
   }, []);
 
-  if (isLoading) {
-    return <LoadingState variant="list" rows={12} />;
-  }
-
-  if (isError) {
-    return <ErrorState className="flex-1" title="Couldn't load meetings" description={getErrorMessage(error)} onRetry={() => void refetch()} />;
-  }
-
   return (
-    <div className="flex flex-col flex-1 min-h-0 gap-3">
-      <div className="flex items-center justify-between shrink-0">
-        <p className="text-sm text-muted-foreground">{meetings?.length ?? 0} meetings</p>
-        <Button size="sm" onClick={handleOpenSheet}>
-          <Plus className="h-3.5 w-3.5 mr-1" />Schedule 1-on-1
-        </Button>
-      </div>
-
-      {!meetings?.length ? (
+    <>
+    <PageState
+      resolution={pageState}
+      onRetry={handleRetry}
+      className="flex-1"
+      loading={<LoadingState variant="list" rows={12} />}
+      empty={
         <EmptyState
           illustration={<EmptyTeamIllustration className="h-full w-full" />}
           title="No 1-on-1 meetings scheduled"
           description="Schedule regular check-ins to support your team's growth and alignment."
-          action={{ label: "Schedule 1-on-1", onClick: handleOpenSheet }}
+          action={canWrite ? { label: "Schedule 1-on-1", onClick: handleOpenSheet } : undefined}
         />
-      ) : (
+      }
+    >
+    <div className="flex flex-col flex-1 min-h-0 gap-3">
+      <div className="flex items-center justify-between shrink-0">
+        <p className="text-sm text-muted-foreground">{meetings?.length ?? 0} meetings</p>
+        {canWrite && (
+          <Button size="sm" onClick={handleOpenSheet}>
+            <Plus className="h-3.5 w-3.5 mr-1" />Schedule 1-on-1
+          </Button>
+        )}
+      </div>
+
         <div className="space-y-2">
-          {meetings.map((m: OneOnOneMeeting) => (
+          {(meetings ?? []).map((m: OneOnOneMeeting) => (
             <Card key={m.id}>
               <CardContent className="p-3 flex items-center gap-3">
                 <div className="flex -space-x-2 shrink-0">
                   <Avatar className="w-7 border-2 border-background">
-                    <AvatarImage src={resolveImageUrl(m.manager?.image ?? null)} />
+                    <AvatarImage src={resolveImageUrl(m.manager?.image ?? null)} alt="" />
                     <AvatarFallback className="text-micro bg-primary/10 text-primary">{m.manager?.name?.[0]}</AvatarFallback>
                   </Avatar>
                   <Avatar className="w-7 border-2 border-background">
-                    <AvatarImage src={resolveImageUrl(m.employee?.image ?? null)} />
+                    <AvatarImage src={resolveImageUrl(m.employee?.image ?? null)} alt="" />
                     <AvatarFallback className="text-micro bg-primary/10 text-primary">{m.employee?.name?.[0]}</AvatarFallback>
                   </Avatar>
                 </div>
@@ -210,52 +223,56 @@ export function MeetingsTab() {
                 <Badge variant={m.status === "COMPLETED" ? "default" : m.status === "CANCELLED" ? "destructive" : "outline"} className="text-micro shrink-0">
                   {m.status}
                 </Badge>
+                {canWrite && (
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild><AnimatedIconButton icon={EllipsisIcon} variant="ghost" size="icon" className="w-7" aria-label="Meeting actions" /></DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
-                    {m.status === "SCHEDULED" && <DropdownMenuItem onClick={() => handleStatusChange(m.id, "COMPLETED")}>Mark Completed</DropdownMenuItem>}
-                    {m.status === "SCHEDULED" && <DropdownMenuItem onClick={() => handleStatusChange(m.id, "CANCELLED")}>Cancel</DropdownMenuItem>}
+                    {m.status === "SCHEDULED" && <DropdownMenuItem disabled={updateMeeting.isPending} onClick={() => handleStatusChange(m.id, "COMPLETED")}>Mark Completed</DropdownMenuItem>}
+                    {m.status === "SCHEDULED" && <DropdownMenuItem disabled={updateMeeting.isPending} onClick={() => handleStatusChange(m.id, "CANCELLED")}>Cancel meeting</DropdownMenuItem>}
                     <DropdownMenuItem variant="destructive" onClick={() => setDeleteId(m.id)}><Trash2 className="h-3.5 w-3.5 mr-1.5" />Delete</DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
+                )}
               </CardContent>
             </Card>
           ))}
         </div>
-      )}
 
+    </div>
+    </PageState>
       <HrSheet open={sheetOpen} onOpenChange={(open) => { if (!open) resetForm(); setSheetOpen(open); }} title="Schedule 1-on-1" onSubmit={handleCreate} submitLabel="Schedule" isPending={createMeeting.isPending}>
         <div className="space-y-1.5">
-          <label className="text-sm font-medium">Employee</label>
+          <p className="text-sm font-medium">Employee</p>
           <EmployeePicker
             value={empId}
             onChange={handleEmpIdChange}
             placeholder="Select team member"
+            ariaLabel="Employee"
             className={fieldErrors.employeeId ? "border-destructive" : undefined}
           />
-          {fieldErrors.employeeId && <p className="text-xs text-destructive">{fieldErrors.employeeId}</p>}
+          {fieldErrors.employeeId && <p className="text-xs text-destructive" role="alert">{fieldErrors.employeeId}</p>}
         </div>
         <div className="grid grid-cols-2 gap-3">
           <div className="space-y-1.5">
-            <label className="text-sm font-medium">Date</label>
-            <DatePicker value={scheduledDate ?? ""} onChange={handleScheduledDateChange} fromDate={new Date()} placeholder="Pick a date" className="text-sm" />
-            {fieldErrors.scheduledDate && <p className="text-xs text-destructive">{fieldErrors.scheduledDate}</p>}
+            <label htmlFor="meeting-date" className="text-sm font-medium">Date</label>
+            <DatePicker id="meeting-date" value={scheduledDate ?? ""} onChange={handleScheduledDateChange} fromDate={new Date()} placeholder="Pick a date" className="text-sm" />
+            {fieldErrors.scheduledDate && <p className="text-xs text-destructive" role="alert">{fieldErrors.scheduledDate}</p>}
           </div>
           <div className="space-y-1.5">
-            <label className="text-sm font-medium">Time</label>
-            <Input type="time" value={scheduledTime} onChange={handleScheduledTimeChange} />
-            {fieldErrors.scheduledTime && <p className="text-xs text-destructive">{fieldErrors.scheduledTime}</p>}
+            <label htmlFor="meeting-time" className="text-sm font-medium">Time</label>
+            <Input id="meeting-time" type="time" value={scheduledTime} onChange={handleScheduledTimeChange} />
+            {fieldErrors.scheduledTime && <p className="text-xs text-destructive" role="alert">{fieldErrors.scheduledTime}</p>}
           </div>
         </div>
         <div className="space-y-1.5">
-          <label className="text-sm font-medium">Duration (min)</label>
-          <Input type="number" min={15} max={480} step={15} value={duration} onChange={handleDurationChange} />
-          {fieldErrors.duration && <p className="text-xs text-destructive">{fieldErrors.duration}</p>}
+          <label htmlFor="meeting-duration" className="text-sm font-medium">Duration (min)</label>
+          <Input id="meeting-duration" type="number" min={15} max={480} step={15} value={duration} onChange={handleDurationChange} />
+          {fieldErrors.duration && <p className="text-xs text-destructive" role="alert">{fieldErrors.duration}</p>}
         </div>
         <div className="space-y-1.5">
-          <label className="text-sm font-medium">Agenda</label>
-          <Textarea placeholder="Topics to discuss..." value={agenda} onChange={handleAgendaChange} rows={3} maxLength={1000} className="resize-none w-full" />
-          {fieldErrors.agenda && <p className="text-xs text-destructive">{fieldErrors.agenda}</p>}
+          <label htmlFor="meeting-agenda" className="text-sm font-medium">Agenda</label>
+          <Textarea id="meeting-agenda" placeholder="Topics to discuss..." value={agenda} onChange={handleAgendaChange} rows={3} maxLength={1000} className="resize-none w-full" />
+          {fieldErrors.agenda && <p className="text-xs text-destructive" role="alert">{fieldErrors.agenda}</p>}
         </div>
       </HrSheet>
 
@@ -269,6 +286,6 @@ export function MeetingsTab() {
         onConfirm={handleDelete}
         isPending={deleteMeeting.isPending}
       />
-    </div>
+    </>
   );
 }

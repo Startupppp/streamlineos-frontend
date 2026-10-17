@@ -11,6 +11,7 @@ import {
 } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
 import { clearStreamToken } from "@/features/notifications/use-notification-events";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 const startImpersonationContract = lazyContract(() =>
   import("@/hooks/api/impersonation-schema").then((m) => m.startImpersonationResponseContract),
@@ -31,7 +32,7 @@ export function useStartImpersonation() {
   const router = useRouter();
   const generationRef = useRef(0);
 
-  return useMutation({
+  return useAuthorizedMutation("settings:impersonate:manage", {
     mutationKey: ["impersonation", "start"],
     mutationFn: (targetUserId: string) =>
       apiClient.post(

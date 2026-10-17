@@ -4,14 +4,42 @@ import { useEffect } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
+import { PAYROLL_AMOUNT_MAX } from "@/lib/validation/payroll-bounds";
 import { Switch } from "@/components/ui/switch";
 import { Input } from "@/components/ui/input";
 import { DatePicker } from "@/components/ui/date-picker";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { HrSheet } from "@/components/shared/hr-sheet";
-import { formatINR } from "@/lib/format-utils";
 import type { SalaryStructureTemplate, CreateSalaryTemplateInput } from "@/hooks/api/hr/salary-structures";
+import { estimateTemplateNet } from "./salary-structure-template-preview";
+import { ComponentsUsed, SampleCtcPreview } from "./salary-breakup-preview";
+
+const NON_NEGATIVE_DECIMAL = /^\d+(\.\d{1,2})?$/;
+const AMOUNT_MAX_LABEL = `₹${PAYROLL_AMOUNT_MAX.toLocaleString("en-IN")}`;
+
+function money(requiredMessage: string) {
+  return z
+    .string()
+    .min(1, requiredMessage)
+    .regex(NON_NEGATIVE_DECIMAL, "Enter an amount of zero or more")
+    .refine(
+      (v) => parseFloat(v) <= PAYROLL_AMOUNT_MAX,
+      `Cannot exceed ${AMOUNT_MAX_LABEL}`,
+    );
+}
+
+function percent(requiredMessage: string) {
+  return z
+    .string()
+    .min(1, requiredMessage)
+    .regex(NON_NEGATIVE_DECIMAL, "Enter a percentage between 0 and 100")
+    .refine((v) => Number(v) <= 100, "Enter a percentage between 0 and 100");
+}
+
+function optionalMoney() {
+  return money("Enter an amount of zero or more").nullable();
+}
 
 const templateSchema = z.object({
   name: z
@@ -20,14 +48,14 @@ const templateSchema = z.object({
     .min(1, "Name is required")
     .max(100, "Name must be at most 100 characters")
     .refine((v) => /[a-zA-Z0-9]/.test(v), "Name must contain at least one letter or digit"),
-  basicSalary: z.string().min(1, "Basic salary is required"),
-  hraPercent: z.string().min(1, "HRA % is required"),
-  specialAllowance: z.string().nullable(),
-  medicalAllowance: z.string().nullable(),
-  travelAllowance: z.string().nullable(),
-  otherAllowances: z.string().nullable(),
-  pfDeductionPercent: z.string().nullable(),
-  professionalTax: z.string().nullable(),
+  basicSalary: money("Basic salary is required"),
+  hraPercent: percent("HRA % is required"),
+  specialAllowance: optionalMoney(),
+  medicalAllowance: optionalMoney(),
+  travelAllowance: optionalMoney(),
+  otherAllowances: optionalMoney(),
+  pfDeductionPercent: percent("PF deduction % is required"),
+  professionalTax: optionalMoney(),
   effectiveFrom: z.string().min(1, "Effective from is required"),
   effectiveTo: z.string().nullable(),
   isActive: z.boolean(),
@@ -41,63 +69,54 @@ interface SalaryStructureTemplateSheetProps {
   template?: SalaryStructureTemplate;
   onSubmit: (data: CreateSalaryTemplateInput) => void;
   isPending: boolean;
+  nameError?: string;
 }
 
-function FieldGroup({ label, children }: { label: React.ReactNode; children: React.ReactNode }) {
+function FieldGroup({
+  label,
+  error,
+  children,
+}: {
+  label: React.ReactNode;
+  error?: string;
+  children: React.ReactNode;
+}) {
   return (
     <div className="space-y-1.5">
       <Label className="text-dense font-semibold text-muted-foreground uppercase tracking-wider">
         {label}
       </Label>
       {children}
+      {error ? <p className="text-xs text-destructive">{error}</p> : null}
     </div>
   );
 }
 
-function CtcPreview({ values }: { values: TemplateFormValues }) {
-  const basic = parseFloat(values.basicSalary || "0");
-  const hraPercent = parseFloat(values.hraPercent || "0");
-  const special = parseFloat(values.specialAllowance || "0");
-  const medical = parseFloat(values.medicalAllowance || "0");
-  const travel = parseFloat(values.travelAllowance || "0");
-  const other = parseFloat(values.otherAllowances || "0");
-  const pfPercent = parseFloat(values.pfDeductionPercent || "0");
-  const profTax = parseFloat(values.professionalTax || "0");
+function missingRequiredFields(values: TemplateFormValues): string[] {
+  const missing: string[] = [];
+  if (values.name.trim() === "") missing.push("a template name");
+  if (values.basicSalary.trim() === "") missing.push("a basic salary");
+  if (values.effectiveFrom.trim() === "") missing.push("an effective-from date");
+  return missing;
+}
 
-  const hra = basic * hraPercent / 100;
-  const gross = basic + hra + special + medical + travel + other;
-  const pfDeduction = basic * pfPercent / 100;
-  const estimatedNet = gross - pfDeduction - profTax;
+function joinFields(fields: string[]): string {
+  if (fields.length <= 1) return fields.join("");
+  return `${fields.slice(0, -1).join(", ")} and ${fields[fields.length - 1]}`;
+}
 
-  const rows: Array<{ label: string; value: string; highlight?: boolean }> = [
-    { label: "Basic", value: formatINR(basic) },
-    { label: "HRA", value: formatINR(hra) },
-    { label: "Special Allowance", value: formatINR(special) },
-    { label: "Medical Allowance", value: formatINR(medical) },
-    { label: "Travel Allowance", value: formatINR(travel) },
-    { label: "Other Allowances", value: formatINR(other) },
-    { label: "Gross", value: formatINR(gross), highlight: true },
-    { label: "PF Deduction", value: `− ${formatINR(pfDeduction)}` },
-    { label: "Professional Tax", value: `− ${formatINR(profTax)}` },
-    { label: "Estimated Net", value: formatINR(estimatedNet), highlight: true },
-  ];
-
+function TemplateValidity({ values }: { values: TemplateFormValues }) {
+  const preview = estimateTemplateNet(values);
+  const missing = missingRequiredFields(values);
+  if (missing.length === 0 && preview.valid) return null;
   return (
-    <div className="rounded-xl bg-primary/5 border border-border px-4 py-3 space-y-1.5">
-      <p className="text-micro font-semibold text-muted-foreground uppercase tracking-wider mb-2">
-        Live CTC Preview
-      </p>
-      {rows.map((row) => (
-        <div key={row.label} className="flex items-center justify-between">
-          <span className={`text-xs ${row.highlight ? "font-semibold text-foreground" : "text-muted-foreground"}`}>
-            {row.label}
-          </span>
-          <span className={`text-xs tabular-nums ${row.highlight ? "font-bold text-foreground" : "text-foreground"}`}>
-            {row.value}
-          </span>
-        </div>
-      ))}
-    </div>
+    <p className="text-xs text-destructive">
+      {missing.length > 0
+        ? `Enter ${joinFields(missing)} before this template can be saved.`
+        : preview.hasNegativeComponent
+          ? "A salary component cannot be negative. Enter zero or more in every amount."
+          : "Deductions cannot exceed gross. Raise basic salary or lower deductions."}
+    </p>
   );
 }
 
@@ -107,6 +126,7 @@ export function SalaryStructureTemplateSheet({
   template,
   onSubmit,
   isPending,
+  nameError,
 }: SalaryStructureTemplateSheetProps) {
   const {
     register,
@@ -136,6 +156,8 @@ export function SalaryStructureTemplateSheet({
 
   const watchedValues = watch();
   const isActiveValue = watch("isActive");
+  const preview = estimateTemplateNet(watchedValues);
+  const canSubmit = missingRequiredFields(watchedValues).length === 0 && preview.valid;
 
   useEffect(() => {
     if (open) {
@@ -203,44 +225,43 @@ export function SalaryStructureTemplateSheet({
       onSubmit={handleSubmit(handleFormSubmit)}
       submitLabel={template ? "Save Changes" : "Create Template"}
       isPending={isPending}
+      submitDisabled={!canSubmit}
     >
-      <FieldGroup label={<>Template Name <span className="text-destructive">*</span></>}>
+      <FieldGroup label={<>Template Name <span className="text-destructive">*</span></>} error={errors.name?.message ?? nameError}>
         <Input
           {...register("name")}
           placeholder="e.g. Senior Engineer L3"
           className=""
         />
-        {errors.name && (
-          <p className="text-xs text-destructive mt-1">{errors.name.message}</p>
-        )}
       </FieldGroup>
 
       <div className="grid grid-cols-2 gap-3">
-        <FieldGroup label={<>Basic Salary (₹) <span className="text-destructive">*</span></>}>
+        <FieldGroup label={<>Basic Salary (₹) <span className="text-destructive">*</span></>} error={errors.basicSalary?.message}>
           <Input
             {...register("basicSalary")}
             type="number"
             min="0"
-            placeholder="50000"
+            placeholder="e.g. 50000"
             className=""
           />
-          {errors.basicSalary && (
-            <p className="text-xs text-destructive mt-1">{errors.basicSalary.message}</p>
-          )}
         </FieldGroup>
-        <FieldGroup label="HRA %">
+        <FieldGroup label="HRA %" error={errors.hraPercent?.message}>
           <Input
             {...register("hraPercent")}
             type="number"
             min="0"
             max="100"
-            placeholder="40"
+            placeholder="e.g. 40"
             className=""
           />
         </FieldGroup>
       </div>
 
-      <CtcPreview values={watchedValues} />
+      <p className="text-xs text-muted-foreground">
+        HRA, PF and Professional Tax start with common defaults (40%, 12%, ₹200). Change them to match this template.
+      </p>
+
+      <TemplateValidity values={watchedValues} />
 
       <Separator />
 
@@ -249,39 +270,39 @@ export function SalaryStructureTemplateSheet({
       </p>
 
       <div className="grid grid-cols-2 gap-3">
-        <FieldGroup label="Special Allowance (₹)">
+        <FieldGroup label="Special Allowance (₹)" error={errors.specialAllowance?.message}>
           <Input
             {...register("specialAllowance")}
             type="number"
             min="0"
-            placeholder="0"
+            placeholder="e.g. 0"
             className=""
           />
         </FieldGroup>
-        <FieldGroup label="Medical Allowance (₹)">
+        <FieldGroup label="Medical Allowance (₹)" error={errors.medicalAllowance?.message}>
           <Input
             {...register("medicalAllowance")}
             type="number"
             min="0"
-            placeholder="0"
+            placeholder="e.g. 0"
             className=""
           />
         </FieldGroup>
-        <FieldGroup label="Travel Allowance (₹)">
+        <FieldGroup label="Travel Allowance (₹)" error={errors.travelAllowance?.message}>
           <Input
             {...register("travelAllowance")}
             type="number"
             min="0"
-            placeholder="0"
+            placeholder="e.g. 0"
             className=""
           />
         </FieldGroup>
-        <FieldGroup label="Other Allowances (₹)">
+        <FieldGroup label="Other Allowances (₹)" error={errors.otherAllowances?.message}>
           <Input
             {...register("otherAllowances")}
             type="number"
             min="0"
-            placeholder="0"
+            placeholder="e.g. 0"
             className=""
           />
         </FieldGroup>
@@ -294,26 +315,32 @@ export function SalaryStructureTemplateSheet({
       </p>
 
       <div className="grid grid-cols-2 gap-3">
-        <FieldGroup label="PF Deduction %">
+        <FieldGroup label="PF Deduction %" error={errors.pfDeductionPercent?.message}>
           <Input
             {...register("pfDeductionPercent")}
             type="number"
             min="0"
             max="100"
-            placeholder="12"
+            placeholder="e.g. 12"
             className=""
           />
         </FieldGroup>
-        <FieldGroup label="Professional Tax (₹)">
+        <FieldGroup label="Professional Tax (₹)" error={errors.professionalTax?.message}>
           <Input
             {...register("professionalTax")}
             type="number"
             min="0"
-            placeholder="200"
+            placeholder="e.g. 200"
             className=""
           />
         </FieldGroup>
       </div>
+
+      <Separator />
+
+      <ComponentsUsed />
+
+      <SampleCtcPreview />
 
       <Separator />
 
@@ -322,7 +349,7 @@ export function SalaryStructureTemplateSheet({
       </p>
 
       <div className="grid grid-cols-2 gap-3">
-        <FieldGroup label={<>Effective From <span className="text-destructive">*</span></>}>
+        <FieldGroup label={<>Effective From <span className="text-destructive">*</span></>} error={errors.effectiveFrom?.message}>
           <Controller
             name="effectiveFrom"
             control={control}
@@ -330,9 +357,6 @@ export function SalaryStructureTemplateSheet({
               <DatePicker value={field.value ?? ""} onChange={field.onChange} placeholder="Pick a date" className="text-sm" />
             )}
           />
-          {errors.effectiveFrom && (
-            <p className="text-xs text-destructive mt-1">{errors.effectiveFrom.message}</p>
-          )}
         </FieldGroup>
         <FieldGroup label="Effective To (optional)">
           <Controller

@@ -1,5 +1,7 @@
 "use client";
 
+import { useAuthorizedIdempotentMutation } from "@/hooks/api/inventory/use-idempotent-mutation";
+import { IDEMPOTENCY_HEADER } from "@/lib/idempotency-key";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { apiClient } from "@/lib/api-client";
@@ -73,18 +75,22 @@ export function useCreateOvertimeRequest() {
 
 export function useApproveOvertime() {
   const qc = useQueryClient();
-  return useAuthorizedMutation("hr:attendance:manage", {
+  // @Idempotent("hr.overtime.approve"): one key per decision, reused on retry.
+  return useAuthorizedIdempotentMutation<OvertimeRequest, Error, number>("hr:attendance:manage", {
     mutationKey: ["hr", "overtime", "approve"],
-    mutationFn: (overtimeId: number) => apiClient.patch<OvertimeRequest>(`/hr/overtime/${overtimeId}/approve`, {}, undefined, approveOvertimeC),
+    mutationFn: (overtimeId, idempotencyKey) =>
+      apiClient.patch<OvertimeRequest>(`/hr/overtime/${overtimeId}/approve`, {}, { headers: { [IDEMPOTENCY_HEADER]: idempotencyKey } }, approveOvertimeC),
     onSuccess: () => qc.invalidateQueries({ queryKey: [...humanResourcesQueryKeys.hr.all, "overtimeRequests"] }),
   });
 }
 
 export function useRejectOvertime() {
   const qc = useQueryClient();
-  return useAuthorizedMutation("hr:attendance:manage", {
+  // @Idempotent("hr.overtime.reject"): one key per decision, reused on retry.
+  return useAuthorizedIdempotentMutation<OvertimeRequest, Error, number>("hr:attendance:manage", {
     mutationKey: ["hr", "overtime", "reject"],
-    mutationFn: (overtimeId: number) => apiClient.patch<OvertimeRequest>(`/hr/overtime/${overtimeId}/reject`, {}, undefined, rejectOvertimeC),
+    mutationFn: (overtimeId, idempotencyKey) =>
+      apiClient.patch<OvertimeRequest>(`/hr/overtime/${overtimeId}/reject`, {}, { headers: { [IDEMPOTENCY_HEADER]: idempotencyKey } }, rejectOvertimeC),
     onSuccess: () => qc.invalidateQueries({ queryKey: [...humanResourcesQueryKeys.hr.all, "overtimeRequests"] }),
   });
 }

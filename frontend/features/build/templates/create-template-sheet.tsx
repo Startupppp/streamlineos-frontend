@@ -35,10 +35,9 @@ import {
   SheetClose,
   SheetBody,
 } from "@/components/ui/sheet";
-import { useCreateProjectTemplate } from "@/hooks/api/build";
+import { useCreateProjectTemplate } from "@/hooks/api/build/templates";
 import { TicketRow, type TicketDraft } from "./ticket-row";
-
-const CATEGORIES = ["GENERAL", "SOFTWARE", "ONBOARDING", "MARKETING", "SALES", "HR"] as const;
+import { TEMPLATE_CATEGORY_OPTIONS } from "./template-categories";
 
 interface CreateTemplateSheetProps {
   open: boolean;
@@ -47,7 +46,7 @@ interface CreateTemplateSheetProps {
 
 export function CreateTemplateSheet({ open, onClose }: CreateTemplateSheetProps) {
   const [tickets, setTickets] = useState<TicketDraft[]>([
-    { title: "", type: "TASK", priority: "MEDIUM", phase: "", estimatedHours: "", order: 0 },
+    { uid: crypto.randomUUID(), title: "", type: "TASK", priority: "MEDIUM", phase: "", estimatedHours: "", order: 0 },
   ]);
   const create = useCreateProjectTemplate();
 
@@ -60,7 +59,7 @@ export function CreateTemplateSheet({ open, onClose }: CreateTemplateSheetProps)
   const addTicket = useCallback(() => {
     setTickets((prev) => [
       ...prev,
-      { title: "", type: "TASK", priority: "MEDIUM", phase: "", estimatedHours: "", order: prev.length },
+      { uid: crypto.randomUUID(), title: "", type: "TASK", priority: "MEDIUM", phase: "", estimatedHours: "", order: prev.length },
     ]);
   }, []);
 
@@ -108,7 +107,7 @@ export function CreateTemplateSheet({ open, onClose }: CreateTemplateSheetProps)
 
   return (
     <Sheet open={open} onOpenChange={onClose}>
-      <SheetContent className="p-0 flex flex-col gap-0 w-full sm:max-w-lg">
+      <SheetContent aria-describedby={undefined} className="p-0 flex flex-col gap-0 w-full sm:max-w-lg">
         <SheetHeader className="shrink-0 px-6 py-4 border-b text-left gap-1">
           <SheetTitle>New Project Template</SheetTitle>
         </SheetHeader>
@@ -142,8 +141,10 @@ export function CreateTemplateSheet({ open, onClose }: CreateTemplateSheetProps)
                           <SelectTrigger><SelectValue /></SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          {CATEGORIES.map((c) => (
-                            <SelectItem key={c} value={c}>{c}</SelectItem>
+                          {TEMPLATE_CATEGORY_OPTIONS.map((category) => (
+                            <SelectItem key={category.value} value={category.value}>
+                              {category.label}
+                            </SelectItem>
                           ))}
                         </SelectContent>
                       </Select>
@@ -183,7 +184,7 @@ export function CreateTemplateSheet({ open, onClose }: CreateTemplateSheetProps)
                 </div>
                 {tickets.map((ticket, idx) => (
                   <TicketRow
-                    key={idx}
+                    key={ticket.uid}
                     ticket={ticket}
                     index={idx}
                     isOnlyTicket={tickets.length <= 1}

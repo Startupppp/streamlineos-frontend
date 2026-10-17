@@ -64,7 +64,7 @@ export function FieldConfigPanel({ field, allFields, onChange, onRemove }: Field
     <div className="space-y-3 p-3 border border-border rounded-lg bg-card">
       <div className="flex items-center justify-between">
         <span className="text-xs font-medium text-muted-foreground">{meta.label} field</span>
-        <Button variant="ghost" size="icon" className="w-7 text-destructive" onClick={onRemove} aria-label="Remove field">
+        <Button type="button" variant="ghost" size="icon" className="w-7 text-destructive" onClick={onRemove} aria-label="Remove field">
           <Trash2 className="h-3.5 w-3.5" />
         </Button>
       </div>
@@ -72,11 +72,11 @@ export function FieldConfigPanel({ field, allFields, onChange, onRemove }: Field
       <div className="grid grid-cols-2 gap-2">
         <div className="space-y-1">
           <Label className="text-xs">Label *</Label>
-          <Input value={field.label} onChange={handleLabelChange} className="text-xs" placeholder="Field label" />
+          <Input value={field.label} onChange={handleLabelChange} placeholder="Field label" />
         </div>
         <div className="space-y-1">
           <Label className="text-xs">Key *</Label>
-          <Input value={field.key} onChange={handleKeyChange} className="text-xs font-mono" placeholder="field_key" />
+          <Input value={field.key} onChange={handleKeyChange} className="font-mono" placeholder="field_key" />
         </div>
       </div>
 
@@ -99,7 +99,7 @@ export function FieldConfigPanel({ field, allFields, onChange, onRemove }: Field
             {(field.options ?? []).map((opt, idx) => (
               <div key={idx} className="flex items-center gap-1">
                 <span className="flex-1 text-xs px-2 py-1 bg-muted rounded">{opt.label}</span>
-                <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => handleRemoveOption(idx)} aria-label={`Remove ${opt.label}`}>
+                <Button type="button" variant="ghost" size="icon" className="h-6 w-6" onClick={() => handleRemoveOption(idx)} aria-label={`Remove ${opt.label}`}>
                   <X className="h-3 w-3" />
                 </Button>
               </div>
@@ -109,10 +109,10 @@ export function FieldConfigPanel({ field, allFields, onChange, onRemove }: Field
                 value={newOption}
                 onChange={handleNewOptionChange}
                 onKeyDown={handleNewOptionKeyDown}
-                className="text-xs flex-1"
+                className="flex-1"
                 placeholder="Add option…"
               />
-              <Button variant="outline" size="icon" className="w-7" onClick={handleAddOption} aria-label="Add option">
+              <Button type="button" variant="outline" size="icon" className="w-7" onClick={handleAddOption} aria-label="Add option">
                 <Plus className="h-3.5 w-3.5" />
               </Button>
             </div>
@@ -168,7 +168,6 @@ export function FieldConfigPanel({ field, allFields, onChange, onRemove }: Field
             )}
             {conditional?.fieldKey && conditional.operator !== "notEmpty" && (
               <Input
-                className="text-xs"
                 placeholder="Value…"
                 value={typeof conditional.value === "string" ? conditional.value : ""}
                 onChange={(e) => update({ conditional: { ...conditional, value: e.target.value } })}

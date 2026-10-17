@@ -8,7 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useProjectMembers } from "@/hooks/api/build";
+import { useProjectMembers } from "@/hooks/api/build/project-members";
 import { getUserDisplayName } from "@/lib/person-display";
 import type { FormField } from "@/types/projects/forms";
 import { numericFieldChangeOr } from "@/lib/numeric-field";
@@ -78,7 +78,8 @@ export function DynamicFormRenderer({
   const [values, setValues] = useState<Record<string, unknown>>({});
   const [submitterName, setSubmitterName] = useState("");
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const { data: members } = useProjectMembers(projectId);
+  const { data: membersPage } = useProjectMembers(projectId);
+  const members = membersPage?.data ?? [];
 
   function setFieldValue(key: string, v: unknown) {
     setValues((prev) => ({ ...prev, [key]: v }));
@@ -182,7 +183,7 @@ export function DynamicFormRenderer({
               <Select value={strVal} onValueChange={(v) => setFieldValue(field.key, v)}>
                 <SelectTrigger className="text-sm"><SelectValue placeholder="Select user…" /></SelectTrigger>
                 <SelectContent>
-                  {(members ?? []).map((m) => (
+                  {members.map((m) => (
                     <SelectItem key={m.id} value={m.id}>
                       {getUserDisplayName(m)}
                     </SelectItem>

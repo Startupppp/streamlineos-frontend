@@ -21,7 +21,7 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { LoadingButton } from "@/components/ui/loading-button";
-import { useSetTemplateApproval } from "@/hooks/api/notifications";
+import { useSetTemplateApproval } from "@/hooks/api/notifications-templates";
 import { getErrorMessage } from "@/lib/get-error-message";
 import type { NotificationTemplate, TemplateApprovalStatus } from "@/types/notifications";
 

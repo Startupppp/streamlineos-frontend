@@ -1,128 +1,40 @@
 "use client";
 
-import { useState, useMemo, useCallback, useEffect } from "react";
+import { useState, useMemo, useCallback, useEffect, useRef } from "react";
 import Link from "next/link";
-import { useRouter, useSearchParams, usePathname } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { LayoutGrid, List, UserPlus } from "lucide-react";
-import {
-  useInfiniteHrEmployees,
-  useHrDepartments,
-} from "@/hooks/api/hr";
-import { useDebouncedValue } from "@/hooks/common/use-debounce";
+import { useInfiniteHrEmployees, useHrDepartments } from "@/hooks/api/hr";
+import { useHrEmployeeCounts } from "@/hooks/api/hr/employee-list";
+import { useFlushableDebouncedValue } from "@/hooks/common/use-debounce";
 import { useCan } from "@/hooks/api/access";
 import { usePageState } from "@/hooks/api/use-page-state";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
-import { EmptyState } from "@/components/ui/empty-state";
+import { InfiniteScrollSentinel } from "@/components/ui/infinite-scroll-sentinel";
 import { ViewToggle } from "@/components/ui/view-toggle";
-import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { EmployeeCard } from "@/features/hr/employees/employee-card";
 import { EmployeesDirectoryStats } from "@/features/hr/employees/employees-directory-stats";
 import { EmployeeExportAction } from "@/features/hr/employees/employee-export-action";
+import { EmployeesFilters } from "@/features/hr/employees/employees-filters";
 import {
-  EmployeesFilters,
-  type Department,
-} from "@/features/hr/employees/employees-filters";
-import {
-  parseEmployeeListFilters,
   toHrEmployeesApiParams,
   hasActiveEmployeeFilters,
-  applyEmployeeUrlUpdates,
   employeeFiltersToUrlUpdates,
   DEFAULT_PAGE_SIZE,
   type EmployeeStatusFilter,
 } from "@/features/hr/employees/employee-list-filters";
 import { EmployeesGridSkeleton } from "@/features/hr/employees/employees-loading-skeleton";
+import { EmployeesListResults, type EmployeesListView } from "@/features/hr/employees/employees-list-results";
+import { EmployeePersonDrawer } from "@/features/hr/employees/employee-person-drawer";
+import { useEmployeeListUrlState } from "@/features/hr/employees/use-employee-list-url-state";
 import { StatCardGridSkeleton } from "@/components/ui/stat-card";
-import { resolveImageUrl, cn } from "@/lib/utils";
 import type { EmployeeListItem } from "@/types/hr";
-import { HrPanel, HrStatusBadge } from "@/features/hr/shared/hr-ui";
-import { TruncatedText } from "@/components/ui/truncated-text";
-import { PAGE_BODY_EMPTY_CLASS } from "@/components/ui/content-fill-panel";
+import { FILTER_ROW_STACKS_ON_MOBILE } from "@/components/ui/content-fill-panel";
 
-const VIEW_MODES = ["grid", "list"] as const;
-type ViewMode = (typeof VIEW_MODES)[number];
+const VIEW_MODES: readonly EmployeesListView[] = ["grid", "list"];
 
 const PAGE_SIZE = DEFAULT_PAGE_SIZE;
-
-/**
- * `useInfiniteHrEmployees` accumulates its pages, so the grid would mount one
- * card per employee ever loaded. The list branch is bounded by `DataTable`'s own
- * window; this bounds the grid to match, and "Load more employees" reveals the
- * cards already in hand before asking the server for another page — one control,
- * so nothing loaded is ever stranded behind a second one.
- */
 const GRID_RENDER_PAGE_SIZE = 24;
-
-function buildEmployeeListColumns(
-  getDept: (emp: EmployeeListItem) => string | null,
-): DataTableColumn<EmployeeListItem>[] {
-  return [
-    {
-      key: "employee",
-      header: "Employee",
-      cell: (emp) => {
-        const displayName =
-          emp.firstName && emp.lastName
-            ? `${emp.firstName} ${emp.lastName}`
-            : (emp.name ?? "—");
-        return (
-          <div className="flex items-center gap-3">
-            <Avatar className="w-9 h-9 shrink-0 ring-2 ring-background shadow-sm">
-              <AvatarImage src={resolveImageUrl(emp.image)} alt="" />
-              <AvatarFallback className="bg-status-info-surface text-status-info-ink text-xs font-bold">
-                {displayName[0]?.toUpperCase()}
-              </AvatarFallback>
-            </Avatar>
-            <div className="min-w-0">
-              <TruncatedText text={displayName} className="text-sm font-semibold text-foreground" />
-              {emp.email && <TruncatedText text={emp.email} className="text-dense text-muted-foreground" />}
-            </div>
-          </div>
-        );
-      },
-    },
-    {
-      key: "employeeId",
-      header: "Employee ID",
-      headerClassName: "w-[110px] hidden md:table-cell",
-      className: "text-xs text-muted-foreground font-mono hidden md:table-cell",
-      cell: (emp) => emp.employeeId ?? "—",
-    },
-    {
-      key: "designation",
-      header: "Designation",
-      headerClassName: "w-[160px] hidden md:table-cell",
-      className: "text-xs text-muted-foreground hidden md:table-cell",
-      cell: (emp) => emp.designation ?? "—",
-    },
-    {
-      key: "department",
-      header: "Department",
-      headerClassName: "w-[140px] hidden md:table-cell",
-      className: "hidden md:table-cell",
-      cell: (emp) => {
-        const dept = getDept(emp);
-        return dept ? (
-          <span className="inline-flex items-center gap-1 text-micro font-semibold px-2 py-0.5 rounded-full border bg-status-info-surface text-status-info-ink border-status-info-rule">
-            {dept}
-          </span>
-        ) : (
-          <span className="text-xs text-muted-foreground">—</span>
-        );
-      },
-    },
-    {
-      key: "status",
-      header: "Status",
-      headerClassName: "w-[100px]",
-      cell: (emp) => (
-        <HrStatusBadge status={emp.isActive ? "active" : "inactive"} />
-      ),
-    },
-  ];
-}
 
 const VIEW_OPTIONS = [
   { value: "grid" as const, icon: LayoutGrid, label: "Grid view" },
@@ -130,45 +42,21 @@ const VIEW_OPTIONS = [
 ];
 
 export function EmployeesListPage() {
-  const router = useRouter();
   const searchParams = useSearchParams();
-  const pathname = usePathname();
   const canOnboard = useCan("hr:onboarding:manage");
   const canExport = useCan("hr:export:manage");
 
-  const filters = useMemo(
-    () =>
-      parseEmployeeListFilters(searchParams, {
-        size: PAGE_SIZE,
-        status: "all",
-      }),
-    [searchParams],
-  );
+  const urlState = useEmployeeListUrlState(PAGE_SIZE);
+  const { filters, search, updateSearch, updateParams, statusHref, clearFilters } = urlState;
 
-  const [searchDraft, setSearchDraft] = useState({
-    sourceQuery: filters.q,
-    value: filters.q,
-  });
-  const search =
-    searchDraft.sourceQuery === filters.q ? searchDraft.value : filters.q;
-  const updateSearch = useCallback(
-    (value: string) => setSearchDraft({ sourceQuery: filters.q, value }),
-    [filters.q],
-  );
-  const [view, setView] = useState<ViewMode>(
-    () => VIEW_MODES.find((candidate) => candidate === searchParams.get("view")) ?? "grid",
-  );
-
-  const debouncedSearch = useDebouncedValue(search, 300);
+  const view: EmployeesListView =
+    VIEW_MODES.find((candidate) => candidate === searchParams.get("view")) ?? "grid";
+  const [debouncedSearch, flushSearch] = useFlushableDebouncedValue(search, 300);
   const { data: departments } = useHrDepartments();
-  const deptList = departments as Department[] | undefined;
+  const deptList = departments;
 
   const apiParams = useMemo(
-    () =>
-      toHrEmployeesApiParams({
-        ...filters,
-        q: debouncedSearch,
-      }),
+    () => toHrEmployeesApiParams({ ...filters, q: debouncedSearch }),
     [filters, debouncedSearch],
   );
 
@@ -189,63 +77,68 @@ export function EmployeesListPage() {
     [employeePages],
   );
 
+  const countsFilters = useMemo(
+    () => ({ search: apiParams.search, departmentId: apiParams.departmentId, role: apiParams.role }),
+    [apiParams.search, apiParams.departmentId, apiParams.role],
+  );
+  useHrEmployeeCounts(countsFilters);
+
   const pageState = usePageState({
     permission: "hr:employees:view",
     isLoading,
     isError,
     error,
-    isEmpty: employees.length === 0,
+    isEmpty: false,
   });
 
-  function handleRetryEmployees() {
-    void refetch();
-  }
-
   const [gridPagesShown, setGridPagesShown] = useState(1);
-  const gridVisibleCount = Math.min(
-    employees.length,
-    gridPagesShown * GRID_RENDER_PAGE_SIZE,
-  );
+  const gridVisibleCount = Math.min(employees.length, gridPagesShown * GRID_RENDER_PAGE_SIZE);
   const hasUnrenderedEmployees = view === "grid" && gridVisibleCount < employees.length;
   const gridEmployees = useMemo(
     () => (view === "grid" ? employees.slice(0, gridVisibleCount) : employees),
     [view, employees, gridVisibleCount],
   );
 
+  const [drawerEmployee, setDrawerEmployee] = useState<EmployeeListItem | null>(null);
+  const openerRef = useRef<HTMLElement | null>(null);
+
+  const handleOpenPerson = useCallback((employee: EmployeeListItem) => {
+    openerRef.current =
+      document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    setDrawerEmployee(employee);
+  }, []);
+
+  const handleDrawerOpenChange = useCallback((next: boolean) => {
+    if (next) return;
+    setDrawerEmployee(null);
+    const opener = openerRef.current;
+    openerRef.current = null;
+    if (opener) requestAnimationFrame(() => opener.focus());
+  }, []);
+
+  function handleRetryEmployees() {
+    void refetch();
+  }
+
   const handleLoadMore = useCallback(() => {
     if (hasUnrenderedEmployees) {
-      setGridPagesShown((p) => p + 1);
+      setGridPagesShown((shown) => shown + 1);
       return;
     }
     void fetchNextPage();
   }, [hasUnrenderedEmployees, fetchNextPage]);
 
-  const updateParams = useCallback(
-    (updates: Record<string, string | null>) => {
-      const params = applyEmployeeUrlUpdates(searchParams, updates);
-      router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+  const handleViewChange = useCallback(
+    (next: EmployeesListView) => {
+      updateParams({ view: next === "grid" ? null : next });
     },
-    [searchParams, router, pathname],
-  );
-
-  const statusHref = useCallback(
-    (status: Exclude<EmployeeStatusFilter, "all">) => {
-      const params = applyEmployeeUrlUpdates(
-        searchParams,
-        employeeFiltersToUrlUpdates({ status }, { size: PAGE_SIZE, status: "all" }),
-      );
-      return `${pathname}?${params.toString()}`;
-    },
-    [searchParams, pathname],
+    [updateParams],
   );
 
   const handleDepartmentFilterChange = useCallback(
     (departmentId: string | undefined) => {
       updateParams(
-        employeeFiltersToUrlUpdates(
-          { departmentId },
-          { size: PAGE_SIZE, status: "all" },
-        ),
+        employeeFiltersToUrlUpdates({ departmentId }, { size: PAGE_SIZE, status: "all" }),
       );
     },
     [updateParams],
@@ -253,12 +146,7 @@ export function EmployeesListPage() {
 
   const handleStatusFilterChange = useCallback(
     (status: EmployeeStatusFilter) => {
-      updateParams(
-        employeeFiltersToUrlUpdates(
-          { status },
-          { size: PAGE_SIZE, status: "all" },
-        ),
-      );
+      updateParams(employeeFiltersToUrlUpdates({ status }, { size: PAGE_SIZE, status: "all" }));
     },
     [updateParams],
   );
@@ -267,27 +155,11 @@ export function EmployeesListPage() {
     const current = searchParams.get("q") || "";
     if (debouncedSearch === current) return;
     updateParams(
-      employeeFiltersToUrlUpdates(
-        { q: debouncedSearch },
-        { size: PAGE_SIZE, status: "all" },
-      ),
+      employeeFiltersToUrlUpdates({ q: debouncedSearch }, { size: PAGE_SIZE, status: "all" }),
     );
   }, [debouncedSearch, searchParams, updateParams]);
 
-  const hasFilters = hasActiveEmployeeFilters(filters, { status: "all" });
-
-  const clearFilters = useCallback(() => {
-    updateSearch("");
-    updateParams({
-      q: null,
-      dept: null,
-      status: null,
-      role: null,
-      page: null,
-    });
-  }, [updateParams, updateSearch]);
-
-  const getDept = (emp: EmployeeListItem) => emp.department?.name ?? null;
+  const hasFilters = hasActiveEmployeeFilters({ ...filters, q: debouncedSearch }, { status: "all" });
 
   return (
     <PageWrapper
@@ -304,17 +176,14 @@ export function EmployeesListPage() {
       loading={
         <>
           <StatCardGridSkeleton cols={3} count={3} />
-          <EmployeesGridSkeleton />
+          <EmployeesGridSkeleton onStalledRetry={handleRetryEmployees} />
         </>
       }
       actions={
         <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto">
-          <ViewToggle<ViewMode>
+          <ViewToggle<EmployeesListView>
             value={view}
-            onChange={(v) => {
-              setView(v);
-              updateParams({ view: v === "grid" ? null : v });
-            }}
+            onChange={handleViewChange}
             options={VIEW_OPTIONS}
             size="sm"
           />
@@ -329,7 +198,7 @@ export function EmployeesListPage() {
             />
           )}
           {canOnboard && (
-            <Button size="sm" className="h-8 flex-1 gap-1.5 shadow-sm sm:flex-none" asChild>
+            <Button size="sm" className="flex-1 gap-1.5 shadow-sm sm:flex-none" asChild>
               <Link href="/hr/onboarding">
                 <UserPlus className="h-3.5 w-3.5" />
                 <span className="sm:hidden">Add</span>
@@ -339,7 +208,7 @@ export function EmployeesListPage() {
           )}
         </div>
       }
-      filtersClassName="max-md:flex-col max-md:items-stretch max-md:gap-2 max-md:overflow-x-visible max-md:[&>[data-slot=search-input]]:min-w-0 max-md:[&>[data-slot=search-input]]:basis-auto max-md:[&>[data-slot=search-input]]:w-full max-md:[&>*:not([data-slot=search-input])]:w-full"
+      filtersClassName={FILTER_ROW_STACKS_ON_MOBILE}
       filters={
         <EmployeesFilters
           search={search}
@@ -348,6 +217,8 @@ export function EmployeesListPage() {
           departments={deptList}
           hasFilters={hasFilters}
           onSearchChange={updateSearch}
+          onSearchSubmit={flushSearch}
+          searching={search.trim() !== debouncedSearch.trim() || (isFetching && !isLoading && !isFetchingNextPage)}
           onDepartmentIdChange={handleDepartmentFilterChange}
           onStatusChange={handleStatusFilterChange}
           onClear={clearFilters}
@@ -361,72 +232,40 @@ export function EmployeesListPage() {
               loadedCount={employees.length}
               hasMore={Boolean(hasNextPage)}
               statusFilter={filters.status}
-              filters={{
-                search: apiParams.search,
-                departmentId: apiParams.departmentId,
-                role: apiParams.role,
-              }}
+              filters={countsFilters}
               statusHref={statusHref}
             />
           </div>
 
           <div className="md:min-h-0 md:flex-1 md:overflow-y-auto md:scrollbar-hide">
-            {employees.length === 0 ? (
-              <EmptyState
-                illustrationPreset="team"
-                title="No employees yet"
-                description={
-                  hasFilters
-                    ? "No results match your filters."
-                    : "No workers with active employment records. Onboard your first employee to get started."
-                }
-                filtersActive={hasFilters}
-                onClearFilters={clearFilters}
-                action={!hasFilters && canOnboard ? { label: "Add employee", href: "/hr/onboarding" } : undefined}
-                className={PAGE_BODY_EMPTY_CLASS}
-              />
-            ) : view === "grid" ? (
-              <div
-                className={cn(
-                  "grid auto-rows-max content-start gap-2.5 sm:gap-3",
-                  "grid-cols-1 min-[420px]:grid-cols-2 md:grid-cols-3 xl:grid-cols-4",
-                  isFetching && "opacity-70 transition-opacity",
-                )}
-              >
-                {gridEmployees.map((emp) => (
-                  <EmployeeCard key={emp.id} employee={emp} department={getDept(emp)} />
-                ))}
-              </div>
-            ) : (
-              <HrPanel
-                padded={false}
-                className="flex min-h-0 flex-col overflow-hidden md:h-full md:flex-1"
-              >
-                <DataTable<EmployeeListItem>
-                  data={employees}
-                  columns={buildEmployeeListColumns(getDept)}
-                  getRowKey={(emp) => emp.id}
-                  onRowClick={(emp) => router.push(`/hr/employees/${emp.id}`)}
-                  className="min-h-0 flex-1"
-                />
-              </HrPanel>
-            )}
+            <EmployeesListResults
+              employees={employees}
+              gridEmployees={gridEmployees}
+              view={view}
+              isFetching={isFetching}
+              hasFilters={hasFilters}
+              canOnboard={canOnboard}
+              onClearFilters={clearFilters}
+              onOpenPerson={handleOpenPerson}
+            />
           </div>
         </div>
 
-        {!isError && (hasNextPage || hasUnrenderedEmployees) ? (
-          <div className="flex shrink-0 justify-center rounded-xl border border-border/70 p-2">
-            <Button
-              variant="outline"
-              size="sm"
-              disabled={isFetchingNextPage}
-              onClick={handleLoadMore}
-            >
-              {isFetchingNextPage ? "Loading..." : "Load more employees"}
-            </Button>
-          </div>
-        ) : null}
+        {!isError && (
+          <InfiniteScrollSentinel
+            hasNextPage={Boolean(hasNextPage) || hasUnrenderedEmployees}
+            isFetchingNextPage={isFetchingNextPage}
+            onLoadMore={handleLoadMore}
+            label="Load more employees"
+          />
+        )}
       </div>
+
+      <EmployeePersonDrawer
+        employee={drawerEmployee}
+        open={drawerEmployee !== null}
+        onOpenChange={handleDrawerOpenChange}
+      />
     </PageWrapper>
   );
 }

@@ -17,7 +17,17 @@ import { TABLE_TITLE_CELL } from "@/lib/text-overflow";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import type { ChangeRequest, ChangeRequestStatus } from "@/types/projects";
 import { CR_STATUS_LABELS } from "./change-request-schema";
-import type { OrgMember } from "@/hooks/api/organization";
+
+interface ChangeRequestActor {
+  id?: string;
+  userId?: string;
+  name?: string | null;
+  email: string;
+}
+
+function actorId(actor: ChangeRequestActor): string | undefined {
+  return actor.id ?? actor.userId;
+}
 
 export const CHANGE_REQUESTS_TABLE_HEADERS = [
   "ID",
@@ -32,16 +42,16 @@ export const CHANGE_REQUESTS_TABLE_HEADERS = [
 
 const CR_STATUS_STYLES: Record<string, string> = {
   submitted: "text-muted-foreground border-border",
-  under_review: "text-status-info-ink border-status-info-rule",
-  estimated: "text-status-warning-ink border-status-warning-rule",
-  awaiting_approval: "text-status-warning-ink border-status-warning-rule",
-  approved: "text-status-success-ink border-status-success-rule",
-  rejected: "text-status-danger-ink border-status-danger-rule",
-  in_progress: "text-status-info-ink border-status-info-rule",
-  completed: "text-status-success-ink border-status-success-rule",
+  under_review: "text-status-info-ink-strong border-status-info-rule",
+  estimated: "text-status-warning-ink-strong border-status-warning-rule",
+  awaiting_approval: "text-status-warning-ink-strong border-status-warning-rule",
+  approved: "text-status-success-ink-strong border-status-success-rule",
+  rejected: "text-status-danger-ink-strong border-status-danger-rule",
+  in_progress: "text-status-info-ink-strong border-status-info-rule",
+  completed: "text-status-success-ink-strong border-status-success-rule",
 };
 
-export function CrStatusBadge({ status }: { status: ChangeRequestStatus }) {
+function CrStatusBadge({ status }: { status: ChangeRequestStatus }) {
   return (
     <Badge
       variant="outline"
@@ -54,12 +64,12 @@ export function CrStatusBadge({ status }: { status: ChangeRequestStatus }) {
 
 interface CrRowHandlers {
   canManage: boolean;
-  members: OrgMember[];
+  members: ChangeRequestActor[];
   onEdit: (cr: ChangeRequest) => void;
   onDelete: (cr: ChangeRequest) => void;
 }
 
-export function CrRowActions({
+function CrRowActions({
   cr,
   onEdit,
   onDelete,
@@ -159,7 +169,7 @@ export function buildChangeRequestsColumns({
       key: "requestedById",
       header: "Requester",
       cell: (row) => {
-        const m = members.find((member) => member.userId === row.requestedById);
+        const m = members.find((member) => actorId(member) === row.requestedById);
         return (
           <span className="text-dense text-muted-foreground">
             {m ? (m.name ?? m.email) : "—"}
@@ -189,7 +199,7 @@ export function ChangeRequestMobileCard({
   onDelete,
 }: { cr: ChangeRequest } & CrRowHandlers) {
   const requester = cr.requestedById
-    ? members.find((m) => m.userId === cr.requestedById)
+    ? members.find((m) => actorId(m) === cr.requestedById)
     : undefined;
   const personUser = requester ? { name: requester.name ?? null, email: requester.email } : null;
   return (

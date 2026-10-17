@@ -5,16 +5,17 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { TablePagination, useCursorPager } from "@/components/ui/table-pagination";
+import { BuildPaginatedContent } from "@/features/build/shared/build-paginated-content";
 import { toast } from "sonner";
 import {
   useFeedbackPosts,
   useDeleteFeedbackPost,
-  useRoadmapItems,
-} from "@/hooks/api/build/roadmap";
+} from "@/hooks/api/build/feedback-posts";
+import { useRoadmapItems } from "@/hooks/api/build/roadmap";
 import type { FeedbackPost } from "@/types/projects";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { cn } from "@/lib/utils";
-import { PmStaggerList, PM_FILL_PANEL, PM_PANEL } from "@/components/pm-chrome";
+import { PmStaggerList, CONTENT_FILL_PANEL, PM_PANEL } from "@/components/pm-chrome";
 import { usePageState } from "@/hooks/api/use-page-state";
 import { PageState } from "@/components/shared/page-state";
 import { FeedbackRow } from "./feedback-row";
@@ -22,6 +23,8 @@ import { MergeFeedbackDialog } from "./merge-feedback-dialog";
 
 interface FeedbackTabProps {
   search: string;
+  cursor?: string | null;
+  onCursorChange?: (cursor: string | null) => void;
 }
 
 function FeedbackListSkeleton() {
@@ -41,12 +44,21 @@ function FeedbackListSkeleton() {
   );
 }
 
-export function FeedbackTab({ search }: FeedbackTabProps) {
-  const pager = useCursorPager(search.trim());
+export function FeedbackTab({
+  search,
+  cursor = null,
+  onCursorChange = () => {},
+}: FeedbackTabProps) {
   const isFiltered = search.trim().length > 0;
+  const pager = useCursorPager(search.trim(), {
+    initialCursor: cursor ?? undefined,
+    onCursorChange: (nextCursor) => onCursorChange(nextCursor ?? null),
+  });
 
   const { data, isLoading, isError, error, refetch } = useFeedbackPosts(
-    isFiltered ? { search: search.trim(), cursor: pager.cursor } : { cursor: pager.cursor },
+    isFiltered
+      ? { search: search.trim(), cursor: pager.cursor }
+      : { cursor: pager.cursor },
   );
   const { data: roadmapData } = useRoadmapItems();
   const deletePost = useDeleteFeedbackPost();
@@ -94,7 +106,7 @@ export function FeedbackTab({ search }: FeedbackTabProps) {
 
   const handleNext = useCallback(() => {
     pager.goNext(data?.pagination.nextCursor);
-  }, [pager, data?.pagination.nextCursor]);
+  }, [data?.pagination.nextCursor, pager]);
 
   const handlePrev = useCallback(() => {
     pager.goPrevious();
@@ -103,13 +115,27 @@ export function FeedbackTab({ search }: FeedbackTabProps) {
   const hasNext = data?.pagination.hasMore ?? false;
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col gap-4">
-      <PageState
+    <>
+      <BuildPaginatedContent
+        ariaLabel="Feedback"
+        footer={(data?.data ?? []).length > 0 || pager.hasPrevious ? (
+          <TablePagination
+            mode="cursor"
+            rowCount={(data?.data ?? []).length}
+            pageNumber={pager.pageNumber}
+            hasMore={hasNext}
+            hasPrevious={pager.hasPrevious}
+            onNext={handleNext}
+            onPrevious={handlePrev}
+          />
+        ) : null}
+      >
+        <PageState
         resolution={resolution}
         loading={<FeedbackListSkeleton />}
         empty={
           <EmptyState
-            className={PM_FILL_PANEL}
+            className={CONTENT_FILL_PANEL}
             illustrationPreset="mail"
             title={isFiltered ? "No feedback matched your search" : "No feedback yet"}
             description={
@@ -121,29 +147,23 @@ export function FeedbackTab({ search }: FeedbackTabProps) {
           />
         }
         onRetry={handleRetry}
-        className={PM_FILL_PANEL}
+        className={CONTENT_FILL_PANEL}
       >
-        <PmStaggerList className="space-y-2">
-          {(data?.data ?? []).map((post) => (
-            <FeedbackRow
-              key={post.id}
-              post={post}
-              roadmapItems={roadmapData?.data ?? []}
-              onDelete={handleSetDeleteTarget}
-              onMerge={handleSetMergeTarget}
-            />
-          ))}
-        </PmStaggerList>
-      </PageState>
-
-      <TablePagination
-        mode="cursor"
-        rowCount={(data?.data ?? []).length}
-        hasMore={hasNext}
-        hasPrevious={pager.hasPrevious}
-        onNext={handleNext}
-        onPrevious={handlePrev}
-      />
+        <div>
+          <PmStaggerList className="space-y-2">
+            {(data?.data ?? []).map((post) => (
+              <FeedbackRow
+                key={post.id}
+                post={post}
+                roadmapItems={roadmapData?.data ?? []}
+                onDelete={handleSetDeleteTarget}
+                onMerge={handleSetMergeTarget}
+              />
+            ))}
+          </PmStaggerList>
+        </div>
+        </PageState>
+      </BuildPaginatedContent>
 
       <MergeFeedbackDialog post={mergeTarget} onOpenChange={handleMergeDialogChange} />
 
@@ -156,6 +176,6 @@ export function FeedbackTab({ search }: FeedbackTabProps) {
         destructive
         onConfirm={handleDelete}
       />
-    </div>
+    </>
   );
 }

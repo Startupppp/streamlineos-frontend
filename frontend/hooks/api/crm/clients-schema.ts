@@ -82,8 +82,17 @@ export const clientTimelineContract = z.object({
 });
 
 export const simpleClientsListContract = z.array(
-  z.object({ id: z.number().int(), name: z.string() }),
+  z.object({ id: z.number().int(), name: z.string().nullable() }),
 );
+
+export const createClientInputSchema = z.object({
+  name: z.string().min(1).max(200),
+});
+
+export const createClientResultSchema = z.object({
+  id: z.number().int(),
+  name: z.string().nullable(),
+});
 
 const opportunityRowSchema = z.object({
   id: z.number().int(),

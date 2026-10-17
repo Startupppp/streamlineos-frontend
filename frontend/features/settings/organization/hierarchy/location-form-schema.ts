@@ -7,10 +7,10 @@ export const formSchema = z.object({
     .string()
     .trim()
     .min(1, "Name is required")
-    .max(100)
-    .refine((v) => /[\p{L}\p{N}]/u.test(v), "Name must contain at least one letter or number"),
+    .max(100, "Name must be at most 100 characters")
+    .refine((v) => v.length === 0 || /[\p{L}\p{N}]/u.test(v), "Name must contain at least one letter or number"),
   type: z.enum(LOCATION_TYPE_ENUM),
-  address: z.string().trim().max(500).optional(),
+  address: z.string().trim().max(500, "Address must be at most 500 characters").optional(),
 });
 
 export type FormValues = z.infer<typeof formSchema>;

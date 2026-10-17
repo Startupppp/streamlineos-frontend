@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback } from "react";
 import { ErrorState } from "@/components/shared/error-state";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -8,35 +8,30 @@ import { getErrorMessage } from "@/lib/get-error-message";
 import { useHrForm } from "@/features/hr/forms/hooks/use-hr-forms";
 import { useHrFormSubmissions } from "@/features/hr/forms/hooks/use-hr-form-submissions";
 import { SubmissionsDataTable } from "@/features/hr/forms/components/submissions-data-table";
-import { CursorPageControls } from "@/components/ui/cursor-page-controls";
+import { useCursorPager } from "@/components/ui/table-pagination";
+import { useCan } from "@/hooks/api/access";
 
 interface HrFormSubmissionsContentProps {
   formId: number;
 }
 
 export function HrFormSubmissionsContent({ formId }: HrFormSubmissionsContentProps) {
-  const [cursorHistory, setCursorHistory] = useState<Array<string | undefined>>([undefined]);
-  const page = cursorHistory.length;
-  const cursor = cursorHistory.at(-1);
+  const pager = useCursorPager();
+  const canManage = useCan("hr:forms:manage");
   const { data: form, isLoading: formLoading } = useHrForm(formId);
   const {
     data: subs,
     isLoading: subsLoading,
-    isFetching,
     isError,
     error,
     refetch,
-  } = useHrFormSubmissions(formId, { cursor, limit: 20 });
+  } = useHrFormSubmissions(formId, { cursor: pager.cursor, limit: 20 });
   const isLoading = formLoading || subsLoading;
 
-  const handlePreviousPage = useCallback(() => {
-    setCursorHistory((history) => history.length > 1 ? history.slice(0, -1) : history);
-  }, []);
-
+  const nextCursor = subs?.pagination.nextCursor;
   const handleNextPage = useCallback(() => {
-    const nextCursor = subs?.pagination.nextCursor;
-    if (nextCursor) setCursorHistory((history) => [...history, nextCursor]);
-  }, [subs?.pagination.nextCursor]);
+    pager.goNext(nextCursor);
+  }, [pager, nextCursor]);
 
   const handleRetry = useCallback(() => {
     void refetch();
@@ -45,7 +40,7 @@ export function HrFormSubmissionsContent({ formId }: HrFormSubmissionsContentPro
   return (
     <PageWrapper
       title={form ? `${form.name} — Submissions` : "Submissions"}
-      subtitle={`${subs?.total ?? 0} total submissions`}
+      subtitle={subs ? `${subs.total} total submissions` : undefined}
       backHref={`/hr/settings/forms/${formId}`}
     >
       {isLoading ? (
@@ -66,18 +61,16 @@ export function HrFormSubmissionsContent({ formId }: HrFormSubmissionsContentPro
           <SubmissionsDataTable
             formId={formId}
             submissions={subs?.data ?? []}
-            canManage
+            canManage={canManage}
+            pagination={{
+              mode: "cursor",
+              pageSize: 20,
+              hasMore: subs?.pagination.hasMore ?? false,
+              hasPrevious: pager.hasPrevious,
+              onNext: handleNextPage,
+              onPrevious: pager.goPrevious,
+            }}
           />
-          {subs && (page > 1 || subs.pagination.hasMore) ? (
-            <CursorPageControls
-              page={page}
-              hasNext={subs.pagination.hasMore}
-              disabled={isFetching}
-              onPrevious={handlePreviousPage}
-              onNext={handleNextPage}
-              className="mt-3"
-            />
-          ) : null}
         </div>
       )}
     </PageWrapper>

@@ -21,7 +21,7 @@ import {
 } from "@/components/ui/select";
 import { Combobox } from "@/components/ui/combobox";
 import { FilterPill, FilterPillGroup } from "@/components/ui/filter-pill";
-import { MonthPicker } from "@/features/payroll/shared";
+import { MonthPicker, monthFromToday } from "@/features/payroll/shared/month-picker";
 import { NavButtons } from "@/features/payroll/setup/nav-buttons";
 import { useCreatePolicy, useUpdatePolicy } from "@/hooks/api/payroll";
 import { CURRENCIES, PAY_FREQUENCIES } from "@/features/payroll/setup/lib/constants";
@@ -113,6 +113,12 @@ export function StepProfile({ draft, updateDraft, goNext }: StepProfileProps) {
 
   const watchFrequency = form.watch("payFrequency");
   const watchCountry = form.watch("country");
+  const watchEntity = form.watch("legalEntityName");
+  const watchStartMonth = form.watch("startMonth");
+  const canContinue =
+    watchCountry.trim() !== "" &&
+    watchEntity.trim() !== "" &&
+    watchStartMonth.trim() !== "";
 
   useEffect(() => {
     const defaultCurrency = COUNTRY_DEFAULT_CURRENCY[watchCountry];
@@ -259,6 +265,7 @@ export function StepProfile({ draft, updateDraft, goNext }: StepProfileProps) {
                       value={field.value}
                       onChange={field.onChange}
                       className="w-full"
+                      minMonth={monthFromToday(0)}
                     />
                   </FormControl>
                   <FormMessage />
@@ -289,7 +296,11 @@ export function StepProfile({ draft, updateDraft, goNext }: StepProfileProps) {
           />
         </div>
 
-        <NavButtons onNext={form.handleSubmit(handleSubmit)} isLoading={isPending} />
+        <NavButtons
+          onNext={form.handleSubmit(handleSubmit)}
+          isLoading={isPending}
+          disableNext={!canContinue}
+        />
       </form>
     </Form>
   );

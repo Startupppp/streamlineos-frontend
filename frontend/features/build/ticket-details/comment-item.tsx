@@ -1,19 +1,16 @@
 ﻿"use client";
 
-import { useState, useCallback, useEffect, memo } from "react";
+import { useState, useCallback, useEffect, memo, useRef } from "react";
 import dynamic from "next/dynamic";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
-import { ConfirmDialog } from "@/components/ui/confirm-dialog";
-import { Pencil } from "lucide-react";
-import { SendIcon, LinkIcon, Trash2Icon, XIcon, CirclePlusIcon } from "@animateicons/react/lucide";
+import { SendIcon, XIcon } from "@animateicons/react/lucide";
 import { resolveImageUrl } from "@/lib/utils";
-import { toast } from "sonner";
-import { formatDistanceToNow } from "date-fns";
-import type { TicketComment, CommentReaction } from "@/types/projects";
+import { formatRelativeTime } from "@/lib/date-utils";
+import type { TicketComment } from "@/types/projects";
 import { MentionTextarea, type MentionUser } from "@/features/build/comments/mention-textarea";
-import { EmojiReactionBar, type ReactionGroup } from "@/features/build/comments/emoji-reaction-bar";
+import { groupReactions, CommentActionBar } from "./comment-action-bar";
 import { RichTextContent } from "@/components/editor/rich-text-content";
 import { getUserDisplayName, getUserInitials } from "@/lib/person-display";
 
@@ -26,23 +23,6 @@ const TiptapEditorDynamic = dynamic(
     ),
   },
 );
-
-function groupReactions(
-  rawReactions: CommentReaction[],
-  currentUserId?: string,
-): ReactionGroup[] {
-  const groups: Record<string, { count: number; hasReacted: boolean }> = {};
-  for (const r of rawReactions) {
-    if (!groups[r.emoji]) groups[r.emoji] = { count: 0, hasReacted: false };
-    groups[r.emoji].count++;
-    if (r.userId === currentUserId) groups[r.emoji].hasReacted = true;
-  }
-  return Object.entries(groups).map(([emoji, g]) => ({
-    emoji,
-    count: g.count,
-    hasReacted: g.hasReacted,
-  }));
-}
 
 export interface CommentItemProps {
   comment: TicketComment;
@@ -94,9 +74,7 @@ function CommentItemComponent({
   onCreateIssue,
 }: CommentItemProps) {
   const user = comment.user;
-  const timeAgo = comment.createdAt
-    ? formatDistanceToNow(new Date(comment.createdAt), { addSuffix: true })
-    : "";
+  const timeAgo = formatRelativeTime(comment.createdAt);
   const isEdited =
     comment.updatedAt &&
     comment.createdAt &&
@@ -106,25 +84,22 @@ function CommentItemComponent({
   const canDelete = canInteract && isAuthor;
   const reactionGroups = groupReactions(comment.reactions ?? [], currentUserId);
 
-  const [showHighlight, setShowHighlight] = useState(isHighlighted);
-  const [isEditing, setIsEditing] = useState(false);
-  const [editText, setEditText] = useState(comment.content);
-
+  const [highlightExpired, setHighlightExpired] = useState(false);
   useEffect(() => {
     if (!isHighlighted) return;
-    setShowHighlight(true);
-    const timer = setTimeout(() => setShowHighlight(false), 2500);
-    return () => clearTimeout(timer);
+    const timer = setTimeout(() => setHighlightExpired(true), 2500);
+    return () => {
+      clearTimeout(timer);
+      setHighlightExpired(false);
+    };
   }, [isHighlighted]);
-
-  const handleCopyLink = useCallback(() => {
-    if (!permalinkUrl) return;
-    navigator.clipboard.writeText(window.location.origin + permalinkUrl).then(() => {
-      toast.success("Link copied");
-    });
-  }, [permalinkUrl]);
+  const showHighlight = isHighlighted && !highlightExpired;
+  const [isEditing, setIsEditing] = useState(false);
+  const [editText, setEditText] = useState(comment.content);
+  const editOriginalRef = useRef<string | null>(null);
 
   const handleStartEdit = useCallback(() => {
+    editOriginalRef.current = null;
     setEditText(comment.content);
     setIsEditing(true);
   }, [comment.content]);
@@ -132,11 +107,13 @@ function CommentItemComponent({
   const handleCancelEdit = useCallback(() => {
     setIsEditing(false);
     setEditText(comment.content);
+    editOriginalRef.current = null;
   }, [comment.content]);
 
   const handleSaveEdit = useCallback(() => {
     const trimmed = editText.trim();
-    if (!trimmed || trimmed === comment.content) {
+    const initial = editOriginalRef.current ?? comment.content;
+    if (!trimmed || trimmed === comment.content || trimmed === initial) {
       setIsEditing(false);
       return;
     }
@@ -150,12 +127,18 @@ function CommentItemComponent({
         e.preventDefault();
         handleSaveEdit();
       }
-      if (e.key === "Escape") handleCancelEdit();
+      if (e.key === "Escape") {
+        e.stopPropagation();
+        handleCancelEdit();
+      }
     },
     [handleSaveEdit, handleCancelEdit],
   );
 
   const handleEditContentChange = useCallback((html: string) => {
+    if (editOriginalRef.current === null) {
+      editOriginalRef.current = html;
+    }
     setEditText(html);
   }, []);
 
@@ -197,7 +180,7 @@ function CommentItemComponent({
       </Avatar>
       <div className="min-w-0 max-w-full flex-1">
         <div className="flex min-w-0 items-center gap-2">
-          <span className="min-w-0 truncate text-xs font-semibold">
+          <span className="min-w-0 truncate text-xs font-medium">
             {getUserDisplayName(user)}
           </span>
           <span className="shrink-0 text-dense text-muted-foreground">{timeAgo}</span>
@@ -208,7 +191,7 @@ function CommentItemComponent({
 
         {isEditing ? (
           <div className="mt-1 space-y-1.5">
-            <div onKeyDown={handleEditKeyDown}>
+            <div onKeyDownCapture={handleEditKeyDown} data-testid="comment-edit-field">
               <TiptapEditorDynamic
                 content={editText}
                 contentKey={comment.id}
@@ -251,76 +234,21 @@ function CommentItemComponent({
         )}
 
         {!isEditing && (
-          <div className="flex items-center gap-3 mt-1.5">
-            {canInteract ? <EmojiReactionBar
-              reactions={reactionGroups}
-              onReact={handleReactEmoji}
-              onUnreact={handleUnreactEmoji}
-            /> : null}
-            {canInteract && !hideReplyButton && (
-              <button
-                type="button"
-                onClick={handleReplyClick}
-                className="text-dense text-muted-foreground hover:text-foreground transition-colors opacity-0 group-hover:opacity-100 focus-visible:opacity-100"
-              >
-                Reply
-              </button>
-            )}
-            {permalinkUrl && (
-              <button
-                type="button"
-                onClick={handleCopyLink}
-                className="text-dense text-muted-foreground hover:text-foreground transition-colors opacity-0 group-hover:opacity-100 focus-visible:opacity-100 flex items-center gap-1"
-                aria-label="Copy comment link"
-              >
-                <LinkIcon size={12} />
-                Copy link
-              </button>
-            )}
-            {onCreateIssue && (
-              <button
-                type="button"
-                onClick={handleCreateIssue}
-                className="text-dense text-muted-foreground hover:text-foreground transition-colors opacity-0 group-hover:opacity-100 focus-visible:opacity-100 flex items-center gap-1"
-                aria-label="Create new issue from comment"
-              >
-                <CirclePlusIcon size={12} />
-                New issue
-              </button>
-            )}
-            {canInteract && isAuthor && (
-              <button
-                type="button"
-                onClick={handleStartEdit}
-                className="text-dense text-muted-foreground hover:text-foreground transition-colors opacity-0 group-hover:opacity-100 focus-visible:opacity-100 flex items-center gap-1"
-                aria-label="Edit comment"
-              >
-                <Pencil className="h-3 w-3" />
-                Edit
-              </button>
-            )}
-            {canDelete && (
-              <ConfirmDialog
-                trigger={
-                  <button
-                    type="button"
-                    className="text-dense text-muted-foreground hover:text-destructive transition-colors opacity-0 group-hover:opacity-100 flex items-center gap-1"
-                    aria-label="Delete comment"
-                    disabled={isDeletingComment}
-                  >
-                    <Trash2Icon size={12} />
-                    Delete
-                  </button>
-                }
-                title="Delete comment?"
-                description="This will permanently delete the comment and all replies. This cannot be undone."
-                confirmLabel="Delete"
-                destructive
-                isPending={isDeletingComment}
-                onConfirm={handleDeleteConfirm}
-              />
-            )}
-          </div>
+          <CommentActionBar
+            canInteract={canInteract}
+            hideReplyButton={hideReplyButton}
+            permalinkUrl={permalinkUrl}
+            isAuthor={isAuthor}
+            canDelete={canDelete}
+            isDeletingComment={isDeletingComment}
+            reactionGroups={reactionGroups}
+            onReact={handleReactEmoji}
+            onUnreact={handleUnreactEmoji}
+            onReply={handleReplyClick}
+            onStartEdit={handleStartEdit}
+            onDeleteConfirm={handleDeleteConfirm}
+            onCreateIssue={onCreateIssue ? handleCreateIssue : undefined}
+          />
         )}
 
         {isReplying && (

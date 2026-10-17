@@ -1,8 +1,11 @@
 "use client";
 
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
+import { NO_CURSOR_YET } from "@/hooks/api/cursor-page-param";
 import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
+import { selectFlatPages, type Page } from "@/lib/api/select-flat-pages";
+import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
 
 const noContentC = lazyContract(() =>
   import("@/hooks/api/cursor-page-schema").then((m) => m.noContentContract),
@@ -10,6 +13,7 @@ const noContentC = lazyContract(() =>
 import { knowledgeAndSurveysQueryKeys } from "@/lib/query-keys/knowledge-and-surveys";
 import { useCan } from "@/hooks/api/access";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import { useIdempotentOperation } from "@/hooks/common/use-idempotent-operation";
 
 export type KbPageTemplate = {
   id: number;
@@ -17,8 +21,11 @@ export type KbPageTemplate = {
   name: string;
   icon: string | null;
   description: string | null;
-  content: Record<string, unknown> | null;
+  content: Record<string, unknown> | Record<string, unknown>[] | null;
   createdById: string | null;
+  createdByName: string | null;
+  useCount: number;
+  lastUsedAt: string | null;
   createdAt: string;
   updatedAt: string;
 };
@@ -29,19 +36,44 @@ export type CreateKbPageTemplateInput = {
   description?: string;
 };
 
-const kbPageTemplateListContract = lazyContract(() =>
-  import("@/hooks/api/kb/kb-templates-schema").then((m) => m.kbPageTemplateListContract),
+export type UpdateKbPageTemplateInput = {
+  templateId: number;
+  name?: string;
+  description?: string | null;
+};
+
+export type KbPageTemplatePage = Page<KbPageTemplate>;
+
+const kbPageTemplateListPageContract = lazyContract(() =>
+  import("@/hooks/api/kb/kb-templates-schema").then(
+    (m) => m.kbPageTemplateListPageContract,
+  ),
 );
 
 const kbPageTemplateSingleContract = lazyContract(() =>
   import("@/hooks/api/kb/kb-templates-schema").then((m) => m.kbPageTemplateSingleContract),
 );
 
-export function useKbPageTemplates() {
+export function useKbPageTemplates(q?: string) {
   const canViewPages = useCan("kb:pages:view");
-  return useQuery({
-    queryKey: knowledgeAndSurveysQueryKeys.kb.pageTemplates(),
-    queryFn: ({ signal }) => apiClient.get<KbPageTemplate[]>("/kb/page-templates", undefined, signal, kbPageTemplateListContract),
+  return useInfiniteQuery({
+    ...INLINE_READ_ERROR,
+    queryKey: knowledgeAndSurveysQueryKeys.kb.pageTemplates(q),
+    initialPageParam: NO_CURSOR_YET,
+    queryFn: ({ signal, pageParam }) => {
+      const params = {
+        ...(pageParam !== undefined ? { cursor: pageParam } : {}),
+        ...(q ? { q } : {}),
+      };
+      return apiClient.get<KbPageTemplatePage>(
+        "/kb/page-templates",
+        Object.keys(params).length > 0 ? params : undefined,
+        signal,
+        kbPageTemplateListPageContract,
+      );
+    },
+    getNextPageParam: (last) => last.pagination.nextCursor ?? undefined,
+    select: selectFlatPages,
     enabled: canViewPages,
     staleTime: 300_000,
   });
@@ -49,10 +81,29 @@ export function useKbPageTemplates() {
 
 export function useCreateKbPageTemplate() {
   const qc = useQueryClient();
+  const operation = useIdempotentOperation();
   return useAuthorizedMutation("kb:templates:manage", {
     mutationKey: ["kb", "pageTemplates", "create"],
     mutationFn: (input: CreateKbPageTemplateInput) =>
-      apiClient.post<KbPageTemplate>("/kb/page-templates", input, undefined, kbPageTemplateSingleContract),
+      apiClient.post<KbPageTemplate>("/kb/page-templates", input, operation.configFor(input), kbPageTemplateSingleContract),
+    onSuccess: () => {
+      operation.settle();
+      qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.kb.pageTemplates() });
+    },
+  });
+}
+
+export function useUpdateKbPageTemplate() {
+  const qc = useQueryClient();
+  return useAuthorizedMutation("kb:templates:manage", {
+    mutationKey: ["kb", "pageTemplates", "update"],
+    mutationFn: ({ templateId, ...body }: UpdateKbPageTemplateInput) =>
+      apiClient.patch<KbPageTemplate>(
+        `/kb/page-templates/${templateId}`,
+        body,
+        undefined,
+        kbPageTemplateSingleContract,
+      ),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.kb.pageTemplates() });
     },

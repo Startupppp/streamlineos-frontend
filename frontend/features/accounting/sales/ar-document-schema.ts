@@ -4,7 +4,6 @@ import type {
   ArDocumentLineInput,
   ArDocumentView,
   CreateInvoiceInput,
-  UpdateArDraftInput,
 } from "@/types/accounting/accounting-ar";
 
 const QUANTITY_PATTERN = /^\d+(\.\d{1,3})?$/;
@@ -193,12 +192,6 @@ export function toCreateDocumentInput(
     memo: values.memo.length > 0 ? values.memo : null,
     lines: values.lines.map((line) => toLineInput(line, currency)),
   };
-}
-
-export function toUpdateDocumentInput(
-  values: ArDocumentFormValues,
-): UpdateArDraftInput {
-  return toCreateDocumentInput(values);
 }
 
 export function quantityLabel(quantityMilli: number): string {

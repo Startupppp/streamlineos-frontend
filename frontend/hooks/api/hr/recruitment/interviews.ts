@@ -10,6 +10,7 @@ const noContentC = lazyContract(() =>
 import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
 import { useCan } from "@/hooks/api/access";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import { invalidateCalendarProjectionWindows } from "@/lib/calendar-projection-cache";
 import type {
   Interview,
   CreateInterviewInput,
@@ -138,15 +139,16 @@ export function useInterviewStats(options?: { enabled?: boolean }) {
 
 export function useInterviews(
   params?: InterviewsParams,
-  options?: { enabled?: boolean },
+  options?: { enabled?: boolean; throwOnError?: false },
 ) {
+  const { enabled, ...queryOptions } = options ?? {};
   const queryParams: Record<string, unknown> = { limit: params?.limit ?? 100 };
   if (params?.candidateId) queryParams.candidateId = params.candidateId;
   if (params?.upcoming != null) queryParams.upcoming = params.upcoming ? "true" : "false";
   if (params?.relevant != null) queryParams.relevant = params.relevant ? "true" : "false";
 
   return useGatedQuery("hr:interviews:view", {
-    enabled: options?.enabled ?? true,
+    enabled: enabled ?? true,
     queryKey: humanResourcesQueryKeys.hr.interviews(queryParams),
     queryFn: async ({ signal }): Promise<Interview[]> => {
       const res = await apiClient.get<Interview[] | RecruitmentListResponse<Interview>>(
@@ -158,6 +160,7 @@ export function useInterviews(
       return unwrapRecruitmentItems(res);
     },
     staleTime: 2 * 60_000,
+    ...queryOptions,
   });
 }
 
@@ -171,6 +174,7 @@ export function useCreateInterview() {
       qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.interviews() });
       qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.recruitmentStats() });
       qc.invalidateQueries({ queryKey: INTERVIEW_STATS_KEY });
+      invalidateCalendarProjectionWindows(qc);
     },
   });
 }
@@ -184,6 +188,7 @@ export function useUpdateInterview() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.interviews() });
       qc.invalidateQueries({ queryKey: INTERVIEW_STATS_KEY });
+      invalidateCalendarProjectionWindows(qc);
     },
   });
 }
@@ -260,6 +265,7 @@ export function useScheduleInterview() {
       qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.interviews() });
       qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.recruitmentStats() });
       qc.invalidateQueries({ queryKey: INTERVIEW_STATS_KEY });
+      invalidateCalendarProjectionWindows(qc);
     },
   });
 }
@@ -304,7 +310,10 @@ export function useBulkRescheduleInterviews() {
       );
       return { rescheduled: ids.length };
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.interviews() }),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.interviews() });
+      invalidateCalendarProjectionWindows(qc);
+    },
   });
 }
 
@@ -321,7 +330,7 @@ export function useInterviewQuestions(filters?: {
   if (filters?.q) params.set("q", filters.q);
   const qs = params.toString();
 
-  return useGatedQuery("hr:employees:view", {
+  return useGatedQuery("hr:interviews:view", {
     queryKey: [...humanResourcesQueryKeys.hr.all, "interviewQuestions", filters] as const,
     queryFn: ({ signal }) =>
       apiClient.get<InterviewQuestion[]>(`/hr/interview-questions${qs ? `?${qs}` : ""}`, undefined, signal, interviewQuestionListContract),
@@ -332,7 +341,7 @@ export function useInterviewQuestions(filters?: {
 
 export function useCreateInterviewQuestion() {
   const qc = useQueryClient();
-  return useAuthorizedMutation("hr:employees:manage", {
+  return useAuthorizedMutation("hr:interviews:manage", {
     mutationKey: ["hr", "recruitment", "interview-questions", "create"],
     mutationFn: (data: CreateQuestionInput) =>
       apiClient.post<InterviewQuestion>("/hr/interview-questions", data, undefined, interviewQuestionContract),
@@ -343,7 +352,7 @@ export function useCreateInterviewQuestion() {
 
 export function useUpdateInterviewQuestion(questionId: number) {
   const qc = useQueryClient();
-  return useAuthorizedMutation("hr:employees:manage", {
+  return useAuthorizedMutation("hr:interviews:manage", {
     mutationKey: ["hr", "recruitment", "interview-questions", "update", questionId],
     mutationFn: (data: Partial<CreateQuestionInput> & { isActive?: boolean }) =>
       apiClient.patch<{ success: boolean }>(`/hr/interview-questions/${questionId}`, data, undefined, interviewSuccessContract),
@@ -354,7 +363,7 @@ export function useUpdateInterviewQuestion(questionId: number) {
 
 export function useDeleteInterviewQuestion(questionId: number) {
   const qc = useQueryClient();
-  return useAuthorizedMutation("hr:employees:manage", {
+  return useAuthorizedMutation("hr:interviews:manage", {
     mutationKey: ["hr", "recruitment", "interview-questions", "delete", questionId],
     mutationFn: () =>
       apiClient.delete<void>(`/hr/interview-questions/${questionId}`, undefined, undefined, noContentC),

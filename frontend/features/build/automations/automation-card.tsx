@@ -12,11 +12,12 @@ import { Switch } from "@/components/ui/switch";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { cn } from "@/lib/utils";
+import { getUserDisplayName } from "@/lib/person-display";
 import {
   TRIGGER_EVENTS,
   ACTION_TYPES,
-  type ProjectAutomation,
 } from "@/hooks/api/build/automations";
+import type { ProjectAutomation } from "@/types/projects";
 import { PM_PANEL } from "@/components/pm-chrome";
 
 function getTriggerLabel(event: string): string {
@@ -82,7 +83,7 @@ export function AutomationCard({ automation, onToggle, onDelete, onEdit, canMana
           <div className="flex items-center gap-2 flex-wrap">
             <TruncatedText
               text={automation.name}
-              className="text-sm font-semibold text-foreground"
+              className="text-sm font-medium text-foreground"
             />
             <Badge
               variant="secondary"
@@ -101,6 +102,19 @@ export function AutomationCard({ automation, onToggle, onDelete, onEdit, canMana
             <span>
               {automation.actions.length} action{automation.actions.length > 1 ? "s" : ""}
             </span>
+            {automation.createdByUser !== null && (
+              <span>by {getUserDisplayName(automation.createdByUser)}</span>
+            )}
+            {automation.lastRunAt !== null && (
+              <span className="tabular-nums">
+                ran {new Date(automation.lastRunAt).toLocaleDateString()}
+              </span>
+            )}
+            {automation.lastFailureAt !== null && (
+              <span className="text-destructive tabular-nums">
+                failed {new Date(automation.lastFailureAt).toLocaleDateString()}
+              </span>
+            )}
           </div>
           <div className="flex flex-wrap gap-1 mt-2">
             {automation.actions.map((a, i) => (

@@ -1,12 +1,7 @@
-﻿import type { z } from "zod";
-import type { Ticket } from "@/types/projects/tasks";
+﻿import type { Ticket } from "@/types/projects/tasks";
 import type { KanbanTicket } from "@/features/build/shared/types";
-import type { ticketListRowContract } from "@/hooks/api/build/build-tickets-core-schema";
 
-type BoardTicket = Ticket &
-  Pick<z.infer<typeof ticketListRowContract>, "descriptionExcerpt">;
-
-export function mapBoardTicketToKanban(t: BoardTicket): KanbanTicket {
+export function mapBoardTicketToKanban(t: Ticket): KanbanTicket {
   return {
     id: t.id,
     title: t.title,
@@ -18,8 +13,10 @@ export function mapBoardTicketToKanban(t: BoardTicket): KanbanTicket {
     timeSpent: t.timeSpent ?? undefined,
     ticketNumber: t.ticketNumber,
     rank: t.rank ?? undefined,
+    parentTicketId: t.parentTicketId ?? null,
     epicId: t.epicId ?? undefined,
     assigneeId: t.assigneeId ?? undefined,
+    version: t.version,
     cycleId: t.cycleId ?? null,
     moduleId: t.moduleId ?? null,
     dueDate: t.dueDate ?? null,

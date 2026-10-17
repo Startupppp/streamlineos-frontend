@@ -5,6 +5,14 @@ import { backendPath } from "./lib/backend-root.mjs";
 
 const FRONTEND_ROOT = fileURLToPath(new URL("..", import.meta.url));
 const CONTRACT = join(FRONTEND_ROOT, "contracts", "openapi.json");
+const CATALOG = join(FRONTEND_ROOT, "contracts", "permission-catalog.json");
+
+const OFF_BACKEND_GATES = new Map([
+  [
+    "blog:posts:manage",
+    "gates only the /blog/admin redirect stub. Backend 8a573e9f4 retired the /blog/admin/* write API in favour of the standalone blog admin, so no operation in this contract enforces the key; it stays in the permission catalogue, so it is still grantable and the stub forwards exactly its holders.",
+  ],
+]);
 
 const SOURCE_DIRS = [
   join(FRONTEND_ROOT, "components", "layout", "sidebar"),
@@ -109,6 +117,14 @@ function collectSourceKeys(files) {
   return found;
 }
 
+export function splitOffBackend(ghosts, catalogKeys, backendKeys, sourceKeys, exceptions = OFF_BACKEND_GATES) {
+  const real = ghosts.filter(([key]) => !(exceptions.has(key) && catalogKeys.has(key)));
+  const stale = [...exceptions.keys()].filter(
+    (key) => backendKeys.has(key) || !catalogKeys.has(key) || !sourceKeys.has(key),
+  );
+  return { real, stale };
+}
+
 function vacuityFailure(contractCount, sourceCount) {
   if (contractCount < MIN_CONTRACT_KEYS)
     return `only ${contractCount} x-permission keys in the contract (floor ${MIN_CONTRACT_KEYS})`;
@@ -162,6 +178,20 @@ function runSelfTest() {
       })(),
     },
     {
+      description: "an off-backend gate still in the catalogue is excused, any other ghost is not",
+      passes: (() => {
+        const ex = new Map([["hr:employees:export", "reason"]]);
+        const sourceKeys = new Map([["hr:employees:export", "c.ts"]]);
+        const { real, stale } = splitOffBackend(ghosts, new Set(["hr:employees:export"]), backend, sourceKeys, ex);
+        const dropped = splitOffBackend(ghosts, new Set(), backend, sourceKeys, ex);
+        return real.length === 0 && stale.length === 0 && dropped.real.length === 1 && dropped.stale.length === 1;
+      })(),
+    },
+    {
+      description: "an off-backend exception goes stale once an endpoint enforces its key",
+      passes: splitOffBackend([], new Set(["hr:employees:view"]), backend, new Map([["hr:employees:view", "a.ts"]]), new Map([["hr:employees:view", "r"]])).stale.length === 1,
+    },
+    {
       description: "a broken source walk refuses to report a pass",
       passes: vacuityFailure(MIN_CONTRACT_KEYS, 0) !== null,
     },
@@ -208,7 +238,19 @@ if (vacuous !== null) {
   process.exit(1);
 }
 
-const ghosts = checkable.filter(([key]) => !backendKeys.has(key));
+const catalogKeys = new Set(existsSync(CATALOG) ? JSON.parse(readFileSync(CATALOG, "utf8")).permissions ?? [] : []);
+const offBackend = splitOffBackend(
+  checkable.filter(([key]) => !backendKeys.has(key)),
+  catalogKeys,
+  backendKeys,
+  sourceKeys,
+);
+if (offBackend.stale.length > 0) {
+  console.error("✖  stale OFF_BACKEND_GATES entr(y|ies) — the key is now enforced by an endpoint, left the catalogue, or no longer gates a route:");
+  for (const key of offBackend.stale) console.error(`   ${key}`);
+  process.exit(1);
+}
+const ghosts = offBackend.real;
 
 console.log(`Navigation source files   ${files.length}`);
 console.log(`Permission keys checked   ${checkable.length} (${excluded} excluded as access rungs or non-permissions)`);

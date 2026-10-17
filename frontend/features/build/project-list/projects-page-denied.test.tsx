@@ -2,7 +2,7 @@ import { render, screen } from "@testing-library/react";
 import { ProjectsPage } from "./projects-page";
 import { ApiError } from "@/lib/api-envelope";
 
-const infiniteProjects = jest.fn();
+const projects = jest.fn();
 const project = jest.fn();
 const can = jest.fn();
 const access = jest.fn();
@@ -13,7 +13,7 @@ jest.mock("@/hooks/api/entitlements", () => ({
 
 jest.mock("next/navigation", () => ({
   useRouter: () => ({ replace: jest.fn(), push: jest.fn() }),
-  usePathname: () => "/build",
+  usePathname: () => "/build/projects",
   useSearchParams: () => new URLSearchParams(),
 }));
 
@@ -27,11 +27,8 @@ jest.mock("@/components/auth/require-module", () => ({
   RequireModule: ({ children }: { children: React.ReactNode }) => <>{children}</>,
 }));
 
-jest.mock("@/hooks/api/build", () => ({
-  useInfiniteProjects: () => infiniteProjects(),
-}));
-
 jest.mock("@/hooks/api/build/projects", () => ({
+  useProjects: () => projects(),
   useProject: () => project(),
 }));
 
@@ -47,15 +44,13 @@ beforeEach(() => {
     isLoading: false,
   });
   project.mockReturnValue({ data: undefined, isError: false, error: null });
-  infiniteProjects.mockReturnValue({
+  projects.mockReturnValue({
     data: undefined,
     isLoading: false,
     isError: false,
     error: null,
     refetch: jest.fn(),
-    hasNextPage: false,
-    isFetchingNextPage: false,
-    fetchNextPage: jest.fn(),
+    isFetching: false,
   });
 });
 
@@ -81,7 +76,7 @@ describe("the Build projects page when the caller lacks build:view", () => {
       data: { isOrgOwner: false, scopes: { "build:view": "all" }, modules: {} },
       isLoading: false,
     });
-    infiniteProjects.mockReturnValue({
+    projects.mockReturnValue({
       data: undefined,
       isLoading: false,
       isError: true,
@@ -91,9 +86,7 @@ describe("the Build projects page when the caller lacks build:view", () => {
         upgradePath: "/settings/billing",
       }),
       refetch: jest.fn(),
-      hasNextPage: false,
-      isFetchingNextPage: false,
-      fetchNextPage: jest.fn(),
+      isFetching: false,
     });
 
     render(<ProjectsPage />);

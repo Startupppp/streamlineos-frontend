@@ -87,7 +87,7 @@ function jsonColumns(content: string): string[] {
   const seen = new Set<string>();
   for (const entry of payload.slice(0, JSON_KEY_SAMPLE_ROWS)) {
     if (entry === null || typeof entry !== "object" || Array.isArray(entry)) continue;
-    for (const key of Object.keys(entry as Record<string, unknown>)) {
+    for (const key of Object.keys(entry)) {
       if (seen.has(key)) continue;
       seen.add(key);
       columns.push(key);

@@ -1,23 +1,47 @@
 import { z } from "zod";
 
+const kbImportItemErrorContract = z.object({
+  index: z.number().int().nonnegative(),
+  title: z.string(),
+  code: z.enum(["INVALID_PARENT", "INVALID_SPACE", "DUPLICATE_REFERENCE", "WRITE_FAILED"]),
+  reason: z.string(),
+});
+
+const kbImportErrorReportContract = z.object({
+  failedTitles: z.array(z.string()).optional(),
+  itemErrors: z.array(kbImportItemErrorContract).optional(),
+  code: z.literal("PROGRESS_RECONCILIATION_REQUIRED").optional(),
+  reason: z.string().optional(),
+});
+
 export const kbImportJobContract = z.object({
   id: z.number().int(),
   orgId: z.string(),
   sourceType: z.string(),
   fileKey: z.string().nullable(),
-  status: z.enum(["pending", "processing", "completed", "failed"]),
+  status: z.enum(["pending", "processing", "completed", "failed", "cancelled"]),
   totalItems: z.number().int(),
   processedItems: z.number().int(),
   succeededItems: z.number().int(),
   failedItems: z.number().int(),
   duplicateItems: z.number().int(),
-  errorReport: z.record(z.string(), z.unknown()).nullable(),
+  canRetry: z.boolean(),
+  errorReport: kbImportErrorReportContract.nullable(),
   createdById: z.string().nullable(),
   createdAt: z.string(),
   updatedAt: z.string(),
 });
 
-export const kbImportJobListContract = z.array(kbImportJobContract);
+const cursorPagination = z.object({
+  limit: z.number().int(),
+  hasMore: z.boolean(),
+  nextCursor: z.string().nullable(),
+});
+
+export const kbImportJobListPageContract = z.object({
+  data: z.array(kbImportJobContract),
+  pagination: cursorPagination,
+});
 
 export const kbExportJobContract = z.object({
   id: z.number().int(),
@@ -33,40 +57,42 @@ export const kbExportJobContract = z.object({
   updatedAt: z.string(),
 });
 
-export const kbExportJobListContract = z.array(kbExportJobContract);
+export const kbExportJobListPageContract = z.object({
+  data: z.array(kbExportJobContract),
+  pagination: cursorPagination,
+});
 
 export const kbImportResultContract = z.object({
   jobId: z.number().int(),
   succeeded: z.number().int(),
   failed: z.number().int(),
+  duplicates: z.number().int(),
   total: z.number().int(),
+  failedTitles: z.array(z.string()),
 });
 
-export const kbMigrationPreviewContract = z.object({
-  total: z.number().int(),
-  byStatus: z.record(z.string(), z.number().int()),
-  alreadyMigrated: z.number().int(),
-  willMigrate: z.number().int(),
-  sample: z.array(
-    z.object({
-      id: z.number().int(),
-      title: z.string(),
-      visibility: z.string(),
-    }),
-  ),
+export const kbImportAcceptedContract = z.object({
+  jobId: z.number().int(),
+  status: z.literal("pending"),
 });
 
-export const kbMigrationRunContract = z.object({
-  migrated: z.number().int(),
-  skipped: z.number().int(),
+export const kbImportDryRunContract = z.object({
   total: z.number().int(),
-  dryRun: z.boolean(),
-  jobId: z.number().int().optional(),
-  failed: z.number().int(),
-  failedArticleIds: z.array(z.number().int()).optional(),
+  wouldSucceed: z.number().int(),
+  wouldSkip: z.number().int(),
+  invalidItems: z.array(z.string()),
 });
 
-export const kbFromTicketSuccessContract = z.object({ success: z.boolean() });
+export const kbImportJobCancelContract = z.object({
+  status: z.string(),
+  message: z.string(),
+});
+
+export const kbExportResultContract = z.object({
+  jobId: z.number().int(),
+  format: z.enum(["markdown", "html"]),
+  content: z.string(),
+});
 
 export const kbMediaUploadContract = z.object({
   key: z.string(),

@@ -10,6 +10,9 @@ export const RBAC_AUDIT_ACTIONS = [
   "role.created",
   "role.updated",
   "role.deleted",
+  "role.permission.granted",
+  "role.permission.revoked",
+  "org.member_role_changed",
   "permission.granted",
   "permission.revoked",
 ] as const;

@@ -2,13 +2,7 @@
 
 import { useFormContext } from "react-hook-form";
 import { Target } from "lucide-react";
-import {
-  FormField,
-  FormItem,
-  FormLabel,
-  FormControl,
-  FormMessage,
-} from "@/components/ui/form";
+import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import {
@@ -26,7 +20,7 @@ export function GoalObjectiveFields() {
 
   return (
     <div className="space-y-3">
-      <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+      <div className="flex items-center gap-2 text-sm font-normal text-muted-foreground">
         <Target className="h-4 w-4" />
         <span>Objective</span>
       </div>
@@ -65,13 +59,17 @@ export function GoalObjectiveFields() {
           render={({ field }) => (
             <FormItem>
               <FormLabel className="text-xs font-medium">Level</FormLabel>
-              <Select value={field.value} onValueChange={field.onChange}>
+              <Select value={field.value} onValueChange={(v) => v && field.onChange(v)}>
                 <FormControl>
-                  <SelectTrigger className="w-full"><SelectValue /></SelectTrigger>
+                  <SelectTrigger className="w-full">
+                    <SelectValue />
+                  </SelectTrigger>
                 </FormControl>
                 <SelectContent>
                   {LEVEL_OPTIONS.map((opt) => (
-                    <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                    <SelectItem key={opt.value} value={opt.value}>
+                      {opt.label}
+                    </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
@@ -85,13 +83,17 @@ export function GoalObjectiveFields() {
           render={({ field }) => (
             <FormItem>
               <FormLabel className="text-xs font-medium">Status</FormLabel>
-              <Select value={field.value} onValueChange={field.onChange}>
+              <Select value={field.value} onValueChange={(v) => v && field.onChange(v)}>
                 <FormControl>
-                  <SelectTrigger className="w-full"><SelectValue /></SelectTrigger>
+                  <SelectTrigger className="w-full">
+                    <SelectValue />
+                  </SelectTrigger>
                 </FormControl>
                 <SelectContent>
                   {STATUS_OPTIONS.map((opt) => (
-                    <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                    <SelectItem key={opt.value} value={opt.value}>
+                      {opt.label}
+                    </SelectItem>
                   ))}
                 </SelectContent>
               </Select>

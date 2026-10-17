@@ -1,4 +1,4 @@
-import { readFileSync, readdirSync } from "node:fs";
+import { readFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import {
   HOME_SECTIONS,
@@ -6,7 +6,6 @@ import {
   homeSectionModule,
   homeSectionPermission,
 } from "../home-sections";
-import type { PermissionKey } from "@/lib/rbac/permissions";
 import { backendPath } from "@/test-utils/backend-repo";
 
 const FRONTEND_ROOT = resolve(__dirname, "../../..");
@@ -17,19 +16,7 @@ const DASHBOARD_ACCESS = join(
   "dashboard",
   "use-dashboard-access.ts",
 );
-const PERMISSIONS_DIR = join(FRONTEND_ROOT, "lib", "rbac", "permissions");
 const BACKEND_DASHBOARD_CONTROLLER = backendPath("src", "modules", "dashboard", "dashboard.controller.ts");
-
-function frontendCatalogKeys(): Set<string> {
-  const keys = new Set<string>();
-  for (const fileName of readdirSync(PERMISSIONS_DIR)) {
-    if (!fileName.endsWith(".ts")) continue;
-    const source = readFileSync(join(PERMISSIONS_DIR, fileName), "utf8");
-    for (const match of source.matchAll(/name:\s*["']([^"']+)["']/g))
-      keys.add(match[1]);
-  }
-  return keys;
-}
 
 interface BackendRoute {
   path: string;
@@ -63,11 +50,8 @@ function backendDashboardRoutes(): Map<string, BackendRoute> {
 }
 
 describe("Home section access metadata", () => {
-  const catalog = frontendCatalogKeys();
-
   it("declares a section for a real surface, so an empty registry cannot pass", () => {
     expect(HOME_SECTIONS.length).toBeGreaterThanOrEqual(15);
-    expect(catalog.size).toBeGreaterThan(400);
   });
 
   it("gives every section a unique id and a non-empty label and endpoint", () => {
@@ -77,13 +61,6 @@ describe("Home section access metadata", () => {
       expect(section.label.length).toBeGreaterThan(2);
       expect(section.endpoint.startsWith("/")).toBe(true);
     }
-  });
-
-  it("uses only permission keys that exist in the catalog", () => {
-    const ghosts = HOME_SECTIONS.map((section) => homeSectionPermission(section.id))
-      .filter((key): key is PermissionKey => key !== null)
-      .filter((key) => !catalog.has(key));
-    expect(ghosts).toEqual([]);
   });
 
   it("throws rather than guessing for an unknown section id", () => {

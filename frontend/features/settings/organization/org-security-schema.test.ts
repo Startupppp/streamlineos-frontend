@@ -66,6 +66,34 @@ describe("organization security form", () => {
     ).toBe(false);
   });
 
+  it.each(["10.0.0.1", "203.0.113.0/24", "2001:db8::/32", "::1"])(
+    "accepts the IP allowlist entry %s",
+    (entry) => {
+      expect(
+        orgSecurityFormSchema.safeParse({
+          mfaEnforced: false,
+          allowedEmailDomains: "",
+          ipAllowlist: entry,
+          maxConcurrentSessions: "",
+        }).success,
+      ).toBe(true);
+    },
+  );
+
+  it.each(["10.0.0", "not-an-ip", "10.0.0.1/33", "10.0.0.1/24/1"])(
+    "rejects the malformed IP allowlist entry %s before it can lock members out",
+    (entry) => {
+      const result = orgSecurityFormSchema.safeParse({
+        mfaEnforced: false,
+        allowedEmailDomains: "",
+        ipAllowlist: `10.0.0.1\n${entry}`,
+        maxConcurrentSessions: "",
+      });
+      expect(result.success).toBe(false);
+      expect(result.error?.issues[0]?.message).toMatch(/IPv4 or IPv6/);
+    },
+  );
+
   it("rejects a domain list longer than the backend accepts", () => {
     const entries = Array.from(
       { length: SECURITY_LIST_MAX_ENTRIES + 1 },

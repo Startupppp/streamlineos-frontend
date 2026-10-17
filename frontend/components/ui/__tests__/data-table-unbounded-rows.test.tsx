@@ -60,7 +60,9 @@ describe("DataTable — a caller that omits `pagination` must not lose rows", ()
     expect(body).not.toBeNull();
     if (!body) return;
     expect(within(body).queryByText("Row 179")).toBeNull();
-    await user.click(screen.getByRole("button", { name: "Last page" }));
+    for (let page = 1; page < 4; page += 1) {
+      await user.click(screen.getByRole("button", { name: "Next page" }));
+    }
     expect(within(body).getByText("Row 179")).toBeInTheDocument();
   });
 
@@ -122,7 +124,9 @@ describe("DataTable — a filter that shrinks the data must not strand the reade
         pagination={{ pageSize: 25 }}
       />,
     );
-    await user.click(screen.getByRole("button", { name: "Last page" }));
+    for (let page = 1; page < 8; page += 1) {
+      await user.click(screen.getByRole("button", { name: "Next page" }));
+    }
     expect(screen.getByText("Row 179")).toBeInTheDocument();
 
     rerender(
@@ -235,7 +239,9 @@ describe("DataTable — a cursor-paginated caller keeps exactly one pager", () =
         getRowKey={(row) => row.id}
       />,
     );
-    await user.click(screen.getByRole("button", { name: "Last page" }));
+    for (let page = 1; page < 4; page += 1) {
+      await user.click(screen.getByRole("button", { name: "Next page" }));
+    }
     expect(container.querySelector("tbody tr")?.getAttribute("aria-rowindex")).toBe("152");
 
     await user.click(screen.getByRole("button", { name: "Sort by Name" }));

@@ -43,6 +43,7 @@ import {
 import { UserDirectoryFilters } from "./user-directory-filters";
 import { getUserTableColumns } from "./user-table-columns";
 import { UserDirectoryActions } from "./user-directory-actions";
+import { UserMobileCard } from "./user-mobile-card";
 import { useUserBulkLifecycle } from "./use-user-bulk-lifecycle";
 import { useEmploymentFacts } from "@/hooks/api/directory/employment";
 import { usePresenceMap } from "@/hooks/api/chat-core-read";
@@ -278,6 +279,14 @@ export function UsersPage() {
     [pushParams, resetCursorHistory],
   );
 
+  const isFiltered =
+    !!searchQuery || status !== "all" || role !== "all" || departmentId !== "all" || branchId !== "all";
+
+  const handleClearFilters = useCallback(() => {
+    setSearch("");
+    pushParams({ search: null, status: null, role: null, departmentId: null, branchId: null, page: null });
+  }, [pushParams]);
+
   const handleViewUser = useCallback((userId: string) => {
     setSelectedUserId(userId);
     setSheetOpen(true);
@@ -300,20 +309,25 @@ export function UsersPage() {
     [branchNames, departmentNames, employmentByUserId, handleViewUser, presenceMap],
   );
 
+  const renderMobileCard = useCallback(
+    (user: User) => (
+      <UserMobileCard user={user} presence={presenceMap.get(user.id)} />
+    ),
+    [presenceMap],
+  );
+
   const emptyStateNode = (
     <EmptyState
       illustrationPreset="team"
       title="No members found"
+      filtersActive={isFiltered}
+      onClearFilters={handleClearFilters}
       description={
-        searchQuery || status !== "all" || role !== "all"
+        isFiltered
           ? "Try adjusting your search or filters."
           : "Invite your first team member to get started."
       }
-      action={
-        !searchQuery && status === "all" && role === "all" && canCreate
-          ? { label: "Invite User", onClick: handleOpenInvite }
-          : undefined
-      }
+      action={canCreate ? { label: "Invite User", onClick: handleOpenInvite } : undefined}
     />
   );
 
@@ -393,6 +407,7 @@ export function UsersPage() {
                 columns={columns}
                 getRowKey={(user) => user.id}
                 onRowClick={handleRowClick}
+                mobileCard={renderMobileCard}
                 isLoading={isLoading || isPlaceholderData}
                 emptyState={emptyStateNode}
                 selection={{

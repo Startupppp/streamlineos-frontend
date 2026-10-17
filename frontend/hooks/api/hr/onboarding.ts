@@ -5,6 +5,7 @@ import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
 import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
+import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
 import { useCan, useModuleEnabled } from "@/hooks/api/access";
 import { invalidateHrWorkforceQueries } from "@/lib/hr-workforce-cache";
 
@@ -160,6 +161,7 @@ export function useOnboardingTemplateDepartments() {
       apiClient.get<OnboardingTemplateDepartment[]>("/onboarding/templates/departments", undefined, signal, onboardingTemplateDepartmentsC),
     staleTime: 5 * 60_000,
     enabled: canManage,
+    ...INLINE_READ_ERROR,
   });
 }
 
@@ -182,9 +184,10 @@ export function useCreateHrOnboardingTemplate() {
     mutationKey: ["onboarding", "templates", "create"],
     mutationFn: (data: CreateOnboardingTemplateInput) =>
       apiClient.post<{ success: boolean; templateId: number }>("/onboarding/templates", data, undefined, createOnboardingTemplateC),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.onboardingTemplates() });
-    },
+    // Returned, not fired: the caller's toast waits for the refetched list, so
+    // "Onboarding plan created" never shows over "No onboarding plans yet"
+    // (BUG-HRMS-021).
+    onSuccess: () => qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.onboardingTemplates() }),
   });
 }
 

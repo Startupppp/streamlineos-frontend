@@ -1,5 +1,6 @@
 "use client";
 
+import { useMemo } from "react";
 import { motion } from "framer-motion";
 
 interface DonutSegment {
@@ -16,6 +17,44 @@ interface MiniDonutChartProps {
   centerValue?: string | number;
 }
 
+interface SegmentGeometry {
+  dashLength: number;
+  dashGap: number;
+  offset: number;
+  color: string;
+}
+
+interface DonutGeometry {
+  total: number;
+  radius: number;
+  circumference: number;
+  center: number;
+  segments: SegmentGeometry[];
+}
+
+function computeDonutGeometry(
+  data: DonutSegment[],
+  size: number,
+  strokeWidth: number,
+): DonutGeometry {
+  const total = data.reduce((sum, d) => sum + d.value, 0);
+  const radius = (size - strokeWidth) / 2;
+  const circumference = 2 * Math.PI * radius;
+  const center = size / 2;
+
+  let accumulatedOffset = 0;
+  const segments: SegmentGeometry[] = data.map((segment) => {
+    const pct = total > 0 ? segment.value / total : 0;
+    const dashLength = pct * circumference;
+    const dashGap = circumference - dashLength;
+    const offset = -accumulatedOffset * circumference;
+    accumulatedOffset += pct;
+    return { dashLength, dashGap, offset, color: segment.color };
+  });
+
+  return { total, radius, circumference, center, segments };
+}
+
 export function MiniDonutChart({
   data,
   size = 180,
@@ -23,14 +62,14 @@ export function MiniDonutChart({
   centerLabel,
   centerValue,
 }: MiniDonutChartProps) {
-  const total = data.reduce((sum, d) => sum + d.value, 0);
-  if (total === 0) return null;
+  const geometry = useMemo(
+    () => computeDonutGeometry(data, size, strokeWidth),
+    [data, size, strokeWidth],
+  );
 
-  const radius = (size - strokeWidth) / 2;
-  const circumference = 2 * Math.PI * radius;
-  const center = size / 2;
+  if (geometry.total === 0) return null;
 
-  let accumulatedOffset = 0;
+  const { radius, circumference, center, segments } = geometry;
 
   return (
     <div className="flex flex-col items-center gap-4">
@@ -47,32 +86,24 @@ export function MiniDonutChart({
             strokeWidth={strokeWidth}
           />
 
-          {data.map((segment, i) => {
-            const pct = segment.value / total;
-            const dashLength = pct * circumference;
-            const dashGap = circumference - dashLength;
-            const offset = -accumulatedOffset * circumference;
-            accumulatedOffset += pct;
-
-            return (
-              <motion.circle
-                key={i}
-                cx={center}
-                cy={center}
-                r={radius}
-                fill="none"
-                stroke={segment.color}
-                strokeWidth={strokeWidth}
-                strokeDasharray={`${dashLength} ${dashGap}`}
-                strokeDashoffset={offset}
-                strokeLinecap="round"
-                transform={`rotate(-90 ${center} ${center})`}
-                initial={{ strokeDasharray: `0 ${circumference}` }}
-                animate={{ strokeDasharray: `${dashLength} ${dashGap}` }}
-                transition={{ duration: 0.8, delay: i * 0.15, ease: "easeOut" }}
-              />
-            );
-          })}
+          {segments.map((seg, i) => (
+            <motion.circle
+              key={i}
+              cx={center}
+              cy={center}
+              r={radius}
+              fill="none"
+              stroke={seg.color}
+              strokeWidth={strokeWidth}
+              strokeDasharray={`${seg.dashLength} ${seg.dashGap}`}
+              strokeDashoffset={seg.offset}
+              strokeLinecap="round"
+              transform={`rotate(-90 ${center} ${center})`}
+              initial={{ strokeDasharray: `0 ${circumference}` }}
+              animate={{ strokeDasharray: `${seg.dashLength} ${seg.dashGap}` }}
+              transition={{ duration: 0.8, delay: i * 0.15, ease: "easeOut" }}
+            />
+          ))}
         </svg>
 
         {(centerLabel || centerValue) && (

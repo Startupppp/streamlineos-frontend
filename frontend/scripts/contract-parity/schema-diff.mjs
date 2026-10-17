@@ -1,5 +1,49 @@
 const MAX_DEPTH = 14;
 
+function isNullable(node, root) {
+  const resolved = deref(node, root);
+  if (resolved === null || resolved === undefined || typeof resolved !== "object") return false;
+  const branches = Array.isArray(resolved.anyOf)
+    ? resolved.anyOf
+    : Array.isArray(resolved.oneOf)
+      ? resolved.oneOf
+      : null;
+  if (branches !== null) {
+    return branches.some((branch) => {
+      const b = deref(branch, root);
+      return b !== null && typeof b === "object" && b.type === "null";
+    });
+  }
+  if (Array.isArray(resolved.type)) return resolved.type.includes("null");
+  return false;
+}
+
+function scalarNodes(node, root) {
+  return expand(node, root).filter(
+    (n) => n.properties === undefined && n.items === undefined && !Array.isArray(n.allOf),
+  );
+}
+
+function isTypeCompatible(backendType, frontendTypeSet) {
+  if (frontendTypeSet.has(backendType)) return true;
+  if (backendType === "integer" && frontendTypeSet.has("number")) return true;
+  return false;
+}
+
+function isUnconstrained(node, root) {
+  if (node === undefined || node === null) return true;
+  const nodes = expand(node, root);
+  if (nodes.length === 0) return true;
+  return nodes.every(
+    (n) =>
+      n.type === undefined &&
+      n.properties === undefined &&
+      n.items === undefined &&
+      n.enum === undefined &&
+      n.const === undefined,
+  );
+}
+
 export function routePattern(route) {
   const withoutQuery = route.split("?")[0] ?? "";
   const collapsed = withoutQuery.replace(/\{[^}]*\}/g, "*");
@@ -83,6 +127,7 @@ export function diffSchemas(frontend, backend, frontendRoot, backendRoot) {
   const extras = [];
   const optionalOnBackend = [];
   const opaque = [];
+  const typeMismatches = [];
   let comparedObjects = 0;
   let comparedFields = 0;
   const visited = new Set();
@@ -106,6 +151,8 @@ export function diffSchemas(frontend, backend, frontendRoot, backendRoot) {
       comparedObjects += 1;
       for (const frontendObject of frontendObjects) {
         for (const field of frontendObject.required ?? []) {
+          const frontendFieldSchema = frontendObject.properties?.[field];
+          if (frontendFieldSchema !== undefined && isUnconstrained(frontendFieldSchema, frontendRoot)) continue;
           comparedFields += 1;
           const declaring = backendObjects.filter((node) =>
             Object.prototype.hasOwnProperty.call(node.properties, field),
@@ -123,7 +170,32 @@ export function diffSchemas(frontend, backend, frontendRoot, backendRoot) {
           const backendChild = backendObjects
             .map((node) => node.properties[name])
             .find((value) => value !== undefined);
-          if (backendChild !== undefined) walk(frontendChild, backendChild, childPath(path, name), depth + 1);
+          if (backendChild !== undefined) {
+            const fp = childPath(path, name);
+            const frontendScalars = scalarNodes(frontendChild, frontendRoot);
+            const backendScalars = scalarNodes(backendChild, backendRoot);
+            if (frontendScalars.length > 0 && backendScalars.length > 0) {
+              const fTypes = new Set(frontendScalars.map((n) => n.type).filter(Boolean));
+              const bTypes = backendScalars.map((n) => n.type).filter(Boolean);
+              if (fTypes.size > 0 && bTypes.length > 0) {
+                const incompatible = bTypes.filter((bt) => !isTypeCompatible(bt, fTypes));
+                if (incompatible.length > 0)
+                  typeMismatches.push({ path: fp, field: name, kind: "type", backendType: incompatible[0], frontendTypes: [...fTypes] });
+              }
+              const fEnumSet = new Set(frontendScalars.flatMap((n) => n.enum ?? []));
+              const bEnums = backendScalars.flatMap((n) => n.enum ?? []);
+              if (fEnumSet.size > 0 && bEnums.length > 0) {
+                const unexpectedValues = [...new Set(bEnums)].filter((v) => !fEnumSet.has(v));
+                if (unexpectedValues.length > 0)
+                  typeMismatches.push({ path: fp, field: name, kind: "enum", unexpectedValues });
+              }
+            }
+            const frontendNullable = isNullable(frontendChild, frontendRoot);
+            const backendNullable = isNullable(backendChild, backendRoot);
+            if (backendNullable && !frontendNullable)
+              typeMismatches.push({ path: fp, field: name, kind: "nullable" });
+            walk(frontendChild, backendChild, fp, depth + 1);
+          }
         }
       }
     }
@@ -159,11 +231,22 @@ export function diffSchemas(frontend, backend, frontendRoot, backendRoot) {
     });
   };
 
+  const uniqueByPathAndKind = (entries) => {
+    const seen = new Set();
+    return entries.filter((entry) => {
+      const key = `${entry.path}|${entry.kind}`;
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+  };
+
   return {
     missing: unique(missing),
     extras: unique(extras),
     optionalOnBackend: unique(optionalOnBackend),
     opaque: [...new Set(opaque)],
+    typeMismatches: uniqueByPathAndKind(typeMismatches),
     comparedObjects,
     comparedFields,
   };

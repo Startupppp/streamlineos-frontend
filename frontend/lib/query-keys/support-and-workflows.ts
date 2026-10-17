@@ -166,6 +166,7 @@ export const supportAndWorkflowsQueryKeys = {
       params
         ? ([...base, "webhooks", "logs", endpointId, params] as const)
         : ([...base, "webhooks", "logs", endpointId] as const),
+    impact: (endpointId: number) => [...base, "webhooks", "impact", endpointId] as const,
   },
 
   workflows: {
@@ -204,6 +205,7 @@ export const supportAndWorkflowsQueryKeys = {
   auth: {
     all: [...base, "auth"] as const,
     sessions: () => [...base, "auth", "sessions"] as const,
+    myPreferences: () => [...base, "auth", "myPreferences"] as const,
     loginHistory: (params?: QueryKeyParams) =>
       params === undefined
         ? ([...base, "auth", "loginHistory"] as const)

@@ -1,12 +1,10 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef } from "react";
 import { Plus } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { keepPreviousData } from "@tanstack/react-query";
 import { PageWrapper } from "@/components/ui/page-wrapper";
-import { DataTable } from "@/components/ui/data-table";
-import { DataTableSkeleton } from "@/components/ui/data-table-skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import {
@@ -15,9 +13,7 @@ import {
 } from "@/hooks/api/build/build-members";
 import type { BuildMember } from "@/hooks/api/build/build-members";
 import { useCan } from "@/hooks/api/access";
-import { usePageState } from "@/hooks/api/use-page-state";
-import { PageState } from "@/components/shared/page-state";
-import { useCursorPager } from "@/components/ui/table-pagination";
+import { useBuildCursorPager } from "@/features/build/shared/use-build-cursor-pager";
 import { getUserDisplayName } from "@/lib/person-display";
 import { resolveImageUrl } from "@/lib/utils";
 import { PmAccessButton } from "@/features/build/members/pm-access-sheet";
@@ -36,7 +32,11 @@ import { BuildHeaderActions } from "@/features/build/shared/build-header-actions
 import { BuildListToolbar } from "@/features/build/shared/build-list-toolbar";
 import { BuildMobileCard } from "@/features/build/shared/build-mobile-card";
 import { useBuildListFilters } from "@/features/build/shared/use-build-list-filters";
-import { PmPageShell, PmSection, PM_FILL_PANEL } from "@/components/pm-chrome";
+import { useBuildListKeyboard } from "@/hooks/common/use-build-list-keyboard";
+import { ShortcutHelpDialog } from "@/components/shared/shortcut-help-dialog";
+import { BuildListSurface } from "@/features/build/shared/build-list-surface";
+import { useOnlineStatus } from "@/hooks/common/use-online-status";
+import { PmPageShell, PmSection, CONTENT_FILL_PANEL } from "@/components/pm-chrome";
 
 const MEMBER_TABLE_HEADERS = ["Name", "Role", "Added", "Actions"] as const;
 
@@ -45,9 +45,12 @@ export function MembersPage() {
     useState<DisplayProps>(loadDisplayProps);
   const [addDialogOpen, setAddDialogOpen] = useState(false);
   const [removeTarget, setRemoveTarget] = useState<BuildMember | null>(null);
+  const [shortcutHelpOpen, setShortcutHelpOpen] = useState(false);
+  const searchInputRef = useRef<HTMLInputElement | null>(null);
+  const isOnline = useOnlineStatus();
 
   const listFilters = useBuildListFilters({ searchParam: "search" });
-  const { cursor, hasPrevious, goNext, goPrevious } = useCursorPager(
+  const { cursor, pageNumber, hasPrevious, goNext, goPrevious } = useBuildCursorPager(
     listFilters.resetKey,
   );
 
@@ -65,14 +68,6 @@ export function MembersPage() {
     );
 
   const members = data?.data ?? [];
-
-  const pageState = usePageState({
-    permission: "build:members:view",
-    isLoading,
-    isError,
-    error,
-    isEmpty: members.length === 0,
-  });
 
   const removeMember = useRemoveBuildMember();
 
@@ -113,6 +108,20 @@ export function MembersPage() {
   const handleNextPage = useCallback(() => {
     goNext(data?.pagination.nextCursor);
   }, [data, goNext]);
+
+  const handleShortcutHelp = useCallback(() => setShortcutHelpOpen(true), []);
+  const handleKeyboardOpen = useCallback((_index: number) => {}, []);
+  const handleKeyboardClearSelection = useCallback(() => setRemoveTarget(null), []);
+
+  useBuildListKeyboard({
+    itemCount: members.length,
+    onOpen: handleKeyboardOpen,
+    onCreate: canManage ? handleOpenAddDialog : undefined,
+    onClearSelection: handleKeyboardClearSelection,
+    onShortcutHelp: handleShortcutHelp,
+    searchInputRef,
+    enabled: !isLoading,
+  });
 
   const columns = useMembersColumns({
     displayProps,
@@ -165,7 +174,7 @@ export function MembersPage() {
               actions={[
                 {
                   id: "add-member",
-                  label: "Add member",
+                  label: "Add workspace member",
                   icon: Plus,
                   primary: true,
                   onSelect: handleOpenAddDialog,
@@ -181,6 +190,7 @@ export function MembersPage() {
               onValueChange: listFilters.setSearch,
               placeholder: "Search members…",
               label: "Search members",
+              inputRef: searchInputRef,
             }}
             trailing={
               <>
@@ -196,57 +206,65 @@ export function MembersPage() {
       >
         <PmPageShell>
           <PmSection index={0} className="flex min-h-0 flex-1 flex-col">
-            <PageState
-              resolution={pageState}
-              loading={
-                <DataTableSkeleton
-                  mobileCards
-                  rows={12}
-                  headers={MEMBER_TABLE_HEADERS}
-                  className="flex-1"
-                />
-              }
+            <BuildListSurface<BuildMember>
+              permission="build:members:view"
+              rows={members}
+              columns={columns}
+              isLoading={isLoading}
+              isError={isError}
+              error={error}
+              isFiltered={listFilters.isFiltered && isOnline}
+              getRowKey={(member) => member.id}
+              mobileCard={renderMobileCard}
+              minWidth="640px"
+              pagination={{
+                mode: "cursor",
+                pageSize: 25,
+                pageNumber,
+                hasMore: hasNext,
+                hasPrevious,
+                onNext: handleNextPage,
+                onPrevious: goPrevious,
+              }}
+              loadingRows={12}
+              loadingHeaders={MEMBER_TABLE_HEADERS}
               empty={
+                isOnline ? (
+                  <EmptyState
+                    className={CONTENT_FILL_PANEL}
+                    illustrationPreset="team"
+                    title="No members yet"
+                    description={
+                      canManage
+                        ? "Add the first person who should have access to the Build workspace."
+                        : "People with access to Build will appear here."
+                    }
+                    action={
+                      canManage
+                        ? { label: "Add workspace member", onClick: handleOpenAddDialog }
+                        : undefined
+                    }
+                  />
+                ) : (
+                  <EmptyState
+                    className={CONTENT_FILL_PANEL}
+                    illustrationPreset="team"
+                    title="You are offline"
+                    description="Reconnect to see the latest member list."
+                  />
+                )
+              }
+              filteredEmpty={
                 <EmptyState
-                  className={PM_FILL_PANEL}
+                  className={CONTENT_FILL_PANEL}
                   illustrationPreset="team"
                   title="No members yet"
-                  description={
-                    listFilters.isFiltered
-                      ? undefined
-                      : canManage
-                        ? "Add the first person who should have access to Build."
-                        : "People with access to Build will appear here."
-                  }
-                  filtersActive={listFilters.isFiltered}
+                  filtersActive
                   onClearFilters={listFilters.clearAll}
-                  action={
-                    !listFilters.isFiltered && canManage
-                      ? { label: "Add member", onClick: handleOpenAddDialog }
-                      : undefined
-                  }
                 />
               }
               onRetry={handleRetry}
-              className={PM_FILL_PANEL}
-            >
-              <DataTable
-                className={PM_FILL_PANEL}
-                data={members}
-                columns={columns}
-                getRowKey={(member) => member.id}
-                mobileCard={renderMobileCard}
-                minWidth="640px"
-                pagination={{
-                  mode: "cursor",
-                  pageSize: 25,
-                  hasMore: hasNext,
-                  hasPrevious,
-                  onNext: handleNextPage,
-                  onPrevious: goPrevious,
-                }}
-              />
-            </PageState>
+            />
           </PmSection>
         </PmPageShell>
       </PageWrapper>
@@ -267,6 +285,11 @@ export function MembersPage() {
         destructive
         isPending={removeMember.isPending}
         onConfirm={handleRemoveConfirm}
+      />
+
+      <ShortcutHelpDialog
+        open={shortcutHelpOpen}
+        onOpenChange={setShortcutHelpOpen}
       />
     </>
   );

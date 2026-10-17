@@ -1,6 +1,6 @@
 "use client";
 
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import type { UseQueryOptions } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
@@ -20,7 +20,8 @@ const noContentContract = lazyContract(() =>
 );
 export interface BuildMember {
   id: string;
-  role: "member" | "admin";
+  membershipId: number;
+  role: string;
   addedAt: string;
   name: string | null;
   firstName: string | null;
@@ -71,9 +72,8 @@ export function useAddBuildMember() {
     mutationKey: [...buildWorkQueryKeys.projects.buildMembers.all, "add"],
     mutationFn: (body: { userId: string; role?: "member" | "admin" }) =>
       apiClient.post<unknown>("/build/members", body, undefined, buildMemberRowContract),
-    onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.buildMembers.all });
-    },
+    onSuccess: () =>
+      qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.buildMembers.all }),
   });
 }
 
@@ -83,8 +83,15 @@ export function useRemoveBuildMember() {
     mutationKey: [...buildWorkQueryKeys.projects.buildMembers.all, "remove"],
     mutationFn: (userId: string) =>
       apiClient.delete<void>(`/build/members/${userId}`, undefined, undefined, noContentContract),
-    onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.buildMembers.all });
+    onSuccess: (_result, userId) => {
+      qc.setQueriesData<BuildMembersResponse>(
+        { queryKey: buildWorkQueryKeys.projects.buildMembers.list() },
+        (page) =>
+          page && Array.isArray(page.data)
+            ? { ...page, data: page.data.filter((member) => member.id !== userId) }
+            : page,
+      );
+      return qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.buildMembers.all });
     },
   });
 }

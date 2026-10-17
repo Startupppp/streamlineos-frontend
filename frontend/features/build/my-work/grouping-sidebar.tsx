@@ -1,7 +1,8 @@
 "use client";
 
 import { memo, useCallback, useMemo } from "react";
-import { useRouter, useSearchParams, usePathname } from "next/navigation";
+import { useMyWorkListUrlState, useMyWorkSearchParams } from "./my-work-collection-params";
+import { PriorityBadge } from "@/features/build/shared/priority-badge";
 import {
   Drawer,
   DrawerContent,
@@ -9,81 +10,17 @@ import {
   DrawerTitle,
 } from "@/components/ui/drawer";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { Skeleton } from "@/components/ui/skeleton";
 import { useIsMobile } from "@/hooks/common/use-mobile";
 import { PM_PANEL } from "@/components/pm-chrome";
 import { cn } from "@/lib/utils";
 import type { AllWorkTicket } from "@/types/projects";
-
-const PRIORITY_ORDER = ["URGENT", "HIGH", "MEDIUM", "LOW"] as const;
-const PRIORITY_LABELS: Record<string, string> = {
-  URGENT: "Urgent",
-  HIGH: "High",
-  MEDIUM: "Medium",
-  LOW: "Low",
-};
-const PRIORITY_COLORS: Record<string, string> = {
-  URGENT: "bg-status-danger-fill",
-  HIGH: "bg-status-warning-fill",
-  MEDIUM: "bg-status-warning-fill",
-  LOW: "bg-status-info-fill",
-};
-
-interface GroupRow {
-  key: string;
-  label: string;
-  count: number;
-  color?: string | null;
-}
-
-interface SidebarRowProps {
-  row: GroupRow;
-  isActive: boolean;
-  onToggle: (key: string) => void;
-  colorDotClass?: string;
-}
-
-const SidebarRow = memo(function SidebarRow({
-  row,
-  isActive,
-  onToggle,
-  colorDotClass,
-}: SidebarRowProps) {
-  function handleClick() {
-    onToggle(row.key);
-  }
-
-  return (
-    <button
-      type="button"
-      onClick={handleClick}
-      className={cn(
-        "flex w-full min-w-0 items-center gap-2 rounded-md px-2 py-1.5 text-left text-xs transition-colors",
-        isActive
-          ? "bg-primary/10 text-primary"
-          : "text-foreground hover:bg-muted/60",
-      )}
-    >
-      {colorDotClass ? (
-        <span className={cn("h-2 w-2 shrink-0 rounded-full", colorDotClass)} />
-      ) : row.color ? (
-        <span
-          className="h-2 w-2 shrink-0 rounded-full"
-          style={{ backgroundColor: row.color }}
-        />
-      ) : null}
-      <span className="min-w-0 flex-1 truncate">{row.label}</span>
-      <span
-        className={cn(
-          "shrink-0 rounded px-1 py-0.5 text-micro font-medium tabular-nums",
-          isActive ? "bg-primary/20 text-primary" : "bg-muted text-muted-foreground",
-        )}
-      >
-        {row.count}
-      </span>
-    </button>
-  );
-});
+import {
+  type GroupRow,
+  SidebarRow,
+  PRIORITY_ORDER,
+  GroupingSkeleton,
+  EmptyGroup,
+} from "./grouping-sidebar-parts";
 
 interface GroupingSidebarBodyProps {
   tickets: AllWorkTicket[] | undefined;
@@ -96,9 +33,8 @@ function GroupingSidebarBody({
   isLoading,
   className,
 }: GroupingSidebarBodyProps) {
-  const router = useRouter();
-  const pathname = usePathname();
-  const searchParams = useSearchParams();
+  const searchParams = useMyWorkSearchParams();
+  const { setListParams } = useMyWorkListUrlState();
 
   const labelsParam = searchParams.get("labels") ?? "";
   const priorityParam = searchParams.get("priority") ?? "";
@@ -117,27 +53,14 @@ function GroupingSidebarBody({
     [projectIdsParam],
   );
 
-  const setParam = useCallback(
-    (key: string, value: string) => {
-      const params = new URLSearchParams(searchParams.toString());
-      if (value) {
-        params.set(key, value);
-      } else {
-        params.delete(key);
-      }
-      router.replace(`${pathname}?${params.toString()}`, { scroll: false });
-    },
-    [router, pathname, searchParams],
-  );
-
   const toggleMulti = useCallback(
     (key: string, current: string[], value: string) => {
       const next = current.includes(value)
         ? current.filter((v) => v !== value)
         : [...current, value];
-      setParam(key, next.join(","));
+      setListParams({ [key]: next.join(",") || null });
     },
-    [setParam],
+    [setListParams],
   );
 
   function handleToggleLabel(id: string) {
@@ -180,7 +103,7 @@ function GroupingSidebarBody({
     }
     return PRIORITY_ORDER.filter((p) => counts.has(p)).map((p) => ({
       key: p,
-      label: PRIORITY_LABELS[p] ?? p,
+      label: p.charAt(0) + p.slice(1).toLowerCase(),
       count: counts.get(p) ?? 0,
     }));
   }, [tickets]);
@@ -208,7 +131,7 @@ function GroupingSidebarBody({
   return (
     <div className={cn("flex h-full min-h-0 flex-col gap-2 overflow-hidden", className)}>
       <div className="border-b border-border/50 px-3 py-2">
-        <span className="text-xs font-semibold text-foreground">Group by</span>
+        <span className="text-xs font-medium text-foreground">Group by</span>
       </div>
 
       <Tabs defaultValue="priority" className="flex min-h-0 flex-1 flex-col">
@@ -239,7 +162,7 @@ function GroupingSidebarBody({
                   row={row}
                   isActive={selectedPriorities.includes(row.key)}
                   onToggle={handleTogglePriority}
-                  colorDotClass={PRIORITY_COLORS[row.key]}
+                  leading={<PriorityBadge priority={row.key} />}
                 />
               ))
             )}
@@ -340,18 +263,3 @@ export const GroupingSidebar = memo(function GroupingSidebar({
   );
 });
 
-function GroupingSkeleton() {
-  return (
-    <div className="space-y-1.5 py-1">
-      {Array.from({ length: 5 }).map((_, i) => (
-        <Skeleton key={i} className="h-7 w-full rounded-md" />
-      ))}
-    </div>
-  );
-}
-
-function EmptyGroup({ label }: { label: string }) {
-  return (
-    <p className="py-4 text-center text-xs text-muted-foreground">{label}</p>
-  );
-}

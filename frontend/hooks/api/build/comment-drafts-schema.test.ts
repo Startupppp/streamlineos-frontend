@@ -1,21 +1,27 @@
-import { commentDraftContract, commentDraftListContract, generatedCommentDraftSchema } from "./comment-drafts-schema";
+import {
+  commentDraftsUpsertResponseSchema,
+  commentDraftsListMineResponseSchema,
+  commentDraftsGenerateDraftResponseSchema,
+} from "@/contracts/build-contracts.generated";
 
 it("accepts the PUT /build/comment-drafts/tickets/:ticketId response, which the service returns as a bare commentDrafts row with no ticket join", () => {
   const raw = {
     id: 5,
+    orgId: "org-abc",
+    membershipId: null,
     ticketId: 42,
     body: "Draft body",
     createdAt: "2026-09-16T00:00:00.000Z",
     updatedAt: "2026-09-16T00:00:00.000Z",
   };
 
-  const result = commentDraftContract.parse(raw);
+  const result = commentDraftsUpsertResponseSchema.parse(raw);
 
-  expect(result.ticket).toBeUndefined();
   expect(result.ticketId).toBe(42);
+  expect(result.orgId).toBe("org-abc");
 });
 
-it("still accepts the GET /build/comment-drafts/mine shape, which joins tickets and always sends a nested ticket", () => {
+it("accepts the paginated envelope from GET /build/comment-drafts/mine with data array and pagination cursor", () => {
   const ticket = {
     id: 42,
     type: "TASK",
@@ -34,32 +40,61 @@ it("still accepts the GET /build/comment-drafts/mine shape, which joins tickets 
       lastName: null,
     },
   };
-  const raw = [
-    {
-      id: 5,
-      ticketId: 42,
-      body: "Draft body",
-      createdAt: "2026-09-16T00:00:00.000Z",
-      updatedAt: "2026-09-16T00:00:00.000Z",
-      ticket,
+  const raw = {
+    data: [
+      {
+        id: 5,
+        orgId: "org-abc",
+        membershipId: null,
+        ticketId: 42,
+        body: "Draft body",
+        createdAt: "2026-09-16T00:00:00.000Z",
+        updatedAt: "2026-09-16T00:00:00.000Z",
+        ticket,
+      },
+    ],
+    pagination: {
+      limit: 100,
+      hasMore: false,
+      nextCursor: null,
     },
-  ];
+  };
 
-  const result = commentDraftListContract.parse(raw);
+  const result = commentDraftsListMineResponseSchema.parse(raw);
 
-  expect(result[0]?.ticket).toEqual(ticket);
+  expect(result.data[0]?.ticket).toEqual(ticket);
+  expect(result.pagination.hasMore).toBe(false);
+  expect(result.pagination.nextCursor).toBeNull();
+});
+
+it("accepts a paginated envelope with a nextCursor when more pages exist", () => {
+  const raw = {
+    data: [],
+    pagination: {
+      limit: 100,
+      hasMore: true,
+      nextCursor: "cursor-abc",
+    },
+  };
+
+  const result = commentDraftsListMineResponseSchema.parse(raw);
+
+  expect(result.pagination.hasMore).toBe(true);
+  expect(result.pagination.nextCursor).toBe("cursor-abc");
 });
 
 it("rejects a draft whose ticketId is not a number, since the drafts page keys the list on it", () => {
   const raw = {
     id: 5,
+    orgId: "org-abc",
+    membershipId: null,
     ticketId: "42",
     body: "Draft body",
     createdAt: "2026-09-16T00:00:00.000Z",
     updatedAt: "2026-09-16T00:00:00.000Z",
   };
 
-  expect(commentDraftContract.safeParse(raw).success).toBe(false);
+  expect(commentDraftsUpsertResponseSchema.safeParse(raw).success).toBe(false);
 });
 
 const validGeneratedDraft = {
@@ -88,13 +123,13 @@ const validGeneratedDraft = {
 };
 
 it("accepts a valid POST /build/comment-drafts/tickets/:ticketId/generate-draft response", () => {
-  const result = generatedCommentDraftSchema.parse(validGeneratedDraft);
+  const result = commentDraftsGenerateDraftResponseSchema.parse(validGeneratedDraft);
   expect(result.body).toBe("AI-generated comment body");
   expect(result.aiUsage.totalTokens).toBe(280);
 });
 
 it("accepts nullable agent-pulse fields — evidence, proposedChange, impact, confidence, affectedRecordIds", () => {
-  const result = generatedCommentDraftSchema.parse(validGeneratedDraft);
+  const result = commentDraftsGenerateDraftResponseSchema.parse(validGeneratedDraft);
   expect(result.evidence).toBeNull();
   expect(result.proposedChange).toBeNull();
   expect(result.impact).toBeNull();
@@ -104,10 +139,10 @@ it("accepts nullable agent-pulse fields — evidence, proposedChange, impact, co
 
 it("rejects a generated draft missing aiUsage, which would silently strip spend from the UI", () => {
   const { aiUsage: _dropped, ...withoutUsage } = validGeneratedDraft;
-  expect(generatedCommentDraftSchema.safeParse(withoutUsage).success).toBe(false);
+  expect(commentDraftsGenerateDraftResponseSchema.safeParse(withoutUsage).success).toBe(false);
 });
 
 it("rejects a generated draft whose aiUsage is missing totalTokens", () => {
   const raw = { ...validGeneratedDraft, aiUsage: { model: "x", promptTokens: 1, completionTokens: 1, credits: 0, costUsd: 0 } };
-  expect(generatedCommentDraftSchema.safeParse(raw).success).toBe(false);
+  expect(commentDraftsGenerateDraftResponseSchema.safeParse(raw).success).toBe(false);
 });

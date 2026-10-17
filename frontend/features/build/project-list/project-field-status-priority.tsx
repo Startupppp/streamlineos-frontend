@@ -11,7 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { useUpdateProject } from "@/hooks/api/build";
+import { useUpdateProject } from "@/hooks/api/build/projects";
 import {
   getColorSafe,
   projectStatusColors,
@@ -21,7 +21,7 @@ import {
   popoverOptionBaseClass,
   popoverOptionSelectedClass,
 } from "@/features/build/shared/popover-option-classes";
-import { InlineFieldWrapper } from "@/features/build/views/card-inline-fields";
+import { InlineFieldWrapper } from "@/features/build/views/card-field-wrapper";
 import { statusDotColors } from "./project-card-utils";
 import type { ProjectStatusValue } from "@/types/projects";
 
@@ -67,7 +67,7 @@ export const InlineProjectStatus = memo(function InlineProjectStatus({
             <Badge
               variant="secondary"
               className={cn(
-                "gap-0.5 rounded-full border-0 px-1.5 py-0 text-micro font-semibold uppercase tracking-wide",
+                "gap-0.5 rounded-full border-0 px-1.5 py-0 text-micro font-medium",
                 "cursor-pointer transition-opacity hover:opacity-80",
                 statusColor,
               )}
@@ -117,7 +117,7 @@ const PRIORITY_OPTIONS: { value: ProjectPriorityValue; label: string }[] = [
   { value: "LOW", label: "Low" },
 ];
 
-const priorityDotColors: Record<ProjectPriorityValue, string> = {
+const priorityDotColors: Record<string, string> = {
   URGENT: "bg-status-danger-fill",
   HIGH: "bg-status-warning-fill",
   MEDIUM: "bg-status-warning-fill",
@@ -125,7 +125,7 @@ const priorityDotColors: Record<ProjectPriorityValue, string> = {
 };
 
 interface InlineProjectPriorityProps extends InlineProjectFieldProps {
-  currentPriority: ProjectPriorityValue | null;
+  currentPriority: string | null;
 }
 
 export const InlineProjectPriority = memo(function InlineProjectPriority({

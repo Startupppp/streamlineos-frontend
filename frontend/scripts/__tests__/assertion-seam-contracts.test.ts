@@ -205,30 +205,30 @@ describe("lib/portal-api-client — parsePortalResponse on a body that is not th
   });
 });
 
-describe("features/build/intake/public-intake-api — the error-branch body probe", () => {
+describe("features/build/intake/public-intake-api — the error-branch body probe (token-addressed path)", () => {
   const realFetch = globalThis.fetch;
   afterEach(() => {
     Object.defineProperty(globalThis, "fetch", { value: realFetch, configurable: true, writable: true });
   });
 
   it("surfaces a string message from the failure body", async () => {
-    const { submitIntake } = await import("@/features/build/intake/public-intake-api");
+    const { submitIntakeByToken } = await import("@/features/build/intake/public-intake-api");
     stubFetch({ message: "Intake is closed for this project" }, 400);
     await expect(
-      submitIntake("1", { title: "t", submitterEmail: undefined }),
+      submitIntakeByToken("tok-abc", { title: "t", submitterEmail: undefined }),
     ).rejects.toThrow("Intake is closed for this project");
   });
 
   it("(negative) falls back to the generic message when the body's message is not a string or a string array", async () => {
-    const { submitIntake } = await import("@/features/build/intake/public-intake-api");
+    const { submitIntakeByToken } = await import("@/features/build/intake/public-intake-api");
     stubFetch({ message: { nested: "object" } }, 400);
     await expect(
-      submitIntake("1", { title: "t", submitterEmail: undefined }),
+      submitIntakeByToken("tok-abc", { title: "t", submitterEmail: undefined }),
     ).rejects.toThrow("Failed to submit. Please try again.");
   });
 
   it("(negative) survives a failure body that is not JSON", async () => {
-    const { submitIntake } = await import("@/features/build/intake/public-intake-api");
+    const { submitIntakeByToken } = await import("@/features/build/intake/public-intake-api");
     Object.defineProperty(globalThis, "fetch", {
       value: jest.fn(() =>
         Promise.resolve({
@@ -244,7 +244,7 @@ describe("features/build/intake/public-intake-api — the error-branch body prob
       writable: true,
     });
     await expect(
-      submitIntake("1", { title: "t", submitterEmail: undefined }),
+      submitIntakeByToken("tok-abc", { title: "t", submitterEmail: undefined }),
     ).rejects.toThrow("Failed to submit. Please try again.");
   });
 });

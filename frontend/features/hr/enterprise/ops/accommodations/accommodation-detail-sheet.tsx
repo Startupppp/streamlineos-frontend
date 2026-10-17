@@ -4,6 +4,7 @@ import { useCallback, useState } from "react";
 import {
   Sheet,
   SheetContent,
+  SheetDescription,
   SheetHeader,
   SheetTitle,
   SheetBody,
@@ -12,8 +13,8 @@ import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/shared/error-state";
 import { Separator } from "@/components/ui/separator";
-import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { Textarea } from "@/components/ui/textarea";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Lock } from "lucide-react";
@@ -57,6 +58,7 @@ export function AccommodationDetailSheet({ id, open, onOpenChange }: Props) {
         <SheetContent className="flex w-full flex-col gap-0 overflow-hidden p-0 sm:max-w-xl">
           <SheetHeader className="shrink-0 border-b border-border px-6 py-4 text-left">
             <SheetTitle>Accommodation request</SheetTitle>
+            <SheetDescription className="sr-only">Workplace accommodation request details and approval status.</SheetDescription>
           </SheetHeader>
           <SheetBody className="space-y-3 px-6 py-5">
             <Skeleton className="h-4 w-1/2" />
@@ -74,6 +76,7 @@ export function AccommodationDetailSheet({ id, open, onOpenChange }: Props) {
         <SheetContent className="flex w-full flex-col gap-0 overflow-hidden p-0 sm:max-w-xl">
           <SheetHeader className="shrink-0 border-b border-border px-6 py-4 text-left">
             <SheetTitle>Accommodation request</SheetTitle>
+            <SheetDescription className="sr-only">Workplace accommodation request details and approval status.</SheetDescription>
           </SheetHeader>
           <SheetBody className="px-6 py-5">
             {isError ? (
@@ -96,9 +99,7 @@ export function AccommodationDetailSheet({ id, open, onOpenChange }: Props) {
   }
 
   function handleApprove() {
-    approve.mutate({ note: approvingNote || undefined }, {
-      onError: (err) => toast.error(getErrorMessage(err)),
-    });
+    approve.mutate({ note: approvingNote || undefined });
   }
 
   return (
@@ -111,6 +112,7 @@ export function AccommodationDetailSheet({ id, open, onOpenChange }: Props) {
               {request.status.replace(/_/g, " ")}
             </Badge>
           </SheetTitle>
+          <SheetDescription className="sr-only">Workplace accommodation request details and approval status.</SheetDescription>
         </SheetHeader>
 
         <SheetBody className="space-y-4 px-6 py-5">
@@ -152,8 +154,8 @@ export function AccommodationDetailSheet({ id, open, onOpenChange }: Props) {
               <Separator />
               <div className="space-y-2">
                 <p className="text-sm font-medium">Approve Request</p>
-                <textarea
-                  className="w-full text-sm rounded-md border border-border bg-background px-3 py-2 resize-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                <Textarea
+                  aria-label="Approval note"
                   rows={2}
                   placeholder="Approval note (optional)"
                   value={approvingNote}
@@ -163,7 +165,7 @@ export function AccommodationDetailSheet({ id, open, onOpenChange }: Props) {
                   onClick={handleApprove}
                   isPending={approve.isPending}
                   loadingText="Approving…"
-                  className="w-full bg-primary hover:bg-primary/90 text-primary-foreground"
+                  className="w-full"
                 >
                   Approve
                 </LoadingButton>

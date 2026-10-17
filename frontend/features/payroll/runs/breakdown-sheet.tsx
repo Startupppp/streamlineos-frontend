@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, memo, type ChangeEvent } from "react";
+import { useState, memo, type ChangeEvent, type ReactNode } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -40,9 +40,13 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { useCan } from "@/hooks/api/access";
-import { useRunEmployee, useAddAdjustment, useSetEmployeeHold } from "@/hooks/api/payroll/run-employees";
+import { useRunEmployee, useAddAdjustment, useSetEmployeeHold, useReleaseEmployeeHold } from "@/hooks/api/payroll/run-employees";
+import { usePayrollRun } from "@/hooks/api/payroll/runs";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { formatMoney } from "@/features/payroll/shared/payroll-format";
 import { cn } from "@/lib/utils";
+import { SourceWhyList } from "./source-why-list";
+import { AdjustmentRemoveAction, adjustmentIdFromCode } from "./adjustment-remove-action";
 import type { CalculationSnapshotLine, SalaryComponentType } from "@/types/payroll/runs";
 
 const adjustmentSchema = z.object({
@@ -52,6 +56,8 @@ const adjustmentSchema = z.object({
   note: z.string().min(1).max(500),
 });
 type AdjustmentForm = z.infer<typeof adjustmentSchema>;
+
+const HOLD_RELEASE_BLOCKED_STATUSES = new Set(["APPROVED", "LOCKED", "CLOSED"]);
 
 const CATEGORY_ORDER: SalaryComponentType[] = [
   "EARNING",
@@ -71,7 +77,7 @@ const CATEGORY_LABELS: Record<SalaryComponentType, string> = {
   ADJUSTMENT: "Adjustments",
 };
 
-const LineItemRow = memo(function LineItemRow({ line }: { line: CalculationSnapshotLine }) {
+const LineItemRow = memo(function LineItemRow({ line, action }: { line: CalculationSnapshotLine; action?: ReactNode }) {
   const [expanded, setExpanded] = useState(false);
 
   function handleToggle() {
@@ -99,7 +105,9 @@ const LineItemRow = memo(function LineItemRow({ line }: { line: CalculationSnaps
         <span className="font-mono text-dense tabular-nums text-foreground">
           {formatMoney(line.amount)}
         </span>
+        {action}
       </div>
+      <SourceWhyList sources={line.explain.sources} />
       {expanded && (
         <div className="px-8 py-2 bg-muted/10 border-t border-border text-micro text-muted-foreground space-y-0.5">
           <p className="font-medium text-foreground">Method: {line.calcMethod}</p>
@@ -136,6 +144,9 @@ export function BreakdownSheet({
   const addAdjustmentMutation = useAddAdjustment(runId, runEmployeeId ?? 0);
   const canManage = useCan("payroll:runs:manage");
   const holdMutation = useSetEmployeeHold(runId, runEmployeeId ?? 0);
+  const releaseMutation = useReleaseEmployeeHold(runId, runEmployeeId ?? 0);
+  const runStatus = usePayrollRun(runId).data?.run.status;
+  const canRelease = runStatus !== undefined && !HOLD_RELEASE_BLOCKED_STATUSES.has(runStatus);
   const [showHold, setShowHold] = useState(false);
   const [holdReason, setHoldReason] = useState("");
 
@@ -185,19 +196,18 @@ export function BreakdownSheet({
           toast.success("Salary put on hold");
           setShowHold(false);
         },
-        onError: () => toast.error("Failed to hold salary"),
+        onError: (err) => toast.error(getErrorMessage(err)),
       },
     );
   }
 
   function handleRelease() {
-    holdMutation.mutate(
-      { hold: false },
-      {
-        onSuccess: () => toast.success("Hold released"),
-        onError: () => toast.error("Failed to release hold"),
+    releaseMutation.mutate(undefined, {
+      onSuccess: (result) => {
+        toast.success(result.published > 0 ? "Hold released and payslip published" : "Hold released");
       },
-    );
+      onError: (err) => toast.error(getErrorMessage(err)),
+    });
   }
 
   const snapshot = data?.calculationSnapshot;
@@ -248,12 +258,32 @@ export function BreakdownSheet({
                       </div>
                       {lines
                         .sort((a, b) => a.sortOrder - b.sortOrder)
-                        .map((line) => (
-                          <LineItemRow key={line.code} line={line} />
-                        ))}
+                        .map((line) => {
+                          const adjustmentId = adjustmentIdFromCode(line.code);
+                          const removable = adjustmentId !== null && runEmployeeId !== null && canManage && !isLocked;
+                          return (
+                            <LineItemRow
+                              key={line.code}
+                              line={line}
+                              action={removable ? (
+                                <AdjustmentRemoveAction runId={runId} runEmployeeId={runEmployeeId} adjustmentId={adjustmentId} name={line.name} />
+                              ) : undefined}
+                            />
+                          );
+                        })}
                     </div>
                   );
                 })}
+
+                {parseFloat(snapshot.lopDays) > 0 && (
+                  <div className="py-1.5">
+                    <div className="flex items-center justify-between px-3 text-dense">
+                      <span className="text-muted-foreground">Loss of pay</span>
+                      <span className="font-mono tabular-nums">{snapshot.lopDays} days</span>
+                    </div>
+                    <SourceWhyList sources={snapshot.lopSources} />
+                  </div>
+                )}
 
                 <div className="px-3 py-3 space-y-1">
                   <div className="flex items-center justify-between text-dense">
@@ -306,15 +336,17 @@ export function BreakdownSheet({
               )}
               {canManage &&
                 (data?.holdReason ? (
-                  <LoadingButton
-                    size="sm"
-                    variant="outline"
-                    onClick={handleRelease}
-                    isPending={holdMutation.isPending}
-                    loadingText="Releasing…"
-                  >
-                    Release Hold
-                  </LoadingButton>
+                  canRelease && (
+                    <LoadingButton
+                      size="sm"
+                      variant="outline"
+                      onClick={handleRelease}
+                      isPending={releaseMutation.isPending}
+                      loadingText="Releasing…"
+                    >
+                      Release
+                    </LoadingButton>
+                  )
                 ) : (
                   <Button size="sm" variant="outline" onClick={handleHoldOpen}>
                     Hold Salary

@@ -1,99 +1,23 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { BuildScopeBrowser } from "./build-scope-browser";
-import { useBuildScopeDirectory } from "./use-build-scope-directory";
-import { useReconciledBuildScopes } from "./use-reconciled-build-scopes";
-import { useBuildScopeRecents, useBuildScopeStars } from "./use-build-nav-preferences";
-import type { BuildScopeDirectory, BuildScopeDirectoryEntry } from "./use-build-scope-directory";
-import type { BuildScopeRef } from "./use-build-nav-preferences";
+import { useBuildScopeStars } from "./use-build-nav-preferences";
+import {
+  makeEntry,
+  makeRef,
+  mockUseBuildScopeDirectory,
+  mockUseBuildScopeRecents,
+  mockUseBuildScopeStars,
+  mockUseReconciledBuildScopes,
+  renderBrowser,
+  setupExpandable,
+  setupMocks,
+} from "./build-scope-browser.test-harness";
 
 jest.mock("./use-build-scope-directory");
 jest.mock("./use-reconciled-build-scopes");
 jest.mock("./use-build-nav-preferences");
 
-const mockUseBuildScopeDirectory = useBuildScopeDirectory as jest.MockedFunction<typeof useBuildScopeDirectory>;
-const mockUseReconciledBuildScopes = useReconciledBuildScopes as jest.MockedFunction<typeof useReconciledBuildScopes>;
-const mockUseBuildScopeRecents = useBuildScopeRecents as jest.MockedFunction<typeof useBuildScopeRecents>;
-const mockUseBuildScopeStars = useBuildScopeStars as jest.MockedFunction<typeof useBuildScopeStars>;
-
-function makeEntry(overrides: Partial<BuildScopeDirectoryEntry> = {}): BuildScopeDirectoryEntry {
-  return {
-    key: "project:1",
-    type: "project",
-    id: "1",
-    name: "Alpha Project",
-    parentPath: "Organization",
-    parentKey: null,
-    projectKey: "ALPHA",
-    href: "/build/1",
-    isArchived: false,
-    ...overrides,
-  };
-}
-
-function makeRef(overrides: Partial<BuildScopeRef> = {}): BuildScopeRef {
-  return {
-    key: "project:1",
-    type: "project",
-    id: "1",
-    name: "Alpha Project",
-    parentPath: "Organization",
-    parentKey: null,
-    projectKey: "ALPHA",
-    href: "/build/1",
-    ...overrides,
-  };
-}
-
-function makeDirectory(overrides: Partial<BuildScopeDirectory> = {}): BuildScopeDirectory {
-  return {
-    products: [],
-    projects: [],
-    quarantinedProjects: [],
-    isLoading: false,
-    isRefreshing: false,
-    isError: false,
-    isDenied: false,
-    hasMoreProjects: false,
-    isFetchingMoreProjects: false,
-    fetchMoreProjects: jest.fn(),
-    hasMoreHierarchy: false,
-    isFetchingMoreHierarchy: false,
-    fetchMoreHierarchy: jest.fn(),
-    refetch: jest.fn(),
-    ...overrides,
-  };
-}
-
-const DEFAULT_PROPS = {
-  currentScopeKey: "organization",
-  settingsHrefFor: () => null as string | null,
-  onSelect: jest.fn(),
-};
-
-function setupMocks(directoryOverrides: Partial<BuildScopeDirectory> = {}) {
-  mockUseBuildScopeDirectory.mockReturnValue(makeDirectory(directoryOverrides));
-  mockUseReconciledBuildScopes.mockReturnValue({ entries: [], isReconciled: false });
-  mockUseBuildScopeRecents.mockReturnValue({
-    recents: [],
-    replaceRecents: jest.fn(),
-    recordScope: jest.fn(),
-  } as ReturnType<typeof useBuildScopeRecents>);
-  mockUseBuildScopeStars.mockReturnValue({
-    starred: [],
-    isStarred: () => false,
-    toggleStar: jest.fn(),
-    replaceStarred: jest.fn(),
-  } as ReturnType<typeof useBuildScopeStars>);
-}
-
-function renderBrowser(props: Partial<typeof DEFAULT_PROPS> = {}) {
-  return render(<BuildScopeBrowser {...DEFAULT_PROPS} {...props} />);
-}
-
-beforeEach(() => {
-  jest.clearAllMocks();
-});
+beforeEach(() => jest.clearAllMocks());
 
 describe("BSN-02-017 — four distinct empty states", () => {
   test("isLoading shows skeleton rows and not error or no-scopes text", () => {
@@ -246,18 +170,7 @@ describe("BSN-02-030 — ARIA roles for browse tree and flat lists", () => {
   });
 
   test("ArrowRight on a collapsed expandable treeitem expands it", async () => {
-    const product = makeEntry({
-      key: "product:p1",
-      type: "product",
-      name: "Product1",
-      parentKey: null,
-    });
-    const child = makeEntry({
-      key: "project:1",
-      name: "ChildProject",
-      parentKey: "product:p1",
-    });
-    setupMocks({ products: [product], projects: [child] });
+    setupExpandable("Product1");
     renderBrowser();
 
     const expandBtn = screen.getByRole("button", { name: "Expand Product1" });
@@ -274,18 +187,7 @@ describe("BSN-02-030 — ARIA roles for browse tree and flat lists", () => {
   });
 
   test("ArrowLeft on an expanded treeitem collapses it", async () => {
-    const product = makeEntry({
-      key: "product:p1",
-      type: "product",
-      name: "Product1",
-      parentKey: null,
-    });
-    const child = makeEntry({
-      key: "project:1",
-      name: "ChildProject",
-      parentKey: "product:p1",
-    });
-    setupMocks({ products: [product], projects: [child] });
+    setupExpandable("Product1");
     renderBrowser();
 
     await userEvent.click(screen.getByRole("button", { name: "Expand Product1" }));
@@ -300,19 +202,80 @@ describe("BSN-02-030 — ARIA roles for browse tree and flat lists", () => {
     });
   });
 
+  test("ArrowLeft on a rendered child focuses its immediate parent without selecting or collapsing it", async () => {
+    setupExpandable("Product1");
+    const onSelect = jest.fn();
+    renderBrowser({ onSelect });
+    await userEvent.click(screen.getByRole("button", { name: "Expand Product1" }));
+    const parent = screen.getByRole("treeitem", { name: /Product1/ });
+    const child = screen.getByRole("treeitem", { name: /ChildProject/ });
+    child.focus();
+    fireEvent.keyDown(child, { key: "ArrowLeft" });
+    expect(parent).toHaveFocus();
+    expect(screen.getByRole("button", { name: "Collapse Product1" })).toBeInTheDocument();
+    expect(child).toBeInTheDocument();
+    expect(onSelect).not.toHaveBeenCalled();
+  });
+
+  test.each([false, true])("ArrowLeft on nested product expanded=%s preserves immediate hierarchy", async expanded => {
+    const root = makeEntry({ key: "product:root", type: "product", name: "Root", parentKey: null });
+    const middle = makeEntry({ key: "product:middle", type: "product", name: "Middle", parentKey: root.key });
+    const leaf = makeEntry({ key: "project:leaf", name: "Leaf", parentKey: middle.key });
+    setupMocks({ products: [root, middle], projects: [leaf] });
+    const onSelect = jest.fn();
+    renderBrowser({ onSelect });
+    await userEvent.click(screen.getByRole("button", { name: "Expand Root" }));
+    if (expanded) await userEvent.click(screen.getByRole("button", { name: "Expand Middle" }));
+    const middleRow = screen.getByRole("treeitem", { name: /Middle/ });
+    middleRow.focus();
+    fireEvent.keyDown(middleRow, { key: "ArrowLeft" });
+    expect(expanded ? middleRow : screen.getByRole("treeitem", { name: /Root/ })).toHaveFocus();
+    expect(screen.getByRole("button", { name: "Collapse Root" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Expand Middle" })).toBeInTheDocument();
+    expect(screen.queryByRole("treeitem", { name: /Leaf/ })).not.toBeInTheDocument();
+    expect(onSelect).not.toHaveBeenCalled();
+  });
+
+  test("root Left stays put and Right expands then enters its child without navigation", async () => {
+    setupExpandable("Product1");
+    const onSelect = jest.fn();
+    renderBrowser({ onSelect });
+    const root = screen.getByRole("treeitem", { name: /Product1/ });
+    root.focus();
+    fireEvent.keyDown(root, { key: "ArrowLeft" });
+    expect(root).toHaveFocus();
+    expect(screen.getByRole("button", { name: "Expand Product1" })).toBeInTheDocument();
+    fireEvent.keyDown(root, { key: "ArrowRight" });
+    expect(screen.getByRole("button", { name: "Collapse Product1" })).toBeInTheDocument();
+    fireEvent.keyDown(root, { key: "ArrowRight" });
+    const child = screen.getByRole("treeitem", { name: /ChildProject/ });
+    expect(child).toHaveFocus();
+    expect(onSelect).not.toHaveBeenCalled();
+    await userEvent.keyboard("{Enter}");
+    expect(onSelect).toHaveBeenCalledTimes(1);
+    expect(onSelect).toHaveBeenCalledWith(expect.objectContaining({ key: "project:1" }));
+  });
+
+  test.each(["Recent", "Search"])("ArrowLeft leaves a flat %s option focused", async mode => {
+    const parent = makeEntry({ key: "product:p1", type: "product", name: "Product1", parentKey: null });
+    const child = makeEntry({ key: "project:1", name: "ChildProject", parentKey: parent.key });
+    setupMocks({ products: [parent], projects: [child] });
+    if (mode === "Recent") {
+      mockUseReconciledBuildScopes.mockReturnValueOnce({ entries: [makeRef(child)], isReconciled: false });
+      mockUseReconciledBuildScopes.mockReturnValueOnce({ entries: [], isReconciled: false });
+    }
+    const onSelect = jest.fn();
+    renderBrowser({ onSelect });
+    if (mode === "Search") await userEvent.type(screen.getByPlaceholderText(/Search projects/), "Child");
+    const option = await screen.findByRole("option", { name: /ChildProject/ });
+    option.focus();
+    fireEvent.keyDown(option, { key: "ArrowLeft" });
+    expect(option).toHaveFocus();
+    expect(onSelect).not.toHaveBeenCalled();
+  });
+
   test("children of an expanded item are wrapped in role=group", async () => {
-    const product = makeEntry({
-      key: "product:p1",
-      type: "product",
-      name: "Product1",
-      parentKey: null,
-    });
-    const child = makeEntry({
-      key: "project:1",
-      name: "ChildProject",
-      parentKey: "product:p1",
-    });
-    setupMocks({ products: [product], projects: [child] });
+    setupExpandable("Product1");
     renderBrowser();
 
     await userEvent.click(screen.getByRole("button", { name: "Expand Product1" }));
@@ -325,18 +288,14 @@ describe("BSN-02-030 — ARIA roles for browse tree and flat lists", () => {
 
 describe("BSN-02-033 — 44px touch targets on expand buttons (class assertion — not layout-verified in jsdom)", () => {
   test("expand button carries h-11 for 44px mobile touch target", () => {
-    const product = makeEntry({ key: "product:p1", type: "product", name: "WS", parentKey: null });
-    const child = makeEntry({ key: "project:1", parentKey: "product:p1" });
-    setupMocks({ products: [product], projects: [child] });
+    setupExpandable();
     renderBrowser();
     const expandBtn = screen.getByRole("button", { name: /Expand WS/ });
     expect(expandBtn.className).toContain("h-11");
   });
 
   test("expand button reverts to h-5 at md breakpoint for desktop density", () => {
-    const product = makeEntry({ key: "product:p1", type: "product", name: "WS", parentKey: null });
-    const child = makeEntry({ key: "project:1", parentKey: "product:p1" });
-    setupMocks({ products: [product], projects: [child] });
+    setupExpandable();
     renderBrowser();
     const expandBtn = screen.getByRole("button", { name: /Expand WS/ });
     expect(expandBtn.className).toContain("md:h-5");
@@ -345,9 +304,7 @@ describe("BSN-02-033 — 44px touch targets on expand buttons (class assertion �
 
 describe("BSN-02-034 — reduced motion (class assertion — not browser-verified in jsdom)", () => {
   test("expand chevron carries motion-reduce:transition-none to disable rotation animation under reduced motion", () => {
-    const product = makeEntry({ key: "product:p1", type: "product", name: "WS", parentKey: null });
-    const child = makeEntry({ key: "project:1", parentKey: "product:p1" });
-    setupMocks({ products: [product], projects: [child] });
+    setupExpandable();
     renderBrowser();
     const expandBtn = screen.getByRole("button", { name: /Expand WS/ });
     const chevron = expandBtn.querySelector("svg");
@@ -386,11 +343,12 @@ describe("BSN-02-014 — real load-more buttons replace the old silent truncatio
     expect(fetchMoreProjects).toHaveBeenCalledTimes(1);
   });
 
-  test("Load more projects button is disabled and shows a spinner while isFetchingMoreProjects is true", () => {
+  test("shows a loading status indicator while isFetchingMoreProjects is true instead of a button", () => {
     const project = makeEntry({ key: "project:1", name: "Alpha" });
     setupMocks({ projects: [project], hasMoreProjects: true, isFetchingMoreProjects: true });
     renderBrowser();
-    expect(screen.getByRole("button", { name: /Load more projects/i })).toBeDisabled();
+    expect(screen.queryByRole("button", { name: /Load more projects/i })).not.toBeInTheDocument();
+    expect(screen.getByRole("status")).toBeInTheDocument();
   });
 
   test("Load more products button is present when hasMoreHierarchy is true", () => {
@@ -441,46 +399,37 @@ describe("BLD-X-SB-DIR-001 — ARIA: search result items must carry role=option 
 });
 
 describe("BLD-X-SB-DIR-001 — search-mode load-more: a paginated search result set must not be silently truncated at the first cursor page", () => {
-  test("Load more projects button appears in search mode when hasMoreProjects is true so the user knows more matching results exist", async () => {
+  test("Load more results appears in search mode when the unified directory has another page", async () => {
     const project = makeEntry({ key: "project:1", name: "Alpha" });
-    setupMocks({ projects: [project], hasMoreProjects: true });
+    setupMocks({ projects: [project], hasMoreSearchResults: true });
     renderBrowser();
     await userEvent.type(screen.getByPlaceholderText(/Search projects/), "Al");
     await waitFor(() => {
-      expect(screen.getByRole("button", { name: /Load more projects/i })).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: /Load more results/i })).toBeInTheDocument();
     });
   });
 
-  test("Load more products button appears in search mode when hasMoreHierarchy is true", async () => {
-    const product = makeEntry({ key: "product:p1", type: "product", name: "SearchWS", parentKey: null });
-    setupMocks({ products: [product], hasMoreHierarchy: true });
-    renderBrowser();
-    await userEvent.type(screen.getByPlaceholderText(/Search projects/), "Se");
-    await waitFor(() => {
-      expect(screen.getByRole("button", { name: /Load more products/i })).toBeInTheDocument();
-    });
-  });
-
-  test("clicking Load more projects in search mode calls fetchMoreProjects so the next cursor page is appended", async () => {
-    const fetchMoreProjects = jest.fn();
+  test("clicking Load more results advances the unified directory cursor", async () => {
+    const fetchMoreSearchResults = jest.fn();
     const project = makeEntry({ key: "project:1", name: "Alpha" });
-    setupMocks({ projects: [project], hasMoreProjects: true, fetchMoreProjects });
+    setupMocks({ projects: [project], hasMoreSearchResults: true, fetchMoreSearchResults });
     renderBrowser();
     await userEvent.type(screen.getByPlaceholderText(/Search projects/), "Al");
-    await waitFor(() => screen.getByRole("button", { name: /Load more projects/i }));
-    await userEvent.click(screen.getByRole("button", { name: /Load more projects/i }));
-    expect(fetchMoreProjects).toHaveBeenCalledTimes(1);
+    await waitFor(() => screen.getByRole("button", { name: /Load more results/i }));
+    await userEvent.click(screen.getByRole("button", { name: /Load more results/i }));
+    expect(fetchMoreSearchResults).toHaveBeenCalledTimes(1);
   });
 
-  test("Load more projects button is absent in search mode when hasMoreProjects is false so there is no spurious prompt", async () => {
+  test("browse pagination flags do not create type-specific load-more controls in search mode", async () => {
     const project = makeEntry({ key: "project:1", name: "Alpha" });
-    setupMocks({ projects: [project], hasMoreProjects: false });
+    setupMocks({ projects: [project], hasMoreProjects: true, hasMoreHierarchy: true });
     renderBrowser();
     await userEvent.type(screen.getByPlaceholderText(/Search projects/), "Al");
     await waitFor(() => {
       expect(screen.getByText("Alpha")).toBeInTheDocument();
     });
     expect(screen.queryByRole("button", { name: /Load more projects/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /Load more products/i })).not.toBeInTheDocument();
   });
 });
 

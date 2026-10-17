@@ -10,10 +10,26 @@ export const kbSpaceListItemContract = z.object({
   isPublicHelpCenter: z.boolean(),
   createdAt: z.string(),
   updatedAt: z.string(),
+  archivedAt: z.string().nullable(),
   articleCount: z.number().int(),
+  pageCount: z.number().int(),
+  memberCount: z.number().int(),
+  ownerName: z.string().nullable(),
+  pagesOverdueForReview: z.number().int(),
 });
 
-export const kbSpaceListContract = z.array(kbSpaceListItemContract);
+export type KbSpaceListItem = z.infer<typeof kbSpaceListItemContract>;
+
+export const kbSpaceListPageContract = z.object({
+  data: z.array(kbSpaceListItemContract),
+  pagination: z.object({
+    limit: z.number().int(),
+    hasMore: z.boolean(),
+    nextCursor: z.string().nullable(),
+  }),
+});
+
+export type KbSpaceListPage = z.infer<typeof kbSpaceListPageContract>;
 
 export const kbSpaceFullContract = z.object({
   id: z.number().int(),
@@ -34,9 +50,25 @@ export const kbSpaceFullContract = z.object({
   defaultVisibility: z.string(),
   owningTeamId: z.string().nullable(),
   archivedAt: z.string().nullable(),
+  ownerName: z.string().nullable(),
+  pagesOverdueForReview: z.number().int().optional(),
+  pagesWithReviewPolicy: z.number().int().optional(),
+  viewerSpaceRole: z
+    .enum(["viewer", "commenter", "editor", "publisher", "admin"])
+    .nullable()
+    .optional(),
 });
 
 export const kbSpaceSuccessContract = z.object({ success: z.boolean() });
+
+export const kbSpaceArchiveImpactContract = z.object({
+  pageCount: z.number().int(),
+  publicLinkCount: z.number().int(),
+  recordLinkCount: z.number().int(),
+  askIndexed: z.boolean(),
+});
+
+export type KbSpaceArchiveImpact = z.infer<typeof kbSpaceArchiveImpactContract>;
 
 export const kbSpaceMemberContract = z.object({
   id: z.number().int(),
@@ -53,7 +85,17 @@ export const kbSpaceMemberContract = z.object({
   userImage: z.string().nullable(),
 });
 
-export const kbSpaceMemberListContract = z.array(kbSpaceMemberContract);
+export const kbSpaceMemberListContract = z.object({
+  data: z.array(kbSpaceMemberContract),
+  pagination: z.object({
+    limit: z.number().int(),
+    hasMore: z.boolean(),
+    nextCursor: z.string().nullable(),
+  }),
+});
+export type KbSpaceMember = z.infer<typeof kbSpaceMemberContract>;
+
+export const kbSpaceMemberSuccessContract = z.object({ success: z.boolean() });
 
 export const kbSettingsContract = z.object({
   trashRetentionDays: z.number().int(),
@@ -67,5 +109,3 @@ export const kbTagContract = z.object({
   slug: z.string(),
   createdAt: z.string(),
 });
-
-export const kbTagListContract = z.array(kbTagContract);

@@ -22,11 +22,18 @@ import { DocumentFilters, DOCUMENT_TYPES } from "@/features/hr/documents/documen
 import { DocumentTable, type FolderItem } from "@/features/hr/documents/document-table";
 import { NewFolderDialog } from "@/features/hr/documents/new-folder-dialog";
 import { EditDocumentSheet } from "@/features/hr/documents/edit-document-sheet";
+import { DocumentClassificationSheet } from "@/features/hr/documents/components/document-classification-sheet";
+import { HrKbSharingSwitch } from "@/features/hr/documents/components/hr-kb-sharing-switch";
+import { DocumentBackfillPanel } from "@/features/hr/documents/components/document-backfill-panel";
+import { useHrKbLinkFlags } from "@/hooks/api/kb/hr-link-config";
+import { useCanClassifyDocuments } from "@/hooks/api/hr/document-classification";
 import { useCan } from "@/hooks/api/access";
 import { RichDocumentsSection } from "@/features/hr/documents/rich-documents-section";
 import { DocumentsExtendedSection } from "@/features/hr/documents/documents-extended-section";
 import { DocumentPageActions } from "@/features/hr/documents/document-page-actions";
-import { DocumentLibrarySkeleton, DocumentLibraryError } from "@/features/hr/documents/document-page-states";
+import { DocumentLibrarySkeleton, DocumentLibraryState } from "@/features/hr/documents/document-page-states";
+import { PageState } from "@/components/shared/page-state";
+import { usePageState } from "@/hooks/api/use-page-state";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import { getErrorMessage } from "@/lib/get-error-message";
 
@@ -50,6 +57,7 @@ export function DocumentsPage() {
   const [customFolders, setCustomFolders] = useState<string[]>([]);
   const [editingDocument, setEditingDocument] = useState<Document | null>(null);
   const [signatureDocument, setSignatureDocument] = useState<Document | null>(null);
+  const [classifyingDocument, setClassifyingDocument] = useState<Document | null>(null);
   const [viewMode, setViewMode] = useState<"list" | "grid">("list");
   const [cursorHistory, setCursorHistory] = useState<Array<string | undefined>>([
     undefined,
@@ -57,6 +65,9 @@ export function DocumentsPage() {
   const pageSize = 20;
 
   const canManageDocs = useCan("hr:documents:manage");
+  // Classification and sharing is organisation-wide authority the server refuses below scope `all`; `canManageDocs` is scope-blind.
+  const canClassify = useCanClassifyDocuments();
+  const hrKbLink = useHrKbLinkFlags();
   const [isLetterGenOpen, setIsLetterGenOpen] = useState(false);
 
   const foldersKey = session?.orgId ? `hr-doc-folders-${session.orgId}` : null;
@@ -84,7 +95,7 @@ export function DocumentsPage() {
   const page = cursorHistory.length;
   const qc = useQueryClient();
 
-  const { data: documentsPage, isLoading, isFetching, isError, refetch } = useHrDocumentList({
+  const { data: documentsPage, isLoading, isFetching, isError, error, refetch } = useHrDocumentList({
     cursor,
     limit: pageSize,
     type: typeFilter,
@@ -146,7 +157,10 @@ export function DocumentsPage() {
   const handleViewGrid = useCallback(() => setViewMode("grid"), []);
   const handleEdit = useCallback((doc: Document) => setEditingDocument(doc), []);
   const handleSendForSignature = useCallback((doc: Document) => setSignatureDocument(doc), []);
+  const handleClassify = useCallback((doc: Document) => setClassifyingDocument(doc), []);
+  const handleClassifySheetChange = useCallback((open: boolean) => { if (!open) setClassifyingDocument(null); }, []);
   const handleRetry = useCallback(() => { void refetch(); }, [refetch]);
+  const pageState = usePageState({ permission: "hr:documents:view", isLoading, isError, error });
   const handleOpenLetterGen = useCallback(() => setIsLetterGenOpen(true), []);
   const handleLetterSaved = useCallback(() => { void refetch(); }, [refetch]);
   const handleUploadSuccess = useCallback(() => {
@@ -158,6 +172,7 @@ export function DocumentsPage() {
 
   const handleNewFolder = useCallback((name: string) => {
     setCustomFolders((prev) => {
+      if (prev.some((folder) => folder.toLowerCase() === name.toLowerCase())) return prev;
       const updated = [...prev, name];
       if (foldersKey) {
         try { localStorage.setItem(foldersKey, JSON.stringify(updated)); } catch { }
@@ -171,8 +186,18 @@ export function DocumentsPage() {
     toast.success(`Folder "${name}" created`);
   }, [foldersKey, resetCursor]);
 
-  if (isLoading) return <DocumentLibrarySkeleton />;
-  if (isError) return <DocumentLibraryError onRetry={handleRetry} />;
+  if (pageState.kind === "loading") return <DocumentLibrarySkeleton />;
+  if (pageState.kind !== "ready" && pageState.kind !== "empty") {
+    // The old error branch said "Something went wrong" for every failure and
+    // dropped the error, so a 402 never showed its upgrade path (FE-41).
+    return (
+      <DocumentLibraryState>
+        <PageState resolution={pageState} loading={null} onRetry={handleRetry} className="flex-1">
+          {null}
+        </PageState>
+      </DocumentLibraryState>
+    );
+  }
 
   return (
     <PageWrapper
@@ -202,6 +227,8 @@ export function DocumentsPage() {
       }
     >
       <div className="flex flex-1 min-h-0 flex-col gap-4">
+        <HrKbSharingSwitch />
+        {hrKbLink.link ? <DocumentBackfillPanel /> : null}
         <StatCardGrid cols={4}>
           <StatCard label="Total Documents" value={totalDocuments} icon={FileText} color="blue" />
           <StatCard label="Folders" value={folders.length + customFolders.length} icon={FolderOpen} color="amber" />
@@ -229,6 +256,7 @@ export function DocumentsPage() {
           onEdit={handleEdit}
           onOpenUpload={handleOpenUpload}
           onSendForSignature={handleSendForSignature}
+          onClassify={hrKbLink.link && canClassify ? handleClassify : undefined}
         />
 
         <RichDocumentsSection />
@@ -258,6 +286,13 @@ export function DocumentsPage() {
           categories={[...DOCUMENT_CATEGORIES, ...customFolders]}
           canAssignEmployee={canManageDocs}
         />
+        {canClassify ? (
+          <DocumentClassificationSheet
+            open={!!classifyingDocument}
+            onOpenChange={handleClassifySheetChange}
+            document={classifyingDocument}
+          />
+        ) : null}
         <CreateEnvelopeDialog
           open={!!signatureDocument}
           onOpenChange={handleSignatureDialogChange}

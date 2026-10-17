@@ -7,7 +7,7 @@ function readSource(relativePath: string) {
 
 describe("Build UI consistency contracts", () => {
   it("keeps timeline period selectors readable at every breakpoint", () => {
-    const source = readSource("features/build/views/gantt-view.tsx");
+    const source = readSource("features/build/views/gantt/gantt-toolbar.tsx");
 
     expect(source).toContain('className="w-40 shrink-0"');
     expect(source).toContain('className="w-28 shrink-0"');
@@ -15,17 +15,20 @@ describe("Build UI consistency contracts", () => {
 
   it("uses the standard navigation type scale in project settings", () => {
     const source = readSource(
-      "features/build/settings/project-settings-page.tsx",
+      "features/build/settings/project-settings-section-panels.tsx",
     );
 
     expect(source).toContain("text-sm font-medium");
-    expect(source).toContain("font-semibold");
+    expect(source).not.toContain("font-bold");
+    expect(source).not.toContain("font-semibold");
+    expect(source).not.toContain("font-extrabold");
   });
 
   it("keeps My Work search and filters visible while stacking dense controls", () => {
-    const source = readSource("features/build/my-work/my-work-page.tsx");
+    const source = readSource("features/build/my-work/my-work-sections.tsx");
 
-    expect(source).toContain('collapseBelow="xl"');
+    expect(source).toContain("h-auto flex-col items-stretch lg:flex-row");
+    expect(source).toContain("searchClassName=");
     expect(source).toContain("search={");
   });
 
@@ -66,9 +69,9 @@ describe("Build UI consistency contracts", () => {
     );
     expect(tabsSource).toContain("border border-input bg-card");
     expect(tabsSource).toContain(
-      "data-[state=active]:bg-primary data-[state=active]:text-primary-foreground",
+      "data-[state=active]:bg-foreground data-[state=active]:text-background",
     );
-    expect(viewToggleSource).toContain("bg-primary text-primary-foreground");
+    expect(viewToggleSource).toContain("bg-foreground text-background");
     expect(headerSource).toContain("border-b-2 border-border bg-muted");
   });
 
@@ -83,10 +86,13 @@ describe("Build UI consistency contracts", () => {
 
   it("gives full-page empty states enough height and visual weight on mobile", () => {
     const source = readSource("components/ui/empty-state.tsx");
+    const chromeSource = readSource("lib/ui-surface-chrome.ts");
 
     expect(source).toContain('md: "mb-5 size-48 sm:size-56"');
-    expect(source).toContain("min-h-80");
-    expect(source).toContain("bg-card");
+    expect(source).toContain("SURFACE_EMPTY");
+    expect(chromeSource).toContain("export const SURFACE_EMPTY");
+    expect(chromeSource).toContain("min-h-80");
+    expect(chromeSource).toContain("bg-card");
   });
 
   it("keeps board columns and cards visually distinct", () => {
@@ -97,14 +103,19 @@ describe("Build UI consistency contracts", () => {
       "features/build/views/kanban-ticket-card.tsx",
     );
 
+    const chromeSource = readSource("lib/ui-surface-chrome.ts");
+
     expect(columnSource).toContain("bg-muted");
-    expect(cardSource).toContain("bg-card");
+    expect(cardSource).toContain("SURFACE_CARD");
+    expect(chromeSource).toContain("export const SURFACE_CARD");
+    expect(chromeSource).toContain("bg-card text-card-foreground");
   });
 
   it("keeps timeline labels readable on compact screens", () => {
+    const viewportSource = readSource("features/build/views/gantt/use-gantt-viewport.ts");
     const source = readSource("features/build/views/gantt-view.tsx");
 
-    expect(source).toContain("? 144 :");
+    expect(viewportSource).toContain("? 144 :");
     expect(source).toContain("labelFontSize={11}");
   });
 
@@ -124,4 +135,5 @@ describe("Build UI consistency contracts", () => {
     expect(selectSource).toContain("FIELD_CONTROL_HOVER_CLASS");
     expect(textareaSource).toContain("FIELD_CONTROL_HOVER_CLASS");
   });
+
 });

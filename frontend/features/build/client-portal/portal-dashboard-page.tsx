@@ -1,113 +1,35 @@
 "use client";
 
-import { useState, type ComponentType, type ReactNode } from "react";
+import { useCallback, useMemo, useState } from "react";
 import {
+  usePortalPreviewApprovals,
+  usePortalPreviewDeliverables,
+  usePortalPreviewFiles,
+  usePortalPreviewInvoices,
+  usePortalPreviewMilestones,
+  usePortalPreviewRequests,
+  usePortalPreviewTasks,
+  usePortalPreviewUpdates,
   usePortalProjectOverview,
-  usePortalChangeRequests,
 } from "@/hooks/api/build/client-portal";
 import { PageWrapper } from "@/components/ui/page-wrapper";
-import { EmptyState } from "@/components/ui/empty-state";
-import { ErrorState } from "@/components/shared/error-state";
 import { Badge } from "@/components/ui/badge";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Diamond, CheckSquare, Paperclip, FileText } from "lucide-react";
-import { DownloadIcon, PlusIcon } from "@animateicons/react/lucide";
-import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
-import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
+import { ErrorState } from "@/components/shared/error-state";
 import { PortalCrSheet } from "./portal-cr-sheet";
-import {
-  PmPageShell,
-  PmPanel,
-  PmSection,
-  PM_PANEL,
-  PM_ROW,
-} from "@/components/pm-chrome";
-import { cn } from "@/lib/utils";
-import { TruncatedText } from "@/components/ui/truncated-text";
+import { PmPageShell } from "@/components/pm-chrome";
 import { usePageState } from "@/hooks/api/use-page-state";
 import { PageState } from "@/components/shared/page-state";
-
-const CR_STATUS_LABELS: Record<string, string> = {
-  submitted: "Submitted",
-  under_review: "Under Review",
-  estimated: "Estimated",
-  awaiting_approval: "Awaiting Approval",
-  approved: "Approved",
-  rejected: "Rejected",
-  in_progress: "In Progress",
-  completed: "Completed",
-};
-
-const CR_STATUS_STYLES: Record<string, string> = {
-  submitted: "text-muted-foreground border-border bg-muted/40",
-  under_review:
-    "text-status-info-ink border-status-info-rule bg-status-info-surface",
-  estimated:
-    "text-status-warning-ink border-status-warning-rule bg-status-warning-surface",
-  awaiting_approval:
-    "text-status-warning-ink border-status-warning-rule bg-status-warning-surface",
-  approved:
-    "text-status-success-ink border-status-success-rule bg-status-success-surface",
-  rejected:
-    "text-status-danger-ink border-status-danger-rule bg-status-danger-surface",
-  in_progress:
-    "text-status-info-ink border-status-info-rule bg-status-info-surface",
-  completed:
-    "text-status-success-ink border-status-success-rule bg-status-success-surface",
-};
-
-function SectionTitle({
-  icon: Icon,
-  title,
-  actions,
-}: {
-  icon: ComponentType<{ className?: string }>;
-  title: string;
-  actions?: ReactNode;
-}) {
-  return (
-    <div className="mb-2 flex min-w-0 items-center justify-between gap-2">
-      <div className="flex min-w-0 items-center gap-2">
-        <Icon className="h-4 w-4 shrink-0 text-muted-foreground" />
-        <h2 className="text-sm font-semibold text-foreground">{title}</h2>
-      </div>
-      {actions}
-    </div>
-  );
-}
-
-function DownloadLink({ href }: { href: string }) {
-  const { iconRef, hoverHandlers } = useAnimatedIcon();
-  return (
-    <a
-      href={href}
-      target="_blank"
-      rel="noopener noreferrer"
-      className="flex shrink-0 items-center gap-1 text-micro text-primary hover:underline"
-      {...hoverHandlers}
-    >
-      <DownloadIcon ref={iconRef} size={12} />
-      Download
-    </a>
-  );
-}
-
-function DashboardSkeleton() {
-  return (
-    <PmPageShell>
-      {Array.from({ length: 4 }).map((_, i) => (
-        <div key={i} className="space-y-2">
-          <Skeleton className="h-5 w-36" />
-          <div className={cn(PM_PANEL, "space-y-2 p-2")}>
-            {Array.from({ length: 6 }).map((_, j) => (
-              <Skeleton key={j} className="h-10 w-full rounded-lg" />
-            ))}
-          </div>
-        </div>
-      ))}
-    </PmPageShell>
-  );
-}
+import { DashboardSkeleton } from "./portal-dashboard-sections";
+import {
+  PreviewApprovalsSection,
+  PreviewDeliverablesSection,
+  PreviewFilesSection,
+  PreviewInvoicesSection,
+  PreviewMilestonesSection,
+  PreviewRequestsSection,
+  PreviewTasksSection,
+  PreviewUpdatesSection,
+} from "./portal-dashboard-paged-sections";
 
 interface PortalDashboardPageProps {
   projectId: number;
@@ -124,27 +46,69 @@ export function PortalDashboardPage({ projectId }: PortalDashboardPageProps) {
     refetch: refetchOverview,
   } = usePortalProjectOverview(projectId);
 
-  const {
-    data: changeRequests,
-    isLoading: loadingCrs,
-    isError: isErrorCrs,
-    error: crsError,
-    refetch: refetchCrs,
-  } = usePortalChangeRequests(projectId);
-
-  const isLoading = loadingOverview || loadingCrs;
-  const isError = isErrorOverview || isErrorCrs;
+  const filesQuery = usePortalPreviewFiles(projectId);
+  const updatesQuery = usePortalPreviewUpdates(projectId);
+  const requestsQuery = usePortalPreviewRequests(projectId);
+  const milestonesQuery = usePortalPreviewMilestones(projectId);
+  const tasksQuery = usePortalPreviewTasks(projectId);
+  const deliverablesQuery = usePortalPreviewDeliverables(projectId);
+  const approvalsQuery = usePortalPreviewApprovals(projectId);
+  const invoicesQuery = usePortalPreviewInvoices(projectId);
 
   const pageState = usePageState({
     permission: "build:portal:view",
-    isLoading,
-    isError,
-    error: overviewError ?? crsError ?? undefined,
+    isLoading: loadingOverview,
+    isError:
+      isErrorOverview ||
+      filesQuery.isError ||
+      updatesQuery.isError ||
+      requestsQuery.isError ||
+      milestonesQuery.isError ||
+      tasksQuery.isError ||
+      deliverablesQuery.isError ||
+      approvalsQuery.isError ||
+      invoicesQuery.isError,
+    error:
+      overviewError ??
+      filesQuery.error ??
+      updatesQuery.error ??
+      requestsQuery.error ??
+      milestonesQuery.error ??
+      tasksQuery.error ??
+      deliverablesQuery.error ??
+      approvalsQuery.error ??
+      invoicesQuery.error ??
+      undefined,
   });
+
+  const handleLoadMoreFiles = useCallback(() => { void filesQuery.fetchNextPage(); }, [filesQuery]);
+  const handleLoadMoreUpdates = useCallback(() => { void updatesQuery.fetchNextPage(); }, [updatesQuery]);
+  const handleLoadMoreRequests = useCallback(() => { void requestsQuery.fetchNextPage(); }, [requestsQuery]);
+  const handleLoadMoreMilestones = useCallback(() => { void milestonesQuery.fetchNextPage(); }, [milestonesQuery]);
+  const handleLoadMoreTasks = useCallback(() => { void tasksQuery.fetchNextPage(); }, [tasksQuery]);
+  const handleLoadMoreDeliverables = useCallback(() => { void deliverablesQuery.fetchNextPage(); }, [deliverablesQuery]);
+  const handleLoadMoreApprovals = useCallback(() => { void approvalsQuery.fetchNextPage(); }, [approvalsQuery]);
+  const handleLoadMoreInvoices = useCallback(() => { void invoicesQuery.fetchNextPage(); }, [invoicesQuery]);
+
+  const filesPage = useMemo(() => ({ items: filesQuery.items, isLoading: filesQuery.isLoading, hasMore: filesQuery.hasMore, isFetchingNextPage: filesQuery.isFetchingNextPage, onLoadMore: handleLoadMoreFiles }), [filesQuery, handleLoadMoreFiles]);
+  const updatesPage = useMemo(() => ({ items: updatesQuery.items, isLoading: updatesQuery.isLoading, hasMore: updatesQuery.hasMore, isFetchingNextPage: updatesQuery.isFetchingNextPage, onLoadMore: handleLoadMoreUpdates }), [updatesQuery, handleLoadMoreUpdates]);
+  const requestsPage = useMemo(() => ({ items: requestsQuery.items, isLoading: requestsQuery.isLoading, hasMore: requestsQuery.hasMore, isFetchingNextPage: requestsQuery.isFetchingNextPage, onLoadMore: handleLoadMoreRequests }), [requestsQuery, handleLoadMoreRequests]);
+  const milestonesPage = useMemo(() => ({ items: milestonesQuery.items, isLoading: milestonesQuery.isLoading, hasMore: milestonesQuery.hasMore, isFetchingNextPage: milestonesQuery.isFetchingNextPage, onLoadMore: handleLoadMoreMilestones }), [milestonesQuery, handleLoadMoreMilestones]);
+  const tasksPage = useMemo(() => ({ items: tasksQuery.items, isLoading: tasksQuery.isLoading, hasMore: tasksQuery.hasMore, isFetchingNextPage: tasksQuery.isFetchingNextPage, onLoadMore: handleLoadMoreTasks }), [tasksQuery, handleLoadMoreTasks]);
+  const deliverablesPage = useMemo(() => ({ items: deliverablesQuery.items, isLoading: deliverablesQuery.isLoading, hasMore: deliverablesQuery.hasMore, isFetchingNextPage: deliverablesQuery.isFetchingNextPage, onLoadMore: handleLoadMoreDeliverables }), [deliverablesQuery, handleLoadMoreDeliverables]);
+  const approvalsPage = useMemo(() => ({ items: approvalsQuery.items, isLoading: approvalsQuery.isLoading, hasMore: approvalsQuery.hasMore, isFetchingNextPage: approvalsQuery.isFetchingNextPage, onLoadMore: handleLoadMoreApprovals }), [approvalsQuery, handleLoadMoreApprovals]);
+  const invoicesPage = useMemo(() => ({ items: invoicesQuery.items, isLoading: invoicesQuery.isLoading, hasMore: invoicesQuery.hasMore, isFetchingNextPage: invoicesQuery.isFetchingNextPage, onLoadMore: handleLoadMoreInvoices }), [invoicesQuery, handleLoadMoreInvoices]);
 
   function handleRetry() {
     void refetchOverview();
-    void refetchCrs();
+    void filesQuery.refetch();
+    void updatesQuery.refetch();
+    void requestsQuery.refetch();
+    void milestonesQuery.refetch();
+    void tasksQuery.refetch();
+    void deliverablesQuery.refetch();
+    void approvalsQuery.refetch();
+    void invoicesQuery.refetch();
   }
 
   function handleOpenCrSheet() {
@@ -176,156 +140,42 @@ export function PortalDashboardPage({ projectId }: PortalDashboardPageProps) {
         ) : (
           <>
             <PmPageShell>
-              <PmSection index={0}>
-                <SectionTitle icon={Diamond} title="Milestones & Deliverables" />
-                {overview.milestones.length === 0 ? (
-                  <PmPanel className="flex items-center justify-center p-4">
-                    <EmptyState
-                      illustrationPreset="calendar"
-                      title="No milestones"
-                      description="No milestones have been shared yet."
-                      compact
-                      className="min-h-[100px]"
-                    />
-                  </PmPanel>
-                ) : (
-                  <PmPanel>
-                    {overview.milestones.map((m) => (
-                      <div key={m.id} className={cn(PM_ROW, "overflow-hidden")}>
-                        <TruncatedText text={m.name} className="min-w-0 flex-1 text-dense font-medium" />
-                        {m.dueDate ? (
-                          <span className="shrink-0 text-micro text-muted-foreground">
-                            Due{" "}
-                            {new Date(m.dueDate).toLocaleDateString("en-IN", {
-                              day: "numeric",
-                              month: "short",
-                            })}
-                          </span>
-                        ) : null}
-                        {m.status ? (
-                          <Badge variant="outline" className="shrink-0 text-micro capitalize">
-                            {m.status}
-                          </Badge>
-                        ) : null}
-                      </div>
-                    ))}
-                  </PmPanel>
-                )}
-              </PmSection>
-
-              <PmSection index={1}>
-                <SectionTitle icon={CheckSquare} title="Tasks" />
-                {overview.tasks.length === 0 ? (
-                  <PmPanel className="flex items-center justify-center p-4">
-                    <EmptyState
-                      illustrationPreset="ticket"
-                      title="No tasks"
-                      description="No tasks have been shared yet."
-                      compact
-                      className="min-h-[100px]"
-                    />
-                  </PmPanel>
-                ) : (
-                  <PmPanel>
-                    {overview.tasks.map((t) => (
-                      <div key={t.id} className={cn(PM_ROW, "overflow-hidden")}>
-                        <span className="w-16 shrink-0 font-mono text-micro text-muted-foreground">
-                          #{t.ticketNumber}
-                        </span>
-                        <TruncatedText text={t.title} className="min-w-0 flex-1 text-dense" />
-                        {t.dueDate ? (
-                          <span className="hidden shrink-0 text-micro text-muted-foreground sm:block">
-                            {new Date(t.dueDate).toLocaleDateString("en-IN", {
-                              day: "numeric",
-                              month: "short",
-                            })}
-                          </span>
-                        ) : null}
-                        <Badge variant="outline" className="shrink-0 text-micro capitalize">
-                          {t.status}
-                        </Badge>
-                      </div>
-                    ))}
-                  </PmPanel>
-                )}
-              </PmSection>
-
-              <PmSection index={2}>
-                <SectionTitle icon={Paperclip} title="Files" />
-                {overview.attachments.length === 0 ? (
-                  <PmPanel className="flex items-center justify-center p-4">
-                    <EmptyState
-                      illustrationPreset="documents"
-                      title="No files"
-                      description="No files have been shared yet."
-                      compact
-                      className="min-h-[100px]"
-                    />
-                  </PmPanel>
-                ) : (
-                  <PmPanel>
-                    {overview.attachments.map((f) => (
-                      <div key={f.id} className={cn(PM_ROW, "overflow-hidden")}>
-                        <FileText className="h-4 w-4 shrink-0 text-muted-foreground" />
-                        <TruncatedText text={f.filename} className="min-w-0 flex-1 text-dense" />
-                        <DownloadLink href={f.url} />
-                      </div>
-                    ))}
-                  </PmPanel>
-                )}
-              </PmSection>
-
-              <PmSection index={3}>
-                <SectionTitle
-                  icon={FileText}
-                  title="Change Requests"
-                  actions={
-                    <AnimatedIconButton
-                      size="sm"
-                      className="text-dense"
-                      onClick={handleOpenCrSheet}
-                      icon={PlusIcon}
-                      iconSize={14}
-                      iconClassName="mr-1"
-                    >
-                      Submit Request
-                    </AnimatedIconButton>
-                  }
+              {overview.capabilities?.canViewMilestones && (
+                <PreviewMilestonesSection index={0} page={milestonesPage} />
+              )}
+              {overview.capabilities?.canViewTasks && (
+                <PreviewTasksSection index={1} page={tasksPage} />
+              )}
+              {overview.capabilities?.canViewMilestones && (
+                <PreviewDeliverablesSection index={2} page={deliverablesPage} />
+              )}
+              {overview.capabilities?.canViewApprovals && (
+                <PreviewApprovalsSection index={3} page={approvalsPage} />
+              )}
+              {overview.capabilities?.canViewInvoices && (
+                <PreviewInvoicesSection index={4} page={invoicesPage} />
+              )}
+              {overview.capabilities?.canViewAttachments && (
+                <PreviewFilesSection index={5} page={filesPage} />
+              )}
+              {overview.capabilities?.canViewComments && (
+                <PreviewUpdatesSection index={6} page={updatesPage} />
+              )}
+              {overview.capabilities?.canViewRequests === true && (
+                <PreviewRequestsSection
+                  index={7}
+                  page={requestsPage}
+                  canSubmit={overview.capabilities.canSubmitChangeRequests === true}
+                  onSubmitRequest={handleOpenCrSheet}
                 />
-
-                {(changeRequests ?? []).length === 0 ? (
-                  <PmPanel className="flex items-center justify-center p-4">
-                    <EmptyState
-                      illustrationPreset="ticket"
-                      title="No change requests"
-                      description="Submit a change request if the project scope needs adjustment."
-                      action={{ label: "Submit Request", onClick: handleOpenCrSheet }}
-                      compact
-                      className="min-h-[100px]"
-                    />
-                  </PmPanel>
-                ) : (
-                  <PmPanel>
-                    {changeRequests?.map((cr) => (
-                      <div key={cr.id} className={cn(PM_ROW, "overflow-hidden")}>
-                        <span className="w-14 shrink-0 font-mono text-micro text-muted-foreground">
-                          CR-{cr.crNumber}
-                        </span>
-                        <TruncatedText text={cr.title} className="min-w-0 flex-1 text-dense" />
-                        <Badge
-                          variant="outline"
-                          className={cn("shrink-0 text-micro", CR_STATUS_STYLES[cr.status])}
-                        >
-                          {CR_STATUS_LABELS[cr.status]}
-                        </Badge>
-                      </div>
-                    ))}
-                  </PmPanel>
-                )}
-              </PmSection>
+              )}
             </PmPageShell>
 
-            <PortalCrSheet projectId={projectId} open={crSheetOpen} onOpenChange={setCrSheetOpen} />
+            <PortalCrSheet
+              projectId={projectId}
+              open={crSheetOpen}
+              onOpenChange={setCrSheetOpen}
+            />
           </>
         )}
       </PageState>

@@ -19,7 +19,7 @@ function FileRowAction({ icon: Icon, label, onClick, destructive }: FileRowActio
       onClick={onClick}
       aria-label={label}
       className={cn(
-        "inline-flex h-7 shrink-0 items-center gap-0.5 rounded-md px-1.5 text-xs font-medium text-muted-foreground transition-colors duration-200 hover:bg-muted hover:text-foreground",
+        "inline-flex h-7 shrink-0 items-center gap-0.5 rounded-md px-1.5 text-xs font-medium text-muted-foreground transition-colors duration-200 hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
         destructive && "hover:text-destructive",
       )}
     >

@@ -1,96 +1,145 @@
 "use client";
 
+import { useGuardedCreateKbPage } from "@/features/wiki/hooks/use-guarded-create-kb-page";
+import { useState, useRef, useCallback, useEffect } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { PageWrapper } from "@/components/ui/page-wrapper";
-
-import { useCallback, useMemo } from "react";
-import { useRouter } from "next/navigation";
-import { EmptyKnowledgeIllustration } from "@/components/illustrations";
-import { toast } from "sonner";
-import { EmptyState } from "@/components/ui/empty-state";
-import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
-import { LoadingState } from "@/components/shared/loading-state";
-import { ErrorState } from "@/components/shared/error-state";
-import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
+import { SearchInput } from "@/components/ui/search-input";
+import { useFlushableDebouncedValue } from "@/hooks/common/use-debounce";
+import { useUrlFilters } from "@/lib/url-state/use-url-filters";
 import { useCan } from "@/hooks/api/access";
 import {
-  useKbPagesRecent,
   useKbPagesFavorites,
-  useKbPagesTree,
-  useKbProjectPagesTree,
-  useCreateKbPage,
+  useKbPagesRecent,
 } from "@/hooks/api/kb";
-import { getErrorMessage } from "@/lib/get-error-message";
-import type { KbPageTreeNode } from "@/hooks/api/kb/page-types";
-import { pageHref, projectPageHref } from "@/lib/knowledge-routes";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
+import { LoadingButton } from "@/components/ui/loading-button";
+import { ErrorState } from "@/components/shared/error-state";
+import { KB_SEARCH, pageHref, projectPageHref } from "@/lib/knowledge-routes";
+import { kbTimeAgo } from "@/features/wiki/lib/kb-date-utils";
 import {
   KbClockIcon,
   KbPlusIcon,
   KbStarIcon,
 } from "@/features/wiki/lib/kb-icons";
-import { kbTimeAgo } from "@/features/wiki/lib/kb-date-utils";
 import {
   WikiPageCard,
   WIKI_PAGE_CARD_GRID_CLASS,
 } from "@/features/wiki/components/wiki-page-card";
+import { WikiHomeAllPages, KB_PAGE_CURSOR_PARAM } from "./wiki-home-all-pages";
+import { WikiCompanyDocumentsStrip } from "./wiki-company-documents-strip";
+import { useBuildListKeyboard } from "@/hooks/common/use-build-list-keyboard";
+import { ShortcutHelpDialog } from "@/components/shared/shortcut-help-dialog";
+import PageTree from "./page-tree";
 
 interface WikiHomePageProps {
   projectId?: number;
 }
 
 export default function WikiHomePage({ projectId }: WikiHomePageProps) {
-  const router = useRouter();
   const isProjectScoped = projectId !== undefined && projectId > 0;
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const urlQuery = (searchParams.get("q") ?? "").trim();
+  const [searchValue, setSearchValue] = useState(urlQuery);
+  const [shortcutHelpOpen, setShortcutHelpOpen] = useState(false);
+  const [pageItemCount, setPageItemCount] = useState(0);
+  const searchInputRef = useRef<HTMLInputElement>(null);
+  const allPagesRowsRef = useRef<{ id: number }[]>([]);
 
-  const resolvePageHref = useMemo(
-    () => (pageId: number): string =>
-      isProjectScoped ? projectPageHref(projectId, pageId) : pageHref(pageId),
-    [isProjectScoped, projectId],
+  const [debouncedSearch, flushSearch] = useFlushableDebouncedValue(
+    searchValue,
+    300,
   );
+  const { update } = useUrlFilters({ pageParam: KB_PAGE_CURSOR_PARAM });
+  const updateRef = useRef(update);
 
-  const { data: recentPages = [], isLoading: recentLoading, isError: recentError, error: recentQueryError, refetch: refetchRecent } =
-    useKbPagesRecent();
-  const { data: favoritePages = [] } = useKbPagesFavorites();
-  const orgTree = useKbPagesTree();
-  const projectTree = useKbProjectPagesTree(projectId ?? 0);
-  const treeQuery = isProjectScoped ? projectTree : orgTree;
-  const treeNodes = treeQuery.data ?? [];
-  const treeLoading = treeQuery.isLoading;
-  const treeError = treeQuery.isError;
-  const treeRefetch = treeQuery.refetch;
+  useEffect(() => {
+    updateRef.current = update;
+  }, [update]);
 
-  const createPage = useCreateKbPage();
+  useEffect(() => {
+    if (!isProjectScoped) return;
+    const next = debouncedSearch.trim();
+    if (next === urlQuery) return;
+    updateRef.current({ q: next === "" ? null : next });
+  }, [isProjectScoped, debouncedSearch, urlQuery]);
+
+  const { data: recentPages = [] } = useKbPagesRecent();
+  const favoritesQuery = useKbPagesFavorites();
+  const favoritePages = favoritesQuery.data ?? [];
   const canCreate = useCan("kb:pages:create");
 
-  const listingLookups = useMemo(() => {
-    const covers = new Map<number, string | null>();
-    const updatedAt = new Map<number, string>();
-    for (const page of [...recentPages, ...favoritePages]) {
-      covers.set(page.id, page.coverImage);
-      updatedAt.set(page.id, page.updatedAt);
-    }
-    return { covers, updatedAt };
-  }, [recentPages, favoritePages]);
-
-  const rootPages: KbPageTreeNode[] = treeNodes.filter(
-    (n: KbPageTreeNode) => n.parentPageId === null,
+  const resolveHref = useCallback(
+    (pageId: number): string =>
+      projectId !== undefined && projectId > 0
+        ? projectPageHref(projectId, pageId)
+        : pageHref(pageId),
+    [projectId],
   );
-  const isLoading = recentLoading || treeLoading;
-  const isError = recentError || treeError;
+  const createPage = useGuardedCreateKbPage((page) => router.push(resolveHref(page.id)));
 
-  const handleRetry = useCallback(() => {
-    void refetchRecent();
-    void treeRefetch();
-  }, [refetchRecent, treeRefetch]);
+  function handleSearchSubmit() {
+    if (isProjectScoped) {
+      flushSearch();
+      return;
+    }
+    const q = searchValue.trim();
+    if (q) {
+      router.push(`${KB_SEARCH}?q=${encodeURIComponent(q)}`);
+    }
+  }
 
-  const handleNewPage = useCallback(() => {
-    createPage.mutate(
-      { projectId: isProjectScoped ? projectId : undefined },
-      {
-        onSuccess: (page) => router.push(resolvePageHref(page.id)),
-        onError: () => toast.error("Failed to create page"),
-      },
-    );
-  }, [createPage, router, projectId, isProjectScoped, resolvePageHref]);
+  function handleSearchFormSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    handleSearchSubmit();
+  }
+
+  function handleNewPage() {
+    void createPage.submit({ projectId: isProjectScoped ? projectId : undefined });
+  }
+
+  function handleLoadMoreFavorites() {
+    void favoritesQuery.fetchNextPage();
+  }
+
+  function handleRetryFavorites() {
+    if (favoritesQuery.isFetchNextPageError) {
+      void favoritesQuery.fetchNextPage();
+      return;
+    }
+    void favoritesQuery.refetch();
+  }
+
+  const handleShortcutHelp = useCallback(() => setShortcutHelpOpen(true), []);
+  const handleClearSelection = useCallback(() => {}, []);
+
+  const handleOpenPage = useCallback(
+    (index: number) => {
+      const row = allPagesRowsRef.current[index];
+      if (!row) return;
+      router.push(resolveHref(row.id));
+    },
+    [router, resolveHref],
+  );
+
+  const handleRowsChange = useCallback((rows: readonly { id: number }[]) => {
+    allPagesRowsRef.current = [...rows];
+  }, []);
+
+  const handleItemCountChange = useCallback((count: number) => {
+    setPageItemCount(count);
+  }, []);
+
+  useBuildListKeyboard({
+    itemCount: pageItemCount,
+    onOpen: handleOpenPage,
+    onEdit: handleOpenPage,
+    onCreate: canCreate ? handleNewPage : undefined,
+    onClearSelection: handleClearSelection,
+    onShortcutHelp: handleShortcutHelp,
+    searchInputRef: searchInputRef,
+  });
 
   const newPageAction = canCreate ? (
     <AnimatedIconButton
@@ -100,129 +149,143 @@ export default function WikiHomePage({ projectId }: WikiHomePageProps) {
       iconClassName="mr-1.5"
       size="sm"
       onClick={handleNewPage}
-      disabled={createPage.isPending}
+      disabled={createPage.isSubmitting}
       suppressHydrationWarning
     >
       New page
     </AnimatedIconButton>
   ) : undefined;
 
-  if (isLoading) {
-    return (
-      <PageWrapper title="Wiki" actions={newPageAction}>
-        <LoadingState variant="cards" />
-      </PageWrapper>
-    );
-  }
-
-  if (isError) {
-    return (
-      <PageWrapper title="Wiki" actions={newPageAction}>
-        <ErrorState
-          title="Couldn't load wiki pages"
-          description={getErrorMessage(recentQueryError ?? treeQuery.error)}
-          onRetry={handleRetry}
-          className="flex-1"
-        />
-      </PageWrapper>
-    );
-  }
-
-  const emptyCondition = isProjectScoped
-    ? rootPages.length === 0
-    : rootPages.length === 0 && recentPages.length === 0;
-
-  if (emptyCondition) {
-    return (
-      <PageWrapper title="Wiki" actions={newPageAction}>
-        <EmptyState
-          illustration={<EmptyKnowledgeIllustration />}
-          title="Your wiki starts here"
-          description={
-            isProjectScoped
-              ? "Create your first page to document this project."
-              : "Create your first page to build a shared knowledge base for your team."
-          }
-          action={{ label: "New page", onClick: handleNewPage }}
-          className={CONTENT_FILL_PANEL}
-        />
-      </PageWrapper>
-    );
-  }
+  const baseHref = isProjectScoped ? `/build/${projectId}/wiki` : undefined;
 
   return (
-    <PageWrapper
-      title="Wiki"
-      subtitle="Your team knowledge base"
-      actions={newPageAction}
-    >
-      {!isProjectScoped && recentPages.length > 0 && (
-        <section className="mb-4">
-          <div className="flex items-center gap-2 mb-3">
-            <KbClockIcon className="h-4 w-4 text-muted-foreground" />
-            <h2 className="text-sm font-semibold text-foreground">
-              Recently visited
-            </h2>
-          </div>
-          <div className={WIKI_PAGE_CARD_GRID_CLASS}>
-            {recentPages.map((page) => (
-              <WikiPageCard
-                key={page.id}
-                icon={page.icon}
-                title={page.title}
-                subtitle={kbTimeAgo(page.updatedAt)}
-                href={resolvePageHref(page.id)}
-                coverImage={page.coverImage}
-              />
-            ))}
-          </div>
-        </section>
-      )}
+    <>
+      <PageWrapper
+        title="Wiki"
+        subtitle={
+          isProjectScoped
+            ? "Docs and decisions for this project"
+            : "Your team knowledge base"
+        }
+        actions={newPageAction}
+      >
+        <div className="flex min-h-0 flex-1 flex-col gap-6">
+          <form onSubmit={handleSearchFormSubmit} role="search">
+            <SearchInput
+              ref={searchInputRef}
+              value={searchValue}
+              onValueChange={setSearchValue}
+              onSubmitSearch={handleSearchSubmit}
+              placeholder={
+                isProjectScoped
+                  ? "Filter this project's pages…"
+                  : "Search wiki pages…"
+              }
+              fill
+            />
+          </form>
 
-      {!isProjectScoped && favoritePages.length > 0 && (
-        <section className="mb-4">
-          <div className="flex items-center gap-2 mb-3">
-            <KbStarIcon className="h-4 w-4 text-muted-foreground" />
-            <h2 className="text-sm font-semibold text-foreground">Favorites</h2>
-          </div>
-          <div className={WIKI_PAGE_CARD_GRID_CLASS}>
-            {favoritePages.map((page) => (
-              <WikiPageCard
-                key={page.id}
-                icon={page.icon}
-                title={page.title}
-                subtitle={kbTimeAgo(page.updatedAt)}
-                href={resolvePageHref(page.id)}
-                coverImage={page.coverImage}
-              />
-            ))}
-          </div>
-        </section>
-      )}
+          {!isProjectScoped && recentPages.length > 0 && (
+            <section>
+              <div className="flex items-center gap-2 mb-3">
+                <KbClockIcon className="h-4 w-4 text-muted-foreground" />
+                <h2 className="text-sm font-semibold text-foreground">
+                  Recently visited
+                </h2>
+              </div>
+              <div className={WIKI_PAGE_CARD_GRID_CLASS}>
+                {recentPages.map((page) => (
+                  <WikiPageCard
+                    key={page.id}
+                    icon={page.icon}
+                    title={page.title}
+                    subtitle={kbTimeAgo(page.updatedAt)}
+                    href={pageHref(page.id)}
+                    coverImage={page.coverImage}
+                  />
+                ))}
+              </div>
+            </section>
+          )}
 
-      {rootPages.length > 0 && (
-        <section>
-          <h2 className="text-sm font-semibold text-foreground mb-3">
-            All pages
-          </h2>
-          <div className={WIKI_PAGE_CARD_GRID_CLASS}>
-            {rootPages.map((node) => (
-              <WikiPageCard
-                key={node.id}
-                icon={node.icon}
-                title={node.title}
-                subtitle={kbTimeAgo(
-                  node.updatedAt ?? listingLookups.updatedAt.get(node.id) ?? "",
+          {!isProjectScoped &&
+            (favoritePages.length > 0 || favoritesQuery.isError) && (
+              <section>
+                <div className="flex items-center gap-2 mb-3">
+                  <KbStarIcon className="h-4 w-4 text-muted-foreground" />
+                  <h2 className="text-sm font-semibold text-foreground">
+                    Favorites
+                  </h2>
+                </div>
+                {favoritePages.length > 0 && (
+                  <div className={WIKI_PAGE_CARD_GRID_CLASS}>
+                    {favoritePages.map((page) => (
+                      <WikiPageCard
+                        key={page.id}
+                        icon={page.icon}
+                        title={page.title}
+                        subtitle={kbTimeAgo(page.updatedAt)}
+                        href={pageHref(page.id)}
+                        coverImage={page.coverImage}
+                      />
+                    ))}
+                  </div>
                 )}
-                href={resolvePageHref(node.id)}
-                coverImage={
-                  node.coverImage ?? listingLookups.covers.get(node.id) ?? null
-                }
+                {favoritesQuery.isError && (
+                  <ErrorState
+                    title="Could not load favorites"
+                    error={favoritesQuery.error}
+                    onRetry={handleRetryFavorites}
+                    compact
+                    className="mt-3"
+                  />
+                )}
+                {favoritesQuery.hasNextPage && !favoritesQuery.isError && (
+                  <LoadingButton
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="mt-3"
+                    onClick={handleLoadMoreFavorites}
+                    isPending={favoritesQuery.isFetchingNextPage}
+                    loadingText="Loading favorites…"
+                  >
+                    Load more favorites
+                  </LoadingButton>
+                )}
+              </section>
+            )}
+
+          {!isProjectScoped && <WikiCompanyDocumentsStrip />}
+
+          <div className="flex min-h-0 flex-1 gap-4">
+            {isProjectScoped && (
+              <aside
+                className="hidden w-[200px] shrink-0 flex-col overflow-y-auto rounded-lg border border-border/60 bg-card/50 p-3 md:flex"
+                aria-label="Page tree"
+              >
+                <PageTree projectId={projectId} baseHref={baseHref} />
+              </aside>
+            )}
+            <section className="flex min-h-0 flex-1 flex-col">
+              {!isProjectScoped && (
+                <h2 className="text-sm font-semibold text-foreground mb-3">
+                  All pages
+                </h2>
+              )}
+              <WikiHomeAllPages
+                projectId={isProjectScoped ? projectId : undefined}
+                onItemCountChange={handleItemCountChange}
+                onRowsChange={handleRowsChange}
               />
-            ))}
+            </section>
           </div>
-        </section>
-      )}
-    </PageWrapper>
+        </div>
+      </PageWrapper>
+      <ShortcutHelpDialog
+        open={shortcutHelpOpen}
+        onOpenChange={setShortcutHelpOpen}
+      />
+    </>
   );
 }

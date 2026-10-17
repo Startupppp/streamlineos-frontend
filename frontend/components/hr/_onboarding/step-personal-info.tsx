@@ -3,14 +3,15 @@
 import { useRef, useCallback, useMemo, useState } from "react";
 import { type UseFormReturn } from "react-hook-form";
 import { z } from "zod";
-import { onboardEmployeeInputSchema } from "@/lib/validation/hr";
+import { onboardEmployeeInputSchema, MIN_EMPLOYMENT_AGE_YEARS } from "@/lib/validation/hr";
 import { format } from "date-fns";
 import { Input } from "@/components/ui/input";
+import { HR_PERSON_NAME_MAX } from "@/lib/person-name-schema";
 import { Checkbox } from "@/components/ui/checkbox";
 import { DatePicker } from "@/components/ui/date-picker";
 import { PhoneInput } from "@/components/ui/phone-input";
 import {
-  FormControl, FormField, FormItem, FormLabel, FormMessage,
+  FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage,
 } from "@/components/ui/form";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
@@ -19,9 +20,11 @@ import {
   employeeAdmissionGuidance,
   fetchEmployeeAdmissionCheck,
 } from "@/components/hr/check-employee-email";
-import { latinNameFieldChange } from "./restricted-field-change";
 
 type FormValues = z.infer<typeof onboardEmployeeInputSchema>;
+
+/** The rule `hrPersonNameField` enforces, stated before anyone breaks it (HR-U-004). */
+const NAME_RULE_HINT = "Letters, spaces, apostrophes, periods and hyphens. No numbers.";
 
 function dateOfBirthChange(
   onChange: (value: Date | null) => void,
@@ -38,8 +41,7 @@ interface StepPersonalInfoProps {
 export function StepPersonalInfo({ form }: StepPersonalInfoProps) {
   const checkedEmailRef = useRef<string>("");
   const [attachNotice, setAttachNotice] = useState<string | null>(null);
-  // eslint-disable-next-line react-hooks/purity
-  const minDob = useMemo(() => new Date(Date.now() - 16 * 365.25 * 24 * 60 * 60 * 1000), []);
+  const minDob = useMemo(() => new Date(Date.now() - MIN_EMPLOYMENT_AGE_YEARS * 365.25 * 24 * 60 * 60 * 1000), []);
 
   const handleEmailBlur = useCallback(async () => {
     const email = form.getValues("email")?.toLowerCase().trim();
@@ -68,8 +70,9 @@ export function StepPersonalInfo({ form }: StepPersonalInfoProps) {
           <FormItem>
             <FormLabel>First Name <span className="text-destructive">*</span></FormLabel>
             <FormControl>
-              <Input placeholder="John" {...field} onChange={latinNameFieldChange(field.onChange)} />
+              <Input placeholder="John" maxLength={HR_PERSON_NAME_MAX} {...field} />
             </FormControl>
+            <FormDescription>{NAME_RULE_HINT}</FormDescription>
             <FormMessage />
           </FormItem>
         )}
@@ -81,8 +84,9 @@ export function StepPersonalInfo({ form }: StepPersonalInfoProps) {
           <FormItem>
             <FormLabel>Last Name <span className="text-destructive">*</span></FormLabel>
             <FormControl>
-              <Input placeholder="Doe" {...field} onChange={latinNameFieldChange(field.onChange)} />
+              <Input placeholder="Doe" maxLength={HR_PERSON_NAME_MAX} {...field} />
             </FormControl>
+            <FormDescription>{NAME_RULE_HINT}</FormDescription>
             <FormMessage />
           </FormItem>
         )}
@@ -110,7 +114,7 @@ export function StepPersonalInfo({ form }: StepPersonalInfoProps) {
               {attachNotice ? (
                 <p
                   role="status"
-                  className="rounded-md border border-amber-200 bg-amber-50 px-2.5 py-1.5 text-[11px] text-amber-700 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-300"
+                  className="rounded-md border border-status-warning-rule bg-status-warning-surface px-2.5 py-1.5 text-xs text-status-warning-ink"
                 >
                   {attachNotice}
                 </p>
@@ -124,7 +128,7 @@ export function StepPersonalInfo({ form }: StepPersonalInfoProps) {
         name="phone"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>Phone <span className="text-destructive">*</span></FormLabel>
+            <FormLabel>Phone</FormLabel>
             <FormControl>
               <PhoneInput defaultCountry="IN" placeholder="Enter phone number" {...field} />
             </FormControl>
@@ -137,7 +141,7 @@ export function StepPersonalInfo({ form }: StepPersonalInfoProps) {
         name="gender"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>Gender <span className="text-destructive">*</span></FormLabel>
+            <FormLabel>Gender</FormLabel>
             <Select onValueChange={field.onChange} defaultValue={field.value}>
               <FormControl>
                 <SelectTrigger><SelectValue placeholder="Select" /></SelectTrigger>
@@ -157,7 +161,7 @@ export function StepPersonalInfo({ form }: StepPersonalInfoProps) {
         name="dateOfBirth"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>Date of Birth <span className="text-destructive">*</span></FormLabel>
+            <FormLabel>Date of Birth</FormLabel>
             <FormControl>
               <DatePicker
                 value={field.value ? format(field.value, "yyyy-MM-dd") : ""}
@@ -167,6 +171,9 @@ export function StepPersonalInfo({ form }: StepPersonalInfoProps) {
                 placeholder="Select DOB"
               />
             </FormControl>
+            <FormDescription className="text-xs">
+              Employee must be at least {MIN_EMPLOYMENT_AGE_YEARS} years old
+            </FormDescription>
             <FormMessage />
           </FormItem>
         )}

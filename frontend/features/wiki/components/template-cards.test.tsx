@@ -1,0 +1,170 @@
+import { fireEvent, render, screen } from "@testing-library/react";
+import { TemplateCard } from "./template-cards";
+import { TemplatePreviewDialog } from "./template-preview-dialog";
+import type { KbPageTemplate } from "@/hooks/api/kb/page-templates";
+import type { StarterTemplate } from "@/features/wiki/lib/starter-templates";
+
+jest.mock("@/hooks/api/kb", () => ({
+  useDeleteKbPageTemplate: () => ({ mutate: jest.fn(), isPending: false }),
+}));
+
+jest.mock("./edit-template-dialog", () => ({
+  EditTemplateDialog: () => null,
+}));
+
+jest.mock("./public-page-content-loader", () => ({
+  PublicPageContentLoader: ({ content }: { content: unknown }) => (
+    <pre data-testid="saved-template-content">{JSON.stringify(content)}</pre>
+  ),
+}));
+
+function makeTemplate(over: Partial<KbPageTemplate> = {}): KbPageTemplate {
+  return {
+    id: 1,
+    orgId: "org-1",
+    name: "Runbook",
+    icon: null,
+    description: null,
+    content: null,
+    createdById: "u-1",
+    createdByName: "Ada Lovelace",
+    useCount: 0,
+    lastUsedAt: null,
+    createdAt: "2026-01-01T00:00:00.000Z",
+    updatedAt: "2026-01-01T00:00:00.000Z",
+    ...over,
+  };
+}
+
+function renderCard(template: KbPageTemplate) {
+  render(
+    <TemplateCard
+      template={template}
+      canDelete={false}
+      onUse={jest.fn()}
+      isPending={false}
+      isDisabled={false}
+    />,
+  );
+}
+
+describe("TemplateCard usage metadata", () => {
+  it("shows how many times a saved template has been used", () => {
+    renderCard(makeTemplate({ useCount: 7 }));
+
+    expect(screen.getByText(/7 uses/i)).toBeInTheDocument();
+  });
+
+  it("singularises a template used exactly once", () => {
+    renderCard(makeTemplate({ useCount: 1 }));
+
+    expect(screen.getByText(/1 use\b/i)).toBeInTheDocument();
+  });
+
+  it("shows when the template was last used", () => {
+    renderCard(
+      makeTemplate({ useCount: 3, lastUsedAt: "2026-01-02T00:00:00.000Z" }),
+    );
+
+    expect(screen.getByText(/last used/i)).toBeInTheDocument();
+  });
+
+  it("says never used rather than showing a blank slot for an unused template", () => {
+    renderCard(makeTemplate({ useCount: 0, lastUsedAt: null }));
+
+    expect(screen.getByText(/never used/i)).toBeInTheDocument();
+    expect(screen.queryByText(/last used/i)).not.toBeInTheDocument();
+  });
+});
+
+describe("TemplateCard preview", () => {
+  it.each([
+    [[{ type: "p", children: [{ text: "Plate checklist" }] }]],
+    [{ type: "doc", content: [{ type: "paragraph", content: [{ type: "text", text: "TipTap checklist" }] }] }],
+  ])("opens a read-only preview of saved content without using the template", (content) => {
+    const onUse = jest.fn();
+    render(
+      <TemplateCard
+        template={makeTemplate({ content })}
+        canDelete={false}
+        onUse={onUse}
+        isPending={false}
+        isDisabled={false}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "Preview Runbook" }));
+
+    expect(screen.getByRole("dialog", { name: /Runbook/ })).toBeInTheDocument();
+    expect(screen.getByTestId("saved-template-content")).toHaveTextContent(JSON.stringify(content));
+    expect(onUse).not.toHaveBeenCalled();
+
+    fireEvent.click(screen.getAllByRole("button", { name: "Close" })[0]);
+    expect(screen.queryByRole("dialog", { name: /Runbook/ })).not.toBeInTheDocument();
+  });
+});
+
+describe("TemplatePreviewDialog", () => {
+  it("labels the expected output and previews the starter content", () => {
+    render(
+      <TemplatePreviewDialog
+        template={{
+          key: "meeting-notes",
+          name: "Meeting Notes",
+          icon: "📝",
+          description: "Capture meeting outcomes",
+          category: "Meetings & Decisions",
+          expectedOutput: "A page with Decisions and Action Items sections.",
+          content: {
+            type: "doc",
+            children: [{ type: "h2", children: [{ text: "Decisions" }] }],
+          },
+        }}
+        onOpenChange={jest.fn()}
+        onUse={jest.fn()}
+        isPending={false}
+        canUse={true}
+      />,
+    );
+
+    expect(screen.getByRole("heading", { name: "Expected output" })).toBeInTheDocument();
+    expect(screen.getByText("A page with Decisions and Action Items sections.")).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Preview" })).toBeInTheDocument();
+    expect(screen.getByText("Decisions")).toBeInTheDocument();
+  });
+
+  it("keeps Use disabled without page-create permission and enables it when granted", () => {
+    const onUse = jest.fn();
+    const template: StarterTemplate = {
+      key: "meeting-notes",
+      name: "Meeting Notes",
+      icon: "📝",
+      description: "Capture meeting outcomes",
+      category: "Meetings & Decisions",
+      expectedOutput: "A page with decisions.",
+      content: { type: "doc", children: [] },
+    };
+    const view = render(
+      <TemplatePreviewDialog
+        template={template}
+        onOpenChange={jest.fn()}
+        onUse={onUse}
+        isPending={false}
+        canUse={false}
+      />,
+    );
+
+    expect(screen.getByRole("button", { name: "Use this template" })).toBeDisabled();
+    view.rerender(
+      <TemplatePreviewDialog
+        template={template}
+        onOpenChange={jest.fn()}
+        onUse={onUse}
+        isPending={false}
+        canUse={true}
+      />,
+    );
+    fireEvent.click(screen.getByRole("button", { name: "Use this template" }));
+    expect(onUse).toHaveBeenCalledWith(template);
+  });
+});

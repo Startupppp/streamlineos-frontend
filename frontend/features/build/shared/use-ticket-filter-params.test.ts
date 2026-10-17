@@ -10,11 +10,7 @@ jest.mock("next/navigation", () => ({
   useSearchParams: () => mockSearchParams,
 }));
 
-/**
- * Pins the behaviour the list-view seam has to preserve when this hook is
- * generalised off ticket vocabulary. Every assertion is about what reaches the
- * URL, never about which internal callback produced it.
- */
+
 
 function lastParams(): URLSearchParams {
   const call = mockReplace.mock.calls.at(-1);
@@ -149,6 +145,14 @@ describe("ticket filter URL state", () => {
     expect(result.current.activeFilterCount).toBe(0);
   });
 
+  it("fails closed for malformed priority and type values", () => {
+    const { result } = renderWith("priority=NOT_A_PRIORITY&type=NOT_A_TYPE");
+
+    expect(result.current.selectedPriorities).toEqual([]);
+    expect(result.current.selectedTypes).toEqual([]);
+    expect(result.current.activeFilterCount).toBe(0);
+  });
+
   it("settles rapid search input into one navigation", () => {
     jest.useFakeTimers();
     const { result } = renderWith("");
@@ -163,6 +167,44 @@ describe("ticket filter URL state", () => {
       jest.advanceTimersByTime(300);
     });
 
+    expect(mockReplace).toHaveBeenCalledTimes(1);
+    expect(lastParams().get("q")).toBe("login");
+  });
+
+  it("holds the ticket search at 299 ms and releases it on the 300th, so a shorter debounce fails this test", () => {
+    jest.useFakeTimers();
+    const { result } = renderWith("");
+
+    act(() => result.current.handleSearchChange("login"));
+    act(() => {
+      jest.advanceTimersByTime(299);
+    });
+    expect(mockReplace).not.toHaveBeenCalled();
+
+    act(() => {
+      jest.advanceTimersByTime(1);
+    });
+    expect(mockReplace).toHaveBeenCalledTimes(1);
+    expect(lastParams().get("q")).toBe("login");
+  });
+
+  it("restarts the wait on each keystroke rather than navigating 300 ms after the first one", () => {
+    jest.useFakeTimers();
+    const { result } = renderWith("");
+
+    act(() => result.current.handleSearchChange("log"));
+    act(() => {
+      jest.advanceTimersByTime(299);
+    });
+    act(() => result.current.handleSearchChange("login"));
+    act(() => {
+      jest.advanceTimersByTime(299);
+    });
+    expect(mockReplace).not.toHaveBeenCalled();
+
+    act(() => {
+      jest.advanceTimersByTime(1);
+    });
     expect(mockReplace).toHaveBeenCalledTimes(1);
     expect(lastParams().get("q")).toBe("login");
   });

@@ -20,6 +20,7 @@ import { useAIGenerateReview } from "@/hooks/api/ai";
 import { AiFailureBody } from "@/components/ai";
 import { toast } from "sonner";
 import { useFeature } from "@/lib/billing/use-feature";
+import { useCan } from "@/hooks/api/access";
 
 interface AIGenerateReviewButtonProps {
   userId: string;
@@ -34,6 +35,8 @@ export function AIGenerateReviewButton({ userId, userName, periodStart, periodEn
   const result = generateMutation.data;
   const failure = generateMutation.isPending ? null : generateMutation.error;
   const { enabled: featureEnabled, requiredPlan } = useFeature("ai.review-generation");
+  // POST /ai/generate-review is `hr:performance:manage` (hr-ai.controller.ts:111).
+  const canGenerate = useCan("hr:performance:manage");
 
   const handleGenerate = () => {
     if (!featureEnabled) { toast.error(`AI review generation requires the ${requiredPlan ?? "PROFESSIONAL"} plan. Upgrade to unlock.`); return; }
@@ -58,6 +61,8 @@ ${result.ratings.map((r) => `- ${r.category}: ${r.score}/5 — ${r.comment}`).jo
     navigator.clipboard.writeText(text);
     toast.success("Review copied to clipboard");
   };
+
+  if (!canGenerate) return null;
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>

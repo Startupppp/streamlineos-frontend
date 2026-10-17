@@ -67,3 +67,19 @@ export function numericSelectChange(
     onChange(Number(value));
   };
 }
+
+/**
+ * The same widening for a select whose "nothing chosen" state is real — an
+ * optional link to another record, where clearing it must reach the schema as
+ * `undefined` rather than `0` or `NaN`. Spelled inline it was
+ * `v ? parseInt(v) : undefined`, which is `numericFieldValue`'s rule written a
+ * second time; this keeps the JSX prop holding a call and the two spellings
+ * agreeing.
+ */
+export function optionalNumericSelectChange(
+  onChange: (value: number | undefined) => void,
+): (value: string) => void {
+  return function handleOptionalNumericSelectChange(value) {
+    onChange(numericFieldValue(value));
+  };
+}

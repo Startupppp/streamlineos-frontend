@@ -1,5 +1,6 @@
 import {
   formatEventDate,
+  endOfDayInTimeZone,
   formatEventTimeRange,
   readerTimeZone,
 } from "./date-utils";
@@ -72,5 +73,23 @@ describe("formatEventDate", () => {
 
     expect(utc).toContain("10");
     expect(kolkata).toContain("11");
+  });
+});
+
+describe("endOfDayInTimeZone", () => {
+  it("ends the day at 23:59:59 in the organisation's zone, not the reader's", () => {
+    const now = new Date("2026-10-09T20:00:00.000Z");
+    expect(endOfDayInTimeZone(now, "Asia/Kolkata").toISOString()).toBe("2026-10-10T18:29:59.000Z");
+    expect(endOfDayInTimeZone(now, "America/New_York").toISOString()).toBe("2026-10-10T03:59:59.000Z");
+  });
+
+  it("crosses a daylight-saving change on the same local day", () => {
+    const now = new Date("2026-03-08T06:00:00.000Z");
+    expect(endOfDayInTimeZone(now, "America/New_York").toISOString()).toBe("2026-03-09T03:59:59.000Z");
+  });
+
+  it("falls back to the reader's zone for an unknown zone", () => {
+    const now = new Date("2026-10-09T08:00:00.000Z");
+    expect(endOfDayInTimeZone(now, "Mars/Olympus").getTime()).toBe(endOfDayInTimeZone(now, null).getTime());
   });
 });

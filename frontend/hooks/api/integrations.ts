@@ -2,13 +2,14 @@
 import type { z } from "zod";
 import type { integrationsFinalizeContract as integrationsFinalizeContractDef } from "@/hooks/api/integrations-schema";
 
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQueryClient } from "@tanstack/react-query";
 import { useGatedQuery } from "@/hooks/api/gated-query";
 import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
 import { directoryAndOwnershipQueryKeys } from "@/lib/query-keys/directory-and-ownership";
 import { platformHierarchyQueryKeys } from "@/lib/query-keys/platform-hierarchy";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import { invalidateCalendarProjectionWindows } from "@/lib/calendar-projection-cache";
 
 const integrationsListContract = lazyContract(() =>
   import("@/hooks/api/integrations-schema").then((m) => m.integrationsListContract),
@@ -31,12 +32,13 @@ export type IntegrationConnectionStatus = "active" | "needs_reauth" | "disabled"
 
 export type IntegrationConnection = z.infer<typeof integrationsFinalizeContractDef>;
 
-export function useIntegrationConnections(options?: { enabled?: boolean }) {
+export function useIntegrationConnections(options?: { enabled?: boolean; inlineErrors?: boolean }) {
   return useGatedQuery("integrations:connections:view", {
     queryKey: platformHierarchyQueryKeys.integrations.connections(),
     queryFn: ({ signal }) => apiClient.get<IntegrationConnection[]>("/integrations/connections", undefined, signal, integrationsListContract),
     staleTime: 60_000,
     enabled: options?.enabled ?? true,
+    throwOnError: options?.inlineErrors ? false : undefined,
   });
 }
 
@@ -66,6 +68,7 @@ export function useFinalizeIntegrationConnection() {
       });
       void qc.invalidateQueries({ queryKey: platformHierarchyQueryKeys.calendar.all });
       void qc.invalidateQueries({ queryKey: directoryAndOwnershipQueryKeys.mail.all });
+      invalidateCalendarProjectionWindows(qc);
     },
   });
 }
@@ -83,6 +86,7 @@ export function useDisconnectIntegration() {
       });
       void qc.invalidateQueries({ queryKey: platformHierarchyQueryKeys.calendar.all });
       void qc.invalidateQueries({ queryKey: directoryAndOwnershipQueryKeys.mail.all });
+      invalidateCalendarProjectionWindows(qc);
     },
   });
 }

@@ -7,7 +7,7 @@ import { AvatarStack } from "@/components/ui/avatar-stack";
 import { cn, resolveImageUrl } from "@/lib/utils";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { useUpdateProject } from "@/hooks/api/build";
+import { useUpdateProject } from "@/hooks/api/build/projects";
 import { MemberPicker } from "@/components/members/member-picker";
 import {
   getUserDisplayName,
@@ -15,7 +15,7 @@ import {
 } from "@/lib/person-display";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { TEXT_FLEX_CHILD } from "@/lib/text-overflow";
-import { InlineFieldWrapper } from "@/features/build/views/card-inline-fields";
+import { InlineFieldWrapper } from "@/features/build/views/card-field-wrapper";
 import type { ProjectListItem } from "@/types/projects/projects";
 
 type ProjectPerson = ProjectListItem["manager"];
@@ -65,7 +65,7 @@ export const InlineProjectLead = memo(function InlineProjectLead({
           </Avatar>
           <TruncatedText
             text={leadName}
-            className="max-w-[96px] text-xs text-muted-foreground"
+            className="min-w-0 text-xs text-muted-foreground"
           />
         </div>
       ) : (
@@ -80,6 +80,7 @@ export const InlineProjectLead = memo(function InlineProjectLead({
   return (
     <InlineFieldWrapper>
       <MemberPicker
+        directory="build"
         value={currentManagerId}
         onChange={handleLeadChange}
         allowUnassigned
@@ -134,6 +135,7 @@ export const InlineProjectMembers = memo(function InlineProjectMembers({
   return (
     <InlineFieldWrapper>
       <MemberPicker
+        directory="build"
         mode="multi"
         values={currentIds}
         onToggle={handleToggle}

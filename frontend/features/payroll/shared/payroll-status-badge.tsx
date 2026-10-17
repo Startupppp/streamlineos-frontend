@@ -33,16 +33,14 @@ type PayrollStatusBadgeProps =
   | { variant: "component"; status: ComponentStatus; className?: string }
   | { variant: "run"; status: RunStatus; className?: string };
 
-export function PayrollStatusBadge(props: PayrollStatusBadgeProps) {
-  let config: { label: string; tone: BadgeTone };
+function resolvePayrollStatusConfig(props: PayrollStatusBadgeProps): { label: string; tone: BadgeTone } {
+  if (props.variant === "policy") return policyStatusConfig[props.status];
+  if (props.variant === "component") return componentStatusConfig[props.status];
+  return runStatusConfig[props.status];
+}
 
-  if (props.variant === "policy") {
-    config = policyStatusConfig[props.status];
-  } else if (props.variant === "component") {
-    config = componentStatusConfig[props.status];
-  } else {
-    config = runStatusConfig[props.status];
-  }
+export function PayrollStatusBadge(props: PayrollStatusBadgeProps) {
+  const config = resolvePayrollStatusConfig(props);
 
   return (
     <SemanticBadge

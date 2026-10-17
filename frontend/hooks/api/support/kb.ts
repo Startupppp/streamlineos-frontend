@@ -1,8 +1,15 @@
 "use client";
 
-import { useMutation, useQueryClient, keepPreviousData } from "@tanstack/react-query";
+import { useInfiniteQuery, useMutation, useQueryClient, keepPreviousData } from "@tanstack/react-query";
+import { knowledgeGapsKeys } from "./knowledge-gaps";
 import type { z } from "zod";
 import { useGatedQuery } from "@/hooks/api/gated-query";
+import { usePermissionGate } from "@/hooks/api/access";
+import { gated } from "@/lib/rbac/permission-gate";
+import { platformCoreQueryKeys } from "@/lib/query-keys/platform-core";
+import { NO_CURSOR_YET } from "@/hooks/api/cursor-page-param";
+import { selectFlatPages, type Page } from "@/lib/api/select-flat-pages";
+import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
 import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
 import { accountingAndSupportQueryKeys } from "@/lib/query-keys/accounting-and-support";
@@ -109,12 +116,30 @@ interface SubmitKbFeedbackInput {
 }
 
 export function useSupportKbCategories(options?: { enabled?: boolean }) {
-  return useGatedQuery("support:kb:view", {
+  const access = usePermissionGate("support:kb:view");
+  const qc = useQueryClient();
+  const query = useInfiniteQuery({
     queryKey: accountingAndSupportQueryKeys.supportKb.categories(),
-    queryFn: ({ signal }) => apiClient.get<KbCategory[]>("/support/kb/categories", undefined, signal, kbCategoryListC),
+    initialPageParam: NO_CURSOR_YET,
+    queryFn: ({ signal, pageParam }) => apiClient.get<Page<KbCategory>>(
+      "/support/kb/categories",
+      pageParam !== undefined ? { cursor: pageParam } : undefined,
+      signal,
+      kbCategoryListC,
+    ),
+    getNextPageParam: (last) => last.pagination.nextCursor ?? undefined,
+    select: selectFlatPages,
     staleTime: 60_000,
-    enabled: options?.enabled ?? true,
+    enabled: access.allowed && (options?.enabled ?? true),
+    ...INLINE_READ_ERROR,
   });
+  const refetch: typeof query.refetch = async (refetchOptions) => {
+    if (access.unavailable) {
+      await qc.refetchQueries({ queryKey: platformCoreQueryKeys.access.me() });
+    }
+    return query.refetch(refetchOptions);
+  };
+  return gated({ ...query, refetch }, access);
 }
 
 export function useCreateSupportKbCategory() {
@@ -158,6 +183,7 @@ export function useSupportKbArticles(params?: KbArticlesParams, options?: { enab
     staleTime: 30_000,
     enabled: options?.enabled ?? true,
     placeholderData: keepPreviousData,
+    ...INLINE_READ_ERROR,
   });
 }
 
@@ -167,6 +193,7 @@ export function useSupportKbArticle(id: number) {
     queryFn: ({ signal }) => apiClient.get<KbArticleDetail>(`/support/kb/articles/${id}`, undefined, signal, kbArticleDetailC),
     enabled: Number.isFinite(id) && id > 0,
     staleTime: 15_000,
+    ...INLINE_READ_ERROR,
   });
 }
 
@@ -198,6 +225,9 @@ export function useUpdateSupportKbArticle() {
     onSuccess: (_, variables) => {
       qc.invalidateQueries({ queryKey: [...accountingAndSupportQueryKeys.supportKb.all, "articles"] });
       qc.invalidateQueries({ queryKey: accountingAndSupportQueryKeys.supportKb.article(variables.id) });
+      if (variables.status === "published") {
+        qc.invalidateQueries({ queryKey: knowledgeGapsKeys.all });
+      }
     },
   });
 }

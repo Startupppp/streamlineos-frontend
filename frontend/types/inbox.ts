@@ -52,6 +52,8 @@ export type BuildApprovalInboxItem = InboxItemBase & {
   projectId: number | null;
   ticketId: number | null;
   dueAt: string | null;
+  objectType: string;
+  objectId: string;
 };
 
 export type ModuleTaskInboxItem = InboxItemBase & {
@@ -96,4 +98,5 @@ export type UnifiedInboxCount = {
   task: number;
   total: number;
   mailExact: boolean;
+  approvalExact: boolean;
 };

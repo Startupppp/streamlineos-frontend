@@ -16,7 +16,8 @@ import {
   useCompleteOnboardingTask,
   useOnboardingStatus,
 } from "@/hooks/api/hr/onboarding";
-import { ErrorState } from "@/components/shared";
+import { PageState } from "@/components/shared/page-state";
+import { usePageState } from "@/hooks/api/use-page-state";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { OnboardingTaskCard } from "@/features/hr/onboarding/onboarding-task-card";
 
@@ -51,6 +52,7 @@ export function OnboardingDetailPage({ userId }: OnboardingDetailPageProps) {
     data: tasks,
     isLoading: tasksLoading,
     isError: tasksError,
+    error: tasksErrorValue,
     refetch: refetchTasks,
   } = useUserOnboarding(userId);
 
@@ -58,6 +60,7 @@ export function OnboardingDetailPage({ userId }: OnboardingDetailPageProps) {
     data: statuses,
     isLoading: statusLoading,
     isError: statusError,
+    error: statusErrorValue,
     refetch: refetchStatus,
   } = useOnboardingStatus();
 
@@ -93,6 +96,13 @@ export function OnboardingDetailPage({ userId }: OnboardingDetailPageProps) {
 
   const isLoading = tasksLoading || statusLoading;
   const isError = tasksError || statusError;
+  const pageState = usePageState({
+    permission: "hr:onboarding:tasks:view",
+    isLoading,
+    isError,
+    error: tasksErrorValue ?? statusErrorValue,
+    isEmpty: (tasks ?? []).length === 0,
+  });
 
   const employeeStatus = statuses?.find((s) => s.userId === userId);
   const employeeName = employeeStatus?.userName ?? "Employee";
@@ -119,23 +129,20 @@ export function OnboardingDetailPage({ userId }: OnboardingDetailPageProps) {
       subtitle="Track and manage onboarding tasks for this employee."
       backHref="/hr/onboarding"
     >
-      {isLoading ? (
-        <LoadingSkeleton />
-      ) : isError ? (
-        <ErrorState
-          className="flex-1"
-          title="Failed to load onboarding"
-          description="Failed to load onboarding data. Please try again."
-          onRetry={handleRetry}
-        />
-      ) : taskList.length === 0 ? (
-        <EmptyState
-          illustration={<EmptyTasksIllustration className="h-24 w-24" />}
-          title="No tasks yet"
-          description="Onboarding hasn't been initiated for this employee yet."
-          compact
-        />
-      ) : (
+      <PageState
+        resolution={pageState}
+        onRetry={handleRetry}
+        className="flex-1"
+        loading={<LoadingSkeleton />}
+        empty={
+          <EmptyState
+            illustration={<EmptyTasksIllustration className="h-24 w-24" />}
+            title="No tasks yet"
+            description="Onboarding hasn't been initiated for this employee yet."
+            compact
+          />
+        }
+      >
         <div className="space-y-5">
           <div className="space-y-1.5">
             <div className="flex items-center justify-between text-sm">
@@ -190,7 +197,7 @@ export function OnboardingDetailPage({ userId }: OnboardingDetailPageProps) {
             </div>
           )}
         </div>
-      )}
+      </PageState>
     </PageWrapper>
   );
 }

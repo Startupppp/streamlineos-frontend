@@ -1,0 +1,531 @@
+import { render, screen } from "@testing-library/react";
+
+export { render, screen };
+
+export const mockRouterPush = jest.fn();
+
+export const mockRouterReplace = jest.fn();
+
+export const mockUseSearchParams = jest.fn(() => new URLSearchParams());
+
+jest.mock("next/navigation", () => ({
+  useRouter: () => ({ replace: mockRouterReplace, push: mockRouterPush }),
+  usePathname: () => "/build/managed-products/7/goals",
+  useSearchParams: mockUseSearchParams,
+}));
+
+jest.mock("@/hooks/api/access", () => ({
+  useCan: jest.fn(() => true),
+  useModuleEnabled: jest.fn(() => true),
+  usePermissionGate: jest.fn(() => ({
+    permission: "build:roadmap:view",
+    allowed: true,
+    denied: false,
+    pending: false,
+  })),
+}));
+
+jest.mock("@/hooks/api/use-page-state", () => ({
+  usePageState: jest.fn(),
+}));
+
+jest.mock("@/components/shared/page-state", () => ({
+  PageState: ({
+    resolution,
+    loading,
+    empty,
+    children,
+  }: {
+    resolution: { kind: string; permission?: string | null };
+    loading: React.ReactNode;
+    empty?: React.ReactNode;
+    children: React.ReactNode;
+  }) => {
+    if (resolution.kind === "loading")
+      return <div data-testid="page-state-loading">{loading}</div>;
+    if (resolution.kind === "denied")
+      return (
+        <div
+          data-testid="no-permission"
+          data-permission={resolution.permission ?? ""}
+        />
+      );
+    if (resolution.kind === "error") return <div data-testid="error-state" />;
+    if (resolution.kind === "not-found") return <div data-testid="page-state-not-found" />;
+    if (resolution.kind === "empty")
+      return <div data-testid="page-state-empty">{empty}</div>;
+    return <div data-testid="page-state-ready">{children}</div>;
+  },
+}));
+
+jest.mock("@/hooks/api/feedbucket", () => ({
+  useFeedbucketSubmissions: jest.fn(),
+  useFeedbucketSubmissionFacets: jest.fn(),
+}));
+
+jest.mock("@/hooks/api/build/intake-mutations", () => ({
+  useRouteFeedbucketToIntake: jest.fn(() => ({
+    mutate: jest.fn(),
+    isPending: false,
+  })),
+}));
+
+jest.mock("@/hooks/api/build/managed-products", () => ({
+  useManagedProduct: jest.fn(() => ({
+    data: { id: 7, name: "QA" },
+    isSuccess: true,
+    isLoading: false,
+    isError: false,
+    error: null,
+  })),
+  useManagedProductInsights: jest.fn(),
+  useManagedProducts: jest.fn(),
+  useManagedProductFacets: jest.fn(() => ({ data: { segments: [], tags: [] } })),
+  useCreateManagedProduct: jest.fn(() => ({
+    mutate: jest.fn(),
+    isPending: false,
+  })),
+  useUpdateManagedProduct: jest.fn(() => ({
+    mutate: jest.fn(),
+    isPending: false,
+  })),
+  useDeleteManagedProduct: jest.fn(() => ({
+    mutate: jest.fn(),
+    isPending: false,
+  })),
+  useBulkUpdateManagedProducts: jest.fn(() => ({
+    mutate: jest.fn(),
+    isPending: false,
+  })),
+  useArchiveManagedProduct: jest.fn(() => ({
+    mutate: jest.fn(),
+    isPending: false,
+  })),
+  useRestoreManagedProduct: jest.fn(() => ({
+    mutate: jest.fn(),
+    isPending: false,
+  })),
+}));
+
+jest.mock("@/hooks/api/build/teams", () => ({
+  useProjectTeams: jest.fn(() => ({ data: null })),
+}));
+
+jest.mock("@/features/build/managed-products/feedback/capture-submission-sheet", () => ({
+  CaptureSubmissionSheet: () => null,
+}));
+
+jest.mock("@/hooks/api/build/projects", () => ({
+  useProjects: jest.fn(() => ({ data: null })),
+}));
+
+jest.mock("@/hooks/api/organization", () => ({
+  useOrgMembers: jest.fn(() => ({ data: { data: [] } })),
+}));
+
+jest.mock("@/hooks/api/build/build-members", () => ({
+  useBuildMembers: jest.fn(() => ({ data: { data: [] } })),
+}));
+
+jest.mock("@/hooks/api/goals", () => ({
+  useGoals: jest.fn(),
+  useGoalsPage: jest.fn(),
+  useGoalStats: jest.fn(() => ({ data: undefined })),
+  useGoal: jest.fn(() => ({ data: undefined })),
+  useDeleteGoal: jest.fn(() => ({ mutate: jest.fn(), isPending: false })),
+  useLinkGoalProduct: jest.fn(() => ({ mutate: jest.fn(), isPending: false })),
+  useUnlinkGoalProduct: jest.fn(() => ({ mutate: jest.fn(), isPending: false })),
+}));
+
+jest.mock("@/hooks/api/build/roadmap", () => ({
+  useRoadmapItems: jest.fn(() => ({
+    data: undefined,
+    isLoading: false,
+    isError: false,
+    error: null,
+    refetch: jest.fn(),
+  })),
+  useDeleteRoadmapItem: jest.fn(() => ({ mutate: jest.fn() })),
+  usePositionRoadmapItem: jest.fn(() => ({ mutate: jest.fn(), isPending: false })),
+  usePublishRoadmapItem: jest.fn(() => ({ mutate: jest.fn(), isPending: false })),
+  useRoadmapItem: jest.fn(() => ({ data: undefined, isLoading: false })),
+}));
+
+jest.mock("@/components/ui/page-wrapper", () => ({
+  PageWrapper: ({
+    children,
+    filters,
+    actions,
+  }: {
+    children: React.ReactNode;
+    filters?: React.ReactNode;
+    actions?: React.ReactNode;
+  }) => (
+    <div>
+      <div data-testid="page-wrapper-actions">{actions}</div>
+      <div data-testid="page-wrapper-filters">{filters}</div>
+      {children}
+    </div>
+  ),
+}));
+
+jest.mock("@/components/pm-chrome", () => ({
+  PmPageShell: ({
+    children,
+    className,
+  }: {
+    children: React.ReactNode;
+    className?: string;
+  }) => (
+    <div data-testid="pm-page-shell" className={className}>
+      {children}
+    </div>
+  ),
+  PmSection: ({
+    children,
+    className,
+  }: {
+    children: React.ReactNode;
+    className?: string;
+  }) => <div className={className}>{children}</div>,
+  PmPanel: ({ children }: { children: React.ReactNode }) => (
+    <div>{children}</div>
+  ),
+  PmStaggerList: ({ children }: { children: React.ReactNode }) => (
+    <div>{children}</div>
+  ),
+  CONTENT_FILL_PANEL: "",
+  PM_PANEL: "",
+  PM_TOOLBAR: "",
+}));
+
+jest.mock("@/components/shared", () => ({
+  NoPermissionState: ({ permission }: { permission: string }) => (
+    <div data-testid="no-permission" data-permission={permission} />
+  ),
+}));
+
+jest.mock("@/components/shared/error-state", () => ({
+  ErrorState: () => <div data-testid="error-state" />,
+}));
+
+jest.mock("@/components/ui/empty-state", () => ({
+  EmptyState: ({
+    action,
+  }: {
+    action?: { label: string; onClick: () => void };
+  }) => (
+    <div data-testid="empty-state">
+      {action ? (
+        <button type="button" onClick={action.onClick}>
+          {action.label}
+        </button>
+      ) : null}
+    </div>
+  ),
+}));
+
+jest.mock("@/components/ui/stat-card", () => ({
+  StatCard: ({
+    label,
+    href,
+    value,
+  }: {
+    label: string;
+    href?: string;
+    value?: number;
+  }) =>
+    href ? (
+      <a data-testid="stat-card-link" data-label={label} href={href}>
+        {label}: {value}
+      </a>
+    ) : (
+      <div data-testid="stat-card" data-label={label}>
+        {label}: {value}
+      </div>
+    ),
+  StatCardGrid: ({ children }: { children: React.ReactNode }) => (
+    <div>{children}</div>
+  ),
+  StatCardGridSkeleton: () => <div data-testid="stat-card-grid-skeleton" />,
+}));
+
+jest.mock("@/components/ui/search-input", () => ({
+  SearchInput: () => null,
+}));
+
+jest.mock("@/components/ui/data-table", () => ({
+  DataTable: ({
+    data,
+    emptyState,
+    isLoading,
+    getRowKey,
+    onRowClick,
+    rowClassName,
+  }: {
+    data?: Array<{ name?: string; message?: string; id?: unknown }>;
+    emptyState?: React.ReactNode;
+    isLoading?: boolean;
+    getRowKey?: (
+      row: { name?: string; message?: string; id?: unknown },
+      i: number,
+    ) => string | number;
+    onRowClick?: (row: {
+      name?: string;
+      message?: string;
+      id?: unknown;
+    }) => void;
+    rowClassName?: (row: {
+      name?: string;
+      message?: string;
+      id?: unknown;
+    }) => string;
+  }) => {
+    if (isLoading) return <div data-testid="data-table-loading" />;
+    if (!data || data.length === 0)
+      return emptyState ?? <div data-testid="data-table" />;
+    return (
+      <div data-testid="data-table">
+        {data.map((row, i) => {
+          const key = getRowKey ? String(getRowKey(row, i)) : String(i);
+          return onRowClick ? (
+            <button
+              key={key}
+              type="button"
+              className={rowClassName?.(row)}
+              onClick={() => onRowClick(row)}
+            >
+              {row.name ?? row.message}
+            </button>
+          ) : (
+            <span key={key}>{row.name ?? row.message}</span>
+          );
+        })}
+      </div>
+    );
+  },
+  DataTableSkeleton: ({ mobileCards }: { mobileCards?: boolean }) => (
+    <div
+      data-testid="data-table-skeleton"
+      data-mobile-cards={mobileCards ? "true" : "false"}
+    />
+  ),
+}));
+
+jest.mock("@/features/build/goals/goal-form-sheet", () => ({
+  GoalFormSheet: ({ managedProductId }: { managedProductId?: number }) => (
+    <div
+      data-testid="goal-form-sheet"
+      data-managed-product-id={managedProductId}
+    />
+  ),
+}));
+
+jest.mock(
+  "@/features/build/managed-products/link-existing-goal-dialog",
+  () => ({
+    LinkExistingGoalDialog: () => <div data-testid="link-existing-goal-dialog" />,
+  }),
+);
+
+jest.mock("@/features/build/goals/constants", () => ({
+  STATUS_CONFIG: {
+    not_started: { label: "Not started", variant: "outline" as const },
+    on_track: { label: "On track", variant: "default" as const },
+    at_risk: { label: "At risk", variant: "destructive" as const },
+    off_track: { label: "Off track", variant: "destructive" as const },
+    completed: { label: "Completed", variant: "secondary" as const },
+  },
+  LEVEL_LABEL: { company: "Company", team: "Team", individual: "Individual" },
+  STATUS_OPTIONS: [],
+  LEVEL_OPTIONS: [],
+  METRIC_OPTIONS: [],
+}));
+
+jest.mock("@/features/build/roadmap/roadmap-constants", () => ({
+  ROADMAP_COLUMNS: [],
+  ROADMAP_HORIZON_COLUMNS: [],
+}));
+
+jest.mock("@/features/build/roadmap/roadmap-item-card", () => ({
+  RoadmapItemCard: () => null,
+}));
+
+jest.mock("@/features/build/roadmap/roadmap-item-sheet", () => ({
+  RoadmapItemSheet: () => null,
+}));
+
+jest.mock(
+  "@/features/build/managed-products/roadmap/roadmap-board-columns",
+  () => ({
+    RoadmapBoardColumns: () => <div data-testid="roadmap-board-columns" />,
+  }),
+);
+
+jest.mock(
+  "@/features/build/managed-products/roadmap/roadmap-timeline-view",
+  () => ({
+    RoadmapTimelineView: () => <div data-testid="roadmap-timeline-view" />,
+  }),
+);
+
+jest.mock(
+  "@/features/build/managed-products/roadmap/roadmap-filters-bar",
+  () => ({
+    RoadmapFiltersBar: () => <div data-testid="roadmap-filters-bar" />,
+  }),
+);
+
+jest.mock(
+  "@/features/build/managed-products/roadmap/roadmap-preview-sheet",
+  () => ({
+    RoadmapPreviewSheet: () => <div data-testid="roadmap-preview-sheet" />,
+  }),
+);
+
+jest.mock(
+  "@/features/build/managed-products/roadmap/roadmap-list-view",
+  () => ({
+    RoadmapListView: jest.fn(() => <div data-testid="roadmap-list-view" />),
+  }),
+);
+
+jest.mock("@/components/ui/confirm-dialog", () => ({
+  ConfirmDialog: () => null,
+}));
+
+jest.mock("@/components/illustrations", () => ({
+  EmptyTargetIllustration: () => null,
+  EmptyProjectsIllustration: () => null,
+  EmptyInboxIllustration: () => null,
+}));
+
+jest.mock("@/lib/utils", () => ({
+  resolveImageUrl: (url: string) => url,
+  cn: (...args: unknown[]) => args.filter(Boolean).join(" "),
+}));
+
+jest.mock("date-fns", () => ({
+  ...jest.requireActual("date-fns"),
+  formatDistanceToNow: () => "2 days ago",
+  format: () => "Jan 1, 2025",
+}));
+
+jest.mock("@/hooks/common/use-debounce", () => ({
+  useDebouncedValue: (v: string) => v,
+}));
+
+jest.mock("@/hooks/common/use-query-param-open", () => ({
+  useQueryParamOpen: () => ({
+    open: false,
+    onOpenChange: jest.fn(),
+    setOpen: jest.fn(),
+  }),
+}));
+
+jest.mock("@/hooks/common/use-animated-icon", () => ({
+  useAnimatedIcon: () => ({ iconRef: { current: null }, hoverHandlers: {} }),
+}));
+
+jest.mock("@animateicons/react/lucide", () => ({
+  PlusIcon: () => null,
+  EllipsisIcon: () => <span data-testid="ellipsis-icon" />,
+  LayoutGridIcon: () => null,
+  LayoutListIcon: () => null,
+  ChartColumnIcon: () => null,
+}));
+
+jest.mock(
+  "@/features/build/managed-products/insights/product-discovery-section",
+  () => ({
+    ProductDiscoverySection: ({ managedProductId }: { managedProductId: number }) => (
+      <section data-testid="product-discovery-section">Discovery {managedProductId}</section>
+    ),
+  }),
+);
+
+jest.mock("@/hooks/api/crm/organizations", () => ({
+  useCrmOrganizationsForPicker: jest.fn(() => ({
+    data: undefined,
+    isLoading: false,
+    isError: false,
+    error: null,
+  })),
+}));
+
+jest.mock(
+  "@/features/build/managed-products/customer-impact-panel",
+  () => ({
+    CustomerImpactPanel: () => null,
+  }),
+);
+
+jest.mock(
+  "@/features/build/managed-products/opportunity-impact-table",
+  () => ({
+    OpportunityImpactTable: () => null,
+  }),
+);
+
+export const {
+  useGoals,
+  useGoalsPage,
+  useGoal,
+  useDeleteGoal,
+}: {
+  useGoals: jest.Mock;
+  useGoalsPage: jest.Mock;
+  useGoal: jest.Mock;
+  useDeleteGoal: jest.Mock;
+} = jest.requireMock("@/hooks/api/goals");
+export const { usePageState }: { usePageState: jest.Mock } = jest.requireMock(
+  "@/hooks/api/use-page-state",
+);
+export const { useCan }: { useCan: jest.Mock } =
+  jest.requireMock("@/hooks/api/access");
+export const {
+  useFeedbucketSubmissions,
+  useFeedbucketSubmissionFacets,
+}: { useFeedbucketSubmissions: jest.Mock; useFeedbucketSubmissionFacets: jest.Mock } = jest.requireMock(
+  "@/hooks/api/feedbucket",
+);
+export const {
+  useManagedProductInsights,
+}: { useManagedProductInsights: jest.Mock } = jest.requireMock(
+  "@/hooks/api/build/managed-products",
+);
+export const { useRoadmapItems }: { useRoadmapItems: jest.Mock } =
+  jest.requireMock("@/hooks/api/build/roadmap");
+export const {
+  RoadmapListView: RoadmapListViewMock,
+}: { RoadmapListView: jest.Mock } = jest.requireMock(
+  "@/features/build/managed-products/roadmap/roadmap-list-view",
+);
+export const { useManagedProducts }: { useManagedProducts: jest.Mock } =
+  jest.requireMock("@/hooks/api/build/managed-products");
+export const {
+  useLinkGoalProduct,
+  useUnlinkGoalProduct,
+  useGoalStats,
+}: {
+  useLinkGoalProduct: jest.Mock;
+  useUnlinkGoalProduct: jest.Mock;
+  useGoalStats: jest.Mock;
+} = jest.requireMock("@/hooks/api/goals");
+
+export {
+  EMPTY_GOALS_PAGE_RESULT,
+  EMPTY_FEEDBUCKET_RESULT,
+  EMPTY_MANAGED_PRODUCTS_RESULT,
+} from "./product-scope-pages.fixtures";
+
+beforeEach(() => {
+  jest.clearAllMocks();
+  mockUseSearchParams.mockReturnValue(new URLSearchParams());
+  useCan.mockReturnValue(true);
+  usePageState.mockReturnValue({ kind: "ready" });
+  const { useGoals: mockUseGoals }: { useGoals: jest.Mock } = jest.requireMock("@/hooks/api/goals");
+  mockUseGoals.mockReturnValue({ data: { data: [], pagination: { hasMore: false, nextCursor: null, limit: 50 } }, isLoading: false, isError: false, error: null, refetch: jest.fn() });
+  const { useFeedbucketSubmissionFacets: mockFacets }: { useFeedbucketSubmissionFacets: jest.Mock } = jest.requireMock("@/hooks/api/feedbucket");
+  mockFacets.mockReturnValue({ data: undefined, isLoading: false, isError: false, error: null });
+});

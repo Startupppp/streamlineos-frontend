@@ -20,7 +20,7 @@ import {
 } from "@/components/ui/dialog";
 import { EmptyState } from "@/components/ui/empty-state";
 import { useCan } from "@/hooks/api/access";
-import { useForm, useDeleteForm, useSubmitForm } from "@/hooks/api/build";
+import { useForm, useDeleteForm, useSubmitForm } from "@/hooks/api/build/forms";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { usePageState } from "@/hooks/api/use-page-state";
 import { FORM_TYPE_LABELS } from "./field-type-meta";
@@ -192,13 +192,17 @@ export function FormDetailPage({ projectId, formId }: FormDetailPageProps) {
                 </TabsContent>
 
                 <TabsContent value="submissions">
-                  <FormSubmissionsTab projectId={projectId} formId={formId} />
+                  <FormSubmissionsTab
+                    projectId={projectId}
+                    formId={formId}
+                    hasActions={form.actions.length > 0}
+                  />
                 </TabsContent>
               </Tabs>
             </motion.div>
 
             <Dialog open={previewOpen} onOpenChange={handlePreviewOpenChange}>
-              <DialogContent className="max-w-lg max-h-[90dvh] overflow-y-auto">
+              <DialogContent aria-describedby={undefined} className="max-w-lg max-h-[90dvh] overflow-y-auto">
                 <DialogHeader>
                   <DialogTitle>Preview — {form.name}</DialogTitle>
                 </DialogHeader>

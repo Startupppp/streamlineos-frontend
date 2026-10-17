@@ -118,9 +118,9 @@ const CASES: Case[] = [
     expectCursor: (calls) => expect(paramsOf(calls)[1]).toEqual({ cursor: 0 }),
   },
   {
-    name: "useKbPageVersions sends empty-string cursor",
-    module: "./kb/pages",
-    run: (m) => (m["useKbPageVersions"] as (p: number) => unknown)(5),
+    name: "useKbPageVersionsInfinite sends empty-string cursor",
+    module: "./kb/page-versions",
+    run: (m) => (m["useKbPageVersionsInfinite"] as (p: number) => unknown)(5),
     firstPage: { data: [], pagination: { limit: 20, nextCursor: "", hasMore: true } },
     expectCursor: (calls) =>
       expect(paramsOf(calls)[1]).toEqual(expect.objectContaining({ cursor: "" })),
@@ -147,14 +147,6 @@ const CASES: Case[] = [
     run: (m) => (m["useMailMessages"] as (p: object) => unknown)({ folder: "INBOX" }),
     firstPage: { messages: [], nextCursor: "" },
     expectCursor: (calls) => expect(urlsOf(calls)[1]).toContain("cursor="),
-  },
-  {
-    name: "useInfiniteBlogFeed sends empty-string cursor past its null sentinel",
-    module: "./blog",
-    run: (m) => (m["useInfiniteBlogFeed"] as (p: object) => unknown)({}),
-    firstPage: { posts: [], nextCursor: "", hasMore: true },
-    expectCursor: (calls) =>
-      expect(paramsOf(calls)[1]).toEqual(expect.objectContaining({ cursor: "" })),
   },
 ];
 

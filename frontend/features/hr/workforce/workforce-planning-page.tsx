@@ -6,13 +6,15 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { PlusIcon } from "@animateicons/react/lucide";
 import { ErrorState } from "@/components/shared/error-state";
+import { NoPermissionState } from "@/components/shared/no-permission-state";
 import { PageState } from "@/components/shared/page-state";
 import { usePageState } from "@/hooks/api/use-page-state";
+import { useCan } from "@/hooks/api/access";
 import { getErrorMessage } from "@/lib/get-error-message";
 import {
   useHrBudgetVsActual,
@@ -85,20 +87,25 @@ const overviewColumns: DataTableColumn<BudgetVsActualRow>[] = [
   },
 ];
 
+// The route guard is hr:analytics:read, but the headcount reads are gated on
+// hr:headcount:read — a caller with only the first must be told "denied", not
+// "No headcount plans yet" (FE-47).
 function OverviewTab() {
   const { data: bva, isLoading, isError, error, refetch } = useHrBudgetVsActual();
+  const pageState = usePageState({ permission: "hr:headcount:read", isLoading, isError, error });
 
-  if (isError)
-    return <ErrorState title="Couldn't load budget data" description={getErrorMessage(error)} onRetry={() => void refetch()} />;
+  function handleRetry() { void refetch(); }
 
   return (
-    <DataTable
-      data={bva ?? []}
-      columns={overviewColumns}
-      getRowKey={(row) => String(row.planId)}
-      isLoading={isLoading}
-      emptyState={<EmptyChart label="No budget data available" />}
-    />
+    <PageState resolution={pageState} loading={<SectionSkeleton rows={8} />} onRetry={handleRetry}>
+      <DataTable
+        data={bva ?? []}
+        columns={overviewColumns}
+        getRowKey={(row) => String(row.planId)}
+        emptyState={<EmptyChart label="No budget data available" />}
+        pagination={{ pageSize: 25 }}
+      />
+    </PageState>
   );
 }
 
@@ -151,6 +158,7 @@ function PlanSheet({ open, plan, onClose }: PlanSheetProps) {
       <SheetContent side="right" className="w-full sm:max-w-md">
         <SheetHeader className="border-b border-border/50 pb-3">
           <SheetTitle>{plan ? "Edit Headcount Plan" : "Add Headcount Plan"}</SheetTitle>
+          <SheetDescription className="sr-only">Set the fiscal year, budgeted headcount, and notes for this workforce plan.</SheetDescription>
         </SheetHeader>
         <form onSubmit={handleSubmit} className="space-y-4 pt-4">
           <div className="space-y-1.5">
@@ -193,8 +201,22 @@ function PlanSheet({ open, plan, onClose }: PlanSheetProps) {
   );
 }
 
+function EditPlanButton({ plan, onEdit }: { plan: HeadcountPlan; onEdit: (p: HeadcountPlan) => void }) {
+  function handleClick() { onEdit(plan); }
+  return (
+    <Button variant="ghost" size="sm" onClick={handleClick}>
+      Edit
+    </Button>
+  );
+}
+
 function HiringPlansTab() {
   const { data: plans, isLoading, isError, error, refetch } = useHrWorkforcePlans();
+  const pageState = usePageState({ permission: "hr:headcount:read", isLoading, isError, error });
+  // POST/PATCH /hr/analytics-plus/workforce/plans require hr:workforce:manage.
+  const canManage = useCan("hr:workforce:manage");
+
+  function handleRetry() { void refetch(); }
   const [sheetPlan, setSheetPlan] = useState<HeadcountPlan | null>(null);
   const [sheetOpen, setSheetOpen] = useState(false);
 
@@ -227,16 +249,16 @@ function HiringPlansTab() {
         className: "text-muted-foreground",
         cell: (row) => row.note ?? "—",
       },
-      {
-        key: "actions",
-        header: "",
-        className: "text-right",
-        cell: (row) => (
-          <Button variant="ghost" size="sm" onClick={() => onEdit(row)}>
-            Edit
-          </Button>
-        ),
-      },
+      ...(canManage
+        ? [
+            {
+              key: "actions",
+              header: "",
+              className: "text-right",
+              cell: (row: HeadcountPlan) => <EditPlanButton plan={row} onEdit={onEdit} />,
+            },
+          ]
+        : []),
     ];
   }
 
@@ -249,23 +271,23 @@ function HiringPlansTab() {
 
   return (
     <>
-      <div className="flex justify-end">
-        <Button size="sm" onClick={handleAdd}>
-          <PlusIcon size={14} className="mr-1.5" />
-          Add Plan
-        </Button>
-      </div>
-      {isError ? (
-        <ErrorState title="Couldn't load headcount plans" description={getErrorMessage(error)} onRetry={() => void refetch()} />
-      ) : (
+      {canManage ? (
+        <div className="flex justify-end">
+          <Button size="sm" onClick={handleAdd}>
+            <PlusIcon size={14} className="mr-1.5" />
+            Add plan
+          </Button>
+        </div>
+      ) : null}
+      <PageState resolution={pageState} loading={<SectionSkeleton rows={8} />} onRetry={handleRetry}>
         <DataTable
           data={plans ?? []}
           columns={hiringColumns}
           getRowKey={(row) => row.id}
-          isLoading={isLoading}
           emptyState={<EmptyChart label="No headcount plans yet" />}
+          pagination={{ pageSize: 25 }}
         />
-      )}
+      </PageState>
       <PlanSheet open={sheetOpen} plan={sheetPlan} onClose={handleClose} />
     </>
   );
@@ -310,19 +332,34 @@ const skillsGapColumns: DataTableColumn<SkillsGapRow>[] = [
 ];
 
 function SkillsGapTab() {
-  const { data, isLoading, isError, error, refetch } = useHrSkillsGap();
-  const gaps = data?.gaps ?? [];
+  const { data, isLoading, isError, error, refetch, access } = useHrSkillsGap();
 
-  if (isError)
-    return <ErrorState title="Couldn't load skills gap data" description={getErrorMessage(error)} onRetry={() => void refetch()} />;
+  function handleRetry() { void refetch(); }
+
+  if (access.denied) return <NoPermissionState permission="hr:analytics:read" compact />;
+
+  if (isError || access.unavailable)
+    return (
+      <ErrorState
+        title="Couldn't load skills gap data"
+        description={getErrorMessage(error)}
+        error={error}
+        onRetry={handleRetry}
+      />
+    );
+
+  if (isLoading || access.pending) return <SectionSkeleton rows={8} />;
+
+  if (data === undefined)
+    return <EmptyChart label="Skills gap data could not be determined" />;
 
   return (
     <DataTable
-      data={gaps}
+      data={data.gaps}
       columns={skillsGapColumns}
       getRowKey={(row) => row.skillName}
-      isLoading={isLoading}
       emptyState={<EmptyChart label="No skills gap data available" />}
+      pagination={{ pageSize: 25 }}
     />
   );
 }

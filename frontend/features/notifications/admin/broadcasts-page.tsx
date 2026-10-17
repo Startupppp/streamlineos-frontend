@@ -39,6 +39,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Skeleton } from "@/components/ui/skeleton";
 import { ErrorState } from "@/components/shared/error-state";
 import { cn } from "@/lib/utils";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import {
   SendIcon,
@@ -52,7 +53,7 @@ import {
   usePublishBroadcast,
   useCancelBroadcast,
   useDeleteBroadcast,
-} from "@/hooks/api/notifications";
+} from "@/hooks/api/notifications-broadcasts";
 import { useCan } from "@/hooks/api/access";
 import {
   NOTIFICATION_CATEGORIES,
@@ -78,7 +79,7 @@ export function BroadcastsPage() {
   const canManage = useCan("notifications:broadcasts:manage");
 
   const params = activeStatus !== "ALL" ? { status: activeStatus } : undefined;
-  const { data: broadcastData, isLoading, isError, refetch } = useBroadcasts(params);
+  const { data: broadcastData, isLoading, isError, error, refetch } = useBroadcasts(params);
   const publish = usePublishBroadcast();
   const cancel = useCancelBroadcast();
   const deleteBroadcast = useDeleteBroadcast();
@@ -165,13 +166,13 @@ export function BroadcastsPage() {
             ))}
           </div>
         ) : isError ? (
-          <ErrorState title="Failed to load broadcasts" description="Could not load broadcasts." onRetry={handleRetry} />
+          <ErrorState title="Failed to load broadcasts" description={getErrorMessage(error)} error={error} onRetry={handleRetry} />
         ) : items.length === 0 ? (
           <EmptyState
             illustrationPreset="mail"
             title="No broadcasts"
             description="Send an announcement to your entire team or specific groups."
-            action={{ label: "New Broadcast", onClick: handleCreate }}
+            action={canManage ? { label: "New Broadcast", onClick: handleCreate } : undefined}
             className={CONTENT_FILL_PANEL}
           />
         ) : (

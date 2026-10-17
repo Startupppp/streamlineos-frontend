@@ -4,6 +4,7 @@ import { useState, useCallback, useMemo } from "react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { SearchInput } from "@/components/ui/search-input";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -12,8 +13,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { EmptyState } from "@/components/ui/empty-state";
-import { ErrorState } from "@/components/shared/error-state";
-import { getErrorMessage } from "@/lib/get-error-message";
+import { usePageState } from "@/hooks/api/use-page-state";
 import { EmptyPersonIllustration } from "@/components/illustrations";
 import { useFindExpert, useHrDepartments, type ExpertResult } from "@/hooks/api/hr";
 import { Search, X } from "lucide-react";
@@ -51,10 +51,19 @@ export function FindExpertPage() {
 
   const { data: departments } = useHrDepartments();
 
-  const { data: experts, isLoading, isError, error, refetch } = useFindExpert({
+  const { data: experts, isLoading, isFetching, isError, error, refetch } = useFindExpert({
     skill: activeParams.skill,
     department: activeParams.department || undefined,
     role: activeParams.role || undefined,
+  });
+
+  // No server-side requirePermission guards this route, so a caller without
+  // hr:employees:view must be told so here — not "No experts found" (FE-47).
+  const pageState = usePageState({
+    permission: "hr:employees:view",
+    isLoading: false,
+    isError,
+    error,
   });
 
   const handleRetry = useCallback(() => {
@@ -113,8 +122,10 @@ export function FindExpertPage() {
     <PageWrapper
       title="Find Expert"
       subtitle="Search across the org to find colleagues with specific skills"
+      state={pageState}
+      onRetry={handleRetry}
     >
-      <div className="flex flex-1 min-h-0 flex-col gap-3">
+      <div className="flex shrink-0 flex-col gap-3">
         <form onSubmit={handleSearch} className="flex gap-2 max-w-lg">
           <SearchInput
             value={query}
@@ -123,10 +134,10 @@ export function FindExpertPage() {
             className="flex-1"
             aria-label="Skill search"
           />
-          <Button type="submit" disabled={!query.trim()}>
-            <Search className="h-4 w-4 mr-1.5" />
+          <LoadingButton type="submit" isPending={isFetching} disabled={!query.trim()}>
+            {!isFetching && <Search className="h-4 w-4 mr-1.5" />}
             Search
-          </Button>
+          </LoadingButton>
         </form>
 
         <div className="flex min-w-0 flex-nowrap items-center gap-2 overflow-x-auto scrollbar-hide [&>*]:shrink-0">
@@ -155,7 +166,7 @@ export function FindExpertPage() {
           </Select>
 
           {hasActiveFilters && (
-            <Button size="sm" variant="ghost" className="text-xs" onClick={handleClearFilters}>
+            <Button size="sm" variant="ghost" onClick={handleClearFilters}>
               <X className="h-3 w-3 mr-1" />
               Clear filters
             </Button>
@@ -163,7 +174,7 @@ export function FindExpertPage() {
         </div>
       </div>
 
-      <div className="mt-6">
+      <div className="mt-4 flex min-h-0 flex-1 flex-col">
         {!activeParams.skill ? (
           <EmptyState
             illustration={<EmptyPersonIllustration className="h-40 w-40" />}
@@ -176,13 +187,6 @@ export function FindExpertPage() {
               <Skeleton key={i} className="h-28 w-full rounded-lg" />
             ))}
           </div>
-        ) : isError ? (
-          <ErrorState
-            className="flex-1"
-            title="Couldn't search for experts"
-            description={getErrorMessage(error)}
-            onRetry={handleRetry}
-          />
         ) : !experts || experts.length === 0 ? (
           <EmptyState
             illustration={<EmptyPersonIllustration className="h-40 w-40" />}
@@ -217,7 +221,7 @@ export function FindExpertPage() {
                           <div className="flex items-start gap-3">
                             <Link href={`/hr/employees/${expert.userId}`} className="flex items-center gap-3 group min-w-0 flex-1">
                               <Avatar className="h-10 w-10 shrink-0">
-                                <AvatarImage src={resolveImageUrl(expert.image)} />
+                                <AvatarImage src={resolveImageUrl(expert.image)} alt="" />
                                 <AvatarFallback className="bg-primary/10 text-primary font-bold text-sm">
                                   {(expert.name ?? "?")[0]?.toUpperCase() ?? "?"}
                                 </AvatarFallback>

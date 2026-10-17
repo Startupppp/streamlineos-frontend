@@ -39,6 +39,15 @@ jest.mock("@/hooks/common/use-debounce", () => ({
   useDebouncedValue: (v: string) => v,
 }));
 
+jest.mock("@/components/command-palette/hooks/use-people-search", () => ({
+  usePalettePeopleSearch: () => ({
+    people: [],
+    canSearchPeople: false,
+    isSearching: false,
+    isError: false,
+  }),
+}));
+
 jest.mock("@/components/command-palette/hooks/use-global-search", () => ({
   GLOBAL_SEARCH_MIN_LENGTH: 2,
   useGlobalSearch: () => ({
@@ -48,6 +57,14 @@ jest.mock("@/components/command-palette/hooks/use-global-search", () => ({
     error: null,
     retry: jest.fn(),
   }),
+}));
+
+jest.mock("@/components/theme/app-theme-provider", () => ({
+  useAppTheme: () => ({ setMode: jest.fn(), theme: "light", mode: "system", isDark: false }),
+}));
+
+jest.mock("@/components/layout/command-palette-hrms-commands", () => ({
+  useHrmsCommands: () => [],
 }));
 
 jest.mock("@/components/command-palette", () => ({
@@ -76,7 +93,7 @@ function projectCatalogHrefs(): string[] {
 
 function typeQuery(value: string) {
   fireEvent.change(
-    screen.getByPlaceholderText("Search pages, leads, deals, contacts…"),
+    screen.getByPlaceholderText("Search people, pages and actions…"),
     { target: { value } },
   );
 }
@@ -121,8 +138,8 @@ describe("CommandPaletteDialogBody — project-scoped route catalog", () => {
     ).not.toBeInTheDocument();
     expect(screen.queryByText("Risks")).not.toBeInTheDocument();
 
-    typeQuery("wiki");
-    expect(screen.getByText(`${PROJECT_BASE_PATH}/wiki`)).toBeInTheDocument();
+    typeQuery("releases");
+    expect(screen.getByText(`${PROJECT_BASE_PATH}/releases`)).toBeInTheDocument();
   });
 
   it("navigates to the project route the palette offered", () => {
@@ -197,5 +214,18 @@ describe("CommandPaletteDialogBody — project-scoped route catalog", () => {
     for (const href of projectCatalogHrefs()) {
       expect(screen.queryByText(href)).not.toBeInTheDocument();
     }
+  });
+
+  it("surfaces the Cycles route when the user searches by the Sprint synonym so Scrum teams migrating can discover the feature — BUG-017", () => {
+    accessData = {
+      isOrgOwner: false,
+      scopes: { "build:view": "all", "build:cycles:view": "all" },
+    };
+    enabledModules = ["BUILD"];
+
+    render(<CommandPaletteDialogBody />);
+    typeQuery("sprint");
+
+    expect(screen.getByText(`${PROJECT_BASE_PATH}/cycles`)).toBeInTheDocument();
   });
 });

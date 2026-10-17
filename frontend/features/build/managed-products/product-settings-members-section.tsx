@@ -1,0 +1,285 @@
+"use client";
+
+import { memo, useCallback, useMemo, useState } from "react";
+import { UserPlus, X } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { TablePagination } from "@/components/ui/table-pagination";
+import { useCan, useCanState } from "@/hooks/api/access";
+import {
+  useManagedProductMembers,
+  useRemoveManagedProductMember,
+  useUpdateManagedProductMemberRole,
+} from "@/hooks/api/build/managed-product-members";
+import type { ManagedProductMember } from "@/hooks/api/build/managed-product-members";
+import { getErrorMessage } from "@/lib/get-error-message";
+import { isApiError } from "@/lib/api-envelope";
+import { toast } from "sonner";
+import { AddProductMemberDialog } from "./add-product-member-dialog";
+import { ErrorState } from "@/components/shared/error-state";
+import { NoPermissionState } from "@/components/shared/no-permission-state";
+import {
+  PRODUCT_MEMBER_CURSORS_PARAM,
+  useBuildCursorPager,
+} from "@/features/build/shared/use-build-cursor-pager";
+
+interface ProductSettingsMembersSectionProps {
+  managedProductId: number;
+  canWrite?: boolean;
+}
+
+function memberDisplayName(m: ManagedProductMember): string {
+  if (!m.member) return `Member #${m.organizationMembershipId}`;
+  const { firstName, lastName, email } = m.member;
+  if (firstName || lastName) return [firstName, lastName].filter(Boolean).join(" ");
+  return email;
+}
+
+const ROLE_LABELS: Record<ManagedProductMember["role"], string> = {
+  admin: "Admin",
+  member: "Member",
+};
+
+function isMemberRole(value: string): value is ManagedProductMember["role"] {
+  return value === "admin" || value === "member";
+}
+
+interface ProductMemberRowProps {
+  member: ManagedProductMember;
+  canUpdate: boolean;
+  onRemove: (m: ManagedProductMember) => void;
+  onRoleChange: (m: ManagedProductMember, role: ManagedProductMember["role"]) => void;
+}
+
+const ProductMemberRow = memo(function ProductMemberRow({
+  member,
+  canUpdate,
+  onRemove,
+  onRoleChange,
+}: ProductMemberRowProps) {
+  const name = memberDisplayName(member);
+  function handleRemove() {
+    onRemove(member);
+  }
+  function handleRoleChange(value: string) {
+    if (isMemberRole(value) && value !== member.role) onRoleChange(member, value);
+  }
+  return (
+    <li className="flex items-center justify-between gap-2 rounded-md border border-border px-3 py-2">
+      <div className="flex min-w-0 flex-1 flex-col gap-0.5">
+        <span className="truncate text-sm font-medium text-foreground">{name}</span>
+        {canUpdate ? null : (
+          <span className="text-xs text-muted-foreground">{ROLE_LABELS[member.role]}</span>
+        )}
+      </div>
+      {canUpdate ? (
+        <>
+          <Select value={member.role} onValueChange={handleRoleChange}>
+            <SelectTrigger className="w-28 shrink-0" aria-label={`Role for ${name}`}>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="admin">{ROLE_LABELS.admin}</SelectItem>
+              <SelectItem value="member">{ROLE_LABELS.member}</SelectItem>
+            </SelectContent>
+          </Select>
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            className="w-7 shrink-0"
+            aria-label={`Remove ${name}`}
+            onClick={handleRemove}
+          >
+            <X aria-hidden="true" size={14} />
+          </Button>
+        </>
+      ) : null}
+    </li>
+  );
+});
+
+export function ProductSettingsMembersSection({
+  managedProductId,
+  canWrite: canWriteProp,
+}: ProductSettingsMembersSectionProps) {
+  const canUpdateByPermission = useCan("build:managed-products:update");
+  const canUpdate = canWriteProp !== undefined ? canWriteProp : canUpdateByPermission;
+  const canViewState = useCanState("build:managed-products:view");
+  const [addOpen, setAddOpen] = useState(false);
+  const [removeTarget, setRemoveTarget] = useState<ManagedProductMember | null>(null);
+  const [removeBlockedMsg, setRemoveBlockedMsg] = useState<string | null>(null);
+  const pager = useBuildCursorPager(
+    String(managedProductId),
+    PRODUCT_MEMBER_CURSORS_PARAM,
+  );
+
+  const { data, isLoading, isError, error, refetch } = useManagedProductMembers(
+    managedProductId,
+    { cursor: pager.cursor },
+  );
+  const removeMember = useRemoveManagedProductMember(managedProductId);
+  const updateRole = useUpdateManagedProductMemberRole(managedProductId);
+  const { mutate: mutateRole } = updateRole;
+
+  // Optimistic: the select shows the new role at once and rolls back on a
+  // refusal; the 409 text names why (last admin, product owner).
+  const handleRoleChange = useCallback(
+    (m: ManagedProductMember, role: ManagedProductMember["role"]) => {
+      mutateRole(
+        { membershipRowId: m.id, role },
+        { onError: (e) => toast.error(getErrorMessage(e)) },
+      );
+    },
+    [mutateRole],
+  );
+
+  const handleRemoveRow = useCallback((m: ManagedProductMember) => {
+    setRemoveBlockedMsg(null);
+    setRemoveTarget(m);
+  }, []);
+
+  const handleRemoveDialogChange = useCallback(
+    (open: boolean) => {
+      if (!open) {
+        setRemoveTarget(null);
+        setRemoveBlockedMsg(null);
+      }
+    },
+    [],
+  );
+
+  function handleRemoveConfirm() {
+    if (!removeTarget) return;
+    removeMember.mutate(removeTarget.id, {
+      onSuccess: () => {
+        toast.success("Member removed.");
+        setRemoveTarget(null);
+      },
+      onError: (e) => {
+        if (isApiError(e) && e.status === 409) {
+          setRemoveBlockedMsg("Cannot remove the last admin of a product.");
+        } else {
+          toast.error(getErrorMessage(e));
+        }
+      },
+    });
+  }
+
+  const handleNextPage = useCallback(() => {
+    pager.goNext(data?.pagination?.nextCursor);
+  }, [pager, data?.pagination?.nextCursor]);
+
+  const handleRetry = useCallback(() => {
+    void refetch();
+  }, [refetch]);
+
+  const members = useMemo(() => data?.data ?? [], [data?.data]);
+  const memberIds = useMemo(
+    () => new Set(members.map((m) => m.organizationMembershipId)),
+    [members],
+  );
+  const hasMore = data?.pagination?.hasMore ?? false;
+
+  return (
+    <section aria-labelledby="members-section-heading" className="flex flex-col gap-3">
+      <div className="flex items-center justify-between">
+        <h2 id="members-section-heading" className="text-sm font-semibold text-foreground">
+          Members
+        </h2>
+        {canUpdate ? (
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => setAddOpen(true)}
+          >
+            <UserPlus aria-hidden="true" />
+            Add member
+          </Button>
+        ) : null}
+      </div>
+
+      {canViewState === "denied" ? (
+        <NoPermissionState compact />
+      ) : isLoading ? (
+        <div className="flex flex-col gap-2">
+          {[0, 1, 2].map((i) => (
+            <Skeleton key={i} className="h-10 w-full" />
+          ))}
+        </div>
+      ) : isError ? (
+        <ErrorState
+          compact
+          title="Could not load product members"
+          description={getErrorMessage(error)}
+          onRetry={handleRetry}
+          error={error}
+        />
+      ) : (
+        <ul className="flex flex-col gap-1" aria-label="Product members">
+          {members.map((m) => (
+            <ProductMemberRow
+              key={m.id}
+              member={m}
+              canUpdate={canUpdate}
+              onRemove={handleRemoveRow}
+              onRoleChange={handleRoleChange}
+            />
+          ))}
+          {members.length === 0 && !isLoading ? (
+            <li className="py-4 text-center text-sm text-muted-foreground">No members yet.</li>
+          ) : null}
+        </ul>
+      )}
+
+      {!isError && (members.length > 0 || pager.hasPrevious) ? (
+        <TablePagination
+          mode="cursor"
+          rowCount={members.length}
+          pageNumber={pager.pageNumber}
+          hasMore={hasMore}
+          hasPrevious={pager.hasPrevious}
+          onNext={handleNextPage}
+          onPrevious={pager.goPrevious}
+          hideOnSinglePage
+        />
+      ) : null}
+
+      {canUpdate ? (
+        <AddProductMemberDialog
+          managedProductId={managedProductId}
+          open={addOpen}
+          onOpenChange={setAddOpen}
+          existingMembershipIds={memberIds}
+        />
+      ) : null}
+
+      <ConfirmDialog
+        open={canUpdate && !!removeTarget}
+        onOpenChange={handleRemoveDialogChange}
+        title="Remove this member?"
+        description={
+          removeBlockedMsg
+            ? removeBlockedMsg
+            : removeTarget
+              ? `${memberDisplayName(removeTarget)} will lose access to this product.`
+              : ""
+        }
+        confirmLabel="Remove"
+        destructive
+        keepOpenOnConfirm
+        isPending={removeMember.isPending}
+        onConfirm={handleRemoveConfirm}
+      />
+    </section>
+  );
+}

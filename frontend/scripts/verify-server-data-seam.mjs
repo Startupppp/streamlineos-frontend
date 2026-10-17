@@ -44,11 +44,11 @@ const authenticatedRoutes = [
 
 const publicRoutes = [
   path.join(sourceRoot, "(public)", "help", "[orgId]", "page.tsx"),
-  path.join(sourceRoot, "(public)", "help", "[orgId]", "[slug]", "page.tsx"),
-  path.join(sourceRoot, "(public)", "application-status", "[token]", "page.tsx"),
-  path.join(sourceRoot, "(public)", "offer", "[token]", "page.tsx"),
-  path.join(sourceRoot, "(public)", "refer", "link", "[token]", "page.tsx"),
-  path.join(sourceRoot, "(public)", "vendor-portal", "[token]", "page.tsx"),
+  path.join(sourceRoot, "(public)", "help", "[orgId]", "[articleSlug]", "page.tsx"),
+  path.join(sourceRoot, "(public)", "application-status", "[applicationToken]", "page.tsx"),
+  path.join(sourceRoot, "(public)", "offer", "[offerToken]", "page.tsx"),
+  path.join(sourceRoot, "(public)", "refer", "link", "[referralToken]", "page.tsx"),
+  path.join(sourceRoot, "(public)", "vendor-portal", "[vendorPortalToken]", "page.tsx"),
 ];
 
 const read = (file) => readFile(file, "utf8");
@@ -295,10 +295,10 @@ sourceHas(serverFetch, "AbortSignal.timeout(TIMEOUT_MS)", path.join(frontendRoot
 
 const authenticatedLayoutPath = path.join(sourceRoot, "(authenticated)", "layout.tsx");
 const authenticatedLayout = await read(authenticatedLayoutPath);
-const accessReadIndex = authenticatedLayout.indexOf("await getServerAccess()");
+const accessReadIndex = authenticatedLayout.indexOf("await getServerAccessResult()");
 const accessPrefetchIndex = authenticatedLayout.indexOf("await prefetchAccess()");
 const accessBoundaryIndex = authenticatedLayout.indexOf("<HydrationBoundary state={state}>");
-assert(accessReadIndex >= 0, "authenticated layout must enforce the server access snapshot");
+assert(accessReadIndex >= 0, "authenticated layout must enforce a successfully-read server access snapshot");
 assert(accessPrefetchIndex > accessReadIndex, "authenticated layout must prefetch access after its server gate");
 assert(accessBoundaryIndex > accessPrefetchIndex, "authenticated shell must hydrate the access snapshot");
 

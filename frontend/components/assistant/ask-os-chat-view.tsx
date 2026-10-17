@@ -5,6 +5,9 @@ import type { AskAiHistoryMessage } from "@/hooks/api";
 import { AiActionResultBody, type AiFailureState } from "@/components/ai";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { AskOsDirective } from "./ask-os-directive-schema";
+import type { AskOsClarificationAnswer } from "./ask-os-clarify-card";
+import { AskOsStatusText, useAskOsPanelState } from "./ask-os-companion-state";
+import type { SpeechPlaybackController } from "./use-browser-speech";
 import {
   AskOsBubble,
   buildMsgRows,
@@ -31,12 +34,15 @@ interface AskOsChatViewProps {
   onRetry: () => void;
   onScroll: () => void;
   onSuggestion: (event: MouseEvent<HTMLButtonElement>) => void;
+  suggestions?: readonly string[];
   persisted: AskAiHistoryMessage[];
   reduce: boolean;
   scrollRef: RefObject<HTMLDivElement | null>;
   showEmpty: boolean;
   topSentinelRef: RefObject<HTMLDivElement | null>;
   directives?: AskOsDirective[];
+  onClarify?: (answer: AskOsClarificationAnswer) => void;
+  speech: SpeechPlaybackController;
 }
 
 export function AskOsChatView({
@@ -52,13 +58,17 @@ export function AskOsChatView({
   onRetry,
   onScroll,
   onSuggestion,
+  suggestions,
   persisted,
   reduce,
   scrollRef,
   showEmpty,
   topSentinelRef,
   directives = [],
+  onClarify,
+  speech,
 }: AskOsChatViewProps) {
+  const panelState = useAskOsPanelState({ draft, failure, directives, persisted });
   const msgRows = buildMsgRows(persisted);
   const lastPersisted =
     persisted.length > 0 ? persisted[persisted.length - 1] : undefined;
@@ -69,6 +79,7 @@ export function AskOsChatView({
   const showJump = !atBottom && !isLoading && !showEmpty;
   const awaitingReply = draft !== null && draft.assistant.length === 0;
   const showHistory = Boolean(draft) || !isLoading;
+  const answerable = draft === null && !isStreaming ? lastPersisted?.id : undefined;
 
   return (
     <div className="relative min-h-0 flex-1 overflow-hidden">
@@ -84,7 +95,7 @@ export function AskOsChatView({
             <Skeleton className="ml-auto h-8 w-1/2 rounded-2xl" />
           </div>
         ) : showEmpty ? (
-          <EmptyAskOs onSuggestion={onSuggestion} />
+          <EmptyAskOs onSuggestion={onSuggestion} suggestions={suggestions} />
         ) : (
           <div className="mx-auto w-full max-w-[36rem] space-y-4">
             {hasNextPage ? (
@@ -119,6 +130,11 @@ export function AskOsChatView({
                   content={row.message.content}
                   streaming={false}
                   reduce={reduce}
+                  live={row.message.id < 0}
+                  onClarify={row.message.id === answerable ? onClarify : undefined}
+                  showCurrentSuggestions={row.message.id === answerable}
+                  speech={speech}
+                  speechKey={`message-${row.message.id}`}
                 />
               ),
             )}
@@ -141,6 +157,8 @@ export function AskOsChatView({
                 content={draft.assistant}
                 streaming={isStreaming || awaitingReply}
                 reduce={reduce}
+                speech={speech}
+                speechKey="draft-assistant"
                 directives={directives}
               />
             )}
@@ -149,6 +167,9 @@ export function AskOsChatView({
             )}
           </div>
         )}
+      </div>
+      <div className="pointer-events-none absolute inset-x-0 bottom-0 bg-card/90">
+        <AskOsStatusText state={panelState} />
       </div>
       <AnimatePresence>
         {showJump && (

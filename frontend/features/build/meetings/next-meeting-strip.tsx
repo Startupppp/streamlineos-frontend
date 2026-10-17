@@ -32,7 +32,7 @@ export function NextMeetingStrip({ meeting, projectId, members }: NextMeetingStr
         <span className="shrink-0 text-xs font-normal text-muted-foreground">Next meeting</span>
         <Link
           href={`/build/${projectId}/meetings/${meeting.id}`}
-          className={cn(TEXT_ONE_LINE, "max-w-[min(100%,20rem)] font-semibold text-foreground hover:underline")}
+          className={cn(TEXT_ONE_LINE, "max-w-[min(100%,20rem)] font-medium text-foreground hover:underline")}
           title={meeting.title}
         >
           {meeting.title}

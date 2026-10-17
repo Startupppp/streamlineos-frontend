@@ -15,7 +15,7 @@ function isInsideInput(target: EventTarget | null): boolean {
   return target.closest(INPUT_SELECTOR) !== null;
 }
 
-export interface AllWorkKeyboardCallbacks {
+interface AllWorkKeyboardCallbacks {
   onNext: () => void;
   onPrev: () => void;
   onOpen: () => void;

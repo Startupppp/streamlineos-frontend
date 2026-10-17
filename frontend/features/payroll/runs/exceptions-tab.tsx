@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -40,7 +41,8 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { useCan } from "@/hooks/api/access";
 import { useRunExceptions, useResolveException, useOverrideException } from "@/hooks/api/payroll/run-exceptions";
-import type { PayrollException, PayrollExceptionSeverity, PayrollExceptionStatus } from "@/types/payroll/runs";
+import type { PayrollExceptionSeverity, PayrollExceptionStatus } from "@/types/payroll/runs";
+import type { RunException } from "@/hooks/api/payroll/run-exceptions-schema";
 
 const SEVERITY_CONFIG: Record<
   PayrollExceptionSeverity,
@@ -50,6 +52,14 @@ const SEVERITY_CONFIG: Record<
   WARNING: { className: "bg-status-warning-surface text-status-warning-ink border-status-warning-rule", label: "Warning" },
   INFO: { className: "bg-status-info-surface text-status-info-ink border-status-info-rule", label: "Info" },
 };
+
+const PROFILE_FIX_CODES = new Set([
+  "MISSING_SALARY_PROFILE",
+  "NO_EARNING_COMPONENTS",
+  "EMPTY_COMPONENT_LIST",
+  "DUPLICATE_COMPONENT_ROLE",
+  "GROSS_EXCEEDS_CTC",
+]);
 
 const STATUS_CONFIG: Record<PayrollExceptionStatus, { className: string; label: string }> = {
   OPEN: { className: "bg-muted text-muted-foreground border-border", label: "Open" },
@@ -70,11 +80,11 @@ interface ExceptionsTabProps {
 export function ExceptionsTab({ runId, isLocked }: ExceptionsTabProps) {
   const [filterSeverity, setFilterSeverity] = useState<PayrollExceptionSeverity | "all">("all");
   const [filterStatus, setFilterStatus] = useState<PayrollExceptionStatus | "all">("all");
-  const [overrideTarget, setOverrideTarget] = useState<PayrollException | null>(null);
+  const [overrideTarget, setOverrideTarget] = useState<RunException | null>(null);
   const canUpdate = useCan("payroll:runs:update");
   const canManage = useCan("payroll:runs:manage");
 
-  const { data: exceptions, isLoading, isError, refetch } = useRunExceptions(
+  const { data: exceptionsPage, isLoading, isError, refetch } = useRunExceptions(
     runId,
     filterSeverity !== "all" || filterStatus !== "all"
       ? {
@@ -93,7 +103,10 @@ export function ExceptionsTab({ runId, isLocked }: ExceptionsTabProps) {
     defaultValues: { reason: "" },
   });
 
-  const grouped = (exceptions ?? []).reduce<Record<PayrollExceptionSeverity, PayrollException[]>>(
+  const exceptions = exceptionsPage?.data ?? [];
+  const hasMoreExceptions = exceptionsPage?.pagination.hasMore ?? false;
+
+  const grouped = exceptions.reduce<Record<PayrollExceptionSeverity, RunException[]>>(
     (acc, ex) => {
       acc[ex.severity].push(ex);
       return acc;
@@ -101,7 +114,7 @@ export function ExceptionsTab({ runId, isLocked }: ExceptionsTabProps) {
     { BLOCKER: [], WARNING: [], INFO: [] },
   );
 
-  function handleResolve(ex: PayrollException) {
+  function handleResolve(ex: RunException) {
     resolveMutation.mutate(
       { exceptionId: ex.id },
       {
@@ -111,7 +124,7 @@ export function ExceptionsTab({ runId, isLocked }: ExceptionsTabProps) {
     );
   }
 
-  function handleOverrideRequest(ex: PayrollException) {
+  function handleOverrideRequest(ex: RunException) {
     setOverrideTarget(ex);
     form.reset({ reason: "" });
   }
@@ -143,7 +156,7 @@ export function ExceptionsTab({ runId, isLocked }: ExceptionsTabProps) {
     setFilterStatus(val as PayrollExceptionStatus | "all");
   }
 
-  const allEmpty = !isLoading && !isError && (exceptions ?? []).length === 0;
+  const allEmpty = !isLoading && !isError && exceptions.length === 0;
 
   function handleRetry() {
     void refetch();
@@ -218,6 +231,11 @@ export function ExceptionsTab({ runId, isLocked }: ExceptionsTabProps) {
                       {ex.code}
                     </span>
                     <TruncatedText text={ex.message ?? ""} className="flex-1 text-foreground min-w-0" />
+                    {ex.status === "OPEN" && ex.userId && PROFILE_FIX_CODES.has(ex.code) && (
+                      <Button asChild size="sm" variant="ghost" className="h-6 px-2 text-micro shrink-0">
+                        <Link href={`/payroll/employees/${encodeURIComponent(ex.userId)}`}>Fix profile</Link>
+                      </Button>
+                    )}
                     <span
                       className={`inline-flex items-center px-1.5 py-0.5 rounded text-micro font-medium border shrink-0 ${stCfg.className}`}
                     >
@@ -255,6 +273,12 @@ export function ExceptionsTab({ runId, isLocked }: ExceptionsTabProps) {
           </div>
         );
       })}
+
+      {hasMoreExceptions && (
+        <p className="text-dense text-muted-foreground">
+          Showing the first page of exceptions for this run. More remain — resolve these and refresh to see the rest.
+        </p>
+      )}
 
       <AlertDialog open={!!overrideTarget} onOpenChange={handleOverrideCancel}>
         <AlertDialogContent>

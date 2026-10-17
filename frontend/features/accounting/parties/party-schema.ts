@@ -2,7 +2,6 @@ import { z } from "zod";
 import type {
   CreatePartyInput,
   PartyDetail,
-  UpdatePartyInput,
 } from "@/types/accounting/accounting-ar";
 
 export const partyFormSchema = z.object({
@@ -100,6 +99,3 @@ export function toCreatePartyInput(values: PartyFormValues): CreatePartyInput {
   };
 }
 
-export function toUpdatePartyInput(values: PartyFormValues): UpdatePartyInput {
-  return toCreatePartyInput(values);
-}

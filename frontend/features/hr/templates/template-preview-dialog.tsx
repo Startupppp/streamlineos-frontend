@@ -7,6 +7,7 @@ import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
@@ -53,12 +54,18 @@ export function TemplatePreviewDialog({ template }: TemplatePreviewDialogProps) 
       <DialogContent className="max-w-3xl max-h-[80dvh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="text-sm">{template.name} — Preview</DialogTitle>
+          <DialogDescription className="sr-only">Preview the rendered output of this HR template.</DialogDescription>
         </DialogHeader>
         {render.isPending && (
           <div className="flex items-center justify-center py-12">
             <LoadingButton isPending loadingText="Rendering..." disabled />
           </div>
         )}
+        {outputHtml && !render.isPending && /missing:/i.test(outputHtml) ? (
+          <p className="text-sm text-destructive">
+            This preview still has unfilled fields. Fix the template before sending it.
+          </p>
+        ) : null}
         {outputHtml && !render.isPending && (
           <iframe
             srcDoc={outputHtml}

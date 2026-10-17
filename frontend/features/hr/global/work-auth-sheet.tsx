@@ -1,5 +1,7 @@
 "use client";
 
+import { DatePicker } from "@/components/ui/date-picker";
+
 import { useEffect, useCallback } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -7,6 +9,7 @@ import { z } from "zod";
 import {
   Sheet,
   SheetContent,
+  SheetDescription,
   SheetHeader,
   SheetTitle,
   SheetBody,
@@ -29,8 +32,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { toast } from "sonner";
-import { getErrorMessage } from "@/lib/get-error-message";
 import { LoadingButton } from "@/components/ui/loading-button";
 import {
   useCreateWorkAuth,
@@ -117,7 +118,6 @@ export function WorkAuthSheet({ open, onOpenChange, existing, defaultEmploymentI
     const mutation = existing ? update : create;
     mutation.mutate(body, {
       onSuccess: () => onOpenChange(false),
-      onError: (err) => toast.error(getErrorMessage(err)),
     });
   }, [existing, create, update, onOpenChange]);
 
@@ -128,6 +128,7 @@ export function WorkAuthSheet({ open, onOpenChange, existing, defaultEmploymentI
       <SheetContent className="flex w-full flex-col gap-0 overflow-hidden p-0 sm:max-w-md">
         <SheetHeader className="shrink-0 border-b border-border px-6 py-4 text-left">
           <SheetTitle>{existing ? "Edit Work Authorization" : "Add Work Authorization"}</SheetTitle>
+          <SheetDescription className="sr-only">Record or update a work authorisation document for this employee.</SheetDescription>
         </SheetHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="flex min-h-0 flex-1 flex-col">
@@ -189,10 +190,10 @@ export function WorkAuthSheet({ open, onOpenChange, existing, defaultEmploymentI
             />
             <div className="grid grid-cols-2 gap-3">
               <FormField control={form.control} name="validFrom" render={({ field }) => (
-                <FormItem><FormLabel>Valid From</FormLabel><FormControl><Input {...field} type="date" /></FormControl><FormMessage /></FormItem>
+                <FormItem><FormLabel>Valid From</FormLabel><FormControl><DatePicker value={field.value ?? ""} onChange={field.onChange} placeholder="Pick a date" dateFormat="dd MMM yyyy" clearable ariaLabel="Valid From" /></FormControl><FormMessage /></FormItem>
               )} />
               <FormField control={form.control} name="validUntil" render={({ field }) => (
-                <FormItem><FormLabel>Valid Until</FormLabel><FormControl><Input {...field} type="date" /></FormControl><FormMessage /></FormItem>
+                <FormItem><FormLabel>Valid Until</FormLabel><FormControl><DatePicker value={field.value ?? ""} onChange={field.onChange} placeholder="Pick a date" dateFormat="dd MMM yyyy" clearable ariaLabel="Valid Until" /></FormControl><FormMessage /></FormItem>
               )} />
             </div>
             <FormField

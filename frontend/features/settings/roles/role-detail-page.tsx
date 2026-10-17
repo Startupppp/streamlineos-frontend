@@ -3,7 +3,7 @@
 import { useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { format } from "date-fns";
-import { Shield, Calendar, Users } from "lucide-react";
+import { Shield, Calendar, Globe, Users } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
@@ -134,13 +134,27 @@ function RoleEditorContent({ roleId: roleIdParam }: RoleDetailPageProps) {
                 <Users className="h-4 w-4 text-muted-foreground shrink-0" />
                 <div>
                   <p className="text-micro text-muted-foreground uppercase tracking-wide font-medium">
-                    Members
+                    Members with this role
                   </p>
                   {membersQuery.isLoading ? (
                     <Skeleton className="h-4 w-8" />
                   ) : (
                     <p className="text-sm font-medium">{memberCount}</p>
                   )}
+                </div>
+              </div>
+
+              <Separator orientation="vertical" className="hidden sm:block" />
+
+              <div className="flex items-center gap-2">
+                <Globe className="h-4 w-4 text-muted-foreground shrink-0" />
+                <div>
+                  <p className="text-micro text-muted-foreground uppercase tracking-wide font-medium">
+                    Scope
+                  </p>
+                  <p className="text-sm font-medium">
+                    Organisation-wide, every module
+                  </p>
                 </div>
               </div>
 

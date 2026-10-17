@@ -57,6 +57,18 @@ describe("buildManagedProductCatalog (BSN-01-032)", () => {
     expect(insightsEntry?.requiredPermission).toBe("build:managed-products:view");
   });
 
+  it("includes a Releases destination after Roadmap pointing at the releases sub-path", () => {
+    const ids = catalog.primary.map((d) => d.id);
+    const releasesEntry = catalog.primary.find((d) => d.id === "product-releases");
+    expect(releasesEntry?.href).toBe(`${BASE}/releases`);
+    expect(ids.indexOf("product-releases")).toBe(ids.indexOf("product-roadmap") + 1);
+  });
+
+  it("gates Releases on build:managed-products:view, the GET /releases permission", () => {
+    const releasesEntry = catalog.primary.find((d) => d.id === "product-releases");
+    expect(releasesEntry?.requiredPermission).toBe("build:managed-products:view");
+  });
+
   it("does NOT include a Changelog destination because the backend changelogListQuerySchema has no managedProductId filter", () => {
     const changelogEntry = catalog.primary.find(
       (d) => d.href.includes("changelog"),
@@ -83,6 +95,7 @@ describe("buildManagedProductCatalog (BSN-01-032)", () => {
       "product-feedback",
       "product-insights",
       "product-roadmap",
+      "product-releases",
       "product-goals",
       "product-projects",
     ]);
@@ -100,6 +113,7 @@ describe("buildManagedProductCatalog (BSN-01-032)", () => {
       `${BASE}/feedback`,
       `${BASE}/insights`,
       `${BASE}/roadmap`,
+      `${BASE}/releases`,
       `${BASE}/goals`,
       `${BASE}/projects`,
     ]);

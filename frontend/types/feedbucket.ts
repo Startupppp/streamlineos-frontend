@@ -1,13 +1,38 @@
 import type { z } from "zod";
 import type { feedbucketSubmissionListContract } from "@/hooks/api/feedbucket/feedbucket-schema";
 import type { feedbucketSubmissionDetailContract } from "@/hooks/api/feedbucket/feedbucket-schema";
-import type { feedbucketWidgetRowContract } from "@/hooks/api/feedbucket/feedbucket-schema";
+import type { feedbucketWidgetRowContract } from "@/hooks/api/feedbucket/feedbucket-widget-schema";
 import type { feedbucketBulkSubmissionsContract } from "@/hooks/api/feedbucket/feedbucket-schema";
 import type { AiUsageMeta } from "@/components/ai/ai-usage-chip";
 
-export type FeedbucketSubmissionType = "bug" | "idea" | "feature" | "question" | "praise" | "other";
+export type FeedbucketSubmissionType =
+  | "bug"
+  | "idea"
+  | "feature"
+  | "question"
+  | "praise"
+  | "other";
+export type FeedbucketSourceChannel =
+  | "widget"
+  | "feedbucket"
+  | "email"
+  | "support"
+  | "sales"
+  | "interview"
+  | "survey"
+  | "public_portal"
+  | "manual"
+  | "import";
+export type FeedbucketSentiment = "positive" | "neutral" | "negative" | "mixed";
+export type FeedbucketConsentStatus = "granted" | "denied" | "unknown";
 
-export type FeedbucketAiType = "bug" | "feature" | "improvement" | "question" | "praise" | "other";
+export type FeedbucketAiType =
+  | "bug"
+  | "feature"
+  | "improvement"
+  | "question"
+  | "praise"
+  | "other";
 export type FeedbucketAiTicketType = "EPIC" | "BUG" | "STORY" | "TASK";
 export type FeedbucketAiPriority = "LOW" | "MEDIUM" | "HIGH" | "URGENT";
 
@@ -26,7 +51,11 @@ export interface FeedbucketAiAnalysis {
   processedAt: string;
   aiUsage?: AiUsageMeta | null;
 }
-export type FeedbucketSubmissionStatus = "open" | "in_progress" | "resolved" | "archived";
+export type FeedbucketSubmissionStatus =
+  | "open"
+  | "in_progress"
+  | "resolved"
+  | "archived";
 export type FeedbucketSubmissionPriority = "low" | "medium" | "high" | "urgent";
 
 export interface FeedbucketWidgetTheme {
@@ -73,11 +102,14 @@ export type FeedbucketWidget = z.infer<typeof feedbucketWidgetRowContract> & {
   openCount?: number;
 };
 
-export type FeedbucketSubmission = z.infer<typeof feedbucketSubmissionDetailContract>;
+export type FeedbucketSubmission = z.infer<
+  typeof feedbucketSubmissionDetailContract
+>;
 
 export interface CreateFeedbucketWidgetInput {
   name: string;
   projectId?: number | null;
+  managedProductId?: number | null;
   allowedDomains?: string[];
   autoCreateTicket?: boolean;
   defaultTicketType?: string;
@@ -91,6 +123,7 @@ export interface CreateFeedbucketWidgetInput {
 export interface UpdateFeedbucketWidgetInput {
   name?: string;
   projectId?: number | null;
+  managedProductId?: number | null;
   allowedDomains?: string[];
   autoCreateTicket?: boolean;
   defaultTicketType?: string;
@@ -106,12 +139,22 @@ export interface FeedbucketSubmissionFilters {
   widgetId?: number;
   managedProductId?: number;
   type?: FeedbucketSubmissionType;
-  status?: FeedbucketSubmissionStatus;
-  assigneeId?: string;
+  status?: FeedbucketSubmissionStatus[];
+  assigneeId?: string[];
   search?: string;
   linked?: "linked" | "unlinked";
+  duplicate?: "true" | "false";
   from?: string;
   to?: string;
+  sourceChannel?: FeedbucketSourceChannel[];
+  segment?: string[];
+  theme?: string[];
+  sentiment?: FeedbucketSentiment[];
+  consentStatus?: FeedbucketConsentStatus[];
+  crmOrganizationId?: number[];
+  crmContactId?: number;
+  opportunityId?: number;
+  linkedToOpportunity?: "true" | "false";
 }
 
 export interface ListFeedbucketSubmissionsQuery extends FeedbucketSubmissionFilters {
@@ -144,4 +187,36 @@ export interface UpdateFeedbucketSubmissionInput {
 
 export type FeedbucketMediaKind = "screenshot" | "recording";
 
-export type PaginatedFeedbucketSubmissions = z.infer<typeof feedbucketSubmissionListContract>;
+export interface CaptureSubmissionInput {
+  managedProductId: number;
+  message: string;
+  sourceChannel: Exclude<FeedbucketSourceChannel, "widget">;
+  type: FeedbucketSubmissionType;
+  reporterName?: string;
+  reporterEmail?: string;
+  crmOrganizationId?: number;
+  crmContactId?: number;
+  segment?: string;
+  theme?: string;
+  sentiment?: FeedbucketSentiment;
+  consentStatus: FeedbucketConsentStatus;
+  pageUrl?: string;
+}
+
+export interface ClassifySubmissionInput {
+  theme?: string | null;
+  segment?: string | null;
+  sentiment?: FeedbucketSentiment | null;
+  consentStatus?: FeedbucketConsentStatus;
+  expectedRevision?: string;
+}
+
+export interface FeedbucketSubmissionFacets {
+  themes: Array<{ value: string | null; count: number }>;
+  segments: Array<{ value: string | null; count: number }>;
+  sourceChannels?: Array<{ value: string | null; count: number }>;
+}
+
+export type PaginatedFeedbucketSubmissions = z.infer<
+  typeof feedbucketSubmissionListContract
+>;

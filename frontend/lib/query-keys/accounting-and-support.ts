@@ -21,7 +21,10 @@ export const accountingAndSupportQueryKeys = {
         ? ([...base, "goals", "list"] as const)
         : ([...base, "goals", "list", params] as const),
     detail: (goalId: number) => [...base, "goals", "detail", goalId] as const,
-    stats: () => [...base, "goals", "stats"] as const,
+    stats: (managedProductId?: number) =>
+      managedProductId === undefined
+        ? ([...base, "goals", "stats"] as const)
+        : ([...base, "goals", "stats", { managedProductId }] as const),
   },
 
   whiteboards: {
@@ -36,9 +39,33 @@ export const accountingAndSupportQueryKeys = {
 
   gitIntegration: {
     all: [...base, "gitIntegration"] as const,
-    connections: () => [...base, "gitIntegration", "connections"] as const,
+    connections: (params?: QueryKeyParams) =>
+      params === undefined
+        ? ([...base, "gitIntegration", "connections"] as const)
+        : ([...base, "gitIntegration", "connections", params] as const),
     ticketLinks: (ticketId: number) =>
       [...base, "gitIntegration", "ticketLinks", ticketId] as const,
+  },
+
+  slackIntegration: {
+    all: [...base, "slackIntegration"] as const,
+    connections: (params?: QueryKeyParams) =>
+      params === undefined
+        ? ([...base, "slackIntegration", "connections"] as const)
+        : ([...base, "slackIntegration", "connections", params] as const),
+  },
+
+  emailInboundIntegration: {
+    all: [...base, "emailInboundIntegration"] as const,
+    connections: (params?: QueryKeyParams) =>
+      params === undefined
+        ? ([...base, "emailInboundIntegration", "connections"] as const)
+        : ([
+            ...base,
+            "emailInboundIntegration",
+            "connections",
+            params,
+          ] as const),
   },
 
   ticketActivity: {
@@ -85,5 +112,4 @@ export const accountingAndSupportQueryKeys = {
     publicArticle: (orgId: string, slug: string) =>
       [...base, "supportKb", "publicArticle", orgId, slug] as const,
   },
-
 } as const;

@@ -1,7 +1,8 @@
 "use client";
 
-import { useCan } from "@/hooks/api/access";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { signalAccessInvalidation, useCan } from "@/hooks/api/access";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useSession } from "next-auth/react";
 import { apiClient } from "@/lib/api-client";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { queryKeyBase } from "@/lib/query-keys/base";
@@ -28,6 +29,7 @@ export function useUserModuleAccess(userId: string, enabled = true) {
 
 export function useSetUserModuleAccess(userId: string) {
   const queryClient = useQueryClient();
+  const { data: session } = useSession();
   return useAuthorizedMutation("settings:organization:manage", {
     mutationKey: ["access", "user-module-access", "set", userId],
     mutationFn: (variables: { moduleKey: string; enabled: boolean }) =>
@@ -58,6 +60,7 @@ export function useSetUserModuleAccess(userId: string) {
     },
     onSuccess: (data) => {
       queryClient.setQueryData(userModuleAccessKey(userId), data);
+      if (session?.orgId) signalAccessInvalidation(session.orgId);
     },
     onSettled: () => {
       void queryClient.invalidateQueries({ queryKey: userModuleAccessKey(userId) });

@@ -1,23 +1,28 @@
 "use client";
 
 import { useState, useCallback, useMemo } from "react";
-import { Sparkles, Send, CheckCircle2, AlertCircle, StopCircle } from "lucide-react";
+import {
+  Sparkles,
+  Send,
+  CheckCircle2,
+  AlertCircle,
+  StopCircle,
+  X,
+} from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { AppDialog } from "@/components/shared/app-dialog";
+import { Label } from "@/components/ui/label";
 import { LoadingButton } from "@/components/ui/loading-button";
+import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
 import { AiDraftCard } from "@/components/ai/ai-draft-card";
 import { AiFailureBody } from "@/components/ai/ai-failure-body";
-import { classifyAiError, isRetryableAiFailure } from "@/components/ai/ai-error-state";
+import {
+  classifyAiError,
+  isRetryableAiFailure,
+} from "@/components/ai/ai-error-state";
 import { AiPermissionDenied } from "@/components/ai/ai-permission-denied";
 import { CalendarConnectInline } from "@/features/calendar/calendar-connect-inline";
 import { useCan } from "@/hooks/api/access";
@@ -29,12 +34,17 @@ import {
   type AgendaCitation,
 } from "@/hooks/api/meetings-ai";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { parseFollowUpStream, isSendableFollowUp } from "./meeting-follow-up-stream-parse";
+import { useAddCalendarMeetingDraft } from "@/hooks/api/calendar-meeting-workspace";
+import {
+  parseFollowUpStream,
+  isSendableFollowUp,
+} from "./meeting-follow-up-stream-parse";
 import { FollowUpDraftBody } from "./meeting-follow-up-draft";
 
 interface MeetingFollowUpPanelProps {
   eventId: string;
   onClose?: () => void;
+  workspaceId?: string;
 }
 
 const MAX_ACTION_ITEMS = 20;
@@ -53,7 +63,12 @@ interface ActionItemRowProps {
   onRemove: (index: number) => void;
 }
 
-function ActionItemRow({ value, index, onChange, onRemove }: ActionItemRowProps) {
+function ActionItemRow({
+  value,
+  index,
+  onChange,
+  onRemove,
+}: ActionItemRowProps) {
   const handleChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
       onChange(index, e.target.value);
@@ -67,36 +82,36 @@ function ActionItemRow({ value, index, onChange, onRemove }: ActionItemRowProps)
 
   return (
     <div className="flex items-center gap-1.5">
-      <CheckCircle2 className="h-3.5 w-3.5 text-muted-foreground shrink-0" aria-hidden />
-      <input
+      <CheckCircle2
+        className="h-3.5 w-3.5 text-muted-foreground shrink-0"
+        aria-hidden
+      />
+      <Input
         type="text"
         value={value}
         onChange={handleChange}
         placeholder={`Action item ${index + 1}`}
-        className="flex-1 h-7 min-w-0 rounded-md border border-input bg-transparent px-2 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring"
+        className="min-w-0 flex-1"
       />
-      <button
+      <Button
         type="button"
+        variant="ghost"
+        size="icon-sm"
         onClick={handleRemove}
-        className="text-xs text-muted-foreground hover:text-destructive transition-colors"
+        className="shrink-0 text-muted-foreground hover:text-destructive"
         aria-label={`Remove action item ${index + 1}`}
       >
-        ×
-      </button>
+        <X className="size-4" aria-hidden />
+      </Button>
     </div>
   );
 }
 
-/**
- * The follow-up streams. The panel still renders the four structured affordances
- * the user had before — subject, email body, action items and a suggested next
- * meeting — but reconstructs them from the text received so far
- * (`parseFollowUpStream`) instead of waiting for a whole buffered record, and
- * hands that same reconstruction to `propose-send`. Stopping keeps everything
- * that arrived, and the citations come off `x-ai-sources` before the first token
- * so a stopped draft still cites what it rests on.
- */
-export function MeetingFollowUpPanel({ eventId, onClose }: MeetingFollowUpPanelProps) {
+export function MeetingFollowUpPanel({
+  eventId,
+  onClose,
+  workspaceId,
+}: MeetingFollowUpPanelProps) {
   const canUse = useCan("calendar:ai:use");
 
   const [meetingNotes, setMeetingNotes] = useState("");
@@ -108,15 +123,24 @@ export function MeetingFollowUpPanel({ eventId, onClose }: MeetingFollowUpPanelP
   const [needsReauth, setNeedsReauth] = useState(false);
 
   const { run, stop, isStreaming } = useAiTextStream();
-  const { mutate: proposeSend, isPending: proposePending } = useProposeMeetingSend();
-  const { mutate: confirmSend, isPending: confirmPending } = useConfirmMeetingSend();
+  const { mutate: proposeSend, isPending: proposePending } =
+    useProposeMeetingSend();
+  const { mutate: confirmSend, isPending: confirmPending } =
+    useConfirmMeetingSend();
+  const addDraft = useAddCalendarMeetingDraft();
 
   const streamedText = "text" in state ? state.text : "";
-  const draft = useMemo(() => parseFollowUpStream(streamedText), [streamedText]);
+  const draft = useMemo(
+    () => parseFollowUpStream(streamedText),
+    [streamedText],
+  );
 
-  const handleNotesChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    setMeetingNotes(e.target.value);
-  }, []);
+  const handleNotesChange = useCallback(
+    (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+      setMeetingNotes(e.target.value);
+    },
+    [],
+  );
 
   const handleActionItemChange = useCallback((index: number, value: string) => {
     setActionItems((prev) => {
@@ -144,7 +168,9 @@ export function MeetingFollowUpPanel({ eventId, onClose }: MeetingFollowUpPanelP
 
     const appendToken = (token: string) => {
       setState((prev) =>
-        prev.status === "streaming" ? { status: "streaming", text: prev.text + token } : prev,
+        prev.status === "streaming"
+          ? { status: "streaming", text: prev.text + token }
+          : prev,
       );
     };
 
@@ -225,15 +251,40 @@ export function MeetingFollowUpPanel({ eventId, onClose }: MeetingFollowUpPanelP
     onClose?.();
   }, [onClose]);
 
-  if (!canUse) {
-    return <AiPermissionDenied />;
-  }
+  const handleSaveForReview = useCallback(() => {
+    if (!workspaceId || !isSendableFollowUp(draft)) return;
+    const items = draft.actionItems
+      .map((item) => {
+        const owner = item.assignee ? ` · owner: ${item.assignee}` : "";
+        const due = item.dueDate ? ` · due: ${item.dueDate}` : "";
+        return `- ${item.item}${owner}${due}`;
+      })
+      .join("\n");
+    const content = [`Subject: ${draft.subject}`, draft.body, items]
+      .filter(Boolean)
+      .join("\n\n");
+    addDraft.mutate(
+      { workspaceId, kind: "FOLLOW_UP", content },
+      {
+        onSuccess: () => {
+          toast.success("Follow-up saved for review");
+          handleDiscard();
+        },
+        onError: (error) => toast.error(getErrorMessage(error)),
+      },
+    );
+  }, [addDraft, draft, handleDiscard, workspaceId]);
 
-  if (needsReauth) {
+  if (!canUse) return <AiPermissionDenied />;
+
+  if (needsReauth)
     return (
       <div className="space-y-3">
         <div className="flex items-start gap-2 rounded-lg border border-border bg-muted/30 p-3">
-          <AlertCircle className="h-3.5 w-3.5 text-muted-foreground mt-0.5 shrink-0" aria-hidden />
+          <AlertCircle
+            className="h-3.5 w-3.5 text-muted-foreground mt-0.5 shrink-0"
+            aria-hidden
+          />
           <p className="text-xs text-muted-foreground">
             Calendar reconnection required to send the follow-up.
           </p>
@@ -241,17 +292,12 @@ export function MeetingFollowUpPanel({ eventId, onClose }: MeetingFollowUpPanelP
         <CalendarConnectInline />
       </div>
     );
-  }
 
-  /**
-   * Exhausted credits and a revoked permission do not get a dispatch control.
-   * `AiFailureBody` already renders the affordance that can help — the top-up
-   * link, or the denial reason — and a "Try again" beside it would spend another
-   * click on a call that cannot succeed.
-   */
   const canDispatch =
-    state.status !== "failed" || isRetryableAiFailure(classifyAiError(state.error).status);
-  const showForm = (state.status === "idle" || state.status === "failed") && canDispatch;
+    state.status !== "failed" ||
+    isRetryableAiFailure(classifyAiError(state.error).status);
+  const showForm =
+    (state.status === "idle" || state.status === "failed") && canDispatch;
   const showDraft = state.status !== "idle" && state.status !== "failed";
 
   return (
@@ -267,23 +313,23 @@ export function MeetingFollowUpPanel({ eventId, onClose }: MeetingFollowUpPanelP
         )}
 
         {showForm && (
-          <div className="space-y-3">
+          <div className="space-y-3 rounded-lg bg-muted p-3 dark:border dark:border-background">
             <div className="space-y-1.5">
-              <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide" htmlFor="meeting-notes">
-                Meeting notes <span className="font-normal normal-case">(optional)</span>
-              </label>
+              <Label htmlFor="meeting-notes">
+                Meeting notes <span className="font-normal text-muted-foreground">(optional)</span>
+              </Label>
               <Textarea
                 id="meeting-notes"
                 placeholder="What was discussed, decisions made…"
                 value={meetingNotes}
                 onChange={handleNotesChange}
-                className="min-h-[80px] text-xs resize-none"
+                className="min-h-20 resize-none"
               />
             </div>
 
             <div className="space-y-1.5">
-              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-                Action items <span className="font-normal normal-case">(optional)</span>
+              <p className="text-sm font-medium">
+                Action items <span className="font-normal text-muted-foreground">(optional)</span>
               </p>
               <div className="space-y-1.5">
                 {actionItems.map((item, index) => (
@@ -302,7 +348,7 @@ export function MeetingFollowUpPanel({ eventId, onClose }: MeetingFollowUpPanelP
                   variant="ghost"
                   size="sm"
                   onClick={handleAddActionItem}
-                  className="h-7 text-xs text-muted-foreground hover:text-foreground px-1"
+                  className="px-1 text-muted-foreground"
                 >
                   + Add item
                 </Button>
@@ -313,7 +359,7 @@ export function MeetingFollowUpPanel({ eventId, onClose }: MeetingFollowUpPanelP
               type="button"
               size="sm"
               onClick={handleDraftFollowUp}
-              className="w-full h-8 text-xs gap-1.5"
+              className="w-full"
             >
               <Sparkles className="h-3.5 w-3.5" aria-hidden />
               Draft Follow-up
@@ -332,7 +378,11 @@ export function MeetingFollowUpPanel({ eventId, onClose }: MeetingFollowUpPanelP
 
             <AiDraftCard
               title="Follow-up Email"
-              citations={citations.map((c) => ({ id: c.id, title: c.title, snippet: c.snippet }))}
+              citations={citations.map((c) => ({
+                id: c.id,
+                title: c.title,
+                snippet: c.snippet,
+              }))}
               citationsPending={isStreaming && citations.length === 0}
               onDiscard={handleDiscard}
             >
@@ -345,29 +395,43 @@ export function MeetingFollowUpPanel({ eventId, onClose }: MeetingFollowUpPanelP
                 variant="outline"
                 size="sm"
                 onClick={stop}
-                className="w-full h-8 text-xs gap-1.5"
+                className="w-full"
               >
                 <StopCircle className="h-3.5 w-3.5" aria-hidden />
                 Stop
               </Button>
             ) : (
               <div className="flex gap-2">
-                <LoadingButton
-                  size="sm"
-                  isPending={proposePending}
-                  loadingText="Preparing…"
-                  onClick={handleSendViaCalendar}
-                  disabled={!isSendableFollowUp(draft)}
-                  className="flex-1 h-8 text-xs gap-1.5"
-                >
-                  <Send className="h-3.5 w-3.5" aria-hidden />
-                  Send via Calendar
-                </LoadingButton>
+                {workspaceId ? (
+                  <LoadingButton
+                    size="sm"
+                    isPending={addDraft.isPending}
+                    loadingText="Saving…"
+                    onClick={handleSaveForReview}
+                    disabled={!isSendableFollowUp(draft)}
+                    className="flex-1"
+                  >
+                    <CheckCircle2 className="h-3.5 w-3.5" aria-hidden />
+                    Save for review
+                  </LoadingButton>
+                ) : (
+                  <LoadingButton
+                    size="sm"
+                    isPending={proposePending}
+                    loadingText="Preparing…"
+                    onClick={handleSendViaCalendar}
+                    disabled={!isSendableFollowUp(draft)}
+                    className="flex-1"
+                  >
+                    <Send className="h-3.5 w-3.5" aria-hidden />
+                    Send via Calendar
+                  </LoadingButton>
+                )}
                 <Button
                   variant="outline"
                   size="sm"
                   onClick={handleDoneNoSend}
-                  className="flex-1 h-8 text-xs"
+                  className="flex-1"
                 >
                   Done (no send)
                 </Button>
@@ -377,20 +441,17 @@ export function MeetingFollowUpPanel({ eventId, onClose }: MeetingFollowUpPanelP
         )}
       </div>
 
-      <Dialog open={confirmOpen} onOpenChange={handleConfirmOpenChange}>
-        <DialogContent className="max-w-sm">
-          <DialogHeader>
-            <DialogTitle className="text-sm">Confirm follow-up</DialogTitle>
-            <DialogDescription className="text-xs">
-              This will update the calendar event description with the follow-up. Proceed?
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
+      <AppDialog
+        open={confirmOpen}
+        onOpenChange={handleConfirmOpenChange}
+        title="Confirm follow-up"
+        description="Review this change before confirming."
+        className="md:max-w-sm"
+        footer={<>
             <Button
               variant="outline"
               size="sm"
               onClick={handleCancelConfirm}
-              className="text-xs"
             >
               Cancel
             </Button>
@@ -399,14 +460,14 @@ export function MeetingFollowUpPanel({ eventId, onClose }: MeetingFollowUpPanelP
               isPending={confirmPending}
               loadingText="Saving…"
               onClick={handleConfirmSend}
-              className="text-xs gap-1.5"
             >
               <CheckCircle2 className="h-3.5 w-3.5" aria-hidden />
               Confirm
             </LoadingButton>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+        </>}
+      >
+        <p className="text-sm text-muted-foreground">This will update the calendar event description with the follow-up. Proceed?</p>
+      </AppDialog>
     </>
   );
 }

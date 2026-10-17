@@ -24,42 +24,67 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useCreateTicket } from "@/hooks/api/build";
+import { useQueryClient } from "@tanstack/react-query";
+import { useCreateTicket } from "@/hooks/api/build/tickets";
+import { useOnlineStatus } from "@/hooks/common/use-online-status";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
 import { activationProps } from "@/lib/keyboard-activation";
+import { useSubmitGuard } from "@/hooks/common/use-submit-guard";
 
 interface CreateEpicDialogProps {
   projectId: number;
   trigger?: ReactNode;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }
 
-export function CreateEpicDialog({ projectId, trigger }: CreateEpicDialogProps) {
-  const [open, setOpen] = useState(false);
+export function CreateEpicDialog({
+  projectId,
+  trigger,
+  open: controlledOpen,
+  onOpenChange,
+}: CreateEpicDialogProps) {
+  const [uncontrolledOpen, setUncontrolledOpen] = useState(false);
+  const controlled = controlledOpen !== undefined;
+  const open = controlled ? controlledOpen : uncontrolledOpen;
+  const queryClient = useQueryClient();
   const createTicket = useCreateTicket();
+  const isOnline = useOnlineStatus();
+
+  const setOpen = (next: boolean) => {
+    if (!controlled) setUncontrolledOpen(next);
+    onOpenChange?.(next);
+  };
 
   const handleOpen = () => setOpen(true);
 
-  const handleSubmit = (data: CreateEpicInput) => {
-    createTicket.mutate(
-      {
+  const guard = useSubmitGuard(async (data: CreateEpicInput) => {
+    if (!isOnline) {
+      toast.warning(
+        "You're offline — your draft is kept here and nothing was sent.",
+      );
+      return;
+    }
+    try {
+      await createTicket.mutateAsync({
         projectId,
         title: data.title,
         description: data.description || undefined,
         type: "EPIC",
         priority: data.priority,
-      },
-      {
-        onSuccess: () => {
-          toast.success("Epic created successfully");
-          setOpen(false);
-        },
-        onError: (error) => {
-          toast.error(getErrorMessage(error));
-        },
-      },
-    );
-  };
+      });
+      void queryClient.invalidateQueries({
+        queryKey: buildWorkQueryKeys.projects.epics(projectId),
+        refetchType: "none",
+      });
+      toast.success("Epic created successfully");
+      setOpen(false);
+    } catch (error) {
+      toast.error(getErrorMessage(error));
+    }
+  });
 
   return (
     <>
@@ -79,8 +104,8 @@ export function CreateEpicDialog({ projectId, trigger }: CreateEpicDialogProps) 
         description="A high-level feature or initiative that contains multiple stories."
         resolver={zodResolver(createEpicSchema)}
         defaultValues={{ title: "", description: "", priority: "MEDIUM" }}
-        onSubmit={handleSubmit}
-        isSubmitting={createTicket.isPending}
+        onSubmit={guard.submit}
+        isSubmitting={guard.isSubmitting}
         submitLabel="Create epic"
       >
         {(form) => (

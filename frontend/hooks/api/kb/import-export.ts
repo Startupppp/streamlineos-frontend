@@ -1,11 +1,16 @@
 "use client";
 
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useEffect } from "react";
+import { useInfiniteQuery, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
+import { NO_CURSOR_YET } from "@/hooks/api/cursor-page-param";
 import { knowledgeAndSurveysQueryKeys } from "@/lib/query-keys/knowledge-and-surveys";
 import { useCan } from "@/hooks/api/access";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import { useIdempotentOperation } from "@/hooks/common/use-idempotent-operation";
+import { selectFlatPages, type Page } from "@/lib/api/select-flat-pages";
+import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
 
 export type KbImportItem = {
   title: string;
@@ -16,13 +21,35 @@ export type KbImportItem = {
 export type ImportKbPagesInput = {
   items: KbImportItem[];
   sourceType: "markdown" | "html" | "zip";
+  spaceId?: number;
+  visibility?: "private" | "org" | "public";
+  duplicatePolicy?: "skip" | "update";
 };
 
-export type ImportResult = {
+export type ImportAccepted = {
   jobId: number;
-  succeeded: number;
-  failed: number;
+  status: "pending";
+};
+
+export type ImportDryRunResult = {
   total: number;
+  wouldSucceed: number;
+  wouldSkip: number;
+  invalidItems: string[];
+};
+
+export type KbImportItemError = {
+  index: number;
+  title: string;
+  code: "INVALID_PARENT" | "INVALID_SPACE" | "DUPLICATE_REFERENCE" | "WRITE_FAILED";
+  reason: string;
+};
+
+export type KbImportErrorReport = {
+  failedTitles?: string[];
+  itemErrors?: KbImportItemError[];
+  code?: "PROGRESS_RECONCILIATION_REQUIRED";
+  reason?: string;
 };
 
 export type KbImportJob = {
@@ -30,13 +57,14 @@ export type KbImportJob = {
   orgId: string;
   sourceType: string;
   fileKey: string | null;
-  status: "pending" | "processing" | "completed" | "failed";
+  status: "pending" | "processing" | "completed" | "failed" | "cancelled";
   totalItems: number;
   processedItems: number;
   succeededItems: number;
   failedItems: number;
   duplicateItems: number;
-  errorReport: Record<string, unknown> | null;
+  canRetry: boolean;
+  errorReport: KbImportErrorReport | null;
   createdById: string | null;
   createdAt: string;
   updatedAt: string;
@@ -56,16 +84,32 @@ export type KbExportJob = {
   updatedAt: string;
 };
 
-const kbImportResultContract = lazyContract(() =>
-  import("@/hooks/api/kb/kb-import-schema").then((m) => m.kbImportResultContract),
+const kbImportAcceptedContract = lazyContract(() =>
+  import("@/hooks/api/kb/kb-import-schema").then((m) => m.kbImportAcceptedContract),
 );
 
-const kbImportJobListContract = lazyContract(() =>
-  import("@/hooks/api/kb/kb-import-schema").then((m) => m.kbImportJobListContract),
+const kbImportJobSingleContract = lazyContract(() =>
+  import("@/hooks/api/kb/kb-import-schema").then((m) => m.kbImportJobContract),
 );
 
-const kbExportJobListContract = lazyContract(() =>
-  import("@/hooks/api/kb/kb-import-schema").then((m) => m.kbExportJobListContract),
+const kbImportJobCancelContractLazy = lazyContract(() =>
+  import("@/hooks/api/kb/kb-import-schema").then((m) => m.kbImportJobCancelContract),
+);
+
+const kbImportDryRunContractLazy = lazyContract(() =>
+  import("@/hooks/api/kb/kb-import-schema").then((m) => m.kbImportDryRunContract),
+);
+
+export type KbImportJobPage = Page<KbImportJob>;
+
+export type KbExportJobPage = Page<KbExportJob>;
+
+const kbImportJobListPageContract = lazyContract(() =>
+  import("@/hooks/api/kb/kb-import-schema").then((m) => m.kbImportJobListPageContract),
+);
+
+const kbExportJobListPageContract = lazyContract(() =>
+  import("@/hooks/api/kb/kb-import-schema").then((m) => m.kbExportJobListPageContract),
 );
 
 export function useImportKbPages() {
@@ -73,41 +117,105 @@ export function useImportKbPages() {
   return useAuthorizedMutation("kb:pages:import", {
     mutationKey: ["kb", "pages", "import"],
     mutationFn: (input: ImportKbPagesInput) =>
-      apiClient.post<ImportResult>("/kb/pages/import", input, undefined, kbImportResultContract),
-    onSuccess: (result, variables) => {
-      qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.kb.pagesTree() });
-      qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.kb.kbPages() });
-      void qc
-        .invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.kb.importJobs() })
-        .then(() => {
-          const itemTitles = variables.items.map((item) => item.title);
-          qc.setQueryData<KbImportJob[]>(
-            knowledgeAndSurveysQueryKeys.kb.importJobs(),
-            (previous) => {
-              if (!previous) return previous;
-              return previous.map((job) => {
-                if (job.id !== result.jobId) return job;
-                return {
-                  ...job,
-                  errorReport: {
-                    ...(job.errorReport ?? {}),
-                    itemTitles,
-                  },
-                };
-              });
-            },
-          );
-        });
+      apiClient.post<ImportAccepted>("/kb/pages/import", input, undefined, kbImportAcceptedContract),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.kb.importJobs(), exact: true });
     },
+  });
+}
+
+const TERMINAL_IMPORT_STATUSES = new Set(["completed", "failed", "cancelled"]);
+
+export function useKbImportJob(jobId: number | null) {
+  const canImport = useCan("kb:pages:import");
+  const qc = useQueryClient();
+  const query = useQuery({
+    queryKey: knowledgeAndSurveysQueryKeys.kb.importJob(jobId ?? 0),
+    queryFn: ({ signal }) =>
+      apiClient.get<KbImportJob>(
+        `/kb/import-jobs/${jobId}`,
+        undefined,
+        signal,
+        kbImportJobSingleContract,
+      ),
+    enabled: canImport && jobId !== null,
+    staleTime: 0,
+    refetchInterval: (query) => {
+      const status = query.state.data?.status;
+      return status === "pending" || status === "processing" ? 1500 : false;
+    },
+  });
+  // A finished job changed the history list and created pages the wiki lists
+  // do not know about yet; neither is computable client-side.
+  const settled = query.data !== undefined && TERMINAL_IMPORT_STATUSES.has(query.data.status);
+  useEffect(() => {
+    if (!settled) return;
+    qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.kb.importJobs(), exact: true });
+    qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.kb.pagesTree() });
+    qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.kb.pagesRecent() });
+    qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.kb.pageCollection() });
+  }, [settled, jobId, qc]);
+  return query;
+}
+
+export function useCancelImportJob() {
+  const qc = useQueryClient();
+  return useAuthorizedMutation("kb:pages:import", {
+    mutationKey: ["kb", "import-job", "cancel"],
+    mutationFn: (jobId: number) =>
+      apiClient.post(`/kb/import-jobs/${jobId}/cancel`, {}, undefined, kbImportJobCancelContractLazy),
+    onSuccess: (_data, jobId) => {
+      qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.kb.importJob(jobId) });
+      qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.kb.importJobs() });
+    },
+  });
+}
+
+export function useRetryImportJob() {
+  const qc = useQueryClient();
+  const operation = useIdempotentOperation();
+  return useAuthorizedMutation("kb:pages:import", {
+    mutationKey: ["kb", "import-job", "retry"],
+    mutationFn: (jobId: number) =>
+      apiClient.post<ImportAccepted>(
+        `/kb/import-jobs/${jobId}/retry`,
+        undefined,
+        operation.configFor({ jobId }),
+        kbImportAcceptedContract,
+      ),
+    onSuccess: () => {
+      operation.settle();
+      qc.invalidateQueries({
+        queryKey: knowledgeAndSurveysQueryKeys.kb.importJobs(),
+        exact: true,
+      });
+    },
+  });
+}
+
+export function useDryRunImport() {
+  return useAuthorizedMutation("kb:pages:import", {
+    mutationKey: ["kb", "pages", "import", "dry-run"],
+    mutationFn: (input: ImportKbPagesInput) =>
+      apiClient.post<ImportDryRunResult>("/kb/pages/import/dry-run", input, undefined, kbImportDryRunContractLazy),
   });
 }
 
 export function useKbImportJobs() {
   const canImport = useCan("kb:pages:import");
-  return useQuery({
+  return useInfiniteQuery({
+    ...INLINE_READ_ERROR,
     queryKey: knowledgeAndSurveysQueryKeys.kb.importJobs(),
-    queryFn: ({ signal }) =>
-      apiClient.get<KbImportJob[]>("/kb/import-jobs", undefined, signal, kbImportJobListContract),
+    initialPageParam: NO_CURSOR_YET,
+    queryFn: ({ signal, pageParam }) =>
+      apiClient.get<KbImportJobPage>(
+        "/kb/import-jobs",
+        pageParam !== undefined ? { cursor: pageParam } : undefined,
+        signal,
+        kbImportJobListPageContract,
+      ),
+    getNextPageParam: (last) => last.pagination.nextCursor ?? undefined,
+    select: selectFlatPages,
     enabled: canImport,
     staleTime: 30_000,
   });
@@ -115,11 +223,27 @@ export function useKbImportJobs() {
 
 export function useKbExportJobs() {
   const canExport = useCan("kb:pages:export");
-  return useQuery({
+  return useInfiniteQuery({
+    ...INLINE_READ_ERROR,
     queryKey: knowledgeAndSurveysQueryKeys.kb.exportJobs(),
-    queryFn: ({ signal }) =>
-      apiClient.get<KbExportJob[]>("/kb/export-jobs", undefined, signal, kbExportJobListContract),
+    initialPageParam: NO_CURSOR_YET,
+    queryFn: ({ signal, pageParam }) =>
+      apiClient.get<KbExportJobPage>(
+        "/kb/export-jobs",
+        pageParam !== undefined ? { cursor: pageParam } : undefined,
+        signal,
+        kbExportJobListPageContract,
+      ),
+    getNextPageParam: (last) => last.pagination.nextCursor ?? undefined,
+    select: selectFlatPages,
     enabled: canExport,
-    staleTime: 30_000,
+    staleTime: 0,
+    refetchInterval: (query) => {
+      const jobs = query.state.data?.pages.flatMap((page) => page.data) ?? [];
+      const inFlight = jobs.some(
+        (job) => job != null && (job.status === "pending" || job.status === "processing"),
+      );
+      return inFlight ? 1500 : false;
+    },
   });
 }

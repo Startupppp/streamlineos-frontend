@@ -1,0 +1,295 @@
+import { render, screen, act } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+
+let mockSearchParams = new URLSearchParams();
+const mockReplace = jest.fn();
+const mockUseProjects = jest.fn();
+const mockAccess = jest.fn();
+const mockUseCan = jest.fn((permission: string) => permission.length === 0);
+
+jest.mock("next/navigation", () => ({
+  useRouter: () => ({ replace: mockReplace, push: jest.fn() }),
+  usePathname: () => "/build/projects",
+  useSearchParams: () => mockSearchParams,
+}));
+
+jest.mock("@/hooks/api/entitlements", () => ({
+  useEntitlements: () => ({ data: undefined }),
+}));
+
+jest.mock("@/hooks/api/access", () => ({
+  useCan: (permission: string) => mockUseCan(permission),
+  useModuleEnabled: () => true,
+  useAccess: () => mockAccess(),
+}));
+
+jest.mock("@/components/auth/require-module", () => ({
+  RequireModule: ({ children }: { children: React.ReactNode }) => <>{children}</>,
+}));
+
+jest.mock("@/hooks/api/build/projects", () => ({
+  useProjects: (filters: unknown) => mockUseProjects(filters),
+  useProject: () => ({ data: undefined, isError: false, error: null }),
+}));
+
+jest.mock("./new-project-dialog", () => ({
+  NewProjectDialog: () => null,
+}));
+
+jest.mock("./link-existing-project-dialog", () => ({
+  LinkExistingProjectDialog: () => null,
+}));
+
+import React from "react";
+import { ProjectsPage } from "./projects-page";
+
+function emptyProjectsResult() {
+  return {
+    data: undefined,
+    isLoading: false,
+    isError: false,
+    error: null,
+    refetch: jest.fn(),
+    isFetching: false,
+  };
+}
+
+beforeEach(() => {
+  jest.clearAllMocks();
+  mockSearchParams = new URLSearchParams();
+  mockUseProjects.mockReturnValue(emptyProjectsResult());
+  mockAccess.mockReturnValue({
+    data: { isOrgOwner: false, scopes: { "build:view": "all" }, modules: {} },
+    isLoading: false,
+  });
+  mockReplace.mockReset();
+  mockUseCan.mockReturnValue(false);
+});
+
+describe("ProjectsPage — productId URL param", () => {
+  it("offers an existing-project link action on the managed-product page to an authorized actor", () => {
+    mockUseCan.mockImplementation((permission: string) => permission === "build:managed-products:update");
+    render(<ProjectsPage managedProductId={7} />);
+    expect(screen.getAllByRole("button", { name: "Link existing project" }).length).toBeGreaterThan(0);
+  });
+  it("hides the project-link action when the actor cannot update managed products", () => {
+    render(<ProjectsPage managedProductId={7} />);
+    expect(screen.queryByRole("button", { name: "Link existing project" })).not.toBeInTheDocument();
+  });
+  it("passes managedProductId to useProjects from the productId URL param so the API returns only that product's projects", () => {
+    mockSearchParams = new URLSearchParams("productId=7");
+
+    render(<ProjectsPage />);
+
+    const calls = mockUseProjects.mock.calls;
+    expect(calls.length).toBeGreaterThan(0);
+    expect(calls[0]?.[0]).toMatchObject({ managedProductId: 7 });
+  });
+
+  it("omits managedProductId from useProjects when productId is absent so the API returns all projects", () => {
+    mockSearchParams = new URLSearchParams();
+
+    render(<ProjectsPage />);
+
+    const calls = mockUseProjects.mock.calls;
+    expect(calls.length).toBeGreaterThan(0);
+    expect(calls[0]?.[0]).not.toHaveProperty("managedProductId");
+  });
+
+  it("prefers the managedProductId prop over the productId URL param so the product-scoped page renders correctly", () => {
+    mockSearchParams = new URLSearchParams("productId=7");
+
+    render(<ProjectsPage managedProductId={3} />);
+
+    const calls = mockUseProjects.mock.calls;
+    expect(calls[0]?.[0]).toMatchObject({ managedProductId: 3 });
+  });
+
+  it("uses product-scoped copy when rendered from a managed-product route", () => {
+    render(<ProjectsPage managedProductId={3} />);
+
+    expect(screen.getByRole("heading", { name: "Linked Projects" })).toBeInTheDocument();
+    expect(screen.getByText("Projects linked to this managed product")).toBeInTheDocument();
+  });
+});
+
+describe("ProjectsPage — managerId URL param", () => {
+  it("passes managerId to the server so the filter applies across all keyset pages", () => {
+    mockSearchParams = new URLSearchParams("managerId=user-abc");
+
+    render(<ProjectsPage />);
+
+    expect(mockUseProjects).toHaveBeenCalledWith(
+      expect.objectContaining({ managerId: "user-abc" }),
+    );
+  });
+
+  it("falls back to filterLead for backward-compatible deep links from existing bookmarks", () => {
+    mockSearchParams = new URLSearchParams("filterLead=user-abc");
+
+    render(<ProjectsPage />);
+
+    expect(mockUseProjects).toHaveBeenCalledWith(
+      expect.objectContaining({ managerId: "user-abc" }),
+    );
+  });
+
+  it("omits managerId when neither URL parameter is present", () => {
+    render(<ProjectsPage />);
+
+    const [filters] = mockUseProjects.mock.calls.at(-1) as [
+      Record<string, unknown>,
+    ];
+    expect(filters).not.toHaveProperty("managerId");
+  });
+});
+
+describe("ProjectsPage — access-scoped heading", () => {
+  it("calls the member-reachable result My Projects", () => {
+    render(<ProjectsPage />);
+
+    expect(screen.getByRole("heading", { name: "My Projects" })).toBeInTheDocument();
+    expect(screen.getByText("Projects you belong to, manage, or reach through your teams")).toBeInTheDocument();
+  });
+
+  it("calls an org owner's unrestricted result All Projects", () => {
+    mockAccess.mockReturnValue({
+      data: { isOrgOwner: true, scopes: {}, modules: {} },
+      isLoading: false,
+    });
+
+    render(<ProjectsPage />);
+
+    expect(screen.getByRole("heading", { name: "All Projects" })).toBeInTheDocument();
+  });
+
+  it("calls an unrestricted Build manager's result All Projects", () => {
+    mockAccess.mockReturnValue({
+      data: { isOrgOwner: false, scopes: { "build:view": "all", "build:manage": "all" }, modules: {} },
+      isLoading: false,
+    });
+
+    render(<ProjectsPage />);
+
+    expect(screen.getByRole("heading", { name: "All Projects" })).toBeInTheDocument();
+  });
+
+  it("uses a neutral heading while access is loading", () => {
+    mockAccess.mockReturnValue({ data: undefined, isLoading: true });
+
+    render(<ProjectsPage />);
+
+    expect(screen.getByRole("heading", { name: "Projects" })).toBeInTheDocument();
+  });
+});
+
+describe("ProjectsPage — clientId URL param", () => {
+  it("reads clientId from the URL without crashing so the filter position is reserved for when the API adds server-side support", () => {
+    mockSearchParams = new URLSearchParams("clientId=user-xyz");
+
+    expect(() => render(<ProjectsPage />)).not.toThrow();
+  });
+});
+
+describe("ProjectsPage — health URL param reaches the server", () => {
+  it("passes filterHealth to useProjects, so the health chip narrows the whole result set and not one keyset page", () => {
+    mockSearchParams = new URLSearchParams("filterHealth=off_track");
+    render(<ProjectsPage />);
+    expect(mockUseProjects).toHaveBeenCalledWith(
+      expect.objectContaining({ health: "off_track" }),
+    );
+  });
+
+  it("passes no health when the param is absent — paired with the present case above", () => {
+    render(<ProjectsPage />);
+    const [filters] = mockUseProjects.mock.calls.at(-1) as [
+      Record<string, unknown>,
+    ];
+    expect("health" in filters).toBe(false);
+  });
+
+  it("passes no health for a band the backend enum does not define, which a strict schema would reject", () => {
+    mockSearchParams = new URLSearchParams("filterHealth=exploding");
+    render(<ProjectsPage />);
+    const [filters] = mockUseProjects.mock.calls.at(-1) as [
+      Record<string, unknown>,
+    ];
+    expect("health" in filters).toBe(false);
+  });
+});
+
+describe("ProjectsPage — cursor pagination", () => {
+  it("passes the current numeric cursor to the bounded projects query", () => {
+    mockSearchParams = new URLSearchParams({ cursors: JSON.stringify(["29"]) });
+
+    render(<ProjectsPage />);
+
+    expect(mockUseProjects).toHaveBeenCalledWith(
+      expect.objectContaining({ afterId: 29, limit: 25 }),
+    );
+  });
+
+  it("does not send an invalid cursor to the projects endpoint", () => {
+    mockSearchParams = new URLSearchParams({
+      cursors: JSON.stringify(["not-an-id"]),
+    });
+
+    render(<ProjectsPage />);
+
+    const [filters] = mockUseProjects.mock.calls.at(-1) as [
+      Record<string, unknown>,
+    ];
+    expect(filters).not.toHaveProperty("afterId");
+  });
+});
+
+describe("ProjectsPage — search input does not reset mid-keystroke", () => {
+  it("keeps all typed characters in the input without resetting, because the URL write is debounced not immediate", async () => {
+    jest.useFakeTimers();
+    const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime });
+    render(<ProjectsPage />);
+
+    const searchInput = screen.getByRole("searchbox");
+    await user.type(searchInput, "hello");
+
+    expect(searchInput).toHaveValue("hello");
+    jest.useRealTimers();
+  });
+
+  it("does not call router.replace on each individual keystroke, only after the 300ms debounce window", async () => {
+    jest.useFakeTimers();
+    const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime });
+    render(<ProjectsPage />);
+
+    const searchInput = screen.getByRole("searchbox");
+    await user.type(searchInput, "hi");
+
+    mockReplace.mockClear();
+    act(() => jest.advanceTimersByTime(50));
+    expect(mockReplace).not.toHaveBeenCalled();
+
+    act(() => jest.advanceTimersByTime(300));
+    expect(mockReplace).toHaveBeenCalledTimes(1);
+    jest.useRealTimers();
+  });
+
+  it("does not overwrite in-progress typing when the URL round-trip from the debounced value lands mid-keystroke", async () => {
+    jest.useFakeTimers();
+    const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime });
+    const { rerender } = render(<ProjectsPage />);
+
+    const searchInput = screen.getByRole("searchbox");
+
+    await user.type(searchInput, "hel");
+    act(() => jest.advanceTimersByTime(300));
+
+    await user.type(searchInput, "l");
+
+    mockSearchParams = new URLSearchParams("q=hel");
+    rerender(<ProjectsPage />);
+
+    expect(searchInput).toHaveValue("hell");
+
+    jest.useRealTimers();
+  });
+});

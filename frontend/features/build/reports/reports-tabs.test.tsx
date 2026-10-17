@@ -28,6 +28,14 @@ jest.mock("./reports-overview-tab", () => ({
   ReportsOverviewTab: () => <div data-testid="overview-tab-content" />,
 }));
 
+jest.mock("./workload-section", () => ({
+  WorkloadSection: () => <div data-testid="workload-section" />,
+}));
+
+jest.mock("./reports-quality-tab", () => ({
+  ReportsQualityTab: ({ projectId }: { projectId: number }) => <h2>Quality for project {projectId}</h2>,
+}), { virtual: true });
+
 import { ReportsTabs } from "./reports-tabs";
 
 function lastParams() {
@@ -97,5 +105,37 @@ describe("ReportsTabs — URL-backed tab state (FE-86)", () => {
     await user.click(screen.getByRole("tab", { name: "Overview" }));
     expect(lastParams().get("foo")).toBe("bar");
     expect(lastParams().get("tab")).toBe("overview");
+  });
+});
+
+describe("ReportsTabs — Quality and Workload tab triggers (BT-235ad1042755)", () => {
+  it("renders the Quality tab trigger", () => {
+    render(<ReportsTabs projectId={1} />);
+    expect(screen.getByRole("tab", { name: "Quality" })).toBeInTheDocument();
+  });
+
+  it("renders the Workload tab trigger", () => {
+    render(<ReportsTabs projectId={1} />);
+    expect(screen.getByRole("tab", { name: "Workload" })).toBeInTheDocument();
+  });
+
+  it("activates the Quality tab when tab=quality is in the URL", () => {
+    mockSearch = "tab=quality";
+    render(<ReportsTabs projectId={1} />);
+    expect(screen.getByRole("tab", { name: "Quality" })).toHaveAttribute(
+      "data-state",
+      "active",
+    );
+    expect(screen.getByRole("heading", { name: "Quality for project 1" })).toBeInTheDocument();
+    expect(screen.queryByText("Coming soon")).not.toBeInTheDocument();
+  });
+
+  it("activates the Workload tab when tab=workload is in the URL", () => {
+    mockSearch = "tab=workload";
+    render(<ReportsTabs projectId={1} />);
+    expect(screen.getByRole("tab", { name: "Workload" })).toHaveAttribute(
+      "data-state",
+      "active",
+    );
   });
 });

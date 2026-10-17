@@ -36,7 +36,7 @@ import { cn } from "@/lib/utils";
 import { getErrorMessage } from "@/lib/get-error-message";
 import {
   useUpdateNotificationEventPolicy
-} from "@/hooks/api/notifications";
+} from "@/hooks/api/notifications-admin";
 import { policySchema, type PolicyFormValues } from "@/features/notifications/policy-schema";
 import type {
   NotificationEventDefinition,

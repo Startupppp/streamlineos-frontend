@@ -37,12 +37,14 @@ function AnnouncementsContent() {
     data: published,
     isLoading: loadingPublished,
     isError: errorPublished,
+    error: publishedError,
     refetch: refetchPublished,
   } = useHrAnnouncements();
   const {
     data: all,
     isLoading: loadingAll,
     isError: errorAll,
+    error: allError,
     refetch: refetchAll,
   } = useAllHrAnnouncements({ enabled: canManage });
 
@@ -61,6 +63,7 @@ function AnnouncementsContent() {
 
   const isLoading = activeTab === "all" ? loadingAll : loadingPublished;
   const isError = activeTab === "all" ? errorAll : errorPublished;
+  const loadError = activeTab === "all" ? allError : publishedError;
 
   const handleNewClick = useCallback(() => {
     setEditTarget(null);
@@ -119,6 +122,7 @@ function AnnouncementsContent() {
     <AnnouncementsBody
       isLoading={isLoading}
       isError={isError}
+      error={loadError}
       list={displayedList}
       canManage={canManage}
       onRetry={handleRetry}

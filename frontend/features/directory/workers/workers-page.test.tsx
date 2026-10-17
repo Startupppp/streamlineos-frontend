@@ -35,6 +35,7 @@ jest.mock("@/hooks/api/access", () => ({
     allowed: true,
     denied: false,
     pending: false,
+    unavailable: false,
   })),
 }));
 

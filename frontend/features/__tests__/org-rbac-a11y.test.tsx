@@ -101,36 +101,6 @@ jest.mock("@/components/ui/empty-state", () => ({
   ),
 }));
 
-jest.mock("@/components/shared/data-table-pagination", () => ({
-  DataTablePagination: ({
-    page,
-    totalPages,
-    onPageChange,
-    onLimitChange: _lc,
-    total: _t,
-    limit: _l,
-    pageSizeOptions: _po,
-  }: {
-    page: number;
-    totalPages: number;
-    total: number;
-    limit: number;
-    onPageChange: (p: number) => void;
-    onLimitChange: (l: number) => void;
-    pageSizeOptions?: number[];
-  }) => (
-    <nav aria-label="Pagination">
-      <button type="button" onClick={() => onPageChange(page - 1)} disabled={page <= 1} aria-label="Previous page">
-        Prev
-      </button>
-      <span>Page {page} of {totalPages}</span>
-      <button type="button" onClick={() => onPageChange(page + 1)} disabled={page >= totalPages} aria-label="Next page">
-        Next
-      </button>
-    </nav>
-  ),
-}));
-
 import { RolesListPanel, type RolesListPanelProps } from "@/features/settings/roles/roles-list-panel";
 import type { RoleListRow } from "@/hooks/api/roles";
 

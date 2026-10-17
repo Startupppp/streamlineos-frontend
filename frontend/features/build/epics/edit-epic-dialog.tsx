@@ -1,11 +1,17 @@
-﻿"use client";
+"use client";
 
-import { ReactNode, useState } from "react";
+import { ReactNode, useCallback, useRef, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { editEpicSchema, EPIC_PRIORITIES, EPIC_STATUSES, type EditEpicInput } from "./epic-schema";
+import {
+  editEpicSchema,
+  EPIC_PRIORITIES,
+  EPIC_STATUSES,
+  type EditEpicInput,
+} from "./epic-schema";
 import { Pencil, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { EntityFormSheet } from "@/components/shared";
 import {
   FormControl,
@@ -23,11 +29,23 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useUpdateTicket } from "@/hooks/api/build";
+import { useUpdateTicket } from "@/hooks/api/build/tickets";
 import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
+import type { EpicPage } from "@/hooks/api/build/epics";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { isApiError, getApiErrorCode } from "@/lib/api-envelope";
+import type { TicketConflictFieldDiff } from "@/features/build/ticket-details/ticket-conflict-diff";
+import { TicketConflictDialog } from "@/features/build/ticket-details/ticket-conflict-dialog";
 import { activationProps } from "@/lib/keyboard-activation";
+import { useOnlineStatus } from "@/hooks/common/use-online-status";
+import { useSubmitGuard } from "@/hooks/common/use-submit-guard";
+import {
+  toPriority,
+  toStatus,
+  STATUS_LABEL,
+  buildEpicConflictDiffs,
+} from "./edit-epic-model";
 
 interface EditEpicDialogProps {
   epic: {
@@ -36,34 +54,14 @@ interface EditEpicDialogProps {
     description?: string | null;
     priority?: string | null;
     status: string | null;
+    version: number;
   };
   projectId: number;
   trigger?: ReactNode;
-  /**
-   * Controlled mode, for a caller that opens this from a menu item. Without it
-   * the caller has to render a trigger, and a caller with no visible trigger to
-   * offer ends up rendering a hidden proxy button — which the sheet then
-   * restores focus to on close, stranding a keyboard user on an element that is
-   * not there.
-   */
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
+  openItemCount?: number;
 }
-
-function toPriority(value: string | null | undefined): EditEpicInput["priority"] {
-  return EPIC_PRIORITIES.find((p) => p === value) ?? "MEDIUM";
-}
-
-function toStatus(value: string | null | undefined): EditEpicInput["status"] {
-  return EPIC_STATUSES.find((s) => s === value) ?? "TODO";
-}
-
-const STATUS_LABEL: Record<EditEpicInput["status"], string> = {
-  TODO: "To Do",
-  IN_PROGRESS: "In Progress",
-  IN_REVIEW: "In Review",
-  DONE: "Done",
-};
 
 export function EditEpicDialog({
   epic,
@@ -71,37 +69,130 @@ export function EditEpicDialog({
   trigger,
   open: controlledOpen,
   onOpenChange,
+  openItemCount,
 }: EditEpicDialogProps) {
   const [uncontrolledOpen, setUncontrolledOpen] = useState(false);
   const controlled = controlledOpen !== undefined;
   const open = controlled ? controlledOpen : uncontrolledOpen;
   const queryClient = useQueryClient();
+  const isOnline = useOnlineStatus();
 
-  const setOpen = (next: boolean) => {
-    if (!controlled) setUncontrolledOpen(next);
-    onOpenChange?.(next);
-  };
+  const setOpen = useCallback(
+    (next: boolean) => {
+      if (!controlled) setUncontrolledOpen(next);
+      onOpenChange?.(next);
+    },
+    [controlled, onOpenChange],
+  );
 
   const handleOpen = () => setOpen(true);
+  const [conflictFields, setConflictFields] = useState<
+    TicketConflictFieldDiff[] | null
+  >(null);
+  const [confirmPendingData, setConfirmPendingData] =
+    useState<EditEpicInput | null>(null);
+  const pendingValuesRef = useRef<EditEpicInput | null>(null);
 
-  const updateTicket = useUpdateTicket(projectId, {
-    onSuccess: () => {
-      toast.success("Epic updated");
-      queryClient.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.detail(projectId) });
-      setOpen(false);
+  const updateTicket = useUpdateTicket(projectId);
+
+  const submitUpdate = useCallback(
+    async (data: EditEpicInput) => {
+      pendingValuesRef.current = data;
+      try {
+        const response = await updateTicket.mutateAsync({
+          ticketId: epic.id,
+          version: epic.version,
+          title: data.title,
+          description: data.description,
+          priority: data.priority,
+          status: data.status,
+        });
+        const epicKey = buildWorkQueryKeys.projects.epics(projectId);
+        for (const [key, cached] of queryClient.getQueriesData<EpicPage>({ queryKey: epicKey })) {
+          if (!cached) continue;
+          queryClient.setQueryData<EpicPage>(key, {
+            ...cached,
+            data: cached.data.map((e) =>
+              e.id === epic.id
+                ? {
+                    ...e,
+                    title: data.title,
+                    description: data.description ?? null,
+                    priority: data.priority,
+                    status: data.status,
+                    version: response.version,
+                    updatedAt: response.updatedAt,
+                  }
+                : e,
+            ),
+          });
+        }
+        void queryClient.invalidateQueries({
+          queryKey: epicKey,
+          refetchType: "none",
+        });
+        toast.success("Epic updated");
+        setOpen(false);
+      } catch (error) {
+        if (
+          isApiError(error) &&
+          getApiErrorCode(error) === "PROJECTS_TICKET_CONFLICT"
+        ) {
+          void queryClient.invalidateQueries({
+            queryKey: buildWorkQueryKeys.projects.epics(projectId),
+            refetchType: "none",
+          });
+          const pending = pendingValuesRef.current;
+          const diffs = pending ? buildEpicConflictDiffs(pending, epic) : [];
+          setConflictFields(
+            diffs.length > 0
+              ? diffs
+              : [
+                  {
+                    key: "version",
+                    label: "Version",
+                    serverValue: "Updated by another user",
+                    pendingValue: "Your edit",
+                  },
+                ],
+          );
+          return;
+        }
+        toast.error(getErrorMessage(error));
+      }
     },
-    onError: (error) => toast.error(getErrorMessage(error)),
+    [updateTicket, epic, projectId, queryClient, setOpen],
+  );
+
+  const guard = useSubmitGuard(async (data: EditEpicInput) => {
+    if (!isOnline) {
+      toast.warning(
+        "You're offline — your draft is kept here and nothing was sent.",
+      );
+      return;
+    }
+    if (data.status === "DONE" && (openItemCount ?? 0) > 0) {
+      setConfirmPendingData(data);
+      return;
+    }
+    await submitUpdate(data);
   });
 
-  const handleSubmit = (data: EditEpicInput) => {
-    updateTicket.mutate({
-      ticketId: epic.id,
-      title: data.title,
-      description: data.description,
-      priority: data.priority,
-      status: data.status,
-    });
-  };
+  const handleConfirmDone = useCallback(() => {
+    const data = confirmPendingData;
+    setConfirmPendingData(null);
+    if (data) void submitUpdate(data);
+  }, [confirmPendingData, submitUpdate]);
+
+  const handleCancelConfirm = useCallback(() => {
+    setConfirmPendingData(null);
+  }, []);
+
+  const handleKeepMine = useCallback(() => setConflictFields(null), []);
+  const handleDiscardConflict = useCallback(() => {
+    setConflictFields(null);
+    setOpen(false);
+  }, [setOpen]);
 
   const defaultValues: EditEpicInput = {
     title: epic.title,
@@ -113,9 +204,7 @@ export function EditEpicDialog({
   return (
     <>
       {controlled ? null : trigger ? (
-        <span {...activationProps(handleOpen)}>
-          {trigger}
-        </span>
+        <span {...activationProps(handleOpen)}>{trigger}</span>
       ) : (
         <Button variant="ghost" size="sm" onClick={handleOpen}>
           <Pencil className="h-4 w-4 mr-2" />
@@ -128,8 +217,8 @@ export function EditEpicDialog({
         title="Edit epic"
         resolver={zodResolver(editEpicSchema)}
         defaultValues={defaultValues}
-        onSubmit={handleSubmit}
-        isSubmitting={updateTicket.isPending}
+        onSubmit={guard.submit}
+        isSubmitting={guard.isSubmitting}
         resetOnOpen
         submitLabel="Save changes"
       >
@@ -227,6 +316,27 @@ export function EditEpicDialog({
           </>
         )}
       </EntityFormSheet>
+      {conflictFields !== null ? (
+        <TicketConflictDialog
+          open
+          fields={conflictFields}
+          onKeepMine={handleKeepMine}
+          onDiscard={handleDiscardConflict}
+        />
+      ) : null}
+      {confirmPendingData !== null ? (
+        <ConfirmDialog
+          open
+          onOpenChange={(nextOpen) => {
+            if (!nextOpen) handleCancelConfirm();
+          }}
+          title="Mark epic as Done?"
+          description={`${openItemCount ?? 0} linked item${(openItemCount ?? 0) !== 1 ? "s are" : " is"} still open. This epic will be marked as Done regardless.`}
+          confirmLabel="Mark as Done"
+          onConfirm={handleConfirmDone}
+          isPending={updateTicket.isPending}
+        />
+      ) : null}
     </>
   );
 }

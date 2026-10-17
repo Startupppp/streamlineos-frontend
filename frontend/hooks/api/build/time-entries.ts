@@ -3,10 +3,10 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
-import type { TimeEntry, LogTimeInput } from "@/types/projects";
+import type { LogTimeInput } from "@/types/projects";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { lazyContract } from "@/lib/api-envelope";
-import { invalidateBuildViews } from "./ticket-cache";
+import { invalidateBuildViews } from "./ticket-cache-invalidation";
 
 
 const timeEntryRowLazy = lazyContract(() =>

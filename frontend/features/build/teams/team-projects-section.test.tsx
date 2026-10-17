@@ -60,8 +60,8 @@ jest.mock("@/components/ui/badge", () => ({
 }));
 
 jest.mock("@/components/pm-chrome", () => ({
-  PmSection: ({ children }: { children: ReactNode }) => <div>{children}</div>,
-  PmPanel: ({ children }: { children: ReactNode }) => <div>{children}</div>,
+  PmSection: ({ children, className }: { children: ReactNode; className?: string }) => <div className={className}>{children}</div>,
+  PmPanel: ({ children, className }: { children: ReactNode; className?: string }) => <div className={className}>{children}</div>,
   PM_ROW: "",
 }));
 
@@ -139,5 +139,24 @@ describe("TeamProjectsSection — access is three-valued, not a boolean", () => 
 
     expect(screen.queryByTestId("empty-state")).toBeNull();
     expect(container.firstChild).toBeNull();
+  });
+});
+
+describe("TeamProjectsSection — empty layout", () => {
+  it("fills the available tab width and remaining height without a fixed minimum-height card", () => {
+    render(<TeamProjectsSection teamId={1} />);
+
+    const emptyState = screen.getByTestId("empty-state");
+    const emptyPanel = emptyState.parentElement;
+    expect(emptyPanel).toHaveClass("min-h-0", "w-full", "flex-1");
+    expect(emptyPanel).not.toHaveClass("min-h-44");
+    expect(emptyPanel?.parentElement).toHaveClass(
+      "flex",
+      "min-h-0",
+      "min-w-0",
+      "w-full",
+      "flex-1",
+      "flex-col",
+    );
   });
 });

@@ -1,3 +1,5 @@
+import type { EnrollmentStatus } from "@/hooks/api/hr/recruitment/email-sequences-schema";
+import type { RejectionReason } from "@/hooks/api/hr/recruitment/rejection-reasons-schema";
 export type JobPostingStatus = "DRAFT" | "OPEN" | "PAUSED" | "CLOSED" | "FILLED";
 export type HiringFlowRoundType = "HR_SCREENING" | "TECHNICAL" | "MANAGER" | "CULTURAL_FIT" | "FINAL" | "CUSTOM";
 export type HiringFlowRoundMode = "VIDEO" | "PHONE" | "ONSITE";
@@ -183,11 +185,23 @@ export interface AtsPipelineCandidate {
 export interface AtsPipelineStage {
   stage: CandidateStatus;
   total: number;
+  /** How many of `total` this response carries — the endpoint caps each stage. */
+  shown: number;
+  truncated: boolean;
+  /** Hiring-flow round names for this column, when every open job agrees. */
+  roundLabel?: string | null;
   candidates: AtsPipelineCandidate[];
+}
+
+export interface AtsPipelineHiringRound {
+  jobPostingId: number;
+  jobTitle: string;
+  rounds: { name: string; orderIndex: number; roundType: string }[];
 }
 
 export interface AtsPipelineResponse {
   stages: AtsPipelineStage[];
+  hiringRounds?: AtsPipelineHiringRound[];
 }
 
 export interface InterviewRubricEntry {
@@ -306,6 +320,14 @@ export interface UpdateCandidateInput {
   status?: CandidateStatus;
   notes?: string;
   rating?: number;
+  /**
+   * Required by the API when `status` becomes `REJECTED`. The candidate detail
+   * page rejects through this endpoint rather than the stage one, so leaving
+   * these off here would have made the profile card the one screen that could
+   * still reject somebody without saying why.
+   */
+  rejectionReason?: RejectionReason;
+  rejectionNote?: string;
 }
 
 export interface CreateInterviewInput {
@@ -367,7 +389,6 @@ export interface CreateReferralInput {
 }
 
 export type EmailSequenceTrigger = "MANUAL" | "CANDIDATE_ADDED" | "APPLICATION_RECEIVED" | "STAGE_CHANGED" | "OFFER_SENT";
-export type EmailSequenceEnrollmentStatus = "ACTIVE" | "COMPLETED" | "UNSUBSCRIBED" | "BOUNCED";
 
 export interface EmailSequenceStep {
   id: number;
@@ -384,7 +405,7 @@ export interface EmailSequenceEnrollment {
   sequenceId: number;
   candidateId: number;
   currentStep: number;
-  status: EmailSequenceEnrollmentStatus;
+  status: EnrollmentStatus;
   enrolledAt: string;
   nextSendAt: string | null;
   completedAt: string | null;

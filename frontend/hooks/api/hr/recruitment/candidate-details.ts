@@ -2,10 +2,12 @@
 
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useGatedQuery } from "@/hooks/api/gated-query";
+import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
 import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
 import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
 import { useCan } from "@/hooks/api/access";
+import { useAuthorizedIdempotentMutation } from "@/hooks/api/inventory/use-idempotent-mutation";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 const noContentContract = lazyContract(() =>
@@ -110,29 +112,31 @@ export type {
 } from "@/hooks/api/hr/recruitment/candidate-details-types";
 
 export function useCandidateActivity(candidateId: number) {
-  const canView = useCan("hr:employees:view");
+  const canView = useCan("hr:requisitions:view");
   return useQuery({
     queryKey: [...humanResourcesQueryKeys.hr.candidate(candidateId), "activity"],
     queryFn: ({ signal }) => apiClient.get<CandidateActivityEvent[]>(`/hr/recruitment/candidates/${candidateId}/activity`, undefined, signal, activityContract),
     staleTime: 60_000,
     enabled: canView && !!candidateId,
+    ...INLINE_READ_ERROR,
   });
 }
 
 export function useCandidateVault(candidateId: number) {
-  const canViewVault = useCan("hr:employees:manage");
+  const canViewVault = useCan("hr:requisitions:manage");
   return useQuery({
     queryKey: humanResourcesQueryKeys.hr.candidateVault(candidateId),
     queryFn: ({ signal }) =>
       apiClient.get<VaultDocument[]>(`/hr/recruitment/candidates/${candidateId}/vault`, undefined, signal, vaultDocumentListContract),
     staleTime: 2 * 60_000,
     enabled: canViewVault && !!candidateId,
+    ...INLINE_READ_ERROR,
   });
 }
 
 export function useAddVaultDocument(candidateId: number) {
   const qc = useQueryClient();
-  return useAuthorizedMutation("hr:employees:manage", {
+  return useAuthorizedMutation("hr:requisitions:manage", {
     mutationKey: ["hr", "recruitment", "vault", "add", candidateId],
     mutationFn: (data: {
       filename: string;
@@ -150,7 +154,7 @@ export function useAddVaultDocument(candidateId: number) {
 
 export function useDeleteVaultDocument(candidateId: number) {
   const qc = useQueryClient();
-  return useAuthorizedMutation("hr:employees:manage", {
+  return useAuthorizedMutation("hr:requisitions:manage", {
     mutationKey: ["hr", "recruitment", "vault", "delete", candidateId],
     mutationFn: (documentId: number) =>
       apiClient.delete<void>(
@@ -165,7 +169,7 @@ export function useDeleteVaultDocument(candidateId: number) {
 }
 
 export function useRolloutDocuments(candidateId: number) {
-  return useGatedQuery("hr:employees:view", {
+  return useGatedQuery("hr:requisitions:view", {
     queryKey: humanResourcesQueryKeys.hr.rolloutDocuments(candidateId),
     queryFn: ({ signal }) =>
       apiClient.get<RolloutDocumentRecord[]>(
@@ -176,12 +180,13 @@ export function useRolloutDocuments(candidateId: number) {
       ),
     staleTime: 2 * 60_000,
     enabled: !!candidateId,
+    ...INLINE_READ_ERROR,
   });
 }
 
 export function useGenerateAndRollout(candidateId: number) {
   const qc = useQueryClient();
-  return useAuthorizedMutation("hr:employees:manage", {
+  return useAuthorizedMutation("hr:requisitions:manage", {
     mutationKey: ["hr", "recruitment", "rollout-documents", candidateId],
     mutationFn: (data: RolloutDocumentsInput) =>
       apiClient.post<RolloutDocumentsResult>(
@@ -199,7 +204,7 @@ export function useGenerateAndRollout(candidateId: number) {
 
 export function useUpdateCandidateBgv(candidateId: number) {
   const qc = useQueryClient();
-  return useAuthorizedMutation("hr:employees:manage", {
+  return useAuthorizedMutation("hr:requisitions:manage", {
     mutationKey: ["hr", "recruitment", "candidates", "bgv", candidateId],
     mutationFn: (data: UpdateBgvInput) =>
       apiClient.patch<{ success: true }>(
@@ -214,7 +219,7 @@ export function useUpdateCandidateBgv(candidateId: number) {
 }
 
 export function useVaultAccessLogs(candidateId: number) {
-  return useGatedQuery("hr:employees:manage", {
+  return useGatedQuery("hr:requisitions:manage", {
     queryKey: [...humanResourcesQueryKeys.hr.all, "vaultAccessLogs", candidateId] as const,
     queryFn: ({ signal }) =>
       apiClient.get<VaultAccessLog[]>(
@@ -239,19 +244,20 @@ export function useBgvComplianceDashboard() {
 }
 
 export function useCandidateReferrals(candidateId: number) {
-  const canView = useCan("hr:employees:view");
+  const canView = useCan("hr:requisitions:view");
   return useQuery<CandidateReferral[]>({
     queryKey: [...humanResourcesQueryKeys.hr.candidate(candidateId), "referrals"],
     queryFn: ({ signal }) =>
       apiClient.get<CandidateReferral[]>(`/hr/recruitment/candidates/${candidateId}/referral`, undefined, signal, referralListContract),
     enabled: canView && candidateId > 0,
     staleTime: 2 * 60_000,
+    ...INLINE_READ_ERROR,
   });
 }
 
 export function useCreateReferral(candidateId: number) {
   const qc = useQueryClient();
-  return useAuthorizedMutation("hr:employees:manage", {
+  return useAuthorizedIdempotentMutation("hr:requisitions:manage", {
     mutationKey: ["hr", "recruitment", "referrals", "create", candidateId],
     mutationFn: (data: {
       referredBy: string;
@@ -259,7 +265,7 @@ export function useCreateReferral(candidateId: number) {
       notes?: string;
       bonusEligible?: boolean;
       bonusAmount?: number;
-    }) => apiClient.post<CandidateReferral>(`/hr/recruitment/candidates/${candidateId}/referral`, data, undefined, referralContract),
+    }, idempotencyKey: string) => apiClient.post<CandidateReferral>(`/hr/recruitment/candidates/${candidateId}/referral`, data, { headers: { "Idempotency-Key": idempotencyKey } }, referralContract),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: [...humanResourcesQueryKeys.hr.candidate(candidateId), "referrals"] });
     },
@@ -268,7 +274,7 @@ export function useCreateReferral(candidateId: number) {
 
 export function useUpdateReferral(candidateId: number) {
   const qc = useQueryClient();
-  return useAuthorizedMutation("hr:employees:manage", {
+  return useAuthorizedMutation("hr:requisitions:manage", {
     mutationKey: ["hr", "recruitment", "referrals", "update", candidateId],
     mutationFn: (data: {
       id: number;
@@ -284,7 +290,7 @@ export function useUpdateReferral(candidateId: number) {
 }
 
 export function useCalibrationSessions(candidateId: number) {
-  return useGatedQuery<CalibrationSession[]>("hr:employees:view", {
+  return useGatedQuery<CalibrationSession[]>("hr:requisitions:view", {
     queryKey: [...humanResourcesQueryKeys.hr.candidate(candidateId), "calibration"],
     queryFn: ({ signal }) =>
       apiClient.get<CalibrationSession[]>(`/hr/recruitment/candidates/${candidateId}/calibration`, undefined, signal, calibrationListContract),
@@ -295,7 +301,7 @@ export function useCalibrationSessions(candidateId: number) {
 
 export function useCreateCalibration(candidateId: number) {
   const qc = useQueryClient();
-  return useAuthorizedMutation("hr:employees:manage", {
+  return useAuthorizedMutation("hr:requisitions:manage", {
     mutationKey: ["hr", "recruitment", "calibration", "create", candidateId],
     mutationFn: (data: {
       jobPostingId?: number;
@@ -311,7 +317,7 @@ export function useCreateCalibration(candidateId: number) {
 
 export function useUpdateCalibration(candidateId: number) {
   const qc = useQueryClient();
-  return useAuthorizedMutation("hr:employees:manage", {
+  return useAuthorizedMutation("hr:requisitions:manage", {
     mutationKey: ["hr", "recruitment", "calibration", "update", candidateId],
     mutationFn: (data: {
       id: number;
@@ -328,18 +334,19 @@ export function useUpdateCalibration(candidateId: number) {
 }
 
 export function useReferenceChecks(candidateId: number) {
-  return useGatedQuery("hr:employees:view", {
+  return useGatedQuery("hr:requisitions:view", {
     queryKey: [...humanResourcesQueryKeys.hr.all, "referenceChecks", candidateId] as const,
     queryFn: ({ signal }) =>
       apiClient.get<ReferenceCheck[]>(`/hr/recruitment/candidates/${candidateId}/reference-checks`, undefined, signal, referenceCheckListContract),
     staleTime: 2 * 60_000,
     enabled: candidateId > 0,
+    ...INLINE_READ_ERROR,
   });
 }
 
 export function useCreateReferenceCheck(candidateId: number) {
   const qc = useQueryClient();
-  return useAuthorizedMutation("hr:employees:manage", {
+  return useAuthorizedMutation("hr:requisitions:manage", {
     mutationKey: ["hr", "recruitment", "reference-checks", "create", candidateId],
     mutationFn: (data: CreateReferenceCheckInput) =>
       apiClient.post<ReferenceCheck>(
@@ -355,7 +362,7 @@ export function useCreateReferenceCheck(candidateId: number) {
 
 export function useUpdateReferenceCheck(candidateId: number, checkId: number) {
   const qc = useQueryClient();
-  return useAuthorizedMutation("hr:employees:manage", {
+  return useAuthorizedMutation("hr:requisitions:manage", {
     mutationKey: ["hr", "recruitment", "reference-checks", "update", candidateId, checkId],
     mutationFn: (data: {
       status?: "PENDING" | "IN_PROGRESS" | "COMPLETED" | "DECLINED";
@@ -376,7 +383,7 @@ export function useUpdateReferenceCheck(candidateId: number, checkId: number) {
 
 export function useDeleteReferenceCheck(candidateId: number, checkId: number) {
   const qc = useQueryClient();
-  return useAuthorizedMutation("hr:employees:manage", {
+  return useAuthorizedMutation("hr:requisitions:manage", {
     mutationKey: ["hr", "recruitment", "reference-checks", "delete", candidateId, checkId],
     mutationFn: () =>
       apiClient.delete<void>(

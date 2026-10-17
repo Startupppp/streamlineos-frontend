@@ -1,5 +1,7 @@
 "use client";
 
+import { DatePicker } from "@/components/ui/date-picker";
+
 import { useEffect, useCallback } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -7,6 +9,7 @@ import { z } from "zod";
 import {
   Sheet,
   SheetContent,
+  SheetDescription,
   SheetHeader,
   SheetTitle,
   SheetBody,
@@ -30,8 +33,6 @@ import {
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { LoadingButton } from "@/components/ui/loading-button";
-import { toast } from "sonner";
-import { getErrorMessage } from "@/lib/get-error-message";
 import {
   useCreateContract,
   useUpdateContract,
@@ -126,11 +127,7 @@ export function ContractSheet({ open, onOpenChange, existing, defaultEmploymentI
 
     const mutation = existing ? update : create;
     mutation.mutate(body, {
-      onSuccess: () => {
-        toast.success(existing ? "Contract updated" : "Contract created");
-        onOpenChange(false);
-      },
-      onError: (err) => toast.error(getErrorMessage(err)),
+      onSuccess: () => onOpenChange(false),
     });
   }, [existing, create, update, onOpenChange]);
 
@@ -141,6 +138,7 @@ export function ContractSheet({ open, onOpenChange, existing, defaultEmploymentI
       <SheetContent className="flex w-full flex-col gap-0 overflow-hidden p-0 sm:max-w-lg">
         <SheetHeader className="shrink-0 border-b border-border px-6 py-4 text-left">
           <SheetTitle>{existing ? "Edit Contract" : "New Contract"}</SheetTitle>
+          <SheetDescription className="sr-only">Record or update a contingent worker contract.</SheetDescription>
         </SheetHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="flex min-h-0 flex-1 flex-col">
@@ -193,10 +191,10 @@ export function ContractSheet({ open, onOpenChange, existing, defaultEmploymentI
             )} />
             <div className="grid grid-cols-2 gap-3">
               <FormField control={form.control} name="startDate" render={({ field }) => (
-                <FormItem><FormLabel>Start Date <span className="text-destructive">*</span></FormLabel><FormControl><Input {...field} type="date" /></FormControl><FormMessage /></FormItem>
+                <FormItem><FormLabel>Start Date <span className="text-destructive">*</span></FormLabel><FormControl><DatePicker value={field.value ?? ""} onChange={field.onChange} placeholder="Pick a date" dateFormat="dd MMM yyyy" ariaLabel="Start Date" /></FormControl><FormMessage /></FormItem>
               )} />
               <FormField control={form.control} name="endDate" render={({ field }) => (
-                <FormItem><FormLabel>End Date</FormLabel><FormControl><Input {...field} type="date" /></FormControl><FormMessage /></FormItem>
+                <FormItem><FormLabel>End Date</FormLabel><FormControl><DatePicker value={field.value ?? ""} onChange={field.onChange} placeholder="Pick a date" dateFormat="dd MMM yyyy" clearable ariaLabel="End Date" /></FormControl><FormMessage /></FormItem>
               )} />
             </div>
             <div className="grid grid-cols-2 gap-3">

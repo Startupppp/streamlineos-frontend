@@ -19,9 +19,22 @@ import {
   unwrapSuccessEnvelope,
 } from "./contract-parity/schema-diff.mjs";
 import { runSelfTest } from "./contract-parity/self-test.mjs";
+import {
+  checkDbCoverage,
+  collectAllFieldNames,
+  inferTableVarForRoute,
+  readDbSchema,
+  UNIVERSAL_PRIVATE_COLUMNS,
+} from "./contract-parity/db-schema.mjs";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
-const CACHE_DIR = join(ROOT, "node_modules", ".cache", "contract-parity");
+// Deliberately NOT under node_modules: in these git worktrees, frontend/node_modules is a
+// symlink into a sibling worktree's node_modules. esbuild resolves entryPoints through
+// symlinks (realpath) before resolving relative imports, so an entry file whose path runs
+// through that symlink has its relative imports (`../../hooks/...`) resolved against the
+// WRONG worktree's source tree. Keeping the cache dir outside node_modules keeps the entry
+// file's real path inside THIS worktree regardless of the node_modules symlink situation.
+const CACHE_DIR = join(ROOT, ".cache", "contract-parity");
 const SCAN_DIRS = ["hooks", "lib", "app", "features", "components"];
 const BACKEND_DOCUMENT = "openapi.json";
 
@@ -123,7 +136,7 @@ function contractRefs(calls) {
 
 export function evaluate(records, document) {
   const operations = indexOperations(document);
-  const findings = { missing: [], extras: [], optionalOnBackend: [], unmatchedRoutes: [], noResponseSchema: [] };
+  const findings = { missing: [], extras: [], optionalOnBackend: [], unmatchedRoutes: [], noResponseSchema: [], typeMismatches: [] };
   const matched = new Set();
   for (const record of records) {
     const pattern = routePattern(record.route);
@@ -146,6 +159,8 @@ export function evaluate(records, document) {
       findings.extras.push({ ...record, backendPath: entry.path, fieldPath: item.path, field: item.field });
     for (const item of diff.optionalOnBackend)
       findings.optionalOnBackend.push({ ...record, backendPath: entry.path, fieldPath: item.path, field: item.field });
+    for (const item of diff.typeMismatches)
+      findings.typeMismatches.push({ ...record, backendPath: entry.path, fieldPath: item.path, field: item.field, kind: item.kind, backendType: item.backendType, frontendTypes: item.frontendTypes, unexpectedValues: item.unexpectedValues });
   }
   return { ...findings, matchedRoutes: matched.size, operations: operations.size };
 }
@@ -164,30 +179,101 @@ export function partitionFindings(findings, baselineKeys) {
 }
 
 function readBaseline() {
-  if (!existsSync(BASELINE_FILE)) return { missing: [], extras: [], capturedAgainst: "(no baseline file)" };
+  if (!existsSync(BASELINE_FILE)) return { missing: [], extras: [], typeMismatches: [], dbCoverage: [], capturedAgainst: "(no baseline file)" };
   const parsed = JSON.parse(readFileSync(BASELINE_FILE, "utf8"));
   return {
     missing: parsed.missing ?? [],
     extras: parsed.extras ?? [],
+    typeMismatches: parsed.typeMismatches ?? [],
+    dbCoverage: parsed.dbCoverage ?? [],
     capturedAgainst: parsed.capturedAgainst ?? "(unknown revision)",
   };
 }
 
-function writeBaseline(result, document) {
-  writeFileSync(
-    BASELINE_FILE,
-    `${JSON.stringify(
-      {
-        capturedAgainst: document.revision,
-        capturedAt: new Date().toISOString(),
-        missing: result.missing.map(findingKey).sort(),
-        extras: result.extras.map(findingKey).sort(),
-      },
-      null,
-      2,
-    )}\n`,
-    "utf8",
-  );
+export function baselineAdditions(previous, next) {
+  const added = [];
+  for (const bucket of ["missing", "extras", "typeMismatches", "dbCoverage"]) {
+    const frozen = new Set(previous[bucket] ?? []);
+    const arriving = (next[bucket] ?? []).filter((key) => !frozen.has(key));
+    if (arriving.length > 0) added.push({ bucket, keys: arriving });
+  }
+  return added;
+}
+
+function writeBaseline(result, document, dbResult) {
+  const dedup = (arr) => [...new Set(arr)].sort();
+  const obj = {
+    capturedAgainst: document.revision,
+    capturedAt: new Date().toISOString(),
+    missing: dedup(result.missing.map(findingKey)),
+    extras: dedup(result.extras.map(findingKey)),
+    typeMismatches: dedup(result.typeMismatches.map(findingKey)),
+  };
+  if (dbResult !== null) obj.dbCoverage = dedup(dbResult.findings.map(findingKey));
+
+  const added = baselineAdditions(readBaseline(), obj);
+  if (added.length > 0) {
+    console.error("FAIL: --update-baseline prunes, it does not capture. This run would ADD frozen debt:");
+    for (const { bucket, keys } of added) {
+      console.error(`  ${bucket}: ${keys.length} new entry(entries)`);
+      for (const key of keys.slice(0, 20)) console.error(`    ${key}`);
+      if (keys.length > 20) console.error(`    ... and ${keys.length - 20} more`);
+    }
+    console.error("");
+    console.error("Fix the finding, or add the key to scripts/contract-parity-baseline.json by hand so a reviewer sees it in the diff.");
+    console.error("Nothing was written; the committed baseline is unchanged.");
+    return 1;
+  }
+  writeFileSync(BASELINE_FILE, `${JSON.stringify(obj, null, 2)}\n`, "utf8");
+  return 0;
+}
+
+export function staleFailures(staleKeys) {
+  if (staleKeys.length === 0) return [];
+  return [
+    `${staleKeys.length} frozen baseline entry(entries) no longer reproduce — run --update-baseline to prune scripts/contract-parity-baseline.json (it refuses to write if the run would add an entry)`,
+  ];
+}
+
+export function evaluateDbCoverage(records, document, tables, privateAllowlist) {
+  const operations = indexOperations(document);
+  const findings = [];
+  const seen = new Set();
+  let routeCount = 0;
+  let matchedCount = 0;
+  for (const record of records) {
+    const pattern = routePattern(record.route);
+    const entry = operations.get(`${record.method} ${pattern}`);
+    if (entry === undefined) continue;
+    routeCount += 1;
+    const tableVar = inferTableVarForRoute(pattern, tables);
+    if (tableVar === null) continue;
+    matchedCount += 1;
+    const columns = tables.get(tableVar);
+    if (!columns || columns.length === 0) continue;
+    const body = responseBodySchema(entry.operation);
+    if (body === null) continue;
+    const payload = unwrapSuccessEnvelope(body, document);
+    const openApiFields = collectAllFieldNames(payload, document);
+    const frontendFields = collectAllFieldNames(record.schema, record.schema);
+    for (const col of checkDbCoverage(columns, openApiFields, frontendFields, privateAllowlist)) {
+      const key = `${record.method} ${entry.path} ${col}`;
+      if (seen.has(key)) continue;
+      seen.add(key);
+      findings.push({
+        method: record.method,
+        backendPath: entry.path,
+        fieldPath: col,
+        field: col,
+        tableVar,
+        contractFile: record.contractFile,
+        contractName: record.contractName,
+        file: record.file,
+        line: record.line,
+      });
+    }
+  }
+  return { findings, routeCount, matchedCount };
 }
 
 export function floorFailures(stats, matchedRoutes) {
@@ -204,6 +290,25 @@ export function floorFailures(stats, matchedRoutes) {
   ].filter((failure) => failure !== null);
 }
 
+function describeTypeMismatch(finding) {
+  const file = finding.contractFile.replace(ROOT, "").replaceAll("\\", "/").replace(/^\//, "");
+  let kindDescription;
+  if (finding.kind === "type") {
+    kindDescription = `type: backend declares '${finding.backendType}', frontend accepts [${(finding.frontendTypes ?? []).join(", ")}]`;
+  } else if (finding.kind === "enum") {
+    kindDescription = `enum: backend can send values not in frontend enum: [${(finding.unexpectedValues ?? []).join(", ")}]`;
+  } else {
+    kindDescription = "nullable: backend allows null but frontend contract does not";
+  }
+  return [
+    `  ${finding.method.toUpperCase()} ${finding.backendPath}`,
+    `    field:    ${finding.fieldPath}`,
+    `    mismatch: ${kindDescription}`,
+    `    frontend: ${file}  (${finding.contractName})`,
+    `    call:     ${finding.file}:${finding.line}`,
+  ].join("\n");
+}
+
 function describe(finding) {
   const found = fieldLine(finding.contractFile, finding.field);
   const file = finding.contractFile.replace(ROOT, "").replaceAll("\\", "/").replace(/^\//, "");
@@ -217,10 +322,13 @@ function describe(finding) {
   ].join("\n");
 }
 
-function report(result, document, options, stats, baseline) {
+function report(result, document, options, stats, baseline, dbResult) {
   const missing = partitionFindings(result.missing, baseline.missing);
   const extras = partitionFindings(result.extras, baseline.extras);
-  console.log("Contract parity — frontend response contracts vs the backend's published response schemas\n");
+  const typeMismatches = partitionFindings(result.typeMismatches, baseline.typeMismatches ?? []);
+  const dbCov = dbResult !== null ? partitionFindings(dbResult.findings, baseline.dbCoverage ?? []) : null;
+  console.log("Contract parity — frontend response contracts vs the backend's published response schemas");
+  console.log("  Checks: required field presence, scalar type compatibility, enum membership, and nullability\n");
   console.log(`  Backend document:     ${document.revision}  ${document.origin}`);
   console.log(`  Operations declared:  ${result.operations}`);
   console.log(`  Seam calls scanned:   ${stats.calls}   (${SCAN_DIRS.join(" ")})`);
@@ -229,9 +337,16 @@ function report(result, document, options, stats, baseline) {
   console.log(
     `  Not comparable:       ${result.unmatchedRoutes.length} route(s) absent from the document, ${result.noResponseSchema.length} without a response schema, ${stats.unresolved} unresolvable contract expression(s), ${stats.loadFailures} contract(s) that would not convert\n`,
   );
+  if (dbResult !== null) {
+    console.log(
+      `  DB schema:            ${stats.dbFiles} files scanned; ${dbResult.routeCount} routes checked; ${dbResult.matchedCount} matched a table; ${dbCov.frozen.length} db-coverage finding(s) frozen in baseline\n`,
+    );
+  } else {
+    console.log(`  DB schema:            not checked (backend root not found; set STREAMLINE_BACKEND_ROOT to enable)\n`);
+  }
 
   console.log(
-    `  Frozen debt:          ${missing.frozen.length} missing + ${extras.frozen.length} strict-extra finding(s) recorded in scripts/contract-parity-baseline.json against ${baseline.capturedAgainst}\n`,
+    `  Frozen debt:          ${missing.frozen.length} missing + ${extras.frozen.length} strict-extra + ${typeMismatches.frozen.length} type-mismatch finding(s) recorded in scripts/contract-parity-baseline.json against ${baseline.capturedAgainst}\n`,
   );
 
   if (missing.fresh.length > 0) {
@@ -251,10 +366,31 @@ function report(result, document, options, stats, baseline) {
     console.error("");
   }
 
-  if (missing.stale.length > 0 || extras.stale.length > 0)
-    console.log(
-      `NOTE: ${missing.stale.length + extras.stale.length} baseline entry(entries) no longer reproduce against ${document.revision}. Rerun --update-baseline against the revision you gate on; this is expected when you point the gate at a different revision, and is not a failure.\n`,
+  if (typeMismatches.fresh.length > 0) {
+    console.error(
+      `FAIL: ${typeMismatches.fresh.length} NEW type/enum/nullability mismatch(es) — the backend's declared type for a field is incompatible with what the frontend contract accepts.\n`,
     );
+    for (const finding of typeMismatches.fresh) console.error(describeTypeMismatch(finding));
+    console.error("");
+  }
+
+  if (dbCov !== null && dbCov.fresh.length > 0) {
+    console.error(
+      `FAIL: ${dbCov.fresh.length} DB column(s) absent from both the backend OpenAPI spec and the frontend contract — the field exists in the table but neither contract declares it.\n`,
+    );
+    for (const finding of dbCov.fresh)
+      console.error(`  ${finding.method.toUpperCase()} ${finding.backendPath}\n    column: ${finding.fieldPath}  table: ${finding.tableVar}\n    frontend: ${finding.contractFile.replace(ROOT, "").replaceAll("\\", "/").replace(/^\//, "")}  (${finding.contractName})\n    call: ${finding.file}:${finding.line}`);
+    console.error("");
+  }
+
+  const allStale = [
+    ...missing.stale,
+    ...extras.stale,
+    ...typeMismatches.stale,
+    ...(dbCov !== null ? dbCov.stale : []),
+  ];
+  const staleMessages = staleFailures(allStale);
+  for (const msg of staleMessages) console.error(`FAIL: ${msg}\n`);
 
   if (options.list) {
     console.log(`Frozen debt — ${missing.frozen.length} missing field(s) already recorded:`);
@@ -275,15 +411,24 @@ function report(result, document, options, stats, baseline) {
   const floors = floorFailures(stats, result.matchedRoutes);
   for (const failure of floors) console.error(`FAIL: ${failure}`);
 
-  if (missing.fresh.length === 0 && extras.fresh.length === 0 && floors.length === 0) {
+  const freshCount =
+    missing.fresh.length + extras.fresh.length + typeMismatches.fresh.length +
+    (dbCov !== null ? dbCov.fresh.length : 0);
+  if (freshCount === 0 && staleMessages.length === 0 && floors.length === 0) {
     console.log(
-      `PASS: no NEW frontend contract requires a field ${document.revision} does not declare (${missing.frozen.length} frozen, listed in the baseline).`,
+      `PASS: no NEW frontend contract requires a field, or declares a type, that ${document.revision} does not match (${missing.frozen.length} missing + ${typeMismatches.frozen.length} type-mismatch frozen, listed in the baseline).`,
     );
     console.log("BLIND SPOTS (this gate does not see them):");
     console.log(`  - the document is an artifact: it proves what the backend REPO declared at ${document.revision}, not what the running API emits`);
     console.log(`  - ${result.unmatchedRoutes.length} call site route(s) match no operation; ${stats.unresolved} contract expression(s) do not resolve to a module export`);
-    console.log("  - types and nullability are not compared, only presence: a string-vs-number or null-vs-string drift still throws at runtime");
-    console.log(`  - ${result.optionalOnBackend.length} field(s) are required here and optional there (run --list); the backend document is generated io:\"input\", so a .default() reads as optional`);
+    console.log(`  - ${result.optionalOnBackend.length} field(s) are required here and optional there (run --list); the backend document is generated io:"input", so a .default() reads as optional`);
+    console.log("  - this gate only validates fields the frontend already declares — it never forces database columns into responses");
+    if (dbResult !== null) {
+      console.log(`  - DB column check uses naming convention route-to-table matching; ${dbResult.routeCount - dbResult.matchedCount} of ${dbResult.routeCount} routes had no table match; computed fields, transformations, and columns from joined tables may produce false positives or false negatives`);
+      console.log(`  - private columns excluded from DB check: ${[...UNIVERSAL_PRIVATE_COLUMNS].join(", ")}`);
+    } else {
+      console.log("  - DB column coverage was not checked (backend root absent); fields absent from both contracts are invisible");
+    }
     return 0;
   }
   return 1;
@@ -295,7 +440,8 @@ async function main() {
     console.log(USAGE);
     return 0;
   }
-  if (options.selfTest) return runSelfTest(evaluate, floorFailures, partitionFindings);
+  if (options.selfTest)
+    return runSelfTest(evaluate, floorFailures, partitionFindings, staleFailures, checkDbCoverage, baselineAdditions);
 
   const document = readBackendDocument(options);
   if (document.error !== undefined) {
@@ -322,12 +468,36 @@ async function main() {
       schema: schemas.get(call.contractKey),
     }));
 
-  const result = evaluate(records, JSON.parse(document.text));
+  const parsed = JSON.parse(document.text);
+  const result = evaluate(records, parsed);
+
+  const backendRootEnv = process.env.STREAMLINE_BACKEND_ROOT;
+  const backendRoot =
+    backendRootEnv !== undefined && backendRootEnv !== ""
+      ? backendRootEnv
+      : resolveBackendRoot(ROOT);
+  let dbResult = null;
+  let dbFiles = 0;
+  if (backendRoot !== null) {
+    const dbSchema = readDbSchema(backendRoot);
+    if (dbSchema.error !== undefined) {
+      if (backendRootEnv !== undefined && backendRootEnv !== "") {
+        console.error(`FAIL: DB schema check inconclusive: ${dbSchema.error}`);
+        return 2;
+      }
+    } else {
+      dbFiles = dbSchema.files;
+      dbResult = evaluateDbCoverage(records, parsed, dbSchema.tables, UNIVERSAL_PRIVATE_COLUMNS);
+    }
+  }
 
   if (options.updateBaseline) {
-    writeBaseline(result, document);
+    const before = readBaseline();
+    const refused = writeBaseline(result, document, dbResult);
+    if (refused !== 0) return refused;
+    const after = readBaseline();
     console.log(
-      `Baseline written: ${result.missing.length} missing and ${result.extras.length} strict-extra finding(s) frozen against ${document.revision}.`,
+      `Baseline pruned: missing ${before.missing.length} -> ${after.missing.length}, strict-extra ${before.extras.length} -> ${after.extras.length}, type-mismatch ${(before.typeMismatches ?? []).length} -> ${(after.typeMismatches ?? []).length}, db-coverage ${(before.dbCoverage ?? []).length} -> ${(after.dbCoverage ?? []).length}, against ${document.revision}.`,
     );
     return 0;
   }
@@ -337,20 +507,22 @@ async function main() {
   if (options.json) {
     const missing = partitionFindings(result.missing, baseline.missing);
     const extras = partitionFindings(result.extras, baseline.extras);
+    const typeMismatches = partitionFindings(result.typeMismatches, baseline.typeMismatches ?? []);
     process.stdout.write(
       JSON.stringify({
         revision: document.revision,
         scanned: calls.length,
         contracts: schemas.size,
         records: records.length,
-        frozen: { missing: missing.frozen.length, extras: extras.frozen.length, stale: missing.stale.length + extras.stale.length },
+        frozen: { missing: missing.frozen.length, extras: extras.frozen.length, typeMismatches: typeMismatches.frozen.length, stale: missing.stale.length + extras.stale.length + typeMismatches.stale.length },
         missing: result.missing.map((f) => ({ method: f.method, path: f.backendPath, field: f.fieldPath, contract: f.contractName, call: `${f.file}:${f.line}`, frozen: baseline.missing.includes(findingKey(f)) })),
         extras: result.extras.map((f) => ({ method: f.method, path: f.backendPath, field: f.fieldPath, contract: f.contractName, frozen: baseline.extras.includes(findingKey(f)) })),
+        typeMismatches: result.typeMismatches.map((f) => ({ method: f.method, path: f.backendPath, field: f.fieldPath, kind: f.kind, contract: f.contractName, frozen: (baseline.typeMismatches ?? []).includes(findingKey(f)) })),
         unmatchedRoutes: result.unmatchedRoutes.map((f) => ({ method: f.method, pattern: f.pattern, call: `${f.file}:${f.line}` })),
         optionalOnBackend: result.optionalOnBackend.length,
       }),
     );
-    return missing.fresh.length === 0 && extras.fresh.length === 0 ? 0 : 1;
+    return missing.fresh.length === 0 && extras.fresh.length === 0 && typeMismatches.fresh.length === 0 ? 0 : 1;
   }
 
   return report(
@@ -363,9 +535,11 @@ async function main() {
       records: records.length,
       unresolved: unresolved.length,
       loadFailures: failures.length,
-    failures,
+      failures,
+      dbFiles,
     },
     baseline,
+    dbResult,
   );
 }
 

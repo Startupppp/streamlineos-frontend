@@ -87,6 +87,7 @@ export interface FilterCategoryRowProps {
   onMouseEnter?: () => void;
   onKeyDown?: (e: KeyboardEvent) => void;
   dense?: boolean;
+  hasSubmenu?: boolean;
 }
 
 export function FilterCategoryRow({
@@ -99,6 +100,7 @@ export function FilterCategoryRow({
   onMouseEnter,
   onKeyDown,
   dense = false,
+  hasSubmenu = true,
 }: FilterCategoryRowProps) {
   const { iconRef } = useAnimatedIcon();
   const shouldReduceMotion = useReducedMotion();
@@ -129,14 +131,14 @@ export function FilterCategoryRow({
     <button
       type="button"
       role="menuitem"
-      aria-haspopup="true"
-      aria-expanded={selected}
+      aria-haspopup={hasSubmenu ? "true" : undefined}
+      aria-expanded={hasSubmenu ? selected : undefined}
       onClick={handleClick}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
       onKeyDown={handleKeyDown}
       className={cn(
-        "relative flex w-full cursor-pointer select-none items-center gap-2.5 rounded-lg px-3 text-sm outline-none",
+        "relative flex w-full cursor-pointer select-none items-center gap-2 rounded-lg px-2.5 text-sm outline-none",
         dense ? "h-9" : "h-10",
         "border-l-2 transition-[background-color,color,border-color] duration-150 ease-out motion-reduce:transition-none",
         "focus-visible:bg-primary/10 focus-visible:text-foreground focus-visible:border-l-primary",
@@ -151,22 +153,28 @@ export function FilterCategoryRow({
         iconRef={iconRef}
         active={selected}
       />
-      <span className="min-w-0 flex-1 truncate text-left font-medium tracking-tight">
+      <span className="min-w-0 flex-1 truncate text-left font-normal tracking-tight">
         {label}
       </span>
       {activeCount > 0 && (
-        <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1.5 text-dense font-semibold text-primary-foreground">
+        <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1.5 text-dense font-normal text-primary-foreground">
           {activeCount}
         </span>
       )}
-      <motion.span
-        aria-hidden
-        className="inline-flex shrink-0 text-muted-foreground"
-        animate={shouldReduceMotion ? undefined : { x: selected ? 2 : 0 }}
-        transition={pmSnappy}
-      >
-        <ChevronRight className="h-4 w-4" />
-      </motion.span>
+      {hasSubmenu ? (
+        <motion.span
+          aria-hidden
+          className="inline-flex shrink-0 text-muted-foreground"
+          animate={shouldReduceMotion ? undefined : { x: selected ? 2 : 0 }}
+          transition={pmSnappy}
+        >
+          <ChevronRight className="h-4 w-4" />
+        </motion.span>
+      ) : (
+        <span className="shrink-0 text-dense font-medium text-muted-foreground">
+          {activeCount > 0 ? "On" : "Add"}
+        </span>
+      )}
     </button>
   );
 }

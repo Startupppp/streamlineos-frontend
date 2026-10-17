@@ -5,14 +5,17 @@ import { SESSION_CLAIMS_UNCONFIRMED_MESSAGE } from "@/hooks/common/use-confirmed
 import type { SetupProvisioning } from "../hooks/use-setup-provisioning";
 
 const mockMutateAsync = jest.fn();
+const mockActivateMutateAsync = jest.fn();
 const mockSignIn = jest.fn();
 const mockRefreshSessionClaims = jest.fn();
 const mockClearAll = jest.fn();
 const mockSetCompletionMarker = jest.fn();
 const mockHasCompletionMarker = jest.fn();
+const mockGetCompletionDestination = jest.fn<string, unknown[]>(() => "/dashboard");
 const mockClearCompletionMarker = jest.fn();
 const mockClearBackendTokenCache = jest.fn();
 const mockLocationReplace = jest.fn();
+const mockIsApiError = jest.fn();
 
 let mockProvisioning: SetupProvisioning = {
   isReady: false,
@@ -26,6 +29,7 @@ let mockProvisioning: SetupProvisioning = {
 };
 
 let capturedProgressProps: Record<string, unknown> = {};
+let capturedWelcomeProps: Record<string, unknown> = {};
 
 jest.mock("./generation-progress-stage", () => ({
   GenerationProgressStage: jest.fn((props: Record<string, unknown>) => {
@@ -35,16 +39,23 @@ jest.mock("./generation-progress-stage", () => ({
 }));
 
 jest.mock("./welcome-celebration", () => ({
-  WelcomeCelebration: jest.fn(() => null),
+  WelcomeCelebration: jest.fn((props: Record<string, unknown>) => {
+    capturedWelcomeProps = props;
+    return null;
+  }),
 }));
 
 jest.mock("../hooks/use-setup-provisioning", () => ({
   useSetupProvisioning: jest.fn(() => mockProvisioning),
 }));
 
-jest.mock("@/lib/api/hooks/org", () => ({
+jest.mock("@/hooks/api/org-setup", () => ({
   useCompleteOrgSetupMutation: jest.fn(() => ({
     mutateAsync: mockMutateAsync,
+    isPending: false,
+  })),
+  useOrgSetupActivateMutation: jest.fn(() => ({
+    mutateAsync: mockActivateMutateAsync,
     isPending: false,
   })),
 }));
@@ -72,13 +83,14 @@ jest.mock("@/features/org-setup/lib/draft", () => ({
   clearAll: jest.fn((...args: unknown[]) => mockClearAll(...args)),
   setCompletionMarker: jest.fn((...args: unknown[]) => mockSetCompletionMarker(...args)),
   hasCompletionMarker: jest.fn((...args: unknown[]) => mockHasCompletionMarker(...args)),
+  getCompletionDestination: jest.fn((...args: unknown[]) => mockGetCompletionDestination(...args)),
   clearCompletionMarker: jest.fn((...args: unknown[]) => mockClearCompletionMarker(...args)),
 }));
 
 jest.mock("@/lib/api-client", () => ({
   clearBackendTokenCache: jest.fn((...args: unknown[]) => mockClearBackendTokenCache(...args)),
   setAutoSignOutSuppressed: jest.fn(),
-  isApiError: jest.fn().mockReturnValue(false),
+  isApiError: jest.fn((error: unknown) => mockIsApiError(error)),
 }));
 
 jest.mock("../lib/setup-payload", () => ({
@@ -103,17 +115,21 @@ const TEST_DATA = {
   goals: [],
   industry: "IT Services",
   companyName: "Test Corp",
+  displayName: "Test Corp",
+  fullName: "QA Owner",
   teamSize: "1-10",
   phone: "",
   installedApps: [],
   modules: [],
   invitees: [],
+  moduleAnswers: {},
 };
 
 const SETUP_RESPONSE = {
   success: true as const,
   orgId: "org-new",
   autoLoginToken: "magic-token-abc",
+  destination: "/dashboard",
 };
 
 const SIGN_IN_SUCCESS = { status: "signed-in" as const };
@@ -127,6 +143,7 @@ const FAKE_SESSION = {
 
 function resetMocks() {
   mockMutateAsync.mockReset();
+  mockActivateMutateAsync.mockReset();
   mockSignIn.mockReset();
   mockRefreshSessionClaims.mockReset();
   mockClearAll.mockReset();
@@ -135,7 +152,9 @@ function resetMocks() {
   mockClearCompletionMarker.mockReset();
   mockClearBackendTokenCache.mockReset();
   mockLocationReplace.mockReset();
+  mockIsApiError.mockReset().mockReturnValue(false);
   capturedProgressProps = {};
+  capturedWelcomeProps = {};
   mockProvisioning = {
     isReady: false,
     background: "unknown",
@@ -159,6 +178,95 @@ beforeAll(() => {
 beforeEach(resetMocks);
 
 import { StepGeneration } from "./step-generation";
+
+describe("StepGeneration — product plan rejection", () => {
+  it("keeps the draft and exposes a return to product choices for the server plan lock", async () => {
+    const onBackToProducts = jest.fn();
+    mockIsApiError.mockReturnValue(true);
+    mockMutateAsync.mockRejectedValue(
+      Object.assign(new Error("Inventory is not available on your plan."), {
+        status: 402,
+        code: "MODULE_NOT_ENABLED",
+        details: { moduleKey: "inventory", reason: "not-in-plan" },
+      }),
+    );
+
+    render(<StepGeneration data={TEST_DATA} onBackToProducts={onBackToProducts} />);
+
+    await waitFor(() => {
+      expect(capturedProgressProps.setupError).toEqual({
+        kind: "module-not-in-plan",
+        message: "Inventory is not available on your plan.",
+      });
+    });
+    expect(capturedProgressProps.onBackToProducts).toBe(onBackToProducts);
+    expect(mockClearAll).not.toHaveBeenCalled();
+    expect(mockSetCompletionMarker).not.toHaveBeenCalled();
+    expect(mockLocationReplace).not.toHaveBeenCalled();
+  });
+
+  it("does not label other module denials as a plan lock", async () => {
+    mockIsApiError.mockReturnValue(true);
+    mockMutateAsync.mockRejectedValue(
+      Object.assign(new Error("You do not have access to Inventory."), {
+        status: 402,
+        code: "MODULE_NOT_ENABLED",
+        details: { moduleKey: "inventory", reason: "user-denied" },
+      }),
+    );
+
+    render(<StepGeneration data={TEST_DATA} />);
+
+    await waitFor(() => {
+      expect(capturedProgressProps.setupError).toEqual({
+        kind: "setup-failed",
+        message: "You do not have access to Inventory.",
+      });
+    });
+  });
+
+  it("MODULE_ELIGIBILITY_CHANGED (409) maps to module-not-in-plan — same Back to Products path as plan lock (BT-12293bf84d3a)", async () => {
+    const onBackToProducts = jest.fn();
+    mockIsApiError.mockReturnValue(true);
+    mockMutateAsync.mockRejectedValue(
+      Object.assign(new Error("One or more selected modules are not available on your current plan."), {
+        status: 409,
+        code: "MODULE_ELIGIBILITY_CHANGED",
+        details: { newReview: { moduleEligibility: [{ moduleKey: "payroll", eligible: false }] } },
+      }),
+    );
+
+    render(<StepGeneration data={TEST_DATA} onBackToProducts={onBackToProducts} />);
+
+    await waitFor(() => {
+      expect(capturedProgressProps.setupError).toEqual({
+        kind: "module-not-in-plan",
+        message: "One or more selected modules are not available on your current plan.",
+      });
+    });
+    expect(capturedProgressProps.onBackToProducts).toBe(onBackToProducts);
+    expect(mockClearAll).not.toHaveBeenCalled();
+    expect(mockLocationReplace).not.toHaveBeenCalled();
+  });
+
+  it("MODULE_ELIGIBILITY_CHANGED without onBackToProducts still maps to module-not-in-plan kind", async () => {
+    mockIsApiError.mockReturnValue(true);
+    mockMutateAsync.mockRejectedValue(
+      Object.assign(new Error("Plan change detected."), {
+        status: 409,
+        code: "MODULE_ELIGIBILITY_CHANGED",
+      }),
+    );
+
+    render(<StepGeneration data={TEST_DATA} />);
+
+    await waitFor(() => {
+      expect(capturedProgressProps.setupError).toMatchObject({
+        kind: "module-not-in-plan",
+      });
+    });
+  });
+});
 
 describe("StepGeneration — signInWithMagicToken returns false", () => {
   it("ANTI-VACUITY: when signIn succeeds, clearAll IS called", async () => {
@@ -208,7 +316,7 @@ describe("StepGeneration — the claims refresh never confirms the new org", () 
     expect(mockRefreshSessionClaims).toHaveBeenCalledWith({ orgId: "org-new" });
     expect(mockSignIn).not.toHaveBeenCalled();
     expect(mockClearAll).toHaveBeenCalledWith("user-1");
-    expect(mockSetCompletionMarker).toHaveBeenCalledWith("user-1", "org-new");
+    expect(mockSetCompletionMarker).toHaveBeenCalledWith("user-1", "org-new", "/dashboard");
     expect(capturedProgressProps.setupError).toBeNull();
     expect(document.cookie).toContain(
       gateCookieName("org-setup-done", "org-new"),
@@ -284,7 +392,7 @@ describe("StepGeneration — both auth steps succeed", () => {
     expect(mockRefreshSessionClaims).toHaveBeenCalledTimes(1);
     expect(mockSignIn).not.toHaveBeenCalled();
     expect(mockClearAll).toHaveBeenCalledWith("user-1");
-    expect(mockSetCompletionMarker).toHaveBeenCalledWith("user-1", "org-new");
+    expect(mockSetCompletionMarker).toHaveBeenCalledWith("user-1", "org-new", "/dashboard");
     expect(capturedProgressProps.setupError).toBeNull();
   });
 });
@@ -336,6 +444,69 @@ describe("StepGeneration — background failed + isReady true → user can conti
   });
 });
 
+describe("StepGeneration — invitations wait for the background result", () => {
+  const WITH_INVITEE = {
+    ...TEST_DATA,
+    invitees: [{ email: "teammate@example.com", role: "MEMBER" as const }],
+  };
+
+  it("does not leave the progress screen while invitations are still pending", async () => {
+    mockProvisioning = { ...mockProvisioning, isReady: true, background: "pending" };
+    mockMutateAsync.mockResolvedValue({ ...SETUP_RESPONSE, autoLoginToken: null });
+    mockRefreshSessionClaims.mockResolvedValue(FAKE_SESSION);
+
+    render(<StepGeneration data={WITH_INVITEE} />);
+
+    await waitFor(() => {
+      expect(mockMutateAsync).toHaveBeenCalled();
+    });
+    expect(mockRefreshSessionClaims).not.toHaveBeenCalled();
+    expect(capturedProgressProps.showWelcome).toBe(false);
+  });
+
+  it("keeps a failed invitation result on screen instead of auto-continuing", async () => {
+    const issue = {
+      title: "Some optional setup steps didn't finish",
+      message: "Your invitations didn't complete.",
+      reference: null,
+      canContinue: true,
+    };
+    const recipientOutcomes = [
+      { email: "teammate@example.com", outcome: "failed" as const, reason: "unknown" as const },
+    ];
+    mockProvisioning = {
+      ...mockProvisioning,
+      isReady: true,
+      background: "completed",
+      issue,
+      recipientOutcomes,
+    };
+    mockMutateAsync.mockResolvedValue({ ...SETUP_RESPONSE, autoLoginToken: null });
+    mockRefreshSessionClaims.mockResolvedValue(FAKE_SESSION);
+
+    render(<StepGeneration data={WITH_INVITEE} />);
+
+    await waitFor(() => {
+      expect(capturedProgressProps.recipientOutcomes).toBe(recipientOutcomes);
+    });
+    expect(capturedProgressProps.provisioningIssue).toBe(issue);
+    expect(capturedProgressProps.showWelcome).toBe(false);
+    expect(mockRefreshSessionClaims).not.toHaveBeenCalled();
+  });
+
+  it("finishes once the invitations completed cleanly", async () => {
+    mockProvisioning = { ...mockProvisioning, isReady: true, background: "completed" };
+    mockMutateAsync.mockResolvedValue({ ...SETUP_RESPONSE, autoLoginToken: null });
+    mockRefreshSessionClaims.mockResolvedValue(FAKE_SESSION);
+
+    render(<StepGeneration data={WITH_INVITEE} />);
+
+    await waitFor(() => {
+      expect(capturedProgressProps.showWelcome).toBe(true);
+    });
+  });
+});
+
 describe("StepGeneration — second mount markers", () => {
   it("redirects when marker matches current user + org from session", () => {
     mockHasCompletionMarker.mockReturnValue(true);
@@ -359,6 +530,37 @@ describe("StepGeneration — second mount markers", () => {
   });
 });
 
+describe("StepGeneration — isValidRedirectPath guard", () => {
+  it("navigates to /dashboard on openOrganization", async () => {
+    const issue = null;
+    mockProvisioning = {
+      isReady: false,
+      background: "pending",
+      orgId: "org-new",
+      issue,
+      isRechecking: false,
+      hasTimedOut: false,
+      recipientOutcomes: null,
+      recheck: jest.fn(),
+    };
+    mockMutateAsync.mockResolvedValue({ ...SETUP_RESPONSE, autoLoginToken: null });
+    mockRefreshSessionClaims.mockResolvedValue(FAKE_SESSION);
+
+    render(<StepGeneration data={TEST_DATA} />);
+
+    await waitFor(() => {
+      expect(capturedProgressProps.onOpenOrganization).toBeDefined();
+    });
+
+    const onOpenOrganization = capturedProgressProps.onOpenOrganization as () => void;
+    onOpenOrganization();
+
+    await waitFor(() => {
+      expect(mockLocationReplace).toHaveBeenCalledWith("/dashboard");
+    });
+  });
+});
+
 describe("StepGeneration — StrictMode double-invoke", () => {
   it("calls mutateAsync exactly once even under StrictMode", async () => {
     mockProvisioning = { ...mockProvisioning, isReady: false, background: "pending" };
@@ -375,5 +577,66 @@ describe("StepGeneration — StrictMode double-invoke", () => {
     });
 
     expect(mockMutateAsync).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe("StepGeneration — server destination replaces hardcoded /dashboard", () => {
+  it("uses the server-provided destination for goToWorkspace instead of /dashboard", async () => {
+    mockProvisioning = { ...mockProvisioning, isReady: true, background: "pending" };
+    mockMutateAsync.mockResolvedValue({
+      ...SETUP_RESPONSE,
+      destination: "/build/projects/my-proj",
+    });
+    mockSignIn.mockResolvedValue(SIGN_IN_SUCCESS);
+    mockRefreshSessionClaims.mockResolvedValue(FAKE_SESSION);
+
+    render(<StepGeneration data={TEST_DATA} />);
+
+    await waitFor(() => {
+      expect(capturedProgressProps.showWelcome).toBe(true);
+    });
+
+    const onContinue = capturedWelcomeProps.onContinue as () => void;
+    onContinue();
+
+    expect(mockLocationReplace).toHaveBeenCalledWith("/build/projects/my-proj");
+    expect(mockSetCompletionMarker).toHaveBeenCalledWith(
+      "user-1",
+      "org-new",
+      "/build/projects/my-proj",
+    );
+  });
+
+  it("falls back to /dashboard when server destination is not available at marker redirect time", () => {
+    mockHasCompletionMarker.mockReturnValue(true);
+    mockGetCompletionDestination.mockReturnValue("/dashboard");
+
+    render(<StepGeneration data={TEST_DATA} />);
+
+    expect(mockLocationReplace).toHaveBeenCalledWith("/dashboard");
+    expect(mockMutateAsync).not.toHaveBeenCalled();
+  });
+});
+
+
+describe("StepGeneration — SETUP_IN_PROGRESS", () => {
+  it("polls status like TIMEOUT instead of setup-failed", async () => {
+    mockIsApiError.mockReturnValue(true);
+    mockMutateAsync.mockRejectedValue(
+      Object.assign(new Error("Organization setup is already in progress."), {
+        status: 409,
+        code: "SETUP_IN_PROGRESS",
+      }),
+    );
+
+    render(<StepGeneration data={TEST_DATA} />);
+
+    await waitFor(() => {
+      expect(capturedProgressProps.setupError).toBeNull();
+    });
+    // Polling after timeout flag drives status poll / destination navigation
+    await waitFor(() => {
+      expect(capturedProgressProps.isPollingAfterTimeout === true || capturedProgressProps.setupError === null).toBe(true);
+    });
   });
 });

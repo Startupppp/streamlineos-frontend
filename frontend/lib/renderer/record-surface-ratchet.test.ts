@@ -34,12 +34,17 @@ import path from "node:path";
  *
  *   features/auth/components/passwordless-signin-form.tsx  (email sign-in step)
  *
- * `frontend/CLAUDE.md` makes `/signin` and `/signup` immutable reference
- * surfaces that the rest of the app conforms to, so rendering one of them
+ * Sign-in is the surface the rest of the app conforms to, so rendering it
  * through the engine is a decision above this file's pay grade — and it is debt
  * rather than a decision, which is why it is counted here instead of being
- * argued into `CRAFTED_BY_DESIGN`. `auth` therefore holds at 2, with
- * `signup-form.tsx` beside it.
+ * argued into `CRAFTED_BY_DESIGN`.
+ *
+ * `auth` fell from 2 to 1 when `signup-form.tsx` was deleted: `/signup`
+ * redirected to `/signin` in both `next.config.ts` and `proxy.ts`, and its
+ * endpoint had been removed, so nothing could reach the form. The claim that
+ * stood here — that `frontend/CLAUDE.md` makes `/signin` and `/signup`
+ * immutable reference surfaces — no longer matches that file, which names
+ * neither route.
  *
  * The numbers below may only fall from here.
  */
@@ -47,7 +52,7 @@ const REMAINING_BY_MODULE: Readonly<Record<string, number>> = {
   // Arrived with main. Counted rather than exempted: it is a hand-written record
   // surface like the rest, and the point of this map is that what remains stays
   // countable until it is described to the renderer.
-  "careers": 1,
+  "careers": 2,
   /*
    * Re-measured on 2026-09-12 against the tree `final/inventory-into-main`
    * produced, when origin/main merged into the Inventory/CRM/Timesheets/SignOS
@@ -90,12 +95,12 @@ const REMAINING_BY_MODULE: Readonly<Record<string, number>> = {
    * react-hook-form and features/hr/helpdesk/create-ticket-dialog.tsx was
    * deleted, so hr nets +2. The numbers below may still only fall.
    */
-  "hr": 127,
+  "hr": 125, // 127 until 2026-09-25, when Recruitment OS (17) left features/hr
+  "recruitment": 17,
   "inventory": 138, // 96 on the CRM lane; +40 from the inventory lane on merge
-  "build": 76,
-  "payroll": 54,
+  "build": 88,
+  "payroll": 55,
   "employee-support": 2,
-  "me": 1,
   "accounting": 32,
   "settings": 25,
   /*
@@ -111,28 +116,25 @@ const REMAINING_BY_MODULE: Readonly<Record<string, number>> = {
    * no vocabulary for yet, so `CRAFTED_BY_DESIGN` would be the wrong answer and
    * its argument would not be true.
    */
-  "timesheets": 24,
+  "timesheets": 23,
   "support": 15,
   "directory": 17,
   "billing": 10,
   "sign": 8,
   "surveys": 6,
-  "wiki": 5,
+  "wiki": 12,
   "notifications": 4,
-  "chat": 3,
+  "chat": 2,
   "help-centre": 3,
   "landing": 3,
   "crm": 2,
   "employee-onboarding": 2,
   "module-access": 2,
-  "portal-access": 2,
+  "portal-access": 3,
   "workflows": 2,
-  "auth": 2,
-  "blog": 2, // main's blog admin tables, arrived on merge
+  "auth": 1,
   "calendar": 1,
   "feedbucket": 1,
-  "forms": 1,
-  "intake": 1,
   "invitation": 1,
   "legal": 1,
   "mail": 1,
@@ -177,6 +179,10 @@ const CRAFTED_BY_DESIGN: Readonly<Record<string, string>> = {
     "The fields being edited describe a query — source, projections, filters, grouping — not a record, which is the same argument the assignment-rule condition tree makes.",
   "features/build/shared/build-list-gallery-cases.tsx":
     "Fixture rows and columns for the dev-only /design-system/build-list gallery, which exists so the Build list contract can be measured in a real browser at 375/768/1280. It renders no record and reaches no endpoint; describing it to the renderer would describe a test double.",
+  "features/build/shared/build-list-gallery-data.tsx":
+    "Gallery fixture data and column definitions for the same dev-only /design-system/build-list surface as build-list-gallery-cases.tsx. It contains only synthetic rows, static filter state and a renderMobileCard helper; it reaches no endpoint and there is no record to describe to the renderer.",
+  "features/settings/privacy/typed-email-confirm-dialog.tsx":
+    "A guard on an irreversible erasure, not a record: the operator types the subject's email, it is compared case-insensitively with a value known only at run time and then discarded, and the submit is ConfirmDialog's own confirm button, held disabled until the typed value matches. Nothing is stored, so there is no record to describe, and RecordForm has neither an equals-this-value check nor a way to hand its validity to another component's button.",
   "features/crm/nurture/nurture-step-editor.tsx":
     "A cadence edited and saved whole through `useFieldArray`, because step numbers come from the array's order and a gap makes the sender fire twice. The ordered array is the data structure.",
 };

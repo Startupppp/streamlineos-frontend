@@ -1,13 +1,17 @@
 import { act, fireEvent, render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { TicketPickerDialog } from "./ticket-picker-dialog";
 
-jest.mock("@/hooks/api/build", () => ({
+jest.mock("@/hooks/api/build/ticket-search", () => ({
   useTicketSearch: jest.fn(),
 }));
 
 const { useTicketSearch } = jest.requireMock<{
   useTicketSearch: jest.Mock;
-}>("@/hooks/api/build");
+}>("@/hooks/api/build/ticket-search");
+const mockIsMobile = jest.fn(() => false);
+
+jest.mock("@/hooks/common/use-mobile", () => ({ useIsMobile: () => mockIsMobile() }));
 
 function renderPicker() {
   render(
@@ -21,8 +25,40 @@ function renderPicker() {
 }
 
 beforeEach(() => {
+  mockIsMobile.mockReturnValue(false);
   useTicketSearch.mockReset();
   useTicketSearch.mockReturnValue({ data: [], isLoading: false });
+});
+
+describe("TicketPickerDialog responsive selection", () => {
+  it("uses a desktop dialog and forwards the selected ticket", () => {
+    const ticket = { id: 12, title: "Fix portal", status: "OPEN", priority: "MEDIUM", ticketNumber: 12, projectId: 3, projectKey: "SOS", projectName: "Streamline", version: 1 };
+    const onSelect = jest.fn();
+    useTicketSearch.mockReturnValue({ data: [ticket], isLoading: false });
+    render(<TicketPickerDialog open onOpenChange={jest.fn()} onSelect={onSelect} />);
+
+    expect(screen.getByRole("dialog", { name: "Link a ticket" })).toHaveAttribute("data-slot", "dialog-content");
+    fireEvent.click(screen.getByRole("button", { name: /SOS-12.*Fix portal/ }));
+    expect(onSelect).toHaveBeenCalledWith(ticket);
+  });
+
+  it("opens the search and result list from the bottom on mobile", () => {
+    mockIsMobile.mockReturnValue(true);
+    renderPicker();
+    expect(screen.getByRole("dialog", { name: "Link a ticket" })).toHaveClass("data-[state=open]:slide-in-from-bottom");
+    expect(screen.getByRole("searchbox", { name: "Search tickets" })).toBeInTheDocument();
+  });
+
+  it("selects a ticket with the keyboard", async () => {
+    const ticket = { id: 12, title: "Fix portal", status: "OPEN", priority: "MEDIUM", ticketNumber: 12, projectId: 3, projectKey: "SOS", projectName: "Streamline", version: 1 };
+    const onSelect = jest.fn();
+    useTicketSearch.mockReturnValue({ data: [ticket], isLoading: false });
+    render(<TicketPickerDialog open onOpenChange={jest.fn()} onSelect={onSelect} />);
+
+    screen.getByRole("button", { name: /SOS-12.*Fix portal/ }).focus();
+    await userEvent.keyboard("{Enter}");
+    expect(onSelect).toHaveBeenCalledWith(ticket);
+  });
 });
 
 describe("TicketPickerDialog search field", () => {

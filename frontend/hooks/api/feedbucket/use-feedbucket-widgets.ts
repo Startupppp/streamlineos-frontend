@@ -1,6 +1,6 @@
 "use client";
 
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
 import { growthAndSignQueryKeys } from "@/lib/query-keys/growth-and-sign";
@@ -9,24 +9,42 @@ import type {
   CreateFeedbucketWidgetInput,
   UpdateFeedbucketWidgetInput,
 } from "@/types/feedbucket";
+import type { FeedbucketWidgetPage } from "@/hooks/api/feedbucket/feedbucket-widget-schema";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { useGatedQuery } from "@/hooks/api/gated-query";
+import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
+import { useModuleEnabled } from "@/hooks/api/access";
 
 const feedbucketWidgetListC = lazyContract(() =>
-  import("@/hooks/api/feedbucket/feedbucket-schema").then((m) => m.feedbucketWidgetListContract),
+  import("@/hooks/api/feedbucket/feedbucket-widget-schema").then((m) => m.feedbucketWidgetListContract),
 );
 const feedbucketWidgetWithProjectC = lazyContract(() =>
-  import("@/hooks/api/feedbucket/feedbucket-schema").then((m) => m.feedbucketWidgetWithProjectContract),
+  import("@/hooks/api/feedbucket/feedbucket-widget-schema").then((m) => m.feedbucketWidgetWithProjectContract),
 );
 const feedbucketRotateKeyC = lazyContract(() =>
   import("@/hooks/api/feedbucket/feedbucket-schema").then((m) => m.feedbucketRotateKeyContract),
 );
 
-export function useFeedbucketWidgets() {
+interface WidgetListParams {
+  managedProductId?: number;
+  cursor?: string;
+  limit?: number;
+}
+
+export function useFeedbucketWidgets(params?: WidgetListParams) {
+  const feedbucketEnabled = useModuleEnabled("feedbucket");
+  const queryParams = params !== undefined
+    ? (Object.fromEntries(
+        Object.entries(params).filter(([, v]) => v !== undefined),
+      ) as Record<string, string | number>)
+    : undefined;
   return useGatedQuery("feedbucket:widgets:view", {
-    queryKey: growthAndSignQueryKeys.feedbucket.widgets(),
-    queryFn: ({ signal }) => apiClient.get<FeedbucketWidget[]>("/feedbucket/widgets", undefined, signal, feedbucketWidgetListC),
+    queryKey: growthAndSignQueryKeys.feedbucket.widgets(params),
+    queryFn: ({ signal }) =>
+      apiClient.get<FeedbucketWidgetPage>("/feedbucket/widgets", queryParams, signal, feedbucketWidgetListC),
     staleTime: 30_000,
+    ...INLINE_READ_ERROR,
+    enabled: feedbucketEnabled,
   });
 }
 

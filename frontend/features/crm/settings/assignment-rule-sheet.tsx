@@ -23,7 +23,7 @@ import type {
   AssignmentRuleCondition,
   CreateAssignmentRuleInput,
   WeightedMember,
-} from "@/hooks/api/crm-settings";
+} from "@/hooks/api/crm/settings/assignment-rules";
 import { ASSIGNMENT_RULE_LAYOUT } from "@/lib/renderer/crm/settings/assignment-rule-layout";
 import {
   armPayload,

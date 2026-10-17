@@ -1,244 +1,104 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
+import { useCallback } from "react";
 import { Plus } from "lucide-react";
-import { useQueryParamOpen } from "@/hooks/common/use-query-param-open";
-import { toast } from "sonner";
-import {
-  useManagedProducts,
-  useCreateManagedProduct,
-  useUpdateManagedProduct,
-  useDeleteManagedProduct,
-} from "@/hooks/api/build";
-import { useCan } from "@/hooks/api/access";
-import { useOrgMembers } from "@/hooks/api/organization";
-import { usePageState } from "@/hooks/api/use-page-state";
 import { PageWrapper } from "@/components/ui/page-wrapper";
-import { DataTable, DataTableSkeleton } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/empty-state";
-import { PageState } from "@/components/shared/page-state";
-import { useCursorPager } from "@/components/ui/table-pagination";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { ManagedProductFormSheet } from "./managed-product-form-sheet";
-import type {
-  ManagedProduct,
-  CreateManagedProductInput,
-  UpdateManagedProductInput,
-} from "@/types/projects";
-import { getErrorMessage } from "@/lib/get-error-message";
-import { PmPageShell, PmSection, PM_FILL_PANEL } from "@/components/pm-chrome";
+import type { ManagedProduct } from "@/types/projects";
+import { PmPageShell, PmSection, CONTENT_FILL_PANEL } from "@/components/pm-chrome";
 import { BuildHeaderActions } from "@/features/build/shared/build-header-actions";
-import { BuildListToolbar } from "@/features/build/shared/build-list-toolbar";
-import { BuildFilterSelect } from "@/features/build/shared/build-filter-select";
-import {
-  BUILD_FILTER_ALL,
-  useBuildListFilters,
-} from "@/features/build/shared/use-build-list-filters";
-import type { NamedUser } from "@/lib/person-display";
-import {
-  MANAGED_PRODUCT_TABLE_HEADERS,
-  ManagedProductMobileCard,
-  buildManagedProductColumns,
-} from "./managed-product-table-columns";
-
-const PAGE_SIZE = 20;
-
-const STATUS_OPTIONS = [
-  { value: BUILD_FILTER_ALL, label: "All statuses" },
-  { value: "active", label: "Active" },
-  { value: "archived", label: "Archived" },
-];
-
-const FILTER_DEFINITIONS = [
-  {
-    param: "status",
-    options: STATUS_OPTIONS.map((option) => option.value),
-  },
-] as const;
+import { BuildListSurface } from "@/features/build/shared/build-list-surface";
+import { BuildOfflineNotice } from "@/features/build/shared/build-offline-notice";
+import { MANAGED_PRODUCT_TABLE_HEADERS } from "./managed-product-table-columns";
+import { ManagedProductMobileCard } from "./managed-product-mobile-card";
+import { ManagedProductBulkToolbar } from "./managed-product-bulk-toolbar";
+import { ManagedProductsToolbar } from "./managed-products-toolbar";
+import { useManagedProductsPage } from "./use-managed-products-page";
+import { PAGE_SIZE } from "./managed-products-filter-constants";
 
 export function ManagedProductsPage() {
-  const canCreate = useCan("build:managed-products:create");
-  const canUpdate = useCan("build:managed-products:update");
-  const canDelete = useCan("build:managed-products:delete");
-
-  const listFilters = useBuildListFilters({ filters: FILTER_DEFINITIONS });
-  const { cursor, hasPrevious, goNext, goPrevious } = useCursorPager(
-    listFilters.resetKey,
-  );
-
   const {
-    open: createOpen,
-    onOpenChange: setCreateOpen,
-    setOpen: openCreate,
-  } = useQueryParamOpen("create");
-  const [editTarget, setEditTarget] = useState<ManagedProduct | null>(null);
-  const [deleteTarget, setDeleteTarget] = useState<ManagedProduct | null>(null);
-
-  const statusValue = listFilters.value("status");
-  const { data, isLoading, isError, error, refetch } = useManagedProducts({
-    cursor,
-    limit: PAGE_SIZE,
-    status: statusValue !== BUILD_FILTER_ALL ? statusValue : undefined,
-    search: listFilters.debouncedSearch.trim() || undefined,
-  });
-
-  const { data: membersRes } = useOrgMembers(1, 100);
-  const members = useMemo(() => membersRes?.data ?? [], [membersRes]);
-
-  const createProduct = useCreateManagedProduct();
-  const updateProduct = useUpdateManagedProduct();
-  const deleteProduct = useDeleteManagedProduct();
-
-  const ownerOf = useCallback(
-    (ownerId: string | null): NamedUser | null => {
-      if (!ownerId) return null;
-      const match = members.find((member) => member.userId === ownerId);
-      return match ? { name: match.name, email: match.email } : null;
-    },
-    [members],
-  );
-
-  const displayed = useMemo(() => data?.data ?? [], [data]);
-
-  const resolution = usePageState({
-    permission: "build:managed-products:view",
+    canCreate,
+    canUpdate,
+    canDelete,
+    listFilters,
+    pageNumber,
+    hasPrevious,
+    goPrevious,
+    createOpen,
+    editTarget,
+    deleteTarget,
+    archiveTarget,
+    selected,
+    setSelected,
+    teamOptions,
+    ownerOptions,
+    segmentOptions,
+    tagOptions,
+    linkedProjectOptions,
+    displayed,
+    data,
     isLoading,
     isError,
     error,
-    isEmpty: displayed.length === 0,
-  });
-
-  const handleCreate = useCallback(
-    (input: CreateManagedProductInput) => {
-      createProduct.mutate(input, {
-        onSuccess: () => {
-          toast.success("Managed product created");
-          setCreateOpen(false);
-        },
-        onError: (e) => toast.error(getErrorMessage(e)),
-      });
-    },
-    [createProduct, setCreateOpen],
-  );
-
-  const handleEdit = useCallback(
-    (input: UpdateManagedProductInput & { managedProductId: number }) => {
-      updateProduct.mutate(input, {
-        onSuccess: () => {
-          toast.success("Managed product updated");
-          setEditTarget(null);
-        },
-        onError: (e) => toast.error(getErrorMessage(e)),
-      });
-    },
-    [updateProduct],
-  );
-
-  const handleDeleteConfirm = useCallback(() => {
-    if (!deleteTarget) return;
-    deleteProduct.mutate(deleteTarget.id, {
-      onSuccess: () => {
-        toast.success("Managed product deleted");
-        setDeleteTarget(null);
-      },
-      onError: (e) => toast.error(getErrorMessage(e)),
-    });
-  }, [deleteProduct, deleteTarget]);
-
-  const handleStatusChange = useCallback(
-    (value: string) => listFilters.setValue("status", value),
-    [listFilters],
-  );
-
-  const handleOpenCreate = useCallback(() => {
-    openCreate();
-  }, [openCreate]);
-
-  const handleSheetOpenChange = useCallback(
-    (open: boolean) => {
-      if (!open) {
-        setCreateOpen(false);
-        setEditTarget(null);
-      }
-    },
-    [setCreateOpen],
-  );
-
-  const handleDeleteDialogChange = useCallback((open: boolean) => {
-    if (!open) setDeleteTarget(null);
-  }, []);
-
-  const handleRetry = useCallback(() => {
-    void refetch();
-  }, [refetch]);
-
-  const handleEditRow = useCallback(
-    (row: ManagedProduct) => setEditTarget(row),
-    [],
-  );
-  const handleDeleteRow = useCallback(
-    (row: ManagedProduct) => setDeleteTarget(row),
-    [],
-  );
-
-  const handleNextPage = useCallback(() => {
-    goNext(data?.pagination.nextCursor);
-  }, [data, goNext]);
-
-  const canManageRow = canUpdate || canDelete;
-
-  const columns = useMemo(
-    () =>
-      buildManagedProductColumns({
-        canManage: canManageRow,
-        ownerOf,
-        onEdit: handleEditRow,
-        onDelete: handleDeleteRow,
-      }),
-    [canManageRow, handleDeleteRow, handleEditRow, ownerOf],
-  );
+    dataUpdatedAt,
+    createProductIsPending,
+    ownerOf,
+    selectedIds,
+    searchInputRef,
+    handleCreate,
+    handleDeleteConfirm,
+    handleArchiveConfirm,
+    handleOpenCreate,
+    handleSheetOpenChange,
+    handleDeleteDialogChange,
+    handleArchiveDialogChange,
+    handleRetry,
+    handleClearKeyboardSelection,
+    handleNextPage,
+    handleEditRow,
+    handleDeleteRow,
+    handleArchiveRow,
+    handleViewModeChange,
+    viewMode,
+    columns,
+  } = useManagedProductsPage();
 
   const renderMobileCard = useCallback(
     (row: ManagedProduct) => (
       <ManagedProductMobileCard
         product={row}
-        canManage={canManageRow}
+        canUpdate={canUpdate}
+        canDelete={canDelete}
         ownerOf={ownerOf}
         onEdit={handleEditRow}
         onDelete={handleDeleteRow}
+        onArchive={handleArchiveRow}
       />
     ),
-    [canManageRow, handleDeleteRow, handleEditRow, ownerOf],
+    [canDelete, canUpdate, handleDeleteRow, handleEditRow, handleArchiveRow, ownerOf],
   );
+
+  const getProductRowKey = useCallback((row: ManagedProduct) => row.id, []);
+  const getProductRowLabel = useCallback((row: ManagedProduct) => row.name, []);
 
   return (
     <PageWrapper
       title="Managed Products"
-      subtitle="Track products and link projects to them"
+      subtitle="Projects, releases, and feedback — grouped by product"
       filters={
-        <BuildListToolbar
-          search={{
-            value: listFilters.search,
-            onValueChange: listFilters.setSearch,
-            placeholder: "Search products…",
-            label: "Search products",
-          }}
-          filters={[
-            {
-              id: "status",
-              label: "Status",
-              active: listFilters.isActive("status"),
-              control: (
-                <BuildFilterSelect
-                  label="Status"
-                  value={statusValue}
-                  onValueChange={handleStatusChange}
-                  options={STATUS_OPTIONS}
-                />
-              ),
-            },
-          ]}
-          onClearAll={listFilters.clearAll}
+        <ManagedProductsToolbar
+          listFilters={listFilters}
+          teamOptions={teamOptions}
+          ownerOptions={ownerOptions}
+          segmentOptions={segmentOptions}
+          tagOptions={tagOptions}
+          linkedProjectOptions={linkedProjectOptions}
+          searchInputRef={searchInputRef}
+          viewMode={viewMode}
+          onViewModeChange={handleViewModeChange}
         />
       }
       actions={
@@ -261,24 +121,49 @@ export function ManagedProductsPage() {
     >
       <PmPageShell>
         <PmSection index={0} className="flex min-h-0 flex-1 flex-col">
-          <PageState
-            resolution={resolution}
-            loading={
-              <DataTableSkeleton
-                mobileCards
-                rows={12}
-                headers={MANAGED_PRODUCT_TABLE_HEADERS}
-                className="flex-1"
-              />
+          <BuildOfflineNotice dataUpdatedAt={dataUpdatedAt} />
+          {canUpdate && selectedIds.length > 0 && (
+            <ManagedProductBulkToolbar
+              selectedIds={selectedIds}
+              onClearSelection={handleClearKeyboardSelection}
+            />
+          )}
+          <BuildListSurface<ManagedProduct>
+            permission="build:managed-products:view"
+            rows={displayed}
+            columns={columns}
+            isLoading={isLoading}
+            isError={isError}
+            error={error}
+            isFiltered={listFilters.isFiltered}
+            getRowKey={getProductRowKey}
+            minWidth="900px"
+            mobileCard={renderMobileCard}
+            gridMode={viewMode === "grid"}
+            selection={
+              canUpdate
+                ? {
+                    selected,
+                    onChange: setSelected,
+                    getRowLabel: getProductRowLabel,
+                  }
+                : undefined
             }
+            pagination={{
+              mode: "cursor",
+              pageSize: PAGE_SIZE,
+              pageNumber,
+              hasMore: Boolean(data?.pagination.hasMore),
+              hasPrevious,
+              onNext: handleNextPage,
+              onPrevious: goPrevious,
+            }}
             empty={
               <EmptyState
-                className={PM_FILL_PANEL}
+                className={CONTENT_FILL_PANEL}
                 illustrationPreset="projects"
-                title="No managed products yet"
-                description="Create a managed product to track delivery across projects."
-                filtersActive={listFilters.isFiltered}
-                onClearFilters={listFilters.clearAll}
+                title="Start with a product"
+                description="A product is the home for projects, releases, and feedback. Create one to see delivery in one place."
                 action={
                   canCreate
                     ? { label: "New product", onClick: handleOpenCreate }
@@ -286,58 +171,60 @@ export function ManagedProductsPage() {
                 }
               />
             }
+            filteredEmpty={
+              <EmptyState
+                className={CONTENT_FILL_PANEL}
+                illustrationPreset="search"
+                filtersActive
+                filteredTitle="No products match"
+                description="Nothing on this page matches the current filters. Clear them to see every product."
+                onClearFilters={listFilters.clearAll}
+              />
+            }
+            loadingHeaders={MANAGED_PRODUCT_TABLE_HEADERS}
+            loadingRows={12}
             onRetry={handleRetry}
-            className={PM_FILL_PANEL}
-          >
-            <DataTable
-              data={displayed}
-              columns={columns}
-              getRowKey={(row) => row.id}
-              minWidth="720px"
-              mobileCard={renderMobileCard}
-              className={PM_FILL_PANEL}
-              pagination={{
-                mode: "cursor",
-                pageSize: PAGE_SIZE,
-                hasMore: Boolean(data?.pagination.hasMore),
-                hasPrevious,
-                onNext: handleNextPage,
-                onPrevious: goPrevious,
-              }}
-            />
-          </PageState>
+          />
         </PmSection>
       </PmPageShell>
 
-      {createOpen && (
+      {canCreate && createOpen && (
         <ManagedProductFormSheet
           open={createOpen}
           onOpenChange={handleSheetOpenChange}
           mode="create"
           onSubmitCreate={handleCreate}
-          isPending={createProduct.isPending}
+          isPending={createProductIsPending}
         />
       )}
 
-      {editTarget && (
+      {canUpdate && editTarget && (
         <ManagedProductFormSheet
           open={!!editTarget}
           onOpenChange={handleSheetOpenChange}
           mode="edit"
           defaultValues={editTarget}
-          onSubmitEdit={handleEdit}
-          isPending={updateProduct.isPending}
         />
       )}
 
       <ConfirmDialog
-        open={!!deleteTarget}
+        open={canDelete && !!deleteTarget}
         onOpenChange={handleDeleteDialogChange}
         title="Delete this managed product?"
         description="This action cannot be undone. Projects linked to this product will not be deleted."
         confirmLabel="Delete"
         destructive
         onConfirm={handleDeleteConfirm}
+      />
+
+      <ConfirmDialog
+        open={canUpdate && !!archiveTarget}
+        onOpenChange={handleArchiveDialogChange}
+        title="Archive this managed product?"
+        description="The product will be hidden from active views. You can restore it later from the settings page."
+        confirmLabel="Archive"
+        destructive
+        onConfirm={handleArchiveConfirm}
       />
     </PageWrapper>
   );

@@ -1,41 +1,25 @@
 "use client";
 
-import { useCallback, useMemo, useState, useTransition } from "react";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { toast } from "sonner";
-import { Skeleton } from "@/components/ui/skeleton";
+import { useCallback, useMemo, useRef } from "react";
+import { useRouter } from "next/navigation";
+import { Trash2Icon } from "@animateicons/react/lucide";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
-import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
-import { ErrorState } from "@/components/shared";
+import { type DataTableColumn } from "@/components/ui/data-table";
+import { BuildListSurface } from "@/features/build/shared/build-list-surface";
 import { EmptyInboxIllustration } from "@/components/illustrations";
-import { useCan } from "@/hooks/api/access";
-import { useCursorPagination } from "@/hooks/common/use-cursor-pagination";
 import {
-  useDeleteFeedbucketSubmission,
-  useFeedbucketSubmissions,
-} from "@/hooks/api/feedbucket";
-import { getErrorMessage } from "@/lib/get-error-message";
-import type {
-  FeedbucketSubmissionFilters,
-  FeedbucketSubmissionType,
-  FeedbucketSubmissionStatus,
-} from "@/types/feedbucket";
-import {
-  DeleteSubmissionButton,
-  SUBMISSION_COLUMNS,
-  SubmissionMobileCard,
   type SubmissionRow,
+  SubmissionMobileCard,
 } from "./submission-inbox-columns";
 import {
   SubmissionInboxFilters,
-  type SubmissionInboxFilterValues,
 } from "./submission-inbox-filters";
-import { SubmissionBulkToolbar } from "./submission-bulk-toolbar";
-
-const PAGE_SIZE = 25;
-
-const FILTER_PARAMS = ["status", "type", "linked", "assigneeId", "search", "from", "to"] as const;
+import { SubmissionBulkToolbar } from "@/components/shared/submission-bulk-toolbar";
+import { useNavigationLeave } from "@/components/shared/dirty-state-context";
+import { useBuildListKeyboard } from "@/hooks/common/use-build-list-keyboard";
+import { useProjectSubmissionsInbox, PAGE_SIZE } from "./use-project-submissions-inbox";
 
 interface ProjectSubmissionsInboxProps {
   widgetId: number;
@@ -47,169 +31,115 @@ export function ProjectSubmissionsInbox({
   projectId,
 }: ProjectSubmissionsInboxProps) {
   const router = useRouter();
-  const pathname = usePathname();
-  const searchParams = useSearchParams();
-  const [, startTransition] = useTransition();
-  const [pendingDeleteId, setPendingDeleteId] = useState<number | null>(null);
-  const [selected, setSelected] = useState<Set<string | number>>(new Set());
-  const canDelete = useCan("feedbucket:submissions:delete");
-  const canUpdate = useCan("feedbucket:submissions:update");
-  const deleteSubmission = useDeleteFeedbucketSubmission();
-  const walk = useCursorPagination();
-  const { reset: resetWalk } = walk;
+  const requestLeave = useNavigationLeave();
+  const searchInputRef = useRef<HTMLInputElement | null>(null);
 
-  const filterValues = useMemo<SubmissionInboxFilterValues>(
-    () => ({
-      status: searchParams.get("status") as FeedbucketSubmissionStatus | null,
-      type: searchParams.get("type") as FeedbucketSubmissionType | null,
-      linked: searchParams.get("linked") as "linked" | "unlinked" | null,
-      assigneeId: searchParams.get("assigneeId"),
-      search: searchParams.get("search"),
-      from: searchParams.get("from"),
-      to: searchParams.get("to"),
-    }),
-    [searchParams],
-  );
-
-  const hasActiveFilters = FILTER_PARAMS.some((key) => searchParams.get(key) !== null);
-
-  const serverFilters = useMemo<FeedbucketSubmissionFilters>(
-    () => ({
-      widgetId,
-      ...(filterValues.status ? { status: filterValues.status } : {}),
-      ...(filterValues.type ? { type: filterValues.type } : {}),
-      ...(filterValues.linked ? { linked: filterValues.linked } : {}),
-      ...(filterValues.assigneeId ? { assigneeId: filterValues.assigneeId } : {}),
-      ...(filterValues.search ? { search: filterValues.search } : {}),
-      ...(filterValues.from ? { from: filterValues.from } : {}),
-      ...(filterValues.to ? { to: filterValues.to } : {}),
-    }),
-    [widgetId, filterValues],
-  );
-
-  const handleFilterChange = useCallback(
-    (key: keyof SubmissionInboxFilterValues, value: string | null) => {
-      resetWalk();
-      setSelected(new Set());
-      const params = new URLSearchParams(searchParams.toString());
-      if (value) params.set(key, value);
-      else params.delete(key);
-      startTransition(() => {
-        router.replace(
-          params.toString() ? `${pathname}?${params.toString()}` : pathname,
-          { scroll: false },
-        );
-      });
-    },
-    [pathname, router, searchParams, resetWalk],
-  );
-
-  function handleClearFilters() {
-    resetWalk();
-    setSelected(new Set());
-    const params = new URLSearchParams(searchParams.toString());
-    for (const key of FILTER_PARAMS) params.delete(key);
-    startTransition(() => {
-      router.replace(
-        params.toString() ? `${pathname}?${params.toString()}` : pathname,
-        { scroll: false },
-      );
-    });
-  }
-
-  const { data, isLoading, isError, refetch } = useFeedbucketSubmissions({
-    limit: PAGE_SIZE,
-    ...(walk.cursor ? { cursor: walk.cursor } : {}),
-    ...serverFilters,
-  });
-
-  const rows = useMemo(() => data?.data ?? [], [data]);
+  const {
+    filterValues,
+    hasActiveFilters,
+    serverFilters,
+    data,
+    isLoading,
+    isError,
+    error,
+    rows,
+    baseColumns,
+    selected,
+    setSelected,
+    selectedIds,
+    selectionEnabled,
+    pendingDeleteId,
+    deleteSubmission,
+    walk,
+    canDelete,
+    handleFilterChange,
+    handleClearFilters,
+    handleRequestDelete,
+    handleDeleteDialogChange,
+    handleConfirmDelete,
+    handleNextPage,
+    handlePreviousPage,
+    handleRetry,
+  } = useProjectSubmissionsInbox({ widgetId, projectId });
 
   function handleRowClick(row: SubmissionRow) {
-    router.push(`/build/${projectId}/feedbucket/${row.id}`);
-  }
-
-  function handleRetry() {
-    void refetch();
-  }
-
-  function handleNextPage() {
-    setSelected(new Set());
-    walk.goNext(data?.pagination.nextCursor);
-  }
-
-  function handlePreviousPage() {
-    setSelected(new Set());
-    walk.goPrevious();
+    requestLeave(() => router.push(`/build/${projectId}/feedbucket/${row.id}`));
   }
 
   const handleClearSelection = useCallback(() => {
     setSelected(new Set());
-  }, []);
+  }, [setSelected]);
 
-  const handleRequestDelete = useCallback((submissionId: number) => {
-    setPendingDeleteId(submissionId);
-  }, []);
+  const handleOpenFocusedSubmission = useCallback(
+    (index: number) => {
+      requestLeave(() => {
+        const row = rows[index];
+        if (row) router.push(`/build/${projectId}/feedbucket/${row.id}`);
+      });
+    },
+    [rows, projectId, router, requestLeave],
+  );
 
-  function handleDeleteDialogChange(open: boolean) {
-    if (!open) setPendingDeleteId(null);
-  }
-
-  function handleConfirmDelete() {
-    if (pendingDeleteId === null) return;
-    deleteSubmission.mutate(
-      { submissionId: pendingDeleteId },
-      {
-        onSuccess: () => {
-          toast.success("Submission deleted");
-          setPendingDeleteId(null);
-        },
-        onError: (error) => {
-          toast.error(getErrorMessage(error));
-        },
-      },
-    );
-  }
+  useBuildListKeyboard({
+    itemCount: rows.length,
+    onOpen: handleOpenFocusedSubmission,
+    onClearSelection: handleClearSelection,
+    searchInputRef,
+    enabled: pendingDeleteId === null,
+  });
 
   const columns = useMemo<DataTableColumn<SubmissionRow>[]>(() => {
-    if (!canDelete) return SUBMISSION_COLUMNS;
+    if (!canDelete) return baseColumns;
     function renderDelete(row: SubmissionRow) {
+      function handleDeleteClick(e: React.MouseEvent) {
+        e.stopPropagation();
+        handleRequestDelete(row.id);
+      }
       return (
-        <DeleteSubmissionButton submissionId={row.id} onRequestDelete={handleRequestDelete} />
+        <AnimatedIconButton
+          type="button"
+          variant="ghost"
+          className="inline-flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-status-danger-ink"
+          aria-label="Delete submission"
+          icon={Trash2Icon}
+          iconSize={14}
+          onClick={handleDeleteClick}
+        />
       );
     }
     return [
-      ...SUBMISSION_COLUMNS,
+      ...baseColumns,
       { key: "actions", header: "", cell: renderDelete, className: "w-8" },
     ];
-  }, [canDelete, handleRequestDelete]);
+  }, [canDelete, handleRequestDelete, baseColumns]);
 
-  const selectedIds = useMemo(
-    () => [...selected].map(Number).filter((id) => Number.isFinite(id)),
-    [selected],
+  const renderMobileCard = useCallback(
+    (row: SubmissionRow) => {
+      function handleDeleteClick(e: React.MouseEvent) {
+        e.stopPropagation();
+        handleRequestDelete(row.id);
+      }
+      return (
+        <SubmissionMobileCard
+          row={row}
+          actions={
+            canDelete ? (
+              <AnimatedIconButton
+                type="button"
+                variant="ghost"
+                className="inline-flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-status-danger-ink"
+                aria-label="Delete submission"
+                icon={Trash2Icon}
+                iconSize={14}
+                onClick={handleDeleteClick}
+              />
+            ) : undefined
+          }
+        />
+      );
+    },
+    [canDelete, handleRequestDelete],
   );
-
-  const selectionEnabled = canUpdate || canDelete;
-
-  if (isLoading) {
-    return (
-      <div className="flex flex-1 min-h-0 h-full flex-col gap-2 p-3">
-        {Array.from({ length: 10 }).map((_, index) => (
-          <Skeleton key={`submission-skeleton-${index}`} className="h-14 w-full rounded-lg" />
-        ))}
-      </div>
-    );
-  }
-
-  if (isError) {
-    return (
-      <ErrorState
-        className="flex flex-1 min-h-0 h-full"
-        description="Failed to load submissions."
-        onRetry={handleRetry}
-      />
-    );
-  }
 
   const filteredEmptyState = (
     <EmptyState
@@ -232,7 +162,12 @@ export function ProjectSubmissionsInbox({
 
   return (
     <>
-      <SubmissionInboxFilters values={filterValues} onChange={handleFilterChange} />
+      <SubmissionInboxFilters
+        values={filterValues}
+        onChange={handleFilterChange}
+        onClearAll={handleClearFilters}
+        searchInputRef={searchInputRef}
+      />
 
       {selectedIds.length > 0 ? (
         <SubmissionBulkToolbar
@@ -242,24 +177,17 @@ export function ProjectSubmissionsInbox({
         />
       ) : null}
 
-      <DataTable
-        data={rows}
+      <BuildListSurface<SubmissionRow>
+        permission="feedbucket:submissions:view"
+        rows={rows}
         columns={columns}
+        isLoading={isLoading}
+        isError={isError}
+        error={error}
+        isFiltered={hasActiveFilters}
         getRowKey={getSubmissionRowKey}
         onRowClick={handleRowClick}
-        mobileCard={(row) => (
-          <SubmissionMobileCard
-            row={row}
-            actions={
-              canDelete ? (
-                <DeleteSubmissionButton
-                  submissionId={row.id}
-                  onRequestDelete={handleRequestDelete}
-                />
-              ) : undefined
-            }
-          />
-        )}
+        mobileCard={renderMobileCard}
         selection={
           selectionEnabled
             ? {
@@ -278,9 +206,10 @@ export function ProjectSubmissionsInbox({
           onNext: handleNextPage,
           onPrevious: handlePreviousPage,
         }}
-        className="flex flex-1 min-h-0 h-full border-0 rounded-none"
-        emptyState={hasActiveFilters ? filteredEmptyState : firstRunEmptyState}
         rowClassName={submissionRowClassName}
+        onRetry={handleRetry}
+        empty={firstRunEmptyState}
+        filteredEmpty={filteredEmptyState}
       />
 
       <ConfirmDialog

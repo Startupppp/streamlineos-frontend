@@ -1,113 +1,194 @@
 "use client";
 
-import { BarChart2, CheckCircle2, FolderOpen, Inbox, LayoutGrid } from "lucide-react";
+import { useCallback, useMemo } from "react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
-import { StatCard, StatCardGrid, StatCardGridSkeleton } from "@/components/ui/stat-card";
-import { PmPageShell, PmSection, PM_FILL_PANEL } from "@/components/pm-chrome";
+import { PageTabsToolbar } from "@/components/ui/page-tabs-toolbar";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { CONTENT_FILL_PANEL } from "@/components/pm-chrome";
 import { useManagedProductInsights } from "@/hooks/api/build/managed-products";
 import { usePageState } from "@/hooks/api/use-page-state";
 import { PageState } from "@/components/shared/page-state";
+import { EmptyState } from "@/components/ui/empty-state";
+import { BuildFilterSelect } from "@/features/build/shared/build-filter-select";
+import { useBuildListFilters } from "@/features/build/shared/use-build-list-filters";
+import {
+  MANAGED_PRODUCT_DETAIL_CONTENT_CLASS,
+  ManagedProductDetailPrimarySection,
+  ManagedProductDetailShell,
+} from "./managed-product-detail-layout";
+import { ProductInsightsSkeleton } from "./managed-product-page-skeletons";
+import {
+  InsightDeliveryPanel,
+  InsightDiscoveryPanel,
+  InsightFeedbackPanel,
+  InsightOverviewPanel,
+} from "./product-insights-panels";
+import {
+  INSIGHT_TABS,
+  INSIGHT_VIEWS,
+  insightTabFromParam,
+  insightViewFromParam,
+} from "./product-insights-tabs";
+import { useProductReturn } from "@/features/build/shared/use-product-return";
+
+const RANGE_OPTIONS = [
+  { label: "All time", value: "all" },
+  { label: "Last 7 days", value: "7d" },
+  { label: "Last 30 days", value: "30d" },
+  { label: "Last 90 days", value: "90d" },
+];
+
+const INSIGHTS_FILTER_DEFINITIONS = [
+  { param: "range" },
+  {
+    param: "view",
+    all: "overview",
+    options: INSIGHT_VIEWS.map((view) => view.id),
+  },
+  {
+    param: "tab",
+    all: "overview",
+    options: INSIGHT_TABS.map((tab) => tab.id),
+  },
+] as const;
 
 interface ProductInsightsPageProps {
   managedProductId: number;
 }
 
-export function ProductInsightsPage({ managedProductId }: ProductInsightsPageProps) {
-  const { data, isLoading, isError, error, refetch } = useManagedProductInsights(managedProductId);
+export function ProductInsightsPage({
+  managedProductId,
+}: ProductInsightsPageProps) {
+  const { handleBack } = useProductReturn(`/build/managed-products/${managedProductId}`);
+  const listFilters = useBuildListFilters({
+    filters: INSIGHTS_FILTER_DEFINITIONS,
+    withSearch: false,
+  });
+  const rangeValue = listFilters.value("range");
+  const requestedView = insightViewFromParam(listFilters.value("view"));
+  const legacyTab = insightTabFromParam(listFilters.value("tab"));
+  const view = requestedView === "discovery" || legacyTab === "discovery" ? "discovery" : "overview";
+
+  const typedRange = useMemo(
+    () =>
+      rangeValue === "7d" || rangeValue === "30d" || rangeValue === "90d"
+        ? rangeValue
+        : undefined,
+    [rangeValue],
+  );
+
+  const setFilter = listFilters.setValue;
+  const setFilters = listFilters.setValues;
+  const handleRangeChange = useCallback(
+    (value: string) => setFilter("range", value),
+    [setFilter],
+  );
+  const handleViewChange = useCallback(
+    (value: string) => {
+      if (value === "discovery") {
+        setFilter("view", "discovery");
+        return;
+      }
+      setFilters({ view: "overview", tab: "overview" });
+    },
+    [setFilter, setFilters],
+  );
+
+  const { data, isLoading, isError, error, refetch } =
+    useManagedProductInsights(managedProductId, { range: typedRange });
 
   const resolution = usePageState({
     permission: "build:managed-products:view",
     isLoading,
     isError,
     error,
+    isEmpty: data === null,
   });
 
-  function handleRetry() {
-    void refetch();
-  }
+  const rangeLabel =
+    RANGE_OPTIONS.find((option) => option.value === rangeValue)?.label ??
+    "All time";
+
+  const handleRetry = useCallback(() => void refetch(), [refetch]);
 
   return (
-    <PageWrapper
-      title="Insights"
-      subtitle="Aggregated activity for this product"
+    <Tabs
+      value={view}
+      onValueChange={handleViewChange}
+      className="h-full min-h-0 min-w-0 flex-1"
     >
-      <PmPageShell>
-        <PmSection index={0} className="shrink-0">
-          <PageState
-            resolution={resolution}
-            loading={
-              <div className="space-y-6">
-                <div>
-                  <h2 className="mb-3 text-sm font-semibold text-foreground">Projects</h2>
-                  <StatCardGridSkeleton cols={3} />
-                </div>
-                <div>
-                  <h2 className="mb-3 text-sm font-semibold text-foreground">Feedback submissions</h2>
-                  <StatCardGridSkeleton cols={4} />
-                </div>
-              </div>
+      <PageWrapper
+        title="Insights"
+        subtitle="Customer signals, planned work, and delivery progress"
+        onBack={handleBack}
+        contentClassName={MANAGED_PRODUCT_DETAIL_CONTENT_CLASS}
+        actions={
+          view === "overview" ? (
+            <BuildFilterSelect
+              label="Range"
+              value={rangeValue || "all"}
+              onValueChange={handleRangeChange}
+              options={RANGE_OPTIONS}
+            />
+          ) : undefined
+        }
+        filters={
+          <PageTabsToolbar
+            tabs={
+              <TabsList aria-label="Insights views">
+                {INSIGHT_VIEWS.map((item) => (
+                  <TabsTrigger
+                    key={item.id}
+                    value={item.id}
+                    className="px-2 sm:px-3"
+                  >
+                    {item.label}
+                  </TabsTrigger>
+                ))}
+              </TabsList>
             }
-            onRetry={handleRetry}
-            className={PM_FILL_PANEL}
-          >
-            <div className="space-y-6">
-              <div>
-                <h2 className="mb-3 text-sm font-semibold text-foreground">Projects</h2>
-                <StatCardGrid cols={3}>
-                  <StatCard
-                    label="Linked projects"
-                    value={data?.linkedProjectCount ?? 0}
-                    icon={LayoutGrid}
-                    tone="default"
+          />
+        }
+      >
+        <ManagedProductDetailShell className="h-auto min-h-full flex-none overflow-visible">
+          <ManagedProductDetailPrimarySection className="flex-none">
+            <PageState
+              resolution={resolution}
+              loading={<ProductInsightsSkeleton />}
+              onRetry={handleRetry}
+              empty={
+                <EmptyState
+                  title="Product not found"
+                  description="This product may have been deleted or moved."
+                  className="flex-1"
+                />
+              }
+              className={CONTENT_FILL_PANEL}
+            >
+              <TabsContent value="overview" className="mt-0 outline-none">
+                <div className="space-y-6">
+                  <InsightOverviewPanel
+                    managedProductId={managedProductId}
+                    insights={data}
+                    rangeLabel={rangeLabel}
                   />
-                  <StatCard
-                    label="Active"
-                    value={data?.projectsByStatus.active ?? 0}
-                    icon={FolderOpen}
-                    tone="emerald"
+                  <InsightDeliveryPanel
+                    managedProductId={managedProductId}
+                    insights={data}
                   />
-                  <StatCard
-                    label="Completed"
-                    value={data?.projectsByStatus.completed ?? 0}
-                    icon={CheckCircle2}
-                    tone="blue"
+                  <InsightFeedbackPanel
+                    managedProductId={managedProductId}
+                    insights={data}
                   />
-                </StatCardGrid>
-              </div>
-
-              <div>
-                <h2 className="mb-3 text-sm font-semibold text-foreground">Feedback submissions</h2>
-                <StatCardGrid cols={4}>
-                  <StatCard
-                    label="Open"
-                    value={data?.submissionsByStatus.open ?? 0}
-                    icon={Inbox}
-                    tone="default"
-                  />
-                  <StatCard
-                    label="In progress"
-                    value={data?.submissionsByStatus.in_progress ?? 0}
-                    icon={BarChart2}
-                    tone="amber"
-                  />
-                  <StatCard
-                    label="Resolved"
-                    value={data?.submissionsByStatus.resolved ?? 0}
-                    icon={CheckCircle2}
-                    tone="emerald"
-                  />
-                  <StatCard
-                    label="Archived"
-                    value={data?.submissionsByStatus.archived ?? 0}
-                    icon={FolderOpen}
-                    tone="default"
-                  />
-                </StatCardGrid>
-              </div>
-            </div>
-          </PageState>
-        </PmSection>
-      </PmPageShell>
-    </PageWrapper>
+                </div>
+              </TabsContent>
+              <TabsContent value="discovery" className="mt-0 outline-none">
+                <InsightDiscoveryPanel managedProductId={managedProductId} />
+              </TabsContent>
+            </PageState>
+          </ManagedProductDetailPrimarySection>
+        </ManagedProductDetailShell>
+      </PageWrapper>
+    </Tabs>
   );
 }

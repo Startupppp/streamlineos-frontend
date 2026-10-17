@@ -12,10 +12,13 @@ import {
 import { useMotionVariants } from "@/lib/motion-variants";
 import type { HrAnnouncement } from "@/hooks/api/hr/announcements";
 import { AnnouncementCard } from "@/features/hr/announcements/announcement-card";
+import { getErrorMessage } from "@/lib/get-error-message";
 
 interface AnnouncementsBodyProps {
   isLoading: boolean;
   isError: boolean;
+  /** The failed read's error, so the message and request reference reach the user (FE-41). */
+  error?: unknown;
   list: HrAnnouncement[];
   canManage: boolean;
   onRetry: () => void;
@@ -28,6 +31,7 @@ interface AnnouncementsBodyProps {
 export function AnnouncementsBody({
   isLoading,
   isError,
+  error,
   list,
   canManage,
   onRetry,
@@ -59,7 +63,8 @@ export function AnnouncementsBody({
       <ErrorState
         className={PAGE_BODY_EMPTY_CLASS}
         title="Failed to load announcements"
-        description="Something went wrong. Please try again."
+        description={getErrorMessage(error)}
+        error={error}
         onRetry={onRetry}
       />
     );

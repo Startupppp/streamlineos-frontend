@@ -27,8 +27,8 @@ const LEVEL_LABEL: Record<string, string> = {
 
 const LEVEL_STYLE: Record<string, string> = {
   low: "text-muted-foreground border-border",
-  medium: "text-status-warning-ink border-status-warning-rule bg-status-warning-surface",
-  high: "text-status-danger-ink border-status-danger-rule bg-status-danger-surface",
+  medium: "text-status-warning-ink-strong border-status-warning-rule bg-status-warning-surface",
+  high: "text-status-danger-ink-strong border-status-danger-rule bg-status-danger-surface",
 };
 
 const STATUS_LABEL: Record<string, string> = {
@@ -42,26 +42,18 @@ const STATUS_LABEL: Record<string, string> = {
 const STATUS_STYLE: Record<string, string> = {
   open: "text-primary border-border bg-primary/5 dark:bg-primary/10",
   mitigating:
-    "text-status-warning-ink border-status-warning-rule bg-status-warning-surface",
+    "text-status-warning-ink-strong border-status-warning-rule bg-status-warning-surface",
   monitoring: "text-primary border-border bg-primary/5 dark:bg-primary/10",
   accepted: "text-muted-foreground border-border",
   closed:
-    "text-status-success-ink border-status-success-rule bg-status-success-surface",
+    "text-status-success-ink-strong border-status-success-rule bg-status-success-surface",
 };
 
-export const RISK_TABLE_HEADERS = [
-  "ID",
-  "Title",
-  "Probability",
-  "Impact",
-  "Severity",
-  "Owner",
-  "Status",
-  "Actions",
-] as const;
+import { RISK_TABLE_HEADERS } from "./risks-table-headers";
+export { RISK_TABLE_HEADERS };
 
-export type RiskOwnerLookup = (userId: string | null) => NamedUser | null;
-export type RiskMemberNameLookup = (userId: string | null) => string;
+type RiskOwnerLookup = (userId: string | null) => NamedUser | null;
+type RiskMemberNameLookup = (userId: string | null) => string;
 
 interface RiskRowHandlers {
   canManage: boolean;
@@ -82,7 +74,7 @@ function RiskStatusBadge({ status }: { status: string }) {
   );
 }
 
-export function RiskRowActions({
+function RiskRowActions({
   risk,
   onEdit,
   onDelete,

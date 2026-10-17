@@ -1,0 +1,31 @@
+{
+  "classification": "Current verified",
+  "date": "2026-10-03",
+  "claim": "BLD-PORTAL-MIGRATION-PROOF-17",
+  "sourceCommit": "3346cc318",
+  "reviewer": "coordinator independent of author scoped_activation_dispatch",
+  "proofScope": "focused-portal-fragments-and-whole-1730-1731",
+  "database": "scratch_build_migration_c829f0843db90a762501ec46",
+  "sourceHashes": {
+    "binding": "61af2507e35f18c40affb486d22e94090cd50712eb003b7fc9623d1cb48790fa",
+    "uniqueness": "0b79da31ab575f65c409a6d21cc504bc7a8e5e3a91d82c64a7f10d4c553e5b37"
+  },
+  "pureTests": { "passed": 49, "failed": 0 },
+  "exactFileLint": { "files": 4, "exitCode": 0 },
+  "databaseChecks": { "passed": 40, "failed": 0, "exitCode": 0 },
+  "observedDenials": ["P0001", "42501", "23514", "23503", "23505", "55P03"],
+  "droppedCurrentRunDatabase": true,
+  "independentRead": {
+    "executingRole": "streamline_app",
+    "transactionReadOnly": "on",
+    "serverVersion": "180004",
+    "proofDatabaseExists": false,
+    "productionBindingColumns": 0
+  },
+  "productionSchemaModified": false,
+  "wholeChainVerified": false,
+  "applicationRuntimeVerified": false,
+  "browserVerified": false,
+  "deploymentVerified": false,
+  "operationsVerified": false
+}

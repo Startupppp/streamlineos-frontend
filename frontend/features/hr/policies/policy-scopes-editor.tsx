@@ -97,7 +97,7 @@ export function PolicyScopesEditor({ value, onChange, disabled }: Props) {
                 ? "Applies to entire org"
                 : `Enter ${SCOPE_TYPE_LABELS[row.scopeType]} ID/code`
             }
-            className="text-xs flex-1"
+            className="flex-1"
             disabled={disabled || row.scopeType === "organization"}
             readOnly={row.scopeType === "organization"}
           />

@@ -5,6 +5,8 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { toast } from "sonner";
 import { HrSheet } from "@/components/shared/hr-sheet";
+import { useOrgDisplay } from "@/hooks/api/org-display";
+import { formatMoney } from "@/lib/format-utils";
 import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
@@ -71,6 +73,7 @@ interface Props {
 
 export function ClaimReviewSheet({ open, onOpenChange, claim }: Props) {
   const reviewClaim = useReviewClaim();
+  const money = useOrgDisplay();
 
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),
@@ -135,8 +138,8 @@ export function ClaimReviewSheet({ open, onOpenChange, claim }: Props) {
           </div>
           <div className="flex items-center justify-between">
             <span className="text-muted-foreground">Amount</span>
-            <span className="font-semibold text-foreground">
-              ₹{(claim.amountCents / 100).toLocaleString("en-IN")}
+            <span className="font-semibold text-foreground tabular-nums">
+              {formatMoney(claim.amountCents / 100, money)}
             </span>
           </div>
           <div className="flex items-center justify-between">

@@ -1,5 +1,3 @@
-import type { TicketPriority } from "./shared";
-
 export interface TicketUser {
   id: string;
   name: string | null;
@@ -44,7 +42,7 @@ export interface TicketLabel {
   id: number;
   orgId: string;
   name: string;
-  color: string | null;
+  color: string;
   createdAt: string | Date | null;
 }
 
@@ -65,10 +63,6 @@ export interface TicketAssignee {
   user?: TicketUser;
 }
 
-/**
- * `userId` is nullable because a watcher whose organization row is gone flattens to nulls
- * rather than to missing keys — the backend lifts both off the `organization_members` join.
- */
 export interface TicketWatcher {
   id: number;
   ticketId: number;
@@ -81,11 +75,6 @@ export interface Ticket {
   id: number;
   orgId: string;
   title: string;
-  /**
-   * Absent on list and board responses, which project it away rather than ship a
-   * body no column renders. Present on the detail read. Optional so a consumer
-   * has to handle the absence instead of trusting a null that never arrives.
-   */
   description?: string | null;
   type: string;
   status: string;
@@ -109,6 +98,7 @@ export interface Ticket {
   cycleId: number | null;
   sequenceId: string | null;
   estimate: number | null;
+  version: number;
   createdAt: string | Date | null;
   updatedAt: string | Date | null;
   assignee?: TicketUser | null;
@@ -119,12 +109,19 @@ export interface Ticket {
   labels?: TicketLabelMapping[];
   watchers?: TicketWatcher[];
   project?: { id: number; name: string; key: string } | null;
-  cycle?: { id: number; name: string; status: string; startDate: string; endDate: string } | null;
+  cycle?: {
+    id: number;
+    name: string;
+    status: string;
+    startDate: string;
+    endDate: string;
+  } | null;
+  health?: "on_track" | "at_risk" | "off_track" | null;
+  descriptionExcerpt?: string;
+  dependencyCount?: number;
   customerId?: number | null;
   customer?: { id: number; name: string } | null;
 }
-
-export type Epic = Ticket;
 
 export interface TimeEntry {
   id: number;
@@ -150,7 +147,7 @@ export interface CreateTicketInput {
   title: string;
   description?: string;
   type: string;
-  priority?: TicketPriority;
+  priority?: string;
   assigneeId?: string;
   assigneeIds?: string[];
   reporterId?: string;
@@ -170,7 +167,7 @@ export interface UpdateTicketInput {
   description?: string;
   type?: string;
   status?: string;
-  priority?: TicketPriority;
+  priority?: string;
   assigneeId?: string;
   assigneeIds?: string[];
   epicId?: number | null;
@@ -181,6 +178,7 @@ export interface UpdateTicketInput {
   startDate?: string | null;
   dueDate?: string | null;
   expectedUpdatedAt?: string;
+  version: number;
   customerId?: number | null;
   parentTicketId?: number | null;
 }
@@ -188,6 +186,7 @@ export interface UpdateTicketInput {
 export interface RankTicketInput {
   projectId: number;
   ticketId: number;
+  version: number;
   beforeTicketId?: number | null;
   afterTicketId?: number | null;
   status?: string;
@@ -228,7 +227,11 @@ export interface TicketFilters {
 export interface AllWorkFilters extends TicketFilters {
   projectIds?: string;
   excludeStatus?: string;
-  scope?: "all" | "mine" | "created" | "subscribed";
+  scope?: "all" | "mine" | "created" | "subscribed" | "mentioned" | "blocked" | "recently-completed";
+  teamId?: number;
+  managedProductId?: number;
+  blockedOnly?: boolean;
+  includeTotal?: boolean;
 }
 
 export interface AllWorkTicketLabel {
@@ -252,6 +255,7 @@ export interface AllWorkTicket {
   points: number | null;
   estimate: number | null;
   rank: string | null;
+  version: number;
   startDate: string | null;
   dueDate: string | null;
   cycleId: number | null;
@@ -298,13 +302,13 @@ export type CustomFieldType = (typeof CUSTOM_FIELD_TYPES)[number];
 
 export interface ProjectCustomField {
   id: number;
-  projectId: number;
+  projectId: number | null;
   orgId: string;
   name: string;
-  type: CustomFieldType;
+  type: string;
   options: string[] | null;
-  required: boolean;
-  position: number;
+  required: boolean | null;
+  position: number | null;
   createdAt: string;
 }
 
@@ -313,7 +317,7 @@ export interface TicketCustomFieldValue {
   ticketId: number;
   fieldId: number;
   field: ProjectCustomField;
-  value: string | null;
+  value: unknown;
   createdAt: string;
   updatedAt: string;
 }
@@ -327,4 +331,5 @@ export interface TicketSearchResult {
   projectId: number;
   projectKey: string;
   projectName: string;
+  version: number;
 }

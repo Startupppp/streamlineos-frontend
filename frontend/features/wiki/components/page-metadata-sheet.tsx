@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import { toast } from "sonner";
+import { isApiError } from "@/lib/api-envelope";
+import { kbPageEditConflictContract } from "@/features/wiki/lib/wiki-schema";
 import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Badge } from "@/components/ui/badge";
@@ -13,6 +15,7 @@ import {
   SheetContent,
   SheetHeader,
   SheetTitle,
+  SheetDescription,
   SheetFooter,
 } from "@/components/ui/sheet";
 import {
@@ -25,6 +28,7 @@ import {
 import { useCan } from "@/hooks/api/access";
 import { useKbSpaces } from "@/hooks/api/kb/spaces";
 import {
+  useKbPage,
   useUpdateKbPage,
   usePublishKbPage,
   useArchiveKbPage,
@@ -33,6 +37,7 @@ import {
   useMarkStaleKbPage,
 } from "@/hooks/api/kb/pages";
 import { PageRecordLinks } from "./page-record-links";
+import { RequestReviewDialog } from "./reviews-decision-dialogs";
 import { kbFormatDate } from "@/features/wiki/lib/kb-date-utils";
 import type { KbPageDetail } from "@/hooks/api/kb/page-types";
 
@@ -69,16 +74,28 @@ interface PageMetadataSheetProps {
   onOpenChange: (open: boolean) => void;
 }
 
+type ScopeChange =
+  | { field: "spaceId"; value: number | null }
+  | { field: "ownerUserId"; value: string | null };
+
 export default function PageMetadataSheet({
   page,
   pageId,
   open,
   onOpenChange,
 }: PageMetadataSheetProps) {
+  const canUpdate = useCan("kb:pages:update");
   const canManage = useCan("kb:pages:manage");
+  const canManageReviews = useCan("kb:reviews:manage");
+  const isEditable = canUpdate && page.canEdit === true && (!page.isLocked || canManage);
+  const canChangeOwner = isEditable && canManage;
   const [intervalDays, setIntervalDays] = useState<string>("");
   const [verifyFormOpen, setVerifyFormOpen] = useState(false);
+  const [reviewDialogOpen, setReviewDialogOpen] = useState(false);
+  const [pendingScope, setPendingScope] = useState<(ScopeChange & { pageId: number; minimumRevision: number | null }) | null>(null);
+  const [isRetryingScope, setIsRetryingScope] = useState(false);
 
+  const { refetch } = useKbPage(pageId);
   const updatePage = useUpdateKbPage();
   const publishPage = usePublishKbPage();
   const archivePage = useArchiveKbPage();
@@ -86,54 +103,100 @@ export default function PageMetadataSheet({
   const verifyPage = useVerifyKbPage();
   const markStalePage = useMarkStaleKbPage();
 
-  const { data: spaces = [] } = useKbSpaces();
+  const { data: spacesPage } = useKbSpaces();
+  const spaces = spacesPage?.data ?? [];
 
-  function handleSpaceChange(value: string) {
+  function changeScope(change: ScopeChange) {
+    if (!isEditable || (change.field === "ownerUserId" && !canChangeOwner)) return;
     updatePage.mutate(
-      { pageId, spaceId: value === "none" ? null : Number(value) },
-      { onSuccess: () => toast.success("Space updated"), onError: () => toast.error("Failed to update space") }
+      { pageId, [change.field]: change.value, expectedContentRevision: page.contentRevision },
+      {
+        onSuccess: () => {
+          setPendingScope((pending) => pending?.pageId === pageId && pending.field === change.field ? null : pending);
+          toast.success(`${change.field === "spaceId" ? "Space" : "Owner"} updated`);
+        },
+        onError: (error) => {
+          if (isApiError(error) && error.status === 409) {
+            const details = kbPageEditConflictContract.safeParse(error.details);
+            setPendingScope({ ...change, pageId, minimumRevision: details.success ? details.data.currentContentRevision : null });
+            toast.error("Page changed before this setting was saved");
+            return;
+          }
+          toast.error(`Failed to update ${change.field === "spaceId" ? "space" : "owner"}`);
+        },
+      },
     );
   }
 
+  function handleSpaceChange(value: string) {
+    changeScope({ field: "spaceId", value: value === "none" ? null : Number(value) });
+  }
+
   function handleStatusChange(value: string) {
+    if (!isEditable) return;
     updatePage.mutate(
-      { pageId, status: value as "draft" | "in_review" | "published" | "archived" },
+      { pageId, status: value as "draft" | "in_review" | "published" | "archived", expectedContentRevision: page.contentRevision },
       { onError: () => toast.error("Failed to update status") }
     );
   }
 
   function handleContentTypeChange(value: string) {
+    if (!isEditable) return;
     updatePage.mutate(
-      { pageId, contentType: value },
+      { pageId, contentType: value, expectedContentRevision: page.contentRevision },
       { onError: () => toast.error("Failed to update content type") }
     );
   }
 
   function handleOwnerChange(value: string) {
-    updatePage.mutate(
-      { pageId, ownerUserId: value || null },
-      { onError: () => toast.error("Failed to update owner") }
-    );
+    changeScope({ field: "ownerUserId", value: value || null });
+  }
+
+  async function retryScopeChange() {
+    const pending = pendingScope?.pageId === pageId ? pendingScope : null;
+    if (!pending || isRetryingScope || !isEditable || (pending.field === "ownerUserId" && !canChangeOwner)) return;
+    setIsRetryingScope(true);
+    try {
+      const latest = await refetch();
+      if (!latest.isSuccess || !latest.data || latest.data.canEdit !== true ||
+        (latest.data.isLocked && !canManage) ||
+        (pending.minimumRevision !== null && latest.data.contentRevision < pending.minimumRevision))
+        throw new Error("Current page version is unavailable");
+      await updatePage.mutateAsync({
+        pageId,
+        [pending.field]: pending.value,
+        expectedContentRevision: latest.data.contentRevision,
+      });
+      setPendingScope(null);
+      toast.success(`${pending.field === "spaceId" ? "Space" : "Owner"} updated`);
+    } catch {
+      toast.error("Could not retry the setting change. Your choice is still available.");
+    } finally {
+      setIsRetryingScope(false);
+    }
   }
 
   function handlePublish() {
-    publishPage.mutate(pageId, {
+    if (!isEditable) return;
+    publishPage.mutate({ pageId, expectedContentRevision: page.contentRevision }, {
       onSuccess: () => toast.success("Page published"),
-      onError: () => toast.error("Failed to publish page"),
+      onError: (error) => toast.error(isApiError(error) && error.status === 409 ? "Page changed before publication. Refresh before trying again." : "Failed to publish page"),
     });
   }
 
   function handleArchive() {
-    archivePage.mutate(pageId, {
+    if (!isEditable) return;
+    archivePage.mutate({ pageId, expectedContentRevision: page.contentRevision }, {
       onSuccess: () => toast.success("Page archived"),
-      onError: () => toast.error("Failed to archive page"),
+      onError: (error) => toast.error(isApiError(error) && error.status === 409 ? "Page changed before archiving. Refresh before trying again." : "Failed to archive page"),
     });
   }
 
   function handleUnarchive() {
-    unarchivePage.mutate(pageId, {
+    if (!isEditable) return;
+    unarchivePage.mutate({ pageId, expectedContentRevision: page.contentRevision }, {
       onSuccess: () => toast.success("Page unarchived"),
-      onError: () => toast.error("Failed to unarchive page"),
+      onError: (error) => toast.error(isApiError(error) && error.status === 409 ? "Page changed before unarchiving. Refresh before trying again." : "Failed to unarchive page"),
     });
   }
 
@@ -147,6 +210,7 @@ export default function PageMetadataSheet({
   }
 
   function handleConfirmVerify() {
+    if (!isEditable) return;
     const days = intervalDays ? Number(intervalDays) : undefined;
     verifyPage.mutate(
       { pageId, intervalDays: days },
@@ -162,6 +226,7 @@ export default function PageMetadataSheet({
   }
 
   function handleMarkStale() {
+    if (!isEditable) return;
     markStalePage.mutate(pageId, {
       onSuccess: () => toast.success("Page marked as stale"),
       onError: () => toast.error("Failed to mark page as stale"),
@@ -177,27 +242,47 @@ export default function PageMetadataSheet({
     onOpenChange(false);
   }
 
+  function handleRequestReview() {
+    setReviewDialogOpen(true);
+  }
+
   const trustState = page.trustState ?? "unverified";
   const status = page.status ?? "draft";
   const showPublish = status !== "published";
   const statusActionCount = showPublish ? 2 : 1;
 
   return (
+    <>
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent side="right" className="gap-0 sm:max-w-md p-0 flex flex-col bg-background">
         <SheetHeader className="px-5 py-4 border-b shrink-0 bg-background">
           <SheetTitle className="text-sm">Page settings</SheetTitle>
+          <SheetDescription className="text-xs mt-0.5">
+            Visibility, review schedule and other properties of this page.
+          </SheetDescription>
         </SheetHeader>
 
         <ScrollArea className="flex-1 min-h-0">
           <div className="min-h-full px-5 py-4 space-y-5 bg-muted">
+            {pendingScope?.pageId === pageId && (
+              <div role="alert" className="space-y-2 rounded-lg border border-status-warning-rule bg-status-warning-surface p-3 text-sm text-status-warning-ink">
+                <p>The page changed before your {pendingScope.field === "spaceId" ? "space" : "owner"} choice was saved. Your choice is ready to retry.</p>
+                <div className="flex flex-wrap gap-2">
+                  <Button size="sm" onClick={retryScopeChange} disabled={isRetryingScope || !isEditable || (pendingScope.field === "ownerUserId" && !canChangeOwner)}>
+                    {isRetryingScope ? "Retrying…" : `Retry ${pendingScope.field === "spaceId" ? "space" : "owner"} change`}
+                  </Button>
+                  <Button size="sm" variant="outline" onClick={() => setPendingScope(null)} disabled={isRetryingScope}>Discard choice</Button>
+                </div>
+              </div>
+            )}
             <div className="space-y-2">
               <p className="text-label font-medium text-foreground">Space</p>
               <Select
                 value={page.spaceId != null ? String(page.spaceId) : "none"}
                 onValueChange={handleSpaceChange}
+                disabled={!isEditable}
               >
-                <SelectTrigger className={FIELD_CLASS}>
+                <SelectTrigger className={FIELD_CLASS} aria-label="Space">
                   <SelectValue placeholder="No space" />
                 </SelectTrigger>
                 <SelectContent>
@@ -213,8 +298,8 @@ export default function PageMetadataSheet({
 
             <div className="space-y-2">
               <p className="text-label font-medium text-foreground">Status</p>
-              <Select value={status} onValueChange={handleStatusChange}>
-                <SelectTrigger className={FIELD_CLASS}>
+              <Select value={status} onValueChange={handleStatusChange} disabled={!isEditable}>
+                <SelectTrigger className={FIELD_CLASS} aria-label="Status">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -225,7 +310,7 @@ export default function PageMetadataSheet({
                   ))}
                 </SelectContent>
               </Select>
-              {canManage && (
+              {isEditable && (
                 <div
                   className={
                     statusActionCount === 2
@@ -266,8 +351,8 @@ export default function PageMetadataSheet({
 
             <div className="space-y-2">
               <p className="text-label font-medium text-foreground">Content type</p>
-              <Select value={page.contentType ?? ""} onValueChange={handleContentTypeChange}>
-                <SelectTrigger className={FIELD_CLASS}>
+              <Select value={page.contentType ?? ""} onValueChange={handleContentTypeChange} disabled={!isEditable}>
+                <SelectTrigger className={FIELD_CLASS} aria-label="Content type">
                   <SelectValue placeholder="Select type" />
                 </SelectTrigger>
                 <SelectContent>
@@ -281,17 +366,19 @@ export default function PageMetadataSheet({
             </div>
 
             <div className="space-y-2">
-              <p className="text-label font-medium text-foreground">Owner</p>
+              <label htmlFor="kb-page-owner" className="text-label font-medium text-foreground">Owner</label>
               <UserCombobox
+                id="kb-page-owner"
                 value={page.ownerUserId ?? ""}
                 onChange={handleOwnerChange}
                 placeholder="Select owner…"
                 allowUnassigned
+                disabled={!canChangeOwner}
                 className={FIELD_CLASS}
               />
             </div>
 
-            {canManage && (
+            {isEditable && (
               <div className="space-y-3">
                 <p className="text-label font-medium text-foreground">Verification</p>
                 <div className="flex items-center gap-2">
@@ -379,6 +466,15 @@ export default function PageMetadataSheet({
               </p>
             )}
 
+            {canManageReviews && (
+              <div className="space-y-2">
+                <p className="text-label font-medium text-foreground">Reviews</p>
+                <Button type="button" variant="outline" className={ACTION_BTN_NEUTRAL} onClick={handleRequestReview}>
+                  Request review
+                </Button>
+              </div>
+            )}
+
             <PageRecordLinks pageId={pageId} />
           </div>
         </ScrollArea>
@@ -390,5 +486,12 @@ export default function PageMetadataSheet({
         </SheetFooter>
       </SheetContent>
     </Sheet>
+    <RequestReviewDialog
+      pageId={pageId}
+      pageTitle={page.title}
+      open={reviewDialogOpen}
+      onOpenChange={setReviewDialogOpen}
+    />
+    </>
   );
 }

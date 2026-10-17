@@ -73,7 +73,7 @@ function MappingForm({
   onSuccess: () => void;
   onCancel: () => void;
 }) {
-  const { data: componentsData } = usePayrollComponents({ active: true, pageSize: 100 });
+  const { data: componentsData } = usePayrollComponents({ active: true, limit: 100 });
   const create = useCreateAccountingMapping();
   const update = useUpdateAccountingMapping();
 

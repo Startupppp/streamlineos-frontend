@@ -3,7 +3,7 @@
 import { useMemo, useState, useCallback } from "react";
 import { toast } from "sonner";
 import { Check, Users } from "lucide-react";
-import { useAddAttendee, useRemoveAttendee } from "@/hooks/api/build";
+import { useAddAttendee, useRemoveAttendee } from "@/hooks/api/build/meetings";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Combobox } from "@/components/ui/combobox";
@@ -129,7 +129,7 @@ export function AttendeesSection({
                     aria-label={`Remove ${displayName}`}
                     disabled={removeAttendee.isPending}
                   >
-                    <span className="text-xs font-bold">&times;</span>
+                    <span className="text-xs font-normal">&times;</span>
                   </button>
                 )}
               </Badge>

@@ -1,74 +1,150 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
-import { useRoadmapItems, useDeleteRoadmapItem } from "@/hooks/api/build/roadmap";
-import type { RoadmapItem, RoadmapStatus } from "@/types/projects";
+import { useCallback, useMemo, useRef, useState } from "react";
+import { useSearchParams, useRouter, usePathname } from "next/navigation";
+import {
+  useRoadmapItems,
+  useDeleteRoadmapItem,
+} from "@/hooks/api/build/roadmap";
 import { PageWrapper } from "@/components/ui/page-wrapper";
-import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Button } from "@/components/ui/button";
-import { TablePagination, useCursorPager } from "@/components/ui/table-pagination";
+import { TablePagination } from "@/components/ui/table-pagination";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { BuildPaginatedContent } from "@/features/build/shared/build-paginated-content";
+import { useBuildCursorPager } from "@/features/build/shared/use-build-cursor-pager";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { usePageState } from "@/hooks/api/use-page-state";
+import { useCan } from "@/hooks/api/access";
 import { PageState } from "@/components/shared/page-state";
-import { cn } from "@/lib/utils";
-import { ROADMAP_COLUMNS } from "@/features/build/roadmap/roadmap-constants";
-import { RoadmapItemCard } from "@/features/build/roadmap/roadmap-item-card";
 import { RoadmapItemSheet } from "@/features/build/roadmap/roadmap-item-sheet";
-import { BuildListToolbar } from "@/features/build/shared/build-list-toolbar";
-import { useBuildListFilters } from "@/features/build/shared/use-build-list-filters";
 import {
-  PmPageShell,
-  PmSection,
-  PmPanel,
-  PmStaggerList,
-  PM_FILL_PANEL,
-  PM_PANEL,
-} from "@/components/pm-chrome";
+  BUILD_FILTER_ALL,
+  useBuildListFilters,
+} from "@/features/build/shared/use-build-list-filters";
+import { useBuildListKeyboard } from "@/hooks/common/use-build-list-keyboard";
+import { CONTENT_FILL_PANEL } from "@/components/pm-chrome";
+import type { ScorableRoadmapItem } from "@/features/build/roadmap/roadmap-item-card";
+import {
+  ROADMAP_FILTER_DEFS,
+  type RoadmapViewMode,
+} from "./product-roadmap-model";
+import { RoadmapInitiativePane } from "./roadmap/roadmap-initiative-pane";
+import {
+  MANAGED_PRODUCT_DETAIL_CONTENT_CLASS,
+  ManagedProductDetailPrimarySection,
+  ManagedProductDetailShell,
+  ManagedProductNotFound,
+} from "./managed-product-detail-layout";
+import {
+  ProductRoadmapBoardSkeleton,
+  ProductRoadmapSkeleton,
+} from "./managed-product-page-skeletons";
+import { RoadmapBoardColumns } from "./roadmap/roadmap-board-columns";
+import { RoadmapTimelineView } from "./roadmap/roadmap-timeline-view";
+import { RoadmapListView } from "./roadmap/roadmap-list-view";
+import { RoadmapFiltersBar } from "./roadmap/roadmap-filters-bar";
+import { RoadmapPreviewSheet } from "./roadmap/roadmap-preview-sheet";
+import { RoadmapPublicationPanel } from "./roadmap/roadmap-publication-panel";
+import { useProductReturn } from "@/features/build/shared/use-product-return";
+import type { RoadmapHorizon } from "@/types/projects";
 
 interface ProductRoadmapPageProps {
   managedProductId: number;
 }
 
-function RoadmapSkeleton() {
-  return (
-    <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
-      {Array.from({ length: 4 }).map((_, i) => (
-        <div key={i} className={cn(PM_PANEL, "min-h-[140px] space-y-2 p-2")}>
-          <Skeleton className="h-4 w-20" />
-          <Skeleton className="h-16 w-full rounded-lg" />
-          <Skeleton className="h-16 w-full rounded-lg" />
-        </div>
-      ))}
-    </div>
+export function ProductRoadmapPage({
+  managedProductId,
+}: ProductRoadmapPageProps) {
+  const canManage = useCan("build:roadmap:manage");
+  const { handleBack } = useProductReturn(`/build/managed-products/${managedProductId}`);
+  const listFilters = useBuildListFilters({ filters: ROADMAP_FILTER_DEFS });
+  const pager = useBuildCursorPager(listFilters.resetKey);
+  const searchInputRef = useRef<HTMLInputElement | null>(null);
+
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const pathname = usePathname();
+
+  const viewParam = searchParams.get("view");
+  const viewMode: RoadmapViewMode =
+    viewParam === "timeline"
+      ? "timeline"
+      : viewParam === "list"
+        ? "list"
+        : "board";
+
+  const openItemId = searchParams.get("item")
+    ? Number(searchParams.get("item"))
+    : null;
+
+  const handleViewItem = useCallback(
+    (item: ScorableRoadmapItem) => {
+      const next = new URLSearchParams(searchParams.toString());
+      next.set("item", String(item.id));
+      router.replace(`${pathname}?${next.toString()}`, { scroll: false });
+    },
+    [router, pathname, searchParams],
   );
-}
 
-export function ProductRoadmapPage({ managedProductId }: ProductRoadmapPageProps) {
-  const listFilters = useBuildListFilters({ filters: [] });
-  const pager = useCursorPager(listFilters.resetKey);
+  const {
+    value: getFilter,
+    debouncedSearch,
+    resetKey: filtersKey,
+  } = listFilters;
 
-  const filters = useMemo(
-    () => ({
+  const filters = useMemo(() => {
+    const nv = (p: string) => {
+      const x = getFilter(p);
+      return x && x !== BUILD_FILTER_ALL ? x : undefined;
+    };
+    return {
       managedProductId,
-      ...(listFilters.debouncedSearch.trim() ? { search: listFilters.debouncedSearch.trim() } : {}),
+      status: nv("status"),
+      horizon: nv("horizon"),
+      search: debouncedSearch.trim() || undefined,
+      sort: nv("sort"),
+      teamId: nv("teamId"),
+      goalId: nv("goalId"),
+      segment: nv("segment")?.trim(),
+      confidenceMin: nv("confidenceMin")
+        ? Number(nv("confidenceMin"))
+        : undefined,
+      targetFrom: nv("targetFrom"),
+      targetTo: nv("targetTo"),
+      customerVisible: nv("customerVisible")
+        ? nv("customerVisible") === "true"
+        : undefined,
+      evidenceState: nv("evidenceState"),
       cursor: pager.cursor,
-    }),
-    [managedProductId, listFilters.debouncedSearch, pager.cursor],
-  );
+    };
+  }, [managedProductId, getFilter, debouncedSearch, filtersKey, pager.cursor]);
 
   const { data, isLoading, isError, error, refetch } = useRoadmapItems(filters);
   const deleteItem = useDeleteRoadmapItem();
 
   const [createOpen, setCreateOpen] = useState(false);
-  const [editTarget, setEditTarget] = useState<RoadmapItem | null>(null);
-  const [deleteTarget, setDeleteTarget] = useState<RoadmapItem | null>(null);
+  const [createHorizon, setCreateHorizon] = useState<RoadmapHorizon>("later");
+  const [editTarget, setEditTarget] = useState<ScorableRoadmapItem | null>(
+    null,
+  );
+  const [deleteTarget, setDeleteTarget] = useState<ScorableRoadmapItem | null>(
+    null,
+  );
+  const [previewOpen, setPreviewOpen] = useState(false);
+  const [publicationOpen, setPublicationOpen] = useState(false);
 
   const grouped = useMemo(() => {
-    const map: Record<string, RoadmapItem[]> = { planned: [], in_progress: [], completed: [], cancelled: [] };
-    for (const item of data?.data ?? []) map[item.status]?.push(item);
+    const map: Record<RoadmapHorizon, ScorableRoadmapItem[]> = {
+      now: [],
+      next: [],
+      later: [],
+    };
+    for (const item of data?.data ?? []) {
+      map[item.horizon ?? "later"].push(item);
+    }
     return map;
   }, [data]);
 
@@ -77,16 +153,26 @@ export function ProductRoadmapPage({ managedProductId }: ProductRoadmapPageProps
     isLoading,
     isError,
     error,
-    isEmpty: (data?.data ?? []).length === 0 && !pager.hasPrevious,
+    isEmpty:
+      viewMode !== "board" &&
+      (data?.data ?? []).length === 0 &&
+      !pager.hasPrevious,
   });
 
-  const handleEditItem = useCallback((item: RoadmapItem) => { setEditTarget(item); }, []);
-  const handleDeleteItem = useCallback((item: RoadmapItem) => { setDeleteTarget(item); }, []);
+  const handleEditItem = useCallback((item: ScorableRoadmapItem) => {
+    setEditTarget(item);
+  }, []);
+  const handleDeleteItem = useCallback((item: ScorableRoadmapItem) => {
+    setDeleteTarget(item);
+  }, []);
 
   const handleDelete = useCallback(() => {
     if (!deleteTarget) return;
     deleteItem.mutate(deleteTarget.id, {
-      onSuccess: () => { toast.success("Roadmap item deleted"); setDeleteTarget(null); },
+      onSuccess: () => {
+        toast.success("Roadmap item deleted");
+        setDeleteTarget(null);
+      },
       onError: (e) => toast.error(getErrorMessage(e)),
     });
   }, [deleteTarget, deleteItem]);
@@ -94,98 +180,232 @@ export function ProductRoadmapPage({ managedProductId }: ProductRoadmapPageProps
   const handleNext = useCallback(() => {
     pager.goNext(data?.pagination.nextCursor);
   }, [pager, data?.pagination.nextCursor]);
-
   const handlePrev = useCallback(() => {
     pager.goPrevious();
   }, [pager]);
-
-  const handleRetry = useCallback(() => { void refetch(); }, [refetch]);
-  const handleOpenCreate = useCallback(() => { setCreateOpen(true); }, []);
-  const handleCloseCreate = useCallback(() => { setCreateOpen(false); }, []);
-  const handleCloseEdit = useCallback(() => { setEditTarget(null); }, []);
-
+  const handleRetry = useCallback(() => {
+    void refetch();
+  }, [refetch]);
+  const handleOpenCreate = useCallback(() => {
+    setCreateHorizon("later");
+    setCreateOpen(true);
+  }, []);
+  const handleCloseCreate = useCallback(() => {
+    setCreateOpen(false);
+  }, []);
+  const handleCloseEdit = useCallback(() => {
+    setEditTarget(null);
+  }, []);
   const handleDeleteOpenChange = useCallback((open: boolean) => {
     if (!open) setDeleteTarget(null);
   }, []);
+  const handleOpenPreview = useCallback(() => {
+    setPreviewOpen(true);
+  }, []);
+  const handleClosePreview = useCallback(() => {
+    setPreviewOpen(false);
+  }, []);
+  const handleOpenPublication = useCallback(() => setPublicationOpen(true), []);
+  const handleClosePublication = useCallback(
+    () => setPublicationOpen(false),
+    [],
+  );
+
+  const handleSetView = useCallback(
+    (mode: string) => {
+      const next = new URLSearchParams(searchParams.toString());
+      if (mode === "board") next.delete("view");
+      else next.set("view", mode);
+      const qs = next.toString();
+      router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
+    },
+    [router, pathname, searchParams],
+  );
+
+  const handleCreateInHorizon = useCallback((horizon: RoadmapHorizon) => {
+    setCreateHorizon(horizon);
+    setCreateOpen(true);
+  }, []);
+
+  const handleKeyboardOpen = useCallback(
+    (index: number) => {
+      const item = data?.data[index];
+      if (item) handleViewItem(item);
+    },
+    [data, handleViewItem],
+  );
+
+  useBuildListKeyboard({
+    itemCount: (data?.data ?? []).length,
+    onOpen: handleKeyboardOpen,
+    onClearSelection: () => undefined,
+    searchInputRef,
+    enabled: !createOpen && !editTarget && !deleteTarget,
+  });
 
   const hasNext = data?.pagination.hasMore ?? false;
+  const allItems = data?.data ?? [];
+
+  const paginationFooter = (
+    <TablePagination
+      mode="cursor"
+      rowCount={allItems.length}
+      pageNumber={pager.pageNumber}
+      hasMore={hasNext}
+      hasPrevious={pager.hasPrevious}
+      onNext={handleNext}
+      onPrevious={handlePrev}
+    />
+  );
+
+  if (resolution.kind === "not-found") return <ManagedProductNotFound />;
 
   return (
     <PageWrapper
       title="Roadmap"
       subtitle="Product roadmap items"
+      onBack={handleBack}
+      contentClassName={MANAGED_PRODUCT_DETAIL_CONTENT_CLASS}
+      noInternalScroll={viewMode === "board" || viewMode === "list"}
       actions={
-        resolution.kind !== "denied" ? (
-          <Button size="sm" onClick={handleOpenCreate}>New Item</Button>
-        ) : undefined
+        <div className="flex w-full min-w-0 flex-wrap items-center gap-2">
+          <Tabs value={viewMode} onValueChange={handleSetView}>
+            <TabsList>
+              <TabsTrigger value="board">Board</TabsTrigger>
+              <TabsTrigger value="timeline">Timeline</TabsTrigger>
+              <TabsTrigger value="list">List</TabsTrigger>
+            </TabsList>
+          </Tabs>
+          {canManage && resolution.kind !== "denied" ? (
+            <>
+              <Button
+                size="sm"
+                variant="outline"
+                type="button"
+                onClick={handleOpenPreview}
+              >
+                Preview
+              </Button>
+              <Button
+                size="sm"
+                variant="outline"
+                type="button"
+                onClick={handleOpenPublication}
+              >
+                Publish
+              </Button>
+              <Button size="sm" onClick={handleOpenCreate}>
+                New Item
+              </Button>
+            </>
+          ) : null}
+        </div>
       }
       filters={
-        <BuildListToolbar
-          search={{
-            value: listFilters.search,
-            onValueChange: listFilters.setSearch,
-            placeholder: "Search roadmap…",
-            label: "Search roadmap",
-          }}
-          filters={[]}
-          onClearAll={listFilters.clearAll}
+        <RoadmapFiltersBar
+          managedProductId={managedProductId}
+          listFilters={listFilters}
+          searchInputRef={searchInputRef}
         />
       }
     >
-      <PmPageShell>
-        <PmSection index={0} className="flex min-h-0 flex-1 flex-col gap-4">
+      <ManagedProductDetailShell>
+        <ManagedProductDetailPrimarySection>
           <PageState
             resolution={resolution}
-            loading={<RoadmapSkeleton />}
+            loading={
+              viewMode === "board" ? (
+                <ProductRoadmapBoardSkeleton />
+              ) : (
+                <ProductRoadmapSkeleton />
+              )
+            }
             empty={
               <EmptyState
-                className={PM_FILL_PANEL}
+                className={CONTENT_FILL_PANEL}
                 illustrationPreset="projects"
                 title="No roadmap items yet"
                 description="Add items to plan what this product is working toward."
-                action={{ label: "Add roadmap item", onClick: handleOpenCreate }}
+                action={
+                  canManage
+                    ? { label: "Add roadmap item", onClick: handleOpenCreate }
+                    : undefined
+                }
               />
             }
             onRetry={handleRetry}
-            className={PM_FILL_PANEL}
+            className={CONTENT_FILL_PANEL}
           >
-            <div className="flex min-h-0 flex-1 flex-col gap-2">
-              <div className="grid min-h-0 flex-1 gap-3 md:grid-cols-2 xl:grid-cols-4">
-                {ROADMAP_COLUMNS.map((col) => (
-                  <PmPanel key={col.status} className="flex min-h-[120px] flex-col p-2">
-                    <div className="mb-2 flex items-center justify-between px-1">
-                      <span className="text-dense font-semibold uppercase tracking-wide text-muted-foreground">{col.label}</span>
-                      <span className="min-w-[20px] rounded-full border border-border/50 bg-background/80 px-1.5 py-0.5 text-center text-dense tabular-nums text-muted-foreground">
-                        {(grouped[col.status as RoadmapStatus] ?? []).length}
-                      </span>
-                    </div>
-                    {(grouped[col.status as RoadmapStatus] ?? []).length === 0 ? (
-                      <div className="rounded-lg border border-dashed border-border/60 py-6 text-center text-xs text-muted-foreground">Empty</div>
-                    ) : (
-                      <PmStaggerList className="flex flex-col gap-1.5">
-                        {(grouped[col.status as RoadmapStatus] ?? []).map((item) => (
-                          <RoadmapItemCard key={item.id} item={item} onEdit={handleEditItem} onDelete={handleDeleteItem} />
-                        ))}
-                      </PmStaggerList>
-                    )}
-                  </PmPanel>
-                ))}
-              </div>
-              <TablePagination
-                mode="cursor"
-                rowCount={(data?.data ?? []).length}
-                hasMore={hasNext}
-                hasPrevious={pager.hasPrevious}
-                onNext={handleNext}
-                onPrevious={handlePrev}
+            {viewMode === "board" ? (
+              <>
+                <RoadmapBoardColumns
+                  grouped={grouped}
+                  onEdit={handleEditItem}
+                  onDelete={handleDeleteItem}
+                  onView={handleViewItem}
+                  onCreateInHorizon={handleCreateInHorizon}
+                />
+                <div className="shrink-0">{paginationFooter}</div>
+              </>
+            ) : viewMode === "list" ? (
+              <RoadmapListView
+                items={allItems}
+                onEdit={handleEditItem}
+                onView={handleViewItem}
+                pagination={{
+                  pageSize: 50,
+                  hasMore: hasNext,
+                  hasPrevious: pager.hasPrevious,
+                  pageNumber: pager.pageNumber,
+                  onNext: handleNext,
+                  onPrevious: handlePrev,
+                }}
               />
-            </div>
+            ) : (
+              <BuildPaginatedContent
+                ariaLabel="Product roadmap items"
+                contentClassName="flex flex-col gap-4"
+                footer={paginationFooter}
+              >
+                <RoadmapTimelineView
+                  items={allItems}
+                  onEdit={handleEditItem}
+                  onDelete={handleDeleteItem}
+                  onView={handleViewItem}
+                />
+              </BuildPaginatedContent>
+            )}
           </PageState>
-        </PmSection>
-      </PmPageShell>
+        </ManagedProductDetailPrimarySection>
+      </ManagedProductDetailShell>
 
-      {createOpen ? <RoadmapItemSheet onClose={handleCloseCreate} /> : null}
-      {editTarget ? <RoadmapItemSheet item={editTarget} onClose={handleCloseEdit} /> : null}
+      {createOpen ? (
+        <RoadmapItemSheet
+          managedProductId={managedProductId}
+          defaultHorizon={createHorizon}
+          onClose={handleCloseCreate}
+        />
+      ) : null}
+      {editTarget ? (
+        <RoadmapItemSheet
+          item={editTarget}
+          managedProductId={managedProductId}
+          onClose={handleCloseEdit}
+        />
+      ) : null}
+      {previewOpen ? (
+        <RoadmapPreviewSheet
+          managedProductId={managedProductId}
+          onClose={handleClosePreview}
+        />
+      ) : null}
+      {publicationOpen ? (
+        <RoadmapPublicationPanel
+          managedProductId={managedProductId}
+          onClose={handleClosePublication}
+        />
+      ) : null}
+      <RoadmapInitiativePane itemId={openItemId} />
 
       <ConfirmDialog
         open={!!deleteTarget}

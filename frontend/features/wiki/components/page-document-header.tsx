@@ -8,18 +8,17 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
   DialogFooter,
 } from "@/components/ui/dialog";
 import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+  Sheet,
+  SheetBody,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { LoadingButton } from "@/components/ui/loading-button";
@@ -29,30 +28,42 @@ import PageCommentsSheet from "./page-comments-sheet";
 import PageHistorySheet from "./page-history-sheet";
 import MovePageDialog from "./move-page-dialog";
 import PageMetadataSheet from "./page-metadata-sheet";
+import { PageRecordLinks } from "./page-record-links";
 import { PageDocumentBreadcrumb } from "./page-document-breadcrumb";
 import { PageDocumentToolbar } from "./page-document-toolbar";
 import { KNOWLEDGE_BASE } from "@/lib/knowledge-routes";
+import type { PageSaveState } from "./use-page-autosave";
 
 interface PageDocumentHeaderProps {
   page: KbPageDetail;
   pageId: number;
-  saveState: "idle" | "pending" | "saving" | "saved";
+  saveState: PageSaveState;
+  savedAt?: Date | null;
+  isOffline?: boolean;
+  onRetrySave?: () => void;
   isEditable: boolean;
   onNavigate: (pageId: number) => void;
+  currentContent?: string;
   onApplyImprovement?: (text: string) => void;
   onInsertSummary?: (text: string) => void;
   onOpenCover: () => void;
+  projectId?: number;
 }
 
 export default function PageDocumentHeader({
   page,
   pageId,
   saveState,
+  savedAt,
+  isOffline,
+  onRetrySave,
   isEditable,
   onNavigate,
+  currentContent,
   onApplyImprovement,
   onInsertSummary,
   onOpenCover,
+  projectId,
 }: PageDocumentHeaderProps) {
   const router = useRouter();
   const deletePage = useDeleteKbPage();
@@ -65,6 +76,7 @@ export default function PageDocumentHeader({
   const [templateName, setTemplateName] = useState("");
   const [deleteAlertOpen, setDeleteAlertOpen] = useState(false);
   const [metaSheetOpen, setMetaSheetOpen] = useState(false);
+  const [linkedRecordsOpen, setLinkedRecordsOpen] = useState(false);
 
   function handleOpenMetaSheet() {
     setMetaSheetOpen(true);
@@ -72,6 +84,14 @@ export default function PageDocumentHeader({
 
   function handleMetaSheetOpenChange(open: boolean) {
     setMetaSheetOpen(open);
+  }
+
+  function handleOpenLinkedRecords() {
+    setLinkedRecordsOpen(true);
+  }
+
+  function handleLinkedRecordsOpenChange(open: boolean) {
+    setLinkedRecordsOpen(open);
   }
 
   function handleOpenComments() {
@@ -100,10 +120,14 @@ export default function PageDocumentHeader({
   }
 
   function handleConfirmDelete() {
+    const afterDeleteHref =
+      projectId !== undefined && projectId > 0
+        ? `/build/${projectId}/wiki`
+        : KNOWLEDGE_BASE;
     deletePage.mutate(pageId, {
       onSuccess: () => {
         toast.success("Page moved to trash");
-        router.push(KNOWLEDGE_BASE);
+        router.push(afterDeleteHref);
       },
       onError: () => toast.error("Failed to delete page"),
     });
@@ -124,7 +148,7 @@ export default function PageDocumentHeader({
           setTemplateName("");
         },
         onError: () => toast.error("Failed to save template"),
-      }
+      },
     );
   }
 
@@ -134,12 +158,20 @@ export default function PageDocumentHeader({
 
   return (
     <>
-      <div className="flex min-w-0 items-center justify-between gap-3">
-        <PageDocumentBreadcrumb page={page} saveState={saveState} />
+      <div className="flex min-w-0 flex-col gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-3">
+        <PageDocumentBreadcrumb
+          page={page}
+          saveState={saveState}
+          savedAt={savedAt}
+          isOffline={isOffline}
+          onRetrySave={onRetrySave}
+          projectId={projectId}
+        />
         <PageDocumentToolbar
           page={page}
           pageId={pageId}
           isEditable={isEditable}
+          currentContent={currentContent}
           onApplyImprovement={onApplyImprovement}
           onInsertSummary={onInsertSummary}
           onOpenMetaSheet={handleOpenMetaSheet}
@@ -148,6 +180,7 @@ export default function PageDocumentHeader({
           onOpenMove={handleOpenMove}
           onOpenSaveAsTemplate={handleOpenSaveAsTemplate}
           onOpenCover={onOpenCover}
+          onOpenLinkedRecords={handleOpenLinkedRecords}
           onDelete={handleDelete}
           onNavigate={onNavigate}
         />
@@ -156,11 +189,13 @@ export default function PageDocumentHeader({
       <PageCommentsSheet
         pageId={pageId}
         open={commentsOpen}
+        content={page.content}
         onOpenChange={setCommentsOpen}
       />
       <PageHistorySheet
         pageId={pageId}
         open={historyOpen}
+        projectId={projectId}
         onOpenChange={setHistoryOpen}
       />
       <MovePageDialog
@@ -170,31 +205,24 @@ export default function PageDocumentHeader({
         onOpenChange={setMoveOpen}
       />
 
-      <AlertDialog open={deleteAlertOpen} onOpenChange={handleDeleteAlertOpenChange}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Move page to trash?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This page will be moved to trash. You can restore it from trash later.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-              onClick={handleConfirmDelete}
-              disabled={deletePage.isPending}
-            >
-              Move to trash
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <ConfirmDialog
+        open={deleteAlertOpen}
+        onOpenChange={handleDeleteAlertOpenChange}
+        title="Move page to trash?"
+        description="This page will be moved to trash. You can restore it from trash later."
+        destructive
+        confirmLabel="Move to trash"
+        isPending={deletePage.isPending}
+        onConfirm={handleConfirmDelete}
+      />
 
       <Dialog open={templateDialogOpen} onOpenChange={setTemplateDialogOpen}>
         <DialogContent className="sm:max-w-md gap-3">
           <DialogHeader>
             <DialogTitle>Save as template</DialogTitle>
+            <DialogDescription className="text-xs">
+              Reuse this page&apos;s structure when creating new pages.
+            </DialogDescription>
           </DialogHeader>
           <Input
             value={templateName}
@@ -224,6 +252,25 @@ export default function PageDocumentHeader({
         open={metaSheetOpen}
         onOpenChange={handleMetaSheetOpenChange}
       />
+
+      <Sheet
+        open={linkedRecordsOpen}
+        onOpenChange={handleLinkedRecordsOpenChange}
+      >
+        <SheetContent
+          side="right"
+          className="flex flex-col gap-0 p-0 sm:max-w-sm"
+        >
+          <SheetHeader className="border-b border-border px-4 py-3 pr-12">
+            <SheetTitle>Linked records</SheetTitle>
+          </SheetHeader>
+          <SheetBody>
+            <div className="px-4 py-4">
+              <PageRecordLinks pageId={pageId} />
+            </div>
+          </SheetBody>
+        </SheetContent>
+      </Sheet>
     </>
   );
 }

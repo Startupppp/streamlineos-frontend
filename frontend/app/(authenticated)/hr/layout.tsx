@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import { HrProvider } from "@/features/hr/shared/hr-context";
 import { HrPathTracker } from "@/features/hr/shared/hr-path-tracker";
 import { enforceRouteAccess } from "@/lib/rbac/route-access/enforce-route-access";
+import { DeferredOnboardingReminder } from "@/features/employee-onboarding/components/onboarding-standing-notices";
 
 export default async function HrLayout({ children }: { children: ReactNode }) {
   await enforceRouteAccess("/hr");
@@ -29,6 +30,12 @@ export default async function HrLayout({ children }: { children: ReactNode }) {
           />
         </div>
         <HrPathTracker />
+        {/* V-034. An administrator who deferred their own wizard was never
+            reminded again; this is the only thing in /hr that says their
+            record is still incomplete. Renders nothing for everyone else. */}
+        <div className="px-4 pt-3 empty:hidden sm:px-6">
+          <DeferredOnboardingReminder />
+        </div>
         <div className="relative flex h-full min-h-0 flex-1 flex-col overflow-hidden [&>:first-child]:h-full [&>:first-child]:min-h-0 [&>:first-child]:flex-1">
           {children}
         </div>

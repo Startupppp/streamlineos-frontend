@@ -31,6 +31,7 @@ export interface ReadinessRailProps {
   canPay: boolean;
   level?: ReadinessLevel;
   blockers: { id: string; label: string; href?: string }[];
+  blockerCount?: number;
   warnings?: { id: string; label: string; href?: string }[];
   changes?: { id: string; label: string }[];
   nextAction?: { label: string; href?: string; onClick?: () => void };
@@ -56,6 +57,7 @@ export function ReadinessRail({
   canPay,
   level,
   blockers,
+  blockerCount,
   warnings = [],
   changes = [],
   nextAction,
@@ -197,7 +199,7 @@ export function ReadinessRail({
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           <div className="space-y-1.5 min-w-0">
             <p className="text-micro font-semibold uppercase tracking-wider text-muted-foreground">
-              Blockers{blockers.length ? ` · ${blockers.length}` : ""}
+              Blockers{(blockerCount ?? blockers.length) ? ` · ${blockerCount ?? blockers.length}` : ""}
             </p>
             {blockers.length === 0 ? (
               <p className="text-xs text-muted-foreground">None</p>

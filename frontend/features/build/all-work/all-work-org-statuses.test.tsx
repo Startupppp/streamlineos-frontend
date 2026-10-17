@@ -6,6 +6,8 @@ const CUSTOM_STATUSES = [
   { name: "CODE REVIEW", color: "#0f0", type: "started" },
   { name: "BLOCKED", color: "#f00", type: "started" },
 ];
+let mockIsMobile = false;
+let mockIsBelowLg = false;
 
 jest.mock("next/navigation", () => ({
   useRouter: () => ({ push: jest.fn(), replace: jest.fn() }),
@@ -28,18 +30,28 @@ jest.mock("@/hooks/api/access", () => ({
 jest.mock("@/hooks/api/entitlements", () => ({
   useEntitlements: () => ({ data: undefined }),
 }));
-jest.mock("@/hooks/api/build", () => ({
+jest.mock("@/hooks/api/build/all-work", () => ({
   useAllWork: () => ({
-    data: undefined,
-    isLoading: true,
+    data: { data: [], hasMore: false, nextCursor: null, limit: 50 },
+    isLoading: false,
     isError: false,
     error: null,
     refetch: jest.fn(),
   }),
+  useAllWorkIds: () => ({ data: undefined }),
+}));
+jest.mock("@/hooks/api/build/projects", () => ({
   useProjects: () => ({ data: undefined }),
+}));
+jest.mock("@/hooks/api/build/build-members", () => ({
+  useBuildMembers: () => ({ data: undefined }),
 }));
 jest.mock("@/hooks/common/use-online-status", () => ({
   useOnlineStatus: () => true,
+}));
+jest.mock("@/hooks/common/use-mobile", () => ({
+  useIsMobile: () => mockIsMobile,
+  useIsBelowLg: () => mockIsBelowLg,
 }));
 
 type OrgStates = typeof CUSTOM_STATUSES | undefined;
@@ -47,16 +59,38 @@ const mockUseOrgCustomStates = jest.fn<{ data: OrgStates }, []>(() => ({ data: C
 jest.mock("@/hooks/api/build/custom-states", () => ({
   useOrgCustomStates: () => mockUseOrgCustomStates(),
 }));
+jest.mock("@/hooks/api/build/teams", () => ({
+  useProjectTeams: () => ({ data: undefined }),
+}));
+jest.mock("@/hooks/api/build/managed-products", () => ({
+  useManagedProducts: () => ({ data: undefined }),
+}));
+jest.mock("@/features/build/shared/build-filter-select", () => ({
+  BuildFilterSelect: () => null,
+}));
 
 interface FilterBarProps {
   statuses?: OrgStates;
+  presentation?: "default" | "all-work";
+  className?: string;
+  showSearch?: boolean;
+  showFilters?: boolean;
+  fillSearch?: boolean;
+  collapsibleSearch?: boolean;
+  searchExpanded?: boolean;
+  iconOnlyFilters?: boolean;
 }
 
-const mockTicketFilterBar = jest.fn<null, [FilterBarProps]>(() => null);
+const mockTicketFilterBar = jest.fn<React.ReactElement, [FilterBarProps]>((props) => (
+  <div
+    data-testid={props.showSearch === false ? "all-work-filter-controls" : "all-work-search"}
+    data-class-name={props.className}
+    data-fill-search={props.fillSearch}
+  />
+));
 jest.mock("@/features/build/shared/ticket-filter-bar", () => ({
   TicketFilterBar: (props: FilterBarProps) => {
-    mockTicketFilterBar(props);
-    return null;
+    return mockTicketFilterBar(props);
   },
 }));
 jest.mock("./use-all-work-filters", () => ({
@@ -64,6 +98,8 @@ jest.mock("./use-all-work-filters", () => ({
     view: "list" as const,
     scopeMine: false,
     filters: {},
+    productIdFilter: null,
+    teamIdFilter: null,
     grouping: "project" as BuildListGrouping,
     sortField: "rank",
     sortDirection: "desc",
@@ -84,9 +120,15 @@ jest.mock("./use-all-work-bulk", () => ({
     handleBulkStatus: jest.fn(),
     handleBulkPriority: jest.fn(),
     handleBulkAssignee: jest.fn(),
-    handleBulkSprintNoOp: jest.fn(),
+    handleBulkCycleNoOp: jest.fn(),
     handleClearSelection: jest.fn(),
+    isExpandedSelection: false,
+    expandedTotal: 0,
+    expandToAllMatching: jest.fn(),
   }),
+}));
+jest.mock("./use-all-work-export", () => ({
+  useAllWorkExport: () => ({ open: false, setOpen: jest.fn(), groups: [], handleOpen: jest.fn(), handleConfirm: jest.fn(), isExporting: false }),
 }));
 jest.mock("./use-all-work-keyboard", () => ({
   useAllWorkKeyboard: jest.fn(),
@@ -94,6 +136,7 @@ jest.mock("./use-all-work-keyboard", () => ({
 jest.mock("./all-work-view-switcher", () => ({
   AllWorkViewSwitcher: () => null,
   AllWorkSkeleton: () => null,
+  AllWorkToolbarSkeleton: () => null,
 }));
 jest.mock("./all-work-views-menu", () => ({
   AllWorkViewsMenu: () => null,
@@ -108,14 +151,14 @@ jest.mock("@/components/pm-chrome", () => ({
   PmPageShell: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
   PmPanel: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
   PmSection: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
-  PM_FILL_PANEL: "",
-}));
-jest.mock("@/components/ui/page-tabs-toolbar", () => ({
-  PageTabsToolbar: ({ filters }: { filters?: React.ReactNode }) => <div>{filters}</div>,
+  CONTENT_FILL_PANEL: "",
 }));
 jest.mock("@/components/ui/page-wrapper", () => ({
   PageWrapper: ({ children, filters }: { children?: React.ReactNode; filters?: React.ReactNode }) => (
-    <div>{filters}{children}</div>
+    <div>
+      <div data-testid="page-wrapper-filters">{filters}</div>
+      <div>{children}</div>
+    </div>
   ),
 }));
 jest.mock("@/components/ui/scroll-area", () => ({
@@ -147,6 +190,8 @@ import React from "react";
 
 beforeEach(() => {
   mockTicketFilterBar.mockClear();
+  mockIsMobile = false;
+  mockIsBelowLg = false;
 });
 
 describe("AllWorkPage — org-wide statuses passed to TicketFilterBar", () => {
@@ -156,6 +201,35 @@ describe("AllWorkPage — org-wide statuses passed to TicketFilterBar", () => {
     expect(calls.length).toBeGreaterThan(0);
     expect(calls[0]?.[0]).toBeDefined();
     expect(calls[0]?.[0]?.statuses).toEqual(CUSTOM_STATUSES);
+    expect(calls[0]?.[0]?.presentation).toBe("all-work");
+    const toolbar = document.querySelector<HTMLElement>('[data-slot="all-work-toolbar"]');
+    expect(toolbar).toHaveClass("md:grid-cols-[2.25rem_minmax(0,1fr)]");
+    expect(toolbar).toHaveClass("lg:grid-cols-[minmax(12rem,1fr)_auto]");
+    expect(document.querySelector('[data-slot="all-work-toolbar-search"]')).toContainElement(
+      document.querySelector('[data-testid="all-work-search"]'),
+    );
+    expect(document.querySelector('[data-slot="all-work-toolbar-controls"]')).toContainElement(
+      document.querySelector('[data-testid="all-work-filter-controls"]'),
+    );
+    expect(document.querySelector('[data-testid="all-work-search"]')).toHaveAttribute(
+      "data-fill-search",
+      "true",
+    );
+    expect(mockTicketFilterBar.mock.calls[0]?.[0]).toMatchObject({
+      collapsibleSearch: false,
+      searchExpanded: true,
+    });
+    expect(document.querySelector('[data-testid="all-work-filter-controls"]')).toHaveAttribute(
+      "data-class-name",
+      "order-2 !w-auto shrink-0 md:order-none",
+    );
+    expect(mockTicketFilterBar.mock.calls[1]?.[0]).toMatchObject({
+      iconOnlyFilters: true,
+      showSearch: false,
+    });
+    expect(
+      document.querySelector<HTMLElement>('[data-testid="page-wrapper-filters"]'),
+    ).toContainElement(toolbar);
   });
 
   it("passes undefined statuses (not the hardcoded four) when useOrgCustomStates has not loaded yet", () => {
@@ -164,5 +238,16 @@ describe("AllWorkPage — org-wide statuses passed to TicketFilterBar", () => {
     const calls = mockTicketFilterBar.mock.calls;
     expect(calls.length).toBeGreaterThan(0);
     expect(calls[0]?.[0]?.statuses).toBeUndefined();
+  });
+
+  it("uses icon-first expandable search at tablet widths", () => {
+    mockIsBelowLg = true;
+
+    render(<AllWorkPage />);
+
+    expect(mockTicketFilterBar.mock.calls[0]?.[0]).toMatchObject({
+      collapsibleSearch: true,
+      searchExpanded: false,
+    });
   });
 });

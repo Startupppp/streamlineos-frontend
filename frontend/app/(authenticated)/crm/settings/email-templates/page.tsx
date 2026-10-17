@@ -23,7 +23,7 @@ import {
   useDeleteEmailTemplate,
   useEmailTemplates,
   type EmailTemplate,
-} from "@/hooks/api/crm-settings";
+} from "@/hooks/api/crm/settings/email-templates";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { EMAIL_TEMPLATE_LAYOUT } from "@/lib/renderer/crm/settings/email-template-layout";
 

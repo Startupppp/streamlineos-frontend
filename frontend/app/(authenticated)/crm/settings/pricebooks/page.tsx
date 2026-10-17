@@ -168,18 +168,16 @@ export default function PricebooksPage() {
         ) : pricebooks.length === 0 ? (
           <EmptyState
             illustration={<EmptyProductsIllustration />}
-            title={query ? "No pricebooks match that search" : "No pricebooks yet"}
+            title="No pricebooks yet"
+            filtersActive={Boolean(query)}
+            filteredTitle="No pricebooks match that search"
+            onClearFilters={handleClearSearch}
             description={
               query
                 ? `Nothing matches "${debouncedSearch.trim()}". Clear the search to see every book.`
                 : "A pricebook holds one set of prices, so a reseller and a direct customer can be quoted different figures for the same product."
             }
-            action={
-              query
-                ? { label: "Clear search", onClick: handleClearSearch }
-                : { label: "New pricebook", onClick: handleOpenCreate }
-            }
-            actionVariant={query ? "outline" : undefined}
+            action={{ label: "New pricebook", onClick: handleOpenCreate }}
             className={CONTENT_FILL_PANEL}
           />
         ) : (

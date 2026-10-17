@@ -49,7 +49,9 @@ function sourceFilesMentioningLegacyRoute(): string[] {
 }
 
 function nextConfigRedirects(): { source: string; destination: string }[] {
-  const source = readFileSync(resolve(ROOT, "next.config.ts"), "utf8");
+  const source = ["next.config.ts", "lib/build/build-compat-redirects.ts"]
+    .map((file) => readFileSync(resolve(ROOT, file), "utf8"))
+    .join("\n");
   return [
     ...source.matchAll(
       /source:\s*"([^"]+)",\s*(?:has:[\s\S]*?,\s*)?destination:\s*"([^"]+)"/g,

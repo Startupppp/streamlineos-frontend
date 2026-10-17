@@ -1,11 +1,63 @@
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
 import {
+  collectBlocks,
   contrastRatio,
   darkCss,
+  extractTokenValue,
   lightCss,
   resolvePair,
   WCAG_AA_NORMAL,
   type TokenPair,
 } from "@/test-utils/globals-css-tokens";
+
+const appCss = readFileSync(join(__dirname, "..", "..", "..", "globals.css"), "utf8");
+const authenticatedLight = [
+  collectBlocks(appCss, 'html.app-neutral:not([class*="theme-"])'),
+  collectBlocks(appCss, "html.app-neutral"),
+  collectBlocks(appCss, ":root"),
+].join("\n");
+const authenticatedDark = [
+  collectBlocks(appCss, 'html.app-neutral.dark:not([class*="theme-"])'),
+  collectBlocks(appCss, "html.app-neutral.dark"),
+  collectBlocks(appCss, "html.app-neutral"),
+  collectBlocks(appCss, ".dark"),
+  collectBlocks(appCss, ":root"),
+].join("\n");
+
+describe.each([
+  ["light", authenticatedLight],
+  ["dark", authenticatedDark],
+])("authenticated Maia palette in %s mode", (_mode, css) => {
+  const textPairs: Array<[string, string]> = [
+    ["foreground", "background"],
+    ["card-foreground", "card"],
+    ["popover-foreground", "popover"],
+    ["primary-foreground", "primary"],
+    ["primary", "card"],
+    ["muted-foreground", "muted"],
+  ];
+
+  it.each(textPairs)("keeps %s readable on %s", (fg, bg) => {
+    const pair = resolvePair(css, fg, bg);
+    expect(pair).not.toBeNull();
+    if (pair) expect(contrastRatio(pair.fg, pair.bg)).toBeGreaterThanOrEqual(4.5);
+  });
+
+  it("keeps the focus ring and every chart series visible on cards", () => {
+    for (const token of ["ring", "chart-1", "chart-2", "chart-3", "chart-4", "chart-5"]) {
+      const pair = resolvePair(css, token, "card");
+      expect(pair).not.toBeNull();
+      if (pair) expect(contrastRatio(pair.fg, pair.bg)).toBeGreaterThanOrEqual(3);
+    }
+  });
+
+  it("distinguishes a work panel from its nested item", () => {
+    const pair = resolvePair(css, "card", "muted");
+    expect(pair).not.toBeNull();
+    if (pair) expect(contrastRatio(pair.fg, pair.bg)).toBeGreaterThan(1.1);
+  });
+});
 
 describe("WCAG AA contrast — light mode token pairs", () => {
   const primaryTextPairs: TokenPair[] = [
@@ -125,18 +177,9 @@ describe("contrastRatio utility — self-test", () => {
 
 const WCAG_NON_TEXT = 3.0;
 
-function extractTokenAnyValue(css: string, tokenName: string): string | undefined {
-  const direct = new RegExp(String.raw`--${tokenName}:\s*(#[0-9a-fA-F]{3,8})`).exec(css);
-  if (direct) return direct[1];
-  const viaVar = new RegExp(
-    String.raw`--${tokenName}:\s*var\([^,]+,\s*(#[0-9a-fA-F]{3,8})\s*\)`,
-  ).exec(css);
-  return viaVar?.[1];
-}
-
 function ratioOf(css: string, fgToken: string, bgToken: string): number {
-  const fg = extractTokenAnyValue(css, fgToken);
-  const bg = extractTokenAnyValue(css, bgToken);
+  const fg = extractTokenValue(css, fgToken);
+  const bg = extractTokenValue(css, bgToken);
   expect(fg).toBeDefined();
   expect(bg).toBeDefined();
   return contrastRatio(fg as string, bg as string);

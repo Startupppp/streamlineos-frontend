@@ -1,6 +1,7 @@
 ﻿"use client";
 
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
+import { NO_CURSOR_YET } from "@/hooks/api/cursor-page-param";
 import { useCan } from "@/hooks/api/access";
 import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
@@ -9,7 +10,6 @@ import type {
   Meeting,
   MeetingDetail,
   ActionItem,
-  MeetingAttendee,
   StandupEntry,
   CreateMeetingInput,
   UpdateMeetingInput,
@@ -21,8 +21,8 @@ import type {
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 
-const meetingListContract = lazyContract(() =>
-  import("@/hooks/api/build/meetings-schema").then((m) => m.meetingListContract),
+const meetingPageContract = lazyContract(() =>
+  import("@/hooks/api/build/meetings-schema").then((m) => m.meetingPageContract),
 );
 const meetingRowContract = lazyContract(() =>
   import("@/hooks/api/build/meetings-schema").then((m) => m.meetingRowContract),
@@ -39,9 +39,6 @@ const actionItemRowContract = lazyContract(() =>
 const convertToTaskResultContract = lazyContract(() =>
   import("@/hooks/api/build/meetings-schema").then((m) => m.convertToTaskResultContract),
 );
-const meetingsSuccessContract = lazyContract(() =>
-  import("@/hooks/api/build/meetings-schema").then((m) => m.meetingsSuccessContract),
-);
 const noContentLazy = lazyContract(() =>
   import("@/hooks/api/cursor-page-schema").then((m) => m.noContentContract),
 );
@@ -57,6 +54,7 @@ interface MeetingFilters {
   attendeeId?: string;
   hasActionItems?: boolean;
   hasUnresolvedActionItems?: boolean;
+  q?: string;
 }
 
 export function useMeetings(projectId: number, filters?: MeetingFilters) {
@@ -69,11 +67,23 @@ export function useMeetings(projectId: number, filters?: MeetingFilters) {
   if (filters?.attendeeId) params["attendeeId"] = filters.attendeeId;
   if (filters?.hasActionItems === true) params["hasActionItems"] = "true";
   if (filters?.hasUnresolvedActionItems === true) params["hasUnresolvedActionItems"] = "true";
+  if (filters?.q) params["q"] = filters.q;
   const hasParams = Object.keys(params).length > 0;
 
-  return useQuery<Meeting[]>({
+  return useInfiniteQuery({
     queryKey: buildWorkQueryKeys.projects.meetings.list(projectId, hasParams ? params : undefined),
-    queryFn: ({ signal }) => apiClient.get<Meeting[]>(`/build/${projectId}/meetings`, hasParams ? params : undefined, signal, meetingListContract),
+    queryFn: async ({ pageParam, signal }) => {
+      const allParams: Record<string, string> = hasParams ? { ...params } : {};
+      if (pageParam !== undefined) allParams["cursor"] = pageParam;
+      return apiClient.get<{ data: Meeting[]; pagination: { limit: number; hasMore: boolean; nextCursor: string | null } }>(
+        `/build/${projectId}/meetings`,
+        Object.keys(allParams).length > 0 ? allParams : undefined,
+        signal,
+        meetingPageContract,
+      );
+    },
+    initialPageParam: NO_CURSOR_YET,
+    getNextPageParam: (lastPage) => lastPage.pagination.nextCursor ?? undefined,
     enabled: canView && !!projectId,
     staleTime: 60_000,
   });
@@ -86,6 +96,7 @@ export function useMeeting(projectId: number, meetingId: number) {
     queryFn: ({ signal }) => apiClient.get<MeetingDetail>(`/build/${projectId}/meetings/${meetingId}`, undefined, signal, meetingDetailContract),
     enabled: canView && !!projectId && !!meetingId,
     staleTime: 60_000,
+    throwOnError: false,
   });
 }
 
@@ -131,7 +142,7 @@ export function useAddAttendee(projectId: number, meetingId: number) {
   return useAuthorizedMutation("build:meetings:manage", {
     mutationKey: ["projects", projectId, "meetings", meetingId, "attendees", "add"],
     mutationFn: (data: AddAttendeeInput) =>
-      apiClient.post<MeetingAttendee>(`/build/${projectId}/meetings/${meetingId}/attendees`, data, undefined, addAttendeeResultContract),
+      apiClient.post<{ meetingId: number; userId: string }>(`/build/${projectId}/meetings/${meetingId}/attendees`, data, undefined, addAttendeeResultContract),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.meetings.detail(projectId, meetingId) });
     },

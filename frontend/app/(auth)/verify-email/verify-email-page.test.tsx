@@ -147,14 +147,14 @@ beforeEach(() => {
 });
 
 describe("VerifyEmailPage — the three auto sign-in outcomes", () => {
-  it("sends a confirmed sign-in to org setup with a single token attempt", async () => {
+  it("sends a confirmed sign-in to dashboard with a single token attempt", async () => {
     currentSearchParams = new URLSearchParams({ token: "vt-signed-in" });
     resolveVerificationWith("login-signed-in");
     signInWithMagicToken.mockResolvedValue({ status: "signed-in" });
 
     const view = render(<VerifyEmailPage />);
 
-    await waitFor(() => expect(navigation.href).toBe("/org-setup"));
+    await waitFor(() => expect(navigation.href).toBe("/dashboard"));
     expect(signInWithMagicToken).toHaveBeenCalledTimes(1);
     expect(signInWithMagicToken).toHaveBeenCalledWith("login-signed-in");
     expect(toastSuccess).toHaveBeenCalledWith("Email verified! Signing you in…");
@@ -169,7 +169,7 @@ describe("VerifyEmailPage — the three auto sign-in outcomes", () => {
     signInWithMagicToken.mockResolvedValue({ status: "signed-in" });
 
     const view = render(<VerifyEmailPage />);
-    await waitFor(() => expect(navigation.href).toBe("/org-setup"));
+    await waitFor(() => expect(navigation.href).toBe("/dashboard"));
     view.unmount();
 
     leaveVerificationInFlight();

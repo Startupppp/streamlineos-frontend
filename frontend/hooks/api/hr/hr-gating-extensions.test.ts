@@ -6,7 +6,7 @@ type GatingCase = readonly [
   hookName: string,
   endpoint: string,
   permission: string,
-  requiresHrModule: boolean,
+  requiresHrModule: boolean | "payroll",
 ];
 
 const gatingCases: readonly GatingCase[] = [
@@ -16,7 +16,7 @@ const gatingCases: readonly GatingCase[] = [
   ["hr/policies.ts", "usePolicyConflicts", "/hr/policies/", "hr:policies:view", true],
   ["hr/policies.ts", "useOrgPolicyConflicts", "/hr/policies/conflicts", "hr:policies:view", true],
   ["hr/policies.ts", "usePolicyPreview", "/hr/policies/", "hr:policies:view", true],
-  ["hr/salary-structures.ts", "useSalaryStructureTemplates", "/hr/payroll/salary-structures", "hr:salary:view", true],
+  ["hr/salary-structures.ts", "useSalaryStructureTemplates", "/hr/payroll/salary-structures", "hr:salary:view", "payroll"],
   ["hr/global.ts", "useWorkAuthorizations", "/hr/global/work-authorizations", "hr:employees:view", true],
   ["hr/global.ts", "useComplianceRequirements", "/hr/global/compliance/requirements", "hr:compliance:manage", true],
   ["hr/global.ts", "useComplianceEvents", "/hr/global/compliance/events", "hr:compliance:manage", true],
@@ -153,7 +153,10 @@ describe("RBAC gating extensions — query hooks", () => {
       expect(source).toContain(endpoint);
       expect(source).toContain(`useCan("${permission}")`);
       expect(source).toMatch(/\benabled\s*[:,]/);
-      if (requiresHrModule) expect(source).toContain('useModuleEnabled("hr")');
+      if (requiresHrModule) {
+        const moduleKey = typeof requiresHrModule === "string" ? requiresHrModule : "hr";
+        expect(source).toContain(`useModuleEnabled("${moduleKey}")`);
+      }
     },
   );
 });

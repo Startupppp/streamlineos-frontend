@@ -108,8 +108,31 @@ jest.mock("next-auth/react", () => ({
 
 jest.mock("@/hooks/api/access", () => ({
   useCan: () => true,
+  useCanState: () => "granted",
   useAccess: () => ({ data: { isOrgOwner: false, scopes: {} }, isLoading: false }),
   useModuleEnabled: () => true,
+}));
+
+// MyDocumentsPage resolves through usePageState; keep its real branch order
+// (loading -> error -> empty -> ready) with access granted, as useCan above is.
+jest.mock("@/hooks/api/use-page-state", () => {
+  const { resolvePageState } = jest.requireActual<typeof import("@/lib/page-state/resolve-page-state")>(
+    "@/lib/page-state/resolve-page-state",
+  );
+  return {
+    usePageState: (options: Omit<Parameters<typeof resolvePageState>[0], "access">) =>
+      resolvePageState({ ...options, access: "granted" }),
+  };
+});
+
+jest.mock("@/hooks/api/payroll/payroll-cutoff", () => ({
+  usePayrollCutoff: () => ({ cutoff: null, month: "2026-10", isLoading: false }),
+  currentPayrollMonth: () => "2026-10",
+}));
+
+// A pending own-leave row asks who approves it (BUG-HRMS-017/018).
+jest.mock("@/hooks/api/hr/approvers", () => ({
+  useMyApprover: () => ({ data: undefined }),
 }));
 
 jest.mock("@/hooks/api/hr/documents", () => ({
@@ -133,6 +156,7 @@ jest.mock("@/hooks/api/hr/expenses", () => ({
   useCreateExpense: () => stub(undefined),
   useUpdateExpense: () => stub(undefined),
   useDeleteExpense: () => stub(undefined),
+  useWithdrawExpense: () => stub(undefined),
 }));
 
 /**

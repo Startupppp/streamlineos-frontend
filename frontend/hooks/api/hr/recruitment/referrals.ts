@@ -5,6 +5,8 @@ import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
 import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
 import { useCan } from "@/hooks/api/access";
+import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
+import { useAuthorizedIdempotentMutation } from "@/hooks/api/inventory/use-idempotent-mutation";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import type { CandidateReferral, CreateReferralInput } from "@/types/hr/recruitment";
 
@@ -19,21 +21,22 @@ const updateReferralStatusC = lazyContract(() =>
 );
 
 export function useAllReferrals() {
-  const canEmployees = useCan("hr:employees:view");
+  const canRequisitions = useCan("hr:requisitions:view");
   return useQuery({
     queryKey: humanResourcesQueryKeys.hr.referrals(),
     queryFn: ({ signal }) => apiClient.get<CandidateReferral[]>("/hr/recruitment/referrals", undefined, signal, allReferralsListC),
     staleTime: 60_000,
-    enabled: canEmployees,
+    enabled: canRequisitions,
+    ...INLINE_READ_ERROR,
   });
 }
 
 export function useSubmitReferral() {
   const qc = useQueryClient();
-  return useAuthorizedMutation("hr:employees:view", {
+  return useAuthorizedIdempotentMutation("hr:requisitions:view", {
     mutationKey: ["hr", "recruitment", "referrals", "submit"],
-    mutationFn: (data: CreateReferralInput) =>
-      apiClient.post<CandidateReferral>("/hr/recruitment/referrals", data, undefined, submitReferralC),
+    mutationFn: (data: CreateReferralInput, idempotencyKey: string) =>
+      apiClient.post<CandidateReferral>("/hr/recruitment/referrals", data, { headers: { "Idempotency-Key": idempotencyKey } }, submitReferralC),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.referrals() });
     },
@@ -42,7 +45,7 @@ export function useSubmitReferral() {
 
 export function useUpdateReferralStatus() {
   const qc = useQueryClient();
-  return useAuthorizedMutation("hr:employees:manage", {
+  return useAuthorizedMutation("hr:requisitions:manage", {
     mutationKey: ["hr", "recruitment", "referrals", "update-status"],
     mutationFn: ({ referralId, ...data }: { referralId: number; status?: string; bonusAmount?: number; bonusEligible?: boolean; notes?: string }) =>
       apiClient.patch<CandidateReferral>(`/hr/recruitment/referrals/${referralId}`, data, undefined, updateReferralStatusC),

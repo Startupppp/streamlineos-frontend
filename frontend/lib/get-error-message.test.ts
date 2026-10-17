@@ -121,6 +121,17 @@ describe("getErrorMessage on a validation refusal", () => {
     return Object.assign(new Error(message), { status: 400, code: "VALIDATION_FAILED", details });
   }
 
+  it("reads issues when a correlation id is stored beside the list", () => {
+    expect(
+      getErrorMessage(
+        refusal({
+          details: [{ path: "state", message: "Invalid input: expected array, received string" }],
+          correlationId: "1769d475-33d2-4730-8c11-bc7583312ff9",
+        }),
+      ),
+    ).toBe("state: Invalid input: expected array, received string");
+  });
+
   it("says which field was refused instead of just that something was", () => {
     expect(
       getErrorMessage(
@@ -177,5 +188,66 @@ describe("getErrorMessage on a validation refusal", () => {
     expect(
       isValidationRefusal(new ApiError("AI credits exhausted", 402, "INSUFFICIENT_CREDITS")),
     ).toBe(false);
+  });
+});
+
+describe("getErrorMessage on a coded Build refusal", () => {
+  it("names the locked project's standing and the way out on a 409 PROJECT_LOCKED", () => {
+    const error = new ApiError(
+      "This project is archived. Reopen it before making changes.",
+      409,
+      "PROJECT_LOCKED",
+      { state: "ARCHIVED" },
+    );
+    expect(getErrorMessage(error)).toBe("This project is archived — reopen it to make changes.");
+  });
+
+  it("still explains a PROJECT_LOCKED refusal that carries no state", () => {
+    const error = new ApiError("", 409, "PROJECT_LOCKED");
+    expect(getErrorMessage(error)).toBe(
+      "This project is archived or completed — reopen it to make changes.",
+    );
+  });
+
+  it("keeps an ordinary 409 conflict on its own message", () => {
+    const error = new ApiError("Ticket was changed by someone else", 409, "VERSION_CONFLICT");
+    expect(getErrorMessage(error)).toBe("Ticket was changed by someone else");
+  });
+
+  it("points a plan-locked MODULE_NOT_ENABLED refusal at billing", () => {
+    const error = new ApiError("Build is not included in your current plan.", 402, "MODULE_NOT_ENABLED", {
+      moduleKey: "build",
+      reason: "not-in-plan",
+      upgradePath: "/settings/billing",
+    });
+    expect(getErrorMessage(error)).toBe(
+      "Build is not included in your current plan. Upgrade your plan in Settings → Billing to use it.",
+    );
+  });
+
+  it("does not offer an upgrade for a module an admin switched off", () => {
+    const error = new ApiError("Build is not enabled for your organization.", 402, "MODULE_NOT_ENABLED", {
+      moduleKey: "build",
+      reason: "org-disabled",
+      upgradePath: null,
+    });
+    expect(getErrorMessage(error)).toBe("Build is not enabled for your organization.");
+  });
+});
+
+describe("getErrorMessage strips correlation and raw IDs", () => {
+  it("does not surface a bare UUID from the server message", () => {
+    const uuid = "7eca7bad-1234-4abc-9def-0123456789ab";
+    expect(getErrorMessage(new Error(`Request failed ${uuid}`))).not.toContain(uuid);
+  });
+
+  it("maps 401 to a session-expired prompt", () => {
+    expect(getErrorMessage({ status: 401, message: "Unauthorized" })).toBe(
+      "Your session expired. Please sign in again.",
+    );
+  });
+
+  it("maps network failures to a connection prompt", () => {
+    expect(getErrorMessage(new Error("Failed to fetch"))).toMatch(/network/i);
   });
 });

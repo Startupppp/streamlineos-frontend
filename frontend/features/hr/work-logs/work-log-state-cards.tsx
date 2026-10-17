@@ -1,7 +1,6 @@
 "use client";
 
 import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyTimeIllustration } from "@/components/illustrations";
@@ -47,22 +46,6 @@ export function WorkLogLoadingCard() {
   );
 }
 
-export function WorkLogErrorCard({ onRetry }: { onRetry: () => void }) {
-  return (
-    <Card className={CARD_CLASS}>
-      <CardContent className="py-12">
-        <div className="flex flex-col items-center justify-center text-center gap-3">
-          <p className="text-sm font-semibold text-foreground">Failed to load work logs</p>
-          <p className="text-sm text-muted-foreground">Something went wrong. Please try again.</p>
-          <Button variant="outline" size="sm" className="mt-1" onClick={onRetry}>
-            Try Again
-          </Button>
-        </div>
-      </CardContent>
-    </Card>
-  );
-}
-
 export function WorkLogNoResultsCard({
   searchTerm,
   onClear,
@@ -98,7 +81,7 @@ export function WorkLogTotalHoursCard({
   year: number;
 }) {
   return (
-    <Card className="rounded-2xl border border-border/70 bg-card/90 backdrop-blur-sm shadow-card overflow-hidden border-l-4 border-l-emerald-500">
+    <Card className="rounded-2xl border border-border/70 bg-card/90 backdrop-blur-sm shadow-card overflow-hidden border-l-4 border-l-status-success-fill">
       <CardContent className="py-3 px-4">
         <div className="flex items-center gap-6">
           <div>

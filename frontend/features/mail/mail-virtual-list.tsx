@@ -1,66 +1,82 @@
 "use client";
 
-import { memo, useCallback, useMemo, type Key } from "react";
+import { memo, useCallback, useMemo, useState, type Key } from "react";
+import { ChevronDown } from "lucide-react";
 import { List, type RowComponentProps } from "react-window";
-import { Button } from "@/components/ui/button";
+import { InfiniteScrollSentinel } from "@/components/ui/infinite-scroll-sentinel";
 import { MailMessageRow, type MailListAction } from "./mail-message-row";
 import type { MailFolder, MailMessageSummary } from "@/types/mail";
 import type { MailTriageGroup } from "./mail-group-messages";
 
-const MESSAGE_ROW_HEIGHT = 72;
-const HEADER_ROW_HEIGHT = 36;
-const LOAD_MORE_ROW_HEIGHT = 52;
 const OVERSCAN_COUNT = 5;
+const HEADER_ROW_HEIGHT = 32;
+const MESSAGE_ROW_HEIGHT = 56;
 const DEFAULT_LIST_HEIGHT = 600;
+const PAGINATION_ROW_HEIGHT = 48;
 
 type FlatItem =
-  | { kind: "header"; label: string; count: number }
+  | {
+      kind: "header";
+      key: string;
+      label: string;
+      count: number;
+      collapsed: boolean;
+    }
   | { kind: "message"; message: MailMessageSummary }
-  | { kind: "loadmore" };
+  | { kind: "sentinel"; key: "mail-pagination" };
 
-function buildFlatItems(
+export function buildFlatItems(
   groups: MailTriageGroup[],
-  hasNextPage: boolean,
+  collapsedGroups = new Set<string>(),
 ): FlatItem[] {
   const items: FlatItem[] = [];
   for (const group of groups) {
     if (group.label)
-      items.push({ kind: "header", label: group.label, count: group.messages.length });
-    for (const msg of group.messages) items.push({ kind: "message", message: msg });
+      items.push({
+        kind: "header",
+        key: group.key,
+        label: group.label,
+        count: group.messages.length,
+        collapsed: collapsedGroups.has(group.key),
+      });
+    if (collapsedGroups.has(group.key)) continue;
+    for (const msg of group.messages)
+      items.push({ kind: "message", message: msg });
   }
-  if (hasNextPage) items.push({ kind: "loadmore" });
   return items;
 }
 
 interface MailVirtualRowData {
-  items: FlatItem[];
-  selectedMessageId: string | null;
-  activeFolder: MailFolder;
   canAi: boolean;
-  onSelect: (message: MailMessageSummary) => void;
+  items: FlatItem[];
+  hasNextPage: boolean;
+  activeFolder: MailFolder;
+  isFetchingNextPage: boolean;
+  selectedMessageId: string | null;
   onAction: (
     messageId: string,
     accountId: number,
     action: MailListAction,
     threadId?: string,
   ) => void;
-  onAiBrief: (accountId: number, threadId: string) => void;
-  isFetchingNextPage: boolean;
   onLoadMore: () => void;
+  onToggleGroup: (key: string) => void;
+  onSelect: (message: MailMessageSummary) => void;
+  onAiBrief: (accountId: number, threadId: string) => void;
 }
 
 function getRowHeight(index: number, data: MailVirtualRowData): number {
   const item = data.items[index];
   if (!item || item.kind === "message") return MESSAGE_ROW_HEIGHT;
-  if (item.kind === "header") return HEADER_ROW_HEIGHT;
-  return LOAD_MORE_ROW_HEIGHT;
+  if (item.kind === "sentinel") return PAGINATION_ROW_HEIGHT;
+  return HEADER_ROW_HEIGHT;
 }
 
 function getRowKey(index: number, data: MailVirtualRowData): Key {
   const item = data.items[index];
   if (!item) return index;
   if (item.kind === "header") return `h-${item.label}`;
-  if (item.kind === "loadmore") return "loadmore";
+  if (item.kind === "sentinel") return item.key;
   return `${item.message.accountId}-${item.message.id}`;
 }
 
@@ -75,41 +91,48 @@ function MailVirtualRow({
   onSelect,
   onAction,
   onAiBrief,
+  onToggleGroup,
+  hasNextPage,
   isFetchingNextPage,
   onLoadMore,
 }: RowComponentProps<MailVirtualRowData>) {
   const item = items[index];
   if (!item) return <div style={style} {...ariaAttributes} />;
 
-  if (item.kind === "header") {
+  if (item.kind === "sentinel") {
     return (
-      <div
-        style={style}
-        {...ariaAttributes}
-        className="flex items-center justify-between gap-2 px-3 bg-background/90 backdrop-blur-sm border-b border-border/30"
-      >
-        <span className="text-micro font-semibold uppercase tracking-wider text-muted-foreground">
-          {item.label}
-        </span>
-        <span className="text-micro tabular-nums text-muted-foreground">
-          {item.count}
-        </span>
+      <div style={style} {...ariaAttributes}>
+        <InfiniteScrollSentinel
+          hasNextPage={hasNextPage}
+          isFetchingNextPage={isFetchingNextPage}
+          onLoadMore={onLoadMore}
+          label="Load more mail"
+          className="h-full py-2"
+        />
       </div>
     );
   }
 
-  if (item.kind === "loadmore") {
+  if (item.kind === "header") {
     return (
-      <div style={style} {...ariaAttributes} className="flex justify-center items-center">
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={onLoadMore}
-          disabled={isFetchingNextPage}
-          className="text-xs"
+      <div style={style} {...ariaAttributes}>
+        <button
+          type="button"
+          className="flex h-full w-full items-center justify-between gap-2 border-b border-border/40 bg-muted/20 px-3 text-left hover:bg-muted/35"
+          aria-expanded={!item.collapsed}
+          onClick={() => onToggleGroup(item.key)}
         >
-          {isFetchingNextPage ? "Loading…" : "Load more"}
-        </Button>
+          <span className="flex items-center gap-1.5 text-micro font-semibold uppercase tracking-wider text-muted-foreground">
+            <ChevronDown
+              className={`size-3.5 transition-transform ${item.collapsed ? "-rotate-90" : ""}`}
+              aria-hidden="true"
+            />
+            {item.label}
+          </span>
+          <span className="text-micro tabular-nums text-muted-foreground">
+            {item.count}
+          </span>
+        </button>
       </div>
     );
   }
@@ -132,11 +155,11 @@ function MailVirtualRow({
 
 export interface MailVirtualListProps {
   groups: MailTriageGroup[];
-  hasNextPage: boolean;
-  isFetchingNextPage: boolean;
   selectedMessageId: string | null;
   activeFolder: MailFolder;
   canAi: boolean;
+  hasNextPage: boolean;
+  isFetchingNextPage: boolean;
   onSelect: (message: MailMessageSummary) => void;
   onAction: (
     messageId: string,
@@ -150,23 +173,50 @@ export interface MailVirtualListProps {
 
 export const MailVirtualList = memo(function MailVirtualList({
   groups,
-  hasNextPage,
-  isFetchingNextPage,
   selectedMessageId,
   activeFolder,
   canAi,
+  hasNextPage,
+  isFetchingNextPage,
   onSelect,
   onAction,
   onAiBrief,
   onLoadMore,
 }: MailVirtualListProps) {
-  const items = useMemo(
-    () => buildFlatItems(groups, hasNextPage),
-    [groups, hasNextPage],
+  const [collapsedGroups, setCollapsedGroups] = useState<Set<string>>(
+    () => new Set(),
   );
+
+  const handleToggleGroup = useCallback((key: string) => {
+    setCollapsedGroups((current) => {
+      const next = new Set(current);
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
+      return next;
+    });
+  }, []);
+
+  const items = useMemo(() => {
+    const rows = buildFlatItems(groups, collapsedGroups);
+    if (hasNextPage) rows.push({ kind: "sentinel", key: "mail-pagination" });
+    return rows;
+  }, [groups, collapsedGroups, hasNextPage]);
 
   const rowProps = useMemo(
     (): MailVirtualRowData => ({
+      items,
+      canAi,
+      hasNextPage,
+      activeFolder,
+      selectedMessageId,
+      isFetchingNextPage,
+      onSelect,
+      onAction,
+      onAiBrief,
+      onLoadMore,
+      onToggleGroup: handleToggleGroup,
+    }),
+    [
       items,
       selectedMessageId,
       activeFolder,
@@ -174,10 +224,11 @@ export const MailVirtualList = memo(function MailVirtualList({
       onSelect,
       onAction,
       onAiBrief,
+      handleToggleGroup,
+      hasNextPage,
       isFetchingNextPage,
       onLoadMore,
-    }),
-    [items, selectedMessageId, activeFolder, canAi, onSelect, onAction, onAiBrief, isFetchingNextPage, onLoadMore],
+    ],
   );
 
   const stableRowKey = useCallback(
@@ -190,15 +241,18 @@ export const MailVirtualList = memo(function MailVirtualList({
   );
 
   return (
-    <List<MailVirtualRowData>
-      rowComponent={MailVirtualRow}
-      rowCount={items.length}
-      rowHeight={stableRowHeight}
-      rowProps={rowProps}
-      rowKey={stableRowKey}
-      defaultHeight={DEFAULT_LIST_HEIGHT}
-      overscanCount={OVERSCAN_COUNT}
-      style={{ height: "100%" }}
-    />
+    <div className="flex flex-col h-full">
+      <List<MailVirtualRowData>
+        rowComponent={MailVirtualRow}
+        rowCount={items.length}
+        rowHeight={stableRowHeight}
+        rowProps={rowProps}
+        rowKey={stableRowKey}
+        defaultHeight={DEFAULT_LIST_HEIGHT}
+        overscanCount={OVERSCAN_COUNT}
+        className="scrollbar-hide"
+        style={{ flex: "1 1 0", minHeight: 0 }}
+      />
+    </div>
   );
 });

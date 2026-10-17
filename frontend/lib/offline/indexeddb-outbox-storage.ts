@@ -3,7 +3,6 @@ import {
   createMemoryOutboxStorage,
   type OutboxStorage,
 } from "./outbox-storage";
-import type { OutboxEntry } from "./outbox-types";
 
 /**
  * B8 — the queue on disk, in plain IndexedDB.
@@ -97,7 +96,7 @@ export function createIndexedDbOutboxStorage(): OutboxStorage {
   return {
     all: () =>
       withStore("readonly", (store) =>
-        promisify(store.getAll() as IDBRequest<OutboxEntry[]>),
+        promisify(store.getAll()),
       ),
 
     insert: (entry) =>

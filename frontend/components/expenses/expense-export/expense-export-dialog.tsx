@@ -146,13 +146,7 @@ export function ExpenseExportDialog(props: ExpenseExportDialogProps) {
     if (!job?.id) return;
     setHasTriggeredDownload(true);
     downloadJob.mutate(job.id, {
-      onSuccess: (blob) => {
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = job.fileName ?? "expenses.csv";
-        a.click();
-        URL.revokeObjectURL(url);
+      onSuccess: () => {
         toast.success("Export downloaded successfully!");
         if (closeTimerRef.current) clearTimeout(closeTimerRef.current);
         closeTimerRef.current = setTimeout(() => {

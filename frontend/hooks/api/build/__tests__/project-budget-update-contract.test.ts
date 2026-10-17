@@ -2,23 +2,7 @@ import * as fs from "fs";
 import * as path from "path";
 import { backendPath } from "@/test-utils/backend-repo";
 
-/**
- * PRD-C123 — the declared shape of `PATCH /build/:projectId/budget` matches what the
- * server returns.
- *
- * The hook declared `apiClient.patch<{ id: number; budget: string }>`. The service
- * returns `{ id, budget: minorToMajor(...), currency }` and `minorToMajor` is
- * `(minor: number): number`, so two things were wrong at once and neither could fail
- * a typecheck: `budget` was a number typed as a string, and `currency` — the only
- * field that says which currency the amount is in — was not declared at all, so it
- * was invisible to every consumer.
- *
- * `check:response-contracts` cannot see this (86 of 2666 calls parsed) and
- * `check:contract-drift` is scoped to timesheets, so the drift is asserted here by
- * reading BOTH sources: the backend return literal and the frontend interface. It is
- * a source read rather than a type import because the two repos are separate
- * TypeScript projects.
- */
+
 const FE_ROOT = path.join(__dirname, "..", "..", "..", "..");
 const TYPES_FILE = path.join(FE_ROOT, "types", "projects", "planning.ts");
 const HOOK_FILE = path.join(FE_ROOT, "hooks", "api", "build", "milestones.ts");
@@ -27,6 +11,7 @@ const BACKEND_SERVICE = backendPath(
   "modules",
   "build",
   "core",
+  "budget",
   "projects-budget.service.ts",
 );
 
@@ -34,12 +19,12 @@ function backendSource(): string {
   return fs.readFileSync(BACKEND_SERVICE, "utf8");
 }
 
-/** The keys of the object literal `updateBudget` returns. */
+
 function backendReturnFields(): string[] {
   const source = backendSource();
   const method = /async updateBudget\([\s\S]*?\n  \}/.exec(source);
-  // Anti-vacuity: a renamed method means the premise changed and must be revisited,
-  // not quietly satisfied by a regex that stopped matching.
+
+
   expect(method).not.toBeNull();
   const block = /return \{([\s\S]*?)\n    \};/.exec(method?.[0] ?? "");
   expect(block).not.toBeNull();
@@ -50,7 +35,7 @@ function backendReturnFields(): string[] {
   return fields;
 }
 
-/** The fields declared on the frontend `ProjectBudgetUpdate` interface. */
+
 function clientFields(): { name: string; type: string }[] {
   const source = fs.readFileSync(TYPES_FILE, "utf8");
   const block = /export interface ProjectBudgetUpdate \{([\s\S]*?)\n\}/.exec(source);
@@ -83,9 +68,9 @@ describe("project budget update response contract", () => {
     expect(currency?.type).toBe("string | null");
   });
 
-  it("makes the mutation hook use the named type instead of an inline literal", () => {
-    const hook = fs.readFileSync(HOOK_FILE, "utf8");
-    expect(hook).toContain("apiClient.patch<ProjectBudgetUpdate>(`/build/${projectId}/budget`");
-    expect(hook).not.toMatch(/apiClient\.patch<\{[^}]*\}>\(`\/build\/\$\{projectId\}\/budget`/);
+  it("makes the mutation hook use the named type instead of an inline literal, matched on whitespace-collapsed source so reformatting the call across lines cannot silently stop this assertion from finding it", () => {
+    const hook = fs.readFileSync(HOOK_FILE, "utf8").replace(/\s+/g, " ");
+    expect(hook).toContain("apiClient.patch<ProjectBudgetUpdate>( `/build/${projectId}/budget`");
+    expect(hook).not.toMatch(/apiClient\.patch<\{[^}]*\}>\( ?`\/build\/\$\{projectId\}\/budget`/);
   });
 });

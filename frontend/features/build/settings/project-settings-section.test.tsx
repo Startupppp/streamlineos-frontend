@@ -4,6 +4,7 @@ import { ProjectSettingsPage } from "./project-settings-page";
 
 const mockPush = jest.fn();
 const mockReplace = jest.fn();
+const mockUpdateProjectMutate = jest.fn();
 let mockSearchParams = new URLSearchParams();
 
 jest.mock("next/navigation", () => ({
@@ -28,7 +29,7 @@ const MOCK_PROJECT = {
   members: [],
 };
 
-jest.mock("@/hooks/api/build", () => ({
+jest.mock("@/hooks/api/build/projects", () => ({
   useProject: () => ({
     data: MOCK_PROJECT,
     isLoading: false,
@@ -36,7 +37,7 @@ jest.mock("@/hooks/api/build", () => ({
     error: null,
     refetch: jest.fn(),
   }),
-  useUpdateProject: () => ({ mutate: jest.fn(), isPending: false }),
+  useUpdateProject: () => ({ mutate: mockUpdateProjectMutate, isPending: false }),
 }));
 
 let mockIsOwner = false;
@@ -44,6 +45,11 @@ let mockIsOwner = false;
 jest.mock("@/hooks/api/access", () => ({
   useCan: () => mockIsOwner,
   useCanState: () => (mockIsOwner ? "granted" : "denied"),
+  usePermissionGate: (permission: string) => ({ permission, allowed: mockIsOwner, denied: !mockIsOwner, pending: false }),
+}));
+
+jest.mock("@/hooks/api/crm/clients", () => ({
+  useSimpleClientsList: () => ({ data: [], isLoading: false, isError: false, error: null }),
 }));
 
 jest.mock("@/hooks/api/use-page-state", () => ({
@@ -63,10 +69,16 @@ jest.mock("@/hooks/api/invoices/project-invoice-line-detail", () => ({
   }),
 }));
 
-jest.mock("@/features/build/settings/project-members-section", () => ({
+jest.mock("@/features/build/settings/project-member-selector", () => ({
   MembersSelector: () => <div data-testid="members-selector" />,
   ReassignDialog: () => null,
+}));
+
+jest.mock("@/features/build/settings/danger-zone-section", () => ({
   DangerZoneSection: () => <div data-testid="danger-zone-section" />,
+}));
+
+jest.mock("@/features/build/settings/project-member-roles-section", () => ({
   ProjectMemberRolesSection: () => null,
 }));
 
@@ -129,6 +141,7 @@ describe("project settings section URL param (BLD-L4-002)", () => {
   beforeEach(() => {
     mockPush.mockClear();
     mockReplace.mockClear();
+    mockUpdateProjectMutate.mockReset();
     mockSearchParams = new URLSearchParams();
     mockIsOwner = false;
   });
@@ -206,5 +219,20 @@ describe("project settings section URL param (BLD-L4-002)", () => {
       await renderPage();
       expect(screen.getByRole("button", { name: "Danger Zone" })).toBeInTheDocument();
     });
+  });
+
+  test("saving keeps the active settings URL and section", async () => {
+    mockSearchParams = new URLSearchParams("section=general");
+    mockUpdateProjectMutate.mockImplementation(
+      (_values, options: { onSuccess: () => void }) => options.onSuccess(),
+    );
+    await renderPage();
+
+    fireEvent.click(screen.getByRole("button", { name: "Save Changes" }));
+
+    await act(async () => {});
+    expect(mockUpdateProjectMutate).toHaveBeenCalledTimes(1);
+    expect(mockPush).not.toHaveBeenCalled();
+    expect(mockReplace).not.toHaveBeenCalled();
   });
 });

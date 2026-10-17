@@ -22,7 +22,11 @@ import {
   useMarkQuoteSigned,
 } from "@/hooks/api/crm/quotes";
 import { useCan } from "@/hooks/api/access";
-import { useQuoteSettings, usePricebooks, useQuoteTemplates } from "@/hooks/api/crm/pricebooks";
+import {
+  useQuoteSettings,
+  usePricebooks,
+  useQuoteTemplates,
+} from "@/hooks/api/crm/pricebooks";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { QuoteStatusProgress } from "@/features/crm/quotes/components/quote-status-progress";
 import {
@@ -33,6 +37,7 @@ import { QuoteActionBar } from "@/features/crm/quotes/components/quote-action-ba
 import { QuoteApprovalBanner } from "@/features/crm/quotes/components/quote-approval-banner";
 import { QuoteDetailContent } from "@/features/crm/quotes/components/quote-detail-content";
 import { QuoteDetailDialogs } from "@/features/crm/quotes/components/quote-detail-dialogs";
+import { CreateEnvelopeDialog } from "@/components/sign/create-envelope-dialog";
 import {
   STATUS_LABELS,
   STATUS_BADGE_CLASSES,
@@ -55,6 +60,7 @@ export default function QuoteDetailPage({
   const [approvalRejectReason, setApprovalRejectReason] = useState("");
   const [signedDialogOpen, setSignedDialogOpen] = useState(false);
   const [signedDocRef, setSignedDocRef] = useState("");
+  const [signingEnvelopeOpen, setSigningEnvelopeOpen] = useState(false);
 
   const { data, isLoading, isError, refetch } = useQuoteDetail(quoteId);
   const { data: settings } = useQuoteSettings();
@@ -75,11 +81,6 @@ export default function QuoteDetailPage({
   const handleRetry = useCallback(() => void refetch(), [refetch]);
 
   const handleSend = useCallback(() => {
-    /*
-     * The dedicated route, not `PATCH { status: "SENT" }`. Only this one refuses
-     * a quote that is pending discount approval, refuses one with no linked
-     * contact, and emits `quote.sent` for the automation rules.
-     */
     sendQuote.mutate(
       { id: quoteId },
       {
@@ -104,9 +105,16 @@ export default function QuoteDetailPage({
   const handleRejectConfirm = useCallback(() => {
     setRejectDialogOpen(false);
     updateStatus.mutate(
-      { id: quoteId, status: "REJECTED", rejectionReason: rejectReason || undefined },
       {
-        onSuccess: () => { toast.success("Quote rejected"); setRejectReason(""); },
+        id: quoteId,
+        status: "REJECTED",
+        rejectionReason: rejectReason || undefined,
+      },
+      {
+        onSuccess: () => {
+          toast.success("Quote rejected");
+          setRejectReason("");
+        },
         onError: (e) => toast.error(getErrorMessage(e)),
       },
     );
@@ -135,14 +143,20 @@ export default function QuoteDetailPage({
     );
   }, [quoteId, approveQuote]);
 
-  const handleApprovalRejectOpen = useCallback(() => setApprovalRejectOpen(true), []);
+  const handleApprovalRejectOpen = useCallback(
+    () => setApprovalRejectOpen(true),
+    [],
+  );
 
   const handleApprovalRejectConfirm = useCallback(() => {
     setApprovalRejectOpen(false);
     rejectQuote.mutate(
       { id: quoteId, reason: approvalRejectReason || undefined },
       {
-        onSuccess: () => { toast.success("Approval rejected"); setApprovalRejectReason(""); },
+        onSuccess: () => {
+          toast.success("Approval rejected");
+          setApprovalRejectReason("");
+        },
         onError: (e) => toast.error(getErrorMessage(e)),
       },
     );
@@ -152,34 +166,56 @@ export default function QuoteDetailPage({
     convertToInvoice.mutate(
       { id: quoteId },
       {
-        onSuccess: (res) => toast.success(`Invoice ${res.invoice.invoiceNumber} created`),
+        onSuccess: (res) =>
+          toast.success(`Invoice ${res.invoice.invoiceNumber} created`),
         onError: (e) => toast.error(getErrorMessage(e)),
       },
     );
   }, [quoteId, convertToInvoice]);
 
   const handleMarkSignedOpen = useCallback(() => setSignedDialogOpen(true), []);
+  const handleCreateSigningEnvelope = useCallback(
+    () => setSigningEnvelopeOpen(true),
+    [],
+  );
+  const handleOpenProject = useCallback(() => {
+    if (quote?.projectId != null) router.push(`/build/${quote.projectId}`);
+  }, [quote?.projectId, router]);
+  const handleOpenInvoice = useCallback(() => {
+    if (quote?.convertedInvoiceId != null) {
+      router.push(`/accounting/invoices/${quote.convertedInvoiceId}`);
+    }
+  }, [quote?.convertedInvoiceId, router]);
 
   const handleMarkSignedConfirm = useCallback(() => {
     setSignedDialogOpen(false);
     markSigned.mutate(
       { id: quoteId, documentRef: signedDocRef || undefined },
       {
-        onSuccess: () => { toast.success("Quote marked as signed"); setSignedDocRef(""); },
+        onSuccess: () => {
+          toast.success("Quote marked as signed");
+          setSignedDocRef("");
+        },
         onError: (e) => toast.error(getErrorMessage(e)),
       },
     );
   }, [quoteId, markSigned, signedDocRef]);
 
-  const handleEditSubmit = useCallback((values: QuoteSubmitValues) => {
-    updateQuote.mutate(
-      { id: quoteId, ...values },
-      {
-        onSuccess: () => { toast.success("Quote updated"); setEditOpen(false); },
-        onError: (e) => toast.error(getErrorMessage(e)),
-      },
-    );
-  }, [quoteId, updateQuote]);
+  const handleEditSubmit = useCallback(
+    (values: QuoteSubmitValues) => {
+      updateQuote.mutate(
+        { id: quoteId, ...values },
+        {
+          onSuccess: () => {
+            toast.success("Quote updated");
+            setEditOpen(false);
+          },
+          onError: (e) => toast.error(getErrorMessage(e)),
+        },
+      );
+    },
+    [quoteId, updateQuote],
+  );
 
   if (isLoading) {
     return (
@@ -255,6 +291,9 @@ export default function QuoteDetailPage({
             onApprove={handleApprove}
             onApprovalRejectOpen={handleApprovalRejectOpen}
             onConvertToInvoice={handleConvertToInvoice}
+            onOpenProject={handleOpenProject}
+            onOpenInvoice={handleOpenInvoice}
+            onCreateSigningEnvelope={handleCreateSigningEnvelope}
             onMarkSignedOpen={handleMarkSignedOpen}
             onDelete={handleDelete}
             updateStatusPending={updateStatus.isPending}
@@ -299,6 +338,17 @@ export default function QuoteDetailPage({
         quoteSettings={settings ?? undefined}
         pricebooks={pricebooks ?? undefined}
         quoteTemplates={templates ?? undefined}
+      />
+
+      <CreateEnvelopeDialog
+        open={signingEnvelopeOpen}
+        onOpenChange={setSigningEnvelopeOpen}
+        defaultTitle={`${quote.subject} agreement`}
+        sourceModule="crm"
+        sourceEntityType="quote"
+        sourceEntityId={String(quote.id)}
+        dialogTitle="Create signing envelope"
+        dialogDescription="Start the agreement from this accepted quote."
       />
 
       <QuoteDetailDialogs

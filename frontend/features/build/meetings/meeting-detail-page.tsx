@@ -4,17 +4,19 @@ import { useCallback, useState } from "react";
 import { toast } from "sonner";
 import { Pencil } from "lucide-react";
 import { Trash2Icon } from "@animateicons/react/lucide";
-import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
-import { useMeeting, useUpdateMeeting, useDeleteMeeting, useProjectMembers } from "@/hooks/api/build";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
+import { useMeeting, useUpdateMeeting, useDeleteMeeting } from "@/hooks/api/build/meetings";
+import { useProjectMembers } from "@/hooks/api/build/project-members";
 import { useCan } from "@/hooks/api/access";
 import { usePageState } from "@/hooks/api/use-page-state";
 import { PageState } from "@/components/shared/page-state";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
-import { ErrorState } from "@/components/shared/error-state";
+import { EmptyState } from "@/components/ui/empty-state";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { MeetingTypeBadge, MeetingStatusBadge } from "./meeting-badges";
+import { formatEventDate } from "@/lib/date-utils";
 import { MeetingFormSheet } from "./meeting-form-sheet";
 import { MeetingNotesSection } from "./meeting-notes-section";
 import { AttendeesSection } from "./attendees-section";
@@ -31,20 +33,6 @@ import {
 import { TEXT_ONE_LINE } from "@/lib/text-overflow";
 import type { UpdateMeetingInput } from "@/types/projects";
 
-function DeleteMeetingButton({ onClick }: { onClick: () => void }) {
-  const { iconRef, hoverHandlers } = useAnimatedIcon();
-  return (
-    <Button
-      size="sm"
-      variant="outline"
-      className="gap-1.5 text-xs text-destructive hover:text-destructive"
-      onClick={onClick}
-      {...hoverHandlers}
-    >
-      <Trash2Icon ref={iconRef} size={14} /> Delete
-    </Button>
-  );
-}
 
 interface MeetingDetailPageProps {
   projectId: number;
@@ -58,7 +46,8 @@ export function MeetingDetailPage({ projectId, meetingId }: MeetingDetailPagePro
   const [deleteOpen, setDeleteOpen] = useState(false);
 
   const { data: meeting, isLoading, isError, error, refetch } = useMeeting(projectId, meetingId);
-  const { data: projectMembers = [] } = useProjectMembers(projectId);
+  const { data: projectMembersPage } = useProjectMembers(projectId);
+  const projectMembers = projectMembersPage?.data ?? [];
 
   const updateMeeting = useUpdateMeeting(projectId);
   const deleteMeeting = useDeleteMeeting(projectId);
@@ -120,14 +109,18 @@ export function MeetingDetailPage({ projectId, meetingId }: MeetingDetailPagePro
     return (
       <PageWrapper title="Meeting" backHref={`/build/${projectId}/meetings`}>
         <PmPageShell>
-          <ErrorState onRetry={handleRetry} />
+          <EmptyState
+            title="Meeting not found"
+            description="This meeting may have been deleted or the link is invalid."
+            action={{ label: "Back to meetings", href: `/build/${projectId}/meetings` }}
+          />
         </PmPageShell>
       </PageWrapper>
     );
   }
 
   const scheduledLabel = meeting.scheduledAt
-    ? new Date(meeting.scheduledAt).toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" })
+    ? formatEventDate(meeting.scheduledAt, meeting.timezone)
     : null;
 
   return (
@@ -147,7 +140,9 @@ export function MeetingDetailPage({ projectId, meetingId }: MeetingDetailPagePro
             <Button variant="outline" onClick={handleOpenEdit}>
               <Pencil className="h-3.5 w-3.5" /> Edit
             </Button>
-            <DeleteMeetingButton onClick={handleOpenDelete} />
+            <AnimatedIconButton size="sm" variant="outline" className="gap-1.5 text-xs text-destructive hover:text-destructive" icon={Trash2Icon} iconSize={14} onClick={handleOpenDelete}>
+              Delete
+            </AnimatedIconButton>
           </div>
         ) : undefined
       }

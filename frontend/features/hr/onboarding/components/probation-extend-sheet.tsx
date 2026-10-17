@@ -1,5 +1,7 @@
 "use client";
 
+import { DatePicker } from "@/components/ui/date-picker";
+
 import { useCallback } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -8,7 +10,6 @@ import { toast } from "sonner";
 
 import { HrSheet } from "@/components/shared/hr-sheet";
 import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useExtendProbation, type ProbationReview } from "@/hooks/api/hr/probation";
@@ -29,7 +30,7 @@ interface ProbationExtendSheetProps {
 export function ProbationExtendSheet({ review, open, onOpenChange }: ProbationExtendSheetProps) {
   const extend = useExtendProbation();
 
-  const { register, handleSubmit, reset, formState: { errors } } = useForm<ExtendFormValues>({
+  const { register, handleSubmit, reset, setValue, watch, formState: { errors } } = useForm<ExtendFormValues>({
     resolver: zodResolver(extendSchema),
     defaultValues: { extendedUntil: "", reason: "" },
   });
@@ -79,9 +80,12 @@ export function ProbationExtendSheet({ review, open, onOpenChange }: ProbationEx
         <Label className="text-sm font-semibold text-foreground">
           Extended Until <span className="text-destructive">*</span>
         </Label>
-        <Input
-          type="date"
-          {...register("extendedUntil")}
+        <DatePicker
+          ariaLabel="Extended Until"
+          value={watch("extendedUntil") ?? ""}
+          onChange={(value) => setValue("extendedUntil", value, { shouldDirty: true, shouldValidate: true })}
+          placeholder="Pick a date"
+          dateFormat="dd MMM yyyy"
           aria-invalid={!!errors.extendedUntil}
         />
         {errors.extendedUntil && (

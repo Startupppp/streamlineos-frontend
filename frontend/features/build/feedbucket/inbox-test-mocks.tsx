@@ -1,13 +1,6 @@
 import type { ChangeEvent, ReactNode } from "react";
 
-/**
- * The presentational doubles the two inbox suites share.
- *
- * Kept out of the suites themselves because each `jest.mock` factory here is
- * ~15 lines and duplicating them put one suite over the 500-line ceiling.
- * Only inert render stubs live here; every spy stays in the suite that asserts
- * on it, so no assertion can leak between files.
- */
+
 
 interface MockDataTableProps {
   data: unknown[];
@@ -24,6 +17,13 @@ interface MockDataTableProps {
 }
 
 export const dataTableModule = {
+  DataTableSkeleton: ({ rows = 8 }: { rows?: number }) => (
+    <div data-testid="data-table-skeleton">
+      {Array.from({ length: rows }, (_, i) => (
+        <div key={i} data-testid="skeleton" />
+      ))}
+    </div>
+  ),
   DataTable: ({ data, emptyState, selection, pagination }: MockDataTableProps) => (
     <div
       data-testid="data-table"
@@ -41,6 +41,32 @@ export const dataTableModule = {
         previous
       </button>
       {data.length === 0 && emptyState}
+    </div>
+  ),
+};
+
+export const sharedModule = {
+  ErrorState: ({ description, onRetry }: { description?: string; onRetry?: () => void }) => (
+    <div data-testid="error-state">
+      <span>{description}</span>
+      {onRetry && (
+        <button data-testid="retry-button" onClick={onRetry}>
+          Retry
+        </button>
+      )}
+    </div>
+  ),
+};
+
+export const errorStateLeafModule = {
+  ErrorState: ({ description, onRetry }: { description?: string; onRetry?: () => void }) => (
+    <div data-testid="error-state">
+      <span>{description}</span>
+      {onRetry && (
+        <button data-testid="retry-button" onClick={onRetry}>
+          Retry
+        </button>
+      )}
     </div>
   ),
 };
@@ -107,19 +133,6 @@ export const emptyStateModule = {
   ),
 };
 
-export const sharedModule = {
-  ErrorState: ({ description, onRetry }: { description: string; onRetry?: () => void }) => (
-    <div data-testid="error-state">
-      <span>{description}</span>
-      {onRetry && (
-        <button data-testid="retry-button" onClick={onRetry}>
-          Retry
-        </button>
-      )}
-    </div>
-  ),
-};
-
 export const skeletonModule = {
   Skeleton: () => <div data-testid="skeleton" />,
 };
@@ -179,7 +192,12 @@ export const utilsModule = {
   cn: (...args: unknown[]) => args.filter(Boolean).join(" "),
 };
 
-export const dateFnsModule = { formatDistanceToNow: () => "2 hours ago" };
+export const dateFnsModule = {
+  formatDistanceToNow: () => "2 hours ago",
+  parseISO: (value: string) => new Date(value),
+  isValid: (date: Date) => !Number.isNaN(date.getTime()),
+  format: (date: Date) => date.toISOString().slice(0, 10),
+};
 
 export const animatedIconModule = {
   useAnimatedIcon: () => ({ iconRef: { current: null }, hoverHandlers: {} }),

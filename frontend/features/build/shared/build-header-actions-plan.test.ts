@@ -56,7 +56,7 @@ describe("Build header action contract", () => {
     expect(plan.desktopInline.map((a) => a.id)).toEqual(["import", "create"]);
   });
 
-  it("never shows more than three actions on desktop", () => {
+  it("never shows more than three actions on desktop when overflow has two or more", () => {
     const plan = planBuildHeaderActions([
       action("a"),
       action("b"),
@@ -67,5 +67,36 @@ describe("Build header action contract", () => {
     expect(plan.desktopInline).toHaveLength(BUILD_HEADER_DESKTOP_VISIBLE);
     expect(plan.desktopInline.at(-1)?.id).toBe("create");
     expect(plan.desktopOverflow.map((a) => a.id)).toEqual(["c", "d"]);
+  });
+
+  it("promotes a lone desktop overflow item to an inline button", () => {
+    const plan = planBuildHeaderActions([
+      action("log-time"),
+      action("summarize"),
+      action("import-export"),
+      action("create", true),
+    ]);
+    expect(plan.desktopInline.map((a) => a.id)).toEqual([
+      "log-time",
+      "summarize",
+      "import-export",
+      "create",
+    ]);
+    expect(plan.desktopOverflow).toHaveLength(0);
+  });
+
+  it("keeps a multi-item mobile overflow as a menu", () => {
+    const plan = planBuildHeaderActions([
+      action("log-time"),
+      action("summarize"),
+      action("import-export"),
+      action("create", true),
+    ]);
+    expect(plan.mobileInline.map((a) => a.id)).toEqual(["create"]);
+    expect(plan.mobileOverflow.map((a) => a.id)).toEqual([
+      "log-time",
+      "summarize",
+      "import-export",
+    ]);
   });
 });

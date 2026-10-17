@@ -32,6 +32,7 @@ import { TruncatedText } from "@/components/ui/truncated-text";
 import { useBillingUninvoiced } from "@/hooks/api/timesheets-core/billing";
 import { BillingExportDialog } from "./billing-export-dialog";
 import { InvoiceDraftDialog } from "./invoice-draft-dialog";
+import { DraftedEntriesBanner } from "./drafted-entries-banner";
 import { formatCurrencyForBilling } from "@/lib/format-utils";
 import type { BillingGroup } from "@/features/timesheets/billing-types";
 
@@ -317,6 +318,8 @@ export function BillingView({ actionsSlot }: BillingViewProps = {}) {
             isLoading={isLoading}
           />
         </StatCardGrid>
+
+        <DraftedEntriesBanner startDate={startDate} endDate={endDate} projectId={parsedProjectId} />
 
         {hasMissingRates && (
           <div className="flex items-center gap-2 rounded-lg border border-status-warning-rule bg-status-warning-surface px-3 py-2 text-xs text-status-warning-ink">

@@ -13,8 +13,12 @@ const PERMISSION_KEY = /^[a-z][a-z0-9_-]*(?::[a-z0-9_-]+)+$/;
 function pageFiles(dir: string, out: string[] = []): string[] {
   for (const entry of readdirSync(dir, { withFileTypes: true })) {
     const full = join(dir, entry.name);
-    if (entry.isDirectory()) pageFiles(full, out);
-    else if (entry.name === "page.tsx" || entry.name === "page.jsx") out.push(full);
+    if (entry.isDirectory()) {
+      if (entry.name.startsWith("@") || entry.name.startsWith("(.")) continue;
+      pageFiles(full, out);
+    } else if (entry.name === "page.tsx" || entry.name === "page.jsx") {
+      out.push(full);
+    }
   }
   return out;
 }
@@ -23,7 +27,7 @@ function segmentsOf(file: string): string[] {
   return dirname(file)
     .slice(AUTHENTICATED_DIR.length + 1)
     .split(/[\\/]/)
-    .filter((segment) => segment.length > 0 && !GROUP_SEGMENT.test(segment) && !segment.startsWith("@"));
+    .filter((segment) => segment.length > 0 && !GROUP_SEGMENT.test(segment) && !segment.startsWith("@") && !segment.startsWith("(."));
 }
 
 export function canonicalPatternOf(file: string): string {

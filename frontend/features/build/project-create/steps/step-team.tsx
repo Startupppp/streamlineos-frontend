@@ -2,24 +2,25 @@
 
 import { useMemo, useState } from "react";
 import { User } from "lucide-react";
-import { useSession } from "next-auth/react";
 import { SearchInput } from "@/components/ui/search-input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { useCan } from "@/hooks/api/access";
-import { useOrgMembers } from "@/hooks/api/organization";
 import { getUserDisplayName } from "@/lib/person-display";
 import type { StepSharedProps } from "../use-project-create";
+import { useWizardMembers, useWizardSessionUser } from "../use-wizard-members";
+import { resolveWizardMemberLabel } from "../resolve-wizard-member-label";
+import { useDebouncedValue } from "@/hooks/common/use-debounce";
 
 export function StepTeam({ draft, updateDraft }: StepSharedProps) {
-  const { data: session } = useSession();
-  const currentUserId = session?.user?.id;
+  const sessionUser = useWizardSessionUser();
+  const currentUserId = sessionUser?.id;
   const canManage = useCan("build:manage");
-  const { data: membersData } = useOrgMembers(1, 100);
-  const members = useMemo(() => membersData?.data ?? [], [membersData]);
   const [search, setSearch] = useState("");
+  const debouncedSearch = useDebouncedValue(search, 300).trim();
+  const members = useWizardMembers(100, debouncedSearch || undefined);
 
   function handleSearch(value: string) {
     setSearch(value);
@@ -33,31 +34,24 @@ export function StepTeam({ draft, updateDraft }: StepSharedProps) {
     updateDraft({ memberIds: next });
   }
 
-  const filtered = useMemo(
-    () =>
-      members.filter((m) => {
-        if (!search.trim()) return true;
-        const q = search.trim().toLowerCase();
-        return (m.name ?? "").toLowerCase().includes(q) || m.email.toLowerCase().includes(q);
-      }),
-    [members, search],
-  );
-
   const selectedLabels = useMemo(
     () =>
-      draft.memberIds.map((id) => {
-        const m = members.find((x) => x.userId === id);
-        if (!m) return "Unknown member";
-        return getUserDisplayName({ name: m.name, email: m.email });
-      }),
-    [draft.memberIds, members],
+      draft.memberIds.map((id) =>
+        resolveWizardMemberLabel(
+          id,
+          members,
+          sessionUser,
+          "No members added",
+        ),
+      ),
+    [draft.memberIds, members, sessionUser],
   );
 
   if (!canManage) {
     return (
       <div className="flex flex-col gap-2 rounded-xl border border-dashed p-6 text-center">
         <User className="mx-auto h-8 w-8 text-muted-foreground" />
-        <p className="text-sm font-medium text-muted-foreground">
+        <p className="text-sm font-normal text-muted-foreground">
           You don&apos;t have invite permissions.
         </p>
         <p className="text-xs text-muted-foreground">
@@ -87,10 +81,10 @@ export function StepTeam({ draft, updateDraft }: StepSharedProps) {
 
       <ScrollArea className="max-h-72">
       <div className="space-y-1">
-        {filtered.length === 0 && (
+        {members.length === 0 && (
           <p className="text-sm text-center py-6 text-muted-foreground">No members found.</p>
         )}
-        {filtered.map((m) => {
+        {members.map((m) => {
           const isCreator = m.userId === currentUserId;
           const isSelected = draft.memberIds.includes(m.userId);
           const displayName = getUserDisplayName({ name: m.name, email: m.email });
@@ -111,7 +105,7 @@ export function StepTeam({ draft, updateDraft }: StepSharedProps) {
                 disabled={isCreator}
                 className="shrink-0"
               />
-              <div className="w-7 rounded-full bg-primary/10 flex items-center justify-center text-xs font-semibold text-primary shrink-0">
+              <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-primary/10 text-xs font-medium text-primary">
                 {displayName.charAt(0).toUpperCase() || <User className="h-3.5 w-3.5" />}
               </div>
               <div className="min-w-0 flex-1">

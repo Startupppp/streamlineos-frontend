@@ -1,6 +1,6 @@
 "use client";
 
-import { memo, useEffect, useTransition, useState, type ComponentType } from "react";
+import { memo, useCallback, useMemo, useDeferredValue, type ComponentType } from "react";
 import Link from "next/link";
 
 import { Skeleton } from "@/components/ui/skeleton";
@@ -10,6 +10,7 @@ import {
   CheckCircle2,
   ChevronRight,
   Clock,
+  Trash2,
 } from "lucide-react";
 
 import type { MyWorkItem } from "@/types/projects/my-work";
@@ -18,17 +19,21 @@ import { cn } from "@/lib/utils";
 import { PriorityBadge } from "@/features/build/shared/priority-badge";
 import { StatusBadge } from "@/components/shared/ticket-status-badge";
 import { PmPanel, PM_ROW } from "@/components/pm-chrome";
-import {
-  FLEX_TITLE_SLOT,
-  TEXT_ONE_LINE,
-} from "@/lib/text-overflow";
-import { getTicketDetailHref } from "@/components/shared/format-ticket-key";
+import { FLEX_TITLE_SLOT, TEXT_ONE_LINE } from "@/lib/text-overflow";
+import { getMyWorkTicketHref } from "@/features/build/ticket-details/build-ticket-detail-url";
+import { useGuardedSoftNavigation } from "@/hooks/common/use-guarded-document-navigation";
+import { formatTicketKey } from "@/components/shared/format-ticket-key";
+import { formatCalendarDate } from "@/lib/date-utils";
+import { getUserDisplayName } from "@/lib/person-display";
+import { WorkIndexTicketRow } from "../views/work-index-ticket-row";
+import type { Ticket } from "../views/list-view-shared";
+import type { DisplayOptions } from "../shared/types";
 
 export type DueBucket = "overdue" | "today" | "upcoming" | "none";
 
 interface WorkRowShape {
   id: number;
-  projectId: number;
+  projectId: number | null;
   projectKey: string;
   projectName: string;
   ticketNumber?: number;
@@ -37,40 +42,138 @@ interface WorkRowShape {
   priority: string | null;
   type: string;
   dueDate: string | null;
+  assignee?: MyWorkItem["assignee"];
+  assigneeId?: MyWorkItem["assigneeId"];
+  version?: number;
+  moduleId?: number | null;
+  labels?: MyWorkItem["labels"];
 }
 
-export const BUCKET_ORDER: DueBucket[] = ["overdue", "today", "upcoming", "none"];
+export const BUCKET_ORDER: DueBucket[] = [
+  "overdue",
+  "today",
+  "upcoming",
+  "none",
+];
 
 export const BUCKET_CONFIG: Record<
   DueBucket,
-  { label: string; icon: ComponentType<{ className?: string }>; iconClass: string }
+  {
+    label: string;
+    icon: ComponentType<{ className?: string }>;
+    iconClass: string;
+  }
 > = {
-  overdue: { label: "Overdue", icon: AlertCircle, iconClass: "text-status-danger-ink" },
-  today: { label: "Due Today", icon: CalendarClock, iconClass: "text-status-warning-ink" },
+  overdue: {
+    label: "Overdue",
+    icon: AlertCircle,
+    iconClass: "text-status-danger-ink",
+  },
+  today: {
+    label: "Due Today",
+    icon: CalendarClock,
+    iconClass: "text-status-warning-ink",
+  },
   upcoming: { label: "Upcoming", icon: Clock, iconClass: "text-primary" },
-  none: { label: "No Due Date", icon: CheckCircle2, iconClass: "text-muted-foreground" },
+  none: {
+    label: "No Due Date",
+    icon: CheckCircle2,
+    iconClass: "text-muted-foreground",
+  },
 };
 
 export const BUCKET_SYNC_LIMIT = 20;
 
 export const WorkItemRow = memo(function WorkItemRow({
   item,
+  returnHref = "/build/my-work",
+  isBlocked,
+  isOverdue,
+  density = "comfortable",
+  displayOptions,
+  onDelete,
 }: {
   item: WorkRowShape;
+  returnHref?: string;
   index?: number;
+  isBlocked?: boolean;
+  isOverdue?: boolean;
+  density?: "compact" | "comfortable";
+  displayOptions?: DisplayOptions;
+  onDelete?: () => void;
 }) {
-  return (
-    <div className="transition-transform duration-150 hover:translate-x-0.5">
-      <Link
-        href={
-          item.ticketNumber != null
-            ? getTicketDetailHref(item.projectId, item.projectKey, item.ticketNumber)
-            : `/build/${item.projectId}`
-        }
-        className={cn(PM_ROW, "gap-2.5")}
-      >
+  const navigate = useGuardedSoftNavigation();
+  const href = item.projectId === null ? "" : item.ticketNumber != null
+    ? getMyWorkTicketHref(item.projectId, item.projectKey, item.ticketNumber, returnHref)
+    : `/build/${item.projectId}`;
+  const handleOpen = useCallback(() => navigate(href), [navigate, href]);
+  const ticket = useMemo<Ticket>(() => ({ ...item, version: item.version ?? 0,
+    labels: item.labels?.map((label) => ({ label })),
+    project: item.projectId === null ? null : { id: item.projectId, key: item.projectKey, name: item.projectName },
+  }), [item]);
+
+  if (item.projectId === null) {
+    function handleDeleteClick() {
+      onDelete?.();
+    }
+
+    return (
+      <div className={cn(PM_ROW, "gap-2.5 opacity-60")} data-unavailable>
         <PriorityBadge priority={item.priority} size="sm" />
         <div className={FLEX_TITLE_SLOT}>
+          <p
+            className={cn(
+              TEXT_ONE_LINE,
+              "text-label font-medium leading-tight text-muted-foreground",
+            )}
+            title={item.title}
+          >
+            {item.title}
+          </p>
+          <span className="text-micro text-status-danger-ink">
+            Unavailable — project was deleted
+          </span>
+        </div>
+        <button
+          type="button"
+          onClick={handleDeleteClick}
+          aria-label="Delete draft"
+          className="shrink-0 rounded p-1 text-muted-foreground hover:text-status-danger-ink"
+        >
+          <Trash2 className="h-3.5 w-3.5" />
+        </button>
+      </div>
+    );
+  }
+
+  function handlePrimaryClick(e: React.MouseEvent<HTMLAnchorElement>) {
+    if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0)
+      return;
+    e.preventDefault();
+    navigate(href);
+  }
+
+  return (
+    <div
+      className={cn(
+        "transition-transform duration-150 hover:translate-x-0.5",
+        isBlocked && "border-l-2 border-status-danger",
+        isOverdue && "border-l-2 border-status-warning",
+      )}
+      data-blocked={isBlocked ? true : undefined}
+      data-overdue={isOverdue ? true : undefined}
+    >
+      {item.version != null ? <WorkIndexTicketRow ticket={ticket} href={href} onClick={handleOpen} displayOptions={displayOptions} /> :
+      <Link
+        href={href}
+        onClick={handlePrimaryClick}
+        className={cn(PM_ROW, "flex-wrap gap-x-3 gap-y-1.5 md:flex-nowrap")}
+      >
+        <PriorityBadge priority={item.priority} size="sm" />
+        <span className="shrink-0 font-mono text-xs text-muted-foreground">
+          {formatTicketKey(item.projectKey, item.ticketNumber)}
+        </span>
+        <div className={cn(FLEX_TITLE_SLOT, "basis-1/2 md:basis-0")}>
           <p
             className={cn(
               TEXT_ONE_LINE,
@@ -80,26 +183,40 @@ export const WorkItemRow = memo(function WorkItemRow({
           >
             {item.title}
           </p>
-          <div className="mt-0.5 flex min-w-0 items-center gap-1.5 overflow-hidden">
-            <span className="shrink-0 font-mono text-micro font-medium text-primary/80">
-              {item.projectKey}
-            </span>
-            <span className="shrink-0 text-micro text-muted-foreground">·</span>
-            <span
-              className={cn(TEXT_ONE_LINE, "min-w-0 flex-1 text-micro text-muted-foreground")}
-              title={item.projectName}
-            >
-              {item.projectName}
-            </span>
-            <span className="shrink-0 text-micro text-muted-foreground">·</span>
-            <span className="shrink-0 text-micro text-muted-foreground">{item.type}</span>
-          </div>
         </div>
+        <span
+          className="max-w-32 truncate text-xs text-muted-foreground"
+          title={item.projectName}
+        >
+          {item.projectName}
+        </span>
+        {density !== "compact" ? (
+          <span
+            className="hidden shrink-0 text-micro text-muted-foreground lg:inline"
+            data-optional-fields
+          >
+            {item.type}
+          </span>
+        ) : null}
+        {item.dueDate ? (
+          <span className="shrink-0 text-xs tabular-nums text-muted-foreground">
+            Due {formatCalendarDate(item.dueDate)}
+          </span>
+        ) : null}
+        <span
+          className="max-w-24 truncate text-xs text-muted-foreground"
+          title={
+            item.assignee ? getUserDisplayName(item.assignee) : "Unassigned"
+          }
+        >
+          {item.assignee ? getUserDisplayName(item.assignee) : "Unassigned"}
+        </span>
         <div className="flex shrink-0 items-center gap-1.5">
-          <StatusBadge status={item.status} className="text-dense" />
+          <StatusBadge status={item.status} compact />
           <ChevronRight className="h-3 w-3 -translate-x-1 text-muted-foreground opacity-0 transition-all duration-150 group-hover:translate-x-0 group-hover:opacity-100" />
         </div>
       </Link>
+      }
     </div>
   );
 });
@@ -107,38 +224,31 @@ export const WorkItemRow = memo(function WorkItemRow({
 export const BucketSection = memo(function BucketSection({
   bucket,
   items,
+  returnHref = "/build/my-work",
+  displayOptions,
 }: {
   bucket: DueBucket;
   items: MyWorkItem[];
+  returnHref?: string;
+  displayOptions?: DisplayOptions;
 }) {
   const cfg = BUCKET_CONFIG[bucket];
-  const [, startTransition] = useTransition();
-  const [visibleCount, setVisibleCount] = useState(() =>
-    Math.min(items.length, BUCKET_SYNC_LIMIT),
-  );
-
-  useEffect(() => {
-    if (items.length > BUCKET_SYNC_LIMIT) {
-      startTransition(() => setVisibleCount(items.length));
-    } else {
-      setVisibleCount(items.length);
-    }
-  }, [items.length]);
+  const deferredItems = useDeferredValue(items);
 
   return (
     <PmPanel>
       <div className="flex items-center gap-2 border-b border-border/50 bg-muted/20 px-3 py-2">
         <cfg.icon className={cn("h-3.5 w-3.5 shrink-0", cfg.iconClass)} />
-        <span className="text-dense font-semibold uppercase tracking-wider text-muted-foreground">
+        <span className="text-dense font-medium uppercase tracking-wider text-muted-foreground">
           {cfg.label}
         </span>
-        <span className="rounded-md bg-primary/10 px-1.5 py-0.5 text-micro font-medium tabular-nums text-primary">
+        <span className="rounded-md bg-primary/10 px-1.5 py-0.5 text-micro font-normal tabular-nums text-primary">
           {items.length}
         </span>
       </div>
       <div>
-        {items.slice(0, visibleCount).map((item) => (
-          <WorkItemRow key={item.id} item={item} />
+        {deferredItems.map((item) => (
+          <WorkItemRow key={item.id} item={item} returnHref={returnHref} displayOptions={displayOptions} />
         ))}
       </div>
     </PmPanel>

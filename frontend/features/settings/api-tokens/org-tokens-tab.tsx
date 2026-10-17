@@ -10,6 +10,8 @@ import {
   type CreateApiTokenResponse,
 } from "@/hooks/api/api-tokens";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { formatDateTimeInOrgTz } from "@/lib/date-utils";
+import { useOrgTimeZone } from "@/hooks/api/org-display";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -46,11 +48,6 @@ function RevokeTokenButton({
   );
 }
 
-function formatDate(iso: string | null) {
-  if (!iso) return "—";
-  return new Date(iso).toLocaleDateString(undefined, { dateStyle: "medium" });
-}
-
 function isExpired(expiresAt: string | null) {
   if (!expiresAt) return false;
   return new Date(expiresAt) < new Date();
@@ -64,6 +61,7 @@ type OrgTokensTabProps = {
 export function OrgTokensTab({ showCreate, onShowCreateChange }: OrgTokensTabProps) {
   const { data, error, isError, isLoading, refetch } = useApiTokens();
   const revoke = useRevokeApiToken();
+  const orgTz = useOrgTimeZone();
 
   const [createdResult, setCreatedResult] = useState<CreateApiTokenResponse | null>(null);
   const [revoking, setRevoking] = useState<ApiToken | null>(null);
@@ -132,7 +130,7 @@ export function OrgTokensTab({ showCreate, onShowCreateChange }: OrgTokensTabPro
         return (
           <div className="flex items-center gap-1">
             {expired && <Clock className="h-3 w-3 text-destructive" />}
-            <span className={expired ? "text-destructive" : ""}>{formatDate(t.expiresAt)}</span>
+            <span className={expired ? "text-destructive" : ""}>{formatDateTimeInOrgTz(t.expiresAt, orgTz)}</span>
           </div>
         );
       },
@@ -141,7 +139,7 @@ export function OrgTokensTab({ showCreate, onShowCreateChange }: OrgTokensTabPro
       key: "lastUsed",
       header: "Last Used",
       className: "text-muted-foreground",
-      cell: (t) => formatDate(t.lastUsedAt),
+      cell: (t) => (formatDateTimeInOrgTz(t.lastUsedAt, orgTz) || "—"),
     },
     {
       key: "status",

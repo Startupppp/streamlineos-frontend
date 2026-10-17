@@ -1,10 +1,15 @@
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
-import type { CSSProperties } from "react";
+import { cache, type CSSProperties } from "react";
 import { format } from "date-fns";
 import { PublicPageContentLoader } from "@/features/wiki/components/public-page-content-loader";
-import { BACKEND_URL } from "@/lib/backend-url";
-import { withCorrelation } from "@/lib/observability/with-correlation";
+import { publicGetNoStore } from "@/lib/public-fetch";
+import { publicWikiPageContract } from "@/lib/public-schema";
+import {
+  COVER_GRADIENT_PREFIX,
+  rewritePublicCoverImage,
+  rewritePublicMediaUrls,
+} from "@/features/wiki/lib/rewrite-public-media-urls";
 
 export const dynamic = "force-dynamic";
 
@@ -23,62 +28,22 @@ const GRADIENT_PRESETS: Array<{ key: string; css: string }> = [
 
 function getCoverStyle(coverImage: string | null): CSSProperties {
   if (!coverImage) return {};
-  if (coverImage.startsWith("gradient:")) {
-    const key = coverImage.slice(9);
+  if (coverImage.startsWith(COVER_GRADIENT_PREFIX)) {
+    const key = coverImage.slice(COVER_GRADIENT_PREFIX.length);
     const preset = GRADIENT_PRESETS.find((p) => p.key === key);
     return preset ? { background: preset.css } : {};
   }
   return {
-    backgroundImage: `url(${coverImage})`,
+    backgroundImage: `url("${coverImage}")`,
     backgroundSize: "cover",
     backgroundPosition: "center",
   };
 }
 
-type PublicWikiData = {
-  title: string;
-  icon: string | null;
-  coverImage: string | null;
-  content: Record<string, unknown> | Record<string, unknown>[] | null;
-  updatedAt: string;
-};
-
-function extractData(raw: unknown): PublicWikiData | null {
-  if (typeof raw !== "object" || raw === null) return null;
-  const obj = raw as Record<string, unknown>;
-  const candidate: unknown =
-    obj.success === true && typeof obj.data === "object" && obj.data !== null
-      ? obj.data
-      : raw;
-  if (typeof candidate !== "object" || candidate === null) return null;
-  const d = candidate as Record<string, unknown>;
-  if (typeof d.title !== "string") return null;
-  return {
-    title: d.title,
-    icon: typeof d.icon === "string" ? d.icon : null,
-    coverImage: typeof d.coverImage === "string" ? d.coverImage : null,
-    content: Array.isArray(d.content)
-      ? (d.content as Record<string, unknown>[])
-      : typeof d.content === "object" && d.content !== null
-        ? (d.content as Record<string, unknown>)
-        : null,
-    updatedAt: typeof d.updatedAt === "string" ? d.updatedAt : new Date().toISOString(),
-  };
-}
-
-async function fetchPageData(shareToken: string): Promise<PublicWikiData | null> {
-  try {
-    const res = await fetch(`${BACKEND_URL}/public/wiki/${shareToken}`, {
-      cache: "no-store",
-      headers: withCorrelation(new Headers()),
-    });
-    if (!res.ok) return null;
-    const raw: unknown = await res.json();
-    return extractData(raw);
-  } catch {
-    return null;
-  }
-}
+const fetchPageData = cache(
+  async (shareToken: string) =>
+    publicGetNoStore(`/public/wiki/${shareToken}`, undefined, publicWikiPageContract),
+);
 
 type Props = { params: Promise<{ shareToken: string }> };
 
@@ -105,31 +70,42 @@ export default async function PublicWikiPage({ params }: Props) {
     notFound();
   }
 
-  const hasCover = !!data.coverImage;
-  const coverStyle = getCoverStyle(data.coverImage);
+  const brokerCover = rewritePublicCoverImage(data.coverImage, shareToken);
+  const hasCover = brokerCover !== null;
+  const coverStyle = getCoverStyle(brokerCover);
+
+  const brokerContent = rewritePublicMediaUrls(data.content, shareToken);
 
   return (
-    <main>
-      {hasCover && (
-        <div className="w-full h-40" style={coverStyle} aria-hidden="true" />
-      )}
-      <div className="max-w-3xl mx-auto px-4 sm:px-6 py-8">
-        <div className="flex items-center gap-3 mb-2">
-          {data.icon && (
-            <span className="text-3xl leading-none" aria-hidden="true">
-              {data.icon}
-            </span>
-          )}
-          <h1 className="text-2xl font-bold text-foreground leading-tight">
-            {data.title || "Untitled"}
-          </h1>
+    <div className="min-h-dvh bg-background">
+      <header className="border-b border-border">
+        <div className="mx-auto max-w-3xl px-4 sm:px-6 py-3">
+          <span className="text-sm font-semibold text-foreground">Knowledge Base</span>
         </div>
-        <p className="text-xs text-muted-foreground mb-8">
-          Last updated{" "}
-          {format(new Date(data.updatedAt), "MMM d, yyyy")}
-        </p>
-        <PublicPageContentLoader content={data.content} />
-      </div>
-    </main>
+      </header>
+      <main>
+        {hasCover && (
+          <div className="w-full h-40" style={coverStyle} aria-hidden="true" />
+        )}
+        <div className="max-w-3xl mx-auto px-4 sm:px-6 py-8">
+          <div className="flex items-center gap-3 mb-2">
+            {data.icon && (
+              <span className="text-3xl leading-none" aria-hidden="true">
+                {data.icon}
+              </span>
+            )}
+            <h1 className="text-2xl font-bold text-foreground leading-tight">
+              {data.title || "Untitled"}
+            </h1>
+          </div>
+          {data.updatedAt && (
+            <time dateTime={data.updatedAt} className="mb-8 block text-xs text-muted-foreground">
+              Last updated {format(new Date(data.updatedAt), "MMM d, yyyy")}
+            </time>
+          )}
+          <PublicPageContentLoader content={brokerContent} />
+        </div>
+      </main>
+    </div>
   );
 }

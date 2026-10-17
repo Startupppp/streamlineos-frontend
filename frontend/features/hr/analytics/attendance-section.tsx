@@ -28,6 +28,10 @@ interface AttendanceSectionProps {
 export function AttendanceSection({ year, month }: AttendanceSectionProps) {
   const { data, isLoading, isError, error, refetch } = useHrAttendanceAnalytics(year, month);
 
+  function handleRetry(): void {
+    void refetch();
+  }
+
   if (isLoading) {
     return (
       <section className="space-y-4">
@@ -40,17 +44,16 @@ export function AttendanceSection({ year, month }: AttendanceSectionProps) {
     );
   }
 
-  if (isError) {
+  if (isError || !data) {
     return (
       <ErrorState
         title="Couldn't load attendance analytics"
         description={getErrorMessage(error)}
-        onRetry={() => void refetch()}
+        error={error}
+        onRetry={handleRetry}
       />
     );
   }
-
-  if (!data) return null;
 
   const dailyChartData = data.daily.map((d) => ({
     date: d.date.slice(8),

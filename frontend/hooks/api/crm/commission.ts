@@ -2,9 +2,15 @@
 
 import { useQueryClient, keepPreviousData } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { lazyContract } from "@/lib/api-envelope";
+import { growthAndSignQueryKeys as queryKeys } from "@/lib/query-keys/growth-and-sign";
 import { useGatedQuery } from "@/hooks/api/gated-query";
 import { useAuthorizedIdempotentMutation } from "@/hooks/api/inventory/use-idempotent-mutation";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import type {
+  CommissionPlanDetail,
+  CommissionRuleSet,
+} from "@/hooks/api/crm/commission-schema";
 import type {
   AccrualParams,
   CommissionAccrual,
@@ -14,6 +20,15 @@ import type {
   CommissionRuleContribution,
   ListEarningsParams,
 } from "@/types/crm/commission";
+
+const schema = () => import("@/hooks/api/crm/commission-schema");
+const planDetailLazy = lazyContract(() => schema().then((m) => m.commissionPlanDetailContract));
+const createPlanLazy = lazyContract(() => schema().then((m) => m.createCommissionPlanContract));
+const planLazy = lazyContract(() => schema().then((m) => m.commissionPlanContract));
+const versionLazy = lazyContract(() => schema().then((m) => m.commissionVersionContract));
+const assignmentLazy = lazyContract(() => schema().then((m) => m.commissionAssignmentContract));
+const calculateLazy = lazyContract(() => schema().then((m) => m.calculateCommissionContract));
+const rebuildLazy = lazyContract(() => schema().then((m) => m.rebuildAccrualContract));
 
 /**
  * Reads of the commission ledger.
@@ -134,4 +149,211 @@ export function useApproveCommissionEarning() {
       },
     },
   );
+}
+
+/** A plan with every version and assignment it has ever had. */
+export function useCommissionPlan(planId: string | null) {
+  return useGatedQuery("crm:commission-plans:view", {
+    queryKey: queryKeys.crmCommission.plan(planId ?? ""),
+    queryFn: ({ signal }) =>
+      apiClient.get(`/crm/commission/plans/${planId}`, undefined, signal, planDetailLazy),
+    staleTime: 60_000,
+    enabled: planId !== null,
+  });
+}
+
+/** Patch a cached plan detail from a write that returned one of its parts. */
+function usePatchPlan() {
+  const qc = useQueryClient();
+  return (planId: string, update: (detail: CommissionPlanDetail) => CommissionPlanDetail) =>
+    qc.setQueryData<CommissionPlanDetail>(queryKeys.crmCommission.plan(planId), (current) =>
+      current ? update(current) : current,
+    );
+}
+
+function replaceById<T>(rows: T[], next: T, id: (row: T) => string): T[] {
+  return rows.some((row) => id(row) === id(next))
+    ? rows.map((row) => (id(row) === id(next) ? next : row))
+    : [...rows, next];
+}
+
+export interface CreateCommissionPlanInput {
+  name: string;
+  description?: string;
+  currency: string;
+  effectiveFrom: string;
+  rules: Omit<CommissionRuleSet, "basis"> & { basis: "deal_value" };
+  note?: string;
+}
+
+export function useCreateCommissionPlan() {
+  const qc = useQueryClient();
+  return useAuthorizedIdempotentMutation(
+    "crm:commission-plans:manage",
+    {
+      mutationKey: ["crm", "commission", "plans", "create"],
+      mutationFn: (input: CreateCommissionPlanInput, idempotencyKey) =>
+        apiClient.post("/crm/commission/plans", input, { headers: { "Idempotency-Key": idempotencyKey } }, createPlanLazy),
+      onSuccess: ({ plan, version }) => {
+        qc.setQueryData<CommissionPlanSummary[]>(queryKeys.crmCommission.plans(), (current) =>
+          current ? [...current, plan] : current,
+        );
+        qc.setQueryData<CommissionPlanDetail>(queryKeys.crmCommission.plan(plan.planId), {
+          plan,
+          versions: [version],
+          assignments: [],
+        });
+      },
+    },
+  );
+}
+
+export interface UpdateCommissionPlanInput {
+  planId: string;
+  name?: string;
+  description?: string | null;
+  retiredOn?: string | null;
+}
+
+export function useUpdateCommissionPlan() {
+  const qc = useQueryClient();
+  const patch = usePatchPlan();
+  return useAuthorizedMutation("crm:commission-plans:manage", {
+    mutationKey: ["crm", "commission", "plans", "update"],
+    mutationFn: ({ planId, ...body }: UpdateCommissionPlanInput) =>
+      apiClient.patch(`/crm/commission/plans/${planId}`, body, undefined, planLazy),
+    onSuccess: (plan) => {
+      patch(plan.planId, (detail) => ({ ...detail, plan }));
+      qc.setQueryData<CommissionPlanSummary[]>(queryKeys.crmCommission.plans(), (current) =>
+        current?.map((row) => (row.planId === plan.planId ? { ...row, ...plan } : row)),
+      );
+    },
+  });
+}
+
+export interface CommissionVersionInput {
+  planId: string;
+  effectiveFrom: string;
+  rules: CreateCommissionPlanInput["rules"];
+  note?: string;
+}
+
+/** A new dated version. The only way to change what a sealed plan pays. */
+export function useCreateCommissionVersion() {
+  const patch = usePatchPlan();
+  return useAuthorizedIdempotentMutation("crm:commission-plans:manage", {
+    mutationKey: ["crm", "commission", "versions", "create"],
+    mutationFn: ({ planId, ...body }: CommissionVersionInput, idempotencyKey) =>
+      apiClient.post(
+        `/crm/commission/plans/${planId}/versions`,
+        body,
+        { headers: { "Idempotency-Key": idempotencyKey } },
+        versionLazy,
+      ),
+    onSuccess: (version) =>
+      patch(version.planId, (detail) => ({ ...detail, versions: [...detail.versions, version] })),
+  });
+}
+
+/** Edits an unsealed version; the server 409s once money has been computed from it. */
+export function useUpdateCommissionVersion() {
+  const patch = usePatchPlan();
+  return useAuthorizedMutation("crm:commission-plans:manage", {
+    mutationKey: ["crm", "commission", "versions", "update"],
+    mutationFn: ({ planId, planVersionId, note, ...body }: CommissionVersionInput & { planVersionId: string }) =>
+      apiClient.patch(
+        `/crm/commission/plans/${planId}/versions/${planVersionId}`,
+        { ...body, note: note ?? null },
+        undefined,
+        versionLazy,
+      ),
+    onSuccess: (version) =>
+      patch(version.planId, (detail) => ({
+        ...detail,
+        versions: replaceById(detail.versions, version, (row) => row.planVersionId),
+      })),
+  });
+}
+
+export interface AssignCommissionPlanInput {
+  planId: string;
+  userId: string;
+  effectiveFrom: string;
+  effectiveTo: string | null;
+  quotaOverrideMinor: number | null;
+}
+
+export function useAssignCommissionPlan() {
+  const patch = usePatchPlan();
+  return useAuthorizedMutation("crm:commission-plans:manage", {
+    mutationKey: ["crm", "commission", "assignments", "create"],
+    mutationFn: ({ planId, ...body }: AssignCommissionPlanInput) =>
+      apiClient.post(`/crm/commission/plans/${planId}/assignments`, body, undefined, assignmentLazy),
+    onSuccess: (assignment) =>
+      patch(assignment.planId, (detail) => ({
+        ...detail,
+        assignments: [...detail.assignments, assignment],
+      })),
+  });
+}
+
+export function useEndCommissionAssignment() {
+  const patch = usePatchPlan();
+  return useAuthorizedMutation("crm:commission-plans:manage", {
+    mutationKey: ["crm", "commission", "assignments", "end"],
+    mutationFn: ({ assignmentId, effectiveTo }: { assignmentId: string; effectiveTo: string }) =>
+      apiClient.patch(`/crm/commission/assignments/${assignmentId}/end`, { effectiveTo }, undefined, assignmentLazy),
+    onSuccess: (assignment) =>
+      patch(assignment.planId, (detail) => ({
+        ...detail,
+        assignments: replaceById(detail.assignments, assignment, (row) => row.assignmentId),
+      })),
+  });
+}
+
+/**
+ * Compute the earning for one won deal. Seals the plan version it used, and
+ * the server's unique index makes a second call return the first earning.
+ */
+export function useCalculateCommission() {
+  const qc = useQueryClient();
+  return useAuthorizedIdempotentMutation("crm:commission-earnings:calculate", {
+    mutationKey: ["crm", "commission", "earnings", "calculate"],
+    mutationFn: (dealId: number, idempotencyKey) =>
+      apiClient.post(
+        "/crm/commission/earnings/calculate",
+        { dealId },
+        { headers: { "Idempotency-Key": idempotencyKey } },
+        calculateLazy,
+      ),
+    onSuccess: () => {
+      // The ledger and accrual are server aggregates over the new row, and the
+      // version it used is now sealed: none of it is computable here.
+      void qc.invalidateQueries({ queryKey: queryKeys.crmCommission.all });
+    },
+  });
+}
+
+export interface RebuildAccrualInput {
+  from: string;
+  to: string;
+  planId?: string;
+}
+
+/** Re-derive the accrual decomposition over a range. Never changes an amount. */
+export function useRebuildCommissionAccrual() {
+  const qc = useQueryClient();
+  return useAuthorizedIdempotentMutation("crm:commission-accruals:rebuild", {
+    mutationKey: ["crm", "commission", "accrual", "rebuild"],
+    mutationFn: (body: RebuildAccrualInput, idempotencyKey) =>
+      apiClient.post(
+        "/crm/commission/accrual/rebuild",
+        body,
+        { headers: { "Idempotency-Key": idempotencyKey } },
+        rebuildLazy,
+      ),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: queryKeys.crmCommission.accrual(), refetchType: "none" });
+    },
+  });
 }

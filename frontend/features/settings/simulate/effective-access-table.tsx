@@ -6,7 +6,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { cn } from "@/lib/utils";
 import { statusToneClasses } from "@/lib/design-tokens";
 import { formatShortDate } from "@/lib/date-utils";
-import { MODULE_LABELS } from "@/components/rbac/permission-matrix-types";
+import { MODULE_LABELS, resourceLabel } from "@/components/rbac/permission-matrix-types";
 import type { ExplainedPermission, GrantSource } from "@/hooks/api/roles-schema";
 import {
   GRANT_SOURCE_LABELS,
@@ -16,27 +16,37 @@ import {
   SCOPE_TONES,
   TEAM_SCOPE_EXPLANATION,
 } from "./effective-access-labels";
-import { actionOf, resourceOf } from "@/lib/rbac/administering-module";
+import { PERMISSION_METADATA, isPermissionKey } from "@/contracts/permission-key.generated";
 
 function getPermissionRowKey(row: ExplainedPermission): string {
   return row.permissionKey;
 }
 
+function catalogResource(row: ExplainedPermission): string {
+  return isPermissionKey(row.permissionKey)
+    ? resourceLabel(PERMISSION_METADATA[row.permissionKey].resource, row.moduleKey)
+    : row.permissionKey;
+}
+
+function catalogAction(permissionKey: string): string {
+  return isPermissionKey(permissionKey) ? PERMISSION_METADATA[permissionKey].action : "—";
+}
+
 function PermissionCell(row: ExplainedPermission) {
   return (
     <div className="flex min-w-0 flex-col">
-      <span className="truncate font-mono text-[11px] text-foreground">
+      <span className="truncate font-mono text-dense text-foreground">
         {row.permissionKey}
       </span>
-      <span className="truncate text-[11px] text-muted-foreground">
-        {MODULE_LABELS[row.moduleKey] ?? row.moduleKey} · {resourceOf(row.permissionKey)}
+      <span className="truncate text-dense text-muted-foreground">
+        {MODULE_LABELS[row.moduleKey] ?? row.moduleKey} · {catalogResource(row)}
       </span>
     </div>
   );
 }
 
 function ActionCell(row: ExplainedPermission) {
-  return <span className="text-sm">{actionOf(row.permissionKey)}</span>;
+  return <span className="text-sm">{catalogAction(row.permissionKey)}</span>;
 }
 
 function ScopeCell(row: ExplainedPermission) {
@@ -53,7 +63,7 @@ function SourcesCell(row: ExplainedPermission) {
         />
       ))}
       {row.sources.length === 0 ? (
-        <span className="text-[11px] text-muted-foreground">
+        <span className="text-dense text-muted-foreground">
           Source unavailable
         </span>
       ) : null}
@@ -63,13 +73,13 @@ function SourcesCell(row: ExplainedPermission) {
 
 function ExpiresCell(row: ExplainedPermission) {
   if (row.expiresAt === null)
-    return <span className="text-[11px] text-muted-foreground">Never</span>;
+    return <span className="text-dense text-muted-foreground">Never</span>;
   const warning = statusToneClasses("warning");
   return (
     <Badge
       variant="outline"
       className={cn(
-        "h-5 px-2 py-0.5 font-mono text-[10px] tabular-nums",
+        "h-5 px-2 py-0.5 font-mono text-micro tabular-nums",
         warning.surface,
         warning.ink,
         warning.rule,
@@ -95,7 +105,7 @@ export function ScopeBadge({ scope }: ScopeBadgeProps) {
   return (
     <Badge
       variant="outline"
-      className={cn("h-5 px-2 py-0.5 text-[10px]", tone.surface, tone.ink, tone.rule)}
+      className={cn("h-5 px-2 py-0.5 text-micro", tone.surface, tone.ink, tone.rule)}
       title={isInert ? TEAM_SCOPE_EXPLANATION : undefined}
     >
       {isInert ? "Team — behaves as Own" : SCOPE_LABELS[scope]}
@@ -115,7 +125,7 @@ function SourceBadge({ source }: SourceBadgeProps) {
   return (
     <Badge
       variant="outline"
-      className={cn("h-5 px-2 py-0.5 text-[10px]", tone.surface, tone.ink, tone.rule)}
+      className={cn("h-5 px-2 py-0.5 text-micro", tone.surface, tone.ink, tone.rule)}
     >
       {showsOwnLabel ? `${kindLabel}: ${source.label}` : kindLabel}
     </Badge>

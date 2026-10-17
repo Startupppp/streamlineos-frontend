@@ -1,7 +1,9 @@
 "use client";
 
-import { useEpics, useModules, useCycles } from "@/hooks/api/build";
-import { LabelPicker } from "../tickets/label-picker";
+import { useEpics } from "@/hooks/api/build/epics";
+import { useModules } from "@/hooks/api/build/modules";
+import { useCycles } from "@/hooks/api/build/cycles";
+import { LabelPicker, TicketLabelChip } from "../tickets/label-picker";
 import { RecurrencePicker } from "../tickets/recurrence-picker";
 import {
   useSetRecurrence,
@@ -16,11 +18,11 @@ import { TicketParentControl } from "./ticket-parent-control";
 import { TicketCustomerPicker } from "./ticket-customer-picker";
 import { TicketDateFields } from "./ticket-date-fields";
 import { TicketSidebarMetadata } from "./ticket-sidebar-metadata";
-import { Badge } from "@/components/ui/badge";
 
 interface TicketSidebarProps {
   ticket: {
     id: number;
+    version: number;
     parentTicketId?: number | null;
     status?: string | null;
     priority?: string | null;
@@ -68,6 +70,7 @@ interface TicketSidebarProps {
     updatedAt?: Date | string | null;
     isRecurring?: boolean | null;
     recurrenceRule?: RecurrenceRule | null;
+    rank?: string | null;
   };
   ticketId: number;
   projectId?: number;
@@ -103,7 +106,7 @@ export function TicketSidebar({
   const handleClearStartDate = () => onAutoSave({ startDate: null });
   const handleClearDueDate = () => onAutoSave({ dueDate: null });
   const handleRecurrenceChange = (rule: RecurrenceRule | null) =>
-    setRecurrence.mutate(rule);
+    setRecurrence.mutate({ version: ticket.version, rule });
 
   const handleStatusChange = (v: string) => onAutoSave({ status: v });
   const handlePriorityChange = (v: string) => onAutoSave({ priority: v });
@@ -152,84 +155,16 @@ export function TicketSidebar({
         : [];
 
   return (
-    <div className="@container space-y-3 border-b border-r border-border bg-muted/10 px-4 py-3">
-      <SidebarSelectFields
-        key={`${ticket.id}:${ticket.points ?? ""}`}
-        ticket={ticket}
-        statuses={statuses}
-        epics={selectableEpics}
-        modules={modules ?? []}
-        cycles={cycles ?? []}
-        onStatusChange={handleStatusChange}
-        onPriorityChange={handlePriorityChange}
-        onTypeChange={handleTypeChange}
-        onPointsChange={handlePointsChange}
-        onEpicChange={handleEpicChange}
-        onModuleChange={handleModuleChange}
-        onCycleChange={handleCycleChange}
-        disabled={!canUpdate}
-      />
-
-      {projectId != null ? (
-        <TicketParentControl
-          ticket={{
-            id: ticket.id,
-            parentTicketId: ticket.parentTicketId ?? null,
-          }}
-          projectId={projectId}
-          projectKey={projectKey}
-          variant="field"
+    <div className="@container divide-y divide-border border-b border-border bg-card">
+      <div className="space-y-4 px-4 py-4">
+        <SidebarAssigneeSection
+          projectId={projectId ?? 0}
+          displayedAssignees={displayedAssignees}
+          onAddAssignee={handleAddAssignee}
+          onRemoveAssignee={handleRemoveAssignee}
+          disabled={!canAssign}
         />
-      ) : null}
 
-      {canUpdate ? (
-        <TicketCustomerPicker
-          customerId={ticket.customerId}
-          customerName={ticket.customer?.name}
-          onChange={handleCustomerChange}
-        />
-      ) : (
-        <div className="text-xs text-muted-foreground">Customer: {ticket.customer?.name ?? "None"}</div>
-      )}
-
-      {canUpdate ? (
-        <TicketDateFields
-          startDate={ticket.startDate}
-          dueDate={ticket.dueDate}
-          onStartDateChange={handleStartDateChange}
-          onDueDateChange={handleDueDateChange}
-          onClearStartDate={handleClearStartDate}
-          onClearDueDate={handleClearDueDate}
-        />
-      ) : (
-        <div className="grid grid-cols-2 gap-3 text-xs text-muted-foreground">
-          <span>Start: {ticket.startDate ?? "None"}</span>
-          <span>Due: {ticket.dueDate ?? "None"}</span>
-        </div>
-      )}
-
-      <div>
-        {canUpdate ? (
-          <RecurrencePicker
-            value={ticket.recurrenceRule ?? null}
-            onChange={handleRecurrenceChange}
-          />
-        ) : (
-          <span className="text-xs text-muted-foreground">
-            Recurring: {ticket.recurrenceRule ? ticket.recurrenceRule.frequency : "No"}
-          </span>
-        )}
-      </div>
-
-      <SidebarAssigneeSection
-        projectId={projectId ?? 0}
-        displayedAssignees={displayedAssignees}
-        onAddAssignee={handleAddAssignee}
-        onRemoveAssignee={handleRemoveAssignee}
-        disabled={!canAssign}
-      />
-
-      <div>
         {canUpdate ? (
           <LabelPicker
             ticketId={ticketId}
@@ -243,21 +178,99 @@ export function TicketSidebar({
             )}
           />
         ) : (
-          <div className="flex flex-wrap gap-1">
+          <div className="flex flex-wrap gap-1.5">
             {(ticket.labels ?? []).flatMap((entry) =>
-              entry.label ? [<Badge key={entry.label.id} variant="secondary">{entry.label.name}</Badge>] : [],
+              entry.label ? [<TicketLabelChip key={entry.label.id} label={entry.label} />] : [],
             )}
           </div>
         )}
       </div>
 
-      <TicketSidebarMetadata
-        timeSpent={ticket.timeSpent}
-        originalEstimate={ticket.originalEstimate}
-        createdAt={ticket.createdAt}
-        updatedAt={ticket.updatedAt}
-        reporter={ticket.reporter}
-      />
+      <div className="space-y-4 px-4 py-4">
+        <h3 className="text-xs font-semibold text-muted-foreground">Workflow</h3>
+        <SidebarSelectFields
+          key={`${ticket.id}:${ticket.points ?? ""}`}
+          ticket={ticket}
+          statuses={statuses}
+          epics={selectableEpics}
+          modules={modules ?? []}
+          cycles={cycles ?? []}
+          onStatusChange={handleStatusChange}
+          onPriorityChange={handlePriorityChange}
+          onTypeChange={handleTypeChange}
+          onPointsChange={handlePointsChange}
+          onEpicChange={handleEpicChange}
+          onModuleChange={handleModuleChange}
+          onCycleChange={handleCycleChange}
+          disabled={!canUpdate}
+        />
+
+        {projectId != null ? (
+          <TicketParentControl
+            ticket={{
+              id: ticket.id,
+              version: ticket.version,
+              parentTicketId: ticket.parentTicketId ?? null,
+            }}
+            projectId={projectId}
+            projectKey={projectKey}
+            variant="field"
+          />
+        ) : null}
+
+        {canUpdate ? (
+          <TicketCustomerPicker
+            customerId={ticket.customerId}
+            customerName={ticket.customer?.name}
+            onChange={handleCustomerChange}
+          />
+        ) : (
+          <div className="text-xs text-muted-foreground">Customer: {ticket.customer?.name ?? "None"}</div>
+        )}
+      </div>
+
+      <div className="space-y-4 px-4 py-4">
+        <h3 className="text-xs font-semibold text-muted-foreground">Schedule</h3>
+        {canUpdate ? (
+          <TicketDateFields
+            startDate={ticket.startDate}
+            dueDate={ticket.dueDate}
+            onStartDateChange={handleStartDateChange}
+            onDueDateChange={handleDueDateChange}
+            onClearStartDate={handleClearStartDate}
+            onClearDueDate={handleClearDueDate}
+          />
+        ) : (
+          <div className="grid grid-cols-2 gap-3 text-xs text-muted-foreground">
+            <span>Start: {ticket.startDate ?? "None"}</span>
+            <span>Due: {ticket.dueDate ?? "None"}</span>
+          </div>
+        )}
+
+        <div>
+          {canUpdate ? (
+            <RecurrencePicker
+              value={ticket.recurrenceRule ?? null}
+              onChange={handleRecurrenceChange}
+            />
+          ) : (
+            <span className="text-xs text-muted-foreground">
+              Recurring: {ticket.recurrenceRule ? ticket.recurrenceRule.frequency : "No"}
+            </span>
+          )}
+        </div>
+      </div>
+
+      <div className="px-4 py-4">
+        <TicketSidebarMetadata
+          timeSpent={ticket.timeSpent}
+          originalEstimate={ticket.originalEstimate}
+          createdAt={ticket.createdAt}
+          updatedAt={ticket.updatedAt}
+          reporter={ticket.reporter}
+          rank={ticket.rank}
+        />
+      </div>
     </div>
   );
 }

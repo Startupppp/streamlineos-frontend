@@ -26,6 +26,10 @@ interface EmployeesFiltersProps {
   departments: Department[] | undefined;
   hasFilters: boolean;
   onSearchChange: (v: string) => void;
+  /** Enter in the search field: publish the typed query without waiting out the debounce. */
+  onSearchSubmit?: () => void;
+  /** The typed search has not come back yet (debouncing or fetching). */
+  searching?: boolean;
   onDepartmentIdChange: (id: string | undefined) => void;
   onStatusChange: (s: EmployeeStatusFilter) => void;
   onClear: () => void;
@@ -42,6 +46,8 @@ export function EmployeesFilters({
   departments,
   hasFilters,
   onSearchChange,
+  onSearchSubmit,
+  searching = false,
   onDepartmentIdChange,
   onStatusChange,
   onClear,
@@ -59,6 +65,8 @@ export function EmployeesFilters({
       <SearchInput
         value={search}
         onValueChange={onSearchChange}
+        onSubmitSearch={onSearchSubmit}
+        searching={searching}
         placeholder="Search name, email, or ID…"
         aria-label="Search employees"
         className="w-full min-w-0 md:w-auto md:max-w-sm md:shrink-0"
@@ -102,6 +110,7 @@ export function EmployeesFilters({
           <SelectContent align="start">
             <SelectItem value="all">All statuses</SelectItem>
             <SelectItem value="active">Active</SelectItem>
+            <SelectItem value="pending">Pending invite</SelectItem>
             <SelectItem value="inactive">Inactive</SelectItem>
           </SelectContent>
         </Select>

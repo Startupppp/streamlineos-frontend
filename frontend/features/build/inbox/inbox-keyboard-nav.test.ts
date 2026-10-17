@@ -15,7 +15,7 @@ function makeNotification(id: number): Notification {
     sourceModule: "build",
     eventKey: null,
     title: `Notification ${id}`,
-    message: null,
+    message: "",
     link: null,
     isRead: false,
     pinned: false,
@@ -149,5 +149,75 @@ describe("useInboxKeyboardNav — j/k navigation", () => {
     );
     fireEvent.keyDown(document, { key: "k" });
     expect(onSelect).toHaveBeenCalledWith(notifications[0]);
+  });
+});
+
+describe("useInboxKeyboardNav — Enter key activates the current selection", () => {
+  it("Enter calls onSelect with the currently selected notification", () => {
+    const onSelect = jest.fn();
+    const ref = { current: null } as RefObject<HTMLInputElement | null>;
+    renderHook(() =>
+      useInboxKeyboardNav({ notifications, selectedId: 2, onSelect, onClearSelection: jest.fn(), searchInputRef: ref }),
+    );
+    fireEvent.keyDown(document, { key: "Enter" });
+    expect(onSelect).toHaveBeenCalledWith(notifications[1]);
+  });
+
+  it("Enter is inert when no notification is selected", () => {
+    const onSelect = jest.fn();
+    const ref = { current: null } as RefObject<HTMLInputElement | null>;
+    renderHook(() =>
+      useInboxKeyboardNav({ notifications, selectedId: null, onSelect, onClearSelection: jest.fn(), searchInputRef: ref }),
+    );
+    fireEvent.keyDown(document, { key: "Enter" });
+    expect(onSelect).not.toHaveBeenCalled();
+  });
+
+  it("Enter is inert when the target is an input element", () => {
+    const onSelect = jest.fn();
+    const ref = { current: null } as RefObject<HTMLInputElement | null>;
+    renderHook(() =>
+      useInboxKeyboardNav({ notifications, selectedId: 1, onSelect, onClearSelection: jest.fn(), searchInputRef: ref }),
+    );
+    const input = document.createElement("input");
+    document.body.appendChild(input);
+    fireEvent.keyDown(input, { key: "Enter" });
+    expect(onSelect).not.toHaveBeenCalled();
+    document.body.removeChild(input);
+  });
+});
+
+describe("useInboxKeyboardNav — ? shortcut opens shortcut help dialog", () => {
+  it("? calls onShortcutHelp when provided", () => {
+    const onShortcutHelp = jest.fn();
+    const ref = { current: null } as RefObject<HTMLInputElement | null>;
+    renderHook(() =>
+      useInboxKeyboardNav({ notifications, selectedId: null, onSelect: jest.fn(), onClearSelection: jest.fn(), searchInputRef: ref, onShortcutHelp }),
+    );
+    fireEvent.keyDown(document, { key: "?" });
+    expect(onShortcutHelp).toHaveBeenCalledTimes(1);
+  });
+
+  it("? does not throw when onShortcutHelp is not provided — paired with the fire test above confirming the hook is reached", () => {
+    const ref = { current: null } as RefObject<HTMLInputElement | null>;
+    expect(() => {
+      renderHook(() =>
+        useInboxKeyboardNav({ notifications, selectedId: null, onSelect: jest.fn(), onClearSelection: jest.fn(), searchInputRef: ref }),
+      );
+      fireEvent.keyDown(document, { key: "?" });
+    }).not.toThrow();
+  });
+
+  it("? is inert when the target is an input element — paired with the positive test confirming the key is otherwise handled", () => {
+    const onShortcutHelp = jest.fn();
+    const ref = { current: null } as RefObject<HTMLInputElement | null>;
+    renderHook(() =>
+      useInboxKeyboardNav({ notifications, selectedId: null, onSelect: jest.fn(), onClearSelection: jest.fn(), searchInputRef: ref, onShortcutHelp }),
+    );
+    const input = document.createElement("input");
+    document.body.appendChild(input);
+    fireEvent.keyDown(input, { key: "?" });
+    expect(onShortcutHelp).not.toHaveBeenCalled();
+    document.body.removeChild(input);
   });
 });

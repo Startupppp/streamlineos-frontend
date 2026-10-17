@@ -1,0 +1,2986 @@
+{
+  "startedAt": "2026-10-03T13:09:54.006Z",
+  "fixtureCommit": "e238696bc",
+  "frontendCommit": "6ab361475",
+  "scopedRouteCommit": "231a94829",
+  "gates": {
+    "backendProductionTypecheck": "passed",
+    "changedNotificationAndFixtureTypecheck": "passed including final __tests__ paths",
+    "sseFocused": "4 suites / 52 tests passed; actual Nest HTTP wire",
+    "sseProductionAndChangedSpecTypecheck": "passed after Feedbucket typed fixture repair",
+    "digestRestrictionFocused": "9 suites / 74 tests; independent root and module_grants_resume review",
+    "dispatchFixtureFocused": "5 suites / 305 tests; corrupt persisted envelope corrected from generic500 to409",
+    "dispatchProductionAndChangedSpecTypecheck": "passed including frozen fixture23 and canonical digest24 before runner17416",
+    "storedReadPolicyAndConsumers": "policy 8db4f6dd6 + consumers e0f3de0fb; independent review; 10 suites/156 and 26 suites/249 selected tests; exact lint/diff, combined scoped and production TypeScript pass",
+    "contractFreshness": "backend OpenAPI 4106 operations/4091 contracts current; frontend vendor and 93 Build generator/6 vendor self-tests pass"
+  },
+  "observations": [
+    {
+      "kind": "runner-start",
+      "status": "failed-before-listen",
+      "reason": "NODE_PATH missing; src alias resolution failed",
+      "pid": 23868
+    },
+    {
+      "kind": "fixture-negative-http",
+      "cases": [
+        {
+          "name": "missing authentication",
+          "status": 401,
+          "expected": 401,
+          "passed": true,
+          "code": "UNAUTHORIZED"
+        },
+        {
+          "name": "missing fixture capability",
+          "status": 403,
+          "expected": 403,
+          "passed": true,
+          "code": "BUILD_BROWSER_SYNTHETIC_ONLY"
+        },
+        {
+          "name": "wrong fixture capability",
+          "status": 403,
+          "expected": 403,
+          "passed": true,
+          "code": "BUILD_BROWSER_SYNTHETIC_ONLY"
+        },
+        {
+          "name": "client authority rejected",
+          "status": 400,
+          "expected": 400,
+          "passed": true,
+          "code": "VALIDATION_FAILED"
+        },
+        {
+          "name": "reserved ticket missing",
+          "status": 404,
+          "expected": 404,
+          "passed": true,
+          "code": "NOT_FOUND"
+        }
+      ]
+    },
+    {
+      "kind": "database-after-denials",
+      "notifications": [
+        {
+          "id": "306",
+          "source_module": "organization",
+          "membership_id": 139,
+          "is_read": false,
+          "reason": "You received \"Organization setup completed\" Delivered via IN_APP, EMAIL.",
+          "deleted": false
+        }
+      ],
+      "watermarks": []
+    },
+    {
+      "kind": "fixture-create",
+      "status": 200,
+      "result": {
+        "notificationId": 307,
+        "created": true
+      }
+    },
+    {
+      "kind": "fixture-retry",
+      "status": 200,
+      "result": {
+        "notificationId": 307,
+        "created": false
+      }
+    },
+    {
+      "kind": "database-after-fixture",
+      "notifications": [
+        {
+          "id": "306",
+          "source_module": "organization",
+          "membership_id": 139,
+          "is_read": false,
+          "reason": "You received \"Organization setup completed\" Delivered via IN_APP, EMAIL.",
+          "deleted": false
+        },
+        {
+          "id": "307",
+          "source_module": "build",
+          "membership_id": 139,
+          "is_read": false,
+          "reason": "BUILD_BROWSER_NOTIFICATION_FIXTURE",
+          "deleted": false
+        }
+      ],
+      "watermarks": []
+    },
+    {
+      "kind": "scoped-read-all",
+      "status": 200,
+      "contract": true,
+      "immediate": [
+        {
+          "status": 200,
+          "value": 1
+        },
+        {
+          "status": 200,
+          "value": 0
+        },
+        {
+          "status": 200,
+          "value": [
+            {
+              "id": 307,
+              "sourceModule": "build",
+              "isRead": true
+            },
+            {
+              "id": 306,
+              "sourceModule": "organization",
+              "isRead": false
+            }
+          ]
+        }
+      ],
+      "database": {
+        "notifications": [
+          {
+            "id": "306",
+            "source_module": "organization",
+            "membership_id": 139,
+            "is_read": false,
+            "reason": "You received \"Organization setup completed\" Delivered via IN_APP, EMAIL.",
+            "deleted": false
+          },
+          {
+            "id": "307",
+            "source_module": "build",
+            "membership_id": 139,
+            "is_read": true,
+            "reason": "BUILD_BROWSER_NOTIFICATION_FIXTURE",
+            "deleted": false
+          }
+        ],
+        "watermarks": []
+      },
+      "events": []
+    },
+    {
+      "kind": "scoped-retry-and-sse",
+      "httpStatus": 200,
+      "streamStatus": 200,
+      "events": [],
+      "streamFailure": "AbortError"
+    },
+    {
+      "kind": "fixture-retry-after-read",
+      "status": 200,
+      "result": {
+        "notificationId": 307,
+        "created": false
+      },
+      "database": {
+        "notifications": [
+          {
+            "id": "306",
+            "source_module": "organization",
+            "membership_id": 139,
+            "is_read": false,
+            "reason": "You received \"Organization setup completed\" Delivered via IN_APP, EMAIL.",
+            "deleted": false
+          },
+          {
+            "id": "307",
+            "source_module": "build",
+            "membership_id": 139,
+            "is_read": true,
+            "reason": "BUILD_BROWSER_NOTIFICATION_FIXTURE",
+            "deleted": false
+          }
+        ],
+        "watermarks": []
+      }
+    },
+    {
+      "kind": "global-read-all",
+      "status": 200,
+      "contract": true,
+      "immediate": [
+        {
+          "status": 200,
+          "contract": true,
+          "value": 0
+        },
+        {
+          "status": 200,
+          "contract": true,
+          "value": 0
+        },
+        {
+          "status": 200,
+          "contract": true,
+          "value": [
+            {
+              "id": 307,
+              "sourceModule": "build",
+              "isRead": true
+            },
+            {
+              "id": 306,
+              "sourceModule": "organization",
+              "isRead": true
+            }
+          ]
+        }
+      ],
+      "database": {
+        "notifications": [
+          {
+            "id": "306",
+            "source_module": "organization",
+            "membership_id": 139,
+            "is_read": false,
+            "reason": "You received \"Organization setup completed\" Delivered via IN_APP, EMAIL.",
+            "deleted": false
+          },
+          {
+            "id": "307",
+            "source_module": "build",
+            "membership_id": 139,
+            "is_read": true,
+            "reason": "BUILD_BROWSER_NOTIFICATION_FIXTURE",
+            "deleted": false
+          }
+        ],
+        "watermarks": [
+          {
+            "last_read_notification_id": "307"
+          }
+        ]
+      }
+    },
+    {
+      "kind": "sse-frame-diagnosis",
+      "status": 200,
+      "triggerStatus": 200,
+      "frameType": "message",
+      "jsonType": "count_changed",
+      "nestedJsonType": "count_changed",
+      "namedEventAbsent": true,
+      "explanation": "Initial observer incorrectly required named SSE event lines; real count event arrived as default message with wrapped payload."
+    },
+    {
+      "kind": "real-sse-notification-before-fix",
+      "createStatus": 200,
+      "createContract": true,
+      "result": {
+        "notificationId": 308,
+        "created": true
+      },
+      "streamStatus": 200,
+      "frames": [
+        {
+          "event": "message",
+          "type": "notification",
+          "hasTopLevelNotification": false,
+          "hasNestedNotification": true
+        }
+      ],
+      "database": {
+        "notifications": [
+          {
+            "id": "306",
+            "source_module": "organization",
+            "membership_id": 139,
+            "is_read": false,
+            "reason": "You received \"Organization setup completed\" Delivered via IN_APP, EMAIL.",
+            "deleted": false
+          },
+          {
+            "id": "307",
+            "source_module": "build",
+            "membership_id": 139,
+            "is_read": true,
+            "reason": "BUILD_BROWSER_NOTIFICATION_FIXTURE",
+            "deleted": false
+          },
+          {
+            "id": "308",
+            "source_module": "build",
+            "membership_id": 139,
+            "is_read": false,
+            "reason": "BUILD_BROWSER_NOTIFICATION_FIXTURE",
+            "deleted": false
+          }
+        ],
+        "watermarks": [
+          {
+            "last_read_notification_id": "307"
+          }
+        ]
+      }
+    },
+    {
+      "kind": "real-sse-notification-after-fix",
+      "commit": "f1eecf42f",
+      "runnerPid": 20336,
+      "streamStatus": 200,
+      "replayedTokenStatus": 401,
+      "warmBuildCount": 1,
+      "createStatus": 200,
+      "createContract": true,
+      "result": {
+        "notificationId": 309,
+        "created": true
+      },
+      "buildCountAfterCreate": 2,
+      "readAllStatus": 200,
+      "readAllContract": true,
+      "frames": [
+        {
+          "event": "notification",
+          "type": "notification",
+          "notificationId": 309,
+          "hasTopLevelNotification": true,
+          "hasNestedData": false,
+          "observedAt": "2026-10-03T13:43:50.639Z"
+        },
+        {
+          "event": "count_changed",
+          "type": "count_changed",
+          "notificationId": null,
+          "hasTopLevelNotification": false,
+          "hasNestedData": false,
+          "observedAt": "2026-10-03T13:43:56.111Z"
+        }
+      ],
+      "final": [
+        {
+          "status": 200,
+          "contract": true,
+          "value": 0
+        },
+        {
+          "status": 200,
+          "contract": true,
+          "value": 0
+        },
+        {
+          "status": 200,
+          "contract": true,
+          "value": [
+            {
+              "id": 309,
+              "sourceModule": "build",
+              "isRead": true
+            },
+            {
+              "id": 308,
+              "sourceModule": "build",
+              "isRead": true
+            },
+            {
+              "id": 307,
+              "sourceModule": "build",
+              "isRead": true
+            },
+            {
+              "id": 306,
+              "sourceModule": "organization",
+              "isRead": true
+            }
+          ]
+        }
+      ],
+      "database": {
+        "notifications": [
+          {
+            "id": "306",
+            "source_module": "organization",
+            "membership_id": 139,
+            "is_read": false,
+            "reason": "You received \"Organization setup completed\" Delivered via IN_APP, EMAIL.",
+            "deleted": false
+          },
+          {
+            "id": "307",
+            "source_module": "build",
+            "membership_id": 139,
+            "is_read": true,
+            "reason": "BUILD_BROWSER_NOTIFICATION_FIXTURE",
+            "deleted": false
+          },
+          {
+            "id": "308",
+            "source_module": "build",
+            "membership_id": 139,
+            "is_read": true,
+            "reason": "BUILD_BROWSER_NOTIFICATION_FIXTURE",
+            "deleted": false
+          },
+          {
+            "id": "309",
+            "source_module": "build",
+            "membership_id": 139,
+            "is_read": true,
+            "reason": "BUILD_BROWSER_NOTIFICATION_FIXTURE",
+            "deleted": false
+          }
+        ],
+        "watermarks": [
+          {
+            "last_read_notification_id": "307"
+          }
+        ]
+      }
+    },
+    {
+      "kind": "canonical-notification-dispatch-replay",
+      "observedAt": "2026-10-03T15:06:10.752Z",
+      "runnerPid": 17416,
+      "backendRevision": "693d332d0",
+      "fixtureRevision": "702bd1d3c",
+      "replayRevision": "0c90ca9f3",
+      "task": "BT-801e948e8a67",
+      "denials": [
+        {
+          "name": "unauthenticated",
+          "status": 401
+        },
+        {
+          "name": "missing capability",
+          "status": 403
+        },
+        {
+          "name": "wrong capability",
+          "status": 403
+        },
+        {
+          "name": "client authority rejected",
+          "status": 400
+        },
+        {
+          "name": "missing reserved ticket",
+          "status": 404
+        },
+        {
+          "name": "replay absent intent",
+          "status": 409
+        },
+        {
+          "name": "GET forbidden",
+          "status": 404
+        }
+      ],
+      "afterDenials": {
+        "intents": [
+          {
+            "count": 5
+          }
+        ],
+        "deliveries": [
+          {
+            "channel": "IN_APP",
+            "count": 1
+          },
+          {
+            "channel": "EMAIL",
+            "count": 1
+          }
+        ],
+        "digests": [
+          {
+            "count": 0
+          }
+        ],
+        "queue": [
+          {
+            "channel": "EMAIL",
+            "status": "DONE",
+            "count": 1
+          }
+        ]
+      },
+      "enqueue": {
+        "httpStatus": 200,
+        "response": {
+          "outboxId": 492,
+          "state": "PENDING",
+          "action": "enqueue",
+          "created": true
+        }
+      },
+      "readAfterCommit": {
+        "notificationId": 310,
+        "deliveryId": 555,
+        "sourceModule": "build",
+        "channel": "IN_APP",
+        "priority": "LOW",
+        "privateReplayMetadataExposed": false
+      },
+      "rolloverObservation": {
+        "createdMinuteBucket": 29850659,
+        "readMinuteBucket": 29850662
+      },
+      "replay": {
+        "httpStatus": 200,
+        "response": {
+          "outboxId": 492,
+          "state": "PROCESSED",
+          "action": "replay",
+          "created": false
+        }
+      },
+      "projection": {
+        "listHttpStatus": 200,
+        "listResponseContractPassed": true,
+        "onlyBuildRows": true,
+        "includesNotification310": true,
+        "unreadCountBeforeRead": 1,
+        "readAllStatus": 200,
+        "replayAfterReadStatus": 200,
+        "unreadCountAfterRead": 0
+      },
+      "final": {
+        "intents": [
+          {
+            "id": "492",
+            "state": "PROCESSED",
+            "event_key": "build.ticket.status_changed",
+            "entity_type": "ticket",
+            "entity_id": "359",
+            "replay_version": 1,
+            "priority": "LOW",
+            "channels": [
+              "IN_APP"
+            ],
+            "exact_recipient": true
+          }
+        ],
+        "notifications": [
+          {
+            "id": "310",
+            "source_module": "build",
+            "event_key": "build.ticket.status_changed",
+            "entity_type": "ticket",
+            "entity_id": "359",
+            "priority": "LOW",
+            "channel": "IN_APP",
+            "private_metadata_exposed": false,
+            "is_read": true
+          }
+        ],
+        "linkedDeliveries": [
+          {
+            "id": "555",
+            "notification_id": "310",
+            "channel": "IN_APP",
+            "status": "DELIVERED",
+            "priority": "LOW",
+            "exact_recipient": true
+          }
+        ],
+        "totals": {
+          "intents": [
+            {
+              "count": 6
+            }
+          ],
+          "deliveries": [
+            {
+              "channel": "IN_APP",
+              "count": 2
+            },
+            {
+              "channel": "EMAIL",
+              "count": 1
+            }
+          ],
+          "digests": [
+            {
+              "count": 0
+            }
+          ],
+          "queue": [
+            {
+              "channel": "EMAIL",
+              "status": "DONE",
+              "count": 1
+            }
+          ]
+        },
+        "globalWatermark": [
+          {
+            "last_read_notification_id": "307"
+          }
+        ]
+      },
+      "queryCorrections": [
+        "First read-only recipient projection compared JSONB against text[] and failed; corrected to jsonb_build_array before the positive write.",
+        "IN_APP delivery metadata does not copy the fixture marker; delivery identity was verified through the actual same-tenant notification composite FK instead."
+      ],
+      "limits": [
+        "Owner-only reserved local fixture; not complete production event/recipient or role/tenant coverage.",
+        "Manual replay uses the canonical persisted envelope and immediate dispatcher; no outbox claim, lease, clock or attempt state was rewritten. This is not crash/worker-lease proof.",
+        "Digest preferences were absent at runtime. Dispatch-time preference changes were covered by focused real-service tests, not a live preference race.",
+        "No browser mutation proof or remote deployment/worker isolation is inferred.",
+        "Owner-policy25 edits began only after this runner boot; its future behavior is excluded."
+      ]
+    },
+    {
+      "kind": "stored-notification-read-authorization",
+      "observedAt": "2026-10-03T16:07:37.528Z",
+      "source": "e0f3de0fb38b49f17fc0c23b6bd309aa4329db78",
+      "policySource": "8db4f6dd6",
+      "runner": {
+        "pid": 24992,
+        "host": "127.0.0.1:1001",
+        "isolatedCommittedWorktree": true,
+        "health": 200,
+        "localProvidersAndWorkersDisabled": true
+      },
+      "scope": {
+        "organizationId": "114fe418-2d7d-4f86-bd85-6a0d1a0040e2",
+        "membershipId": 139,
+        "projectId": 54,
+        "ticketId": 358
+      },
+      "baseline": [
+        {
+          "path": "/notifications?sourceModule=build&limit=2",
+          "status": 200,
+          "contract": true,
+          "ids": [
+            310,
+            309
+          ],
+          "sources": [
+            "build"
+          ],
+          "hasMore": true,
+          "nextCursor": 309
+        },
+        {
+          "path": "/notifications?limit=20",
+          "status": 200,
+          "contract": true,
+          "ids": [
+            310,
+            309,
+            308,
+            307,
+            306
+          ],
+          "sources": [
+            "build",
+            "organization"
+          ],
+          "hasMore": false,
+          "nextCursor": null
+        },
+        {
+          "path": "/notifications/unread-count?sourceModule=build",
+          "status": 200,
+          "contract": true,
+          "count": 0
+        },
+        {
+          "path": "/notifications/unread-count",
+          "status": 200,
+          "contract": true,
+          "count": 0
+        },
+        {
+          "path": "/me/inbox?limit=20",
+          "status": 200,
+          "contract": true,
+          "ids": [
+            310,
+            309,
+            308,
+            307,
+            306
+          ],
+          "sources": [
+            "build",
+            "organization"
+          ],
+          "hasMore": false,
+          "nextCursor": null
+        },
+        {
+          "path": "/me/inbox/count",
+          "status": 200,
+          "contract": true,
+          "count": 0
+        }
+      ],
+      "restrictedBaseline": [
+        {
+          "path": "/notifications?sourceModule=build&limit=1",
+          "status": 200,
+          "contract": true,
+          "ids": [],
+          "sources": [],
+          "hasMore": false,
+          "nextCursor": null
+        },
+        {
+          "path": "/notifications?limit=1",
+          "status": 200,
+          "contract": true,
+          "ids": [
+            306
+          ],
+          "sources": [
+            "organization"
+          ],
+          "hasMore": false,
+          "nextCursor": null
+        },
+        {
+          "path": "/notifications/unread-count?sourceModule=build",
+          "status": 200,
+          "contract": true,
+          "count": 0
+        }
+      ],
+      "positivePat": {
+        "status": 200,
+        "ids": [
+          310,
+          309
+        ]
+      },
+      "cursor": {
+        "status": 200,
+        "ids": [
+          308,
+          307
+        ],
+        "nextCursor": null,
+        "hasMore": false
+      },
+      "freshIntent": {
+        "status": 200,
+        "outboxId": 495,
+        "state": "PENDING",
+        "action": "enqueue",
+        "created": true
+      },
+      "matrix": [
+        {
+          "actor": "owner",
+          "path": "/notifications?sourceModule=build&section=UNREAD&limit=1",
+          "status": 200,
+          "contract": true,
+          "ids": [
+            311
+          ],
+          "nextCursor": null,
+          "hasMore": false
+        },
+        {
+          "actor": "owner",
+          "path": "/notifications/unread-count?sourceModule=build",
+          "status": 200,
+          "contract": true,
+          "count": 1
+        },
+        {
+          "actor": "owner",
+          "path": "/me/inbox/unified?kinds=notification&module=build&unreadOnly=true&limit=1",
+          "status": 200,
+          "contract": true,
+          "ids": [
+            311
+          ],
+          "hasMore": false,
+          "degraded": false
+        },
+        {
+          "actor": "owner",
+          "path": "/me/inbox/unified/count",
+          "status": 200,
+          "contract": true,
+          "notification": 1,
+          "total": 1
+        },
+        {
+          "actor": "restricted-pat",
+          "path": "/notifications?sourceModule=build&section=UNREAD&limit=1",
+          "status": 200,
+          "contract": true,
+          "ids": [],
+          "nextCursor": null,
+          "hasMore": false
+        },
+        {
+          "actor": "restricted-pat",
+          "path": "/notifications/unread-count?sourceModule=build",
+          "status": 200,
+          "contract": true,
+          "count": 0
+        },
+        {
+          "actor": "restricted-pat",
+          "path": "/me/inbox/unified?kinds=notification&module=build&unreadOnly=true&limit=1",
+          "status": 200,
+          "contract": true,
+          "ids": [],
+          "hasMore": false,
+          "degraded": false
+        },
+        {
+          "actor": "restricted-pat",
+          "path": "/me/inbox/unified/count",
+          "status": 200,
+          "contract": true,
+          "notification": 0,
+          "total": 0
+        },
+        {
+          "actor": "permitted-pat",
+          "path": "/notifications?sourceModule=build&section=UNREAD&limit=1",
+          "status": 200,
+          "contract": true,
+          "ids": [
+            311
+          ],
+          "nextCursor": null,
+          "hasMore": false
+        },
+        {
+          "actor": "permitted-pat",
+          "path": "/notifications/unread-count?sourceModule=build",
+          "status": 200,
+          "contract": true,
+          "count": 1
+        },
+        {
+          "actor": "permitted-pat",
+          "path": "/me/inbox/unified?kinds=notification&module=build&unreadOnly=true&limit=1",
+          "status": 200,
+          "contract": true,
+          "ids": [
+            311
+          ],
+          "hasMore": false,
+          "degraded": false
+        },
+        {
+          "actor": "permitted-pat",
+          "path": "/me/inbox/unified/count",
+          "status": 200,
+          "contract": true,
+          "notification": 1,
+          "total": 1
+        }
+      ],
+      "denials": [
+        {
+          "name": "missing session",
+          "status": 401,
+          "code": "UNAUTHORIZED"
+        },
+        {
+          "name": "client organization query",
+          "status": 400,
+          "code": "VALIDATION_FAILED"
+        },
+        {
+          "name": "restricted ticket endpoint",
+          "status": 403,
+          "code": "FORBIDDEN"
+        }
+      ],
+      "persistedBeforeReadAll": {
+        "notifications": [
+          {
+            "id": "306",
+            "source_module": "organization",
+            "event_key": "organization.setup.completed",
+            "entity_type": "organization",
+            "entity_id": "114fe418-2d7d-4f86-bd85-6a0d1a0040e2",
+            "is_read": false
+          },
+          {
+            "id": "310",
+            "source_module": "build",
+            "event_key": "build.ticket.status_changed",
+            "entity_type": "ticket",
+            "entity_id": "359",
+            "is_read": true
+          },
+          {
+            "id": "311",
+            "source_module": "build",
+            "event_key": "build.ticket.status_changed",
+            "entity_type": "ticket",
+            "entity_id": "358",
+            "is_read": false
+          }
+        ],
+        "intent": [
+          {
+            "id": "495",
+            "state": "PROCESSED",
+            "event_key": "build.ticket.status_changed",
+            "entity_type": "ticket",
+            "entity_id": "358"
+          }
+        ],
+        "delivery": [
+          {
+            "id": "558",
+            "notification_id": "311",
+            "channel": "IN_APP",
+            "status": "DELIVERED"
+          }
+        ],
+        "watermark": [
+          {
+            "last_read_notification_id": "307"
+          }
+        ]
+      },
+      "cleanup": {
+        "readAllStatus": 200,
+        "readAllContract": true,
+        "count": 0,
+        "tokens": [
+          {
+            "id": "36640b30-6a11-404b-abfb-b1e51caec9fa",
+            "revokeStatus": 204,
+            "afterRevocationStatus": 401,
+            "code": "UNAUTHORIZED"
+          },
+          {
+            "id": "a266ec4a-e2cc-45b6-b0fa-b4a9cdf0106b",
+            "revokeStatus": 204,
+            "afterRevocationStatus": 401,
+            "code": "UNAUTHORIZED"
+          }
+        ],
+        "persisted": {
+          "notifications": [
+            {
+              "id": "306",
+              "is_read": false
+            },
+            {
+              "id": "307",
+              "is_read": true
+            },
+            {
+              "id": "308",
+              "is_read": true
+            },
+            {
+              "id": "309",
+              "is_read": true
+            },
+            {
+              "id": "310",
+              "is_read": true
+            },
+            {
+              "id": "311",
+              "is_read": true
+            }
+          ],
+          "watermark": [
+            {
+              "last_read_notification_id": "307"
+            }
+          ],
+          "tokens": [
+            {
+              "id": "36640b30-6a11-404b-abfb-b1e51caec9fa",
+              "revoked": true
+            },
+            {
+              "id": "a266ec4a-e2cc-45b6-b0fa-b4a9cdf0106b",
+              "revoked": true
+            }
+          ]
+        }
+      },
+      "harnessCorrections": [
+        "Initial notification contract parse incorrectly included the success envelope; corrected to canonical payload before assertions.",
+        "Token server schema uses Date values; wire verification uses its published ISO datetime fields.",
+        "Attempt with unrecognized build:projects:view was rejected 400; recreated using catalog build:view and build:tickets:view."
+      ],
+      "limitations": [
+        "Owner and two personal-token scope variants only; no nonowner, cross-tenant or assignment-revocation matrix.",
+        "No browser or deployment proof; frontend1000 uses deployed backend.",
+        "No actual owner-query cost, worker crash/lease recovery, cache freshness ceiling, SSE authorization or AI consumer proof.",
+        "Temporary tokens are revoked; durable synthetic notification311, intent495 and delivery558 remain as evidence."
+      ],
+      "principals": [
+        {
+          "label": "owner",
+          "kind": "human-session",
+          "membershipId": 139
+        },
+        {
+          "label": "restricted-pat",
+          "kind": "personal-token",
+          "membershipId": 139,
+          "scopes": [
+            "build:access:view"
+          ]
+        },
+        {
+          "label": "permitted-pat",
+          "kind": "personal-token",
+          "membershipId": 139,
+          "scopes": [
+            "build:view",
+            "build:tickets:view"
+          ]
+        }
+      ],
+      "independentReview": {
+        "reviewer": "scoped_activation_dispatch",
+        "result": "clear for recorded bounded scope; source and evidence consistency review, no additional DB/browser calls"
+      }
+    },
+    {
+      "kind": "stored-notification-cross-tenant-isolation",
+      "observedAt": "2026-10-03T16:39:51.091Z",
+      "classification": "Current verified",
+      "runtime": {
+        "backendCommit": "e0f3de0fb38b49f17fc0c23b6bd309aa4329db78",
+        "pid": 24992,
+        "baseUrl": "http://127.0.0.1:1001"
+      },
+      "scope": "Two synthetic organization owners; current Build and global notification reads plus no-op Build-scoped read-all",
+      "activation": {
+        "emailOtpRequestStatus": 200,
+        "emailOtpVerifyStatus": 200,
+        "magicVerifyStatus": 200,
+        "setupStatus": 201,
+        "setupContract": true,
+        "sessionExchangeStatus": 200,
+        "orgId": "a3ee7aa5-3005-4c3b-a4c5-db16151d0a29",
+        "membershipId": 140,
+        "notificationId": 312
+      },
+      "reads": [
+        {
+          "path": "/me/inbox/unified?module=build&limit=2",
+          "status": 200,
+          "contract": true,
+          "ids": [],
+          "degraded": false
+        },
+        {
+          "path": "/me/inbox/unified?limit=2",
+          "status": 200,
+          "contract": true,
+          "ids": [
+            312
+          ],
+          "degraded": false
+        },
+        {
+          "path": "/me/inbox/unified/count",
+          "status": 200,
+          "contract": true,
+          "counts": {
+            "notification": 1,
+            "mail": 0,
+            "approval": 0,
+            "total": 1,
+            "mailExact": true,
+            "approvalExact": true
+          }
+        },
+        {
+          "path": "/me/inbox?limit=2",
+          "status": 200,
+          "contract": true,
+          "ids": [
+            312
+          ]
+        },
+        {
+          "path": "/notifications/unread-count?sourceModule=build",
+          "status": 200,
+          "contract": true,
+          "counts": {
+            "count": 0
+          }
+        }
+      ],
+      "negativeChecks": [
+        {
+          "action": "Second tenant reads first tenant project54/ticket358",
+          "status": 404,
+          "method": "GET",
+          "path": "/build/54/tickets/358"
+        },
+        {
+          "action": "Client-supplied orgId query rejected",
+          "status": 400,
+          "method": "GET",
+          "path": "/notifications?orgId=114fe418-2d7d-4f86-bd85-6a0d1a0040e2"
+        }
+      ],
+      "scopedMutation": {
+        "path": "/notifications/source/build/read-all",
+        "status": 200,
+        "contract": true,
+        "refreshRows": [
+          {
+            "id": 312,
+            "isRead": false,
+            "sourceModule": "organization"
+          }
+        ],
+        "firstTenantReadIds": [
+          311,
+          310,
+          309,
+          308,
+          307,
+          306
+        ]
+      },
+      "database": {
+        "role": {
+          "app": true,
+          "scoped": true,
+          "readonly": true
+        },
+        "scope": {
+          "id": "a3ee7aa5-3005-4c3b-a4c5-db16151d0a29",
+          "name": "Build verification Inbox isolation 20261003",
+          "slug": "build-verification-inbox-isolation-20261003-a3ee7aa530054c3ba4c5db16151d0a29",
+          "onboarded": true,
+          "membership_id": 140,
+          "is_owner": true,
+          "status": "ACTIVE"
+        },
+        "secondTenant": {
+          "rows": [
+            {
+              "id": "312",
+              "org_id": "a3ee7aa5-3005-4c3b-a4c5-db16151d0a29",
+              "membership_id": 140,
+              "source_module": "organization",
+              "event_key": "organization.setup.completed",
+              "is_read": false,
+              "live": true
+            }
+          ],
+          "watermark": [],
+          "foreign": {
+            "visible": 0
+          }
+        },
+        "originalTenant": {
+          "rows": [
+            {
+              "id": "306",
+              "is_read": false,
+              "source_module": "organization"
+            },
+            {
+              "id": "307",
+              "is_read": true,
+              "source_module": "build"
+            },
+            {
+              "id": "308",
+              "is_read": true,
+              "source_module": "build"
+            },
+            {
+              "id": "309",
+              "is_read": true,
+              "source_module": "build"
+            },
+            {
+              "id": "310",
+              "is_read": true,
+              "source_module": "build"
+            },
+            {
+              "id": "311",
+              "is_read": true,
+              "source_module": "build"
+            }
+          ],
+          "watermarks": [
+            {
+              "last_read_notification_id": "307"
+            }
+          ]
+        }
+      },
+      "harnessCorrections": [
+        "Captured mail code isolated from visible HTML; no secrets printed.",
+        "Initial unified queries used flat /me/inbox path and received400; corrected to canonical /me/inbox/unified?module=build.",
+        "Initial read-only watermark query used non-existent last_read_id; transaction failed without writes, corrected to schema last_read_notification_id."
+      ],
+      "limitations": [
+        "No browser, mobile, deployment or worker recovery proof.",
+        "Second tenant has organization notification312 as positive read control and no Build records; no nonowner or own/team/project-revocation matrix.",
+        "Runtime predates AI28 and stream29; this observation does not verify them.",
+        "Synthetic account, organization, membership and notification retained as evidence; no live ticket comments or external mail."
+      ],
+      "independentReview": {
+        "reviewer": "scoped_activation_dispatch",
+        "result": "clear for bounded recorded scope; source/schema/evidence review, no additional browser or database calls"
+      }
+    },
+    {
+      "kind": "id-only-stream-and-authorized-hydration",
+      "observedAt": "2026-10-03T16:57:32.816Z",
+      "classification": "Current verified",
+      "runtime": {
+        "backendCommit": "efcb686814d6816d6d2ad9b27b4d300ad474c3ca",
+        "pid": 8804,
+        "baseUrl": "http://127.0.0.1:1001"
+      },
+      "scope": "Two synthetic owner streams, current canonical hydration reads and one restricted personal token; no browser",
+      "stream": {
+        "ownerStatus": 200,
+        "otherTenantStatus": 200,
+        "notificationFrames": [
+          {
+            "type": "notification",
+            "notification": {
+              "id": 313
+            }
+          }
+        ],
+        "countFrames": [
+          {
+            "type": "count_changed"
+          }
+        ],
+        "ownerHeartbeat": true,
+        "otherTenantHeartbeat": true,
+        "otherTenantNotificationFrames": 0,
+        "consumedTokenStatus": 401,
+        "readError": null,
+        "closed": true
+      },
+      "dispatch": {
+        "method": "POST",
+        "path": "/__build-verification/notifications/dispatch-fixture",
+        "body": {
+          "projectId": 54,
+          "ticketId": 357,
+          "action": "enqueue"
+        },
+        "status": 200,
+        "response": {
+          "outboxId": 497,
+          "state": "PENDING",
+          "action": "enqueue",
+          "created": true
+        }
+      },
+      "hydration": [
+        {
+          "label": "owner-unread",
+          "path": "/notifications?section=UNREAD&ids=313&limit=1",
+          "status": 200,
+          "contract": true,
+          "ids": [
+            313
+          ]
+        },
+        {
+          "label": "cross-tenant-id",
+          "path": "/notifications?section=UNREAD&ids=313&limit=1",
+          "status": 200,
+          "contract": true,
+          "ids": []
+        },
+        {
+          "label": "duplicate-ids",
+          "path": "/notifications?ids=313,313",
+          "status": 400
+        },
+        {
+          "label": "unsafe-id",
+          "path": "/notifications?ids=9007199254740992",
+          "status": 400
+        },
+        {
+          "label": "bigint-compatible-miss",
+          "path": "/notifications?ids=2147483648",
+          "status": 200,
+          "contract": true,
+          "ids": []
+        },
+        {
+          "label": "auth-required",
+          "path": "/notifications?ids=313",
+          "status": 401
+        }
+      ],
+      "restricted": {
+        "tokenId": "45d32e0a-ddfa-447b-b4e8-d1e69c568c9f",
+        "scopes": [
+          "build:access:view"
+        ],
+        "creationStatus": 201,
+        "creationWireContract": true,
+        "path": "/notifications?section=UNREAD&ids=313&limit=1",
+        "status": 200,
+        "contract": true,
+        "ids": [],
+        "ticketPath": "/build/54/tickets/357",
+        "ticketStatus": 403,
+        "revokeStatus": 204,
+        "afterRevoke": 401
+      },
+      "databaseBefore": {
+        "notification": [
+          {
+            "id": "313",
+            "org_id": "114fe418-2d7d-4f86-bd85-6a0d1a0040e2",
+            "membership_id": 139,
+            "source_module": "build",
+            "event_key": "build.ticket.status_changed",
+            "entity_id": "357",
+            "is_read": false,
+            "live": true
+          }
+        ],
+        "outbox": [
+          {
+            "id": "497",
+            "state": "PROCESSED",
+            "entity_id": "357",
+            "org_id": "114fe418-2d7d-4f86-bd85-6a0d1a0040e2"
+          }
+        ]
+      },
+      "readMutation": {
+        "path": "/notifications/source/build/read-all",
+        "status": 200,
+        "contract": true,
+        "refreshPath": "/notifications?section=UNREAD&ids=313&limit=1",
+        "refreshStatus": 200,
+        "refreshContract": true,
+        "refreshIds": []
+      },
+      "databaseAfter": {
+        "notification": [
+          {
+            "id": "306",
+            "is_read": false,
+            "source_module": "organization"
+          },
+          {
+            "id": "313",
+            "is_read": true,
+            "source_module": "build"
+          }
+        ],
+        "watermark": [
+          {
+            "last_read_notification_id": "307"
+          }
+        ],
+        "delivery": [
+          {
+            "id": "561",
+            "notification_id": "313",
+            "channel": "IN_APP",
+            "status": "DELIVERED"
+          }
+        ],
+        "token": [
+          {
+            "id": "45d32e0a-ddfa-447b-b4e8-d1e69c568c9f",
+            "revoked": true
+          }
+        ]
+      },
+      "harnessCorrections": [
+        "Initial TextDecoderStream was unavailable in the REPL sandbox; used native node:stream/web decoder without changing application source.",
+        "Ticket359 already had the exact deduped intent492; enqueue returned200 created:false, no new event. Read-only fixture inventory identified ticket357 for new intent497.",
+        "Immediate unread read before asynchronous after-commit dispatch returned empty; subsequent read and independent persisted state proved delivery."
+      ],
+      "limitations": [
+        "Not frontend30 browser/toast, mobile, deployment or full role/object-revocation proof.",
+        "Guarded dispatch creates LOW synthetic notices; live toast display requires a separate matching frontend and non-LOW domain action.",
+        "No worker crash recovery, query-cost measurement or operational fanout proof.",
+        "Synthetic intent497, notice313, delivery561 retained; temporary token revoked and both streams closed."
+      ],
+      "independentReview": {
+        "reviewer": "scoped_activation_dispatch",
+        "result": "clear for bounded source/schema/evidence consistency; no additional DB/browser calls, no broad task closure"
+      }
+    },
+    {
+      "name": "triage-query-contract-read-smoke",
+      "classification": "Current verified",
+      "recordedAt": "2026-10-03T17:31:56.035Z",
+      "backendSourceCommit": "f2ec6c210",
+      "runnerPid": 25784,
+      "baseUrl": "http://127.0.0.1:1001",
+      "actions": [
+        {
+          "name": "owner-active",
+          "path": "/notifications?sourceModule=build&section=ALL&limit=20",
+          "status": 200,
+          "contractValid": true,
+          "ids": [
+            313,
+            311,
+            310,
+            309,
+            308,
+            307
+          ],
+          "hasMore": false
+        },
+        {
+          "name": "owner-later",
+          "path": "/notifications?sourceModule=build&section=SNOOZED&limit=20",
+          "status": 200,
+          "contractValid": true,
+          "ids": [],
+          "hasMore": false
+        },
+        {
+          "name": "owner-done",
+          "path": "/notifications?sourceModule=build&section=ARCHIVED&limit=20",
+          "status": 200,
+          "contractValid": true,
+          "ids": [],
+          "hasMore": false
+        },
+        {
+          "name": "foreign-later",
+          "path": "/notifications?sourceModule=build&section=SNOOZED&ids=313&limit=20",
+          "status": 200,
+          "contractValid": true,
+          "ids": [],
+          "hasMore": false
+        },
+        {
+          "name": "invalid-section",
+          "path": "/notifications?sourceModule=build&section=LATER&limit=20",
+          "status": 400,
+          "contractValid": false
+        },
+        {
+          "name": "no-auth",
+          "path": "/notifications?sourceModule=build&section=SNOOZED&limit=20",
+          "status": 401,
+          "contractValid": false
+        }
+      ],
+      "database": {
+        "transaction": "streamline_app READ ONLY; reserved Flow02 tenant/actor guard passed",
+        "rows": [
+          {
+            "id": 306,
+            "source_module": "organization",
+            "is_read": false,
+            "archived_at": null,
+            "snoozed_until": null
+          },
+          {
+            "id": 307,
+            "source_module": "build",
+            "is_read": true,
+            "archived_at": null,
+            "snoozed_until": null
+          },
+          {
+            "id": 308,
+            "source_module": "build",
+            "is_read": true,
+            "archived_at": null,
+            "snoozed_until": null
+          },
+          {
+            "id": 309,
+            "source_module": "build",
+            "is_read": true,
+            "archived_at": null,
+            "snoozed_until": null
+          },
+          {
+            "id": 310,
+            "source_module": "build",
+            "is_read": true,
+            "archived_at": null,
+            "snoozed_until": null
+          },
+          {
+            "id": 311,
+            "source_module": "build",
+            "is_read": true,
+            "archived_at": null,
+            "snoozed_until": null
+          },
+          {
+            "id": 313,
+            "source_module": "build",
+            "is_read": true,
+            "archived_at": null,
+            "snoozed_until": null
+          }
+        ]
+      },
+      "runnerHealth": {
+        "health": 200,
+        "ready": 200
+      },
+      "limitations": [
+        "No notification mutation was executed in this observation.",
+        "Later and Done are empty controls only; they do not prove persisted snooze/archive transitions or a positive foreign-tenant Later isolation case.",
+        "Current Build lifecycle boundary still refuses archive/snooze writes until separately reviewed.",
+        "Browser/mobile, complete role/object revocation, cache/event transitions, query budgets, deployment and operations remain open."
+      ],
+      "harnessCorrections": [
+        "First health probes preceded listening; later /health and /health/ready returned200. /health/live returned404 because it is not a declared route."
+      ],
+      "independentReview": {
+        "reviewer": "scoped_activation_dispatch",
+        "result": "clear for bounded source/schema/evidence consistency; no additional database/browser calls and no full task closure"
+      }
+    },
+    {
+      "name": "synthetic-member-invite-and-unassigned-module-denial",
+      "classification": "Current verified",
+      "recordedAt": "2026-10-03T18:11:53.711Z",
+      "backendSourceCommit": "f2ec6c210",
+      "runnerPid": 25784,
+      "baseUrl": "http://127.0.0.1:1001",
+      "reservedRecords": {
+        "organizationId": "114fe418-2d7d-4f86-bd85-6a0d1a0040e2",
+        "invitationId": "8ec14496-c3c8-4e7b-9289-a0aaca97b75d",
+        "membershipId": 141,
+        "userId": "c462911b-9e11-4f22-a182-b908e993b182",
+        "priorOrganizationId": "a3ee7aa5-3005-4c3b-a4c5-db16151d0a29",
+        "priorMembershipId": 140,
+        "projectId": 54
+      },
+      "actions": {
+        "createInvitation": {
+          "status": 201,
+          "contractValid": true,
+          "role": "MEMBER",
+          "moduleAccessOmitted": true,
+          "resent": false
+        },
+        "validateInvitation": {
+          "status": 200,
+          "contractValid": true,
+          "existingAccount": true
+        },
+        "requestInvitationOtp": {
+          "status": 200,
+          "contractValid": true,
+          "transport": "local captured mail only"
+        },
+        "acceptWithoutOtp": {
+          "status": 400,
+          "code": "BAD_REQUEST"
+        },
+        "acceptWithOtp": {
+          "status": 200,
+          "contractValid": true
+        },
+        "verifyIssuedMagicLink": {
+          "status": 200,
+          "contractValid": true,
+          "expectedOrganization": true,
+          "expectedUser": true
+        },
+        "reuseIssuedMagicLink": {
+          "status": 401,
+          "code": "AUTH_TOKEN_EXPIRED"
+        },
+        "sessionExchange": {
+          "status": 200
+        },
+        "unassignedBuildProject": {
+          "status": 403,
+          "code": "FORBIDDEN"
+        },
+        "buildNoticeRead": {
+          "status": 200,
+          "contractValid": true,
+          "ids": []
+        },
+        "globalNoticeRead": {
+          "status": 200,
+          "contractValid": true,
+          "ids": []
+        },
+        "createInvitationKeyedReplay": {
+          "status": 201,
+          "contractValid": true,
+          "sameInvitation": true
+        },
+        "acceptConsumedInvitation": {
+          "status": 404,
+          "code": "NOT_FOUND"
+        }
+      },
+      "database": {
+        "mode": "READ ONLY application role; reserved organization and account preflight; no superuser or BYPASSRLS",
+        "invitationBeforeAcceptance": [
+          {
+            "id": "8ec14496-c3c8-4e7b-9289-a0aaca97b75d",
+            "org_id": "114fe418-2d7d-4f86-bd85-6a0d1a0040e2",
+            "status": "PENDING",
+            "role": "MEMBER",
+            "accepted_membership_id": null,
+            "module_assignments": 0
+          }
+        ],
+        "otpBeforeAcceptance": [
+          {
+            "id": 10,
+            "invitation_id": "8ec14496-c3c8-4e7b-9289-a0aaca97b75d",
+            "attempts": 0,
+            "used_at": null,
+            "future_deadline": true
+          }
+        ],
+        "acceptedMembership": [
+          {
+            "id": "8ec14496-c3c8-4e7b-9289-a0aaca97b75d",
+            "status": "ACCEPTED",
+            "accepted_membership_id": 141,
+            "user_id": "c462911b-9e11-4f22-a182-b908e993b182",
+            "membership_status": "ACTIVE",
+            "role": "MEMBER",
+            "invited_module_assignments": 0,
+            "consumed_codes": 1
+          }
+        ],
+        "storedAuthority": [
+          {
+            "module_overrides": 0,
+            "build_role_assignments": 0
+          }
+        ],
+        "magicLinkConsumption": [
+          {
+            "issued_for_join": 1,
+            "consumed_for_join": 1
+          }
+        ],
+        "membershipAfterReplay": [
+          {
+            "membership_count": 1,
+            "membership_id": 141
+          }
+        ]
+      },
+      "limitations": [
+        "No module assignment was performed; positive entry after assignment remains open.",
+        "No browser or mobile invitation flow was exercised.",
+        "No claim33 lifecycle mutation was executed; this runner predates that source.",
+        "Empty notification lists do not prove positive recipient visibility.",
+        "Full role/tenant transitions, client grants, deployment and operational acceptance remain open."
+      ],
+      "harnessCorrections": [
+        "The emailed frontend join link carries its capability in /invitation/:token; the canonical validation API separately accepts query.token.",
+        "Notification cursor page has nested data, hasMore and nextCursor; canonical contracts were parsed before recording IDs."
+      ],
+      "independentReview": {
+        "status": "clear for bounded recorded evidence",
+        "reviewer": "scoped_activation_dispatch",
+        "scope": "Sanitized invite, OTP, accepted Member persistence and unassigned Build denial; no full task-stage closure"
+      }
+    },
+    {
+      "name": "synthetic-build-member-assignment-and-preserved-object-scope",
+      "classification": "Current verified",
+      "recordedAt": "2026-10-03T18:51:40.193Z",
+      "backendSourceCommit": "f2ec6c210",
+      "runnerPid": 25784,
+      "baseUrl": "http://127.0.0.1:1001",
+      "reservedRecords": {
+        "organizationId": "114fe418-2d7d-4f86-bd85-6a0d1a0040e2",
+        "ownerMembershipId": 139,
+        "memberMembershipId": 141,
+        "memberAccountId": "c462911b-9e11-4f22-a182-b908e993b182",
+        "organizationRoleId": 2048,
+        "buildMemberGroupId": 2068,
+        "refusedBuildAdminGroupId": 2051,
+        "projectId": 54,
+        "ticketId": 358
+      },
+      "actions": {
+        "ownerGroupList": {
+          "status": 200,
+          "contractValid": true
+        },
+        "ownerAssignMember": {
+          "status": 201,
+          "contractValid": true,
+          "bodyAuthority": "userId and canonical groupIds; tenant and acting authority are server-derived"
+        },
+        "freshMemberPermissions": {
+          "status": 200,
+          "contractValid": true,
+          "buildView": true,
+          "accessManage": false,
+          "isOrgOwner": false,
+          "isOrgAdmin": false,
+          "isModuleOwner": false,
+          "isModuleAdmin": false
+        },
+        "memberProjectsCollection": {
+          "status": 200,
+          "contractValid": true,
+          "visibleProjectIds": [],
+          "interpretation": "Authorized empty collection; does not prove positive project-object visibility"
+        },
+        "privateProject": {
+          "status": 403,
+          "code": "PROJECTS_FORBIDDEN_PROJECT"
+        },
+        "privateTicket": {
+          "status": 403,
+          "code": "PROJECTS_FORBIDDEN_TICKET"
+        },
+        "selfEscalation": {
+          "status": 403,
+          "code": "FORBIDDEN"
+        },
+        "otherTenantProject": {
+          "status": 404,
+          "code": "PROJECTS_NOT_FOUND"
+        }
+      },
+      "database": {
+        "readRole": "streamline_app",
+        "transaction": "READ ONLY",
+        "tenantGuard": "Flow02 organization, original owner membership139 and synthetic active account checked",
+        "member": {
+          "id": 141,
+          "status": "ACTIVE",
+          "role": "MEMBER",
+          "is_owner": false
+        },
+        "organizationRoles": [
+          {
+            "id": 2048,
+            "name": "Member",
+            "module_key": null
+          }
+        ],
+        "moduleRoles": [
+          {
+            "id": 2068,
+            "name": "Build Module Member",
+            "module_key": "build"
+          }
+        ],
+        "moduleOverrides": [
+          {
+            "module_key": "build",
+            "enabled": true
+          }
+        ],
+        "observedPermissionsVersion": 13,
+        "auditRecords": [
+          {
+            "id": 930,
+            "action": "module_access.member_added",
+            "user_id": "c22bd52b-ecd5-49cb-be9a-38bb09aebe6b",
+            "target_id": "c462911b-9e11-4f22-a182-b908e993b182",
+            "group_ids": [
+              2068
+            ],
+            "created_at": "2026-10-03 18:28:47.028651"
+          }
+        ],
+        "afterDeniedEscalation": "Exactly one Build role2068; no Build Admin2051; Org Member remains nonowner"
+      },
+      "limitations": [
+        "This verifies explicit module entry plus preserved object denials, not complete role/tenant matrix",
+        "Empty project collection and empty notification pages are not positive object/notification visibility proof",
+        "No project assignment was granted and no client grant activated",
+        "No concurrent authority-transition, expiry, browser/mobile, deployment or operations proof",
+        "Observed permissions version has no captured pre-assignment comparison; version increment and complete cache/event fanout are not asserted"
+      ],
+      "harnessCorrections": [
+        "Held credentials returned401 after the initial write. Normal session exchange returned200; permission and denial assertions use subsequent renewed credentials. The cause of the earlier401 was not independently proven.",
+        "The first final-standing assertion incorrectly counted the existing structural organization Member role2048 as a Build role. The persisted rows were inspected and the assertion corrected to module_key=build; no additional product write was made."
+      ],
+      "independentReview": {
+        "status": "clear",
+        "reviewer": "scoped_activation_dispatch",
+        "scope": "Sanitized artifact and claim accuracy; prior19 unchanged versus committed HEAD; canonical denial-code source compared. Reviewer did not repeat runtime or database actions.",
+        "findings": "No credentials or false positive visibility, expiry, version-increment, cache/event fanout, browser or broad stage-closure claims."
+      }
+    },
+    {
+      "name": "real-personal-triage-persistence-retry-and-recipient-event-boundary",
+      "classification": "Current verified",
+      "recordedAt": "2026-10-03T19:24:03.907Z",
+      "backendSourceCommit": "94d32b547",
+      "lifecycleCommit": "1c673c5bd",
+      "boundaryCommit": "94d32b547",
+      "runnerPid": 6156,
+      "baseUrl": "http://127.0.0.1:1001",
+      "reservedRecords": {
+        "organizationId": "114fe418-2d7d-4f86-bd85-6a0d1a0040e2",
+        "ownerMembershipId": 139,
+        "memberMembershipId": 141,
+        "otherOwnerMembershipId": 140,
+        "otherOrganizationId": "a3ee7aa5-3005-4c3b-a4c5-db16151d0a29",
+        "notificationId": 313,
+        "foreignSyntheticNotificationId": 312,
+        "recordedMissingNotificationId": 2147483648,
+        "linkedProjectId": 54,
+        "linkedTicketId": 357
+      },
+      "health": {
+        "health": 200,
+        "ready": 200
+      },
+      "authorization": [
+        {
+          "case": "absent-auth",
+          "status": 401,
+          "code": "UNAUTHORIZED"
+        },
+        {
+          "case": "same-tenant-wrong-recipient",
+          "status": 404,
+          "code": "NOT_FOUND"
+        },
+        {
+          "case": "existing-other-tenant-target",
+          "status": 404,
+          "code": "NOT_FOUND"
+        },
+        {
+          "case": "safe-integer-missing-target-above-int32",
+          "status": 404,
+          "code": "NOT_FOUND"
+        },
+        {
+          "case": "body-authority-field",
+          "status": 400,
+          "code": "VALIDATION_FAILED"
+        },
+        {
+          "case": "new-expired-snooze",
+          "status": 400,
+          "code": "VALIDATION_FAILED"
+        }
+      ],
+      "commands": [
+        {
+          "action": "archive without key/body",
+          "status": 200,
+          "ackContractValid": true
+        },
+        {
+          "action": "repeat archive without key/body",
+          "status": 200,
+          "originalArchiveTimestampPreserved": true
+        },
+        {
+          "action": "unarchive keyed with empty object",
+          "status": 200
+        },
+        {
+          "action": "same keyed unarchive with absent body",
+          "status": 200,
+          "interpretation": "Normalized completed-key replay, not direct keyless no-op proof"
+        },
+        {
+          "action": "future snooze keyed",
+          "status": 200,
+          "deadline": "2026-10-03T19:16:33.912Z"
+        },
+        {
+          "action": "same snooze key with different valid future body",
+          "status": 422,
+          "code": "UNPROCESSABLE_ENTITY"
+        },
+        {
+          "action": "archive while snoozed",
+          "status": 200
+        },
+        {
+          "action": "restore before snooze deadline",
+          "status": 200
+        },
+        {
+          "action": "explicit unsnooze without key/body",
+          "status": 200
+        },
+        {
+          "action": "repeat unsnooze with empty object",
+          "status": 200
+        },
+        {
+          "action": "completed keyed snooze replay after its deadline and subsequent unsnooze",
+          "status": 200,
+          "ackContractValid": true,
+          "finalStateUnchanged": true
+        },
+        {
+          "action": "same expired deadline as new keyed command",
+          "status": 400,
+          "code": "VALIDATION_FAILED"
+        }
+      ],
+      "sectionReads": {
+        "afterArchive": {
+          "status": 200,
+          "contractValid": true,
+          "doneIds": [
+            313
+          ],
+          "activeStatus": 200,
+          "activeIds": []
+        },
+        "afterSnooze": {
+          "status": 200,
+          "contractValid": true,
+          "laterIds": [
+            313
+          ]
+        },
+        "archivedWhileSnoozed": {
+          "status": 200,
+          "doneIds": [
+            313
+          ]
+        },
+        "restoredBeforeDeadline": {
+          "status": 200,
+          "laterIds": [
+            313
+          ]
+        },
+        "afterUnsnooze": [
+          {
+            "section": "ALL",
+            "status": 200,
+            "contractValid": true,
+            "ids": [
+              313
+            ]
+          },
+          {
+            "section": "SNOOZED",
+            "status": 200,
+            "contractValid": true,
+            "ids": []
+          },
+          {
+            "section": "ARCHIVED",
+            "status": 200,
+            "contractValid": true,
+            "ids": []
+          }
+        ],
+        "otherTenantPositiveControl": {
+          "status": 200,
+          "contractValid": true,
+          "ids": [
+            312
+          ]
+        }
+      },
+      "database": {
+        "readRole": "streamline_app",
+        "transaction": "READ ONLY",
+        "tenantGuard": "Flow02 original active owner139 and synthetic organization/account validated",
+        "initialObservedRows": [
+          {
+            "id": "306",
+            "membership_id": 139,
+            "source_module": "organization",
+            "created_at": "2026-10-03 06:26:22.483026+00",
+            "archived_at": null,
+            "snoozed_until": null,
+            "is_read": false,
+            "pinned": false,
+            "deleted_at": null
+          },
+          {
+            "id": "307",
+            "membership_id": 139,
+            "source_module": "build",
+            "created_at": "2026-10-03 13:14:36.124372+00",
+            "archived_at": null,
+            "snoozed_until": null,
+            "is_read": true,
+            "pinned": false,
+            "deleted_at": null
+          },
+          {
+            "id": "308",
+            "membership_id": 139,
+            "source_module": "build",
+            "created_at": "2026-10-03 13:28:13.580828+00",
+            "archived_at": null,
+            "snoozed_until": null,
+            "is_read": true,
+            "pinned": false,
+            "deleted_at": null
+          },
+          {
+            "id": "309",
+            "membership_id": 139,
+            "source_module": "build",
+            "created_at": "2026-10-03 13:43:51.078071+00",
+            "archived_at": null,
+            "snoozed_until": null,
+            "is_read": true,
+            "pinned": false,
+            "deleted_at": null
+          },
+          {
+            "id": "310",
+            "membership_id": 139,
+            "source_module": "build",
+            "created_at": "2026-10-03 14:59:30.517139+00",
+            "archived_at": null,
+            "snoozed_until": null,
+            "is_read": true,
+            "pinned": false,
+            "deleted_at": null
+          },
+          {
+            "id": "311",
+            "membership_id": 139,
+            "source_module": "build",
+            "created_at": "2026-10-03 16:05:05.469114+00",
+            "archived_at": null,
+            "snoozed_until": null,
+            "is_read": true,
+            "pinned": false,
+            "deleted_at": null
+          },
+          {
+            "id": "313",
+            "membership_id": 139,
+            "source_module": "build",
+            "created_at": "2026-10-03 16:53:20.348809+00",
+            "archived_at": null,
+            "snoozed_until": null,
+            "is_read": true,
+            "pinned": false,
+            "deleted_at": null
+          }
+        ],
+        "afterArchive": {
+          "id": "313",
+          "membership_id": 139,
+          "source_module": "build",
+          "created_at": "2026-10-03 16:53:20.348809+00",
+          "archived_at": "2026-10-03 19:13:08.981+00",
+          "snoozed_until": null,
+          "is_read": true,
+          "pinned": false,
+          "deleted_at": null
+        },
+        "afterRepeatArchive": {
+          "id": "313",
+          "membership_id": 139,
+          "source_module": "build",
+          "created_at": "2026-10-03 16:53:20.348809+00",
+          "archived_at": "2026-10-03 19:13:08.981+00",
+          "snoozed_until": null,
+          "is_read": true,
+          "pinned": false,
+          "deleted_at": null
+        },
+        "afterRestore": {
+          "id": "313",
+          "membership_id": 139,
+          "source_module": "build",
+          "created_at": "2026-10-03 16:53:20.348809+00",
+          "archived_at": null,
+          "snoozed_until": null,
+          "is_read": true,
+          "pinned": false,
+          "deleted_at": null
+        },
+        "afterSnooze": {
+          "id": "313",
+          "membership_id": 139,
+          "source_module": "build",
+          "created_at": "2026-10-03 16:53:20.348809+00",
+          "archived_at": null,
+          "snoozed_until": "2026-10-03 19:16:33.912+00",
+          "is_read": true,
+          "pinned": false,
+          "deleted_at": null
+        },
+        "archivedWhileSnoozed": {
+          "id": "313",
+          "membership_id": 139,
+          "source_module": "build",
+          "created_at": "2026-10-03 16:53:20.348809+00",
+          "archived_at": "2026-10-03 19:15:58.248+00",
+          "snoozed_until": "2026-10-03 19:16:33.912+00",
+          "is_read": true,
+          "pinned": false,
+          "deleted_at": null
+        },
+        "restoredWhileSnoozed": {
+          "id": "313",
+          "membership_id": 139,
+          "source_module": "build",
+          "created_at": "2026-10-03 16:53:20.348809+00",
+          "archived_at": null,
+          "snoozed_until": "2026-10-03 19:16:33.912+00",
+          "is_read": true,
+          "pinned": false,
+          "deleted_at": null
+        },
+        "afterUnsnooze": {
+          "id": "313",
+          "membership_id": 139,
+          "source_module": "build",
+          "created_at": "2026-10-03 16:53:20.348809+00",
+          "archived_at": null,
+          "snoozed_until": null,
+          "is_read": true,
+          "pinned": false,
+          "deleted_at": null
+        },
+        "afterRetry": {
+          "id": "313",
+          "membership_id": 139,
+          "source_module": "build",
+          "created_at": "2026-10-03 16:53:20.348809+00",
+          "archived_at": null,
+          "snoozed_until": null,
+          "is_read": true,
+          "pinned": false,
+          "deleted_at": null
+        },
+        "microsecondPartitionTimestampPreserved": "2026-10-03 16:53:20.348809+00",
+        "unrelatedObservedRowsUnchanged": true,
+        "globalWatermark": [
+          {
+            "membership_id": 139,
+            "last_read_notification_id": "307"
+          }
+        ],
+        "watermarkUnchanged": true,
+        "observedFieldsRestored": true
+      },
+      "counts": {
+        "initial": [
+          {
+            "scope": "global",
+            "status": 200,
+            "contractValid": true,
+            "count": 1
+          },
+          {
+            "scope": "build",
+            "status": 200,
+            "contractValid": true,
+            "count": 0
+          }
+        ],
+        "final": [
+          {
+            "scope": "global",
+            "status": 200,
+            "contractValid": true,
+            "count": 1
+          },
+          {
+            "scope": "build",
+            "status": 200,
+            "contractValid": true,
+            "count": 0
+          }
+        ],
+        "interpretation": "Target was already read, so both counts remain global1/build0; unread badge numeric decrease/increase is not proven"
+      },
+      "streams": {
+        "statuses": [
+          200,
+          200,
+          200
+        ],
+        "ownerCountEvents": 6,
+        "ownerFrameShapes": [
+          {
+            "event": "count_changed",
+            "type": "count_changed",
+            "keys": [
+              "type"
+            ]
+          },
+          {
+            "event": "count_changed",
+            "type": "count_changed",
+            "keys": [
+              "type"
+            ]
+          },
+          {
+            "event": "count_changed",
+            "type": "count_changed",
+            "keys": [
+              "type"
+            ]
+          },
+          {
+            "event": "count_changed",
+            "type": "count_changed",
+            "keys": [
+              "type"
+            ]
+          },
+          {
+            "event": "count_changed",
+            "type": "count_changed",
+            "keys": [
+              "type"
+            ]
+          },
+          {
+            "event": "count_changed",
+            "type": "count_changed",
+            "keys": [
+              "type"
+            ]
+          }
+        ],
+        "sameTenantMemberEventCount": 0,
+        "otherTenantOwnerEventCount": 0,
+        "errors": [],
+        "allStreamsClosed": true
+      },
+      "limitations": [
+        "This is bounded owner command/recipient/tenant proof, not the complete role/current-membership/account/organization revocation matrix",
+        "Only recorded fields and watermark were compared; updated_at and unobserved metadata are not claimed restored",
+        "Wrong-tenant positive notification312 control was an authorized API reread, not an independent second-tenant database full-field comparison",
+        "No unread target/count numeric transition, keyless Restore no-op or same-future-deadline keyless Snooze no-op runtime proof",
+        "SSE six effects match six changed states; no durable recovery, physical cache deletion, expiry event/timer, audit/CAS, adversarial concurrency or rollback injection was observed",
+        "Matching frontend browser/mobile, exact-version approvals, deployment and operations remain unverified",
+        "Canonical artifact candidate freshness passed but independent semantic review found optional header/body mismatch; uncommitted generation awaits claimed38 correction"
+      ],
+      "harnessCorrections": [
+        "A first READ ONLY query used the nonexistent notification_read_cursors name; it rolled back and was repeated using the inspected canonical notification_read_watermarks schema. No product write came from that failed read.",
+        "An initial GET used nonexistent /notifications/count and returned404. Canonical /notifications/unread-count responses supply the actual count evidence; the guessed-route404 is not an authorization test.",
+        "Initial runner relaunch attempts failed in local orchestration before spawning: a reused REPL variable and an overly strict source-root equality check were corrected. The documented NODE_PATH source+dependency roots and exact invocation then launched only6156."
+      ],
+      "independentReview": {
+        "status": "clear",
+        "reviewer": "scoped_activation_dispatch",
+        "scope": "Sanitized artifact accuracy and canonical source-path/status comparison; prior20 unchanged; no repeated runtime/database actions.",
+        "findings": "Recorded persistence, microsecond locator, recipient-only event shapes, retries and denials are bounded; no false unread numeric/cache/durable/browser/deployment or full-stage closure."
+      }
+    },
+    {
+      "name": "invitation-acceptance-automatically-activates-build-member-standing",
+      "classification": "Current verified",
+      "scope": "Bounded invitation-to-Build API/application-role persistence; no browser, client or deployment closure",
+      "recordedAt": "2026-10-03T21:50:15.572Z",
+      "claimRevision": "cd0cd105a",
+      "backendSourceCommit": "120545d96c01cd188e1e81d42dc4b6a06c27324f",
+      "sourceTestRevision": "d2863e8d8957bf3c83b951bf9cb5a3fac343f680",
+      "runnerPid": 15000,
+      "runnerStopped": true,
+      "baseUrl": "http://127.0.0.1:1001",
+      "reservedRecords": {
+        "organizationId": "114fe418-2d7d-4f86-bd85-6a0d1a0040e2",
+        "ownerMembershipId": 139,
+        "invitationId": "646fe869-ffc4-4831-b604-8039146372b7",
+        "userId": "5a72d0ee-c788-420a-b471-24cac4b33acf",
+        "membershipId": 142,
+        "buildMemberRoleId": 2068,
+        "privateProjectId": 54,
+        "otherOrganizationId": "a3ee7aa5-3005-4c3b-a4c5-db16151d0a29"
+      },
+      "health": 200,
+      "commands": [
+        {
+          "case": "required-idempotency-key",
+          "status": 400,
+          "code": "BAD_REQUEST"
+        },
+        {
+          "case": "create-build-member-invitation",
+          "status": 201,
+          "canonicalContract": true,
+          "resent": false
+        },
+        {
+          "case": "completed-invite-key-replay",
+          "status": 201,
+          "sameInvitation": true
+        },
+        {
+          "case": "invalid-organization-role-validation",
+          "status": 400,
+          "code": "VALIDATION_FAILED"
+        },
+        {
+          "case": "valid-changed-request-key-conflict",
+          "status": 422,
+          "code": "UNPROCESSABLE_ENTITY"
+        },
+        {
+          "case": "normal-owner-join-link",
+          "status": 200,
+          "canonicalContract": true
+        },
+        {
+          "case": "public-pending-invitation-validation",
+          "status": 200,
+          "canonicalContract": true,
+          "freshUser": true
+        },
+        {
+          "case": "canonical-local-otp-request",
+          "status": 200,
+          "canonicalContract": true
+        },
+        {
+          "case": "missing-email-otp",
+          "status": 400,
+          "code": "BAD_REQUEST"
+        },
+        {
+          "case": "wrong-email-otp",
+          "status": 401,
+          "code": "UNAUTHORIZED"
+        },
+        {
+          "case": "correct-otp-acceptance-after-denial",
+          "status": 200,
+          "canonicalContract": true
+        },
+        {
+          "case": "accepted-invitation-replay",
+          "status": 404,
+          "code": "NOT_FOUND"
+        },
+        {
+          "case": "org-bound-magic-link-consume",
+          "status": 200,
+          "canonicalContract": true,
+          "identityMatchesPersistedMember": true
+        },
+        {
+          "case": "consumed-magic-token-replay",
+          "status": 401,
+          "code": "AUTH_TOKEN_EXPIRED"
+        },
+        {
+          "case": "valid-session-proof-foreign-organization",
+          "status": 403,
+          "code": "FORBIDDEN",
+          "productAuthorization": true
+        },
+        {
+          "case": "fresh-proof-invited-organization-control",
+          "status": 200,
+          "canonicalContract": true
+        },
+        {
+          "case": "fresh-human-member-and-access",
+          "status": 200,
+          "canonicalContracts": true,
+          "role": "MEMBER",
+          "membershipId": 142,
+          "buildAvailable": true,
+          "buildViewScope": "all",
+          "canManageOrganizationMembership": false,
+          "version": 15
+        },
+        {
+          "case": "authorized-empty-build-page",
+          "status": 200,
+          "canonicalContract": true,
+          "rows": 0
+        },
+        {
+          "case": "private-project-without-grant",
+          "status": 403,
+          "code": "PROJECTS_FORBIDDEN_PROJECT"
+        },
+        {
+          "case": "missing-project",
+          "status": 404,
+          "code": "PROJECTS_NOT_FOUND"
+        },
+        {
+          "case": "owner-project-positive-control",
+          "status": 200
+        },
+        {
+          "case": "owner-exact-invitation-read-after-write",
+          "status": 200,
+          "rows": 1,
+          "sameInvitation": true
+        },
+        {
+          "case": "other-organization-invitation-query",
+          "status": 200,
+          "rows": 0
+        },
+        {
+          "case": "member-invitation-management-read-denial",
+          "status": 403,
+          "code": "FORBIDDEN"
+        },
+        {
+          "case": "member-invitation-mutation-denial",
+          "status": 403,
+          "code": "FORBIDDEN",
+          "productAuthorization": true
+        },
+        {
+          "case": "other-organization-owner-project54",
+          "status": 404,
+          "code": "PROJECTS_NOT_FOUND",
+          "sameRecordOwnerControl": 200
+        },
+        {
+          "case": "accepted-public-token-validation",
+          "status": 404,
+          "code": "NOT_FOUND"
+        },
+        {
+          "case": "repeat-read-after-write",
+          "status": 200,
+          "canonicalContracts": true,
+          "sameVersionAndMember": true
+        }
+      ],
+      "contracts": {
+        "pinnedZodPayloads": [
+          "users-response.schemas.ts:inviteUserResponseSchema (flat response)",
+          "users-response.schemas.ts:invitationJoinLinkResponseSchema",
+          "organization-core-response.schemas.ts:invitationValidateResponseSchema",
+          "organization-core-response.schemas.ts:requestInvitationOtpResponseSchema",
+          "organization-core-response.schemas.ts:acceptInvitationResponseSchema",
+          "auth-response.schemas.ts:authVerifyMagicLinkResponseSchema",
+          "auth-response.schemas.ts:authSessionExchangeResponseSchema",
+          "me-response.schemas.ts:meResponseSchema",
+          "me-response.schemas.ts:accessSnapshotSchema",
+          "build-core-response.schemas.ts:projectListPageSchema (empty page)"
+        ],
+        "secretHandling": "Codes, capability URLs/tokens, mail bodies, session proofs and bearer credentials remain only in persistent memory.",
+        "dateBoundary": "Auxiliary owner-project and nonempty invitation-list controls checked by status/envelope/identity, not raw backend z.date parsing; no canonical JSON-wire parser proof claimed for them."
+      },
+      "focusedTests": {
+        "command": "pnpm -C backend exec jest --runInBand --runTestsByPath src/modules/organization/core/__tests__/invitation-module-access.spec.ts src/modules/organization/core/invitation-acceptance-otp-gate.spec.ts src/modules/organization/core/invitation-accept-otp-covers-existing-user.spec.ts src/modules/organization/core/invitation-acceptance-org-scope.spec.ts src/modules/organization/core/invitation-acceptance-org-visibility.spec.ts src/modules/organization/core/invitation-acceptance-insert-ordering.spec.ts src/modules/organization/core/invitation-acceptance-recovery.spec.ts src/modules/organization/core/invitation-join-link.spec.ts src/modules/organization/core/invitation-resend-seat.spec.ts src/modules/organization/core/invitations-read-tenant-isolation.spec.ts src/modules/auth/auth-magic-link-org-scope.spec.ts src/modules/auth/auth-session-org-scope.spec.ts src/modules/auth/auth-session-exchange.spec.ts",
+        "suites": 13,
+        "tests": 152,
+        "exitCode": 0,
+        "qualification": "Tests at current main d2863e8d8; actual runner remains pinned120545."
+      },
+      "database": {
+        "reader": "streamline_app",
+        "superuser": false,
+        "bypassRls": false,
+        "transaction": "READ ONLY",
+        "scope": "Exact reserved tenant/invitation/user/member joins; global identity/capability tables not assumed tenant-RLS protected.",
+        "baseline": {
+          "existing_user": 0,
+          "existing_invite": 0,
+          "active_members": 2,
+          "permissions_version": 13
+        },
+        "pending": {
+          "invitation": [
+            {
+              "id": "646fe869-ffc4-4831-b604-8039146372b7",
+              "org_id": "114fe418-2d7d-4f86-bd85-6a0d1a0040e2",
+              "role": "MEMBER",
+              "status": "PENDING",
+              "inviter_membership_id": 139,
+              "accepted_membership_id": null,
+              "accepted": false
+            }
+          ],
+          "standing": [
+            {
+              "module_key": "build",
+              "standing": "MEMBER"
+            }
+          ],
+          "counts": {
+            "users": 0,
+            "memberships": 0,
+            "assignments": 0
+          }
+        },
+        "otpBeforeWrong": [
+          {
+            "id": 11,
+            "attempts": 0,
+            "used": false,
+            "live": true
+          }
+        ],
+        "wrongOtp": {
+          "otp": [
+            {
+              "id": 11,
+              "attempts": 1,
+              "used": false
+            }
+          ],
+          "sideEffects": {
+            "users": 0,
+            "memberships": 0,
+            "assignments": 0,
+            "accepted_events": 0,
+            "magic_tokens": 0,
+            "sessions": 0
+          }
+        },
+        "accepted": {
+          "anchor": [
+            {
+              "invitation_id": "646fe869-ffc4-4831-b604-8039146372b7",
+              "org_id": "114fe418-2d7d-4f86-bd85-6a0d1a0040e2",
+              "invitation_role": "MEMBER",
+              "invitation_status": "ACCEPTED",
+              "inviter_membership_id": 139,
+              "accepted_membership_id": 142,
+              "accepted_at": "2026-10-03 21:38:11.95",
+              "user_id": "5a72d0ee-c788-420a-b471-24cac4b33acf",
+              "is_active": true,
+              "user_live": true,
+              "email_verified": true,
+              "membership_id": 142,
+              "role": "MEMBER",
+              "status": "ACTIVE",
+              "is_owner": false
+            }
+          ],
+          "grants": [
+            {
+              "id": "cbc1386e-436c-4d99-8c9a-c35b22c0aa04",
+              "org_id": "114fe418-2d7d-4f86-bd85-6a0d1a0040e2",
+              "organization_membership_id": 142,
+              "role_id": 2048,
+              "assigned_by_membership_id": null,
+              "expires_at": null,
+              "slug": "MEMBER",
+              "module_key": null,
+              "rank": 40,
+              "is_system": true
+            },
+            {
+              "id": "2c969ba3-1418-4362-9bbd-3628e1a87b70",
+              "org_id": "114fe418-2d7d-4f86-bd85-6a0d1a0040e2",
+              "organization_membership_id": 142,
+              "role_id": 2068,
+              "assigned_by_membership_id": null,
+              "expires_at": null,
+              "slug": "BUILD_MODULE_MEMBER",
+              "module_key": "build",
+              "rank": 30,
+              "is_system": true
+            }
+          ],
+          "events": [
+            {
+              "id": "0e4bdcdc-ab8a-4d6c-be1d-928899fb0243",
+              "event": "CREATED",
+              "actor_membership_id": 139
+            },
+            {
+              "id": "d7e77210-40d3-4200-9c7d-21eadda11372",
+              "event": "RESENT",
+              "actor_membership_id": 139
+            },
+            {
+              "id": "07dcd67b-bc48-4e25-8907-dcfcdfeb505e",
+              "event": "ACCEPTED",
+              "actor_membership_id": 142
+            }
+          ],
+          "seats": [
+            {
+              "id": "133",
+              "event_type": "INVITE_SENT",
+              "quantity_delta": 1,
+              "billed_quantity_after": 3
+            },
+            {
+              "id": "134",
+              "event_type": "INVITE_ACCEPTED",
+              "quantity_delta": 0,
+              "billed_quantity_after": 3
+            }
+          ],
+          "magic": [
+            {
+              "id": "713a03bb-8891-41c9-9672-9df136e40bd1",
+              "user_id": "5a72d0ee-c788-420a-b471-24cac4b33acf",
+              "org_id": "114fe418-2d7d-4f86-bd85-6a0d1a0040e2",
+              "used": false,
+              "live": true
+            }
+          ],
+          "otp": [
+            {
+              "id": 11,
+              "attempts": 2,
+              "used": true
+            }
+          ],
+          "absence": {
+            "project_memberships": 0,
+            "module_ownerships": 0,
+            "sessions": 0,
+            "permissions_version": 15
+          }
+        },
+        "final": {
+          "counts": {
+            "live_verified_users": 1,
+            "active_members": 1,
+            "accepted_invitations": 1,
+            "assignment_count": 2,
+            "build_member_assignments": 1,
+            "accepted_events": 1,
+            "accepted_seats": 1,
+            "used_magic_tokens": 1,
+            "session_count": 1,
+            "live_returned_sessions": 1,
+            "project_memberships": 0,
+            "module_ownerships": 0,
+            "permissions_version": 15
+          },
+          "otp": [
+            {
+              "id": 11,
+              "attempts": 2,
+              "used": true
+            }
+          ],
+          "assignmentIds": [
+            {
+              "id": "cbc1386e-436c-4d99-8c9a-c35b22c0aa04",
+              "role_id": 2048
+            },
+            {
+              "id": "2c969ba3-1418-4362-9bbd-3628e1a87b70",
+              "role_id": 2068
+            }
+          ],
+          "audit": [
+            {
+              "id": 933,
+              "action": "user.invitation.module_access_granted",
+              "target_id": "142",
+              "target_type": "membership",
+              "invitation_id": "646fe869-ffc4-4831-b604-8039146372b7"
+            }
+          ]
+        },
+        "foreignRls": {
+          "foreign_invitation_rows": 0,
+          "foreign_module_intent_rows": 0,
+          "foreign_assignment_rows": 0
+        },
+        "catalog": {
+          "roleBoundaries": [
+            {
+              "relname": "invitation_email_otps",
+              "not_effective_table_owner": true,
+              "relrowsecurity": false,
+              "relforcerowsecurity": false,
+              "can_select": true,
+              "can_insert": true,
+              "can_update": true,
+              "can_delete": true
+            },
+            {
+              "relname": "invitation_module_access",
+              "not_effective_table_owner": true,
+              "relrowsecurity": true,
+              "relforcerowsecurity": false,
+              "can_select": true,
+              "can_insert": true,
+              "can_update": true,
+              "can_delete": true
+            },
+            {
+              "relname": "invitations",
+              "not_effective_table_owner": true,
+              "relrowsecurity": true,
+              "relforcerowsecurity": false,
+              "can_select": true,
+              "can_insert": true,
+              "can_update": true,
+              "can_delete": true
+            },
+            {
+              "relname": "role_assignments",
+              "not_effective_table_owner": true,
+              "relrowsecurity": true,
+              "relforcerowsecurity": false,
+              "can_select": true,
+              "can_insert": true,
+              "can_update": true,
+              "can_delete": true
+            }
+          ],
+          "indexes": [
+            {
+              "table_name": "invitation_module_access",
+              "index_name": "pk_invitation_module_access",
+              "indisvalid": true,
+              "indisready": true,
+              "indisunique": true,
+              "definition": "CREATE UNIQUE INDEX pk_invitation_module_access ON public.invitation_module_access USING btree (id)"
+            },
+            {
+              "table_name": "invitation_module_access",
+              "index_name": "uniq_ima_invitation_module",
+              "indisvalid": true,
+              "indisready": true,
+              "indisunique": true,
+              "definition": "CREATE UNIQUE INDEX uniq_ima_invitation_module ON public.invitation_module_access USING btree (invitation_id, module_key)"
+            },
+            {
+              "table_name": "invitations",
+              "index_name": "invitations_pkey",
+              "indisvalid": true,
+              "indisready": true,
+              "indisunique": true,
+              "definition": "CREATE UNIQUE INDEX invitations_pkey ON public.invitations USING btree (id)"
+            },
+            {
+              "table_name": "invitations",
+              "index_name": "invitations_token_hash_unique",
+              "indisvalid": true,
+              "indisready": true,
+              "indisunique": true,
+              "definition": "CREATE UNIQUE INDEX invitations_token_hash_unique ON public.invitations USING btree (token_hash)"
+            },
+            {
+              "table_name": "invitations",
+              "index_name": "uniq_invitations_org_email_pending",
+              "indisvalid": true,
+              "indisready": true,
+              "indisunique": true,
+              "definition": "CREATE UNIQUE INDEX uniq_invitations_org_email_pending ON public.invitations USING btree (org_id, email) WHERE (status = 'PENDING'::invitation_status)"
+            },
+            {
+              "table_name": "invitations",
+              "index_name": "uniq_invitations_org_id",
+              "indisvalid": true,
+              "indisready": true,
+              "indisunique": true,
+              "definition": "CREATE UNIQUE INDEX uniq_invitations_org_id ON public.invitations USING btree (org_id, id)"
+            },
+            {
+              "table_name": "role_assignments",
+              "index_name": "role_assignments_pkey",
+              "indisvalid": true,
+              "indisready": true,
+              "indisunique": true,
+              "definition": "CREATE UNIQUE INDEX role_assignments_pkey ON public.role_assignments USING btree (id)"
+            },
+            {
+              "table_name": "role_assignments",
+              "index_name": "uniq_role_assignments_org_membership_role",
+              "indisvalid": true,
+              "indisready": true,
+              "indisunique": true,
+              "definition": "CREATE UNIQUE INDEX uniq_role_assignments_org_membership_role ON public.role_assignments USING btree (org_id, organization_membership_id, role_id)"
+            }
+          ],
+          "constraints": [
+            {
+              "table_name": "invitation_email_otps",
+              "conname": "invitation_email_otps_invitation_id_fkey",
+              "convalidated": true,
+              "definition": "FOREIGN KEY (invitation_id) REFERENCES invitations(id) ON DELETE CASCADE"
+            },
+            {
+              "table_name": "invitation_module_access",
+              "conname": "chk_ima_standing",
+              "convalidated": true,
+              "definition": "CHECK ((standing = ANY (ARRAY['MEMBER'::text, 'ADMIN'::text])))"
+            },
+            {
+              "table_name": "invitation_module_access",
+              "conname": "fk_ima_invitation",
+              "convalidated": true,
+              "definition": "FOREIGN KEY (invitation_id) REFERENCES invitations(id) ON DELETE CASCADE"
+            },
+            {
+              "table_name": "invitation_module_access",
+              "conname": "fk_ima_org",
+              "convalidated": true,
+              "definition": "FOREIGN KEY (org_id) REFERENCES organizations(id) ON DELETE CASCADE"
+            },
+            {
+              "table_name": "role_assignments",
+              "conname": "fk_role_assignments_assigner_membership",
+              "convalidated": true,
+              "definition": "FOREIGN KEY (org_id, assigned_by_membership_id) REFERENCES organization_members(org_id, id) ON DELETE SET NULL (assigned_by_membership_id)"
+            },
+            {
+              "table_name": "role_assignments",
+              "conname": "fk_role_assignments_org_role",
+              "convalidated": true,
+              "definition": "FOREIGN KEY (org_id, role_id) REFERENCES roles(org_id, id) ON DELETE CASCADE"
+            },
+            {
+              "table_name": "role_assignments",
+              "conname": "ra_membership_fk",
+              "convalidated": true,
+              "definition": "FOREIGN KEY (org_id, organization_membership_id) REFERENCES organization_members(org_id, id) ON DELETE CASCADE"
+            },
+            {
+              "table_name": "role_assignments",
+              "conname": "ra_org_fk",
+              "convalidated": true,
+              "definition": "FOREIGN KEY (org_id) REFERENCES organizations(id) ON DELETE CASCADE"
+            }
+          ],
+          "helperPrivileges": [
+            {
+              "nspname": "app",
+              "proname": "current_org_id",
+              "can_execute": true
+            },
+            {
+              "nspname": "app",
+              "proname": "current_org_id_or_null",
+              "can_execute": true
+            },
+            {
+              "nspname": "app",
+              "proname": "current_public_token_or_null",
+              "can_execute": true
+            },
+            {
+              "nspname": "app",
+              "proname": "current_user_id_or_null",
+              "can_execute": true
+            }
+          ]
+        }
+      },
+      "freshAccess": {
+        "role": "MEMBER",
+        "membershipId": 142,
+        "humanSession": true,
+        "isOrgOwner": false,
+        "canManageOrganizationMembership": false,
+        "buildEnabled": true,
+        "buildViewScope": "all",
+        "permissionVersion": 15,
+        "projectRows": 0,
+        "repeatReadStatus": 200
+      },
+      "effects": {
+        "acceptedEventCount": 1,
+        "acceptedSeatEventCount": 1,
+        "seatQuantityDelta": 0,
+        "billedSeatCount": 3,
+        "moduleGrantAuditId": 933,
+        "permissionVersions": {
+          "before": 13,
+          "after": 15
+        },
+        "qualification": "Durable rows and fresh Access proven; physical cache invalidation, worker fanout and crash recovery unverified."
+      },
+      "limitations": [
+        "Matching browser/mobile unavailable: frontend1002 approval pending; frontend1000 uses deployed API.",
+        "Portal1730/1731 unapplied; no client grant activation proof.",
+        "Older pinned120545 cannot prove current41 expired renewal SQL.",
+        "Only fresh Member/single Build standing: OrgAdmin, multi-module, existing user, lost inviter/seed authority, simultaneous accept and module-disabled transitions remain open.",
+        "OTP consumed before membership transaction; rollback/retry recovery not established by this sequential flow.",
+        "OTP/magic/session tables are global capability tables without tenant RLS; actual OTP DELETE privilege exceeds the three explicitly granted by1611.",
+        "IMA has separate organization/invitation FKs; composite same-org integrity not enforced by those two FKs.",
+        "Current pending invitation unique predicate uses status=PENDING per0667; Drizzle declares accepted_at IS NULL. Drift recorded, not repaired.",
+        "Other owner project list empty; foreign-project404 is proven against primary project54 with other owner, not a new Member read of a positive foreign record.",
+        "Local captured mail does not prove provider or external-worker delivery.",
+        "No broad checkbox or full D/I/T/R/B/L stage closes."
+      ],
+      "harnessCorrections": [
+        "Removed assumed organization_members.deleted_at from the read-only baseline; canonical status used.",
+        "Invalid ADMIN enum probe returned validation400; valid changed recipient then returned key conflict422.",
+        "Join token extracted privately from canonical /invitation/:token path, not query.",
+        "Captured OTP extracted from visible text after stripping CSS; no code printed.",
+        "Other-tenant name assumption failed preflight; known owner ID/email and reserved name prefix verified before RLS read.",
+        "REPL block-local references were unavailable in later cells; retained private state used and baseline reflects the actual earlier output, not a post-write reread."
+      ],
+      "independentReview": {
+        "status": "CLEAR",
+        "owner": "module_grants_resume",
+        "reviewedSnapshotSha256": "6ad13f906287cb808d546a47c609afec504b9c18c38b3d257a83797842c1c03b",
+        "scope": "Sanitized evidence accuracy and pinned-source comparison; no independent repeat DB/API/browser run."
+      }
+    }
+  ],
+  "backendSourceCommit": "1aee0d53a",
+  "runtime": {
+    "runnerPid": 20860,
+    "baseUrl": "http://127.0.0.1:1001",
+    "syntheticTenant": "114fe418-2d7d-4f86-bd85-6a0d1a0040e2",
+    "membershipId": 139,
+    "projectId": 54,
+    "ticketId": 359,
+    "applicationRole": "streamline_app",
+    "databaseReads": "READ ONLY with tenant guard",
+    "priorUnattributedChangesExcluded": [
+      "src/modules/cron/cron-email-outbox.service.ts",
+      "src/modules/email/email-outbox-retry-auth.spec.ts",
+      "src/modules/email/email-outbox.service.ts"
+    ],
+    "finalRunnerPid": 20336
+  },
+  "limitations": [
+    "Browser mutations await separate local frontend approval",
+    "Full recipient/tenant runtime matrix remains open",
+    "Fixture creation is not production Build event fanout proof",
+    "Authenticated local SSE framing verified; browser consumption and wider principal/tenant delivery matrix remain open",
+    "No deployment or operations verification",
+    "Full frontend test TypeScript has unchanged failures; full backend test TypeScript previously exhausted 10GB"
+  ],
+  "sseCorrectionCommit": "f1eecf42f",
+  "browser": {
+    "frontendUrl": "http://localhost:1000/build/inbox?type=WORKFLOW",
+    "backend": "existing deployed backend",
+    "mutationPerformed": false,
+    "widthsVerified": [
+      375,
+      390,
+      768,
+      1280
+    ],
+    "categories": [
+      "All types",
+      "Projects & tickets",
+      "Approvals"
+    ],
+    "selectedTabStyle": "existing black-and-white",
+    "keyboardEscapeReturnsFocus": true,
+    "horizontalOverflowObservedAt768And1280": false,
+    "consoleErrorsObserved": 0,
+    "viewportRestored": true,
+    "screenshots": "Captured in browser tool output; no external artifact path asserted"
+  }
+}

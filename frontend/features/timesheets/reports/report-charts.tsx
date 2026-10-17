@@ -51,8 +51,8 @@ export const ByDayChart = memo(function ByDayChart({ data, isLoading }: ByDayCha
             <AreaChart data={chartData}>
               <defs>
                 <linearGradient id="hoursGrad" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3} />
-                  <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
+                  <stop offset="5%" stopColor="var(--chart-1)" stopOpacity={0.3} />
+                  <stop offset="95%" stopColor="var(--chart-1)" stopOpacity={0} />
                 </linearGradient>
               </defs>
               <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
@@ -62,7 +62,7 @@ export const ByDayChart = memo(function ByDayChart({ data, isLoading }: ByDayCha
               <Area
                 type="monotone"
                 dataKey="hours"
-                stroke="#3b82f6"
+                stroke="var(--chart-1)"
                 strokeWidth={2}
                 fill="url(#hoursGrad)"
               />
@@ -115,14 +115,14 @@ export const ByMemberChart = memo(function ByMemberChart({ data, isLoading }: By
                 dataKey="billableHours"
                 name="Billable"
                 stackId="hours"
-                fill="#3b82f6"
+                fill="var(--chart-1)"
                 radius={[0, 0, 0, 0]}
               />
               <Bar
                 dataKey="nonBillableHours"
                 name="Non-billable"
                 stackId="hours"
-                fill="#93c5fd"
+                fill="var(--chart-2)"
                 radius={[0, 4, 4, 0]}
               />
             </BarChart>
@@ -172,7 +172,7 @@ export const ByProjectChart = memo(function ByProjectChart({ data, isLoading }: 
                 width={100}
               />
               <Tooltip contentStyle={CHART_TOOLTIP_STYLE} />
-              <Bar dataKey="hours" fill="#3b82f6" radius={[0, 4, 4, 0]} />
+              <Bar dataKey="hours" fill="var(--chart-1)" radius={[0, 4, 4, 0]} />
             </BarChart>
           </ResponsiveContainer>
         )}

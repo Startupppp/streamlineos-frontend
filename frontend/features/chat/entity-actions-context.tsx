@@ -6,7 +6,7 @@ import {
   useEntityActions,
   type EntityAction,
   type EntityReferenceInput,
-} from "@/hooks/api/chat";
+} from "@/hooks/api/chat-entities";
 import type { Message } from "./chat-types";
 
 interface EntityActionsValue {

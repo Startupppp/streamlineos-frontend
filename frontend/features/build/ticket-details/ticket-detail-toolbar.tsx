@@ -2,14 +2,14 @@
 
 import { useState } from "react";
 import { PanelRightOpen } from "lucide-react";
-import { EllipsisIcon, ShareIcon } from "@animateicons/react/lucide";
+import { EllipsisIcon, ShareIcon, Trash2Icon } from "@animateicons/react/lucide";
 import { toast } from "sonner";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { useCan } from "@/hooks/api/access";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { TicketDetailActions, TicketDetailDeleteDialog, TicketDetailDeleteMenuItem } from "./ticket-detail-actions";
+import { TicketDetailActions, TicketDetailDeleteDialog } from "./ticket-detail-actions";
 
 interface TicketDetailToolbarProps {
   isMobile: boolean;
@@ -17,6 +17,7 @@ interface TicketDetailToolbarProps {
   onExpandRightPanel: () => void;
   onDelete: () => void;
   isDeleting: boolean;
+  subtaskCount?: number;
 }
 
 export function TicketDetailToolbar({
@@ -25,6 +26,7 @@ export function TicketDetailToolbar({
   onExpandRightPanel,
   onDelete,
   isDeleting,
+  subtaskCount,
 }: TicketDetailToolbarProps) {
   const [overflowDeleteOpen, setOverflowDeleteOpen] = useState(false);
   const canDeleteTicket = useCan("build:tickets:delete");
@@ -57,37 +59,49 @@ export function TicketDetailToolbar({
       ) : null}
 
       {isMobile ? (
-        <>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <AnimatedIconButton
-                size="icon"
-                variant="outline"
-                icon={EllipsisIcon}
-                iconSize={16}
-                className="h-9 w-9 touch-manipulation border-border/60 bg-card/50 backdrop-blur-sm sm:h-8 sm:w-8"
-                aria-label="More actions"
-              />
-            </DropdownMenuTrigger>
-            <DropdownMenuContent forceMount align="end" className="w-52">
-              <DropdownMenuItem onSelect={handleShare} className="gap-2">
-                <ShareIcon size={14} />
-                Share
-              </DropdownMenuItem>
-              {canDeleteTicket && (
-                <TicketDetailDeleteMenuItem onRequestDelete={handleOpenOverflowDelete} />
-              )}
-            </DropdownMenuContent>
-          </DropdownMenu>
-          {canDeleteTicket && (
+        canDeleteTicket ? (
+          <>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <AnimatedIconButton
+                  size="icon"
+                  variant="outline"
+                  icon={EllipsisIcon}
+                  iconSize={16}
+                  className="h-9 w-9 touch-manipulation border-border/60 bg-card/50 backdrop-blur-sm sm:h-8 sm:w-8"
+                  aria-label="More actions"
+                />
+              </DropdownMenuTrigger>
+              <DropdownMenuContent forceMount align="end" className="w-52">
+                <DropdownMenuItem onSelect={handleShare} className="gap-2">
+                  <ShareIcon size={14} />
+                  Share
+                </DropdownMenuItem>
+                <DropdownMenuItem variant="destructive" onSelect={handleOpenOverflowDelete} className="gap-2">
+                  <Trash2Icon size={14} />
+                  Delete
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
             <TicketDetailDeleteDialog
               open={overflowDeleteOpen}
               onOpenChange={setOverflowDeleteOpen}
               onDelete={onDelete}
               isDeleting={isDeleting}
+              subtaskCount={subtaskCount}
             />
-          )}
-        </>
+          </>
+        ) : (
+          <AnimatedIconButton
+            size="icon"
+            variant="outline"
+            icon={ShareIcon}
+            iconSize={16}
+            className="h-9 w-9 touch-manipulation border-border/60 bg-card/50 backdrop-blur-sm sm:h-8 sm:w-8"
+            onClick={handleShare}
+            aria-label="Copy share link"
+          />
+        )
       ) : (
         <>
           <AnimatedIconButton
@@ -103,6 +117,7 @@ export function TicketDetailToolbar({
             <TicketDetailActions
               onDelete={onDelete}
               isDeleting={isDeleting}
+              subtaskCount={subtaskCount}
             />
           )}
         </>

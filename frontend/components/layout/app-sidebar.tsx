@@ -26,6 +26,8 @@ import { ProductSwitcherMenu } from "./header/product-switcher-menu";
 import { WorkspaceSwitcher } from "./header/org-switcher";
 
 import { useAccess, useCan } from "@/hooks/api/access";
+import { useHrSettingsMode } from "@/hooks/common/use-hr-settings-mode";
+import { applyHrWeekOneNav } from "./sidebar/hr-week-one-nav";
 import { useEnabledModules } from "@/hooks/api/access/org-modules";
 import { useEntitlements } from "@/hooks/api/entitlements";
 
@@ -104,20 +106,39 @@ export function AppSidebar({
   const scopes = access?.scopes;
   const canApproveLeaves = useCan("hr:leaves:approve");
   const canReadChat = useCan("chat:channels:read");
+  const canReadCalendar = useCan("calendar:read");
+  useEffect(() => {
+    if (!access || typeof navigator === "undefined" || !navigator.onLine) return;
+    try {
+      const stored = sessionStorage.getItem("streamline-calendar-offline-session-identity");
+      const current = session?.orgId && session.user?.id ? `${session.orgId}:${session.user.id}` : "";
+      if (!stored || (canReadCalendar && stored === current)) return;
+      sessionStorage.removeItem("streamline-calendar-offline-session-identity");
+      void import("@/lib/offline/calendar-offline-cache")
+        .then((module) => module.clearOfflineCalendarSnapshot())
+        .catch(() => undefined);
+    } catch {
+      void import("@/lib/offline/calendar-offline-cache")
+        .then((module) => module.clearOfflineCalendarSnapshot())
+        .catch(() => undefined);
+    }
+  }, [access, canReadCalendar, session?.orgId, session?.user?.id]);
   const enabledModules = useEnabledModules();
   const isHrModuleEnabled = isModuleEnabled("hrms", enabledModules);
   const { data: entitlements } = useEntitlements();
   const lockedModules = entitlements?.lockedModules ?? [];
 
+  const [showAdvancedHr] = useHrSettingsMode();
   const navGroups = useMemo(() => {
     if (isBuildProduct) return [];
-    return getNavGroupsForProduct(
+    const groups = getNavGroupsForProduct(
       activeProduct,
       effectiveRole,
       scopes,
       enabledModules,
       lockedModules,
     );
+    return activeProduct === "hrms" ? applyHrWeekOneNav(groups, showAdvancedHr) : groups;
   }, [
     isBuildProduct,
     activeProduct,
@@ -125,6 +146,7 @@ export function AppSidebar({
     scopes,
     enabledModules,
     lockedModules,
+    showAdvancedHr,
   ]);
 
   const activeGroupLabel = useMemo(() => {
@@ -201,13 +223,16 @@ export function AppSidebar({
     throwOnError: false,
   });
   const unreadInboxCount = unifiedCountData?.total ?? 0;
+  const unreadInboxExact =
+    unifiedCountData?.mailExact !== false && unifiedCountData?.approvalExact !== false;
 
   useEffect(() => {
     const base = "StreamlineOS";
     const total = unreadChatCount + unreadInboxCount;
-    document.title =
-      total > 0 ? `(${total > 99 ? "99+" : total}) ${base}` : base;
-  }, [unreadChatCount, unreadInboxCount]);
+    const shown =
+      total > 99 ? "99+" : unreadInboxExact ? String(total) : `${total}+`;
+    document.title = total > 0 ? `(${shown}) ${base}` : base;
+  }, [unreadChatCount, unreadInboxCount, unreadInboxExact]);
 
   const effectiveCollapsed = isMobile ? false : isCollapsed;
 

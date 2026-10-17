@@ -21,6 +21,8 @@ import { HrSheet } from "@/components/shared/hr-sheet";
 
 import { TERMINATION_REASONS, TERMINATION_REASON_OTHER } from "@/lib/constants/hr-separation";
 import type { EmployeeListItem } from "@/types/hr";
+import type { TerminationCandidate } from "@/hooks/api/hr/termination-schema";
+import { getUserDisplayName } from "@/lib/person-display";
 
 function buildLetterPreview(params: {
   employeeName: string;
@@ -80,6 +82,7 @@ interface TerminationFormSheetProps {
   submitDisabled?: boolean;
   onSubmit: () => void;
   employees: EmployeeListItem[];
+  prefilledEmployee: TerminationCandidate | null;
   selectedEmployeeUserId: string;
   onSelectedEmployeeUserIdChange: (employeeUserId: string) => void;
   selectedReason: string;
@@ -94,6 +97,8 @@ interface TerminationFormSheetProps {
   onSeveranceAmountChange: (inputEvent: React.ChangeEvent<HTMLInputElement>) => void;
   internalNotes: string;
   onInternalNotesChange: (inputEvent: React.ChangeEvent<HTMLTextAreaElement>) => void;
+  saveAsDraft: boolean;
+  onSaveAsDraftChange: (checked: boolean) => void;
 }
 
 export function TerminationFormSheet({
@@ -104,6 +109,7 @@ export function TerminationFormSheet({
   submitDisabled = false,
   onSubmit,
   employees,
+  prefilledEmployee,
   selectedEmployeeUserId,
   onSelectedEmployeeUserIdChange,
   selectedReason,
@@ -118,15 +124,18 @@ export function TerminationFormSheet({
   onSeveranceAmountChange,
   internalNotes,
   onInternalNotesChange,
+  saveAsDraft,
+  onSaveAsDraftChange,
 }: TerminationFormSheetProps) {
   const isOtherReason = selectedReason === TERMINATION_REASON_OTHER;
+  const approvesOnCreate = canApproveExit && !saveAsDraft;
 
   const selectedEmployee = useMemo(
     () =>
       employees.find(
         (employeeRecord) => employeeRecord.id === selectedEmployeeUserId,
-      ) ?? null,
-    [employees, selectedEmployeeUserId]
+      ) ?? (prefilledEmployee?.id === selectedEmployeeUserId ? prefilledEmployee : null),
+    [employees, prefilledEmployee, selectedEmployeeUserId]
   );
 
   const employeeOptions = useMemo(
@@ -150,6 +159,21 @@ export function TerminationFormSheet({
     [employees]
   );
 
+  const options = useMemo(
+    () =>
+      prefilledEmployee && !employeeOptions.some((option) => option.value === prefilledEmployee.id)
+        ? [
+            {
+              value: prefilledEmployee.id,
+              label: getUserDisplayName(prefilledEmployee),
+              sublabel: prefilledEmployee.designation ?? prefilledEmployee.email,
+            },
+            ...employeeOptions,
+          ]
+        : employeeOptions,
+    [employeeOptions, prefilledEmployee],
+  );
+
   const letterPreview = useMemo(
     () =>
       buildLetterPreview({
@@ -170,12 +194,12 @@ export function TerminationFormSheet({
       onOpenChange={onOpenChange}
       title="New Termination"
       description={
-        canApproveExit
+        approvesOnCreate
           ? "Create a termination record. As FINAL, this will be automatically approved."
           : "Create a termination record. It will be saved as a draft for FINAL approval."
       }
       onSubmit={onSubmit}
-      submitLabel={canApproveExit ? "Create & Approve" : "Save as Draft"}
+      submitLabel={approvesOnCreate ? "Create & Approve" : "Save as Draft"}
       isPending={isPending}
       submitDisabled={submitDisabled}
     >
@@ -197,7 +221,7 @@ export function TerminationFormSheet({
             Select Employee <span className="text-status-danger-ink">*</span>
           </Label>
           <Combobox
-            options={employeeOptions}
+            options={options}
             value={selectedEmployeeUserId}
             onChange={onSelectedEmployeeUserIdChange}
             placeholder="Select an employee…"
@@ -296,6 +320,22 @@ export function TerminationFormSheet({
             aria-label="Notice period waived"
           />
         </div>
+
+        {canApproveExit ? (
+          <div className="flex items-center justify-between rounded-lg border border-border bg-muted/20 px-3 py-2.5">
+            <div>
+              <p className="text-sm font-medium">Save as draft</p>
+              <p className="text-xs text-muted-foreground">
+                Keep it for review instead of approving it now. Submit it for approval later.
+              </p>
+            </div>
+            <Switch
+              checked={saveAsDraft}
+              onCheckedChange={onSaveAsDraftChange}
+              aria-label="Save as draft"
+            />
+          </div>
+        ) : null}
 
         <div className="space-y-1.5">
           <Label className="text-sm font-medium">

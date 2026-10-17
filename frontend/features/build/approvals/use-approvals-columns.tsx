@@ -5,10 +5,13 @@ import { Badge } from "@/components/ui/badge";
 import type { DataTableColumn } from "@/components/ui/data-table";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { TABLE_TITLE_CELL } from "@/lib/text-overflow";
-import { ApprovalStatusBadge, entityTypeLabel } from "./approval-status-badge";
+import { ApprovalStatusBadge } from "./approval-status-badge";
 import { ApprovalActions } from "./approvals-toolbar";
-import { DECIDABLE } from "./approvals-constants";
-import type { Approval, ApprovalStatus } from "@/types/projects";
+import { DECIDABLE, entityTypeLabel } from "./approvals-constants";
+import { useAccess } from "@/hooks/api/access";
+import type { BuildApprovalsCreateApprovalResponse } from "@/contracts/build-contracts.generated";
+import type { ApprovalStatus } from "@/types/projects";
+import { formatShortDate } from "@/lib/date-utils";
 
 const APPROVAL_STATUS_VALUES: ApprovalStatus[] = [
   "requested",
@@ -23,12 +26,12 @@ const APPROVAL_STATUS_VALUES: ApprovalStatus[] = [
 interface UseApprovalsColumnsParams {
   canDecide: boolean;
   canManage: boolean;
-  memberName: (userId: string | null) => string;
-  setDecideTarget: (row: Approval) => void;
-  setDelegateTarget: (row: Approval) => void;
-  handleEscalate: (row: Approval) => void;
-  setCancelTarget: (row: Approval) => void;
-  setDeleteTarget: (row: Approval) => void;
+  memberName: (membershipId: number | null) => string;
+  setDecideTarget: (row: BuildApprovalsCreateApprovalResponse) => void;
+  setDelegateTarget: (row: BuildApprovalsCreateApprovalResponse) => void;
+  handleEscalate: (row: BuildApprovalsCreateApprovalResponse) => void;
+  setCancelTarget: (row: BuildApprovalsCreateApprovalResponse) => void;
+  setDeleteTarget: (row: BuildApprovalsCreateApprovalResponse) => void;
 }
 
 function ApprovalsActionsCell({
@@ -41,18 +44,20 @@ function ApprovalsActionsCell({
   setCancelTarget,
   setDeleteTarget,
 }: {
-  row: Approval;
+  row: BuildApprovalsCreateApprovalResponse;
   canDecide: boolean;
   canManage: boolean;
-  setDecideTarget: (r: Approval) => void;
-  setDelegateTarget: (r: Approval) => void;
-  handleEscalate: (r: Approval) => void;
-  setCancelTarget: (r: Approval) => void;
-  setDeleteTarget: (r: Approval) => void;
+  setDecideTarget: (r: BuildApprovalsCreateApprovalResponse) => void;
+  setDelegateTarget: (r: BuildApprovalsCreateApprovalResponse) => void;
+  handleEscalate: (r: BuildApprovalsCreateApprovalResponse) => void;
+  setCancelTarget: (r: BuildApprovalsCreateApprovalResponse) => void;
+  setDeleteTarget: (r: BuildApprovalsCreateApprovalResponse) => void;
 }) {
   const narrowStatus =
     APPROVAL_STATUS_VALUES.find((v) => v === row.status) ?? "pending";
-  const canDecideRow = canDecide && DECIDABLE.has(narrowStatus) && canManage;
+  const { data: access } = useAccess();
+  const assigned = access?.membershipId != null && access.membershipId === row.approverMembershipId;
+  const canDecideRow = canDecide && DECIDABLE.has(narrowStatus) && assigned;
 
   const handleDecide = useCallback(
     () => setDecideTarget(row),
@@ -89,6 +94,9 @@ function ApprovalsActionsCell({
   );
 }
 
+import { APPROVALS_TABLE_HEADERS } from "./approvals-table-headers";
+export { APPROVALS_TABLE_HEADERS };
+
 export function useApprovalsColumns({
   canDecide,
   canManage,
@@ -98,8 +106,8 @@ export function useApprovalsColumns({
   handleEscalate,
   setCancelTarget,
   setDeleteTarget,
-}: UseApprovalsColumnsParams): DataTableColumn<Approval>[] {
-  return useMemo<DataTableColumn<Approval>[]>(
+}: UseApprovalsColumnsParams): DataTableColumn<BuildApprovalsCreateApprovalResponse>[] {
+  return useMemo<DataTableColumn<BuildApprovalsCreateApprovalResponse>[]>(
     () => [
       {
         key: "entityType",
@@ -127,7 +135,7 @@ export function useApprovalsColumns({
         key: "approver",
         header: "Approver",
         cell: (row) => {
-          const name = memberName(row.requestedById);
+          const name = memberName(row.approverMembershipId);
           return (
             <TruncatedText
               text={name}
@@ -152,7 +160,7 @@ export function useApprovalsColumns({
         cell: (row) =>
           row.dueAt ? (
             <span className="tabular-nums text-muted-foreground">
-              {row.dueAt.slice(0, 10)}
+              {formatShortDate(row.dueAt)}
             </span>
           ) : (
             <span className="text-muted-foreground">—</span>

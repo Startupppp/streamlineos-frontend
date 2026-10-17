@@ -25,9 +25,7 @@ import {
   ResponsivePopoverTrigger,
 } from "@/components/ui/responsive-popover";
 import { Check, ChevronsUpDown, User, UserX } from "lucide-react";
-import { useOrgMembers } from "@/hooks/api/organization";
 import { useBuildMembers } from "@/hooks/api/build/build-members";
-import { useCan } from "@/hooks/api/access";
 
 type DirectoryPerson = {
   id: string;
@@ -36,33 +34,15 @@ type DirectoryPerson = {
 };
 
 function useWorkspaceDirectoryPeople(enabled = true): DirectoryPerson[] {
-  const canViewOrgMembers = useCan("settings:view");
-  const canViewBuildMembers = useCan("build:members:view");
-  const useOrg = enabled && canViewOrgMembers;
-  const useWorkspace = enabled && !canViewOrgMembers && canViewBuildMembers;
-
-  const { data: orgMembersData } = useOrgMembers(1, 200, undefined, {
-    enabled: useOrg,
-  });
-  const { data: workspaceData } = useBuildMembers(
-    { limit: 200 },
-    { enabled: useWorkspace },
-  );
+  const { data: workspaceData } = useBuildMembers({ limit: 200 }, { enabled });
 
   return useMemo(() => {
-    if (useOrg) {
-      return (orgMembersData?.data ?? []).map((m) => ({
-        id: m.userId,
-        name: m.name,
-        email: m.email,
-      }));
-    }
     return (workspaceData?.data ?? []).map((m) => ({
       id: m.id,
       name: m.name,
       email: m.email,
     }));
-  }, [useOrg, orgMembersData?.data, workspaceData?.data]);
+  }, [workspaceData?.data]);
 }
 
 interface MemberItemProps {
@@ -113,9 +93,7 @@ const MemberItem = memo(function MemberItem({
       </div>
       <div className="flex-1 min-w-0">
         <p className="text-sm font-medium truncate">{emp.name}</p>
-        <p className="text-dense text-muted-foreground truncate">
-          {emp.email}
-        </p>
+        <p className="text-dense text-muted-foreground truncate">{emp.email}</p>
       </div>
       {isSelected && <Check className="h-4 w-4 text-primary shrink-0" />}
     </button>

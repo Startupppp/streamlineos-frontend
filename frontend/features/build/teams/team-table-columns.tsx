@@ -82,7 +82,7 @@ export function buildTeamColumns({
             <span className="text-base leading-none">{row.icon}</span>
           ) : (
             <span
-              className="flex h-5 w-5 shrink-0 items-center justify-center rounded text-micro font-bold text-white"
+              className="flex h-5 w-5 shrink-0 items-center justify-center rounded text-micro font-medium text-white"
               style={{ backgroundColor: row.color ?? "#64748b" }}
             >
               {row.key.slice(0, 2)}

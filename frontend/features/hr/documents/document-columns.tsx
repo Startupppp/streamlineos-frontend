@@ -10,12 +10,25 @@ import {
 } from "./document-table-constants";
 import { DocumentRowActions } from "./document-row-actions";
 import { formatFileSize } from "@/lib/format-utils";
+import { DocumentClassificationBadge } from "@/features/hr/documents/components/document-classification-badge";
 
 export function createDocumentColumns(
   onDelete: (documentId: number) => Promise<void>,
   onEdit: (doc: Document) => void,
   onSendForSignature: (doc: Document) => void,
+  onClassify?: (doc: Document) => void,
 ): DataTableColumn<Document>[] {
+  const sharingColumn: DataTableColumn<Document>[] = onClassify
+    ? [
+        {
+          key: "classification",
+          header: "Sharing",
+          cell(doc) {
+            return <DocumentClassificationBadge classification={doc.classification} />;
+          },
+        },
+      ]
+    : [];
   return [
     {
       key: "name",
@@ -35,9 +48,15 @@ export function createDocumentColumns(
             </div>
             <div className="min-w-0">
               <TruncatedText
-                text={doc.fileName ?? doc.name}
+                text={doc.name}
                 className="text-sm font-medium text-foreground leading-snug"
               />
+              {doc.fileName && doc.fileName !== doc.name && (
+                <TruncatedText
+                  text={doc.fileName}
+                  className="text-xs text-muted-foreground leading-snug"
+                />
+              )}
               {doc.tags && doc.tags.length > 0 && (
                 <div className="flex gap-1 mt-0.5 flex-wrap">
                   {doc.tags.slice(0, 3).map((tag) => (
@@ -80,6 +99,7 @@ export function createDocumentColumns(
         );
       },
     },
+    ...sharingColumn,
     {
       key: "date",
       header: "Date",
@@ -110,6 +130,7 @@ export function createDocumentColumns(
             onDelete={onDelete}
             onEdit={onEdit}
             onSendForSignature={onSendForSignature}
+            onClassify={onClassify}
           />
         );
       },

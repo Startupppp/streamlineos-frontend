@@ -1,9 +1,5 @@
 import { format } from "date-fns";
 
-export function formatCurrency(value: number): string {
-  return formatINRCompact(value);
-}
-
 export function formatCurrencyForBilling(amount: number, currency: string): string {
   return new Intl.NumberFormat("en", {
     style: "currency",
@@ -23,7 +19,15 @@ export function formatCurrencyFull(
   return new Intl.NumberFormat(locale, {
     style: "currency",
     currency,
-    minimumFractionDigits: 2,
+    /**
+     * The floor follows the ceiling. `minimumFractionDigits` was pinned at 2
+     * while the caller chose the maximum, so every caller asking for whole
+     * units — `formatCurrencyFull(salary, "INR", undefined, 0)` — hit
+     * `RangeError: maximumFractionDigits value is out of range` and took its
+     * whole React tree down. That crashed the public offer page for any offer
+     * carrying a salary, which is the screen a candidate accepts a job on.
+     */
+    minimumFractionDigits: Math.min(2, maximumFractionDigits),
     maximumFractionDigits,
   }).format(num);
 }
@@ -133,15 +137,15 @@ export function formatINRCompact(amount: string | number): string {
   const abs = Math.abs(num);
   const sign = num < 0 ? "-" : "";
   if (abs >= 1_00_00_000) {
-    const val = abs / 1_00_00_000;
+    const val = Math.floor((abs / 1_00_00_000) * 10) / 10;
     return `${sign}₹${val % 1 === 0 ? val.toFixed(0) : val.toFixed(1)}Cr`;
   }
   if (abs >= 1_00_000) {
-    const val = abs / 1_00_000;
+    const val = Math.floor((abs / 1_00_000) * 10) / 10;
     return `${sign}₹${val % 1 === 0 ? val.toFixed(0) : val.toFixed(1)}L`;
   }
   if (abs >= 10_000) {
-    const val = abs / 1_000;
+    const val = Math.floor((abs / 1_000) * 10) / 10;
     return `${sign}₹${val % 1 === 0 ? val.toFixed(0) : val.toFixed(1)}K`;
   }
   const hasPaisa = abs % 1 !== 0;
@@ -175,13 +179,15 @@ export function formatMoneyCompact(
   value: number | string | null | undefined,
   display: MoneyDisplay,
 ): string {
-  return new Intl.NumberFormat(display.locale, {
+  const amount = toAmount(value);
+  if (display.currency === "INR") return formatINRCompact(amount);
+  return cachedNumberFormat(display.locale, {
     style: "currency",
     currency: display.currency,
     notation: "compact",
     minimumFractionDigits: 0,
     maximumFractionDigits: 1,
-  }).format(toAmount(value));
+  }).format(amount);
 }
 
 const numberFormats = new Map<string, Intl.NumberFormat>();

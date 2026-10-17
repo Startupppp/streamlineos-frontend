@@ -2,10 +2,13 @@ import { render, screen } from "@testing-library/react";
 import { MeetingDetailPage } from "./meeting-detail-page";
 import { ApiError } from "@/lib/api-envelope";
 
-jest.mock("@/hooks/api/build", () => ({
+jest.mock("@/hooks/api/build/meetings", () => ({
   useMeeting: jest.fn(),
   useUpdateMeeting: jest.fn(),
   useDeleteMeeting: jest.fn(),
+}));
+
+jest.mock("@/hooks/api/build/project-members", () => ({
   useProjectMembers: jest.fn(),
 }));
 
@@ -117,7 +120,8 @@ jest.mock("@/lib/get-error-message", () => ({
   getErrorMessage: (e: unknown) => (e instanceof Error ? e.message : "Error"),
 }));
 
-import { useMeeting, useUpdateMeeting, useDeleteMeeting, useProjectMembers } from "@/hooks/api/build";
+import { useMeeting, useUpdateMeeting, useDeleteMeeting } from "@/hooks/api/build/meetings";
+import { useProjectMembers } from "@/hooks/api/build/project-members";
 import { useCan, useAccess } from "@/hooks/api/access";
 
 const mockUseMeeting = useMeeting as jest.Mock;

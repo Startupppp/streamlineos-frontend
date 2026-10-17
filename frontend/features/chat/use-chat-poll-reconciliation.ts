@@ -37,17 +37,14 @@ export function useChatPollReconciliation({
   position: ChatPollPosition;
 } {
   const queryClient = useQueryClient();
-  const [position, setPosition] = useState<ChatPollPosition | null>(null);
-  const [positionChannelId, setPositionChannelId] = useState(channelId);
-
-  if (positionChannelId !== channelId) {
-    setPositionChannelId(channelId);
-    setPosition(null);
-  }
+  const [positionState, setPositionState] = useState<{
+    channelId: number;
+    position: ChatPollPosition | null;
+  }>({ channelId, position: null });
 
   const effectivePosition =
-    positionChannelId === channelId && position !== null
-      ? position
+    positionState.channelId === channelId && positionState.position !== null
+      ? positionState.position
       : openingPollPosition(newestLoadedAt);
 
   const { data: pollResult } = useChatPoll(
@@ -68,13 +65,16 @@ export function useChatPollReconciliation({
         queryKey: collaborationQueryKeys.chat.myChannels(),
       });
       if (nextPosition !== null)
-        setPosition({ kind: "cursor", cursor: nextPosition });
+        setPositionState({
+          channelId,
+          position: { kind: "cursor", cursor: nextPosition },
+        });
     })();
 
     return () => {
       cancelled = true;
     };
-  }, [pollResult, queryClient, refetchHistory]);
+  }, [channelId, pollResult, queryClient, refetchHistory]);
 
   useEffect(() => {
     if (isRealtimeConnected || channelId <= 0) return;

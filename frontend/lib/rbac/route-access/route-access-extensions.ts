@@ -14,6 +14,8 @@ function prefixCovers(prefix: string[], path: string[]): boolean {
   return prefix.every((segment, index) => {
     const actual = path[index];
     if (actual === undefined || actual.length === 0) return false;
+    if (segment === "[projectId]")
+      return actual === segment || /^\d+$/.test(actual);
     return isDynamicSegment(segment) ? true : segment === actual;
   });
 }

@@ -1,12 +1,14 @@
 "use client";
 
 import { useMemo, useCallback, useState } from "react";
+import { toBulkPriority } from "@/features/build/shared/bulk-priority";
+import type { BulkPriority } from "@/features/build/shared/bulk-priority";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { apiClient } from "@/lib/api-client";
 import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { isApiError } from "@/lib/api-envelope";
+import { isWriteConflict } from "@/lib/api-envelope";
 import type { AllWorkTicket } from "@/types/projects";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { lazyContract } from "@/lib/api-envelope";
@@ -17,8 +19,6 @@ const bulkUpdateResultLazy = lazyContract(() =>
   ),
 );
 
-type BulkPriority = "LOW" | "MEDIUM" | "HIGH" | "URGENT";
-const BULK_PRIORITIES: readonly BulkPriority[] = ["LOW", "MEDIUM", "HIGH", "URGENT"];
 const MAX_BULK_CHUNK = 100;
 
 function chunkArray<T>(arr: T[], size: number): T[][] {
@@ -40,12 +40,23 @@ interface ProjectOutcome {
   failures: unknown[];
 }
 
+export interface AllWorkIdsSnapshot {
+  entries: { projectId: number; ids: number[] }[];
+  total: number;
+  capped: boolean;
+  cap: number;
+}
+
 interface UseAllWorkBulkReturn {
   tableSelection: Set<string | number>;
   setTableSelection: React.Dispatch<React.SetStateAction<Set<string | number>>>;
   selectedTicketIds: number[];
   selectedTickets: AllWorkTicket[];
   isPendingBulk: boolean;
+  isExpandedSelection: boolean;
+  expandedTotal: number;
+  expandedEntries: AllWorkIdsSnapshot["entries"] | undefined;
+  expandToAllMatching: (snapshot: AllWorkIdsSnapshot) => void;
   handleBulkStatus: (value: string) => void;
   handleBulkPriority: (value: string) => void;
   handleBulkAssignee: (value: string) => void;
@@ -56,6 +67,9 @@ interface UseAllWorkBulkReturn {
 export function useAllWorkBulk(tickets: AllWorkTicket[]): UseAllWorkBulkReturn {
   const queryClient = useQueryClient();
   const [tableSelection, setTableSelection] = useState<Set<string | number>>(new Set());
+  const [isExpandedSelection, setIsExpandedSelection] = useState(false);
+  const [expandedTotal, setExpandedTotal] = useState(0);
+  const [expandedEntries, setExpandedEntries] = useState<AllWorkIdsSnapshot["entries"] | undefined>(undefined);
 
   const selectedTicketIds = useMemo(
     () => [...tableSelection].map((id) => Number(id)),
@@ -129,7 +143,7 @@ export function useAllWorkBulk(tickets: AllWorkTicket[]): UseAllWorkBulkReturn {
             });
           }
           for (const reason of outcome.failures) {
-            if (isApiError(reason) && reason.status === 409) {
+            if (isWriteConflict(reason)) {
               conflictIds.push(outcome.projectId);
             } else {
               errorMessages.push(getErrorMessage(reason));
@@ -137,7 +151,7 @@ export function useAllWorkBulk(tickets: AllWorkTicket[]): UseAllWorkBulkReturn {
           }
         } else {
           const reason: unknown = result.reason;
-          if (isApiError(reason) && reason.status === 409) {
+          if (isWriteConflict(reason)) {
             conflictIds.push(0);
           } else {
             errorMessages.push(getErrorMessage(reason));
@@ -161,7 +175,12 @@ export function useAllWorkBulk(tickets: AllWorkTicket[]): UseAllWorkBulkReturn {
         toast.error(`Failed on ${errorMessages.length} project${errorMessages.length === 1 ? "" : "s"}: ${errorMessages.join("; ")}`);
       }
 
-      if (totalUpdated > 0) setTableSelection(new Set());
+      if (totalUpdated > 0) {
+        setTableSelection(new Set());
+        setIsExpandedSelection(false);
+        setExpandedEntries(undefined);
+        setExpandedTotal(0);
+      }
     },
     onError: (err) => {
       toast.error(getErrorMessage(err));
@@ -184,7 +203,7 @@ export function useAllWorkBulk(tickets: AllWorkTicket[]): UseAllWorkBulkReturn {
 
   const handleBulkPriority = useCallback(
     (value: string) => {
-      const found = BULK_PRIORITIES.find((p) => p === value);
+      const found = toBulkPriority(value);
       if (found) void handleBulkAction({ priority: found });
     },
     [handleBulkAction],
@@ -201,6 +220,17 @@ export function useAllWorkBulk(tickets: AllWorkTicket[]): UseAllWorkBulkReturn {
 
   const handleClearSelection = useCallback(() => {
     setTableSelection(new Set());
+    setIsExpandedSelection(false);
+    setExpandedEntries(undefined);
+    setExpandedTotal(0);
+  }, []);
+
+  const expandToAllMatching = useCallback((snapshot: AllWorkIdsSnapshot) => {
+    const all = snapshot.entries.flatMap((e) => e.ids);
+    setTableSelection(new Set(all));
+    setIsExpandedSelection(true);
+    setExpandedTotal(snapshot.total);
+    setExpandedEntries(snapshot.entries);
   }, []);
 
   return {
@@ -209,6 +239,10 @@ export function useAllWorkBulk(tickets: AllWorkTicket[]): UseAllWorkBulkReturn {
     selectedTicketIds,
     selectedTickets,
     isPendingBulk: crossProjectBulkMutation.isPending,
+    isExpandedSelection,
+    expandedTotal,
+    expandedEntries,
+    expandToAllMatching,
     handleBulkStatus,
     handleBulkPriority,
     handleBulkAssignee,

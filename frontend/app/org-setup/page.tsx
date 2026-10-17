@@ -2,29 +2,23 @@
 
 export const dynamic = "force-dynamic";
 
-import { useState, useEffect, useCallback, useMemo, useRef } from "react";
+import React, { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { useSession } from "next-auth/react";
 import { toast } from "sonner";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Button } from "@/components/ui/button";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { clearBackendTokenCache } from "@/lib/api-client";
-import { clearGateCookie, completeOnboardingGate } from "@/lib/onboarding-gate";
-import { signInWithMagicToken } from "@/hooks/common/auth-hooks";
+import { setAutoSignOutSuppressed } from "@/lib/api-client";
 import {
-  SESSION_CLAIMS_UNCONFIRMED_MESSAGE,
-  useConfirmedSessionClaimsRefresh,
-} from "@/hooks/common/use-confirmed-session-claims-refresh";
-import {
-  useSkipOrgSetupMutation,
   useOrgSetupSessionQuery,
-} from "@/lib/api/hooks/org";
+  useOrgSetupDraftQuery,
+  useOrgSetupDraftSaveMutation,
+} from "@/hooks/api/org-setup";
 import {
   STEP_TITLES,
   DEFAULT_DATA,
-  deriveAppsFromGoals,
   getStepSequence,
   resolveStepIndex,
-  toggleGoalSelection,
   type StepId,
 } from "@/features/org-setup/lib/constants";
 import {
@@ -34,187 +28,306 @@ import {
   loadStep,
   saveStep,
   clampStep,
-  hasDraftProgress,
+  reachableStep,
   hasCompletionMarker,
+  getCompletionDestination,
+  type SyncStatus,
 } from "@/features/org-setup/lib/draft";
 import {
   parseWizardDraft,
   type WizardData,
 } from "@/features/org-setup/lib/wizard-data-schema";
 import { OrgSetupShell } from "@/features/org-setup/components/org-setup-shell";
-import { StepWelcome } from "@/features/org-setup/components/step-welcome";
-import { StepBasics } from "@/features/org-setup/components/step-basics";
+import { StepWorkspace } from "@/features/org-setup/components/step-workspace";
+import { StepProducts } from "@/features/org-setup/components/step-products";
 import { StepInviteLaunch } from "@/features/org-setup/components/step-invite-launch";
 import { ArchivedOrgsRestore } from "@/components/organization/archived-orgs-restore";
+import {
+  useMyPendingInvitations,
+  useClaimInvitation,
+  signInWithMagicToken,
+} from "@/hooks/common/auth-hooks";
+import { persistPartialGrants } from "@/features/auth/components/post-invite-transition";
+import type { PendingInvitationItem } from "@/hooks/common/auth-schema";
 
-function syncAppsFromGoals(data: WizardData): WizardData {
-  const derived = deriveAppsFromGoals(data.goals);
-  return { ...data, installedApps: derived, modules: derived };
+function PendingInvitationsNotice({ items }: { items: PendingInvitationItem[] }) {
+  const [joiningId, setJoiningId] = useState<string | null>(null);
+  const claimMutation = useClaimInvitation();
+  if (items.length === 0) return null;
+
+  function handleJoin(invitationId: string) {
+    if (joiningId) return;
+    setJoiningId(invitationId);
+    claimMutation.mutate(invitationId, {
+      onSuccess: async (data) => {
+        persistPartialGrants(data.skippedGrants ?? []);
+        const outcome = await signInWithMagicToken(data.autoLoginToken);
+        if (outcome.status === "signed-in") {
+          window.location.href = "/post-invite";
+        } else {
+          toast.error("Could not complete sign-in. Please try again.");
+          setJoiningId(null);
+        }
+      },
+      onError: (error) => {
+        toast.error(getErrorMessage(error));
+        setJoiningId(null);
+      },
+    });
+  }
+
+  function handleJoinClick(event: React.MouseEvent<HTMLButtonElement>) {
+    const invitationId = event.currentTarget.dataset.invitationId;
+    if (invitationId) handleJoin(invitationId);
+  }
+
+  return (
+    <div className="flex flex-col gap-3 rounded-lg border border-border bg-muted/40 p-4">
+      <p className="text-sm font-medium text-foreground">
+        {items.length === 1
+          ? "You have a pending invitation"
+          : `You have ${items.length} pending invitations`}
+      </p>
+      {items.map((item) => (
+        <div key={item.id} className="flex items-center justify-between gap-3">
+          <p className="text-sm text-muted-foreground">
+            {item.organizationName} &mdash; {item.role}
+          </p>
+          <button
+            type="button"
+            data-invitation-id={item.id}
+            disabled={!!joiningId}
+            onClick={handleJoinClick}
+            className="shrink-0 rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
+          >
+            {joiningId === item.id ? "Joining…" : "Join"}
+          </button>
+        </div>
+      ))}
+    </div>
+  );
 }
 
 export default function OrgSetupPage() {
   const { data: session } = useSession();
-  const beginClaimsRefresh = useConfirmedSessionClaimsRefresh();
   const userId = session?.user?.id ?? "";
 
   const [step, setStep] = useState(1);
   const [mounted, setMounted] = useState(false);
-  const [isSkipping, setIsSkipping] = useState(false);
+  const [createOwnOrg, setCreateOwnOrg] = useState(false);
   const [direction, setDirection] = useState(1);
   const [data, setData] = useState<WizardData>({ ...DEFAULT_DATA });
-  const [saveState, setSaveState] = useState<"idle" | "saved">("idle");
-  const [shouldLoadServerSession, setShouldLoadServerSession] = useState(false);
-  const hydratedFromServerRef = useRef(false);
-  const mountedOnceRef = useRef(false);
-  const skipPendingRef = useRef(false);
 
-  const { data: serverSession } = useOrgSetupSessionQuery(
-    shouldLoadServerSession,
-  );
-  const { mutateAsync: skipOrgSetup } = useSkipOrgSetupMutation();
+  useEffect(() => {
+    if (!mounted) return;
+    const sessionName = session?.user?.name?.trim();
+    if (!sessionName) return;
+    setData((current) =>
+      current.fullName.trim() ? current : { ...current, fullName: sessionName },
+    );
+  }, [mounted, session?.user?.name]);
+  const [saveState, setSaveState] = useState<"idle" | "saved">("idle");
+  const [syncStatus, setSyncStatus] = useState<SyncStatus>("synced");
+  const mountedOnceRef = useRef(false);
+  const draftRevisionRef = useRef(0);
+  const draftSaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const draftSaveChainRef = useRef<Promise<void>>(Promise.resolve());
+
+  const { data: pendingInvitations, isPending: isInvitationsPending } =
+    useMyPendingInvitations(Boolean(userId));
+
+  const { data: serverSession, isFetched: isServerSessionFetched } =
+    useOrgSetupSessionQuery(Boolean(userId));
+  const { data: serverDraft, isFetched: isServerDraftFetched } =
+    useOrgSetupDraftQuery(Boolean(userId));
+  const { mutateAsync: saveOrgSetupDraft } = useOrgSetupDraftSaveMutation();
 
   const sequence = useMemo(() => getStepSequence(), []);
   const totalSteps = sequence.length;
   const currentStepId: StepId = sequence[step - 1] ?? "welcome";
 
-  const firstName =
-    session?.user?.name?.split(" ")[0] ??
-    session?.user?.email?.split("@")[0] ??
-    "";
-
   const markDraftSaved = useCallback(() => {
     setSaveState("saved");
   }, []);
+
+  const saveServerDraft = useCallback(
+    (nextData: WizardData, nextStepId: StepId): Promise<void> => {
+      if (!userId) return Promise.resolve();
+      setSyncStatus("saving");
+      const save = draftSaveChainRef.current
+        .catch(() => undefined)
+        .then(async () => {
+          const result = await saveOrgSetupDraft({
+            revision: draftRevisionRef.current,
+            stepData: {
+              ...nextData,
+              __schemaVersion: 1,
+              __currentStep: nextStepId,
+            },
+            expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+          });
+          draftRevisionRef.current = result.revision;
+          setSyncStatus("synced");
+        })
+        .catch((error: unknown) => {
+          setSyncStatus("error");
+          throw error;
+        });
+      draftSaveChainRef.current = save;
+      return save;
+    },
+    [saveOrgSetupDraft, userId],
+  );
+
+  const scheduleServerDraftSave = useCallback(
+    (nextData: WizardData, nextStepId: StepId) => {
+      if (draftSaveTimerRef.current) clearTimeout(draftSaveTimerRef.current);
+      setSyncStatus("unsynced");
+      draftSaveTimerRef.current = setTimeout(() => {
+        draftSaveTimerRef.current = null;
+        void saveServerDraft(nextData, nextStepId).catch(() => undefined);
+      }, 500);
+    },
+    [saveServerDraft],
+  );
 
   const patch = useCallback(
     (updates: Partial<WizardData>) => {
       setData((prev) => {
         const next = { ...prev, ...updates };
         saveDraft(next, userId);
+        scheduleServerDraftSave(next, currentStepId);
         return next;
       });
       markDraftSaved();
     },
-    [markDraftSaved, userId],
+    [currentStepId, markDraftSaved, scheduleServerDraftSave, userId],
   );
 
-  const goNext = useCallback(() => {
+  const goNext = useCallback(async () => {
+    const nextStep = Math.min(step + 1, totalSteps);
+    const nextStepId = sequence[nextStep - 1] ?? currentStepId;
+    if (draftSaveTimerRef.current) {
+      clearTimeout(draftSaveTimerRef.current);
+      draftSaveTimerRef.current = null;
+    }
+    try {
+      await saveServerDraft(data, nextStepId);
+    } catch (error) {
+      toast.error(`We couldn't save your setup. ${getErrorMessage(error)}`);
+      return;
+    }
     setDirection(1);
-    setStep((s) => Math.min(s + 1, totalSteps));
+    setStep(nextStep);
     markDraftSaved();
-  }, [totalSteps, markDraftSaved]);
+  }, [currentStepId, data, markDraftSaved, saveServerDraft, sequence, step, totalSteps]);
 
   const goBack = useCallback(() => {
-    setDirection(-1);
-    setStep((s) => Math.max(s - 1, 1));
-  }, []);
-
-  const handleStepSelect = useCallback((index: number) => {
-    setDirection(-1);
-    setStep(index + 1);
-  }, []);
-
-  const handleToggleGoal = useCallback(
-    (id: string) => {
-      setData((prev) => {
-        const newGoals = toggleGoalSelection(prev.goals, id);
-        const next = syncAppsFromGoals({ ...prev, goals: newGoals });
-        saveDraft(next, userId);
-        return next;
-      });
-      markDraftSaved();
-    },
-    [markDraftSaved, userId],
-  );
-
-  const handleSkipToDashboard = useCallback(async () => {
-    if (skipPendingRef.current) return;
-    skipPendingRef.current = true;
-    setIsSkipping(true);
-    const claimsRun = beginClaimsRefresh();
-    let createdOrgId: string | null = null;
-    try {
-      const res = await skipOrgSetup({});
-      createdOrgId = res.orgId;
-      clearBackendTokenCache();
-      const claimsOutcome = await completeOnboardingGate(
-        "org-setup-done",
-        res.orgId,
-        claimsRun.confirm,
-        { orgId: res.orgId },
-      );
-      if (claimsOutcome.status === "superseded") {
-        skipPendingRef.current = false;
-        setIsSkipping(false);
-        return;
-      }
-      if (claimsOutcome.status !== "confirmed" && res.autoLoginToken) {
-        const outcome = await signInWithMagicToken(res.autoLoginToken);
-        if (outcome.status === "indeterminate")
-          throw new Error(
-            "We could not confirm your sign-in. Please sign in again.",
-          );
-        if (outcome.status !== "signed-in")
-          throw new Error("Sign-in failed. Please retry.");
-      } else if (claimsOutcome.status !== "confirmed")
-        throw new Error(SESSION_CLAIMS_UNCONFIRMED_MESSAGE);
-      clearAll(userId);
-      window.location.replace("/dashboard");
-    } catch (err) {
-      if (createdOrgId) clearGateCookie("org-setup-done", createdOrgId);
-      skipPendingRef.current = false;
-      setIsSkipping(false);
-      toast.error(getErrorMessage(err));
+    const nextStep = Math.max(step - 1, 1);
+    const nextStepId = sequence[nextStep - 1] ?? currentStepId;
+    if (draftSaveTimerRef.current) {
+      clearTimeout(draftSaveTimerRef.current);
+      draftSaveTimerRef.current = null;
     }
-  }, [skipOrgSetup, beginClaimsRefresh, userId]);
+    setDirection(-1);
+    setStep(nextStep);
+    function persistDraft() {
+      saveServerDraft(data, nextStepId).catch((error: unknown) => {
+        toast.error(`We couldn't save your setup. ${getErrorMessage(error)}`, {
+          action: { label: "Retry", onClick: persistDraft },
+        });
+      });
+    }
+    persistDraft();
+  }, [currentStepId, data, saveServerDraft, sequence, step]);
+
+  const handleStepSelect = useCallback(async (index: number) => {
+    const nextStep = index + 1;
+    const nextStepId = sequence[index] ?? currentStepId;
+    try {
+      await saveServerDraft(data, nextStepId);
+    } catch (error) {
+      toast.error(`We couldn't save your setup. ${getErrorMessage(error)}`);
+      return;
+    }
+    setDirection(-1);
+    setStep(nextStep);
+  }, [currentStepId, data, saveServerDraft, sequence]);
+
+  useEffect(() => {
+    setAutoSignOutSuppressed(true);
+    return () => setAutoSignOutSuppressed(false);
+  }, []);
 
   useEffect(() => {
     if (!userId) return;
     if (!hasCompletionMarker(userId, session?.orgId ?? "")) return;
-    window.location.replace("/dashboard");
+    window.location.replace(
+      getCompletionDestination(userId, session?.orgId ?? ""),
+    );
   }, [userId, session?.orgId]);
 
   useEffect(() => {
-    if (!userId || mountedOnceRef.current) return;
+    if (
+      !userId ||
+      mountedOnceRef.current ||
+      !isServerDraftFetched ||
+      !isServerSessionFetched
+    )
+      return;
     mountedOnceRef.current = true;
     if (hasCompletionMarker(userId, session?.orgId ?? "")) return;
-    const savedDraft = syncAppsFromGoals(loadDraft(userId));
+    const savedDraft = loadDraft(userId);
+    const rawServerData = serverDraft?.stepData;
+    const parsedServerDraft = rawServerData
+      ? parseWizardDraft(rawServerData)
+      : null;
+    const legacyServerDraft =
+      !parsedServerDraft &&
+      serverSession?.status === "in_progress" &&
+      serverSession.data
+        ? parseWizardDraft(serverSession.data)
+        : null;
+    const authoritativeDraft = parsedServerDraft ?? legacyServerDraft;
+    const sessionName = session?.user?.name?.trim();
+    const baseDraft = authoritativeDraft ?? savedDraft;
+    const hydrated =
+      sessionName && !baseDraft.fullName.trim()
+        ? { ...baseDraft, fullName: sessionName }
+        : baseDraft;
     const savedSequence = getStepSequence();
-    const restoredStep = clampStep(loadStep(userId), savedSequence.length);
-    setData(savedDraft);
-    saveDraft(savedDraft, userId);
-    setStep(restoredStep);
-    saveStep(restoredStep, userId);
-    setShouldLoadServerSession(!hasDraftProgress(savedDraft));
-    setMounted(true);
-  }, [userId, session?.orgId]);
-
-  useEffect(() => {
-    if (!mounted || hydratedFromServerRef.current || !serverSession) return;
-    hydratedFromServerRef.current = true;
-
-    const localDraft = loadDraft(userId);
-    if (hasDraftProgress(localDraft)) return;
-    if (serverSession.status !== "in_progress" || !serverSession.data) return;
-
-    const merged = syncAppsFromGoals(parseWizardDraft(serverSession.data));
-    if (!hasDraftProgress(merged)) return;
-
-    const mergedSequence = getStepSequence();
-    const stepFromServer = resolveStepIndex(
-      serverSession.currentStep,
-      mergedSequence,
+    const serverStepId =
+      rawServerData && typeof rawServerData.__currentStep === "string"
+        ? rawServerData.__currentStep
+        : serverSession?.currentStep;
+    const serverStep = resolveStepIndex(serverStepId, savedSequence);
+    const restoredStep = reachableStep(
+      clampStep(serverStep || loadStep(userId), savedSequence.length),
+      hydrated,
+      savedSequence,
     );
-    const restoredStep =
-      stepFromServer >= 1
-        ? clampStep(stepFromServer, mergedSequence.length)
-        : clampStep(loadStep(userId), mergedSequence.length);
-
-    setData(merged);
-    saveDraft(merged, userId);
+    draftRevisionRef.current = serverDraft?.revision ?? 0;
+    setData(hydrated);
+    saveDraft(hydrated, userId);
     setStep(restoredStep);
     saveStep(restoredStep, userId);
-  }, [mounted, serverSession, userId]);
+    setMounted(true);
+  }, [
+    isServerDraftFetched,
+    isServerSessionFetched,
+    serverDraft,
+    serverSession,
+    session?.orgId,
+    session?.user?.name,
+    userId,
+  ]);
+
+  useEffect(
+    () => () => {
+      if (draftSaveTimerRef.current) clearTimeout(draftSaveTimerRef.current);
+    },
+    [],
+  );
 
   useEffect(() => {
     if (!mounted) return;
@@ -226,6 +339,25 @@ export default function OrgSetupPage() {
     const timeout = setTimeout(() => setSaveState("idle"), 4000);
     return () => clearTimeout(timeout);
   }, [saveState]);
+
+  const handleCreateOwnOrg = useCallback(() => setCreateOwnOrg(true), []);
+
+  if (mounted && !createOwnOrg && !isInvitationsPending && (pendingInvitations?.length ?? 0) > 0) {
+    return (
+      <div className="mx-auto flex w-full max-w-lg flex-1 flex-col gap-6 px-4 py-12 sm:px-8">
+        <div className="flex flex-col gap-1">
+          <h1 className="text-xl font-semibold">You have a pending invitation</h1>
+          <p className="text-sm text-muted-foreground">
+            Join an organization below to get started.
+          </p>
+        </div>
+        <PendingInvitationsNotice items={pendingInvitations ?? []} />
+        <Button variant="ghost" className="self-start" onClick={handleCreateOwnOrg}>
+          Create my own organization instead
+        </Button>
+      </div>
+    );
+  }
 
   if (!mounted)
     return (
@@ -246,10 +378,7 @@ export default function OrgSetupPage() {
       </div>
     );
 
-  const stepTitle =
-    currentStepId === "welcome"
-      ? `Welcome${firstName ? `, ${firstName}` : ""}`
-      : STEP_TITLES[currentStepId];
+  const stepTitle = STEP_TITLES[currentStepId];
 
   return (
     <OrgSetupShell
@@ -258,23 +387,29 @@ export default function OrgSetupPage() {
       title={stepTitle}
       direction={direction}
       saveState={saveState}
+      syncStatus={syncStatus}
       data={data}
       onStepSelect={handleStepSelect}
     >
-      {currentStepId === "welcome" && (
-        <StepWelcome
-          onNext={goNext}
-          onSkip={handleSkipToDashboard}
-          isSkipping={isSkipping}
-          firstName={firstName}
-          restoreSlot={<ArchivedOrgsRestore />}
-        />
-      )}
-      {currentStepId === "basics" && (
-        <StepBasics
+      {currentStepId === "workspace" && (
+        <StepWorkspace
           data={data}
           patch={patch}
-          onToggleGoal={handleToggleGoal}
+          onBack={goBack}
+          onNext={goNext}
+          isFirstStep
+          restoreSlot={
+            <>
+              <ArchivedOrgsRestore />
+              <PendingInvitationsNotice items={pendingInvitations ?? []} />
+            </>
+          }
+        />
+      )}
+      {currentStepId === "products" && (
+        <StepProducts
+          data={data}
+          patch={patch}
           onBack={goBack}
           onNext={goNext}
         />

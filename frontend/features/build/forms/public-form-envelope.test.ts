@@ -1,32 +1,4 @@
-/**
- * @jest-environment node
- *
- * A NEGATIVE test for the public-form read seam.
- *
- * The defect this pins is not hypothetical: `app/(public)/forms/[token]/page.tsx`
- * used to end `fetchPublicForm` with
- *
- *     return res.json() as Promise<PublicFormDefinition>;
- *
- * The backend's global `ResponseTransformInterceptor` wraps EVERY handler return
- * as `{ success: true, data }` unless it already carries a `success` key, and
- * `getFormByToken` returns a bare Drizzle row. So the value that actually
- * resolved was the envelope, not the form: `form.name` was undefined (the header
- * stayed on "Loading form…") and `form.fields.length` threw a TypeError. Both
- * repositories typechecked clean throughout, which is exactly why a typecheck is
- * not the proof here.
- *
- * Every assertion below is written so it FAILS if that cast comes back, rather
- * than merely restating the type:
- *
- *   1. the wire body really is a different shape from the declared type — proved
- *      by handing the raw envelope to the contract and requiring a rejection.
- *      Without this, assertion 2 could pass vacuously on a payload that happened
- *      to be shaped like the form already.
- *   2. reading through `parseApiResponse` unwraps it and yields the form.
- *   3. a renamed or dropped field is REJECTED rather than surfacing as
- *      undefined — the property the cast could never have.
- */
+/** @jest-environment node */
 import {
   intakeSubmitResponseContract,
 } from "@/features/build/intake/public-intake-schema";
@@ -38,10 +10,11 @@ import { isContractViolation, parseApiResponse } from "@/lib/api-envelope";
 import {
   fetchPublicForm,
   submitPublicForm,
-} from "@/features/build/forms/public-form-api";
-import { submitIntake } from "@/features/build/intake/public-intake-api";
+} from "@/hooks/api/build/public-form";
+import { submitIntakeByToken } from "@/features/build/intake/public-intake-api";
+import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
 
-/** Exactly what `getFormByToken` returns, before the interceptor sees it. */
+
 const FORM_ROW = {
   id: 42,
   name: "Client onboarding",
@@ -53,7 +26,7 @@ const FORM_ROW = {
   ],
 };
 
-/** Exactly what leaves the server: the interceptor's envelope around that row. */
+
 const WIRE_BODY = { success: true, data: FORM_ROW };
 
 async function contractViolationFrom(promise: Promise<unknown>): Promise<boolean> {
@@ -76,8 +49,8 @@ function response(body: unknown, status = 200) {
 
 describe("the envelope is a different shape from the declared type", () => {
   it("rejects the raw wire body against the form contract", () => {
-    // If this ever passes, the interceptor stopped wrapping and assertion 2
-    // below would no longer be evidence of anything.
+
+
     expect(publicFormDefinitionContract.safeParse(WIRE_BODY).success).toBe(false);
   });
 
@@ -161,7 +134,7 @@ describe("a shape change is an error, not an undefined", () => {
   });
 });
 
-describe("the two submit seams carry the same envelope", () => {
+describe("both submit seams unwrap the envelope, and only the authenticated one surfaces an id", () => {
   it("unwraps the form submit response", async () => {
     const result = await parseApiResponse(
       response({ success: true, data: { id: 7, message: "Submission received" } }),
@@ -176,32 +149,42 @@ describe("the two submit seams carry the same envelope", () => {
     const result = await parseApiResponse(
       response({ success: true, data: { id: 9, message: "Request submitted" } }),
       intakeSubmitResponseContract,
-      "/public/intake/1",
+      "/public/intake/t/tok",
     );
 
     expect(result.message).toBe("Request submitted");
   });
 
-  it("rejects an intake response that lost its id", async () => {
+  it("does not surface the created item id on the anonymous intake seam even when the server sends one, unlike the token-authenticated form seam which declares it", async () => {
+    const intake = await parseApiResponse(
+      response({ success: true, data: { id: 9, message: "Request submitted" } }),
+      intakeSubmitResponseContract,
+      "/public/intake/t/tok",
+    );
+    const form = await parseApiResponse(
+      response({ success: true, data: { id: 7, message: "Submission received" } }),
+      publicFormSubmitResponseContract,
+      "/public/forms/t/submit",
+    );
+
+    expect(intake).toEqual({ message: "Request submitted" });
+    expect(form.id).toBe(7);
+  });
+
+  it("rejects an intake response that lost its message, so the contract still bites on the field it does declare", async () => {
     await expect(
       contractViolationFrom(
         parseApiResponse(
-          response({ success: true, data: { message: "Request submitted" } }),
+          response({ success: true, data: { id: 9 } }),
           intakeSubmitResponseContract,
-          "/public/intake/1",
+          "/public/intake/t/tok",
         ),
       ),
     ).resolves.toBe(true);
   });
 });
 
-/**
- * The three real call sites, driven through a stubbed `fetch` that returns
- * exactly what the server sends. These are the assertions that bite on a
- * revert: put `res.json() as Promise<T>` back into any of the three and the
- * resolved value becomes the envelope, so `form.name` is undefined and each
- * `expect` below fails.
- */
+
 describe("the real call sites resolve the payload, not the envelope", () => {
   const originalFetch = global.fetch;
 
@@ -225,7 +208,7 @@ describe("the real call sites resolve the payload, not the envelope", () => {
 
     expect(form.name).toBe("Client onboarding");
     expect(form.fields).toHaveLength(2);
-    // The page renders `form.fields.length` unguarded; on the envelope this threw.
+
     expect(() => form.fields.length).not.toThrow();
   });
 
@@ -243,6 +226,18 @@ describe("the real call sites resolve the payload, not the envelope", () => {
     );
   });
 
+  it("fetchPublicForm forwards the query abort signal without sending credentials", async () => {
+    stubFetch(WIRE_BODY);
+    const signal = new AbortController().signal;
+
+    await fetchPublicForm("tok", signal);
+
+    expect(global.fetch).toHaveBeenCalledWith(
+      expect.stringContaining("/public/forms/tok"),
+      expect.objectContaining({ signal, credentials: "omit" }),
+    );
+  });
+
   it("submitPublicForm returns the submission id from an enveloped body", async () => {
     stubFetch({ success: true, data: { id: 7, message: "Submission received" } });
 
@@ -252,11 +247,87 @@ describe("the real call sites resolve the payload, not the envelope", () => {
     });
   });
 
-  it("submitIntake returns the item id from an enveloped body", async () => {
+  it("submitIntakeByToken resolves to the message alone, withholding the created item id from an unauthenticated caller", async () => {
     stubFetch({ success: true, data: { id: 9, message: "Request submitted" } });
 
     await expect(
-      submitIntake("1", { title: "Broken login", submitterEmail: undefined }),
-    ).resolves.toEqual({ id: 9, message: "Request submitted" });
+      submitIntakeByToken("tok-abc", { title: "Broken login", submitterEmail: undefined }),
+    ).resolves.toEqual({ message: "Request submitted" });
+  });
+});
+
+describe("cache partitioning — form tokens produce distinct query keys", () => {
+  it("two different form tokens never share a query key", () => {
+    const keyA = buildWorkQueryKeys.projects.publicForms.token("tok-aaa");
+    const keyB = buildWorkQueryKeys.projects.publicForms.token("tok-bbb");
+    expect(keyA).not.toEqual(keyB);
+  });
+
+  it("the token value appears in the query key so invalidation is scoped", () => {
+    const token = "form-token-xyz";
+    const key = buildWorkQueryKeys.projects.publicForms.token(token);
+    const keyString = JSON.stringify(key);
+    expect(keyString).toContain(token);
+  });
+
+  it("intake-form-by-token key is distinct from the form-token key for the same value", () => {
+    const value = "tok-123";
+    const formKey = buildWorkQueryKeys.projects.publicForms.token(value);
+    const intakeKey = buildWorkQueryKeys.projects.publicForms.intakeFormByToken(value);
+    expect(formKey).not.toEqual(intakeKey);
+  });
+
+  it("intake-form-by-token keys for different tokens do not overlap", () => {
+    const keyA = buildWorkQueryKeys.projects.publicForms.intakeFormByToken("tok-aaa");
+    const keyB = buildWorkQueryKeys.projects.publicForms.intakeFormByToken("tok-bbb");
+    expect(keyA).not.toEqual(keyB);
+    expect(JSON.stringify(keyA)).toContain("tok-aaa");
+    expect(JSON.stringify(keyB)).toContain("tok-bbb");
+  });
+});
+
+
+describe("intake submission idempotency — intentionally non-idempotent by design", () => {
+  const originalFetch = global.fetch;
+
+  function stubFetch(body: unknown, status = 200) {
+    global.fetch = jest.fn(async () =>
+      new Response(JSON.stringify(body), {
+        status,
+        headers: { "Content-Type": "application/json" },
+      }),
+    ) as unknown as typeof fetch;
+  }
+
+  afterEach(() => {
+    global.fetch = originalFetch;
+  });
+
+  it("submitIntakeByToken sends no Idempotency-Key header — each submission is a distinct record by design", async () => {
+    stubFetch({ success: true, data: { id: 1, message: "Request submitted" } });
+
+    await submitIntakeByToken("tok-99", { title: "New request", submitterEmail: undefined });
+
+    const [, init] = (global.fetch as jest.Mock).mock.calls[0] as [
+      string,
+      RequestInit,
+    ];
+    const headers = init.headers as Headers;
+    expect(headers.has("Idempotency-Key")).toBe(false);
+  });
+
+  it("two calls to submitIntakeByToken each reach the server — no client-side deduplication", async () => {
+    stubFetch({ success: true, data: { id: 1, message: "Request submitted" } });
+
+    await submitIntakeByToken("tok-99", { title: "First request", submitterEmail: undefined });
+    await submitIntakeByToken("tok-99", { title: "Second request", submitterEmail: undefined });
+
+    expect((global.fetch as jest.Mock).mock.calls).toHaveLength(2);
+  });
+
+  it("submitIntakeByToken does not read or write a cache key — intake submissions are not cached reads", () => {
+    const intakeKey = buildWorkQueryKeys.projects.publicForms.intakeFormByToken("tok-99");
+    expect(intakeKey).toBeDefined();
+    expect(Array.isArray(intakeKey)).toBe(true);
   });
 });

@@ -34,6 +34,7 @@ interface DayTimelineProps {
   days: string[];
   weekStart: string;
   weekEnd: string;
+  defaultProjectId?: number;
 }
 
 interface EntryRowProps {
@@ -95,7 +96,7 @@ const EntryRow = memo(function EntryRow({ entry, onEdit, onVoid }: EntryRowProps
   );
 });
 
-export function DayTimeline({ entries, days, weekStart, weekEnd }: DayTimelineProps) {
+export function DayTimeline({ entries, days, weekStart, weekEnd, defaultProjectId }: DayTimelineProps) {
   const access = usePermissionGate("timesheets:entries:view");
   const { data: holidayData } = useTimesheetHolidays(weekStart, weekEnd);
   const holidayByDate = useMemo(
@@ -240,6 +241,7 @@ export function DayTimeline({ entries, days, weekStart, weekEnd }: DayTimelinePr
         open={logOpen}
         onOpenChange={handleLogClose}
         defaultDate={selectedDay}
+        defaultProjectId={defaultProjectId}
         entry={editEntry}
       />
 

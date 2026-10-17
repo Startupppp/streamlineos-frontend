@@ -64,3 +64,41 @@ export function boundedAskOsContext<T extends { content: string }>(
 
   return selected.reverse();
 }
+
+const MAX_CONTEXT_ROUTE_CHARS = 300;
+const RECORD_ID_PATTERN =
+  /^(\d+|[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})$/i;
+
+export interface AskOsPageContext {
+  route: string;
+  module?: string;
+  projectId?: string;
+  recordType?: string;
+  recordId?: string;
+}
+
+function singular(segment: string): string {
+  return segment.endsWith("s") ? segment.slice(0, -1) : segment;
+}
+
+export function askOsPageContext(pathname: string): AskOsPageContext {
+  const route = pathname.slice(0, MAX_CONTEXT_ROUTE_CHARS);
+  const segments = route.split("/").filter(Boolean);
+  const [module, second, third, fourth] = segments;
+  if (!module) return { route };
+  if (module === "build" && second && /^\d+$/.test(second)) {
+    const ticket = third === "tickets" && fourth ? { recordType: "ticket", recordId: fourth } : {};
+    return { route, module, projectId: second, ...ticket };
+  }
+  for (let index = segments.length - 1; index >= 2; index -= 1) {
+    const candidate = segments[index] ?? "";
+    if (!RECORD_ID_PATTERN.test(candidate)) continue;
+    return {
+      route,
+      module,
+      recordType: singular(segments[index - 1] ?? ""),
+      recordId: candidate,
+    };
+  }
+  return { route, module };
+}

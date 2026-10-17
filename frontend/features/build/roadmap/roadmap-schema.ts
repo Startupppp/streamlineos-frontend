@@ -35,17 +35,42 @@ export const changelogSchema = z.object({
 
 export type ChangelogFormValues = z.infer<typeof changelogSchema>;
 
-export const roadmapItemSchema = z.object({
-  title: z.string().min(1, "Title is required"),
-  description: z.string(),
-  status: z.enum(["planned", "in_progress", "completed", "cancelled"]),
-  category: z.string(),
-  targetQuarter: z.string(),
-  isPublic: z.boolean(),
-  reach: riceField(RICE_REACH_MIN, RICE_REACH_MAX, "Reach"),
-  impact: riceField(RICE_IMPACT_MIN, RICE_IMPACT_MAX, "Impact"),
-  confidence: riceField(RICE_CONFIDENCE_MIN, RICE_CONFIDENCE_MAX, "Confidence"),
-  effort: riceField(RICE_EFFORT_MIN, RICE_EFFORT_MAX, "Effort"),
-});
+export const ROADMAP_TITLE_MAX = 200;
+
+export const roadmapItemSchema = z
+  .object({
+    title: z
+      .string()
+      .min(1, "Title is required")
+      .max(ROADMAP_TITLE_MAX, `Keep under ${String(ROADMAP_TITLE_MAX)} characters`),
+    description: z.string(),
+    outcome: z.string(),
+    status: z.enum(["planned", "in_progress", "completed", "cancelled"]),
+    horizon: z.enum(["now", "next", "later"]),
+    category: z.string(),
+    targetQuarter: z.string(),
+    targetStart: z.string(),
+    targetEnd: z.string(),
+    projectId: z.string().refine(
+      (value) => value === "" || (/^[1-9]\d*$/.test(value) && Number.isSafeInteger(Number(value))),
+      "Choose a valid delivery project",
+    ),
+    epicTicketId: z.string(),
+    goalId: z.string(),
+    releaseId: z.string(),
+    teamId: z.string(),
+    isPublic: z.boolean(),
+    reach: riceField(RICE_REACH_MIN, RICE_REACH_MAX, "Reach"),
+    impact: riceField(RICE_IMPACT_MIN, RICE_IMPACT_MAX, "Impact"),
+    confidence: riceField(RICE_CONFIDENCE_MIN, RICE_CONFIDENCE_MAX, "Confidence"),
+    effort: riceField(RICE_EFFORT_MIN, RICE_EFFORT_MAX, "Effort"),
+  })
+  .refine(
+    (data) => {
+      if (!data.targetStart || !data.targetEnd) return true;
+      return data.targetEnd >= data.targetStart;
+    },
+    { message: "Target end must be on or after target start", path: ["targetEnd"] },
+  );
 
 export type RoadmapItemFormValues = z.infer<typeof roadmapItemSchema>;

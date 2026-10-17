@@ -45,6 +45,7 @@ export function TeamForm({
     <Form {...form}>
       <form
         id="team-form"
+        noValidate
         onSubmit={form.handleSubmit(onSubmit)}
         className="space-y-5"
       >

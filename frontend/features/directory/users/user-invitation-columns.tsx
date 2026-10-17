@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/select";
 import type { Invitation } from "@/hooks/api/users";
 import { USER_INVITE_ROLES, formatRoleLabel } from "@/lib/constants/user-invite-roles";
+import { describeModuleAccess } from "./invite-module-access";
 
 export type InvitationStatus = "pending" | "accepted" | "expired" | "revoked" | "declined";
 export type InvitationStatusFilter = "all" | InvitationStatus;
@@ -204,7 +205,9 @@ function InvitationActionCell({
           isPending={isCopyingRow}
           disabled={isCancelling}
           aria-label={`Copy join link for ${invitation.email}`}
-          title="Copy a fresh join link. This replaces any link already sent."
+          // BUG-HRMS-004: the reissue is confirmed in a dialog now, because a
+          // tooltip is not consent for breaking the link already in their inbox.
+          title="Copy a join link. Issuing a new one stops the emailed link working."
         >
           <LinkIcon className="h-4 w-4" />
         </LoadingButton>
@@ -264,24 +267,28 @@ export function getInvitationColumns({
     const invitationStatus = getInvitationStatus(invitation);
     const editable =
       (invitationStatus === "pending" || invitationStatus === "expired") && canInvite;
-    if (!editable)
-      return (
-        <Badge variant="outline" className="h-4 px-1.5 py-0 text-micro">
-          {formatRoleLabel(invitation.role)}
-        </Badge>
-      );
+    const access = describeModuleAccess(invitation.moduleAccess);
     return (
-      <InvitationRoleSelect
-        invitationId={invitation.id}
-        email={invitation.email}
-        role={invitation.role}
-        disabled={isInvitationRoleChangePending(
-          isChangingRole,
-          changingInvitationId,
-          invitation.id,
+      <div className="flex flex-wrap items-center gap-1.5">
+        {editable ? (
+          <InvitationRoleSelect
+            invitationId={invitation.id}
+            email={invitation.email}
+            role={invitation.role}
+            disabled={isInvitationRoleChangePending(
+              isChangingRole,
+              changingInvitationId,
+              invitation.id,
+            )}
+            onChange={onRoleChange}
+          />
+        ) : (
+          <Badge variant="outline" className="h-4 px-1.5 py-0 text-micro">
+            {formatRoleLabel(invitation.role)}
+          </Badge>
         )}
-        onChange={onRoleChange}
-      />
+        {access ? <span className="text-micro text-muted-foreground">+ {access}</span> : null}
+      </div>
     );
   }
 
@@ -310,7 +317,7 @@ export function getInvitationColumns({
           <Badge
             variant="outline"
             className="h-4 border-status-danger-rule bg-status-danger-surface px-1.5 py-0 text-micro text-status-danger-ink"
-            title="The invitation email could not be delivered. Resend to try again."
+            title="Email delivery failed. Check provider settings or recipient suppression before resending. Copying a join link requires confirmation."
           >
             Email failed
           </Badge>

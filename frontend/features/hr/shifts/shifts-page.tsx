@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { motion } from "framer-motion";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
@@ -46,12 +45,7 @@ export function ShiftsPage() {
         ) : undefined
       }
     >
-      <motion.div
-        initial={{ opacity: 0, y: 16 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.22, ease: "easeOut" }}
-        className="flex flex-1 min-h-0 flex-col"
-      >
+      <div className="flex flex-1 min-h-0 flex-col">
         <Tabs defaultValue="templates" className="flex flex-1 min-h-0 flex-col gap-4">
           <TabsList>
             <TabsTrigger value="templates">Shift Templates</TabsTrigger>
@@ -68,7 +62,7 @@ export function ShiftsPage() {
             <ShiftSwapsTab canManage={canManage} />
           </TabsContent>
         </Tabs>
-      </motion.div>
+      </div>
       <ShiftFormSheet open={sheetOpen} onOpenChange={handleSheetOpenChange} shift={editing} />
     </PageWrapper>
   );

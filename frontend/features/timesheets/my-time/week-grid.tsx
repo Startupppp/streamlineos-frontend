@@ -2,6 +2,7 @@
 import { useCallback, useMemo, useRef, useState } from "react";
 import { addDays, differenceInCalendarDays, format, parseISO } from "date-fns";
 import { Copy, Lock, Plus } from "lucide-react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -9,6 +10,7 @@ import { cn } from "@/lib/utils";
 import { ProjectTicketSelect } from "./project-ticket-select";
 import { describeCell } from "./day-label";
 import {
+  useCopyTimesheetEntries,
   useCreateTimesheetEntry,
   useUpdateTimesheetEntry,
   useVoidTimesheetEntry,
@@ -16,10 +18,28 @@ import {
   useTimesheetHolidays,
 } from "@/hooks/api/timesheets-core";
 import { TruncatedText } from "@/components/ui/truncated-text";
-import type { TimesheetEntry } from "@/features/timesheets";
+import type { CreateEntryInput, TimesheetEntry } from "@/features/timesheets";
 import { deriveRows, isCellLocked, rowKeyOf, type GridRow } from "./week-grid-rows";
 import { useWeekGridCells } from "./use-week-grid-cells";
 import { OVERFLOW_EDGE_FADE_CLASS, useHorizontalOverflow } from "@/hooks/common/use-horizontal-overflow";
+
+export interface CopyLastWeekResult {
+  created: number;
+  skipped: number;
+  failed: number;
+}
+
+/** One line for the whole copy, so a 20-entry week is not 20 toasts. */
+export function describeCopyResult({ created, skipped, failed }: CopyLastWeekResult): string {
+  if (created === 0 && failed === 0)
+    return skipped > 0
+      ? "Nothing to copy — this week already has those entries."
+      : "Last week had no entries to copy.";
+  const parts = [`Copied ${created} ${created === 1 ? "entry" : "entries"}`];
+  if (skipped > 0) parts.push(`${skipped} already logged`);
+  if (failed > 0) parts.push(`${failed} failed`);
+  return `${parts.join(" · ")}.`;
+}
 
 interface WeekGridProps {
   entries: TimesheetEntry[] | undefined;
@@ -45,6 +65,7 @@ export function WeekGrid({
   const createEntry = useCreateTimesheetEntry();
   const updateEntry = useUpdateTimesheetEntry();
   const voidEntry = useVoidTimesheetEntry();
+  const copyEntries = useCopyTimesheetEntries();
 
   const [pendingRows, setPendingRows] = useState<GridRow[]>([]);
   const [addingRow, setAddingRow] = useState(false);
@@ -148,6 +169,8 @@ export function WeekGrid({
     try {
       const result = await prevWeekQuery.refetch();
       const prevEntries = result.data?.data ?? [];
+      let skipped = 0;
+      const rows: CreateEntryInput[] = [];
       for (const e of prevEntries) {
         const dayOff = differenceInCalendarDays(
           parseISO(e.date),
@@ -160,8 +183,11 @@ export function WeekGrid({
         const alreadyExists = entryMap.has(
           `${e.projectId ?? 0}-${e.ticketId ?? 0}-${newDate}`,
         );
-        if (alreadyExists) continue;
-        createEntry.mutate({
+        if (alreadyExists) {
+          skipped += 1;
+          continue;
+        }
+        rows.push({
           date: newDate,
           hours: Number(e.hours),
           projectId: e.projectId ?? undefined,
@@ -171,10 +197,16 @@ export function WeekGrid({
           source: "MANUAL",
         });
       }
+      // Awaited, so "Copying…" outlives the writes it started, and reported
+      // once rather than one toast and one refetch per row.
+      const { created, failed } = await copyEntries.mutateAsync(rows);
+      toast[failed > 0 ? "error" : "success"](
+        describeCopyResult({ created, skipped, failed }),
+      );
     } finally {
       setIsCopying(false);
     }
-  }, [prevWeekQuery, prevWeekStart, weekStart, entryMap, createEntry]);
+  }, [prevWeekQuery, prevWeekStart, weekStart, entryMap, copyEntries]);
 
   if (isLoading) {
     return (
@@ -218,7 +250,16 @@ export function WeekGrid({
         data-hidden-right={gridOverflow.hiddenRight}
         className={cn("overflow-x-auto rounded-lg border border-border scrollbar-thin", OVERFLOW_EDGE_FADE_CLASS)}
       >
-        <table className="w-full text-xs" style={{ minWidth: 800 }}>
+        {/*
+          `table-fixed` is load-bearing, not cosmetic. Under the default auto
+          layout a cell's declared width is only a suggestion, so the sticky
+          project column grew to the longest project name — 242px of a 356px
+          scroll port at 390px wide — and, being sticky, it then sat on top of
+          Thu/Fri/Sat at every scroll offset that would have revealed them.
+          Fixed layout makes `w-28 sm:w-48` the real width and lets the
+          `truncate` inside the cell do its job (QA-TS-001).
+        */}
+        <table className="w-full table-fixed text-xs" style={{ minWidth: 800 }}>
           <caption className="sr-only">
             Hours by project and day for the week of{" "}
             {format(parseISO(weekStart), "d MMMM yyyy")}. Use the arrow keys to
@@ -226,7 +267,9 @@ export function WeekGrid({
           </caption>
           <thead>
             <tr className="bg-muted/40 border-b border-border">
-              <th className="sticky left-0 z-10 bg-muted/40 text-left px-3 py-2 font-medium text-muted-foreground w-48 border-r border-border">
+              {/* Opaque, not `bg-muted/40`: a translucent sticky cell lets the
+                  day columns it is covering show through it (QA-TS-001). */}
+              <th className="sticky left-0 z-10 bg-card text-left px-3 py-2 font-medium text-muted-foreground w-28 sm:w-48 border-r border-border">
                 Project / Ticket
               </th>
               {days.map((d) => (
@@ -258,7 +301,7 @@ export function WeekGrid({
                   key={row.rowKey}
                   className="group hover:bg-muted/20 transition-colors"
                 >
-                  <th scope="row" className="sticky left-0 z-10 bg-card group-hover:bg-muted/20 px-3 py-1.5 text-left font-normal border-r border-border">
+                  <th scope="row" className="sticky left-0 z-10 bg-card group-hover:bg-muted px-3 py-1.5 text-left font-normal border-r border-border">
                     <TruncatedText
                       text={row.projectName}
                       className="font-medium text-foreground"
@@ -340,7 +383,7 @@ export function WeekGrid({
           </tbody>
           <tfoot>
             <tr className="border-t border-border bg-muted/30">
-              <td className="sticky left-0 z-10 bg-muted/30 px-3 py-2 text-xs font-semibold text-muted-foreground border-r border-border">
+              <td className="sticky left-0 z-10 bg-card px-3 py-2 text-xs font-semibold text-muted-foreground border-r border-border">
                 Total
               </td>
               {dayTotals.map((total, i) => (
@@ -359,7 +402,9 @@ export function WeekGrid({
         </table>
       </div>
       {gridOverflow.scrolls ? (
-        <p className="text-micro text-muted-foreground sm:hidden">Swipe sideways to reach every day of the week.</p>
+        <p className="text-micro text-muted-foreground">
+          Scroll sideways to reach every day of the week and the weekly total.
+        </p>
       ) : null}
 
       {addingRow ? (

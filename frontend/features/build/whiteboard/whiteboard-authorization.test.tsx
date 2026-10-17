@@ -38,22 +38,34 @@ jest.mock("@/hooks/api/entitlements", () => ({
   useEntitlements: () => ({ data: undefined }),
 }));
 
-jest.mock("@/hooks/api/build", () => ({
+jest.mock("@/hooks/api/build/whiteboards", () => ({
   useWhiteboards: () => ({
-    data: [
-      {
-        id: 1,
-        name: "Test Board",
-        elementCount: 0,
-        visibility: "project",
-        createdBy: null,
-        updatedAt: null,
-      },
-    ],
+    data: {
+      pages: [
+        {
+          data: [
+            {
+              id: 1,
+              name: "Test Board",
+              elementCount: 0,
+              visibility: "project",
+              createdBy: null,
+              updatedAt: null,
+            },
+          ],
+          hasMore: false,
+          nextCursor: null,
+        },
+      ],
+      pageParams: [undefined],
+    },
     isLoading: false,
     isError: false,
     error: undefined,
     refetch: jest.fn(),
+    hasNextPage: false,
+    fetchNextPage: jest.fn(),
+    isFetchingNextPage: false,
   }),
   useWhiteboard: () => ({
     data: {
@@ -89,7 +101,7 @@ jest.mock("next/dynamic", () => () => MockExcalidrawCanvas);
 jest.mock("@/components/pm-chrome", () => ({
   PmPageShell: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
   PmPanel: ({ children }: { children: React.ReactNode; className?: string; solid?: boolean }) => <div>{children}</div>,
-  PM_FILL_PANEL: "fill-panel",
+  CONTENT_FILL_PANEL: "fill-panel",
   PM_ROW: "pm-row",
 }));
 
@@ -133,6 +145,7 @@ jest.mock("./share-dialog", () => ({
 }));
 
 jest.mock("./scene-utils", () => ({
+  ...jest.requireActual("./scene-utils"),
   computeStoredVersion: () => 0,
 }));
 

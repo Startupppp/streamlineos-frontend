@@ -15,6 +15,7 @@ import type {
   BuildListSortDirection,
 } from "@/features/build/shared/use-build-list-url-state";
 import { BUILD_LIST_SORT_FIELDS } from "@/features/build/shared/use-build-list-url-state";
+import { cn } from "@/lib/utils";
 
 const SORT_FIELD_LABELS: Record<BuildListSortField, string> = {
   rank: "Manual",
@@ -28,12 +29,14 @@ interface MyWorkSortControlProps {
   sortField: BuildListSortField;
   sortDirection: BuildListSortDirection;
   onSortChange: (field: BuildListSortField, direction: BuildListSortDirection) => void;
+  className?: string;
 }
 
 export const MyWorkSortControl = memo(function MyWorkSortControl({
   sortField,
   sortDirection,
   onSortChange,
+  className,
 }: MyWorkSortControlProps) {
   function handleFieldChange(value: string) {
     const field = BUILD_LIST_SORT_FIELDS.find((f) => f === value);
@@ -45,9 +48,9 @@ export const MyWorkSortControl = memo(function MyWorkSortControl({
   }
 
   return (
-    <div className="flex shrink-0 items-center gap-1">
+    <div className={cn("flex shrink-0 items-center gap-1", className)}>
       <Select value={sortField} onValueChange={handleFieldChange}>
-        <SelectTrigger className="w-[7.5rem]">
+        <SelectTrigger className="w-[7.5rem] flex-1">
           <SelectValue />
         </SelectTrigger>
         <SelectContent>

@@ -4,7 +4,6 @@ import {
   useQuery,
   useInfiniteQuery,
   useQueryClient,
-  keepPreviousData,
 } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
@@ -36,8 +35,7 @@ const mailSendResultContract = lazyContract(() =>
 const mailActionSuccessContract = lazyContract(() =>
   import("@/hooks/api/mail-schema").then((m) => m.mailActionSuccessContract),
 );
-import { directoryAndOwnershipQueryKeys } from "@/lib/query-keys/directory-and-ownership";
-import { platformCoreQueryKeys } from "@/lib/query-keys/platform-core";
+import { directoryAndOwnershipQueryKeys, mailListingSearchParams } from "@/lib/query-keys/directory-and-ownership";
 import { useIdempotentOperation } from "@/hooks/common/use-idempotent-operation";
 import { useCan } from "@/hooks/api/access";
 import type {
@@ -52,7 +50,7 @@ import type {
 import type { AiUsageMeta } from "@/components/ai/ai-usage-chip";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import type { AiAbortInput } from "@/hooks/api/ai-abort";
-import { applyMailActionToCaches, restoreMailCaches } from "@/hooks/api/mail-action-cache";
+import { applyMailActionToCaches, restoreMailCaches, invalidateAfterMailSend } from "@/hooks/api/mail-action-cache";
 import { NO_CURSOR_YET } from "@/hooks/api/cursor-page-param";
 
 export function useMailAccounts() {
@@ -65,30 +63,19 @@ export function useMailAccounts() {
   });
 }
 
-export function useMailMessages(params: MailMessagesParams) {
+export function useMailMessages(params: MailMessagesParams, options?: { enabled?: boolean }) {
   const can = useCan("mail:inbox:view");
-  const queryParams: Record<string, unknown> = {};
-  if (params.folder) queryParams.folder = params.folder;
-  if (params.accountId !== undefined) queryParams.accountId = params.accountId;
-  if (params.q) queryParams.q = params.q;
-  if (params.limit) queryParams.limit = params.limit;
-
   return useInfiniteQuery({
-    queryKey: directoryAndOwnershipQueryKeys.mail.messages(queryParams),
-    queryFn: ({ pageParam , signal }) => {
-      const searchParams = new URLSearchParams();
-      if (params.folder) searchParams.set("folder", params.folder);
-      if (params.accountId !== undefined) searchParams.set("accountId", String(params.accountId));
-      if (params.q) searchParams.set("q", params.q);
-      if (params.limit) searchParams.set("limit", String(params.limit));
-      if (pageParam !== undefined) searchParams.set("cursor", String(pageParam));
+    queryKey: directoryAndOwnershipQueryKeys.mail.messages(params),
+    queryFn: ({ pageParam, signal }) => {
+      const searchParams = mailListingSearchParams(params, pageParam);
       return apiClient.get<MailListResponse>(`/mail/messages?${searchParams.toString()}`, undefined, signal, mailListResponseContract);
     },
     initialPageParam: NO_CURSOR_YET,
     getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
     staleTime: 30_000,
-    placeholderData: keepPreviousData,
-    enabled: can,
+    refetchOnMount: "always",
+    enabled: can && options?.enabled !== false,
   });
 }
 
@@ -118,7 +105,6 @@ export function useMailMessage(accountId: number | undefined, messageId: string 
   });
 }
 
-/** The idempotency key belongs to the send, not the HTTP call — see `useIdempotentOperation`. */
 export function useSendMail() {
   const qc = useQueryClient();
   const operation = useIdempotentOperation();
@@ -128,8 +114,7 @@ export function useSendMail() {
       apiClient.post<{ sent: true }>("/mail/send", body, operation.configFor(body), mailSendResultContract),
     onSuccess: () => {
       operation.settle();
-      void qc.invalidateQueries({ queryKey: directoryAndOwnershipQueryKeys.mail.all });
-      void qc.invalidateQueries({ queryKey: platformCoreQueryKeys.inbox.all });
+      invalidateAfterMailSend(qc);
     },
   });
 }
@@ -143,8 +128,7 @@ export function useReplyMail() {
       apiClient.post<{ sent: true }>("/mail/reply", body, operation.configFor(body), mailSendResultContract),
     onSuccess: () => {
       operation.settle();
-      void qc.invalidateQueries({ queryKey: directoryAndOwnershipQueryKeys.mail.all });
-      void qc.invalidateQueries({ queryKey: platformCoreQueryKeys.inbox.all });
+      invalidateAfterMailSend(qc);
     },
   });
 }
@@ -211,18 +195,23 @@ export function useMailAiDraft() {
 
 export function useMailAction() {
   const qc = useQueryClient();
+  const operation = useIdempotentOperation();
   return useAuthorizedMutation("mail:messages:manage", {
     mutationKey: ["mail", "action"],
     mutationFn: ({ messageId, body }: { messageId: string; body: MailActionBody }) =>
-      apiClient.post<{ success: boolean }>(`/mail/messages/${messageId}/actions`, body, undefined, mailActionSuccessContract),
+      apiClient.post<{ ok: true }>(
+        `/mail/messages/${messageId}/actions`,
+        body,
+        operation.configFor({ messageId, body }),
+        mailActionSuccessContract,
+      ),
     onMutate: ({ messageId, body }) => applyMailActionToCaches(qc, messageId, body),
+    onSuccess: () => {
+      operation.settle();
+    },
     onError: (_, _variables, context) => {
       if (!context) return;
       restoreMailCaches(qc, context);
-    },
-    onSettled: () => {
-      void qc.invalidateQueries({ queryKey: directoryAndOwnershipQueryKeys.mail.all });
-      void qc.invalidateQueries({ queryKey: platformCoreQueryKeys.inbox.all });
     },
   });
 }

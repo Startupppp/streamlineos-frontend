@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
@@ -32,6 +32,9 @@ import {
   FILTER_TOOLBAR_ROW,
 } from "@/components/ui/content-fill-panel";
 import { ErrorState } from "@/components/shared/error-state";
+import { PageState } from "@/components/shared/page-state";
+import { usePageState } from "@/hooks/api/use-page-state";
+import { OVERFLOW_EDGE_FADE_CLASS, useHorizontalOverflow } from "@/hooks/common/use-horizontal-overflow";
 import { LoadingState } from "@/components/shared/loading-state";
 import {
   EmptyDocumentsIllustration,
@@ -76,6 +79,8 @@ export function KbManagerContent() {
   const searchParams = useSearchParams();
 
   const tab = searchParams.get("tab") ?? "articles";
+  const filterRowRef = useRef<HTMLDivElement>(null);
+  const filterOverflow = useHorizontalOverflow(filterRowRef, tab);
   const statusParam = searchParams.get("status") ?? "all";
   const visibilityParam = searchParams.get("visibility") ?? "all";
   const categoryParam = searchParams.get("category") ?? "all";
@@ -98,6 +103,10 @@ export function KbManagerContent() {
 
   const categoriesQuery = useSupportKbCategories({ enabled: supportEnabled });
   const categories = useMemo(() => categoriesQuery.data ?? [], [categoriesQuery.data]);
+
+  function handleLoadMoreCategories() {
+    void categoriesQuery.fetchNextPage();
+  }
 
   const articleParams = useMemo(
     () => ({
@@ -136,6 +145,14 @@ export function KbManagerContent() {
     }),
     [articles],
   );
+  const activeQuery = tab === "categories" ? categoriesQuery : articlesQuery;
+  const pageState = usePageState({
+    permission: "support:kb:view",
+    module: "support",
+    isLoading: tab !== "analytics" && (activeQuery.access.pending || activeQuery.isLoading),
+    isError: tab !== "analytics" && Boolean(activeQuery.error),
+    error: activeQuery.error,
+  });
 
   function setParam(key: string, value: string) {
     const next = new URLSearchParams(searchParams.toString());
@@ -267,7 +284,12 @@ export function KbManagerContent() {
   }
 
   const filters = (
-    <div className={FILTER_TOOLBAR_ROW}>
+    <div
+      ref={filterRowRef}
+      data-hidden-left={filterOverflow.hiddenLeft}
+      data-hidden-right={filterOverflow.hiddenRight}
+      className={`${FILTER_TOOLBAR_ROW} ${OVERFLOW_EDGE_FADE_CLASS}`}
+    >
       <SearchInput
         placeholder="Search…"
         value={localSearch}
@@ -318,7 +340,7 @@ export function KbManagerContent() {
           ? "Create and publish help articles for customers and your team"
           : "Manage help articles, categories, and AI-indexed content for your team"
       }
-      actions={
+      actions={pageState.kind === "ready" ? (
         <>
           <LoadingButton
             variant="outline"
@@ -337,8 +359,14 @@ export function KbManagerContent() {
             New Article
           </AnimatedIconButton>
         </>
-      }
+      ) : null}
     >
+      <PageState
+        resolution={pageState}
+        loading={<LoadingState variant="list" />}
+        onRetry={tab === "categories" ? handleCategoriesRetry : handleArticlesRetry}
+        className="flex-1"
+      >
       <div className="flex min-h-0 flex-1 flex-col gap-4">
       <StatCardGrid cols={3}>
         <StatCard label="Total articles" value={stats.total} icon={FileText} />
@@ -363,12 +391,32 @@ export function KbManagerContent() {
 
         {filters}
 
+        {tab !== "analytics" && categoriesQuery.access.allowed && categoriesQuery.hasNextPage && (
+          <div className="space-y-2">
+            {categoriesQuery.isFetchNextPageError && (
+              <p role="alert" className="text-sm text-destructive">
+                Could not load more categories. {getErrorMessage(categoriesQuery.error)}
+              </p>
+            )}
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={handleLoadMoreCategories}
+              disabled={categoriesQuery.isFetchingNextPage}
+            >
+              {categoriesQuery.isFetchingNextPage ? "Loading categories…" : categoriesQuery.isFetchNextPageError ? "Retry loading categories" : "Load more categories"}
+            </Button>
+          </div>
+        )}
+
         <TabsContent value="articles" className="mt-0">
           {articlesQuery.isLoading ? (
             <LoadingState variant="list" />
           ) : articlesQuery.error ? (
             <ErrorState
               description={getErrorMessage(articlesQuery.error)}
+              error={articlesQuery.error}
               onRetry={handleArticlesRetry}
             />
           ) : articles.length === 0 && hasFilters ? (
@@ -378,6 +426,7 @@ export function KbManagerContent() {
               description="Try adjusting your search or filters."
               action={{ label: "Clear filters", onClick: handleClearFilters }}
               className={CONTENT_FILL_PANEL}
+              access={articlesQuery.access}
             />
           ) : articles.length === 0 ? (
             <EmptyState
@@ -386,6 +435,7 @@ export function KbManagerContent() {
               description="Create your first help center article to get started."
               action={{ label: "New Article", onClick: handleOpenNewArticle }}
               className={CONTENT_FILL_PANEL}
+              access={articlesQuery.access}
             />
           ) : (
             <div className="space-y-2">
@@ -411,9 +461,10 @@ export function KbManagerContent() {
         <TabsContent value="categories" className="mt-0">
           {categoriesQuery.isLoading ? (
             <LoadingState variant="list" />
-          ) : categoriesQuery.error ? (
+          ) : categoriesQuery.error && categories.length === 0 ? (
             <ErrorState
               description={getErrorMessage(categoriesQuery.error)}
+              error={categoriesQuery.error}
               onRetry={handleCategoriesRetry}
             />
           ) : categories.length === 0 ? (
@@ -423,6 +474,7 @@ export function KbManagerContent() {
               description="Group your articles into categories for the help center."
               action={{ label: "New Category", onClick: handleOpenCategoryDialog }}
               className={CONTENT_FILL_PANEL}
+              access={categoriesQuery.access}
             />
           ) : (
             <div className="space-y-2">
@@ -439,6 +491,7 @@ export function KbManagerContent() {
         </TabsContent>
       </Tabs>
       </div>
+      </PageState>
 
       {categoryDialogOpen && (
         <KbCategoryDialog onClose={handleCloseCategoryDialog} />
@@ -447,7 +500,13 @@ export function KbManagerContent() {
         <KbCategoryDialog category={editCategory} onClose={handleCloseEditCategory} />
       )}
       {newArticleOpen && (
-        <KbNewArticleDialog categories={categories} onClose={handleCloseNewArticle} />
+        <KbNewArticleDialog
+          categories={categories}
+          hasMoreCategories={categoriesQuery.hasNextPage}
+          isLoadingMoreCategories={categoriesQuery.isFetchingNextPage}
+          onLoadMoreCategories={handleLoadMoreCategories}
+          onClose={handleCloseNewArticle}
+        />
       )}
 
       <AlertDialog open={!!deleteCategory} onOpenChange={handleDeleteCategoryOpenChange}>

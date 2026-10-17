@@ -5,11 +5,12 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { getValidationFieldErrors } from "@/lib/api-envelope";
+import { getValidationFieldErrors, type ValidationFieldError } from "@/lib/api-envelope";
 
 import {
   Sheet,
   SheetContent,
+  SheetDescription,
   SheetHeader,
   SheetTitle,
   SheetFooter,
@@ -150,11 +151,12 @@ export function PolicyFormSheet({
       closeSheet();
     } catch (err) {
       const fieldErrors = getValidationFieldErrors(err).filter(
-        (issue) => issue.path in emptyPolicyDefaults,
+        (issue): issue is ValidationFieldError & { path: keyof PolicyFormValues } =>
+          issue.path in emptyPolicyDefaults,
       );
       if (fieldErrors.length > 0) {
         for (const issue of fieldErrors)
-          form.setError(issue.path as keyof PolicyFormValues, {
+          form.setError(issue.path, {
             message: issue.message,
           });
         return;
@@ -214,9 +216,11 @@ export function PolicyFormSheet({
             <SheetTitle>
               {editingPolicy ? "Edit leave policy" : "Create leave policy"}
             </SheetTitle>
+            <SheetDescription className="sr-only">Configure the allowance, accrual rules, and carry-forward limits for this leave policy.</SheetDescription>
           </SheetHeader>
           <Form {...form}>
             <form
+              noValidate
               onSubmit={form.handleSubmit(handleFormSubmit)}
               className="flex-1 flex flex-col overflow-hidden"
             >

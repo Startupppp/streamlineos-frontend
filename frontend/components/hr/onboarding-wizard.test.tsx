@@ -17,13 +17,19 @@ jest.mock("@/components/hr/check-employee-email", () => {
 });
 
 const onboardMutate = jest.fn();
-const onboardState = { isPending: false };
+const onboardState: { isPending: boolean; error: Error | null } = { isPending: false, error: null };
 
 jest.mock("@/hooks/api/hr", () => ({
   useOnboardEmployee: () => ({
     mutate: onboardMutate,
     get isPending() {
       return onboardState.isPending;
+    },
+    get isError() {
+      return onboardState.error !== null;
+    },
+    get error() {
+      return onboardState.error;
     },
   }),
 }));
@@ -32,8 +38,27 @@ jest.mock("@/hooks/api/hr/onboarding", () => ({
   useOnboardingTemplateDepartments: () => ({ data: [] }),
 }));
 
+/** BUG-HRMS-006: the wizard reads the org's locations for the Job Details step. */
+jest.mock("@/hooks/api/org-hierarchy", () => ({
+  useOrgLocations: () => ({ data: { data: [] } }),
+}));
+
 jest.mock("next/navigation", () => ({
   useRouter: () => ({ push: jest.fn() }),
+}));
+
+jest.mock("next-auth/react", () => ({
+  useSession: () => ({
+    data: { user: { id: "u1" }, orgId: "o1" },
+    status: "authenticated",
+  }),
+}));
+
+jest.mock("@/components/hr/_onboarding/wizard-draft", () => ({
+  loadAdminWizardDraft: () => null,
+  saveAdminWizardDraft: jest.fn(),
+  clearAdminWizardDraft: jest.fn(),
+  toAdminWizardDraft: (values: Record<string, unknown>, step: number) => ({ ...values, step }),
 }));
 
 const toastError = jest.fn();
@@ -61,12 +86,12 @@ describe("employeeAdmissionGuidance — the four admission outcomes are distinct
     });
   });
 
-  it("offers the attach journey for a member who holds no employment", () => {
+  it("blocks a member who holds no employment and directs to Users", () => {
     const guidance = guidanceFor("member-without-employment");
-    expect(guidance.blocking).toBe(false);
-    expect(guidance.attachToExistingMember).toBe(true);
-    expect(guidance.message).toMatch(/already a member/i);
-    expect(guidance.message).toMatch(/does not create a second login|another seat/i);
+    expect(guidance.blocking).toBe(true);
+    expect(guidance.attachToExistingMember).toBe(false);
+    expect(guidance.message).toMatch(/belongs to a member/i);
+    expect(guidance.message).toMatch(/users panel/i);
   });
 
   it("blocks an existing employee and says so", () => {
@@ -88,6 +113,7 @@ describe("OnboardingWizard — the email check explains which case the admin is 
   beforeEach(() => {
     jest.clearAllMocks();
     onboardState.isPending = false;
+    onboardState.error = null;
   });
 
   async function enterEmail(
@@ -115,7 +141,7 @@ describe("OnboardingWizard — the email check explains which case the admin is 
     expect(screen.getByLabelText(/^email/i)).toHaveAttribute("aria-invalid", "false");
   });
 
-  it("explains the attach journey for a member who holds no employment", async () => {
+  it("blocks a member without employment and directs to the Users panel", async () => {
     const user = userEvent.setup();
     admissionCheck.mockResolvedValue({
       exists: true,
@@ -125,10 +151,10 @@ describe("OnboardingWizard — the email check explains which case the admin is 
 
     await enterEmail(user);
 
-    const notice = await screen.findByRole("status");
-    expect(notice).toHaveTextContent(/already a member/i);
-    expect(notice).toHaveTextContent(/second login|another seat/i);
-    expect(screen.getByLabelText(/^email/i)).toHaveAttribute("aria-invalid", "false");
+    const message = await screen.findByRole("alert");
+    expect(message).toHaveTextContent(/belongs to a member/i);
+    expect(screen.getByLabelText(/^email/i)).toHaveAttribute("aria-invalid", "true");
+    expect(screen.queryByRole("status")).toBeNull();
   });
 
   it("marks the field invalid for an address that already belongs to an employee", async () => {
@@ -191,5 +217,19 @@ describe("OnboardingWizard — the email check explains which case the admin is 
 
     expect(screen.getByRole("button", { name: /^next$/i })).toBeEnabled();
     expect(screen.getByRole("button", { name: /back/i })).toBeDisabled();
+  });
+
+  it("BUG-011: a failed submit says why inline and keeps what was typed", async () => {
+    const user = userEvent.setup();
+    const { rerender } = render(<OnboardingWizard />);
+    await user.type(screen.getByLabelText(/^first name/i), "Jane");
+
+    onboardState.error = new Error("The service is temporarily unavailable. Please try again.");
+    rerender(<OnboardingWizard />);
+
+    expect(screen.getByRole("alert")).toHaveTextContent(
+      /temporarily unavailable.*entries are kept; submit again/i,
+    );
+    expect(screen.getByLabelText(/^first name/i)).toHaveValue("Jane");
   });
 });

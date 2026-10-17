@@ -34,6 +34,11 @@ import { usersAndCommerceQueryKeys } from "@/lib/query-keys/users-and-commerce";
 import { readUsersListState } from "@/features/directory/users/users-list-state";
 import { readAuditLogFilters } from "@/features/settings/audit-log/audit-log-constants";
 import { readDelegationListState } from "@/features/settings/delegations/delegation-list-state";
+import { readSubjectFilter } from "@/features/settings/privacy/subject-request-schema";
+import {
+  QUARANTINE_PAGE_SIZE,
+  readQuarantineStatus,
+} from "@/features/settings/storage-quarantine/quarantine-list-state";
 import { RBAC_AUDIT_INITIAL_FILTERS } from "@/features/settings/roles/roles-audit-constants";
 import { parsePageSize } from "@/lib/list-pagination";
 import {
@@ -46,17 +51,28 @@ import {
 import { prefetchAccountSettings } from "./settings-account";
 import {
   prefetchOrgModules,
+  prefetchPrivacyRequests,
   prefetchRoleSimulation,
   prefetchRolesAudit,
   prefetchSettingsAuditLog,
   prefetchSettingsDelegations,
   prefetchSettingsUsers,
   prefetchSettingsWebhooks,
+  prefetchStorageQuarantine,
 } from "./settings-admin";
 import {
   prefetchAiCreditsSettings,
   prefetchBillingSettings,
 } from "./settings-billing";
+import {
+  prefetchEmailTemplatePreviews,
+  prefetchMyNotificationPreferences,
+  prefetchNotificationBroadcasts,
+  prefetchNotificationEvents,
+  prefetchNotificationPolicy,
+  prefetchNotificationProviders,
+  prefetchNotificationTemplates,
+} from "./settings-notifications";
 
 const BACKEND_JWT = "backend-jwt-must-never-cross-the-boundary";
 const ORG = "org-settings";
@@ -73,6 +89,14 @@ const ALL_KEYS = [
   "billing:seats:view",
   "billing:profile:view",
   "billing:ai-credits:view",
+  "notifications:broadcasts:view",
+  "notifications:events:view",
+  "notifications:policy:view",
+  "notifications:providers:view",
+  "notifications:templates:view",
+  "settings:email-templates:manage",
+  "storage:quarantine:view",
+  "compliance:subject-requests:view",
 ] as const;
 
 function accessWith(keys: readonly string[]): AccessResponse {
@@ -104,7 +128,11 @@ const ORG_MODULES_BODY = [{ moduleKey: "HR", enabled: true }];
 function respondByPath(): void {
   (serverGet as jest.Mock).mockImplementation((path: string) =>
     Promise.resolve(
-      path === "/access/org-modules" ? ORG_MODULES_BODY : { readFrom: path },
+      path === "/access/org-modules"
+        ? ORG_MODULES_BODY
+        : path === "/notification-templates"
+          ? { items: [{ readFrom: path }] }
+          : { readFrom: path },
     ),
   );
 }
@@ -284,7 +312,128 @@ const CASES: readonly PrefetchCase[] = [
     expected: [
       {
         key: accessAndCrmQueryKeys.auditLog.list(RBAC_AUDIT_INITIAL_FILTERS),
-        path: "/audit-log?limit=25&actions=role.changed%2Crole.permissions.set%2Crole.member.added%2Crole.member.removed%2Crole.assigned%2Crole.unassigned%2Crole.created%2Crole.updated%2Crole.deleted%2Cpermission.granted%2Cpermission.revoked",
+        path: "/audit-log?limit=25&actions=role.changed%2Crole.permissions.set%2Crole.member.added%2Crole.member.removed%2Crole.assigned%2Crole.unassigned%2Crole.created%2Crole.updated%2Crole.deleted%2Crole.permission.granted%2Crole.permission.revoked%2Corg.member_role_changed%2Cpermission.granted%2Cpermission.revoked",
+      },
+    ],
+  },  {
+    route: "/settings/notifications/broadcasts",
+    run: prefetchNotificationBroadcasts,
+    expected: [{ key: platformCoreQueryKeys.notifications.broadcasts(), path: "/broadcasts" }],
+  },
+  {
+    route: "/settings/notifications/events",
+    run: prefetchNotificationEvents,
+    expected: [
+      { key: platformCoreQueryKeys.notifications.events(), path: "/notifications/admin/events" },
+    ],
+  },
+  {
+    route: "/settings/notifications/policy",
+    run: prefetchNotificationPolicy,
+    expected: [
+      { key: platformCoreQueryKeys.notifications.policy(), path: "/notifications/admin/policy" },
+    ],
+  },
+  {
+    route: "/settings/notifications/providers",
+    run: prefetchNotificationProviders,
+    expected: [
+      {
+        key: platformCoreQueryKeys.notifications.providers(),
+        path: "/notifications/admin/providers",
+      },
+    ],
+  },
+  {
+    route: "/settings/notifications/templates",
+    run: prefetchNotificationTemplates,
+    expected: [
+      {
+        key: platformCoreQueryKeys.notifications.templates(),
+        path: "/notification-templates",
+        value: [{ readFrom: "/notification-templates" }],
+      },
+    ],
+  },
+  {
+    route: "/settings/notifications/email-templates",
+    run: prefetchEmailTemplatePreviews,
+    expected: [
+      {
+        key: platformCoreQueryKeys.notifications.emailTemplatePreviews(),
+        path: "/settings/email-templates/preview",
+      },
+    ],
+  },
+  {
+    route: "/settings/storage-quarantine",
+    run: () =>
+      prefetchStorageQuarantine({
+        status: readQuarantineStatus(NO_PARAMS.get("status")),
+        cursor: undefined,
+        limit: QUARANTINE_PAGE_SIZE,
+      }),
+    expected: [
+      {
+        // The page's own call shape: `useQuarantine({ status, cursor: pager.cursor, limit })`.
+        key: platformCoreQueryKeys.privacy.quarantine({
+          status: undefined,
+          cursor: undefined,
+          limit: 20,
+        }),
+        path: "/storage/quarantine?limit=20",
+      },
+    ],
+  },
+  {
+    route: "/settings/storage-quarantine?status=infected",
+    run: () =>
+      prefetchStorageQuarantine({
+        status: readQuarantineStatus("infected"),
+        cursor: undefined,
+        limit: QUARANTINE_PAGE_SIZE,
+      }),
+    expected: [
+      {
+        key: platformCoreQueryKeys.privacy.quarantine({
+          status: "infected",
+          cursor: undefined,
+          limit: 20,
+        }),
+        path: "/storage/quarantine?status=infected&limit=20",
+      },
+    ],
+  },
+  {
+    route: "/settings/privacy",
+    run: () => prefetchPrivacyRequests(readSubjectFilter(NO_PARAMS.get("subject") ?? "")),
+    expected: [
+      { key: platformCoreQueryKeys.privacy.subjectRequests(), path: "/compliance/subject-requests" },
+    ],
+  },
+  {
+    route: "/settings/privacy?subject=",
+    run: () => prefetchPrivacyRequests(readSubjectFilter(" Ada@Example.test ")),
+    expected: [
+      {
+        key: platformCoreQueryKeys.privacy.subjectRequests({ subjectEmail: "ada@example.test" }),
+        path: "/compliance/subject-requests?subjectEmail=ada%40example.test",
+      },
+    ],
+  },
+  {
+    route: "/settings/notifications/my-preferences",
+    run: prefetchMyNotificationPreferences,
+    expected: [
+      {
+        key: platformCoreQueryKeys.notifications.preferences(),
+        path: "/notification-preferences",
+        ungated: true,
+      },
+      {
+        key: platformCoreQueryKeys.notifications.suppressions(),
+        path: "/notification-preferences/suppressions",
+        ungated: true,
       },
     ],
   },
@@ -362,6 +511,8 @@ describe("every gated read is really gated", () => {
       "/billing/entitlements",
       "/billing/plans",
       "/me/login-history?page=1&limit=5",
+      "/notification-preferences",
+      "/notification-preferences/suppressions",
       "/sessions",
     ]);
   });

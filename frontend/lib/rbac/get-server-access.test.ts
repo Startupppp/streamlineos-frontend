@@ -10,7 +10,7 @@ jest.mock("@/lib/server-fetch", () => ({
 
 import { ApiError } from "@/lib/api-envelope";
 import { serverGet } from "@/lib/server-fetch";
-import { getServerAccessResult } from "@/lib/rbac/get-server-access";
+import { getServerAccess, getServerAccessResult } from "@/lib/rbac/get-server-access";
 
 const access = {
   scopes: {},
@@ -75,5 +75,42 @@ describe("getServerAccessResult", () => {
 
     await expect(result).resolves.toMatchObject({ ok: false });
     expect(serverGet).toHaveBeenCalledTimes(4);
+  });
+});
+
+describe("getServerAccess falls back to a constant that actually denies", () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  it("does not waive the MFA redirect when /me/access fails, because a DENIED constant carrying satisfied:true skips the layout's enforcement branch", async () => {
+    jest.mocked(serverGet).mockRejectedValue(
+      new ApiError("Not authenticated", 401, "UNAUTHENTICATED"),
+    );
+
+    const fallback = await getServerAccess();
+
+    expect(fallback.mfa).toEqual({ enforced: true, satisfied: false });
+  });
+
+  it("grants no scope, no module and no owner standing in the same fallback, so the MFA field is the only one that changed", async () => {
+    jest.mocked(serverGet).mockRejectedValue(
+      new ApiError("Not authenticated", 401, "UNAUTHENTICATED"),
+    );
+
+    const fallback = await getServerAccess();
+
+    expect(fallback).toMatchObject({
+      scopes: {},
+      modules: {},
+      isOrgOwner: false,
+      canManageOrganizationMembership: false,
+    });
+  });
+
+  it("returns the real snapshot untouched when /me/access succeeds, so the fallback is never mistaken for the answer", async () => {
+    jest.mocked(serverGet).mockResolvedValue(access);
+
+    await expect(getServerAccess()).resolves.toEqual(access);
   });
 });

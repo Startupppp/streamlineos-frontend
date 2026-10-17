@@ -4,16 +4,7 @@ import { useState } from "react";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { SearchInput } from "@/components/ui/search-input";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { EmptyState } from "@/components/ui/empty-state";
 import { LoadingState } from "@/components/shared/loading-state";
@@ -85,7 +76,7 @@ export function AutomationsSettingsPage() {
     if (!deleteTarget) return;
     remove.mutate(deleteTarget.id, {
       onSuccess: () => { toast.success("Automation deleted"); setDeleteTarget(null); },
-      onError: (err) => { toast.error(getErrorMessage(err)); setDeleteTarget(null); },
+      onError: (err) => toast.error(getErrorMessage(err)),
     });
   }
 
@@ -102,6 +93,11 @@ export function AutomationsSettingsPage() {
   }
 
   function handleOpenCreate() { setCreateOpen(true); }
+  function handleClearFilters() {
+    setSearch("");
+    setTriggerFilter("all");
+    setStatusFilter("all");
+  }
   function handleCloseCreate() { setCreateOpen(false); }
   function handleCloseEdit() { setEditTarget(null); }
   function handleCloseRuns() { setRunsTarget(null); }
@@ -166,8 +162,15 @@ export function AutomationsSettingsPage() {
           <EmptyState
             illustrationPreset="automations"
             title="No HR automation rules yet"
-            description="Create a rule to automatically trigger actions on HR events like onboarding, leave, or resignation."
-            action={{ label: "Create automation", onClick: handleOpenCreate }}
+            filtersActive={debouncedSearch.trim().length > 0 || triggerFilter !== "all" || statusFilter !== "all"}
+            filteredTitle="No rules match these filters"
+            onClearFilters={handleClearFilters}
+            description={
+              debouncedSearch.trim() || triggerFilter !== "all" || statusFilter !== "all"
+                ? "Change the search or filters to see other rules."
+                : "Create a rule to automatically trigger actions on HR events like onboarding, leave, or resignation."
+            }
+            action={canManage ? { label: "Create automation", onClick: handleOpenCreate } : undefined}
             className="flex-1"
           />
         ) : (
@@ -194,22 +197,17 @@ export function AutomationsSettingsPage() {
         {testTarget && <AutomationTestDialog rule={testTarget} onClose={handleCloseTest} />}
       </PageState>
 
-      <AlertDialog open={!!deleteTarget} onOpenChange={handleDeleteDialogChange}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Delete automation rule?</AlertDialogTitle>
-            <AlertDialogDescription>
-              &ldquo;{deleteTarget?.name}&rdquo; and its run history will be permanently deleted.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction variant="destructive" onClick={handleDelete}>
-              Delete
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <ConfirmDialog
+        open={!!deleteTarget}
+        onOpenChange={handleDeleteDialogChange}
+        title="Delete automation rule?"
+        description={`"${deleteTarget?.name ?? ""}" and its run history will be permanently deleted.`}
+        confirmLabel="Delete"
+        destructive
+        isPending={remove.isPending}
+        keepOpenOnConfirm
+        onConfirm={handleDelete}
+      />
     </PageWrapper>
   );
 }

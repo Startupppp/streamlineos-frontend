@@ -19,6 +19,7 @@ export interface VendoredPermissionCatalog {
   readonly delegableModuleIds: readonly string[];
   readonly memberDefaultPermissions: readonly string[];
   readonly ownerOnlyOperations: Readonly<Record<string, string>>;
+  readonly roleTemplatePermissions: readonly string[];
 }
 
 export const PERMISSION_CATALOG_PATH = resolve(
@@ -45,6 +46,10 @@ export function backendPermissionNames(): Set<string> {
 
 export function delegableModuleIds(): readonly string[] {
   return permissionCatalog().delegableModuleIds;
+}
+
+export function roleTemplatePermissions(): Set<string> {
+  return new Set(permissionCatalog().roleTemplatePermissions);
 }
 
 /** The keys every MEMBER keeps by default, before any role or grant. */

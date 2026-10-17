@@ -1,10 +1,13 @@
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import type { AccessState } from "@/lib/rbac/gate";
+import type { PageStateResolution } from "@/lib/page-state/resolve-page-state";
 import { CustomFieldsSettings } from "./custom-fields-settings";
+import type { CustomFieldItem } from "./custom-field-row";
 import { customFieldSchema } from "./custom-fields-schema";
 
 let mockAccessState: AccessState = "denied";
+let mockPageState: PageStateResolution = { kind: "ready" };
 const mockUpdateMutate = jest.fn();
 
 const mockPermissionsAsked: string[] = [];
@@ -14,9 +17,27 @@ jest.mock("@/hooks/api/access", () => ({
     mockPermissionsAsked.push(permission);
     return permission === "build:manage" && mockAccessState === "granted";
   },
-  useCanState: (permission: string): AccessState => {
-    mockPermissionsAsked.push(permission);
-    return mockAccessState;
+  useCanState: () => "granted" as const,
+}));
+
+jest.mock("@/hooks/api/use-page-state", () => ({
+  usePageState: () => mockPageState,
+}));
+
+jest.mock("@/components/shared/page-state", () => ({
+  PageState: ({
+    resolution,
+    children,
+    loading,
+  }: {
+    resolution: { kind: string };
+    children: React.ReactNode;
+    loading?: React.ReactNode;
+  }) => {
+    if (resolution.kind === "loading") return <div data-testid="page-loading">{loading}</div>;
+    if (resolution.kind === "denied") return <div data-testid="page-denied" />;
+    if (resolution.kind === "error") return <div data-testid="page-error" />;
+    return <>{children}</>;
   },
 }));
 
@@ -38,6 +59,7 @@ jest.mock("@/hooks/api/build/custom-fields", () => ({
 
 beforeEach(() => {
   mockAccessState = "denied";
+  mockPageState = { kind: "ready" };
   mockUpdateMutate.mockReset();
 });
 
@@ -56,12 +78,13 @@ describe("CustomFieldsSettings — build:manage gates", () => {
   it("shows a Delete button on every field row when the viewer holds build:manage", () => {
     mockAccessState = "granted";
     render(<CustomFieldsSettings projectId={1} />);
-    expect(screen.getAllByRole("button", { name: "Delete field" })).toHaveLength(2);
+    expect(screen.getByRole("button", { name: "Delete field Story Points" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Delete field Priority Label" })).toBeInTheDocument();
   });
 
   it("hides all Delete buttons when the viewer lacks build:manage", () => {
     render(<CustomFieldsSettings projectId={1} />);
-    expect(screen.queryByRole("button", { name: "Delete field" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /delete field/i })).not.toBeInTheDocument();
   });
 
   it("still renders every custom field name when the viewer lacks build:manage", () => {
@@ -99,6 +122,18 @@ describe("CustomFieldsSettings — edit control visibility", () => {
 });
 
 describe("CustomFieldsSettings — edit form submits with changed values", () => {
+  it("describes the edit dialog so its purpose is available to assistive technology", async () => {
+    const user = userEvent.setup();
+    mockAccessState = "granted";
+    render(<CustomFieldsSettings projectId={1} />);
+
+    await user.click(screen.getByRole("button", { name: "Edit field Story Points" }));
+
+    expect(screen.getByRole("dialog")).toHaveAccessibleDescription(
+      "Update the field name, type, and available options.",
+    );
+  });
+
   it("opening the edit dialog for a field pre-fills the field name", async () => {
     const user = userEvent.setup();
     mockAccessState = "granted";
@@ -131,6 +166,46 @@ describe("CustomFieldsSettings — edit form submits with changed values", () =>
   });
 });
 
+describe("CustomFieldsSettings — search filtering", () => {
+  beforeEach(() => {
+    mockAccessState = "granted";
+  });
+
+  it("shows all fields when no search prop is provided", () => {
+    render(<CustomFieldsSettings projectId={1} />);
+    expect(screen.getByText("Story Points")).toBeInTheDocument();
+    expect(screen.getByText("Priority Label")).toBeInTheDocument();
+  });
+
+  it("shows only fields matching the search term (case-insensitive)", () => {
+    render(<CustomFieldsSettings projectId={1} search="story" />);
+    expect(screen.getByText("Story Points")).toBeInTheDocument();
+    expect(screen.queryByText("Priority Label")).not.toBeInTheDocument();
+  });
+
+  it("shows the filtered-empty state when no field names match the search", () => {
+    render(<CustomFieldsSettings projectId={1} search="xyz-no-match" />);
+    expect(screen.getByText("No fields match your search")).toBeInTheDocument();
+    expect(screen.queryByText("Story Points")).not.toBeInTheDocument();
+  });
+});
+
+describe("CustomFieldsSettings — createRef and editRef imperative handles", () => {
+  it("sets createRef.current to the show-form handler so a keyboard shortcut can open the create form", async () => {
+    mockAccessState = "granted";
+    const createRef = { current: null as (() => void) | null };
+    render(<CustomFieldsSettings projectId={1} createRef={createRef} />);
+    expect(typeof createRef.current).toBe("function");
+  });
+
+  it("sets editRef.current to the open-edit handler so a keyboard shortcut can open the edit dialog", () => {
+    mockAccessState = "granted";
+    const editRef = { current: null as ((f: CustomFieldItem) => void) | null };
+    render(<CustomFieldsSettings projectId={1} editRef={editRef} />);
+    expect(typeof editRef.current).toBe("function");
+  });
+});
+
 describe("customFieldSchema — fieldType carries the domain union, not bare string", () => {
   it("rejects a fieldType outside CustomFieldType, so the form boundary refuses it instead of a cast carrying it to the API", () => {
     const result = customFieldSchema.safeParse({ fieldName: "Effort", fieldType: "bogus", options: "" });
@@ -143,5 +218,35 @@ describe("customFieldSchema — fieldType carries the domain union, not bare str
 
     for (const fieldType of offered)
       expect(customFieldSchema.safeParse({ fieldName: "Effort", fieldType, options: "" }).success).toBe(true);
+  });
+});
+
+describe("CustomFieldsSettings — page state transitions", () => {
+  it("renders the loading skeleton and not field names while the page state is loading", () => {
+    mockPageState = { kind: "loading" };
+    render(<CustomFieldsSettings projectId={1} />);
+    expect(screen.getByTestId("page-loading")).toBeInTheDocument();
+    expect(screen.queryByText("Story Points")).not.toBeInTheDocument();
+  });
+
+  it("renders the denied view and not field names when access is refused", () => {
+    mockPageState = { kind: "denied", permission: "build:view" };
+    render(<CustomFieldsSettings projectId={1} />);
+    expect(screen.getByTestId("page-denied")).toBeInTheDocument();
+    expect(screen.queryByText("Story Points")).not.toBeInTheDocument();
+  });
+
+  it("renders the error view and not field names when the data fetch fails", () => {
+    mockPageState = { kind: "error", error: new Error("network failure") };
+    render(<CustomFieldsSettings projectId={1} />);
+    expect(screen.getByTestId("page-error")).toBeInTheDocument();
+    expect(screen.queryByText("Story Points")).not.toBeInTheDocument();
+  });
+
+  it("renders field names in the ready state", () => {
+    mockPageState = { kind: "ready" };
+    render(<CustomFieldsSettings projectId={1} />);
+    expect(screen.getByText("Story Points")).toBeInTheDocument();
+    expect(screen.getByText("Priority Label")).toBeInTheDocument();
   });
 });

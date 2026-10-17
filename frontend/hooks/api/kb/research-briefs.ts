@@ -12,6 +12,8 @@ import type {
 } from "@/types/kb";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { NO_ID_CURSOR_YET } from "@/hooks/api/cursor-page-param";
+import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
+import { useIdempotentOperation } from "@/hooks/common/use-idempotent-operation";
 
 const RESEARCH_BRIEFS_PAGE_SIZE = 20;
 
@@ -31,6 +33,14 @@ const kbResearchBriefRateContract = lazyContract(() =>
   import("@/hooks/api/kb/kb-research-schema").then((m) => m.kbResearchBriefRateContract),
 );
 
+const kbConvertBriefToPageContract = lazyContract(() =>
+  import("@/hooks/api/kb/kb-research-schema").then((m) => m.kbConvertBriefToPageContract),
+);
+
+const kbResearchBriefApproveContract = lazyContract(() =>
+  import("@/hooks/api/kb/kb-research-schema").then((m) => m.kbResearchBriefApproveContract),
+);
+
 export function useKbResearchBriefs() {
   const canViewPages = useCan("kb:pages:view");
   return useInfiniteQuery({
@@ -44,7 +54,18 @@ export function useKbResearchBriefs() {
     getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
     enabled: canViewPages,
     staleTime: 30_000,
+    ...INLINE_READ_ERROR,
   });
+}
+
+export const RESEARCH_BRIEF_POLL_MS = 3_000;
+
+export function researchBriefPollInterval(
+  status: KbResearchBrief["status"] | undefined,
+): number | false {
+  return status === "queued" || status === "running"
+    ? RESEARCH_BRIEF_POLL_MS
+    : false;
 }
 
 export function useKbResearchBrief(briefId: number | undefined) {
@@ -54,21 +75,22 @@ export function useKbResearchBrief(briefId: number | undefined) {
     queryFn: ({ signal }) => apiClient.get<KbResearchBrief>(`/kb/research-briefs/${briefId}`, undefined, signal, kbResearchBriefDetailContract),
     enabled: canViewPages && briefId !== undefined,
     staleTime: 10_000,
-    refetchInterval: (query) => {
-      const data = query.state.data;
-      if (data?.status === "queued" || data?.status === "running") return 3_000;
-      return false;
-    },
+    ...INLINE_READ_ERROR,
+    refetchInterval: (query) => researchBriefPollInterval(query.state.data?.status),
   });
 }
 
 export function useCreateResearchBrief() {
   const qc = useQueryClient();
+  const operation = useIdempotentOperation();
   return useAuthorizedMutation("kb:pages:view", {
     mutationKey: ["kb", "research-briefs", "create"],
     mutationFn: (input: CreateResearchBriefInput) =>
-      apiClient.post<{ briefId: number; jobId: number }>("/kb/research-briefs", input, undefined, kbResearchBriefEnqueueContract),
-    onSuccess: () => qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.kb.researchBriefs() }),
+      apiClient.post<{ briefId: number; jobId: number }>("/kb/research-briefs", input, operation.configFor(input), kbResearchBriefEnqueueContract),
+    onSuccess: () => {
+      operation.settle();
+      qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.kb.researchBriefs() });
+    },
   });
 }
 
@@ -79,6 +101,64 @@ export function useRateResearchBrief() {
     mutationFn: ({ briefId, rating }: { briefId: number; rating: "helpful" | "not_helpful" }) =>
       apiClient.post<{ success: boolean }>(`/kb/research-briefs/${briefId}/rate`, { rating }, undefined, kbResearchBriefRateContract),
     onSuccess: (_, { briefId }) => {
+      qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.kb.researchBrief(briefId) });
+      qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.kb.researchBriefs() });
+    },
+  });
+}
+
+export function useRetryResearchBrief() {
+  const qc = useQueryClient();
+  const operation = useIdempotentOperation();
+  return useAuthorizedMutation("kb:pages:view", {
+    mutationKey: ["kb", "research-briefs", "retry"],
+    mutationFn: (briefId: number) =>
+      apiClient.post<{ briefId: number; jobId: number }>(`/kb/research-briefs/${briefId}/retry`, {}, operation.configFor({ briefId }), kbResearchBriefEnqueueContract),
+    onSuccess: (_, briefId) => {
+      operation.settle();
+      qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.kb.researchBrief(briefId) });
+      qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.kb.researchBriefs() });
+    },
+  });
+}
+
+export function useConvertResearchBriefToPage() {
+  const qc = useQueryClient();
+  return useAuthorizedMutation("kb:pages:create", {
+    mutationKey: ["kb", "research-briefs", "convert-to-page"],
+    mutationFn: (briefId: number) =>
+      apiClient.post<{ pageId: number }>(
+        `/kb/research-briefs/${briefId}/convert-to-page`,
+        {},
+        undefined,
+        kbConvertBriefToPageContract,
+      ),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.kb.pageCollection() });
+    },
+  });
+}
+
+export function useCancelResearchBrief() {
+  const qc = useQueryClient();
+  return useAuthorizedMutation("kb:pages:view", {
+    mutationKey: ["kb", "research-briefs", "cancel"],
+    mutationFn: (briefId: number) =>
+      apiClient.delete<void>(`/kb/research-briefs/${briefId}`, undefined, undefined),
+    onSuccess: (_, briefId) => {
+      qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.kb.researchBrief(briefId) });
+      qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.kb.researchBriefs() });
+    },
+  });
+}
+
+export function useApproveResearchBrief() {
+  const qc = useQueryClient();
+  return useAuthorizedMutation("kb:pages:manage", {
+    mutationKey: ["kb", "research-briefs", "approve"],
+    mutationFn: (briefId: number) =>
+      apiClient.post<{ success: true }>(`/kb/research-briefs/${briefId}/approve`, {}, undefined, kbResearchBriefApproveContract),
+    onSuccess: (_, briefId) => {
       qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.kb.researchBrief(briefId) });
       qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.kb.researchBriefs() });
     },

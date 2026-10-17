@@ -21,7 +21,8 @@ export const employeeStatsContract = z.object({
 
 export const employeeProjectsContract = z.array(
   z.object({
-    id: z.string(),
+    // projects.id and tickets.{id,project_id,ticket_number} are integer columns.
+    id: z.number(),
     name: z.string(),
     key: z.string(),
     status: z.string(),
@@ -32,12 +33,12 @@ export const employeeProjectsContract = z.array(
 export const employeeTicketsContract = z.object({
   data: z.array(
     z.object({
-      id: z.string(),
+      id: z.number(),
       title: z.string(),
       status: z.string(),
       priority: z.string(),
-      projectId: z.string(),
-      ticketNumber: z.string(),
+      projectId: z.number(),
+      ticketNumber: z.number(),
     }),
   ),
 });

@@ -3,41 +3,39 @@
 import { useCallback, useState } from "react";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { Pencil } from "lucide-react";
-import { Trash2Icon } from "@animateicons/react/lucide";
-import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { IncidentActions, InfoSection } from "./incident-actions";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
-import { useIncident, useDeleteIncident } from "@/hooks/api/build/incidents";
+import { useIncident } from "@/hooks/api/build/incidents";
+import { useDeleteIncident } from "@/hooks/api/build/incident-mutations";
 import { useCan } from "@/hooks/api/access";
 import { usePageState } from "@/hooks/api/use-page-state";
 import { PageState } from "@/components/shared/page-state";
-import { useOrgMembers } from "@/hooks/api/organization";
+import { useProjectMembers } from "@/hooks/api/build/project-members";
+import { useReleases } from "@/hooks/api/build/releases";
+import { useTicket } from "@/hooks/api/build/ticket-queries";
 import { IncidentSlaPanel } from "./incident-sla-panel";
 import { IncidentTimeline } from "./incident-timeline";
 import { IncidentSheet } from "./incident-sheet";
+import { IncidentDecisions } from "./incident-decisions";
+import { IncidentFollowUps } from "./incident-follow-ups";
 
-/**
- * Two ladders, and both lost their orange rung: `high` and `investigating` were
- * orange before the migration, and with no orange status they collapsed onto
- * the amber below them. Everything else here means its status and keeps it.
- */
 const SEVERITY_STYLES: Record<string, string> = {
-  critical: "text-status-danger-ink border-status-danger-rule bg-status-danger-surface",
+  critical: "text-status-danger-ink-strong border-status-danger-rule bg-status-danger-surface",
   high: "text-category-orange-ink border-category-orange-rule",
-  medium: "text-status-warning-ink border-status-warning-rule",
+  medium: "text-status-warning-ink-strong border-status-warning-rule",
   low: "text-muted-foreground border-border",
 };
 const STATUS_STYLES: Record<string, string> = {
-  detected: "text-status-danger-ink border-status-danger-rule",
+  detected: "text-status-danger-ink-strong border-status-danger-rule",
   investigating: "text-category-orange-ink border-category-orange-rule",
-  mitigating: "text-status-warning-ink border-status-warning-rule",
-  resolved: "text-status-success-ink border-status-success-rule",
-  postmortem: "text-status-info-ink border-status-info-rule",
+  mitigating: "text-status-warning-ink-strong border-status-warning-rule",
+  resolved: "text-status-success-ink-strong border-status-success-rule",
+  postmortem: "text-status-info-ink-strong border-status-info-rule",
   closed: "text-muted-foreground border-border",
 };
 const STATUS_LABELS: Record<string, string> = {
@@ -48,34 +46,6 @@ const STATUS_LABELS: Record<string, string> = {
 interface IncidentDetailPageProps {
   projectId: number;
   incidentId: number;
-}
-
-function IncidentActions({
-  onEdit,
-  onDelete,
-}: {
-  onEdit: () => void;
-  onDelete: () => void;
-}) {
-  const { iconRef, hoverHandlers } = useAnimatedIcon();
-  return (
-    <div className="flex items-center gap-2">
-      <Button size="sm" variant="outline" className="text-dense" onClick={onEdit}>
-        <Pencil className="h-3.5 w-3.5 mr-1" />
-        Edit
-      </Button>
-      <Button
-        size="sm"
-        variant="outline"
-        className="text-dense text-destructive border-destructive/30 hover:bg-destructive/5"
-        onClick={onDelete}
-        {...hoverHandlers}
-      >
-        <Trash2Icon ref={iconRef} size={14} className="mr-1" />
-        Delete
-      </Button>
-    </div>
-  );
 }
 
 export function IncidentDetailPage({ projectId, incidentId }: IncidentDetailPageProps) {
@@ -89,10 +59,20 @@ export function IncidentDetailPage({ projectId, incidentId }: IncidentDetailPage
     isError,
     error,
     refetch,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
   } = useIncident(projectId, incidentId);
-  const { data: membersData } = useOrgMembers(1, 100);
+  const { data: membersPage } = useProjectMembers(projectId);
+  const members = membersPage?.data ?? [];
+  const releasesPage = useReleases(projectId);
+  const releases = releasesPage.data?.data ?? [];
+  const releasesLoading = releasesPage.isLoading;
+  const { data: linkedTicket, isLoading: linkedTicketLoading } = useTicket(
+    projectId,
+    incident?.linkedTicketId ?? 0,
+  );
   const deleteIncident = useDeleteIncident();
-  const members = membersData?.data ?? [];
 
   const pageState = usePageState({
     permission: "build:incidents:view",
@@ -108,6 +88,9 @@ export function IncidentDetailPage({ projectId, incidentId }: IncidentDetailPage
   const handleRetry = useCallback(() => {
     void refetch();
   }, [refetch]);
+  const handleLoadMore = useCallback(() => {
+    void fetchNextPage();
+  }, [fetchNextPage]);
 
   const handleDeleteConfirm = useCallback(() => {
     deleteIncident.mutate(
@@ -160,7 +143,11 @@ export function IncidentDetailPage({ projectId, incidentId }: IncidentDetailPage
 
   if (!incident) return null;
 
-  const owner = members.find((m) => m.userId === incident.ownerId);
+  const owner = members.find((member) => member.id === incident.ownerId);
+  const release = releases.find((item) => item.id === incident.releaseId);
+  const unresolvedFollowUps = incident.followUpActions.filter(
+    (action) => action.status === "open" || action.status === "in_progress",
+  ).length;
 
   return (
     <PageWrapper
@@ -190,13 +177,31 @@ export function IncidentDetailPage({ projectId, incidentId }: IncidentDetailPage
           <InfoSection label="Root Cause" value={incident.rootCause} />
           <InfoSection label="Customer Comms" value={incident.customerComms} />
           <div className="space-y-1">
-            <p className="text-micro font-semibold uppercase tracking-wider text-muted-foreground">Owner</p>
-            <p className="text-xs">{owner ? (owner.name ?? owner.email) : "—"}</p>
+            <p className="text-micro font-medium uppercase tracking-wider text-muted-foreground">Owner</p>
+            <p className="text-xs">{owner ? (owner.name ?? owner.email) : "Unassigned"}</p>
           </div>
           {incident.linkedTicketId ? (
             <div className="space-y-1">
-              <p className="text-micro font-semibold uppercase tracking-wider text-muted-foreground">Linked Ticket</p>
-              <Badge variant="outline" className="text-micro font-mono">#{incident.linkedTicketId}</Badge>
+              <p className="text-micro font-medium uppercase tracking-wider text-muted-foreground">Linked Ticket</p>
+              <Badge variant="outline" className="max-w-full text-micro">
+                {linkedTicket
+                  ? `${linkedTicket.project?.key ?? "Ticket"}-${linkedTicket.ticketNumber}: ${linkedTicket.title}`
+                  : linkedTicketLoading
+                    ? "Loading ticket…"
+                    : "Linked ticket unavailable"}
+              </Badge>
+            </div>
+          ) : null}
+          {incident.releaseId ? (
+            <div className="space-y-1">
+              <p className="text-micro font-medium uppercase tracking-wider text-muted-foreground">Affected Release</p>
+              <Badge variant="outline" className="text-micro">
+                {release
+                  ? `${release.name} (${release.version})`
+                  : releasesLoading
+                    ? "Loading release…"
+                    : "Release unavailable"}
+              </Badge>
             </div>
           ) : null}
         </div>
@@ -206,7 +211,38 @@ export function IncidentDetailPage({ projectId, incidentId }: IncidentDetailPage
           incidentId={incidentId}
           updates={incident.updates}
           canManage={canManage}
+          unresolvedFollowUps={unresolvedFollowUps}
         />
+
+        <IncidentFollowUps
+          projectId={projectId}
+          incidentId={incidentId}
+          actions={incident.followUpActions}
+          canManage={canManage}
+          members={members}
+        />
+
+        <IncidentDecisions
+          projectId={projectId}
+          incidentId={incidentId}
+          decisions={incident.decisions}
+          canManage={canManage}
+          members={members}
+        />
+
+        {hasNextPage ? (
+          <div className="flex justify-center border-t pt-4">
+            <LoadingButton
+              type="button"
+              variant="outline"
+              onClick={handleLoadMore}
+              isPending={isFetchingNextPage}
+              loadingText="Loading…"
+            >
+              Load older activity
+            </LoadingButton>
+          </div>
+        ) : null}
       </div>
 
       <IncidentSheet
@@ -229,13 +265,3 @@ export function IncidentDetailPage({ projectId, incidentId }: IncidentDetailPage
   );
 }
 
-function InfoSection({ label, value }: { label: string; value: string | null }) {
-  return (
-    <div className="space-y-1">
-      <p className="text-micro font-semibold uppercase tracking-wider text-muted-foreground">{label}</p>
-      <p className="whitespace-pre-wrap text-xs text-foreground">
-        {value ?? <span className="italic text-muted-foreground">Not set</span>}
-      </p>
-    </div>
-  );
-}

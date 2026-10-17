@@ -116,9 +116,8 @@ describe("a 500 on /hr/overtime/comp-off", () => {
   it("renders the screen's own inline error, not a fabricated 0.0", async () => {
     renderUnderBoundary(<CompOffPageClient />, clientWithoutPolicy());
 
-    expect(
-      await screen.findByText("Couldn't load comp-off balance"),
-    ).toBeInTheDocument();
+    // The screen now resolves its error through the shared PageState/ErrorState.
+    expect(await screen.findByText("Something went wrong")).toBeInTheDocument();
     expect(screen.queryByText("0.0")).not.toBeInTheDocument();
     expect(screen.queryByText("days earned")).not.toBeInTheDocument();
     expect(screen.queryByText("route error boundary")).not.toBeInTheDocument();
@@ -197,7 +196,7 @@ describe("a screen that already loaded", () => {
   it("survives a failed background refresh rather than being replaced by an error", async () => {
     const client = clientWithPolicy();
     client.setQueryData(queryKeys.hr.compOff(), [
-      { orgId: ORG_ID, userId: USER_ID, earnedDays: "3.5" },
+      { orgId: ORG_ID, userId: USER_ID, earnedDays: "3.5", usedDays: "0" },
     ]);
 
     renderUnderBoundary(<CompOffPageClient />, client);

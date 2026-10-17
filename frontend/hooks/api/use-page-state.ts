@@ -6,6 +6,7 @@ import { accessState } from "@/lib/rbac/gate";
 import { grantsPermission } from "@/lib/rbac/permission-gate";
 import { normalizeOrgModuleKey } from "@/lib/org-module-keys";
 import {
+  pageStateFromError,
   resolvePageState,
   type ModuleAvailability,
   type PageStateResolution,
@@ -19,38 +20,65 @@ export interface UsePageStateOptions {
   readonly isError: boolean;
   readonly error?: unknown;
   readonly isEmpty?: boolean;
+  readonly hasActiveFilters?: boolean;
 }
 
-export function usePageState(options: UsePageStateOptions): PageStateResolution {
-  const { data: access, isLoading: accessLoading } = useAccess();
+export function resolveModuleAvailability(
+  module: string,
+  accessLoading: boolean,
+  modules: Record<string, boolean> | undefined,
+  lockedModules: string[] | undefined,
+): ModuleAvailability {
+  const moduleKey = normalizeOrgModuleKey(module);
+  if (accessLoading || modules === undefined) return { status: "loading" };
+  if (modules[moduleKey] === true) return { status: "available" };
+  const planLocked =
+    lockedModules?.some(
+      (locked) => normalizeOrgModuleKey(locked) === moduleKey,
+    ) ?? false;
+  return {
+    status: "unavailable",
+    moduleKey,
+    reason: planLocked ? "not-in-plan" : "org-disabled",
+    upgradePath: planLocked ? "/settings/billing" : null,
+  };
+}
+
+export function usePageState(
+  options: UsePageStateOptions,
+): PageStateResolution {
+  const {
+    data: access,
+    isLoading: accessLoading,
+    isError: accessFailed,
+    error: accessError,
+  } = useAccess();
   const { data: entitlements } = useEntitlements(options.module !== undefined);
+
+  const moduleAvailability: ModuleAvailability | undefined =
+    options.module !== undefined
+      ? resolveModuleAvailability(
+          options.module,
+          accessLoading || access === undefined,
+          access?.modules,
+          entitlements?.lockedModules,
+        )
+      : undefined;
+
+  if (accessFailed && access === undefined)
+    return (
+      pageStateFromError(accessError) ?? { kind: "error", error: accessError }
+    );
 
   const permissionState =
     options.permission === undefined
       ? ("granted" as const)
       : accessState({
           isLoading: accessLoading || access === undefined,
-          granted: access !== undefined && grantsPermission(access, options.permission),
+          granted:
+            access !== undefined &&
+            grantsPermission(access, options.permission),
         });
-
-  let moduleAvailability: ModuleAvailability | undefined;
-  if (options.module !== undefined) {
-    const moduleKey = normalizeOrgModuleKey(options.module);
-    if (accessLoading || access === undefined) moduleAvailability = { status: "loading" };
-    else if (access.modules[moduleKey] === true) moduleAvailability = { status: "available" };
-    else {
-      const planLocked =
-        entitlements?.lockedModules.some(
-          (locked) => normalizeOrgModuleKey(locked) === moduleKey,
-        ) ?? false;
-      moduleAvailability = {
-        status: "unavailable",
-        moduleKey,
-        reason: planLocked ? "not-in-plan" : "org-disabled",
-        upgradePath: planLocked ? "/settings/billing" : null,
-      };
-    }
-  }
 
   return resolvePageState({
     permission: options.permission,
@@ -60,5 +88,6 @@ export function usePageState(options: UsePageStateOptions): PageStateResolution 
     isError: options.isError,
     error: options.error,
     isEmpty: options.isEmpty,
+    hasActiveFilters: options.hasActiveFilters,
   });
 }

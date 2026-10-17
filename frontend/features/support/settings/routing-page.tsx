@@ -30,6 +30,24 @@ import { useOrgMembers } from "@/hooks/api/organization";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { toast } from "sonner";
 
+export function resolveRoutingRuleOrder(
+  serverRules: readonly SupportRoutingRule[],
+  orderOverride: readonly number[] | null,
+): SupportRoutingRule[] {
+  if (
+    orderOverride === null ||
+    orderOverride.length !== serverRules.length ||
+    orderOverride.some((id) => !serverRules.some((rule) => rule.id === id))
+  ) {
+    return [...serverRules];
+  }
+  const ruleById = new Map(serverRules.map((rule) => [rule.id, rule]));
+  return orderOverride.flatMap((id) => {
+    const rule = ruleById.get(id);
+    return rule ? [rule] : [];
+  });
+}
+
 export function RoutingPage() {
   const { data: rules, isLoading, isError, refetch } = useRoutingRules();
   const { data: membersResponse } = useOrgMembers(1, 200);
@@ -39,12 +57,11 @@ export function RoutingPage() {
   const [createOpen, setCreateOpen] = useState(false);
   const [editTarget, setEditTarget] = useState<SupportRoutingRule | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<SupportRoutingRule | null>(null);
-  const [orderedRules, setOrderedRules] = useState<SupportRoutingRule[]>(rules ?? []);
-  const [syncedRules, setSyncedRules] = useState(rules);
-  if (rules !== syncedRules) {
-    setSyncedRules(rules);
-    setOrderedRules(rules ?? []);
-  }
+  const [orderOverride, setOrderOverride] = useState<readonly number[] | null>(null);
+  const orderedRules = useMemo(
+    () => resolveRoutingRuleOrder(rules ?? [], orderOverride),
+    [orderOverride, rules],
+  );
 
   const assigneeNameOf = useCallback(
     (id: string | null) => {
@@ -71,7 +88,7 @@ export function RoutingPage() {
       if (target < 0 || target >= orderedRules.length) return;
       const next = [...orderedRules];
       [next[index], next[target]] = [next[target], next[index]];
-      setOrderedRules(next);
+      setOrderOverride(next.map((rule) => rule.id));
       next.forEach((rule, ruleIndex) => {
         if (rule.sortOrder !== ruleIndex)
           updateRule.mutate(

@@ -1,5 +1,6 @@
 import { resetErrorReporter, setErrorReporter, type ErrorReport } from "./error-reporter";
 import { installGlobalErrorHandlers } from "./global-handlers";
+import { ApiError } from "@/lib/api-envelope";
 
 /**
  * A real `ErrorEvent` carrying an `error` is treated by jsdom as an uncaught
@@ -57,6 +58,11 @@ describe("installGlobalErrorHandlers", () => {
     dispatchRejection("just a string");
     expect(reports).toHaveLength(1);
     expect(reports[0].error).toBe("just a string");
+  });
+
+  it("does not report an expected missing-record API rejection", () => {
+    dispatchRejection(new ApiError("Not found", 404, "NOT_FOUND"));
+    expect(reports).toHaveLength(0);
   });
 
   it("stops reporting once uninstalled, so a remount does not double-report", () => {

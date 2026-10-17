@@ -68,7 +68,7 @@ function DrawerContent({
         )}
         {...props}
       >
-        <DrawerPrimitive.Handle
+        <div
           data-slot="drawer-handle"
           className="bg-muted mx-auto mt-4 hidden h-2 w-32 shrink-0 rounded-full group-data-[vaul-drawer-direction=bottom]/drawer-content:block"
         />

@@ -16,12 +16,13 @@ import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import { EmptyState } from "@/components/ui/empty-state";
 import { Separator } from "@/components/ui/separator";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { AiActionsMenu, type AiAction } from "@/components/ai";
 import { useCan } from "@/hooks/api/access";
-import { usePeriod } from "@/hooks/api/timesheets-core/periods";
+import { usePeriod, useCanViewPeriodDetail } from "@/hooks/api/timesheets-core/periods";
 import { useApprovePeriod, useRejectPeriod } from "@/hooks/api/timesheets-core/approvals";
 import { fetchTimesheetPeriodSummary, draftRejectionReason } from "@/hooks/api/timesheets-core/ai";
 import {
@@ -34,6 +35,7 @@ import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { cn } from "@/lib/utils";
 import { ApprovalRouteCell } from "./approval-route-cell";
+import { PeriodLifecycleActions } from "./period-lifecycle-actions";
 
 interface ApprovalDetailSheetProps {
   period: TimesheetPeriod | null;
@@ -60,11 +62,13 @@ export function ApprovalDetailSheet({
   const [rejectReason, setRejectReason] = useState("");
   const [approveOpen, setApproveOpen] = useState(false);
 
-  const { data: detail, isLoading } = usePeriod(period?.id ?? null);
+  const canViewDetail = useCanViewPeriodDetail();
+  const { data: detail, isLoading, isError } = usePeriod(period?.id ?? null);
   const approveMutation = useApprovePeriod();
   const rejectMutation = useRejectPeriod();
 
   const handleApproveOpen = useCallback(() => setApproveOpen(true), []);
+  const handleClose = useCallback(() => onOpenChange(false), [onOpenChange]);
 
   const handleApprove = useCallback(() => {
     if (!period) return;
@@ -234,7 +238,21 @@ export function ApprovalDetailSheet({
 
           <Separator className="mb-4" />
 
-          {isLoading ? (
+          {!canViewDetail ? (
+            <EmptyState
+              compact
+              illustrationPreset="permissions"
+              title="Access restricted"
+              description="You don't have permission to view this timesheet's entries."
+            />
+          ) : isError ? (
+            <EmptyState
+              compact
+              illustrationPreset="alert"
+              title="Couldn't load this timesheet"
+              description="The entries for this period could not be fetched."
+            />
+          ) : isLoading ? (
             <div className="space-y-3">
               {Array.from({ length: 4 }).map((_, i) => (
                 <div key={i} className="space-y-1.5">
@@ -369,6 +387,7 @@ export function ApprovalDetailSheet({
               )}
             </SheetFooter>
           )}
+          {period && <PeriodLifecycleActions period={period} onDone={handleClose} />}
         </SheetContent>
       </Sheet>
       <ConfirmDialog

@@ -28,6 +28,14 @@ function makeNotification(overrides: Partial<Notification> = {}): Notification {
 const noop = () => undefined;
 
 describe("InboxNotificationItem", () => {
+  it("keeps interactive actions outside the activation button", async () => {
+    const select = jest.fn(), action = jest.fn();
+    const user = userEvent.setup();
+    render(<InboxNotificationItem notification={makeNotification()} isSelected={false} onSelect={select} actions={<button onClick={action}>Resolve</button>} />);
+    expect(screen.getByRole("button", { name: "Resolve" }).parentElement?.closest("button")).toBeNull();
+    await user.click(screen.getByRole("button", { name: "Resolve" }));
+    expect(action).toHaveBeenCalledTimes(1); expect(select).not.toHaveBeenCalled();
+  });
   it("does not repeat a title that is already the message", () => {
     render(
       <InboxNotificationItem
@@ -72,7 +80,10 @@ describe("InboxNotificationItem", () => {
         notification={makeNotification({
           ticketContext: {
             ticketId: 41,
+            projectId: 7,
+            projectName: "Build experience",
             ticketKey: "BLD-41",
+            ticketTitle: "Clarify the status change notification",
             priority: "HIGH",
             status: "IN_PROGRESS",
             type: "TASK",
@@ -91,6 +102,8 @@ describe("InboxNotificationItem", () => {
     );
 
     expect(screen.getByText("BLD-41")).toBeInTheDocument();
+    expect(screen.getByText("Clarify the status change notification")).toBeInTheDocument();
+    expect(screen.getByText("Build experience")).toBeInTheDocument();
     expect(screen.getByText("Ada Lovelace")).toBeInTheDocument();
     expect(screen.queryByText("BUILD")).not.toBeInTheDocument();
   });

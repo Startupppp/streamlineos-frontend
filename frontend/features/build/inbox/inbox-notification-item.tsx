@@ -14,6 +14,7 @@ import { getUserDisplayName, getUserInitials } from "@/lib/person-display";
 import { TicketTypeIcon } from "@/features/build/shared/ticket-type-icon";
 import { getStatusDotClass, getStatusBadgeClass } from "@/components/shared/ticket-status-badge";
 import { priorityConfig, statusConfig } from "@/features/build/shared/types";
+import { propagationShield } from "@/lib/keyboard-activation";
 import { parseInboxTicketLink } from "./parse-inbox-ticket-link";
 
 interface InboxNotificationItemProps {
@@ -23,6 +24,7 @@ interface InboxNotificationItemProps {
   isChecked?: boolean;
   onSelect: (notification: Notification) => void;
   onToggleSelect?: (id: number) => void;
+  actions?: React.ReactNode;
 }
 
 const PRIORITY_ICONS = {
@@ -61,17 +63,22 @@ export const InboxNotificationItem = React.memo(function InboxNotificationItem({
   isChecked = false,
   onSelect,
   onToggleSelect,
+  actions,
 }: InboxNotificationItemProps) {
   const rowRef = React.useRef<HTMLButtonElement>(null);
   const ticket = notification.ticketContext ?? null;
   const linkTarget = parseInboxTicketLink(notification.link);
   const ticketKey = ticket?.ticketKey ?? linkTarget?.ticketKey ?? null;
+  const ticketTitle = ticket?.ticketTitle ?? null;
+  const projectName = ticket?.projectName ?? null;
   const priority = ticket?.priority ?? null;
   const status = ticket?.status ?? null;
   const ticketType = ticket?.type ?? null;
   const assignee = ticket?.assignee ?? null;
   const hasMeta = Boolean(ticketKey || priority || status || ticketType || assignee);
   const body = distinctNotificationBody(notification.title, notification.message);
+  const primaryText = ticketTitle ?? notification.title;
+  const eventText = ticketTitle && ticketTitle !== notification.title ? notification.title : body;
   const typeConfig = NOTIFICATION_TYPE_CONFIG[notification.type];
   const TypeIcon = typeConfig.icon;
   const isUnread = !notification.isRead;
@@ -93,10 +100,6 @@ export const InboxNotificationItem = React.memo(function InboxNotificationItem({
     }
   }
 
-  function handleCheckboxClick(e: React.MouseEvent) {
-    e.stopPropagation();
-  }
-
   const priorityKey = priority ? resolvePriorityKey(priority) : null;
   const PriorityIcon = priorityKey ? PRIORITY_ICONS[priorityKey] : null;
   const priorityCfg = priorityKey
@@ -110,15 +113,10 @@ export const InboxNotificationItem = React.memo(function InboxNotificationItem({
       aria-pressed={isSelected}
       onClick={handleClick}
       className={cn(
-        "relative flex w-full items-start gap-3 border-b border-border px-4 py-3 text-left last:border-b-0",
-        "cursor-pointer transition-colors",
+        "relative flex w-full min-w-0 flex-1 items-start gap-2.5 px-3 py-2 text-left pr-20",
+        "cursor-pointer transition-colors duration-150",
         "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset",
-        isSelected
-          ? "bg-primary/10 hover:bg-primary/15"
-          : isUnread
-            ? "bg-primary/5 hover:bg-primary/10"
-            : "hover:bg-muted/50",
-        isSelectable && "pl-2",
+        isSelected ? "bg-muted/70" : isUnread ? "bg-primary/5 hover:bg-muted/60" : "hover:bg-muted/40",
       )}
     >
       <div
@@ -133,12 +131,12 @@ export const InboxNotificationItem = React.memo(function InboxNotificationItem({
       <div className="min-w-0 flex-1">
         <div className="flex min-w-0 items-start gap-2">
           <TruncatedText
-            text={notification.title}
+            text={primaryText}
             className={cn(
               "min-w-0 flex-1 text-sm leading-snug text-pretty",
               isUnread
-                ? "font-semibold text-foreground"
-                : "font-medium text-muted-foreground",
+                ? "font-medium text-foreground"
+                : "font-normal text-muted-foreground",
             )}
           />
           {isUnread ? (
@@ -149,25 +147,29 @@ export const InboxNotificationItem = React.memo(function InboxNotificationItem({
           ) : null}
         </div>
 
-        {body ? (
+        {eventText ? (
           <TruncatedText
-            text={body}
-            lines={2}
-            className="mt-1 text-xs leading-relaxed text-pretty text-muted-foreground"
+            text={eventText}
+            lines={1}
+            className="mt-0.5 text-xs leading-relaxed text-pretty text-muted-foreground"
           />
         ) : null}
 
-        <div className="mt-1.5 flex min-w-0 items-center gap-2">
+        <div className="mt-1 flex min-w-0 items-center gap-2">
           {hasMeta ? (
             <div className="flex min-w-0 flex-1 flex-wrap items-center gap-x-2 gap-y-1">
               {ticketKey ? (
-                <span className="inline-flex max-w-[9rem] items-center rounded-md border border-border bg-muted/50 px-1.5 py-0.5 font-mono text-micro font-medium text-muted-foreground">
+                <span className="inline-flex max-w-[9rem] items-center rounded-md border border-border bg-muted/50 px-1.5 py-0.5 font-mono text-micro font-normal text-muted-foreground">
                   <TruncatedText text={ticketKey} className="min-w-0" />
                 </span>
               ) : null}
 
+              {projectName ? (
+                <TruncatedText text={projectName} className="max-w-36 text-micro text-muted-foreground" />
+              ) : null}
+
               {ticketType ? (
-                <span className="inline-flex items-center gap-1 text-micro font-medium text-muted-foreground">
+                <span className="inline-flex items-center gap-1 text-micro font-normal text-muted-foreground">
                   <TicketTypeIcon type={ticketType} size="sm" />
                   <span className="capitalize">{ticketType.toLowerCase()}</span>
                 </span>
@@ -217,35 +219,46 @@ export const InboxNotificationItem = React.memo(function InboxNotificationItem({
             </div>
           ) : null}
 
-          {createdLabel ? (
-            <time
-              dateTime={createdAtIso(notification.createdAt)}
-              title={createdExact}
-              className="shrink-0 text-dense tabular-nums text-muted-foreground"
-            >
-              {createdLabel}
-            </time>
-          ) : null}
         </div>
       </div>
+      {createdLabel ? (
+        <time
+          dateTime={createdAtIso(notification.createdAt)}
+          title={createdExact}
+          className="absolute right-3 top-2.5 shrink-0 text-dense tabular-nums text-muted-foreground transition-opacity md:group-hover/notification:opacity-0 md:group-focus-within/notification:opacity-0"
+        >
+          {createdLabel}
+        </time>
+      ) : null}
     </button>
   );
 
-  if (!isSelectable) return buttonNode;
+  if (!isSelectable && !actions) return buttonNode;
 
   return (
-    <div className="flex items-stretch">
-      <div
-        className="flex items-start pl-4 pt-3.5"
-        onClick={handleCheckboxClick}
+    <div className={cn(
+      "group/notification relative flex items-stretch border-b border-border last:border-b-0",
+      isSelected && "ring-1 ring-inset ring-border",
+    )}>
+      {isSelectable ? <div
+        className={cn(
+          "absolute left-3 top-2 z-10 flex h-8 w-8 items-center justify-center transition-[opacity,transform] duration-150",
+          "md:scale-95 md:opacity-0 md:group-hover/notification:scale-100 md:group-hover/notification:opacity-100 md:group-focus-within/notification:scale-100 md:group-focus-within/notification:opacity-100",
+          (isChecked || isSelected) && "scale-100 opacity-100",
+        )}
+        {...propagationShield}
       >
         <Checkbox
           checked={isChecked}
           onCheckedChange={handleCheckboxChange}
           aria-label={`Select notification: ${notification.title}`}
         />
-      </div>
+      </div> : null}
       {buttonNode}
+      {actions ? <div
+        className="absolute right-2 top-1/2 z-10 flex -translate-y-1/2 items-center transition-[opacity,transform] duration-150 md:translate-x-1 md:opacity-0 md:group-hover/notification:translate-x-0 md:group-hover/notification:opacity-100 md:group-focus-within/notification:translate-x-0 md:group-focus-within/notification:opacity-100 [&_button]:h-7 [&_button]:w-7 [&_svg]:!h-3.5 [&_svg]:!w-3.5"
+        {...propagationShield}
+      >{actions}</div> : null}
     </div>
   );
 });

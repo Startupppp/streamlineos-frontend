@@ -95,7 +95,7 @@ export function PersonDetailPage({
         />
       ) : isLoading || personQuery.access.pending ? (
         <PersonDetailSkeleton />
-      ) : isError ? (
+      ) : isError || personQuery.access.unavailable ? (
         <ErrorState onRetry={handleRetry} />
       ) : !person ? (
         <EmptyState

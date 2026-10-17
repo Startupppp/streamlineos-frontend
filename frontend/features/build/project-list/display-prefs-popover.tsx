@@ -3,6 +3,11 @@
 import { SlidersHorizontal } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
+  MobileOnlyLabelTooltip,
+  RESPONSIVE_ICON_LABEL_TRIGGER_CLASS,
+  ResponsiveIconLabelText,
+} from "@/components/ui/responsive-icon-label";
+import {
   ResponsivePopover,
   ResponsivePopoverContent,
   ResponsivePopoverTrigger,
@@ -27,11 +32,12 @@ interface DisplayPrefsPopoverProps {
   prefs: DisplayPrefs;
   onToggle: (key: keyof DisplayPrefs) => void;
   onSet: (next: Partial<DisplayPrefs>) => void;
+  showMobileLabel?: boolean;
 }
 
 function SectionLabel({ children }: { children: string }) {
   return (
-    <p className="mb-1 mt-3 text-micro font-semibold uppercase tracking-wider text-muted-foreground first:mt-0">
+    <p className="mb-1 mt-3 text-micro font-medium uppercase tracking-wider text-muted-foreground first:mt-0">
       {children}
     </p>
   );
@@ -106,6 +112,7 @@ export function DisplayPrefsPopover({
   prefs,
   onToggle,
   onSet,
+  showMobileLabel = false,
 }: DisplayPrefsPopoverProps) {
   function handleGroupByChange(value: string) {
     const groupBy = GROUP_BY_OPTIONS.find((candidate) => candidate === value);
@@ -128,23 +135,31 @@ export function DisplayPrefsPopover({
 
   return (
     <ResponsivePopover>
-      <ResponsivePopoverTrigger asChild>
-        <Button
-          variant="outline"
-          size="sm"
-          aria-label="Display"
-          className="h-9 gap-1.5 text-xs"
-        >
-          <SlidersHorizontal className="h-3.5 w-3.5" aria-hidden="true" />
-          <span className="hidden sm:inline">Display</span>
-        </Button>
-      </ResponsivePopoverTrigger>
+      <MobileOnlyLabelTooltip label="Display">
+        <ResponsivePopoverTrigger asChild>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            aria-label="Display"
+            className={cn(
+              RESPONSIVE_ICON_LABEL_TRIGGER_CLASS,
+              showMobileLabel && "max-md:h-9 max-md:w-auto max-md:px-2.5",
+            )}
+          >
+            <SlidersHorizontal className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+            <ResponsiveIconLabelText className={cn(showMobileLabel && "max-md:inline")}>
+              Display
+            </ResponsiveIconLabelText>
+          </Button>
+        </ResponsivePopoverTrigger>
+      </MobileOnlyLabelTooltip>
       <ResponsivePopoverContent
         align="end"
         title="Display options"
         className="w-60 p-3"
       >
-        <p className="mb-3 text-label font-semibold text-foreground">Display options</p>
+        <p className="mb-3 text-label font-medium text-foreground">Display options</p>
 
         <SectionLabel>Group by</SectionLabel>
         <Select value={prefs.groupBy} onValueChange={handleGroupByChange}>

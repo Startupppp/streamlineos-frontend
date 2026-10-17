@@ -65,6 +65,7 @@ export function ChannelSectionList({
               onlineUserIds={onlineUserIds}
               onSelectChannel={onSelectChannel}
               compact={compact}
+              tabIndex={index === 0 ? 0 : -1}
               onStartCall={onStartCall}
               onOpenSettings={onOpenSettings}
             />

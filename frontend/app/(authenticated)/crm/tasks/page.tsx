@@ -339,20 +339,18 @@ function CrmTasksContent() {
               })}
             </AnimatePresence>
           </div>
-        ) : activeFilterLabels.length > 0 ? (
-          <EmptyState
-            illustration={<EmptyTasksIllustration />}
-            title="No tasks match these filters"
-            description={`Filtering by ${activeFilterLabels.join(", ")}. Clear the filters to see every task.`}
-            action={{ label: "Clear filters", onClick: handleClearFilters }}
-            actionVariant="outline"
-            className={CONTENT_FILL_PANEL}
-          />
         ) : (
           <EmptyState
             illustration={<EmptyTasksIllustration />}
             title="No tasks yet"
-            description="Tasks are the calls, emails and follow-ups you owe a lead, contact or deal. Create one to keep it out of your head."
+            filtersActive={activeFilterLabels.length > 0}
+            filteredTitle="No tasks match these filters"
+            onClearFilters={handleClearFilters}
+            description={
+              activeFilterLabels.length > 0
+                ? `Filtering by ${activeFilterLabels.join(", ")}. Clear the filters to see every task.`
+                : "Tasks are the calls, emails and follow-ups you owe a lead, contact or deal. Create one to keep it out of your head."
+            }
             action={{ label: "Create task", onClick: handleCreateOpen }}
             className={CONTENT_FILL_PANEL}
           />

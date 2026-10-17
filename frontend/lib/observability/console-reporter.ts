@@ -4,17 +4,11 @@ import { redact } from "./redact";
 const RELEASE: string | undefined = process.env.NEXT_PUBLIC_APP_VERSION;
 
 function apiDiagnostics(error: Error): Record<string, unknown> {
-  const candidate = error as Partial<{
-    status: number;
-    code: string;
-    endpoint: string;
-    details: unknown;
-  }>;
   const out: Record<string, unknown> = {};
-  if (typeof candidate.status === "number") out.status = candidate.status;
-  if (typeof candidate.code === "string") out.code = candidate.code;
-  if (typeof candidate.endpoint === "string") out.endpoint = candidate.endpoint;
-  if (candidate.details !== undefined) out.details = redact(candidate.details);
+  if ("status" in error && typeof error.status === "number") out.status = error.status;
+  if ("code" in error && typeof error.code === "string") out.code = error.code;
+  if ("endpoint" in error && typeof error.endpoint === "string") out.endpoint = error.endpoint;
+  if ("details" in error && error.details !== undefined) out.details = redact(error.details);
   return out;
 }
 

@@ -335,18 +335,16 @@ function ActivitiesContent() {
         ) : rows.length === 0 ? (
           <EmptyState
             illustration={<EmptyActivityIllustration />}
-            title={hasActiveFilters ? "No activities match these filters" : "No activities yet"}
+            title="No activities yet"
+            filtersActive={hasActiveFilters}
+            filteredTitle="No activities match these filters"
+            onClearFilters={handleClearFilters}
             description={
               hasActiveFilters
                 ? "Nothing here matches what you have filtered to. Clear the filters to see the whole queue."
                 : "Log your first call, email or meeting and it lands here with a due date you can work from."
             }
-            action={
-              hasActiveFilters
-                ? { label: "Clear filters", onClick: handleClearFilters }
-                : { label: "Log Activity", onClick: handleOpenDialog }
-            }
-            actionVariant={hasActiveFilters ? "outline" : undefined}
+            action={{ label: "Log Activity", onClick: handleOpenDialog }}
             className={CONTENT_FILL_PANEL}
           />
         ) : (

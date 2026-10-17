@@ -3,9 +3,10 @@
 import { useInfiniteQuery, useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useSession } from "next-auth/react";
 import { apiClient } from "@/lib/api-client";
+import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
 import { directoryAndOwnershipQueryKeys } from "@/lib/query-keys/directory-and-ownership";
 import { platformCoreQueryKeys } from "@/lib/query-keys/platform-core";
-import { useCan } from "@/hooks/api/access";
+import { signalAccessInvalidation, useCan } from "@/hooks/api/access";
 import type { CursorPaginatedResult, DataScope, MemberGrant, ModuleMember, ModuleMemberCandidate } from "./types";
 import { viewKey, manageKey } from "./types";
 import { lazyContract } from "@/lib/api-envelope";
@@ -38,6 +39,7 @@ export function useModuleMembersInfinite(
   const canView = useCan(viewKey(moduleKey));
   const userId = options?.userId;
   return useInfiniteQuery<CursorPaginatedResult<ModuleMember>, Error>({
+    ...INLINE_READ_ERROR,
     queryKey: directoryAndOwnershipQueryKeys.moduleAccess.members(moduleKey, { pageSize, userId }),
     queryFn: ({ pageParam, signal }) => {
       const params = new URLSearchParams({ pageSize: String(pageSize) });
@@ -81,6 +83,7 @@ export function useAddModuleMember(moduleKey: string) {
           exact: true,
         });
       }
+      if (session?.orgId) signalAccessInvalidation(session.orgId);
     },
   });
 }
@@ -114,6 +117,7 @@ export function useUpdateModuleMember(moduleKey: string) {
           exact: true,
         });
       }
+      if (session?.orgId) signalAccessInvalidation(session.orgId);
     },
   });
 }
@@ -142,6 +146,7 @@ export function useRemoveModuleMember(moduleKey: string) {
           exact: true,
         });
       }
+      if (session?.orgId) signalAccessInvalidation(session.orgId);
     },
   });
 }
@@ -150,23 +155,26 @@ export function useModuleMemberCandidates(
   moduleKey: string,
   pageSize: number,
   search: string,
-  options?: { enabled?: boolean; userId?: string; excludeAssigned?: boolean },
+  options?: { enabled?: boolean; userId?: string; excludeAssigned?: boolean; includeRevoked?: boolean },
 ) {
   const canManage = useCan(manageKey(moduleKey));
   const userId = options?.userId;
   const excludeAssigned = options?.excludeAssigned ?? true;
+  const includeRevoked = options?.includeRevoked ?? false;
   return useQuery<CursorPaginatedResult<ModuleMemberCandidate>, Error>({
     queryKey: directoryAndOwnershipQueryKeys.moduleAccess.memberCandidates(moduleKey, {
       pageSize,
       search,
       userId,
       excludeAssigned,
+      includeRevoked,
     }),
     queryFn: ({ signal }) => {
       const params = new URLSearchParams({ pageSize: String(pageSize) });
       if (search) params.set("search", search);
       if (userId) params.set("userId", userId);
       params.set("excludeAssigned", String(excludeAssigned));
+      if (includeRevoked) params.set("includeRevoked", "true");
       return apiClient.get(
         `/module-access/${moduleKey}/member-candidates?${params.toString()}`,
         undefined,
@@ -176,7 +184,13 @@ export function useModuleMemberCandidates(
     },
     enabled: canManage && (options?.enabled ?? true),
     staleTime: 5 * 60_000,
-    placeholderData: (previous) => previous,
+    placeholderData: (previous, previousQuery) => {
+      const previousParams = previousQuery?.queryKey.at(-1);
+      if (typeof previousParams !== "object" || previousParams === null) return undefined;
+      return "includeRevoked" in previousParams && previousParams.includeRevoked === includeRevoked
+        ? previous
+        : undefined;
+    },
   });
 }
 
@@ -202,6 +216,7 @@ export function useModuleMemberGrants(
 
 export function useSetModuleMemberGrants(moduleKey: string) {
   const queryClient = useQueryClient();
+  const { data: session } = useSession();
   return useMutation<
     { success: true; granted: number },
     Error,
@@ -230,6 +245,7 @@ export function useSetModuleMemberGrants(moduleKey: string) {
       void queryClient.invalidateQueries({
         queryKey: platformCoreQueryKeys.access.me(),
       });
+      if (session?.orgId) signalAccessInvalidation(session.orgId);
     },
   });
 }

@@ -5,8 +5,10 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { createElement } from "react";
 import type { ReactNode } from "react";
 import { useUpdateTicket } from "./ticket-update-mutation";
-import { useCreateTicket, useDeleteTicket, useBulkUpdateTickets } from "./ticket-create-rank-mutations";
+import { useCreateTicket, useDeleteTicket } from "./ticket-create-rank-mutations";
+import { useBulkUpdateTickets } from "./ticket-bulk-update-mutation";
 import { queryKeys } from "@/lib/query-keys";
+import { apiClient } from "@/lib/api-client";
 
 jest.mock("@/lib/api-client", () => ({
   apiClient: {
@@ -159,7 +161,7 @@ describe("useUpdateTicket — invalidation contract", () => {
   });
 
   it("keeps the optimistic ticket cache and refreshes activity without a detail refetch", async () => {
-    client.setQueryData(queryKeys.projects.ticket(9), {
+    client.setQueryData(queryKeys.projects.ticket(42, 9), {
       id: 9,
       title: "Before",
       updatedAt: "2026-09-15T10:00:00.000Z",
@@ -169,15 +171,15 @@ describe("useUpdateTicket — invalidation contract", () => {
     });
 
     await act(async () => {
-      await result.current.mutateAsync({ ticketId: 9, title: "After" });
+      await result.current.mutateAsync({ ticketId: 9, version: 3, title: "After" });
     });
 
-    expect(client.getQueryData(queryKeys.projects.ticket(9))).toMatchObject({
+    expect(client.getQueryData(queryKeys.projects.ticket(42, 9))).toMatchObject({
       title: "After",
       updatedAt: "2026-09-15T10:01:00.000Z",
     });
     expect(invalidateSpy).not.toHaveBeenCalledWith(
-      expect.objectContaining({ queryKey: queryKeys.projects.ticket(9) }),
+      expect.objectContaining({ queryKey: queryKeys.projects.ticket(42, 9) }),
     );
     expect(invalidateSpy).toHaveBeenCalledWith({
       queryKey: queryKeys.ticketActivity.list(9),
@@ -191,7 +193,7 @@ describe("useUpdateTicket — invalidation contract", () => {
     });
 
     await act(async () => {
-      await result.current.mutateAsync({ ticketId: 9, cycleId: 3 });
+      await result.current.mutateAsync({ ticketId: 9, version: 3, cycleId: 3 });
     });
 
     expect(invalidateSpy).toHaveBeenCalledWith({
@@ -202,6 +204,22 @@ describe("useUpdateTicket — invalidation contract", () => {
       queryKey: queryKeys.projects.columnCounts(42),
       refetchType: "none",
     });
+  });
+
+  it("keeps optimistically patched project ticket lists fresh", async () => {
+    const { result } = renderHook(() => useUpdateTicket(42), {
+      wrapper: wrap(client),
+    });
+
+    await act(async () => {
+      await result.current.mutateAsync({ ticketId: 9, version: 3, title: "After" });
+    });
+
+    expect(invalidateSpy).not.toHaveBeenCalledWith(
+      expect.objectContaining({
+        queryKey: queryKeys.projects.tickets({ projectId: 42 }),
+      }),
+    );
   });
 });
 
@@ -215,7 +233,12 @@ describe("useBulkUpdateTickets — invalidation contract", () => {
     invalidateSpy = jest.spyOn(client, "invalidateQueries");
   });
 
-  it("invalidates projectReports.all so cycle burndown reflects bulk status/cycle changes", async () => {
+  it("invalidates the status-derived reports without staling unrelated report caches", async () => {
+    jest.mocked(apiClient.post).mockResolvedValueOnce({ updated: 2, ticketIds: [1, 2] });
+    client.setQueryData(queryKeys.projects.tickets({ projectId: 42 }), {
+      data: [{ id: 1, version: 1 }, { id: 2, version: 1 }],
+      pagination: { nextCursor: null },
+    });
     const { result } = renderHook(() => useBulkUpdateTickets(42), { wrapper: wrap(client) });
 
     await act(async () => {
@@ -225,12 +248,17 @@ describe("useBulkUpdateTickets — invalidation contract", () => {
     const invalidatedKeys = invalidateSpy.mock.calls.map(
       (c) => JSON.stringify((c[0] as { queryKey: unknown }).queryKey),
     );
-    expect(invalidatedKeys).toContain(
-      JSON.stringify(queryKeys.projectReports.all),
-    );
+    expect(invalidatedKeys).toContain(JSON.stringify(queryKeys.projectReports.velocity(42)));
+    expect(invalidatedKeys).toContain(JSON.stringify(queryKeys.projectReports.burnup(42)));
+    expect(invalidatedKeys).not.toContain(JSON.stringify(queryKeys.projectReports.all));
   });
 
   it("invalidates dashboard.myIssues() so My Issues widget reflects bulk assignee/status changes", async () => {
+    jest.mocked(apiClient.post).mockResolvedValueOnce({ updated: 2, ticketIds: [1, 2] });
+    client.setQueryData(queryKeys.projects.tickets({ projectId: 42 }), {
+      data: [{ id: 1, version: 1 }, { id: 2, version: 1 }],
+      pagination: { nextCursor: null },
+    });
     const { result } = renderHook(() => useBulkUpdateTickets(42), { wrapper: wrap(client) });
 
     await act(async () => {

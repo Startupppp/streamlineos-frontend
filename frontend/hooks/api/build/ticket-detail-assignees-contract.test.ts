@@ -38,6 +38,7 @@ const DETAIL_RESPONSE = {
   dueDate: null,
   moduleId: null,
   cycleId: null,
+  health: null,
   sequenceId: null,
   estimate: null,
   createdAt: "2026-09-18T10:00:00.000Z",
@@ -52,6 +53,7 @@ const DETAIL_RESPONSE = {
     { id: 2, ticketId: 12, assignedAt: "2026-09-18T10:05:00.000Z", assignedBy: "user-a", user: { userId: "user-b", user: person("user-b", "Blair") } },
   ],
   watchers: [],
+  members: [],
   attachments: [],
   labels: [],
 };
@@ -63,12 +65,6 @@ describe("the ticket detail contract keeps the whole assignee roster", () => {
   });
 
   it("exposes the roster under the key the sidebar reads, so removing one assignee cannot wipe the rest", () => {
-    /*
-      The sidebar builds `currentAssigneeIds` from `ticket.assignees` and sends the
-      remainder back as `assigneeIds`. While the contract published this array under
-      `members`, `ticket.assignees` was undefined, the list collapsed to the single
-      `assignee`, and removing that one sent `assigneeIds: []` — deleting every row.
-    */
     const detail = ticketDetailContract.parse(DETAIL_RESPONSE);
     const remaining = detail.assignees.filter((a) => a.userId !== "user-a").map((a) => a.userId);
     expect(remaining).toEqual(["user-b"]);

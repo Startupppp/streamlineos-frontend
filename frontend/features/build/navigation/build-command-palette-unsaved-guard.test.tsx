@@ -1,6 +1,7 @@
 import React from "react";
 import { fireEvent, render, screen } from "@testing-library/react";
 import { useRouter, usePathname } from "next/navigation";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useCan } from "@/hooks/api/access";
 import { CommandPaletteDialogBody } from "@/components/layout/command-palette-dialog";
 import {
@@ -13,6 +14,7 @@ const push = jest.fn();
 jest.mock("@/hooks/api/access", () => ({
   useAccess: () => ({ data: { isOrgOwner: false, scopes: [] } }),
   useCan: jest.fn(),
+  useModuleEnabled: () => false,
 }));
 
 jest.mock("@/hooks/api/access/org-modules", () => ({
@@ -44,6 +46,14 @@ jest.mock(
     }),
   }),
 );
+
+jest.mock("@/components/theme/app-theme-provider", () => ({
+  useAppTheme: () => ({ setMode: jest.fn(), theme: "light", mode: "system", isDark: false }),
+}));
+
+jest.mock("@/components/layout/command-palette-hrms-commands", () => ({
+  useHrmsCommands: () => [],
+}));
 
 jest.mock("@/components/command-palette", () => ({
   useCommandPalette: () => ({
@@ -84,6 +94,9 @@ jest.mock("lucide-react", () => {
     RefreshCw: Icon,
     BarChart2: Icon,
     Star: Icon,
+    Moon: Icon,
+    Sun: Icon,
+    Monitor: Icon,
   };
 });
 
@@ -97,11 +110,16 @@ function DirtySurface({ isDirty }: { isDirty: boolean }) {
 }
 
 function renderWithDirtyState(isDirty: boolean) {
+  const queryClient = new QueryClient({
+    defaultOptions: { queries: { retry: false } },
+  });
   return render(
-    <DirtyStateProvider>
-      <DirtySurface isDirty={isDirty} />
-      <CommandPaletteDialogBody />
-    </DirtyStateProvider>,
+    <QueryClientProvider client={queryClient}>
+      <DirtyStateProvider>
+        <DirtySurface isDirty={isDirty} />
+        <CommandPaletteDialogBody />
+      </DirtyStateProvider>
+    </QueryClientProvider>,
   );
 }
 

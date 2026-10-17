@@ -75,8 +75,9 @@ export function useHierarchyListState() {
   );
 
   useEffect(() => {
+    if (serverSearch === debouncedSearch.trim()) return;
     setSearch(serverSearch);
-  }, [serverSearch]);
+  }, [serverSearch, debouncedSearch]);
 
   useEffect(() => {
     const normalizedSearch = debouncedSearch.trim();

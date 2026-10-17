@@ -1,5 +1,7 @@
-import type { RoadmapStatus, FeedbackStatus, ChangelogType } from "@/types/projects";
-import type { CrmAccountTier } from "@/hooks/api/build/roadmap-schema";
+import type { RoadmapStatus, RoadmapHorizon, FeedbackStatus, ChangelogType } from "@/types/projects";
+import type { CrmAccountTier } from "@/types/crm";
+
+export const BUILD_FILTER_NONE = "__none__";
 
 export const ROADMAP_COLUMNS: { status: RoadmapStatus; label: string }[] = [
   { status: "planned", label: "Planned" },
@@ -8,12 +10,44 @@ export const ROADMAP_COLUMNS: { status: RoadmapStatus; label: string }[] = [
   { status: "cancelled", label: "Cancelled" },
 ];
 
+export const ROADMAP_HORIZON_COLUMNS: { horizon: RoadmapHorizon; label: string }[] = [
+  { horizon: "now", label: "Now" },
+  { horizon: "next", label: "Next" },
+  { horizon: "later", label: "Later" },
+];
+
+export const ROADMAP_HORIZON_LABEL: Record<RoadmapHorizon, string> = {
+  now: "Now",
+  next: "Next",
+  later: "Later",
+};
+
+export const ROADMAP_HORIZON_OPTIONS: { value: RoadmapHorizon; label: string }[] = [
+  { value: "now", label: "Now" },
+  { value: "next", label: "Next" },
+  { value: "later", label: "Later" },
+];
+
 export const ROADMAP_STATUS_OPTIONS: { value: RoadmapStatus; label: string }[] = [
   { value: "planned", label: "Planned" },
   { value: "in_progress", label: "In Progress" },
   { value: "completed", label: "Completed" },
   { value: "cancelled", label: "Cancelled" },
 ];
+
+export const ROADMAP_STATUS_BADGE_VARIANT: Record<string, "default" | "secondary" | "outline" | "destructive"> = {
+  planned: "outline",
+  in_progress: "default",
+  completed: "secondary",
+  cancelled: "destructive",
+};
+
+export const ROADMAP_STATUS_LABEL: Record<string, string> = {
+  planned: "Planned",
+  in_progress: "In Progress",
+  completed: "Completed",
+  cancelled: "Cancelled",
+};
 
 export const FEEDBACK_STATUS_OPTIONS: { value: FeedbackStatus; label: string }[] = [
   { value: "open", label: "Open" },

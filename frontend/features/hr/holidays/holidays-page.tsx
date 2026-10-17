@@ -2,11 +2,12 @@
 
 import { useState, useMemo, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { getYear, parseISO } from "date-fns";
+import { format, getYear, parseISO } from "date-fns";
 import { addMonths, subMonths } from "date-fns";
 import { toast } from "sonner";
 import { PlusIcon } from "@animateicons/react/lucide";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -46,6 +47,7 @@ export function HolidaysPage() {
   const [yearFilter, setYearFilter] = useState<number | "all">(getYear(new Date()));
   const [sheetOpen, setSheetOpen] = useState(false);
   const [editingHoliday, setEditingHoliday] = useState<Holiday | null>(null);
+  const [pendingDuplicateDateValues, setPendingDuplicateDateValues] = useState<HolidayFormValues | null>(null);
 
   const allHolidays = useMemo(() => holidays ?? [], [holidays]);
 
@@ -72,9 +74,21 @@ export function HolidaysPage() {
     setEditingHoliday(holiday);
     setSheetOpen(true);
   }
+  // Delete fired straight from the row icon with no confirmation (FE-83).
+  const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
   function handleDeleteClick(id: string) {
-    deleteMutation.mutate(id, {
-      onSuccess: () => toast.success("Holiday deleted"),
+    setPendingDeleteId(id);
+  }
+  function handleDeleteOpenChange(open: boolean) {
+    if (!open) setPendingDeleteId(null);
+  }
+  function handleDeleteConfirm() {
+    if (pendingDeleteId === null) return;
+    deleteMutation.mutate(pendingDeleteId, {
+      onSuccess: () => {
+        toast.success("Holiday deleted");
+        setPendingDeleteId(null);
+      },
       onError: (err) => toast.error(getErrorMessage(err)),
     });
   }
@@ -99,11 +113,16 @@ export function HolidaysPage() {
         },
       );
     } else {
-      const duplicate = allHolidays.find(
+      const exactDuplicate = allHolidays.find(
         (h) => h.date === values.date && h.name.trim().toLowerCase() === trimmedName,
       );
-      if (duplicate) {
+      if (exactDuplicate) {
         toast.error("A holiday with this name already exists on this date.");
+        return;
+      }
+      const sameDateHoliday = allHolidays.find((h) => h.date === values.date);
+      if (sameDateHoliday) {
+        setPendingDuplicateDateValues(values);
         return;
       }
       createMutation.mutate(values, {
@@ -114,6 +133,23 @@ export function HolidaysPage() {
         onError: (err) => toast.error(getErrorMessage(err)),
       });
     }
+  }
+
+  function handleDuplicateDateConfirm() {
+    if (!pendingDuplicateDateValues) return;
+    const vals = pendingDuplicateDateValues;
+    setPendingDuplicateDateValues(null);
+    createMutation.mutate(vals, {
+      onSuccess: () => {
+        toast.success("Holiday added");
+        setSheetOpen(false);
+      },
+      onError: (err) => toast.error(getErrorMessage(err)),
+    });
+  }
+
+  function handleDuplicateDateOpenChange(open: boolean) {
+    if (!open) setPendingDuplicateDateValues(null);
   }
 
   function handleViewChange(v: string) {
@@ -189,7 +225,7 @@ export function HolidaysPage() {
         onRetry={handleRetry}
         className="flex-1"
       >
-        <AnimatePresence mode="wait">
+        <AnimatePresence mode="wait" initial={false}>
           <motion.div
             key={viewMode}
             initial={{ opacity: 0, y: 12 }}
@@ -235,6 +271,33 @@ export function HolidaysPage() {
           </motion.div>
         </AnimatePresence>
       </PageState>
+
+      <ConfirmDialog
+        open={pendingDeleteId !== null}
+        onOpenChange={handleDeleteOpenChange}
+        title="Delete this holiday?"
+        description="It is removed from everyone's holiday calendar."
+        confirmLabel="Delete"
+        destructive
+        isPending={deleteMutation.isPending}
+        keepOpenOnConfirm
+        onConfirm={handleDeleteConfirm}
+      />
+
+      <ConfirmDialog
+        open={pendingDuplicateDateValues !== null}
+        onOpenChange={handleDuplicateDateOpenChange}
+        title="Holiday already exists on this date"
+        description={
+          pendingDuplicateDateValues
+            ? `"${allHolidays.find((h) => h.date === pendingDuplicateDateValues.date)?.name ?? ""}" is already on ${format(parseISO(pendingDuplicateDateValues.date), "d MMM yyyy")}. Add another holiday on the same date?`
+            : ""
+        }
+        confirmLabel="Add anyway"
+        isPending={createMutation.isPending}
+        keepOpenOnConfirm
+        onConfirm={handleDuplicateDateConfirm}
+      />
 
       <HolidaySheet
         open={sheetOpen}

@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { render, screen, waitFor } from "@testing-library/react";
+import { render, screen, waitFor, within } from "@testing-library/react";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { apiClient } from "@/lib/api-client";
 import { EnvelopeList } from "./envelope-list";
@@ -110,7 +110,7 @@ describe("EnvelopeList", () => {
 
     renderList();
 
-    await waitFor(() => expect(screen.getByText("Envelope 31")).toBeInTheDocument());
+    await waitFor(() => expect(within(screen.getByRole("table")).getByText("Envelope 31")).toBeInTheDocument());
     const [path, params] = get.mock.calls[0] as [string, Record<string, unknown>];
     expect(path).toBe("/sign/envelopes");
     expect(params).toEqual({ status: "completed", page: 3, limit: 10 });
@@ -122,7 +122,7 @@ describe("EnvelopeList", () => {
 
     renderList();
 
-    await waitFor(() => expect(screen.getByText("Envelope 1")).toBeInTheDocument());
+    await waitFor(() => expect(within(screen.getByRole("table")).getByText("Envelope 1")).toBeInTheDocument());
     expect(screen.getByText(/of 42/)).toBeInTheDocument();
   });
 

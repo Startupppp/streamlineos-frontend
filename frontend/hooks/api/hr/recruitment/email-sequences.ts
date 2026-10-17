@@ -11,6 +11,10 @@ import type {
   UpdateEmailSequenceInput,
 } from "@/types/hr/recruitment";
 import { useGatedQuery } from "@/hooks/api/gated-query";
+import type { z } from "zod";
+import type { nurtureMetricsContract } from "@/hooks/api/hr/recruitment/email-sequences-schema";
+
+export type NurtureMetrics = z.infer<typeof nurtureMetricsContract>;
 
 const emailSequenceListContract = lazyContract(() =>
   import("@/hooks/api/hr/recruitment/email-sequences-schema").then(
@@ -27,6 +31,33 @@ const emailSequenceSuccessContract = lazyContract(() =>
     (m) => m.emailSequenceSuccessSchema,
   ),
 );
+const nurtureMetricsC = lazyContract(() =>
+  import("@/hooks/api/hr/recruitment/email-sequences-schema").then(
+    (m) => m.nurtureMetricsContract,
+  ),
+);
+
+/**
+ * What a campaign actually did, gated on `view` to match the route.
+ *
+ * A short `staleTime`: these numbers move whenever the sender ticks, and a
+ * recruiter watching a campaign they just launched reads a stale zero as the
+ * campaign not working.
+ */
+export function useEmailSequenceMetrics(emailSequenceId: number, enabled = true) {
+  return useGatedQuery("hr:requisitions:view", {
+    queryKey: humanResourcesQueryKeys.hr.emailSequenceMetrics(emailSequenceId),
+    queryFn: ({ signal }) =>
+      apiClient.get<NurtureMetrics>(
+        `/hr/recruitment/email-sequences/${emailSequenceId}/metrics`,
+        undefined,
+        signal,
+        nurtureMetricsC,
+      ),
+    staleTime: 15_000,
+    enabled,
+  });
+}
 
 export function useEmailSequences() {
   return useGatedQuery("hr:requisitions:view", {

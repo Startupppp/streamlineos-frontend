@@ -50,10 +50,28 @@ interface UpdateGitConnectionInput {
   projectId?: number | null;
 }
 
-export function useGitConnections() {
-   return useGatedQuery("integrations:git:view", {
-    queryKey: accountingAndSupportQueryKeys.gitIntegration.connections(),
-    queryFn: ({ signal }) => apiClient.get("/integrations/git/connections", undefined, signal, gitConnectionListContract),
+interface GitConnectionsParams {
+  search?: string;
+  cursor?: string;
+}
+
+export function useGitConnections(params?: GitConnectionsParams) {
+  const queryParams = {
+    ...(params?.search ? { search: params.search } : {}),
+    ...(params?.cursor ? { cursor: params.cursor } : {}),
+  };
+  const hasParams = Object.keys(queryParams).length > 0;
+  return useGatedQuery("integrations:git:view", {
+    queryKey: accountingAndSupportQueryKeys.gitIntegration.connections(
+      hasParams ? queryParams : undefined,
+    ),
+    queryFn: ({ signal }) =>
+      apiClient.get(
+        "/integrations/git/connections",
+        hasParams ? queryParams : undefined,
+        signal,
+        gitConnectionListContract,
+      ),
     staleTime: 60_000,
   });
 }

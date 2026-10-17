@@ -52,6 +52,16 @@ export interface FormSubmission {
   submittedById: string | null;
   convertedTicketId: number | null;
   createdAt: string;
+  intake?: {
+    id: number;
+    status: "pending" | "accepted" | "declined" | "duplicate";
+    linkedTicket: { id: number; ticketNumber: number } | null;
+  } | null;
+}
+
+export interface FormSubmissionPage {
+  data: FormSubmission[];
+  pagination: { limit: number; hasMore: boolean; nextCursor: string | null };
 }
 
 export interface CreateFormInput {
@@ -77,10 +87,6 @@ export interface UpdateFormInput {
 export interface SubmitFormInput {
   values: Record<string, unknown>;
   submittedByName?: string;
-}
-
-export interface UpdateSubmissionInput {
-  status: FormSubmissionStatus;
 }
 
 export interface SubmitFormResponse extends FormSubmission {

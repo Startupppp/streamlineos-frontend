@@ -1,70 +1,24 @@
-import { z } from "zod";
+import {
+  portfoliosListPortfoliosResponseSchema,
+  portfoliosCreatePortfolioResponseSchema,
+  portfoliosGetPortfolioResponseSchema,
+  portfoliosLinkProjectResponseSchema,
+  programsListProgramsResponseSchema,
+  programsCreateProgramResponseSchema,
+  programsGetProgramResponseSchema,
+} from "@/contracts/build-contracts.generated";
 
-const portfolioRowContract = z.object({
-  id: z.number().int(),
-  orgId: z.string(),
-  name: z.string(),
-  description: z.string().nullable(),
-  ownerId: z.string().nullable(),
-  status: z.string(),
-  health: z.string().nullable(),
-  strategicGoal: z.string().nullable(),
-  createdBy: z.string().nullable(),
-  createdAt: z.string(),
-  updatedAt: z.string(),
-  deletedAt: z.string().nullable(),
-});
+export const portfolioRowContract = portfoliosCreatePortfolioResponseSchema;
 
-export { portfolioRowContract };
+export const portfolioPageContract = portfoliosListPortfoliosResponseSchema;
 
-const portfolioListItemContract = portfolioRowContract.omit({ deletedAt: true }).extend({
-  projectCount: z.number().int(),
-});
+export const portfolioDetailContract = portfoliosGetPortfolioResponseSchema;
 
-export const portfolioPageContract = z.object({
-  data: z.array(portfolioListItemContract),
-  pagination: z.object({
-    limit: z.number().int(),
-    hasMore: z.boolean(),
-    nextCursor: z.string().nullable(),
-  }),
-});
+export const programRowContract = programsCreateProgramResponseSchema;
 
-export const portfolioDetailContract = portfolioRowContract.extend({
-  projects: z.array(z.object({
-    id: z.number().int(),
-    name: z.string(),
-    key: z.string(),
-    status: z.string(),
-    openCount: z.number().int(),
-    doneCount: z.number().int(),
-  })),
-  programs: z.array(z.object({
-    id: z.number().int(),
-    name: z.string(),
-    status: z.string(),
-  })),
-});
+export const programPageContract = programsListProgramsResponseSchema;
 
-export const programRowContract = z.object({
-  id: z.number().int(),
-  orgId: z.string(),
-  portfolioId: z.number().int().nullable(),
-  name: z.string(),
-  description: z.string().nullable(),
-  ownerId: z.string().nullable(),
-  status: z.string(),
-  health: z.string().nullable(),
-  createdBy: z.string().nullable(),
-  createdAt: z.string(),
-  updatedAt: z.string(),
-  deletedAt: z.string().nullable(),
-});
+export const programDetailContract = programsGetProgramResponseSchema;
 
-export const programListItemContract = programRowContract.omit({ deletedAt: true }).extend({
-  projectCount: z.number().int(),
-});
 
-export const programListContract = z.array(programListItemContract);
-
-export const portfoliosSuccessContract = z.object({ success: z.literal(true) });
+export const portfoliosSuccessContract = portfoliosLinkProjectResponseSchema;

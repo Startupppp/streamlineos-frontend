@@ -295,7 +295,6 @@ export function AutomationUpsertSheet({ rule, onClose }: Props) {
                   <Input
                     {...form.register(`conditions.${idx}.field`)}
                     placeholder={eventDef?.fields[0]?.field ?? "field"}
-                    className="text-xs"
                   />
                   <Controller
                     control={form.control}
@@ -316,7 +315,6 @@ export function AutomationUpsertSheet({ rule, onClose }: Props) {
                   <Input
                     {...form.register(`conditions.${idx}.value`)}
                     placeholder="value"
-                    className="text-xs"
                   />
                   <AnimatedIconButton icon={XIcon} iconSize={14} type="button" variant="ghost" size="icon" className="w-8" onClick={() => removeCondition(idx)} aria-label="Remove condition" />
                 </div>
@@ -364,7 +362,7 @@ export function AutomationUpsertSheet({ rule, onClose }: Props) {
                         {...form.register(`actions.${idx}.configRaw`)}
                         rows={2}
                         placeholder="Config JSON"
-                        className="text-xs font-mono resize-none"
+                        className="font-mono resize-none"
                       />
                       <ActionConfigFields index={idx} actionType={currentType} />
                     </div>

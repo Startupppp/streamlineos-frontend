@@ -88,7 +88,7 @@ export function ImportMappingSummary({ format, content }: ImportMappingSummaryPr
         </Table>
       </div>
       {missingTitle ? (
-        <p className="text-sm text-status-danger-ink">
+        <p className="text-sm text-status-danger-ink-strong">
           No column maps to <span className="font-mono">title</span>, which every ticket
           needs. Every row will be rejected.
         </p>

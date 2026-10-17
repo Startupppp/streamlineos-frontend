@@ -1,6 +1,13 @@
 "use client";
 
-import { useState, useCallback, useMemo, useRef, useEffect } from "react";
+import {
+  useState,
+  useCallback,
+  useMemo,
+  useRef,
+  useEffect,
+  type SetStateAction,
+} from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
   addMonths,
@@ -9,43 +16,113 @@ import {
   subWeeks,
   addDays,
   subDays,
+  format,
 } from "date-fns";
 import type { View, SlotInfo, BigCalEvent } from "./big-calendar-wrapper";
 import { useCalendarSlotSelectionGuard } from "./use-calendar-slot-selection-guard";
+import {
+  calendarUrl,
+  parseCalendarUrlState,
+  type CalendarSelectionSource,
+  type CalendarViewMode,
+} from "./calendar-url-state";
 
 export function useCalendarViewState() {
   const router = useRouter();
   const searchParams = useSearchParams();
-
-  const [currentDate, setCurrentDate] = useState(new Date());
-  const [view, setView] = useState<View>("week");
-  const [viewMode, setViewMode] = useState<"calendar" | "list" | "history">(
-    "calendar",
+  const [fallbackNow] = useState(() => new Date());
+  const urlState = useMemo(
+    () =>
+      parseCalendarUrlState(
+        new URLSearchParams(searchParams.toString()),
+        fallbackNow,
+      ),
+    [fallbackNow, searchParams],
   );
+  const currentDate = urlState.date;
+  const view = urlState.view;
+  const viewMode = urlState.mode;
+  const createRequested = searchParams.get("create") === "1";
   const calContainerRef = useRef<HTMLDivElement>(null);
   const [containerHeight, setContainerHeight] = useState(600);
   const [createSlot, setCreateSlot] = useState<{
     start: Date;
     end: Date;
   } | null>(null);
-  const [isCreateOpen, setIsCreateOpen] = useState(false);
-  const createParamConsumedRef = useRef(false);
-  const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
-  const [isSlotChoiceOpen, setIsSlotChoiceOpen] = useState(false);
-  const [pendingSlot, setPendingSlot] = useState<{
-    start: Date;
-    end: Date;
-  } | null>(null);
-  const [isCreateTicketOpen, setIsCreateTicketOpen] = useState(false);
-  const [createTicketSlot, setCreateTicketSlot] = useState<{
-    start: Date;
-    end: Date;
-  } | null>(null);
-  const [selectedExternal, setSelectedExternal] =
-    useState<BigCalEvent | null>(null);
-  const [selectedHrEvent, setSelectedHrEvent] =
-    useState<BigCalEvent | null>(null);
+  const [createOpenState, setCreateOpenState] = useState(false);
+  const [hasMountedCreate, setHasMountedCreate] = useState(false);
   const [accountsOpen, setAccountsOpen] = useState(false);
+
+  const navigate = useCallback(
+    (
+      changes: Record<string, string | null>,
+      method: "push" | "replace" = "push",
+    ) => {
+      router[method](
+        calendarUrl(new URLSearchParams(searchParams.toString()), changes),
+      );
+    },
+    [router, searchParams],
+  );
+
+  const isCreateOpen = createRequested || createOpenState;
+  const shouldMountCreate = createRequested || hasMountedCreate;
+  const setIsCreateOpen = useCallback(
+    (open: boolean) => {
+      setCreateOpenState(open);
+      if (!open) setCreateSlot(null);
+      if (!open && createRequested) navigate({ create: null }, "replace");
+    },
+    [createRequested, navigate],
+  );
+
+  const setCurrentDate = useCallback(
+    (next: SetStateAction<Date>) => {
+      const resolved = typeof next === "function" ? next(currentDate) : next;
+      if (format(resolved, "yyyy-MM-dd") === format(currentDate, "yyyy-MM-dd"))
+        return;
+      navigate({ date: format(resolved, "yyyy-MM-dd") });
+    },
+    [currentDate, navigate],
+  );
+
+  const setView = useCallback(
+    (next: View) => {
+      if (next === view) return;
+      navigate({ view: next });
+    },
+    [navigate, view],
+  );
+
+  const setViewMode = useCallback(
+    (next: CalendarViewMode) => {
+      if (next === viewMode) return;
+      navigate({
+        mode: next,
+        filter: null,
+        historyBefore: next === "history" ? urlState.historyBefore : null,
+        historyPages: next === "history" ? String(urlState.historyPages) : null,
+      });
+    },
+    [navigate, urlState.historyBefore, urlState.historyPages, viewMode],
+  );
+
+  const setSourceVisibility = useCallback(
+    (source: "hr" | "crm" | "attendance", visible: boolean) => {
+      navigate({ [source]: visible ? "1" : "0" });
+    },
+    [navigate],
+  );
+
+  const setHistoryPages = useCallback(
+    (pages: number) => {
+      navigate(
+        { historyPages: String(Math.min(120, Math.max(1, pages))) },
+        "replace",
+      );
+    },
+    [navigate],
+  );
 
   useEffect(() => {
     const el = calContainerRef.current;
@@ -63,28 +140,31 @@ export function useCalendarViewState() {
   );
 
   useEffect(() => {
-    if (createParamConsumedRef.current) return;
-    if (searchParams.get("create") !== "1") return;
-    createParamConsumedRef.current = true;
-    setCreateSlot(null);
-    setIsCreateOpen(true);
-    const next = new URLSearchParams(searchParams.toString());
-    next.delete("create");
-    router.replace(`/calendar${next.size > 0 ? `?${next.toString()}` : ""}`);
-  }, [searchParams, router]);
+    if (viewMode !== "history" || searchParams.has("historyBefore")) return;
+    navigate(
+      {
+        historyBefore: urlState.historyBefore,
+        historyPages: String(urlState.historyPages),
+      },
+      "replace",
+    );
+  }, [
+    navigate,
+    searchParams,
+    urlState.historyBefore,
+    urlState.historyPages,
+    viewMode,
+  ]);
 
   const isCalendarOverlayOpen =
     isCreateOpen ||
-    isSlotChoiceOpen ||
-    isCreateTicketOpen ||
     accountsOpen ||
-    selectedEventId !== null ||
-    selectedExternal !== null ||
-    selectedHrEvent !== null;
+    urlState.selected !== null;
 
   const handleSelectSlot = useCallback((slotInfo: SlotInfo) => {
-    setPendingSlot({ start: slotInfo.start, end: slotInfo.end });
-    setIsSlotChoiceOpen(true);
+    setHasMountedCreate(true);
+    setCreateSlot({ start: slotInfo.start, end: slotInfo.end });
+    setCreateOpenState(true);
   }, []);
 
   const guardedSelectSlot = useCalendarSlotSelectionGuard(
@@ -92,85 +172,67 @@ export function useCalendarViewState() {
     isCalendarOverlayOpen,
   );
 
-  const handleSlotChooseEvent = useCallback(() => {
-    setIsSlotChoiceOpen(false);
-    setCreateSlot(pendingSlot);
-    setIsCreateOpen(true);
-  }, [pendingSlot]);
-
-  const handleSlotChooseTicket = useCallback(() => {
-    setIsSlotChoiceOpen(false);
-    setCreateTicketSlot(pendingSlot);
-    setIsCreateTicketOpen(true);
-  }, [pendingSlot]);
-
   const handleOpenCreate = useCallback(() => {
     setCreateSlot(null);
+    setHasMountedCreate(true);
     setIsCreateOpen(true);
-  }, []);
-
-  const handleOpenCreateTicket = useCallback(() => {
-    setCreateTicketSlot(null);
-    setIsCreateTicketOpen(true);
-  }, []);
+  }, [setIsCreateOpen]);
 
   const handleSelectEvent = useCallback(
     (event: BigCalEvent) => {
-      if (event.resource?.source === "hr") {
-        setSelectedHrEvent(event);
-        return;
-      }
-      if (event.resource?.source === "external") {
-        setSelectedExternal(event);
-        return;
-      }
-      if (
-        event.resource?.source === "task" &&
-        event.resource.entityType === "ticket" &&
-        event.resource.projectId != null &&
-        event.resource.entityId != null
-      ) {
-        router.push(
-          `/build/${event.resource.projectId}/issues?ticket=${event.resource.entityId}`,
-        );
-        return;
-      }
-      setSelectedEventId(String(event.id));
+      if (event.resource?.actions?.view !== true) return;
+      const source = (event.resource?.sourceFamily ??
+        (event.resource?.source === "external"
+          ? "external"
+          : event.resource?.source === "hr"
+            ? "hr"
+            : "calendar")) as CalendarSelectionSource;
+      window.history.pushState(
+        null,
+        "",
+        calendarUrl(new URLSearchParams(window.location.search), {
+          event: String(event.id),
+          eventSource: source,
+        }),
+      );
     },
-    [router],
+    [],
   );
 
   const handlePrev = useCallback(() => {
     setCurrentDate((d) => {
+      if (viewMode === "my-day") return subDays(d, 1);
       if (view === "month") return subMonths(d, 1);
       if (view === "week") return subWeeks(d, 1);
       return subDays(d, 1);
     });
-  }, [view]);
+  }, [setCurrentDate, view, viewMode]);
 
   const handleNext = useCallback(() => {
     setCurrentDate((d) => {
+      if (viewMode === "my-day") return addDays(d, 1);
       if (view === "month") return addMonths(d, 1);
       if (view === "week") return addWeeks(d, 1);
       return addDays(d, 1);
     });
-  }, [view]);
+  }, [setCurrentDate, view, viewMode]);
 
-  const handleToday = useCallback(() => setCurrentDate(new Date()), []);
-  const handleCloseDetail = useCallback(() => setSelectedEventId(null), []);
-  const handleCloseExternal = useCallback(() => setSelectedExternal(null), []);
-  const handleCloseHrEvent = useCallback(() => setSelectedHrEvent(null), []);
+  const handleToday = useCallback(
+    () => setCurrentDate(new Date()),
+    [setCurrentDate],
+  );
+  const handleCloseSelected = useCallback(() => {
+    window.history.replaceState(
+      null,
+      "",
+      calendarUrl(new URLSearchParams(window.location.search), {
+        event: null,
+        eventSource: null,
+      }),
+    );
+  }, []);
   const handleOpenAccounts = useCallback(() => setAccountsOpen(true), []);
   const handleCloseAccounts = useCallback(() => setAccountsOpen(false), []);
-  const handleCloseCreateTicket = useCallback(
-    () => setIsCreateTicketOpen(false),
-    [],
-  );
-  const handleSelectEventById = useCallback(
-    (eventId: string) => setSelectedEventId(eventId),
-    [],
-  );
-
   return {
     currentDate,
     setCurrentDate,
@@ -183,31 +245,27 @@ export function useCalendarViewState() {
     createSlot,
     isCreateOpen,
     setIsCreateOpen,
-    selectedEventId,
-    isSlotChoiceOpen,
-    setIsSlotChoiceOpen,
-    isCreateTicketOpen,
-    createTicketSlot,
-    selectedExternal,
-    selectedHrEvent,
+    shouldMountCreate,
+    selected: urlState.selected,
+    historyBefore: urlState.historyBefore,
+    historyPages: urlState.historyPages,
+    savedFilterId: urlState.savedFilterId,
+    hrEventsVisible: urlState.hrVisible,
+    crmEventsVisible: urlState.crmVisible,
+    attendanceEventsVisible: urlState.attendanceVisible,
+    setSourceVisibility,
+    setHistoryPages,
     accountsOpen,
     setAccountsOpen,
     isCalendarOverlayOpen,
     guardedSelectSlot,
-    handleSlotChooseEvent,
-    handleSlotChooseTicket,
     handleOpenCreate,
-    handleOpenCreateTicket,
     handleSelectEvent,
     handlePrev,
     handleNext,
     handleToday,
-    handleCloseDetail,
-    handleCloseExternal,
-    handleCloseHrEvent,
+    handleCloseSelected,
     handleOpenAccounts,
     handleCloseAccounts,
-    handleCloseCreateTicket,
-    handleSelectEventById,
   };
 }

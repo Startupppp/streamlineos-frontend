@@ -24,6 +24,17 @@ interface BulkRejectDialogProps {
 }
 
 export function BulkRejectDialog({
+  ...props
+}: BulkRejectDialogProps) {
+  return (
+    <BulkRejectDialogBody
+      key={props.open ? "open" : "closed"}
+      {...props}
+    />
+  );
+}
+
+function BulkRejectDialogBody({
   open,
   count,
   onOpenChange,
@@ -31,20 +42,6 @@ export function BulkRejectDialog({
   isPending,
 }: BulkRejectDialogProps) {
   const [reason, setReason] = useState("");
-
-  /**
-   * `reason` clears once the dialog actually closes, not on click — clearing
-   * it inside `handleConfirm` used to run whether the mutation the parent
-   * kicked off (via `onConfirm`) succeeded or failed, so a failed submission
-   * lost the typed reason with no way to retry it. Adjusted during render
-   * (React's prop-change pattern) rather than in an effect, so it takes
-   * effect in the same commit `open` changes instead of one render later.
-   */
-  const [prevOpen, setPrevOpen] = useState(open);
-  if (open !== prevOpen) {
-    setPrevOpen(open);
-    if (!open) setReason("");
-  }
 
   const handleConfirm = useCallback(() => {
     if (!reason.trim()) return;

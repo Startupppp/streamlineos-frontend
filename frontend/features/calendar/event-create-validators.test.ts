@@ -194,6 +194,18 @@ describe("buildEventPayload", () => {
     expect(result.payload.syncConnectionId).toBeUndefined();
   });
 
+  it("sends an empty description when an edit clears its notes", () => {
+    const result = buildEventPayload({
+      form: { ...base, description: "" },
+      showEndDate: false,
+      linkedTicket: null,
+      existingEntityId: null,
+      isEdit: true,
+    });
+    expect(result.error).toBeNull();
+    expect(result.payload.description).toBe("");
+  });
+
   /**
    * The authored timezone is the anchor the server re-projects every future
    * occurrence from (`expandRecurring` builds `dtstart` with `toWallClockUtc(

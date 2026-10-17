@@ -1,7 +1,6 @@
 "use client";
 
 import { useCallback, useState } from "react";
-import { motion } from "framer-motion";
 import { format } from "date-fns";
 import { Edit2, AlertCircle, CheckCircle2, WifiOff } from "lucide-react";
 import { Trash2Icon } from "@animateicons/react/lucide";
@@ -12,10 +11,13 @@ import { CursorPageControls } from "@/components/ui/cursor-page-controls";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/shared/error-state";
+import { NoPermissionState } from "@/components/shared/no-permission-state";
 import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
 import { LoadingButton } from "@/components/ui/loading-button";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { useCanState } from "@/hooks/api/access";
 import { useTimeDevices, useDeleteTimeDevice, type TimeDevice } from "@/hooks/api/hr/enterprise-comp";
 
 interface Props {
@@ -40,6 +42,7 @@ export function DevicesTable({ canManage, onAdd, onEdit }: Props) {
   const [cursorHistory, setCursorHistory] = useState<Array<string | undefined>>([undefined]);
   const page = cursorHistory.length;
   const cursor = cursorHistory.at(-1);
+  const access = useCanState("hr:biometric:manage");
   const { data, isLoading, isFetching, isError, error, refetch } = useTimeDevices({ cursor });
   const deleteMut = useDeleteTimeDevice();
   const [deletingId, setDeletingId] = useState<number | null>(null);
@@ -65,11 +68,25 @@ export function DevicesTable({ canManage, onAdd, onEdit }: Props) {
     });
   }
 
-  if (isLoading) {
+  function stopRowClick(e: React.MouseEvent) {
+    e.stopPropagation();
+  }
+
+  if (isLoading || access === "loading") {
     return (
       <div className="space-y-2">
         {Array.from({ length: 5 }).map((_, i) => <Skeleton key={i} className="h-12 rounded-lg" />)}
       </div>
+    );
+  }
+
+  if (access === "denied") {
+    return (
+      <NoPermissionState
+        className={CONTENT_FILL_PANEL}
+        permission="hr:biometric:manage"
+        compact
+      />
     );
   }
 
@@ -84,7 +101,18 @@ export function DevicesTable({ canManage, onAdd, onEdit }: Props) {
     );
   }
 
-  const devices = data?.data ?? [];
+  if (data === undefined) {
+    return (
+      <ErrorState
+        className={CONTENT_FILL_PANEL}
+        title="Couldn't determine the device list"
+        description="The device list was never read, so whether any are registered is unknown."
+        onRetry={handleRetry}
+      />
+    );
+  }
+
+  const devices = data.data;
 
   if (!devices.length) {
     return (
@@ -100,7 +128,7 @@ export function DevicesTable({ canManage, onAdd, onEdit }: Props) {
   }
 
   return (
-    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.2 }} className="flex flex-1 min-h-0 flex-col gap-3">
+    <div className="flex flex-1 min-h-0 flex-col gap-3">
       <DataTable
         className="flex-1 min-h-0"
         getRowKey={(r) => r.id}
@@ -127,16 +155,26 @@ export function DevicesTable({ canManage, onAdd, onEdit }: Props) {
                 <Button variant="ghost" size="icon" className="w-7" aria-label={`Edit ${r.name}`} onClick={(e) => { e.stopPropagation(); onEdit(r); }}>
                   <Edit2 className="h-3.5 w-3.5" />
                 </Button>
-                <LoadingButton
-                  variant="ghost"
-                  size="icon"
-                  className="w-7 text-destructive hover:text-destructive"
-                  aria-label={`Delete ${r.name}`}
+                <ConfirmDialog
+                  trigger={
+                    <LoadingButton
+                      variant="ghost"
+                      size="icon"
+                      className="w-7 text-destructive hover:text-destructive"
+                      aria-label={`Delete ${r.name}`}
+                      isPending={deletingId === r.id}
+                      onClick={stopRowClick}
+                    >
+                      <Trash2Icon size={14} />
+                    </LoadingButton>
+                  }
+                  title={`Delete ${r.name}?`}
+                  description="This permanently deletes the device. It cannot be undone."
+                  confirmLabel="Delete"
+                  destructive
                   isPending={deletingId === r.id}
-                  onClick={(e) => { e.stopPropagation(); handleDelete(r); }}
-                >
-                  <Trash2Icon size={14} />
-                </LoadingButton>
+                  onConfirm={() => handleDelete(r)}
+                />
               </div>
             ) : null,
           },
@@ -152,6 +190,6 @@ export function DevicesTable({ canManage, onAdd, onEdit }: Props) {
           onNext={handleNextPage}
         />
       ) : null}
-    </motion.div>
+    </div>
   );
 }

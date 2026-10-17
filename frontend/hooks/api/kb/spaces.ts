@@ -1,15 +1,34 @@
 "use client";
 
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useInfiniteQuery, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
 import { knowledgeAndSurveysQueryKeys } from "@/lib/query-keys/knowledge-and-surveys";
 import { useCan } from "@/hooks/api/access";
+import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
 import type { KbSpace, CreateSpaceInput, UpdateSpaceInput } from "@/types/kb";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import { useIdempotentOperation } from "@/hooks/common/use-idempotent-operation";
+import type {
+  KbSpaceListPage,
+  KbSpaceArchiveImpact,
+} from "@/hooks/api/kb/kb-spaces-settings-schema";
 
-const kbSpaceListContract = lazyContract(() =>
-  import("@/hooks/api/kb/kb-spaces-settings-schema").then((m) => m.kbSpaceListContract),
+export type { KbSpaceListItem } from "@/hooks/api/kb/kb-spaces-settings-schema";
+export type { KbSpaceListPage } from "@/hooks/api/kb/kb-spaces-settings-schema";
+export type { KbSpaceArchiveImpact } from "@/hooks/api/kb/kb-spaces-settings-schema";
+export type { KbSpaceMember } from "@/hooks/api/kb/kb-spaces-settings-schema";
+
+export interface KbSpacesListParams {
+  q?: string;
+  audience?: "internal" | "public" | "mixed";
+  archived?: boolean;
+  cursor?: string;
+  limit?: number;
+}
+
+const kbSpaceListPageContract = lazyContract(() =>
+  import("@/hooks/api/kb/kb-spaces-settings-schema").then((m) => m.kbSpaceListPageContract),
 );
 
 const kbSpaceFullContract = lazyContract(() =>
@@ -20,11 +39,36 @@ const kbSpaceSuccessContract = lazyContract(() =>
   import("@/hooks/api/kb/kb-spaces-settings-schema").then((m) => m.kbSpaceSuccessContract),
 );
 
-export function useKbSpaces() {
+const kbSpaceArchiveImpactContract = lazyContract(() =>
+  import("@/hooks/api/kb/kb-spaces-settings-schema").then((m) => m.kbSpaceArchiveImpactContract),
+);
+
+const kbSpaceMemberListContract = lazyContract(() =>
+  import("@/hooks/api/kb/kb-spaces-settings-schema").then((m) => m.kbSpaceMemberListContract),
+);
+
+const kbSpaceMemberContract = lazyContract(() =>
+  import("@/hooks/api/kb/kb-spaces-settings-schema").then((m) => m.kbSpaceMemberContract),
+);
+
+const kbSpaceMemberSuccessContract = lazyContract(() =>
+  import("@/hooks/api/kb/kb-spaces-settings-schema").then((m) => m.kbSpaceMemberSuccessContract),
+);
+
+export function useKbSpaces(params?: KbSpacesListParams) {
   const canView = useCan("kb:spaces:view");
+  const queryParams: Record<string, unknown> = {};
+  if (params?.q) queryParams.q = params.q;
+  if (params?.audience) queryParams.audience = params.audience;
+  if (params?.archived !== undefined) queryParams.archived = params.archived ? "1" : "0";
+  if (params?.cursor) queryParams.cursor = params.cursor;
+  if (params?.limit !== undefined) queryParams.limit = params.limit;
+
   return useQuery({
-    queryKey: knowledgeAndSurveysQueryKeys.kb.spaces(),
-    queryFn: ({ signal }) => apiClient.get<KbSpace[]>("/kb/spaces", undefined, signal, kbSpaceListContract),
+    ...INLINE_READ_ERROR,
+    queryKey: [...knowledgeAndSurveysQueryKeys.kb.spaces(), params],
+    queryFn: ({ signal }) =>
+      apiClient.get<KbSpaceListPage>("/kb/spaces", queryParams, signal, kbSpaceListPageContract),
     staleTime: 60_000,
     enabled: canView,
   });
@@ -33,20 +77,44 @@ export function useKbSpaces() {
 export function useKbSpace(spaceId: number) {
   const canView = useCan("kb:spaces:view");
   return useQuery({
+    ...INLINE_READ_ERROR,
     queryKey: knowledgeAndSurveysQueryKeys.kb.space(spaceId),
-    queryFn: ({ signal }) => apiClient.get<KbSpace>(`/kb/spaces/${spaceId}`, undefined, signal, kbSpaceFullContract),
+    queryFn: ({ signal }) =>
+      apiClient.get<KbSpace>(`/kb/spaces/${spaceId}`, undefined, signal, kbSpaceFullContract),
     enabled: canView && Number.isFinite(spaceId) && spaceId > 0,
     staleTime: 60_000,
   });
 }
 
+export function useKbSpaceArchiveImpact(
+  spaceId: number,
+  options?: { enabled?: boolean },
+) {
+  const canManage = useCan("kb:spaces:manage");
+  return useQuery({
+    ...INLINE_READ_ERROR,
+    queryKey: [...knowledgeAndSurveysQueryKeys.kb.space(spaceId), "archive-impact"],
+    queryFn: ({ signal }) =>
+      apiClient.get<KbSpaceArchiveImpact>(
+        `/kb/spaces/${spaceId}/archive-impact`,
+        undefined,
+        signal,
+        kbSpaceArchiveImpactContract,
+      ),
+    enabled: canManage && Number.isFinite(spaceId) && spaceId > 0 && (options?.enabled ?? false),
+    staleTime: 30_000,
+  });
+}
+
 export function useCreateKbSpace() {
   const qc = useQueryClient();
+  const operation = useIdempotentOperation();
   return useAuthorizedMutation("kb:spaces:manage", {
     mutationKey: ["kb", "spaces", "create"],
     mutationFn: (input: CreateSpaceInput) =>
-      apiClient.post<KbSpace>("/kb/spaces", input, undefined, kbSpaceFullContract),
+      apiClient.post<KbSpace>("/kb/spaces", input, operation.configFor(input), kbSpaceFullContract),
     onSuccess: () => {
+      operation.settle();
       qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.kb.spaces() });
     },
   });
@@ -58,9 +126,42 @@ export function useUpdateKbSpace() {
     mutationKey: ["kb", "spaces", "update"],
     mutationFn: ({ spaceId, ...data }: UpdateSpaceInput) =>
       apiClient.patch<KbSpace>(`/kb/spaces/${spaceId}`, data, undefined, kbSpaceFullContract),
-    onSuccess: (_, variables) => {
+    onSuccess: () => {
       qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.kb.spaces() });
-      qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.kb.space(variables.spaceId) });
+    },
+  });
+}
+
+export function useArchiveKbSpace() {
+  const qc = useQueryClient();
+  return useAuthorizedMutation("kb:spaces:manage", {
+    mutationKey: ["kb", "spaces", "archive"],
+    mutationFn: (spaceId: number) =>
+      apiClient.post<{ success: boolean }>(
+        `/kb/spaces/${spaceId}/archive`,
+        {},
+        undefined,
+        kbSpaceSuccessContract,
+      ),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.kb.spaces() });
+    },
+  });
+}
+
+export function useRestoreKbSpace() {
+  const qc = useQueryClient();
+  return useAuthorizedMutation("kb:spaces:manage", {
+    mutationKey: ["kb", "spaces", "restore"],
+    mutationFn: (spaceId: number) =>
+      apiClient.post<{ success: boolean }>(
+        `/kb/spaces/${spaceId}/restore`,
+        {},
+        undefined,
+        kbSpaceSuccessContract,
+      ),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.kb.spaces() });
     },
   });
 }
@@ -70,9 +171,82 @@ export function useDeleteKbSpace() {
   return useAuthorizedMutation("kb:spaces:manage", {
     mutationKey: ["kb", "spaces", "delete"],
     mutationFn: (spaceId: number) =>
-      apiClient.delete<{ success: boolean }>(`/kb/spaces/${spaceId}`, undefined, undefined, kbSpaceSuccessContract),
+      apiClient.delete<{ success: boolean }>(
+        `/kb/spaces/${spaceId}`,
+        undefined,
+        undefined,
+        kbSpaceSuccessContract,
+      ),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.kb.spaces() });
     },
+  });
+}
+
+export interface AddKbSpaceMemberInput {
+  spaceId: number;
+  spaceRole: "viewer" | "commenter" | "editor" | "publisher" | "admin";
+  userId?: string;
+  role?: string;
+}
+
+export function useAddKbSpaceMember() {
+  const qc = useQueryClient();
+  return useAuthorizedMutation("kb:spaces:manage", {
+    mutationKey: ["kb", "spaces", "members", "add"],
+    mutationFn: ({ spaceId, ...body }: AddKbSpaceMemberInput) =>
+      apiClient.post(
+        `/kb/spaces/${spaceId}/members`,
+        body,
+        undefined,
+        kbSpaceMemberContract,
+      ),
+    onSuccess: (_data, { spaceId }) => {
+      void qc.invalidateQueries({
+        queryKey: [...knowledgeAndSurveysQueryKeys.kb.space(spaceId), "members"],
+      });
+    },
+  });
+}
+
+export function useRemoveKbSpaceMember() {
+  const qc = useQueryClient();
+  return useAuthorizedMutation("kb:spaces:manage", {
+    mutationKey: ["kb", "spaces", "members", "remove"],
+    mutationFn: ({ spaceId, memberId }: { spaceId: number; memberId: number }) =>
+      apiClient.delete(
+        `/kb/spaces/${spaceId}/members/${memberId}`,
+        undefined,
+        undefined,
+        kbSpaceMemberSuccessContract,
+      ),
+    onSuccess: (_data, { spaceId }) => {
+      void qc.invalidateQueries({
+        queryKey: [...knowledgeAndSurveysQueryKeys.kb.space(spaceId), "members"],
+      });
+    },
+  });
+}
+
+export function useKbSpaceMembers(
+  spaceId: number,
+  options?: { enabled?: boolean },
+) {
+  const canManage = useCan("kb:spaces:manage");
+  return useInfiniteQuery({
+    ...INLINE_READ_ERROR,
+    queryKey: [...knowledgeAndSurveysQueryKeys.kb.space(spaceId), "members"],
+    queryFn: ({ pageParam, signal }) =>
+      apiClient.get(
+        `/kb/spaces/${spaceId}/members`,
+        pageParam ? { cursor: pageParam } : undefined,
+        signal,
+        kbSpaceMemberListContract,
+      ),
+    initialPageParam: null as string | null,
+    getNextPageParam: (lastPage) => lastPage.pagination.nextCursor,
+    select: (data) => data.pages.flatMap((page) => page.data),
+    enabled: canManage && Number.isFinite(spaceId) && spaceId > 0 && (options?.enabled ?? true),
+    staleTime: 60_000,
   });
 }

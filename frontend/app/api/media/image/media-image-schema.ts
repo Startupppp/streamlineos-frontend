@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-const OBJECT_KEY = /^[a-zA-Z0-9][a-zA-Z0-9/_.-]*$/;
+const OBJECT_KEY = /^[a-zA-Z0-9][a-zA-Z0-9/_ .-]*$/;
 
 export const mediaImageQuerySchema = z.object({
   key: z

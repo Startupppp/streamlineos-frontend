@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { intakeUpdateIntakeBodySchema } from "@/contracts/build-contracts.generated";
 
 export const createIntakeSchema = z.object({
   title: z.string().min(1, "Title is required"),
@@ -14,10 +15,17 @@ export const acceptSchema = z.object({
   moduleId: z.number().optional(),
 });
 
-export type AcceptForm = z.infer<typeof acceptSchema>;
-
 export const declineIntakeSchema = z.object({
   reason: z.string().min(1, "Reason is required"),
 });
 
-export type DeclineIntakeForm = z.infer<typeof declineIntakeSchema>;
+export const intakeDecisionSchema = z.discriminatedUnion("action", [
+  acceptSchema.extend({ action: z.literal("accept") }),
+  declineIntakeSchema.extend({ action: z.literal("decline") }),
+  z.object({
+    action: z.literal("duplicate"),
+    linkedWorkItemId: intakeUpdateIntakeBodySchema.shape.linkedWorkItemId.unwrap(),
+  }),
+]);
+
+export type IntakeDecisionForm = z.infer<typeof intakeDecisionSchema>;

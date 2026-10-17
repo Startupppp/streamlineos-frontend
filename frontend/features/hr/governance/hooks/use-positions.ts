@@ -8,6 +8,7 @@ import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
 
 const positionListContract = lazyContract(() =>
   import("@/features/hr/governance/hooks/positions-schema").then((m) => m.positionListContract),
@@ -26,6 +27,9 @@ const positionContract = lazyContract(() =>
 );
 const positionStatusListContract = lazyContract(() =>
   import("@/features/hr/governance/hooks/positions-schema").then((m) => m.positionStatusListContract),
+);
+const positionStatusSeedContract = lazyContract(() =>
+  import("@/features/hr/governance/hooks/positions-schema").then((m) => m.positionStatusSeedContract),
 );
 
 export interface Position {
@@ -115,6 +119,7 @@ export function useSimulateScenario(scenarioId: number | undefined) {
     queryFn: ({ signal }) => apiClient.get(`/hr/governance/scenarios/${scenarioId}/simulate`, undefined, signal, simulationResultContract),
     enabled: canViewPositions && scenarioId !== undefined,
     staleTime: 0,
+    ...INLINE_READ_ERROR,
   });
 }
 
@@ -126,6 +131,23 @@ export function usePositionStatuses(options?: { enabled?: boolean }) {
       apiClient.get<PositionStatus[]>("/hr/governance/position-taxonomy/statuses", undefined, signal, positionStatusListContract),
     staleTime: 2 * 60_000,
     enabled: canViewPositions && (options?.enabled ?? true),
+  });
+}
+
+export function useSeedPositionStatuses() {
+  const qc = useQueryClient();
+  return useAuthorizedMutation<{ seeded: number; skipped: number }, Error, void>("hr:positions:manage", {
+    mutationKey: [...humanResourcesQueryKeys.hr.hrPositionsAll, "statuses", "seed-defaults"],
+    mutationFn: () =>
+      apiClient.post<{ seeded: number; skipped: number }>(
+        "/hr/governance/position-taxonomy/statuses/seed-defaults",
+        undefined,
+        undefined,
+        positionStatusSeedContract,
+      ),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: [...humanResourcesQueryKeys.hr.hrPositionsAll, "statuses"] });
+    },
   });
 }
 

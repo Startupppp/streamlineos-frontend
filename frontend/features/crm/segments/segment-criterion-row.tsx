@@ -17,8 +17,9 @@ import { FIELD_SELECT_CONTENT_CLASS } from "@/components/ui/field-control";
 import {
   REPORTING_COMPARISON_OPERATORS,
   type ReportingComparisonOperator,
+  type ReportingFieldType,
 } from "@/types/crm/reporting";
-import type { SegmentFieldType, SegmentSourceField } from "@/types/crm/segments";
+import type { SegmentSourceField } from "@/types/crm/segments";
 import {
   SEGMENT_OPERATORS_FOR_TYPE,
   SEGMENT_OPERATOR_LABELS,
@@ -41,7 +42,7 @@ function isComparisonOperator(value: string): value is ReportingComparisonOperat
   return REPORTING_COMPARISON_OPERATORS.some((entry) => entry === value);
 }
 
-function inputTypeFor(fieldType: SegmentFieldType | ""): string {
+function inputTypeFor(fieldType: ReportingFieldType | ""): string {
   if (fieldType === "number") return "number";
   if (fieldType === "date") return "date";
   if (fieldType === "timestamp") return "datetime-local";

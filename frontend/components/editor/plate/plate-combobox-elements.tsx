@@ -1,10 +1,9 @@
 'use client';
 
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback, type RefObject, type SetStateAction } from 'react';
 import ReactDOM from 'react-dom';
-import { PlateElement, useEditorRef } from 'platejs/react';
+import { PlateElement, useEditorRef, useSelected } from 'platejs/react';
 import type { PlateElementProps, PlateEditor } from 'platejs/react';
-import { NodeApi } from 'platejs';
 import type { TElement, Path } from 'platejs';
 import { getMentionOnSelectItem } from '@platejs/mention';
 import emojiData from '@emoji-mart/data';
@@ -35,7 +34,24 @@ const SLASH_COMMANDS: CommandItem[] = [
   { key: 'table', label: 'Table', description: 'Table with rows and columns' },
   { key: 'img', label: 'Image', description: 'Image from URL' },
   { key: 'toggle', label: 'Toggle', description: 'Collapsible section' },
+  { key: 'citation', label: 'Citation', description: 'Quoted text with a source' },
+  { key: 'link_preview', label: 'Link preview', description: 'Embed a link with a preview card' },
 ];
+
+function useQueryActiveIndex(query: string) {
+  const [selection, setSelection] = useState({ query, index: 0 });
+  const activeIndex = selection.query === query ? selection.index : 0;
+  const setActiveIndex = useCallback((next: SetStateAction<number>) => {
+    setSelection((current) => {
+      const currentIndex = current.query === query ? current.index : 0;
+      return {
+        query,
+        index: typeof next === 'function' ? next(currentIndex) : next,
+      };
+    });
+  }, [query]);
+  return [activeIndex, setActiveIndex] as const;
+}
 
 function applySlashCommand(editor: PlateEditor, key: string, path: Path) {
   const blockEntry = editor.api.above({ at: path, match: { type: 'p' } }) as [TElement, Path] | undefined;
@@ -56,20 +72,20 @@ function applySlashCommand(editor: PlateEditor, key: string, path: Path) {
       editor.tf.setNodes({ type: 'blockquote' }, { at: blockPath });
       break;
     case 'ul':
-      editor.tf.setNodes({ listStyleType: 'disc', indent: 1 } as Partial<TElement>, { at: blockPath });
+      editor.tf.setNodes({ listStyleType: 'disc', indent: 1 }, { at: blockPath });
       break;
     case 'ol':
-      editor.tf.setNodes({ listStyleType: 'decimal', indent: 1 } as Partial<TElement>, { at: blockPath });
+      editor.tf.setNodes({ listStyleType: 'decimal', indent: 1 }, { at: blockPath });
       break;
     case 'todo':
-      editor.tf.setNodes({ listStyleType: 'todo', indent: 1, checked: false } as Partial<TElement>, { at: blockPath });
+      editor.tf.setNodes({ listStyleType: 'todo', indent: 1, checked: false }, { at: blockPath });
       break;
     case 'code_block':
       editor.tf.setNodes({ type: 'code_block' }, { at: blockPath });
       editor.tf.setNodes({ type: 'code_line' }, { at: [...blockPath, 0] });
       break;
     case 'callout':
-      editor.tf.setNodes({ type: 'callout', icon: '💡' } as Partial<TElement>, { at: blockPath });
+      editor.tf.setNodes({ type: 'callout', icon: '💡' }, { at: blockPath });
       break;
     case 'hr':
       editor.tf.setNodes({ type: 'hr' }, { at: blockPath });
@@ -88,7 +104,7 @@ function applySlashCommand(editor: PlateEditor, key: string, path: Path) {
               { type: 'td', children: [{ type: 'p', children: [{ text: '' }] }] },
             ] },
           ],
-        } as TElement,
+        },
         { at: blockPath }
       );
       editor.tf.removeNodes({ at: nextPath });
@@ -97,7 +113,7 @@ function applySlashCommand(editor: PlateEditor, key: string, path: Path) {
       const url = window.prompt('Image URL:');
       if (url) {
         editor.tf.insertNodes(
-          { type: 'img', url, children: [{ text: '' }] } as TElement,
+          { type: 'img', url, children: [{ text: '' }] },
           { at: blockPath }
         );
         editor.tf.removeNodes({ at: nextPath });
@@ -107,58 +123,201 @@ function applySlashCommand(editor: PlateEditor, key: string, path: Path) {
     case 'toggle':
       editor.tf.setNodes({ type: 'toggle' }, { at: blockPath });
       break;
+    case 'citation':
+      editor.tf.setNodes(
+        { type: 'citation', sourceTitle: null, sourceUrl: null },
+        { at: blockPath },
+      );
+      break;
+    case 'link_preview': {
+      const url = window.prompt('Link URL:');
+      if (url) {
+        editor.tf.insertNodes(
+          { type: 'link_preview', url, children: [{ text: '' }] },
+          { at: blockPath },
+        );
+        editor.tf.removeNodes({ at: nextPath });
+      }
+      break;
+    }
     default:
       editor.tf.setNodes({ type: 'p' }, { at: blockPath });
   }
+}
+/**
+ * KB-B-005 / KB-B-033. The slash, mention and emoji input nodes are inline
+ * *voids*, so they hold no text: reading the query with NodeApi.string always
+ * gave "", typed characters went past the node, and a window-level keydown
+ * listener swallowed Arrow/Enter for the whole editor while the node lived on
+ * (and was saved as a stray "/"). The query now lives in a real <input> inside
+ * the void, as Plate's own combobox does, and the node is cancelled back into
+ * plain text on Escape, blur, or arrowing out, or removed on Backspace when empty.
+ */
+function useComboboxQueryInput(
+  element: TElement,
+  trigger: string,
+  inputRef: RefObject<HTMLInputElement | null>,
+) {
+  const editor = useEditorRef();
+  const selected = useSelected();
+  const settledRef = useRef(false);
+  const [query, setQuery] = useState('');
+  const [focused, setFocused] = useState(false);
+
+  useEffect(() => {
+    if (selected) inputRef.current?.focus();
+  }, [selected, inputRef]);
+
+  const settle = useCallback(() => {
+    settledRef.current = true;
+  }, []);
+
+  const cancel = useCallback((keepText: boolean, focusEditor: boolean) => {
+    if (settledRef.current) return;
+    settledRef.current = true;
+    const path = editor.api.findPath(element);
+    if (!path) return;
+    editor.tf.withoutNormalizing(() => {
+      editor.tf.removeNodes({ at: path });
+      if (keepText) editor.tf.insertNodes({ text: trigger + query }, { at: path, select: true });
+    });
+    if (focusEditor) editor.tf.focus();
+  }, [editor, element, trigger, query]);
+
+  function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
+    setQuery(e.target.value);
+  }
+
+  function handleFocus() {
+    setFocused(true);
+  }
+
+  function handleBlur() {
+    setFocused(false);
+    cancel(true, false);
+  }
+
+  function handleEditKeys(e: React.KeyboardEvent<HTMLInputElement>) {
+    const input = e.currentTarget;
+    const atStart = input.selectionStart === 0 && input.selectionEnd === 0;
+    const atEnd = input.selectionStart === input.value.length;
+    if (e.key === 'Escape') {
+      e.preventDefault();
+      cancel(true, true);
+    } else if (e.key === 'Backspace' && input.value === '') {
+      e.preventDefault();
+      cancel(false, true);
+    } else if ((e.key === 'ArrowLeft' && atStart) || (e.key === 'ArrowRight' && atEnd)) {
+      e.preventDefault();
+      cancel(true, true);
+    }
+  }
+
+  return { query, open: focused, settle, handleChange, handleFocus, handleBlur, handleEditKeys };
+}
+
+type ComboboxQueryInput = ReturnType<typeof useComboboxQueryInput>;
+
+function listNavigationKeyHandler(
+  combobox: ComboboxQueryInput,
+  count: number,
+  setActiveIndex: (next: SetStateAction<number>) => void,
+  onEnter: () => void,
+) {
+  return function handleKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      setActiveIndex((i) => Math.min(i + 1, Math.max(0, count - 1)));
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      setActiveIndex((i) => Math.max(i - 1, 0));
+    } else if (e.key === 'Enter') {
+      e.preventDefault();
+      if (count > 0) onEnter();
+    } else {
+      combobox.handleEditKeys(e);
+    }
+  };
+}
+
+function ComboboxQueryField({
+  inputRef,
+  combobox,
+  trigger,
+  label,
+  className,
+  onKeyDown,
+}: {
+  inputRef: RefObject<HTMLInputElement | null>;
+  combobox: ComboboxQueryInput;
+  trigger: string;
+  label: string;
+  className: string;
+  onKeyDown: (e: React.KeyboardEvent<HTMLInputElement>) => void;
+}) {
+  return (
+    <span contentEditable={false} className={className}>
+      {trigger}
+      <input
+        ref={inputRef}
+        value={combobox.query}
+        onChange={combobox.handleChange}
+        onFocus={combobox.handleFocus}
+        onBlur={combobox.handleBlur}
+        onKeyDown={onKeyDown}
+        aria-label={label}
+        autoComplete="off"
+        className="field-sizing-content min-w-1 border-0 bg-transparent p-0 text-inherit outline-none"
+      />
+    </span>
+  );
+}
+
+function useAnchorRect(open: boolean) {
+  const anchorRef = useRef<HTMLSpanElement>(null);
+  const [rect, setRect] = useState<DOMRect | null>(null);
+  useEffect(() => {
+    if (open && anchorRef.current) setRect(anchorRef.current.getBoundingClientRect());
+  }, [open]);
+  return { anchorRef, rect: open ? rect : null };
 }
 
 export function MentionInputElement({ element, children, ...props }: PlateElementProps) {
   const editor = useEditorRef();
   const { fetchMentionUsers } = useEditorPageContext();
-  const spanRef = useRef<HTMLSpanElement>(null);
-  const query = NodeApi.string(element);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const combobox = useComboboxQueryInput(element, '@', inputRef);
+  const { query } = combobox;
   const [items, setItems] = useState<UserItem[]>([]);
-  const [activeIndex, setActiveIndex] = useState(0);
-  const [rect, setRect] = useState<DOMRect | null>(null);
-
-  useEffect(() => {
-    if (spanRef.current) setRect(spanRef.current.getBoundingClientRect());
-  }, []);
+  const [activeIndex, setActiveIndex] = useQueryActiveIndex(query);
+  const { anchorRef, rect } = useAnchorRect(combobox.open);
 
   useEffect(() => {
     let cancelled = false;
     if (fetchMentionUsers) {
       fetchMentionUsers(query)
-        .then((results) => { if (!cancelled) { setItems(results); setActiveIndex(0); } })
+        .then((results) => { if (!cancelled) setItems(results); })
         .catch(() => {});
     }
     return () => { cancelled = true; };
   }, [query, fetchMentionUsers]);
 
   const handleSelect = useCallback((item: UserItem) => {
+    combobox.settle();
     getMentionOnSelectItem()(editor, { text: item.label, key: item.id }, query);
-  }, [editor, query]);
+  }, [combobox, editor, query]);
 
-  useEffect(() => {
-    function onKeyDown(e: KeyboardEvent) {
-      if (e.key === 'ArrowDown') {
-        e.preventDefault(); e.stopPropagation();
-        setActiveIndex((i) => Math.min(i + 1, items.length - 1));
-      } else if (e.key === 'ArrowUp') {
-        e.preventDefault(); e.stopPropagation();
-        setActiveIndex((i) => Math.max(i - 1, 0));
-      } else if (e.key === 'Enter' && items[activeIndex]) {
-        e.preventDefault(); e.stopPropagation();
-        handleSelect(items[activeIndex]!);
-      }
-    }
-    window.addEventListener('keydown', onKeyDown, true);
-    return () => window.removeEventListener('keydown', onKeyDown, true);
-  }, [items, activeIndex, handleSelect]);
+  const handleKeyDown = listNavigationKeyHandler(combobox, items.length, setActiveIndex, () => {
+    const item = items[activeIndex];
+    if (item) handleSelect(item);
+  });
 
   return (
     <PlateElement {...props} element={element} as="span">
-      <span ref={spanRef} className="text-primary">@{children}</span>
+      <span ref={anchorRef}>
+        <ComboboxQueryField inputRef={inputRef} combobox={combobox} trigger="@" label="Mention a person" className="text-primary" onKeyDown={handleKeyDown} />
+      </span>
+      {children}
       {rect && ReactDOM.createPortal(
         <div
           style={{ position: 'fixed', top: rect.bottom + 4, left: rect.left, zIndex: 9999 }}
@@ -185,12 +344,11 @@ export function MentionInputElement({ element, children, ...props }: PlateElemen
 
 export function SlashInputElement({ element, children, ...props }: PlateElementProps) {
   const editor = useEditorRef();
-  const spanRef = useRef<HTMLSpanElement>(null);
-  const query = NodeApi.string(element);
-  const [activeIndex, setActiveIndex] = useState(0);
-  const [rect, setRect] = useState<DOMRect | null>(null);
-  const [prevQuery, setPrevQuery] = useState(query);
-  if (query !== prevQuery) { setPrevQuery(query); setActiveIndex(0); }
+  const inputRef = useRef<HTMLInputElement>(null);
+  const combobox = useComboboxQueryInput(element, '/', inputRef);
+  const { query } = combobox;
+  const [activeIndex, setActiveIndex] = useQueryActiveIndex(query);
+  const { anchorRef, rect } = useAnchorRect(combobox.open);
 
   const filtered = query
     ? SLASH_COMMANDS.filter(
@@ -200,36 +358,25 @@ export function SlashInputElement({ element, children, ...props }: PlateElementP
       )
     : SLASH_COMMANDS;
 
-  useEffect(() => {
-    if (spanRef.current) setRect(spanRef.current.getBoundingClientRect());
-  }, []);
-
   const handleSelect = useCallback((cmd: CommandItem) => {
-    const path = editor.selection?.focus.path;
+    const path = editor.api.findPath(element);
     if (!path) return;
+    combobox.settle();
     applySlashCommand(editor, cmd.key, path);
-  }, [editor]);
+    editor.tf.focus();
+  }, [combobox, editor, element]);
 
-  useEffect(() => {
-    function onKeyDown(e: KeyboardEvent) {
-      if (e.key === 'ArrowDown') {
-        e.preventDefault(); e.stopPropagation();
-        setActiveIndex((i) => Math.min(i + 1, filtered.length - 1));
-      } else if (e.key === 'ArrowUp') {
-        e.preventDefault(); e.stopPropagation();
-        setActiveIndex((i) => Math.max(i - 1, 0));
-      } else if (e.key === 'Enter' && filtered[activeIndex]) {
-        e.preventDefault(); e.stopPropagation();
-        handleSelect(filtered[activeIndex]!);
-      }
-    }
-    window.addEventListener('keydown', onKeyDown, true);
-    return () => window.removeEventListener('keydown', onKeyDown, true);
-  }, [filtered, activeIndex, handleSelect]);
+  const handleKeyDown = listNavigationKeyHandler(combobox, filtered.length, setActiveIndex, () => {
+    const cmd = filtered[activeIndex];
+    if (cmd) handleSelect(cmd);
+  });
 
   return (
     <PlateElement {...props} element={element} as="span">
-      <span ref={spanRef} className="text-muted-foreground">/{children}</span>
+      <span ref={anchorRef}>
+        <ComboboxQueryField inputRef={inputRef} combobox={combobox} trigger="/" label="Slash command" className="text-muted-foreground" onKeyDown={handleKeyDown} />
+      </span>
+      {children}
       {rect && ReactDOM.createPortal(
         <div
           style={{ position: 'fixed', top: rect.bottom + 4, left: rect.left, zIndex: 9999 }}
@@ -257,12 +404,11 @@ export function SlashInputElement({ element, children, ...props }: PlateElementP
 
 export function EmojiInputElement({ element, children, ...props }: PlateElementProps) {
   const editor = useEditorRef();
-  const spanRef = useRef<HTMLSpanElement>(null);
-  const query = NodeApi.string(element).toLowerCase();
-  const [activeIndex, setActiveIndex] = useState(0);
-  const [rect, setRect] = useState<DOMRect | null>(null);
-  const [prevQuery, setPrevQuery] = useState(query);
-  if (query !== prevQuery) { setPrevQuery(query); setActiveIndex(0); }
+  const inputRef = useRef<HTMLInputElement>(null);
+  const combobox = useComboboxQueryInput(element, ':', inputRef);
+  const query = combobox.query.toLowerCase();
+  const [activeIndex, setActiveIndex] = useQueryActiveIndex(query);
+  const { anchorRef, rect } = useAnchorRect(combobox.open);
 
   const filtered = (
     query
@@ -270,38 +416,26 @@ export function EmojiInputElement({ element, children, ...props }: PlateElementP
       : EMOJI_LIST
   ).slice(0, 36);
 
-  useEffect(() => {
-    if (spanRef.current) setRect(spanRef.current.getBoundingClientRect());
-  }, []);
-
   const handleSelect = useCallback((item: EmojiItem) => {
     const path = editor.api.findPath(element);
     if (!path) return;
+    combobox.settle();
     editor.tf.removeNodes({ at: path });
     editor.tf.insertText(item.native);
     editor.tf.focus();
-  }, [editor, element]);
+  }, [combobox, editor, element]);
 
-  useEffect(() => {
-    function onKeyDown(e: KeyboardEvent) {
-      if (e.key === 'ArrowDown') {
-        e.preventDefault(); e.stopPropagation();
-        setActiveIndex((i) => Math.min(i + 1, filtered.length - 1));
-      } else if (e.key === 'ArrowUp') {
-        e.preventDefault(); e.stopPropagation();
-        setActiveIndex((i) => Math.max(i - 1, 0));
-      } else if (e.key === 'Enter' && filtered[activeIndex]) {
-        e.preventDefault(); e.stopPropagation();
-        handleSelect(filtered[activeIndex]!);
-      }
-    }
-    window.addEventListener('keydown', onKeyDown, true);
-    return () => window.removeEventListener('keydown', onKeyDown, true);
-  }, [filtered, activeIndex, handleSelect]);
+  const handleKeyDown = listNavigationKeyHandler(combobox, filtered.length, setActiveIndex, () => {
+    const item = filtered[activeIndex];
+    if (item) handleSelect(item);
+  });
 
   return (
     <PlateElement {...props} element={element} as="span">
-      <span ref={spanRef} className="text-muted-foreground">:{children}</span>
+      <span ref={anchorRef}>
+        <ComboboxQueryField inputRef={inputRef} combobox={combobox} trigger=":" label="Emoji search" className="text-muted-foreground" onKeyDown={handleKeyDown} />
+      </span>
+      {children}
       {rect && ReactDOM.createPortal(
         <div
           style={{ position: 'fixed', top: rect.bottom + 4, left: rect.left, zIndex: 9999 }}

@@ -29,10 +29,12 @@ jest.mock("@/hooks/api/integrations", () => ({
 }));
 
 describe("MailAccountsSheet", () => {
-  it("uses a bottom drawer on mobile", () => {
+  it("uses the shared bottom AppSheet presentation on mobile", () => {
     render(<MailAccountsSheet open onClose={jest.fn()} />);
 
-    expect(document.querySelector("[data-slot='drawer-content']")).not.toBeNull();
-    expect(document.querySelector("[data-slot='sheet-content']")).toBeNull();
+    const content = document.querySelector("[data-slot='sheet-content']");
+    expect(content).not.toBeNull();
+    expect(content).toHaveClass("data-[state=open]:slide-in-from-bottom", "rounded-t-2xl");
+    expect(document.querySelector("[data-slot='drawer-content']")).toBeNull();
   });
 });

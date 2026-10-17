@@ -38,10 +38,10 @@ export function GoalFormFields({
     <>
       {!isEdit && (
         <div className="space-y-1.5">
-          <label className="text-sm font-medium">Employee</label>
-          <EmployeePicker value={watchedUserId} onChange={handleUserIdChange} />
+          <p className="text-sm font-medium">Employee</p>
+          <EmployeePicker value={watchedUserId} onChange={handleUserIdChange} ariaLabel="Employee" />
           {form.formState.errors.userId?.message && (
-            <p className="text-xs text-destructive">
+            <p id="goal-employee-error" role="alert" className="text-xs text-destructive">
               {form.formState.errors.userId.message}
             </p>
           )}

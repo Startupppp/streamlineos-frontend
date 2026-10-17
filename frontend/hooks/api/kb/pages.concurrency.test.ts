@@ -4,13 +4,15 @@ import { renderHook, act } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import type { ReactNode } from "react";
 import { createElement } from "react";
-import { useUpdateKbPage } from "./pages";
+import { useUpdateKbPage, useSetKbPageVisibility, usePublishKbPage, useArchiveKbPage, useUnarchiveKbPage } from "./pages";
 import { ApiError } from "@/lib/api-envelope";
 import { knowledgeAndSurveysQueryKeys } from "@/lib/query-keys/knowledge-and-surveys";
+import { useRestoreKbVersion } from "./page-versions";
 
 jest.mock("@/lib/api-client", () => ({
   apiClient: {
     patch: jest.fn(),
+    post: jest.fn(),
   },
 }));
 
@@ -169,7 +171,7 @@ describe("useUpdateKbPage — optimistic concurrency", () => {
     });
 
     await act(async () => {
-      await result.current.mutateAsync({ pageId: 1, title: "Renamed" });
+      await result.current.mutateAsync({ pageId: 1, title: "Renamed", expectedContentRevision: 2 });
     });
 
     expect(invalidate).toHaveBeenCalledWith({
@@ -225,5 +227,77 @@ describe("useUpdateKbPage — optimistic concurrency", () => {
       undefined,
       expect.any(Function),
     );
+  });
+});
+
+describe("KB page visibility and status revision requests", () => {
+  beforeEach(() => jest.clearAllMocks());
+
+  it("sends the visibility precondition", async () => {
+    const { apiClient } = jest.requireMock("@/lib/api-client") as { apiClient: { patch: jest.Mock } };
+    apiClient.patch.mockResolvedValueOnce({ id: 1 });
+    const { result } = renderHook(() => useSetKbPageVisibility(), { wrapper: wrapper(makeClient()) });
+    await act(async () => { await result.current.mutateAsync({ pageId: 1, visibility: "public", expectedContentRevision: 4 }); });
+    expect(apiClient.patch).toHaveBeenCalledWith("/kb/pages/1/visibility", { visibility: "public", expectedContentRevision: 4 }, undefined, expect.any(Function));
+  });
+
+  it("writes the saved visibility into the open page at once, so the share badge does not lag behind a refetch", async () => {
+    const { apiClient } = jest.requireMock("@/lib/api-client") as { apiClient: { patch: jest.Mock } };
+    apiClient.patch.mockResolvedValueOnce({ id: 1, visibility: "private", publicToken: null, contentRevision: 5 });
+    const client = makeClient();
+    const key = knowledgeAndSurveysQueryKeys.kb.page(1);
+    client.setQueryData(key, { id: 1, visibility: "public", publicToken: "tok", contentRevision: 4, title: "T" });
+    const { result } = renderHook(() => useSetKbPageVisibility(), { wrapper: wrapper(client) });
+    await act(async () => { await result.current.mutateAsync({ pageId: 1, visibility: "private", expectedContentRevision: 4 }); });
+    expect(client.getQueryData(key)).toEqual({ id: 1, visibility: "private", publicToken: null, contentRevision: 5, title: "T" });
+  });
+
+  it.each([
+    ["publish", usePublishKbPage],
+    ["archive", useArchiveKbPage],
+    ["unarchive", useUnarchiveKbPage],
+  ] as const)("sends the %s precondition", async (action, hook) => {
+    const { apiClient } = jest.requireMock("@/lib/api-client") as { apiClient: { post: jest.Mock } };
+    apiClient.post.mockResolvedValueOnce({ id: 1 });
+    const { result } = renderHook(() => hook(), { wrapper: wrapper(makeClient()) });
+    await act(async () => { await result.current.mutateAsync({ pageId: 1, expectedContentRevision: 4 }); });
+    expect(apiClient.post).toHaveBeenCalledWith(`/kb/pages/1/${action}`, { expectedContentRevision: 4 }, action === "publish" ? expect.anything() : undefined, expect.any(Function));
+  });
+
+  it("reuses the publish idempotency key for the same revision after a transport failure", async () => {
+    const { apiClient } = jest.requireMock("@/lib/api-client") as { apiClient: { post: jest.Mock } };
+    apiClient.post.mockRejectedValueOnce(new Error("Network unavailable")).mockResolvedValueOnce({ id: 1 });
+    const { result } = renderHook(() => usePublishKbPage(), { wrapper: wrapper(makeClient()) });
+    const input = { pageId: 1, expectedContentRevision: 4 };
+    await act(async () => { await result.current.mutateAsync(input).catch(() => undefined); });
+    await act(async () => { await result.current.mutateAsync(input); });
+    expect(apiClient.post.mock.calls[0]?.[2].headers["Idempotency-Key"]).toBeTruthy();
+    expect(apiClient.post.mock.calls[1]?.[2].headers["Idempotency-Key"]).toBe(apiClient.post.mock.calls[0]?.[2].headers["Idempotency-Key"]);
+  });
+});
+
+describe("KB page version restore request", () => {
+  beforeEach(() => jest.clearAllMocks());
+
+  it("sends the observed revision and reuses its idempotency key across a failed retry", async () => {
+    const { apiClient } = jest.requireMock("@/lib/api-client") as { apiClient: { post: jest.Mock } };
+    apiClient.post.mockRejectedValueOnce(new Error("Network unavailable")).mockResolvedValueOnce({ id: 1 });
+    const { result } = renderHook(() => useRestoreKbVersion(), { wrapper: wrapper(makeClient()) });
+    const input = { pageId: 1, versionNumber: 2, expectedContentRevision: 4 };
+    await act(async () => { await result.current.mutateAsync(input).catch(() => undefined); });
+    await act(async () => { await result.current.mutateAsync(input); });
+
+    expect(apiClient.post).toHaveBeenNthCalledWith(1, "/kb/pages/1/versions/2/restore", { expectedContentRevision: 4 }, expect.anything(), expect.any(Function));
+    expect(apiClient.post.mock.calls[0]?.[2].headers["Idempotency-Key"]).toBeTruthy();
+    expect(apiClient.post.mock.calls[1]?.[2].headers["Idempotency-Key"]).toBe(apiClient.post.mock.calls[0]?.[2].headers["Idempotency-Key"]);
+  });
+
+  it("uses a fresh idempotency key for a new restore intent", async () => {
+    const { apiClient } = jest.requireMock("@/lib/api-client") as { apiClient: { post: jest.Mock } };
+    apiClient.post.mockResolvedValue({ id: 1 });
+    const { result } = renderHook(() => useRestoreKbVersion(), { wrapper: wrapper(makeClient()) });
+    await act(async () => { await result.current.mutateAsync({ pageId: 1, versionNumber: 2, expectedContentRevision: 4 }); });
+    await act(async () => { await result.current.mutateAsync({ pageId: 1, versionNumber: 2, expectedContentRevision: 4 }); });
+    expect(apiClient.post.mock.calls[1]?.[2].headers["Idempotency-Key"]).not.toBe(apiClient.post.mock.calls[0]?.[2].headers["Idempotency-Key"]);
   });
 });

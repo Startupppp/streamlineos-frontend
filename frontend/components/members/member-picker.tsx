@@ -12,46 +12,49 @@ import {
   CommandItem,
   CommandList,
 } from "@/components/ui/command";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { cn, resolveImageUrl } from "@/lib/utils";
 import {
   COMPACT_SEARCH_POPOVER_CONTENT_CLASS,
   FIELD_CONTROL_CLASS,
   FIELD_SEARCH_POPOVER_CONTENT_CLASS,
 } from "@/components/ui/field-control";
-import { useOrgMembers, useOrgMembersByIds } from "@/hooks/api/organization";
-import { useProjectMembers } from "@/hooks/api/build/projects";
-import { useBuildMembers } from "@/hooks/api/build/build-members";
-import { useModuleMemberCandidates } from "@/hooks/api/module-access";
-import { useCan } from "@/hooks/api/access";
-import { useDebouncedValue } from "@/hooks/common/use-debounce";
-import {
-  getUserDisplayName,
-  getUserInitials,
-  type NamedUser,
-} from "@/lib/person-display";
+import { getUserDisplayName, getUserInitials } from "@/lib/person-display";
 import { TruncatedText } from "@/components/ui/truncated-text";
-
-interface MemberOption extends NamedUser {
-  id: string;
-  email: string;
-  image: string | null;
-}
+import { filterMembers, type MemberOption } from "./member-picker-options";
+import {
+  useMemberDirectory,
+  type DirectoryMember,
+  type DirectoryScope,
+} from "@/hooks/api/members/use-member-directory";
 
 interface MemberPickerBaseProps {
-  /**
-   * An explicit candidate list, when the caller already knows who is eligible.
-   * Used by the declaration-driven action form: the seam resolves an input's
-   * option source and hands the result here, so this picker never has to learn
-   * which module produced it.
-   */
   candidates?: MemberOption[];
+  scope?: DirectoryScope;
+
+  onSearchChange?: (search: string) => void;
+  onOpenChange?: (open: boolean) => void;
+
+  knownMembers?: MemberOption[];
+  searchLabel?: string;
+  id?: string;
+  "aria-describedby"?: string;
+  "aria-invalid"?: boolean | "true" | "false";
   projectId?: number;
-  /** Scopes candidates to a module's member-access candidates instead of org/project members. */
+  directory?: "build";
   moduleKey?: string;
-  /** Module mode only: exclude users already assigned to the module. Defaults to true. */
   excludeAssigned?: boolean;
-  /** Gates candidate fetching, e.g. only while a parent dialog/sheet is open. Defaults to true. */
+  includeRevoked?: boolean;
   enabled?: boolean;
   placeholder?: string;
   disabled?: boolean;
@@ -59,8 +62,10 @@ interface MemberPickerBaseProps {
   excludeUserId?: string;
   excludeUserIds?: string[];
   trigger?: ReactNode;
+  triggerTooltip?: string;
   contentAlign?: "start" | "center" | "end";
   contentClassName?: string;
+  modal?: boolean;
 }
 
 interface MemberPickerSingleProps extends MemberPickerBaseProps {
@@ -68,6 +73,7 @@ interface MemberPickerSingleProps extends MemberPickerBaseProps {
   value?: string;
   onChange?: (userId: string | null) => void;
   allowUnassigned?: boolean;
+  unassignedLabel?: string;
   values?: never;
   onToggle?: never;
 }
@@ -81,206 +87,66 @@ interface MemberPickerMultiProps extends MemberPickerBaseProps {
   allowUnassigned?: never;
 }
 
-export type MemberPickerProps = MemberPickerSingleProps | MemberPickerMultiProps;
-
-function useMemberOptions(
-  candidates: MemberOption[] | undefined,
-  projectId: number | undefined,
-  moduleKey: string | undefined,
-  excludeAssigned: boolean,
-  enabled: boolean,
-  search: string,
-  selectedIds: string[],
-): { options: MemberOption[]; selectedMembers: MemberOption[] } {
-  const explicit = candidates !== undefined;
-  const canViewOrgMembers = useCan("settings:view");
-  const canViewBuildMembers = useCan("build:members:view");
-  const useOrgDirectory =
-    enabled && !explicit && projectId === undefined && moduleKey === undefined && canViewOrgMembers;
-  const useWorkspaceDirectory =
-    enabled &&
-    !explicit &&
-    projectId === undefined &&
-    moduleKey === undefined &&
-    !canViewOrgMembers &&
-    canViewBuildMembers;
-  const useModuleDirectory = !explicit && moduleKey !== undefined && enabled;
-
-  const debouncedSearch = useDebouncedValue(search.trim(), 300);
-  const { data: orgData } = useOrgMembers(1, 50, debouncedSearch || undefined, {
-    enabled: useOrgDirectory,
-    staleTime: 30_000,
-    placeholderData: (prev) => prev,
-  });
-  const { data: workspaceData } = useBuildMembers(
-    { limit: 200, search: debouncedSearch || undefined },
-    {
-      enabled: useWorkspaceDirectory,
-      staleTime: 30_000,
-      placeholderData: (prev) => prev,
-    },
-  );
-  const { data: projectMembers = [] } = useProjectMembers(projectId ?? 0, {
-    enabled: enabled && !explicit && projectId !== undefined,
-  });
-  const { data: moduleData } = useModuleMemberCandidates(
-    moduleKey ?? "",
-    50,
-    debouncedSearch,
-    { enabled: useModuleDirectory, userId: selectedIds[0], excludeAssigned },
-  );
-  const moduleOptions = useMemo(
-    () =>
-      (moduleData?.data ?? []).map((c) => ({
-        id: c.userId,
-        name: c.displayName,
-        firstName: null,
-        lastName: null,
-        email: c.email,
-        image: c.avatarUrl ?? null,
-      })),
-    [moduleData?.data],
-  );
-
-  const orgOptions = useMemo(
-    () =>
-      (orgData?.data ?? []).map((m) => ({
-        id: m.userId,
-        name: m.name,
-        firstName: null,
-        lastName: null,
-        email: m.email,
-        image: m.image,
-      })),
-    [orgData?.data],
-  );
-
-  const workspaceOptions = useMemo(
-    () =>
-      (workspaceData?.data ?? []).map((m) => ({
-        id: m.id,
-        name: m.name,
-        firstName: m.firstName,
-        lastName: m.lastName,
-        email: m.email,
-        image: m.image,
-      })),
-    [workspaceData?.data],
-  );
-
-  const missingIds = useMemo(
-    () =>
-      useOrgDirectory
-        ? selectedIds.filter((id) => !orgOptions.some((m) => m.id === id))
-        : [],
-    [useOrgDirectory, selectedIds, orgOptions],
-  );
-  const { data: selectedData } = useOrgMembersByIds(missingIds);
-
-  return useMemo(() => {
-    if (candidates !== undefined) {
-      return {
-        options: candidates,
-        selectedMembers: candidates.filter((m) => selectedIds.includes(m.id)),
-      };
-    }
-    if (projectId !== undefined) {
-      const options = projectMembers.map((m) => ({
-        id: m.id,
-        name: m.name,
-        firstName: m.firstName,
-        lastName: m.lastName,
-        email: m.email,
-        image: m.image,
-      }));
-      return {
-        options,
-        selectedMembers: options.filter((m) => selectedIds.includes(m.id)),
-      };
-    }
-    if (useOrgDirectory) {
-      const resolved = (selectedData?.data ?? []).map((m) => ({
-        id: m.userId,
-        name: m.name,
-        firstName: null,
-        lastName: null,
-        email: m.email,
-        image: m.image,
-      }));
-      const byId = new Map<string, MemberOption>();
-      for (const m of [...orgOptions, ...resolved]) byId.set(m.id, m);
-      return {
-        options: orgOptions,
-        selectedMembers: selectedIds
-          .map((id) => byId.get(id))
-          .filter((m): m is MemberOption => m !== undefined),
-      };
-    }
-    if (useModuleDirectory) {
-      return {
-        options: moduleOptions,
-        selectedMembers: moduleOptions.filter((m) => selectedIds.includes(m.id)),
-      };
-    }
-    return {
-      options: workspaceOptions,
-      selectedMembers: workspaceOptions.filter((m) => selectedIds.includes(m.id)),
-    };
-  }, [
-    candidates,
-    projectId,
-    useOrgDirectory,
-    useModuleDirectory,
-    projectMembers,
-    orgOptions,
-    moduleOptions,
-    workspaceOptions,
-    selectedData?.data,
-    selectedIds,
-  ]);
-}
-
-function filterMembers(
-  members: MemberOption[],
-  search: string,
-  serverFiltered: boolean,
-  excludeUserId?: string,
-  excludeUserIds?: string[],
-) {
-  const excludeSet = new Set<string>(excludeUserIds ?? []);
-  if (excludeUserId) excludeSet.add(excludeUserId);
-  const eligible = excludeSet.size > 0
-    ? members.filter((m) => !excludeSet.has(m.id))
-    : members;
-  if (serverFiltered || !search.trim()) return eligible;
-  const q = search.toLowerCase();
-  return eligible.filter(
-    (m) =>
-      getUserDisplayName(m).toLowerCase().includes(q) ||
-      m.email.toLowerCase().includes(q),
-  );
-}
+export type MemberPickerProps =
+  | MemberPickerSingleProps
+  | MemberPickerMultiProps;
 
 const TRIGGER_CLASS = cn(
   FIELD_CONTROL_CLASS,
   "w-full justify-start gap-2 px-3 text-left font-medium",
 );
 
-function MemberAvatar({ member, className }: { member: MemberOption; className?: string }) {
+function MemberAvatar({
+  member,
+  className,
+}: {
+  member: DirectoryMember | MemberOption;
+  className?: string;
+}) {
   return (
     <Avatar className={cn("h-5 w-5 shrink-0", className)}>
       <AvatarImage src={resolveImageUrl(member.image)} />
-      <AvatarFallback className="text-micro">{getUserInitials(member)}</AvatarFallback>
+      <AvatarFallback className="text-micro">
+        {getUserInitials(member)}
+      </AvatarFallback>
     </Avatar>
   );
+}
+
+function deriveScope(
+  candidates: MemberOption[] | undefined,
+  scope: DirectoryScope | undefined,
+  projectId: number | undefined,
+  moduleKey: string | undefined,
+  directory: "build" | undefined,
+  excludeAssigned: boolean,
+  includeRevoked: boolean,
+  candidateMembers: DirectoryMember[],
+): DirectoryScope {
+  if (scope !== undefined) return scope;
+  if (candidates !== undefined) return { kind: "explicit", members: candidateMembers };
+  if (moduleKey !== undefined) return { kind: "module", moduleKey, excludeAssigned, includeRevoked };
+  if (projectId !== undefined) return { kind: "project", projectId };
+  if (directory === "build") return { kind: "build" };
+  return { kind: "org" };
 }
 
 export function MemberPicker(props: MemberPickerProps) {
   const {
     candidates,
+    scope: scopeProp,
+    onSearchChange,
+    onOpenChange,
+    knownMembers,
+    searchLabel = "Search members",
+    id,
+    "aria-describedby": ariaDescribedBy,
+    "aria-invalid": ariaInvalid,
     projectId,
+    directory,
     moduleKey,
     excludeAssigned = true,
+    includeRevoked = false,
     enabled = true,
     placeholder = "Select member…",
     disabled,
@@ -288,8 +154,10 @@ export function MemberPicker(props: MemberPickerProps) {
     excludeUserId,
     excludeUserIds,
     trigger,
+    triggerTooltip,
     contentAlign = "start",
     contentClassName,
+    modal = false,
   } = props;
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
@@ -300,27 +168,71 @@ export function MemberPicker(props: MemberPickerProps) {
     [multiValues, singleValue],
   );
   const directoryEnabled = enabled && (open || selectedIds.length > 0);
-  const { options: members, selectedMembers } = useMemberOptions(
-    candidates,
-    projectId,
-    moduleKey,
-    excludeAssigned,
-    directoryEnabled,
-    search,
-    selectedIds,
+
+  const candidateMembers = useMemo<DirectoryMember[]>(
+    () =>
+      candidates?.map((c) => ({
+        ...c,
+        membershipId: null,
+        name: c.name ?? null,
+        firstName: c.firstName ?? null,
+        lastName: c.lastName ?? null,
+      })) ?? [],
+    [candidates],
   );
-  const serverFiltered = candidates === undefined && projectId === undefined;
+
+  const derivedScope = useMemo(
+    () =>
+      deriveScope(
+        candidates,
+        scopeProp,
+        projectId,
+        moduleKey,
+        directory,
+        excludeAssigned,
+        includeRevoked,
+        candidateMembers,
+      ),
+    [candidates, scopeProp, projectId, moduleKey, directory, excludeAssigned, includeRevoked, candidateMembers],
+  );
+
+  const { members, selectedMembers, isServerFiltered, isLoading } = useMemberDirectory(
+    derivedScope,
+    { search, enabled: directoryEnabled, selectedIds },
+  );
+
+  const serverFiltered = isServerFiltered || onSearchChange !== undefined;
   const filtered = useMemo(
-    () => filterMembers(members, search, serverFiltered, excludeUserId, excludeUserIds),
+    () =>
+      filterMembers(
+        members,
+        search,
+        serverFiltered,
+        excludeUserId,
+        excludeUserIds,
+      ),
     [members, search, serverFiltered, excludeUserId, excludeUserIds],
   );
 
-  const handleSearchChange = useCallback((v: string) => {
-    setSearch(v);
-  }, []);
+  const emptyText = isLoading ? "Loading members…" : "No members found.";
+
+  const handleSearchChange = useCallback(
+    (v: string) => {
+      setSearch(v);
+      onSearchChange?.(v);
+    },
+    [onSearchChange],
+  );
+
+  function handleOpenChange(next: boolean) {
+    setOpen(next);
+    onOpenChange?.(next);
+  }
 
   const popoverContentClass = cn(
-    trigger ? COMPACT_SEARCH_POPOVER_CONTENT_CLASS : FIELD_SEARCH_POPOVER_CONTENT_CLASS,
+    trigger
+      ? COMPACT_SEARCH_POPOVER_CONTENT_CLASS
+      : FIELD_SEARCH_POPOVER_CONTENT_CLASS,
     "p-0",
     contentClassName,
   );
@@ -337,7 +249,10 @@ export function MemberPicker(props: MemberPickerProps) {
         type="button"
         variant="outline"
         role="combobox"
-        aria-label={placeholder}
+        id={id}
+        aria-label={id ? undefined : placeholder}
+        aria-describedby={ariaDescribedBy}
+        aria-invalid={ariaInvalid}
         disabled={disabled}
         className={cn(TRIGGER_CLASS, "text-muted-foreground font-normal")}
       >
@@ -351,9 +266,16 @@ export function MemberPicker(props: MemberPickerProps) {
         {!trigger && selectedMembers.length > 0 ? (
           <div className="flex flex-wrap gap-1">
             {selectedMembers.map((m) => (
-              <Badge key={m.id} variant="secondary" className="gap-1.5 pl-0.5 pr-1.5 py-0.5">
+              <Badge
+                key={m.id}
+                variant="secondary"
+                className="gap-1.5 pl-0.5 pr-1.5 py-0.5"
+              >
                 <MemberAvatar member={m} className="h-4 w-4" />
-                <TruncatedText text={getUserDisplayName(m)} className="text-dense max-w-[120px]" />
+                <TruncatedText
+                  text={getUserDisplayName(m)}
+                  className="text-dense max-w-[120px]"
+                />
                 <button
                   type="button"
                   className="text-muted-foreground hover:text-destructive transition-colors leading-none"
@@ -366,12 +288,21 @@ export function MemberPicker(props: MemberPickerProps) {
             ))}
           </div>
         ) : null}
-        <Popover open={open} onOpenChange={setOpen}>
-          <PopoverTrigger asChild>
-            {multiTrigger}
-          </PopoverTrigger>
+        <Popover open={open} onOpenChange={handleOpenChange} modal={modal}>
+          {triggerTooltip ? (
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <PopoverTrigger asChild>{multiTrigger}</PopoverTrigger>
+                </TooltipTrigger>
+                <TooltipContent>{triggerTooltip}</TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          ) : (
+            <PopoverTrigger asChild>{multiTrigger}</PopoverTrigger>
+          )}
           <PopoverContent className={popoverContentClass} align={contentAlign}>
-            <Command shouldFilter={false}>
+            <Command shouldFilter={false} label={searchLabel}>
               <CommandInput
                 placeholder="Search members…"
                 className="text-xs"
@@ -379,17 +310,30 @@ export function MemberPicker(props: MemberPickerProps) {
                 onValueChange={handleSearchChange}
               />
               {filtered.length === 0 ? (
-                <div role="status" aria-live="polite" className="py-2 text-center text-xs text-muted-foreground">
-                  No members found.
+                <div
+                  role="status"
+                  aria-live="polite"
+                  className="py-2 text-center text-xs text-muted-foreground"
+                >
+                  {emptyText}
                 </div>
               ) : (
                 <CommandList className="max-h-52 overflow-y-auto scrollbar-hide">
                   <CommandGroup>
                     {filtered.map((m) => (
-                      <CommandItem key={m.id} value={m.id} onSelect={() => handleToggle(m.id)}>
+                      <CommandItem
+                        key={m.id}
+                        value={m.id}
+                        onSelect={() => handleToggle(m.id)}
+                      >
                         <MemberAvatar member={m} className="mr-2" />
-                        <TruncatedText text={getUserDisplayName(m)} className="text-xs" />
-                        {values.includes(m.id) && <Check className="ml-auto h-3 w-3" />}
+                        <TruncatedText
+                          text={getUserDisplayName(m)}
+                          className="text-xs"
+                        />
+                        {values.includes(m.id) && (
+                          <Check className="ml-auto h-3 w-3" />
+                        )}
                       </CommandItem>
                     ))}
                   </CommandGroup>
@@ -402,15 +346,18 @@ export function MemberPicker(props: MemberPickerProps) {
     );
   }
 
-  const { value, onChange, allowUnassigned } = props;
+  const { value, onChange, allowUnassigned, unassignedLabel = "Unassigned" } = props;
   const selected = value
-    ? (selectedMembers.find((m) => m.id === value) ?? members.find((m) => m.id === value) ?? null)
+    ? (selectedMembers.find((m) => m.id === value) ??
+      members.find((m) => m.id === value) ??
+      knownMembers?.find((m) => m.id === value) ??
+      null)
     : null;
 
   function handleSelect(userId: string | null) {
     onChange?.(userId);
-    setOpen(false);
-    setSearch("");
+    handleOpenChange(false);
+    handleSearchChange("");
   }
 
   const singleTrigger = trigger ?? (
@@ -418,7 +365,10 @@ export function MemberPicker(props: MemberPickerProps) {
       type="button"
       variant="outline"
       role="combobox"
-      aria-label={placeholder}
+      id={id}
+      aria-label={id ? undefined : placeholder}
+      aria-describedby={ariaDescribedBy}
+      aria-invalid={ariaInvalid}
       disabled={disabled}
       className={cn(
         TRIGGER_CLASS,
@@ -431,6 +381,9 @@ export function MemberPicker(props: MemberPickerProps) {
         <>
           <MemberAvatar member={selected} />
           <TruncatedText text={getUserDisplayName(selected)} />
+          {selected.moduleAccessRevoked ? (
+            <Badge variant="destructive">Revoked</Badge>
+          ) : null}
         </>
       ) : (
         <>
@@ -442,12 +395,21 @@ export function MemberPicker(props: MemberPickerProps) {
   );
 
   return (
-    <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger asChild>
-        {singleTrigger}
-      </PopoverTrigger>
+    <Popover open={open} onOpenChange={handleOpenChange} modal={modal}>
+      {triggerTooltip ? (
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <PopoverTrigger asChild>{singleTrigger}</PopoverTrigger>
+            </TooltipTrigger>
+            <TooltipContent>{triggerTooltip}</TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+      ) : (
+        <PopoverTrigger asChild>{singleTrigger}</PopoverTrigger>
+      )}
       <PopoverContent className={popoverContentClass} align={contentAlign}>
-        <Command shouldFilter={false}>
+        <Command shouldFilter={false} label={searchLabel}>
           <CommandInput
             placeholder="Search members…"
             className="text-xs"
@@ -455,23 +417,43 @@ export function MemberPicker(props: MemberPickerProps) {
             onValueChange={handleSearchChange}
           />
           {filtered.length === 0 && !allowUnassigned ? (
-            <div role="status" aria-live="polite" className="py-2 text-center text-xs text-muted-foreground">
-              No members found.
+            <div
+              role="status"
+              aria-live="polite"
+              className="py-2 text-center text-xs text-muted-foreground"
+            >
+              {emptyText}
             </div>
           ) : (
             <CommandList className="max-h-52 overflow-y-auto scrollbar-hide">
               <CommandGroup>
                 {allowUnassigned && (
-                  <CommandItem value="__unassigned__" onSelect={() => handleSelect(null)}>
+                  <CommandItem
+                    value="__unassigned__"
+                    onSelect={() => handleSelect(null)}
+                  >
                     <User className="mr-2 h-4 w-4 text-muted-foreground" />
-                    <span className="text-xs">Unassigned</span>
+                    <span className="text-xs">{unassignedLabel}</span>
                     {!value && <Check className="ml-auto h-3 w-3" />}
                   </CommandItem>
                 )}
                 {filtered.map((m) => (
-                  <CommandItem key={m.id} value={m.id} onSelect={() => handleSelect(m.id)}>
+                  <CommandItem
+                    key={m.id}
+                    value={m.id}
+                    onSelect={() => handleSelect(m.id)}
+                  >
                     <MemberAvatar member={m} className="mr-2" />
-                    <span className="truncate text-xs">{getUserDisplayName(m)}</span>
+                    <span className="flex min-w-0 flex-col">
+                      <span className="truncate text-xs">
+                        {getUserDisplayName(m)}
+                      </span>
+                      {m.description ? (
+                        <span className="truncate text-micro text-muted-foreground">
+                          {m.description}
+                        </span>
+                      ) : null}
+                    </span>
                     {m.id === value && <Check className="ml-auto h-3 w-3" />}
                   </CommandItem>
                 ))}

@@ -27,6 +27,10 @@ import { useHrDocumentTypes } from "@/hooks/api/hr/document-types";
 import { useMyOnboardingDocs } from "@/hooks/api/hr/documents";
 import { useUploadOnboardingDoc } from "@/hooks/api/hr/document-review";
 import { getErrorMessage } from "@/lib/get-error-message";
+import {
+  UPLOAD_ACCEPT_ATTRIBUTE,
+  uploadFileRejection,
+} from "@/features/hr/document-review/upload-file-validation";
 
 interface UploadDocSheetProps {
   open: boolean;
@@ -54,7 +58,10 @@ export function UploadDocSheet({
     isError: typesError,
     refetch: refetchTypes,
   } = useHrDocumentTypes({ enabled: open });
-  const { data: myDocs } = useMyOnboardingDocs({ enabled: open && selfUpload });
+  const { data: myDocs } = useMyOnboardingDocs({
+    enabled: open && selfUpload,
+    limit: 100,
+  });
   const uploadFileMutation = useUploadFile();
   const uploadDocMutation = useUploadOnboardingDoc(selfUpload);
 
@@ -94,9 +101,13 @@ export function UploadDocSheet({
 
   const handleFileChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0] ?? null;
-    if (file && file.size > 10 * 1024 * 1024) {
-      toast.error("File exceeds 10 MB limit");
-      return;
+    if (file) {
+      const rejection = uploadFileRejection(file);
+      if (rejection) {
+        toast.error(rejection);
+        if (fileInputRef.current) fileInputRef.current.value = "";
+        return;
+      }
     }
     setUploadFile(file);
   }, []);
@@ -268,7 +279,7 @@ export function UploadDocSheet({
               ref={fileInputRef}
               type="file"
               className="hidden"
-              accept="application/pdf,image/*,.doc,.docx"
+              accept={UPLOAD_ACCEPT_ATTRIBUTE}
               onChange={handleFileChange}
             />
             <p className="text-dense text-muted-foreground">

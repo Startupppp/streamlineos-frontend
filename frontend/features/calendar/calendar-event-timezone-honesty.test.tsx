@@ -2,6 +2,7 @@ import { render, screen } from "@testing-library/react";
 import React from "react";
 import { CalendarEventsPanel } from "./calendar-events-panel";
 import type { CalendarListItem } from "@/hooks/api/calendar";
+import { calendarProjectionFields } from "./calendar-projection-fixtures";
 
 jest.mock("@/components/ui/empty-state", () => ({
   EmptyState: ({ title }: { title: string }) => (
@@ -62,6 +63,7 @@ function zonedEvent(): CalendarListItem {
     category: "meeting",
     source: "event",
     timezone: AUTHORED_ZONE,
+    ...calendarProjectionFields("event-7", "2026-09-12T14:00:00.000Z", "2026-09-12T15:00:00.000Z", false, AUTHORED_ZONE),
   };
 }
 

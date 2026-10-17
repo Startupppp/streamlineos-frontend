@@ -1,0 +1,269 @@
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+import { DEFAULT_DATA } from "../lib/constants";
+import type { Invitee, InviteeModuleAccess, WizardData } from "../lib/wizard-data-schema";
+import { StepInviteLaunch } from "./step-invite-launch";
+
+jest.mock("@/hooks/api/subscription", () => ({
+  useBillingPlans: () => ({
+    data: { trialPlan: "trial", plans: [{ id: "trial", maxEmployees: 20 }] },
+  }),
+}));
+
+const mockToastSuccess = jest.fn();
+jest.mock("sonner", () => ({
+  toast: { success: (...args: unknown[]) => mockToastSuccess(...args), error: jest.fn() },
+}));
+
+jest.mock("./step-generation", () => ({
+  StepGeneration: ({ onBackToProducts }: { onBackToProducts: () => void }) => (
+    <div data-testid="generation">
+      <button onClick={onBackToProducts}>Return to products</button>
+    </div>
+  ),
+}));
+
+function wizard(invitees: Invitee[] = []): WizardData {
+  return {
+    ...DEFAULT_DATA,
+    goals: ["build", "sales", "hr"],
+    modules: ["build", "crm", "hr", "chat", "kb"],
+    installedApps: ["build", "crm", "hr", "chat", "kb"],
+    invitees,
+  };
+}
+
+describe("People step product access", () => {
+  beforeAll(() => {
+    Object.defineProperty(HTMLElement.prototype, "hasPointerCapture", {
+      value: jest.fn().mockReturnValue(false),
+      configurable: true,
+      writable: true,
+    });
+    Object.defineProperty(HTMLElement.prototype, "setPointerCapture", {
+      value: jest.fn(),
+      configurable: true,
+      writable: true,
+    });
+    Object.defineProperty(HTMLElement.prototype, "releasePointerCapture", {
+      value: jest.fn(),
+      configurable: true,
+      writable: true,
+    });
+  });
+
+  it("adds a Member with access to every selected module and shows the per-person summary", () => {
+    const onChangeInvitees = jest.fn<void, [Invitee[]]>();
+    const onBack = jest.fn();
+    const { rerender } = render(
+      <StepInviteLaunch
+        data={wizard()}
+        onBack={onBack}
+        onChangeInvitees={onChangeInvitees}
+      />,
+    );
+
+    fireEvent.change(screen.getByPlaceholderText("teammate@company.com"), {
+      target: { value: "editor@example.com" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Add invitee" }));
+
+    expect(onChangeInvitees).toHaveBeenCalledWith([
+      {
+        email: "editor@example.com",
+        role: "MEMBER",
+        moduleAccess: [
+          { moduleKey: "build", standing: "MEMBER" },
+          { moduleKey: "crm", standing: "MEMBER" },
+          { moduleKey: "hr", standing: "MEMBER" },
+        ],
+      },
+    ]);
+
+    const invitees = onChangeInvitees.mock.calls[0]?.[0] ?? [];
+    rerender(
+      <StepInviteLaunch
+        data={wizard(invitees)}
+        onBack={onBack}
+        onChangeInvitees={onChangeInvitees}
+      />,
+    );
+    expect(screen.getByText(/Access:.*Build Member/)).toBeInTheDocument();
+    expect(screen.getByText(/CRM Member/)).toBeInTheDocument();
+    expect(screen.getByText(/HR Member/)).toBeInTheDocument();
+    expect(screen.getByText("Edit product access for editor@example.com")).toBeInTheDocument();
+  });
+
+  it("blocks launch and offers a repair when a draft still grants a deselected product", () => {
+    const onChangeInvitees = jest.fn();
+    const data = wizard([
+      {
+        email: "editor@example.com",
+        role: "MEMBER",
+        moduleAccess: [
+          { moduleKey: "build", standing: "MEMBER" },
+          { moduleKey: "hr", standing: "ADMIN" },
+        ],
+      },
+    ]);
+    data.modules = ["build", "chat", "kb"];
+
+    render(
+      <StepInviteLaunch
+        data={data}
+        onBack={jest.fn()}
+        onChangeInvitees={onChangeInvitees}
+      />,
+    );
+
+    expect(screen.getByRole("alert")).toHaveTextContent(/hr access.*no longer selected/i);
+    fireEvent.click(screen.getByRole("button", { name: "Build my organization" }));
+    expect(screen.queryByTestId("generation")).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "Remove unavailable access" }));
+    expect(onChangeInvitees).toHaveBeenCalledWith([
+      {
+        email: "editor@example.com",
+        role: "MEMBER",
+        moduleAccess: [{ moduleKey: "build", standing: "MEMBER" }],
+      },
+    ]);
+  });
+
+  it("allows repairing one stale invite even while another still needs repair", () => {
+    const onChangeInvitees = jest.fn();
+    const staleAccess: InviteeModuleAccess[] = [
+      { moduleKey: "hr", standing: "ADMIN" },
+    ];
+    const data = wizard([
+      { email: "one@example.com", role: "MEMBER", moduleAccess: staleAccess },
+      { email: "two@example.com", role: "MEMBER", moduleAccess: staleAccess },
+    ]);
+    data.modules = ["build", "chat", "kb"];
+
+    render(
+      <StepInviteLaunch
+        data={data}
+        onBack={jest.fn()}
+        onChangeInvitees={onChangeInvitees}
+      />,
+    );
+
+    fireEvent.click(screen.getAllByRole("button", { name: "Remove unavailable access" })[0]);
+    expect(onChangeInvitees).toHaveBeenCalledWith([
+      { email: "one@example.com", role: "MEMBER", moduleAccess: [] },
+      { email: "two@example.com", role: "MEMBER", moduleAccess: staleAccess },
+    ]);
+  });
+
+  it("lets the owner explicitly add CRM Admin access to a Build member", async () => {
+    const onChangeInvitees = jest.fn<void, [Invitee[]]>();
+    const data = wizard([
+      {
+        email: "editor@example.com",
+        role: "MEMBER",
+        moduleAccess: [{ moduleKey: "build", standing: "MEMBER" }],
+      },
+    ]);
+    const user = userEvent.setup();
+    render(
+      <StepInviteLaunch
+        data={data}
+        onBack={jest.fn()}
+        onChangeInvitees={onChangeInvitees}
+      />,
+    );
+
+    await user.click(screen.getByText("Edit product access for editor@example.com"));
+    await user.click(screen.getByRole("combobox", { name: "CRM access for editor@example.com" }));
+    await user.click(screen.getByRole("option", { name: "Admin" }));
+
+    expect(onChangeInvitees).toHaveBeenCalledWith([
+      {
+        email: "editor@example.com",
+        role: "MEMBER",
+        moduleAccess: [
+          { moduleKey: "build", standing: "MEMBER" },
+          { moduleKey: "crm", standing: "ADMIN" },
+        ],
+      },
+    ]);
+  });
+
+  it("requires an explicit Org Admin choice and shows its structural access", async () => {
+    const onChangeInvitees = jest.fn<void, [Invitee[]]>();
+    const user = userEvent.setup();
+    const { rerender } = render(
+      <StepInviteLaunch
+        data={wizard()}
+        onBack={jest.fn()}
+        onChangeInvitees={onChangeInvitees}
+      />,
+    );
+
+    await user.click(screen.getByRole("combobox"));
+    await user.click(screen.getByRole("option", { name: "Org Admin" }));
+    await user.type(screen.getByPlaceholderText("teammate@company.com"), "admin@example.com");
+    await user.click(screen.getByRole("button", { name: "Add invitee" }));
+
+    expect(onChangeInvitees).toHaveBeenCalledWith([
+      { email: "admin@example.com", role: "ORG_ADMIN", moduleAccess: [] },
+    ]);
+    const invitees = onChangeInvitees.mock.calls[0]?.[0] ?? [];
+    rerender(
+      <StepInviteLaunch
+        data={wizard(invitees)}
+        onBack={jest.fn()}
+        onChangeInvitees={onChangeInvitees}
+      />,
+    );
+    expect(screen.getByText("Access: all enabled products as Org Admin")).toBeInTheDocument();
+  });
+
+  it("returns from a rejected launch to product choices without changing invitees", async () => {
+    const onBack = jest.fn();
+    const onChangeInvitees = jest.fn();
+    const invitees: Invitee[] = [
+      {
+        email: "editor@example.com",
+        role: "MEMBER",
+        moduleAccess: [{ moduleKey: "build", standing: "MEMBER" }],
+      },
+    ];
+    render(
+      <StepInviteLaunch
+        data={wizard(invitees)}
+        onBack={onBack}
+        onChangeInvitees={onChangeInvitees}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "Build my organization" }));
+    await waitFor(() => expect(screen.getByTestId("generation")).toBeInTheDocument());
+    fireEvent.click(screen.getByRole("button", { name: "Return to products" }));
+
+    expect(onBack).toHaveBeenCalledTimes(1);
+    expect(onChangeInvitees).not.toHaveBeenCalled();
+  });
+
+  it("Skip for now clears the invite list and offers an undo", () => {
+    const onChangeInvitees = jest.fn<void, [Invitee[]]>();
+    const invitees: Invitee[] = [{ email: "teammate@example.com", role: "MEMBER" }];
+    render(
+      <StepInviteLaunch data={wizard(invitees)} onBack={jest.fn()} onChangeInvitees={onChangeInvitees} />,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "Skip for now" }));
+
+    expect(onChangeInvitees).toHaveBeenLastCalledWith([]);
+    const [message, options] = mockToastSuccess.mock.calls[0] ?? [];
+    expect(message).toMatch(/Invites skipped/);
+    options.action.onClick();
+    expect(onChangeInvitees).toHaveBeenLastCalledWith(invitees);
+  });
+
+  it("hides Skip for now when nobody has been added", () => {
+    render(<StepInviteLaunch data={wizard()} onBack={jest.fn()} onChangeInvitees={jest.fn()} />);
+    expect(screen.queryByRole("button", { name: "Skip for now" })).not.toBeInTheDocument();
+  });
+});

@@ -1,29 +1,23 @@
 "use client";
 
 import {
-  useState,
   useCallback,
-  useRef,
   useEffect,
+  useRef,
   type KeyboardEvent,
 } from "react";
-import { getUserDisplayName } from "@/lib/person-display";
+import { useSourceOverride } from "@/hooks/common/use-source-override";
 import { resolveColumnColor } from "@/lib/column-colors";
 import { getStatusEntry, type StatusConfigEntry } from "@/lib/status-config";
 import {
-  FilterAssigneeLeading,
-  FilterLabelDot,
   FilterPriorityLeading,
   FilterTypeLeading,
 } from "./filter-option-leading";
 import {
   OptionRow,
-  FilterMenuSearch,
   PanelShell,
   EmptyHint,
   FilterDatesPanel,
-} from "@/components/list-view";
-import {
   PRIORITIES,
   TYPES,
   type FilterCategory,
@@ -33,6 +27,11 @@ import {
   type Cycle,
   type ProjectOption,
 } from "@/components/list-view";
+import {
+  AssigneePanel,
+  LabelPanel,
+  ProjectPanel,
+} from "./filter-category-list-panels";
 
 export type { StatusFilterOption } from "@/components/list-view";
 export { StatusFilterDot } from "@/components/list-view";
@@ -100,7 +99,7 @@ export function FilterCategorySubmenu({
   className,
   listClassName = "max-h-[min(50dvh,320px)] overflow-y-auto scrollbar-hide p-1",
 }: FilterCategorySubmenuProps) {
-  const [search, setSearch] = useState("");
+  const [search, setSearch] = useSourceOverride(category, "");
   const containerRef = useRef<HTMLDivElement>(null);
 
   const handleKeyDown = useCallback(
@@ -118,11 +117,6 @@ export function FilterCategorySubmenu({
     containerRef.current?.focus();
   }, [category]);
 
-  useEffect(() => {
-    setSearch("");
-  }, [category]);
-
-  const needsSearch = category === "assignee" || category === "label" || category === "project";
   const q = search.toLowerCase();
 
   if (category === "dates") {
@@ -220,90 +214,38 @@ export function FilterCategorySubmenu({
   }
 
   if (category === "assignee") {
-    const allMembers: { id: string; displayName: string; member: Member | null }[] = [
-      { id: "@me", displayName: "Me (dynamic)", member: null },
-      { id: "__unassigned__", displayName: "Unassigned", member: null },
-      ...members.map((m) => ({ id: m.id, displayName: getUserDisplayName(m), member: m })),
-    ];
-    const filtered = allMembers.filter(
-      (m) => !q || m.displayName.toLowerCase().includes(q),
-    );
     return (
-      <PanelShell
-        category={category}
+      <AssigneePanel
+        members={members}
+        selectedAssignees={selectedAssignees}
+        onToggleAssignee={onToggleAssignee}
+        search={search}
+        onSearchChange={setSearch}
+        q={q}
         containerRef={containerRef}
         onKeyDown={handleKeyDown}
-        withSearch
         showTitle={showTitle}
         className={className}
-      >
-        {needsSearch ? (
-          <FilterMenuSearch
-            value={search}
-            onValueChange={setSearch}
-            placeholder="Search assignees…"
-          />
-        ) : null}
-        <div className={listClassName}>
-          {filtered.map((m) => {
-            function handleClick() {
-              onToggleAssignee(m.id);
-            }
-            return (
-              <OptionRow
-                key={m.id}
-                active={selectedAssignees.includes(m.id)}
-                label={m.displayName}
-                leading={<FilterAssigneeLeading assigneeId={m.id} member={m.member} />}
-                onClick={handleClick}
-              />
-            );
-          })}
-          {filtered.length === 0 ? <EmptyHint message="No members" /> : null}
-        </div>
-      </PanelShell>
+        listClassName={listClassName}
+      />
     );
   }
 
   if (category === "label") {
-    const filtered = labels.filter(
-      (l) => !q || l.name.toLowerCase().includes(q),
-    );
     return (
-      <PanelShell
-        category={category}
+      <LabelPanel
+        labels={labels}
+        selectedLabels={selectedLabels}
+        onToggleLabel={onToggleLabel}
+        search={search}
+        onSearchChange={setSearch}
+        q={q}
         containerRef={containerRef}
         onKeyDown={handleKeyDown}
-        withSearch
         showTitle={showTitle}
         className={className}
-      >
-        {needsSearch ? (
-          <FilterMenuSearch
-            value={search}
-            onValueChange={setSearch}
-            placeholder="Search labels…"
-          />
-        ) : null}
-        <div className={listClassName}>
-          {filtered.map((l) => {
-            const labelId = String(l.id);
-            function handleClick() {
-              onToggleLabel(labelId);
-            }
-            return (
-              <OptionRow
-                key={l.id}
-                active={selectedLabels.includes(labelId)}
-                label={l.name}
-                leading={<FilterLabelDot color={l.color} />}
-                onClick={handleClick}
-              />
-            );
-          })}
-          {filtered.length === 0 ? <EmptyHint message="No labels" /> : null}
-        </div>
-      </PanelShell>
+        listClassName={listClassName}
+      />
     );
   }
 
@@ -332,47 +274,20 @@ export function FilterCategorySubmenu({
   }
 
   if (category === "project") {
-    const projects = projectOptions ?? [];
-    const filtered = projects.filter(
-      (p) =>
-        !q ||
-        p.name.toLowerCase().includes(q) ||
-        p.key.toLowerCase().includes(q),
-    );
     return (
-      <PanelShell
-        category={category}
+      <ProjectPanel
+        projectOptions={projectOptions ?? []}
+        selectedProjectIds={selectedProjectIds}
+        onToggleProject={onToggleProject}
+        search={search}
+        onSearchChange={setSearch}
+        q={q}
         containerRef={containerRef}
         onKeyDown={handleKeyDown}
-        withSearch
         showTitle={showTitle}
         className={className}
-      >
-        {needsSearch ? (
-          <FilterMenuSearch
-            value={search}
-            onValueChange={setSearch}
-            placeholder="Search projects…"
-          />
-        ) : null}
-        <div className={listClassName}>
-          {filtered.map((p) => {
-            const projectId = String(p.id);
-            function handleClick() {
-              onToggleProject(projectId);
-            }
-            return (
-              <OptionRow
-                key={p.id}
-                active={selectedProjectIds.includes(projectId)}
-                label={p.name}
-                onClick={handleClick}
-              />
-            );
-          })}
-          {filtered.length === 0 ? <EmptyHint message="No projects" /> : null}
-        </div>
-      </PanelShell>
+        listClassName={listClassName}
+      />
     );
   }
 

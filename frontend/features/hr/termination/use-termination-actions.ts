@@ -1,8 +1,9 @@
 "use client";
 
 import { useState, useCallback } from "react";
+import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { isToday, isFuture, parseISO } from "date-fns";
+import { format, isToday, isFuture, parseISO } from "date-fns";
 import {
   useCreateTermination,
   useSubmitTermination,
@@ -15,22 +16,35 @@ import type { EmployeeListItem } from "@/types/hr";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { TERMINATION_REASON_OTHER } from "@/lib/constants/hr-separation";
 
+function createdTerminationMessage(status: Termination["status"], effectiveDate: string): string {
+  if (status === "COMPLETED")
+    return "Termination approved and in effect. Access removed; final settlement and asset returns started.";
+  if (status === "APPROVED")
+    return `Termination approved. It takes effect on ${format(parseISO(effectiveDate), "MMM d, yyyy")}.`;
+  return "Termination saved as a draft for approval";
+}
+
 interface UseTerminationActionsOptions {
+  canApproveExit: boolean;
   terminations: Termination[];
   employees: EmployeeListItem[];
   employeeUserIdParam: string | null;
+  prefillMissing: boolean;
 }
 
 export function useTerminationActions({
+  canApproveExit,
   terminations,
   employees,
   employeeUserIdParam,
+  prefillMissing,
 }: UseTerminationActionsOptions) {
   const createTermination = useCreateTermination();
   const submitTermination = useSubmitTermination();
   const finalReview = useFinalReviewTermination();
   const sendEmail = useSendTerminationEmail();
   const completeTermination = useCompleteTermination();
+  const router = useRouter();
 
   const [createOpen, setCreateOpen] = useState(() => Boolean(employeeUserIdParam));
   const [selectedEmployeeUserId, setSelectedEmployeeUserId] = useState(
@@ -42,6 +56,8 @@ export function useTerminationActions({
   const [noticePeriodWaived, setNoticePeriodWaived] = useState(false);
   const [severanceAmount, setSeveranceAmount] = useState("");
   const [internalNotes, setInternalNotes] = useState("");
+  const [saveAsDraft, setSaveAsDraft] = useState(false);
+  const [confirmCreateOpen, setConfirmCreateOpen] = useState(false);
   const [submitTerminationId, setSubmitTerminationId] = useState<number | null>(null);
   const [reviewRecord, setReviewRecord] = useState<Termination | null>(null);
   const [reviewDecision, setReviewDecision] = useState<"approve" | "reject" | null>(null);
@@ -61,6 +77,7 @@ export function useTerminationActions({
     (!isOtherReason || remarks.trim().length >= 10);
 
   const resetCreateForm = useCallback(() => {
+    if (employeeUserIdParam) router.replace("/hr/termination", { scroll: false });
     setSelectedEmployeeUserId("");
     setSelectedReason("");
     setRemarks("");
@@ -68,7 +85,44 @@ export function useTerminationActions({
     setNoticePeriodWaived(false);
     setSeveranceAmount("");
     setInternalNotes("");
-  }, []);
+    setSaveAsDraft(false);
+  }, [employeeUserIdParam, router]);
+
+  const performCreate = useCallback(() => {
+    createTermination.mutate(
+      {
+        employeeUserId: selectedEmployeeUserId,
+        reasons: [selectedReason],
+        detailedExplanation: remarks.trim(),
+        effectiveDate,
+        severanceAmount: severanceAmount ? Number(severanceAmount) : undefined,
+        noticePeriodWaived,
+        internalNotes: internalNotes.trim() || undefined,
+        saveAsDraft: canApproveExit ? saveAsDraft : undefined,
+      },
+      {
+        onSuccess: (created) => {
+          toast.success(createdTerminationMessage(created.status, created.effectiveDate));
+          setConfirmCreateOpen(false);
+          setCreateOpen(false);
+          resetCreateForm();
+        },
+        onError: (mutationError) => toast.error(getErrorMessage(mutationError)),
+      },
+    );
+  }, [
+    selectedEmployeeUserId,
+    selectedReason,
+    remarks,
+    effectiveDate,
+    severanceAmount,
+    noticePeriodWaived,
+    internalNotes,
+    canApproveExit,
+    saveAsDraft,
+    createTermination,
+    resetCreateForm,
+  ]);
 
   const handleCreateSubmit = useCallback(() => {
     if (!selectedEmployeeUserId) {
@@ -121,25 +175,11 @@ export function useTerminationActions({
       return;
     }
 
-    createTermination.mutate(
-      {
-        employeeUserId: selectedEmployeeUserId,
-        reasons: [selectedReason],
-        detailedExplanation: remarks.trim(),
-        effectiveDate,
-        severanceAmount: severanceAmount ? Number(severanceAmount) : undefined,
-        noticePeriodWaived,
-        internalNotes: internalNotes.trim() || undefined,
-      },
-      {
-        onSuccess: () => {
-          toast.success("Termination saved as draft");
-          setCreateOpen(false);
-          resetCreateForm();
-        },
-        onError: (mutationError) => toast.error(getErrorMessage(mutationError)),
-      },
-    );
+    if (canApproveExit && !saveAsDraft) {
+      setConfirmCreateOpen(true);
+      return;
+    }
+    performCreate();
   }, [
     selectedEmployeeUserId,
     employees,
@@ -148,11 +188,15 @@ export function useTerminationActions({
     remarks,
     effectiveDate,
     severanceAmount,
-    noticePeriodWaived,
     internalNotes,
-    createTermination,
-    resetCreateForm,
+    canApproveExit,
+    saveAsDraft,
+    performCreate,
   ]);
+
+  const handleConfirmCreateOpenChange = useCallback((open: boolean) => {
+    if (!open) setConfirmCreateOpen(false);
+  }, []);
 
   const handleSubmitForApproval = useCallback(() => {
     if (!submitTerminationId) return;
@@ -227,7 +271,7 @@ export function useTerminationActions({
     completeTermination.mutate(completeTerminationId, {
       onSuccess: () => {
         toast.success(
-          "Termination completed. Employee deactivated, final settlement and asset return initiated.",
+          "Termination completed. Organization access removed; final settlement draft, asset returns and exit checklist created.",
         );
         setCompleteTerminationId(null);
       },
@@ -265,7 +309,13 @@ export function useTerminationActions({
     if (!open) setViewRecord(null);
   }, []);
 
-  const handleCreateOpen = useCallback(() => setCreateOpen(true), []);
+  const handleCreateOpen = useCallback(() => {
+    if (prefillMissing) setSelectedEmployeeUserId("");
+    setCreateOpen(true);
+  }, [prefillMissing]);
+
+  const showingMissingPrefill =
+    prefillMissing && selectedEmployeeUserId !== "" && selectedEmployeeUserId === employeeUserIdParam;
 
   const handleCreateSheetOpenChange = useCallback(
     (open: boolean) => {
@@ -327,7 +377,7 @@ export function useTerminationActions({
   }, []);
 
   return {
-    createOpen,
+    createOpen: createOpen && !showingMissingPrefill,
     handleCreateOpen,
     handleCreateSheetOpenChange,
     canSubmitCreate,
@@ -347,6 +397,11 @@ export function useTerminationActions({
     handleSeveranceAmountChange,
     internalNotes,
     handleInternalNotesChange,
+    saveAsDraft,
+    setSaveAsDraft,
+    confirmCreateOpen,
+    handleConfirmCreateOpenChange,
+    performCreate,
     submitTerminationId,
     handleSetSubmitTerminationId,
     handleSubmitForApproval,

@@ -2,8 +2,8 @@
 
 import { memo, useCallback, useMemo, type Key } from "react";
 import { List, useDynamicRowHeight, type RowComponentProps } from "react-window";
-import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
+import { InfiniteScrollSentinel } from "@/components/ui/infinite-scroll-sentinel";
 import { InboxItemCard, type InboxItemCardProps } from "./inbox-item-card";
 import type { UnifiedInboxItem } from "@/types/inbox";
 
@@ -11,13 +11,9 @@ const INBOX_ROW_HEIGHT = 96;
 const ROW_GAP_PX = 8;
 const OVERSCAN_COUNT = 5;
 const DEFAULT_LIST_HEIGHT = 600;
-const LOAD_MORE_KEY = "loadmore";
 
 interface InboxVirtualRowData {
   items: UnifiedInboxItem[];
-  hasNextPage: boolean;
-  isFetchingNextPage: boolean;
-  isOnline: boolean;
   selectedKeys: Set<string> | undefined;
   onToggleSelect: ((key: string) => void) | undefined;
   onNotificationClick: InboxItemCardProps["onNotificationClick"];
@@ -33,11 +29,9 @@ interface InboxVirtualRowData {
   rejectingId: number | undefined;
   archivingId: number | undefined;
   deletingId: number | undefined;
-  onLoadMore: () => void;
 }
 
 function getRowKey(index: number, data: InboxVirtualRowData): Key {
-  if (data.hasNextPage && index === data.items.length) return LOAD_MORE_KEY;
   const item = data.items[index];
   if (!item) return index;
   return item.dedupKey;
@@ -52,9 +46,6 @@ function InboxVirtualRow({
   index,
   style,
   items,
-  hasNextPage,
-  isFetchingNextPage,
-  isOnline,
   selectedKeys,
   onToggleSelect,
   onNotificationClick,
@@ -70,31 +61,7 @@ function InboxVirtualRow({
   rejectingId,
   archivingId,
   deletingId,
-  onLoadMore,
 }: RowComponentProps<InboxVirtualRowData>) {
-  if (hasNextPage && index === items.length) {
-    return (
-      <div
-        style={{ ...style, paddingBottom: ROW_GAP_PX, boxSizing: "border-box" }}
-        {...ariaAttributes}
-        className="flex items-center justify-center py-2"
-      >
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={onLoadMore}
-          disabled={isFetchingNextPage || !isOnline}
-        >
-          {!isOnline
-            ? "Offline — reconnect to load more"
-            : isFetchingNextPage
-              ? "Loading…"
-              : "Load more"}
-        </Button>
-      </div>
-    );
-  }
-
   const item = items[index];
   if (!item) return <div style={style} {...ariaAttributes} />;
 
@@ -183,12 +150,11 @@ export const InboxVirtualList = memo(function InboxVirtualList({
   deletingId,
   onLoadMore,
 }: InboxVirtualListProps) {
-  const rowCount = items.length + (hasNextPage ? 1 : 0);
+  const rowCount = items.length;
 
   const heightKey = useMemo(
-    () =>
-      `${items.map((item) => item.dedupKey).join("|")}#${hasNextPage ? 1 : 0}`,
-    [items, hasNextPage],
+    () => items.map((item) => item.dedupKey).join("|"),
+    [items],
   );
 
   const rowHeight = useDynamicRowHeight({
@@ -199,9 +165,6 @@ export const InboxVirtualList = memo(function InboxVirtualList({
   const rowProps = useMemo(
     (): InboxVirtualRowData => ({
       items,
-      hasNextPage,
-      isFetchingNextPage,
-      isOnline,
       selectedKeys,
       onToggleSelect,
       onNotificationClick,
@@ -217,13 +180,9 @@ export const InboxVirtualList = memo(function InboxVirtualList({
       rejectingId,
       archivingId,
       deletingId,
-      onLoadMore,
     }),
     [
       items,
-      hasNextPage,
-      isFetchingNextPage,
-      isOnline,
       selectedKeys,
       onToggleSelect,
       onNotificationClick,
@@ -239,7 +198,6 @@ export const InboxVirtualList = memo(function InboxVirtualList({
       rejectingId,
       archivingId,
       deletingId,
-      onLoadMore,
     ],
   );
 
@@ -248,17 +206,36 @@ export const InboxVirtualList = memo(function InboxVirtualList({
     [],
   );
 
+  const handleRowsRendered = useCallback(
+    ({ stopIndex }: { startIndex: number; stopIndex: number }) => {
+      if (stopIndex >= rowCount - 1 && hasNextPage && !isFetchingNextPage && isOnline) {
+        onLoadMore();
+      }
+    },
+    [rowCount, hasNextPage, isFetchingNextPage, isOnline, onLoadMore],
+  );
+
   return (
-    <List<InboxVirtualRowData>
-      aria-label="Inbox items"
-      rowComponent={InboxVirtualRow}
-      rowCount={rowCount}
-      rowHeight={rowHeight}
-      rowProps={rowProps}
-      rowKey={stableRowKey}
-      defaultHeight={DEFAULT_LIST_HEIGHT}
-      overscanCount={OVERSCAN_COUNT}
-      style={{ height: "100%" }}
-    />
+    <div className="flex flex-col h-full">
+      <List<InboxVirtualRowData>
+        aria-label="Inbox items"
+        rowComponent={InboxVirtualRow}
+        rowCount={rowCount}
+        rowHeight={rowHeight}
+        rowProps={rowProps}
+        rowKey={stableRowKey}
+        defaultHeight={DEFAULT_LIST_HEIGHT}
+        overscanCount={OVERSCAN_COUNT}
+        style={{ flex: "1 1 0", minHeight: 0 }}
+        onRowsRendered={handleRowsRendered}
+      />
+      <InfiniteScrollSentinel
+        hasNextPage={hasNextPage}
+        isFetchingNextPage={isFetchingNextPage}
+        onLoadMore={onLoadMore}
+        label="Load more items"
+        className="py-2"
+      />
+    </div>
   );
 });

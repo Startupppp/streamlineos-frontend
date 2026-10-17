@@ -1,10 +1,10 @@
 "use client";
 
 import { useCallback, useMemo, useState } from "react";
-import type React from "react";
 import {
   Bell,
   BellOff,
+  CircleDot,
   EyeOff,
   Phone,
   Settings,
@@ -31,14 +31,18 @@ import {
 import {
   useArchiveChannel,
   useFavoriteChannel,
+  useMarkChannelUnread,
   useMuteChannel,
   useSetNotificationPreference,
   useUnfavoriteChannel,
   useUnmuteChannel,
 } from "@/hooks/api/chat-personal-b";
-import type { ChatNotificationPreference } from "@/types/chat";
 import { AddChannelMembersDialog } from "./add-channel-members-dialog";
 import type { Channel } from "./chat-types";
+import {
+  CHAT_NOTIFICATION_OPTIONS,
+  isChatNotificationPreference,
+} from "./chat-notification-preferences";
 
 const MUTE_DURATIONS: { value: "15m" | "1h" | "8h" | "24h" | "forever"; label: string }[] = [
   { value: "15m", label: "For 15 minutes" },
@@ -48,37 +52,7 @@ const MUTE_DURATIONS: { value: "15m" | "1h" | "8h" | "24h" | "forever"; label: s
   { value: "forever", label: "Until turned back on" },
 ];
 
-const NOTIFICATION_OPTIONS: { value: ChatNotificationPreference; label: string }[] = [
-  { value: "DEFAULT", label: "Use Default" },
-  { value: "ALL", label: "All Messages" },
-  { value: "MENTIONS", label: "Mentions Only" },
-  { value: "NOTHING", label: "Nothing" },
-];
-
-function isNotificationPreference(value: string): value is ChatNotificationPreference {
-  return NOTIFICATION_OPTIONS.some((option) => option.value === value);
-}
-
 type MuteDuration = (typeof MUTE_DURATIONS)[number]["value"];
-
-function MuteDurationItem({
-  duration,
-  label,
-  onMute,
-}: {
-  duration: MuteDuration;
-  label: string;
-  onMute: (duration: MuteDuration) => void;
-}) {
-  const handleSelect = useCallback(
-    (event: Event) => {
-      event.preventDefault();
-      onMute(duration);
-    },
-    [onMute, duration],
-  );
-  return <DropdownMenuItem onSelect={handleSelect}>{label}</DropdownMenuItem>;
-}
 
 export function ChannelItemMenu({
   channel,
@@ -98,6 +72,7 @@ export function ChannelItemMenu({
   const unmuteChannel = useUnmuteChannel();
   const setNotificationPreference = useSetNotificationPreference();
   const archiveChannel = useArchiveChannel();
+  const markUnread = useMarkChannelUnread();
 
   const myMembership = useMemo(
     () => channel.members?.find((m) => m.user?.id === currentUserId),
@@ -143,11 +118,6 @@ export function ChannelItemMenu({
     [muteChannel, channel.id],
   );
 
-  const handleMuteDuration = useCallback(
-    (duration: MuteDuration) => { void handleMute(duration); },
-    [handleMute],
-  );
-
   const handleUnmute = useCallback(
     async (event: Event) => {
       event.preventDefault();
@@ -164,7 +134,7 @@ export function ChannelItemMenu({
   const handleNotificationPreferenceChange = useCallback(
     async (value: string) => {
       try {
-        if (!isNotificationPreference(value)) return;
+        if (!isChatNotificationPreference(value)) return;
         await setNotificationPreference.mutateAsync({
           channelId: channel.id,
           preference: value,
@@ -189,6 +159,19 @@ export function ChannelItemMenu({
     [archiveChannel, channel.id],
   );
 
+  const handleMarkUnread = useCallback(
+    async (event: Event) => {
+      event.preventDefault();
+      try {
+        await markUnread.mutateAsync(channel.id);
+        toast.success("Marked as unread");
+      } catch (error) {
+        toast.error(getErrorMessage(error));
+      }
+    },
+    [markUnread, channel.id],
+  );
+
   const handleStartCall = useCallback(
     (event: Event) => {
       event.preventDefault();
@@ -196,10 +179,6 @@ export function ChannelItemMenu({
     },
     [onStartCall, channel.id],
   );
-
-  const handleStopPropagation = useCallback((event: React.SyntheticEvent) => {
-    event.stopPropagation();
-  }, []);
 
   const handleOpenInvite = useCallback((event: Event) => {
     event.preventDefault();
@@ -224,7 +203,7 @@ export function ChannelItemMenu({
             type="button"
             onClick={(event) => event.stopPropagation()}
             aria-label="Conversation options"
-            className="absolute right-2 top-[11px] z-10 h-6 w-6 flex items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-background/90 opacity-0 pointer-events-none group-hover/item:opacity-100 group-hover/item:pointer-events-auto transition-all duration-150 data-[state=open]:opacity-100 data-[state=open]:pointer-events-auto"
+            className="absolute right-1 top-1/2 z-10 flex size-11 -translate-y-1/2 items-center justify-center rounded-md text-muted-foreground hover:bg-background hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring max-lg:pointer-events-auto max-lg:opacity-100 lg:pointer-events-none lg:size-9 lg:opacity-0 lg:group-hover/item:pointer-events-auto lg:group-hover/item:opacity-100 lg:group-focus-within/item:pointer-events-auto lg:group-focus-within/item:opacity-100 data-[state=open]:pointer-events-auto data-[state=open]:opacity-100"
             {...menuHoverHandlers}
           >
             <EllipsisIcon ref={menuIconRef} size={14} />
@@ -235,6 +214,12 @@ export function ChannelItemMenu({
             <Phone className="h-4 w-4" />
             Start Call
           </DropdownMenuItem>
+          {channel.unreadCount === 0 && (
+            <DropdownMenuItem onSelect={handleMarkUnread}>
+              <CircleDot className="h-4 w-4" />
+              Mark as unread
+            </DropdownMenuItem>
+          )}
           <DropdownMenuSeparator />
           <DropdownMenuItem onSelect={handleOpenInvite}>
             <UserPlus className="h-4 w-4" />
@@ -278,7 +263,7 @@ export function ChannelItemMenu({
                 value={notificationPreference}
                 onValueChange={handleNotificationPreferenceChange}
               >
-                {NOTIFICATION_OPTIONS.map((option) => (
+                {CHAT_NOTIFICATION_OPTIONS.map((option) => (
                   <DropdownMenuRadioItem key={option.value} value={option.value}>
                     {option.label}
                   </DropdownMenuRadioItem>

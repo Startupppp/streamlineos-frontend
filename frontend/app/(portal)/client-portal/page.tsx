@@ -1,13 +1,17 @@
 "use client";
 
 import { useCallback } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
+import { InfiniteScrollSentinel } from "@/components/ui/infinite-scroll-sentinel";
 import { ErrorState } from "@/components/shared/error-state";
 import { PortalHeader } from "@/features/portal/components/portal-header";
 import { PortalProjectCard } from "@/features/portal/components/portal-project-card";
 import { usePortalGuard } from "@/hooks/api/portal/use-portal-guard";
 import { useExternalPortalProjects } from "@/hooks/api/portal/use-portal-projects";
+import { PortalApiError } from "@/lib/portal-api-client";
 
 function ProjectsListSkeleton() {
   return (
@@ -35,12 +39,44 @@ function ProjectsListSkeleton() {
 }
 
 export default function PortalProjectsPage() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const { isReady } = usePortalGuard();
-  const { data, isLoading, isError, refetch } = useExternalPortalProjects();
+
+  const waitingParam = searchParams.get("waiting");
+  const waiting = waitingParam === "true" ? true : undefined;
+
+  const filters = waiting ? { waiting } : undefined;
+
+  const { data, isLoading, isError, error, refetch, fetchNextPage, hasNextPage, isFetchingNextPage } =
+    useExternalPortalProjects(filters);
+
+  const handleLoadMore = useCallback(() => {
+    void fetchNextPage();
+  }, [fetchNextPage]);
 
   const handleRetry = useCallback(() => {
     void refetch();
   }, [refetch]);
+
+  const handleWaitingChange = useCallback(
+    (value: boolean | undefined) => {
+      const params = new URLSearchParams(searchParams.toString());
+      if (value === true) {
+        params.set("waiting", "true");
+      } else {
+        params.delete("waiting");
+      }
+      router.replace(`?${params.toString()}`, { scroll: false });
+    },
+    [router, searchParams],
+  );
+
+  const handleToggleWaiting = useCallback(() => {
+    handleWaitingChange(waiting === true ? undefined : true);
+  }, [handleWaitingChange, waiting]);
+
+  const projects = data?.pages.flatMap((p) => p.data) ?? [];
 
   return (
     <div className="flex flex-col min-h-dvh bg-background">
@@ -53,28 +89,55 @@ export default function PortalProjectsPage() {
           </p>
         </div>
 
+        <div className="mb-4 flex items-center gap-2">
+          <Button
+            type="button"
+            aria-pressed={waiting === true}
+            onClick={handleToggleWaiting}
+            variant={waiting === true ? "default" : "outline"}
+          >
+            Awaiting my approval
+          </Button>
+        </div>
+
         {!isReady || isLoading ? (
           <ProjectsListSkeleton />
         ) : isError ? (
           <ErrorState
             title="Could not load projects"
-            description="There was a problem fetching your projects. Please try again."
+            description={error instanceof PortalApiError && error.code === "PORTAL_WAITING_FILTER_UNAVAILABLE"
+              ? 'Approval filtering is unavailable. Turn off "Awaiting my approval" to view your projects.'
+              : "There was a problem fetching your projects. Please try again."}
             onRetry={handleRetry}
             className="min-h-[320px]"
           />
-        ) : !data || data.length === 0 ? (
+        ) : projects.length === 0 ? (
           <EmptyState
             illustrationPreset="projects"
-            title="No projects yet"
-            description="Projects your team shares with you will appear here. Contact your project team if you were expecting access."
+            title={waiting === true ? "No projects awaiting approval" : "No projects yet"}
+            description={
+              waiting === true
+                ? "No projects have approvals waiting for you right now."
+                : "Projects your team shares with you will appear here. Contact your project team if you were expecting access."
+            }
             className="min-h-[320px]"
           />
         ) : (
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            {data.map((project) => (
-              <PortalProjectCard key={project.id} project={project} />
-            ))}
-          </div>
+          <>
+            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+              {projects.map((project) => (
+                <PortalProjectCard key={project.id} project={project} />
+              ))}
+            </div>
+            <InfiniteScrollSentinel
+              hasNextPage={hasNextPage}
+              isFetchingNextPage={isFetchingNextPage}
+              onLoadMore={handleLoadMore}
+              label="Load more projects"
+              pending={<ProjectsListSkeleton />}
+              className="mt-4"
+            />
+          </>
         )}
       </main>
     </div>

@@ -1,5 +1,7 @@
 "use client";
 
+import type { MouseEvent as ReactMouseEvent, PointerEvent } from "react";
+import { motion, useReducedMotion } from "framer-motion";
 import { Check, Monitor, Moon, Palette, Sun, type LucideIcon } from "lucide-react";
 import {
   DropdownMenuSeparator,
@@ -22,38 +24,69 @@ const MODE_ICONS: Record<AppThemeModeOption["id"], LucideIcon> = {
   system: Monitor,
 };
 
-function ModeOption({ mode }: { mode: AppThemeModeOption }) {
+function ModeOption({
+  mode,
+  layoutId,
+}: {
+  mode: AppThemeModeOption;
+  layoutId: string;
+}) {
   const { mode: activeMode, setMode } = useAppTheme();
+  const reduceMotion = useReducedMotion() === true;
   const isActive = activeMode === mode.id;
   const Icon = MODE_ICONS[mode.id];
 
-  function handleSelect() {
+  function applyMode(event: PointerEvent<HTMLButtonElement> | ReactMouseEvent<HTMLButtonElement>) {
+    event.preventDefault();
+    event.stopPropagation();
     setMode(mode.id);
   }
 
   return (
     <button
       type="button"
-      onClick={handleSelect}
+      onPointerDownCapture={applyMode}
+      onClick={applyMode}
       aria-pressed={isActive}
       className={cn(
-        "flex flex-1 flex-col items-center gap-1 rounded-lg border px-2 py-1.5 text-dense font-medium transition-colors",
-        isActive
-          ? "border-ring bg-accent text-accent-foreground"
-          : "border-border text-muted-foreground hover:bg-accent hover:text-accent-foreground",
+        "relative flex flex-1 flex-col items-center gap-1 rounded-md px-2 py-1.5 text-sm font-medium active:scale-[0.97]",
+        "transition-colors duration-200 motion-reduce:transition-none",
+        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+        isActive ? "text-foreground" : "text-muted-foreground hover:text-foreground",
       )}
     >
-      <Icon className="h-3.5 w-3.5" />
-      {mode.label}
+      {isActive ? (
+        <motion.span
+          layoutId={layoutId}
+          aria-hidden
+          className="absolute inset-0 rounded-md bg-card shadow-xs"
+          transition={
+            reduceMotion
+              ? { duration: 0 }
+              : { type: "spring", stiffness: 500, damping: 34 }
+          }
+        />
+      ) : null}
+      <Icon
+        className={cn(
+          "relative z-10 h-3.5 w-3.5 transition-transform duration-200 motion-reduce:transition-none",
+          isActive && "scale-110",
+        )}
+      />
+      <span className="relative z-10">{mode.label}</span>
     </button>
   );
 }
 
-function ModeOptionsRow() {
+function ModeOptionsRow({ layoutId }: { layoutId: string }) {
   return (
-    <div className="flex gap-1.5">
+    <div
+      role="group"
+      aria-label="Appearance"
+      className="grid grid-cols-3 gap-1 rounded-lg bg-muted p-1"
+    >
       {APP_THEME_MODES.map((mode) => (
-        <ModeOption key={mode.id} mode={mode} />
+        <ModeOption key={mode.id} mode={mode} layoutId={layoutId} />
       ))}
     </div>
   );
@@ -67,9 +100,15 @@ function ThemeOption({ theme }: { theme: AppTheme }) {
     setTheme(theme.id);
   }
 
+  function handlePointerDown(event: PointerEvent<HTMLButtonElement>) {
+    event.preventDefault();
+    setTheme(theme.id);
+  }
+
   return (
     <button
       type="button"
+      onPointerDown={handlePointerDown}
       onClick={handleSelect}
       aria-pressed={isActive}
       className={cn(
@@ -81,7 +120,7 @@ function ThemeOption({ theme }: { theme: AppTheme }) {
     >
       <span
         aria-hidden
-        className="h-3.5 w-3.5 shrink-0 rounded-full border border-black/10"
+        className="h-3.5 w-3.5 shrink-0 rounded-full border border-foreground/25"
         style={{ backgroundColor: theme.swatch }}
       />
       <span className="flex-1 truncate text-left">{theme.label}</span>
@@ -107,8 +146,16 @@ export function ThemeMenuPanel({ className }: { className?: string }) {
         <Palette className="h-3.5 w-3.5" />
         Interface theme
       </div>
-      <ModeOptionsRow />
+      <ModeOptionsRow layoutId="appearance-mode-panel" />
       <ThemeOptionsGrid />
+    </div>
+  );
+}
+
+export function ThemeModeMenuItems() {
+  return (
+    <div className="px-2 pb-1.5">
+      <ModeOptionsRow layoutId="appearance-mode-menu" />
     </div>
   );
 }
@@ -120,8 +167,13 @@ export function ThemeMenuSubmenu() {
         <Palette className="h-3.5 w-3.5" />
         Interface theme
       </DropdownMenuSubTrigger>
-      <DropdownMenuSubContent className="w-64 p-2">
-        <ModeOptionsRow />
+      <DropdownMenuSubContent
+        sideOffset={-4}
+        alignOffset={-4}
+        collisionPadding={16}
+        className="w-64 max-h-[min(28rem,var(--radix-dropdown-menu-content-available-height))] overflow-y-auto p-2"
+      >
+        <ModeOptionsRow layoutId="appearance-mode-submenu" />
         <DropdownMenuSeparator className="my-2" />
         <ThemeOptionsGrid />
       </DropdownMenuSubContent>

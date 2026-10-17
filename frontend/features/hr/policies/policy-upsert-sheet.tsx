@@ -1,5 +1,7 @@
 "use client";
 
+import { DatePicker } from "@/components/ui/date-picker";
+
 import { useCallback, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -24,6 +26,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useCreateHrPolicy, useUpdateHrPolicy } from "@/hooks/api/hr/policies";
+import { getValidationFieldErrors } from "@/lib/api-envelope";
 import {
   HR_POLICY_TYPES,
   POLICY_TYPE_LABELS,
@@ -33,7 +36,7 @@ import { PolicyScopesEditor } from "./policy-scopes-editor";
 import { PolicyVersionHistory } from "./policy-version-history";
 import { useCan } from "@/hooks/api/access";
 import { PolicyRulesFields } from "./policy-rules-fields";
-import { policyFormSchema, type PolicyFormValues } from "./policy-form-types";
+import { policyFormSchema, withExplicitSwitches, type PolicyFormValues } from "./policy-form-types";
 import { numericFieldChangeOr } from "@/lib/numeric-field";
 
 interface Props {
@@ -97,43 +100,71 @@ export function PolicyUpsertSheet({ open, onOpenChange, policy }: Props) {
 
   const onSubmit = useCallback(
     (data: PolicyFormValues) => {
-      const payload = {
-        policyType: data.policyType as HrPolicyType,
-        name: data.name,
-        description: data.description || undefined,
-        effectiveFrom: data.effectiveFrom,
-        effectiveTo: data.effectiveTo || undefined,
-        priority: data.priority,
-        rules: data.rules,
-        scopes: data.scopes,
+      const handleError = (err: unknown) => {
+        const fieldErrors = getValidationFieldErrors(err);
+        if (fieldErrors.length > 0) {
+          let anySet = false;
+          const topLevel = form.getValues();
+          for (const { path, message } of fieldErrors) {
+            if (path in topLevel) {
+              form.setError(path as keyof PolicyFormValues, { message });
+            } else {
+              form.setError(`rules.${path}` as `rules.${string}`, { message });
+            }
+            anySet = true;
+          }
+          if (!anySet) toast.error(getErrorMessage(err));
+          return;
+        }
+        toast.error(getErrorMessage(err));
       };
 
       if (isEdit && policy) {
+        const editPayload = {
+          name: data.name,
+          description: data.description || undefined,
+          effectiveFrom: data.effectiveFrom,
+          effectiveTo: data.effectiveTo || undefined,
+          priority: data.priority,
+          rules: withExplicitSwitches(policy.policyType, data.rules),
+          scopes: data.scopes,
+        };
         update.mutate(
-          { policyId: policy.id, ...payload },
+          { policyId: policy.id, ...editPayload },
           {
             onSuccess: () => {
               toast.success("Policy updated");
               onOpenChange(false);
             },
-            onError: (err) => toast.error(getErrorMessage(err)),
+            onError: handleError,
           },
         );
       } else {
-        create.mutate(payload, {
+        const createPayload = {
+          policyType: data.policyType as HrPolicyType,
+          name: data.name,
+          description: data.description || undefined,
+          effectiveFrom: data.effectiveFrom,
+          effectiveTo: data.effectiveTo || undefined,
+          priority: data.priority,
+          rules: withExplicitSwitches(data.policyType, data.rules),
+          scopes: data.scopes,
+        };
+        create.mutate(createPayload, {
           onSuccess: () => {
             toast.success("Policy created");
             onOpenChange(false);
           },
-          onError: (err) => toast.error(getErrorMessage(err)),
+          onError: handleError,
         });
       }
     },
-    [isEdit, policy, create, update, onOpenChange],
+    [isEdit, policy, form, create, update, onOpenChange],
   );
 
   const policyType = form.watch("policyType") as HrPolicyType;
   const isActive = policy?.status === "active";
+  const handleActivated = useCallback(() => onOpenChange(false), [onOpenChange]);
 
   return (
     <HrSheet
@@ -234,7 +265,7 @@ export function PolicyUpsertSheet({ open, onOpenChange, policy }: Props) {
                   <FormItem>
                     <FormLabel className={LABEL_CLASS}>Effective From</FormLabel>
                     <FormControl>
-                      <Input type="date" className="text-sm" {...field} disabled={isActive} />
+                      <DatePicker value={field.value ?? ""} onChange={field.onChange} placeholder="Pick a date" dateFormat="dd MMM yyyy" clearable disabled={isActive} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -247,7 +278,7 @@ export function PolicyUpsertSheet({ open, onOpenChange, policy }: Props) {
                   <FormItem>
                     <FormLabel className={LABEL_CLASS}>Effective To</FormLabel>
                     <FormControl>
-                      <Input type="date" className="text-sm" {...field} disabled={isActive} />
+                      <DatePicker value={field.value ?? ""} onChange={field.onChange} placeholder="Pick a date" dateFormat="dd MMM yyyy" clearable disabled={isActive} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -316,7 +347,9 @@ export function PolicyUpsertSheet({ open, onOpenChange, policy }: Props) {
               <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                 Versions &amp; Activation
               </p>
-              <PolicyVersionHistory policy={policy} canManage={canManage} />
+              <PolicyVersionHistory policy={policy} canManage={canManage} onActivated={handleActivated}
+                unsavedChanges={form.formState.isDirty}
+              />
             </div>
           )}
         </div>

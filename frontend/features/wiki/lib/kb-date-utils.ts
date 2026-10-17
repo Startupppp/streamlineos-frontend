@@ -12,6 +12,21 @@ export function kbTimeAgo(date: string | Date): string {
   return "just now";
 }
 
+export function kbTimeUntil(date: string | Date): string {
+  if (!date) return "";
+  const time = typeof date === "string" ? new Date(date).getTime() : date.getTime();
+  if (isNaN(time)) return "";
+  const diff = time - Date.now();
+  if (diff <= 0) return "Expired";
+  const minutes = Math.floor(diff / 60_000);
+  const hours = Math.floor(minutes / 60);
+  const days = Math.floor(hours / 24);
+  if (days > 0) return `Expires in ${days}d`;
+  if (hours > 0) return `Expires in ${hours}h`;
+  if (minutes > 0) return `Expires in ${minutes}m`;
+  return "Expires soon";
+}
+
 export function kbFormatDate(date: string | Date): string {
   if (!date) return "";
   const d = typeof date === "string" ? new Date(date) : date;

@@ -15,6 +15,7 @@ function derivedComponents(settlement: FnfGetOne): LocalFnfComponent[] {
   const all: LocalFnfComponent[] = [
     { label: "Pending Salary", amount: settlement.basicDues, type: "credit" },
     { label: "Leave Encashment", amount: settlement.leaveEncashment, type: "credit" },
+    { label: "Gratuity", amount: settlement.gratuity, type: "credit" },
     { label: "Bonus Due", amount: settlement.bonusDue, type: "credit" },
     { label: "Reimbursements", amount: settlement.reimbursementsDue, type: "credit" },
     { label: "Loan Recovery", amount: settlement.loanRecovery, type: "deduction" },
@@ -35,7 +36,7 @@ export function FnfStatementView({ settlement, statement }: FnfStatementViewProp
       <div className="flex flex-col gap-0.5">
         <div className="flex items-center gap-2 flex-wrap">
           <span className="text-sm font-semibold">{statement.employee.name}</span>
-          <FnfStatusBadge status={statement.status} />
+          <FnfStatusBadge status={settlement.status} />
         </div>
         <span className="text-dense text-muted-foreground">{statement.employee.email}</span>
         <span className="text-micro text-muted-foreground">Settlement #{settlement.id}</span>

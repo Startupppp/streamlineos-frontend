@@ -1,7 +1,17 @@
 "use client";
 
+import { useEffect, useRef, useState } from "react";
+import { AlertTriangle, CheckCircle2, Clock, Copy, Flag, HelpCircle, MessageSquareWarning, ThumbsDown, ThumbsUp } from "lucide-react";
+import { toast } from "sonner";
 import { AnimatedLogo } from "@/components/brand/animated-logo";
+import { statusToneClasses } from "@/lib/design-tokens";
+import { getErrorMessage } from "@/lib/get-error-message";
+import { useKbAiAnswerFeedback, useCreateKbKnowledgeGap } from "@/hooks/api/kb/ask";
 import type { ChatMessage } from "@/components/kb/kb-chat-bubble";
+import type { KbAskCitationWithParts } from "@/hooks/api/kb/ask-result-schema";
+
+const warningTone = statusToneClasses("warning");
+const successTone = statusToneClasses("success");
 
 export type KbHistoryRow =
   | { type: "sep"; id: string; label: string }
@@ -47,6 +57,21 @@ export function buildKbHistoryRows(messages: ChatMessage[]): KbHistoryRow[] {
   return rows;
 }
 
+export function questionForAssistantId(messages: ChatMessage[]): Map<string, string> {
+  const questionById = new Map<string, string>();
+  let lastQuestion: string | null = null;
+  for (const message of messages) {
+    if (message.role === "user") {
+      lastQuestion = message.content;
+      continue;
+    }
+    if (message.role === "assistant" && lastQuestion !== null) {
+      questionById.set(message.id, lastQuestion);
+    }
+  }
+  return questionById;
+}
+
 export function DaySeparator({ label }: { label: string }) {
   return (
     <div className="flex items-center justify-center py-0.5">
@@ -73,14 +98,14 @@ export function EmptyChat({
           Answers are grounded in your uploaded files, notes and wiki pages.
         </p>
       </div>
-      <div className="flex flex-wrap justify-center gap-2">
+      <div className="flex w-full max-w-full flex-wrap justify-center gap-2 px-2">
         {KB_SUGGESTIONS.map((s) => (
           <button
             key={s}
             type="button"
             data-suggestion={s}
             onClick={onSuggestion}
-            className="rounded-full border border-border bg-background px-3 py-1.5 text-xs text-muted-foreground transition-colors hover:border-accent hover:text-foreground"
+            className="max-w-full whitespace-normal rounded-full border border-border bg-background px-3 py-1.5 text-left text-xs text-muted-foreground transition-colors hover:border-accent hover:text-foreground"
           >
             {s}
           </button>
@@ -90,3 +115,318 @@ export function EmptyChat({
   );
 }
 
+export function CreateKnowledgeGapButton({ question, spaceId }: { question: string; spaceId?: number }) {
+  const createGap = useCreateKbKnowledgeGap();
+  const [created, setCreated] = useState(false);
+
+  function handleCreate() {
+    createGap.mutate(
+      { question, ...(spaceId !== undefined ? { spaceId } : {}) },
+      {
+        onSuccess: () => {
+          setCreated(true);
+          toast.success("Flagged for the content team");
+        },
+        onError: (error: unknown) => toast.error(getErrorMessage(error)),
+      },
+    );
+  }
+
+  if (created) {
+    return <span className="text-micro text-muted-foreground">Knowledge gap flagged</span>;
+  }
+
+  return (
+    <button
+      type="button"
+      onClick={handleCreate}
+      disabled={createGap.isPending}
+      aria-label="Create a knowledge gap for this question"
+      className="inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-dense text-muted-foreground transition-colors hover:text-foreground"
+    >
+      <HelpCircle className="h-3 w-3 shrink-0" aria-hidden="true" />
+      Create knowledge gap
+    </button>
+  );
+}
+
+export function InsufficientEvidenceBanner({ question, spaceId }: { question?: string; spaceId?: number }) {
+  return (
+    <div
+      role="status"
+      aria-live="polite"
+      className={`flex items-start gap-3 rounded-xl border px-4 py-3 text-sm ${warningTone.rule} ${warningTone.surface} ${warningTone.inkStrong}`}
+    >
+      <MessageSquareWarning className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
+      <div>
+        <p className="font-semibold">No relevant content found</p>
+        <p className={`mt-0.5 text-xs ${warningTone.ink}`}>
+          The knowledge base does not contain anything that answers this question. Consider uploading relevant files or adding a note.
+        </p>
+        {question ? (
+          <div className="mt-1.5">
+            <CreateKnowledgeGapButton question={question} spaceId={spaceId} />
+          </div>
+        ) : null}
+      </div>
+    </div>
+  );
+}
+
+export function OverQuotaBanner({ limit }: { limit: string }) {
+  return (
+    <div
+      role="alert"
+      className="flex items-start gap-3 rounded-xl border border-destructive/30 bg-destructive/5 px-4 py-3 text-sm text-destructive"
+    >
+      <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
+      <div>
+        <p className="font-semibold">AI quota reached</p>
+        <p className="mt-0.5 text-xs">
+          {limit}. Contact your administrator or upgrade your plan to continue.
+        </p>
+      </div>
+    </div>
+  );
+}
+
+interface CitationPassageProps {
+  citation: KbAskCitationWithParts;
+  index: number;
+}
+
+export function CitationPassage({ citation, index }: CitationPassageProps) {
+  if (!citation.passage) return null;
+  return (
+    <blockquote className="mt-1.5 border-l-2 border-accent/40 pl-3 text-xs text-muted-foreground italic">
+      {citation.passage}
+      <span className="not-italic text-dense text-accent ml-1">— source {index + 1}</span>
+    </blockquote>
+  );
+}
+
+interface FreshnessTagProps {
+  updatedAt: string;
+}
+
+export function FreshnessTag({ updatedAt }: FreshnessTagProps) {
+  const date = new Date(updatedAt);
+  if (!Number.isFinite(date.getTime())) return null;
+  const now = Date.now();
+  const ageMs = now - date.getTime();
+  const ageDays = Math.floor(ageMs / 86_400_000);
+  const stale = ageDays > 90;
+  const label = ageDays === 0
+    ? "Updated today"
+    : ageDays === 1
+    ? "Updated yesterday"
+    : ageDays < 30
+    ? `Updated ${ageDays}d ago`
+    : `Updated ${date.toLocaleDateString(undefined, { month: "short", year: "numeric" })}`;
+  return (
+    <span
+      aria-label={label}
+      className={`inline-flex items-center gap-0.5 text-micro ${stale ? warningTone.ink : "text-muted-foreground"}`}
+    >
+      <Clock className="h-2.5 w-2.5 shrink-0" aria-hidden="true" />
+      {label}
+    </span>
+  );
+}
+
+interface VerificationBadgeProps {
+  verified?: boolean;
+}
+
+export function VerificationBadge({ verified }: VerificationBadgeProps) {
+  const label = verified === true ? "Verified" : verified === false ? "Not verified" : "Verification unavailable";
+  const accessibleLabel = verified === true ? "Verified source" : verified === false ? "Not verified source" : label;
+  return (
+    <span
+      aria-label={accessibleLabel}
+      className={`inline-flex items-center gap-0.5 text-micro ${verified === true ? successTone.ink : warningTone.ink}`}
+    >
+      {verified === true ? <CheckCircle2 className="h-2.5 w-2.5 shrink-0" aria-hidden="true" /> : <HelpCircle className="h-2.5 w-2.5 shrink-0" aria-hidden="true" />}
+      {label}
+    </span>
+  );
+}
+
+function citationEvidenceKey(citation: KbAskCitationWithParts): string {
+  if (citation.kind === "page") return `page-${citation.pageId}-${citation.passage ?? ""}`;
+  if (citation.kind === "source") return `source-${citation.sourceId}-${citation.passage ?? ""}`;
+  if (citation.kind === "document") return `document-${citation.linkedDocumentId}-${citation.passage ?? ""}`;
+  return `article-${citation.articleId}-${citation.passage ?? ""}`;
+}
+
+export function CitationEvidenceList({ citations }: { citations: KbAskCitationWithParts[] }) {
+  if (citations.length === 0) return null;
+  const seen = new Set<string>();
+  // The Sources chips already name every citation; a row here without a passage would only
+  // repeat the title (KB-B-027).
+  const evidence = citations.filter((citation) => {
+    if (!citation.passage) return false;
+    const key = citationEvidenceKey(citation);
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+  if (evidence.length === 0) return null;
+  return (
+    <ul className="mt-2 space-y-2 border-t border-border/60 pt-2">
+      {evidence.map((citation, index) => (
+        <li key={citationEvidenceKey(citation)}>
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="text-dense font-medium text-foreground">{citation.title}</span>
+            <FreshnessTag updatedAt={citation.updatedAt} />
+            <VerificationBadge verified={citation.verified} />
+          </div>
+          <CitationPassage citation={citation} index={index} />
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+interface DisagreementBannerProps {
+  summary: string;
+}
+
+export function DisagreementBanner({ summary }: DisagreementBannerProps) {
+  return (
+    <div
+      role="note"
+      className={`mt-2 flex items-start gap-2 rounded-lg border px-3 py-2 text-xs ${warningTone.rule} ${warningTone.surface} ${warningTone.ink}`}
+    >
+      <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+      <span><span className="font-semibold">Sources disagree:</span> {summary}</span>
+    </div>
+  );
+}
+
+export function CopyAnswerButton({ text }: { text: string }) {
+  const [copied, setCopied] = useState(false);
+  const mounted = useRef(false);
+  const copySequence = useRef(0);
+  const resetTimer = useRef<number | null>(null);
+
+  useEffect(() => {
+    mounted.current = true;
+    return () => {
+      mounted.current = false;
+      if (resetTimer.current !== null) window.clearTimeout(resetTimer.current);
+    };
+  }, []);
+
+  function handleCopy() {
+    const sequence = ++copySequence.current;
+    navigator.clipboard.writeText(text).then(
+      () => {
+        if (!mounted.current || sequence !== copySequence.current) return;
+        if (resetTimer.current !== null) window.clearTimeout(resetTimer.current);
+        setCopied(true);
+        resetTimer.current = window.setTimeout(() => {
+          resetTimer.current = null;
+          setCopied(false);
+        }, 2000);
+      },
+      () => {
+        if (mounted.current && sequence === copySequence.current)
+          toast.error("Could not copy the answer");
+      },
+    );
+  }
+
+  return (
+    <button
+      type="button"
+      onClick={handleCopy}
+      aria-label={copied ? "Answer copied" : "Copy answer"}
+      className="inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-dense text-muted-foreground transition-colors hover:text-foreground"
+    >
+      {copied ? (
+        <CheckCircle2 className="h-3 w-3 shrink-0" aria-hidden="true" />
+      ) : (
+        <Copy className="h-3 w-3 shrink-0" aria-hidden="true" />
+      )}
+      {copied ? "Copied" : "Copy"}
+    </button>
+  );
+}
+
+type AnswerFeedbackRating = "helpful" | "not_helpful" | "missing_source";
+
+export function AnswerFeedbackBar({
+  question,
+  onSubmitted,
+}: {
+  question: string;
+  onSubmitted?: () => void;
+}) {
+  const feedback = useKbAiAnswerFeedback();
+  const [given, setGiven] = useState(false);
+
+  function submit(rating: AnswerFeedbackRating, comment?: string) {
+    feedback.mutate(
+      { rating, question, comment },
+      {
+        onSuccess: () => {
+          setGiven(true);
+          toast.success("Thanks for the feedback");
+          onSubmitted?.();
+        },
+        onError: (error: unknown) => toast.error(getErrorMessage(error)),
+      },
+    );
+  }
+
+  function handleHelpful() {
+    submit("helpful");
+  }
+
+  function handleNotHelpful() {
+    submit("not_helpful");
+  }
+
+  function handleReportWrongOrStale() {
+    submit("not_helpful", "Reported as wrong or stale");
+  }
+
+  if (given) {
+    return <p className="pt-1 text-micro text-muted-foreground">Thanks for the feedback</p>;
+  }
+
+  return (
+    <div className="flex flex-wrap items-center gap-1 pt-1">
+      <span className="mr-1 text-micro text-muted-foreground">Helpful?</span>
+      <button
+        type="button"
+        onClick={handleHelpful}
+        disabled={feedback.isPending}
+        aria-label="Mark answer as helpful"
+        className="inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-dense text-muted-foreground transition-colors hover:text-foreground"
+      >
+        <ThumbsUp className="h-3 w-3 shrink-0" aria-hidden="true" />
+      </button>
+      <button
+        type="button"
+        onClick={handleNotHelpful}
+        disabled={feedback.isPending}
+        aria-label="Mark answer as not helpful"
+        className="inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-dense text-muted-foreground transition-colors hover:text-foreground"
+      >
+        <ThumbsDown className="h-3 w-3 shrink-0" aria-hidden="true" />
+      </button>
+      <button
+        type="button"
+        onClick={handleReportWrongOrStale}
+        disabled={feedback.isPending}
+        aria-label="Report answer as wrong or stale"
+        className="inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-dense text-muted-foreground transition-colors hover:text-foreground"
+      >
+        <Flag className="h-3 w-3 shrink-0" aria-hidden="true" />
+        Report wrong or stale
+      </button>
+    </div>
+  );
+}

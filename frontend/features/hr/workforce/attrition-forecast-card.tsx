@@ -13,6 +13,8 @@ import {
 import { useHrAttritionForecast } from "@/hooks/api/hr/workforce";
 import { ErrorState } from "@/components/shared/error-state";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { PageState } from "@/components/shared/page-state";
+import { usePageState } from "@/hooks/api/use-page-state";
 import {
   AnalyticsChartCard,
   SectionSkeleton,
@@ -25,6 +27,13 @@ import {
 
 export function AttritionForecastCard() {
   const { data, isLoading, isError, error, refetch } = useHrAttritionForecast();
+
+  const forecastAccess = usePageState({
+    permission: "hr:analytics:read",
+    isLoading: false,
+    isError: false,
+    error: null,
+  });
 
   function handleRetry(): void {
     void refetch();
@@ -40,13 +49,18 @@ export function AttritionForecastCard() {
 
   return (
     <AnalyticsChartCard title="Attrition Forecast (Trend-Based Estimate — Not a Prediction)">
-      {isLoading ? (
+      {forecastAccess.kind !== "ready" ? (
+        <PageState resolution={forecastAccess} loading={null} compact>
+          {null}
+        </PageState>
+      ) : isLoading ? (
         <SectionSkeleton rows={8} />
       ) : isError ? (
         <ErrorState
           compact
           className="border-0 bg-transparent shadow-none"
           title="Couldn't load attrition forecast"
+          error={error}
           description={getErrorMessage(error)}
           onRetry={handleRetry}
         />

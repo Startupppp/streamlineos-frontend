@@ -2,7 +2,10 @@
 
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { delegateApprovalSchema, type DelegateApprovalValues } from "./approvals-schema";
+import {
+  delegateApprovalSchema,
+  type DelegateApprovalValues,
+} from "./approvals-schema";
 import {
   Dialog,
   DialogContent,
@@ -28,38 +31,42 @@ import {
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
-import type { OrgMember } from "@/types/organization";
+import type { DirectoryMember } from "@/hooks/api/members/use-member-directory";
+import { useSubmitGuard } from "@/hooks/common/use-submit-guard";
 
 interface DelegateDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onConfirm: (approverId: string) => void;
-  isPending?: boolean;
-  members: OrgMember[];
+  onConfirm: (approverId: string) => Promise<void>;
+  members: DirectoryMember[];
   currentApproverId?: string | null;
+  requesterId?: string | null;
 }
 
 export function DelegateDialog({
   open,
   onOpenChange,
   onConfirm,
-  isPending,
   members,
   currentApproverId,
+  requesterId,
 }: DelegateDialogProps) {
   const form = useForm<DelegateApprovalValues>({
     resolver: zodResolver(delegateApprovalSchema),
     defaultValues: { approverId: "" },
   });
+  const guard = useSubmitGuard(onConfirm);
 
-  const candidates = members.filter((m) => m.userId !== currentApproverId);
+  const candidates = members.filter(
+    (m) => m.id !== currentApproverId && m.id !== requesterId,
+  );
 
-  function handleSubmit(values: DelegateApprovalValues) {
-    onConfirm(values.approverId);
+  async function handleSubmit(values: DelegateApprovalValues) {
+    await guard.submit(values.approverId);
   }
 
   function handleOpenChange(open: boolean) {
-    if (!open && isPending) return;
+    if (!open && guard.isSubmitting) return;
     if (!open) form.reset();
     onOpenChange(open);
   }
@@ -69,10 +76,15 @@ export function DelegateDialog({
       <DialogContent className="sm:max-w-sm">
         <DialogHeader>
           <DialogTitle>Delegate Approval</DialogTitle>
-          <DialogDescription>Reassign this approval to another team member.</DialogDescription>
+          <DialogDescription>
+            Reassign this approval to another team member.
+          </DialogDescription>
         </DialogHeader>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
+          <form
+            onSubmit={form.handleSubmit(handleSubmit)}
+            className="space-y-4"
+          >
             <FormField
               control={form.control}
               name="approverId"
@@ -87,7 +99,7 @@ export function DelegateDialog({
                     </FormControl>
                     <SelectContent>
                       {candidates.map((m) => (
-                        <SelectItem key={m.userId} value={m.userId}>
+                        <SelectItem key={m.id} value={m.id}>
                           {m.name ?? m.email}
                         </SelectItem>
                       ))}
@@ -106,7 +118,12 @@ export function DelegateDialog({
               >
                 Cancel
               </Button>
-              <LoadingButton type="submit" size="sm" isPending={isPending} loadingText="Delegating…">
+              <LoadingButton
+                type="submit"
+                size="sm"
+                isPending={guard.isSubmitting}
+                loadingText="Delegating…"
+              >
                 Delegate
               </LoadingButton>
             </DialogFooter>

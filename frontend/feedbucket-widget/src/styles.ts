@@ -1,6 +1,17 @@
+/**
+ * Below the desktop shell the launcher's default anchor -- right edge, vertically
+ * centred -- lands exactly where the app keeps its controls: the module switches
+ * on /settings/modules, a table's trailing columns, a plan card's CTA
+ * (SETTINGS-012, SETTINGS-013). The max-width: 1023px block docks it to the
+ * bottom-left corner instead, clear of the bottom nav and of the right-hand rail
+ * of controls, and lays it flat so it is one button tall rather than four.
+ *
+ * Its :not(.positioned) arm leaves a launcher the reader has dragged where they
+ * put it -- DragManager writes inline left/top, which this could not beat anyway.
+ */
 export function getStyles(): string {
   return `
-:host { all: initial; }
+:host { all: initial; position: relative; z-index: 40; }
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 [hidden] { display: none !important; }
 
@@ -14,6 +25,7 @@ export function getStyles(): string {
   font-size: 14px;
   line-height: 1.5;
   color: #0b1220;
+  pointer-events: none;
 }
 .widget.positioned { transform: none; }
 .widget.dragging {
@@ -34,19 +46,20 @@ export function getStyles(): string {
   flex-direction: column;
   align-items: center;
   gap: 2px;
-  padding: 6px;
+  padding: 4px;
   background: #ffffff;
   border: 1px solid #e6eaf0;
-  border-radius: 16px;
+  border-radius: 13px;
   box-shadow: 0 6px 24px rgba(11,18,32,0.16);
   transition: opacity 160ms ease;
+  pointer-events: auto;
 }
 .launcher-btn {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 38px;
-  height: 38px;
+  width: 32px;
+  height: 32px;
   background: none;
   border: none;
   border-radius: 11px;
@@ -56,23 +69,29 @@ export function getStyles(): string {
 }
 .launcher-btn:hover { background: #f1f5f9; color: #0b1220; }
 .launcher-btn:active { transform: scale(0.92); }
-.launcher-btn svg { width: 19px; height: 19px; }
+.launcher-btn svg { width: 17px; height: 17px; }
 .launcher-divider { width: 22px; height: 1px; background: #eef1f5; margin: 2px 0; }
+@media (min-width: 1024px) {
+  .launcher:not(:hover):not(:focus-within):not(.expanded) .launcher-btn,
+  .launcher:not(:hover):not(:focus-within):not(.expanded) .launcher-divider {
+    display: none;
+  }
+}
 .launcher-logo {
   position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 38px;
-  height: 38px;
-  border-radius: 11px;
+  width: 32px;
+  height: 32px;
+  border-radius: 9px;
   color: #6366f1;
   cursor: grab;
   touch-action: none;
 }
 .launcher-logo:hover { background: #f1f5f9; }
 .launcher-logo:active { cursor: grabbing; }
-.launcher-logo svg { width: 20px; height: 20px; transition: opacity 120ms ease; }
+.launcher-logo svg { width: 17px; height: 17px; transition: opacity 120ms ease; }
 .launcher-logo .grip-overlay {
   position: absolute;
   width: 16px;
@@ -304,7 +323,30 @@ export function getStyles(): string {
   transition: opacity 180ms ease, visibility 0ms;
 }
 
+/* SETTINGS-012/013: dock clear of the app's right-hand controls below the desktop shell. */
+@media (max-width: 1023px) {
+  .launcher:not(:focus-within):not(.expanded) .launcher-btn,
+  .launcher:not(:focus-within):not(.expanded) .launcher-divider {
+    display: none;
+  }
+  .widget:not(.positioned) {
+    top: auto;
+    right: auto;
+    bottom: calc(env(safe-area-inset-bottom, 0px) + 76px);
+    left: 12px;
+    transform: none;
+  }
+  .launcher { flex-direction: row; }
+  .launcher-divider {
+    width: 1px;
+    height: 22px;
+    margin: 0 2px;
+  }
+}
+
 @media (max-width: 480px) {
+  .launcher { padding: 4px; }
+  .launcher-logo, .launcher-btn { width: 34px; height: 34px; }
   .panel.is-sheet .panel-header { padding: 12px 14px; }
   .panel.is-sheet .panel-body { padding: 14px; }
   .panel.is-sheet .result-view { padding: 28px 16px; }

@@ -1,10 +1,7 @@
 "use client";
 
-import { useState, useCallback } from "react";
-import {
-  useIntakeRequests, useCreateIntakeRequest, useUpdateIntakeRequest,
-  useProjectMembers, useCycles, useModules,
-} from "@/hooks/api/build";
+import { useState, useCallback, useEffect, useMemo, useRef } from "react";
+import { useIntakeRequests } from "@/hooks/api/build/intake";
 import { useCan } from "@/hooks/api/access";
 import { usePageState } from "@/hooks/api/use-page-state";
 import { PageWrapper } from "@/components/ui/page-wrapper";
@@ -13,47 +10,110 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { EmptyInboxIllustration } from "@/components/illustrations";
 import { EmptyState } from "@/components/ui/empty-state";
-import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, SheetBody } from "@/components/ui/sheet";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
+import {
+  CONTENT_FILL_PANEL,
+  PAGE_BODY_EMPTY_CLASS,
+} from "@/components/ui/content-fill-panel";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
-} from "@/components/ui/select";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Plus, ExternalLink } from "lucide-react";
-import { getErrorMessage } from "@/lib/get-error-message";
-import { getUserDisplayName } from "@/lib/person-display";
-import { useRegisterDirtyState } from "@/components/shared/dirty-state-context";
-import { useForm, Controller, useController } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { toast } from "sonner";
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+  TABS_CONTENT_PAGE_BODY_CLASS,
+} from "@/components/ui/tabs";
+import { TablePagination } from "@/components/ui/table-pagination";
+import { ListChecks } from "lucide-react";
+import {
+  BUILD_FILTER_ALL,
+  useBuildListFilters,
+} from "@/features/build/shared/use-build-list-filters";
+import { BuildFilterSelect } from "@/features/build/shared/build-filter-select";
+import { BuildPaginatedContent } from "@/features/build/shared/build-paginated-content";
+import { useBuildCursorPager } from "@/features/build/shared/use-build-cursor-pager";
+import { IntakeDecisionDialog } from "@/features/build/intake/components/intake-decision-dialog";
 import { IntakeItemCard } from "@/features/build/intake/intake-item-card";
-import {
-  PmPageShell,
-  PmSection,
-  PmStaggerList,
-} from "@/components/pm-chrome";
-import { LoadingButton } from "@/components/ui/loading-button";
-import {
-  createIntakeSchema,
-  type CreateIntakeForm,
-  acceptSchema,
-  type AcceptForm,
-  declineIntakeSchema,
-  type DeclineIntakeForm,
-} from "@/features/build/intake/intake-schema";
+import { IntakeTriageMode } from "@/features/build/intake/intake-triage-mode";
+import { IntakeCreateSheet } from "@/features/build/intake/components/intake-create-sheet";
+import { IntakeShareControls } from "@/features/build/intake/intake-share-controls";
+import { PmPageShell, PmSection, PmStaggerList } from "@/components/pm-chrome";
+import type {
+  IntakeSource,
+  IntakeStatus,
+  IntakeStatusCounts,
+} from "@/types/projects";
 
-const WORK_STATES = ["backlog", "todo", "in_progress", "done", "cancelled"] as const;
+const PAGE_SIZE = 50;
+const EMPTY_STATUS_COUNTS: IntakeStatusCounts = {
+  pending: 0,
+  accepted: 0,
+  declined: 0,
+  duplicate: 0,
+};
+const INTAKE_STATUS_OPTIONS = [
+  "pending",
+  "accepted",
+  "declined",
+  "duplicate",
+] as const satisfies readonly IntakeStatus[];
+const INTAKE_TAB_OPTIONS = [...INTAKE_STATUS_OPTIONS, "all"] as const;
+const INTAKE_MODE_OPTIONS = ["triage"] as const;
+const INTAKE_SOURCE_OPTIONS = [
+  "manual",
+  "web_form",
+  "email",
+  "feedbucket",
+  "portal_client",
+] as const;
+const INTAKE_SOURCE_FILTERS = [
+  { value: BUILD_FILTER_ALL, label: "All sources" },
+  { value: "manual", label: "Manual" },
+  { value: "web_form", label: "Form" },
+  { value: "email", label: "Email" },
+  { value: "feedbucket", label: "Feedbucket" },
+  { value: "portal_client", label: "Portal" },
+] as const;
+const INTAKE_FILTER_DEFINITIONS = [
+  { param: "tab", all: "pending", options: INTAKE_TAB_OPTIONS },
+  { param: "mode", all: "list", options: INTAKE_MODE_OPTIONS },
+  { param: "source", options: INTAKE_SOURCE_OPTIONS },
+  { param: "view", options: ["bug-reports"] as const },
+] as const;
 
-export function IntakePage({ projectId }: { projectId: number }) {
+export function IntakePage({
+  projectId,
+  highlightId,
+  highlightRequested = highlightId !== undefined,
+}: {
+  projectId: number;
+  highlightId?: number;
+  highlightRequested?: boolean;
+}) {
   const [createOpen, setCreateOpen] = useState(false);
-  const [acceptOpen, setAcceptOpen] = useState(false);
-  const [declineOpen, setDeclineOpen] = useState(false);
-  const [selectedItemId, setSelectedItemId] = useState<number | null>(null);
-  const [activeTab, setActiveTab] = useState("pending");
+  const highlightRef = useRef<HTMLDivElement>(null);
+  const listFilters = useBuildListFilters({
+    filters: INTAKE_FILTER_DEFINITIONS,
+    withSearch: false,
+  });
+  const pager = useBuildCursorPager(listFilters.resetKey);
+  const urlTab = listFilters.value("tab");
+  const triageMode = listFilters.value("mode") === "triage";
+  const sourceValue = listFilters.value("source");
+  const bugReportsView = listFilters.value("view") === "bug-reports";
+  const widenForHighlight = Boolean(
+    highlightRequested && urlTab === "pending" && !triageMode,
+  );
+  const activeTab = widenForHighlight ? "all" : urlTab;
+  const sourceParam: IntakeSource | undefined =
+    sourceValue !== BUILD_FILTER_ALL
+      ? (INTAKE_SOURCE_OPTIONS.find((source) => source === sourceValue) ??
+        (bugReportsView ? "feedbucket" : undefined))
+      : bugReportsView
+        ? "feedbucket"
+        : undefined;
+  const statusParam: IntakeStatus | undefined = triageMode
+    ? "pending"
+    : INTAKE_STATUS_OPTIONS.find((status) => status === activeTab);
 
   const {
     data: intakeData,
@@ -61,374 +121,311 @@ export function IntakePage({ projectId }: { projectId: number }) {
     isError,
     error,
     refetch,
-  } = useIntakeRequests(projectId);
-  const { data: members } = useProjectMembers(projectId);
-  const { data: cycles } = useCycles(projectId);
-  const { data: modules } = useModules(projectId);
-
-  const createMutation = useCreateIntakeRequest();
-  const updateMutation = useUpdateIntakeRequest();
-
-  const createForm = useForm<CreateIntakeForm>({ resolver: zodResolver(createIntakeSchema) });
-  const acceptForm = useForm<AcceptForm>({ resolver: zodResolver(acceptSchema) });
-  const declineForm = useForm<DeclineIntakeForm>({ resolver: zodResolver(declineIntakeSchema) });
-  useRegisterDirtyState(
-    (createOpen && createForm.formState.isDirty) ||
-    (acceptOpen && acceptForm.formState.isDirty) ||
-    (declineOpen && declineForm.formState.isDirty),
-  );
-
-  const { field: assigneeIdField } = useController({ control: acceptForm.control, name: "assigneeId" });
-  const { field: cycleIdField } = useController({ control: acceptForm.control, name: "cycleId" });
-  const { field: moduleIdField } = useController({ control: acceptForm.control, name: "moduleId" });
-
-  const handleAssigneeChange = useCallback(
-    (v: string) => assigneeIdField.onChange(v || undefined),
-    [assigneeIdField]
-  );
-  const handleCycleChange = useCallback(
-    (v: string) => cycleIdField.onChange(v ? parseInt(v) : undefined),
-    [cycleIdField]
-  );
-  const handleModuleChange = useCallback(
-    (v: string) => moduleIdField.onChange(v ? parseInt(v) : undefined),
-    [moduleIdField]
-  );
-
-  const onCreateSubmit = useCallback((data: CreateIntakeForm) => {
-    createMutation.mutate(
-      { ...data, projectId },
-      {
-        onSuccess: () => {
-          setCreateOpen(false);
-          createForm.reset();
-          toast.success("Intake item created");
-        },
-        onError: (err) => toast.error(getErrorMessage(err)),
-      }
-    );
-  }, [createMutation, projectId, createForm]);
-
-  const onAcceptSubmit = useCallback((_: AcceptForm) => {
-    if (selectedItemId === null) return;
-    updateMutation.mutate(
-      { intakeRequestId: selectedItemId, projectId, status: "accepted" },
-      {
-        onSuccess: () => {
-          setAcceptOpen(false);
-          acceptForm.reset();
-          toast.success("Item accepted and work item created");
-        },
-        onError: (err) => toast.error(getErrorMessage(err)),
-      }
-    );
-  }, [selectedItemId, updateMutation, projectId, acceptForm]);
-
-  const onDeclineSubmit = useCallback((data: DeclineIntakeForm) => {
-    if (selectedItemId === null) return;
-    updateMutation.mutate(
-      { intakeRequestId: selectedItemId, projectId, status: "declined", declineReason: data.reason },
-      {
-        onSuccess: () => {
-          setDeclineOpen(false);
-          declineForm.reset();
-          toast.success("Item declined");
-        },
-        onError: (err) => toast.error(getErrorMessage(err)),
-      }
-    );
-  }, [selectedItemId, updateMutation, projectId, declineForm]);
-
-  const handleAccept = useCallback((itemId: number) => {
-    setSelectedItemId(itemId);
-    acceptForm.reset();
-    setAcceptOpen(true);
-  }, [acceptForm]);
-
-  const handleDecline = useCallback((itemId: number) => {
-    setSelectedItemId(itemId);
-    declineForm.reset();
-    setDeclineOpen(true);
-  }, [declineForm]);
-
-  const handleDuplicate = useCallback((itemId: number) => {
-    updateMutation.mutate(
-      { intakeRequestId: itemId, projectId, status: "duplicate" },
-      {
-        onSuccess: () => toast.success("Item marked as duplicate"),
-        onError: (err) => toast.error(getErrorMessage(err)),
-      }
-    );
-  }, [updateMutation, projectId]);
-
+  } = useIntakeRequests(projectId, {
+    status: statusParam,
+    source: sourceParam,
+    cursor: pager.cursor,
+    limit: PAGE_SIZE,
+  });
   const canManage = useCan("build:workspace:manage");
-  const pageState = usePageState({ permission: "build:view", isLoading, isError, error });
+  const pageState = usePageState({
+    permission: "build:view",
+    isLoading,
+    isError,
+    error,
+  });
 
   const handleRetry = useCallback(() => {
     void refetch();
   }, [refetch]);
 
-  const handleCopyFormUrl = useCallback(() => {
-    const formUrl = `${typeof window !== "undefined" ? window.location.origin : ""}/intake/${projectId}`;
-    navigator.clipboard.writeText(formUrl);
-    toast.success("Form URL copied to clipboard");
-  }, [projectId]);
+  function handleOpenCreate(): void {
+    setCreateOpen(true);
+  }
+  function handleEnterTriage(): void {
+    listFilters.setValue("mode", "triage");
+  }
+  function handleExitTriage(): void {
+    listFilters.setValue("mode", "list");
+  }
+  function handleTabChange(value: string): void {
+    listFilters.setValue("tab", value);
+  }
+  function handleSourceChange(value: string): void {
+    listFilters.setValue("source", value);
+  }
+  function handleNextPage(): void {
+    pager.goNext(intakeData?.pagination?.nextCursor);
+  }
+  const items = useMemo(() => intakeData?.data ?? [], [intakeData]);
+  const statusCounts = intakeData?.statusCounts ?? EMPTY_STATUS_COUNTS;
 
-  function handleOpenCreate(): void { setCreateOpen(true); }
-  function handleCloseCreate(): void { setCreateOpen(false); }
-  function handleCloseAccept(): void { setAcceptOpen(false); }
-  function handleCloseDecline(): void { setDeclineOpen(false); }
+  const highlightedItem =
+    highlightId !== undefined
+      ? (items.find((i) => i.id === highlightId) ?? null)
+      : null;
+  const highlightFound = highlightedItem !== null;
+  const listSettled = !isLoading && intakeData !== undefined;
+  const highlightNotFound =
+    highlightRequested && listSettled && highlightedItem === null;
 
-  const allItems = intakeData?.data ?? [];
-  const filteredItems = allItems.filter((item) => activeTab === "all" || item.status === activeTab);
-  const pendingCount = allItems.filter((i) => i.status === "pending").length;
+  useEffect(() => {
+    if (highlightRef.current) {
+      highlightRef.current.scrollIntoView({
+        block: "center",
+        behavior: "smooth",
+      });
+    }
+  }, [highlightFound]);
 
-  if (pageState.kind !== "ready" && pageState.kind !== "empty" && pageState.kind !== "loading") return (
-    <PageWrapper title="Intake" subtitle="Collect and triage incoming requests from your team or clients">
-      <PmPageShell>
-        <PageState resolution={pageState} loading={null} onRetry={handleRetry}>{null}</PageState>
-      </PmPageShell>
-    </PageWrapper>
+  const pendingItems = useMemo(
+    () => items.filter((i) => i.status === "pending"),
+    [items],
   );
+  const pendingCount = statusCounts.pending;
+  const sourceFiltered = sourceValue !== BUILD_FILTER_ALL || bugReportsView;
 
-  if (pageState.kind === "loading") return (
-    <PageWrapper title="Intake" subtitle="Collect and triage incoming requests from your team or clients">
-      <PmPageShell>
-        <div className="flex flex-1 min-h-0 flex-col gap-3">
-          {Array.from({ length: 5 }).map((_, i) => (
-            <Skeleton key={i} className="h-20 w-full rounded-xl" />
-          ))}
-        </div>
-      </PmPageShell>
-    </PageWrapper>
-  );
+  if (
+    pageState.kind !== "ready" &&
+    pageState.kind !== "empty" &&
+    pageState.kind !== "loading"
+  )
+    return (
+      <PageWrapper
+        title="Intake"
+        subtitle="Collect and triage incoming requests from your team or clients"
+      >
+        <PmPageShell>
+          <PageState
+            resolution={pageState}
+            loading={null}
+            onRetry={handleRetry}
+          >
+            {null}
+          </PageState>
+        </PmPageShell>
+      </PageWrapper>
+    );
+
+  if (pageState.kind === "loading")
+    return (
+      <PageWrapper
+        title="Intake"
+        subtitle="Collect and triage incoming requests from your team or clients"
+      >
+        <PmPageShell>
+          <div className="flex flex-1 min-h-0 flex-col gap-3">
+            {Array.from({ length: 5 }).map((_, i) => (
+              <Skeleton key={i} className="h-20 w-full rounded-xl" />
+            ))}
+          </div>
+        </PmPageShell>
+      </PageWrapper>
+    );
 
   return (
-    <PageWrapper
-      title="Intake"
-      subtitle="Collect and triage incoming requests from your team or clients"
-      actions={
-        <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm" onClick={handleCopyFormUrl}>
-            <ExternalLink className="h-4 w-4 mr-1" /> Copy Form URL
-          </Button>
-          {canManage ? (
-          <Sheet open={createOpen} onOpenChange={setCreateOpen}>
-            <SheetTrigger asChild>
-              <Button size="sm">
-                <Plus className="h-4 w-4 mr-1" /> New Item
-              </Button>
-            </SheetTrigger>
-            <SheetContent side="right" className="sm:max-w-md p-0 flex flex-col gap-0">
-              <SheetHeader className="shrink-0 px-6 py-4 border-b text-left gap-1">
-                <SheetTitle>Create Intake Item</SheetTitle>
-              </SheetHeader>
-              <SheetBody className="px-6 py-5">
-                <form id="create-intake-form" onSubmit={createForm.handleSubmit(onCreateSubmit)} className="space-y-4">
-                  <div>
-                    <Label htmlFor="intake-title">Title</Label>
-                    <Input id="intake-title" {...createForm.register("title")} />
-                    {createForm.formState.errors.title && (
-                      <p className="text-xs text-destructive mt-1" aria-live="polite">{createForm.formState.errors.title.message}</p>
-                    )}
-                  </div>
-                  <div>
-                    <Label htmlFor="intake-desc">Description</Label>
-                    <Textarea id="intake-desc" {...createForm.register("description")} />
-                  </div>
-                </form>
-              </SheetBody>
-              <div className="shrink-0 px-6 py-4 border-t">
-                <div className="grid grid-cols-2 gap-2">
-                  <Button variant="outline" size="sm" onClick={handleCloseCreate}>Cancel</Button>
-                  <LoadingButton
-                    size="sm"
-                    type="submit"
-                    form="create-intake-form"
-                    isPending={createMutation.isPending}
-                    loadingText="Creating…"
-                  >
-                    Create Item
-                  </LoadingButton>
-                </div>
-              </div>
-            </SheetContent>
-          </Sheet>
-          ) : null}
-        </div>
-      }
-    >
-      <PmPageShell>
-        <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <PmSection index={0}>
-            <TabsList>
-              <TabsTrigger value="pending">
-                Pending
-                {pendingCount > 0 ? (
-                  <Badge variant="secondary" className="ml-1.5 h-5 px-1.5 text-xs">
-                    {pendingCount}
-                  </Badge>
-                ) : null}
-              </TabsTrigger>
-              <TabsTrigger value="accepted">Accepted</TabsTrigger>
-              <TabsTrigger value="declined">Declined</TabsTrigger>
-              <TabsTrigger value="all">All</TabsTrigger>
-            </TabsList>
-          </PmSection>
-
-          <TabsContent value={activeTab} className="mt-4">
-            {filteredItems.length === 0 ? (
-              <EmptyState
-                illustration={<EmptyInboxIllustration />}
-                title={activeTab === "pending" ? "No pending items" : `No ${activeTab} items`}
-                description={
-                  activeTab === "pending"
-                    ? "Share the form URL to start receiving submissions."
-                    : "Items will appear here once triaged."
-                }
-                action={
-                  activeTab === "pending"
-                    ? { label: "Create First Item", onClick: handleOpenCreate }
-                    : undefined
-                }
-                className={CONTENT_FILL_PANEL}
+    <IntakeDecisionDialog projectId={projectId}>
+      {({ onAccept, onDecline, onDuplicate }) => (
+        <PageWrapper
+          title="Intake"
+          subtitle={
+            bugReportsView
+              ? "Bug reports captured through Feedbucket and other intake sources"
+              : "Collect and triage incoming requests from your team or clients"
+          }
+          filters={
+            triageMode ? undefined : (
+              <BuildFilterSelect
+                label="Source"
+                value={sourceValue}
+                onValueChange={handleSourceChange}
+                options={INTAKE_SOURCE_FILTERS}
               />
-            ) : (
-              <PmSection index={1}>
-                <PmStaggerList className="space-y-2.5">
-                  {filteredItems.map((item) => (
-                    <IntakeItemCard
-                      key={item.id}
-                      item={item}
-                      canManage={canManage}
-                      onAccept={handleAccept}
-                      onDecline={handleDecline}
-                      onDuplicate={handleDuplicate}
-                    />
-                  ))}
-                </PmStaggerList>
-              </PmSection>
-            )}
-          </TabsContent>
-        </Tabs>
+            )
+          }
+          actions={
+            <div className="flex w-full flex-wrap items-center gap-2">
+              {canManage && !triageMode ? (
+                <Button variant="outline" size="sm" onClick={handleEnterTriage}>
+                  <ListChecks className="h-4 w-4 mr-1" /> Triage
+                </Button>
+              ) : null}
+              <IntakeShareControls projectId={projectId} />
+              {canManage && !triageMode ? (
+                <IntakeCreateSheet
+                  projectId={projectId}
+                  open={createOpen}
+                  onOpenChange={setCreateOpen}
+                />
+              ) : null}
+            </div>
+          }
+        >
+          <PmPageShell>
+            {triageMode && canManage ? (
+              <IntakeTriageMode
+                items={pendingItems}
+                onAccept={onAccept}
+                onDecline={onDecline}
+                onDuplicate={onDuplicate}
+                onExit={handleExitTriage}
+              />
+            ) : null}
+            {!triageMode || !canManage ? (
+              <Tabs
+                value={activeTab}
+                onValueChange={handleTabChange}
+                className="flex min-h-0 flex-1 flex-col gap-0"
+              >
+                <PmSection index={0} className="shrink-0">
+                  <TabsList>
+                    <TabsTrigger value="pending">
+                      Pending
+                      {pendingCount > 0 ? (
+                        <Badge
+                          variant="secondary"
+                          className="ml-1.5 h-5 px-1.5 text-xs tabular-nums"
+                        >
+                          {pendingCount}
+                        </Badge>
+                      ) : null}
+                    </TabsTrigger>
+                    <TabsTrigger value="accepted">
+                      Accepted
+                      {statusCounts.accepted > 0 ? (
+                        <Badge
+                          variant="secondary"
+                          className="ml-1.5 h-5 px-1.5 text-xs tabular-nums"
+                        >
+                          {statusCounts.accepted}
+                        </Badge>
+                      ) : null}
+                    </TabsTrigger>
+                    <TabsTrigger value="declined">
+                      Declined
+                      {statusCounts.declined > 0 ? (
+                        <Badge
+                          variant="secondary"
+                          className="ml-1.5 h-5 px-1.5 text-xs tabular-nums"
+                        >
+                          {statusCounts.declined}
+                        </Badge>
+                      ) : null}
+                    </TabsTrigger>
+                    <TabsTrigger value="duplicate">
+                      Duplicate
+                      {statusCounts.duplicate > 0 ? (
+                        <Badge
+                          variant="secondary"
+                          className="ml-1.5 h-5 px-1.5 text-xs tabular-nums"
+                        >
+                          {statusCounts.duplicate}
+                        </Badge>
+                      ) : null}
+                    </TabsTrigger>
+                    <TabsTrigger value="all">All</TabsTrigger>
+                  </TabsList>
+                </PmSection>
 
-      <Sheet open={acceptOpen} onOpenChange={setAcceptOpen}>
-        <SheetContent side="right" className="sm:max-w-md p-0 flex flex-col gap-0">
-          <SheetHeader className="shrink-0 px-6 py-4 border-b text-left gap-1">
-            <SheetTitle>Accept Intake Item</SheetTitle>
-          </SheetHeader>
-          <SheetBody className="px-6 py-5">
-            <form id="accept-intake-form" onSubmit={acceptForm.handleSubmit(onAcceptSubmit)} className="space-y-4">
-              <div>
-                <Label>State</Label>
-                <Controller
-                  control={acceptForm.control}
-                  name="state"
-                  render={({ field }) => (
-                    <Select value={field.value} onValueChange={field.onChange}>
-                      <SelectTrigger><SelectValue placeholder="Select state..." /></SelectTrigger>
-                      <SelectContent>
-                        {WORK_STATES.map((s) => (
-                          <SelectItem key={s} value={s}>
-                            {s.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase())}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                <TabsContent
+                  value={activeTab}
+                  className={`${TABS_CONTENT_PAGE_BODY_CLASS} mt-4 min-h-0 flex-1 max-md:pb-[calc(6.5rem+env(safe-area-inset-bottom,0px))]`}
+                >
+                  {highlightNotFound ? (
+                    <p
+                      className="mb-3 shrink-0 rounded-lg border border-warning/40 bg-warning/10 px-4 py-2.5 text-sm text-warning-foreground"
+                      role="status"
+                      data-testid="intake-item-not-found"
+                    >
+                      The linked item is not in this view. It may have been
+                      deleted or moved to a different status.
+                    </p>
+                  ) : null}
+                  {items.length === 0 ? (
+                    <div
+                      data-testid="intake-empty-panel"
+                      className={`${CONTENT_FILL_PANEL} ${PAGE_BODY_EMPTY_CLASS}`}
+                    >
+                      <EmptyState
+                        illustration={<EmptyInboxIllustration />}
+                        title={
+                          sourceFiltered
+                            ? "No items match this source"
+                            : activeTab === "pending"
+                              ? "No pending items"
+                              : `No ${activeTab} items`
+                        }
+                        description={
+                          sourceFiltered
+                            ? "Try another source or clear the filter to see more requests."
+                            : activeTab === "pending"
+                              ? "Share the form URL to start receiving submissions."
+                              : "Items will appear here once triaged."
+                        }
+                        action={
+                          activeTab === "pending" && !sourceFiltered
+                            ? {
+                                label: "Create First Item",
+                                onClick: handleOpenCreate,
+                              }
+                            : undefined
+                        }
+                        className={`${CONTENT_FILL_PANEL} ${PAGE_BODY_EMPTY_CLASS}`}
+                      />
+                    </div>
+                  ) : (
+                    <PmSection index={1} className="flex min-h-0 flex-1 flex-col">
+                      <BuildPaginatedContent
+                        ariaLabel="Intake items"
+                        footer={
+                          <TablePagination
+                            mode="cursor"
+                            rowCount={items.length}
+                            pageNumber={pager.pageNumber}
+                            hasMore={Boolean(intakeData?.pagination?.hasMore)}
+                            hasPrevious={pager.hasPrevious}
+                            onNext={handleNextPage}
+                            onPrevious={pager.goPrevious}
+                            hideOnSinglePage
+                          />
+                        }
+                      >
+                        <PmStaggerList className="space-y-2.5 pb-2">
+                          {items.map((item) => {
+                            const isHighlighted = item.id === highlightId;
+                            return (
+                              <div
+                                key={item.id}
+                                ref={isHighlighted ? highlightRef : undefined}
+                                className={
+                                  isHighlighted
+                                    ? "ring-2 ring-primary ring-offset-2 rounded-xl"
+                                    : undefined
+                                }
+                                data-highlighted={
+                                  isHighlighted ? "true" : undefined
+                                }
+                              >
+                                <IntakeItemCard
+                                  item={item}
+                                  canManage={canManage}
+                                  onAccept={onAccept}
+                                  onDecline={onDecline}
+                                  onDuplicate={onDuplicate}
+                                />
+                              </div>
+                            );
+                          })}
+                        </PmStaggerList>
+                      </BuildPaginatedContent>
+                    </PmSection>
                   )}
-                />
-                {acceptForm.formState.errors.state && (
-                  <p className="text-xs text-destructive mt-1" aria-live="polite">{acceptForm.formState.errors.state.message}</p>
-                )}
-              </div>
-              <div>
-                <Label>Assignee</Label>
-                <Select
-                  value={assigneeIdField.value ?? ""}
-                  onValueChange={handleAssigneeChange}
-                >
-                  <SelectTrigger><SelectValue placeholder="Select assignee..." /></SelectTrigger>
-                  <SelectContent>
-                    {members?.map((m) => (
-                      <SelectItem key={m.id} value={m.id}>
-                        {getUserDisplayName(m)}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <Label>Cycle</Label>
-                <Select
-                  value={cycleIdField.value?.toString() ?? ""}
-                  onValueChange={handleCycleChange}
-                >
-                  <SelectTrigger><SelectValue placeholder="Select cycle..." /></SelectTrigger>
-                  <SelectContent>
-                    {cycles?.map((c) => (
-                      <SelectItem key={c.id} value={c.id.toString()}>{c.name}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <Label>Module</Label>
-                <Select
-                  value={moduleIdField.value?.toString() ?? ""}
-                  onValueChange={handleModuleChange}
-                >
-                  <SelectTrigger><SelectValue placeholder="Select module..." /></SelectTrigger>
-                  <SelectContent>
-                    {modules?.map((m) => (
-                      <SelectItem key={m.id} value={m.id.toString()}>{m.name}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </form>
-          </SheetBody>
-          <div className="shrink-0 px-6 py-4 border-t">
-            <div className="grid grid-cols-2 gap-2">
-              <Button variant="outline" size="sm" onClick={handleCloseAccept}>Cancel</Button>
-              <LoadingButton size="sm" type="submit" form="accept-intake-form" isPending={updateMutation.isPending} loadingText="Accepting…">
-                Accept & Create
-              </LoadingButton>
-            </div>
-          </div>
-        </SheetContent>
-      </Sheet>
-
-      <Sheet open={declineOpen} onOpenChange={setDeclineOpen}>
-        <SheetContent side="right" className="sm:max-w-md p-0 flex flex-col gap-0">
-          <SheetHeader className="shrink-0 px-6 py-4 border-b text-left gap-1">
-            <SheetTitle>Decline Intake Item</SheetTitle>
-          </SheetHeader>
-          <SheetBody className="px-6 py-5">
-            <form id="decline-intake-form" onSubmit={declineForm.handleSubmit(onDeclineSubmit)} className="space-y-4">
-              <div>
-                <Label htmlFor="decline-reason">Reason</Label>
-                <Textarea
-                  id="decline-reason"
-                  placeholder="Why is this being declined?"
-                  {...declineForm.register("reason")}
-                />
-                {declineForm.formState.errors.reason && (
-                  <p className="text-xs text-destructive mt-1" aria-live="polite">{declineForm.formState.errors.reason.message}</p>
-                )}
-              </div>
-            </form>
-          </SheetBody>
-          <div className="shrink-0 px-6 py-4 border-t">
-            <div className="grid grid-cols-2 gap-2">
-              <Button variant="outline" size="sm" onClick={handleCloseDecline}>Cancel</Button>
-              <Button size="sm" variant="destructive" type="submit" form="decline-intake-form" disabled={updateMutation.isPending}>
-                {updateMutation.isPending ? "Declining…" : "Decline Item"}
-              </Button>
-            </div>
-          </div>
-        </SheetContent>
-      </Sheet>
-      </PmPageShell>
-    </PageWrapper>
+                </TabsContent>
+              </Tabs>
+            ) : null}
+          </PmPageShell>
+        </PageWrapper>
+      )}
+    </IntakeDecisionDialog>
   );
 }

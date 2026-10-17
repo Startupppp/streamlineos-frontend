@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { Users, UserCheck } from "lucide-react";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { LoadingButton } from "@/components/ui/loading-button";
+import { InfiniteScrollSentinel } from "@/components/ui/infinite-scroll-sentinel";
 import { PlusIcon } from "@animateicons/react/lucide";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
@@ -192,18 +193,12 @@ export function CommunitiesTab({ currentUserId }: { currentUserId: string }) {
         </div>
       )}
 
-      {hasNextPage && (
-        <div className="flex justify-center">
-          <LoadingButton
-            variant="outline"
-            size="sm"
-            isPending={isFetchingNextPage}
-            onClick={() => void fetchNextPage()}
-          >
-            Load more
-          </LoadingButton>
-        </div>
-      )}
+      <InfiniteScrollSentinel
+        hasNextPage={hasNextPage}
+        isFetchingNextPage={isFetchingNextPage}
+        onLoadMore={fetchNextPage}
+        label="Load more communities"
+      />
 
       <HrSheet
         open={sheetOpen}

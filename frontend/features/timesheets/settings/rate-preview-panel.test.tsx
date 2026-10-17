@@ -12,7 +12,7 @@ jest.mock("@/hooks/api/timesheets-core/rate-preview", () => ({
   useRatePreview: () => ({ ...previewState, error: null }),
 }));
 
-jest.mock("@/hooks/api/build", () => ({
+jest.mock("@/hooks/api/build/projects", () => ({
   useProjects: () => ({ data: { data: [{ id: 1, name: "Atlas" }] } }),
 }));
 

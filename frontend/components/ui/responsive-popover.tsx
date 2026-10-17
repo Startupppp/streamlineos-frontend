@@ -1,7 +1,11 @@
 "use client";
 
 import * as React from "react";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import {
   Drawer,
   DrawerContent,
@@ -21,6 +25,22 @@ interface ResponsivePopoverContextValue {
 const ResponsivePopoverContext =
   React.createContext<ResponsivePopoverContextValue | null>(null);
 
+const BELOW_LG_QUERY = "(max-width: 1023px)";
+
+function subscribeBelowLg(onStoreChange: () => void) {
+  const query = window.matchMedia(BELOW_LG_QUERY);
+  query.addEventListener("change", onStoreChange);
+  return () => query.removeEventListener("change", onStoreChange);
+}
+
+function useIsBelowLgViewport() {
+  return React.useSyncExternalStore(
+    subscribeBelowLg,
+    () => window.matchMedia(BELOW_LG_QUERY).matches,
+    () => false,
+  );
+}
+
 function useResponsivePopoverContext(): ResponsivePopoverContextValue {
   const ctx = React.useContext(ResponsivePopoverContext);
   if (!ctx) {
@@ -37,6 +57,7 @@ interface ResponsivePopoverProps {
   defaultOpen?: boolean;
   onOpenChange?: (open: boolean) => void;
   modal?: boolean;
+  collapseBelow?: "md" | "lg";
 }
 
 function ResponsivePopover({
@@ -45,8 +66,11 @@ function ResponsivePopover({
   defaultOpen,
   onOpenChange,
   modal,
+  collapseBelow = "md",
 }: ResponsivePopoverProps) {
-  const isMobile = useIsMobile();
+  const isMobileViewport = useIsMobile();
+  const isBelowLg = useIsBelowLgViewport();
+  const isMobile = collapseBelow === "lg" ? isBelowLg : isMobileViewport;
   const value = React.useMemo(() => ({ isMobile }), [isMobile]);
 
   if (isMobile) {
@@ -91,12 +115,14 @@ function ResponsivePopoverTrigger({
 const DEFAULT_DRAWER_DESCRIPTION =
   "A sheet of controls for the button you just activated. Press Escape, or swipe the sheet down, to close it and return to the page.";
 
-interface ResponsivePopoverContentProps
-  extends React.ComponentPropsWithoutRef<typeof PopoverContent> {
+interface ResponsivePopoverContentProps extends React.ComponentPropsWithoutRef<
+  typeof PopoverContent
+> {
   title?: string;
   description?: string;
   drawerClassName?: string;
   stickyFooter?: boolean;
+  showHeader?: boolean;
 }
 
 const ResponsivePopoverContent = React.forwardRef<
@@ -109,6 +135,7 @@ const ResponsivePopoverContent = React.forwardRef<
     description = DEFAULT_DRAWER_DESCRIPTION,
     drawerClassName,
     stickyFooter = false,
+    showHeader = false,
     children,
     align = "center",
     sideOffset = 4,
@@ -130,9 +157,16 @@ const ResponsivePopoverContent = React.forwardRef<
           drawerClassName,
         )}
       >
-        <DrawerHeader className="sr-only">
+        <DrawerHeader
+          className={cn(
+            !showHeader && "sr-only",
+            showHeader && "shrink-0 border-b border-border px-4 py-3 text-left",
+          )}
+        >
           <DrawerTitle>{title}</DrawerTitle>
-          <DrawerDescription>{description}</DrawerDescription>
+          <DrawerDescription className={showHeader ? "text-label" : undefined}>
+            {description}
+          </DrawerDescription>
         </DrawerHeader>
         {stickyFooter ? (
           <div

@@ -17,7 +17,9 @@ export const changeRequestFormSchema = z.object({
   description: z.string(),
   impact: z.string(),
   status: z.string(),
-  estimateHours: z.string(),
+  estimateHours: z.string().refine((v) => !v || parseFloat(v) >= 0, {
+    message: "Estimate must be non-negative",
+  }),
   budgetRs: z.string(),
   timelineDays: z.string(),
   approvalOwnerId: z.string(),

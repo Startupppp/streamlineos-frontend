@@ -237,6 +237,22 @@ describe("PlanCard", () => {
     expect(button).toBeDisabled();
   });
 
+  it("marks a trial plan as current and offers Subscribe instead of Upgrade", () => {
+    grantOnly("billing:subscription:manage");
+    render(planCard({ currentPlan: "PROFESSIONAL", currentStatus: "TRIAL" }));
+
+    expect(screen.getByText("Current · Trial")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /^subscribe$/i })).toBeEnabled();
+    expect(screen.queryByRole("button", { name: /^upgrade$/i })).not.toBeInTheDocument();
+  });
+
+  it("disables the button on an active current plan", () => {
+    grantOnly("billing:subscription:manage");
+    render(planCard({ currentPlan: "PROFESSIONAL", currentStatus: "ACTIVE" }));
+
+    expect(screen.getByRole("button", { name: /current plan/i })).toBeDisabled();
+  });
+
   it("disables Upgrade when isConfigured is false (payment gateway not ready)", () => {
     grantOnly("billing:subscription:manage");
     render(planCard({ isConfigured: false }));

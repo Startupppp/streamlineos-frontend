@@ -12,12 +12,13 @@ import { getErrorMessage } from "@/lib/get-error-message";
 import type { MyWorkItem } from "@/types/projects/my-work";
 import type { ProjectListItem } from "@/types/projects";
 import { PmSection, PmPanel, PmStaggerList } from "@/components/pm-chrome";
-import { MyWorkRow } from "./command-center-rows";
+import { MyWorkRow } from "./command-center-my-work-row";
 import { CreateIssueButton } from "./command-center-actions";
 import { PanelHeader } from "./panel-header";
 import type { EmptyAction } from "./command-center-utils";
 import {
   COMMAND_CENTER_LIST_PANEL,
+  COMMAND_CENTER_PANEL_SECTION,
   COMMAND_CENTER_PANEL_BODY_SCROLL,
 } from "./command-center-constants";
 
@@ -29,6 +30,7 @@ interface MyIssuesPanelProps {
   error?: unknown;
   isFetchingNextPage: boolean;
   emptyActions: { action: EmptyAction; secondaryAction?: EmptyAction };
+  focusedIndex: number | null;
   onRetry: () => void;
   onScroll: (e: UIEvent<HTMLDivElement>) => void;
   onCreateIssue: () => void;
@@ -43,6 +45,7 @@ export function MyIssuesPanel({
   error,
   isFetchingNextPage,
   emptyActions,
+  focusedIndex,
   onRetry,
   onScroll,
   onCreateIssue,
@@ -51,7 +54,7 @@ export function MyIssuesPanel({
   return (
     <PmSection
       index={2}
-      className="flex min-h-0 min-w-0 w-full max-w-full flex-col lg:col-span-3"
+      className={COMMAND_CENTER_PANEL_SECTION}
     >
       <PmPanel className={COMMAND_CENTER_LIST_PANEL}>
         <PanelHeader
@@ -63,7 +66,12 @@ export function MyIssuesPanel({
                 onCreateForProject={onCreateForProject}
                 onCreateIssue={onCreateIssue}
               />
-              <Button variant="ghost" size="sm" className="gap-1 text-xs" asChild>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="gap-1 text-xs"
+                asChild
+              >
                 <Link href="/build/my-work">
                   View all <ArrowRight className="h-3 w-3" />
                 </Link>
@@ -106,8 +114,12 @@ export function MyIssuesPanel({
           >
             <div className="min-w-0 w-full max-w-full overscroll-contain">
               <PmStaggerList>
-                {items.map((item) => (
-                  <MyWorkRow key={item.id} item={item} />
+                {items.map((item, i) => (
+                  <MyWorkRow
+                    key={item.id}
+                    item={item}
+                    isFocused={focusedIndex === i}
+                  />
                 ))}
               </PmStaggerList>
               {isFetchingNextPage ? (

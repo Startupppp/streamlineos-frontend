@@ -10,7 +10,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
 import { CursorPageControls } from "@/components/ui/cursor-page-controls";
 import { Card, CardContent } from "@/components/ui/card";
-import { ErrorState } from "@/components/shared/error-state";
+import { PageState } from "@/components/shared/page-state";
+import { usePageState } from "@/hooks/api/use-page-state";
 import { EmptyPersonIllustration } from "@/components/illustrations";
 import { cn } from "@/lib/utils";
 
@@ -19,7 +20,6 @@ import { ProbationConfirmSheet } from "@/features/hr/onboarding/components/proba
 import { ProbationExtendSheet } from "@/features/hr/onboarding/components/probation-extend-sheet";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { useCan } from "@/hooks/api/access";
-import { getErrorMessage } from "@/lib/get-error-message";
 
 type StatusConfig = {
   label: string;
@@ -69,7 +69,7 @@ function ProbationSkeletons() {
   return (
     <div className="space-y-2 pt-2">
       {Array.from({ length: 4 }).map((_, i) => (
-        <Skeleton key={i} className="h-[72px] rounded-xl" />
+        <Skeleton key={i} className="h-18 rounded-xl" />
       ))}
     </div>
   );
@@ -118,7 +118,6 @@ function ProbationRow({ review, canManage, onExtend, onConfirm }: ProbationRowPr
             )}
           </div>
           <div className="flex items-center gap-3 text-dense text-muted-foreground flex-wrap">
-            <span>ID: {review.employmentId}</span>
             <span>Ends: {formatDate(effectiveEndDate)}</span>
             {review.workEmail && <span className="hidden sm:inline">{review.workEmail}</span>}
           </div>
@@ -129,14 +128,12 @@ function ProbationRow({ review, canManage, onExtend, onConfirm }: ProbationRowPr
             <Button
               size="sm"
               variant="outline"
-              className="text-xs gap-1.5 duration-200"
               onClick={handleExtend}
             >
               Extend
             </Button>
             <Button
               size="sm"
-              className="text-xs gap-1.5 duration-200 bg-primary hover:bg-primary/90 text-primary-foreground border-0"
               onClick={handleConfirm}
             >
               Confirm
@@ -157,6 +154,13 @@ export function ProbationPage() {
     limit: 20,
   });
   const handleRetry = useCallback(() => { void refetch(); }, [refetch]);
+  const pageState = usePageState({
+    permission: "hr:probation:view",
+    isLoading,
+    isError,
+    error,
+    isEmpty: (data?.data ?? []).length === 0,
+  });
 
   const handleNext = useCallback(() => {
     const nextCursor = data?.pageInfo.nextCursor;
@@ -198,26 +202,6 @@ export function ProbationPage() {
     if (!open) setConfirmTarget(null);
   }, []);
 
-  if (isLoading) {
-    return (
-      <PageWrapper title="Probation Reviews" subtitle="Employees due for review or confirmation" backHref="/hr/onboarding">
-        <ProbationSkeletons />
-      </PageWrapper>
-    );
-  }
-
-  if (isError) {
-    return (
-      <PageWrapper title="Probation Reviews" subtitle="Employees due for review or confirmation" backHref="/hr/onboarding">
-        <ErrorState
-          title="Failed to load probation reviews"
-          description={getErrorMessage(error)}
-          onRetry={handleRetry}
-        />
-      </PageWrapper>
-    );
-  }
-
   const reviews = data?.data ?? [];
 
   return (
@@ -226,14 +210,19 @@ export function ProbationPage() {
       subtitle="Employees due for review or confirmation"
       backHref="/hr/onboarding"
     >
-      {reviews.length === 0 ? (
-        <EmptyState
-          illustration={<EmptyPersonIllustration className="h-24 w-24" />}
-          title="No probation reviews"
-          description="Employees approaching their probation end date will appear here."
-          compact
-        />
-      ) : (
+      <PageState
+        resolution={pageState}
+        onRetry={handleRetry}
+        loading={<ProbationSkeletons />}
+        empty={
+          <EmptyState
+            illustration={<EmptyPersonIllustration className="h-24 w-24" />}
+            title="No probation reviews"
+            description="Employees approaching their probation end date will appear here."
+            compact
+          />
+        }
+      >
         <div className="space-y-2">
           {reviews.map((review) => (
             <ProbationRow
@@ -245,7 +234,7 @@ export function ProbationPage() {
             />
           ))}
         </div>
-      )}
+      </PageState>
 
       {(cursorHistory.length > 0 || data?.pageInfo.hasMore) && (
         <CursorPageControls

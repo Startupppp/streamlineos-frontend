@@ -15,17 +15,59 @@ jest.mock("@/hooks/api/entitlements", () => ({
   useEntitlements: () => ({ data: undefined }),
 }));
 
-jest.mock("@/hooks/api/build", () => ({
+jest.mock("@/hooks/api/build/approvals", () => ({
   useApprovalInbox: () => mockUseApprovalInbox(),
+  useApprovalInboxPage: () => mockUseApprovalInbox(),
   useDecideApproval: () => ({ mutate: jest.fn(), isPending: false }),
   useProjectApprovals: () => mockUseProjectApprovals(),
+  useProjectApprovalsPage: () => mockUseProjectApprovals(),
   useCreateApproval: () => ({ mutate: jest.fn(), isPending: false }),
   useUpdateApproval: () => ({ mutate: jest.fn(), isPending: false }),
   useDeleteApproval: () => ({ mutate: jest.fn(), isPending: false }),
 }));
 
+jest.mock("@/hooks/api/members/use-member-directory", () => ({
+  useMemberDirectory: () => ({ members: [], selectedMembers: [], isLoading: false, isServerFiltered: false }),
+}));
+
+jest.mock("@/hooks/api/build/build-members", () => ({
+  useBuildMembers: () => ({ data: undefined }),
+}));
+
 jest.mock("@/hooks/api/organization", () => ({
   useOrgMembers: () => ({ data: undefined }),
+  useOrgMembersByIds: () => ({ data: undefined }),
+}));
+
+jest.mock("@tanstack/react-query", () => ({
+  ...jest.requireActual("@tanstack/react-query"),
+  useQueryClient: () => ({ invalidateQueries: jest.fn() }),
+}));
+
+jest.mock("@/hooks/common/use-online-status", () => ({
+  useOnlineStatus: () => true,
+}));
+
+jest.mock("@/components/ui/date-range-picker", () => ({
+  DateRangePicker: () => null,
+}));
+
+jest.mock("@/lib/query-keys/build-work", () => ({
+  buildWorkQueryKeys: {
+    projects: {
+      approvals: {
+        inbox: () => ["approvals", "inbox"],
+        inboxCount: () => ["approvals", "inbox", "count"],
+        list: (projectId: number) => ["approvals", "list", projectId],
+        detail: (projectId: number, approvalId: number) => [
+          "approvals",
+          "detail",
+          projectId,
+          approvalId,
+        ],
+      },
+    },
+  },
 }));
 
 jest.mock("next/navigation", () => ({
@@ -96,12 +138,11 @@ jest.mock("@/components/ui/badge", () => ({
 jest.mock("@/components/pm-chrome", () => ({
   PmPageShell: ({ children }: { children: ReactNode }) => <div>{children}</div>,
   PmSection: ({ children }: { children: ReactNode }) => <div>{children}</div>,
-  PM_FILL_PANEL: "",
+  CONTENT_FILL_PANEL: "",
 }));
 
 jest.mock("./approval-status-badge", () => ({
   ApprovalStatusBadge: () => null,
-  entityTypeLabel: () => "Task",
 }));
 
 jest.mock("./decide-dialog", () => ({
@@ -118,6 +159,12 @@ jest.mock("./request-approval-sheet", () => ({
 
 jest.mock("./approvals-toolbar", () => ({
   RequestApprovalMenuButton: () => null,
+}));
+
+jest.mock("./approval-bulk-action-bar", () => ({
+  ApprovalBulkActionBar: ({ selectedCount }: { selectedCount: number }) => (
+    <div data-testid="bulk-action-bar">{selectedCount} selected</div>
+  ),
 }));
 
 jest.mock("./approvals-filter-bar", () => ({

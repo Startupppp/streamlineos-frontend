@@ -44,12 +44,22 @@ export function parseViewType(value: string | null): ViewType {
   return VIEW_TYPES.find((v) => v === value) ?? "board";
 }
 
+const BOARD_PAGE_VIEWS: ReadonlySet<ViewType> = new Set([
+  "board",
+  "list",
+  "table",
+  "timeline",
+  "workload",
+]);
+
+export function parseBoardPageView(value: string | null | undefined): ViewType {
+  const parsed = parseViewType(value ?? null);
+  return BOARD_PAGE_VIEWS.has(parsed) ? parsed : "board";
+}
+
 export function toSavedViewLayout(view: ViewType): SavedViewLayout {
   if (view === "timeline") return "gantt";
   if (view === "workload") return "board";
   return view;
 }
 
-export function fromSavedViewLayout(layout: string): ViewType {
-  return parseViewType(layout);
-}

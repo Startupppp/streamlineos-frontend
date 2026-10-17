@@ -33,6 +33,12 @@ export const humanResourcesQueryKeys = {
         ? ([...base, "hr", "documents"] as const)
         : ([...base, "hr", "documents", params] as const),
     documentsAll: [...base, "hr", "documents"] as const,
+    documentClassification: (documentId: number) =>
+      [...base, "hr", "documents", "classification", documentId] as const,
+    documentKbLink: (documentId: number) =>
+      [...base, "hr", "documents", "kbLink", documentId] as const,
+    documentVersions: (documentId: number) =>
+      [...base, "hr", "documents", "versions", documentId] as const,
     performanceReviews: (params?: QueryKeyParams) =>
       params === undefined
         ? ([...base, "hr", "performanceReviews"] as const)
@@ -47,11 +53,16 @@ export const humanResourcesQueryKeys = {
         ? ([...base, "hr", "workLogs"] as const)
         : ([...base, "hr", "workLogs", params] as const),
     orgChart: () => [...base, "hr", "orgChart"] as const,
-    wfhRequests: () => [...base, "hr", "wfhRequests"] as const,
+    wfhRequestsAll: [...base, "hr", "wfhRequests"] as const,
+    wfhRequests: (orgId: string, userId: string) =>
+      [...base, "hr", "wfhRequests", orgId, userId] as const,
     pendingWfhRequests: () => [...base, "hr", "pendingWfhRequests"] as const,
     holidaysCalendar: (params: { year: number; month: number }) =>
       [...base, "hr", "holidaysCalendar", params] as const,
+    monthlyAttendanceAll: [...base, "hr", "monthlyAttendance"] as const,
     monthlyAttendance: (params: {
+      orgId: string;
+      actorUserId: string;
       userId?: string;
       year: number;
       month: number;
@@ -103,6 +114,8 @@ export const humanResourcesQueryKeys = {
       params === undefined
         ? ([...base, "hr", "onboardingDocs", "summary"] as const)
         : ([...base, "hr", "onboardingDocs", "summary", params] as const),
+    documentAcknowledgements: () =>
+      [...base, "hr", "documentAcknowledgements"] as const,
     documentsStats: () => [...base, "hr", "documentsStats"] as const,
     documentsExpiry: (days: number) =>
       [...base, "hr", "documentsExpiry", days] as const,
@@ -161,6 +174,19 @@ export const humanResourcesQueryKeys = {
     interviewSlas: () => [...base, "hr", "interviewSlas"] as const,
     slaReport: () => [...base, "hr", "slaReport"] as const,
     hiringFlows: () => [...base, "hr", "hiringFlows"] as const,
+    /**
+     * The reusable job-template library. `params === undefined` yields the bare
+     * prefix so a write can invalidate every filtered page at once — a key that
+     * always carried its filters would leave the unfiltered picker stale.
+     *
+     * Named `jobTemplates`, not `hrTemplates`: that segment already belongs to
+     * the HR document-template domain, and sharing it would make one domain's
+     * invalidation silently refetch the other's.
+     */
+    jobTemplates: (params?: QueryKeyParams) =>
+      params === undefined
+        ? ([...base, "hr", "jobTemplates"] as const)
+        : ([...base, "hr", "jobTemplates", params] as const),
     hiringFlow: (hiringFlowId: number) =>
       [...base, "hr", "hiringFlow", hiringFlowId] as const,
     hiringFlowRounds: (flowId: number) =>
@@ -168,6 +194,17 @@ export const humanResourcesQueryKeys = {
     emailSequences: () => [...base, "hr", "emailSequences"] as const,
     emailSequence: (emailSequenceId: number) =>
       [...base, "hr", "emailSequence", emailSequenceId] as const,
+    emailSequenceMetrics: (emailSequenceId: number) =>
+      [...base, "hr", "emailSequence", emailSequenceId, "metrics"] as const,
+    /** Conversion over a window, keyed by the window so two ranges do not share a cache entry. */
+    recruitingAnalytics: (from: string, to: string) =>
+      [...base, "hr", "recruitingAnalytics", from, to] as const,
+    candidateVoiceScreens: (candidateId: number) =>
+      [...base, "hr", "candidate", candidateId, "voiceScreens"] as const,
+    candidateIdentity: (candidateId: number) =>
+      [...base, "hr", "recruitment", "candidates", candidateId, "identity"] as const,
+    candidateWhatsapp: (candidateId: number) =>
+      [...base, "hr", "candidate", candidateId, "whatsapp"] as const,
     pipelineAutomations: () => [...base, "hr", "pipelineAutomations"] as const,
     referrals: () => [...base, "hr", "referrals"] as const,
     talentPools: () => [...base, "hr", "talentPools"] as const,
@@ -219,9 +256,33 @@ export const humanResourcesQueryKeys = {
     hrTemplateVariables: () => [...base, "hr", "templateVariables"] as const,
     employeeEmployment: (userId: string) =>
       [...base, "hr", "employeeEmployment", userId] as const,
+    reportingLinesAll: () => [...base, "hr", "reportingLine"] as const,
     reportingLine: (userId: string) =>
       [...base, "hr", "reportingLine", userId] as const,
     managerCoverage: () => [...base, "hr", "reportingLines", "coverage"] as const,
+    reportingManagerPolicy: () => [...base, "hr", "reportingManagerPolicy"] as const,
+    managerCandidates: (q: string, excludeUserId?: string) =>
+      excludeUserId === undefined
+        ? ([...base, "hr", "reportingLines", "managerCandidates", q] as const)
+        : ([...base, "hr", "reportingLines", "managerCandidates", q, excludeUserId] as const),
+    reportingManagerRequests: (params?: QueryKeyParams) =>
+      params === undefined
+        ? ([...base, "hr", "reportingManagerRequests"] as const)
+        : ([...base, "hr", "reportingManagerRequests", params] as const),
+    reportingManagerRequest: (requestId: string) =>
+      [...base, "hr", "reportingManagerRequest", requestId] as const,
+    reportingLineBulkJobs: (params?: QueryKeyParams) =>
+      params === undefined
+        ? ([...base, "hr", "reportingLines", "bulkJobs"] as const)
+        : ([...base, "hr", "reportingLines", "bulkJobs", params] as const),
+    reportingLineBulkJob: (jobId: string, rowCursor?: string) =>
+      rowCursor === undefined
+        ? ([...base, "hr", "reportingLines", "bulkJob", jobId] as const)
+        : ([...base, "hr", "reportingLines", "bulkJob", jobId, rowCursor] as const),
+    myReportingLine: () => [...base, "me", "reportingLine"] as const,
+    myReportingManagerRequests: () => [...base, "me", "reportingManagerRequests"] as const,
+    myManagerCandidates: (q: string) => [...base, "me", "reportingManagerRequests", "managerCandidates", q] as const,
+    myApprovers: () => [...base, "me", "approvers"] as const,
     myApprover: (kind: string) => [...base, "me", "approvers", kind] as const,
     myTeam: () => [...base, "me", "team"] as const,
     employeeTimeline: (employmentId: number, params?: QueryKeyParams) =>
@@ -269,6 +330,7 @@ export const humanResourcesQueryKeys = {
     travelMine: () => [...base, "hr", "travel", "mine"] as const,
     travelApprovals: () => [...base, "hr", "travel", "approvals"] as const,
     leavePolicies: () => [...base, "hr", "leave-policies"] as const,
+    leavePolicyTemplates: () => [...base, "hr", "leave-policy-templates"] as const,
     leavePolicy: () => [...base, "hr", "leave-policy"] as const,
     requisitions: (status?: string) =>
       status === undefined
@@ -351,6 +413,13 @@ export const humanResourcesQueryKeys = {
     hrTalentPoolMembersAll: (poolId: number) =>
       [...base, "hr", "talentPools", poolId, "members"] as const,
     hrInternalJobs: [...base, "hr", "recruitment", "internal-jobs"] as const,
+    internalMyApplications: [...base, "hr", "recruitment", "internal-mobility", "mine"] as const,
+    internalApprovals: [...base, "hr", "recruitment", "internal-mobility", "approvals"] as const,
+    internalApprovalDecision: [...base, "hr", "recruitment", "internal-mobility", "decide"] as const,
+    atsSandboxEvents: [...base, "hr", "recruitment", "developer", "events"] as const,
+    atsDirectorySync: [...base, "hr", "recruitment", "developer", "directory-sync"] as const,
+    atsSandboxDeliveries: [...base, "hr", "recruitment", "developer", "deliveries"] as const,
+    atsSandboxReplay: [...base, "hr", "recruitment", "developer", "replay"] as const,
     hrAssignedInterviews: (page: number) =>
       [...base, "hr", "me", "assigned-interviews", page] as const,
     hrDevicesAll: [...base, "hr", "enterprise", "comp", "devices"] as const,

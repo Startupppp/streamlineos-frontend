@@ -22,8 +22,11 @@ import { CommandCenterPanels } from "@/features/payroll/runs/command-center-pane
 import { ReadinessRail } from "@/features/payroll/shared/readiness-rail";
 import { EmptyPayroll } from "@/components/illustrations";
 import { useCommandCenter } from "@/hooks/api/payroll/command-center";
+import { usePayrollPolicyCurrent } from "@/hooks/api/payroll/policies";
 import { useCreateRun } from "@/hooks/api/payroll/runs";
-import { useCan } from "@/hooks/api/access";
+import { useAccess, useCan, usePermissionGate } from "@/hooks/api/access";
+import { payrollRunStartGate } from "@/features/payroll/runs/run-start-gate";
+import { PayrollSetupTour } from "@/features/payroll/setup-tour/payroll-setup-tour";
 import type { PayrollRunStatus } from "@/types/payroll/runs";
 
 function currentYearMonth(): string {
@@ -36,13 +39,31 @@ function PrimaryAction({
   runId,
   onCreateRun,
   isPending,
+  startGate,
 }: {
   status: PayrollRunStatus | null;
   runId?: number;
   onCreateRun: () => void;
   isPending: boolean;
+  startGate: ReturnType<typeof payrollRunStartGate> | null;
 }) {
   if (!status) {
+    if (!startGate) {
+      return (
+        <Button size="sm" type="button" disabled>
+          Checking payroll setup…
+        </Button>
+      );
+    }
+    if (startGate.action === "setup") {
+      return (
+        <Button size="sm" asChild>
+          <Link href={startGate.href} title={startGate.reason}>
+            {startGate.label}
+          </Link>
+        </Button>
+      );
+    }
     return (
       <LoadingButton size="sm" onClick={onCreateRun} isPending={isPending} loadingText="Starting…">
         Start Payroll Run
@@ -88,18 +109,33 @@ function PrimaryAction({
 export function PayrollCommandCenterPage() {
   const [month, setMonth] = useState(currentYearMonth);
   const router = useRouter();
-  const canView = useCan("payroll:runs:view");
+  const viewGate = usePermissionGate("payroll:runs:view");
+  const { refetch: refetchAccess } = useAccess();
   const canManage = useCan("payroll:runs:manage");
   const canViewPolicies = useCan("payroll:policies:view");
 
   const { data, isLoading, isError, error, refetch } = useCommandCenter(month);
+  const policy = usePayrollPolicyCurrent();
   const createRunMutation = useCreateRun();
 
   const handleRetry = useCallback(() => {
     void refetch();
   }, [refetch]);
 
-  if (!canView) {
+  if (viewGate.unavailable) {
+    return (
+      <PageWrapper variant="display" title="Payroll">
+        <ErrorState
+          className="flex-1"
+          title="Couldn't load the payroll command center"
+          description="Your access could not be checked. Try again."
+          onRetry={refetchAccess}
+        />
+      </PageWrapper>
+    );
+  }
+
+  if (viewGate.denied) {
     return (
       <PageWrapper variant="display" title="Payroll">
         <EmptyState
@@ -126,8 +162,14 @@ export function PayrollCommandCenterPage() {
   const runId = data?.header.runId ?? undefined;
   const header = data?.header;
   const excCount = header ? header.exceptionCounts.BLOCKER + header.exceptionCounts.WARNING : 0;
+  const setupKnown = !canViewPolicies || !policy.isLoading;
+  const startGate = !setupKnown || isLoading
+    ? null
+    : payrollRunStartGate({
+        policyReady: canViewPolicies ? Boolean(policy.data?.policy) : true,
+      });
 
-  const isPreSetup = !isLoading && !isError && !data;
+  const isPreSetup = viewGate.allowed && !isLoading && !isError && !data;
 
   return (
     <PageWrapper
@@ -146,18 +188,21 @@ export function PayrollCommandCenterPage() {
       actions={
         <div className="flex items-center gap-2">
           <MonthPicker value={month} onChange={setMonth} yearRange={[-2, 0]} className="w-44" />
-          {canManage && (
+          {canManage && !isError && (
             <PrimaryAction
               status={header?.status ?? null}
               runId={runId}
               onCreateRun={handleCreateRun}
               isPending={createRunMutation.isPending}
+              startGate={startGate}
             />
           )}
         </div>
       }
     >
-      {isLoading && (
+      <PayrollSetupTour />
+
+      {(viewGate.pending || isLoading) && (
         <div className="flex flex-1 min-h-0 flex-col gap-4">
           <StatCardGridSkeleton cols={5} count={5} />
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
@@ -255,9 +300,7 @@ export function PayrollCommandCenterPage() {
                 canPay={
                   !!header &&
                   header.exceptionCounts.BLOCKER === 0 &&
-                  (header.status === "LOCKED" ||
-                    header.status === "APPROVED" ||
-                    header.status === "PAID")
+                  (header.status === "LOCKED" || header.status === "PAID")
                 }
                 totals={{
                   gross: formatMoney(header?.grossTotal),

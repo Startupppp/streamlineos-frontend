@@ -40,43 +40,46 @@ interface QuestionEditorSheetProps {
   onOpenChange: (open: boolean) => void;
 }
 
-export function QuestionEditorSheet({ surveyId, sectionId, question, sections, logicRules, open, onOpenChange }: QuestionEditorSheetProps) {
+export function questionEditorSessionKey(
+  open: boolean,
+  questionId: number | null,
+  sectionId: number | null,
+): string {
+  return `${open ? "open" : "closed"}:${questionId ?? "new"}:${sectionId ?? "none"}`;
+}
+
+export function QuestionEditorSheet(props: QuestionEditorSheetProps) {
+  const { open, question, sectionId } = props;
+  return (
+    <QuestionEditorSheetBody
+      key={questionEditorSessionKey(open, question?.id ?? null, sectionId)}
+      {...props}
+    />
+  );
+}
+
+function QuestionEditorSheetBody({ surveyId, sectionId, question, sections, logicRules, open, onOpenChange }: QuestionEditorSheetProps) {
   const createQuestion = useCreateQuestion(surveyId);
   const patchQuestion = usePatchQuestion(surveyId);
 
-  const [title, setTitle] = useState("");
-  const [description, setDescription] = useState("");
-  const [type, setType] = useState<SurveyQuestionType>("short_text");
-  const [required, setRequired] = useState(false);
-  const [variableName, setVariableName] = useState("");
-  const [choices, setChoices] = useState<ChoiceInput[]>([]);
-  const [settings, setSettings] = useState<Record<string, unknown>>({});
+  const [title, setTitle] = useState(question?.title ?? "");
+  const [description, setDescription] = useState(question?.description ?? "");
+  const [type, setType] = useState<SurveyQuestionType>(question?.type ?? "short_text");
+  const [required, setRequired] = useState(question?.required ?? false);
+  const [variableName, setVariableName] = useState(question?.variableName ?? "");
+  const [choices, setChoices] = useState<ChoiceInput[]>(() =>
+    question?.choices.map((choice) => ({
+      choiceKey: choice.choiceKey,
+      label: choice.label,
+      value: choice.value ?? undefined,
+      score: choice.score ?? undefined,
+      isCorrect: choice.isCorrect,
+    })) ?? [],
+  );
+  const [settings, setSettings] = useState<Record<string, unknown>>(
+    () => question?.settings ?? {},
+  );
   const [titleError, setTitleError] = useState<string | null>(null);
-
-  const [prevOpen, setPrevOpen] = useState(open);
-  const [prevQuestion, setPrevQuestion] = useState(question);
-  if (open !== prevOpen || question !== prevQuestion) {
-    setPrevOpen(open);
-    setPrevQuestion(question);
-    if (open) {
-      setTitle(question?.title ?? "");
-      setDescription(question?.description ?? "");
-      setType(question?.type ?? "short_text");
-      setRequired(question?.required ?? false);
-      setVariableName(question?.variableName ?? "");
-      setSettings(question?.settings ?? {});
-      setTitleError(null);
-      setChoices(
-        question?.choices.map((c) => ({
-          choiceKey: c.choiceKey,
-          label: c.label,
-          value: c.value ?? undefined,
-          score: c.score ?? undefined,
-          isCorrect: c.isCorrect,
-        })) ?? [],
-      );
-    }
-  }
 
   function handleTypeChange(v: string): void {
     const next = QUESTION_TYPE_LIST.find((candidate) => candidate === v);

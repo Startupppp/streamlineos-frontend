@@ -2,14 +2,16 @@
 
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
+import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
 import { lazyContract } from "@/lib/api-envelope";
 import { payrollQueryKeys } from "@/lib/query-keys/payroll";
 import { useCan } from "@/hooks/api/access";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
-import type { PayrollException, PayrollExceptionSeverity, PayrollExceptionStatus } from "@/types/payroll/runs";
+import type { PayrollExceptionSeverity, PayrollExceptionStatus } from "@/types/payroll/runs";
+import type { RunExceptionsPage } from "@/hooks/api/payroll/run-exceptions-schema";
 
-const runExceptionsListC = lazyContract(() =>
-  import("@/hooks/api/payroll/run-exceptions-schema").then((m) => m.runExceptionsListContract),
+const runExceptionsPageC = lazyContract(() =>
+  import("@/hooks/api/payroll/run-exceptions-schema").then((m) => m.runExceptionsPageContract),
 );
 const resolveExceptionC = lazyContract(() =>
   import("@/hooks/api/payroll/run-exceptions-schema").then((m) => m.resolveExceptionResponseContract),
@@ -23,9 +25,10 @@ export function useRunExceptions(
   return useQuery({
     queryKey: payrollQueryKeys.payroll.runExceptions(runId, params),
     queryFn: ({ signal }) =>
-      apiClient.get(`/payroll/runs/${runId}/exceptions`, params, signal, runExceptionsListC),
+      apiClient.get<RunExceptionsPage>(`/payroll/runs/${runId}/exceptions`, params, signal, runExceptionsPageC),
     staleTime: 30_000,
     enabled: canView && runId > 0,
+    ...INLINE_READ_ERROR,
   });
 }
 

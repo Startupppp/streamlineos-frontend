@@ -82,6 +82,11 @@ export function WorkflowsListPage() {
   const hasFilters = search.length > 0 || statusFilter !== "all";
   const hasMore = data?.pagination?.hasMore ?? false;
 
+  function handleClearFilters() {
+    setSearch("");
+    setStatusFilter("all");
+  }
+
   function handleOpenCreate() {
     setCreateOpen(true);
   }
@@ -188,21 +193,16 @@ export function WorkflowsListPage() {
         ) : workflows.length === 0 ? (
           <EmptyState
             illustration={<EmptyProjectsIllustration />}
-            title={
-              hasFilters
-                ? "No workflows match your filters"
-                : "No workflows yet"
-            }
+            title="No workflows yet"
+            filtersActive={hasFilters}
+            filteredTitle="No workflows match your filters"
+            onClearFilters={handleClearFilters}
             description={
               hasFilters
                 ? "Try adjusting your search or status filter."
                 : "Create your first workflow to start automating your business processes."
             }
-            action={
-              hasFilters
-                ? undefined
-                : { label: "New Workflow", onClick: handleOpenCreate }
-            }
+            action={{ label: "New Workflow", onClick: handleOpenCreate }}
             className={CONTENT_FILL_PANEL}
           />
         ) : (

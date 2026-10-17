@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useMemo, useState, type ChangeEvent } from "react";
+import Link from "next/link";
+import { useSession } from "next-auth/react";
 import { History, Save } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -108,9 +110,15 @@ function articleToDraft(article: KbArticleDetail): ArticleDraft {
 export function KbArticleEditor({
   article,
   categories,
+  hasMoreCategories,
+  isLoadingMoreCategories,
+  onLoadMoreCategories,
 }: {
   article: KbArticleDetail;
   categories: KbCategory[];
+  hasMoreCategories?: boolean;
+  isLoadingMoreCategories?: boolean;
+  onLoadMoreCategories?: () => void;
 }) {
   const scope = useOrgStorageScope();
   const update = useUpdateSupportKbArticle();
@@ -121,6 +129,7 @@ export function KbArticleEditor({
   );
   const [excerpt, setExcerpt] = useState(article.excerpt ?? "");
   const [content, setContent] = useState(article.content ?? "");
+  const { data: session } = useSession();
   const [status, setStatus] = useState<KbArticleStatus>(article.status);
   const [visibility, setVisibility] = useState<KbArticleVisibility>(article.visibility);
   const [tagsInput, setTagsInput] = useState((article.tags ?? []).join(", "));
@@ -243,6 +252,7 @@ export function KbArticleEditor({
       title={article.title}
       subtitle="Edit article content, metadata, and publishing settings."
       backHref="/support/kb"
+      contentClassName="min-w-0 md:pr-36"
       actions={
         <div className="flex items-center gap-2">
           <KbArticleAiActions articleId={article.id} onApplyImprovement={handleApplyImprovement} />
@@ -253,6 +263,14 @@ export function KbArticleEditor({
         </div>
       }
     >
+      {status === "published" && visibility === "public" && session?.user?.orgId ? (
+        <p className="mb-4 text-sm text-muted-foreground">
+          Public reader:{" "}
+          <Link href={`/help/${session.user.orgId}/${article.slug}`} className="text-primary underline">
+            /help/{session.user.orgId}/{article.slug}
+          </Link>
+        </p>
+      ) : null}
       {pendingDraft && (
         <div className="mb-4 flex flex-col gap-3 rounded-lg border border-status-warning-rule bg-status-warning-surface px-4 py-3 text-status-warning-ink sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-start gap-2 min-w-0">
@@ -340,6 +358,17 @@ export function KbArticleEditor({
                     ))}
                   </SelectContent>
                 </Select>
+                {hasMoreCategories && onLoadMoreCategories && (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={onLoadMoreCategories}
+                    disabled={isLoadingMoreCategories}
+                  >
+                    {isLoadingMoreCategories ? "Loading categories…" : "Load more categories"}
+                  </Button>
+                )}
               </div>
               <div className="space-y-1">
                 <Label>Status</Label>

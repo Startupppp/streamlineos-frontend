@@ -64,7 +64,7 @@ describe("resolveBuildScopeFallback", () => {
     ).toEqual({ kind: "no-access" });
   });
 
-  it("recovers to the accessible parent product ahead of the organization destination", () => {
+  it("prefers the nearer product parent over the organization destination, because use-build-scope-recovery only supplies a parent whose product read already succeeded", () => {
     expect(
       resolveBuildScopeFallback({
         scope: PROJECT_SCOPE,
@@ -76,7 +76,7 @@ describe("resolveBuildScopeFallback", () => {
     ).toEqual({
       kind: "recover",
       href: "/build/managed-products/7",
-      label: "Go to the parent product",
+      label: "Go to product",
     });
   });
 
@@ -113,6 +113,50 @@ describe("resolveBuildScopeFallback", () => {
   });
 
   it("BSN-04-014: degrades to no-access instead of offering a dead command-center link when the organization model has no authorized destination", () => {
+    expect(
+      resolveBuildScopeFallback({
+        scope: PROJECT_SCOPE,
+        isInaccessible: true,
+        hasAnyBuildAccess: true,
+        accessibleParent: null,
+        organizationHref: null,
+      }),
+    ).toEqual({ kind: "no-access" });
+  });
+
+  it("still prefers the product parent when the only organization destination is a narrow one", () => {
+    expect(
+      resolveBuildScopeFallback({
+        scope: PROJECT_SCOPE,
+        isInaccessible: true,
+        hasAnyBuildAccess: true,
+        accessibleParent: { type: "product", id: "7" },
+        organizationHref: "/build/my-work",
+      }),
+    ).toEqual({
+      kind: "recover",
+      href: "/build/managed-products/7",
+      label: "Go to product",
+    });
+  });
+
+  it("still offers the product parent when no organization destination is authorized at all, so a product member is not stranded on no-access", () => {
+    expect(
+      resolveBuildScopeFallback({
+        scope: PROJECT_SCOPE,
+        isInaccessible: true,
+        hasAnyBuildAccess: true,
+        accessibleParent: { type: "product", id: "7" },
+        organizationHref: null,
+      }),
+    ).toEqual({
+      kind: "recover",
+      href: "/build/managed-products/7",
+      label: "Go to product",
+    });
+  });
+
+  it("falls back to no-access when there is neither an accessible product parent nor an authorized organization destination", () => {
     expect(
       resolveBuildScopeFallback({
         scope: PROJECT_SCOPE,

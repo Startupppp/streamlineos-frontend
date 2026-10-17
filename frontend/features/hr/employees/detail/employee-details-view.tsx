@@ -21,11 +21,11 @@ import { LoadingButton } from "@/components/ui/loading-button";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { toast } from "sonner";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ArrowLeft, UserX, Download } from "lucide-react";
+import { ArrowLeft, UserX, UserCheck, Download } from "lucide-react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { useSearchParams, useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
-import { useCan } from "@/hooks/api/access";
+import { useCan, useScope } from "@/hooks/api/access";
 import { canDeleteEmployee } from "@/features/hr/employees/hr-types";
 import { AiActionsMenu } from "@/components/ai";
 import type { AiAction } from "@/components/ai";
@@ -34,10 +34,17 @@ import { EmployeeHeaderCard } from "@/features/hr/employees/detail/employee-head
 import { OverviewTab } from "@/features/hr/employees/detail/overview-tab";
 import { EmployeeTabsList } from "@/features/hr/employees/detail/employee-tabs-list";
 import { LIFECYCLE_BADGE, profileCompletenessScore } from "@/features/hr/employees/detail/employee-detail-constants";
+import { getUserDisplayName } from "@/lib/person-display";
 
 const EmployeeTimelineTab = dynamic(
   () => import("@/features/hr/employees/detail/timeline-tab").then(m => ({ default: m.EmployeeTimelineTab })),
   { loading: () => <div className="space-y-3">{Array.from({ length: 10 }).map((_, i) => <Skeleton key={i} className="h-16 w-full rounded-xl" />)}</div> }
+);
+const RehireEmployeeDialog = dynamic(() =>
+  import("@/features/hr/employees/detail/rehire-employee-dialog").then((m) => ({ default: m.RehireEmployeeDialog })),
+);
+const ArchiveEmployeeAction = dynamic(() =>
+  import("@/features/hr/employees/detail/archive-employee-action").then((m) => ({ default: m.ArchiveEmployeeAction })),
 );
 const EmployeeSensitiveTab = dynamic(
   () => import("@/features/hr/employees/detail/sensitive-tab").then(m => ({ default: m.EmployeeSensitiveTab })),
@@ -53,8 +60,14 @@ export function EmployeeDetailsView({ employee }: { employee: EmployeeData }) {
   const router = useRouter();
   const { data: session } = useSession();
   const canManageEmployees = useCan("hr:employees:manage");
+  // Terminate lands on /hr/termination, which requires hr:exit:manage, and the
+  // review draft posts to /ai/generate-review, which requires hr:performance:manage.
+  // Gating either on an HR-employees key sends a permitted-looking user to a 403.
+  const canManageExits = useCan("hr:exit:manage");
+  const canDraftReview = useCan("hr:performance:manage");
+  const sensitiveScope = useScope("hr:sensitive:view");
   const canUpdateEmployee = useCan("hr:employees:update");
-  const canViewSensitive = useCan("hr:sensitive:view");
+  const manageScope = useScope("hr:employees:manage");
   const searchParams = useSearchParams();
   const defaultTab = searchParams.get("tab") ?? "overview";
   const [activeTab, setActiveTab] = useState(defaultTab);
@@ -78,9 +91,12 @@ export function EmployeeDetailsView({ employee }: { employee: EmployeeData }) {
 
   const isSelf = hydrated && session?.user?.id === employee.id;
   const showManageActions = hydrated && canManageEmployees;
-  const showSensitiveTab = hydrated && canViewSensitive;
-  const employeeName =
-    `${employee.firstName ?? ""} ${employee.lastName ?? ""}`.trim() || "Employee";
+  const showSensitiveTab = hydrated && sensitiveScope !== "none" && (isSelf || sensitiveScope !== "own");
+  const showEditTab = hydrated && canUpdateEmployee && (isSelf || manageScope === "all");
+  // V-023/V-025: the same helper the header card uses. Composing first+last
+  // here ignored `employee.name`, so a display-name-only person exported a PDF
+  // called "Employee".
+  const employeeName = getUserDisplayName(employee);
 
   const scrollActiveTabIntoView = useCallback(() => {
     const active = tabsListRef.current?.querySelector<HTMLElement>(
@@ -136,6 +152,10 @@ export function EmployeeDetailsView({ employee }: { employee: EmployeeData }) {
     router.push(`/hr/termination?employeeId=${employee.id}`);
   }, [employee.id, router]);
 
+  const [rehireOpen, setRehireOpen] = useState(false);
+  const handleRehireClick = useCallback(() => setRehireOpen(true), []);
+  const handleLifecycleChanged = useCallback(() => router.refresh(), [router]);
+
   const handleBack = useCallback(() => {
     requestLeaveIfNeeded(() => router.back());
   }, [requestLeaveIfNeeded, router]);
@@ -163,7 +183,7 @@ export function EmployeeDetailsView({ employee }: { employee: EmployeeData }) {
 
   const aiActions = useMemo<AiAction[]>(() => {
     if (!canManageEmployees) return [];
-    return [
+    const actions: AiAction[] = [
       {
         key: "attrition-risk",
         label: "Attrition insight (advisory)",
@@ -171,10 +191,16 @@ export function EmployeeDetailsView({ employee }: { employee: EmployeeData }) {
         run: async () => {
           const result = await attritionRiskMutation.mutateAsync(employee.id);
           return {
-            text: `Risk level: ${result.riskLevel} (${result.attritionRiskScore}/100)\n\nReasoning: ${result.reasoning}\n\nRisk factors:\n${result.riskFactors.map((f) => "• " + f).join("\n")}\n\nRetention actions:\n${result.retentionActions.map((a) => "• " + a).join("\n")}\n\n⚠ Advisory only. This is an AI estimate — all people decisions require human judgment.`,
+            text: `Risk level: ${result.riskLevel} (${result.attritionRiskScore}/100)\n\nReasoning: ${result.reasoning}\n\nRisk factors:\n${result.riskFactors.map((f) => "• " + f).join("\n")}\n\nRetention actions:\n${result.retentionActions.map((a) => "• " + a).join("\n")}`,
+            advisory:
+              "Advisory only. This is an AI estimate — all people decisions require human judgment.",
           };
         },
       },
+    ];
+    if (!canDraftReview) return actions;
+    return [
+      ...actions,
       {
         key: "draft-review",
         label: "Draft performance review",
@@ -191,7 +217,7 @@ export function EmployeeDetailsView({ employee }: { employee: EmployeeData }) {
         },
       },
     ];
-  }, [canManageEmployees, employee.id, attritionRiskMutation, generateReviewMutation]);
+  }, [canManageEmployees, canDraftReview, employee.id, attritionRiskMutation, generateReviewMutation]);
 
   const employmentStatusRaw = employee.employmentStatus;
   const employmentStatus =
@@ -199,7 +225,8 @@ export function EmployeeDetailsView({ employee }: { employee: EmployeeData }) {
       ? employmentStatusRaw.toUpperCase()
       : null;
   const isAlreadyTerminated =
-    employee.isActive === false || employmentStatus === "TERMINATED";
+    employee.isActive === false || employmentStatus === "EXITED" || employmentStatus === "ALUMNI";
+  const canRehire = hydrated && canManageExits && isAlreadyTerminated;
   const canTerminate =
     hydrated &&
     !isAlreadyTerminated &&
@@ -208,7 +235,7 @@ export function EmployeeDetailsView({ employee }: { employee: EmployeeData }) {
       employee.id,
       true,
       session?.user?.id,
-      canUpdateEmployee,
+      canManageExits,
     );
 
   const lifecycleBadgeLabel = lifecycleStatus
@@ -230,19 +257,17 @@ export function EmployeeDetailsView({ employee }: { employee: EmployeeData }) {
         <Button
           variant="ghost"
           size="sm"
-          className="-ml-2 h-9 shrink-0 gap-1.5 px-2.5 sm:h-8"
+          className="-ml-2 shrink-0 gap-1.5 px-2.5"
           onClick={handleBack}
         >
           <ArrowLeft className="h-3.5 w-3.5" />
           Back
         </Button>
       }
-      title={
-        <>
-          <span className="sr-only sm:hidden">{employeeName}</span>
-          <span className="hidden sm:inline">{employeeName}</span>
-        </>
-      }
+      // V-023: the header card below already carries the name as its <h2>, so
+      // the page title only names the page for assistive tech — it is not a
+      // second visible copy of the same words.
+      title={<span className="sr-only">{employeeName}</span>}
       actionsInline
       actions={
         <div className="flex items-center gap-1.5">
@@ -250,7 +275,7 @@ export function EmployeeDetailsView({ employee }: { employee: EmployeeData }) {
             <LoadingButton
               variant="outline"
               size="sm"
-              className="h-9 gap-1.5 px-2.5 sm:h-8"
+              className="gap-1.5 px-2.5"
               isPending={exportPdfMutation.isPending}
               loadingText="…"
               onClick={handleExportPdf}
@@ -264,11 +289,31 @@ export function EmployeeDetailsView({ employee }: { employee: EmployeeData }) {
             <Button
               variant="outline"
               size="sm"
-              className="h-9 gap-1.5 border-destructive/30 px-2.5 text-destructive hover:bg-destructive/10 hover:text-destructive sm:h-8"
+              className="gap-1.5 border-destructive/30 px-2.5 text-destructive hover:bg-destructive/10 hover:text-destructive"
               onClick={handleTerminateClick}
+              aria-label="Terminate employee"
             >
               <UserX className="h-3.5 w-3.5" />
               <span className="hidden sm:inline">Terminate</span>
+            </Button>
+          )}
+          {canTerminate && (
+            <ArchiveEmployeeAction
+              employeeUserId={employee.id}
+              employeeName={employeeName}
+              onArchived={handleLifecycleChanged}
+            />
+          )}
+          {canRehire && (
+            <Button
+              variant="outline"
+              size="sm"
+              className="gap-1.5 px-2.5"
+              onClick={handleRehireClick}
+              aria-label="Rehire employee"
+            >
+              <UserCheck className="h-3.5 w-3.5" />
+              <span className="hidden sm:inline">Rehire</span>
             </Button>
           )}
           {showManageActions && aiActions.length > 0 && (
@@ -303,6 +348,7 @@ export function EmployeeDetailsView({ employee }: { employee: EmployeeData }) {
           <EmployeeTabsList
             ref={tabsListRef}
             showSensitiveTab={showSensitiveTab}
+            showEditTab={showEditTab}
             isSelf={isSelf}
           />
         </ScrollEdgeFade>
@@ -374,6 +420,15 @@ export function EmployeeDetailsView({ employee }: { employee: EmployeeData }) {
           />
         </TabsContent>
       </Tabs>
+      {canRehire && rehireOpen && (
+        <RehireEmployeeDialog
+          open={rehireOpen}
+          onOpenChange={setRehireOpen}
+          employeeUserId={employee.id}
+          employeeName={employeeName}
+          onRehired={handleLifecycleChanged}
+        />
+      )}
     </PageWrapper>
   );
 }

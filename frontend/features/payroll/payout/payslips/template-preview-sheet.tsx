@@ -1,6 +1,9 @@
 "use client";
 
-import { Loader2 } from "lucide-react";
+import { useEffect } from "react";
+import { Download, Loader2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { downloadBlob } from "@/lib/download-blob";
 import {
   Sheet,
   SheetBody,
@@ -18,24 +21,38 @@ interface Props {
   onOpenChange: (open: boolean) => void;
 }
 
+function previewFilename(name: string): string {
+  const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+  return `payslip-preview-${slug || "template"}.html`;
+}
+
 export function PayslipPreviewSheet({ template, open, onOpenChange }: Props) {
   const previewMutation = usePreviewPayslipTemplate();
+  const { mutate } = previewMutation;
+  const { layout, config } = template;
+  const html = previewMutation.data?.html;
 
-  function handleOpenChange(nextOpen: boolean) {
-    if (nextOpen) {
-      previewMutation.mutate({ layout: template.layout, config: template.config });
-    }
-    onOpenChange(nextOpen);
+  function handleDownload() {
+    if (!html) return;
+    downloadBlob(new Blob([html], { type: "text/html;charset=utf-8" }), previewFilename(template.name));
   }
 
+  useEffect(() => {
+    if (open) mutate({ layout, config });
+  }, [open, layout, config, mutate]);
+
   return (
-    <Sheet open={open} onOpenChange={handleOpenChange}>
+    <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent className="p-0 flex flex-col gap-0 overflow-hidden w-full sm:max-w-2xl">
         <div className="shrink-0 px-6 py-4 border-b">
           <SheetHeader>
             <SheetTitle>Preview — {template.name}</SheetTitle>
             <SheetDescription>Sample payslip rendered with this template.</SheetDescription>
           </SheetHeader>
+          <Button size="sm" variant="outline" className="mt-3" onClick={handleDownload} disabled={!html}>
+            <Download className="mr-1.5 h-3.5 w-3.5" />
+            Download preview
+          </Button>
         </div>
         <SheetBody className="px-6 py-4">
           {previewMutation.isPending && (
@@ -43,10 +60,13 @@ export function PayslipPreviewSheet({ template, open, onOpenChange }: Props) {
               <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
             </div>
           )}
-          {previewMutation.data?.html && (
+          {html && (
             <iframe
-              srcDoc={previewMutation.data.html}
-              sandbox="allow-scripts allow-same-origin"
+              srcDoc={html}
+              // Static payslip HTML with backend-interpolated names: no scripts,
+              // and never `allow-scripts` + `allow-same-origin`, which together
+              // let the frame's scripts run as the app and lift the sandbox.
+              sandbox=""
               className="w-full h-[600px] border-0"
               title="Payslip Preview"
             />

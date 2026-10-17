@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { Search, X } from "lucide-react";
+import { Loader2, Search, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Input } from "@/components/ui/input";
 
@@ -18,9 +18,19 @@ export interface SearchInputProps
   value: string;
   onValueChange: (value: string) => void;
   onClear?: () => void;
+  /**
+   * Enter pressed in the field. Debounced searches use it to publish the typed
+   * value at once instead of waiting out the timer; the default is still a
+   * trailing debounce, so this never turns into a request per keystroke.
+   */
+  onSubmitSearch?: () => void;
   inputClassName?: string;
   /** Span the container instead of capping at the shared filter max-width. */
   fill?: boolean;
+  /** Render a square icon-only control until the caller expands it. */
+  compact?: boolean;
+  /** A search for the typed value is still pending: the icon becomes a spinner. */
+  searching?: boolean;
 }
 
 export const SearchInput = React.forwardRef<HTMLInputElement, SearchInputProps>(
@@ -29,11 +39,14 @@ export const SearchInput = React.forwardRef<HTMLInputElement, SearchInputProps>(
       value,
       onValueChange,
       onClear,
+      onSubmitSearch,
       className,
       inputClassName,
       placeholder = "Search…",
       disabled,
       fill = false,
+      compact = false,
+      searching = false,
       id,
       ...props
     },
@@ -41,6 +54,14 @@ export const SearchInput = React.forwardRef<HTMLInputElement, SearchInputProps>(
   ) {
     function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
       onValueChange(e.target.value);
+    }
+
+    function handleKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
+      props.onKeyDown?.(e);
+      if (e.key !== "Enter" || e.defaultPrevented) return;
+      // A search row often sits inside a form; Enter must search, not submit.
+      e.preventDefault();
+      onSubmitSearch?.();
     }
 
     function handleClear() {
@@ -56,25 +77,38 @@ export const SearchInput = React.forwardRef<HTMLInputElement, SearchInputProps>(
           SEARCH_INPUT_WIDTH,
           !fill && SEARCH_INPUT_MAX_WIDTH,
           className,
+          compact &&
+            "!size-9 !min-w-9 !max-w-9 !flex-none !basis-9 overflow-hidden",
         )}
       >
-        <Search
-          className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"
-          aria-hidden="true"
-        />
+        {React.createElement(searching ? Loader2 : Search, {
+          className: cn(
+            "pointer-events-none absolute top-1/2 z-10 h-4 w-4 -translate-y-1/2 text-muted-foreground",
+            compact ? "left-1/2 -translate-x-1/2" : "left-3",
+            searching && "animate-spin motion-reduce:animate-none",
+          ),
+          "aria-hidden": true,
+        })}
         <Input
           ref={ref}
           id={id}
+          suppressHydrationWarning
           type="search"
           value={value}
           onChange={handleChange}
           placeholder={placeholder}
           disabled={disabled}
+          aria-busy={searching || undefined}
           className={cn(
             "min-w-0 pl-9 pr-9 [&::-webkit-search-cancel-button]:hidden [&::-webkit-search-decoration]:hidden",
             inputClassName,
+            compact &&
+              "absolute inset-0 !size-9 !min-w-9 !max-w-9 !p-0 text-transparent placeholder:text-transparent",
           )}
           {...props}
+          // After the spread: a caller's own onKeyDown is chained inside
+          // handleKeyDown, never allowed to replace it.
+          onKeyDown={handleKeyDown}
         />
         {value ? (
           <button

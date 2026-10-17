@@ -13,11 +13,11 @@ import {
   isBuildDestinationActive,
   isBuildNavModelEmpty,
 } from "@/lib/build/build-nav-model";
-import type { BuildNavDestination } from "@/lib/build/nav/build-nav-destination";
+import type { BuildNavDestination, BuildNavModel } from "@/lib/build/nav/build-nav-destination";
 import { ErrorState } from "@/components/shared/error-state";
 import { NoPermissionState } from "@/components/shared/no-permission-state";
 import { BuildAgentPulse } from "./build-agent-pulse";
-import { BuildSidebarSkeleton } from "./build-sidebar-skeleton";
+import { BuildSidebarSkeleton } from "@/components/layout/sidebar/build-sidebar-skeleton";
 import { BuildMoreToolsMenu } from "./build-more-tools-menu";
 import { BuildNavLink } from "./build-nav-link";
 import { BuildQuickCreate } from "./build-quick-create";
@@ -28,6 +28,7 @@ import { useBuildScopeRecovery } from "./use-build-scope-recovery";
 import { useBuildNavModel, useBuildNavView } from "./use-build-nav-model";
 
 const BUILD_ACCENT: ModuleAccent = MODULE_ACCENTS.build;
+const NO_CREATE_ACTIONS: BuildNavModel["createActions"] = [];
 
 interface BuildSidebarProps {
   isCollapsed: boolean;
@@ -44,7 +45,7 @@ function SectionLabel({
   if (isCollapsed)
     return <div aria-hidden className="mx-auto my-1.5 h-px w-5 bg-sidebar-border" />;
   return (
-    <p className="px-2 pb-1 pt-2 text-micro font-semibold uppercase tracking-[0.08em] text-sidebar-foreground/65">
+    <p className="px-2 pb-1 pt-2 text-micro font-medium uppercase tracking-[0.08em] text-sidebar-foreground/65">
       {label}
     </p>
   );
@@ -174,11 +175,18 @@ export function BuildSidebar({ isCollapsed, onNavigate }: BuildSidebarProps) {
         </>
       ) : null}
 
-      <div className={cn("pt-2", isCollapsed ? "space-y-1" : "space-y-0.5")}>
+      <div
+        className={cn(
+          "pt-2",
+          isCollapsed
+            ? "flex flex-col items-center gap-1"
+            : "space-y-0.5",
+        )}
+      >
         <BuildAgentPulse isCollapsed={isCollapsed} onNavigate={onNavigate} />
         <BuildQuickCreate
           scope={model.scope}
-          actions={model.createActions}
+          actions={identity.isInaccessible ? NO_CREATE_ACTIONS : model.createActions}
           isCollapsed={isCollapsed}
           onNavigate={onNavigate}
         />

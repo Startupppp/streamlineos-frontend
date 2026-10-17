@@ -6,12 +6,13 @@ import {
   type MutableRefObject,
   type SetStateAction,
 } from "react";
-import { useRankTicket } from "@/hooks/api/build/ticket-create-rank-mutations";
+import { useRankTicket } from "@/hooks/api/build/ticket-rank-mutation";
 import { useReorderCustomStates } from "@/hooks/api/build/custom-states";
 import { patchTicketCollections, restoreTicketCollections, ticketRollback, type TicketSnapshots } from "@/hooks/api/build/ticket-cache";
 import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { isWriteConflict } from "@/lib/api-envelope";
 import { useQueryClient } from "@tanstack/react-query";
 import type { DropResult } from "@hello-pangea/dnd";
 import type { KanbanTicket, KanbanColumn } from "../shared/types";
@@ -37,6 +38,7 @@ function isRankDragContext(v: unknown): v is RankDragContext {
 interface KanbanDragParams {
   projectId: number;
   statuses: StatusEntry[] | undefined;
+  columnBy: string;
   rowBy: string;
   hideCompleted: boolean;
   canManage: boolean;
@@ -47,13 +49,14 @@ interface KanbanDragParams {
   setOptimisticTickets: Dispatch<SetStateAction<KanbanTicket[]>>;
   setOptimisticStatuses: Dispatch<SetStateAction<StatusEntry[] | undefined>>;
   setOptimisticColumnOrder: Dispatch<SetStateAction<KanbanColumn[] | null>>;
-  isDraggingRef: MutableRefObject<boolean>;
+  setIsDragging: Dispatch<SetStateAction<boolean>>;
   dragStartRef: MutableRefObject<{ x: number; y: number } | null>;
 }
 
 export function useKanbanDrag({
   projectId,
   statuses,
+  columnBy,
   rowBy,
   hideCompleted,
   canManage,
@@ -64,7 +67,7 @@ export function useKanbanDrag({
   setOptimisticTickets,
   setOptimisticStatuses,
   setOptimisticColumnOrder,
-  isDraggingRef,
+  setIsDragging,
   dragStartRef,
 }: KanbanDragParams) {
   const queryClient = useQueryClient();
@@ -111,14 +114,20 @@ export function useKanbanDrag({
         restoreTicketCollections(queryClient, context.previousCache);
       }
       toast.error(getErrorMessage(error));
+      if (isWriteConflict(error)) {
+        void queryClient.invalidateQueries({ queryKey: boardTicketsKey, refetchType: "active" });
+      }
     },
-    onSettled: (data) => {
+    onSuccess: (data) => {
       if (data) {
-        patchTicketCollections(queryClient, projectId, (t) =>
-          t.id === data.id ? { ...t, rank: data.rank, status: data.status } : t,
+        setOptimisticTickets((current) =>
+          current.map((ticket) =>
+            ticket.id === data.id
+              ? { ...ticket, rank: data.rank, status: data.status, version: data.version }
+              : ticket,
+          ),
         );
       }
-      queryClient.invalidateQueries({ queryKey: boardTicketsKey });
     },
   });
 
@@ -169,17 +178,17 @@ export function useKanbanDrag({
         },
       );
     },
-    [canManage, visibleColumns, orderedColumns, reorderStates, statuses],
+    [canManage, visibleColumns, orderedColumns, reorderStates, statuses, setOptimisticColumnOrder, setOptimisticStatuses],
   );
 
   const onDragStart = useCallback(() => {
-    isDraggingRef.current = true;
+    setIsDragging(true);
     dragStartRef.current = null;
-  }, []);
+  }, [setIsDragging, dragStartRef]);
 
   const onDragEnd = useCallback(
     (result: DropResult) => {
-      isDraggingRef.current = false;
+      setIsDragging(false);
       dragStartRef.current = null;
       if (result.type === COLUMN_DND_TYPE) {
         handleColumnDragEnd(result);
@@ -194,6 +203,8 @@ export function useKanbanDrag({
         destination.index === source.index
       )
         return;
+
+      if (columnBy !== "status") return;
 
       if (rowBy !== "none") {
         const srcRow = decodeRowKey(source.droppableId.split("||")[0] ?? "");
@@ -237,6 +248,7 @@ export function useKanbanDrag({
       rankTicket.mutate({
         projectId,
         ticketId,
+        version: sourceTicket.version,
         beforeTicketId,
         afterTicketId,
         ...(isCrossColumn ? { status: newStatus } : {}),
@@ -246,10 +258,13 @@ export function useKanbanDrag({
       optimisticTickets,
       rankTicket,
       projectId,
+      columnBy,
       rowBy,
       hideCompleted,
       optimisticStatuses,
       handleColumnDragEnd,
+      setIsDragging,
+      dragStartRef,
     ],
   );
 

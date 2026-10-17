@@ -4,6 +4,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import { useAuthorizedIdempotentMutation } from "@/hooks/api/inventory/use-idempotent-mutation";
 import type {
   HrWorkflowDefinition,
   HrWorkflowInstance,
@@ -18,6 +19,7 @@ import type {
 import { lazyContract } from "@/lib/api-envelope";
 import { queryKeyBase } from "@/lib/query-keys/base";
 import { useGatedQuery } from "@/hooks/api/gated-query";
+import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
 
 const noContentC = lazyContract(() =>
   import("@/hooks/api/cursor-page-schema").then((m) => m.noContentContract),
@@ -189,6 +191,7 @@ export function useWorkflowInstanceDetail(instanceId: number | null) {
     queryFn: ({ signal }) => apiClient.get<HrWorkflowInstance>(`/hr/workflows/instances/${instanceId}`, undefined, signal, lazyContract(() => import("@/hooks/api/hr/hr-workflows-schema").then(m => m.workflowInstanceDetailContract))),
     enabled: instanceId !== null,
     staleTime: 30_000,
+    ...INLINE_READ_ERROR,
   });
 }
 
@@ -197,10 +200,12 @@ interface RejectPayload { comment: string; attachments?: { url: string; name: st
 
 export function useApproveInstance() {
   const qc = useQueryClient();
-  return useAuthorizedMutation("hr:workflows:approve", {
+  // Backend fences this route with @Idempotent; the key must survive a retry of
+  // the same intent or a stalled-then-repeated approve is two commands.
+  return useAuthorizedIdempotentMutation<HrWorkflowInstance, Error, ActPayload & { instanceId: number }>("hr:workflows:approve", {
     mutationKey: ["hr", "workflow-instances", "approve"],
-    mutationFn: ({ instanceId, ...body }: ActPayload & { instanceId: number }) =>
-      apiClient.post<HrWorkflowInstance>(`/hr/workflows/instances/${instanceId}/approve`, body, undefined, lazyContract(() => import("@/hooks/api/hr/hr-workflows-schema").then(m => m.workflowInstanceRowContract))),
+    mutationFn: ({ instanceId, ...body }, idempotencyKey) =>
+      apiClient.post<HrWorkflowInstance>(`/hr/workflows/instances/${instanceId}/approve`, body, { headers: { "Idempotency-Key": idempotencyKey } }, lazyContract(() => import("@/hooks/api/hr/hr-workflows-schema").then(m => m.workflowInstanceRowContract))),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: INSTANCES_KEY });
     },
@@ -209,10 +214,10 @@ export function useApproveInstance() {
 
 export function useRejectInstance() {
   const qc = useQueryClient();
-  return useAuthorizedMutation("hr:workflows:approve", {
+  return useAuthorizedIdempotentMutation<HrWorkflowInstance, Error, RejectPayload & { instanceId: number }>("hr:workflows:approve", {
     mutationKey: ["hr", "workflow-instances", "reject"],
-    mutationFn: ({ instanceId, ...body }: RejectPayload & { instanceId: number }) =>
-      apiClient.post<HrWorkflowInstance>(`/hr/workflows/instances/${instanceId}/reject`, body, undefined, lazyContract(() => import("@/hooks/api/hr/hr-workflows-schema").then(m => m.workflowInstanceRowContract))),
+    mutationFn: ({ instanceId, ...body }, idempotencyKey) =>
+      apiClient.post<HrWorkflowInstance>(`/hr/workflows/instances/${instanceId}/reject`, body, { headers: { "Idempotency-Key": idempotencyKey } }, lazyContract(() => import("@/hooks/api/hr/hr-workflows-schema").then(m => m.workflowInstanceRowContract))),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: INSTANCES_KEY });
     },
@@ -225,6 +230,7 @@ export function useMyDelegations(options?: { enabled?: boolean }) {
     queryFn: ({ signal }) => apiClient.get<HrWorkflowDelegation[]>("/hr/workflows/delegations/mine", undefined, signal, lazyContract(() => import("@/hooks/api/hr/hr-workflows-schema").then(m => m.workflowDelegationListContract))),
     staleTime: 2 * 60_000,
     enabled: options?.enabled ?? true,
+    ...INLINE_READ_ERROR,
   });
 }
 

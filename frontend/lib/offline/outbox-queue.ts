@@ -118,6 +118,19 @@ function defaultOperationId(): string {
   return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20)}`;
 }
 
+function attachIdentity(
+  draft: OutboxOperationDraft,
+  clientOperationId: string,
+  occurredAt: string,
+): OutboxOperation {
+  switch (draft.type) {
+    case "stock.adjust": return { ...draft, clientOperationId, occurredAt };
+    case "pick.confirm": return { ...draft, clientOperationId, occurredAt };
+    case "receive.count": return { ...draft, clientOperationId, occurredAt };
+    case "scan.capture": return { ...draft, clientOperationId, occurredAt };
+  }
+}
+
 /** The order the server replays in, reproduced here so a batch arrives sorted. */
 function byOperatorOrder(a: OutboxEntry, b: OutboxEntry): number {
   const at = Date.parse(a.operation.occurredAt);
@@ -218,11 +231,8 @@ export class OutboxQueue {
   ): Promise<OutboxEntry> {
     await this.hydrate();
     const at = this.now();
-    const operation = {
-      ...draft,
-      clientOperationId: this.newOperationId(),
-      occurredAt: new Date(at).toISOString(),
-    } as OutboxOperation;
+    const clientOperationId = this.newOperationId();
+    const operation = attachIdentity(draft, clientOperationId, new Date(at).toISOString());
 
     const entry: OutboxEntry = {
       clientOperationId: operation.clientOperationId,

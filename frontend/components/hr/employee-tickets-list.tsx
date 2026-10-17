@@ -17,9 +17,6 @@ type Ticket = {
     name: string;
     key: string;
   } | null;
-  sprint: {
-    name: string;
-  } | null;
 };
 
 interface EmployeeTicketsListProps {
@@ -60,11 +57,6 @@ const TICKET_COLUMNS: DataTableColumn<Ticket>[] = [
       ) : (
         "-"
       ),
-  },
-  {
-    key: "sprint",
-    header: "Sprint",
-    cell: (row) => row.sprint?.name || "-",
   },
   {
     key: "status",

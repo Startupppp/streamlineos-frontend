@@ -1,0 +1,125 @@
+import type { ReactNode } from "react";
+import { fireEvent, render, screen } from "@testing-library/react";
+
+const toastError = jest.fn();
+jest.mock("sonner", () => ({ toast: { error: (m: string) => toastError(m), success: jest.fn() } }));
+
+jest.mock("@/components/ui/page-wrapper", () => ({
+  PageWrapper: ({ title, children, actions }: { title: ReactNode; children: ReactNode; actions?: ReactNode }) => (
+    <div>
+      <h1>{title}</h1>
+      {actions}
+      {children}
+    </div>
+  ),
+}));
+
+jest.mock("@/features/hr/shared/employee-picker", () => ({
+  EmployeePicker: ({ onChange, includeInactive }: { onChange: (id: string) => void; includeInactive?: boolean }) => (
+    <button type="button" data-include-inactive={String(!!includeInactive)} onClick={() => onChange("user_1")}>
+      pick employee
+    </button>
+  ),
+}));
+
+jest.mock("@/components/shared/hr-sheet", () => ({
+  HrSheet: ({
+    open,
+    children,
+    onSubmit,
+    submitLabel,
+  }: {
+    open: boolean;
+    children: ReactNode;
+    onSubmit?: () => void;
+    submitLabel?: ReactNode;
+  }) =>
+    open ? (
+      <div>
+        {children}
+        <button type="button" onClick={onSubmit}>
+          {submitLabel}
+        </button>
+      </div>
+    ) : null,
+}));
+
+jest.mock("@/components/ui/confirm-sheet", () => ({ ConfirmSheet: () => null }));
+jest.mock("./fnf-suggestion-panel", () => ({
+  FnfSuggestionPanel: ({ onApply }: { onApply: (s: { gratuity: string; leaveEncashment: string }) => void }) => (
+    <button type="button" onClick={() => onApply({ gratuity: "90000.00", leaveEncashment: "12500.00" })}>
+      Fill suggested amounts
+    </button>
+  ),
+}));
+jest.mock("@/hooks/api/access", () => ({ useCan: () => true }));
+jest.mock("@/hooks/api/org-display", () => ({ useOrgDisplay: () => ({ currency: "INR", locale: "en-IN" }) }));
+jest.mock("@/hooks/api/use-page-state", () => ({ usePageState: () => ({ kind: "ready" }) }));
+
+const createMutate = jest.fn();
+jest.mock("@/hooks/api/hr/fnf", () => ({
+  useFnfSettlements: () => ({ data: [], isLoading: false, isError: false, error: null, refetch: jest.fn() }),
+  useCreateFnfSettlement: () => ({ mutate: createMutate, isPending: false }),
+  useCompleteFnfSettlement: () => ({ mutate: jest.fn(), isPending: false }),
+}));
+
+import { FnfPageClient } from "./fnf-page-client";
+
+function openCreateDrawer() {
+  render(<FnfPageClient />);
+  fireEvent.click(screen.getByRole("button", { name: "Create draft" }));
+}
+
+beforeEach(() => {
+  toastError.mockReset();
+  createMutate.mockReset();
+});
+
+describe("the full and final draft drawer says what is missing inside the drawer", () => {
+  it("renders a field-level error beside the employee picker on a blank submit, not only a toast", () => {
+    openCreateDrawer();
+
+    fireEvent.click(screen.getByRole("button", { name: "Create settlement" }));
+
+    const message = screen.getByRole("alert");
+    expect(message).toHaveTextContent("Employee is required");
+    expect(createMutate).not.toHaveBeenCalled();
+  });
+
+  it("clears the error once an employee is chosen and then submits", () => {
+    openCreateDrawer();
+
+    fireEvent.click(screen.getByRole("button", { name: "Create settlement" }));
+    expect(screen.getByRole("alert")).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "pick employee" }));
+    expect(screen.queryByRole("alert")).toBeNull();
+
+    fireEvent.click(screen.getByRole("button", { name: "Create settlement" }));
+    expect(createMutate).toHaveBeenCalled();
+  });
+});
+
+describe("filling suggested amounts puts gratuity in its own field, counted in net payable", () => {
+  it("fills the Gratuity input and sends it as a number, leaving Notes empty", () => {
+    openCreateDrawer();
+    fireEvent.click(screen.getByRole("button", { name: "pick employee" }));
+    fireEvent.click(screen.getByRole("button", { name: "Fill suggested amounts" }));
+
+    expect(screen.getByLabelText("Gratuity")).toHaveValue(90000);
+
+    fireEvent.click(screen.getByRole("button", { name: "Create settlement" }));
+    expect(createMutate).toHaveBeenCalledWith(
+      expect.objectContaining({ userId: "user_1", gratuity: 90000, leaveEncashment: 12500, notes: undefined }),
+      expect.anything(),
+    );
+  });
+});
+
+describe("who the final settlement picker offers (QA 2026-10-13)", () => {
+  it("lists deactivated (terminated) employees and points at the Exit page", () => {
+    openCreateDrawer();
+    expect(screen.getByRole("button", { name: "pick employee" })).toHaveAttribute("data-include-inactive", "true");
+    expect(screen.getByRole("link", { name: "Record the exit first" })).toHaveAttribute("href", "/hr/exit");
+  });
+});

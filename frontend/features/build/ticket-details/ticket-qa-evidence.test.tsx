@@ -3,7 +3,7 @@ import type { AccessState } from "@/lib/rbac/gate";
 import { TicketQaEvidence } from "./ticket-qa-evidence";
 
 let mockAccess: AccessState = "granted";
-let mockBugResult: { data: unknown; isLoading: boolean } = {
+let mockBugResult: { data: unknown; isLoading: boolean; isError?: boolean } = {
   data: undefined,
   isLoading: false,
 };
@@ -115,5 +115,16 @@ describe("TicketQaEvidence gating", () => {
     render(<TicketQaEvidence projectId={1} ticketId={7} ticketType="BUG" />);
 
     expect(screen.queryByText("No QA evidence recorded.")).toBeNull();
+  });
+
+  it("renders nothing rather than a stuck skeleton when the bug fetch errors during an optimistic type conversion", () => {
+    mockBugResult = { data: undefined, isLoading: false, isError: true };
+
+    const { container } = render(
+      <TicketQaEvidence projectId={1} ticketId={7} ticketType="BUG" />,
+    );
+
+    expect(container.querySelector(".skeleton-shimmer")).toBeNull();
+    expect(container).toBeEmptyDOMElement();
   });
 });

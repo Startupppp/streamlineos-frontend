@@ -1,9 +1,31 @@
 import { render, screen } from "@testing-library/react";
+import { ApiError } from "@/lib/api-envelope";
 import { PageState } from "./page-state";
+
+jest.mock("./enable-module-button", () => ({
+  EnableModuleButton: ({ moduleName }: { moduleName: string }) => <button type="button">Enable {moduleName}</button>,
+}));
 
 const loading = <div data-testid="skeleton" />;
 
 describe("PageState", () => {
+  it("offers a clear action for filtered results without showing the create empty state", () => {
+    const onClearFilters = jest.fn();
+    render(
+      <PageState resolution={{ kind: "filtered-empty" }} loading={loading} empty={<div>Create a record</div>} onClearFilters={onClearFilters}>
+        <div>body</div>
+      </PageState>,
+    );
+    expect(screen.queryByText("Create a record")).toBeNull();
+    screen.getByRole("button", { name: /clear filters/i }).click();
+    expect(onClearFilters).toHaveBeenCalledTimes(1);
+  });
+
+  it("accepts custom content for an error while retaining the resolved branch", () => {
+    render(<PageState resolution={{ kind: "error", error: new Error("failure") }} loading={loading} views={{ error: <div>Custom recovery</div> }}><div>body</div></PageState>);
+    expect(screen.getByText("Custom recovery")).toBeInTheDocument();
+    expect(screen.queryByText("body")).toBeNull();
+  });
   it("offers to enable, never to buy, when the organization simply has it switched off", () => {
     render(
       <PageState resolution={{ kind: "module-disabled", moduleKey: "feedbucket" }} loading={loading}>
@@ -16,6 +38,7 @@ describe("PageState", () => {
       "/settings/modules",
     );
     expect(screen.queryByRole("link", { name: /plan|upgrade|billing/i })).toBeNull();
+    expect(screen.getByRole("button", { name: /enable/i })).toBeInTheDocument();
   });
 
   it("does not offer to enable a module that is already on to a user who was denied it", () => {
@@ -53,6 +76,15 @@ describe("PageState", () => {
     expect(screen.getByText("body")).toBeInTheDocument();
   });
 
+  it("forwards className to the ready branch so list bodies fill the shell", () => {
+    render(
+      <PageState resolution={{ kind: "ready" }} loading={loading} className="flex-1">
+        <div data-testid="ready-body">body</div>
+      </PageState>,
+    );
+    expect(screen.getByTestId("ready-body").parentElement).toHaveClass("flex-1");
+  });
+
   it("falls back to the children when a non-list surface reports emptiness", () => {
     render(
       <PageState resolution={{ kind: "empty" }} loading={loading}>
@@ -69,6 +101,37 @@ describe("PageState", () => {
       </PageState>,
     );
     expect(screen.getByTestId("skeleton").parentElement).toHaveClass("flex-1");
+  });
+
+  it("forwards className to the empty branch so EmptyState fills every list shell", () => {
+    render(
+      <PageState
+        resolution={{ kind: "empty" }}
+        loading={loading}
+        empty={<div data-testid="empty-body">No rows</div>}
+        className="flex-1"
+      >
+        <div>body</div>
+      </PageState>,
+    );
+    expect(screen.getByTestId("empty-body").parentElement).toHaveClass("flex-1");
+  });
+
+  it("gives every empty-list branch the full available content width", () => {
+    render(
+      <PageState
+        resolution={{ kind: "empty" }}
+        loading={loading}
+        empty={<div data-testid="empty-list">No rows</div>}
+      >
+        <div>body</div>
+      </PageState>,
+    );
+
+    expect(screen.getByTestId("empty-list").parentElement).toHaveClass(
+      "min-w-0",
+      "w-full",
+    );
   });
 
   it("renders access-restricted, not the empty state, when the caller is denied — the Ticket 26 guarantee at the component boundary", () => {
@@ -116,5 +179,39 @@ describe("PageState", () => {
     );
 
     expect(screen.queryByText("body")).not.toBeInTheDocument();
+  });
+
+  it("shows the request id of a failed load, so the person can quote it", () => {
+    const failure = new ApiError("Server error", 500, "INTERNAL", { correlationId: "req-3b1c" }, "/hr/documents");
+    render(
+      <PageState resolution={{ kind: "error", error: failure }} loading={loading}>
+        <div>body</div>
+      </PageState>,
+    );
+
+    expect(screen.getByText("req-3b1c")).toBeInTheDocument();
+  });
+});
+
+describe("PageState — not-found", () => {
+  it("renders the shared not-found state instead of the empty node or the children", () => {
+    render(
+      <PageState resolution={{ kind: "not-found" }} loading={loading} empty={<div>No releases yet</div>}>
+        <div>body</div>
+      </PageState>,
+    );
+    expect(screen.getByRole("heading", { name: "Not found" })).toBeInTheDocument();
+    expect(screen.queryByText("No releases yet")).not.toBeInTheDocument();
+    expect(screen.queryByText("body")).not.toBeInTheDocument();
+  });
+
+  it("keeps the empty node for a genuinely empty result", () => {
+    render(
+      <PageState resolution={{ kind: "empty" }} loading={loading} empty={<div>No releases yet</div>}>
+        <div>body</div>
+      </PageState>,
+    );
+    expect(screen.getByText("No releases yet")).toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: "Not found" })).not.toBeInTheDocument();
   });
 });

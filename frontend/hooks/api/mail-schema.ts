@@ -1,11 +1,5 @@
 import { z } from "zod";
 
-/**
- * Response contracts for the mail module.
- * Derived from backend `mail-response.schemas.ts`.
- * NOT `.strict()`.
- */
-
 const mailAddressContract = z.object({
   name: z.string().nullable(),
   email: z.string(),
@@ -26,7 +20,6 @@ export const mailAccountContract = z.object({
   accountLabel: z.string().nullable(),
   status: z.enum(["active", "needs_reauth", "disabled"]),
   isPrimary: z.boolean(),
-  composioConnectedAccountId: z.string(),
 });
 
 /** `mailAccountListSchema` */
@@ -142,4 +135,4 @@ export const mailAiDraftContract = z.object({
 export const mailSendResultContract = z.object({ sent: z.literal(true) });
 
 /** `mailActionSuccessSchema` */
-export const mailActionSuccessContract = z.object({ success: z.literal(true) });
+export const mailActionSuccessContract = z.object({ ok: z.literal(true) });

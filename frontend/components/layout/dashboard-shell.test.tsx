@@ -6,6 +6,7 @@ import { renderWithProviders } from "@/test-utils/render";
 import { DashboardShell } from "./dashboard-shell";
 import { ChatMobileBottomNav } from "@/features/chat/chat-mobile-bottom-nav";
 import { getChatMobileBottomNavClassName } from "./mobile/chat-mobile-chrome-layout";
+import { launcherBottomCssPx, scrollGutterCssPx } from "./mobile/mobile-bottom-chrome-geometry";
 
 const drawerCalls: Array<{ direction?: string; open?: boolean }> = [];
 const productSwitcherCalls: Array<{ drawerOnly?: boolean }> = [];
@@ -318,7 +319,7 @@ describe("DashboardShell /chat mobile bottom nav", () => {
     expect(buttons.length).toBeGreaterThanOrEqual(3);
   });
 
-  it("desktop variant on /chat still mounts the slot — the md: breakpoint hides it, not the variant", () => {
+  it("desktop variant on /chat still mounts the slot — the lg: breakpoint hides it, not the variant", () => {
     renderWithProviders(
       <DashboardShell
         userId="user-1"
@@ -331,7 +332,7 @@ describe("DashboardShell /chat mobile bottom nav", () => {
     );
 
     expect(screen.queryByTestId("chat-mobile-nav")).not.toBeNull();
-    expect(getChatMobileBottomNavClassName()).toContain("md:hidden");
+    expect(getChatMobileBottomNavClassName()).toContain("lg:hidden");
   });
 
   it("off /chat the slot is never called, in either variant", () => {
@@ -363,11 +364,35 @@ describe("DashboardShell /chat mobile bottom nav", () => {
     );
 
     expect(layoutClient).toContain(
-      'import { ChatMobileBottomNav } from "@/features/chat/chat-mobile-bottom-nav";',
+      'import("@/features/chat/chat-mobile-bottom-nav")',
     );
     expect(layoutClient).toContain("chatMobileNavSlot={renderChatMobileNav}");
     expect(layoutClient).toMatch(
       /function renderChatMobileNav\([\s\S]*?<ChatMobileBottomNav onOpenMobileMenu=\{onOpenMobileMenu\} \/>/,
+    );
+  });
+});
+
+describe("DashboardShell mobile scroll gutter", () => {
+  beforeEach(() => {
+    currentPathname = "/build";
+  });
+
+  it("sets --mb-scroll-gutter on main#dashboard-content when module nav is shown", () => {
+    renderWithProviders(
+      <DashboardShell userId="user-1" defaultCollapsed={false} shellVariant="desktop">
+        <div>Content</div>
+      </DashboardShell>,
+    );
+    const main = document.getElementById("dashboard-content");
+    expect(main?.style?.getPropertyValue("--mb-scroll-gutter")).toBe(
+      `${scrollGutterCssPx(true)}px`,
+    );
+    expect(main?.style?.getPropertyValue("--mb-fab-lane")).toBe(
+      `${scrollGutterCssPx(true)}px`,
+    );
+    expect(document.documentElement.style.getPropertyValue("--mb-launcher-bottom")).toBe(
+      `${launcherBottomCssPx(true)}px`,
     );
   });
 });

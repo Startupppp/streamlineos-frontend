@@ -1,20 +1,22 @@
 "use client";
 
-import { useCallback } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { ClipboardList, X } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
-import { LoadingButton } from "@/components/ui/loading-button";
+import { InfiniteScrollSentinel } from "@/components/ui/infinite-scroll-sentinel";
 import { EmptyState } from "@/components/ui/empty-state";
 import {
   Sheet,
   SheetContent,
+  SheetDescription,
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
 import {
   Drawer,
   DrawerContent,
+  DrawerDescription,
   DrawerHeader,
   DrawerTitle,
 } from "@/components/ui/drawer";
@@ -22,6 +24,7 @@ import { useIsMobile } from "@/hooks/common/use-mobile";
 import { useModuleAuditLog, type AuditLogEntry } from "@/hooks/api/module-access";
 
 const PAGE_SIZE = 15;
+const AUDIT_LOG_DESCRIPTION = "Recent access and role changes for this module, newest first.";
 
 function formatRelativeTime(isoDate: string): string {
   const diff = Date.now() - new Date(isoDate).getTime();
@@ -88,40 +91,74 @@ interface AuditLogBodyProps {
   open: boolean;
 }
 
+function useProgressiveLoadState(isLoading: boolean): { stillLoading: boolean; offerRetry: boolean } {
+  const [stillLoading, setStillLoading] = useState(false);
+  const [offerRetry, setOfferRetry] = useState(false);
+
+  useEffect(() => {
+    if (!isLoading) {
+      setStillLoading(false);
+      setOfferRetry(false);
+      return;
+    }
+    const t1 = setTimeout(() => setStillLoading(true), 5_000);
+    const t2 = setTimeout(() => setOfferRetry(true), 15_000);
+    return () => {
+      clearTimeout(t1);
+      clearTimeout(t2);
+    };
+  }, [isLoading]);
+
+  return { stillLoading, offerRetry };
+}
+
 function AuditLogBody({ moduleKey, open }: AuditLogBodyProps) {
   const auditQuery = useModuleAuditLog(moduleKey, PAGE_SIZE, { enabled: open });
+  const { stillLoading, offerRetry } = useProgressiveLoadState(auditQuery.isLoading);
 
   const entries = auditQuery.data?.pages.flatMap((p) => p.data) ?? [];
-
-  const handleLoadMore = useCallback(() => {
-    void auditQuery.fetchNextPage();
-  }, [auditQuery]);
+  const { refetch } = auditQuery;
+  const handleRetry = useCallback(() => void refetch(), [refetch]);
 
   return (
     <div className="flex flex-col flex-1 min-h-0">
       {auditQuery.isLoading ? (
-        <div className="divide-y divide-border/60 flex-1">
-          {Array.from({ length: 6 }).map((_, i) => (
-            <AuditEntryRowSkeleton key={i} />
-          ))}
+        <div className="flex flex-col flex-1">
+          <div className="divide-y divide-border/60">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <AuditEntryRowSkeleton key={i} />
+            ))}
+          </div>
+          {stillLoading ? (
+            <div className="flex flex-col items-center gap-2 px-4 py-3 text-center">
+              <p className="text-xs text-muted-foreground">Still loading…</p>
+              {offerRetry ? (
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => void auditQuery.refetch()}
+                >
+                  Retry
+                </Button>
+              ) : null}
+            </div>
+          ) : null}
         </div>
       ) : auditQuery.isError ? (
         <EmptyState
           illustrationPreset="permissions"
           title="Failed to load audit log"
           description="Check your connection and try again."
-          action={{
-            label: "Retry",
-            onClick: () => void auditQuery.refetch(),
-          }}
+          action={{ label: "Retry", onClick: handleRetry }}
           compact
           className="border-0 bg-transparent flex-1"
         />
       ) : entries.length === 0 ? (
         <EmptyState
           illustrationPreset="permissions"
-          title="No audit events yet"
-          description="Access changes will appear here."
+          title="No access changes yet"
+          description="This log records changes to who can use this module: role groups, members, grants and ownership. Day-to-day work inside the module is not listed here; see Settings → Audit log."
           compact
           className="border-0 bg-transparent flex-1"
         />
@@ -135,18 +172,12 @@ function AuditLogBody({ moduleKey, open }: AuditLogBodyProps) {
               />
             ))}
           </div>
-          {auditQuery.hasNextPage ? (
-            <div className="border-t border-border/60 px-4 py-3 flex justify-center shrink-0">
-              <LoadingButton
-                variant="ghost"
-                size="sm"
-                onClick={handleLoadMore}
-                isPending={auditQuery.isFetchingNextPage}
-              >
-                Load more
-              </LoadingButton>
-            </div>
-          ) : null}
+          <InfiniteScrollSentinel
+            hasNextPage={auditQuery.hasNextPage}
+            isFetchingNextPage={auditQuery.isFetchingNextPage}
+            onLoadMore={auditQuery.fetchNextPage}
+            label="Load more audit entries"
+          />
         </>
       )}
     </div>
@@ -177,6 +208,7 @@ export function AuditLogDrawer({
               <ClipboardList className="h-4 w-4" />
               Audit Log
             </DrawerTitle>
+            <DrawerDescription className="sr-only">{AUDIT_LOG_DESCRIPTION}</DrawerDescription>
             <Button
               variant="ghost"
               size="sm"
@@ -205,6 +237,7 @@ export function AuditLogDrawer({
             <ClipboardList className="h-4 w-4" />
             Audit Log
           </SheetTitle>
+          <SheetDescription className="sr-only">{AUDIT_LOG_DESCRIPTION}</SheetDescription>
           <Button
             variant="ghost"
             size="sm"

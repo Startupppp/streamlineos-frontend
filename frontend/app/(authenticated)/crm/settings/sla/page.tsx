@@ -26,7 +26,7 @@ import {
   useSlaPolicies,
   useSlaReport,
   type SlaPolicy,
-} from "@/hooks/api/crm-settings";
+} from "@/hooks/api/crm/settings/sla";
 import { getErrorMessage } from "@/lib/get-error-message";
 import {
   SLA_BREACH_LAYOUT,

@@ -90,7 +90,7 @@ function CommandDialog({
     <Dialog open={open} onOpenChange={onOpenChange} {...props}>
       <DialogContent
         showCloseButton={false}
-        className="gap-0 overflow-hidden border-border bg-background p-0 shadow-lg md:max-w-lg"
+        className="gap-0 overflow-hidden border-border/80 bg-background p-0 shadow-lg md:max-w-lg md:rounded-xl md:min-h-[24rem]"
       >
         <VisuallyHidden>
           <DialogTitle>Command Palette</DialogTitle>
@@ -128,7 +128,7 @@ const CommandList = React.forwardRef<
   React.ComponentRef<typeof CommandPrimitive.List>,
   React.ComponentPropsWithoutRef<typeof CommandPrimitive.List>
 >(({ className, ...props }, ref) => (
-  <div tabIndex={0} className={cn("max-h-[300px] overflow-y-auto overflow-x-hidden outline-none", className)}>
+  <div tabIndex={0} className={cn("h-[min(50vh,20rem)] max-h-[300px] overflow-y-auto overflow-x-hidden outline-none", className)}>
     <CommandPrimitive.List ref={ref} {...props} />
   </div>
 ))
@@ -183,7 +183,7 @@ const CommandItem = React.forwardRef<
   <CommandPrimitive.Item
     ref={ref}
     className={cn(
-      "relative flex cursor-default gap-2 select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none data-[disabled=true]:pointer-events-none data-[selected='true']:bg-accent data-[selected=true]:text-accent-foreground data-[disabled=true]:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
+      "relative flex cursor-default gap-2 select-none items-center rounded-md px-2 py-1.5 text-sm outline-none data-[disabled=true]:pointer-events-none data-[selected='true']:bg-accent data-[selected=true]:text-accent-foreground data-[disabled=true]:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
       className
     )}
     {...props}

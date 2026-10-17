@@ -14,6 +14,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/shared/error-state";
 import { DataTable } from "@/components/ui/data-table";
 import { LoadingButton } from "@/components/ui/loading-button";
+import { InfiniteScrollSentinel } from "@/components/ui/infinite-scroll-sentinel";
 import {
   StatCard,
   StatCardGrid,
@@ -113,10 +114,6 @@ export function ExceptionsView() {
   const handleRetry = useCallback(() => {
     void refetch();
   }, [refetch]);
-
-  const handleLoadMore = useCallback(() => {
-    void fetchNextPage();
-  }, [fetchNextPage]);
 
   const handleRunDetection = useCallback(() => {
     runDetectionMutation.mutate();
@@ -352,18 +349,12 @@ export function ExceptionsView() {
               minWidth="800px"
               emptyState={emptyState}
             />
-            {hasNextPage && (
-              <div className="flex justify-center pb-2">
-                <LoadingButton
-                  variant="outline"
-                  size="sm"
-                  isPending={isFetchingNextPage}
-                  onClick={handleLoadMore}
-                >
-                  Load more
-                </LoadingButton>
-              </div>
-            )}
+            <InfiniteScrollSentinel
+              hasNextPage={hasNextPage}
+              isFetchingNextPage={isFetchingNextPage}
+              onLoadMore={fetchNextPage}
+              label="Load more exceptions"
+            />
           </>
         )}
       </motion.div>

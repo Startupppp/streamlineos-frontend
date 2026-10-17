@@ -12,9 +12,11 @@ import React from "react";
 import { cn, resolveImageUrl } from "@/lib/utils";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { useSavedMessages, useUnsaveMessage, useChatOrgUsers } from "@/hooks/api";
+import { useSavedMessages, useUnsaveMessage } from "@/hooks/api/chat-personal-a";
+import { useChatOrgUsers } from "@/hooks/api/chat-core-read";
 import { formatMessageTime, buildChatUserMap, resolveChatUserName } from "./chat-helpers";
-import { panelRevealLabel, usePanelRenderWindow } from "./panel-render-window";
+import { usePanelRenderWindow } from "./panel-render-window";
+import { TablePagination } from "@/components/ui/table-pagination";
 import type { SavedMessage } from "@/types/chat";
 import { getInitials } from "@/lib/format-utils";
 
@@ -145,6 +147,8 @@ export function SavedMessagesPanel({
     [items, renderWindow.visibleCount],
   );
 
+  function handleNoPrevious() {}
+
   const handleRetry = useCallback(() => void refetch(), [refetch]);
 
   return (
@@ -211,16 +215,15 @@ export function SavedMessagesPanel({
               ))}
             </div>
             {renderWindow.hasMore && (
-              <div className="flex justify-center py-3">
-                <button
-                  type="button"
-                  onClick={renderWindow.onLoadMore}
-                  disabled={isFetchingNextPage}
-                  className="text-dense text-primary hover:underline disabled:opacity-50"
-                >
-                  {panelRevealLabel(renderWindow, total, isFetchingNextPage, "Load more")}
-                </button>
-              </div>
+              <TablePagination
+                mode="cursor"
+                rowCount={renderWindow.visibleCount}
+                hasMore={renderWindow.hasMore}
+                hasPrevious={false}
+                onNext={renderWindow.onLoadMore}
+                onPrevious={handleNoPrevious}
+                disabled={isFetchingNextPage}
+              />
             )}
           </div>
         )}

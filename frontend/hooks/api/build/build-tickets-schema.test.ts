@@ -15,6 +15,7 @@ it("accepts the joined relation shape listRelations actually returns, not the ra
         priority: "HIGH",
         type: "BUG",
         points: 3,
+        version: 3,
         assigneeMembershipId: 7,
         projectId: 5,
         assignee: null,
@@ -28,17 +29,42 @@ it("accepts the joined relation shape listRelations actually returns, not the ra
   expect(result[0]?.direction).toBe("outgoing");
 });
 
-it("still accepts a relation whose related ticket has been deleted (null relatedTicket)", () => {
-  const result = ticketRelationListContract.parse([
-    {
-      id: 2,
-      relationType: "relates_to",
-      relatedTicket: null,
-      direction: "incoming",
-    },
-  ]);
+it("rejects a related ticket with no version, because a stale relatedTicket cache entry cannot resolve a concurrent edit conflict", () => {
+  expect(() =>
+    ticketRelationListContract.parse([
+      {
+        id: 1,
+        relationType: "blocks",
+        relatedTicket: {
+          id: 42,
+          title: "Related ticket",
+          ticketNumber: 12,
+          status: "IN_PROGRESS",
+          priority: "HIGH",
+          type: "BUG",
+          points: 3,
+          assigneeMembershipId: 7,
+          projectId: 5,
+          assignee: null,
+          project: { key: "ENG" },
+        },
+        direction: "outgoing",
+      },
+    ]),
+  ).toThrow(ZodError);
+});
 
-  expect(result[0]?.relatedTicket).toBeNull();
+it("rejects a relation whose relatedTicket is null, because the backend always joins before returning the row", () => {
+  expect(() =>
+    ticketRelationListContract.parse([
+      {
+        id: 2,
+        relationType: "relates_to",
+        relatedTicket: null,
+        direction: "incoming",
+      },
+    ]),
+  ).toThrow(ZodError);
 });
 
 it("rejects an unknown relation type such as the raw row's absent relationType default", () => {

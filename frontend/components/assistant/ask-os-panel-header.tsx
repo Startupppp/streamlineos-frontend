@@ -8,6 +8,10 @@ import {
 import { Maximize2, Minimize2 } from "lucide-react";
 import { AnimatedLogo } from "@/components/brand/animated-logo";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
+import { Button } from "@/components/ui/button";
+import { useAskOsCompanionState } from "./ask-os-companion-state";
+import { CompanionCharacter } from "./companion-character";
+import { companionDisplayName, companionPetState, useCompanionPresence } from "./companion-launcher";
 
 interface AskOsPanelHeaderProps {
   activeConversationId: number | null;
@@ -26,9 +30,11 @@ interface AskOsPanelHeaderProps {
 
 function ExpandToggleButton({
   expanded,
+  label,
   onToggle,
 }: {
   expanded: boolean;
+  label: string;
   onToggle: () => void;
 }) {
   const Icon = expanded ? Minimize2 : Maximize2;
@@ -37,7 +43,7 @@ function ExpandToggleButton({
       type="button"
       onClick={onToggle}
       aria-pressed={expanded}
-      aria-label={expanded ? "Exit full screen" : "Expand Ask OS"}
+      aria-label={expanded ? "Exit full screen" : `Expand ${label}`}
       title={expanded ? "Exit full screen" : "Full screen"}
       className="inline-flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
     >
@@ -60,6 +66,8 @@ export function AskOsPanelHeader({
   onNewChat,
   onOpenConversations,
 }: AskOsPanelHeaderProps) {
+  const companion = useCompanionPresence();
+  const pet = companionPetState(useAskOsCompanionState());
   return (
     <div className="flex shrink-0 items-center justify-between gap-2 border-b border-border/70 px-3 py-2">
       {isConversations ? (
@@ -79,13 +87,22 @@ export function AskOsPanelHeader({
         </div>
       ) : (
         <div className="flex min-w-0 items-center gap-2">
-          <AnimatedLogo size={22} gradient className="shrink-0 rounded-full" />
+          {companion ? (
+            <CompanionCharacter
+              preset={companion.preset}
+              state={pet.visual}
+              animation={companion.animation}
+              className="size-8"
+            />
+          ) : (
+            <AnimatedLogo size={22} gradient className="shrink-0 rounded-full" />
+          )}
           <div className="min-w-0">
-            <p className="text-sm font-semibold leading-none tracking-tight text-foreground">
-              Ask OS
+            <p className="truncate text-sm font-semibold leading-none tracking-tight text-foreground">
+              {companion ? companionDisplayName(companion) : "Ask OS"}
             </p>
-            <p className="mt-0.5 text-[11px] text-muted-foreground">
-              Your organization assistant
+            <p className="mt-0.5 text-dense text-muted-foreground">
+              {companion ? pet.label : "Your organization assistant"}
             </p>
           </div>
         </div>
@@ -129,17 +146,19 @@ export function AskOsPanelHeader({
           </>
         )}
         {showExpand ? (
-          <ExpandToggleButton expanded={expanded} onToggle={onToggleExpanded} />
+          <ExpandToggleButton
+            expanded={expanded}
+            label={companion ? companionDisplayName(companion) : "Ask OS"}
+            onToggle={onToggleExpanded}
+          />
         ) : null}
-        <AnimatedIconButton
-          type="button"
-          icon={XIcon}
-          variant="ghost"
-          size="icon"
-          className="h-7 w-7"
-          aria-label="Close"
-          onClick={onClose}
-        />
+        {companion ? (
+          <Button type="button" variant="ghost" size="icon" className="h-7 w-7" aria-label="Minimize chat" onClick={onClose}>
+            <Minimize2 className="size-4" aria-hidden />
+          </Button>
+        ) : (
+          <AnimatedIconButton type="button" icon={XIcon} variant="ghost" size="icon" className="h-7 w-7" aria-label="Close" onClick={onClose} />
+        )}
       </div>
     </div>
   );

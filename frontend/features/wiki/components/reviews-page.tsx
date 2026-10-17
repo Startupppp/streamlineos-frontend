@@ -1,415 +1,384 @@
 "use client";
 
-import { PageWrapper } from "@/components/ui/page-wrapper";
-
 import { useState, useCallback, useMemo } from "react";
+import { useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { toast } from "sonner";
+import { PageWrapper } from "@/components/ui/page-wrapper";
+import { PageState } from "@/components/shared/page-state";
+import { usePageState } from "@/hooks/api/use-page-state";
+import { DataTable } from "@/components/ui/data-table";
+import type { DataTableColumn, DataTableSortState } from "@/components/ui/data-table.types";
+import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
-import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { TruncatedText } from "@/components/ui/truncated-text";
-import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
+import { useUrlFilters, parseEnum } from "@/lib/url-state/use-url-filters";
 import { useCan } from "@/hooks/api/access";
-import {
-  useKbPageReviews,
-  useApprovePageReview,
-  useRejectPageReview,
-} from "@/hooks/api/kb/page-reviews";
+import { TrustBadge } from "@/features/wiki/components/kb-collection-badges";
+import { useKbPageReviews } from "@/hooks/api/kb/page-reviews";
 import type {
   KbPageReview,
-  KbReviewStatus,
-  KbReviewType,
+  BulkDecideResultItem,
 } from "@/hooks/api/kb/page-reviews";
 import { pageHref } from "@/lib/knowledge-routes";
 import { cn } from "@/lib/utils";
-import {
-  KbClipboardCheckIcon,
-  KbLockIcon,
-  KbCheckCircleIcon,
-  KbXCircleIcon,
-  KbAlertCircleIcon,
-} from "@/features/wiki/lib/kb-icons";
 import { kbFormatDate } from "@/features/wiki/lib/kb-date-utils";
+import { ReviewsFilters } from "./reviews-filters";
+import { ReviewMobileCard, StatusBadge, TypeBadge } from "./reviews-mobile-card";
+import { ApproveDialog, RejectDialog } from "./reviews-decision-dialogs";
+import { BulkDecideDialog } from "./reviews-bulk-decide-dialog";
+import {
+  BulkDecideResultsDialog,
+  type BulkFailureWithTitle,
+} from "./reviews-bulk-results-dialog";
 
-const STATUS_FILTERS = [
-  "all",
-  "pending",
-  "approved",
-  "rejected",
-  "expired",
-] as const satisfies readonly ("all" | KbReviewStatus)[];
-type StatusFilter = (typeof STATUS_FILTERS)[number];
-const TYPE_FILTERS = ["all", "approval", "freshness"] as const satisfies readonly (
-  | "all"
-  | KbReviewType
-)[];
-type TypeFilter = (typeof TYPE_FILTERS)[number];
+const STATUS_FILTER_VALUES = ["all", "pending", "approved", "rejected", "overdue"] as const;
+const TYPE_FILTER_VALUES = ["all", "approval", "freshness"] as const;
+const SORT_DIR_VALUES = ["asc", "desc"] as const;
+const DEFAULT_LIMIT = 50;
 
-function isOverdue(dueAt: string | null, status: KbReviewStatus): boolean {
-  if (!dueAt || status !== "pending") return false;
-  return new Date(dueAt) < new Date();
+function toDayBoundary(value: string, edge: "start" | "end"): string | undefined {
+  if (!value) return undefined;
+  const suffix = edge === "start" ? "T00:00:00.000Z" : "T23:59:59.999Z";
+  const candidate = value.includes("T") ? value : `${value}${suffix}`;
+  return Number.isNaN(Date.parse(candidate)) ? undefined : candidate;
 }
 
-function StatusBadge({ status }: { status: KbReviewStatus }) {
-  if (status === "pending") {
-    return (
-      <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-dense font-medium bg-status-warning-surface text-status-warning-ink border border-status-warning-rule">
-        <KbAlertCircleIcon className="h-3 w-3" />
-        Pending
-      </span>
-    );
-  }
-  if (status === "approved") {
-    return (
-      <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-dense font-medium bg-status-success-surface text-status-success-ink border border-status-success-rule">
-        <KbCheckCircleIcon className="h-3 w-3" />
-        Approved
-      </span>
-    );
-  }
+type BulkState =
+  | { kind: "idle" }
+  | { kind: "deciding"; ids: number[] }
+  | { kind: "results"; succeeded: number; failures: BulkFailureWithTitle[] };
+
+function ReviewsSkeleton() {
   return (
-    <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-dense font-medium bg-status-danger-surface text-status-danger-ink border border-status-danger-rule">
-      <KbXCircleIcon className="h-3 w-3" />
-      Rejected
-    </span>
-  );
-}
-
-function TypeBadge({ type }: { type: KbReviewType }) {
-  if (type === "approval") {
-    return (
-      <Badge
-        className="bg-primary/10 text-foreground border-primary/20 text-dense"
-        variant="outline"
-      >
-        Approval
-      </Badge>
-    );
-  }
-  return (
-    <Badge
-      className="bg-status-info-surface text-status-info-ink border-status-info-rule text-dense"
-      variant="outline"
-    >
-      Freshness
-    </Badge>
-  );
-}
-
-type ApproveDialogProps = {
-  review: KbPageReview;
-  onClose: () => void;
-};
-
-function ApproveDialog({ review, onClose }: ApproveDialogProps) {
-  const [note, setNote] = useState("");
-  const approve = useApprovePageReview();
-
-  function handleNoteChange(e: React.ChangeEvent<HTMLTextAreaElement>) {
-    setNote(e.target.value);
-  }
-
-  function handleApprove() {
-    approve.mutate(
-      { reviewId: review.id, note: note.trim() || undefined },
-      {
-        onSuccess: () => {
-          toast.success("Review approved");
-          onClose();
-        },
-        onError: () => toast.error("Failed to approve review"),
-      },
-    );
-  }
-
-  return (
-    <Dialog open onOpenChange={onClose}>
-      <DialogContent className="max-w-sm">
-        <DialogHeader>
-          <DialogTitle>Approve review</DialogTitle>
-        </DialogHeader>
-        <div className="space-y-3 px-0 py-2">
-          <TruncatedText text={review.pageTitle ?? ""} lines={2} className="text-sm text-muted-foreground" />
-          <div className="space-y-1.5">
-            <Label className="text-xs">Note (optional)</Label>
-            <Textarea
-              value={note}
-              onChange={handleNoteChange}
-              placeholder="Add a note…"
-              className="text-sm resize-none"
-              rows={3}
-            />
-          </div>
-        </div>
-        <DialogFooter>
-          <Button variant="outline" size="sm" onClick={onClose}>
-            Cancel
-          </Button>
-          <Button
-            size="sm"
-            onClick={handleApprove}
-            disabled={approve.isPending}
-            className="bg-status-success-fill hover:bg-status-success-fill-hover text-white"
-          >
-            Approve
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
-  );
-}
-
-type RejectDialogProps = {
-  review: KbPageReview;
-  onClose: () => void;
-};
-
-function RejectDialog({ review, onClose }: RejectDialogProps) {
-  const [note, setNote] = useState("");
-  const reject = useRejectPageReview();
-
-  function handleNoteChange(e: React.ChangeEvent<HTMLTextAreaElement>) {
-    setNote(e.target.value);
-  }
-
-  function handleReject() {
-    if (!note.trim()) return;
-    reject.mutate(
-      { reviewId: review.id, note: note.trim() },
-      {
-        onSuccess: () => {
-          toast.success("Review rejected");
-          onClose();
-        },
-        onError: () => toast.error("Failed to reject review"),
-      },
-    );
-  }
-
-  return (
-    <Dialog open onOpenChange={onClose}>
-      <DialogContent className="max-w-sm">
-        <DialogHeader>
-          <DialogTitle>Reject review</DialogTitle>
-        </DialogHeader>
-        <div className="space-y-3 px-0 py-2">
-          <TruncatedText text={review.pageTitle ?? ""} lines={2} className="text-sm text-muted-foreground" />
-          <div className="space-y-1.5">
-            <Label className="text-xs">
-              Reason <span className="text-destructive">*</span>
-            </Label>
-            <Textarea
-              value={note}
-              onChange={handleNoteChange}
-              placeholder="Explain why this review is rejected…"
-              className="text-sm resize-none"
-              rows={3}
-            />
-          </div>
-        </div>
-        <DialogFooter>
-          <Button variant="outline" size="sm" onClick={onClose}>
-            Cancel
-          </Button>
-          <Button
-            size="sm"
-            variant="destructive"
-            onClick={handleReject}
-            disabled={reject.isPending || !note.trim()}
-          >
-            Reject
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+    <div className="space-y-2">
+      {Array.from({ length: 5 }).map((_, i) => (
+        <Skeleton key={i} className="h-12 w-full rounded-md" />
+      ))}
+    </div>
   );
 }
 
 export default function ReviewsPage() {
-  const canView = useCan("kb:reviews:view");
+  const searchParams = useSearchParams();
+  const { update: updateFilters } = useUrlFilters({ pageParam: "cursor" });
+
+  const statusFilter = parseEnum(searchParams.get("status"), STATUS_FILTER_VALUES, "all");
+  const typeFilter = parseEnum(searchParams.get("type"), TYPE_FILTER_VALUES, "all");
+  const sortDir = parseEnum(searchParams.get("sortDir"), SORT_DIR_VALUES, "asc");
+  const searchFilter = searchParams.get("q") ?? "";
+  const spaceFilter = searchParams.get("spaceId") ?? "";
+  const reviewerFilter = searchParams.get("reviewer") ?? "";
+  const dueFromFilter = searchParams.get("dueFrom") ?? "";
+  const dueToFilter = searchParams.get("dueTo") ?? "";
+  const cursor = searchParams.get("cursor") || undefined;
+  const cursorTrailValue = searchParams.get("cursorTrail");
+  const cursorTrail = useMemo(() => {
+    if (!cursor) return [];
+    if (!cursorTrailValue) return ["~"];
+    const entries = cursorTrailValue.split(".");
+    return entries.length <= 100 && entries[0] === "~" && entries.slice(1).every((entry) => /^[A-Za-z0-9_-]{1,1024}$/.test(entry))
+      ? entries
+      : ["~"];
+  }, [cursor, cursorTrailValue]);
+
+  const hasFilters =
+    statusFilter !== "all" ||
+    typeFilter !== "all" ||
+    sortDir !== "asc" ||
+    searchFilter !== "" ||
+    spaceFilter !== "" ||
+    reviewerFilter !== "" ||
+    dueFromFilter !== "" ||
+    dueToFilter !== "";
+
   const canManage = useCan("kb:reviews:manage");
 
-  const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
-  const [typeFilter, setTypeFilter] = useState<TypeFilter>("all");
-  const [approveTarget, setApproveTarget] = useState<KbPageReview | null>(null);
-  const [rejectTarget, setRejectTarget] = useState<KbPageReview | null>(null);
+  const parsedSpaceId = Number(spaceFilter);
 
   const params = {
+    cursor,
+    limit: DEFAULT_LIMIT,
     status: statusFilter === "all" ? undefined : statusFilter,
     type: typeFilter === "all" ? undefined : typeFilter,
+    q: searchFilter || undefined,
+    spaceId: Number.isFinite(parsedSpaceId) && parsedSpaceId > 0 ? parsedSpaceId : undefined,
+    reviewer: reviewerFilter || undefined,
+    dueFrom: toDayBoundary(dueFromFilter, "start"),
+    dueTo: toDayBoundary(dueToFilter, "end"),
+    sortDir,
   };
 
-  const { data: reviews = [], isLoading, isError } = useKbPageReviews(params);
+  const { data, isLoading, isError, error, refetch } = useKbPageReviews(params);
 
-  const handleStatusChange = useCallback((val: string) => {
-    const next = STATUS_FILTERS.find((candidate) => candidate === val);
-    if (next) setStatusFilter(next);
-  }, []);
+  const pageState = usePageState({
+    permission: "kb:reviews:view",
+    isLoading,
+    isError,
+    error,
+    isEmpty: !isLoading && !isError && (data?.data.length ?? 0) === 0,
+  });
 
-  const handleTypeChange = useCallback((val: string) => {
-    const next = TYPE_FILTERS.find((candidate) => candidate === val);
-    if (next) setTypeFilter(next);
-  }, []);
+  const [approveTarget, setApproveTarget] = useState<KbPageReview | null>(null);
+  const [rejectTarget, setRejectTarget] = useState<KbPageReview | null>(null);
+  const [bulkState, setBulkState] = useState<BulkState>({ kind: "idle" });
+  const [selected, setSelected] = useState<Set<string | number>>(new Set());
+
+  const renderMobileCard = useCallback(
+    (review: KbPageReview) => (
+      <ReviewMobileCard
+        review={review}
+        canManage={canManage}
+        onApprove={setApproveTarget}
+        onReject={setRejectTarget}
+      />
+    ),
+    [canManage],
+  );
+
+  const reviews = useMemo(() => data?.data ?? [], [data]);
+  const pagination = data?.pagination;
+
+  const handleFilterPatch = useCallback(
+    (patch: Record<string, string | null>) => {
+      updateFilters({ ...patch, cursorTrail: null });
+    },
+    [updateFilters],
+  );
+
+  const handleSortChange = useCallback(
+    (_field: string, direction: "asc" | "desc") => {
+      updateFilters({ sortDir: direction === "asc" ? null : "desc", cursorTrail: null });
+    },
+    [updateFilters],
+  );
+
+  function handleClearFilters() {
+    updateFilters({
+      status: null,
+      type: null,
+      sortDir: null,
+      q: null,
+      spaceId: null,
+      reviewer: null,
+      dueFrom: null,
+      dueTo: null,
+      cursorTrail: null,
+    });
+  }
 
   const handleCloseApprove = useCallback(() => setApproveTarget(null), []);
   const handleCloseReject = useCallback(() => setRejectTarget(null), []);
 
-  function makeApproveHandler(review: KbPageReview) {
-    return function handleApprove() { setApproveTarget(review); };
+  function handleOpenBulkDecide() {
+    setBulkState({ kind: "deciding", ids: Array.from(selected).map(Number) });
   }
 
-  function makeRejectHandler(review: KbPageReview) {
-    return function handleReject() { setRejectTarget(review); };
+  const handleBulkCancel = useCallback(() => setBulkState({ kind: "idle" }), []);
+
+  const handleBulkComplete = useCallback(
+    (failures: BulkDecideResultItem[]) => {
+      setSelected(new Set());
+      if (failures.length === 0) {
+        setBulkState({ kind: "idle" });
+        return;
+      }
+      const failuresWithTitle: BulkFailureWithTitle[] = failures.map((f) => ({
+        ...f,
+        pageTitle: reviews.find((r) => r.id === f.id)?.pageTitle ?? "Unknown page",
+      }));
+      setBulkState({
+        kind: "results",
+        succeeded: (bulkState.kind === "deciding" ? bulkState.ids.length : 0) - failures.length,
+        failures: failuresWithTitle,
+      });
+    },
+    [reviews, bulkState],
+  );
+
+  const handleResultsDismiss = useCallback(() => setBulkState({ kind: "idle" }), []);
+
+  const handleResultsRetry = useCallback(
+    (ids: number[]) => {
+      setBulkState({ kind: "deciding", ids });
+    },
+    [],
+  );
+
+  function handleGoNext() {
+    if (!pagination?.nextCursor) return;
+    updateFilters({
+      cursor: pagination.nextCursor,
+      cursorTrail: [...cursorTrail, cursor ?? "~"].join("."),
+    });
   }
 
-  const columns = useMemo<DataTableColumn<KbPageReview>[]>(() => [
-    {
-      key: "page",
-      header: "Page",
-      cell: (review) => (
-        <Link
-          href={pageHref(review.pageId)}
-          className="text-sm font-medium text-foreground hover:text-accent transition-colors line-clamp-1"
-        >
-          {review.pageTitle || "Untitled"}
-        </Link>
-      ),
-    },
-    {
-      key: "type",
-      header: "Type",
-      headerClassName: "hidden sm:table-cell",
-      className: "hidden sm:table-cell",
-      cell: (review) => <TypeBadge type={review.type} />,
-    },
-    {
-      key: "status",
-      header: "Status",
-      cell: (review) => <StatusBadge status={review.status} />,
-    },
-    {
-      key: "reviewer",
-      header: "Reviewer",
-      headerClassName: "hidden md:table-cell",
-      className: "hidden md:table-cell",
-      cell: (review) => (
-        <span className="text-sm text-muted-foreground">{review.reviewerName ?? "—"}</span>
-      ),
-    },
-    {
-      key: "dueDate",
-      header: "Due date",
-      headerClassName: "hidden lg:table-cell",
-      className: "hidden lg:table-cell",
-      cell: (review) => {
-        const overdue = isOverdue(review.dueAt, review.status);
-        return (
+  function handleGoPrevious() {
+    if (cursorTrail.length === 0) return;
+    const previousCursor = cursorTrail[cursorTrail.length - 1];
+    updateFilters({
+      cursor: previousCursor === "~" ? null : previousCursor,
+      cursorTrail: cursorTrail.length > 1 ? cursorTrail.slice(0, -1).join(".") : null,
+    });
+  }
+
+  const sortState: DataTableSortState = {
+    fields: ["dueAt"] as const,
+    field: "dueAt",
+    direction: sortDir,
+    onChange: handleSortChange,
+  };
+
+  const columns = useMemo<DataTableColumn<KbPageReview>[]>(
+    () => [
+      {
+        key: "page",
+        header: "Page",
+        cell: (review) => (
+          <div className="flex items-center gap-2 min-w-0">
+            <Link
+              href={pageHref(review.pageId)}
+              className="text-sm font-medium text-foreground hover:text-accent transition-colors line-clamp-1"
+            >
+              {review.pageTitle ?? "Untitled"}
+            </Link>
+            {review.pageTrustState ? (
+              <TrustBadge trustState={review.pageTrustState} />
+            ) : null}
+          </div>
+        ),
+      },
+      {
+        key: "type",
+        header: "Type",
+        headerClassName: "hidden sm:table-cell",
+        className: "hidden sm:table-cell",
+        cell: (review) => <TypeBadge type={review.type} />,
+      },
+      {
+        key: "status",
+        header: "Status",
+        cell: (review) => (
+          <StatusBadge status={review.status} isOverdue={review.isOverdue} />
+        ),
+      },
+      {
+        key: "reviewer",
+        header: "Reviewer",
+        headerClassName: "hidden md:table-cell",
+        className: "hidden md:table-cell",
+        cell: (review) => (
+          <span className="text-sm text-muted-foreground">
+            {review.reviewerName ?? "—"}
+          </span>
+        ),
+      },
+      {
+        key: "dueAt",
+        header: "Due date",
+        headerClassName: "hidden lg:table-cell",
+        className: "hidden lg:table-cell",
+        cell: (review) => (
           <span
             className={cn(
-              "text-sm tabular-nums",
-              overdue ? "text-status-danger-ink font-medium" : "text-muted-foreground",
+              "text-sm tabular-nums font-mono",
+              review.isOverdue
+                ? "text-status-danger-ink font-medium"
+                : "text-muted-foreground",
             )}
           >
             {review.dueAt ? kbFormatDate(review.dueAt) : "—"}
-            {overdue && " (overdue)"}
           </span>
-        );
+        ),
       },
-    },
-    {
-      key: "requestedBy",
-      header: "Requested by",
-      headerClassName: "hidden lg:table-cell",
-      className: "hidden lg:table-cell",
-      cell: (review) => (
-        <span className="text-sm text-muted-foreground">{review.requestedByName ?? "—"}</span>
-      ),
-    },
-    {
-      key: "actions",
-      header: "Actions",
-      cell: (review) => {
-        if (!canManage || review.status !== "pending") return null;
-        return (
-          <div className="flex items-center gap-1.5">
-            <Button
-              size="sm"
-              variant="outline"
-              className="text-xs text-status-success-ink border-status-success-rule hover:bg-status-success-surface"
-              onClick={makeApproveHandler(review)}
-            >
-              Approve
-            </Button>
-            <Button
-              size="sm"
-              variant="outline"
-              className="text-xs text-destructive border-destructive/30 hover:bg-destructive/10"
-              onClick={makeRejectHandler(review)}
-            >
-              Reject
-            </Button>
-          </div>
-        );
+      {
+        key: "requestedBy",
+        header: "Requested by",
+        headerClassName: "hidden lg:table-cell",
+        className: "hidden lg:table-cell",
+        cell: (review) => (
+          <span className="text-sm text-muted-foreground">
+            {review.requestedByName ?? "—"}
+          </span>
+        ),
       },
-    },
-  ], [canManage]);
+      {
+        key: "actions",
+        header: "",
+        cell: (review) => {
+          if (!canManage || review.status !== "pending") return null;
+          return (
+            <div className="flex items-center gap-1.5">
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                className="text-xs text-status-success-ink border-status-success-rule hover:bg-status-success-surface"
+                onClick={() => setApproveTarget(review)}
+              >
+                Approve
+              </Button>
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                className="text-xs text-destructive border-destructive/30 hover:bg-destructive/10"
+                onClick={() => setRejectTarget(review)}
+              >
+                Reject
+              </Button>
+            </div>
+          );
+        },
+      },
+    ],
+    [canManage],
+  );
 
-  if (!canView) {
-    return (
-      <PageWrapper title="Reviews">
-        <EmptyState
-          illustration={
-            <KbLockIcon className="w-8 text-muted-foreground" />
-          }
-          title="Access restricted"
-          description="You don't have permission to view knowledge base reviews."
-          className={CONTENT_FILL_PANEL}
-        />
-      </PageWrapper>
-    );
-  }
+  const emptyNode = cursorTrail.length > 0 ? (
+    <EmptyState
+      illustrationPreset="default"
+      title="No reviews on this page."
+      description="The reviews on this page may have changed. Go back to continue browsing."
+      action={{ label: "Previous page", onClick: handleGoPrevious }}
+      compact
+    />
+  ) : hasFilters ? (
+    <EmptyState
+      illustrationPreset="default"
+      title="No reviews under these filters."
+      filtersActive
+      filteredTitle="No reviews match your filters."
+      onClearFilters={handleClearFilters}
+      compact
+    />
+  ) : (
+    <EmptyState
+      illustrationPreset="default"
+      title="No pages under review."
+      description="Assign reviews to keep your knowledge base current."
+      compact
+    />
+  );
 
   const filters = (
     <>
-      <Select value={statusFilter} onValueChange={handleStatusChange}>
-        <SelectTrigger className="w-[130px]">
-          <SelectValue placeholder="Status" />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="all">All statuses</SelectItem>
-          <SelectItem value="pending">Pending</SelectItem>
-          <SelectItem value="approved">Approved</SelectItem>
-          <SelectItem value="rejected">Rejected</SelectItem>
-        </SelectContent>
-      </Select>
-      <Select value={typeFilter} onValueChange={handleTypeChange}>
-        <SelectTrigger className="w-[130px]">
-          <SelectValue placeholder="Type" />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="all">All types</SelectItem>
-          <SelectItem value="approval">Approval</SelectItem>
-          <SelectItem value="freshness">Freshness</SelectItem>
-        </SelectContent>
-      </Select>
+      <ReviewsFilters
+        values={{
+          q: searchFilter,
+          status: statusFilter,
+          type: typeFilter,
+          spaceId: spaceFilter,
+          reviewer: reviewerFilter,
+          dueFrom: dueFromFilter,
+          dueTo: dueToFilter,
+        }}
+        onChange={handleFilterPatch}
+      />
+      {canManage && selected.size > 0 && (
+        <Button type="button" size="sm" variant="outline" onClick={handleOpenBulkDecide}>
+          Decide {selected.size} selected
+        </Button>
+      )}
     </>
   );
 
@@ -421,43 +390,53 @@ export default function ReviewsPage() {
       {rejectTarget && (
         <RejectDialog review={rejectTarget} onClose={handleCloseReject} />
       )}
-      <PageWrapper
-        title="Reviews"
-        badge={reviews.length > 0 ? String(reviews.length) : undefined}
-        filters={filters}
-      >
-        {isError ? (
-          <EmptyState
-            illustration={
-              <KbAlertCircleIcon className="w-8 text-muted-foreground" />
-            }
-            title="Failed to load reviews"
-            description="An error occurred while fetching reviews."
-            className={CONTENT_FILL_PANEL}
-          />
-        ) : (
+      {bulkState.kind === "deciding" && (
+        <BulkDecideDialog
+          ids={bulkState.ids}
+          onCancel={handleBulkCancel}
+          onComplete={handleBulkComplete}
+        />
+      )}
+      {bulkState.kind === "results" && (
+        <BulkDecideResultsDialog
+          succeeded={bulkState.succeeded}
+          failures={bulkState.failures}
+          onRetry={handleResultsRetry}
+          onDismiss={handleResultsDismiss}
+        />
+      )}
+      <PageWrapper title="Reviews" filters={filters}>
+        <PageState
+          resolution={pageState}
+          loading={<ReviewsSkeleton />}
+          empty={emptyNode}
+          onRetry={refetch}
+          className="flex-1 min-h-0"
+        >
           <DataTable
             data={reviews}
             columns={columns}
             getRowKey={(review) => review.id}
             isLoading={isLoading}
+            selection={{
+              selected,
+              onChange: setSelected,
+              getRowLabel: (r) => r.pageTitle ?? "Review",
+            }}
+            sortState={sortState}
+            mobileCard={renderMobileCard}
             className="flex-1 min-h-0"
-            emptyState={
-              <EmptyState
-                illustration={
-                  <KbClipboardCheckIcon className="w-8 text-muted-foreground" />
-                }
-                title="No reviews"
-                description={
-                  statusFilter !== "all" || typeFilter !== "all"
-                    ? "No reviews match the current filters."
-                    : "No pages are currently under review."
-                }
-                className={CONTENT_FILL_PANEL}
-              />
-            }
+            pagination={{
+              mode: "cursor",
+              pageSize: DEFAULT_LIMIT,
+              pageNumber: cursorTrail.length + 1,
+              hasMore: pagination?.hasMore ?? false,
+              hasPrevious: cursorTrail.length > 0,
+              onNext: handleGoNext,
+              onPrevious: handleGoPrevious,
+            }}
           />
-        )}
+        </PageState>
       </PageWrapper>
     </>
   );

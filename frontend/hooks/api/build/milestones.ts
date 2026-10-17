@@ -1,55 +1,99 @@
 ﻿"use client";
 
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useCan } from "@/hooks/api/access";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useCan, useCanState } from "@/hooks/api/access";
 import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
 import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
-import type { ProjectMilestone, ProjectBudget, ProjectBudgetUpdate } from "@/types/projects";
+import type {
+  ProjectMilestone as ProjectMilestoneBase,
+  ProjectBudget,
+  ProjectBudgetUpdate,
+} from "@/types/projects";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { queryKeyBase } from "@/lib/query-keys/base";
 
-const milestoneListContract = lazyContract(() =>
+export type ProjectMilestone = ProjectMilestoneBase & {
+  completedTicketCount: number;
+};
+
+type MilestonePage = {
+  data: ProjectMilestone[];
+  pagination: { limit: number; hasMore: boolean; nextCursor: string | null };
+};
+
+const milestoneListContract = lazyContract<MilestonePage>(() =>
   import("@/hooks/api/build/workspace-schema").then((m) => m.milestoneListContract),
 );
 const milestoneRowContract = lazyContract(() =>
-  import("@/hooks/api/build/workspace-schema").then((m) => m.milestoneRowContract),
+  import("@/hooks/api/build/workspace-schema").then(
+    (m) => m.milestoneRowContract,
+  ),
 );
 const noContentContract = lazyContract(() =>
   import("@/hooks/api/cursor-page-schema").then((m) => m.noContentContract),
 );
 const projectBudgetContract = lazyContract(() =>
-  import("@/hooks/api/build/workspace-schema").then((m) => m.projectBudgetContract),
+  import("@/hooks/api/build/workspace-schema").then(
+    (m) => m.projectBudgetContract,
+  ),
 );
 const projectBudgetUpdateContract = lazyContract(() =>
-  import("@/hooks/api/build/workspace-schema").then((m) => m.projectBudgetUpdateContract),
+  import("@/hooks/api/build/workspace-schema").then(
+    (m) => m.projectBudgetUpdateContract,
+  ),
 );
-export type { ProjectMilestone, ProjectBudget, ProjectBudgetUpdate } from "@/types/projects";
 
 interface CreateMilestoneInput {
   name: string;
   description?: string;
   targetDate: string;
   status?: "PENDING" | "ACHIEVED" | "MISSED";
+  ownerMembershipId?: number | null;
 }
 
 interface UpdateMilestoneInput {
+  version: number;
   name?: string;
   description?: string;
   targetDate?: string;
   status?: "PENDING" | "ACHIEVED" | "MISSED";
+  ownerMembershipId?: number | null;
 }
 
-function milestoneKey(projectId: number) {
+interface MilestoneListQuery {
+  cursor?: string;
+  limit?: number;
+  status?: "PENDING" | "ACHIEVED" | "MISSED";
+  q?: string;
+  from?: string;
+  to?: string;
+  ownerId?: number;
+}
+
+function milestoneBaseKey(projectId: number) {
   return [...queryKeyBase, "projects", projectId, "milestones"] as const;
 }
 
-export function useProjectMilestones(projectId: number) {
-  const canView = useCan("build:view");
+function milestoneKey(projectId: number, query?: MilestoneListQuery) {
+  return [...milestoneBaseKey(projectId), query ?? {}] as const;
+}
+
+export function useProjectMilestones(
+  projectId: number,
+  query: MilestoneListQuery = {},
+) {
+  const canViewState = useCanState("build:view");
   return useQuery({
-    queryKey: milestoneKey(projectId),
-    queryFn: ({ signal }) => apiClient.get<ProjectMilestone[]>(`/build/${projectId}/milestones`, undefined, signal, milestoneListContract),
-    enabled: canView && !!projectId,
+    queryKey: milestoneKey(projectId, query),
+    queryFn: ({ signal }) =>
+      apiClient.get(
+        `/build/${projectId}/milestones`,
+        query,
+        signal,
+        milestoneListContract,
+      ),
+    enabled: canViewState !== "denied" && !!projectId,
     staleTime: 30_000,
   });
 }
@@ -59,8 +103,18 @@ export function useCreateMilestone(projectId: number) {
   return useAuthorizedMutation("build:workspace:manage", {
     mutationKey: ["projects", "milestones", "create"],
     mutationFn: (input: CreateMilestoneInput) =>
-      apiClient.post<ProjectMilestone>(`/build/${projectId}/milestones`, input, undefined, milestoneRowContract),
-    onSuccess: () => qc.invalidateQueries({ queryKey: milestoneKey(projectId) }),
+      apiClient.post<ProjectMilestone>(
+        `/build/${projectId}/milestones`,
+        input,
+        undefined,
+        milestoneRowContract,
+      ),
+    onSuccess: (created) => {
+      qc.setQueriesData<MilestonePage>(
+        { queryKey: milestoneBaseKey(projectId) },
+        (old) => old ? { ...old, data: [created, ...old.data] } : old,
+      );
+    },
   });
 }
 
@@ -68,9 +122,22 @@ export function useUpdateMilestone(projectId: number) {
   const qc = useQueryClient();
   return useAuthorizedMutation("build:workspace:manage", {
     mutationKey: ["projects", "milestones", "update"],
-    mutationFn: ({ milestoneId, ...input }: UpdateMilestoneInput & { milestoneId: number }) =>
-      apiClient.patch<ProjectMilestone>(`/build/${projectId}/milestones/${milestoneId}`, input, undefined, milestoneRowContract),
-    onSuccess: () => qc.invalidateQueries({ queryKey: milestoneKey(projectId) }),
+    mutationFn: ({
+      milestoneId,
+      ...input
+    }: UpdateMilestoneInput & { milestoneId: number }) =>
+      apiClient.patch<ProjectMilestone>(
+        `/build/${projectId}/milestones/${milestoneId}`,
+        input,
+        undefined,
+        milestoneRowContract,
+      ),
+    onSuccess: (updated) => {
+      qc.setQueriesData<MilestonePage>(
+        { queryKey: milestoneBaseKey(projectId) },
+        (old) => old ? { ...old, data: old.data.map((m) => m.id === updated.id ? updated : m) } : old,
+      );
+    },
   });
 }
 
@@ -79,8 +146,18 @@ export function useDeleteMilestone(projectId: number) {
   return useAuthorizedMutation("build:workspace:manage", {
     mutationKey: ["projects", "milestones", "delete"],
     mutationFn: (milestoneId: number) =>
-      apiClient.delete<void>(`/build/${projectId}/milestones/${milestoneId}`, undefined, undefined, noContentContract),
-    onSuccess: () => qc.invalidateQueries({ queryKey: milestoneKey(projectId) }),
+      apiClient.delete<void>(
+        `/build/${projectId}/milestones/${milestoneId}`,
+        undefined,
+        undefined,
+        noContentContract,
+      ),
+    onSuccess: (_, milestoneId) => {
+      qc.setQueriesData<MilestonePage>(
+        { queryKey: milestoneBaseKey(projectId) },
+        (old) => old ? { ...old, data: old.data.filter((m) => m.id !== milestoneId) } : old,
+      );
+    },
   });
 }
 
@@ -88,7 +165,13 @@ export function useProjectBudget(projectId: number) {
   const canManage = useCan("build:manage");
   return useQuery({
     queryKey: buildWorkQueryKeys.projects.budget(projectId),
-    queryFn: ({ signal }) => apiClient.get<ProjectBudget>(`/build/${projectId}/budget`, undefined, signal, projectBudgetContract),
+    queryFn: ({ signal }) =>
+      apiClient.get<ProjectBudget>(
+        `/build/${projectId}/budget`,
+        undefined,
+        signal,
+        projectBudgetContract,
+      ),
     enabled: canManage && !!projectId,
     staleTime: 60_000,
   });
@@ -99,7 +182,22 @@ export function useUpdateProjectBudget(projectId: number) {
   return useAuthorizedMutation("build:manage", {
     mutationKey: ["projects", "budget", "update"],
     mutationFn: (budget: number) =>
-      apiClient.patch<ProjectBudgetUpdate>(`/build/${projectId}/budget`, { budget }, undefined, projectBudgetUpdateContract),
-    onSuccess: () => qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.budget(projectId) }),
+      apiClient.patch<ProjectBudgetUpdate>(
+        `/build/${projectId}/budget`,
+        { budget },
+        undefined,
+        projectBudgetUpdateContract,
+      ),
+    onSuccess: (data) => {
+      qc.setQueryData(
+        buildWorkQueryKeys.projects.budget(projectId),
+        (old: ProjectBudget | undefined) => {
+          if (!old) return old;
+          const remaining = data.budget - old.actualCost;
+          const utilizationPct = data.budget > 0 ? Math.round((old.actualCost / data.budget) * 100) : 0;
+          return { ...old, plannedBudget: data.budget, remaining, utilizationPct };
+        },
+      );
+    },
   });
 }

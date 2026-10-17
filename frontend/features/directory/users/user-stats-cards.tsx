@@ -1,15 +1,32 @@
 "use client";
 
-import { memo } from "react";
+import { memo, useCallback } from "react";
 import { Archive, Users, UserCheck, UserX, Mail } from "lucide-react";
 import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
 import { useUserStats } from "@/hooks/api/users";
+import { useCanManageOrganizationMembership } from "@/hooks/api/access";
+import { useSwitchPeopleView } from "./people-section-tabs";
 
 export const UserStatsCards = memo(function UserStatsCards() {
   const { data, isLoading } = useUserStats();
+  const canManageInvitations = useCanManageOrganizationMembership();
+  const switchView = useSwitchPeopleView();
+  const handleShowInvitations = useCallback(
+    () => switchView("invitations"),
+    [switchView],
+  );
+  const pendingInvites = (
+    <StatCard
+      label="Pending Invites"
+      value={data?.pendingInvitations ?? 0}
+      icon={Mail}
+      tone="blue"
+      isLoading={isLoading}
+    />
+  );
 
   return (
-    <StatCardGrid cols={5}>
+    <StatCardGrid cols={5} stackOnMobile={2}>
       <StatCard
         label="Total Users"
         value={data?.total ?? 0}
@@ -38,13 +55,18 @@ export const UserStatsCards = memo(function UserStatsCards() {
         tone="default"
         isLoading={isLoading}
       />
-      <StatCard
-        label="Pending Invites"
-        value={data?.pendingInvitations ?? 0}
-        icon={Mail}
-        tone="blue"
-        isLoading={isLoading}
-      />
+      {canManageInvitations ? (
+        <button
+          type="button"
+          className="h-full rounded-xl text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          aria-label={`Pending invites: ${data?.pendingInvitations ?? 0}. Show invitations`}
+          onClick={handleShowInvitations}
+        >
+          {pendingInvites}
+        </button>
+      ) : (
+        pendingInvites
+      )}
     </StatCardGrid>
   );
 });

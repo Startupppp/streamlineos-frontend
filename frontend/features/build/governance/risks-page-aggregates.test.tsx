@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, fireEvent } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import type { ReactNode } from "react";
 import type { Risk } from "@/types/projects";
@@ -28,15 +28,17 @@ jest.mock("@/hooks/api/entitlements", () => ({
   useEntitlements: () => ({ data: undefined }),
 }));
 
-jest.mock("@/hooks/api/build", () => ({
+jest.mock("@/hooks/api/build/governance", () => ({
   useProjectRisks: (projectId: number, filters?: { status?: string }) =>
     mockUseProjectRisks(projectId, filters),
   useProjectRiskStats: (...args: unknown[]) => mockUseProjectRiskStats(...args),
   useCreateRisk: () => ({ mutate: jest.fn(), isPending: false }),
   useUpdateRisk: () => ({ mutate: jest.fn(), isPending: false }),
   useDeleteRisk: () => ({ mutate: jest.fn(), isPending: false }),
-  useProjectMembers: () => ({ data: [] }),
   GOVERNANCE_PAGE_SIZE: 100,
+}));
+jest.mock("@/hooks/api/build/project-members", () => ({
+  useProjectMembers: () => ({ data: [] }),
 }));
 
 jest.mock("sonner", () => ({ toast: { success: jest.fn(), error: jest.fn() } }));
@@ -138,7 +140,7 @@ jest.mock("@/components/pm-chrome", () => ({
   PmPageShell: ({ children }: { children: ReactNode }) => <div>{children}</div>,
   PmSection: ({ children }: { children: ReactNode }) => <div>{children}</div>,
   PmPanel: ({ children }: { children: ReactNode }) => <div>{children}</div>,
-  PM_FILL_PANEL: "",
+  CONTENT_FILL_PANEL: "",
 }));
 
 jest.mock("@/components/ui/content-fill-panel", () => ({
@@ -169,8 +171,9 @@ jest.mock("@/components/ui/dropdown-menu", () => ({
   DropdownMenuItem: ({ children }: { children: ReactNode }) => <div>{children}</div>,
 }));
 
+const mockRiskFormSheet = jest.fn((_props: { open: boolean }) => null);
 jest.mock("./risk-form-sheet", () => ({
-  RiskFormSheet: () => null,
+  RiskFormSheet: (props: { open: boolean }) => { mockRiskFormSheet(props); return null; },
 }));
 
 jest.mock("@/components/ui/truncated-text", () => ({
@@ -210,6 +213,7 @@ function makeRisk(overrides: Partial<Risk>): Risk {
     ownerId: null,
     mitigation: null,
     linkedTicketId: null,
+    createdBy: null,
     deletedAt: null,
     createdAt: "2026-01-01T00:00:00.000Z",
     updatedAt: "2026-01-01T00:00:00.000Z",
@@ -271,7 +275,7 @@ describe("RisksPage aggregates and matrix describe the whole register, not the a
     render(<RisksPage projectId={10} />);
 
     const user = userEvent.setup();
-    await user.selectOptions(screen.getByTestId("status-filter"), "closed");
+    await user.selectOptions(screen.getAllByTestId("status-filter")[0], "closed");
 
     expect(screen.getByText("Open: 1")).toBeInTheDocument();
     expect(screen.getByText("High / Critical: 1")).toBeInTheDocument();
@@ -282,7 +286,7 @@ describe("RisksPage aggregates and matrix describe the whole register, not the a
     render(<RisksPage projectId={10} />);
 
     const user = userEvent.setup();
-    await user.selectOptions(screen.getByTestId("status-filter"), "closed");
+    await user.selectOptions(screen.getAllByTestId("status-filter")[0], "closed");
 
     expect(
       screen.getByRole("button", { name: "high probability, high impact: 1 open risk" }),
@@ -293,10 +297,19 @@ describe("RisksPage aggregates and matrix describe the whole register, not the a
     render(<RisksPage projectId={10} />);
 
     const user = userEvent.setup();
-    await user.selectOptions(screen.getByTestId("status-filter"), "closed");
+    await user.selectOptions(screen.getAllByTestId("status-filter")[0], "closed");
 
     for (const call of mockUseProjectRiskStats.mock.calls) {
       expect(call).toEqual([10]);
     }
+  });
+
+  it("pressing j then Enter opens the first risk's edit sheet so keyboard users can edit without a mouse", () => {
+    render(<RisksPage projectId={10} />);
+    fireEvent.keyDown(document, { key: "j" });
+    fireEvent.keyDown(document, { key: "Enter" });
+    const calls = mockRiskFormSheet.mock.calls;
+    const lastCall = calls[calls.length - 1][0] as { open: boolean };
+    expect(lastCall.open).toBe(true);
   });
 });

@@ -1,0 +1,242 @@
+"use client";
+
+import { useCallback, useState } from "react";
+import { Plus, Pencil, Trash2 } from "lucide-react";
+import { DataTableSkeleton } from "@/components/ui/data-table";
+import { QueryClientProvider } from "@tanstack/react-query";
+import { BuildListSurface } from "@/features/build/shared/build-list-surface";
+import { createAppQueryClient } from "@/components/providers/query-provider";
+import { platformCoreQueryKeys } from "@/lib/query-keys/platform-core";
+import { GALLERY_STUB_ACCESS } from "@/features/build/shared/build-list-fixtures";
+import { EmptyState } from "@/components/ui/empty-state";
+import { ErrorState } from "@/components/shared/error-state";
+import { NoPermissionState } from "@/components/shared";
+import { CONTENT_FILL_PANEL, PmPageShell, PmSection } from "@/components/pm-chrome";
+import { PageWrapper } from "@/components/ui/page-wrapper";
+import { BuildHeaderActions } from "@/features/build/shared/build-header-actions";
+import { BuildListToolbar } from "@/features/build/shared/build-list-toolbar";
+import { BuildFilterSelect } from "@/features/build/shared/build-filter-select";
+import {
+  PORTFOLIO_TABLE_HEADERS,
+  buildPortfolioColumns,
+  PortfolioMobileCard,
+} from "@/features/build/portfolios/portfolio-table-columns";
+import {
+  PROGRAM_TABLE_HEADERS,
+  buildProgramColumns,
+  ProgramMobileCard,
+} from "@/features/build/programs/program-table-columns";
+import type { Portfolio, Program } from "@/types/projects";
+import { GalleryCase } from "./goals-gallery-section";
+
+const NOOP = () => undefined;
+
+const STUB_PORTFOLIOS: Portfolio[] = [
+  { id: 10, orgId: "org-1", name: "Platform Modernisation", description: "Core infrastructure improvements", ownerId: "u1", status: "active", health: "on_track", strategicGoal: null, createdBy: "u1", createdAt: "2026-01-01T00:00:00Z", updatedAt: "2026-09-01T00:00:00Z", projectCount: 4 },
+  { id: 11, orgId: "org-1", name: "Customer Growth", description: null, ownerId: "u2", status: "active", health: "at_risk", strategicGoal: "Reach $5M ARR", createdBy: "u2", createdAt: "2026-02-01T00:00:00Z", updatedAt: "2026-09-10T00:00:00Z", projectCount: 2 },
+];
+
+const STUB_PROGRAMS: Program[] = [
+  { id: 10, orgId: "org-1", portfolioId: 10, name: "Cloud Migration", description: "Migrating to managed cloud", ownerId: "u1", status: "active", health: "on_track", createdBy: "u1", createdAt: "2026-01-01T00:00:00Z", updatedAt: "2026-09-01T00:00:00Z", projectCount: 3 },
+  { id: 11, orgId: "org-1", portfolioId: null, name: "API Gateway V2", description: null, ownerId: null, status: "active", health: "at_risk", createdBy: "u2", createdAt: "2026-03-01T00:00:00Z", updatedAt: "2026-09-15T00:00:00Z", projectCount: 1 },
+];
+
+function PortfoliosToolbarGallery() {
+  const [search, setSearch] = useState("");
+  const [status, setStatus] = useState("all");
+  const [health, setHealth] = useState("all");
+  const handleClearAll = useCallback(() => { setSearch(""); setStatus("all"); setHealth("all"); }, []);
+  return (
+    <BuildListToolbar
+      search={{ value: search, onValueChange: setSearch, placeholder: "Search portfolios…", label: "Search portfolios" }}
+      filters={[
+        { id: "status", label: "Status", active: status !== "all", control: <BuildFilterSelect label="Status" value={status} onValueChange={setStatus} options={[{ value: "all", label: "All statuses" }, { value: "active", label: "Active" }, { value: "on_hold", label: "On hold" }, { value: "completed", label: "Completed" }, { value: "archived", label: "Archived" }]} /> },
+        { id: "health", label: "Health", active: health !== "all", control: <BuildFilterSelect label="Health" value={health} onValueChange={setHealth} options={[{ value: "all", label: "All health" }, { value: "on_track", label: "On track" }, { value: "at_risk", label: "At risk" }, { value: "off_track", label: "Off track" }]} /> },
+      ]}
+      onClearAll={handleClearAll}
+    />
+  );
+}
+
+function PortfoliosGalleryWrapper({ caseId, title, children }: { caseId: string; title: string; children: React.ReactNode }) {
+  return (
+    <GalleryCase id={caseId} title={title}>
+      <PageWrapper title="Portfolios" subtitle="Group related projects into portfolios" actions={<BuildHeaderActions actions={[{ id: "new", label: "New portfolio", icon: Plus, primary: true }]} />} filters={<PortfoliosToolbarGallery />}>
+        <PmPageShell>
+          <PmSection index={0} className="flex min-h-0 flex-1 flex-col">{children}</PmSection>
+        </PmPageShell>
+      </PageWrapper>
+    </GalleryCase>
+  );
+}
+
+function PortfoliosReadyTable() {
+  function stubOwnerOf(_id: string | null) { return null; }
+  function getRowKey(row: Portfolio) { return row.id; }
+  const columns = buildPortfolioColumns({ canManage: true, ownerOf: stubOwnerOf, onEdit: NOOP, onDelete: NOOP });
+  const renderMobileCard = useCallback(
+    (row: Portfolio) => (
+      <PortfolioMobileCard portfolio={row} canManage ownerOf={stubOwnerOf} onEdit={NOOP} onDelete={NOOP} />
+    ),
+    [],
+  );
+  return (
+    <BuildListSurface<Portfolio>
+      permission="build:portfolios:view"
+      rows={STUB_PORTFOLIOS}
+      columns={columns}
+      isLoading={false}
+      isError={false}
+      getRowKey={getRowKey}
+      mobileCard={renderMobileCard}
+      pagination={{ mode: "cursor", pageSize: 20, pageNumber: 1, hasMore: false, hasPrevious: false, onNext: NOOP, onPrevious: NOOP }}
+      empty={<EmptyState className={CONTENT_FILL_PANEL} illustrationPreset="projects" title="No portfolios yet" />}
+    />
+  );
+}
+
+function ProgramsToolbarGallery() {
+  const [search, setSearch] = useState("");
+  const [status, setStatus] = useState("all");
+  const handleClearAll = useCallback(() => { setSearch(""); setStatus("all"); }, []);
+  return (
+    <BuildListToolbar
+      search={{ value: search, onValueChange: setSearch, placeholder: "Search programs…", label: "Search programs" }}
+      filters={[
+        { id: "status", label: "Status", active: status !== "all", control: <BuildFilterSelect label="Status" value={status} onValueChange={setStatus} options={[{ value: "all", label: "All statuses" }, { value: "active", label: "Active" }, { value: "on_hold", label: "On hold" }, { value: "completed", label: "Completed" }, { value: "archived", label: "Archived" }]} /> },
+      ]}
+      onClearAll={handleClearAll}
+    />
+  );
+}
+
+function ProgramsGalleryWrapper({ caseId, title, children }: { caseId: string; title: string; children: React.ReactNode }) {
+  return (
+    <GalleryCase id={caseId} title={title}>
+      <PageWrapper title="Programs" subtitle="Coordinate related projects as a single program of work" actions={<BuildHeaderActions actions={[{ id: "new", label: "New program", icon: Plus, primary: true }]} />} filters={<ProgramsToolbarGallery />}>
+        <PmPageShell>
+          <PmSection index={0} className="flex min-h-0 flex-1 flex-col">{children}</PmSection>
+        </PmPageShell>
+      </PageWrapper>
+    </GalleryCase>
+  );
+}
+
+function ProgramsReadyTable() {
+  function stubOwnerOf(_id: string | null) { return null; }
+  function stubPortfolioName(_id: number | null) { return "—"; }
+  function getRowKey(row: Program) { return row.id; }
+  const columns = buildProgramColumns({ canManage: true, ownerOf: stubOwnerOf, portfolioName: stubPortfolioName, onEdit: NOOP, onDelete: NOOP });
+  const renderMobileCard = useCallback(
+    (row: Program) => (
+      <ProgramMobileCard program={row} canManage ownerOf={stubOwnerOf} portfolioName={stubPortfolioName} onEdit={NOOP} onDelete={NOOP} />
+    ),
+    [],
+  );
+  return (
+    <BuildListSurface<Program>
+      permission="build:programs:view"
+      rows={STUB_PROGRAMS}
+      columns={columns}
+      isLoading={false}
+      isError={false}
+      getRowKey={getRowKey}
+      mobileCard={renderMobileCard}
+      pagination={{ mode: "cursor", pageSize: 25, pageNumber: 1, hasMore: false, hasPrevious: false, onNext: NOOP, onPrevious: NOOP }}
+      empty={<EmptyState className={CONTENT_FILL_PANEL} illustrationPreset="projects" title="No programs yet" />}
+    />
+  );
+}
+
+export function PortfoliosProgramsGalleryCases() {
+  const [queryClient] = useState(() => {
+    const client = createAppQueryClient("portfolios-programs-gallery");
+    client.setQueryData(platformCoreQueryKeys.access.me(), GALLERY_STUB_ACCESS);
+    return client;
+  });
+  return (
+    <QueryClientProvider client={queryClient}>
+      <PortfoliosGalleryWrapper caseId="portfolios-ready" title="Portfolios — populated">
+        <PortfoliosReadyTable />
+      </PortfoliosGalleryWrapper>
+
+      <PortfoliosGalleryWrapper caseId="portfolios-loading" title="Portfolios — loading">
+        <DataTableSkeleton mobileCards rows={8} headers={PORTFOLIO_TABLE_HEADERS} className="flex-1" />
+      </PortfoliosGalleryWrapper>
+
+      <PortfoliosGalleryWrapper caseId="portfolios-empty-true" title="Portfolios — true empty">
+        <EmptyState className={CONTENT_FILL_PANEL} illustrationPreset="projects" title="No portfolios yet" description="Create a portfolio to group and govern your projects." action={{ label: "New portfolio", onClick: NOOP }} />
+      </PortfoliosGalleryWrapper>
+
+      <PortfoliosGalleryWrapper caseId="portfolios-error" title="Portfolios — error">
+        <ErrorState className="flex-1" title="Couldn't load portfolios" description="An unexpected error occurred. Try again." />
+      </PortfoliosGalleryWrapper>
+
+      <GalleryCase id="portfolios-denied" title="Portfolios — access denied">
+        <NoPermissionState permission="build:portfolios:view" />
+      </GalleryCase>
+
+      <GalleryCase id="portfolio-detail-ready" title="Portfolio detail — populated">
+        <PageWrapper
+          title="Platform Modernisation"
+          subtitle="Active · On track · 4 projects"
+          actions={
+            <BuildHeaderActions
+              actions={[
+                { id: "edit", label: "Edit portfolio", icon: Pencil, primary: false, onSelect: NOOP },
+                { id: "delete", label: "Delete portfolio", icon: Trash2, primary: false, onSelect: NOOP },
+              ]}
+            />
+          }
+        >
+          <PmPageShell>
+            <PmSection index={0} className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto p-4">
+              <h2 className="text-sm font-medium">Linked projects</h2>
+              <ul aria-label="Linked projects" className="flex flex-col gap-2">
+                <li className="flex items-center gap-2 rounded-lg border border-border bg-card p-3 text-sm"><span className="font-medium">Auth service refactor</span></li>
+                <li className="flex items-center gap-2 rounded-lg border border-border bg-card p-3 text-sm"><span className="font-medium">Data pipeline v2</span></li>
+              </ul>
+            </PmSection>
+          </PmPageShell>
+        </PageWrapper>
+      </GalleryCase>
+
+      <GalleryCase id="portfolio-detail-loading" title="Portfolio detail — loading">
+        <PageWrapper title="Portfolio" subtitle="Loading…">
+          <PmPageShell>
+            <PmSection index={0} className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto p-4">
+              <div className="skeleton-shimmer animate-pulse h-4 w-1/4 rounded-md bg-muted" />
+              <div className="flex flex-col gap-2">
+                {Array.from({ length: 3 }).map((_, i) => (
+                  <div key={i} className="flex items-center gap-2 rounded-lg border border-border bg-card p-3">
+                    <div className="skeleton-shimmer animate-pulse h-4 w-3/4 rounded-md bg-muted" />
+                  </div>
+                ))}
+              </div>
+            </PmSection>
+          </PmPageShell>
+        </PageWrapper>
+      </GalleryCase>
+
+      <ProgramsGalleryWrapper caseId="programs-ready" title="Programs — populated">
+        <ProgramsReadyTable />
+      </ProgramsGalleryWrapper>
+
+      <ProgramsGalleryWrapper caseId="programs-loading" title="Programs — loading">
+        <DataTableSkeleton mobileCards rows={8} headers={PROGRAM_TABLE_HEADERS} className="flex-1" />
+      </ProgramsGalleryWrapper>
+
+      <ProgramsGalleryWrapper caseId="programs-empty-true" title="Programs — true empty">
+        <EmptyState className={CONTENT_FILL_PANEL} illustrationPreset="projects" title="No programs yet" description="Create a program to coordinate related projects toward one outcome." action={{ label: "New program", onClick: NOOP }} />
+      </ProgramsGalleryWrapper>
+
+      <ProgramsGalleryWrapper caseId="programs-error" title="Programs — error">
+        <ErrorState className="flex-1" title="Couldn't load programs" description="An unexpected error occurred. Try again." />
+      </ProgramsGalleryWrapper>
+
+      <GalleryCase id="programs-denied" title="Programs — access denied">
+        <NoPermissionState permission="build:programs:view" />
+      </GalleryCase>
+    </QueryClientProvider>
+  );
+}

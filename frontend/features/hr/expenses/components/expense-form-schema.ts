@@ -1,5 +1,34 @@
 import { z } from "zod";
 
+export const EXPENSE_AMOUNT_MAX = 1_000_000;
+
+const AMOUNT_TEXT_RE = /^\d+(\.\d*)?$/;
+const AMOUNT_TWO_DECIMALS_RE = /^\d+(\.\d{0,2})?$/;
+
+function validateAmountText(value: string, ctx: z.RefinementCtx) {
+  const text = value.trim();
+  if (!text) {
+    ctx.addIssue({ code: "custom", message: "Amount must be greater than 0" });
+    return;
+  }
+  if (!AMOUNT_TEXT_RE.test(text)) {
+    ctx.addIssue({ code: "custom", message: "Amount must be a positive number" });
+    return;
+  }
+  if (!AMOUNT_TWO_DECIMALS_RE.test(text)) {
+    ctx.addIssue({ code: "custom", message: "Amount can have at most 2 decimal places" });
+    return;
+  }
+  const amount = Number(text);
+  if (amount <= 0) {
+    ctx.addIssue({ code: "custom", message: "Amount must be greater than 0" });
+    return;
+  }
+  if (amount > EXPENSE_AMOUNT_MAX) {
+    ctx.addIssue({ code: "custom", message: "Amount must be ₹10,00,000 or less" });
+  }
+}
+
 const LABEL_CHARS_RE = /^[\p{L}\p{N}\s'.-]+$/u;
 const CONSECUTIVE_SPECIAL_RE = /[^\p{L}\p{N}\s]{2,}/u;
 
@@ -54,10 +83,7 @@ function validateExpenseLabel(
 export const expenseFormSchema = z.object({
   category: z.string().min(1, "Category is required"),
   customCategory: z.string().optional(),
-  amount: z
-    .number()
-    .positive("Amount must be greater than 0")
-    .max(999_999_999.99, "Amount cannot exceed ₹99,99,99,999.99"),
+  amount: z.string().superRefine(validateAmountText),
   description: z
     .string()
     .max(1000, "Description must be at most 1000 characters")
@@ -82,7 +108,7 @@ export const expenseFormSchema = z.object({
     if (!data.customCategory?.trim()) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
-        message: "Please describe what the other category is",
+        message: "Enter a name for the category",
         path: ["customCategory"],
       });
     } else {
@@ -93,7 +119,7 @@ export const expenseFormSchema = z.object({
     if (!data.customPaymentMethod?.trim()) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
-        message: "Please describe what the other payment method is",
+        message: "Enter a name for the payment method",
         path: ["customPaymentMethod"],
       });
     } else {

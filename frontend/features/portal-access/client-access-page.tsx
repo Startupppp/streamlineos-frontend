@@ -1,12 +1,15 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { toast } from "sonner";
+import { X } from "lucide-react";
 import { PlusIcon, EllipsisIcon } from "@animateicons/react/lucide";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { useQueryParamOpen } from "@/hooks/common/use-query-param-open";
-import { useProjectClientGrants, useRevokeGrant } from "@/hooks/api/portal-access/grants";
+import { useProjectClientGrants, useRevokeGrant, useBulkRevokeGrant } from "@/hooks/api/portal-access/grants";
 import { useCan } from "@/hooks/api/access";
+import { useBuildListKeyboard } from "@/hooks/common/use-build-list-keyboard";
+import { PM_TOOLBAR } from "@/components/pm-chrome";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { DataTable } from "@/components/ui/data-table";
 import type { DataTableColumn } from "@/components/ui/data-table";
@@ -15,6 +18,13 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { CursorPageControls } from "@/components/ui/cursor-page-controls";
 import { SearchInput } from "@/components/ui/search-input";
 import { Button } from "@/components/ui/button";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import {
   DropdownMenu,
@@ -25,6 +35,7 @@ import {
 import { SemanticBadge } from "@/components/ui/semantic-badge";
 import type { BadgeTone } from "@/components/ui/semantic-badge";
 import { GrantFormDialog } from "./grant-form-dialog";
+import { InviteClientDialog } from "./invite-client-dialog";
 import type { ProjectClientGrant, PortalGrantStatus } from "@/types/portal-access/grants";
 import { getErrorMessage } from "@/lib/get-error-message";
 import {
@@ -59,7 +70,22 @@ const VISIBILITY_FLAGS = [
   { key: "canViewAttachments", label: "Attachments" },
   { key: "canViewComments", label: "Comments" },
   { key: "canSubmitChangeRequests", label: "Change Requests" },
+  { key: "canViewApprovals", label: "Approvals" },
+  { key: "canViewInvoices", label: "Invoices" },
+  { key: "canViewRequests", label: "Requests" },
 ] as const satisfies ReadonlyArray<{ key: keyof ProjectClientGrant; label: string }>;
+
+const GRANT_STATE_FILTERS = [
+  { value: "active", label: "Active" },
+  { value: "suspended", label: "Suspended" },
+  { value: "expired", label: "Expired" },
+  { value: "revoked", label: "Revoked" },
+] as const;
+
+const GRANT_PERMISSION_FILTERS = VISIBILITY_FLAGS.map(({ key, label }) => ({
+  value: key,
+  label,
+}));
 
 function truncateId(id: string): string {
   return id.length > 12 ? `${id.slice(0, 8)}…` : id;
@@ -170,12 +196,22 @@ export function ClientAccessPage() {
   const canManage = useCan("build:clientvisibility:manage");
 
   const [cursorHistory, setCursorHistory] = useState<(string | undefined)[]>([undefined]);
-  const { q, state: grantState, permission, hasActiveFilters, setFilter } = useClientAccessUrlState();
+  const [selectedGrantIds, setSelectedGrantIds] = useState<Set<string | number>>(new Set());
+  const [bulkRevokeOpen, setBulkRevokeOpen] = useState(false);
+  const {
+    q,
+    state: grantState,
+    permission,
+    hasActiveFilters,
+    setFilter,
+    resetFilters,
+  } = useClientAccessUrlState();
 
   const { open: createOpen, onOpenChange: setCreateOpen, setOpen: openCreate } =
     useQueryParamOpen("create");
   const [editTarget, setEditTarget] = useState<ProjectClientGrant | null>(null);
   const [revokeTarget, setRevokeTarget] = useState<ProjectClientGrant | null>(null);
+  const [inviteOpen, setInviteOpen] = useState(false);
 
   const { data, isLoading, isError, error, refetch } = useProjectClientGrants({
     cursor: cursorHistory.at(-1),
@@ -192,22 +228,86 @@ export function ClientAccessPage() {
     error,
   });
 
-  const filteredRows = data?.data ?? [];
+  const filteredRows = useMemo(() => data?.data ?? [], [data?.data]);
   const pagination = data?.pagination;
   const isFiltered = hasActiveFilters;
+
+  const bulkRevoke = useBulkRevokeGrant();
+
+  const handleKeyboardClear = useCallback(() => setSelectedGrantIds(new Set()), []);
+
+  const handleKeyboardEdit = useCallback(
+    (index: number) => {
+      const row = filteredRows[index];
+      if (row) setEditTarget(row);
+    },
+    [filteredRows],
+  );
+
+  const handleKeyboardOpen = useCallback(
+    (index: number) => {
+      if (canManage) handleKeyboardEdit(index);
+    },
+    [canManage, handleKeyboardEdit],
+  );
+
+  const handleBulkRevokeConfirm = useCallback(() => setBulkRevokeOpen(true), []);
+
+  const handleBulkRevoke = useCallback(() => {
+    if (!canManage) return;
+    setBulkRevokeOpen(false);
+    selectedGrantIds.forEach((id) => {
+      bulkRevoke.mutate(String(id), {
+        onError: (e) => toast.error(getErrorMessage(e)),
+      });
+    });
+    setSelectedGrantIds(new Set());
+  }, [canManage, selectedGrantIds, bulkRevoke]);
 
   function handleSearchChange(value: string) {
     setFilter("q", value);
     setCursorHistory([undefined]);
+    setSelectedGrantIds(new Set());
+  }
+
+  function handleStateChange(value: string) {
+    setFilter("state", value === "all" ? "" : value);
+    setCursorHistory([undefined]);
+    setSelectedGrantIds(new Set());
+  }
+
+  function handlePermissionChange(value: string) {
+    setFilter("permission", value === "all" ? "" : value);
+    setCursorHistory([undefined]);
+    setSelectedGrantIds(new Set());
+  }
+
+  function handleResetFilters() {
+    resetFilters();
+    setCursorHistory([undefined]);
+    setSelectedGrantIds(new Set());
   }
 
   const handlePreviousPage = useCallback(() => {
     setCursorHistory((history) => history.slice(0, -1));
+    setSelectedGrantIds(new Set());
   }, []);
 
   const handleOpenCreate = useCallback(() => {
     openCreate();
   }, [openCreate]);
+
+  const handleOpenInvite = useCallback(() => {
+    setInviteOpen(true);
+  }, []);
+
+  function handleInviteOpenChange(nextOpen: boolean) {
+    setInviteOpen(nextOpen);
+  }
+
+  function handlePageMembershipInvited() {
+    setInviteOpen(false);
+  }
 
   function handleCreateDialogChange(open: boolean) {
     if (!open) setCreateOpen(false);
@@ -235,8 +335,20 @@ export function ClientAccessPage() {
 
   function handleNextPage(): void {
     const nextCursor = pagination?.nextCursor;
-    if (nextCursor) setCursorHistory((history) => [...history, nextCursor]);
+    if (nextCursor) {
+      setCursorHistory((history) => [...history, nextCursor]);
+      setSelectedGrantIds(new Set());
+    }
   }
+
+  useBuildListKeyboard({
+    itemCount: filteredRows.length,
+    onOpen: handleKeyboardOpen,
+    onCreate: canManage ? handleOpenCreate : undefined,
+    onEdit: canManage ? handleKeyboardEdit : undefined,
+    onClearSelection: handleKeyboardClear,
+    enabled: pageState.kind === "ready",
+  });
 
   const columns: DataTableColumn<ProjectClientGrant>[] = [
     {
@@ -334,9 +446,41 @@ export function ClientAccessPage() {
     <div className={FILTER_TOOLBAR_ROW}>
       <SearchInput
         placeholder="Search by contact or project…"
+        aria-label="Search client access grants"
         value={q}
         onValueChange={handleSearchChange}
       />
+      <Select value={grantState || "all"} onValueChange={handleStateChange}>
+        <SelectTrigger className="w-full sm:w-40" aria-label="Filter by grant status">
+          <SelectValue placeholder="All statuses" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="all">All statuses</SelectItem>
+          {GRANT_STATE_FILTERS.map((option) => (
+            <SelectItem key={option.value} value={option.value}>
+              {option.label}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+      <Select value={permission || "all"} onValueChange={handlePermissionChange}>
+        <SelectTrigger className="w-full sm:w-48" aria-label="Filter by client permission">
+          <SelectValue placeholder="All permissions" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="all">All permissions</SelectItem>
+          {GRANT_PERMISSION_FILTERS.map((option) => (
+            <SelectItem key={option.value} value={option.value}>
+              {option.label}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+      {hasActiveFilters ? (
+        <Button variant="ghost" size="sm" className="shrink-0" onClick={handleResetFilters}>
+          Clear filters
+        </Button>
+      ) : null}
     </div>
   );
 
@@ -347,7 +491,12 @@ export function ClientAccessPage() {
       filters={pageState.kind === "ready" ? filtersBar : undefined}
       actions={
         pageState.kind === "ready" && canManage ? (
-          <GrantAccessButton onClick={handleOpenCreate} />
+          <div className="flex items-center gap-2">
+            <Button variant="outline" size="sm" onClick={handleOpenInvite}>
+              Invite Client
+            </Button>
+            <GrantAccessButton onClick={handleOpenCreate} />
+          </div>
         ) : undefined
       }
     >
@@ -362,16 +511,16 @@ export function ClientAccessPage() {
             {filteredRows.length === 0 ? (
               <EmptyState
                 className={CONTENT_FILL_PANEL}
-                illustrationPreset="clients"
+                illustrationPreset="invitation"
                 title={isFiltered ? "No matching grants" : "No client access grants"}
                 description={
                   isFiltered
-                    ? "Try adjusting your search."
+                    ? "Try adjusting or clearing the active filters."
                     : "Grant clients read-only visibility into project milestones, tasks, and more."
                 }
                 action={
                   isFiltered
-                    ? undefined
+                    ? { label: "Clear filters", onClick: handleResetFilters }
                     : canManage
                       ? { label: "Grant Access", onClick: handleOpenCreate }
                       : undefined
@@ -379,12 +528,68 @@ export function ClientAccessPage() {
               />
             ) : (
               <>
+                {canManage && selectedGrantIds.size > 0 && (
+                  <div className={cn(PM_TOOLBAR, "mb-2 rounded-lg border border-border/80 bg-card px-3 py-2")}>
+                    <span className="text-sm font-medium">{selectedGrantIds.size} selected</span>
+                    <div className="flex items-center gap-2">
+                      <Button variant="destructive" size="sm" onClick={handleBulkRevokeConfirm}>
+                        Revoke selected
+                      </Button>
+                      <Button variant="ghost" size="sm" aria-label="Clear selection" onClick={handleKeyboardClear}>
+                        <X className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+                )}
                 <DataTable
                   data={filteredRows}
                   columns={columns}
                   getRowKey={(row) => row.projectClientGrantId}
                   minWidth="680px"
                   className={CONTENT_FILL_PANEL}
+                  mobileCard={(row) => {
+                    const contactName = resolveContactName(row.contactFirstName, row.contactLastName);
+                    const activeFlags = VISIBILITY_FLAGS.filter((flag) => row[flag.key] === true);
+                    return (
+                      <div className="space-y-3">
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="min-w-0">
+                            <p className="truncate text-sm font-medium text-foreground">
+                              {contactName ?? "Unknown contact"}
+                            </p>
+                            <p className="mt-0.5 text-xs text-muted-foreground">Project #{row.projectId}</p>
+                          </div>
+                          <SemanticBadge
+                            tone={GRANT_STATUS_TONES[row.status]}
+                            label={GRANT_STATUS_LABELS[row.status]}
+                            size="xs"
+                          />
+                        </div>
+                        <div className="flex flex-wrap gap-1">
+                          {activeFlags.length > 0 ? activeFlags.map((flag) => (
+                            <SemanticBadge key={flag.key} tone="accent" label={flag.label} size="xs" />
+                          )) : <span className="text-xs text-muted-foreground">No access</span>}
+                        </div>
+                        {canManage ? (
+                          <div className="flex justify-end">
+                            <GrantRowActions
+                              grant={row}
+                              canManage
+                              onEdit={handleEditRow}
+                              onRevoke={handleRevokeRow}
+                            />
+                          </div>
+                        ) : null}
+                      </div>
+                    );
+                  }}
+                  mobileCardBreakpoint="xl"
+                  selection={canManage ? {
+                    selected: selectedGrantIds,
+                    onChange: setSelectedGrantIds,
+                    isRowSelectable: (row) => row.status === "ACTIVE" || row.status === "SUSPENDED",
+                    getRowLabel: (row) => `Grant ${truncateId(row.projectClientGrantId)}`,
+                  } : undefined}
                 />
                 {pagination && (cursorHistory.length > 1 || pagination.hasMore) ? (
                   <CursorPageControls
@@ -425,6 +630,25 @@ export function ClientAccessPage() {
           onOpenChange={handleRevokeDialogChange}
         />
       )}
+
+      {bulkRevokeOpen && (
+        <ConfirmDialog
+          open={bulkRevokeOpen}
+          onOpenChange={setBulkRevokeOpen}
+          title="Revoke selected grants?"
+          description={`This will revoke access for ${selectedGrantIds.size} client grant${selectedGrantIds.size === 1 ? "" : "s"}. This cannot be undone.`}
+          confirmLabel="Revoke"
+          destructive
+          isPending={bulkRevoke.isPending}
+          onConfirm={handleBulkRevoke}
+        />
+      )}
+
+      <InviteClientDialog
+        open={inviteOpen}
+        onOpenChange={handleInviteOpenChange}
+        onInvited={handlePageMembershipInvited}
+      />
     </PageWrapper>
   );
 }

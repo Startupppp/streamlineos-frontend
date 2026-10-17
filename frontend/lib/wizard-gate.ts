@@ -1,6 +1,9 @@
 import "server-only";
 import type { Session } from "next-auth";
-import { gateCookieName } from "@/lib/onboarding-gate";
+import { gateCookieName, mayDeferOwnOnboarding } from "@/lib/onboarding-gate";
+import { grantsPermission } from "@/lib/rbac/permission-gate";
+import { hasAssignedProductAccess, resolveRouteAccess } from "@/lib/rbac/route-access/route-access";
+import type { AccessResponse } from "@/types/access";
 
 export type WizardGate =
   | "/access-suspended"
@@ -13,9 +16,19 @@ interface GateCookieReader {
   get(name: string): { value: string } | undefined;
 }
 
+function isHrSurface(path: string): boolean {
+  return (
+    path === "/hr" ||
+    path.startsWith("/hr/") ||
+    path === "/employee-onboarding" ||
+    path.startsWith("/employee-onboarding/")
+  );
+}
+
 export function resolveWizardGate(
   session: Session,
   cookieStore: GateCookieReader,
+  destination: string,
 ): WizardGate {
   const orgId = session.orgId ?? null;
   const userId = session.user?.id ?? "";
@@ -23,10 +36,6 @@ export function resolveWizardGate(
 
   if (session.organizationAccess === "suspended") return "/access-suspended";
 
-  // Root section 8: the onboarding wizards are never shown to a platform
-  // operator. They hold PLATFORM_ONLY_PERMISSION_KEYS by deployment allowlist
-  // rather than by membership, so an operator without an organization has
-  // nothing to set up and belongs on their own route.
   if (session.isPlatformAdmin === true && !orgId) return "/owner";
 
   if (!orgId) return "/org-setup";
@@ -38,13 +47,33 @@ export function resolveWizardGate(
     if (!setupDone) return "/org-setup";
   }
 
-  if (!isOrgOwner && !session.userOnboardingCompletedAt && userId) {
-    const onboardingDone = Boolean(
-      cookieStore.get(gateCookieName("onboarding-done", `${userId}--${orgId}`))
-        ?.value,
-    );
-    if (!onboardingDone) return "/employee-onboarding";
+  if (isHrSurface(destination)) {
+    const hrEnabled = (session.enabledModules ?? []).includes("hr");
+    if (!isOrgOwner && hrEnabled && !session.userOnboardingCompletedAt && userId) {
+      const scope = `${userId}--${orgId}`;
+      const onboardingDone = Boolean(
+        cookieStore.get(gateCookieName("onboarding-done", scope))?.value,
+      );
+      const deferred =
+        mayDeferOwnOnboarding(session) &&
+        Boolean(cookieStore.get(gateCookieName("onboarding-deferred", scope))?.value);
+      if (!onboardingDone && !deferred) return "/employee-onboarding";
+    }
   }
 
   return null;
+}
+
+// The onboarding detour is for people HR manages. It yields when the route would deny the caller, or when the
+// caller holds no assigned HR grant at all (only member-default self-service keys, RBAC-B-003): the route's own
+// guard then decides, so a self:leaves holder sees their leave page and everyone else the denial.
+export function onboardingGateYieldsToDenial(
+  destination: string,
+  access: Pick<AccessResponse, "isOrgOwner" | "scopes">,
+): boolean {
+  const decision = resolveRouteAccess(destination);
+  if (decision.kind !== "permission" || decision.permission === null) return false;
+  if (!access.isOrgOwner && !hasAssignedProductAccess("hrms", access.scopes)) return true;
+  const keys = Array.isArray(decision.permission) ? decision.permission : [decision.permission];
+  return !keys.some((key) => grantsPermission(access, key));
 }

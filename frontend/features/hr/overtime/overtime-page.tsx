@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { motion } from "framer-motion";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
@@ -13,6 +12,8 @@ import { OvertimeRequestSheet } from "./overtime-request-sheet";
 
 export function OvertimePage() {
   const canManage = useCan("hr:attendance:manage");
+  // POST /hr/overtime requires hr:attendance:view; the route itself is unguarded.
+  const canRequest = useCan("hr:attendance:view");
   const [open, setOpen] = useState(false);
 
   function handleOpen() {
@@ -24,20 +25,15 @@ export function OvertimePage() {
       title="Overtime & Comp-Off"
       subtitle="Manage overtime requests and compensatory leave balances"
       actions={
-        <Button
-          onClick={handleOpen}
-          className="bg-primary hover:bg-primary/90 text-primary-foreground shadow-md hover:shadow-lg transition-all duration-200">
-          <Plus className="h-4 w-4 mr-2" />
-          Request Overtime
-        </Button>
+        canRequest ? (
+          <Button size="sm" onClick={handleOpen}>
+            <Plus className="h-4 w-4" />
+            Request overtime
+          </Button>
+        ) : undefined
       }
     >
-      <motion.div
-        className="flex flex-1 min-h-0 flex-col"
-        initial={{ opacity: 0, y: 16 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.22, ease: "easeOut" }}
-      >
+      <div className="flex flex-1 min-h-0 flex-col">
         <Tabs defaultValue="requests" className="flex flex-1 min-h-0 flex-col">
           <TabsList className="shrink-0">
             <TabsTrigger value="requests">Overtime Requests</TabsTrigger>
@@ -50,7 +46,7 @@ export function OvertimePage() {
             <CompOffPanel />
           </TabsContent>
         </Tabs>
-      </motion.div>
+      </div>
       <OvertimeRequestSheet open={open} onOpenChange={setOpen} />
     </PageWrapper>
   );

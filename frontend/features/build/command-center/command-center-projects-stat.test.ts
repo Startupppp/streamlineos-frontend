@@ -1,4 +1,4 @@
-import { resolveProjectsStatValue } from "./command-center-page";
+import { resolveProjectsStatValue } from "./command-center-model";
 
 describe("resolveProjectsStatValue", () => {
   it("returns the exact count when hasMore is false because no further results exist beyond what loaded", () => {

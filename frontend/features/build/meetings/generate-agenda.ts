@@ -3,7 +3,7 @@ import type { Cycle } from "@/types/projects";
 
 export type AgendaSource = "cycle" | "overdue" | "blocked" | "recently_completed" | "open_action_items";
 
-export interface GenerateAgendaOptions {
+interface GenerateAgendaOptions {
   cycle?: Cycle | null;
   tickets?: Ticket[];
   sources: AgendaSource[];

@@ -1,6 +1,11 @@
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
 import { fireEvent, render, screen } from "@testing-library/react";
 import { ApiError } from "@/lib/api-envelope";
+import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
 import { AutomationRunsSheet } from "./automation-runs-sheet";
+
+const HOOKS = join(process.cwd(), "hooks/api/hr/hr-automations.ts");
 
 const mockUseHrAutomationRuns = jest.fn();
 const refetch = jest.fn();
@@ -9,10 +14,28 @@ jest.mock("@/hooks/api/hr/hr-automations", () => ({
   useHrAutomationRuns: () => mockUseHrAutomationRuns(),
 }));
 
+const mockAccess = jest.fn(() => "granted");
+jest.mock("@/hooks/api/access", () => ({
+  useCanState: () => mockAccess(),
+}));
+
 function noop(): void {}
 
 beforeEach(() => {
   jest.clearAllMocks();
+  mockAccess.mockReturnValue("granted");
+});
+
+it("says access is restricted, not 'No runs yet', when hr:automations:view is denied (FE-47)", () => {
+  mockAccess.mockReturnValue("denied");
+  mockUseHrAutomationRuns.mockReturnValue({
+    data: undefined, isLoading: false, isError: false, error: null, refetch,
+  });
+
+  render(<AutomationRunsSheet ruleId={1} ruleName="Rule" onClose={noop} />);
+
+  expect(screen.getByText("Access Restricted")).toBeInTheDocument();
+  expect(screen.queryByText("No runs yet for this rule.")).toBeNull();
 });
 
 describe("the automation runs sheet distinguishes a failed load from an empty history", () => {
@@ -44,5 +67,27 @@ describe("the automation runs sheet distinguishes a failed load from an empty hi
 
     expect(screen.queryByRole("alert")).toBeNull();
     expect(screen.getByText(/no runs yet for this rule/i)).toBeInTheDocument();
+  });
+
+  it("keeps the failed runs read inline instead of throwing it to the /hr boundary", () => {
+    const source = readFileSync(HOOKS, "utf8");
+
+    expect(INLINE_READ_ERROR).toEqual({ throwOnError: false });
+    expect(source).toContain("...INLINE_READ_ERROR,");
+  });
+});
+
+describe("the failed read's request id is quotable to support", () => {
+  it("renders the copyable reference the backend echoed on the error envelope", () => {
+    mockUseHrAutomationRuns.mockReturnValue({
+      data: undefined,
+      isLoading: false,
+      isError: true,
+      error: new ApiError("Internal server error", 500, undefined, { correlationId: "req-abc123" }),
+      refetch,
+    });
+    render(<AutomationRunsSheet ruleId={7} ruleName="Welcome email" onClose={noop} />);
+    expect(screen.getByText(/reference/i)).toBeInTheDocument();
+    expect(screen.getByText("req-abc123")).toBeInTheDocument();
   });
 });

@@ -1,39 +1,24 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
+import { useCallback } from "react";
 import { Plus, Siren } from "lucide-react";
-import { toast } from "sonner";
-import { useIncidents, useDeleteIncident } from "@/hooks/api/build/incidents";
-import { useCan } from "@/hooks/api/access";
-import { usePageState } from "@/hooks/api/use-page-state";
-import { PageState } from "@/components/shared/page-state";
-import { useOrgMembers } from "@/hooks/api/organization";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
-import { DataTable, DataTableSkeleton } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { IncidentSheet } from "./incident-sheet";
-import { getSlaState } from "./sla";
-import type { Incident } from "@/types/projects";
-import {
-  PmPageShell,
-  PmSection,
-  PM_FILL_PANEL,
-} from "@/components/pm-chrome";
-import { getErrorMessage } from "@/lib/get-error-message";
+import type { IncidentsCreateIncidentResponse } from "@/contracts/build-contracts.generated";
+import { PmPageShell, PmSection, CONTENT_FILL_PANEL } from "@/components/pm-chrome";
 import { BuildHeaderActions } from "@/features/build/shared/build-header-actions";
+import { BuildListSurface } from "@/features/build/shared/build-list-surface";
 import { BuildListToolbar } from "@/features/build/shared/build-list-toolbar";
 import { BuildFilterSelect } from "@/features/build/shared/build-filter-select";
-import {
-  BUILD_FILTER_ALL,
-  useBuildListFilters,
-} from "@/features/build/shared/use-build-list-filters";
+import { BUILD_FILTER_ALL } from "@/features/build/shared/use-build-list-filters";
 import {
   INCIDENTS_TABLE_HEADERS,
   IncidentMobileCard,
-  buildIncidentsColumns,
 } from "./incidents-table-columns";
+import { useIncidentsPage } from "./use-incidents-page";
 
 const SEVERITY_OPTIONS = [
   { value: BUILD_FILTER_ALL, label: "All severities" },
@@ -53,116 +38,46 @@ const STATUS_OPTIONS = [
   { value: "closed", label: "Closed" },
 ];
 
-const FILTER_DEFINITIONS = [
-  { param: "status", options: ["detected", "investigating", "mitigating", "resolved", "postmortem", "closed"] as const },
-  { param: "severity", options: ["critical", "high", "medium", "low"] as const },
-] as const;
-
-const INCIDENTS_LIST_CAP = 100;
-
 interface IncidentsPageProps {
   projectId: number;
 }
 
 export function IncidentsPage({ projectId }: IncidentsPageProps) {
-  const canManage = useCan("build:incidents:manage");
-
-  const listFilters = useBuildListFilters({ filters: FILTER_DEFINITIONS });
-
-  const [sheetOpen, setSheetOpen] = useState(false);
-  const [editIncident, setEditIncident] = useState<Incident | null>(null);
-  const [deleteTarget, setDeleteTarget] = useState<Incident | null>(null);
-
-  const statusValue = listFilters.value("status");
-  const severityValue = listFilters.value("severity");
-
-  const { data: incidents, isLoading, isError, error, refetch } = useIncidents(projectId, {
-    status: statusValue !== BUILD_FILTER_ALL ? statusValue : undefined,
-    severity: severityValue !== BUILD_FILTER_ALL ? severityValue : undefined,
-  });
-
-  const { data: membersData } = useOrgMembers(1, 100);
-  const deleteIncident = useDeleteIncident();
-  const pageState = usePageState({ permission: "build:incidents:view", isLoading, isError, error });
-  const members = useMemo(() => membersData?.data ?? [], [membersData]);
-
-  const all = useMemo(() => incidents ?? [], [incidents]);
-
-  const displayed = useMemo(() => {
-    const q = listFilters.debouncedSearch.trim().toLowerCase();
-    if (!q) return all;
-    return all.filter(
-      (i) =>
-        i.title.toLowerCase().includes(q) ||
-        `inc-${i.incidentNumber}`.includes(q),
-    );
-  }, [all, listFilters.debouncedSearch]);
-
-  const openCount = all.filter((i) => i.status !== "resolved" && i.status !== "closed").length;
-  const slaBreachedCount = all.filter((i) => {
-    const s = getSlaState(i);
-    return s.responseBreached || s.resolutionBreached;
-  }).length;
-  const resolvedCount = all.filter(
-    (i) => i.status === "resolved" || i.status === "closed",
-  ).length;
-
-  const handleRetry = useCallback(() => {
-    void refetch();
-  }, [refetch]);
-
-  const handleEdit = useCallback((inc: Incident) => {
-    setEditIncident(inc);
-    setSheetOpen(true);
-  }, []);
-
-  const handleNew = useCallback(() => {
-    setEditIncident(null);
-    setSheetOpen(true);
-  }, []);
-
-  const handleAlertOpenChange = useCallback((open: boolean) => {
-    if (!open) setDeleteTarget(null);
-  }, []);
-
-  const handleDeleteConfirm = useCallback(() => {
-    if (!deleteTarget) return;
-    deleteIncident.mutate(
-      { projectId, incidentId: deleteTarget.id },
-      {
-        onSuccess: () => {
-          toast.success("Incident deleted");
-          setDeleteTarget(null);
-        },
-        onError: (e) => toast.error(getErrorMessage(e)),
-      },
-    );
-  }, [deleteTarget, deleteIncident, projectId]);
-
-  const handleStatusChange = useCallback(
-    (value: string) => listFilters.setValue("status", value),
-    [listFilters],
-  );
-
-  const handleSeverityChange = useCallback(
-    (value: string) => listFilters.setValue("severity", value),
-    [listFilters],
-  );
-
-  const columns = useMemo(
-    () =>
-      buildIncidentsColumns({
-        canManage,
-        members,
-        projectId,
-        onEdit: handleEdit,
-        onDelete: setDeleteTarget,
-      }),
-    [canManage, members, projectId, handleEdit],
-  );
+  const {
+    canManage,
+    listFilters,
+    sheetOpen,
+    setSheetOpen,
+    editIncident,
+    deleteTarget,
+    setDeleteTarget,
+    statusValue,
+    severityValue,
+    isLoading,
+    isError,
+    error,
+    pageNumber,
+    hasPrevious,
+    hasMore,
+    members,
+    all,
+    openCount,
+    slaBreachedCount,
+    resolvedCount,
+    columns,
+    handleRetry,
+    handleEdit,
+    handleNew,
+    handleAlertOpenChange,
+    handleDeleteConfirm,
+    handleStatusChange,
+    handleSeverityChange,
+    handleNextPage,
+    handlePreviousPage,
+  } = useIncidentsPage({ projectId });
 
   const renderMobileCard = useCallback(
-    (row: Incident) => (
+    (row: IncidentsCreateIncidentResponse) => (
       <IncidentMobileCard
         incident={row}
         canManage={canManage}
@@ -171,7 +86,7 @@ export function IncidentsPage({ projectId }: IncidentsPageProps) {
         onDelete={setDeleteTarget}
       />
     ),
-    [canManage, members, handleEdit],
+    [canManage, members, handleEdit, setDeleteTarget],
   );
 
   return (
@@ -238,51 +153,74 @@ export function IncidentsPage({ projectId }: IncidentsPageProps) {
       <PmPageShell>
         <PmSection index={0} className="shrink-0">
           <StatCardGrid cols={3}>
-            <StatCard label="Open" value={openCount} icon={Siren} tone="amber" isLoading={isLoading} />
-            <StatCard label="SLA Breached" value={slaBreachedCount} tone="red" isLoading={isLoading} />
-            <StatCard label="Resolved" value={resolvedCount} tone="emerald" isLoading={isLoading} />
+            <StatCard
+              label="Open"
+              value={openCount}
+              icon={Siren}
+              tone="amber"
+              isLoading={isLoading}
+            />
+            <StatCard
+              label="SLA Breached"
+              value={slaBreachedCount}
+              tone="red"
+              isLoading={isLoading}
+            />
+            <StatCard
+              label="Resolved"
+              value={resolvedCount}
+              tone="emerald"
+              isLoading={isLoading}
+            />
           </StatCardGrid>
         </PmSection>
 
         <PmSection index={1} className="flex min-h-0 flex-1 flex-col">
-          {!isLoading && !isError && all.length >= INCIDENTS_LIST_CAP ? (
-            <p className="mb-2 shrink-0 text-micro text-muted-foreground">
-              Showing the most recent {INCIDENTS_LIST_CAP} incidents. Narrow the status or
-              severity filter to see more.
-            </p>
-          ) : null}
-          <PageState
-            resolution={pageState}
-            loading={
-              <DataTableSkeleton mobileCards
-                rows={12}
-                headers={INCIDENTS_TABLE_HEADERS}
-                className="flex-1"
-              />
-            }
+          <BuildListSurface<IncidentsCreateIncidentResponse>
+            permission="build:incidents:view"
+            rows={all}
+            columns={columns}
+            isLoading={isLoading}
+            isError={isError}
+            error={error}
+            isFiltered={listFilters.isFiltered}
+            getRowKey={(row) => row.id}
+            mobileCard={renderMobileCard}
+            loadingHeaders={INCIDENTS_TABLE_HEADERS}
+            loadingRows={12}
+            pagination={{
+              mode: "cursor",
+              pageSize: 25,
+              pageNumber,
+              hasMore,
+              hasPrevious,
+              onNext: handleNextPage,
+              onPrevious: handlePreviousPage,
+            }}
             empty={
               <EmptyState
-                className={PM_FILL_PANEL}
+                className={CONTENT_FILL_PANEL}
                 illustrationPreset="ticket"
                 title="No incidents found"
                 description="Create an incident to start tracking."
-                filtersActive={listFilters.isFiltered}
+                action={
+                  canManage
+                    ? { label: "New Incident", onClick: handleNew }
+                    : undefined
+                }
+              />
+            }
+            filteredEmpty={
+              <EmptyState
+                className={CONTENT_FILL_PANEL}
+                illustrationPreset="ticket"
+                title="No incidents match your filters"
+                description="Try adjusting the filters to see more incidents."
                 onClearFilters={listFilters.clearAll}
-                action={canManage ? { label: "New Incident", onClick: handleNew } : undefined}
               />
             }
             onRetry={handleRetry}
-            className={PM_FILL_PANEL}
-          >
-            <DataTable<Incident>
-              data={displayed}
-              columns={columns}
-              getRowKey={(row) => row.id}
-              className={PM_FILL_PANEL}
-              mobileCard={renderMobileCard}
-              pagination={{ pageSize: 25 }}
-            />
-          </PageState>
+          />
         </PmSection>
       </PmPageShell>
 

@@ -1,5 +1,6 @@
 "use client";
 
+import { useMemo } from "react";
 import type { RepTrendPoint } from "@/types/crm/call-intelligence";
 import { METRIC_UNKNOWN, formatBpsPercent } from "./call-metric-format";
 
@@ -17,6 +18,45 @@ const METRIC_LABEL: Record<RepTrendSparklineProps["metric"], string> = {
   questionRate: "median question rate",
   nextStep: "next-step capture",
 };
+
+interface SparklinePathData {
+  segments: string;
+  first: number;
+  last: number;
+}
+
+function computeSparklinePath(
+  points: RepTrendPoint[],
+  metric: RepTrendSparklineProps["metric"],
+): SparklinePathData | null {
+  const values = points.map((point) => valueFor(point, metric));
+  const present = values.filter((value): value is number => value !== null);
+  if (present.length < 2) return null;
+
+  const low = Math.min(...present);
+  const high = Math.max(...present);
+  const span = high - low || 1;
+  const step = values.length > 1 ? 100 / (values.length - 1) : 100;
+
+  const pathParts: string[] = [];
+  let open = false;
+  values.forEach((value, index) => {
+    if (value === null) {
+      open = false;
+      return;
+    }
+    const x = index * step;
+    const y = 24 - ((value - low) / span) * 20 - 2;
+    pathParts.push(`${open ? "L" : "M"}${x.toFixed(2)} ${y.toFixed(2)}`);
+    open = true;
+  });
+
+  return {
+    segments: pathParts.join(" "),
+    first: present[0],
+    last: present[present.length - 1],
+  };
+}
 
 /**
  * One rep's metric across the window, drawn small enough to sit in a table cell.
@@ -44,42 +84,16 @@ export function RepTrendSparkline({
   bucket,
   repLabel,
 }: RepTrendSparklineProps) {
-  const values = points.map((point) => valueFor(point, metric));
-  const present = values.filter((value): value is number => value !== null);
+  const pathData = useMemo(() => computeSparklinePath(points, metric), [points, metric]);
 
-  if (present.length < 2)
+  if (!pathData)
     return (
       <span className="text-sm text-muted-foreground" aria-label={`Not enough points to chart ${METRIC_LABEL[metric]}`}>
         {METRIC_UNKNOWN}
       </span>
     );
 
-  /**
-   * The band is padded so a flat series does not collapse onto the baseline and
-   * read as zero. A rep whose talk ratio held at 52% all month should see a flat
-   * line in the middle of the box, which is the true shape of that month.
-   */
-  const low = Math.min(...present);
-  const high = Math.max(...present);
-  const span = high - low || 1;
-
-  const step = values.length > 1 ? 100 / (values.length - 1) : 100;
-  const segments: string[] = [];
-  let open = false;
-
-  values.forEach((value, index) => {
-    if (value === null) {
-      open = false;
-      return;
-    }
-    const x = index * step;
-    const y = 24 - ((value - low) / span) * 20 - 2;
-    segments.push(`${open ? "L" : "M"}${x.toFixed(2)} ${y.toFixed(2)}`);
-    open = true;
-  });
-
-  const first = present[0];
-  const last = present[present.length - 1];
+  const { segments, first, last } = pathData;
 
   return (
     <svg
@@ -90,7 +104,7 @@ export function RepTrendSparkline({
       aria-label={`${repLabel}: ${METRIC_LABEL[metric]} by ${bucket}, from ${describe(first, metric)} to ${describe(last, metric)}`}
     >
       <path
-        d={segments.join(" ")}
+        d={segments}
         fill="none"
         stroke="currentColor"
         strokeWidth={1.5}

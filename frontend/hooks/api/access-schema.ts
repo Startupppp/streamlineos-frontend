@@ -1,6 +1,8 @@
 import { z } from "zod";
 import type { Permission } from "@/lib/rbac/permissions";
+import { isPermissionKey } from "@/contracts/permission-key.generated";
 import type { ResponseContract } from "@/lib/api-envelope";
+import { moduleDenialReasonContract } from "@/lib/page-state/page-state-schema";
 
 /**
  * Response contracts for the access endpoints. Everything a permission check
@@ -33,6 +35,7 @@ export const accessResponseContract = z.object({
   isOrgOwner: z.boolean(),
   canManageOrganizationMembership: z.boolean(),
   modules: z.record(z.string(), z.boolean()),
+  moduleReasons: z.record(z.string(), moduleDenialReasonContract).optional(),
   mfa: mfaStateContract.optional(),
   version: z.number().optional(),
 });
@@ -56,15 +59,25 @@ export const rbacDiscoveryMembersContract = z.array(rbacDiscoveryMemberContract)
  * contract with it makes the compiler, rather than a reviewer, the thing that
  * keeps the two in step.
  */
-export const permissionCatalogContract: ResponseContract<Permission[]> = z.array(
-  z.object({
-    name: z.string(),
-    resource: z.string(),
-    action: z.string(),
-    description: z.string(),
-    baselineScope: z.enum(["own", "all"]).optional(),
-  }),
-);
+const permissionRowContract = z.object({
+  name: z.string(),
+  resource: z.string(),
+  action: z.string(),
+  description: z.string(),
+  scopable: z.boolean().optional(),
+  baselineScope: z.enum(["own", "all"]).optional(),
+  sensitive: z.literal(true).optional(),
+});
+
+type PermissionRow = z.infer<typeof permissionRowContract>;
+
+function isCataloguedRow(row: PermissionRow): row is PermissionRow & Permission {
+  return isPermissionKey(row.name);
+}
+
+export const permissionCatalogContract: ResponseContract<Permission[]> = z
+  .array(permissionRowContract)
+  .transform((rows) => rows.filter(isCataloguedRow));
 
 export type DataScope = z.infer<typeof dataScopeContract>;
 export type AccessResponse = z.infer<typeof accessResponseContract>;

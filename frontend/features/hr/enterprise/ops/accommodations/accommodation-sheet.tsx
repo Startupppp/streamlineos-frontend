@@ -6,6 +6,7 @@ import { z } from "zod";
 import {
   Sheet,
   SheetContent,
+  SheetDescription,
   SheetHeader,
   SheetTitle,
   SheetBody,
@@ -29,8 +30,6 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { UserCombobox } from "@/components/ui/user-combobox";
-import { toast } from "sonner";
-import { getErrorMessage } from "@/lib/get-error-message";
 import { useCan } from "@/hooks/api/access";
 import { useCreateAccommodation } from "@/hooks/api/hr/enterprise-ops-accommodations";
 
@@ -76,7 +75,6 @@ export function AccommodationSheet({ open, onOpenChange }: Props) {
           form.reset();
           onOpenChange(false);
         },
-        onError: (err) => toast.error(getErrorMessage(err)),
       },
     );
   }
@@ -86,6 +84,7 @@ export function AccommodationSheet({ open, onOpenChange }: Props) {
       <SheetContent className="flex w-full flex-col gap-0 overflow-hidden p-0 sm:max-w-lg">
         <SheetHeader className="shrink-0 border-b border-border px-6 py-4 text-left">
           <SheetTitle>New Accommodation Request</SheetTitle>
+          <SheetDescription className="sr-only">Submit a new workplace accommodation request for an employee.</SheetDescription>
         </SheetHeader>
 
         <Form {...form}>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ChevronsUpDown } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -25,11 +25,11 @@ import {
   BUILD_ROOT_PATH,
   type BuildScope,
 } from "@/lib/build/build-scope";
+import { buildOrganizationCatalog } from "@/lib/build/nav/build-organization-catalog";
+import { buildProjectCatalog } from "@/lib/build/nav/build-project-catalog";
 import { BuildScopeBrowser } from "./build-scope-browser";
-import {
-  useBuildScopeRecents,
-  type BuildScopeRef,
-} from "./use-build-nav-preferences";
+import { useBuildScopeRecents } from "./use-build-nav-preferences";
+import type { BuildScopeRef } from "./build-nav-storage";
 import { useBuildScopeIdentity } from "./use-build-scope-identity";
 import { useHasUnsavedWork } from "@/components/shared/dirty-state-context";
 
@@ -61,21 +61,32 @@ export function BuildScopeSelector({
     isDirty: hasUnsavedWork,
   });
 
-  const currentRef = identity.ref;
-  const hasName = currentRef.name.length > 0;
+  // An unknown or foreign scope id has no name; say so instead of letting the
+  // avatar fall back to "BD" next to the type label ("BD Product", MP-B-021).
+  const currentRef = useMemo(
+    () =>
+      identity.isInaccessible
+        ? { ...identity.ref, name: "Unavailable", projectKey: null, parentPath: null }
+        : identity.ref,
+    [identity.isInaccessible, identity.ref],
+  );
+  const hasName = identity.ref.name.length > 0;
 
   useEffect(() => {
     if (!hasName || identity.isInaccessible) return;
-    recordScope(currentRef);
-  }, [hasName, identity.isInaccessible, currentRef, recordScope]);
+    recordScope(identity.ref);
+  }, [hasName, identity.isInaccessible, identity.ref, recordScope]);
 
   const settingsHrefFor = useCallback(
     (target: BuildScopeRef): string | null => {
       if (target.type === "project")
-        return canUpdateProject ? `${BUILD_ROOT_PATH}/${target.id}/settings` : null;
+        return canUpdateProject
+          ? (buildProjectCatalog(`${BUILD_ROOT_PATH}/${target.id}`).settings
+              ?.href ?? null)
+          : null;
       if (target.type === "organization")
         return canManageIntegrations
-          ? `${BUILD_ROOT_PATH}/settings/integrations`
+          ? (buildOrganizationCatalog().settings?.href ?? null)
           : null;
       return null;
     },
@@ -113,7 +124,7 @@ export function BuildScopeSelector({
       aria-label={triggerLabel}
       aria-expanded={open}
       aria-haspopup="listbox"
-      className="mx-auto flex h-8 w-8 items-center justify-center rounded-md bg-primary/10 text-micro font-bold text-primary transition-colors hover:bg-primary/15 motion-reduce:transition-none"
+      className="mx-auto flex h-8 w-8 items-center justify-center rounded-md bg-primary/10 text-micro font-medium text-primary transition-colors hover:bg-primary/15 motion-reduce:transition-none"
     >
       {scopeAvatarText(currentRef)}
     </button>
@@ -128,7 +139,7 @@ export function BuildScopeSelector({
     >
       <span
         aria-hidden
-        className="flex h-7 w-7 shrink-0 items-center justify-center rounded bg-primary/10 text-micro font-bold text-primary"
+        className="flex h-7 w-7 shrink-0 items-center justify-center rounded bg-primary/10 text-micro font-medium text-primary"
       >
         {scopeAvatarText(currentRef)}
       </span>
@@ -139,7 +150,7 @@ export function BuildScopeSelector({
           ) : (
             <TruncatedText
               text={currentRef.name}
-              className="min-w-0 flex-1 text-label font-semibold text-sidebar-foreground"
+              className="min-w-0 flex-1 text-label font-medium text-sidebar-foreground"
             />
           )}
           {identity.isArchived ? (
@@ -170,7 +181,9 @@ export function BuildScopeSelector({
         {isCollapsed ? (
           <Tooltip delayDuration={0}>
             <TooltipTrigger asChild>
-              <ResponsivePopoverTrigger asChild>{trigger}</ResponsivePopoverTrigger>
+              <span className="block">
+                <ResponsivePopoverTrigger asChild>{trigger}</ResponsivePopoverTrigger>
+              </span>
             </TooltipTrigger>
             <TooltipContent side="right" sideOffset={10} className="text-xs font-medium">
               {currentRef.name || BUILD_SCOPE_TYPE_LABELS[currentRef.type]}

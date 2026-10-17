@@ -14,6 +14,7 @@ const noContentC = lazyContract(() =>
 import { useCan, useModuleEnabled } from "@/hooks/api/access";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { NULL_CURSOR_YET } from "@/hooks/api/cursor-page-param";
+import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
 
 export interface MoodCheckin {
   id: number;
@@ -126,6 +127,7 @@ export function useEngagementOverview() {
     queryFn: ({ signal }) => apiClient.get("/hr/engagement/overview", undefined, signal, _overviewContract),
     staleTime: 5 * 60_000,
     enabled: canView && hrEnabled,
+    ...INLINE_READ_ERROR,
   });
 }
 
@@ -137,6 +139,7 @@ export function useMyMoodHistory() {
     queryFn: ({ signal }) => apiClient.get("/hr/engagement/mood/history", undefined, signal, _moodHistoryContract),
     staleTime: 60_000,
     enabled: canView && hrEnabled,
+    ...INLINE_READ_ERROR,
   });
 }
 
@@ -148,6 +151,7 @@ export function useOrgMoodAggregate() {
     queryFn: ({ signal }) => apiClient.get("/hr/engagement/mood/aggregate", undefined, signal, _moodAggregateContract),
     staleTime: 5 * 60_000,
     enabled: canManage && hrEnabled,
+    ...INLINE_READ_ERROR,
   });
 }
 
@@ -169,6 +173,7 @@ export function useEngagementBadges() {
     queryFn: ({ signal }) => apiClient.get("/hr/engagement/badges", undefined, signal, _listBadgesContract),
     staleTime: 5 * 60_000,
     enabled: canView && hrEnabled,
+    ...INLINE_READ_ERROR,
   });
 }
 
@@ -193,6 +198,7 @@ export function useLeaderboard(top = 20) {
     queryFn: ({ signal }) => apiClient.get(`/hr/engagement/points/leaderboard?top=${top}`, undefined, signal, _leaderboardContract),
     staleTime: 5 * 60_000,
     enabled: canView && hrEnabled,
+    ...INLINE_READ_ERROR,
   });
 }
 
@@ -248,6 +254,7 @@ export function usePollResults(pollId: number) {
     queryFn: ({ signal }) => apiClient.get(`/hr/engagement/polls/${pollId}/results`, undefined, signal, _pollResultsContract),
     staleTime: 30_000,
     enabled: pollId > 0 && canView && hrEnabled,
+    ...INLINE_READ_ERROR,
   });
 }
 

@@ -17,11 +17,17 @@ const accessDenied = {
 const useAllWork = jest.fn();
 const useProjects = jest.fn();
 const groupTicketsMock = jest.fn<TicketGroup[], [AllWorkTicket[], BuildListGrouping]>(() => []);
+const mockPush = jest.fn();
+const mockRequestLeave = jest.fn((action: () => void) => action());
+const mockUseAllWorkKeyboard = jest.fn();
 
 jest.mock("next/navigation", () => ({
-  useRouter: () => ({ push: jest.fn(), replace: jest.fn() }),
+  useRouter: () => ({ push: mockPush, replace: jest.fn() }),
   usePathname: () => "/build/all-work",
   useSearchParams: () => new URLSearchParams(),
+}));
+jest.mock("@/components/shared/dirty-state-context", () => ({
+  useNavigationLeave: () => mockRequestLeave,
 }));
 jest.mock("framer-motion", () => ({
   AnimatePresence: ({ children }: { children: ReactNode }) => <>{children}</>,
@@ -36,12 +42,27 @@ jest.mock("@/hooks/api/access", () => ({
 jest.mock("@/hooks/api/entitlements", () => ({
   useEntitlements: () => ({ data: undefined }),
 }));
-jest.mock("@/hooks/api/build", () => ({
+jest.mock("@/hooks/api/build/all-work", () => ({
   useAllWork: () => useAllWork(),
+  useAllWorkIds: () => ({ data: undefined }),
+}));
+jest.mock("@/hooks/api/build/projects", () => ({
   useProjects: () => useProjects(),
+}));
+jest.mock("@/hooks/api/build/build-members", () => ({
+  useBuildMembers: () => ({ data: undefined }),
 }));
 jest.mock("@/hooks/api/build/custom-states", () => ({
   useOrgCustomStates: () => ({ data: undefined }),
+}));
+jest.mock("@/hooks/api/build/teams", () => ({
+  useProjectTeams: () => ({ data: undefined }),
+}));
+jest.mock("@/hooks/api/build/managed-products", () => ({
+  useManagedProducts: () => ({ data: undefined }),
+}));
+jest.mock("@/features/build/shared/build-filter-select", () => ({
+  BuildFilterSelect: () => null,
 }));
 jest.mock("@/hooks/common/use-online-status", () => ({
   useOnlineStatus: () => true,
@@ -54,6 +75,8 @@ jest.mock("./use-all-work-filters", () => ({
     view: "list" as const,
     scopeMine: false,
     filters: {},
+    productIdFilter: null,
+    teamIdFilter: null,
     grouping: "project" as BuildListGrouping,
     sortField: "rank",
     sortDirection: "desc",
@@ -74,16 +97,23 @@ jest.mock("./use-all-work-bulk", () => ({
     handleBulkStatus: jest.fn(),
     handleBulkPriority: jest.fn(),
     handleBulkAssignee: jest.fn(),
-    handleBulkSprintNoOp: jest.fn(),
+    handleBulkCycleNoOp: jest.fn(),
     handleClearSelection: jest.fn(),
+    isExpandedSelection: false,
+    expandedTotal: 0,
+    expandToAllMatching: jest.fn(),
   }),
 }));
+jest.mock("./use-all-work-export", () => ({
+  useAllWorkExport: () => ({ open: false, setOpen: jest.fn(), groups: [], handleOpen: jest.fn(), handleConfirm: jest.fn(), isExporting: false }),
+}));
 jest.mock("./use-all-work-keyboard", () => ({
-  useAllWorkKeyboard: jest.fn(),
+  useAllWorkKeyboard: (...args: unknown[]) => mockUseAllWorkKeyboard(...args),
 }));
 jest.mock("./all-work-view-switcher", () => ({
   AllWorkViewSwitcher: () => null,
   AllWorkSkeleton: () => <div data-testid="all-work-skeleton" />,
+  AllWorkToolbarSkeleton: () => <div data-testid="all-work-toolbar-skeleton" />,
 }));
 jest.mock("./all-work-views-menu", () => ({
   AllWorkViewsMenu: () => null,
@@ -98,7 +128,7 @@ jest.mock("@/components/pm-chrome", () => ({
   PmPageShell: ({ children }: { children: ReactNode }) => <div>{children}</div>,
   PmPanel: ({ children }: { children: ReactNode }) => <div>{children}</div>,
   PmSection: ({ children }: { children: ReactNode }) => <div>{children}</div>,
-  PM_FILL_PANEL: "",
+  CONTENT_FILL_PANEL: "",
 }));
 jest.mock("@/components/ui/page-tabs-toolbar", () => ({
   PageTabsToolbar: ({ filters }: { filters?: ReactNode }) => <div>{filters}</div>,
@@ -132,9 +162,6 @@ jest.mock("@/features/build/views/list-view", () => ({
 jest.mock("@/features/build/views/kanban-board", () => ({
   KanbanBoard: () => null,
 }));
-jest.mock("./project-chip", () => ({
-  ProjectChip: () => null,
-}));
 jest.mock("@/components/ui/truncated-text", () => ({
   TruncatedText: ({ text }: { text: string }) => <span>{text}</span>,
 }));
@@ -162,6 +189,7 @@ const stubTicket: AllWorkTicket = {
   id: 1, title: "Stub ticket", type: "TASK", status: "TODO", priority: null,
   projectId: 1, projectKey: "ENG", projectName: "Engineering", ticketNumber: 1,
   epicId: null, assigneeId: null, points: null, estimate: null,
+  version: 1,
   rank: null, startDate: null, dueDate: null, cycleId: null,
   createdAt: null, updatedAt: null, assignee: null, labels: [],
 };
@@ -176,10 +204,38 @@ const stubGroup: TicketGroup = {
 
 beforeEach(() => {
   jest.clearAllMocks();
+  mockRequestLeave.mockImplementation((action: () => void) => action());
   useAccess.mockReturnValue(accessGranted);
   useAllWork.mockReturnValue(pendingQuery());
   useProjects.mockReturnValue({ data: undefined });
   groupTicketsMock.mockReturnValue([]);
+});
+
+describe("AllWorkPage — unsaved-work navigation", () => {
+  it("routes keyboard ticket opens through the shared leave guard", () => {
+    useAllWork.mockReturnValue({
+      ...pendingQuery(),
+      data: { data: [stubTicket], hasMore: false, nextCursor: null, limit: 50 },
+    });
+
+    render(<AllWorkPage />);
+
+    const options = mockUseAllWorkKeyboard.mock.calls[0]?.[0] as {
+      onOpen: () => void;
+    };
+    let pendingNavigation: (() => void) | undefined;
+    mockRequestLeave.mockImplementation((action: () => void) => {
+      pendingNavigation = action;
+    });
+
+    options.onOpen();
+
+    expect(mockRequestLeave).toHaveBeenCalledTimes(1);
+    expect(mockPush).not.toHaveBeenCalled();
+
+    pendingNavigation?.();
+    expect(mockPush).toHaveBeenCalledWith("/build/1/tickets/1");
+  });
 });
 
 describe("AllWorkPage — access is three-valued, not a boolean", () => {
@@ -198,6 +254,8 @@ describe("AllWorkPage — access is three-valued, not a boolean", () => {
     render(<AllWorkPage />);
 
     expect(screen.queryByText(/access restricted/i)).toBeNull();
+    expect(screen.getByTestId("all-work-toolbar-skeleton")).toBeInTheDocument();
+    expect(screen.getByTestId("all-work-skeleton")).toBeInTheDocument();
   });
 });
 

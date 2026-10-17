@@ -39,6 +39,7 @@ export interface Deal {
   nextStep: string | null;
   healthScore: number | null;
   followUpNotes: string | null;
+  customData?: Record<string, unknown> | null;
   createdAt: string | null;
   updatedAt: string | null;
   assignedTo?: DealUserRef | null;

@@ -1,27 +1,29 @@
-﻿"use client";
+"use client";
 
-import { useMutation, useQuery, useQueryClient, keepPreviousData } from "@tanstack/react-query";
+import {
+  useQuery,
+  useQueryClient,
+  keepPreviousData,
+} from "@tanstack/react-query";
 import { useCan } from "@/hooks/api/access";
 import { apiClient } from "@/lib/api-client";
 import { knowledgeAndSurveysQueryKeys } from "@/lib/query-keys/knowledge-and-surveys";
-import type {
-  RoadmapStatus,
-  FeedbackStatus,
-  ChangelogType,
-  RoadmapItem,
-  FeedbackPost,
-  ChangelogEntry,
-  PublicRoadmapItem,
-  PublicFeedbackPost,
-  PublicChangelogEntry,
-} from "@/types/projects";
-import { lazyContract } from "@/lib/api-envelope";
+import type { RoadmapStatus, RoadmapHorizon } from "@/types/projects";
+import { lazyContract, isApiError } from "@/lib/api-envelope";
+import { getErrorMessage } from "@/lib/get-error-message";
+import { toast } from "sonner";
+import { readErrorExceptNotFoundReachesBoundary } from "@/lib/query-error-policy";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import type {
-  CrmAccountTier,
+  RoadmapOwner,
   RoadmapPrioritization,
   RoadmapSignals,
   RoadmapTierWeighting,
+  RoadmapGoal,
+  RoadmapRelease,
+  RoadmapTeam,
+  RoadmapOpportunity,
+  RoadmapDelivery,
 } from "@/hooks/api/build/roadmap-schema";
 
 const roadmapPageContract = lazyContract(() =>
@@ -30,45 +32,23 @@ const roadmapPageContract = lazyContract(() =>
 const roadmapItemContract = lazyContract(() =>
   import("@/hooks/api/build/roadmap-schema").then((m) => m.roadmapItemContract),
 );
-const feedbackPageContract = lazyContract(() =>
-  import("@/hooks/api/build/roadmap-schema").then((m) => m.feedbackPageContract),
-);
-const feedbackPostContract = lazyContract(() =>
-  import("@/hooks/api/build/roadmap-schema").then((m) => m.feedbackPostContract),
-);
-const changelogPageContract = lazyContract(() =>
-  import("@/hooks/api/build/roadmap-schema").then((m) => m.changelogPageContract),
-);
-const changelogEntryContract = lazyContract(() =>
-  import("@/hooks/api/build/roadmap-schema").then((m) => m.changelogEntryContract),
-);
 const noContentLazy = lazyContract(() =>
   import("@/hooks/api/cursor-page-schema").then((m) => m.noContentContract),
 );
-const publicRoadmapBoardContract = lazyContract(() =>
-  import("@/hooks/api/build/roadmap-schema").then((m) => m.publicRoadmapBoardContract),
-);
-const publicVoteResultContract = lazyContract(() =>
-  import("@/hooks/api/build/roadmap-schema").then((m) => m.publicVoteResultContract),
-);
-const publicFeedbackResultContract = lazyContract(() =>
-  import("@/hooks/api/build/roadmap-schema").then((m) => m.publicFeedbackResultContract),
-);
 const roadmapSignalsContract = lazyContract(() =>
-  import("@/hooks/api/build/roadmap-schema").then((m) => m.roadmapSignalsContract),
+  import("@/hooks/api/build/roadmap-schema").then(
+    (m) => m.roadmapSignalsContract,
+  ),
 );
 
-export type { CrmAccountTier, RoadmapPrioritization, RoadmapSignals, RoadmapTierWeighting };
+export const ROADMAP_SORTS = [
+  "updated_at",
+  "created_at",
+  "title",
+  "horizon",
+] as const;
 
-export type {
-  ChangelogType,
-  RoadmapItem,
-  FeedbackPost,
-  ChangelogEntry,
-  PublicRoadmapItem,
-  PublicFeedbackPost,
-  PublicChangelogEntry,
-} from "@/types/projects";
+export type RoadmapSort = (typeof ROADMAP_SORTS)[number];
 
 interface CursorPaginated<T> {
   data: T[];
@@ -79,21 +59,39 @@ interface CursorPaginated<T> {
   };
 }
 
-interface RoadmapItemFilters {
-  status?: RoadmapStatus;
+export interface RoadmapItemFilters {
+  status?: string;
   search?: string;
   cursor?: string;
   limit?: number;
   managedProductId?: number;
+  sort?: string;
+  projectId?: number;
+  horizon?: string;
+  ownerId?: number;
+  goalId?: string;
+  releaseId?: number;
+  teamId?: string;
+  opportunityId?: number;
+  hasOpportunity?: boolean;
+  confidenceMin?: number;
+  confidenceMax?: number;
+  targetFrom?: string;
+  targetTo?: string;
+  segment?: string;
+  customerVisible?: boolean;
+  evidenceState?: string;
 }
 
-interface CreateRoadmapItemInput {
+export interface CreateRoadmapItemInput {
   title: string;
   description?: string;
+  outcome?: string;
   status?: RoadmapStatus;
   category?: string;
   isPublic?: boolean;
   projectId?: number;
+  managedProductId?: number;
   epicTicketId?: number;
   targetQuarter?: string;
   sortOrder?: number;
@@ -101,11 +99,20 @@ interface CreateRoadmapItemInput {
   impact?: number;
   confidence?: number;
   effort?: number;
+  ownerMembershipId?: number;
+  horizon?: RoadmapHorizon;
+  goalId?: number | null;
+  releaseId?: number | null;
+  teamId?: number | null;
+  targetStart?: string | null;
+  targetEnd?: string | null;
 }
 
-interface UpdateRoadmapItemInput {
+export interface UpdateRoadmapItemInput {
+  version: number;
   title?: string;
   description?: string | null;
+  outcome?: string | null;
   status?: RoadmapStatus;
   category?: string | null;
   isPublic?: boolean;
@@ -117,87 +124,58 @@ interface UpdateRoadmapItemInput {
   impact?: number | null;
   confidence?: number | null;
   effort?: number | null;
+  ownerMembershipId?: number | null;
+  horizon?: RoadmapHorizon;
+  goalId?: number | null;
+  releaseId?: number | null;
+  teamId?: number | null;
+  targetStart?: string | null;
+  targetEnd?: string | null;
 }
 
-export interface ScoredRoadmapItem extends RoadmapItem {
+export interface ScoredRoadmapItem {
+  id: number;
+  orgId: string;
+  title: string;
+  description: string | null;
+  outcome: string | null;
+  status: RoadmapStatus;
+  category: string | null;
+  isPublic: boolean;
+  projectId: number | null;
+  managedProductId: number | null;
+  epicTicketId: number | null;
+  targetQuarter: string | null;
+  sortOrder: number;
+  votes: number;
   reach: number | null;
   impact: number | null;
   confidence: number | null;
   effort: number | null;
+  ownerMembershipId: number | null;
+  owner: RoadmapOwner | null;
+  horizon: RoadmapHorizon;
+  goalId: number | null;
+  releaseId: number | null;
+  teamId: number | null;
+  opportunityId: number | null;
+  targetStart: string | null;
+  targetEnd: string | null;
+  decisionSnapshot: Record<string, unknown> | null;
+  goal: RoadmapGoal | null;
+  release: RoadmapRelease | null;
+  team: RoadmapTeam | null;
+  opportunity: RoadmapOpportunity | null;
   prioritization: RoadmapPrioritization;
   tierWeighting: RoadmapTierWeighting;
-}
-
-interface FeedbackPostFilters {
-  status?: FeedbackStatus;
-  search?: string;
-  cursor?: string;
-  limit?: number;
-}
-
-
-interface UpdateFeedbackPostInput {
-  title?: string;
-  description?: string | null;
-  status?: FeedbackStatus;
-  category?: string | null;
-  crmOrganizationId?: number | null;
-  linkedRoadmapItemId?: number | null;
-}
-
-interface ChangelogFilters {
-  type?: ChangelogType;
-  cursor?: string;
-  limit?: number;
-}
-
-interface CreateChangelogEntryInput {
-  title: string;
-  content?: string;
-  version?: string;
-  type?: ChangelogType;
-  isPublished?: boolean;
-  linkedRoadmapItemId?: number;
-}
-
-interface UpdateChangelogEntryInput {
-  title?: string;
-  content?: string;
-  version?: string | null;
-  type?: ChangelogType;
-  isPublished?: boolean;
-  linkedRoadmapItemId?: number | null;
-}
-
-interface PublicRoadmapBoard {
-  orgName: string | null;
-  roadmap: {
-    planned: PublicRoadmapItem[];
-    in_progress: PublicRoadmapItem[];
-    completed: PublicRoadmapItem[];
-  };
-  feedback: PublicFeedbackPost[];
-  changelog: PublicChangelogEntry[];
-}
-
-interface PublicVoteInput {
-  type: "roadmap" | "feedback";
-  id: number;
-  voterKey: string;
-}
-
-interface PublicVoteResult {
-  id: number;
-  type: string;
-  votes: number;
-  voted: boolean;
-}
-
-interface SubmitPublicFeedbackInput {
-  title: string;
-  description?: string;
-  name?: string;
-  email?: string;
+  delivery: RoadmapDelivery;
+  allowedActions: string[];
+  sourceFreshness: string | null;
+  version: number;
+  createdBy: string | null;
+  createdAt: string;
+  updatedAt: string;
+  deletedAt: string | null;
 }
 
 export function useRoadmapItems(filters: RoadmapItemFilters = {}) {
@@ -205,15 +183,42 @@ export function useRoadmapItems(filters: RoadmapItemFilters = {}) {
   const canView = useCan("build:roadmap:view");
   return useQuery({
     queryKey: knowledgeAndSurveysQueryKeys.roadmap.items(params),
-    queryFn: ({ signal }) => apiClient.get<CursorPaginated<ScoredRoadmapItem>>("/build/roadmap", params, signal, roadmapPageContract),
+    queryFn: ({ signal }) =>
+      apiClient.get<CursorPaginated<ScoredRoadmapItem>>(
+        "/build/roadmap",
+        params,
+        signal,
+        roadmapPageContract,
+      ),
     enabled: canView,
     staleTime: 30_000,
     placeholderData: keepPreviousData,
+    throwOnError: readErrorExceptNotFoundReachesBoundary,
   });
 }
 
 const roadmapSignalsQueryKey = (roadmapItemId: number) =>
   knowledgeAndSurveysQueryKeys.roadmap.itemSignals(roadmapItemId);
+
+export function useRoadmapItem(
+  roadmapItemId: number | null,
+  options?: { enabled?: boolean },
+) {
+  const canView = useCan("build:roadmap:view");
+  return useQuery({
+    ...options,
+    queryKey: knowledgeAndSurveysQueryKeys.roadmap.item(roadmapItemId ?? 0),
+    queryFn: ({ signal }) =>
+      apiClient.get<ScoredRoadmapItem>(
+        `/build/roadmap/${String(roadmapItemId)}`,
+        undefined,
+        signal,
+        roadmapItemContract,
+      ),
+    enabled: canView && roadmapItemId !== null && (options?.enabled ?? true),
+    staleTime: 60_000,
+  });
+}
 
 export function useRoadmapItemSignals(
   roadmapItemId: number | null,
@@ -235,13 +240,115 @@ export function useRoadmapItemSignals(
   });
 }
 
+function patchRoadmapItemInCache(
+  qc: ReturnType<typeof useQueryClient>,
+  updated: ScoredRoadmapItem,
+) {
+  qc.setQueriesData<CursorPaginated<ScoredRoadmapItem>>(
+    { queryKey: knowledgeAndSurveysQueryKeys.roadmap.items(), exact: false },
+    (old) => {
+      if (!old || !Array.isArray(old.data)) return old;
+      return {
+        ...old,
+        data: old.data.map((item) =>
+          item.id === updated.id ? { ...item, ...updated } : item,
+        ),
+      };
+    },
+  );
+  qc.setQueryData(
+    knowledgeAndSurveysQueryKeys.roadmap.item(updated.id),
+    updated,
+  );
+}
+
+function listSortsByPosition(queryKey: readonly unknown[]): boolean {
+  const params = queryKey[queryKey.length - 1];
+  return !(
+    typeof params === "object" &&
+    params !== null &&
+    "sort" in params &&
+    params.sort
+  );
+}
+
+function repositionRoadmapItemInCache(
+  qc: ReturnType<typeof useQueryClient>,
+  updated: ScoredRoadmapItem,
+) {
+  const lists = qc.getQueriesData<CursorPaginated<ScoredRoadmapItem>>({
+    queryKey: knowledgeAndSurveysQueryKeys.roadmap.items(),
+    exact: false,
+  });
+  for (const [queryKey, old] of lists) {
+    if (!old || !Array.isArray(old.data)) continue;
+    const data = old.data.map((item) =>
+      item.id === updated.id ? { ...item, ...updated } : item,
+    );
+    if (listSortsByPosition(queryKey)) {
+      data.sort((a, b) => a.sortOrder - b.sortOrder || a.id - b.id);
+    }
+    qc.setQueryData(queryKey, { ...old, data });
+  }
+  qc.setQueryData(
+    knowledgeAndSurveysQueryKeys.roadmap.item(updated.id),
+    updated,
+  );
+  void qc.invalidateQueries({
+    queryKey: knowledgeAndSurveysQueryKeys.roadmap.items(),
+    refetchType: "none",
+  });
+}
+
+export function addRoadmapItemToCache(
+  qc: ReturnType<typeof useQueryClient>,
+  created: ScoredRoadmapItem,
+) {
+  const lists = qc.getQueriesData<CursorPaginated<ScoredRoadmapItem>>({
+    queryKey: knowledgeAndSurveysQueryKeys.roadmap.items(),
+    exact: false,
+  });
+  for (const [queryKey, old] of lists) {
+    if (!old || !Array.isArray(old.data)) continue;
+    const data = [created, ...old.data];
+    if (listSortsByPosition(queryKey)) {
+      data.sort((a, b) => a.sortOrder - b.sortOrder || a.id - b.id);
+    }
+    qc.setQueryData(queryKey, { ...old, data });
+  }
+}
+
+function removeRoadmapItemFromCache(
+  qc: ReturnType<typeof useQueryClient>,
+  roadmapItemId: number,
+) {
+  qc.setQueriesData<CursorPaginated<ScoredRoadmapItem>>(
+    { queryKey: knowledgeAndSurveysQueryKeys.roadmap.items(), exact: false },
+    (old) => {
+      if (!old || !Array.isArray(old.data)) return old;
+      return {
+        ...old,
+        data: old.data.filter((item) => item.id !== roadmapItemId),
+      };
+    },
+  );
+  qc.removeQueries({
+    queryKey: knowledgeAndSurveysQueryKeys.roadmap.item(roadmapItemId),
+  });
+}
+
 export function useCreateRoadmapItem() {
   const qc = useQueryClient();
   return useAuthorizedMutation("build:roadmap:manage", {
     mutationKey: ["projects", "roadmap", "create"],
     mutationFn: (input: CreateRoadmapItemInput) =>
-      apiClient.post<ScoredRoadmapItem>("/build/roadmap", input, undefined, roadmapItemContract),
-    onSuccess: () => qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.roadmap.all }),
+      apiClient.post<ScoredRoadmapItem>(
+        "/build/roadmap",
+        input,
+        undefined,
+        roadmapItemContract,
+      ),
+    onSuccess: (result) => addRoadmapItemToCache(qc, result),
   });
 }
 
@@ -249,9 +356,17 @@ export function useUpdateRoadmapItem() {
   const qc = useQueryClient();
   return useAuthorizedMutation("build:roadmap:manage", {
     mutationKey: ["projects", "roadmap", "update"],
-    mutationFn: ({ roadmapItemId, ...input }: UpdateRoadmapItemInput & { roadmapItemId: number }) =>
-      apiClient.patch<ScoredRoadmapItem>(`/build/roadmap/${roadmapItemId}`, input, undefined, roadmapItemContract),
-    onSuccess: () => qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.roadmap.all }),
+    mutationFn: ({
+      roadmapItemId,
+      ...input
+    }: UpdateRoadmapItemInput & { roadmapItemId: number }) =>
+      apiClient.patch<ScoredRoadmapItem>(
+        `/build/roadmap/${roadmapItemId}`,
+        input,
+        undefined,
+        roadmapItemContract,
+      ),
+    onSuccess: (result) => patchRoadmapItemInCache(qc, result),
   });
 }
 
@@ -260,126 +375,66 @@ export function useDeleteRoadmapItem() {
   return useAuthorizedMutation("build:roadmap:manage", {
     mutationKey: ["projects", "roadmap", "delete"],
     mutationFn: (roadmapItemId: number) =>
-      apiClient.delete<void>(`/build/roadmap/${roadmapItemId}`, undefined, undefined, noContentLazy),
-    onSuccess: () => qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.roadmap.all }),
+      apiClient.delete<void>(
+        `/build/roadmap/${roadmapItemId}`,
+        undefined,
+        undefined,
+        noContentLazy,
+      ),
+    onSuccess: (_result, roadmapItemId) =>
+      removeRoadmapItemFromCache(qc, roadmapItemId),
   });
 }
 
-export function useFeedbackPosts(filters: FeedbackPostFilters = {}) {
-  const params: Record<string, unknown> = { ...filters };
-  const canView = useCan("build:roadmap:view");
-  return useQuery({
-    queryKey: knowledgeAndSurveysQueryKeys.roadmap.feedback(params),
-    queryFn: ({ signal }) => apiClient.get<CursorPaginated<FeedbackPost>>("/build/feedback", params, signal, feedbackPageContract),
-    enabled: canView,
-    staleTime: 30_000,
-    placeholderData: keepPreviousData,
-  });
+interface PositionRoadmapItemInput {
+  roadmapItemId: number;
+  version: number;
+  horizon?: RoadmapHorizon;
+  beforeItemId?: number;
+  afterItemId?: number;
+  sortOrder?: number;
 }
 
-export function useUpdateFeedbackPost() {
+export function usePositionRoadmapItem() {
   const qc = useQueryClient();
   return useAuthorizedMutation("build:roadmap:manage", {
-    mutationKey: ["projects", "feedback", "update"],
-    mutationFn: ({ postId, ...input }: UpdateFeedbackPostInput & { postId: number }) =>
-      apiClient.patch<FeedbackPost>(`/build/feedback/${postId}`, input, undefined, feedbackPostContract),
-    onSuccess: () => qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.roadmap.all }),
-  });
-}
-
-export function useMergeFeedbackPost() {
-  const qc = useQueryClient();
-  return useAuthorizedMutation("build:roadmap:manage", {
-    mutationKey: ["projects", "feedback", "merge"],
-    mutationFn: ({ postId, targetPostId }: { postId: number; targetPostId: number }) =>
-      apiClient.post<FeedbackPost>(`/build/feedback/${postId}/merge`, { targetPostId }, undefined, feedbackPostContract),
-    onSuccess: () => qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.roadmap.all }),
-  });
-}
-
-export function useDeleteFeedbackPost() {
-  const qc = useQueryClient();
-  return useAuthorizedMutation("build:roadmap:manage", {
-    mutationKey: ["projects", "feedback", "delete"],
-    mutationFn: (postId: number) =>
-      apiClient.delete<void>(`/build/feedback/${postId}`, undefined, undefined, noContentLazy),
-    onSuccess: () => qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.roadmap.all }),
-  });
-}
-
-export function useChangelog(filters: ChangelogFilters = {}) {
-  const params: Record<string, unknown> = { ...filters };
-  const canView = useCan("build:roadmap:view");
-  return useQuery({
-    queryKey: knowledgeAndSurveysQueryKeys.roadmap.changelog(params),
-    queryFn: ({ signal }) => apiClient.get<CursorPaginated<ChangelogEntry>>("/build/changelog", params, signal, changelogPageContract),
-    enabled: canView,
-    staleTime: 30_000,
-    placeholderData: keepPreviousData,
-  });
-}
-
-export function useCreateChangelogEntry() {
-  const qc = useQueryClient();
-  return useAuthorizedMutation("build:roadmap:manage", {
-    mutationKey: ["projects", "changelog", "create"],
-    mutationFn: (input: CreateChangelogEntryInput) =>
-      apiClient.post<ChangelogEntry>("/build/changelog", input, undefined, changelogEntryContract),
-    onSuccess: () => qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.roadmap.all }),
-  });
-}
-
-export function useUpdateChangelogEntry() {
-  const qc = useQueryClient();
-  return useAuthorizedMutation("build:roadmap:manage", {
-    mutationKey: ["projects", "changelog", "update"],
-    mutationFn: ({ entryId, ...input }: UpdateChangelogEntryInput & { entryId: number }) =>
-      apiClient.patch<ChangelogEntry>(`/build/changelog/${entryId}`, input, undefined, changelogEntryContract),
-    onSuccess: () => qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.roadmap.all }),
-  });
-}
-
-export function useDeleteChangelogEntry() {
-  const qc = useQueryClient();
-  return useAuthorizedMutation("build:roadmap:manage", {
-    mutationKey: ["projects", "changelog", "delete"],
-    mutationFn: (entryId: number) =>
-      apiClient.delete<void>(`/build/changelog/${entryId}`, undefined, undefined, noContentLazy),
-    onSuccess: () => qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.roadmap.all }),
-  });
-}
-
-export function usePublicRoadmap(orgId: string) {
-  return useQuery({
-    queryKey: knowledgeAndSurveysQueryKeys.roadmap.publicBoard(orgId),
-    queryFn: ({ signal }) => apiClient.get<PublicRoadmapBoard>("/public/roadmap", { org: orgId }, signal, publicRoadmapBoardContract),
-    enabled: Boolean(orgId),
-    staleTime: 60_000,
-    retry: false,
-  });
-}
-
-export function usePublicVote(orgId: string) {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationKey: ["projects", "roadmap", "vote"],
-    mutationFn: (input: PublicVoteInput) =>
-      apiClient.post<PublicVoteResult>(`/public/roadmap/vote?org=${encodeURIComponent(orgId)}`, input, undefined, publicVoteResultContract),
-    onSuccess: () => qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.roadmap.publicBoard(orgId) }),
-  });
-}
-
-export function useSubmitPublicFeedback(orgId: string) {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationKey: ["projects", "feedback", "submit"],
-    mutationFn: (input: SubmitPublicFeedbackInput) =>
-      apiClient.post<{ id: number; message: string }>(
-        `/public/roadmap/feedback?org=${encodeURIComponent(orgId)}`,
+    mutationKey: ["projects", "roadmap", "position"],
+    mutationFn: ({ roadmapItemId, ...input }: PositionRoadmapItemInput) =>
+      apiClient.patch<ScoredRoadmapItem>(
+        `/build/roadmap-items/${roadmapItemId}/position`,
         input,
         undefined,
-        publicFeedbackResultContract,
+        roadmapItemContract,
       ),
-    onSuccess: () => qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.roadmap.publicBoard(orgId) }),
+    onSuccess: (result) => repositionRoadmapItemInCache(qc, result),
+    onError: (e, { roadmapItemId }) => {
+      if (isApiError(e) && e.status === 409) {
+        toast.error("Someone else moved this item. Refreshing…");
+        void qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.roadmap.item(roadmapItemId), exact: true });
+      } else {
+        toast.error(getErrorMessage(e));
+      }
+    },
+  });
+}
+
+interface PublishRoadmapItemInput {
+  roadmapItemId: number;
+  version: number;
+  isPublic: boolean;
+}
+
+export function usePublishRoadmapItem() {
+  const qc = useQueryClient();
+  return useAuthorizedMutation("build:roadmap:manage", {
+    mutationKey: ["projects", "roadmap", "item", "publication"],
+    mutationFn: ({ roadmapItemId, ...input }: PublishRoadmapItemInput) =>
+      apiClient.patch<ScoredRoadmapItem>(
+        `/build/roadmap-items/${roadmapItemId}/publication`,
+        input,
+        undefined,
+        roadmapItemContract,
+      ),
+    onSuccess: (result) => patchRoadmapItemInCache(qc, result),
   });
 }

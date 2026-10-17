@@ -8,12 +8,13 @@ import {
 import type { UseQueryOptions } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { platformHierarchyQueryKeys } from "@/lib/query-keys/platform-hierarchy";
+import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
 import { useCan } from "@/hooks/api/access";
 import type {
   OrgLocation,
   OrgCostCenter,
   OrgHierarchyOverview,
-  OrgTreeNode,
+  OrgTreeRoot,
   OrgUnitDependencyPreview,
   OrgUnitKind,
 } from "@/types/org-hierarchy";
@@ -76,12 +77,6 @@ export interface HierarchyParentRecord {
   deletedAt: string | null;
 }
 
-const HIERARCHY_PARENT_ENDPOINTS: Record<HierarchyParentKind, string> = {
-  BUSINESS_UNIT: "/org-hierarchy/business-units",
-  BRANCH: "/org-hierarchy/branches",
-  DEPARTMENT: "/org-hierarchy/departments",
-};
-
 const HIERARCHY_PARENT_PAGE_SIZE = 25;
 
 export function useHierarchyParentOptions(
@@ -136,7 +131,7 @@ export function useOrgTree() {
   return useQuery({
     queryKey: platformHierarchyQueryKeys.hierarchy.tree(),
     queryFn: ({ signal }) =>
-      apiClient.get<OrgTreeNode[]>("/org-hierarchy/tree", undefined, signal, hierarchyTreeContract),
+      apiClient.get<OrgTreeRoot[]>("/org-hierarchy/tree", undefined, signal, hierarchyTreeContract),
     staleTime: 30_000,
     enabled: canView,
   });
@@ -166,6 +161,7 @@ export function useOrgLocations(query?: ListQuery) {
         ...(query?.status ? { status: query.status } : {}),
       }, signal, locationListContract),
     staleTime: 60_000,
+    ...INLINE_READ_ERROR,
   });
 }
 
@@ -175,7 +171,9 @@ export function useCreateOrgLocation() {
     mutationKey: ["create", "org", "location"],
     mutationFn: (data: { name: string; type?: string; address?: string; latitude?: number; longitude?: number }) =>
       apiClient.post<OrgLocation>("/org-hierarchy/locations", data, undefined, locationContract),
-    onSuccess: () => qc.invalidateQueries({ queryKey: platformHierarchyQueryKeys.hierarchy.all }),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: platformHierarchyQueryKeys.hierarchy.all });
+    },
   });
 }
 
@@ -185,7 +183,9 @@ export function useUpdateOrgLocation() {
     mutationKey: ["update", "org", "location"],
     mutationFn: ({ id, ...data }: { id: string } & Record<string, unknown>) =>
       apiClient.patch<OrgLocation>(`/org-hierarchy/locations/${id}`, data, undefined, locationContract),
-    onSuccess: () => qc.invalidateQueries({ queryKey: platformHierarchyQueryKeys.hierarchy.all }),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: platformHierarchyQueryKeys.hierarchy.all });
+    },
   });
 }
 
@@ -214,7 +214,9 @@ export function useCreateOrgCostCenter() {
     mutationKey: ["create", "org", "cost", "center"],
     mutationFn: (data: { code: string; name: string; description?: string }) =>
       apiClient.post<OrgCostCenter>("/org-hierarchy/cost-centers", data, undefined, costCenterContract),
-    onSuccess: () => qc.invalidateQueries({ queryKey: platformHierarchyQueryKeys.hierarchy.all }),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: platformHierarchyQueryKeys.hierarchy.all });
+    },
   });
 }
 
@@ -224,7 +226,9 @@ export function useUpdateOrgCostCenter() {
     mutationKey: ["update", "org", "cost", "center"],
     mutationFn: ({ id, ...data }: { id: string } & Record<string, unknown>) =>
       apiClient.patch<OrgCostCenter>(`/org-hierarchy/cost-centers/${id}`, data, undefined, costCenterContract),
-    onSuccess: () => qc.invalidateQueries({ queryKey: platformHierarchyQueryKeys.hierarchy.all }),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: platformHierarchyQueryKeys.hierarchy.all });
+    },
   });
 }
 

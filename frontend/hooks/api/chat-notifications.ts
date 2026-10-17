@@ -6,12 +6,17 @@ import type { InboundMessage } from "ably";
 import { useQueryClient } from "@tanstack/react-query";
 import { useSession } from "next-auth/react";
 import { toast } from "sonner";
-import { collaborationQueryKeys } from "@/lib/query-keys/collaboration";
-import { safeSubscribe, safeUnsubscribe } from "@/lib/ably-safe-subscribe";
+import { isForgedServerFrame, safeSubscribe, safeUnsubscribe } from "@/lib/ably-safe-subscribe";
 import { chatChannelName, notificationsChannelName } from "@/lib/ably-channels";
 import { reauthorizeAblyClients } from "@/lib/ably";
 import type { Channel } from "@/types/chat";
 import { isRecord } from "@/lib/is-record";
+import {
+  chatAlertDecision,
+  chatAlertIsRaised,
+  viewerChannelState,
+} from "@/lib/chat-alert-policy";
+import { invalidateChatUnreadState } from "@/lib/chat-read-state";
 
 /**
  * An Ably message body is `any`, so asserting it into a payload interface
@@ -88,6 +93,7 @@ export function useChatGlobalNotifications(
         const ablyChannel = ably.channels.get(chatChannelName(org, channelId));
 
         const handler = (msg: InboundMessage) => {
+          if (isForgedServerFrame("message", msg.clientId)) return;
           const payload = readChatNotification(msg.data);
           if (!payload || payload.senderId === currentUserIdRef.current) return;
 
@@ -95,16 +101,17 @@ export function useChatGlobalNotifications(
           const channelType = current?.type;
           const channelDisplayName = current?.name;
 
-          queryClient.invalidateQueries({
-            queryKey: collaborationQueryKeys.chat.myChannels(),
-            exact: true,
-          });
-          queryClient.invalidateQueries({
-            queryKey: collaborationQueryKeys.chat.unreadTotal(),
-            exact: true,
-          });
+          invalidateChatUnreadState(queryClient);
 
-          if (channelId === activeChannelIdRef.current) return;
+          const decision = chatAlertDecision({
+            kind: "message",
+            channelId,
+            senderId: payload.senderId,
+            currentUserId: currentUserIdRef.current,
+            activeChannelId: activeChannelIdRef.current,
+            viewer: viewerChannelState(current, currentUserIdRef.current),
+          });
+          if (!chatAlertIsRaised(decision)) return;
 
           const senderName = payload.senderName ?? "Someone";
           const title =
@@ -148,23 +155,61 @@ export function useChatGlobalNotifications(
 
     const notifChannel = ably.channels.get(notificationsChannelName(orgId, currentUserId));
     let cancelled = false;
-    let subscribed = false;
 
     const capabilityHandler = (_msg: InboundMessage) => {
       void reauthorizeAblyClients();
     };
 
-    void safeSubscribe(notifChannel, "realtime:capability:refresh", capabilityHandler).then((ok) => {
-      if (cancelled) {
-        if (ok) safeUnsubscribe(notifChannel, "realtime:capability:refresh", capabilityHandler);
-        return;
+    // The per-channel `message` subscriptions above only cover channels on pages the
+    // sidebar has already fetched. The backend also publishes `notification:message`
+    // (DMs) and `notification:mention` to this per-user channel for every recipient,
+    // so a DM or mention in a channel that is not loaded still moves the badges.
+    const inboxHandler = (event: string) => (msg: InboundMessage) => {
+      if (isForgedServerFrame(event, msg.clientId)) return;
+      const data: unknown = msg.data;
+      if (!isRecord(data) || typeof data.channelId !== "number") return;
+      const channelId = data.channelId;
+      const loaded = channelsRef.current?.find((c) => c.id === channelId);
+      if (loaded !== undefined) return;
+      invalidateChatUnreadState(queryClient);
+      const decision = chatAlertDecision({
+        kind: event === "notification:mention" ? "mention" : "message",
+        channelId,
+        senderId: data.senderId,
+        currentUserId: currentUserIdRef.current,
+        activeChannelId: activeChannelIdRef.current,
+        viewer: viewerChannelState(loaded, currentUserIdRef.current),
+      });
+      if (!chatAlertIsRaised(decision)) return;
+      const senderName = typeof data.senderName === "string" && data.senderName ? data.senderName : "Someone";
+      const mention = event === "notification:mention";
+      toast(mention ? `${senderName} mentioned you` : senderName, {
+        description: mention ? undefined : "Sent you a message",
+        duration: 5_000,
+      });
+    };
+
+    const listeners: Array<[string, (msg: InboundMessage) => void]> = [
+      ["realtime:capability:refresh", capabilityHandler],
+      ["notification:message", inboxHandler("notification:message")],
+      ["notification:mention", inboxHandler("notification:mention")],
+    ];
+    const subscribed: typeof listeners = [];
+
+    void (async () => {
+      for (const listener of listeners) {
+        const ok = await safeSubscribe(notifChannel, listener[0], listener[1]);
+        if (cancelled) {
+          if (ok) safeUnsubscribe(notifChannel, listener[0], listener[1]);
+          return;
+        }
+        if (ok) subscribed.push(listener);
       }
-      subscribed = ok;
-    });
+    })();
 
     return () => {
       cancelled = true;
-      if (subscribed) safeUnsubscribe(notifChannel, "realtime:capability:refresh", capabilityHandler);
+      for (const [event, handler] of subscribed) safeUnsubscribe(notifChannel, event, handler);
     };
-  }, [orgId, currentUserId, ably]);
+  }, [orgId, currentUserId, ably, queryClient]);
 }

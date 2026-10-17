@@ -5,7 +5,6 @@ import type { suggestDraftFieldsContract as suggestDraftFieldsContractDef } from
 import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
 import type { TicketHandoffResult } from "@/types/projects/ai";
-import type { TicketPriority } from "@/types/projects";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import type { AiAbortInput } from "@/hooks/api/ai-abort";
 
@@ -49,33 +48,33 @@ export interface TicketCommentsSummaryResult {
   openQuestions: string[];
 }
 
-export interface TicketImproveDescriptionResult {
+interface TicketImproveDescriptionResult {
   description: string;
 }
 
-export interface TicketSuggestedSubtask {
+interface TicketSuggestedSubtask {
   title: string;
 }
 
-export interface TicketSuggestSubtasksResult {
+interface TicketSuggestSubtasksResult {
   subtasks: TicketSuggestedSubtask[];
 }
 
-export interface TicketSuggestedChecklistItem {
+interface TicketSuggestedChecklistItem {
   text: string;
 }
 
-export interface TicketGenerateChecklistResult {
+interface TicketGenerateChecklistResult {
   title: string;
   items: TicketSuggestedChecklistItem[];
 }
 
-export interface TicketDraftInput {
+interface TicketDraftInput {
   title?: string;
   description?: string;
 }
 
-export interface TicketSuggestTitleResult {
+interface TicketSuggestTitleResult {
   title: string;
 }
 

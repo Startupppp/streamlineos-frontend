@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'">
+  <title>Calendar offline</title>
+  <style>
+    body { margin: 0; background: #fafafa; color: #171717; font: 15px system-ui, sans-serif; }
+    main { max-width: 760px; margin: 0 auto; padding: 24px; }
+    h1 { font-size: 24px; margin: 0 0 16px; }
+    h2 { font-size: 16px; margin: 24px 0 10px; }
+    p { line-height: 1.5; }
+    .muted { color: #525252; }
+    .card { border: 1px solid #d4d4d4; border-radius: 10px; padding: 14px; margin: 10px 0; background: white; }
+    button { border: 1px solid #737373; border-radius: 7px; background: white; padding: 9px 13px; cursor: pointer; }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>Calendar offline</h1>
+    <p class="card">This is a saved, read-only busy schedule. Access and availability may have changed. Reconnect for current details or actions.</p>
+    <p id="status" role="status">Checking the saved schedule</p>
+    <section id="coverage"></section>
+    <section id="windows"></section>
+    <button id="retry" type="button">Try reconnecting</button>
+  </main>
+  <script>
+    const status = document.getElementById("status");
+    const coverage = document.getElementById("coverage");
+    const windows = document.getElementById("windows");
+    addEventListener("storage", (event) => {
+      let identity;
+      try { identity = sessionStorage.getItem("streamline-calendar-offline-session-identity"); }
+      catch { identity = null; }
+      if (identity && event.key !== `streamline-calendar-offline-policy-revocation:${identity}` &&
+        (event.key !== "streamline-calendar-offline-identity" || event.newValue === identity)) return;
+      if (!identity && event.key !== "streamline-calendar-offline-identity") return;
+      coverage.replaceChildren();
+      windows.replaceChildren();
+      status.textContent = "Saved Calendar access changed. Reconnect to check your current permissions.";
+    });
+    document.getElementById("retry").addEventListener("click", () => location.replace("/calendar"));
+    addEventListener("online", () => location.replace("/calendar"));
+    function line(parent, value, className) {
+      const element = document.createElement("p");
+      element.textContent = value;
+      if (className) element.className = className;
+      parent.append(element);
+    }
+    function policyDenied(identity, version) {
+      try {
+        const raw = localStorage.getItem(`streamline-calendar-offline-policy-revocation:${identity}`);
+        if (!raw) return true;
+        const state = JSON.parse(raw);
+        return !state || !Number.isInteger(state.version) || state.version < 0 || typeof state.enabled !== "boolean" || !state.enabled || version !== undefined && state.version !== version;
+      } catch { return true; }
+    }
+    function readSnapshot() {
+      return new Promise((resolve, reject) => {
+        const request = indexedDB.open("streamline-calendar-offline", 1);
+        request.onerror = () => reject(request.error);
+        request.onsuccess = () => {
+          const db = request.result;
+          if (!db.objectStoreNames.contains("snapshot")) { db.close(); resolve(null); return; }
+          const transaction = db.transaction("snapshot", "readonly");
+          const item = transaction.objectStore("snapshot").get("latest");
+          item.onerror = () => reject(item.error);
+          item.onsuccess = () => resolve(item.result ?? null);
+          transaction.oncomplete = () => db.close();
+          transaction.onabort = () => { db.close(); reject(transaction.error); };
+        };
+      });
+    }
+    async function show() {
+      let identity;
+      try { identity = sessionStorage.getItem("streamline-calendar-offline-session-identity"); }
+      catch { identity = null; }
+      let deviceIdentity;
+      try { deviceIdentity = localStorage.getItem("streamline-calendar-offline-identity"); }
+      catch { deviceIdentity = null; }
+      if (!identity || identity !== deviceIdentity || policyDenied(identity)) { status.textContent = "This tab has no recent authenticated Calendar session. Reconnect to sign in."; return; }
+      try {
+        const snapshot = await readSnapshot();
+        const age = snapshot && Date.now() - snapshot.fetchedAt;
+        if (!snapshot || snapshot.identity !== identity || localStorage.getItem("streamline-calendar-offline-identity") !== identity || policyDenied(identity, snapshot.policyVersion) || !Number.isFinite(age) || age < 0 ||
+          !Number.isInteger(snapshot.maxAgeDays) || snapshot.maxAgeDays < 1 || snapshot.maxAgeDays > 30 ||
+          age > snapshot.maxAgeDays * 86400000 || !Array.isArray(snapshot.sources) || !Array.isArray(snapshot.windows)) {
+          status.textContent = "No recent offline schedule is available for this tab. Reconnect to refresh it.";
+          return;
+        }
+        const ageMinutes = Math.max(1, Math.floor(age / 60000));
+        status.textContent = `Saved ${ageMinutes < 60 ? `${ageMinutes} minutes` : ageMinutes < 1440 ? `${Math.floor(ageMinutes / 60)} hours` : `${Math.floor(ageMinutes / 1440)} days`} ago. Coverage: ${snapshot.coverage}.`;
+        const heading = document.createElement("h2");
+        heading.textContent = "Source coverage at last refresh";
+        coverage.append(heading);
+        for (const source of snapshot.sources.slice(0, 100)) {
+          if (typeof source.sourceKey === "string" && typeof source.state === "string") {
+            const refreshedAt = typeof source.asOf === "string" ? Date.parse(source.asOf) : NaN;
+            const sourceAge = Date.now() - refreshedAt;
+            const freshness = Number.isFinite(sourceAge) && sourceAge >= 0
+              ? `source data ${Math.max(1, Math.floor(sourceAge / 60000))} minutes old`
+              : "last successful source refresh unknown";
+            line(coverage, `${source.sourceKey}: ${source.state}, ${freshness}`, "muted");
+          }
+        }
+        const busyHeading = document.createElement("h2");
+        busyHeading.textContent = "Saved busy windows";
+        windows.append(busyHeading);
+        if (snapshot.windows.length === 0) line(windows, "No busy windows were saved.", "muted");
+        for (const window of snapshot.windows.slice(0, 2000)) {
+          const start = new Date(window.start);
+          const end = new Date(window.end);
+          if (!Number.isFinite(start.getTime()) || !Number.isFinite(end.getTime()) || end <= start) continue;
+          line(windows, `Busy · ${start.toLocaleString()} – ${end.toLocaleString()}`, "card");
+        }
+      } catch {
+        status.textContent = "The saved schedule could not be read. Reconnect to refresh it.";
+      }
+    }
+    show();
+  </script>
+</body>
+</html>

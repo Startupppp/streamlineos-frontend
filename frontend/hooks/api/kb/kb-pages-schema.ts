@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { cursorPageContract } from "@/hooks/api/cursor-page-schema";
 
 const kbPageBaseContract = z.object({
   id: z.number().int(),
@@ -16,7 +17,12 @@ const kbPageBaseContract = z.object({
   visibility: z.enum(["private", "org", "public"]),
   publicToken: z.string().nullable(),
   publicSlug: z.string().nullable(),
-  content: z.union([z.array(z.record(z.string(), z.unknown())), z.record(z.string(), z.unknown())]).nullable(),
+  content: z
+    .union([
+      z.array(z.record(z.string(), z.unknown())),
+      z.record(z.string(), z.unknown()),
+    ])
+    .nullable(),
   contentText: z.string().nullable(),
   isLocked: z.boolean(),
   createdAt: z.string(),
@@ -36,37 +42,33 @@ const kbPageBaseContract = z.object({
   nextReviewAt: z.string().nullable(),
   aclRevision: z.number().int(),
   contentRevision: z.number().int(),
-  sourceArticleId: z.number().int().nullable(),
+  legalHold: z.boolean(),
+  legalHoldReason: z.string().nullable(),
 });
 
 export const kbPageContract = kbPageBaseContract;
 
-export const kbPageListItemContract = kbPageBaseContract.omit({ content: true, contentText: true });
+export const kbPageListItemContract = kbPageBaseContract.omit({
+  content: true,
+  contentText: true,
+});
 
 export const kbPageListContract = z.array(kbPageListItemContract);
+
+export const kbFavoritePageListContract = z.object({
+  data: z.array(kbPageListItemContract),
+  pagination: z.object({
+    limit: z.number().int(),
+    hasMore: z.boolean(),
+    nextCursor: z.string().nullable(),
+  }),
+});
 
 export const kbPageWithAncestorsContract = kbPageBaseContract.extend({
   ancestors: z.array(z.object({ id: z.number().int(), title: z.string() })),
   isFavorite: z.boolean(),
+  canEdit: z.boolean().optional(),
 });
-
-export const kbPageTreeItemContract = z.object({
-  id: z.number().int(),
-  parentPageId: z.number().int().nullable(),
-  spaceId: z.number().int().nullable(),
-  projectId: z.number().int().nullable(),
-  title: z.string(),
-  icon: z.string().nullable(),
-  coverImage: z.string().nullable().optional(),
-  sortOrder: z.number().int().nullable(),
-  visibility: z.string(),
-  createdById: z.string().nullable(),
-  status: z.string(),
-  updatedAt: z.string().optional(),
-  hasChildren: z.boolean(),
-});
-
-export const kbPageTreeContract = z.array(kbPageTreeItemContract);
 
 export const kbPageSearchResponseContract = z.object({
   items: z.array(
@@ -81,13 +83,23 @@ export const kbPageSearchResponseContract = z.object({
   limit: z.number().int(),
 });
 
-export const kbPageSoftDeleteContract = z.object({ deletedCount: z.number().int() });
-export const kbPageEmptyTrashContract = z.object({ purgedCount: z.number().int() });
+export const kbPageSoftDeleteContract = z.object({
+  deletedCount: z.number().int(),
+});
+export const kbPageEmptyTrashContract = z.object({
+  purgedCount: z.number().int(),
+});
 export const kbPageSuccessContract = z.object({ success: z.boolean() });
 export const kbPagePermanentDeleteContract = z.undefined();
 
-export const kbPageBacklinkContract = z.array(
-  z.object({ id: z.number().int(), title: z.string(), icon: z.string().nullable() }),
+export const kbPageBacklinkContract = z.object({
+  id: z.number().int(),
+  title: z.string(),
+  icon: z.string().nullable(),
+});
+
+export const kbPageBacklinksPageContract = cursorPageContract(
+  kbPageBacklinkContract,
 );
 
 const kbPageVersionItemContract = z.object({
@@ -96,7 +108,12 @@ const kbPageVersionItemContract = z.object({
   pageId: z.number().int(),
   versionNumber: z.number().int(),
   title: z.string(),
-  content: z.union([z.array(z.record(z.string(), z.unknown())), z.record(z.string(), z.unknown())]).nullable(),
+  content: z
+    .union([
+      z.array(z.record(z.string(), z.unknown())),
+      z.record(z.string(), z.unknown()),
+    ])
+    .nullable(),
   contentText: z.string().nullable(),
   changeSummary: z.string().nullable(),
   authorId: z.string().nullable(),
@@ -115,3 +132,41 @@ export const kbPageVersionListContract = z.object({
 });
 
 export const kbPageVersionContract = kbPageVersionItemContract;
+
+export const kbTrashPageListContract = z.object({
+  data: z.array(kbPageListItemContract),
+  pagination: z.object({
+    limit: z.number().int(),
+    hasMore: z.boolean(),
+    nextCursor: z.string().nullable(),
+  }),
+});
+
+const kbTrashDeleterContract = z.object({ membershipId: z.number().int(), name: z.string() });
+export const kbTrashDeletersContract = z.object({
+  data: z.array(kbTrashDeleterContract),
+  pagination: z.object({
+    limit: z.number().int(),
+    hasMore: z.boolean(),
+    nextCursor: z.string().nullable(),
+  }),
+  selected: kbTrashDeleterContract.nullable(),
+});
+
+export const kbBulkPageResultContract = z.object({
+  results: z.array(
+    z.object({
+      pageId: z.number().int(),
+      result: z.enum(["succeeded", "denied", "conflict", "notFound"]),
+    }),
+  ),
+});
+
+export const kbPageTrashPurgeImpactContract = z.object({
+  pageCount: z.number().int(),
+  descendantCount: z.number().int(),
+});
+
+export type KbPageTrashPurgeImpact = z.infer<
+  typeof kbPageTrashPurgeImpactContract
+>;

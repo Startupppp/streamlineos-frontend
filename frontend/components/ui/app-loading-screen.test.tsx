@@ -1,5 +1,10 @@
 import { act, render, screen } from "@testing-library/react";
 
+const mockSignOutStaleSession = jest.fn(() => Promise.resolve());
+jest.mock("@/lib/stale-session-sign-out", () => ({
+  signOutStaleSession: () => mockSignOutStaleSession(),
+}));
+
 jest.mock("next/image", () => ({
   __esModule: true,
   default: function MockImage({
@@ -108,6 +113,19 @@ describe("AppLoadingScreen — ARIA attributes", () => {
     render(<AppLoadingScreen label="Preparing workspace" />);
     expect(screen.getByText("Preparing workspace")).toBeInTheDocument();
   });
+
+  it("types the visible label one character at a time", () => {
+    jest.useFakeTimers();
+    const { unmount } = render(<AppLoadingScreen label="Build" />);
+    const typedLabel = screen.getByTestId("loading-typed-label");
+    expect(typedLabel).toHaveTextContent("");
+    act(() => jest.advanceTimersByTime(200));
+    expect(typedLabel).toHaveTextContent("Bu");
+    act(() => jest.advanceTimersByTime(300));
+    expect(typedLabel).toHaveTextContent("Build");
+    unmount();
+    jest.useRealTimers();
+  });
 });
 
 describe("AppLoadingScreen — reduced-motion preference", () => {
@@ -120,7 +138,7 @@ describe("AppLoadingScreen — reduced-motion preference", () => {
     render(<AppLoadingScreen />);
 
     expect(screen.getByRole("status")).toBeInTheDocument();
-    expect(screen.getByText("Loading")).toBeInTheDocument();
+    expect(screen.getByTestId("loading-typed-label")).toHaveTextContent("Loading");
   });
 
   it("renders the full decorative path when motion is not reduced", () => {
@@ -172,6 +190,15 @@ describe("AppLoadingScreen — a sync that never lands stops claiming to be load
     expect(alert).toHaveAttribute("aria-busy", "false");
     expect(alert).toHaveTextContent(/taking longer/i);
     expect(screen.getByRole("button", { name: /reload/i })).toBeInTheDocument();
+  });
+
+  it("offers Sign out on the stalled screen, because Reload cannot fix a session the server rejects", () => {
+    render(<AppLoadingScreen stalledAfterMs={1_000} />);
+    act(() => {
+      jest.advanceTimersByTime(1_000);
+    });
+    screen.getByRole("button", { name: /sign out/i }).click();
+    expect(mockSignOutStaleSession).toHaveBeenCalledTimes(1);
   });
 
   it("BITE PROOF — the stalled screen must not still be announced as a busy status", () => {

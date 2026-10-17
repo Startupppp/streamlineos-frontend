@@ -1,128 +1,111 @@
 "use client";
 
-import { use, useCallback } from "react";
-import {
-  useProject,
-  useUpdateTicket,
-  useDeleteTicket,
-  useCreateTicket,
-  useProjectBoardTickets,
-} from "@/hooks/api/build";
+import { use } from "react";
+import { WifiOff, Layers, AlertCircle, BookOpen, Wrench, CheckCircle2 } from "lucide-react";
+import { formatDistanceToNow } from "date-fns";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { CreateEpicDialog } from "@/features/build/epics/create-epic-dialog";
-import { EpicCard } from "@/features/build/epics/epic-card";
 import { EpicStoryRow } from "@/features/build/epics/epic-story-row";
-import { StatCard, StatCardGrid, StatCardGridSkeleton } from "@/components/ui/stat-card";
-import { Skeleton } from "@/components/ui/skeleton";
-import { EmptyState } from "@/components/ui/empty-state";
-import { PageState } from "@/components/shared/page-state";
-import { usePageState } from "@/hooks/api/use-page-state";
 import {
-  Layers,
-  AlertCircle,
-  BookOpen,
-  Wrench,
-  CheckCircle2,
-} from "lucide-react";
+  StatCard,
+  StatCardGrid,
+  StatCardGridSkeleton,
+} from "@/components/ui/stat-card";
+import { Skeleton } from "@/components/ui/skeleton";
+import { PageState } from "@/components/shared/page-state";
 import { PageWrapper } from "@/components/ui/page-wrapper";
-import { toast } from "sonner";
-import { getErrorMessage } from "@/lib/get-error-message";
 import { ModuleDisabledState } from "@/features/build/shared/module-disabled-state";
 import { getCompletedStatusNames } from "@/features/build/shared/completed-status";
-import { useCan } from "@/hooks/api/access";
+import { ShortcutHelpDialog } from "@/components/shared/shortcut-help-dialog";
+import { EpicsListSection } from "@/features/build/epics/epics-list-section";
+import { EpicsFilterToolbar } from "@/features/build/epics/epics-filter-toolbar";
+import { EditEpicDialog } from "@/features/build/epics/edit-epic-dialog";
+import { BulkActionBar } from "@/features/build/shared/bulk-action-bar";
 import {
   PmPageShell,
   PmPanel,
   PmSection,
-  PmStaggerList,
-  PM_FILL_PANEL,
 } from "@/components/pm-chrome";
+import { useEpicsPage } from "./use-epics-page";
 
 interface PageProps {
   params: Promise<{ projectId: string }>;
 }
 
 export function EpicsPage({ params }: PageProps) {
-  const canCreate = useCan("build:tickets:create");
   const { projectId: projectIdStr } = use(params);
-  const projectId = parseInt(projectIdStr);
-
   const {
-    data: project,
-    isLoading: projectLoading,
-    isError: projectFailed,
-    error: projectError,
-    refetch: refetchProject,
-  } = useProject(projectId);
-  const {
-    data: boardTickets,
-    isLoading: ticketsLoading,
-    isError: ticketsFailed,
-    error: ticketsError,
-    refetch: refetchTickets,
-  } = useProjectBoardTickets(projectId);
-  const isLoading = projectLoading || ticketsLoading;
-  const isError = projectFailed || ticketsFailed;
-  const loadError = projectError ?? ticketsError;
+    projectId,
+    canCreate,
+    canUpdate,
+    isOnline,
+    searchInputRef,
+    listFilters,
+    project,
+    pageState,
+    epicsUpdatedAt,
+    tickets,
+    epics,
+    allEpics,
+    stories,
+    tasks,
+    unlinkedItems,
+    hasMoreEpics,
+    visitedCursors,
+    cycles,
+    orgLabels,
+    members,
+    deleteTicket,
+    bulkUpdate,
+    createOpen,
+    shortcutHelpOpen,
+    setShortcutHelpOpen,
+    keyboardEditTarget,
+    handleRetry,
+    handleNextPage,
+    handlePreviousPage,
+    handleDeleteEpic,
+    handleLinkStory,
+    handleCreateStory,
+    handleOpenCreate,
+    handleCreateOpenChange,
+    handleEditOpenChange,
+    selectedIds,
+    archiveConfirmOpen,
+    handleEpicSelection,
+    handleClearSelection,
+    handleBulkStatus,
+    handleBulkPriority,
+    handleBulkAssignee,
+    handleBulkCycle,
+    handleBulkParent,
+    handleBulkLabel,
+    handleBulkArchiveRequest,
+    handleArchiveDialogChange,
+    handleBulkArchiveConfirm,
+    handleBulkExport,
+  } = useEpicsPage(projectIdStr);
 
-  const handleRetry = useCallback(() => {
-    void refetchProject();
-    void refetchTickets();
-  }, [refetchProject, refetchTickets]);
-
-  const updateTicket = useUpdateTicket(projectId);
-  const deleteTicket = useDeleteTicket(projectId);
-  const createTicket = useCreateTicket();
-
-  const tickets = boardTickets ?? [];
-  const epics = tickets.filter((t) => t.type === "EPIC");
-  const stories = tickets.filter((t) => t.type === "STORY");
-  const tasks = tickets.filter((t) => t.type === "TASK");
-
-  const handleDeleteEpic = useCallback((epicId: number) => {
-    const children = tickets.filter(t => t.type !== "EPIC" && t.epicId === epicId);
-    const unlinkPromises = children.map(t =>
-      updateTicket.mutateAsync({ ticketId: t.id, epicId: undefined })
-    );
-    Promise.all(unlinkPromises)
-      .then(() => {
-        deleteTicket.mutate(
-          { ticketId: epicId },
-          {
-            onSuccess: () => toast.success("Epic deleted"),
-            onError: (error) => toast.error(getErrorMessage(error)),
-          }
-        );
-      })
-      .catch(() => {
-        toast.error("Failed to unlink tickets from epic");
-      });
-  }, [tickets, updateTicket, deleteTicket]);
-
-  const handleLinkStory = useCallback((storyId: number, epicId: number) => {
-    updateTicket.mutate({ ticketId: storyId, epicId });
-  }, [updateTicket]);
-
-  const handleCreateStory = useCallback((title: string, epicId: number) => {
-    createTicket.mutate(
-      { projectId, title, type: "STORY", epicId },
-      {
-        onSuccess: () => toast.success("Story created"),
-        onError: (error) => toast.error(getErrorMessage(error)),
-      }
-    );
-  }, [createTicket, projectId]);
-
-  const pageState = usePageState({ permission: "build:view", isLoading, isError, error: loadError });
-
-  if (project?.settings?.modules?.epics === false) {
+  if (project?.settings?.modules?.epics === false)
     return <ModuleDisabledState moduleName="Epics" projectId={projectId} />;
-  }
 
-  if (pageState.kind !== "ready" && pageState.kind !== "empty" && pageState.kind !== "loading") {
+  if (
+    pageState.kind !== "ready" &&
+    pageState.kind !== "empty" &&
+    pageState.kind !== "loading"
+  ) {
     return (
-      <PageWrapper title="Epics" subtitle="Organize related stories and tasks into larger themes">
+      <PageWrapper
+        title="Epics"
+        subtitle="Organize related stories and tasks into larger themes"
+      >
         <PmPageShell>
-          <PageState resolution={pageState} loading={null} onRetry={handleRetry} className="flex-1">
+          <PageState
+            resolution={pageState}
+            loading={null}
+            onRetry={handleRetry}
+            className="flex-1"
+          >
             {null}
           </PageState>
         </PmPageShell>
@@ -137,9 +120,7 @@ export function EpicsPage({ params }: PageProps) {
           <div className="space-y-4">
             <StatCardGridSkeleton cols={4} className="mb-1" />
             <div className="space-y-2.5">
-              {Array.from({ length: 3 }).map((_, i) => (
-                <Skeleton key={i} className="h-24 rounded-xl" />
-              ))}
+              {Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} className="h-24 rounded-xl" />)}
             </div>
           </div>
         </PmPageShell>
@@ -147,14 +128,29 @@ export function EpicsPage({ params }: PageProps) {
     );
   }
 
-  const unlinkedStories = stories.filter((s) => !s.epicId);
   const completedStatusNames = getCompletedStatusNames(project?.statuses);
 
   return (
     <PageWrapper
       title="Epics"
       subtitle="Organize related stories and tasks into larger themes"
-      actions={canCreate ? <CreateEpicDialog projectId={projectId} /> : undefined}
+      actions={
+        canCreate ? (
+          <CreateEpicDialog
+            projectId={projectId}
+            open={createOpen}
+            onOpenChange={handleCreateOpenChange}
+          />
+        ) : undefined
+      }
+      filters={
+        <EpicsFilterToolbar
+          listFilters={listFilters}
+          searchInputRef={searchInputRef}
+          projectStatuses={project?.statuses}
+          members={members}
+        />
+      }
     >
       <PmPageShell>
         <div
@@ -162,58 +158,99 @@ export function EpicsPage({ params }: PageProps) {
           aria-live="polite"
           aria-atomic="true"
         >
+          {!isOnline && epics.length > 0 ? (
+            <div
+              className="flex shrink-0 items-center gap-2 rounded-md border border-border bg-muted/40 px-3 py-2"
+              data-testid="offline-banner"
+            >
+              <WifiOff className="h-4 w-4 shrink-0 text-muted-foreground" />
+              <p className="text-xs text-muted-foreground">
+                You&apos;re offline — these epics may be out of date.
+                {epicsUpdatedAt ? (
+                  <span data-testid="offline-banner-freshness">
+                    {" "}
+                    Last updated{" "}
+                    {formatDistanceToNow(new Date(epicsUpdatedAt), {
+                      addSuffix: true,
+                    })}
+                    .
+                  </span>
+                ) : null}
+              </p>
+            </div>
+          ) : null}
+          {canUpdate && selectedIds.size > 0 && (
+            <BulkActionBar
+              selectedCount={selectedIds.size}
+              members={members}
+              cycles={cycles ?? []}
+              statuses={project?.statuses}
+              projectId={projectId}
+              excludeIds={selectedIds}
+              onBulkStatus={handleBulkStatus}
+              onBulkPriority={handleBulkPriority}
+              onBulkAssignee={handleBulkAssignee}
+              onBulkCycle={handleBulkCycle}
+              onBulkParent={handleBulkParent}
+              onBulkLabel={handleBulkLabel}
+              onBulkArchive={handleBulkArchiveRequest}
+              onBulkExport={handleBulkExport}
+              labels={orgLabels}
+              onClear={handleClearSelection}
+            />
+          )}
           <PmSection index={0} className="shrink-0">
             <StatCardGrid cols={4}>
-              <StatCard label="Epics" value={epics.length} icon={Layers} tone="default" index={0} />
-              <StatCard label="Stories" value={stories.length} icon={BookOpen} tone="default" index={1} />
-              <StatCard label="Tasks" value={tasks.length} icon={Wrench} tone="default" index={2} />
-              <StatCard
-                label="Completed"
-                value={tickets.filter((t) => completedStatusNames.has(t.status)).length}
-                icon={CheckCircle2}
-                tone="emerald"
-                index={3}
-              />
+              {(
+                [
+                  { label: "Epics", value: allEpics.length, icon: Layers },
+                  { label: "Stories", value: stories.length, icon: BookOpen },
+                  { label: "Tasks", value: tasks.length, icon: Wrench },
+                  { label: "Completed", value: tickets.filter((t) => completedStatusNames.has(t.status)).length, icon: CheckCircle2, tone: "emerald" as const },
+                ] as const
+              ).map((card, i) => (
+                <StatCard key={card.label} label={card.label} value={card.value} icon={card.icon} tone={"tone" in card ? card.tone : "default"} index={i} />
+              ))}
             </StatCardGrid>
           </PmSection>
 
           <PmSection index={1} className="flex min-h-0 flex-1 flex-col">
-            {epics.length === 0 ? (
-              <EmptyState
-                  className={PM_FILL_PANEL}
-                  illustrationPreset="projects"
-                  title="No epics yet"
-                  description="Create your first epic to organize related stories and tasks."
-                />
-            ) : (
-              <PmStaggerList className="space-y-2.5">
-                {epics.map((epic) => (
-                  <EpicCard
-                    key={epic.id}
-                    epic={epic}
-                    stories={tickets.filter((t) => t.type !== "EPIC" && t.epicId === epic.id)}
-                    projectId={projectId}
-                    projectKey={project?.key}
-                    projectStatuses={project?.statuses}
-                    unlinkedStories={unlinkedStories}
-                    onDeleteEpic={handleDeleteEpic}
-                    onLinkStory={handleLinkStory}
-                    onCreateStory={handleCreateStory}
-                    isDeleting={deleteTicket.isPending}
-                  />
-                ))}
-              </PmStaggerList>
-            )}
+            <EpicsListSection
+              epics={epics}
+              tickets={tickets}
+              unlinkedItems={unlinkedItems}
+              projectId={projectId}
+              projectKey={project?.key}
+              projectStatuses={project?.statuses}
+              isOnline={isOnline}
+              epicsUpdatedAt={epicsUpdatedAt}
+              canCreate={canCreate}
+              canUpdate={canUpdate}
+              isFiltered={listFilters.isFiltered}
+              selectedIds={selectedIds}
+              hasMore={hasMoreEpics}
+              hasPrevious={visitedCursors.length > 0}
+              pageNumber={visitedCursors.length + 1}
+              isDeleting={deleteTicket.isPending}
+              onClearFilters={listFilters.clearAll}
+              onOpenCreate={handleOpenCreate}
+              onEpicSelection={handleEpicSelection}
+              onDeleteEpic={handleDeleteEpic}
+              onLinkStory={handleLinkStory}
+              onCreateStory={handleCreateStory}
+              onNextPage={handleNextPage}
+              onPreviousPage={handlePreviousPage}
+            />
           </PmSection>
 
-          {unlinkedStories.length > 0 ? (
+          {unlinkedItems.length > 0 && (
             <PmSection index={2} className="shrink-0">
-              <h2 className="mb-2 flex items-center gap-1.5 text-xs font-semibold text-foreground">
+              <h2 className="mb-2 flex items-center gap-1.5 text-xs font-medium text-foreground">
                 <AlertCircle className="h-3.5 w-3.5 text-status-warning-ink" />
-                Stories without Epic
+                Items without Epic
               </h2>
               <PmPanel className="space-y-1 p-2">
-                {unlinkedStories.map((story) => (
+                {unlinkedItems.map((story) => (
                   <EpicStoryRow
                     key={story.id}
                     story={story}
@@ -224,6 +261,31 @@ export function EpicsPage({ params }: PageProps) {
                 ))}
               </PmPanel>
             </PmSection>
+          )}
+
+          <ConfirmDialog
+            open={archiveConfirmOpen}
+            onOpenChange={handleArchiveDialogChange}
+            title={`Archive ${selectedIds.size} epic${selectedIds.size !== 1 ? "s" : ""}?`}
+            description="An epic with active sub-tasks outside the selection is reported back and left alone."
+            confirmLabel="Archive"
+            destructive
+            isPending={bulkUpdate.isPending}
+            onConfirm={handleBulkArchiveConfirm}
+          />
+
+          <ShortcutHelpDialog
+            open={shortcutHelpOpen}
+            onOpenChange={setShortcutHelpOpen}
+          />
+
+          {canUpdate && keyboardEditTarget ? (
+            <EditEpicDialog
+              epic={keyboardEditTarget}
+              projectId={projectId}
+              open
+              onOpenChange={handleEditOpenChange}
+            />
           ) : null}
         </div>
       </PmPageShell>

@@ -25,22 +25,36 @@ export const collaborationQueryKeys = {
     pins: (channelId: number) => [...base, "chat", "pins", channelId] as const,
     thread: (channelId: number, messageId: number) =>
       [...base, "chat", "thread", channelId, messageId] as const,
+    threadsInChannel: (channelId: number) =>
+      [...base, "chat", "thread", channelId] as const,
     huddle: (channelId: number) =>
       [...base, "chat", "huddle", channelId] as const,
     savedMessages: () => [...base, "chat", "savedMessages"] as const,
+    orgSettings: () => [...base, "chat", "orgSettings"] as const,
     inviteLink: (channelId: number) =>
       [...base, "chat", "inviteLink", channelId] as const,
+    channelFiles: (channelId: number) =>
+      [...base, "chat", "channelFiles", channelId] as const,
     attachment: (channelId: number, attachmentId: number) =>
       [...base, "chat", "attachment", channelId, attachmentId] as const,
-    orgSettings: () => [...base, "chat", "orgSettings"] as const,
   },
 
   aiChat: {
     all: [...base, "aiChat"] as const,
     history: () => [...base, "aiChat", "history"] as const,
+    starterSuggestions: () => [...base, "aiChat", "starterSuggestions"] as const,
     conversations: () => [...base, "aiChat", "conversationList"] as const,
     conversationMessages: (conversationId: number) =>
       [...base, "aiChat", "conversations", conversationId, "messages"] as const,
+  },
+
+  companion: {
+    preferences: () => [...base, "companion", "preferences"] as const,
+    policy: () => [...base, "companion", "policy"] as const,
+    nextPrompt: () => [...base, "companion", "prompts", "next"] as const,
+    promptHistory: (filters?: { category?: string; status?: string }, cursor?: string) => filters
+      ? [...base, "companion", "prompts", "history", filters.category ?? "all", filters.status ?? "all", cursor ?? null] as const
+      : [...base, "companion", "prompts", "history"] as const,
   },
 
   aiCrm: {

@@ -16,8 +16,10 @@ import { cn } from "@/lib/utils";
 import { parseEnum, useUrlFilters } from "@/lib/url-state/use-url-filters";
 import { ReportsAgileTab } from "./reports-agile-tab";
 import { ReportsOverviewTab } from "./reports-overview-tab";
+import { ReportsQualityTab } from "./reports-quality-tab";
+import { WorkloadSection } from "./workload-section";
 
-const REPORTS_TABS = ["agile", "overview"] as const;
+const REPORTS_TABS = ["agile", "overview", "quality", "workload"] as const;
 type ReportsTab = typeof REPORTS_TABS[number];
 const DEFAULT_TAB: ReportsTab = "agile";
 
@@ -52,6 +54,8 @@ export function ReportsTabs({ projectId }: ReportsTabsProps) {
               <TabsList>
                 <TabsTrigger value="agile">Agile Reports</TabsTrigger>
                 <TabsTrigger value="overview">Overview</TabsTrigger>
+                <TabsTrigger value="quality">Quality</TabsTrigger>
+                <TabsTrigger value="workload">Workload</TabsTrigger>
               </TabsList>
             }
           />
@@ -71,6 +75,18 @@ export function ReportsTabs({ projectId }: ReportsTabsProps) {
               className={cn(TABS_CONTENT_PAGE_BODY_CLASS, "gap-4 overflow-y-auto")}
             >
               <ReportsOverviewTab projectId={projectId} />
+            </TabsContent>
+            <TabsContent
+              value="quality"
+              className={cn(TABS_CONTENT_PAGE_BODY_CLASS, "gap-4 overflow-y-auto")}
+            >
+              <ReportsQualityTab projectId={projectId} />
+            </TabsContent>
+            <TabsContent
+              value="workload"
+              className={cn(TABS_CONTENT_PAGE_BODY_CLASS, "gap-4 overflow-y-auto")}
+            >
+              <WorkloadSection projectId={projectId} />
             </TabsContent>
           </PmSection>
         </PmPageShell>

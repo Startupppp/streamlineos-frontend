@@ -18,6 +18,8 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/shared/error-state";
 import { RichPanel, RichSectionHeader } from "@/components/shared/rich-surface";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { formatDateTimeInOrgTz } from "@/lib/date-utils";
+import { useOrgTimeZone } from "@/hooks/api/org-display";
 import {
   useWebhookLogs,
   useRetryDelivery,
@@ -58,6 +60,7 @@ function LogRowSkeleton() {
 
 function LogRow({ log, endpointId, canManage }: LogRowProps) {
   const retry = useRetryDelivery(endpointId);
+  const orgTz = useOrgTimeZone();
 
   const handleRetry = useCallback(() => {
     retry.mutate(log.id, {
@@ -79,7 +82,15 @@ function LogRow({ log, endpointId, canManage }: LogRowProps) {
           <span className="text-sm font-mono font-medium truncate">
             {log.event}
           </span>
-          {isBlocked && (
+          {log.deadLetter && (
+            <Badge
+              variant="outline"
+              className="text-micro shrink-0 border-destructive text-destructive"
+            >
+              Dead letter
+            </Badge>
+          )}
+          {isBlocked && !log.deadLetter && (
             <Badge
               variant="outline"
               className="text-micro shrink-0 border-status-warning-rule text-status-warning-ink bg-status-warning-surface"
@@ -87,7 +98,7 @@ function LogRow({ log, endpointId, canManage }: LogRowProps) {
               Blocked
             </Badge>
           )}
-          {!isBlocked && log.statusCode !== null && (
+          {!isBlocked && !log.deadLetter && log.statusCode !== null && (
             <Badge
               variant={log.success ? "outline" : "destructive"}
               className="text-micro shrink-0"
@@ -98,10 +109,7 @@ function LogRow({ log, endpointId, canManage }: LogRowProps) {
         </div>
         <div className="flex items-center gap-2 shrink-0">
           <span className="text-xs text-muted-foreground whitespace-nowrap">
-            {new Date(log.createdAt).toLocaleString("en-IN", {
-              dateStyle: "short",
-              timeStyle: "short",
-            })}
+            {formatDateTimeInOrgTz(log.createdAt, orgTz)}
           </span>
           {canManage && !log.success && (
             <LoadingButton
@@ -122,6 +130,7 @@ function LogRow({ log, endpointId, canManage }: LogRowProps) {
           {log.responseBody}
         </p>
       )}
+      <p className="pl-4 text-micro text-muted-foreground">Delivery {log.deliveryId} · API {log.apiVersion} · {log.attempt} attempt{log.attempt === 1 ? "" : "s"}</p>
     </div>
   );
 }

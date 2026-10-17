@@ -6,6 +6,7 @@ export interface ProjectTeam {
   icon: string | null;
   color: string | null;
   isPrivate: boolean;
+  capacity: number | null;
   createdAt: string;
   updatedAt: string;
   memberCount?: number;
@@ -39,6 +40,7 @@ export interface UpdateTeamInput {
   icon?: string | null;
   color?: string | null;
   isPrivate?: boolean;
+  capacity?: number | null;
 }
 
 export interface AddTeamMemberInput {

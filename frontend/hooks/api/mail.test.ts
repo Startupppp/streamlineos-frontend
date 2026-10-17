@@ -1,9 +1,9 @@
-import { renderHook, act } from "@testing-library/react";
+import { renderHook, act, waitFor } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import type { InfiniteData } from "@tanstack/react-query";
 import type { ReactNode } from "react";
 import { createElement } from "react";
-import { useMailAction } from "./mail";
+import { useMailAction, useMailMessages } from "./mail";
 import { queryKeys } from "@/lib/query-keys";
 import type { MailListResponse, MailMessageSummary } from "@/types/mail";
 import type { UnifiedInboxResponse } from "@/types/inbox";
@@ -16,9 +16,47 @@ jest.mock("next-auth/react", () => ({
 
 jest.mock("@/lib/api-client", () => ({
   apiClient: {
+    get: jest.fn().mockResolvedValue({ messages: [], nextCursor: null, accountErrors: [] }),
     post: jest.fn().mockResolvedValue({ success: true }),
   },
 }));
+
+it("does not fetch mail without a connected account", () => {
+  const { result } = renderHook(() => useMailMessages({ folder: "inbox", accountId: "all" }, { enabled: false }), { wrapper: wrapper(makeClient()) });
+  expect(result.current.fetchStatus).toBe("idle");
+});
+
+it("fetches the initial inbox when connected accounts become available", async () => {
+  const { apiClient } = jest.requireMock("@/lib/api-client") as {
+    apiClient: { get: jest.Mock };
+  };
+  apiClient.get.mockResolvedValueOnce(
+    makeMailPage([makeMsg("initial-inbox", false, 67)]),
+  );
+
+  const client = makeClient();
+  const { result, rerender } = renderHook(
+    ({ accountIds }: { accountIds: number[] }) =>
+      useMailMessages(
+        { folder: "inbox", accountId: "all", accountIds },
+        { enabled: accountIds.length > 0 },
+      ),
+    {
+      initialProps: { accountIds: [] as number[] },
+      wrapper: wrapper(client),
+    },
+  );
+
+  expect(result.current.fetchStatus).toBe("idle");
+  rerender({ accountIds: [67] });
+
+  await waitFor(() => {
+    expect(result.current.data?.pages[0]?.messages[0]?.id).toBe(
+      "initial-inbox",
+    );
+  });
+  expect(apiClient.get).toHaveBeenCalledTimes(1);
+});
 
 jest.mock("@/hooks/api/access", () => ({
   useAccess: jest.fn(() => ({ data: { scopes: {}, modules: {}, isOrgOwner: false }, refetch: jest.fn() })),
@@ -123,7 +161,7 @@ describe("query key prefix regression", () => {
 
   it("messages() matches every distinct filter combination it is meant to invalidate", () => {
     const qc = makeClient();
-    for (const folder of ["inbox", "archive", "sent"]) {
+    for (const folder of ["inbox", "archive", "sent"] as const) {
       qc.setQueryData(
         queryKeys.mail.messages({ folder, accountId: 1 }),
         makeInfiniteMailData([makeMailPage([makeMsg(`m-${folder}`, false)])]),
@@ -131,9 +169,53 @@ describe("query key prefix regression", () => {
     }
     expect(qc.getQueriesData({ queryKey: queryKeys.mail.messages() })).toHaveLength(3);
   });
+
+  it("messages() normalizes accountIds so order-independent callers hit the same cache entry", () => {
+    expect(queryKeys.mail.messages({ folder: "inbox", accountIds: [2, 1] })).toEqual(
+      queryKeys.mail.messages({ folder: "inbox", accountIds: [1, 2] }),
+    );
+  });
 });
 
 describe("useMailAction — markRead optimistic patch", () => {
+  it("does not cancel an initial inbox request that has no cache data yet", async () => {
+    const { apiClient } = jest.requireMock("@/lib/api-client") as {
+      apiClient: { get: jest.Mock; post: jest.Mock };
+    };
+    let resolveInbox!: (page: MailListResponse) => void;
+    apiClient.get.mockImplementationOnce(
+      () =>
+        new Promise<MailListResponse>((resolve) => {
+          resolveInbox = resolve;
+        }),
+    );
+    apiClient.post.mockResolvedValueOnce({ ok: true });
+
+    const client = makeClient();
+    const { result } = renderHook(
+      () => ({
+        inbox: useMailMessages({ folder: "inbox", accountId: "all" }),
+        action: useMailAction(),
+      }),
+      { wrapper: wrapper(client) },
+    );
+
+    await waitFor(() => expect(result.current.inbox.fetchStatus).toBe("fetching"));
+    await act(async () => {
+      await result.current.action.mutateAsync({
+        messageId: "deep-linked-message",
+        body: { action: "markRead", accountId: 67 },
+      });
+      resolveInbox(makeMailPage([makeMsg("initial-inbox", false, 67)]));
+    });
+
+    await waitFor(() => {
+      expect(result.current.inbox.data?.pages[0]?.messages[0]?.id).toBe(
+        "initial-inbox",
+      );
+    });
+  });
+
   it("patches isRead across all pages and restores on error", async () => {
     const client = makeClient();
     const msgKey = queryKeys.mail.messages({ folder: "inbox", accountId: 1 });
@@ -148,6 +230,7 @@ describe("useMailAction — markRead optimistic patch", () => {
     const { result } = renderHook(() => useMailAction(), {
       wrapper: wrapper(client),
     });
+    const invalidate = jest.spyOn(client, "invalidateQueries");
 
     await act(async () => {
       await result.current.mutateAsync({
@@ -160,6 +243,7 @@ describe("useMailAction — markRead optimistic patch", () => {
     expect(after?.pages[0]?.messages[0]?.isRead).toBe(true);
     expect(after?.pages[0]?.messages[1]?.isRead).toBe(false);
     expect(after?.pages[1]?.messages[0]?.isRead).toBe(false);
+    expect(invalidate).not.toHaveBeenCalled();
   });
 
   it("restores original data on mutation error", async () => {

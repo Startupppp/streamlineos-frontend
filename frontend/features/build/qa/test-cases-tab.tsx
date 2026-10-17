@@ -1,67 +1,79 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
-import { PlusIcon } from "@animateicons/react/lucide";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useTestCases, useTestSuites, useDeleteTestCase } from "@/hooks/api/build/qa";
 import { useCan } from "@/hooks/api/access";
-import { usePageState } from "@/hooks/api/use-page-state";
-import { PageState } from "@/components/shared/page-state";
-import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
-import { useCursorPager } from "@/components/ui/table-pagination";
+import { useBuildCursorPager } from "@/features/build/shared/use-build-cursor-pager";
 import type { TestCase } from "@/types/projects";
-import { DataTable, DataTableSkeleton } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/empty-state";
-import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { BuildListToolbar } from "@/features/build/shared/build-list-toolbar";
 import { BuildFilterSelect } from "@/features/build/shared/build-filter-select";
+import { BuildListSurface } from "@/features/build/shared/build-list-surface";
+import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
 import {
   BUILD_FILTER_ALL,
   useBuildListFilters,
 } from "@/features/build/shared/use-build-list-filters";
+import { useBuildListKeyboard } from "@/hooks/common/use-build-list-keyboard";
 import {
   TEST_CASE_TABLE_HEADERS,
   buildTestCaseColumns,
   TestCaseMobileCard,
 } from "./test-case-columns";
 import { TestCaseSheet } from "./test-case-sheet";
+import { QaBulkActionBar } from "./qa-bulk-action-bar";
 
 const CASE_PAGE_SIZE = 50;
 
-const FILTER_DEFINITIONS = [{ param: "suite" }] as const;
+const PRIORITY_OPTIONS = [
+  { value: BUILD_FILTER_ALL, label: "All priorities" },
+  { value: "low", label: "Low" },
+  { value: "medium", label: "Medium" },
+  { value: "high", label: "High" },
+];
 
-function NewCaseButton({ onClick }: { onClick: () => void }) {
-  const { iconRef, hoverHandlers } = useAnimatedIcon();
-  return (
-    <Button onClick={onClick} {...hoverHandlers}>
-      <PlusIcon ref={iconRef} size={14} />
-      New Test Case
-    </Button>
-  );
-}
+const AUTOMATION_STATUS_OPTIONS = [
+  { value: BUILD_FILTER_ALL, label: "All automation" },
+  { value: "manual", label: "Manual" },
+  { value: "automated", label: "Automated" },
+  { value: "planned", label: "Planned" },
+];
+
+const FILTER_DEFINITIONS = [
+  { param: "suite" },
+  { param: "priority", options: ["low", "medium", "high"] as const },
+  { param: "automationStatus", options: ["manual", "automated", "planned"] as const },
+] as const;
 
 interface TestCasesTabProps {
   projectId: number;
+  createNonce?: number;
 }
 
-export function TestCasesTab({ projectId }: TestCasesTabProps) {
+export function TestCasesTab({ projectId, createNonce = 0 }: TestCasesTabProps) {
   const canManage = useCan("build:qa:manage");
   const listFilters = useBuildListFilters({ filters: FILTER_DEFINITIONS });
 
   const [sheetOpen, setSheetOpen] = useState(false);
   const [editCase, setEditCase] = useState<TestCase | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<TestCase | null>(null);
+  const [selectedIds, setSelectedIds] = useState(new Set<string | number>());
 
-  const { cursor, hasPrevious, goNext, goPrevious } = useCursorPager(
+  const { cursor, pageNumber, hasPrevious, goNext, goPrevious } = useBuildCursorPager(
     listFilters.resetKey,
   );
 
   const suiteValue = listFilters.value("suite");
+  const priorityValue = listFilters.value("priority");
+  const automationStatusValue = listFilters.value("automationStatus");
   const queryFilters = {
     q: listFilters.debouncedSearch || undefined,
     suiteId: suiteValue !== BUILD_FILTER_ALL ? Number(suiteValue) : undefined,
+    priority: priorityValue !== BUILD_FILTER_ALL ? priorityValue : undefined,
+    automationStatus: automationStatusValue !== BUILD_FILTER_ALL ? automationStatusValue : undefined,
     cursor: cursor !== undefined ? Number(cursor) : undefined,
   };
 
@@ -93,6 +105,11 @@ export function TestCasesTab({ projectId }: TestCasesTabProps) {
     setEditCase(null);
     setSheetOpen(true);
   }, []);
+
+  useEffect(() => {
+    if (createNonce <= 0) return;
+    handleNewCase();
+  }, [createNonce, handleNewCase]);
 
   const handleDeleteRow = useCallback((tc: TestCase) => setDeleteTarget(tc), []);
 
@@ -127,11 +144,36 @@ export function TestCasesTab({ projectId }: TestCasesTabProps) {
     [listFilters],
   );
 
-  const pageState = usePageState({
-    permission: "build:qa:view",
-    isLoading,
-    isError,
-    error,
+  const handlePriorityChange = useCallback(
+    (value: string) => listFilters.setValue("priority", value),
+    [listFilters],
+  );
+
+  const handleAutomationStatusChange = useCallback(
+    (value: string) => listFilters.setValue("automationStatus", value),
+    [listFilters],
+  );
+
+  const handleClearSelection = useCallback(() => {
+    setSelectedIds(new Set());
+  }, []);
+
+  const handleOpenFocused = useCallback(
+    (index: number) => { handleEdit(cases[index]); },
+    [cases, handleEdit],
+  );
+  const handleEditByIndex = useCallback(
+    (index: number) => { if (cases[index]) handleEdit(cases[index]); },
+    [cases, handleEdit],
+  );
+  const handleClearKeyboardSelection = useCallback(() => {}, []);
+  useBuildListKeyboard({
+    itemCount: cases.length,
+    onOpen: handleOpenFocused,
+    onEdit: canManage ? handleEditByIndex : undefined,
+    onCreate: canManage ? handleNewCase : undefined,
+    onClearSelection: handleClearKeyboardSelection,
+    enabled: !sheetOpen && !deleteTarget,
   });
 
   const columns = useMemo(
@@ -158,78 +200,115 @@ export function TestCasesTab({ projectId }: TestCasesTabProps) {
 
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-3">
-      <div className="flex shrink-0 items-start gap-2">
-        <BuildListToolbar
-          search={{
-            value: listFilters.search,
-            onValueChange: listFilters.setSearch,
-            placeholder: "Search cases…",
-            label: "Search test cases",
-          }}
-          filters={[
-            {
-              id: "suite",
-              label: "Suite",
-              active: listFilters.isActive("suite"),
-              control: (
-                <BuildFilterSelect
-                  label="Suite"
-                  value={suiteValue}
-                  onValueChange={handleSuiteChange}
-                  options={suiteOptions}
-                />
-              ),
-            },
-          ]}
-          onClearAll={listFilters.clearAll}
-          className="flex-1 min-w-0"
-        />
-        {canManage ? <NewCaseButton onClick={handleNewCase} /> : null}
-      </div>
+      <BuildListToolbar
+        search={{
+          value: listFilters.search,
+          onValueChange: listFilters.setSearch,
+          placeholder: "Search cases…",
+          label: "Search test cases",
+        }}
+        filters={[
+          {
+            id: "suite",
+            label: "Suite",
+            active: listFilters.isActive("suite"),
+            control: (
+              <BuildFilterSelect
+                label="Suite"
+                value={suiteValue}
+                onValueChange={handleSuiteChange}
+                options={suiteOptions}
+              />
+            ),
+          },
+          {
+            id: "priority",
+            label: "Priority",
+            active: listFilters.isActive("priority"),
+            control: (
+              <BuildFilterSelect
+                label="Priority"
+                value={priorityValue}
+                onValueChange={handlePriorityChange}
+                options={PRIORITY_OPTIONS}
+              />
+            ),
+          },
+          {
+            id: "automationStatus",
+            label: "Automation",
+            active: listFilters.isActive("automationStatus"),
+            control: (
+              <BuildFilterSelect
+                label="Automation"
+                value={automationStatusValue}
+                onValueChange={handleAutomationStatusChange}
+                options={AUTOMATION_STATUS_OPTIONS}
+              />
+            ),
+          },
+        ]}
+        onClearAll={listFilters.clearAll}
+      />
 
-      <PageState
-        resolution={pageState}
-        loading={
-          <DataTableSkeleton mobileCards
-            rows={12}
-            headers={TEST_CASE_TABLE_HEADERS}
-            className="flex-1"
-          />
-        }
+      {selectedIds.size > 0 ? (
+        <QaBulkActionBar
+          projectId={projectId}
+          selectedIds={selectedIds}
+          onClear={handleClearSelection}
+        />
+      ) : null}
+
+      <BuildListSurface<TestCase>
+        permission="build:qa:view"
+        rows={cases}
+        columns={columns}
+        isLoading={isLoading}
+        isError={isError}
+        error={error}
+        isFiltered={listFilters.isFiltered}
+        getRowKey={(row) => row.id}
+        mobileCard={renderMobileCard}
+        selection={{
+          selected: selectedIds,
+          onChange: setSelectedIds,
+          getRowLabel: (row) => row.title,
+        }}
+        pagination={{
+          mode: "cursor",
+          pageSize: CASE_PAGE_SIZE,
+          pageNumber,
+          hasMore: casesPage?.hasMore ?? false,
+          hasPrevious,
+          onNext: handleNextPage,
+          onPrevious: goPrevious,
+        }}
         empty={
           <EmptyState
             illustrationPreset="ticket"
             title="No test cases"
             description="Create a test case to get started."
-            filtersActive={listFilters.isFiltered}
-            onClearFilters={listFilters.clearAll}
             action={
               canManage
                 ? { label: "New Test Case", onClick: handleNewCase }
                 : undefined
             }
-            className="flex-1"
+            className={CONTENT_FILL_PANEL}
           />
         }
+        filteredEmpty={
+          <EmptyState
+            illustrationPreset="ticket"
+            title="No test cases match your filters"
+            description="Try clearing the filters to see more."
+            onClearFilters={listFilters.clearAll}
+            className={CONTENT_FILL_PANEL}
+          />
+        }
+        loadingHeaders={TEST_CASE_TABLE_HEADERS}
+        loadingRows={12}
         onRetry={handleRetry}
-        className="flex-1 min-h-0"
-      >
-        <DataTable<TestCase>
-          data={cases}
-          columns={columns}
-          getRowKey={(row) => row.id}
-          mobileCard={renderMobileCard}
-          className="flex-1 min-h-0"
-          pagination={{
-            mode: "cursor",
-            pageSize: CASE_PAGE_SIZE,
-            hasMore: casesPage?.hasMore ?? false,
-            hasPrevious,
-            onNext: handleNextPage,
-            onPrevious: goPrevious,
-          }}
-        />
-      </PageState>
+      />
 
       <TestCaseSheet
         projectId={projectId}

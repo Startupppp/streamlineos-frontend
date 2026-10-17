@@ -73,14 +73,16 @@ export function HrQueueCard({
         <p className="flex-1 min-w-0 text-xs text-muted-foreground truncate">
           {label} — {getErrorMessage(new Error("unavailable"))}
         </p>
-        <button
+        <Button
           type="button"
+          variant="link"
+          size="sm"
           onClick={onRetry}
-          className="shrink-0 text-micro text-status-info-ink hover:underline flex items-center gap-0.5"
+          className="h-auto shrink-0 gap-1 p-0 text-micro text-status-info-ink"
         >
           <RefreshCcw className="h-3 w-3" />
           Retry
-        </button>
+        </Button>
       </div>
     );
   }
@@ -166,11 +168,11 @@ export function OpsInboxCard({
 
   return (
     <Link
-      href="/hr/service-delivery"
+      href="/hr/cases"
       className="group block rounded-xl border border-border/70 bg-card p-4 transition-all hover:-translate-y-0.5 hover:shadow-md hover:border-border focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
     >
       <div className="flex items-center justify-between mb-2.5">
-        <p className="text-sm font-semibold text-foreground">Service delivery inbox</p>
+        <p className="text-sm font-semibold text-foreground">People Ops queue</p>
         <span
           className={cn(
             "inline-flex h-6 min-w-[1.5rem] items-center justify-center rounded-full px-1.5 text-xs font-bold",

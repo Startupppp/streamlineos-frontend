@@ -2,16 +2,12 @@
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
+import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
 import { lazyContract } from "@/lib/api-envelope";
 import { payrollQueryKeys } from "@/lib/query-keys/payroll";
 import { useCan } from "@/hooks/api/access";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import type { RunEmployee, RunEmployeeDetail, VarianceData } from "@/types/payroll/runs";
-
-interface RunEmployeesPage {
-  data: RunEmployee[];
-  pagination: { limit: number; nextCursor: string | null; hasMore: boolean };
-}
 
 const runListEmployeesC = lazyContract(() =>
   import("@/hooks/api/payroll/run-employees-schema").then((m) => m.runListEmployeesResponseContract),
@@ -21,6 +17,12 @@ const runEmployeeDetailC = lazyContract(() =>
 );
 const runVarianceC = lazyContract(() =>
   import("@/hooks/api/payroll/run-employees-schema").then((m) => m.runVarianceResponseContract),
+);
+const releaseHoldC = lazyContract(() =>
+  import("@/hooks/api/payroll/publications-schema").then((m) => m.publishResponseContract),
+);
+const voidAdjustmentC = lazyContract(() =>
+  import("@/hooks/api/cursor-page-schema").then((m) => m.noContentContract),
 );
 const addAdjustmentC = lazyContract(() =>
   import("@/hooks/api/payroll/run-employees-schema").then((m) => m.addAdjustmentResponseContract),
@@ -47,6 +49,7 @@ export function useRunEmployees(
       ),
     staleTime: 30_000,
     enabled: canView && runId > 0,
+    ...INLINE_READ_ERROR,
   });
 }
 
@@ -68,6 +71,7 @@ export function useRunVariance(runId: number) {
     queryFn: ({ signal }) => apiClient.get<VarianceData>(`/payroll/runs/${runId}/variance`, undefined, signal, runVarianceC),
     staleTime: 60_000,
     enabled: canView && runId > 0,
+    ...INLINE_READ_ERROR,
   });
 }
 
@@ -83,6 +87,23 @@ export function useAddAdjustment(runId: number, runEmployeeId: number) {
   });
 }
 
+export function useVoidAdjustment(runId: number, runEmployeeId: number) {
+  const qc = useQueryClient();
+  return useAuthorizedMutation("payroll:runs:manage", {
+    mutationKey: ["payroll", "run-employees", runId, runEmployeeId, "adjustment", "void"],
+    mutationFn: (adjustmentId: number) =>
+      apiClient.delete<void>(
+        `/payroll/runs/${runId}/employees/${runEmployeeId}/adjustments/${adjustmentId}`,
+        undefined, undefined, voidAdjustmentC,
+      ),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: payrollQueryKeys.payroll.runEmployee(runId, runEmployeeId) });
+      void qc.invalidateQueries({ queryKey: payrollQueryKeys.payroll.runEmployeesAll(runId) });
+      void qc.invalidateQueries({ queryKey: payrollQueryKeys.payroll.run(runId) });
+    },
+  });
+}
+
 export function useSetEmployeeHold(runId: number, runEmployeeId: number) {
   const qc = useQueryClient();
   return useAuthorizedMutation("payroll:runs:manage", {
@@ -93,6 +114,24 @@ export function useSetEmployeeHold(runId: number, runEmployeeId: number) {
       void qc.invalidateQueries({ queryKey: payrollQueryKeys.payroll.runEmployeesAll(runId) });
       void qc.invalidateQueries({ queryKey: payrollQueryKeys.payroll.run(runId) });
       void qc.invalidateQueries({ queryKey: payrollQueryKeys.payroll.runExceptionsAll(runId) });
+      void qc.invalidateQueries({ queryKey: payrollQueryKeys.payroll.commandCenterAll });
+    },
+  });
+}
+
+export function useReleaseEmployeeHold(runId: number, runEmployeeId: number) {
+  const qc = useQueryClient();
+  return useAuthorizedMutation("payroll:runs:manage", {
+    mutationKey: ["payroll", "run-employees", runId, runEmployeeId, "release"],
+    mutationFn: () =>
+      apiClient.post(`/payroll/runs/${runId}/employees/${runEmployeeId}/release`, undefined, undefined, releaseHoldC),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: payrollQueryKeys.payroll.runEmployeesAll(runId) });
+      void qc.invalidateQueries({ queryKey: payrollQueryKeys.payroll.run(runId) });
+      void qc.invalidateQueries({ queryKey: [...payrollQueryKeys.payroll.all, "runs"] });
+      void qc.invalidateQueries({ queryKey: payrollQueryKeys.payroll.runPublications(runId) });
+      void qc.invalidateQueries({ queryKey: payrollQueryKeys.payroll.runExceptionsAll(runId) });
+      void qc.invalidateQueries({ queryKey: payrollQueryKeys.payroll.essPayslips() });
       void qc.invalidateQueries({ queryKey: payrollQueryKeys.payroll.commandCenterAll });
     },
   });

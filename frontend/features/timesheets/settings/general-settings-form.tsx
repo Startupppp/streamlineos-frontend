@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo } from "react";
-import { useForm, useWatch } from "react-hook-form";
+import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -139,15 +139,13 @@ export function GeneralSettingsForm() {
     },
   });
 
-  const { control, reset, setError, clearErrors } = form;
+  const { reset, setError, clearErrors } = form;
 
-  const watched = useWatch({ control });
+  const formValues = form.watch();
   const pendingMaterial = useMemo(() => {
     if (!settings) return [];
-    return materialChangesIn(
-      buildChanges(watched as GeneralSettingsFormValues, settings),
-    );
-  }, [watched, settings]);
+    return materialChangesIn(buildChanges(formValues, settings));
+  }, [formValues, settings]);
 
   useEffect(() => {
     if (settings) form.reset(toFormValues(settings));

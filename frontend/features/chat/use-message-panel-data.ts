@@ -4,11 +4,14 @@ import { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import {
-  useChatChannel, useChatMessages, useMarkChannelRead,
-  useSendMessage, useDeleteMessage, useEditMessage, useChatOnlineUsers,
-  useChatOrgUsers, useToggleReaction, useChatPins, usePinMessage,
-  useUnpinMessage, useSavedMessages, useSaveMessage, useUnsaveMessage,
-} from "@/hooks/api/chat";
+  useChatChannel, useChatMessages, useChatOnlineUsers, useChatOrgUsers,
+} from "@/hooks/api/chat-core-read";
+import {
+  useSendMessage, useDeleteMessage, useEditMessage, useMarkChannelRead,
+} from "@/hooks/api/chat-core-mutations-a";
+import { useToggleReaction } from "@/hooks/api/chat-core-mutations-b";
+import { useChatPins, usePinMessage, useUnpinMessage } from "@/hooks/api/chat-search";
+import { useSavedMessages, useSaveMessage, useUnsaveMessage } from "@/hooks/api/chat-personal-a";
 import { useChatPollReconciliation } from "./use-chat-poll-reconciliation";
 import { orgScopedStorageKey, useOrgStorageScope } from "@/lib/org-scoped-storage";
 import { useChatRealtime } from "@/hooks/api/chat-realtime";
@@ -27,7 +30,12 @@ import type { ForwardableMessage } from "./forward-message-dialog";
 import { useChatMentions } from "./use-chat-mentions";
 import { useChatTypingText } from "./use-chat-typing-text";
 import { useMessageComposer } from "./use-message-composer";
-import { findOwnMember, resolveDirectPartner } from "./channel-member-lookup";
+import { resolveDirectPartner } from "./channel-member-lookup";
+import { flattenMessagePages } from "./message-page-merge";
+import { resolveFirstUnreadIndex } from "./chat-read-position";
+import { useChatReadMarker } from "./use-chat-read-marker";
+import { useChatOfflineQueue } from "./use-chat-offline-queue";
+import { useHuddleAutoStart } from "./use-huddle-auto-start";
 
 export interface MessagePanelProps {
   channelId: number;
@@ -39,14 +47,18 @@ export interface MessagePanelProps {
   onAutoStartHandled?: () => void;
   isSidebarCollapsed?: boolean;
   onToggleSidebar?: () => void;
+  scrollToMessageId?: number | null;
 }
 
 export function useMessagePanelData({
   channelId, currentUserId, onBack, onToggleInfo, showInfoPanel,
   autoStartCall, onAutoStartHandled, isSidebarCollapsed, onToggleSidebar,
+  scrollToMessageId,
 }: MessagePanelProps) {
   const scope = useOrgStorageScope();
   const draftKey = orgScopedStorageKey(`chat:draft:${channelId}`, scope);
+  const draftKeyRef = useRef(draftKey);
+  draftKeyRef.current = draftKey;
   const { data: channel } = useChatChannel(channelId);
   const {
     data: messagesData,
@@ -77,6 +89,7 @@ export function useMessagePanelData({
   const lastTypingSent = useRef(0);
   const { isConnected: ablyConnected, typingUsers, publishTyping } = useChatRealtime(channelId);
   const { isConnected: ablySocketConnected } = useAblyConnection();
+
   useHuddleRealtime(channelId);
   const { data: activeHuddle } = useActiveHuddle(channelId);
   const startHuddle = useStartHuddle();
@@ -105,29 +118,22 @@ export function useMessagePanelData({
   const typingText = useChatTypingText(typingUsers);
 
   const [threadMessageId, setThreadMessageId] = useState<number | null>(null);
-  const autoStartHandledRef = useRef(false);
-  const markReadCalledRef = useRef<number | null>(null);
-  const joinHuddleCalledRef = useRef<number | null>(null);
 
-  useEffect(() => {
-    if (!autoStartCall) {
-      autoStartHandledRef.current = false;
-      return;
-    }
-    if (autoStartHandledRef.current) return;
-    autoStartHandledRef.current = true;
-    if (activeHuddle) {
-      joinHuddle.mutate({ huddleId: activeHuddle.id, channelId });
-    } else {
-      startHuddle.mutate(channelId);
-    }
-    onAutoStartHandled?.();
-  }, [autoStartCall, channelId, activeHuddle, startHuddle, joinHuddle, onAutoStartHandled]);
+  useHuddleAutoStart({
+    channelId,
+    autoStartCall,
+    onAutoStartHandled,
+    activeHuddle,
+    isInHuddle,
+    startHuddle,
+    joinHuddle,
+  });
 
   const [showSavedPanel, setShowSavedPanel] = useState(false);
   const [showFilesPanel, setShowFilesPanel] = useState(false);
   const [forwardMessage, setForwardMessage] = useState<ForwardableMessage | null>(null);
-  const [isOnline, setIsOnline] = useState(true);
+  const flushQueueRef = useRef<() => Promise<void>>(async () => undefined);
+  const { isOnline } = useChatOfflineQueue(flushQueueRef);
 
   const { data: orgUsers } = useChatOrgUsers();
   const chatUserMap = useMemo(() => buildChatUserMap(orgUsers), [orgUsers]);
@@ -137,81 +143,40 @@ export function useMessagePanelData({
     [chatUserMap],
   );
   const scrollToBottomRef = useRef<(behavior?: ScrollBehavior) => void>(() => undefined);
-  const { messageInput, setMessageInput, replyTo, setReplyTo, editingMessage, setEditingMessage, editInput, setEditInput, pendingAttachments, setPendingAttachments, uploading, showEmojiPicker, setShowEmojiPicker, showMentions, setShowMentions, mentionQuery, setMentionQuery, mentionIndex, setMentionIndex, showTicketPicker, setShowTicketPicker, ticketQuery, setTicketQuery, ticketSelectedIndex, setTicketSelectedIndex, inputRef, fileInputRef, emojiRef, messageQueue, pendingEntitiesRef, pendingMentionsRef, setFilteredMentions, handleFileSelect, handlePastedFiles, insertEmoji, insertMention, insertTicket, handleSend, handleEdit, handleInputChange, handleKeyDown } = useMessageComposer({ channelId, draftKey, isOnline, sendMessage, editMessage, markRead, scrollToBottom: (behavior) => scrollToBottomRef.current(behavior), publishTyping, filteredMentions: [] });
+  const { messageInput, setMessageInput, replyTo, setReplyTo, editingMessage, setEditingMessage, editInput, setEditInput, pendingAttachments, setPendingAttachments, uploading, showEmojiPicker, setShowEmojiPicker, showMentions, setShowMentions, mentionQuery, setMentionQuery, mentionIndex, setMentionIndex, showTicketPicker, setShowTicketPicker, ticketQuery, setTicketQuery, ticketSelectedIndex, setTicketSelectedIndex, inputRef, fileInputRef, emojiRef, pendingEntitiesRef, pendingMentionsRef, setFilteredMentions, handleFileSelect, handlePastedFiles, insertEmoji, insertMention, insertTicket, handleSend, handleEdit, handleInputChange, handleKeyDown, flushMessageQueue } = useMessageComposer({ channelId, draftKey, isOnline, sendMessage, editMessage, markRead, scrollToBottom: (behavior) => scrollToBottomRef.current(behavior), publishTyping, filteredMentions: [] });
+  useEffect(() => {
+    flushQueueRef.current = flushMessageQueue;
+  }, [flushMessageQueue]);
 
   useEffect(() => {
+    const key = draftKeyRef.current;
     if (messageInput) {
-      localStorage.setItem(draftKey, messageInput);
+      localStorage.setItem(key, messageInput);
     } else {
-      localStorage.removeItem(draftKey);
+      localStorage.removeItem(key);
     }
-  }, [draftKey, messageInput]);
+  }, [messageInput]);
 
   const { filtered: filteredMentions } = useChatMentions({ orgUsers, channel, currentUserId, query: mentionQuery });
   setFilteredMentions(filteredMentions);
 
   useEffect(() => {
     const handler = (e: MouseEvent) => {
-      if (emojiRef.current && !emojiRef.current.contains(e.target as Node))
+      if (
+        emojiRef.current &&
+        e.target instanceof Node &&
+        !emojiRef.current.contains(e.target)
+      )
         setShowEmojiPicker(false);
     };
     if (showEmojiPicker) document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
   }, [showEmojiPicker]);
 
-  useEffect(() => {
-    const goOnline = async () => {
-      setIsOnline(true);
-      const queued = [...messageQueue.current];
-      messageQueue.current = [];
-      for (const msg of queued) {
-        try {
-          await sendMessage.mutateAsync({
-            channelId,
-            // Minted when the message was queued, so two `online` events — or a
-            // reconnect that races the send — replay the winner rather than
-            // inserting the message twice.
-            clientKey: msg.clientKey,
-            content: msg.content,
-            replyToId: msg.replyToId,
-            attachments: msg.attachments,
-            metadata: msg.metadata,
-          });
-        } catch {}
-      }
-    };
-    const goOffline = () => setIsOnline(false);
-    window.addEventListener("online", goOnline);
-    window.addEventListener("offline", goOffline);
-    setIsOnline(navigator.onLine);
-    return () => {
-      window.removeEventListener("online", goOnline);
-      window.removeEventListener("offline", goOffline);
-    };
-  }, [channelId]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  useEffect(() => {
-    if (joinHuddleCalledRef.current === channelId) return;
-    const params = new URLSearchParams(window.location.search);
-    if (params.get("joinHuddle") === "1" && activeHuddle && !isInHuddle) {
-      joinHuddleCalledRef.current = channelId;
-      joinHuddle.mutate({ huddleId: activeHuddle.id, channelId });
-      const url = new URL(window.location.href);
-      url.searchParams.delete("joinHuddle");
-      window.history.replaceState({}, "", url.toString());
-    }
-  }, [activeHuddle, channelId]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  const messages: Message[] = useMemo(() => {
-    const all =
-      ([...(messagesData?.pages ?? [])].reverse().flatMap((p) => p.messages) as Message[]) ?? [];
-    const seen = new Set<number>();
-    return all.filter((msg) => {
-      if (seen.has(msg.id)) return false;
-      seen.add(msg.id);
-      return true;
-    });
-  }, [messagesData]);
+  const messages = useMemo(
+    () => flattenMessagePages(messagesData),
+    [messagesData],
+  );
 
   const [renderPages, setRenderPages] = useState(1);
   useEffect(() => {
@@ -242,12 +207,11 @@ export function useMessagePanelData({
     refetchHistory: refetchMessages,
   });
 
-  useEffect(() => {
-    if (channelId > 0 && markReadCalledRef.current !== channelId) {
-      markReadCalledRef.current = channelId;
-      markRead.mutate({ channelId });
-    }
-  }, [channelId]); // eslint-disable-line react-hooks/exhaustive-deps
+  useChatReadMarker({
+    channelId,
+    newestMessageId: messages.at(-1)?.id,
+    markRead,
+  });
 
   const { scrollContainerRef, messagesEndRef, showScrollBtn, scrollToBottom, handleScroll } = useChatScroll({
     channelId,
@@ -367,15 +331,10 @@ export function useMessagePanelData({
     startHuddle.mutate(channelId);
   }, [activeHuddle, channelId, joinHuddle, startHuddle]);
 
-  const firstUnreadIndex = useMemo(() => {
-    const currentMember = findOwnMember(channel?.members, currentUserId);
-    const lastReadAt = currentMember?.lastReadAt;
-    if (!lastReadAt) return -1;
-    const lastReadTime = new Date(lastReadAt).getTime();
-    return messages.findIndex(
-      (m) => m.createdAt && new Date(m.createdAt).getTime() > lastReadTime,
-    );
-  }, [messages, channel, currentUserId]);
+  const firstUnreadIndex = useMemo(
+    () => resolveFirstUnreadIndex(messages, channel?.members, currentUserId),
+    [messages, channel, currentUserId],
+  );
 
   const firstUnreadMessageId =
     firstUnreadIndex >= 0 ? messages[firstUnreadIndex]?.id : undefined;
@@ -445,7 +404,7 @@ export function useMessagePanelData({
   return {
     header: { onBack, displayName, channel, otherMember, isOtherOnline, memberCount, activeHuddle, isInHuddle, onHuddle: handleHuddle, huddleStartPending: startHuddle.isPending, huddleJoinPending: joinHuddle.isPending, canUseAi, summarizeAction, channelId, onToggleFiles: handleToggleFiles, onToggleSaved: handleToggleSaved, showFilesPanel, showSavedPanel, onToggleInfo, showInfoPanel, isSidebarCollapsed, onToggleSidebar },
     workspace: {
-      messageList: { groupedMessages, messages, isLoading, isError: messagesError, errorMessage: messagesError ? getErrorMessage(messagesErrorValue) : undefined, onRetry: handleRetryMessages, hasNextPage: hasNextPage || hasOlderHeld, isFetchingNextPage, fetchNextPage: handleLoadOlder, currentUserId, channelId, displayName, channelType: channel?.type, editingMessage, editInput, pinnedMessageIds, savedMessageIds, replyCountMap, firstUnreadMessageId, onEditInputChange: setEditInput, onStartEdit: handleStartEdit, onCancelEdit: handleCancelEdit, onSaveEdit: handleEdit, onReply: handleReply, onOpenThread: handleOpenThread, onDelete: handleDelete, onReact: handleReact, onPin: handlePin, onUnpin: handleUnpin, onSave: handleSave, onUnsaveMsg: handleUnsaveMsg, onForward: handleForward, resolveUserName, showScrollBtn, scrollToBottom: handleScrollToBottom, messagesEndRef, scrollContainerRef, onScroll: handleScroll },
+      messageList: { groupedMessages, messages, isLoading, isError: messagesError, errorMessage: messagesError ? getErrorMessage(messagesErrorValue) : undefined, onRetry: handleRetryMessages, hasNextPage: hasNextPage || hasOlderHeld, isFetchingNextPage, fetchNextPage: handleLoadOlder, currentUserId, channelId, displayName, channelType: channel?.type, editingMessage, editInput, pinnedMessageIds, savedMessageIds, replyCountMap, firstUnreadMessageId, onEditInputChange: setEditInput, onStartEdit: handleStartEdit, onCancelEdit: handleCancelEdit, onSaveEdit: handleEdit, onReply: handleReply, onOpenThread: handleOpenThread, onDelete: handleDelete, onReact: handleReact, onPin: handlePin, onUnpin: handleUnpin, onSave: handleSave, onUnsaveMsg: handleUnsaveMsg, onForward: handleForward, resolveUserName, showScrollBtn, scrollToBottom: handleScrollToBottom, messagesEndRef, scrollContainerRef, onScroll: handleScroll, scrollToMessageId },
       messageInput: { channelId, displayName, channelType: channel?.type, messageInput, setMessageInput, inputRef, fileInputRef, replyTo, setReplyTo, pendingAttachments, setPendingAttachments, uploading, onFileSelect: handleFileSelect, showEmojiPicker, setShowEmojiPicker, emojiRef, insertEmoji, showMentions, setShowMentions, mentionQuery, mentionIndex, setMentionIndex, filteredMentions, insertMention, showTicketPicker, ticketQuery, ticketSelectedIndex, onTicketSelect: insertTicket, typingText, sendMessage, onSend: handleSend, onKeyDown: handleKeyDown, onInputChange: handleInputChange, onFilesSelected: handlePastedFiles },
       huddle: activeHuddle && isInHuddle ? { huddle: activeHuddle, channelId, currentUserId } : undefined,
     },

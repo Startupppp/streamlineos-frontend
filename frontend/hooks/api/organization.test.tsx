@@ -2,8 +2,12 @@ import type { ReactNode } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { act, renderHook } from "@testing-library/react";
 import { apiClient } from "@/lib/api-client";
-import { useDeleteOrg } from "./organization";
+import { platformCoreQueryKeys } from "@/lib/query-keys/platform-core";
+import type { OrgSettings } from "@/types/organization";
+import { useDeleteOrg, useUpdateOrgSettings } from "./organization";
 import { useBulkDeleteLeads } from "./leads";
+import { useCreateOrgCostCenter } from "./org-hierarchy";
+import { platformHierarchyQueryKeys } from "@/lib/query-keys/platform-hierarchy";
 
 jest.mock("@/hooks/api/access", () => ({
   useAccess: jest.fn(() => ({ data: { scopes: {}, modules: {}, isOrgOwner: false }, refetch: jest.fn() })),
@@ -14,6 +18,8 @@ jest.mock("@/hooks/api/access", () => ({
 jest.mock("@/lib/api-client", () => ({
   apiClient: {
     delete: jest.fn(),
+    patch: jest.fn(),
+    post: jest.fn(),
   },
   setAutoSignOutSuppressed: jest.fn(),
 }));
@@ -62,5 +68,45 @@ describe("organization mutations", () => {
       undefined,
       expect.any(Function),
     );
+  });
+
+  it("ORG-B-014: settles the settings save on the PATCH response with the cache patched, not after the slow refetch", async () => {
+    (apiClient.patch as jest.Mock).mockResolvedValue({ success: true });
+    const client = new QueryClient({ defaultOptions: { mutations: { retry: false } } });
+    const key = platformCoreQueryKeys.organization.settings();
+    const stored: Partial<OrgSettings> = { id: "org-1", name: "Old name", industry: "Retail" };
+    client.setQueryData(key, stored);
+    const invalidate = jest
+      .spyOn(client, "invalidateQueries")
+      .mockImplementation(() => new Promise<void>(() => undefined));
+    function sharedWrapper({ children }: { children: ReactNode }) {
+      return <QueryClientProvider client={client}>{children}</QueryClientProvider>;
+    }
+    const { result } = renderHook(() => useUpdateOrgSettings(), { wrapper: sharedWrapper });
+
+    await act(async () => {
+      await result.current.mutateAsync({ name: "New name", website: undefined });
+    });
+
+    expect(invalidate).toHaveBeenCalled();
+    expect(client.getQueryData<OrgSettings>(key)).toMatchObject({ name: "New name", industry: "Retail" });
+  });
+
+  it("ORG-B-014: settles a hierarchy create on the POST response instead of waiting for every hierarchy list to refetch", async () => {
+    (apiClient.post as jest.Mock).mockResolvedValue({ id: "cc-1", name: "Ops", code: "OPS" });
+    const client = new QueryClient({ defaultOptions: { mutations: { retry: false } } });
+    const invalidate = jest
+      .spyOn(client, "invalidateQueries")
+      .mockImplementation(() => new Promise<void>(() => undefined));
+    function sharedWrapper({ children }: { children: ReactNode }) {
+      return <QueryClientProvider client={client}>{children}</QueryClientProvider>;
+    }
+    const { result } = renderHook(() => useCreateOrgCostCenter(), { wrapper: sharedWrapper });
+
+    await act(async () => {
+      await result.current.mutateAsync({ name: "Ops", code: "OPS" });
+    });
+
+    expect(invalidate).toHaveBeenCalledWith({ queryKey: platformHierarchyQueryKeys.hierarchy.all });
   });
 });

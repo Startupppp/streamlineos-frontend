@@ -1,6 +1,6 @@
 "use client";
 
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
 import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
@@ -19,7 +19,6 @@ const noContentContract = lazyContract(() =>
   import("@/hooks/api/cursor-page-schema").then((m) => m.noContentContract),
 );
 
-export type { AgentToken, CreateAgentTokenResponse } from "@/hooks/api/build/agent-tokens-schema";
 
 export function useAgentTokens() {
   const canView = useCan("settings:api-tokens:read");

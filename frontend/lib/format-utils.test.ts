@@ -112,6 +112,23 @@ describe("formatCurrencyFull — full-precision formatter", () => {
     const result = formatCurrencyFull(1234.5678, "USD", "en-US", 4);
     expect(result).toContain("5678");
   });
+
+  /**
+   * `minimumFractionDigits` was pinned at 2 while the caller chose the maximum,
+   * so asking for whole units threw `RangeError: maximumFractionDigits value is
+   * out of range` rather than rounding. Two call sites did ask for 0 — the
+   * public offer page and a payroll column — and the offer page took its whole
+   * React tree down with it for any offer carrying a salary.
+   */
+  it("rounds to whole units when asked for zero fraction digits, instead of throwing", () => {
+    const result = formatCurrencyFull(2_400_000, "INR", "en-IN", 0);
+    expect(result).toContain("24,00,000");
+    expect(result).not.toContain(".00");
+  });
+
+  it("still shows two decimals when no maximum is asked for", () => {
+    expect(formatCurrencyFull(1234.5, "USD", "en-US")).toContain("1,234.50");
+  });
 });
 
 describe("formatCurrencyForBilling — billing-only formatter", () => {
@@ -306,6 +323,38 @@ describe("formatAmountInCurrency — a stored row renders in the currency it sto
 
   it("renders a non-numeric amount as zero instead of NaN", () => {
     expect(formatAmountInCurrency("not-a-number", "USD")).not.toContain("NaN");
+  });
+});
+
+describe("formatINRCompact — truncation prevents rounding overflow (B-052)", () => {
+  it("does not round 9.9Cr up to 10Cr when the raw value is 999,99,999", () => {
+    const result = formatINRCompact(9_99_99_999);
+    expect(result).toBe("₹9.9Cr");
+    expect(result).not.toContain("10");
+  });
+
+  it("does not round 9.9L up to 10L at the lakh boundary", () => {
+    const result = formatINRCompact(9_99_999);
+    expect(result).toBe("₹9.9L");
+    expect(result).not.toContain("10");
+  });
+
+  it("does not round 99.9K up to 100K when the raw value is 99,999", () => {
+    const result = formatINRCompact(99_999);
+    expect(result).toBe("₹99.9K");
+    expect(result).not.toBe("₹100K");
+  });
+
+  it("shows a round number without a decimal point", () => {
+    expect(formatINRCompact(1_00_00_000)).toBe("₹1Cr");
+    expect(formatINRCompact(5_00_000)).toBe("₹5L");
+    expect(formatINRCompact(10_000)).toBe("₹10K");
+  });
+
+  it("matches the parity test values that formatMoneyCompact emits for INR", () => {
+    expect(formatINRCompact(12_300_000)).toBe("₹1.2Cr");
+    expect(formatINRCompact(340_000)).toBe("₹3.4L");
+    expect(formatINRCompact(12_000)).toBe("₹12K");
   });
 });
 

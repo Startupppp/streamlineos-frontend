@@ -14,6 +14,8 @@ export const employeeListItemContract = z.object({
   isActive: z.boolean(),
   joiningDate: z.string().nullable(),
   reportingTo: z.string().nullable(),
+  reportingToName: z.string().nullable(),
+  hasAccepted: z.boolean().optional(),
 });
 
 export const employeeListPageContract = z.object({
@@ -27,5 +29,7 @@ export const employeeListPageContract = z.object({
 
 export const employeeCountsContract = z.object({
   active: z.number().int(),
+  /** Invited, account created, never accepted. Split out of `active`. */
+  pending: z.number().int(),
   inactive: z.number().int(),
 });

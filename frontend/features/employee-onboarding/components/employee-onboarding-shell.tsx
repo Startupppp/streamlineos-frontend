@@ -11,6 +11,8 @@ import {
 import type { EmployeePreviewSnapshot } from "../lib/preview-snapshot";
 import { StepRail } from "./step-rail";
 import { MobileProgressBar } from "./mobile-progress-bar";
+import { AdminDeferBanner } from "./admin-defer-banner";
+import { MemberOnboardingNote } from "./onboarding-standing-notices";
 import { BrandColumn } from "./brand-column";
 
 type EmployeeOnboardingShellProps = {
@@ -80,6 +82,16 @@ export function EmployeeOnboardingShell({
               {STEP_SUBTITLES[currentStepId]}
             </p>
           </div>
+
+          {/* HRMS-E2E-020. In the header rather than on one step, because every
+              /hr URL redirects here: an administrator must be able to leave from
+              wherever the wizard put them, not only from the last page of it. */}
+          <AdminDeferBanner />
+
+          {/* V-034. The other half of the same question: the banner above
+              renders nothing for somebody who may not defer, which left them
+              redirected here with no explanation. */}
+          <MemberOnboardingNote />
         </>
       }
     >

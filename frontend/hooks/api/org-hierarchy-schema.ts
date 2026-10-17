@@ -177,7 +177,7 @@ export const hierarchyTreeContract = z.array(
 export const dependencyPreviewContract = z.object({
   unitId: z.string(),
   unitKind: z.enum(["BUSINESS_UNIT", "BRANCH", "DEPARTMENT", "TEAM", "LOCATION", "COST_CENTER"]),
-  mode: z.enum(["archive", "retire"]),
+  mode: z.enum(["archive", "retire"]).catch("archive"),
   dependencies: z.array(z.object({
     key: z.string(),
     label: z.string(),

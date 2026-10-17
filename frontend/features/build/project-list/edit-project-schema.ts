@@ -1,10 +1,11 @@
 import { z } from "zod";
+import { projectNameSchema } from "@/lib/validation/projects";
 
 export const PROJECT_STATUSES = ["ACTIVE", "COMPLETED", "ARCHIVED"] as const;
-export const PROJECT_PRIORITIES = ["LOW", "MEDIUM", "HIGH", "URGENT"] as const;
+const PROJECT_PRIORITIES = ["LOW", "MEDIUM", "HIGH", "URGENT"] as const;
 
 export const editProjectSchema = z.object({
-  name: z.string().min(2, "Name must be at least 2 characters"),
+  name: projectNameSchema,
   description: z.string().optional(),
   status: z.enum(PROJECT_STATUSES),
   priority: z.enum(PROJECT_PRIORITIES).optional(),

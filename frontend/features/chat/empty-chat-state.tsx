@@ -1,8 +1,12 @@
 "use client";
 
-import { Plus, Hash, Search } from "lucide-react";
+import { PlusIcon, SearchIcon, UsersIcon } from "@animateicons/react/lucide";
 import { ChatIllustration } from "@/components/illustrations";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
+import { EmptyState } from "@/components/ui/empty-state";
 import { ChannelSidebarCollapseButton } from "./channel-sidebar-collapse-button";
+
+const PANE_ACTION_CLASS = "h-11 flex-col gap-1 px-2";
 
 export function EmptyChatState({
   onNewDM,
@@ -18,41 +22,49 @@ export function EmptyChatState({
   onToggleSidebar?: () => void;
 }) {
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex h-full min-h-0 flex-col">
       {onToggleSidebar && (
-        <div className="h-[56px] px-4 border-b border-border/40 flex items-center shrink-0 bg-card/80 backdrop-blur-sm">
+        <div className="flex h-14 shrink-0 items-center border-b border-border/40 px-4">
           <ChannelSidebarCollapseButton
             isCollapsed={isSidebarCollapsed ?? false}
             onToggle={onToggleSidebar}
           />
         </div>
       )}
-      <div className="flex flex-col items-center justify-center flex-1 text-center px-6">
-        <ChatIllustration className="mb-6 h-44 w-44" />
-        <h3 className="text-lg font-bold mb-1">Welcome to Chat</h3>
-        <p className="text-label text-muted-foreground max-w-xs leading-relaxed">
-          Select a conversation or start a new one.
-        </p>
-        <div className="flex items-center gap-6 mt-5">
-          <button onClick={onNewDM} className="flex flex-col items-center gap-1.5 group">
-            <div className="h-10 w-10 rounded-xl bg-muted/40 flex items-center justify-center group-hover:bg-primary/10 group-hover:text-primary text-muted-foreground transition-colors">
-              <Plus className="h-5 w-5" />
-            </div>
-            <span className="text-dense font-medium text-muted-foreground group-hover:text-foreground transition-colors">New DM</span>
-          </button>
-          <button onClick={onNewChannel} className="flex flex-col items-center gap-1.5 group">
-            <div className="h-10 w-10 rounded-xl bg-muted/40 flex items-center justify-center group-hover:bg-primary/10 group-hover:text-primary text-muted-foreground transition-colors">
-              <Hash className="h-5 w-5" />
-            </div>
-            <span className="text-dense font-medium text-muted-foreground group-hover:text-foreground transition-colors">Channel</span>
-          </button>
-          <button onClick={onSearch} className="flex flex-col items-center gap-1.5 group">
-            <div className="h-10 w-10 rounded-xl bg-muted/40 flex items-center justify-center group-hover:bg-primary/10 group-hover:text-primary text-muted-foreground transition-colors">
-              <Search className="h-5 w-5" />
-            </div>
-            <span className="text-dense font-medium text-muted-foreground group-hover:text-foreground transition-colors">Search</span>
-          </button>
-        </div>
+      <EmptyState
+        illustration={<ChatIllustration className="h-44 w-44" />}
+        title="Choose a conversation"
+        description="Your messages and channels are in the list. Start a new one when you need it."
+        className="min-h-0 flex-1 border-0 bg-transparent px-6 shadow-none"
+      />
+      <div className="grid shrink-0 grid-cols-3 gap-2 border-t border-border/40 bg-background/95 p-3">
+        <AnimatedIconButton
+          icon={PlusIcon}
+          iconSize={18}
+          variant="outline"
+          className={PANE_ACTION_CLASS}
+          onClick={onNewDM}
+        >
+          Message
+        </AnimatedIconButton>
+        <AnimatedIconButton
+          icon={UsersIcon}
+          iconSize={18}
+          variant="outline"
+          className={PANE_ACTION_CLASS}
+          onClick={onNewChannel}
+        >
+          Channel
+        </AnimatedIconButton>
+        <AnimatedIconButton
+          icon={SearchIcon}
+          iconSize={18}
+          variant="outline"
+          className={PANE_ACTION_CLASS}
+          onClick={onSearch}
+        >
+          Search
+        </AnimatedIconButton>
       </div>
     </div>
   );

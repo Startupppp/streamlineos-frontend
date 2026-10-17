@@ -63,14 +63,14 @@ export function BuildScopeRecovery({
     >
       <div className="flex items-start gap-2">
         <TriangleAlert className="mt-0.5 h-3.5 w-3.5 shrink-0 text-status-warning-ink" />
-        <p className="text-micro leading-relaxed text-status-warning-ink">
+        <p className="text-micro leading-relaxed text-status-warning-ink-strong">
           This Build scope is no longer available to you.
         </p>
       </div>
       <Link
         href={fallback.href}
         onClick={handleClick}
-        className="text-micro font-medium text-status-warning-ink underline underline-offset-2 hover:no-underline"
+        className="text-micro font-medium text-status-warning-ink-strong underline underline-offset-2 hover:no-underline"
       >
         {fallback.label}
       </Link>

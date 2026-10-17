@@ -7,16 +7,18 @@ import {
   KbBarChart2Icon,
   KbBookOpenTextIcon,
   KbClipboardCheckIcon,
+  KbFileTextIcon,
   KbLayoutGridIcon,
   KbLayoutTemplateIcon,
   KbLockIcon,
   KbMessageSquareIcon,
   KbSearchIcon,
   KbTrash2Icon,
+  KbTriangleAlertIcon,
   KbUploadIcon,
   KbUsersIcon,
 } from "@/features/wiki/lib/kb-icons";
-import type { KbIconComponent } from "@/features/wiki/lib/kb-icons";
+import type { AnimatedNavIconComponent } from "@/components/layout/sidebar/sidebar-animated-nav";
 import {
   Accordion,
   AccordionContent,
@@ -25,7 +27,11 @@ import {
 } from "@/components/ui/accordion";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import {
   SidebarAnimatedNavIcon,
@@ -35,9 +41,12 @@ import {
   KNOWLEDGE_BASE,
   KB_ANALYTICS,
   KB_CHAT,
+  KB_COMPANY_DOCUMENTS,
   KB_IMPORT,
   KB_PRIVATE,
+  KB_MANAGE,
   KB_REVIEWS,
+  KB_SEARCH,
   KB_SHARED,
   KB_SPACES,
   KB_TEMPLATES,
@@ -49,7 +58,7 @@ const WIKI_NAV_GROUPS_KEY = "wiki-nav-groups";
 interface WikiNavItem {
   label: string;
   href: string;
-  icon: KbIconComponent;
+  icon: AnimatedNavIconComponent;
   exact?: boolean;
 }
 
@@ -63,6 +72,11 @@ interface WikiSidebarNavProps {
   isCollapsed?: boolean;
   canViewAnalytics: boolean;
   canViewReviews: boolean;
+  canManageContent: boolean;
+  canManageTemplates: boolean;
+  canImportPages: boolean;
+  canViewSpaces: boolean;
+  showCompanyDocuments?: boolean;
 }
 
 interface WikiSidebarFooterProps {
@@ -76,39 +90,86 @@ function buildAskKbItem(): WikiNavItem {
 
 function buildPrimaryItems(): WikiNavItem[] {
   return [
-    { label: "Wiki", href: KNOWLEDGE_BASE, icon: KbBookOpenTextIcon, exact: true },
+    {
+      label: "Wiki",
+      href: KNOWLEDGE_BASE,
+      icon: KbBookOpenTextIcon,
+      exact: true,
+    },
+    { label: "Search", href: KB_SEARCH, icon: KbSearchIcon },
   ];
 }
 
 function buildNavGroups({
   canViewAnalytics,
   canViewReviews,
-}: Pick<
-  WikiSidebarNavProps,
-  "canViewAnalytics" | "canViewReviews"
->): WikiNavGroup[] {
-  const manageItems: WikiNavItem[] = [
-    { label: "Templates", href: KB_TEMPLATES, icon: KbLayoutTemplateIcon },
-  ];
+  canManageContent,
+  canManageTemplates,
+  canImportPages,
+  canViewSpaces,
+  showCompanyDocuments,
+}: Omit<WikiSidebarNavProps, "isCollapsed">): WikiNavGroup[] {
+  const manageItems: WikiNavItem[] = [];
+
+  if (canManageTemplates) {
+    manageItems.push({
+      label: "Templates",
+      href: KB_TEMPLATES,
+      icon: KbLayoutTemplateIcon,
+    });
+  }
 
   if (canViewReviews) {
-    manageItems.push({ label: "Reviews", href: KB_REVIEWS, icon: KbClipboardCheckIcon });
+    manageItems.push({
+      label: "Reviews",
+      href: KB_REVIEWS,
+      icon: KbClipboardCheckIcon,
+    });
   }
 
-  manageItems.push({ label: "Import & Export", href: KB_IMPORT, icon: KbUploadIcon });
+  if (canImportPages) {
+    manageItems.push({
+      label: "Import & Export",
+      href: KB_IMPORT,
+      icon: KbUploadIcon,
+    });
+  }
 
   if (canViewAnalytics) {
-    manageItems.push({ label: "Analytics", href: KB_ANALYTICS, icon: KbBarChart2Icon });
+    manageItems.push({
+      label: "Analytics",
+      href: KB_ANALYTICS,
+      icon: KbBarChart2Icon,
+    });
   }
 
-  return [
+  if (canManageContent) {
+    manageItems.push({
+      label: "Content Health",
+      href: KB_MANAGE,
+      icon: KbTriangleAlertIcon,
+    });
+  }
+
+  const groups: WikiNavGroup[] = [
     {
       id: "library",
       label: "Library",
       items: [
-        { label: "Private", href: KB_PRIVATE, icon: KbLockIcon },
-        { label: "Shared", href: KB_SHARED, icon: KbUsersIcon },
-        { label: "Spaces", href: KB_SPACES, icon: KbLayoutGridIcon },
+        { label: "My pages", href: KB_PRIVATE, icon: KbLockIcon },
+        { label: "Shared with me", href: KB_SHARED, icon: KbUsersIcon },
+        ...(canViewSpaces
+          ? [{ label: "Spaces", href: KB_SPACES, icon: KbLayoutGridIcon }]
+          : []),
+        ...(showCompanyDocuments === true
+          ? [
+              {
+                label: "Company documents",
+                href: KB_COMPANY_DOCUMENTS,
+                icon: KbFileTextIcon,
+              },
+            ]
+          : []),
       ],
     },
     {
@@ -117,6 +178,7 @@ function buildNavGroups({
       items: manageItems,
     },
   ];
+  return groups.filter((group) => group.items.length > 0);
 }
 
 function isNavItemActive(
@@ -208,7 +270,10 @@ function WikiNavLink({
   );
 }
 
-export function WikiSidebarFooter({ isCollapsed, onQuickFind }: WikiSidebarFooterProps) {
+export function WikiSidebarFooter({
+  isCollapsed,
+  onQuickFind,
+}: WikiSidebarFooterProps) {
   const pathname = usePathname();
   const trashActive = isNavItemActive(pathname, KB_TRASH);
   const quickFindIcon = useAnimatedNavIconHover();
@@ -306,6 +371,11 @@ export default function WikiSidebarNav({
   isCollapsed = false,
   canViewAnalytics,
   canViewReviews,
+  canManageContent,
+  canManageTemplates,
+  canImportPages,
+  canViewSpaces,
+  showCompanyDocuments = false,
 }: WikiSidebarNavProps) {
   const pathname = usePathname();
   const askKbItem = useMemo(() => buildAskKbItem(), []);
@@ -315,17 +385,27 @@ export default function WikiSidebarNav({
       buildNavGroups({
         canViewAnalytics,
         canViewReviews,
+        canManageContent,
+        canManageTemplates,
+        canImportPages,
+        canViewSpaces,
+        showCompanyDocuments,
       }),
-    [canViewAnalytics, canViewReviews],
+    [
+      canViewAnalytics,
+      canViewReviews,
+      canManageContent,
+      canManageTemplates,
+      canImportPages,
+      canViewSpaces,
+      showCompanyDocuments,
+    ],
   );
   const accordionItems = useMemo(
     () => groups.flatMap((group) => group.items),
     [groups],
   );
-  const groupIds = useMemo(
-    () => groups.map((group) => group.id),
-    [groups],
-  );
+  const groupIds = useMemo(() => groups.map((group) => group.id), [groups]);
   const [openGroups, setOpenGroups] = useState(groupIds);
 
   useEffect(() => {
@@ -391,7 +471,11 @@ export default function WikiSidebarNav({
         className="mt-1 space-y-0.5"
       >
         {groups.map((group) => (
-          <AccordionItem key={group.id} value={group.id} className="border-none">
+          <AccordionItem
+            key={group.id}
+            value={group.id}
+            className="border-none"
+          >
             <AccordionTrigger className="items-center gap-2 px-2 py-1.5 text-dense font-semibold uppercase tracking-wider text-muted-foreground hover:bg-muted/60 hover:text-foreground hover:no-underline [&>svg]:size-3">
               {group.label}
             </AccordionTrigger>

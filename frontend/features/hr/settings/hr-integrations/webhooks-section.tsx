@@ -16,6 +16,8 @@ import { TooltipIconButton } from "@/components/ui/tooltip-icon-button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { ConfirmSheet } from "@/components/ui/confirm-sheet";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { useCan, useCanState } from "@/hooks/api/access";
+import { NoPermissionState } from "@/components/shared/no-permission-state";
 import {
   useHrWebhooks,
   useToggleHrWebhook,
@@ -70,6 +72,16 @@ function WebhookRow({
     }
   }, [test, sub.id]);
 
+  function handleViewDeliveries() {
+    onViewDeliveries(sub);
+  }
+  function handleEdit() {
+    onEdit(sub);
+  }
+  function handleOpenDelete() {
+    setConfirmDeleteOpen(true);
+  }
+
   return (
     <div className="flex items-start gap-4 px-4 py-3 border-b last:border-0 hover:bg-muted/20 transition-colors">
       <Switch
@@ -96,7 +108,7 @@ function WebhookRow({
           iconSize={14}
           label="View Deliveries"
           className="w-7"
-          onClick={() => onViewDeliveries(sub)}
+          onClick={handleViewDeliveries}
         />
         <Tooltip>
           <TooltipTrigger asChild>
@@ -116,7 +128,7 @@ function WebhookRow({
         <TooltipIconButton
           label="Edit"
           className="w-7"
-          onClick={() => onEdit(sub)}
+          onClick={handleEdit}
         >
           <Pencil className="h-3.5 w-3.5" />
         </TooltipIconButton>
@@ -128,7 +140,7 @@ function WebhookRow({
               className="w-7 text-destructive hover:text-destructive"
               aria-label="Delete"
               isPending={remove.isPending}
-              onClick={() => setConfirmDeleteOpen(true)}
+              onClick={handleOpenDelete}
             >
               <Trash2Icon size={14} />
             </LoadingButton>
@@ -156,6 +168,8 @@ export function WebhooksSection() {
   const [upsertOpen, setUpsertOpen] = useState(false);
   const [editing, setEditing] = useState<HrWebhookSubscription | undefined>(undefined);
   const [deliveriesSub, setDeliveriesSub] = useState<HrWebhookSubscription | undefined>(undefined);
+  const manageAccess = useCanState("hr:integrations:manage");
+  const canManage = useCan("hr:integrations:manage");
 
   const handleNew = useCallback(() => {
     setEditing(undefined);
@@ -176,6 +190,10 @@ export function WebhooksSection() {
     void refetch();
   }, [refetch]);
 
+  const handleDeliveriesOpenChange = useCallback((open: boolean) => {
+    if (!open) setDeliveriesSub(undefined);
+  }, []);
+
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between">
@@ -185,14 +203,19 @@ export function WebhooksSection() {
             Receive signed HTTPS payloads for HR events in real time.
           </p>
         </div>
-        <Button size="sm" variant="outline" onClick={handleNew} className="gap-1.5">
-          <PlusIcon size={14} />
-          Add Webhook
-        </Button>
+        {canManage && (
+          <Button type="button" size="sm" variant="outline" onClick={handleNew} className="gap-1.5">
+            <PlusIcon size={14} />
+            Add webhook
+          </Button>
+        )}
       </div>
 
       <div className="rounded-lg border divide-y-0">
-        {isLoading ? (
+        {manageAccess === "denied" ? (
+          // FE-47: the list read is disabled without the key; that is not "No webhooks configured".
+          <NoPermissionState permission="hr:integrations:manage" compact />
+        ) : isLoading || manageAccess === "loading" ? (
           <div className="p-4 space-y-3">
             {Array.from({ length: 8 }).map((_, i) => (
               <Skeleton key={i} className="h-14 w-full rounded-md" />
@@ -241,7 +264,7 @@ export function WebhooksSection() {
       {deliveriesSub && (
         <WebhookDeliveriesSheet
           open={!!deliveriesSub}
-          onOpenChange={(open) => { if (!open) setDeliveriesSub(undefined); }}
+          onOpenChange={handleDeliveriesOpenChange}
           subscription={deliveriesSub}
         />
       )}

@@ -11,7 +11,6 @@ export default function robots(): MetadataRoute.Robots {
         disallow: [
           "/api/",
           "/accounting/",
-          "/ask/",
           "/billing/",
           "/calendar/",
           "/chat/",
@@ -25,6 +24,7 @@ export default function robots(): MetadataRoute.Robots {
           "/employee-onboarding/",
           "/organization/",
           "/payroll/",
+          "/recruitment/",
           "/build/",
           "/settings/",
           "/sign/",

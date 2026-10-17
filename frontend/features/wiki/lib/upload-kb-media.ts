@@ -9,8 +9,6 @@ const kbMediaUploadContract = lazyContract(() =>
 );
 import type { UploadedEditorMedia } from '@/components/editor/plate/upload-media';
 
-export type UploadedKbMedia = UploadedEditorMedia;
-
 const IMAGE_MAX = 10 * 1024 * 1024;
 const VIDEO_MAX = 100 * 1024 * 1024;
 const AUDIO_MAX = 25 * 1024 * 1024;
@@ -61,25 +59,15 @@ function getValidationError(file: File): string | null {
   if (DOC_TYPES.has(file.type)) {
     return file.size > DOC_MAX ? 'File too large (max 25 MB).' : null;
   }
-  return `Unsupported file type: ${file.type || 'unknown'}`;
+  const extension = /\.([a-z0-9]+)$/i.exec(file.name)?.[1];
+  const kind = extension ? `.${extension.toLowerCase()} files` : 'This file type';
+  return `${kind} can't be uploaded. ${ALLOWED_TYPES_COPY}`;
 }
 
-/**
- * One idempotency key per FILE, not per attempt, released only on success.
- *
- * `POST /kb/media` is `@Idempotent`. `api-client` mints a fallback key per HTTP call so
- * the route never 400s, but a key minted per attempt is a request id wearing the wrong
- * name and makes the backend's replay inert: every retry uploads a second R2 object under
- * a fresh storage key (the `(org_id, file_key)` conflict target can never match a retry),
- * and for a document against a page it pays for a second extract and embed batch. Both
- * call sites — the editor's drop handler and the cover picker — are user-retryable after a
- * timeout, which is exactly the case the fence exists for.
- *
- * `use-idempotent-operation.ts` is the hook form of this and cannot be used here:
- * `uploadKbMedia` is a plain function called from an editor callback, not a component. The
- * key is therefore held module-scoped against the file's own identity, which is stable
- * across retries of the same upload and different for a different file.
- */
+const ALLOWED_TYPES_COPY =
+  'You can upload images (JPEG, PNG, GIF, WebP), video (MP4, WebM), audio (MP3, WAV, OGG, M4A) ' +
+  'and documents (PDF, Word, Excel, PowerPoint, CSV, TXT, ZIP).';
+
 const mediaUploadKeys = new Map<string, string>();
 
 function uploadSignature(file: File, pageId?: number): string {
@@ -94,17 +82,29 @@ function idempotencyKeyFor(signature: string): string {
   return minted;
 }
 
-export async function uploadKbMedia(file: File, pageId?: number): Promise<UploadedKbMedia> {
-  const error = getValidationError(file);
-  if (error) throw new Error(error);
+// The same file dropped again while its first upload is in flight would reuse
+// the idempotency key and get a 409 "matching request in progress"; share the
+// in-flight upload instead.
+const inFlightUploads = new Map<string, Promise<UploadedEditorMedia>>();
+
+async function sendUpload(file: File, signature: string, pageId?: number): Promise<UploadedEditorMedia> {
   const fd = new FormData();
   fd.append('file', file);
   if (pageId != null) fd.append('pageId', String(pageId));
-
-  const signature = uploadSignature(file, pageId);
-  const uploaded = await apiClient.upload<UploadedKbMedia>('/kb/media', fd, kbMediaUploadContract, {
+  const uploaded = await apiClient.upload<UploadedEditorMedia>('/kb/media', fd, kbMediaUploadContract, {
     headers: { [IDEMPOTENCY_HEADER]: idempotencyKeyFor(signature) },
   });
   mediaUploadKeys.delete(signature);
   return uploaded;
+}
+
+export function uploadKbMedia(file: File, pageId?: number): Promise<UploadedEditorMedia> {
+  const error = getValidationError(file);
+  if (error) return Promise.reject(new Error(error));
+  const signature = uploadSignature(file, pageId);
+  const pending = inFlightUploads.get(signature);
+  if (pending) return pending;
+  const upload = sendUpload(file, signature, pageId).finally(() => inFlightUploads.delete(signature));
+  inFlightUploads.set(signature, upload);
+  return upload;
 }

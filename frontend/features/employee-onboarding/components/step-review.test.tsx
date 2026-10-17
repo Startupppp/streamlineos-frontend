@@ -35,7 +35,7 @@ jest.mock("@/hooks/common/auth-hooks", () => ({
   useSessionClaimsRefresh: () => mockRefreshSessionClaims,
 }));
 
-jest.mock("@/lib/api/hooks/onboarding", () => ({
+jest.mock("@/hooks/api/onboarding/employee-onboarding", () => ({
   useSubmitOnboardingMutation: () => ({ mutateAsync: mockSubmitOnboarding }),
 }));
 
@@ -187,5 +187,54 @@ describe("StepReview — submitting writes the gate cookie and shows the celebra
     fireEvent.click(submit);
 
     expect(mockSubmitOnboarding).toHaveBeenCalledTimes(1);
+  });
+
+  it("submits the country the wizard resolved when the bank draft never stored one — BUG-019", async () => {
+    const draftMissingCountryCode: WizardDraft = {
+      ...DRAFT,
+      bank: { ...DRAFT.bank, countryCode: "" },
+    };
+    const user = userEvent.setup();
+    render(
+      <StepReview
+        completedSteps={new Set(DATA_STEP_IDS)}
+        draft={draftMissingCountryCode}
+        countryCode="IN"
+        onBack={jest.fn()}
+        onEditPersonal={jest.fn()}
+        onEditBank={jest.fn()}
+        onClearDraft={jest.fn()}
+      />,
+    );
+    await user.click(screen.getByRole("button", { name: /confirm & submit/i }));
+
+    expect(mockSubmitOnboarding).toHaveBeenCalledWith(
+      expect.objectContaining({
+        bank: expect.objectContaining({ countryCode: "IN" }),
+      }),
+    );
+  });
+
+  it("asks for a country only when neither the bank step nor the address resolved one — BUG-019 / FE-122", async () => {
+    const draftMissingCountryCode: WizardDraft = {
+      ...DRAFT,
+      bank: { ...DRAFT.bank, countryCode: "" },
+    };
+    const user = userEvent.setup();
+    render(
+      <StepReview
+        completedSteps={new Set(DATA_STEP_IDS)}
+        draft={draftMissingCountryCode}
+        countryCode=""
+        onBack={jest.fn()}
+        onEditPersonal={jest.fn()}
+        onEditBank={jest.fn()}
+        onClearDraft={jest.fn()}
+      />,
+    );
+    await user.click(screen.getByRole("button", { name: /confirm & submit/i }));
+
+    expect(mockSubmitOnboarding).not.toHaveBeenCalled();
+    expect(mockToastError).toHaveBeenCalled();
   });
 });

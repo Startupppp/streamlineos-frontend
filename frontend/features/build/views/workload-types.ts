@@ -1,8 +1,20 @@
 export type StatFilter = "all" | "assigned" | "unassigned" | "over-capacity";
 
+const WORKLOAD_GROUPS = ["none", "team"] as const;
+export type WorkloadGroup = (typeof WORKLOAD_GROUPS)[number];
+
+export function isWorkloadGroup(value: string): value is WorkloadGroup {
+  return WORKLOAD_GROUPS.some((g) => g === value);
+}
+
 export interface MemberCapacityData {
+  teams?: { id: number; name: string }[];
   capacityHours: number | null;
+  leaveDays: number;
   loggedHours: number;
+  estimateHours: number | null;
+  allocationPercent: number | null;
+  varianceHours: number | null;
   isOverAllocated: boolean;
   isZeroCapacity: boolean;
   utilizationPercent: number | null;
@@ -23,6 +35,7 @@ export interface FilterState {
   type: string;
   status: string;
   assigneeId: string;
+  teamId: string;
   showUnassigned: boolean;
 }
 
@@ -33,6 +46,7 @@ export const INITIAL_FILTERS: FilterState = {
   type: "all",
   status: "all",
   assigneeId: "all",
+  teamId: "all",
   showUnassigned: true,
 };
 
@@ -43,6 +57,7 @@ export function hasActiveWorkloadFilters(filters: FilterState): boolean {
     filters.type !== "all" ||
     filters.status !== "all" ||
     filters.assigneeId !== "all" ||
+    filters.teamId !== "all" ||
     filters.statCard !== "all"
   );
 }

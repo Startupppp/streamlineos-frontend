@@ -61,7 +61,7 @@ describe("calendar create response contract", () => {
 
   it("declares no field the backend's createEvent return does not carry", () => {
     const source = fs.readFileSync(BACKEND_SERVICE, "utf8");
-    const returned = /return \{ event, oooConflicts, eventConflicts, meetingUrl: null, syncQueued: ([^}]*)\};/.exec(
+    const returned = /return\s*\{\s*event,\s*oooConflicts,\s*eventConflicts,\s*meetingUrl:\s*null,\s*syncQueued:\s*([^}]*)\};/.exec(
       source,
     );
     // Anti-vacuity: a reshaped return means this suite's premise changed and must be

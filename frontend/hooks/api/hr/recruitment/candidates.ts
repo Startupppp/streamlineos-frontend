@@ -1,13 +1,16 @@
 "use client";
 
 import type { z } from "zod";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
 
 const noContentC = lazyContract(() =>
   import("@/hooks/api/cursor-page-schema").then((m) => m.noContentContract),
+);
+const candidateErasureC = lazyContract(() =>
+  import("@/hooks/api/hr/recruitment/candidates-schema").then((m) => m.candidateErasureContract),
 );
 import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
 import { useCan } from "@/hooks/api/access";
@@ -18,10 +21,9 @@ import type {
   AtsPipelineResponse,
   CreateCandidateInput,
   UpdateCandidateInput,
-  Interview,
 } from "@/types/hr";
-import type { CandidateSlaRecord, InterviewScorecard } from "./interviews";
-import type { candidateDetailSchema } from "@/hooks/api/hr/recruitment/candidates-schema";
+import type { RejectionDetails } from "@/hooks/api/hr/recruitment/rejection-reasons-schema";
+import type { candidateDetailSchema, CandidateErasureResult } from "@/hooks/api/hr/recruitment/candidates-schema";
 import { useGatedQuery } from "@/hooks/api/gated-query";
 
 export type CandidateDetail = z.infer<typeof candidateDetailSchema>;
@@ -86,12 +88,6 @@ const bulkRejectContract = lazyContract(() =>
     (m) => m.candidateBulkRejectResponseSchema,
   ),
 );
-const recruitmentAnalyticsContract = lazyContract(() =>
-  import("@/hooks/api/hr/recruitment/candidates-schema").then(
-    (m) => m.recruitmentAnalyticsSchema,
-  ),
-);
-
 interface AiScoreBreakdown {
   technicalSkills: number;
   experience: number;
@@ -136,19 +132,6 @@ interface BulkRejectResult {
   emailsSent: number;
 }
 
-interface RecruitmentFunnelStage {
-  stage: string;
-  count: number;
-  avgDaysInStage: number | null;
-}
-
-export interface RecruitmentAnalytics {
-  funnel: RecruitmentFunnelStage[];
-  hireRate: number;
-  totalCandidates: number;
-  totalHired: number;
-}
-
 const ATS_KANBAN_KEY = humanResourcesQueryKeys.hr.atsKanban();
 
 export type CandidatesParams = {
@@ -182,10 +165,13 @@ function candidateQueryParams(params: CandidatesParams | undefined, limit: numbe
  * consumer here wants a bounded picker list, not a walk of the whole pipeline —
  * `useCandidatesPage` is what pages.
  */
-export function useCandidates(params?: CandidatesParams) {
+export function useCandidates(
+  params?: CandidatesParams,
+  options?: { throwOnError?: false },
+) {
   const queryParams = candidateQueryParams(params, params?.limit ?? 100);
 
-  return useGatedQuery("hr:employees:view", {
+  return useGatedQuery("hr:requisitions:view", {
     queryKey: humanResourcesQueryKeys.hr.candidates(queryParams),
     queryFn: async ({ signal }): Promise<Candidate[]> => {
       const res = await apiClient.get<CandidatesListResponse>(
@@ -197,6 +183,7 @@ export function useCandidates(params?: CandidatesParams) {
       return res.data;
     },
     staleTime: 2 * 60_000,
+    ...options,
   });
 }
 
@@ -204,7 +191,7 @@ export function useCandidates(params?: CandidatesParams) {
 export function useCandidatesPage(params?: CandidatesParams) {
   const queryParams = candidateQueryParams(params, params?.limit ?? 20);
 
-  return useGatedQuery("hr:employees:view", {
+  return useGatedQuery("hr:requisitions:view", {
     queryKey: [...humanResourcesQueryKeys.hr.candidates(queryParams), "page"] as const,
     queryFn: ({ signal }): Promise<CandidatesListResponse> =>
       apiClient.get<CandidatesListResponse>(
@@ -232,7 +219,7 @@ export interface DuplicateCandidateGroup {
 }
 
 export function useCandidateDuplicates() {
-  return useGatedQuery("hr:employees:view", {
+  return useGatedQuery("hr:requisitions:view", {
     queryKey: [...humanResourcesQueryKeys.hr.all, "candidateDuplicates"] as const,
     queryFn: ({ signal }) =>
       apiClient.get<DuplicateCandidateGroup[]>(
@@ -247,7 +234,7 @@ export function useCandidateDuplicates() {
 
 export function useLinkDuplicateCandidate() {
   const qc = useQueryClient();
-  return useAuthorizedMutation("hr:employees:manage", {
+  return useAuthorizedMutation("hr:requisitions:manage", {
     mutationKey: ["hr", "recruitment", "candidates", "link-duplicate"],
     mutationFn: ({ candidateId, duplicateOfId }: { candidateId: number; duplicateOfId: number }) =>
       apiClient.post<{ success: boolean }>(`/hr/recruitment/candidates/${candidateId}/link-duplicate`, { duplicateOfId }, undefined, candidateSuccessContract),
@@ -260,7 +247,7 @@ export function useLinkDuplicateCandidate() {
 
 export function useBulkShortlistCandidates() {
   const qc = useQueryClient();
-  return useAuthorizedMutation("hr:employees:manage", {
+  return useAuthorizedMutation("hr:requisitions:manage", {
     mutationKey: ["hr", "recruitment", "candidates", "bulk-shortlist"],
     mutationFn: (candidateIds: number[]) =>
       apiClient.post<{ shortlisted: number; skipped: number }>("/hr/recruitment/candidates/bulk-shortlist", { candidateIds }, undefined, bulkShortlistContract),
@@ -272,7 +259,7 @@ export function useBulkShortlistCandidates() {
 }
 
 export function useCandidate(candidateId: number) {
-  const canView = useCan("hr:employees:view");
+  const canView = useCan("hr:requisitions:view");
   const enabled = canView && Number.isFinite(candidateId) && candidateId > 0;
   return useQuery({
     queryKey: humanResourcesQueryKeys.hr.candidate(candidateId),
@@ -290,7 +277,7 @@ export function useCandidate(candidateId: number) {
 
 export function useGenerateCandidateAiScore() {
   const qc = useQueryClient();
-  return useAuthorizedMutation("hr:employees:manage", {
+  return useAuthorizedMutation("hr:requisitions:manage", {
     mutationKey: ["hr", "recruitment", "candidates", "ai-score"],
     mutationFn: (candidateId: number) =>
       apiClient.post<AiScoreResult>(
@@ -307,7 +294,7 @@ export function useGenerateCandidateAiScore() {
 }
 
 export function useGenerateCandidateCompositeScore() {
-  return useAuthorizedMutation("hr:employees:manage", {
+  return useAuthorizedMutation("hr:requisitions:manage", {
     mutationKey: ["hr", "recruitment", "candidates", "composite-score"],
     mutationFn: (candidateId: number) =>
       apiClient.post<CompositeScoreResult>(
@@ -321,7 +308,7 @@ export function useGenerateCandidateCompositeScore() {
 
 export function useCreateCandidate() {
   const qc = useQueryClient();
-  return useAuthorizedMutation("hr:employees:manage", {
+  return useAuthorizedMutation("hr:requisitions:manage", {
     mutationKey: ["hr", "recruitment", "candidates", "create"],
     mutationFn: (data: CreateCandidateInput) =>
       apiClient.post<Candidate>("/hr/recruitment/candidates", data, undefined, candidateCreateContract),
@@ -334,7 +321,7 @@ export function useCreateCandidate() {
 
 export function useUpdateCandidate() {
   const qc = useQueryClient();
-  return useAuthorizedMutation("hr:employees:manage", {
+  return useAuthorizedMutation("hr:requisitions:manage", {
     mutationKey: ["hr", "recruitment", "candidates", "update"],
     mutationFn: ({ candidateId, ...data }: UpdateCandidateInput & { candidateId: number }) =>
       apiClient.patch<{ success: boolean }>(`/hr/recruitment/candidates/${candidateId}`, data, undefined, candidateSuccessContract),
@@ -348,7 +335,7 @@ export function useUpdateCandidate() {
 
 export function useDeleteCandidate() {
   const qc = useQueryClient();
-  return useAuthorizedMutation("hr:employees:manage", {
+  return useAuthorizedMutation("hr:requisitions:manage", {
     mutationKey: ["hr", "recruitment", "candidates", "delete"],
     mutationFn: (candidateId: number) =>
       apiClient.delete<void>(`/hr/recruitment/candidates/${candidateId}`, undefined, undefined, noContentC),
@@ -360,9 +347,38 @@ export function useDeleteCandidate() {
   });
 }
 
+/**
+ * Erase a candidate's personal data, résumé vault included.
+ *
+ * Deliberately separate from `useDeleteCandidate`, which hits a 204 route and
+ * therefore cannot report anything. This one returns what was and was not
+ * deleted, because the résumé objects live in a store the API does not own and
+ * "we tried" is a different claim from "it is gone". Callers must branch on
+ * `status` rather than treating a resolved promise as success.
+ */
+export function useEraseCandidate() {
+  const qc = useQueryClient();
+  return useAuthorizedMutation("hr:requisitions:manage", {
+    mutationKey: ["hr", "recruitment", "candidates", "erase"],
+    mutationFn: (candidateId: number) =>
+      apiClient.delete<CandidateErasureResult>(
+        `/hr/recruitment/candidates/${candidateId}/personal-data`,
+        undefined,
+        undefined,
+        candidateErasureC,
+      ),
+    onSuccess: (_result, candidateId) => {
+      qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.candidate(candidateId) });
+      qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.candidates() });
+      qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.recruitmentStats() });
+      qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.recruitmentPipeline() });
+    },
+  });
+}
+
 export function useCreateApplication() {
   const qc = useQueryClient();
-  return useAuthorizedMutation("hr:employees:manage", {
+  return useAuthorizedMutation("hr:requisitions:manage", {
     mutationKey: ["hr", "recruitment", "applications", "create"],
     mutationFn: ({ candidateId, ...data }: { candidateId: number; jobPostingId: number; coverLetter?: string }) =>
       apiClient.post<CandidateApplication>(
@@ -379,23 +395,32 @@ export function useCreateApplication() {
 }
 
 export function useAtsKanban() {
-  const canEmployees = useCan("hr:employees:view");
+  const canRequisitions = useCan("hr:requisitions:view");
   return useQuery({
     queryKey: ATS_KANBAN_KEY,
     queryFn: ({ signal }) => apiClient.get<AtsPipelineResponse>("/hr/recruitment/pipeline", undefined, signal, pipelineContract),
     staleTime: 2 * 60_000,
-    enabled: canEmployees,
+    enabled: canRequisitions,
   });
 }
 
 export function useUpdateCandidateStage() {
   const qc = useQueryClient();
-  return useAuthorizedMutation("hr:employees:manage", {
+  return useAuthorizedMutation("hr:requisitions:manage", {
     mutationKey: ["hr", "recruitment", "candidates", "update-stage"],
-    mutationFn: ({ candidateId, stage }: { candidateId: number; stage: CandidateStatus }) =>
+    /*
+      The disposition rides with the stage. The endpoint refuses a move to
+      REJECTED that carries no reason, so a caller that omits it gets a 422
+      rather than a silent reject — which is why every reject control routes
+      through `RejectCandidateDialog` before reaching here.
+    */
+    mutationFn: ({
+      candidateId,
+      ...body
+    }: { candidateId: number; stage: CandidateStatus } & Partial<RejectionDetails>) =>
       apiClient.patch<{ id: number; stage: CandidateStatus; changed: boolean }>(
         `/hr/recruitment/candidates/${candidateId}/stage`,
-        { stage },
+        body,
         undefined,
         moveStageContract,
       ),
@@ -413,6 +438,9 @@ export function useUpdateCandidateStage() {
                 ...s,
                 candidates: withoutCandidate,
                 total: hadCandidate ? Math.max(0, s.total - 1) : s.total,
+                // `shown` is what this column renders; it moves with the cards,
+                // or the board's "N of M" would drift from the list beneath it.
+                shown: withoutCandidate.length,
               };
             }
             const moved = previous.stages
@@ -423,8 +451,9 @@ export function useUpdateCandidateStage() {
                   ...s,
                   candidates: [moved, ...withoutCandidate],
                   total: hadCandidate ? s.total : s.total + 1,
+                  shown: withoutCandidate.length + 1,
                 }
-              : { ...s, candidates: withoutCandidate };
+              : { ...s, candidates: withoutCandidate, shown: withoutCandidate.length };
           }),
         };
         qc.setQueryData<AtsPipelineResponse>(ATS_KANBAN_KEY, next);
@@ -448,7 +477,7 @@ export function useUpdateCandidateStage() {
 
 export function useBulkRejectCandidates() {
   const qc = useQueryClient();
-  return useAuthorizedMutation("hr:employees:manage", {
+  return useAuthorizedMutation("hr:requisitions:manage", {
     mutationKey: ["hr", "recruitment", "candidates", "bulk-reject"],
     mutationFn: (data: BulkRejectInput) =>
       apiClient.post<BulkRejectResult>(
@@ -464,12 +493,3 @@ export function useBulkRejectCandidates() {
   });
 }
 
-export function useRecruitmentAnalytics() {
-  const canInterviews = useCan("hr:interviews:view");
-  return useQuery({
-    queryKey: [...humanResourcesQueryKeys.hr.all, "recruitmentAnalytics"] as const,
-    queryFn: ({ signal }) => apiClient.get<RecruitmentAnalytics>("/hr/recruitment/analytics", undefined, signal, recruitmentAnalyticsContract),
-    staleTime: 2 * 60_000,
-    enabled: canInterviews,
-  });
-}

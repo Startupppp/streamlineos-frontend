@@ -77,6 +77,7 @@ jest.mock("@/lib/renderer/crm/client-layout", () => ({
 
 jest.mock("@/hooks/api/crm/clients", () => ({
   useClientAccounts: jest.fn(),
+  useCreateClient: jest.fn().mockReturnValue({ mutate: jest.fn(), isPending: false }),
 }));
 
 jest.mock("@/hooks/api/org-display", () => ({

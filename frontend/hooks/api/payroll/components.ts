@@ -3,6 +3,7 @@
 import { keepPreviousData, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
+import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
 
 const noContentC = lazyContract(() =>
   import("@/hooks/api/cursor-page-schema").then((m) => m.noContentContract),
@@ -28,8 +29,8 @@ type ComponentListParams = {
   type?: ComponentType;
   active?: boolean;
   search?: string;
-  page?: number;
-  pageSize?: number;
+  cursor?: string;
+  limit?: number;
 };
 
 type CreateComponentInput = {
@@ -65,6 +66,7 @@ export function usePayrollComponents(params?: ComponentListParams) {
     staleTime: 2 * 60_000,
     placeholderData: keepPreviousData,
     enabled: canView,
+    ...INLINE_READ_ERROR,
   });
 }
 
@@ -74,8 +76,9 @@ export function useCreatePayrollComponent() {
     mutationKey: ["payroll", "components", "create"],
     mutationFn: (data: CreateComponentInput) =>
       apiClient.post<SalaryComponent>("/payroll/components", data, undefined, salaryComponentC),
-    onSuccess: () =>
-      qc.invalidateQueries({ queryKey: payrollQueryKeys.payroll.components() }),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: payrollQueryKeys.payroll.components() });
+    },
   });
 }
 
@@ -85,8 +88,9 @@ export function useUpdatePayrollComponent() {
     mutationKey: ["payroll", "components", "update"],
     mutationFn: ({ componentId, data }: UpdateComponentInput) =>
       apiClient.patch<SalaryComponent>(`/payroll/components/${componentId}`, data, undefined, salaryComponentC),
-    onSuccess: () =>
-      qc.invalidateQueries({ queryKey: payrollQueryKeys.payroll.components() }),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: payrollQueryKeys.payroll.components() });
+    },
   });
 }
 
@@ -98,7 +102,8 @@ export function useDeletePayrollComponent() {
       apiClient.delete<void>(
         `/payroll/components/${componentId}`, undefined, undefined, noContentC,
       ),
-    onSuccess: () =>
-      qc.invalidateQueries({ queryKey: payrollQueryKeys.payroll.components() }),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: payrollQueryKeys.payroll.components() });
+    },
   });
 }

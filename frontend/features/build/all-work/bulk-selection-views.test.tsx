@@ -2,6 +2,9 @@ import React from "react";
 import { render } from "@testing-library/react";
 import { renderHook, act } from "@testing-library/react";
 
+const mockPush = jest.fn();
+const mockRequestLeave = jest.fn((action: () => void) => action());
+
 jest.mock("@/features/build/views/list-view", () => ({
   ListView: jest.fn(() => null),
 }));
@@ -11,7 +14,11 @@ jest.mock("@/features/build/views/kanban-board", () => ({
 }));
 
 jest.mock("next/navigation", () => ({
-  useRouter: () => ({ push: jest.fn() }),
+  useRouter: () => ({ push: mockPush }),
+}));
+
+jest.mock("@/components/shared/dirty-state-context", () => ({
+  useNavigationLeave: () => mockRequestLeave,
 }));
 
 jest.mock("@/components/pm-chrome", () => ({
@@ -26,9 +33,6 @@ jest.mock("@/components/ui/truncated-text", () => ({
   TruncatedText: ({ text }: { text?: string | null }) => <span>{text}</span>,
 }));
 
-jest.mock("./project-chip", () => ({
-  ProjectChip: () => null,
-}));
 
 jest.mock("@/components/shared/format-ticket-key", () => ({
   getTicketDetailHref: () => "/build/1/tickets/1",
@@ -47,6 +51,9 @@ import { useItemSelectHandler } from "@/features/build/views/list-view-shared";
 
 interface MockListViewProps {
   selection?: ListSelection;
+  onTicketClick?: (id: number) => void;
+  onTicketSelect?: (id: number) => void;
+  itemLayout?: "standard" | "work-index";
 }
 
 function getListViewMock(): jest.Mock {
@@ -71,6 +78,7 @@ const TICKET: AllWorkTicket = {
   assigneeId: null,
   points: null,
   estimate: null,
+  version: 1,
   rank: null,
   startDate: null,
   dueDate: null,
@@ -91,9 +99,17 @@ const GROUP: TicketGroup = {
 
 beforeEach(() => {
   jest.clearAllMocks();
+  mockRequestLeave.mockImplementation((action: () => void) => action());
 });
 
 describe("AllWorkListSection — selection threading", () => {
+  it("uses the responsive work-index row layout without changing the shared default", () => {
+    render(<AllWorkListSection groups={[GROUP]} />);
+
+    const props = getListViewMock().mock.calls[0]?.[0] as MockListViewProps;
+    expect(props.itemLayout).toBe("work-index");
+  });
+
   it("ListView receives selection when tableSelection and onSelectionChange are provided", () => {
     const selected = new Set<string | number>([10]);
     const onChange = jest.fn();
@@ -146,6 +162,44 @@ describe("AllWorkBoardSection — selection threading", () => {
     expect(calls.length).toBeGreaterThan(0);
     const props = calls[0]?.[0];
     expect(props?.selection).toBeUndefined();
+  });
+});
+
+describe("AllWork sections — unsaved-work navigation", () => {
+  it("routes list ticket clicks through the shared leave guard", () => {
+    let pendingNavigation: (() => void) | undefined;
+    mockRequestLeave.mockImplementation((action: () => void) => {
+      pendingNavigation = action;
+    });
+
+    render(<AllWorkListSection groups={[GROUP]} />);
+
+    const props = getListViewMock().mock.calls[0]?.[0] as MockListViewProps;
+    props.onTicketClick?.(TICKET.id);
+
+    expect(mockRequestLeave).toHaveBeenCalledTimes(1);
+    expect(mockPush).not.toHaveBeenCalled();
+
+    pendingNavigation?.();
+    expect(mockPush).toHaveBeenCalledWith("/build/1/tickets/1");
+  });
+
+  it("routes board ticket clicks through the shared leave guard", () => {
+    let pendingNavigation: (() => void) | undefined;
+    mockRequestLeave.mockImplementation((action: () => void) => {
+      pendingNavigation = action;
+    });
+
+    render(<AllWorkBoardSection groups={[GROUP]} />);
+
+    const props = getKanbanBoardMock().mock.calls[0]?.[0] as MockListViewProps;
+    props.onTicketSelect?.(TICKET.id);
+
+    expect(mockRequestLeave).toHaveBeenCalledTimes(1);
+    expect(mockPush).not.toHaveBeenCalled();
+
+    pendingNavigation?.();
+    expect(mockPush).toHaveBeenCalledWith("/build/1/tickets/1");
   });
 });
 

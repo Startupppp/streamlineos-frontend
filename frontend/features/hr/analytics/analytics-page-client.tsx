@@ -5,12 +5,11 @@ import {
   useHrAnalytics,
   useHrAttritionAnalytics,
 } from "@/hooks/api/hr/analytics";
-import { useRecruitmentStats } from "@/hooks/api/hr/recruitment";
-import { useCan } from "@/hooks/api/access";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { StatCard, StatCardGrid, StatCardGridSkeleton } from "@/components/ui/stat-card";
 import { EmptyState } from "@/components/ui/empty-state";
-import { getCorrelationId } from "@/lib/api-envelope";
+import { PageState } from "@/components/shared/page-state";
+import { usePageState } from "@/hooks/api/use-page-state";
 import {
   CONTENT_FILL_PANEL,
   FILTER_SELECT_TRIGGER,
@@ -28,27 +27,25 @@ import { PageTabsToolbar } from "@/components/ui/page-tabs-toolbar";
 import {
   Users,
   TrendingDown,
-  Briefcase,
   Activity,
   CalendarDays,
   BarChart3,
 } from "lucide-react";
 import { WorkforceSection } from "@/features/hr/analytics/workforce-section";
-import { RecruitmentSection } from "@/features/hr/analytics/recruitment-section";
 import { AttendanceSection } from "@/features/hr/analytics/attendance-section";
 import { LeaveSection } from "@/features/hr/analytics/leave-section";
 import { AttritionSection } from "@/features/hr/analytics/attrition-section";
 import { CommandCenterSection } from "@/features/hr/analytics/command-center-section";
 
 type DateRange = "month" | "quarter" | "year";
-type SectionTab = "command-center" | "workforce" | "recruitment" | "attendance" | "leaves" | "attrition";
+type SectionTab = "command-center" | "workforce" | "attendance" | "leaves" | "attrition";
 
 const NOW = new Date();
 const CURRENT_YEAR = NOW.getFullYear();
 const CURRENT_MONTH = NOW.getMonth() + 1;
 
 const DATE_RANGE_VALUES: readonly DateRange[] = ["month", "quarter", "year"];
-const SECTION_TAB_VALUES: readonly SectionTab[] = ["command-center", "workforce", "recruitment", "attendance", "leaves", "attrition"];
+const SECTION_TAB_VALUES: readonly SectionTab[] = ["command-center", "workforce", "attendance", "leaves", "attrition"];
 
 function isDateRange(v: string): v is DateRange {
   return DATE_RANGE_VALUES.some((candidate) => candidate === v);
@@ -62,11 +59,9 @@ const SECTION_TABS: Array<{
   value: SectionTab;
   label: string;
   icon: React.ComponentType<{ className?: string }>;
-  requiredPermission?: "hr:interviews:view";
 }> = [
   { value: "command-center", label: "Command center", icon: BarChart3 },
   { value: "workforce", label: "Workforce", icon: Users },
-  { value: "recruitment", label: "Recruitment", icon: Briefcase, requiredPermission: "hr:interviews:view" },
   { value: "attendance", label: "Attendance", icon: Activity },
   { value: "leaves", label: "Leaves", icon: CalendarDays },
   { value: "attrition", label: "Attrition", icon: TrendingDown },
@@ -79,28 +74,23 @@ interface KpiItem {
   tone: "default" | "blue" | "emerald" | "amber" | "red";
 }
 
+const UNMEASURED = "—";
+
 function ExecutiveKPIs({
   totalEmployees,
   attritionRate,
-  openPositions,
   attendanceLogs,
   isLoading,
 }: {
-  totalEmployees: number;
+  totalEmployees: string | number;
   attritionRate: string;
-  openPositions: number | null;
-  attendanceLogs: number;
+  attendanceLogs: string | number;
   isLoading: boolean;
 }) {
-  const cols = openPositions === null ? 3 : 4;
   if (isLoading) {
-    return <StatCardGridSkeleton cols={cols} />;
+    return <StatCardGridSkeleton cols={3} />;
   }
 
-  const openPositionsKpi: KpiItem[] =
-    openPositions === null
-      ? []
-      : [{ label: "Open positions", value: openPositions, icon: Briefcase, tone: "amber" }];
   const kpis: KpiItem[] = [
     {
       label: "Total employees",
@@ -110,11 +100,10 @@ function ExecutiveKPIs({
     },
     {
       label: "Attrition rate",
-      value: `${attritionRate}%`,
+      value: attritionRate,
       icon: TrendingDown,
       tone: "red",
     },
-    ...openPositionsKpi,
     {
       label: "Attendance logs",
       value: attendanceLogs,
@@ -124,7 +113,7 @@ function ExecutiveKPIs({
   ];
 
   return (
-    <StatCardGrid cols={cols}>
+    <StatCardGrid cols={3}>
       {kpis.map((item) => (
         <StatCard
           key={item.label}
@@ -154,7 +143,7 @@ function DateRangeSelector({
 
   return (
     <Select value={value} onValueChange={handleChange}>
-      <SelectTrigger className={cn("w-36", FILTER_SELECT_TRIGGER)}>
+      <SelectTrigger className={cn("w-36", FILTER_SELECT_TRIGGER)} aria-label="Date range">
         <SelectValue />
       </SelectTrigger>
       <SelectContent className="min-w-[var(--radix-select-trigger-width)]">
@@ -178,7 +167,6 @@ export function AnalyticsPageClient() {
     return 1;
   }, [dateRange]);
 
-  const canViewRecruitment = useCan("hr:interviews:view");
   const {
     data,
     isLoading: isAnalyticsLoading,
@@ -187,146 +175,126 @@ export function AnalyticsPageClient() {
     refetch,
   } = useHrAnalytics();
   const handleRetry = useCallback(() => { void refetch(); }, [refetch]);
-  const { data: recruitmentStats, isLoading: isRecruitmentLoading } =
-    useRecruitmentStats();
-  const { data: attritionData, isLoading: isAttritionLoading } =
-    useHrAttritionAnalytics();
+  const {
+    data: attritionData,
+    isLoading: isAttritionLoading,
+    isError: isAttritionError,
+  } = useHrAttritionAnalytics();
 
   const isTopLoading =
-    isAnalyticsLoading || isRecruitmentLoading || isAttritionLoading;
+    isAnalyticsLoading || isAttritionLoading;
 
-  const totalEmployees = data?.headcount.active ?? 0;
-  const attritionRate = attritionData?.attritionRatePercent ?? "0.0";
-  const openPositions = canViewRecruitment ? (recruitmentStats?.openJobs ?? 0) : null;
-  const attendanceLogs = data?.attendance.totalLogsThisMonth ?? 0;
-  const visibleTabs = SECTION_TABS.filter(
-    (tab) => tab.requiredPermission === undefined || canViewRecruitment,
-  );
-  const selectedSection = visibleTabs.some((tab) => tab.value === activeSection)
-    ? activeSection
-    : "command-center";
+  const totalEmployees = data ? data.headcount.active : UNMEASURED;
+  const attritionRate =
+    isAttritionError || !attritionData
+      ? UNMEASURED
+      : `${attritionData.attritionRatePercent}%`;
+  const attendanceLogs = data ? data.attendance.totalLogsThisMonth : UNMEASURED;
 
   const handleSectionChange = useCallback((v: string) => {
     if (isSectionTab(v)) setActiveSection(v);
   }, []);
 
-  if (isError) {
-    const supportCode = getCorrelationId(error);
-    return (
-      <PageWrapper
-        title="People analytics"
-        subtitle="Workforce insights and operational metrics">
-        <EmptyState
-          illustrationPreset="alert"
-          title="Analytics didn't load"
-          description={
-            supportCode
-              ? `We couldn't reach the analytics service. Try again — if it keeps happening, quote ${supportCode} to support.`
-              : "We couldn't reach the analytics service. Try again in a moment."
-          }
-          action={{ label: "Retry", onClick: handleRetry }}
-          className={CONTENT_FILL_PANEL}
-        />
-      </PageWrapper>
-    );
-  }
-
-  if (!isAnalyticsLoading && data !== undefined && data.headcount.total === 0) {
-    return (
-      <PageWrapper
-        title="People analytics"
-        subtitle="Workforce insights and operational metrics">
-        <EmptyState
-          illustrationPreset="team"
-          title="No people to report on yet"
-          description="Analytics fill in as you add employees — headcount, attendance, leave and attrition all read from your people records."
-          action={{ label: "Add your first employee", href: "/hr/onboarding" }}
-          secondaryAction={{ label: "View people", href: "/hr/employees" }}
-          className={CONTENT_FILL_PANEL}
-        />
-      </PageWrapper>
-    );
-  }
+  const pageState = usePageState({
+    permission: "hr:analytics:read",
+    isLoading: isAnalyticsLoading,
+    isError,
+    error,
+    isEmpty: data !== undefined && data.headcount.total === 0,
+  });
 
   return (
     <PageWrapper
       title="People analytics"
       subtitle="Workforce insights and operational metrics">
-      <div className="flex min-h-0 flex-1 flex-col gap-4">
-        <ExecutiveKPIs
-          totalEmployees={totalEmployees}
-          attritionRate={attritionRate}
-          openPositions={openPositions}
-          attendanceLogs={attendanceLogs}
-          isLoading={isTopLoading}
-        />
-
-        <Tabs
-          value={selectedSection}
-          onValueChange={handleSectionChange}
-          className="flex min-h-0 flex-1 flex-col gap-4"
-        >
-          <PageTabsToolbar
-            tabsDensity="labeled"
-            tabs={
-              <TabsList>
-                {visibleTabs.map(({ value, label, icon: Icon }) => (
-                  <TabsTrigger key={value} value={value} className="gap-1.5">
-                    <Icon className="h-3.5 w-3.5" aria-hidden="true" />
-                    {label}
-                  </TabsTrigger>
-                ))}
-              </TabsList>
-            }
-            filters={<DateRangeSelector value={dateRange} onChange={setDateRange} />}
+      <PageState
+        resolution={pageState}
+        onRetry={handleRetry}
+        className={CONTENT_FILL_PANEL}
+        loading={<StatCardGridSkeleton cols={3} />}
+        empty={
+          <EmptyState
+            illustrationPreset="team"
+            title="No people to report on yet"
+            description="Analytics fill in as you add employees — headcount, attendance, leave and attrition all read from your people records."
+            action={{ label: "Add your first employee", href: "/hr/onboarding" }}
+            secondaryAction={{ label: "View people", href: "/hr/employees" }}
+            className={CONTENT_FILL_PANEL}
+          />
+        }
+      >
+        <div className="flex min-h-0 flex-1 flex-col gap-4">
+          <ExecutiveKPIs
+            totalEmployees={totalEmployees}
+            attritionRate={attritionRate}
+            attendanceLogs={attendanceLogs}
+            isLoading={isTopLoading}
           />
 
-          <div className="rounded-2xl border border-border/70 bg-card/90 shadow-card overflow-hidden flex min-h-0 flex-1 flex-col">
-            <div className="flex items-center gap-2 px-4 py-3 border-b border-border shrink-0">
-              <div className="w-7 rounded-lg bg-primary/10 flex items-center justify-center">
-                <BarChart3
-                  className="h-3.5 w-3.5 text-primary"
-                  aria-hidden="true"
-                />
+          <Tabs
+            value={activeSection}
+            onValueChange={handleSectionChange}
+            className="flex min-h-0 flex-1 flex-col gap-4"
+          >
+            <PageTabsToolbar
+              tabsDensity="labeled"
+            // Six labelled tabs + the range select need ~1180px; below xl they
+            // pushed the select off-screen at 768 and 1024 (measured).
+            collapseBelow="xl"
+              tabs={
+                <TabsList>
+                  {SECTION_TABS.map(({ value, label, icon: Icon }) => (
+                    <TabsTrigger key={value} value={value} className="gap-1.5">
+                      <Icon className="h-3.5 w-3.5" aria-hidden="true" />
+                      {label}
+                    </TabsTrigger>
+                  ))}
+                </TabsList>
+              }
+              filters={<DateRangeSelector value={dateRange} onChange={setDateRange} />}
+            />
+
+            <div className="rounded-2xl border border-border/70 bg-card/90 shadow-card overflow-hidden flex min-h-0 flex-1 flex-col">
+              <div className="flex items-center gap-2 px-4 py-3 border-b border-border shrink-0">
+                <div className="w-7 rounded-lg bg-primary/10 flex items-center justify-center">
+                  <BarChart3
+                    className="h-3.5 w-3.5 text-primary"
+                    aria-hidden="true"
+                  />
+                </div>
+                <h2 className="text-sm font-semibold text-foreground">
+                  Detailed analytics
+                </h2>
               </div>
-              <h2 className="text-sm font-semibold text-foreground">
-                Detailed analytics
-              </h2>
-            </div>
 
-            <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain p-4">
-              <TabsContent value="command-center" className="mt-0 flex-none">
-                <CommandCenterSection />
-              </TabsContent>
-
-              <TabsContent value="workforce" className="mt-0 flex-none">
-                <WorkforceSection data={data} isLoading={isAnalyticsLoading} />
-              </TabsContent>
-
-              {canViewRecruitment ? (
-                <TabsContent value="recruitment" className="mt-0 flex-none">
-                  <RecruitmentSection isLoading={isRecruitmentLoading} />
+              <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain p-4">
+                <TabsContent value="command-center" className="mt-0 flex-none">
+                  <CommandCenterSection />
                 </TabsContent>
-              ) : null}
 
-              <TabsContent value="attendance" className="mt-0 flex-none">
-                <AttendanceSection
-                  year={analyticsYear}
-                  month={analyticsMonth}
-                />
-              </TabsContent>
+                <TabsContent value="workforce" className="mt-0 flex-none">
+                  <WorkforceSection data={data} isLoading={isAnalyticsLoading} />
+                </TabsContent>
 
-              <TabsContent value="leaves" className="mt-0 flex-none">
-                <LeaveSection year={analyticsYear} />
-              </TabsContent>
+                <TabsContent value="attendance" className="mt-0 flex-none">
+                  <AttendanceSection
+                    year={analyticsYear}
+                    month={analyticsMonth}
+                  />
+                </TabsContent>
 
-              <TabsContent value="attrition" className="mt-0 flex-none">
-                <AttritionSection isLoading={isAttritionLoading} />
-              </TabsContent>
+                <TabsContent value="leaves" className="mt-0 flex-none">
+                  <LeaveSection year={analyticsYear} />
+                </TabsContent>
+
+                <TabsContent value="attrition" className="mt-0 flex-none">
+                  <AttritionSection isLoading={isAttritionLoading} />
+                </TabsContent>
+              </div>
             </div>
-          </div>
-        </Tabs>
-      </div>
+          </Tabs>
+        </div>
+      </PageState>
     </PageWrapper>
   );
 }

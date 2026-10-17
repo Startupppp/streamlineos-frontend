@@ -8,14 +8,16 @@ jest.mock("framer-motion", () => ({
   AnimatePresence: ({ children }: { children: React.ReactNode }) => <>{children}</>,
   motion: {
     div: React.forwardRef(
-      (
+      function MotionDiv(
         { children, className, ...rest }: React.HTMLAttributes<HTMLDivElement>,
         ref: React.Ref<HTMLDivElement>,
-      ) => (
-        <div ref={ref} className={className} data-testid="motion-panel" {...rest}>
-          {children}
-        </div>
-      ),
+      ) {
+        return (
+          <div ref={ref} className={className} data-testid="motion-panel" {...rest}>
+            {children}
+          </div>
+        );
+      },
     ),
   },
 }));

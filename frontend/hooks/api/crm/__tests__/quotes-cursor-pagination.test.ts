@@ -1,3 +1,4 @@
+import { renderHook } from "@testing-library/react";
 import { useQuery } from "@tanstack/react-query";
 import { useQuotes } from "../quotes";
 
@@ -36,7 +37,7 @@ const mockGatedQuery = jest.requireMock("@/hooks/api/gated-query").useGatedQuery
 
 function captureQuotesOptions(params?: Parameters<typeof useQuotes>[0]) {
   mockGatedQuery.mockImplementation((_key: unknown, opts: unknown) => opts);
-  useQuotes(params);
+  renderHook(() => useQuotes(params));
   return mockGatedQuery.mock.calls.at(-1)?.[1] as { queryFn: (ctx: { signal: AbortSignal }) => unknown };
 }
 

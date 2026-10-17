@@ -251,20 +251,16 @@ export default function LeadDistributionPage() {
         ) : leads.length === 0 ? (
           <EmptyState
             illustration={<EmptyLeadsIllustration />}
-            title={isFiltered ? "No leads match these filters" : "No leads to distribute"}
+            title="No leads to distribute"
+            filtersActive={isFiltered}
+            filteredTitle="No leads match these filters"
+            onClearFilters={handleClearFilters}
             description={
               isFiltered
                 ? `Filtering by ${activeFilterLabels.join(", ")}. Clear the filters to see every lead.`
                 : "Distribution hands unassigned leads out to your reps. Import a list, or add leads, and they show up here."
             }
-            action={
-              isFiltered
-                ? { label: "Clear filters", onClick: handleClearFilters }
-                : canCreateLead
-                  ? { label: "Import leads", href: "/crm/import?entity=leads" }
-                  : undefined
-            }
-            actionVariant={isFiltered ? "outline" : undefined}
+            action={canCreateLead ? { label: "Import leads", href: "/crm/import?entity=leads" } : undefined}
             className={CONTENT_FILL_PANEL}
           />
         ) : (

@@ -64,7 +64,7 @@ describe("NEO-5 - the RF shell is not a desktop screen", () => {
     // segment name would have swept the two new queues in and demanded a capture
     // they have no business performing.
     const runners = sourceFiles(RF_ROUTE_DIR).filter((path) =>
-      /\/(pick|putaway)\/\[[^/\]]+\]\/page\.tsx$/.test(path),
+      /[/\\](pick|putaway)[/\\]\[[^\\/\]]+\][/\\]page\.tsx$/.test(path),
     );
     expect(runners).toHaveLength(2);
 

@@ -90,16 +90,16 @@ function ExpenseRow({
 }
 
 export function ExpensesWidget() {
-  const accountingEnabled = useModuleEnabled("accounting");
+  const hrEnabled = useModuleEnabled("hr");
   const canViewExpenses = useCan("hr:expenses:view");
   const canCreateExpenses = useCan("hr:expenses:create");
   const canApproveExpenses = useCan("hr:expenses:approve");
   const [isCreateOpen, setIsCreateOpen] = useState(false);
 
-  const enabled = accountingEnabled && canViewExpenses;
+  const enabled = hrEnabled && canViewExpenses;
   const { data, isLoading, error, refetch } = useExpensePageData(
     { page: 1, pageSize: WIDGET_PAGE_SIZE, sortBy: "created", sortOrder: "desc" },
-    { enabled },
+    { enabled, selfService: !canApproveExpenses },
   );
 
   const isApprover = data?.isAdmin ?? canApproveExpenses;

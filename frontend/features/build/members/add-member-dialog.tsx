@@ -56,7 +56,7 @@ export function AddMemberDialog({ open, onOpenChange }: AddMemberDialogProps) {
       { userId: selectedUserId, role: selectedRole },
       {
         onSuccess: () => {
-          toast.success("Member added to workspace.");
+          toast.success("Added to the Build workspace.");
           handleOpenChange(false);
         },
         onError: (err) => {
@@ -70,9 +70,9 @@ export function AddMemberDialog({ open, onOpenChange }: AddMemberDialogProps) {
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="sm:max-w-sm">
         <DialogHeader>
-          <DialogTitle>Add member</DialogTitle>
+          <DialogTitle>Add workspace member</DialogTitle>
           <DialogDescription>
-            Pick someone from your organization to give access to Build.
+            Add someone to the Build workspace so they can be invited to individual projects.
           </DialogDescription>
         </DialogHeader>
         <div className="flex flex-col gap-3 py-1">

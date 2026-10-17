@@ -20,28 +20,28 @@ export const BUG_SEVERITIES: readonly BugSeverity[] = [
   "trivial",
 ];
 
-export const BUG_SEVERITY_STYLES: Record<string, string> = {
+const BUG_SEVERITY_STYLES: Record<string, string> = {
   blocker:
-    "text-status-danger-ink border-status-danger-rule bg-status-danger-surface",
-  critical: "text-status-danger-ink border-status-danger-rule",
-  major: "text-status-warning-ink border-status-warning-rule",
+    "text-status-danger-ink-strong border-status-danger-rule bg-status-danger-surface",
+  critical: "text-status-danger-ink-strong border-status-danger-rule",
+  major: "text-status-warning-ink-strong border-status-warning-rule",
   minor: "text-muted-foreground border-border",
   trivial: "text-muted-foreground border-border",
 };
 
-export const BUG_STATUS_STYLES: Record<string, string> = {
+const BUG_STATUS_STYLES: Record<string, string> = {
   new: "text-muted-foreground border-border",
-  triaged: "text-status-info-ink border-status-info-rule",
-  assigned: "text-status-info-ink border-status-info-rule",
-  in_progress: "text-status-warning-ink border-status-warning-rule",
-  fixed: "text-status-success-ink border-status-success-rule",
-  ready_for_qa: "text-status-info-ink border-status-info-rule",
-  verified: "text-status-success-ink border-status-success-rule",
+  triaged: "text-status-info-ink-strong border-status-info-rule",
+  assigned: "text-status-info-ink-strong border-status-info-rule",
+  in_progress: "text-status-warning-ink-strong border-status-warning-rule",
+  fixed: "text-status-success-ink-strong border-status-success-rule",
+  ready_for_qa: "text-status-info-ink-strong border-status-info-rule",
+  verified: "text-status-success-ink-strong border-status-success-rule",
   reopened: "text-category-orange-ink border-category-orange-rule",
   closed: "text-muted-foreground border-border",
 };
 
-export const BUG_STATUS_LABELS: Record<string, string> = {
+const BUG_STATUS_LABELS: Record<string, string> = {
   new: "New",
   triaged: "Triaged",
   assigned: "Assigned",
@@ -53,7 +53,7 @@ export const BUG_STATUS_LABELS: Record<string, string> = {
   closed: "Closed",
 };
 
-export const BUG_FALLBACK_STYLE = "text-muted-foreground border-border";
+const BUG_FALLBACK_STYLE = "text-muted-foreground border-border";
 
 export function bugStatusLabel(status: string | null | undefined): string {
   if (!status) return "Not set";

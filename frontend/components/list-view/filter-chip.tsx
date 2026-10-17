@@ -33,11 +33,11 @@ export function FilterChip({ label, color, onRemove, className }: FilterChipProp
           style={{ backgroundColor: color }}
         />
       ) : null}
-      <span className="min-w-0 truncate font-medium leading-none">{label}</span>
+      <span className="min-w-0 truncate font-normal leading-none">{label}</span>
       <button
         type="button"
         onClick={handleRemoveClick}
-        className="inline-flex size-4 shrink-0 items-center justify-center rounded-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+        className="inline-flex size-4 shrink-0 items-center justify-center rounded-sm text-muted-foreground outline-none transition-colors hover:bg-muted hover:text-foreground focus-visible:ring-1 focus-visible:ring-ring"
         aria-label={`Remove ${label} filter`}
         {...hoverHandlers}
       >

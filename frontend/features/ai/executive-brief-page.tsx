@@ -22,7 +22,7 @@ import {
   type BriefCitation,
   type LatestBriefResponse,
   type ExecutiveBriefSnapshot,
-} from "@/lib/api/hooks/executive-brief";
+} from "@/hooks/api/executive-brief";
 
 export default function ExecutiveBriefPage() {
   const { data, isLoading, isError, error, refetch } = useExecutiveBrief();

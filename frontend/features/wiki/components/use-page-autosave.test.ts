@@ -3,12 +3,6 @@ import { act, renderHook } from "@testing-library/react";
 import { usePageAutosave, type PageAutosavePatch } from "./use-page-autosave";
 import { ApiError } from "@/lib/api-envelope";
 
-/**
- * Three ways the wiki editor silently discarded edits. Each is asserted against
- * what actually reached the save call, not against what the screen showed —
- * `localTitle` kept rendering the dropped rename from local draft state, which
- * is exactly why nobody noticed until a reload.
- */
 
 type SavePayload = PageAutosavePatch & {
   pageId: number;
@@ -53,6 +47,7 @@ beforeEach(() => {
 afterEach(() => {
   jest.runOnlyPendingTimers();
   jest.useRealTimers();
+  Reflect.deleteProperty(navigator, "onLine");
 });
 
 async function settle() {
@@ -61,7 +56,6 @@ async function settle() {
   });
 }
 
-/** Lets an already-dispatched save promise resolve inside act(). */
 async function drain() {
   await act(async () => {});
 }
@@ -119,8 +113,6 @@ describe("wiki autosave — merging successive patches", () => {
       hook.result.current.schedule({ contentText: "typed on 12" });
     });
     act(() => {
-      // Page 13 is opened; its own revision has not arrived yet (`page` is still
-      // loading). Sending 12's would be a made-up precondition.
       hook.rerender({ pageId: 13, contentRevision: undefined });
     });
     act(() => {
@@ -236,7 +228,6 @@ describe("wiki autosave — flushing before the editor goes away", () => {
     await drain();
 
     expect(sent).toHaveLength(1);
-    // Addressed to the page it was typed on, not to the one just opened.
     expect(sent[0]!.pageId).toBe(12);
     expect(sent[0]!.contentText).toBe("typed on page 12");
   });
@@ -253,6 +244,73 @@ describe("wiki autosave — flushing before the editor goes away", () => {
     });
 
     expect(sent).toHaveLength(1);
+  });
+});
+
+describe("wiki autosave — connectivity and retry", () => {
+  it("starts offline and keeps the queued field visible until one reconnect save", async () => {
+    Object.defineProperty(navigator, "onLine", { configurable: true, value: false });
+    const { hook, sent } = harness();
+
+    expect(hook.result.current.isOffline).toBe(true);
+    act(() => {
+      hook.result.current.schedule({ title: "Offline title" });
+    });
+    await settle();
+
+    expect(sent).toHaveLength(0);
+    expect(hook.result.current.saveState).toBe("pending");
+    expect(hook.result.current.pendingFields).toEqual(["title"]);
+
+    await act(async () => {
+      Object.defineProperty(navigator, "onLine", { configurable: true, value: true });
+      window.dispatchEvent(new Event("online"));
+    });
+
+    expect(sent).toHaveLength(1);
+    expect(sent[0]!.title).toBe("Offline title");
+    expect(hook.result.current.saveState).toBe("saved");
+    expect(hook.result.current.pendingFields).toEqual([]);
+
+    act(() => {
+      window.dispatchEvent(new Event("online"));
+    });
+    expect(sent).toHaveLength(1);
+  });
+
+  it("keeps a failed save available for explicit retry without another edit", async () => {
+    const save = jest.fn()
+      .mockRejectedValueOnce(new ApiError("Temporary failure", 503))
+      .mockResolvedValueOnce({ contentRevision: 5 });
+    const hook = renderHook(() => usePageAutosave({
+      pageId: 12,
+      contentRevision: 4,
+      save,
+      onConflict: jest.fn(),
+      onSaveError: jest.fn(),
+      delayMs: 1500,
+    }));
+
+    act(() => {
+      hook.result.current.schedule({ contentText: "unsaved text" });
+    });
+    await settle();
+
+    expect(hook.result.current.saveState).toBe("failed");
+    expect(hook.result.current.pendingFields).toEqual(["contentText"]);
+    expect(save).toHaveBeenCalledTimes(1);
+
+    await act(async () => {
+      hook.result.current.retry();
+    });
+
+    expect(save).toHaveBeenCalledTimes(2);
+    expect(save.mock.calls[1]?.[0]).toEqual(expect.objectContaining({
+      contentText: "unsaved text",
+      expectedContentRevision: 4,
+    }));
+    expect(hook.result.current.saveState).toBe("saved");
+    expect(hook.result.current.pendingFields).toEqual([]);
   });
 });
 
@@ -364,8 +422,6 @@ describe("wiki autosave — a user must never conflict with their own previous s
     await settle();
     await drain();
 
-    // The refetch the FIRST save's invalidation started finally lands, carrying
-    // the state as of that save — two writes ago.
     await act(async () => {
       hook.rerender({ pageId: 12, contentRevision: 5 });
     });
@@ -488,6 +544,12 @@ describe("wiki autosave — a real conflict is resolvable without losing either 
       lastEditedByName: null,
       lastEditedAt: null,
     });
+    expect(hook.result.current.pendingFields).toEqual(["contentText"]);
+    act(() => {
+      hook.result.current.keepLocalEdits();
+    });
+    expect(hook.result.current.conflict).not.toBeNull();
+    expect(hook.result.current.pendingFields).toEqual(["contentText"]);
   });
 
   it("keeps collecting keystrokes while the banner stands, and sends them all on Keep my version", async () => {
@@ -498,6 +560,7 @@ describe("wiki autosave — a real conflict is resolvable without losing either 
     });
     await settle();
     expect(sent).toHaveLength(1);
+    expect(hook.result.current.pendingFields).toEqual(["contentText"]);
 
     act(() => {
       hook.result.current.schedule({ contentText: "before the conflict, and after it" });

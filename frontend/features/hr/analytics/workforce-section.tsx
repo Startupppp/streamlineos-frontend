@@ -8,6 +8,7 @@ import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
 import { Users, TrendingUp, UserMinus, UserPlus } from "lucide-react";
 import dynamic from "next/dynamic";
 import { Skeleton } from "@/components/ui/skeleton";
+import { ErrorState } from "@/components/shared/error-state";
 import {
   AnalyticsChartCard,
   AnalyticsSectionHeader,
@@ -43,7 +44,14 @@ export function WorkforceSection({ data, isLoading }: WorkforceSectionProps) {
     );
   }
 
-  if (!data) return null;
+  if (!data) {
+    return (
+      <ErrorState
+        title="Couldn't load the workforce overview"
+        description="The headcount figures this section reports did not load, so none are shown."
+      />
+    );
+  }
 
   return (
     <section className="space-y-4">

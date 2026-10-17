@@ -34,7 +34,8 @@ export type KbPage = {
   nextReviewAt: string | null;
   aclRevision: number;
   contentRevision: number;
-  sourceArticleId: number | null;
+  legalHold: boolean;
+  legalHoldReason: string | null;
 };
 
 export type KbPageListItem = Omit<KbPage, "content" | "contentText">;
@@ -42,10 +43,12 @@ export type KbPageListItem = Omit<KbPage, "content" | "contentText">;
 export type KbPageDetail = KbPage & {
   ancestors: Array<{ id: number; title: string }>;
   isFavorite: boolean;
+  canEdit?: boolean;
 };
 
 export type KbPageTreeNode = {
   id: number;
+  contentRevision: number;
   parentPageId: number | null;
   spaceId: number | null;
   projectId: number | null;
@@ -108,16 +111,24 @@ type KbPageMetadataPatch = {
   ownerUserId?: string | null;
 };
 
-/**
- * Writing `content` requires the revision it is replacing — the backend refuses a body without
- * one — so an unguarded body write cannot be expressed. Metadata is not gated on someone
- * else's typing, because `contentRevision` tracks the body alone.
- */
-export type UpdateKbPageInput = KbPageMetadataPatch &
-  (
-    | { content: unknown; expectedContentRevision: number }
-    | { content?: undefined; expectedContentRevision?: number }
-  );
+type KbPageRevisionedPatch = KbPageMetadataPatch & {
+  content?: unknown;
+  expectedContentRevision: number;
+};
+
+type KbPageNonIndexedPatch = Omit<
+  KbPageMetadataPatch,
+  "contentText" | "title" | "contentType" | "status"
+> & {
+  content?: never;
+  contentText?: never;
+  title?: never;
+  contentType?: never;
+  status?: never;
+  expectedContentRevision?: number;
+};
+
+export type UpdateKbPageInput = KbPageRevisionedPatch | KbPageNonIndexedPatch;
 
 export type MoveKbPageInput = {
   parentPageId: number | null;

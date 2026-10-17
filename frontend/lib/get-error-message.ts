@@ -1,4 +1,5 @@
 import { getRetryAfterSeconds, isApiError } from "@/lib/api-envelope";
+import { isRecord } from "@/lib/is-record";
 
 const NETWORK_PATTERN =
   /failed to fetch|networkerror|network request failed|load failed|fetch failed/i;
@@ -13,6 +14,13 @@ const BARE_STATUS = /^(\d{3})(\s|$)/;
 const VALIDATION_HEADLINE = /^validation failed\.?$/i;
 
 const GENERIC_MESSAGE = "Something went wrong. Please try again.";
+const UUID_PATTERN =
+  /\b[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}\b/gi;
+
+function stripRawIds(message: string): string {
+  const cleaned = message.replace(UUID_PATTERN, "").replace(/\s{2,}/g, " ").trim();
+  return cleaned.length > 0 ? cleaned : GENERIC_MESSAGE;
+}
 const STALE_BUILD_MESSAGE =
   "A new version of the app is available. Please refresh the page and try again.";
 
@@ -106,10 +114,16 @@ function describeIssue(issue: { path?: unknown; message: string }): string {
   return `${path}: ${issue.message.trim()}`;
 }
 
+function validationIssues(details: unknown): unknown[] {
+  if (Array.isArray(details)) return details;
+  if (isRecord(details) && Array.isArray(details.details)) return details.details;
+  return [];
+}
+
 function validationDetail(error: unknown): string {
   if (!error || typeof error !== "object" || !("details" in error)) return "";
-  const { details } = error;
-  if (!Array.isArray(details)) return "";
+  const details = validationIssues(error.details);
+  if (details.length === 0) return "";
 
   const issues = details
     .filter(isValidationIssue)
@@ -124,7 +138,7 @@ function validationDetail(error: unknown): string {
     : shown.join("; ");
 }
 
-function extractStatus(error: unknown): number | undefined {
+export function getErrorStatus(error: unknown): number | undefined {
   if (!error || typeof error !== "object") return undefined;
   if ("status" in error && typeof error.status === "number")
     return error.status;
@@ -155,18 +169,41 @@ function rateLimitMessage(error: unknown): string {
   return endpoint ? `${wait} (${endpoint})` : wait;
 }
 
+function projectLockedMessage(details: unknown): string {
+  const state = isRecord(details) && typeof details.state === "string" ? details.state.trim() : "";
+  const standing = state ? state.toLowerCase() : "archived or completed";
+  return `This project is ${standing} — reopen it to make changes.`;
+}
+
+function moduleUpgradeMessage(details: unknown, message: string): string | undefined {
+  if (!isRecord(details) || typeof details.upgradePath !== "string" || !details.upgradePath)
+    return undefined;
+  const lead = message || "This module is not included in your current plan.";
+  return `${lead} Upgrade your plan in Settings → Billing to use it.`;
+}
+
+function codedMessage(error: unknown, message: string): string | undefined {
+  if (!isApiError(error)) return undefined;
+  if (error.code === "PROJECT_LOCKED") return projectLockedMessage(error.details);
+  if (error.code === "MODULE_NOT_ENABLED") return moduleUpgradeMessage(error.details, message);
+  return undefined;
+}
+
 export function isValidationRefusal(error: unknown): boolean {
   if (isApiError(error) && error.code === "VALIDATION_FAILED") return true;
-  const status = extractStatus(error);
+  const status = getErrorStatus(error);
   if (status !== 400 && status !== 422) return false;
   return VALIDATION_HEADLINE.test(extractMessage(error));
 }
 
 export function getErrorMessage(error: unknown): string {
   const message = extractMessage(error);
-  const status = extractStatus(error);
+  const status = getErrorStatus(error);
 
   if (status === 429) return rateLimitMessage(error);
+
+  const coded = codedMessage(error, message);
+  if (coded) return coded;
 
   const detail = validationDetail(error);
   if (detail)
@@ -190,5 +227,5 @@ export function getErrorMessage(error: unknown): string {
     REASON_PHRASE_STATUS[message.toLowerCase().replace(/\.$/, "")];
   if (reasonStatus !== undefined) return statusFallback(reasonStatus);
 
-  return message;
+  return stripRawIds(message);
 }

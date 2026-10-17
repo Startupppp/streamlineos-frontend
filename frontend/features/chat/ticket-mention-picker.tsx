@@ -3,8 +3,8 @@
 import { useCallback } from "react";
 import { Clock, Loader2, Search, Ticket } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useTicketSearch } from "@/hooks/api/build";
-import type { TicketSearchResult } from "@/hooks/api/build";
+import { useTicketSearch } from "@/hooks/api/build/ticket-search";
+import type { TicketSearchResult } from "@/types/projects";
 import { getStatusDotClass } from "@/components/shared/ticket-status-badge";
 import { TruncatedText } from "@/components/ui/truncated-text";
 

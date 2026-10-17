@@ -1,10 +1,10 @@
 ﻿"use client";
 
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
 import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
-import { useCan } from "@/hooks/api/access";
+import { useCan, useCanState } from "@/hooks/api/access";
 import type {
   Risk, Decision,
   CreateRiskInput, UpdateRiskInput,
@@ -30,9 +30,6 @@ const decisionPageContract = lazyContract(() =>
 const decisionRowContract = lazyContract(() =>
   import("@/hooks/api/build/governance-schema").then((m) => m.decisionRowContract),
 );
-const governanceSuccessContract = lazyContract(() =>
-  import("@/hooks/api/build/governance-schema").then((m) => m.governanceSuccessContract),
-);
 const noContentLazy = lazyContract(() =>
   import("@/hooks/api/cursor-page-schema").then((m) => m.noContentContract),
 );
@@ -41,14 +38,42 @@ export const GOVERNANCE_PAGE_SIZE = 100;
 
 interface ListFilters {
   status?: string;
+  probability?: string;
+  impact?: string;
+  ownerId?: string;
   cursor?: number;
+  search?: string;
+}
+
+interface OrgRiskFilters {
+  status?: string;
+  cursor?: number;
+}
+
+export function useOrgRisks(filters?: OrgRiskFilters) {
+  const canState = useCanState("build:risks:view");
+  const params: Record<string, string> = {};
+  if (filters?.status) params["status"] = filters.status;
+  if (filters?.cursor !== undefined) params["cursor"] = String(filters.cursor);
+
+  return useQuery<IdCursorPage<Risk>>({
+    queryKey: buildWorkQueryKeys.projects.risks.orgList(Object.keys(params).length > 0 ? params : undefined),
+    queryFn: ({ signal }) => apiClient.get<IdCursorPage<Risk>>("/build/risks", params, signal, riskPageContract),
+    enabled: canState !== "denied",
+    staleTime: 60_000,
+    throwOnError: false,
+  });
 }
 
 export function useProjectRisks(projectId: number, filters?: ListFilters) {
   const canView = useCan("build:risks:view");
   const params: Record<string, string> = {};
   if (filters?.status) params["status"] = filters.status;
+  if (filters?.probability) params["probability"] = filters.probability;
+  if (filters?.impact) params["impact"] = filters.impact;
+  if (filters?.ownerId) params["ownerId"] = filters.ownerId;
   if (filters?.cursor !== undefined) params["cursor"] = String(filters.cursor);
+  if (filters?.search) params["search"] = filters.search;
 
   return useQuery<IdCursorPage<Risk>>({
     queryKey: buildWorkQueryKeys.projects.risks.list(
@@ -114,7 +139,9 @@ export function useProjectDecisions(projectId: number, filters?: ListFilters) {
   const canView = useCan("build:decisions:view");
   const params: Record<string, string> = {};
   if (filters?.status) params["status"] = filters.status;
+  if (filters?.ownerId) params["ownerId"] = filters.ownerId;
   if (filters?.cursor !== undefined) params["cursor"] = String(filters.cursor);
+  if (filters?.search) params["search"] = filters.search;
 
   return useQuery<IdCursorPage<Decision>>({
     queryKey: buildWorkQueryKeys.projects.decisions.list(

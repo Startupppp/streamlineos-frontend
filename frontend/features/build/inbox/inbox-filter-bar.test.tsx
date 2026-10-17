@@ -17,18 +17,18 @@ jest.mock("@/components/ui/select", () => {
     );
   }
   function SelectTrigger({ children, "aria-label": ariaLabel }: { children: React.ReactNode; "aria-label"?: string; className?: string }) {
-    return <button type="button" role="combobox" aria-label={ariaLabel}>{children}</button>;
+    return <button type="button" role="combobox" aria-label={ariaLabel} aria-expanded="true" aria-controls="mock-select-options">{children}</button>;
   }
   function SelectValue({ placeholder }: { placeholder?: string }) {
     return <span>{placeholder}</span>;
   }
   function SelectContent({ children }: { children: React.ReactNode }) {
-    return <div>{children}</div>;
+    return <div id="mock-select-options">{children}</div>;
   }
   function SelectItem({ value, children }: { value: string; children: React.ReactNode }) {
     const { onValueChange } = mockReact.useContext(SelectCtx);
     return (
-      <div role="option" onClick={() => onValueChange?.(value)}>
+      <div role="option" aria-selected="false" onClick={() => onValueChange?.(value)}>
         {children}
       </div>
     );
@@ -84,7 +84,7 @@ describe("InboxFilterBar — search debounce", () => {
     expect(onQChange).not.toHaveBeenCalledWith("x");
   });
 
-  it("shows a clear-filters button when hasActiveFilters is true", () => {
+  it("uses the search input clear action when the query is populated", () => {
     const ref = React.createRef<HTMLInputElement>();
     render(
       <InboxFilterBar
@@ -97,10 +97,11 @@ describe("InboxFilterBar — search debounce", () => {
         searchInputRef={ref}
       />,
     );
-    expect(screen.getByRole("button", { name: /clear filters/i })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /clear search/i })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /clear filters/i })).toBeNull();
   });
 
-  it("does not show clear-filters button when hasActiveFilters is false", () => {
+  it("does not show a clear-search button when the query is empty", () => {
     const ref = React.createRef<HTMLInputElement>();
     render(
       <InboxFilterBar
@@ -113,26 +114,30 @@ describe("InboxFilterBar — search debounce", () => {
         searchInputRef={ref}
       />,
     );
-    expect(screen.queryByRole("button", { name: /clear filters/i })).toBeNull();
+    expect(screen.queryByRole("button", { name: /clear search/i })).toBeNull();
   });
 
-  it("calls onClearFilters when the clear button is clicked", async () => {
+  it("clears the search through the shared search input action", async () => {
     const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime });
-    const onClearFilters = jest.fn();
+    const onQChange = jest.fn();
     const ref = React.createRef<HTMLInputElement>();
     render(
       <InboxFilterBar
         q="foo"
         type={null}
         hasActiveFilters
-        onQChange={noop}
+        onQChange={onQChange}
         onTypeChange={noop}
-        onClearFilters={onClearFilters}
+        onClearFilters={noop}
         searchInputRef={ref}
       />,
     );
-    await user.click(screen.getByRole("button", { name: /clear filters/i }));
-    expect(onClearFilters).toHaveBeenCalledTimes(1);
+    await user.click(screen.getByRole("button", { name: /clear search/i }));
+    expect(screen.getByRole("searchbox", { name: /search notifications/i })).toHaveValue("");
+    act(() => {
+      jest.advanceTimersByTime(300);
+    });
+    expect(onQChange).toHaveBeenCalledWith("");
   });
 
   it("initialises the local input value from the q prop", () => {
@@ -152,7 +157,73 @@ describe("InboxFilterBar — search debounce", () => {
   });
 });
 
+describe("InboxFilterBar — onQChange stability", () => {
+  it("does not re-fire the debounce when onQChange prop identity changes without a user keystroke", () => {
+    const firstOnQChange = jest.fn();
+    const secondOnQChange = jest.fn();
+    const ref = React.createRef<HTMLInputElement>();
+
+    const { rerender } = render(
+      <InboxFilterBar
+        q={null}
+        type={null}
+        hasActiveFilters={false}
+        onQChange={firstOnQChange}
+        onTypeChange={noop}
+        onClearFilters={noop}
+        searchInputRef={ref}
+      />,
+    );
+
+    act(() => {
+      jest.advanceTimersByTime(300);
+    });
+    jest.clearAllMocks();
+
+    rerender(
+      <InboxFilterBar
+        q={null}
+        type={null}
+        hasActiveFilters={false}
+        onQChange={secondOnQChange}
+        onTypeChange={noop}
+        onClearFilters={noop}
+        searchInputRef={ref}
+      />,
+    );
+
+    act(() => {
+      jest.advanceTimersByTime(300);
+    });
+
+    expect(secondOnQChange).not.toHaveBeenCalled();
+  });
+});
+
 describe("InboxFilterBar — type category select", () => {
+  it("offers Active attention filters without adding them to Later", async () => {
+    const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime });
+    const onSectionChange = jest.fn();
+    const props = { q: null, type: null, hasActiveFilters: false, onQChange: noop,
+      onTypeChange: noop, onClearFilters: noop, onSectionChange, searchInputRef: React.createRef<HTMLInputElement>() };
+    const { rerender } = render(<InboxFilterBar {...props} section="UNREAD" />);
+    expect(screen.getByRole("combobox", { name: "Filter active notifications" })).toBeInTheDocument();
+    await user.click(screen.getByRole("option", { name: "Mentions" }));
+    expect(onSectionChange).toHaveBeenCalledWith("MENTIONS");
+    rerender(<InboxFilterBar {...props} section="SNOOZED" />);
+    expect(screen.queryByRole("combobox", { name: "Filter active notifications" })).toBeNull();
+    expect(screen.getByRole("combobox", { name: "Filter by category" })).toBeInTheDocument();
+  });
+  it("offers only categories emitted by Build rather than the global module list", () => {
+    render(
+      <InboxFilterBar q={null} type={null} hasActiveFilters={false}
+        onQChange={noop} onTypeChange={noop} onClearFilters={noop}
+        searchInputRef={React.createRef<HTMLInputElement>()} />,
+    );
+    expect(screen.getAllByRole("option").map((option) => option.textContent))
+      .toEqual(["All types", "Projects & tickets", "Approvals"]);
+  });
+
   it("renders a combobox with accessible label", () => {
     const ref = React.createRef<HTMLInputElement>();
     render(
@@ -184,7 +255,7 @@ describe("InboxFilterBar — type category select", () => {
         searchInputRef={ref}
       />,
     );
-    await user.click(screen.getByRole("option", { name: "PROJECTS" }));
+    await user.click(screen.getByRole("option", { name: "Projects & tickets" }));
     expect(onTypeChange).toHaveBeenCalledWith("PROJECTS");
   });
 

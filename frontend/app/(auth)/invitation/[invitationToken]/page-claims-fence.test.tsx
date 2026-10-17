@@ -32,6 +32,7 @@ jest.mock("next/navigation", () => ({
 }));
 
 const invitation = {
+  id: "inv-1",
   email: "new.joiner@acme.test",
   organizationName: "Acme Corp",
   role: "MEMBER",
@@ -39,7 +40,7 @@ const invitation = {
 };
 
 jest.mock("next-auth/react", () => ({
-  useSession: () => ({ data: { user: { email: "new.joiner@acme.test" } } }),
+  useSession: () => ({ data: { user: { email: "existing.user@acme.test" } } }),
 }));
 
 jest.mock("sonner", () => ({
@@ -58,14 +59,27 @@ const acceptMutation = {
   isPending: false,
 };
 
+/**
+ * Added to the page when the invitation email OTP landed and never stubbed here,
+ * so all four claims-fence tests threw on render (BUG-HRMS-010).
+ */
+const requestOtpMutation = {
+  mutate: jest.fn((_variables: unknown, callbacks?: { onSuccess?: () => void }) => {
+    callbacks?.onSuccess?.();
+  }),
+  isPending: false,
+};
+
 jest.mock("@/hooks/common/auth-hooks", () => ({
   useValidateInvitation: () => ({
     data: invitation,
     error: null,
     isPending: false,
   }),
+  useClaimInvitation: () => ({ mutate: jest.fn(), isPending: false }),
   useAcceptInvitation: () => acceptMutation,
   useDeclineInvitation: () => ({ mutate: jest.fn(), isPending: false }),
+  useRequestInvitationOtp: () => requestOtpMutation,
   useSessionClaimsRefresh: () => mockRefreshSessionClaims,
   signInWithMagicToken: jest.fn(),
 }));
@@ -84,20 +98,32 @@ beforeEach(() => {
   acceptMutation.isPending = false;
 });
 
+const EMAIL_OTP = "424242";
+
+/** The claims fence sits behind the code step now, so the code is entered first. */
+async function submitEmailCode(user: ReturnType<typeof userEvent.setup>) {
+  await user.type(
+    screen.getByRole("textbox", { name: /verification code/i }),
+    EMAIL_OTP,
+  );
+  await user.click(screen.getByRole("button", { name: /verify & create account/i }));
+}
+
 async function acceptAsExistingUser() {
   const user = userEvent.setup();
   render(<InvitationPage />);
   await user.click(screen.getByRole("button", { name: /accept & join/i }));
+  await submitEmailCode(user);
 }
 
 describe("InvitationPage — joining without an auto-login token waits for a confirmed session", () => {
-  it("sends the invitee to the dashboard once the refresh returns a session", async () => {
+  it("sends the invitee to the authorized landing resolver once the refresh returns a session", async () => {
     mockRefreshSessionClaims.mockResolvedValue(JOINED_SESSION);
 
     await acceptAsExistingUser();
 
     await waitFor(() => {
-      expect(mockPush).toHaveBeenCalledWith("/dashboard");
+      expect(mockPush).toHaveBeenCalledWith("/post-invite");
     });
     expect(mockToastError).not.toHaveBeenCalled();
   });
@@ -112,7 +138,7 @@ describe("InvitationPage — joining without an auto-login token waits for a con
     });
   });
 
-  it("keeps the invitee off the dashboard when the claims refresh times out, because the session still names the previous org", async () => {
+  it("redirects to sign-in when the claims refresh times out rather than re-validating the now-accepted invitation token", async () => {
     mockRefreshSessionClaims.mockResolvedValue(null);
 
     await acceptAsExistingUser();
@@ -120,10 +146,10 @@ describe("InvitationPage — joining without an auto-login token waits for a con
     await waitFor(() => {
       expect(mockToastError).toHaveBeenCalled();
     });
-    expect(mockPush).not.toHaveBeenCalledWith("/dashboard");
-    expect(
-      screen.getByRole("button", { name: /accept & join/i }),
-    ).toBeEnabled();
+    expect(mockPush).not.toHaveBeenCalledWith("/post-invite");
+    await waitFor(() => {
+      expect(mockPush).toHaveBeenCalledWith("/signin");
+    });
   });
 
   it("keeps one acceptance in flight until its claims refresh settles", async () => {
@@ -137,8 +163,8 @@ describe("InvitationPage — joining without an auto-login token waits for a con
 
     const user = userEvent.setup();
     render(<InvitationPage />);
-    const acceptButton = screen.getByRole("button", { name: /accept & join/i });
-    await user.click(acceptButton);
+    await user.click(screen.getByRole("button", { name: /accept & join/i }));
+    await submitEmailCode(user);
     expect(acceptMutation.mutate).toHaveBeenCalledTimes(1);
 
     await act(async () => {
@@ -147,7 +173,7 @@ describe("InvitationPage — joining without an auto-login token waits for a con
     });
 
     await waitFor(() => {
-      expect(mockPush).toHaveBeenCalledWith("/dashboard");
+      expect(mockPush).toHaveBeenCalledWith("/post-invite");
     });
     expect(mockPush).toHaveBeenCalledTimes(1);
     expect(mockToastError).not.toHaveBeenCalled();

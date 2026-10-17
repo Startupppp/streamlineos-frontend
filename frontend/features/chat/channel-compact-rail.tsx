@@ -13,6 +13,7 @@ import {
   UsersIcon,
 } from "@animateicons/react/lucide";
 import { cn } from "@/lib/utils";
+import { ChannelSidebarCollapseButton } from "./channel-sidebar-collapse-button";
 
 const RAIL_ICON_SIZE = 14;
 
@@ -29,7 +30,7 @@ function CompactRailButton({ label, icon, onClick }: CompactRailButtonProps) {
         <button
           type="button"
           onClick={onClick}
-          className="flex size-8 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-muted/50 hover:text-foreground"
+          className="flex size-11 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-muted/50 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           aria-label={label}
         >
           {icon}
@@ -48,6 +49,7 @@ interface ChannelCompactRailProps {
   onBrowseOpen: () => void;
   onNewDMOpen: () => void;
   onNewGroupOpen: () => void;
+  onToggleSidebar?: () => void;
 }
 
 export function ChannelCompactRail({
@@ -56,14 +58,22 @@ export function ChannelCompactRail({
   onBrowseOpen,
   onNewDMOpen,
   onNewGroupOpen,
+  onToggleSidebar,
 }: ChannelCompactRailProps) {
   return (
     <div
       className={cn(
         "relative z-20 hidden flex-col items-center gap-2 px-1.5 pt-2 pb-2 shrink-0",
-        isCollapsed && "md:flex",
+        isCollapsed && "lg:flex",
       )}
     >
+      {onToggleSidebar ? (
+        <ChannelSidebarCollapseButton
+          isCollapsed
+          onToggle={onToggleSidebar}
+          className="mb-1"
+        />
+      ) : null}
       <div className="flex flex-col items-center gap-0.5">
         <CompactRailButton
           label="Search"

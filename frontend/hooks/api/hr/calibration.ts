@@ -7,6 +7,7 @@ import { lazyContract } from "@/lib/api-envelope";
 import { useCan, useModuleEnabled } from "@/hooks/api/access";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { queryKeyBase } from "@/lib/query-keys/base";
+import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
 import type {
   calibrationEntryContract,
   nineBoxEntryContract,
@@ -47,6 +48,7 @@ export function useCalibrationEntries(cycleId: number) {
     queryFn: ({ signal }) => apiClient.get<CalibrationEntry[]>(`/hr/performance/calibration/cycles/${cycleId}/entries`, undefined, signal, calibrationEntryListC),
     staleTime: 30_000,
     enabled: cycleId > 0 && canManage && hrEnabled,
+    ...INLINE_READ_ERROR,
   });
 }
 
@@ -58,6 +60,7 @@ export function useNineBox(cycleId: number) {
     queryFn: ({ signal }) => apiClient.get<NineBoxEntry[]>(`/hr/performance/calibration/nine-box?cycleId=${cycleId}`, undefined, signal, nineBoxListC),
     staleTime: 60_000,
     enabled: cycleId > 0 && canManage && hrEnabled,
+    ...INLINE_READ_ERROR,
   });
 }
 

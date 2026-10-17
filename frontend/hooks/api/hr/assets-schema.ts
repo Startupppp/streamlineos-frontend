@@ -17,6 +17,7 @@ export const assetRowContract = z.object({
   location: z.string().nullable(),
   notes: z.string().nullable(),
   expectedReturnDate: z.string().nullable(),
+  version: z.number().int(),
   createdAt: z.string(),
   updatedAt: z.string(),
 });

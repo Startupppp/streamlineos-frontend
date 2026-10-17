@@ -45,6 +45,13 @@ const PROJECT_SHORTCUTS: ShortcutRowProps[] = [
   { keys: ["G", "I"], label: "Go to My Tickets" },
 ];
 
+const COMPANION_SHORTCUTS: ShortcutRowProps[] = [
+  { keys: ["Alt", "Shift", "C"], label: "Toggle Companion chat" },
+  { keys: ["Alt", "Shift", "V"], label: "Start or end Companion voice" },
+  { keys: ["Alt", "Shift", "M"], label: "Minimize or restore Companion" },
+  { keys: ["?"], label: "Show this shortcut help" },
+];
+
 export function ShortcutsHelpDialog() {
   const { helpOpen, setHelpOpen } = useCommandPalette();
 
@@ -81,6 +88,16 @@ export function ShortcutsHelpDialog() {
             <div className="divide-y divide-border/50">
               {PROJECT_SHORTCUTS.map((s) => (
                 <ShortcutRow key={s.label + s.keys.join("")} keys={s.keys} label={s.label} />
+              ))}
+            </div>
+          </div>
+          <div>
+            <p className="mb-1 text-micro font-semibold uppercase tracking-widest text-muted-foreground">
+              Companion, when visible
+            </p>
+            <div className="divide-y divide-border/50">
+              {COMPANION_SHORTCUTS.map((shortcut) => (
+                <ShortcutRow key={shortcut.label} keys={shortcut.keys} label={shortcut.label} />
               ))}
             </div>
           </div>

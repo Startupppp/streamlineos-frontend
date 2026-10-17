@@ -98,6 +98,34 @@ describe("BuildHeaderActions", () => {
     expect(screen.getAllByLabelText("More actions").length).toBeGreaterThan(0);
   });
 
+  it("renders a lone overflow action as a button, not a menu", () => {
+    const { container } = render(
+      <BuildHeaderActions
+        actions={[
+          { id: "log-time", label: "Log time" },
+          { id: "summarize", label: "Summarize" },
+          { id: "import-export", label: "Import / Export" },
+          { id: "create", label: "Create Issue", primary: true },
+        ]}
+      />,
+    );
+    const root = container.querySelector<HTMLElement>(
+      "[data-slot=build-header-actions]",
+    );
+    expect(root).not.toBeNull();
+    const desktopOverflow = root!.querySelectorAll<HTMLElement>(
+      "[aria-label='More actions'].hidden.sm\\:inline-flex",
+    );
+    expect(desktopOverflow).toHaveLength(0);
+    const importButtons = screen.getAllByRole("button", {
+      name: "Import / Export",
+    });
+    expect(importButtons.length).toBeGreaterThan(0);
+    expect(
+      importButtons.some((button) => button.className.includes("sm:inline-flex")),
+    ).toBe(true);
+  });
+
   it("runs the handler the caller supplied", () => {
     const onSelect = jest.fn();
     render(
@@ -112,13 +140,23 @@ describe("BuildHeaderActions", () => {
   it("renders an href action as a link", () => {
     render(
       <BuildHeaderActions
-        actions={[{ id: "resume", label: "Resume project", href: "/build/7" }]}
+        actions={[
+          {
+            id: "resume",
+            label: "Resume",
+            ariaLabel: "Resume Build QA Sandbox",
+            title: "Resume Build QA Sandbox",
+            href: "/build/7",
+          },
+        ]}
       />,
     );
-    expect(screen.getAllByRole("link", { name: "Resume project" })[0]).toHaveAttribute(
-      "href",
-      "/build/7",
-    );
+    const link = screen.getAllByRole("link", {
+      name: "Resume Build QA Sandbox",
+    })[0];
+    expect(link).toHaveAttribute("href", "/build/7");
+    expect(link).toHaveAttribute("title", "Resume Build QA Sandbox");
+    expect(link).toHaveTextContent("Resume");
   });
 });
 

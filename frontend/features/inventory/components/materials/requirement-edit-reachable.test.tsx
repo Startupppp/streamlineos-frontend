@@ -100,7 +100,7 @@ it("opens on the line's own values", async () => {
 
   expect(await screen.findByRole("dialog")).toHaveTextContent("Edit requirement");
   expect(screen.getByLabelText(/quantity needed/i)).toHaveValue("120");
-  expect(screen.getByLabelText(/needed by/i)).toHaveValue("2026-10-15");
+  expect(screen.getByLabelText(/needed by/i)).toHaveTextContent("15 Oct 2026");
 });
 
 it("sends the line the endpoint's own fields, quantity as a string", async () => {

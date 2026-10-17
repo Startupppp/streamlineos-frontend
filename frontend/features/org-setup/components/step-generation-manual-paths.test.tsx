@@ -9,6 +9,7 @@ const mockRefreshSessionClaims = jest.fn();
 const mockClearAll = jest.fn();
 const mockSetCompletionMarker = jest.fn();
 const mockHasCompletionMarker = jest.fn();
+const mockGetCompletionDestination = jest.fn<string, unknown[]>(() => "/dashboard");
 const mockClearCompletionMarker = jest.fn();
 const mockClearBackendTokenCache = jest.fn();
 const mockLocationReplace = jest.fn();
@@ -43,9 +44,13 @@ jest.mock("../hooks/use-setup-provisioning", () => ({
   useSetupProvisioning: jest.fn(() => mockProvisioning),
 }));
 
-jest.mock("@/lib/api/hooks/org", () => ({
+jest.mock("@/hooks/api/org-setup", () => ({
   useCompleteOrgSetupMutation: jest.fn(() => ({
     mutateAsync: mockMutateAsync,
+    isPending: false,
+  })),
+  useOrgSetupActivateMutation: jest.fn(() => ({
+    mutateAsync: jest.fn(),
     isPending: false,
   })),
 }));
@@ -73,6 +78,7 @@ jest.mock("@/features/org-setup/lib/draft", () => ({
   clearAll: jest.fn((...args: unknown[]) => mockClearAll(...args)),
   setCompletionMarker: jest.fn((...args: unknown[]) => mockSetCompletionMarker(...args)),
   hasCompletionMarker: jest.fn((...args: unknown[]) => mockHasCompletionMarker(...args)),
+  getCompletionDestination: jest.fn((...args: unknown[]) => mockGetCompletionDestination(...args)),
   clearCompletionMarker: jest.fn((...args: unknown[]) =>
     mockClearCompletionMarker(...args),
   ),
@@ -111,17 +117,21 @@ const TEST_DATA = {
   goals: [],
   industry: "IT Services",
   companyName: "Test Corp",
+  displayName: "Test Corp",
+  fullName: "QA Owner",
   teamSize: "1-10",
   phone: "",
   installedApps: [],
   modules: [],
   invitees: [],
+  moduleAnswers: {},
 };
 
 const SETUP_RESPONSE = {
   success: true as const,
   orgId: "org-new",
   autoLoginToken: "magic-token-abc",
+  destination: "/dashboard",
 };
 
 const FAKE_SESSION = {
@@ -233,7 +243,15 @@ describe("StepGeneration — manual continue paths honour the discriminated sign
       });
       expect(mockRefreshSessionClaims).toHaveBeenCalledWith({ orgId: "org-new" });
       expect(mockToastError).not.toHaveBeenCalled();
-      expect(mockSetCompletionMarker).toHaveBeenCalledWith("user-1", "org-new");
+      const expectedDestination =
+        prop === "onGoToInvitations"
+          ? "/settings/users?view=invitations"
+          : "/dashboard";
+      expect(mockSetCompletionMarker).toHaveBeenCalledWith(
+        "user-1",
+        "org-new",
+        expectedDestination,
+      );
     },
   );
 
@@ -247,7 +265,7 @@ describe("StepGeneration — manual continue paths honour the discriminated sign
       expect(mockLocationReplace).toHaveBeenCalledWith("/dashboard");
     });
     expect(mockRefreshSessionClaims).toHaveBeenCalledWith({ orgId: "org-new" });
-    expect(mockSetCompletionMarker).toHaveBeenCalledWith("user-1", "org-new");
+    expect(mockSetCompletionMarker).toHaveBeenCalledWith("user-1", "org-new", "/dashboard");
   });
 
   it("onGoToInvitations: fallback sign-in opens invitations", async () => {

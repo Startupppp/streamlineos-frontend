@@ -3,28 +3,246 @@
 import { useEffect, useState } from "react";
 import {
   KbFileTextIcon,
+  KbInfoIcon,
   KbPanelRightCloseIcon,
   KbPanelRightOpenIcon,
 } from "@/features/wiki/lib/kb-icons";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { TruncatedText } from "@/components/ui/truncated-text";
+import { Skeleton } from "@/components/ui/skeleton";
+import { PageState } from "@/components/shared/page-state";
+import { ErrorReference } from "@/components/shared/error-reference";
+import { usePageState } from "@/hooks/api/use-page-state";
+import { isApiError } from "@/lib/api-envelope";
+import {
+  Sheet,
+  SheetBody,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
 import { useKbPageBacklinks } from "@/hooks/api/kb";
 import { useKbPageRecordLinks } from "@/hooks/api/kb/record-links";
+import { useOrgMembersByIds } from "@/hooks/api/organization";
 import type { KbPageDetail } from "@/hooks/api/kb/page-types";
-import { kbTimeAgo } from "@/features/wiki/lib/kb-date-utils";
+import { kbTimeAgo, kbFormatDate } from "@/features/wiki/lib/kb-date-utils";
 import {
   KB_STATUS_LABELS,
   KB_STATUS_BADGE_CLASS,
 } from "@/features/wiki/lib/kb-page-status";
+import { getUserDisplayName } from "@/lib/person-display";
+import { cn } from "@/lib/utils";
 
 const STORAGE_KEY = "wiki-right-panel-collapsed";
+const BACKLINK_DISPLAY_LIMIT = 20;
+const RECORD_LINK_DISPLAY_LIMIT = 20;
 
 interface PageRightPanelProps {
   pageId: number;
   page: KbPageDetail;
   wordCount: number;
   onNavigate: (pageId: number) => void;
+}
+
+interface PanelContentProps {
+  pageId: number;
+  page: KbPageDetail;
+  wordCount: number;
+  onNavigate: (pageId: number) => void;
+}
+
+function StatusBadge({ status }: { status: string }) {
+  return (
+    <Badge
+      variant="outline"
+      className={cn("h-5 px-1.5 text-micro", KB_STATUS_BADGE_CLASS[status])}
+    >
+      {KB_STATUS_LABELS[status] ?? status}
+    </Badge>
+  );
+}
+
+function Stat({
+  label,
+  value,
+  suppressHydrationWarning,
+}: {
+  label: string;
+  value: string;
+  suppressHydrationWarning?: boolean;
+}) {
+  return (
+    <div className="min-w-0">
+      <p className="text-xs text-muted-foreground">{label}</p>
+      <p
+        className="mt-0.5 truncate text-sm tabular-nums text-foreground"
+        suppressHydrationWarning={suppressHydrationWarning}
+      >
+        {value}
+      </p>
+    </div>
+  );
+}
+
+function PanelContent({ pageId, page, wordCount, onNavigate }: PanelContentProps) {
+  const { data: backlinks = [], isLoading: backlinksLoading, isError: backlinksError, error: backlinksReadError, refetch: refetchBacklinks } = useKbPageBacklinks(pageId);
+  const { data: recordLinks = [], hasNextPage: hasMoreRecordLinks } = useKbPageRecordLinks(pageId);
+  const backlinksAccessLost = isApiError(backlinksReadError) && (backlinksReadError.status === 401 || backlinksReadError.status === 403 || backlinksReadError.status === 404);
+  const backlinksState = usePageState({
+    permission: "kb:pages:view",
+    isLoading: backlinksLoading,
+    isError: backlinksError && (backlinks.length === 0 || backlinksAccessLost),
+    error: backlinksReadError,
+    isEmpty: !backlinksLoading && !backlinksError && backlinks.length === 0,
+  });
+  const memberIds = [page.lastEditedById, page.ownerUserId].filter(
+    (id): id is string => id !== null && id !== undefined,
+  );
+  const { data: membersPage } = useOrgMembersByIds(memberIds);
+  const members = membersPage?.data ?? [];
+
+  function handleBacklinkClick(event: React.MouseEvent<HTMLButtonElement>) {
+    const id = Number(event.currentTarget.dataset.pageId);
+    if (!Number.isFinite(id)) return;
+    onNavigate(id);
+  }
+
+  function handleRetryBacklinks() {
+    void refetchBacklinks();
+  }
+
+  function memberName(userId: string | null | undefined): string | null {
+    if (!userId) return null;
+    const member = members.find((m) => m.userId === userId);
+    return member
+      ? getUserDisplayName({ name: member.name, email: member.email })
+      : null;
+  }
+
+  const editorName = memberName(page.lastEditedById);
+  const ownerName = memberName(page.ownerUserId);
+  const editedValue = editorName
+    ? `${kbTimeAgo(page.updatedAt)} · ${editorName}`
+    : kbTimeAgo(page.updatedAt);
+
+  const trustLabel =
+    page.trustState === "verified"
+      ? "Verified"
+      : page.trustState === "verification_expired"
+        ? "Stale"
+        : null;
+
+  return (
+    <div className="flex flex-col gap-5 px-4 py-4">
+      <section className="grid grid-cols-2 gap-x-4 gap-y-3">
+        <div className="min-w-0">
+          <p className="text-xs text-muted-foreground">Status</p>
+          <div className="mt-1 flex flex-wrap items-center gap-1.5">
+            <StatusBadge status={page.status} />
+            {trustLabel ? (
+              <Badge
+                variant="outline"
+                className={cn(
+                  "h-5 px-1.5 text-micro",
+                  page.trustState === "verified"
+                    ? "border-status-success-rule bg-status-success-surface text-status-success-ink"
+                    : "border-status-warning-rule bg-status-warning-surface text-status-warning-ink",
+                )}
+              >
+                {trustLabel}
+              </Badge>
+            ) : null}
+          </div>
+        </div>
+        <Stat label="Words" value={wordCount.toLocaleString()} />
+        <Stat label="Created" value={kbTimeAgo(page.createdAt)} suppressHydrationWarning />
+        <Stat label="Edited" value={editedValue} suppressHydrationWarning />
+        {ownerName ? <Stat label="Owner" value={ownerName} /> : null}
+        {page.nextReviewAt ? (
+          <Stat
+            label="Review due"
+            value={kbFormatDate(page.nextReviewAt)}
+            suppressHydrationWarning
+          />
+        ) : null}
+      </section>
+
+      <section className="border-t border-border/70 pt-4">
+        <div className="mb-2 flex items-baseline justify-between gap-2">
+          <h3 className="text-sm font-medium text-foreground">Backlinks</h3>
+          {(backlinksState.kind === "ready" || backlinksState.kind === "empty") && (
+            <span className="text-xs tabular-nums text-muted-foreground">{backlinks.length}</span>
+          )}
+        </div>
+        <PageState
+          resolution={backlinksState}
+          compact
+          onRetry={handleRetryBacklinks}
+          loading={<Skeleton className="h-12 w-full" />}
+          empty={<p className="text-xs text-muted-foreground">No pages link here.</p>}
+        >
+          <>
+            <ul className="flex flex-col">
+              {backlinks.slice(0, BACKLINK_DISPLAY_LIMIT).map((bl) => (
+                <li key={bl.id}>
+                  <button
+                    type="button"
+                    data-page-id={bl.id}
+                    className="flex w-full items-center gap-2 rounded-md px-1.5 py-1.5 text-left text-sm hover:bg-muted"
+                    onClick={handleBacklinkClick}
+                  >
+                    <span className="shrink-0 text-sm leading-none">
+                      {bl.icon ?? <KbFileTextIcon className="h-3.5 w-3.5 text-muted-foreground" />}
+                    </span>
+                    <TruncatedText text={bl.title || "Untitled"} />
+                  </button>
+                </li>
+              ))}
+            </ul>
+            {backlinks.length > BACKLINK_DISPLAY_LIMIT ? (
+              <p className="mt-1 px-1.5 text-xs text-muted-foreground">
+                +{backlinks.length - BACKLINK_DISPLAY_LIMIT} more
+              </p>
+            ) : null}
+            {backlinksError && (
+              <div role="alert" className="space-y-2 text-xs text-destructive">
+                <p>Could not refresh backlinks.</p>
+                <ErrorReference error={backlinksReadError} />
+                <Button type="button" variant="outline" size="sm" onClick={handleRetryBacklinks}>Retry backlinks</Button>
+              </div>
+            )}
+          </>
+        </PageState>
+      </section>
+
+      <section className="border-t border-border/70 pt-4">
+        <div className="mb-2 flex items-baseline justify-between gap-2">
+          <h3 className="text-sm font-medium text-foreground">Linked records</h3>
+          <span className="text-xs tabular-nums text-muted-foreground">{recordLinks.length}{hasMoreRecordLinks ? "+" : ""}</span>
+        </div>
+        {recordLinks.length === 0 ? (
+          <p className="text-xs text-muted-foreground">No linked records.</p>
+        ) : (
+          <>
+            <ul className="flex flex-col gap-1">
+              {recordLinks.slice(0, RECORD_LINK_DISPLAY_LIMIT).map((rl) => (
+                <li key={rl.id} className="px-1.5 py-1 text-sm text-foreground">
+                  <TruncatedText text={rl.label ?? rl.targetType} className="capitalize" />
+                </li>
+              ))}
+            </ul>
+            {recordLinks.length > RECORD_LINK_DISPLAY_LIMIT ? (
+              <p className="mt-1 px-1.5 text-xs text-muted-foreground">
+                +{recordLinks.length - RECORD_LINK_DISPLAY_LIMIT}{hasMoreRecordLinks ? "+" : ""} more
+              </p>
+            ) : null}
+          </>
+        )}
+      </section>
+    </div>
+  );
 }
 
 export default function PageRightPanel({
@@ -34,9 +252,8 @@ export default function PageRightPanel({
   onNavigate,
 }: PageRightPanelProps) {
   const [collapsed, setCollapsed] = useState(false);
-
-  const { data: backlinks = [] } = useKbPageBacklinks(pageId);
-  const { data: recordLinks = [] } = useKbPageRecordLinks(pageId);
+  const [mobileSheetOpen, setMobileSheetOpen] = useState(false);
+  const title = page.title || "Untitled";
 
   useEffect(() => {
     setCollapsed(localStorage.getItem(STORAGE_KEY) === "true");
@@ -50,124 +267,84 @@ export default function PageRightPanel({
     });
   }
 
-  function handleBacklinkClick(id: number) {
-    onNavigate(id);
+  function handleMobileOpen() {
+    setMobileSheetOpen(true);
+  }
+
+  function handleMobileSheetChange(open: boolean) {
+    setMobileSheetOpen(open);
   }
 
   return (
-    <div className="hidden xl:flex flex-col shrink-0">
-      <div className="sticky top-0 pt-3 flex justify-end pr-2">
-        <Button
-          variant="ghost"
-          size="icon"
-          className="w-7"
-          onClick={handleToggle}
-          aria-label={collapsed ? "Open details panel" : "Close details panel"}
-        >
-          {collapsed ? (
-            <KbPanelRightOpenIcon className="h-4 w-4" />
-          ) : (
-            <KbPanelRightCloseIcon className="h-4 w-4" />
-          )}
-        </Button>
-      </div>
+    <>
+      <Button
+        type="button"
+        variant="ghost"
+        size="icon"
+        className="fixed right-4 bottom-4 z-30 h-10 w-10 rounded-full border border-border bg-background shadow-md xl:hidden"
+        onClick={handleMobileOpen}
+        aria-label="Open details panel"
+      >
+        <KbInfoIcon className="h-4 w-4" />
+      </Button>
 
-      {!collapsed && (
-        <div className="w-64 border-l border-border overflow-y-auto pb-16 px-4 space-y-5 text-sm">
-          <section>
-            <p className="text-dense font-semibold text-muted-foreground uppercase tracking-wide mb-2">
-              Details
-            </p>
-            <div className="space-y-1.5">
-              <div className="flex items-center justify-between gap-2">
-                <span className="text-muted-foreground text-xs">Status</span>
-                <Badge
-                  variant="outline"
-                  className={`text-micro h-4 px-1.5 ${KB_STATUS_BADGE_CLASS[page.status] ?? ""}`}
-                >
-                  {KB_STATUS_LABELS[page.status] ?? page.status}
-                </Badge>
-              </div>
-              {page.trustState !== "unverified" && (
-                <div className="flex items-center justify-between gap-2">
-                  <span className="text-muted-foreground text-xs">Trust</span>
-                  <Badge
-                    variant="outline"
-                    className={`text-micro h-4 px-1.5 ${
-                      page.trustState === "verified"
-                        ? "bg-status-success-surface text-status-success-ink border-status-success-rule"
-                        : "bg-status-warning-surface text-status-warning-ink border-status-warning-rule"
-                    }`}
-                  >
-                    {page.trustState === "verified" ? "Verified" : "Stale"}
-                  </Badge>
-                </div>
-              )}
-              <div className="flex items-center justify-between gap-2">
-                <span className="text-muted-foreground text-xs">Words</span>
-                <span className="text-xs text-foreground">{wordCount}</span>
-              </div>
-              <div className="flex items-center justify-between gap-2">
-                <span className="text-muted-foreground text-xs">Created</span>
-                <span className="text-xs text-foreground" suppressHydrationWarning>
-                  {kbTimeAgo(page.createdAt)}
-                </span>
-              </div>
-              <div className="flex items-center justify-between gap-2">
-                <span className="text-muted-foreground text-xs">Edited</span>
-                <span className="text-xs text-foreground" suppressHydrationWarning>
-                  {kbTimeAgo(page.updatedAt)}
-                </span>
-              </div>
+      <Sheet open={mobileSheetOpen} onOpenChange={handleMobileSheetChange}>
+        <SheetContent side="right" className="gap-0 p-0 xl:hidden sm:max-w-sm">
+          <SheetHeader className="border-b border-border px-4 py-3 pr-12">
+            <SheetDescription className="text-xs">Page details</SheetDescription>
+            <SheetTitle className="truncate text-base leading-tight">{title}</SheetTitle>
+          </SheetHeader>
+          <SheetBody>
+            <PanelContent
+              pageId={pageId}
+              page={page}
+              wordCount={wordCount}
+              onNavigate={onNavigate}
+            />
+          </SheetBody>
+        </SheetContent>
+      </Sheet>
+
+      <div className="hidden shrink-0 flex-col xl:flex">
+        {!collapsed ? (
+          <div className="flex w-64 flex-col border-l border-border">
+            <div className="flex items-center justify-between gap-2 border-b border-border px-3 py-2">
+              <p className="truncate text-sm font-medium text-foreground">{title}</p>
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                className="h-7 w-7 shrink-0"
+                onClick={handleToggle}
+                aria-label="Close details panel"
+              >
+                <KbPanelRightCloseIcon className="h-4 w-4" />
+              </Button>
             </div>
-          </section>
-
-          <section>
-            <p className="text-dense font-semibold text-muted-foreground uppercase tracking-wide mb-2">
-              Backlinks ({backlinks.length})
-            </p>
-            {backlinks.length === 0 ? (
-              <p className="text-xs text-muted-foreground">No pages link here.</p>
-            ) : (
-              <div className="space-y-0.5">
-                {backlinks.map((bl) => (
-                  <button
-                    key={bl.id}
-                    className="flex items-center gap-1.5 w-full text-left text-xs px-1 py-1 rounded hover:bg-muted transition-colors"
-                    onClick={() => handleBacklinkClick(bl.id)}
-                  >
-                    <span className="shrink-0 text-sm">
-                      {bl.icon ?? <KbFileTextIcon className="h-3 w-3 text-muted-foreground" />}
-                    </span>
-                    <TruncatedText text={bl.title || "Untitled"} />
-                  </button>
-                ))}
-              </div>
-            )}
-          </section>
-
-          <section>
-            <p className="text-dense font-semibold text-muted-foreground uppercase tracking-wide mb-2">
-              Linked records ({recordLinks.length})
-            </p>
-            {recordLinks.length === 0 ? (
-              <p className="text-xs text-muted-foreground">No linked records.</p>
-            ) : (
-              <div className="space-y-0.5">
-                {recordLinks.map((rl) => (
-                  <div
-                    key={rl.id}
-                    className="flex items-center gap-1.5 text-xs px-1 py-1"
-                  >
-                    <TruncatedText text={rl.label ?? rl.targetType} className="text-muted-foreground capitalize" />
-                  </div>
-                ))}
-              </div>
-            )}
-          </section>
-        </div>
-      )}
-    </div>
+            <div className="min-h-0 flex-1 overflow-y-auto">
+              <PanelContent
+                pageId={pageId}
+                page={page}
+                wordCount={wordCount}
+                onNavigate={onNavigate}
+              />
+            </div>
+          </div>
+        ) : (
+          <div className="sticky top-0 pt-3 pr-2">
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              className="h-7 w-7"
+              onClick={handleToggle}
+              aria-label="Open details panel"
+            >
+              <KbPanelRightOpenIcon className="h-4 w-4" />
+            </Button>
+          </div>
+        )}
+      </div>
+    </>
   );
 }
-

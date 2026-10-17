@@ -13,24 +13,25 @@ import {
   useNodesState,
   useReactFlow,
   type Connection,
+  type Edge,
 } from "@xyflow/react";
 import { WorkflowNodeConfigPanel } from "./workflow-node-config-panel";
 import { isWorkflowNodeType, NODE_PALETTE_MAP } from "./workflow-node-palette";
 import { workflowNodeTypes } from "./workflow-flow-node";
-import type { WorkflowEdge, WorkflowNode, WorkflowNodeData } from "./workflow-builder-types";
+import type { WorkflowNode, WorkflowNodeData } from "./workflow-builder-types";
 
 const DEFAULT_EDGE_OPTIONS = { style: { stroke: "var(--muted-foreground)", strokeWidth: 1.5 } };
 
 interface WorkflowBuilderCanvasSurfaceProps {
-  initialEdges: WorkflowEdge[];
+  initialEdges: Edge[];
   initialNodes: WorkflowNode[];
-  onDefinitionChange: (nodes: WorkflowNode[], edges: WorkflowEdge[]) => void;
+  onDefinitionChange: (nodes: WorkflowNode[], edges: Edge[]) => void;
 }
 
 export function WorkflowBuilderCanvasSurface({ initialEdges, initialNodes, onDefinitionChange }: WorkflowBuilderCanvasSurfaceProps) {
   const { screenToFlowPosition } = useReactFlow();
   const [nodes, setNodes, onNodesChange] = useNodesState<WorkflowNode>(initialNodes);
-  const [edges, setEdges, onEdgesChange] = useEdgesState<WorkflowEdge>(initialEdges);
+  const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>(initialEdges);
   const [selectedNode, setSelectedNode] = useState<WorkflowNode | null>(null);
 
   useEffect(() => { onDefinitionChange(nodes, edges); }, [edges, nodes, onDefinitionChange]);

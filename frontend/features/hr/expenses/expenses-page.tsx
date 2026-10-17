@@ -13,6 +13,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { toast } from "sonner";
+import { getErrorMessage } from "@/lib/get-error-message";
 import {
   useExpensePageData,
   useUpdateExpenseStatus,
@@ -22,7 +23,7 @@ import {
 import type { Employee } from "@/types/hr";
 import { CreateExpenseDialog } from "@/features/hr/expenses/components/create-expense-dialog";
 import { ImportExpenseSheet } from "@/features/hr/expenses/components/import-expense-sheet";
-import { ExpenseExportDialog } from "@/components/expenses/expense-export-dialog";
+import { ExpenseExportDialog } from "@/components/expenses/expense-export/expense-export-dialog";
 import { useExpenseFilters } from "@/hooks/common/use-expense-filters";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import { useSession } from "next-auth/react";
@@ -48,6 +49,8 @@ import {
 import type { ExpenseToEdit } from "@/features/hr/expenses/components/create-expense-dialog";
 import type { ExpenseWithRelations } from "@/types/hr/expenses";
 import { useCan } from "@/hooks/api/access";
+import { usePageState } from "@/hooks/api/use-page-state";
+import { PageState } from "@/components/shared/page-state";
 
 export function ExpensesPage() {
   const { staggerContainer, fadeUp } = useMotionVariants();
@@ -61,6 +64,10 @@ export function ExpensesPage() {
   const [isExportOpen, setIsExportOpen] = useState(false);
 
   const isAdmin = useCan("hr:expenses:approve");
+  // Exact keys of the endpoints each control reaches (FE-45).
+  const canCreate = useCan("self:expenses");
+  const canImport = useCan("hr:expenses:manage");
+  const canExport = useCan("hr:expenses:read");
 
   const { filters, setFilter, setDatePreset, datePreset, activeFilterCount } =
     useExpenseFilters({
@@ -82,6 +89,7 @@ export function ExpensesPage() {
     data: pageData,
     isLoading,
     isError,
+    error,
     refetch,
   } = useExpensePageData(
     {
@@ -132,7 +140,7 @@ export function ExpensesPage() {
             void refetch();
             return "Expense approved";
           },
-          error: "Failed to approve expense",
+          error: getErrorMessage,
         },
       );
     },
@@ -156,7 +164,7 @@ export function ExpensesPage() {
             void refetch();
             return "Expense rejected";
           },
-          error: "Failed to reject expense",
+          error: getErrorMessage,
         },
       );
     },
@@ -219,22 +227,24 @@ export function ExpensesPage() {
     setIsCreateOpen(false);
   }, [refetch]);
 
-  if (isLoading && !pageData) return <LoadingState variant="page" />;
+  // Expenses are HRMS-owned. Accounting is not a prerequisite.
+  const pageState = usePageState({
+    isLoading: isLoading && !pageData,
+    isError: isError && !pageData,
+    error,
+  });
 
-  if (isError && !pageData) {
+  if (pageState.kind !== "ready") {
     return (
       <PageWrapper title="Expenses" subtitle="Manage your expense claims">
-        <div className="flex flex-col items-center justify-center py-20 gap-4">
-          <div className="text-center">
-            <p className="text-sm font-semibold text-foreground">Failed to load expenses</p>
-            <p className="text-xs text-muted-foreground mt-1">
-              Something went wrong. Please try again.
-            </p>
-          </div>
-          <Button variant="outline" size="sm" onClick={handleRetryLoad}>
-            Try Again
-          </Button>
-        </div>
+        <PageState
+          resolution={pageState}
+          loading={<LoadingState variant="page" />}
+          onRetry={handleRetryLoad}
+          className="flex-1"
+        >
+          {null}
+        </PageState>
       </PageWrapper>
     );
   }
@@ -271,10 +281,13 @@ export function ExpensesPage() {
                 {pendingCount} pending
               </span>
             )}
-            <Button variant="outline" size="sm" className="h-9 gap-1.5 text-sm" onClick={handleOpenImport}>
-              <Upload className="h-4 w-4" />
-              Import expenses
-            </Button>
+            {canImport && (
+              <Button variant="outline" size="sm" className="h-9 gap-1.5 text-sm" onClick={handleOpenImport}>
+                <Upload className="h-4 w-4" />
+                Import expenses
+              </Button>
+            )}
+            {canExport && (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <AnimatedIconButton
@@ -292,11 +305,16 @@ export function ExpensesPage() {
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
-            <ExpenseExportDialog filters={filters} open={isExportOpen} onOpenChange={setIsExportOpen} />
-            <Button size="sm" className="h-9 gap-1.5 text-sm" onClick={handleOpenAdminCreate}>
-              <Plus className="h-4 w-4" />
-              Add expense
-            </Button>
+            )}
+            {canExport && (
+              <ExpenseExportDialog filters={filters} open={isExportOpen} onOpenChange={setIsExportOpen} />
+            )}
+            {canCreate && (
+              <Button size="sm" className="h-9 gap-1.5 text-sm" onClick={handleOpenAdminCreate}>
+                <Plus className="h-4 w-4" />
+                Add expense
+              </Button>
+            )}
           </div>
         }
       >
@@ -331,6 +349,7 @@ export function ExpensesPage() {
               rejectingId={rejectingId}
               rejectionReason={rejectionReason}
               isPending={updateStatusMutation.isPending}
+              pendingId={updateStatusMutation.variables?.expenseId ?? null}
               onApprove={handleApprove}
               onRejectStart={handleRejectStart}
               onRejectConfirm={handleReject}
@@ -366,10 +385,12 @@ export function ExpensesPage() {
       noInternalScroll
       contentClassName="flex min-h-0 flex-1 flex-col"
       actions={
-        <Button size="sm" className="h-9 gap-1.5 text-sm" onClick={handleOpenMemberCreate}>
-          <Plus className="h-4 w-4" />
-          Submit expense claim
-        </Button>
+        canCreate ? (
+          <Button size="sm" className="h-9 gap-1.5 text-sm" onClick={handleOpenMemberCreate}>
+            <Plus className="h-4 w-4" />
+            Submit expense claim
+          </Button>
+        ) : undefined
       }
       filters={
         <MemberExpenseFilters
@@ -378,6 +399,7 @@ export function ExpensesPage() {
           filters={filters}
           onStatusChange={setStatusFilter}
           onDatePresetChange={setDatePreset}
+          canExport={canExport}
         />
       }
     >
@@ -393,7 +415,9 @@ export function ExpensesPage() {
           action={
             statusFilter !== "ALL"
               ? { label: "Show All Claims", onClick: handleShowAll }
-              : { label: "Submit New Claim", onClick: handleOpenMemberCreate }
+              : canCreate
+                ? { label: "Submit New Claim", onClick: handleOpenMemberCreate }
+                : undefined
           }
           className="min-h-0 flex-1 border-0 bg-transparent shadow-none"
         />

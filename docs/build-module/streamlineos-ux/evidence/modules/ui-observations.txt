@@ -1,0 +1,24 @@
+Modules evidence (UI-only)
+==========================
+Route: https://www.streamlineos.in/build/47/modules
+Discovery: More tools > Modules
+Org: PXC-Design-A-20260930
+Project: PXC-Project-Alpha
+
+Empty surface:
+- Modules / Organize work into feature groups and track module progress
+- Search modules
+- Total 0 | In Progress 0 | Completed 0 | Planned 0
+- No modules yet
+- Create your first module to organize work into feature areas.
+- CTAs: New Module; Create First Module
+
+Create Module dialog (opened then Cancelled):
+- Name
+- Description (0/500)
+- Status = Backlog; options Backlog, Planned, In Progress, Paused, Completed, Cancelled
+- Start Date; End Date
+- Lead = No lead; option Unassigned
+- CTAs: Cancel, Create Module, Close
+
+Result: VERIFIED empty-state and creation craft; filled list and module toggles unavailable without mutating data.

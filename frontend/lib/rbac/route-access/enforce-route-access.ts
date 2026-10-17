@@ -1,7 +1,7 @@
 import "server-only";
 
 import { headers } from "next/headers";
-import { redirect } from "next/navigation";
+import { notFound } from "next/navigation";
 import type { Session } from "next-auth";
 import {
   requireModulePermission,
@@ -31,11 +31,7 @@ export async function enforceRouteAccess(
 
   if (decision.kind === "unknown") {
     await requireSession();
-    const params = new URLSearchParams({
-      required: "route:unregistered",
-      from: pathname,
-    });
-    redirect(`/access-denied?${params.toString()}`);
+    notFound();
   }
 
   if (decision.kind === "universal") {
@@ -57,9 +53,5 @@ export async function enforceRouteAccess(
   }
 
   await requireSession();
-  const params = new URLSearchParams({
-    required: "route:unresolved",
-    from: pathname,
-  });
-  redirect(`/access-denied?${params.toString()}`);
+  notFound();
 }

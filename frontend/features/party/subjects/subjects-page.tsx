@@ -12,6 +12,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/shared/error-state";
 import { SearchInput } from "@/components/ui/search-input";
 import { Button } from "@/components/ui/button";
+import { TablePagination, useCursorPager } from "@/components/ui/table-pagination";
 import {
   Select,
   SelectContent,
@@ -57,7 +58,6 @@ export function SubjectsPage() {
   const [typeId, setTypeId] = useState<string | null>(null);
   const [search, setSearch] = useState("");
   const debouncedSearch = useDebouncedValue(search, 300);
-  const [cursor, setCursor] = useState<string | undefined>(undefined);
   // The open record lives in the URL so a task assigned on a subject's timeline
   // lands on the subject itself, not merely on the list.
   const router = useRouter();
@@ -82,10 +82,12 @@ export function SubjectsPage() {
   const typeList = types.data?.data ?? [];
   const selectedType = typeList.find((t) => t.subjectTypeId === typeId) ?? typeList[0];
 
+  const pager = useCursorPager(`${selectedType?.subjectTypeId ?? ""}-${debouncedSearch}`);
+
   const subjects = useSubjects({
     subjectTypeId: selectedType?.subjectTypeId,
     search: debouncedSearch || undefined,
-    cursor,
+    cursor: pager.cursor,
     limit: PAGE_SIZE,
   });
 
@@ -95,13 +97,13 @@ export function SubjectsPage() {
 
   function handleTypeChange(value: string) {
     setTypeId(value);
-    setCursor(undefined);
+    pager.reset();
     setSearch("");
   }
 
   function handleSearchChange(value: string) {
     setSearch(value);
-    setCursor(undefined);
+    pager.reset();
   }
 
   function handleRetry() {
@@ -110,6 +112,10 @@ export function SubjectsPage() {
 
   function handleSheetOpenChange(open: boolean) {
     if (!open) setOpenSubjectId(null);
+  }
+
+  function handleClearSearch() {
+    setSearch("");
   }
 
   function handleOpenCreate() {
@@ -126,8 +132,7 @@ export function SubjectsPage() {
   }
 
   function handleNextPage() {
-    const next = subjects.data?.pagination.nextCursor;
-    if (next) setCursor(next);
+    pager.goNext(subjects.data?.pagination.nextCursor);
   }
 
   if (types.isLoading)
@@ -214,21 +219,16 @@ export function SubjectsPage() {
         ) : rows.length === 0 ? (
           <EmptyState
             className={CONTENT_FILL_PANEL}
-            title={
-              isFiltered
-                ? `No matching ${selectedType.plural.toLowerCase()}`
-                : `No ${selectedType.plural.toLowerCase()} yet`
-            }
+            title={`No ${selectedType.plural.toLowerCase()} yet`}
+            filtersActive={isFiltered}
+            filteredTitle={`No matching ${selectedType.plural.toLowerCase()}`}
+            onClearFilters={handleClearSearch}
             description={
               isFiltered
                 ? "Try adjusting your search."
                 : `Records of this type will appear here once ${canManage ? "you add" : "someone adds"} them.`
             }
-            action={
-              isFiltered || !canManage
-                ? undefined
-                : { label: `New ${selectedType.singular}`, onClick: handleOpenCreate }
-            }
+            action={canManage ? { label: `New ${selectedType.singular}`, onClick: handleOpenCreate } : undefined}
           />
         ) : (
           <>
@@ -240,13 +240,14 @@ export function SubjectsPage() {
               minWidth="720px"
               className={CONTENT_FILL_PANEL}
             />
-            {hasMore ? (
-              <div className="flex shrink-0 justify-end px-1">
-                <Button variant="outline" size="sm" onClick={handleNextPage}>
-                  Load more
-                </Button>
-              </div>
-            ) : null}
+            <TablePagination
+              mode="cursor"
+              rowCount={rows.length}
+              hasMore={hasMore}
+              hasPrevious={pager.hasPrevious}
+              onNext={handleNextPage}
+              onPrevious={pager.goPrevious}
+            />
           </>
         )}
       </div>

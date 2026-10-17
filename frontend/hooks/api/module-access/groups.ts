@@ -9,9 +9,10 @@ import {
 } from "@tanstack/react-query";
 import { useSession } from "next-auth/react";
 import { apiClient } from "@/lib/api-client";
+import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
 import { directoryAndOwnershipQueryKeys } from "@/lib/query-keys/directory-and-ownership";
 import { platformCoreQueryKeys } from "@/lib/query-keys/platform-core";
-import { useCan } from "@/hooks/api/access";
+import { signalAccessInvalidation, useCan } from "@/hooks/api/access";
 import type { AuditCursorPage, DataScope, ModuleGroupMember, ModuleRoleGroup } from "./types";
 import { viewKey } from "./types";
 import { lazyContract } from "@/lib/api-envelope";
@@ -37,6 +38,7 @@ const moduleGroupPermissionsSetContract = lazyContract(() =>
 export function useModuleRoleGroups(moduleKey: string) {
   const canView = useCan(viewKey(moduleKey));
   return useInfiniteQuery<AuditCursorPage<ModuleRoleGroup>, Error>({
+    ...INLINE_READ_ERROR,
     queryKey: directoryAndOwnershipQueryKeys.moduleAccess.roleGroups(moduleKey),
     queryFn: ({ pageParam, signal }) => {
       const params = new URLSearchParams({ limit: "100" });
@@ -57,6 +59,7 @@ export function useModuleRoleGroups(moduleKey: string) {
 
 export function useCreateModuleRoleGroup(moduleKey: string) {
   const queryClient = useQueryClient();
+  const { data: session } = useSession();
   return useMutation<ModuleRoleGroup, Error, { name: string }>({
     mutationKey: ["moduleAccess", moduleKey, "create-group"],
     mutationFn: (body) =>
@@ -66,12 +69,14 @@ export function useCreateModuleRoleGroup(moduleKey: string) {
         queryKey: directoryAndOwnershipQueryKeys.moduleAccess.roleGroups(moduleKey),
         exact: true,
       });
+      if (session?.orgId) signalAccessInvalidation(session.orgId);
     },
   });
 }
 
 export function useRenameModuleRoleGroup(moduleKey: string) {
   const queryClient = useQueryClient();
+  const { data: session } = useSession();
   return useMutation<ModuleRoleGroup, Error, { id: number; name: string }>({
     mutationKey: ["moduleAccess", moduleKey, "rename-group"],
     mutationFn: ({ id, name }) =>
@@ -81,12 +86,14 @@ export function useRenameModuleRoleGroup(moduleKey: string) {
         queryKey: directoryAndOwnershipQueryKeys.moduleAccess.roleGroups(moduleKey),
         exact: true,
       });
+      if (session?.orgId) signalAccessInvalidation(session.orgId);
     },
   });
 }
 
 export function useDeleteModuleRoleGroup(moduleKey: string) {
   const queryClient = useQueryClient();
+  const { data: session } = useSession();
   return useMutation<{ success: true }, Error, number>({
     mutationKey: ["moduleAccess", moduleKey, "delete-group"],
     mutationFn: (id) =>
@@ -96,12 +103,14 @@ export function useDeleteModuleRoleGroup(moduleKey: string) {
         queryKey: directoryAndOwnershipQueryKeys.moduleAccess.roleGroups(moduleKey),
         exact: true,
       });
+      if (session?.orgId) signalAccessInvalidation(session.orgId);
     },
   });
 }
 
 export function useSetModuleGroupPermissions(moduleKey: string) {
   const queryClient = useQueryClient();
+  const { data: session } = useSession();
   return useMutation<
     { success: true; version: number },
     Error,
@@ -139,6 +148,7 @@ export function useSetModuleGroupPermissions(moduleKey: string) {
         queryKey: platformCoreQueryKeys.access.me(),
         exact: true,
       });
+      if (session?.orgId) signalAccessInvalidation(session.orgId);
     },
   });
 }
@@ -191,6 +201,7 @@ export function useAddModuleGroupMember(moduleKey: string) {
           exact: true,
         });
       }
+      if (session?.orgId) signalAccessInvalidation(session.orgId);
     },
   });
 }
@@ -227,6 +238,7 @@ export function useRemoveModuleGroupMember(moduleKey: string) {
           exact: true,
         });
       }
+      if (session?.orgId) signalAccessInvalidation(session.orgId);
     },
   });
 }

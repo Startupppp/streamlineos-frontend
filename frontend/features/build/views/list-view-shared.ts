@@ -15,12 +15,16 @@ export interface Ticket {
   sequenceId?: string | null;
   assigneeId?: string | null;
   cycleId?: number | null;
+  moduleId?: number | null;
   dueDate?: string | null;
   startDate?: string | null;
   rank?: string | null;
+  version: number;
   assignee?: { id: string; name?: string | null; firstName?: string | null; lastName?: string | null; email?: string | null; image?: string | null } | null;
+  assignees?: { user?: { id: string; name?: string | null; firstName?: string | null; lastName?: string | null; email?: string | null; image?: string | null } }[];
   labels?: { label?: { id: number; name: string; color?: string | null } }[];
   cycle?: { id: number; name: string; status: string; startDate: string; endDate: string } | null;
+  project?: { id: number; name: string; key: string } | null;
 }
 
 export interface ListSelection {
@@ -41,6 +45,7 @@ export interface ListViewProps {
   showEmptyColumns?: boolean;
   selection?: ListSelection;
   focusedTicketId?: number | null;
+  itemLayout?: "standard" | "work-index";
 }
 
 export interface ListViewItemProps {
@@ -55,6 +60,7 @@ export interface ListViewItemProps {
   isSelected?: boolean;
   onSelect?: (id: string | number, checked: boolean) => void;
   isKeyboardFocused?: boolean;
+  layout?: "standard" | "work-index";
 }
 
 export interface InlineGroupCreateProps {
@@ -117,12 +123,12 @@ export function isReorderContext(v: unknown): v is ReorderContext {
   return typeof v === "object" && v !== null && "previousTickets" in v;
 }
 
-export type GroupFieldPatch = Pick<UpdateTicketInput, "status" | "priority" | "assigneeId" | "assigneeIds">;
+type GroupFieldPatch = Pick<UpdateTicketInput, "status" | "priority" | "assigneeId" | "assigneeIds">;
 
-export const VALID_PRIORITIES = ["LOW", "MEDIUM", "HIGH", "URGENT"] as const;
-export type ValidPriority = typeof VALID_PRIORITIES[number];
+const VALID_PRIORITIES = ["LOW", "MEDIUM", "HIGH", "URGENT"] as const;
+type ValidPriority = typeof VALID_PRIORITIES[number];
 
-export function isValidPriority(v: string): v is ValidPriority {
+function isValidPriority(v: string): v is ValidPriority {
   return VALID_PRIORITIES.some((candidate) => candidate === v);
 }
 

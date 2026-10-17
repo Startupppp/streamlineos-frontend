@@ -1,5 +1,7 @@
 "use client";
 
+import { DatePicker } from "@/components/ui/date-picker";
+
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -148,7 +150,7 @@ export function IssueWarningSheet({ open, onOpenChange, caseId }: Props) {
               <FormItem>
                 <FormLabel>Effective Date <span className="text-destructive">*</span></FormLabel>
                 <FormControl>
-                  <Input type="date" className="" {...field} />
+                  <DatePicker value={field.value ?? ""} onChange={field.onChange} placeholder="Pick a date" dateFormat="dd MMM yyyy" clearable />
                 </FormControl>
                 <FormMessage />
               </FormItem>

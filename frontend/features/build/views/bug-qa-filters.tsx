@@ -8,6 +8,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
 import { useCan } from "@/hooks/api/access";
 import {
   BUG_SEVERITIES,
@@ -18,7 +19,7 @@ import {
 const ANY_SEVERITY = "all-severities";
 const ANY_QA_STATE = "all-qa-states";
 
-const QA_SELECT_TRIGGER = "h-9 w-fit min-w-0 shrink-0 gap-1 px-2 text-xs";
+const QA_SELECT_TRIGGER = `${FILTER_SELECT_TRIGGER} h-9 w-fit min-w-0 shrink-0 gap-1 px-2 text-xs`;
 
 interface BugQaFiltersProps {
   severity: string;
@@ -56,14 +57,14 @@ export const BugQaFilters = memo(function BugQaFilters({
         onValueChange={handleSeverityChange}
       >
         <SelectTrigger className={QA_SELECT_TRIGGER} aria-label="Filter by severity">
-          <SelectValue placeholder="Severity" />
+          <SelectValue placeholder="Severity" className="font-normal" />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value={ANY_SEVERITY} className="text-xs">
+          <SelectItem value={ANY_SEVERITY} className="text-xs font-normal">
             All severities
           </SelectItem>
           {BUG_SEVERITIES.map((value) => (
-            <SelectItem key={value} value={value} className="text-xs capitalize">
+            <SelectItem key={value} value={value} className="text-xs font-normal capitalize">
               {value}
             </SelectItem>
           ))}
@@ -72,14 +73,14 @@ export const BugQaFilters = memo(function BugQaFilters({
 
       <Select value={qaState || ANY_QA_STATE} onValueChange={handleQaStateChange}>
         <SelectTrigger className={QA_SELECT_TRIGGER} aria-label="Filter by QA state">
-          <SelectValue placeholder="QA state" />
+          <SelectValue placeholder="QA state" className="font-normal" />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value={ANY_QA_STATE} className="text-xs">
+          <SelectItem value={ANY_QA_STATE} className="text-xs font-normal">
             All QA states
           </SelectItem>
           {BUG_STATUSES.map((value) => (
-            <SelectItem key={value} value={value} className="text-xs">
+            <SelectItem key={value} value={value} className="text-xs font-normal">
               {bugStatusLabel(value)}
             </SelectItem>
           ))}

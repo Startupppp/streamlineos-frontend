@@ -2,6 +2,7 @@
 
 import { motion } from "framer-motion";
 import { BookOpenTextIcon } from "@animateicons/react/lucide";
+import { Building2 } from "lucide-react";
 import { MarkdownContent } from "@/components/markdown/markdown-content";
 import { cn } from "@/lib/utils";
 import { TruncatedText } from "@/components/ui/truncated-text";
@@ -17,13 +18,17 @@ export interface ChatMessage {
 }
 
 export function ChatBubble({
-  message,
-  onCitation,
   reduce,
+  message,
+  actions,
+  evidence,
+  onCitation,
 }: {
-  message: ChatMessage;
-  onCitation?: (event: React.MouseEvent<HTMLButtonElement>) => void;
   reduce: boolean;
+  message: ChatMessage;
+  actions?: React.ReactNode;
+  evidence?: React.ReactNode;
+  onCitation?: (event: React.MouseEvent<HTMLButtonElement>) => void;
 }) {
   const isUser = message.role === "user";
   return (
@@ -43,7 +48,7 @@ export function ChatBubble({
             "min-w-0 max-w-[85%] rounded-2xl rounded-bl-sm border px-3.5 py-2.5 text-sm shadow-sm",
             message.isError
               ? "border-destructive/30 bg-destructive/5 text-destructive"
-              : "border-border bg-background text-foreground",
+              : "border-border bg-card text-card-foreground",
           )}
         >
           {message.isError ? (
@@ -56,10 +61,24 @@ export function ChatBubble({
           {message.citations && message.citations.length > 0 && onCitation ? (
             <Citations citations={message.citations} onCitation={onCitation} />
           ) : null}
+          {!message.isError && evidence ? evidence : null}
+          {!message.isError && actions ? (
+            <div className="mt-2 flex flex-wrap items-center gap-2 border-t border-border/60 pt-2">
+              {actions}
+            </div>
+          ) : null}
         </div>
       )}
     </motion.div>
   );
+}
+
+function citationKey(citation: KbAskCitation): string {
+  if (citation.kind === "page") return `page-${citation.pageId}`;
+  if (citation.kind === "source") return `source-${citation.sourceId}`;
+  if (citation.kind === "document")
+    return `document-${citation.linkedDocumentId}`;
+  return `article-${citation.articleId}`;
 }
 
 function Citations({
@@ -71,12 +90,7 @@ function Citations({
 }) {
   const seen = new Set<string>();
   const unique = citations.filter((citation) => {
-    const key =
-      citation.kind === "page"
-        ? `page-${citation.pageId}`
-        : citation.kind === "source"
-          ? `source-${citation.sourceId}`
-          : `article-${citation.articleId}`;
+    const key = citationKey(citation);
     if (seen.has(key)) return false;
     seen.add(key);
     return true;
@@ -97,20 +111,44 @@ function Citations({
                 type="button"
                 data-page-id={citation.pageId}
                 onClick={onCitation}
-                className="inline-flex max-w-[12rem] items-center gap-1 rounded-full border border-border bg-muted/40 px-2 py-0.5 text-dense text-accent transition-colors hover:bg-muted"
+                className="inline-flex max-w-48 items-center gap-1 rounded-full border border-border bg-muted/40 px-2 py-0.5 text-dense text-accent transition-colors hover:bg-muted"
               >
                 <BookOpenTextIcon size={11} />
-                <TruncatedText text={(citation.title ?? "").trim() || "Untitled page"} />
+                <TruncatedText
+                  text={(citation.title ?? "").trim() || "Untitled page"}
+                />
+              </button>
+            );
+          }
+          if (citation.kind === "document") {
+            return (
+              <button
+                key={`document-${citation.linkedDocumentId}`}
+                type="button"
+                data-linked-document-id={citation.linkedDocumentId}
+                aria-label={`HR document: ${(citation.title ?? "").trim() || "Company document"}`}
+                onClick={onCitation}
+                className="inline-flex max-w-48 items-center gap-1 rounded-full border border-border bg-muted/40 px-2 py-0.5 text-dense text-accent transition-colors hover:bg-muted"
+              >
+                <Building2 className="h-3 w-3 shrink-0" aria-hidden="true" />
+                <TruncatedText
+                  text={(citation.title ?? "").trim() || "Company document"}
+                />
               </button>
             );
           }
           const isSource = citation.kind === "source";
           const label =
-            (citation.title ?? "").trim() || (isSource ? "Uploaded document" : "Untitled");
+            (citation.title ?? "").trim() ||
+            (isSource ? "Uploaded document" : "Untitled");
           return (
             <span
-              key={isSource ? `source-${citation.sourceId}` : `article-${citation.articleId}`}
-              className="inline-flex max-w-[12rem] items-center gap-1 rounded-full border border-border bg-muted/40 px-2 py-0.5 text-dense text-muted-foreground"
+              key={
+                isSource
+                  ? `source-${citation.sourceId}`
+                  : `article-${citation.articleId}`
+              }
+              className="inline-flex max-w-48 items-center gap-1 rounded-full border border-border bg-muted/40 px-2 py-0.5 text-dense text-muted-foreground"
             >
               <BookOpenTextIcon size={11} />
               <TruncatedText text={label} />
@@ -129,7 +167,7 @@ export function TypingBubble({ reduce }: { reduce: boolean }) {
       animate={{ opacity: 1, y: 0 }}
       className="flex justify-start"
     >
-      <div className="flex items-center gap-1 rounded-2xl rounded-bl-sm border border-border bg-background px-4 py-3 shadow-sm">
+      <div className="flex items-center gap-1 rounded-2xl rounded-bl-sm border border-border bg-card px-4 py-3 shadow-sm">
         {[0, 1, 2].map((i) => (
           <motion.span
             key={i}

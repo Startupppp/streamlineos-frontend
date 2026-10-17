@@ -2,12 +2,18 @@
 
 import { useEffect, useState, useCallback, useRef } from "react";
 import { useAbly } from "ably/react";
-import type { InboundMessage, ConnectionState, ConnectionStateChange } from "ably";
+import type { InboundMessage, ConnectionState } from "ably";
 import { useQueryClient } from "@tanstack/react-query";
 import { useSession } from "next-auth/react";
 import { collaborationQueryKeys } from "@/lib/query-keys/collaboration";
-import { safeSubscribe, safeUnsubscribe } from "@/lib/ably-safe-subscribe";
+import { isForgedServerFrame, safeSubscribe, safeUnsubscribe } from "@/lib/ably-safe-subscribe";
 import { chatChannelName } from "@/lib/ably-channels";
+import {
+  invalidateChatInboundMessage,
+  invalidateChatReconnect,
+} from "@/lib/chat-read-state";
+import { mergeInboundMessage } from "@/features/chat/message-page-merge";
+import { useAblyConnection } from "@/features/chat/use-ably-connection";
 import type {
   Message,
   MessagesPage,
@@ -18,6 +24,7 @@ import type { InfiniteData } from "@tanstack/react-query";
 import {
   messagePayloadSchema,
   messageUpdatedPayloadSchema,
+  messageEntitiesUpdatedPayloadSchema,
   messageDeletedPayloadSchema,
   reactionUpdatedPayloadSchema,
   typingPayloadSchema,
@@ -30,39 +37,23 @@ const CHAT_EVENTS = ["message", "typing", "message:updated", "message:deleted", 
 type ChatEvent = (typeof CHAT_EVENTS)[number];
 
 /**
- * The four events the SERVER is the only legitimate author of.
- *
- * The chat token grants each of the caller's own channels `["subscribe", "publish", "history"]`
- * (backend ably.service.ts `createChatTokenRequest`), and `publish` is not decoration — the
- * typing indicator is published from the browser. So any member of a channel can also publish
- * a `message` frame onto it, and this hook used to write `payload.senderId` and
- * `payload.senderName` straight into the message cache and into a desktop Notification: a
- * member could make a message appear, in every open window, attributed to a colleague, with
- * text they chose. Nothing was persisted, which is exactly what makes it hard to notice.
- *
- * The discriminator is `clientId`, which Ably stamps on a message from the identity in the
- * publisher's token and which a publisher cannot forge. The backend publishes over REST with
- * the API key and no `clientId` at all (`AblyService.publishChatMessage`/`publishChatEvent`),
- * so a server frame carries none — and a browser frame always carries one, because every chat
- * token is minted with `clientId: <userId>`. A frame on a server-authored event that arrives
- * WITH a clientId was published by a browser and is dropped.
+ * Server-authored events (see `isForgedServerFrame`) are dropped when a browser
+ * published them. `typing` is genuinely browser-published, so it may only speak
+ * for its own publisher.
  */
-const SERVER_AUTHORED_EVENTS: ReadonlySet<string> = new Set([
-  "message",
-  "message:updated",
-  "message:deleted",
-  "reaction:updated",
-]);
-
 export function isTrustedChatFrame(
   event: ChatEvent,
   clientId: string | undefined,
   declaredSenderId: string | undefined,
 ): boolean {
-  if (SERVER_AUTHORED_EVENTS.has(event)) return clientId === undefined || clientId === null;
-  // `typing` is genuinely published by a browser. It may only speak for its own publisher,
-  // so a frame whose payload names someone else is dropped rather than rendered.
+  if (event !== "typing") return !isForgedServerFrame(event, clientId);
   return clientId === undefined || clientId === null || clientId === declaredSenderId;
+}
+
+export function reconnectShouldResync(
+  previousState: ConnectionState,
+): boolean {
+  return previousState === "disconnected" || previousState === "suspended";
 }
 
 function payloadToMessage(payload: MessagePayload): Message {
@@ -124,9 +115,7 @@ export function useChatRealtime(channelId: number | null): {
   const currentUserId = session?.user?.id;
   const orgId = session?.orgId;
 
-  const [socketConnected, setSocketConnected] = useState(
-    () => ably.connection.state === "connected",
-  );
+  const { isConnected: socketConnected, reconnectCount } = useAblyConnection();
   // A refused channel attach leaves the CONNECTION healthy, so a verdict read
   // from `ably.connection.state` alone reports "connected" on a window that
   // will never receive a message and keeps the poll fallback switched off.
@@ -137,45 +126,14 @@ export function useChatRealtime(channelId: number | null): {
   const typingTimers = useRef<Map<string, ReturnType<typeof setTimeout>>>(
     new Map(),
   );
-  const prevConnectionState = useRef<ConnectionState>(ably.connection.state);
+  const resyncedAtRef = useRef(reconnectCount);
 
   useEffect(() => {
-    const handleConnected = () => {
-      const wasDisconnected =
-        prevConnectionState.current === "disconnected" ||
-        prevConnectionState.current === "suspended";
-      prevConnectionState.current = "connected";
-      setSocketConnected(true);
-
-      if (wasDisconnected && channelId && channelId > 0) {
-        queryClient.invalidateQueries({
-          queryKey: collaborationQueryKeys.chat.messages(channelId),
-          exact: false,
-        });
-        queryClient.invalidateQueries({ queryKey: collaborationQueryKeys.chat.myChannels() });
-        queryClient.invalidateQueries({ queryKey: collaborationQueryKeys.chat.unreadTotal() });
-      }
-    };
-    const handleDisconnected = (stateChange: ConnectionStateChange) => {
-      prevConnectionState.current = stateChange.current;
-      setSocketConnected(false);
-    };
-
-    ably.connection.on("connected", handleConnected);
-    ably.connection.on("disconnected", handleDisconnected);
-    ably.connection.on("failed", handleDisconnected);
-    ably.connection.on("suspended", handleDisconnected);
-
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setSocketConnected(ably.connection.state === "connected");
-
-    return () => {
-      ably.connection.off("connected", handleConnected);
-      ably.connection.off("disconnected", handleDisconnected);
-      ably.connection.off("failed", handleDisconnected);
-      ably.connection.off("suspended", handleDisconnected);
-    };
-  }, [ably, channelId, queryClient]);
+    if (resyncedAtRef.current === reconnectCount) return;
+    resyncedAtRef.current = reconnectCount;
+    if (channelId && channelId > 0)
+      invalidateChatReconnect(queryClient, channelId);
+  }, [reconnectCount, channelId, queryClient]);
 
   useEffect(() => {
     if (!orgId || !channelId || channelId <= 0) return;
@@ -194,47 +152,30 @@ export function useChatRealtime(channelId: number | null): {
 
       queryClient.setQueryData<InfiniteData<MessagesPage>>(cacheKey, (old) => {
         if (!old) return old;
-
-        const allExisting = old.pages.flatMap((p) => p.messages);
-        if (allExisting.some((m) => m.id === payload.id)) return old;
-
-        const newMessage = payloadToMessage(payload);
-
-        const pages = old.pages.map((page, idx) => {
-          if (idx !== 0) return page;
-          return { ...page, messages: [...page.messages, newMessage] };
-        });
-
-        return { ...old, pages };
+        return mergeInboundMessage(
+          old,
+          payloadToMessage(payload),
+          payload.clientKey,
+        );
       });
 
-      if (payload.replyToId) {
-        queryClient.invalidateQueries({
-          queryKey: collaborationQueryKeys.chat.thread(channelId, payload.replyToId),
-        });
-      }
-
-      queryClient.invalidateQueries({ queryKey: collaborationQueryKeys.chat.myChannels() });
-      queryClient.invalidateQueries({ queryKey: collaborationQueryKeys.chat.unreadTotal() });
-
-      if (
-        payload.senderId !== currentUserId &&
-        typeof window !== "undefined" &&
-        "Notification" in window &&
-        Notification.permission === "granted"
-      ) {
-        const senderName = payload.senderName ?? "Someone";
-        const body = payload.content?.slice(0, 80) ?? "Sent an attachment";
-        new Notification(senderName, { body, icon: "/favicon.ico" });
-      }
+      invalidateChatInboundMessage(
+        queryClient,
+        channelId,
+        payload.replyToId ?? null,
+      );
     };
 
     const messageUpdatedHandler = (msg: InboundMessage) => {
+      const cacheKey = collaborationQueryKeys.chat.messages(channelId);
       const parsed = messageUpdatedPayloadSchema.safeParse(msg.data);
-      if (!parsed.success) return;
+      if (!parsed.success) {
+        if (messageEntitiesUpdatedPayloadSchema.safeParse(msg.data).success)
+          void queryClient.invalidateQueries({ queryKey: cacheKey });
+        return;
+      }
       const payload = parsed.data;
 
-      const cacheKey = collaborationQueryKeys.chat.messages(channelId);
       patchMessagesCache(queryClient, cacheKey, (m) => {
         if (m.id !== payload.id) return m;
         return {

@@ -1,10 +1,8 @@
 import { z } from "zod";
-import type { ApprovalEntityType } from "@/types/projects";
+import { DB_ENUMS } from "@/contracts/db-enums.generated";
+import { decideApprovalInputSchema } from "@/hooks/api/build/approvals-schema";
 
-export const decideApprovalSchema = z.object({
-  decision: z.enum(["approved", "rejected", "changes_requested"]),
-  decisionComment: z.string(),
-});
+export const decideApprovalSchema = decideApprovalInputSchema.omit({ expectedRevision: true });
 
 export type DecideApprovalValues = z.infer<typeof decideApprovalSchema>;
 
@@ -16,11 +14,10 @@ export type DelegateApprovalValues = z.infer<typeof delegateApprovalSchema>;
 
 const TITLE_REGEX = /\S/;
 
+const APPROVAL_ENTITY_TYPES = DB_ENUMS.approval_entity_type;
+
 export const requestApprovalSchema = z.object({
-  entityType: z.enum([
-    "task", "milestone", "budget", "release",
-    "change_request", "timesheet",
-  ] as [ApprovalEntityType, ...ApprovalEntityType[]]),
+  entityType: z.enum(APPROVAL_ENTITY_TYPES),
   entityId: z.string().min(1, "Select an item"),
   title: z
     .string()

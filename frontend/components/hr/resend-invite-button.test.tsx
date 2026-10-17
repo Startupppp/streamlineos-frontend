@@ -27,7 +27,7 @@ const toastWarning = jest.fn();
 const toastError = jest.fn();
 jest.mock("sonner", () => ({
   toast: {
-    success: (message: string) => toastSuccess(message),
+    success: (message: string, options?: unknown) => toastSuccess(message, options),
     warning: (message: string) => toastWarning(message),
     error: (message: string) => toastError(message),
   },
@@ -62,7 +62,13 @@ describe("ResendInviteButton", () => {
 
     expect(mutate).toHaveBeenCalledWith("user-1", expect.any(Object));
     lastMutateOptions().onSuccess({ success: true, invite: { sent: true, reason: null } });
-    expect(toastSuccess).toHaveBeenCalledWith("Invitation sent to Priya Sharma");
+    // The test's own name said "queued" while it asserted "sent", which is the
+    // gap the ticket is about: invite.sent means the outbox accepted the mail,
+    // not that anyone received it.
+    expect(toastSuccess).toHaveBeenCalledWith(
+      "Invitation queued for Priya Sharma",
+      expect.objectContaining({ description: expect.stringContaining("Copy invite link") }),
+    );
     expect(toastWarning).not.toHaveBeenCalled();
   });
 

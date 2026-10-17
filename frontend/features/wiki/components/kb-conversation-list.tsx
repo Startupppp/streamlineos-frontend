@@ -8,8 +8,6 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import {
-  KbChevronUpIcon,
-  KbLoader2Icon,
   KbMessageCircleIcon,
   KbMoreHorizontalIcon,
   KbPenLineIcon,
@@ -18,6 +16,7 @@ import {
   KbXIcon,
 } from "@/features/wiki/lib/kb-icons";
 import { SidebarAnimatedNavIcon, useAnimatedNavIconHover } from "@/components/layout/sidebar/sidebar-animated-nav";
+import { InfiniteScrollSentinel } from "@/components/ui/infinite-scroll-sentinel";
 import type { KbConversation } from "@/hooks/api/kb/chat-history";
 
 function conversationDateGroup(updatedAt: string): string {
@@ -65,7 +64,7 @@ function ConversationRowActions({ conv, onRename, onDeleteRequest }: Conversatio
         <button
           type="button"
           aria-label="More options"
-          className="shrink-0 rounded p-0.5 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100 data-[state=open]:opacity-100"
+          className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded text-muted-foreground transition-opacity lg:h-7 lg:w-7 lg:opacity-0 lg:group-hover:opacity-100 lg:group-focus-within:opacity-100 lg:focus-visible:opacity-100 data-[state=open]:opacity-100"
           {...moreIcon.animatedNavHoverHandlers}
         >
           <SidebarAnimatedNavIcon
@@ -115,7 +114,6 @@ export function KbConversationList({
   const cancelRenameRef = useRef(false);
   const newChatIcon = useAnimatedNavIconHover();
   const closeIcon = useAnimatedNavIconHover();
-  const loadMoreIcon = useAnimatedNavIconHover();
 
   const groups = useMemo(() => {
     const q = search.trim().toLowerCase();
@@ -210,7 +208,7 @@ export function KbConversationList({
             value={search}
             onChange={handleSearchChange}
             placeholder="Search conversations…"
-            className="flex-1 bg-transparent text-xs focus-visible:outline-none"
+            className="min-w-0 flex-1 bg-transparent text-xs focus-visible:outline-none"
           />
         </div>
       </div>
@@ -266,24 +264,13 @@ export function KbConversationList({
                 ))}
               </div>
             ))}
-            {hasNextPage && (
-              <button
-                type="button"
-                onClick={onLoadMore}
-                disabled={isFetchingNextPage}
-                className="mt-1 flex w-full items-center justify-center gap-1 rounded-lg border border-border bg-background px-3 py-1.5 text-xs text-muted-foreground transition-colors hover:bg-muted disabled:opacity-50"
-                {...loadMoreIcon.animatedNavHoverHandlers}
-              >
-                {isFetchingNextPage ? (
-                  <KbLoader2Icon className="h-3.5 w-3.5 animate-spin" />
-                ) : (
-                  <>
-                    <SidebarAnimatedNavIcon icon={KbChevronUpIcon} iconRef={loadMoreIcon.iconRef} className="h-3.5 w-3.5" />
-                    Load more
-                  </>
-                )}
-              </button>
-            )}
+            <InfiniteScrollSentinel
+              hasNextPage={hasNextPage}
+              isFetchingNextPage={isFetchingNextPage}
+              onLoadMore={onLoadMore}
+              label="Load more conversations"
+              rootMargin="0px"
+            />
           </>
         )}
         </div>

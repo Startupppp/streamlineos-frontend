@@ -1,12 +1,14 @@
 import { renderHook } from "@testing-library/react";
-import { useMyWorkData } from "./use-my-work-data";
+import { parseWorkTab, useMyWorkData } from "./use-my-work-data";
 import { useAllWork } from "@/hooks/api/build/all-work";
+import { format, subDays } from "date-fns";
 
 const mockReplace = jest.fn();
 let mockSearchParams = new URLSearchParams();
+let mockPathname = "/build/my-work";
 
 jest.mock("next/navigation", () => ({
-  usePathname: () => "/build/my-work",
+  usePathname: () => mockPathname,
   useRouter: () => ({ replace: mockReplace }),
   useSearchParams: () => mockSearchParams,
 }));
@@ -30,6 +32,7 @@ function renderWith(query: string) {
 describe("useMyWorkData Due Dates filter", () => {
   beforeEach(() => {
     mockedUseAllWork.mockClear();
+    mockPathname = "/build/my-work";
   });
 
   it("forwards dueDateFrom and dueDateTo to the mine-scoped all-work request so the always-visible Due Dates filter chip is not a no-op", () => {
@@ -54,6 +57,40 @@ describe("useMyWorkData Due Dates filter", () => {
 
     expect(mineCall?.[0]).not.toHaveProperty("dueDateFrom");
     expect(mineCall?.[0]).not.toHaveProperty("dueDateTo");
+  });
+});
+
+describe("useMyWorkData ticket pane", () => {
+  beforeEach(() => mockedUseAllWork.mockClear());
+  afterEach(() => { mockPathname = "/build/my-work"; });
+
+  it("keeps the My Work search when the ticket pane replaces the address bar", () => {
+    mockPathname = "/build/1/tickets/STRE-35";
+    mockSearchParams = new URLSearchParams();
+    mockSearchParams.set("returnTo", "/build/my-work?q=QA-070");
+    renderHook(() => useMyWorkData({ activeTab: "assigned", activeView: "list" }));
+    const mineCall = mockedUseAllWork.mock.calls.find(([filters]) => filters?.scope === "mine");
+    expect(mineCall?.[0]).toMatchObject({ search: "QA-070" });
+  });
+});
+
+describe("useMyWorkData board filters", () => {
+  it("retains relation and URL filters while starting column discovery from the first cursor", () => {
+    mockSearchParams = new URLSearchParams("cursor=list-page-2&status=CODE_REVIEW&projectIds=1&q=payments");
+    const { result } = renderHook(() => useMyWorkData({ activeTab: "created", activeView: "board" }));
+    expect(result.current.boardFilters).toMatchObject({ scope: "created", status: "CODE_REVIEW", projectIds: "1", search: "payments", cursor: undefined });
+    expect(mockSearchParams.get("cursor")).toBe("list-page-2");
+  });
+});
+
+describe("parseWorkTab relation aliases", () => {
+  it("accepts the canonical watching relation and maps it to subscribed work", () => {
+    expect(parseWorkTab("watching")).toBe("subscribed");
+  });
+
+  it("keeps legacy tab values working", () => {
+    expect(parseWorkTab("tab-value-that-is-not-valid")).toBe("assigned");
+    expect(parseWorkTab("created")).toBe("created");
   });
 });
 
@@ -90,5 +127,69 @@ describe("useMyWorkData legacy cycle deep links", () => {
     );
 
     expect(mineCall?.[0]).not.toHaveProperty("cycleId");
+  });
+});
+
+describe("useMyWorkData overdue relation", () => {
+  beforeEach(() => {
+    mockedUseAllWork.mockClear();
+  });
+
+  it("uses the personal scope with a due-date cutoff and open-status exclusion", () => {
+    renderHook(() => useMyWorkData({ activeTab: "overdue", activeView: "list" }));
+
+    const overdueCall = mockedUseAllWork.mock.calls.find(
+      ([filters, options]) =>
+        filters?.scope === "mine" && options?.enabled === true && filters?.excludeStatus,
+    );
+
+    expect(overdueCall?.[0]).toMatchObject({
+      scope: "mine",
+      excludeStatus: "DONE,CANCELLED",
+    });
+    expect(overdueCall?.[0].dueDateTo).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+    expect(overdueCall?.[0].dueDateTo).toBe(format(subDays(new Date(), 1), "yyyy-MM-dd"));
+  });
+});
+
+describe("useMyWorkData server-backed relation tabs", () => {
+  beforeEach(() => {
+    mockedUseAllWork.mockClear();
+  });
+
+  it("keeps Blocked personal while using the supported blocked-only filter", () => {
+    renderHook(() => useMyWorkData({ activeTab: "blocked", activeView: "list" }));
+    const blockedCall = mockedUseAllWork.mock.calls.find(([, options]) => options?.enabled === true);
+    expect(blockedCall?.[0]).toMatchObject({ scope: "mine", blockedOnly: true });
+    expect(blockedCall?.[0]).not.toHaveProperty("blockingRelation");
+  });
+
+  it("uses the backend recently-completed scope instead of an unsupported updatedAfter parameter", () => {
+    renderHook(() => useMyWorkData({ activeTab: "done", activeView: "list" }));
+    const doneCall = mockedUseAllWork.mock.calls.find(([, options]) => options?.enabled === true);
+    expect(doneCall?.[0]).toMatchObject({ scope: "recently-completed" });
+    expect(doneCall?.[0]).not.toHaveProperty("updatedAfter");
+  });
+});
+
+describe("useMyWorkData due-soon relation", () => {
+  beforeEach(() => {
+    mockedUseAllWork.mockClear();
+  });
+
+  it("uses a seven-day open-work date window", () => {
+    renderHook(() => useMyWorkData({ activeTab: "due-soon", activeView: "list" }));
+
+    const dueSoonCall = mockedUseAllWork.mock.calls.find(
+      ([filters, options]) =>
+        filters?.scope === "mine" && options?.enabled === true && filters?.dueDateFrom,
+    );
+
+    expect(dueSoonCall?.[0]).toMatchObject({
+      scope: "mine",
+      excludeStatus: "DONE,CANCELLED",
+    });
+    expect(dueSoonCall?.[0].dueDateFrom).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+    expect(dueSoonCall?.[0].dueDateTo).toMatch(/^\d{4}-\d{2}-\d{2}$/);
   });
 });

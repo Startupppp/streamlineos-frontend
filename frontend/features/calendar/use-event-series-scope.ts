@@ -1,4 +1,3 @@
-import type { CreateCalendarEventPayload } from "@/hooks/api/calendar";
 import { useState, useCallback } from "react";
 import {
   parseCalendarEventId,
@@ -15,6 +14,7 @@ interface UseEventSeriesScopeProps {
   event?: CalendarListItem | null;
   updateEvent: ReturnType<typeof useUpdateCalendarEvent>;
   upsertOccurrenceException: ReturnType<typeof useUpsertOccurrenceException>;
+  expectedVersion?: number;
   onClose: () => void;
 }
 
@@ -22,6 +22,7 @@ export function useEventSeriesScope({
   event,
   updateEvent,
   upsertOccurrenceException,
+  expectedVersion,
   onClose,
 }: UseEventSeriesScopeProps) {
   const [seriesScopeOpen, setSeriesScopeOpen] = useState(false);
@@ -48,13 +49,21 @@ export function useEventSeriesScope({
             // Keyed on the NOMINAL start the id carries, not the moved `start`.
             occurrenceStart: parsed.occurrenceStart ?? event.start,
             modifiedTitle: pendingPayload.title,
+            ...(pendingPayload.description !== undefined
+              ? { modifiedDescription: pendingPayload.description }
+              : {}),
             modifiedStart: pendingPayload.startDate,
             modifiedEnd: pendingPayload.endDate,
+            expectedVersion,
           });
           toast.success("Occurrence updated");
         } else {
           const { syncConnectionId: _sc, addConference: _ac, ...editPayload } = pendingPayload;
-          await updateEvent.mutateAsync({ calendarEventId: parsed.eventId, ...editPayload });
+          await updateEvent.mutateAsync({
+            calendarEventId: parsed.eventId,
+            ...editPayload,
+            expectedVersion,
+          });
           toast.success("Event updated");
         }
         setSeriesScopeOpen(false);
@@ -64,7 +73,7 @@ export function useEventSeriesScope({
         toast.error(getErrorMessage(error));
       }
     },
-    [pendingPayload, event, upsertOccurrenceException, updateEvent, onClose],
+    [pendingPayload, event, upsertOccurrenceException, updateEvent, expectedVersion, onClose],
   );
 
   const handleSeriesScopeOpenChange = useCallback((isOpen: boolean) => {

@@ -1,45 +1,40 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useEffectEvent, useRef, useState } from "react";
 import { toast } from "sonner";
 import { Download, FileText, Trash2 } from "lucide-react";
 import { PlusIcon } from "@animateicons/react/lucide";
-import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import {
   useProjectFiles,
   useUploadProjectFile,
+  MAX_PROJECT_FILE_BYTES,
+  PROJECT_FILE_MIME_TYPES,
+  PROJECT_FILE_TYPES_LABEL,
+  isAllowedProjectFileType,
   useDeleteProjectFile,
   useProjectFileSignedUrl,
   type ProjectFileRow,
 } from "@/hooks/api/build/project-files";
 import { useCan } from "@/hooks/api/access";
 import { usePageState } from "@/hooks/api/use-page-state";
+import { useBuildListFilters } from "@/features/build/shared/use-build-list-filters";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { PageState } from "@/components/shared/page-state";
 import { EmptyState } from "@/components/ui/empty-state";
 import { LoadingButton } from "@/components/ui/loading-button";
+import { InfiniteScrollSentinel } from "@/components/ui/infinite-scroll-sentinel";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { validatePreUpload } from "@/lib/build-upload-validator";
+import { formatDateTime } from "@/lib/date-utils";
 import { Card, CardContent } from "@/components/ui/card";
 import { CONTENT_PANEL_SOLID } from "@/components/ui/content-fill-panel";
 import { PmPageShell, PmSection } from "@/components/pm-chrome";
 
-const ALLOWED_TYPES = [
-  "application/pdf",
-  "image/jpeg",
-  "image/png",
-  "image/webp",
-  "image/gif",
-  "text/plain",
-  "text/csv",
-  "application/msword",
-  "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-  "application/vnd.ms-excel",
-  "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-].join(",");
+const ALLOWED_TYPES = PROJECT_FILE_MIME_TYPES.join(",");
 
-const MAX_BYTES = 2 * 1024 * 1024;
 
 function formatFileSize(bytes: number): string {
   if (bytes < 1024) return `${bytes} B`;
@@ -47,29 +42,31 @@ function formatFileSize(bytes: number): string {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
-function UploadButton({ onUpload }: { onUpload: () => void }) {
-  const { iconRef, hoverHandlers } = useAnimatedIcon();
-  return (
-    <Button onClick={onUpload} {...hoverHandlers}>
-      <PlusIcon ref={iconRef} size={14} />
-      Upload file
-    </Button>
-  );
-}
 
 function FileDownloadButton({ projectId, file }: { projectId: number; file: ProjectFileRow }) {
   const [enabled, setEnabled] = useState(false);
-  const { data, isFetching } = useProjectFileSignedUrl(
+  const { data, isFetching, isError } = useProjectFileSignedUrl(
     projectId,
     enabled ? file.id : null,
   );
 
+  const afterDownload = useEffectEvent(() => {
+    setEnabled(false);
+  });
+
   useEffect(() => {
     if (data?.url) {
       window.open(data.url, "_blank", "noopener,noreferrer");
-      setEnabled(false);
+      afterDownload();
     }
   }, [data?.url]);
+
+  useEffect(() => {
+    if (isError) {
+      toast.error("Couldn't get download link. Please try again.");
+      afterDownload();
+    }
+  }, [isError]);
 
   const handleClick = useCallback(() => {
     if (data?.url) {
@@ -83,7 +80,7 @@ function FileDownloadButton({ projectId, file }: { projectId: number; file: Proj
     <LoadingButton
       variant="ghost"
       size="sm"
-      className="h-7 w-7"
+      className="size-9"
       isPending={isFetching}
       onClick={handleClick}
       type="button"
@@ -106,7 +103,7 @@ function FileCard({
   onDelete: (id: number) => void;
 }) {
   const handleConfirmDelete = useCallback(() => onDelete(file.id), [file.id, onDelete]);
-  const date = new Date(file.createdAt).toLocaleString();
+  const date = formatDateTime(file.createdAt);
 
   return (
     <Card className={CONTENT_PANEL_SOLID}>
@@ -132,7 +129,7 @@ function FileCard({
                   <Button
                     variant="ghost"
                     size="sm"
-                    className="h-7 w-7 text-destructive hover:text-destructive"
+                    className="size-9 text-destructive hover:text-destructive"
                     type="button"
                     aria-label="Delete file"
                   >
@@ -156,8 +153,10 @@ export function FilesPage({ projectId }: FilesPageProps) {
   const canManage = useCan("build:files:manage");
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  const listFilters = useBuildListFilters({ filters: [], withSearch: true });
+
   const { data, isLoading, isError, error, refetch, hasNextPage, fetchNextPage, isFetchingNextPage } =
-    useProjectFiles(projectId);
+    useProjectFiles(projectId, { q: listFilters.debouncedSearch || undefined });
   const uploadFile = useUploadProjectFile(projectId);
   const deleteFile = useDeleteProjectFile(projectId);
 
@@ -169,23 +168,24 @@ export function FilesPage({ projectId }: FilesPageProps) {
     (e: React.ChangeEvent<HTMLInputElement>) => {
       const file = e.target.files?.[0];
       if (!file) return;
-      if (file.size > MAX_BYTES) {
+      const preUploadError = validatePreUpload(
+        file,
+        (f) => isAllowedProjectFileType(f.type),
+        PROJECT_FILE_TYPES_LABEL,
+      );
+      if (preUploadError) {
+        toast.error(preUploadError);
+        e.target.value = "";
+        return;
+      }
+      if (file.size > MAX_PROJECT_FILE_BYTES) {
         toast.error(`File is too large. Maximum size is 2 MB.`);
         return;
       }
-      const reader = new FileReader();
-      reader.onload = () => {
-        const raw = reader.result as string;
-        const base64 = raw.includes(",") ? raw.slice(raw.indexOf(",") + 1) : raw;
-        uploadFile.mutate(
-          { fileName: file.name, mimeType: file.type, contentBase64: base64 },
-          {
-            onSuccess: () => toast.success("File uploaded"),
-            onError: (err) => toast.error(getErrorMessage(err)),
-          },
-        );
-      };
-      reader.readAsDataURL(file);
+      uploadFile.mutate(file, {
+        onSuccess: () => toast.success("File uploaded"),
+        onError: (err) => toast.error(getErrorMessage(err)),
+      });
       e.target.value = "";
     },
     [uploadFile],
@@ -202,7 +202,6 @@ export function FilesPage({ projectId }: FilesPageProps) {
   );
 
   const handleRetry = useCallback(() => { void refetch(); }, [refetch]);
-  const handleFetchMore = useCallback(() => { void fetchNextPage(); }, [fetchNextPage]);
 
   const pageState = usePageState({ permission: "build:files:view", isLoading, isError, error });
 
@@ -243,7 +242,9 @@ export function FilesPage({ projectId }: FilesPageProps) {
               onChange={handleFileChange}
               aria-hidden="true"
             />
-            <UploadButton onUpload={handleUploadClick} />
+            <AnimatedIconButton icon={PlusIcon} iconSize={14} onClick={handleUploadClick}>
+              Upload file
+            </AnimatedIconButton>
           </>
         ) : undefined
       }
@@ -251,13 +252,22 @@ export function FilesPage({ projectId }: FilesPageProps) {
       <PmPageShell>
         <PmSection index={0} className="flex min-h-0 flex-1 flex-col">
         {data.length === 0 ? (
+          listFilters.debouncedSearch ? (
+            <EmptyState
+              className="flex-1 min-h-0"
+              illustrationPreset="documents"
+              title="No files match your search"
+              description="Try a different search term."
+            />
+          ) : (
           <EmptyState
             className="flex-1 min-h-0"
-            illustrationPreset="activity"
+            illustrationPreset="documents"
             title="No files yet"
             description="Upload files to share documents, images, and resources with your project team."
             action={canManage ? { label: "Upload file", onClick: handleUploadClick } : undefined}
           />
+          )
         ) : (
           <>
             <div className="flex flex-col gap-3">
@@ -271,19 +281,12 @@ export function FilesPage({ projectId }: FilesPageProps) {
                 />
               ))}
             </div>
-            {hasNextPage ? (
-              <div className="flex justify-center pt-2">
-                <LoadingButton
-                  variant="outline"
-                  size="sm"
-                  isPending={isFetchingNextPage}
-                  onClick={handleFetchMore}
-                  type="button"
-                >
-                  Load more
-                </LoadingButton>
-              </div>
-            ) : null}
+            <InfiniteScrollSentinel
+              hasNextPage={hasNextPage}
+              isFetchingNextPage={isFetchingNextPage}
+              onLoadMore={fetchNextPage}
+              label="Load more files"
+            />
           </>
         )}
         </PmSection>

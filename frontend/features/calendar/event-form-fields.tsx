@@ -1,6 +1,7 @@
 "use client";
 
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { DatePicker } from "@/components/ui/date-picker";
@@ -22,7 +23,7 @@ import type { IntegrationConnection } from "@/hooks/api/integrations";
 import type { CalendarOrgMember } from "@/hooks/api/calendar";
 import { EventAttendeesPicker } from "./event-attendees-picker";
 import { CalendarConnectInline } from "./calendar-connect-inline";
-import { EVENT_COLORS, EVENT_CATEGORIES } from "./calendar-event-constants";
+import { EVENT_COLORS, EVENT_CATEGORIES, eventCategoryLabel } from "./calendar-event-constants";
 import type { EventCategory, RecurrenceState } from "./event-form-state";
 import { RecurrenceEditor } from "./event-recurrence-editor";
 
@@ -44,7 +45,7 @@ interface EventFormFieldsProps {
   showEndDate: boolean;
   dateTimeError: string;
   onTitleChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
-  onDescriptionChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  onDescriptionChange: (e: React.ChangeEvent<HTMLTextAreaElement>) => void;
   onAllDayChange: (v: boolean) => void;
   onStartDateChange: (v: string) => void;
   onStartTimeChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
@@ -152,6 +153,7 @@ export function EventFormFields({
               {!allDay && (
                 <Input
                   type="time"
+                  name="startTime"
                   className="w-[5.5rem] min-w-[5.5rem] shrink-0 text-xs"
                   value={startTime}
                   onChange={onStartTimeChange}
@@ -184,8 +186,9 @@ export function EventFormFields({
               {showEndDate && !allDay && (
                 <Input
                   type="time"
+                  name="endTime"
                   className={cn(
-                    "h-8 w-[5.5rem] min-w-[5.5rem] shrink-0 text-xs",
+                    "w-[5.5rem] min-w-[5.5rem] shrink-0 text-xs",
                     dateTimeError && "border-destructive",
                   )}
                   value={endTime}
@@ -235,8 +238,8 @@ export function EventFormFields({
               </SelectTrigger>
               <SelectContent>
                 {EVENT_CATEGORIES.map((cat) => (
-                  <SelectItem key={cat} value={cat} className="text-xs capitalize">
-                    {cat}
+                  <SelectItem key={cat} value={cat} className="text-xs">
+                    {eventCategoryLabel(cat)}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -274,14 +277,15 @@ export function EventFormFields({
       )}
 
       <div className="flex items-start gap-2.5">
-        <FileText className="h-4 w-4 text-muted-foreground shrink-0 mt-2" />
+        <FileText className="h-4 w-4 text-muted-foreground shrink-0 mt-2.5" />
         <div className="flex-1">
-          <Input
+          <Textarea
             id="ev-desc"
             value={description}
             onChange={onDescriptionChange}
             placeholder="Notes"
-            className="text-xs"
+            maxLength={2000}
+            className="min-h-20"
           />
         </div>
       </div>
@@ -304,10 +308,10 @@ export function EventFormFields({
               </SelectContent>
             </Select>
             {syncConnectionId !== "none" && (
-              <div className="flex items-center justify-between rounded-md border border-border px-3 py-1.5">
+              <div className="flex h-9 items-center justify-between rounded-md border border-border px-3">
                 <div className="flex items-center gap-2">
-                  <Video className="h-3.5 w-3.5 text-muted-foreground" />
-                  <span className="text-xs">
+                  <Video className="h-4 w-4 text-muted-foreground" />
+                  <span className="text-sm">
                     {selectedToolkit === "outlook" ? "Add Teams meeting link" : "Add Google Meet link"}
                   </span>
                 </div>

@@ -28,7 +28,15 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ErrorState } from "@/components/shared/error-state";
-import { toast } from "sonner";
+import { useCan, useCanState } from "@/hooks/api/access";
+import { NoPermissionState } from "@/components/shared/no-permission-state";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { UserCombobox } from "@/components/ui/user-combobox";
@@ -57,6 +65,9 @@ interface LegalHoldSheetProps {
 }
 
 export function LegalHoldSheet({ open, onClose, hold }: LegalHoldSheetProps) {
+  // "Items" is reachable with hr:legalhold:view; attach/detach need :manage.
+  const canManage = useCan("hr:legalhold:manage");
+  const itemsAccess = useCanState("hr:legalhold:view");
   const [showAttach, setShowAttach] = useState(false);
   const [itemType, setItemType] = useState<(typeof HOLD_ITEM_TYPES)[number]>("employee_profile");
   const [itemRef, setItemRef] = useState("");
@@ -93,15 +104,14 @@ export function LegalHoldSheet({ open, onClose, hold }: LegalHoldSheetProps) {
     defaultValues: { subjectUserId: "", reason: "", restrictedExport: true },
   });
 
-  function handleItemTypeChange(e: React.ChangeEvent<HTMLSelectElement>) {
-    const next = HOLD_ITEM_TYPES.find((candidate) => candidate === e.target.value);
+  function handleItemTypeChange(value: string) {
+    const next = HOLD_ITEM_TYPES.find((candidate) => candidate === value);
     if (next) setItemType(next);
   }
 
   function handleCreate(values: PlaceHoldForm) {
     createHold.mutate(values, {
       onSuccess: () => { form.reset(); onClose(); },
-      onError: (err) => toast.error(getErrorMessage(err)),
     });
   }
 
@@ -109,7 +119,6 @@ export function LegalHoldSheet({ open, onClose, hold }: LegalHoldSheetProps) {
     if (!hold || !itemRef.trim()) return;
     attachItem.mutate({ holdId: hold.id, itemType, itemRef: itemRef.trim() }, {
       onSuccess: () => { setItemRef(""); setShowAttach(false); },
-      onError: (err) => toast.error(getErrorMessage(err)),
     });
   }
 
@@ -147,7 +156,7 @@ export function LegalHoldSheet({ open, onClose, hold }: LegalHoldSheetProps) {
             <div>
               <div className="flex items-center justify-between mb-2">
                 <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Hold Items</p>
-                {hold.status === "active" && (
+                {canManage && hold.status === "active" && (
                   <Button variant="outline" size="sm" onClick={handleToggleAttach}>
                     {showAttach ? "Cancel" : "Attach Item"}
                   </Button>
@@ -156,21 +165,21 @@ export function LegalHoldSheet({ open, onClose, hold }: LegalHoldSheetProps) {
               {showAttach && (
                 <div className="border rounded-lg p-3 space-y-2 mb-3">
                   <div className="flex gap-2">
-                    <select
-                      aria-label="Item type"
-                      value={itemType}
-                      onChange={handleItemTypeChange}
-                      className="text-sm border rounded px-2 py-1 bg-background"
-                    >
-                      <option value="employee_profile">Employee Profile</option>
-                      <option value="document">Document</option>
-                      <option value="case_evidence">Case Evidence</option>
-                    </select>
+                    <Select value={itemType} onValueChange={handleItemTypeChange}>
+                      <SelectTrigger aria-label="Item type" className="w-44">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="employee_profile">Employee Profile</SelectItem>
+                        <SelectItem value="document">Document</SelectItem>
+                        <SelectItem value="case_evidence">Case Evidence</SelectItem>
+                      </SelectContent>
+                    </Select>
                     <Input
                       placeholder="Item reference (ID or URL)"
                       value={itemRef}
                       onChange={(e) => setItemRef(e.target.value)}
-                      className="flex-1 text-sm"
+                      className="flex-1"
                     />
                   </div>
                   <LoadingButton
@@ -183,7 +192,9 @@ export function LegalHoldSheet({ open, onClose, hold }: LegalHoldSheetProps) {
                   </LoadingButton>
                 </div>
               )}
-              {itemsLoading ? (
+              {itemsAccess === "denied" ? (
+                <NoPermissionState compact permission="hr:legalhold:view" />
+              ) : itemsLoading || itemsAccess === "loading" ? (
                 <div className="space-y-2">
                   {[1, 2].map((i) => <Skeleton key={i} className="h-4 w-full rounded" />)}
                 </div>
@@ -193,25 +204,31 @@ export function LegalHoldSheet({ open, onClose, hold }: LegalHoldSheetProps) {
                   className="border-0 bg-transparent shadow-none"
                   title="Couldn't load hold items"
                   description={getErrorMessage(itemsErrorData)}
+                  error={itemsErrorData}
                   onRetry={handleItemsRetry}
                 />
-              ) : (items ?? []).length === 0 ? (
+              ) : items === undefined ? (
+                <p className="text-sm text-status-warning-ink">
+                  Hold coverage could not be determined. Do not treat this as an empty hold.
+                </p>
+              ) : items.length === 0 ? (
                 <p className="text-sm text-muted-foreground">No items attached to this hold.</p>
               ) : (
                 <ul className="space-y-2">
-                  {(items ?? []).map((item) => (
+                  {items.map((item) => (
                     <li key={item.id} className="flex items-center justify-between p-2 border rounded-lg text-sm">
                       <div>
                         <Badge variant="outline" className="text-xs mr-2">{item.itemType}</Badge>
                         <span className="font-mono text-xs">{item.itemRef}</span>
                       </div>
-                      {hold.status === "active" && (
+                      {canManage && hold.status === "active" && (
                         <LoadingButton
                           variant="ghost"
                           size="sm"
-                          className="text-destructive hover:text-destructive h-6 px-2 text-xs"
+                          className="text-destructive hover:text-destructive"
                           onClick={() => handleDetach(item.id)}
-                          isPending={detachItem.isPending}
+                          isPending={detachItem.isPending && detachItem.variables?.itemId === item.id}
+                          disabled={detachItem.isPending}
                         >
                           Remove
                         </LoadingButton>
@@ -285,7 +302,7 @@ export function LegalHoldSheet({ open, onClose, hold }: LegalHoldSheetProps) {
             <SheetFooter className="shrink-0 border-t border-border bg-muted/30 px-6 py-4">
               <div className="grid w-full grid-cols-2 gap-2">
                 <Button type="button" variant="outline" onClick={onClose}>Cancel</Button>
-                <LoadingButton type="submit" isPending={createHold.isPending} className="bg-primary hover:bg-primary/90 text-primary-foreground">
+                <LoadingButton type="submit" isPending={createHold.isPending}>
                   Place Hold
                 </LoadingButton>
               </div>

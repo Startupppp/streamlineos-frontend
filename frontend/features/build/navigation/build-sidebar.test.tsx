@@ -6,7 +6,8 @@ import { useBuildScopeRecovery } from "./use-build-scope-recovery";
 import { useBuildNotificationUnreadCount } from "@/hooks/api/build/approvals";
 import type { BuildNavModel } from "@/lib/build/nav/build-nav-destination";
 import { ORGANIZATION_BUILD_SCOPE } from "@/lib/build/build-scope";
-import type { BuildScopeRef } from "./use-build-nav-preferences";
+import type { BuildScopeRef } from "./build-nav-storage";
+import { buildProjectCatalog } from "@/lib/build/nav/build-project-catalog";
 
 jest.mock("next/navigation", () => ({
   usePathname: () => "/build",
@@ -21,7 +22,7 @@ jest.mock("./build-scope-selector", () => ({
 jest.mock("./build-scope-recovery", () => ({
   BuildScopeRecovery: () => null,
 }));
-jest.mock("./build-sidebar-skeleton", () => ({
+jest.mock("@/components/layout/sidebar/build-sidebar-skeleton", () => ({
   BuildSidebarSkeleton: () => <div data-testid="sidebar-skeleton" />,
 }));
 jest.mock("./build-agent-pulse", () => ({
@@ -192,5 +193,14 @@ describe("BLD-X-SB-OFFLINE-001 — a failed access fetch surfaces an error, not 
       screen.getByRole("img", { name: "Build navigation failed to load" }),
     ).toBeInTheDocument();
     expect(screen.queryByText("Couldn't load Build navigation")).not.toBeInTheDocument();
+  });
+});
+
+describe("BT-c0aaaa1fdbbf — project catalog uses Workstreams label not Modules", () => {
+  test("project-modules destination label is Workstreams", () => {
+    const catalog = buildProjectCatalog("/build/42");
+    const all = [...catalog.primary, ...catalog.moreTools];
+    const dest = all.find((d) => d.id === "project-modules");
+    expect(dest?.label).toBe("Workstreams");
   });
 });

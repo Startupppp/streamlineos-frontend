@@ -4,6 +4,15 @@ import { OnboardingDetailPage } from "./onboarding-detail-page";
 
 const mutate = jest.fn();
 
+jest.mock("next/navigation", () => ({
+  useRouter: () => ({ push: jest.fn(), replace: jest.fn(), back: jest.fn() }),
+  usePathname: () => "/hr/onboarding/u1",
+}));
+
+jest.mock("@/hooks/api/use-page-state", () => ({
+  usePageState: () => ({ kind: "ready" }),
+}));
+
 jest.mock("@/hooks/api/hr/onboarding", () => ({
   useUserOnboarding: () => ({
     data: [

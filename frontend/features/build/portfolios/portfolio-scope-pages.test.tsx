@@ -1,6 +1,7 @@
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import { PortfoliosPage } from "./portfolios-page";
 import { PortfolioDetailPage } from "./portfolio-detail-page";
+import { buildPortfolioColumns, PORTFOLIO_TABLE_HEADERS } from "./portfolio-table-columns";
 
 jest.mock("next/navigation", () => ({
   useRouter: () => ({ replace: jest.fn(), push: jest.fn() }),
@@ -12,10 +13,9 @@ jest.mock("@/hooks/api/access", () => ({
   useCan: jest.fn(() => true),
 }));
 
-jest.mock("@/hooks/api/build", () => ({
+jest.mock("@/hooks/api/build/portfolios", () => ({
   usePortfolios: jest.fn(),
   usePortfolio: jest.fn(),
-  useProjects: jest.fn(() => ({ data: undefined })),
   useCreatePortfolio: jest.fn(() => ({ mutate: jest.fn(), isPending: false })),
   useUpdatePortfolio: jest.fn(() => ({ mutate: jest.fn(), isPending: false })),
   useDeletePortfolio: jest.fn(() => ({ mutate: jest.fn(), isPending: false })),
@@ -23,8 +23,16 @@ jest.mock("@/hooks/api/build", () => ({
   useUnlinkPortfolioProject: jest.fn(() => ({ mutate: jest.fn(), isPending: false })),
 }));
 
+jest.mock("@/hooks/api/build/projects", () => ({
+  useProjects: jest.fn(() => ({ data: undefined })),
+}));
+
 jest.mock("@/hooks/api/organization", () => ({
   useOrgMembers: jest.fn(() => ({ data: undefined })),
+}));
+
+jest.mock("@/hooks/api/build/build-members", () => ({
+  useBuildMembers: jest.fn(() => ({ data: undefined })),
 }));
 
 jest.mock("@/hooks/api/use-page-state", () => ({
@@ -75,7 +83,7 @@ jest.mock("@/components/pm-chrome", () => ({
   PmPageShell: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
   PmSection: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
   PmPanel: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
-  PM_FILL_PANEL: "",
+  CONTENT_FILL_PANEL: "",
   PM_PANEL: "",
   PM_ROW: "",
 }));
@@ -86,8 +94,46 @@ jest.mock("@/components/ui/data-table", () => ({
 }));
 
 jest.mock("@/components/ui/empty-state", () => ({
-  EmptyState: () => <div data-testid="empty-state" />,
+  EmptyState: ({ title }: { title?: string }) => (
+    <div data-testid="empty-state">{title ? <span>{title}</span> : null}</div>
+  ),
 }));
+
+const mockPortfolioListFilters = {
+  search: "",
+  debouncedSearch: "",
+  resetKey: "0",
+  value: jest.fn((_p: string) => "all"),
+  isActive: jest.fn(() => false),
+  setValue: jest.fn(),
+  clearAll: jest.fn(),
+  isFiltered: false,
+  activeCount: 0,
+  isPending: false,
+  setSearch: jest.fn(),
+  cursor: null,
+  setCursor: jest.fn(),
+};
+jest.mock("@/features/build/shared/use-build-list-filters", () => ({
+  useBuildListFilters: () => mockPortfolioListFilters,
+  BUILD_FILTER_ALL: "all",
+}));
+
+jest.mock("@/features/build/shared/use-build-cursor-pager", () => {
+  const { useState } = jest.requireActual<typeof import("react")>("react");
+  return {
+    useBuildCursorPager: () => {
+      const [cursor, setCursor] = useState<string | undefined>(undefined);
+      return {
+        cursor,
+        hasPrevious: cursor !== undefined,
+        goNext: (next: string | null | undefined) => { if (next) setCursor(next); },
+        goPrevious: () => setCursor(undefined),
+        reset: () => setCursor(undefined),
+      };
+    },
+  };
+});
 
 jest.mock("@/components/ui/search-input", () => ({
   SearchInput: () => null,
@@ -100,8 +146,10 @@ jest.mock("@/components/ui/confirm-dialog", () => ({
 jest.mock("@/components/ui/select", () => ({
   Select: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
   SelectTrigger: () => null,
-  SelectContent: () => null,
-  SelectItem: () => null,
+  SelectContent: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+  SelectItem: ({ children, value }: { children: React.ReactNode; value: string }) => (
+    <div data-testid={`select-item-${value}`}>{children}</div>
+  ),
   SelectValue: () => null,
 }));
 
@@ -116,9 +164,15 @@ jest.mock("@/components/ui/loading-button", () => ({
   LoadingButton: ({ children }: { children: React.ReactNode }) => <button>{children}</button>,
 }));
 
-jest.mock("@/hooks/common/use-query-param-open", () => ({
-  useQueryParamOpen: () => ({ open: false, onOpenChange: jest.fn(), setOpen: jest.fn() }),
-}));
+jest.mock("@/hooks/common/use-query-param-open", () => {
+  const { useState } = jest.requireActual<typeof import("react")>("react");
+  return {
+    useQueryParamOpen: () => {
+      const [open, setOpen] = useState(false);
+      return { open, onOpenChange: (v: boolean) => setOpen(v), setOpen: () => setOpen(true) };
+    },
+  };
+});
 
 jest.mock("@/hooks/common/use-animated-icon", () => ({
   useAnimatedIcon: () => ({ iconRef: { current: null }, hoverHandlers: {} }),
@@ -136,20 +190,32 @@ jest.mock("./portfolio-status-badge", () => ({
 }));
 
 jest.mock("./portfolio-form-sheet", () => ({
-  PortfolioFormSheet: () => null,
+  PortfolioFormSheet: ({ open }: { open?: boolean }) =>
+    open ? <div data-testid="portfolio-form-sheet" /> : null,
 }));
 
-const { usePortfolios, usePortfolio } = jest.requireMock("@/hooks/api/build") as {
+const { usePortfolios } = jest.requireMock("@/hooks/api/build/portfolios") as {
   usePortfolios: jest.Mock;
+};
+const { usePortfolio } = jest.requireMock("@/hooks/api/build/portfolios") as {
   usePortfolio: jest.Mock;
+};
+const { useProjects } = jest.requireMock("@/hooks/api/build/projects") as {
+  useProjects: jest.Mock;
 };
 const { usePageState } = jest.requireMock("@/hooks/api/use-page-state") as {
   usePageState: jest.Mock;
+};
+const { useCan: mockPortfoliosUseCan } = jest.requireMock("@/hooks/api/access") as {
+  useCan: jest.Mock;
 };
 
 beforeEach(() => {
   jest.clearAllMocks();
   usePageState.mockReturnValue({ kind: "ready" });
+  mockPortfoliosUseCan.mockReturnValue(true);
+  mockPortfolioListFilters.isFiltered = false;
+  mockPortfolioListFilters.value.mockReturnValue("all");
 });
 
 describe("PortfoliosPage — denied state (BSN-FE-D1)", () => {
@@ -207,6 +273,127 @@ describe("PortfoliosPage — denied state (BSN-FE-D1)", () => {
   });
 });
 
+describe("PortfoliosPage — permission gates (BSN-FE-D5)", () => {
+  it("hides New portfolio button when build:portfolios:manage is denied because a create control must not offer authority the caller may not hold", () => {
+    mockPortfoliosUseCan.mockReturnValue(false);
+    usePortfolios.mockReturnValue({
+      data: { data: [], pagination: { nextCursor: null, hasMore: false } },
+      isLoading: false,
+      isError: false,
+      error: null,
+      refetch: jest.fn(),
+    });
+
+    render(<PortfoliosPage />);
+
+    expect(screen.queryByText("New portfolio")).not.toBeInTheDocument();
+  });
+
+  it("shows New portfolio button when build:portfolios:manage is granted", () => {
+    usePortfolios.mockReturnValue({
+      data: { data: [], pagination: { nextCursor: null, hasMore: false } },
+      isLoading: false,
+      isError: false,
+      error: null,
+      refetch: jest.fn(),
+    });
+
+    render(<PortfoliosPage />);
+
+    expect(screen.getAllByText("New portfolio")[0]).toBeInTheDocument();
+  });
+});
+
+describe("PortfoliosPage — keyboard shortcuts (BSN-FE-K2)", () => {
+  it("c shortcut opens the create form sheet", () => {
+    usePortfolios.mockReturnValue({
+      data: { data: [], pagination: { nextCursor: null, hasMore: false } },
+      isLoading: false,
+      isError: false,
+      error: null,
+      refetch: jest.fn(),
+    });
+
+    render(<PortfoliosPage />);
+    fireEvent.keyDown(document, { key: "c" });
+
+    expect(screen.getByTestId("portfolio-form-sheet")).toBeInTheDocument();
+  });
+
+  it("e shortcut opens the edit form sheet for the focused row", () => {
+    usePortfolios.mockReturnValue({
+      data: {
+        data: [
+          { id: 1, name: "Test Portfolio", status: "active", health: "on_track", ownerId: null, projectCount: 0, strategicGoal: null },
+        ],
+        pagination: { nextCursor: null, hasMore: false },
+      },
+      isLoading: false,
+      isError: false,
+      error: null,
+      refetch: jest.fn(),
+    });
+
+    render(<PortfoliosPage />);
+    fireEvent.keyDown(document, { key: "j" });
+    fireEvent.keyDown(document, { key: "e" });
+
+    expect(screen.getByTestId("portfolio-form-sheet")).toBeInTheDocument();
+  });
+});
+
+describe("PortfoliosPage — empty states (BSN-FE-E1)", () => {
+  it("shows 'No portfolios yet' empty copy when there are no portfolios and no filters are active", () => {
+    usePortfolios.mockReturnValue({
+      data: { data: [], pagination: { nextCursor: null, hasMore: false } },
+      isLoading: false,
+      isError: false,
+      error: null,
+      refetch: jest.fn(),
+    });
+    usePageState.mockReturnValue({ kind: "empty" });
+
+    render(<PortfoliosPage />);
+
+    expect(screen.getByText("No portfolios yet")).toBeInTheDocument();
+    expect(screen.queryByText("No portfolios match your filters")).not.toBeInTheDocument();
+  });
+
+  it("shows 'No portfolios match your filters' empty copy when filters are active and no portfolios match", () => {
+    mockPortfolioListFilters.isFiltered = true;
+    usePortfolios.mockReturnValue({
+      data: { data: [], pagination: { nextCursor: null, hasMore: false } },
+      isLoading: false,
+      isError: false,
+      error: null,
+      refetch: jest.fn(),
+    });
+    usePageState.mockReturnValue({ kind: "empty" });
+
+    render(<PortfoliosPage />);
+
+    expect(screen.getByText("No portfolios match your filters")).toBeInTheDocument();
+    expect(screen.queryByText("No portfolios yet")).not.toBeInTheDocument();
+  });
+
+  it("passes error to usePageState so a MODULE_NOT_ENABLED 402 shows the upgrade path rather than a generic error (FE-41)", () => {
+    const err = new Error("MODULE_NOT_ENABLED");
+    usePortfolios.mockReturnValue({
+      data: undefined,
+      isLoading: false,
+      isError: true,
+      error: err,
+      refetch: jest.fn(),
+    });
+
+    render(<PortfoliosPage />);
+
+    expect(usePageState).toHaveBeenCalledWith(
+      expect.objectContaining({ error: err }),
+    );
+  });
+});
+
 describe("PortfolioDetailPage — denied state (BSN-FE-D4)", () => {
   it("shows denied state when usePageState returns denied, not error state", () => {
     usePortfolio.mockReturnValue({
@@ -238,5 +425,78 @@ describe("PortfolioDetailPage — denied state (BSN-FE-D4)", () => {
 
     expect(screen.queryByTestId("denied-state")).not.toBeInTheDocument();
     expect(screen.queryByTestId("error-state")).not.toBeInTheDocument();
+  });
+
+  it("appends and deduplicates linked projects while rendering linked programs", () => {
+    useProjects.mockReturnValue({
+      data: {
+        data: [
+          { id: 1, name: "Project One" },
+          { id: 2, name: "Project Two" },
+          { id: 3, name: "Project Three" },
+        ],
+      },
+    });
+    usePortfolio.mockImplementation(
+      (_portfolioId: number, filters?: { projectsCursor?: string }) => ({
+        data: {
+          id: 1,
+          name: "Portfolio One",
+          status: "active",
+          health: "on_track",
+          ownerId: null,
+          strategicGoal: null,
+          description: null,
+          projects:
+            filters?.projectsCursor === "next-projects"
+              ? {
+                  data: [
+                    { id: 1, name: "Project One", key: "ONE", status: "ACTIVE" },
+                    { id: 2, name: "Project Two", key: "TWO", status: "ACTIVE" },
+                  ],
+                  pagination: { nextCursor: null, hasMore: false },
+                }
+              : {
+                  data: [{ id: 1, name: "Project One", key: "ONE", status: "ACTIVE" }],
+                  pagination: { nextCursor: "next-projects", hasMore: true },
+                },
+          programs: {
+            data: [{ id: 10, name: "Program Alpha", status: "active" }],
+            pagination: { nextCursor: null, hasMore: false },
+          },
+        },
+        isLoading: false,
+        isError: false,
+        error: null,
+        refetch: jest.fn(),
+      }),
+    );
+
+    render(<PortfolioDetailPage portfolioId={1} />);
+
+    expect(screen.getByText("Project One")).toBeInTheDocument();
+    expect(screen.getByText("Program Alpha")).toBeInTheDocument();
+    fireEvent.click(screen.getAllByRole("button", { name: "Next page" })[0]);
+    expect(screen.getByText("Project Two")).toBeInTheDocument();
+    expect(screen.getAllByText("Project One")).toHaveLength(1);
+    expect(screen.queryByTestId("select-item-1")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("select-item-2")).not.toBeInTheDocument();
+    expect(screen.getByTestId("select-item-3")).toBeInTheDocument();
+  });
+});
+
+describe("portfolio-table-columns — Health column (BSN-FE-HC1)", () => {
+  it("PORTFOLIO_TABLE_HEADERS includes Health so the health rollup column is always defined", () => {
+    expect(PORTFOLIO_TABLE_HEADERS).toContain("Health");
+  });
+
+  it("buildPortfolioColumns returns a column with header Health so health rollup renders in the table", () => {
+    const columns = buildPortfolioColumns({
+      canManage: false,
+      ownerOf: () => null,
+      onEdit: () => {},
+      onDelete: () => {},
+    });
+    expect(columns.map((c) => c.header)).toContain("Health");
   });
 });

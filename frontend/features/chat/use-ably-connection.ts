@@ -1,44 +1,28 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useMemo, useSyncExternalStore } from "react";
 import { useAbly } from "ably/react";
+import {
+  ablyConnectionStore,
+  type AblyConnectionSnapshot,
+} from "./ably-connection-store";
 
-export function useAblyConnection(): { isConnected: boolean; connectionError: string | null } {
+const DISCONNECTED_SNAPSHOT: AblyConnectionSnapshot = {
+  isConnected: false,
+  connectionError: null,
+  reconnectCount: 0,
+};
+
+export function useAblyConnection(): AblyConnectionSnapshot {
   const ably = useAbly();
-  const [isConnected, setIsConnected] = useState(
-    () => ably.connection.state === "connected",
+  const store = useMemo(() => ablyConnectionStore(ably), [ably]);
+
+  const subscribe = useCallback(
+    (onChange: () => void) => store.subscribe(onChange),
+    [store],
   );
-  const [connectionError, setConnectionError] = useState<string | null>(null);
+  const getSnapshot = useCallback(() => store.getSnapshot(), [store]);
+  const getServerSnapshot = useCallback(() => DISCONNECTED_SNAPSHOT, []);
 
-  useEffect(() => {
-    const handleConnected = () => {
-      setIsConnected(true);
-      setConnectionError(null);
-    };
-    const handleDisconnected = () => setIsConnected(false);
-    const handleFailed = () => {
-      setIsConnected(false);
-      setConnectionError("Real-time connection unavailable");
-    };
-
-    ably.connection.on("connected", handleConnected);
-    ably.connection.on("disconnected", handleDisconnected);
-    ably.connection.on("failed", handleFailed);
-    ably.connection.on("suspended", handleDisconnected);
-
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setIsConnected(ably.connection.state === "connected");
-    if (ably.connection.state === "failed") {
-      setConnectionError("Real-time connection unavailable");
-    }
-
-    return () => {
-      ably.connection.off("connected", handleConnected);
-      ably.connection.off("disconnected", handleDisconnected);
-      ably.connection.off("failed", handleFailed);
-      ably.connection.off("suspended", handleDisconnected);
-    };
-  }, [ably]);
-
-  return { isConnected, connectionError };
+  return useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
 }

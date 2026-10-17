@@ -1,5 +1,5 @@
-import type { ReactNode } from "react";
-import { render, screen } from "@testing-library/react";
+import { Component, type ReactNode } from "react";
+import { render, screen, waitFor } from "@testing-library/react";
 import {
   QueryClient,
   QueryClientProvider,
@@ -10,6 +10,9 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import type { Asset } from "@/types/hr";
+import { createAppQueryClient } from "@/components/providers/query-provider";
+import { ApiError } from "@/lib/api-envelope";
+import { authenticatedScope } from "@/lib/query-scope";
 
 jest.mock("next/navigation", () => ({
   useRouter: () => ({ push: jest.fn(), replace: jest.fn() }),
@@ -30,9 +33,13 @@ jest.mock("@/hooks/common/use-animated-icon", () => ({
 }));
 
 jest.mock("@/hooks/api/access", () => ({
-  useAccess: jest.fn(() => ({ data: { scopes: {}, modules: {}, isOrgOwner: false }, refetch: jest.fn() })),
+  useAccess: jest.fn(() => ({ data: { scopes: { "hr:assets:view": "all" }, modules: {}, isOrgOwner: false }, isLoading: false, refetch: jest.fn() })),
   useCan: jest.fn(() => true),
   useModuleEnabled: jest.fn(() => true),
+}));
+
+jest.mock("@/hooks/api/entitlements", () => ({
+  useEntitlements: jest.fn(() => ({ data: undefined })),
 }));
 
 jest.mock("@/lib/api-client", () => ({
@@ -82,10 +89,16 @@ jest.mock("@/features/hr/assets/asset-table-section", () => ({
   AssetTableSection: ({
     filteredItems,
   }: {
-    filteredItems: { name: string }[];
+    filteredItems: { name: string; assignedTo: string | null }[];
   }) =>
     filteredItems.map((a) => (
-      <div key={a.name} data-testid="asset-row">
+      <div
+        key={a.name}
+        data-testid="asset-row"
+        // V-082. The rows read `assignedTo`; the Assigned summary reads the
+        // backend aggregate. The test below holds the two together.
+        data-assigned={a.assignedTo ? "yes" : "no"}
+      >
         {a.name}
       </div>
     )),
@@ -111,6 +124,7 @@ const asset: Asset = {
   purchaseCost: null,
   location: null,
   notes: null,
+  version: 1,
   createdAt: "2026-08-01T00:00:00.000Z",
   updatedAt: "2026-08-01T00:00:00.000Z",
 };
@@ -177,5 +191,118 @@ describe("AssetsPage server-prefetch seam", () => {
       expect.anything(),
       expect.anything(),
     );
+  });
+});
+
+/**
+ * V-082. The Assigned summary card was rendered from a status-derived backend
+ * count while the rows and the assignment filter both read `assignedTo` — so an
+ * asset whose status said ASSIGNED but whose `assigned_to` was empty made the
+ * card and the list disagree, with nothing on screen to explain it. The backend
+ * half makes the aggregate count `assigned_to`; this is the frontend half's
+ * guard, that the card binds to that aggregate and to nothing else.
+ */
+describe("AssetsPage assignment summary", () => {
+  function assetRow(id: number, overrides: Partial<Asset>): Asset {
+    return { ...asset, id, name: `Asset ${id}`, ...overrides };
+  }
+
+  const MIXED = {
+    data: [
+      assetRow(1, { assignedTo: "usr-1", status: "ASSIGNED" }),
+      assetRow(2, { assignedTo: "usr-2", status: "ASSIGNED" }),
+      assetRow(3, { assignedTo: null, status: "AVAILABLE" }),
+      assetRow(4, { assignedTo: null, status: "MAINTENANCE" }),
+    ],
+    counts: { total: 4, available: 1, assigned: 2, maintenance: 1, retired: 0 },
+    pagination: { limit: 20, hasMore: false, nextCursor: null },
+  };
+
+  it("the Assigned summary equals the number of rows showing an assignee, for a mix of assigned and unassigned assets", () => {
+    const seed = new QueryClient();
+    seed.setQueryData(queryKeys.hr.assets({ limit: 20 }), MIXED);
+    const client = new QueryClient();
+
+    render(
+      <Wrapper client={client}>
+        <HydrationBoundary state={dehydrate(seed)}>
+          <AssetsPage />
+        </HydrationBoundary>
+      </Wrapper>,
+    );
+
+    const rowsWithAssignee = screen
+      .getAllByTestId("asset-row")
+      .filter((row) => row.getAttribute("data-assigned") === "yes");
+    expect(rowsWithAssignee).toHaveLength(2);
+
+    const assignedCard = screen.getByText("Assigned").closest("div")
+      ?.parentElement as HTMLElement;
+    expect(assignedCard).toHaveTextContent(String(rowsWithAssignee.length));
+    // Paired with the totals, so a card bound to the wrong aggregate cannot pass.
+    expect(screen.getByText("Total Assets").closest("div")?.parentElement)
+      .toHaveTextContent("4");
+  });
+});
+
+class RouteSegmentBoundary extends Component<
+  { children: ReactNode; onFired: () => void },
+  { failed: boolean }
+> {
+  state = { failed: false };
+
+  static getDerivedStateFromError() {
+    return { failed: true };
+  }
+
+  componentDidUpdate(_: unknown, prev: { failed: boolean }) {
+    if (!prev.failed && this.state.failed) this.props.onFired();
+  }
+
+  render() {
+    if (this.state.failed) return <div data-testid="boundary-fallback">boundary</div>;
+    return this.props.children;
+  }
+}
+
+describe("AssetsPage read-error stays inline, not at the route boundary", () => {
+  let consoleError: jest.SpyInstance;
+
+  beforeEach(() => {
+    consoleError = jest.spyOn(console, "error").mockImplementation(() => {});
+  });
+
+  afterEach(() => {
+    consoleError.mockRestore();
+  });
+
+  it("keeps a 500 from the assets endpoint inline so the whole page does not crash", async () => {
+    (apiClient.get as jest.Mock).mockImplementation((path: string) => {
+      if (path === "/hr/assets") return Promise.reject(new ApiError("backend down", 500));
+      return new Promise(() => {});
+    });
+
+    const client = createAppQueryClient(authenticatedScope("org-1", "user-1"));
+    const defaults = client.getDefaultOptions();
+    client.setDefaultOptions({
+      ...defaults,
+      queries: { ...defaults.queries, retry: false },
+    });
+
+    render(
+      <RouteSegmentBoundary onFired={() => {}}>
+        <QueryClientProvider client={client}>
+          <AssetsPage />
+        </QueryClientProvider>
+      </RouteSegmentBoundary>,
+    );
+
+    await waitFor(() => {
+      const inlineError = screen.queryByText("Something went wrong");
+      const boundaryFallback = screen.queryByTestId("boundary-fallback");
+      expect(inlineError ?? boundaryFallback).toBeInTheDocument();
+    });
+
+    expect(screen.queryByTestId("boundary-fallback")).not.toBeInTheDocument();
   });
 });

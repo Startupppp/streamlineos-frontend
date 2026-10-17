@@ -60,6 +60,8 @@ export const unifiedInboxContract = z.object({
         projectId: z.number().int().nullable(),
         ticketId: z.number().int().nullable(),
         dueAt: z.string().nullable(),
+        objectType: z.string(),
+        objectId: z.string(),
       }),
       z.object({
         ...inboxItemBase,
@@ -94,4 +96,5 @@ export const unifiedInboxCountContract = z.object({
   task: z.number().int(),
   total: z.number().int(),
   mailExact: z.boolean(),
+  approvalExact: z.boolean().optional().default(false),
 });

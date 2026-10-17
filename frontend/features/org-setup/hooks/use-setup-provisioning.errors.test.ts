@@ -1,6 +1,6 @@
 import { renderHook, act } from "@testing-library/react";
 import { ApiError, CONTRACT_VIOLATION_CODE } from "@/lib/api-envelope";
-import type { OrgSetupStatus } from "@/lib/api/hooks/org-schema";
+import type { OrgSetupStatus } from "@/hooks/api/org-setup-schema";
 import { useSetupProvisioning } from "./use-setup-provisioning";
 
 type MockQueryResult = {
@@ -14,7 +14,7 @@ let mockQueryResult: MockQueryResult;
 let capturedEnabled: boolean | undefined;
 const mockRefetch = jest.fn();
 
-jest.mock("@/lib/api/hooks/org", () => ({
+jest.mock("@/hooks/api/org-setup", () => ({
   useOrgSetupStatusQuery: jest.fn((opts: { enabled?: boolean } | undefined) => {
     capturedEnabled = opts?.enabled;
     return mockQueryResult;

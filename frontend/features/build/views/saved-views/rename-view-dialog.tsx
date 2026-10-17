@@ -12,6 +12,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { MAX_VIEW_NAME } from "./create-view-schema";
 
 interface RenameViewDialogProps {
   open: boolean;
@@ -29,15 +30,24 @@ export function RenameViewDialog({
   isSaving,
 }: RenameViewDialogProps) {
   const [name, setName] = useState(currentName);
+  const [nameError, setNameError] = useState<string | null>(null);
 
   const handleChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => setName(e.target.value),
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      setName(e.target.value);
+      setNameError(null);
+    },
     [],
   );
 
   const submit = useCallback(() => {
     const trimmed = name.trim();
     if (!trimmed || trimmed === currentName) return;
+    if (trimmed.length > MAX_VIEW_NAME) {
+      setNameError(`Name must be ${MAX_VIEW_NAME} characters or fewer`);
+      return;
+    }
+    setNameError(null);
     onRename(trimmed);
   }, [name, currentName, onRename]);
 
@@ -72,7 +82,9 @@ export function RenameViewDialog({
               onKeyDown={handleKeyDown}
               className="mt-1.5"
               autoFocus
+              aria-invalid={!!nameError}
             />
+            <p className="text-xs text-destructive mt-1">{nameError}</p>
           </div>
           <div className="grid grid-cols-2 gap-2">
             <Button
@@ -86,7 +98,7 @@ export function RenameViewDialog({
             <LoadingButton
               size="sm"
               onClick={submit}
-              disabled={!name.trim() || name.trim() === currentName}
+              disabled={!name.trim() || name.trim() === currentName || name.trim().length > MAX_VIEW_NAME}
               isPending={isSaving}
               loadingText="Saving..."
             >

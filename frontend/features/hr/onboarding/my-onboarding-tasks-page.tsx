@@ -8,7 +8,8 @@ import { toast } from "sonner";
 import { EmptyTasksIllustration } from "@/components/illustrations";
 import { OnboardingProgressRing } from "@/components/hr/onboarding-progress-ring";
 import { OnboardingTaskCard } from "@/components/hr/onboarding-task-card";
-import { ErrorState } from "@/components/shared/error-state";
+import { PageState } from "@/components/shared/page-state";
+import { usePageState } from "@/hooks/api/use-page-state";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { PageWrapper } from "@/components/ui/page-wrapper";
@@ -35,7 +36,7 @@ function AllDoneBanner() {
         </p>
       </div>
       <CheckCircle2
-        className="h-5 w-5 animate-bounce text-status-success-ink"
+        className="h-5 w-5 text-status-success-ink"
         aria-hidden="true"
       />
     </div>
@@ -48,8 +49,20 @@ export function MyOnboardingTasksPage() {
     data: onboardingTasks,
     error: onboardingError,
     isLoading,
+    isError,
     refetch,
   } = useMyOnboarding();
+  const pageState = usePageState({
+    permission: "self:onboarding-tasks",
+    isLoading,
+    isError,
+    error: onboardingError,
+    isEmpty: (onboardingTasks?.length ?? 0) === 0,
+  });
+
+  function handleRetry() {
+    void refetch();
+  }
   const completeTask = useCompleteOnboardingTask();
   const [togglingTaskIds, setTogglingTaskIds] = useState<Set<number>>(
     new Set(),
@@ -116,31 +129,30 @@ export function MyOnboardingTasksPage() {
         ) : undefined
       }
     >
-      {isLoading ? (
-        <div className="space-y-4">
-          <div className="flex flex-col items-center gap-3 py-4">
-            <Skeleton className="h-[120px] w-[120px] rounded-full" />
-            <Skeleton className="h-4 w-40" />
+      <PageState
+        resolution={pageState}
+        onRetry={handleRetry}
+        loading={
+          <div className="space-y-4">
+            <div className="flex flex-col items-center gap-3 py-4">
+              <Skeleton className="h-32 w-32 rounded-full" />
+              <Skeleton className="h-4 w-40" />
+            </div>
+            <div className="space-y-2">
+              {Array.from({ length: 10 }).map((_, skeletonIndex) => (
+                <Skeleton key={skeletonIndex} className="h-16" />
+              ))}
+            </div>
           </div>
-          <div className="space-y-2">
-            {Array.from({ length: 10 }).map((_, skeletonIndex) => (
-              <Skeleton key={skeletonIndex} className="h-16" />
-            ))}
-          </div>
-        </div>
-      ) : onboardingError ? (
-        <ErrorState
-          title="Unable to load onboarding tasks"
-          description={getErrorMessage(onboardingError)}
-          onRetry={() => void refetch()}
-        />
-      ) : totalTasks === 0 ? (
-        <EmptyState
-          illustration={<EmptyTasksIllustration className="h-40 w-40" />}
-          title="No onboarding tasks yet"
-          description="Your HR team hasn't set up any tasks for you. Check back soon."
-        />
-      ) : (
+        }
+        empty={
+          <EmptyState
+            illustration={<EmptyTasksIllustration className="h-40 w-40" />}
+            title="No onboarding tasks yet"
+            description="Your HR team hasn't set up any tasks for you. Check back soon."
+          />
+        }
+      >
         <div className="space-y-4 max-md:pb-[calc(4.5rem+env(safe-area-inset-bottom,0px))]">
           <div className="flex flex-col items-center gap-2 pb-1 pt-2">
             <OnboardingProgressRing
@@ -175,7 +187,7 @@ export function MyOnboardingTasksPage() {
             ))}
           </div>
         </div>
-      )}
+      </PageState>
     </PageWrapper>
   );
 }

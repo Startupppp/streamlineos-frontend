@@ -114,3 +114,39 @@ describe("withoutPendingUploads — an upload placeholder is transient UI and mu
     expect(JSON.stringify(withoutPendingUploads(value))).toBe(JSON.stringify(value));
   });
 });
+
+describe("withoutPendingUploads — an open slash, mention or emoji combobox is never persisted (KB-B-033)", () => {
+  it("drops a slash_input left inside a paragraph and keeps the paragraph's text", () => {
+    const value = [
+      {
+        type: "p",
+        children: [
+          { text: "before " },
+          { type: "slash_input", children: [{ text: "" }] },
+          { text: " after" },
+        ],
+      },
+    ];
+
+    expect(withoutPendingUploads(value)).toEqual([
+      { type: "p", children: [{ text: "before " }, { text: " after" }] },
+    ]);
+  });
+
+  it("drops mention_input and emoji_input but keeps a finished mention", () => {
+    const value = [
+      {
+        type: "p",
+        children: [
+          { type: "mention_input", children: [{ text: "" }] },
+          { type: "mention", value: "Ada", children: [{ text: "" }] },
+          { type: "emoji_input", children: [{ text: "" }] },
+        ],
+      },
+    ];
+
+    expect(withoutPendingUploads(value)).toEqual([
+      { type: "p", children: [{ type: "mention", value: "Ada", children: [{ text: "" }] }] },
+    ]);
+  });
+});

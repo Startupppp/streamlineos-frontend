@@ -6,7 +6,6 @@ import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
 import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
 import type { TicketSearchResult } from "@/types/projects";
-export type { TicketSearchResult } from "@/types/projects";
 import { useCan } from "@/hooks/api/access";
 
 const ticketSearchResultListLazy = lazyContract(() =>

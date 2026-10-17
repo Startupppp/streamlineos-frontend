@@ -1,5 +1,7 @@
 "use client";
 
+import { DatePicker } from "@/components/ui/date-picker";
+
 import { useMemo, useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -17,7 +19,13 @@ import { EntityFormSheet } from "@/components/shared/entity-form-sheet";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useCreateRegularization } from "@/hooks/api/hr/attendance";
-import { formatDateOnly, getTodayString } from "@/lib/date-utils";
+import { useCan } from "@/hooks/api/access";
+import { useOrgTimeZone } from "@/hooks/api/org-display";
+import {
+  formatDateOnly,
+  todayInOrgTz,
+  toIsoOnDateInOrgTz,
+} from "@/lib/date-utils";
 import { FilePen } from "lucide-react";
 
 export const REGULARIZATION_WINDOW_DAYS = 30;
@@ -33,78 +41,78 @@ function isRealCalendarDate(iso: string): boolean {
   return !Number.isNaN(d.getTime()) && formatDateOnly(d) === iso;
 }
 
-function currentTimeHhMm(): string {
-  const d = new Date();
-  return `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
-}
-
-const regularizationSchema = z
-  .object({
-    attendanceDate: z
-      .string()
-      .regex(/^\d{4}-\d{2}-\d{2}$/, "Select a valid date")
-      .refine(isRealCalendarDate, "That date does not exist")
-      .refine(
-        (v) => v <= getTodayString(),
-        "You cannot request a correction for a future date",
-      )
-      .refine(
-        (v) => v >= shiftDays(getTodayString(), -REGULARIZATION_WINDOW_DAYS),
-        `Corrections are only allowed within the last ${REGULARIZATION_WINDOW_DAYS} days`,
-      ),
-    requestedCheckIn: z.string().optional(),
-    requestedCheckOut: z.string().optional(),
-    reason: z
-      .string()
-      .trim()
-      .min(10, "Reason must be at least 10 characters")
-      .max(500, "Reason must be at most 500 characters")
-      .refine((v) => !/\s{2,}/.test(v), "Reason cannot have consecutive spaces"),
-  })
-  .superRefine((values, ctx) => {
-    const checkIn = values.requestedCheckIn?.trim();
-    const checkOut = values.requestedCheckOut?.trim();
-    if (!checkIn && !checkOut) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        message: "Provide at least a check-in or check-out time",
-        path: ["requestedCheckIn"],
-      });
-    }
-    if (checkIn && checkOut && checkIn >= checkOut) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        message: "Check-out must be after check-in",
-        path: ["requestedCheckOut"],
-      });
-    }
-    if (values.attendanceDate === getTodayString()) {
-      const now = currentTimeHhMm();
-      if (checkIn && checkIn > now) {
+function buildSchema(orgTz: string | null) {
+  return z
+    .object({
+      attendanceDate: z
+        .string()
+        .regex(/^\d{4}-\d{2}-\d{2}$/, "Select a valid date")
+        .refine(isRealCalendarDate, "That date does not exist")
+        .refine(
+          (v) => v <= todayInOrgTz(orgTz),
+          "You cannot request a correction for a future date",
+        )
+        .refine(
+          (v) =>
+            v >= shiftDays(todayInOrgTz(orgTz), -REGULARIZATION_WINDOW_DAYS),
+          `Corrections are only allowed within the last ${REGULARIZATION_WINDOW_DAYS} days`,
+        ),
+      requestedCheckIn: z.string().optional(),
+      requestedCheckOut: z.string().optional(),
+      reason: z
+        .string()
+        .trim()
+        .min(10, "Reason must be at least 10 characters")
+        .max(500, "Reason must be at most 500 characters")
+        .refine(
+          (v) => !/\s{2,}/.test(v),
+          "Reason cannot have consecutive spaces",
+        ),
+    })
+    .superRefine((values, ctx) => {
+      const checkIn = values.requestedCheckIn?.trim();
+      const checkOut = values.requestedCheckOut?.trim();
+      if (!checkIn && !checkOut) {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
-          message: "Check-in cannot be later than the current time",
+          message: "Provide at least a check-in or check-out time",
           path: ["requestedCheckIn"],
         });
       }
-      if (checkOut && checkOut > now) {
+      if (checkIn && checkOut && checkIn >= checkOut) {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
-          message: "Check-out cannot be later than the current time",
+          message: "Check-out must be after check-in",
           path: ["requestedCheckOut"],
         });
       }
-    }
-  });
-
-type RegularizationFormValues = z.infer<typeof regularizationSchema>;
-
-function toIsoOnDate(date: string, time: string): string {
-  const [h, m] = time.split(":");
-  const d = new Date(`${date}T00:00:00`);
-  d.setHours(Number(h), Number(m), 0, 0);
-  return d.toISOString();
+      if (values.attendanceDate === todayInOrgTz(orgTz)) {
+        const nowIso = new Date().toISOString();
+        if (
+          checkIn &&
+          toIsoOnDateInOrgTz(values.attendanceDate, checkIn, orgTz) > nowIso
+        ) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: "Check-in cannot be later than the current time",
+            path: ["requestedCheckIn"],
+          });
+        }
+        if (
+          checkOut &&
+          toIsoOnDateInOrgTz(values.attendanceDate, checkOut, orgTz) > nowIso
+        ) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: "Check-out cannot be later than the current time",
+            path: ["requestedCheckOut"],
+          });
+        }
+      }
+    });
 }
+
+type RegularizationFormValues = z.infer<ReturnType<typeof buildSchema>>;
 
 export function AttendanceRegularizationDialog({
   children,
@@ -121,15 +129,19 @@ export function AttendanceRegularizationDialog({
   const open = openProp ?? uncontrolledOpen;
   const setOpen = onOpenChange ?? setUncontrolledOpen;
   const mutation = useCreateRegularization();
+  const canRequest = useCan("self:attendance");
+  const orgTz = useOrgTimeZone();
+
+  const regularizationSchema = useMemo(() => buildSchema(orgTz), [orgTz]);
 
   const defaultValues = useMemo<RegularizationFormValues>(
     () => ({
-      attendanceDate: getTodayString(),
+      attendanceDate: todayInOrgTz(orgTz),
       requestedCheckIn: "",
       requestedCheckOut: "",
       reason: "",
     }),
-    [],
+    [orgTz],
   );
 
   async function onSubmit(values: RegularizationFormValues) {
@@ -140,12 +152,20 @@ export function AttendanceRegularizationDialog({
       };
       const checkIn = values.requestedCheckIn?.trim();
       const checkOut = values.requestedCheckOut?.trim();
-      if (checkIn) {
-        payload.requestedCheckIn = toIsoOnDate(values.attendanceDate, checkIn);
-      }
-      if (checkOut) {
-        payload.requestedCheckOut = toIsoOnDate(values.attendanceDate, checkOut);
-      }
+      if (checkIn)
+        payload.requestedCheckIn = toIsoOnDateInOrgTz(
+          values.attendanceDate,
+          checkIn,
+          orgTz,
+        );
+
+      if (checkOut)
+        payload.requestedCheckOut = toIsoOnDateInOrgTz(
+          values.attendanceDate,
+          checkOut,
+          orgTz,
+        );
+
       await mutation.mutateAsync(payload);
       toast.success("Regularization request submitted");
       setOpen(false);
@@ -158,9 +178,12 @@ export function AttendanceRegularizationDialog({
     setOpen(true);
   }
 
+  const today = todayInOrgTz(orgTz);
+  const windowStart = shiftDays(today, -REGULARIZATION_WINDOW_DAYS);
+
   return (
     <>
-      {!hideTrigger ? (
+      {!hideTrigger && canRequest ? (
         <Button
           type="button"
           variant="ghost"
@@ -198,14 +221,14 @@ export function AttendanceRegularizationDialog({
                 <FormItem>
                   <FormLabel>Date</FormLabel>
                   <FormControl>
-                    <Input
-                      type="date"
-                      min={shiftDays(
-                        getTodayString(),
-                        -REGULARIZATION_WINDOW_DAYS,
-                      )}
-                      max={getTodayString()}
-                      {...field}
+                    <DatePicker
+                      value={field.value ?? ""}
+                      onChange={field.onChange}
+                      ariaLabel="Date"
+                      placeholder="Pick a date"
+                      dateFormat="dd MMM yyyy"
+                      fromDate={new Date(`${windowStart}T00:00:00`)}
+                      toDate={new Date(`${today}T00:00:00`)}
                     />
                   </FormControl>
                   <FormMessage />

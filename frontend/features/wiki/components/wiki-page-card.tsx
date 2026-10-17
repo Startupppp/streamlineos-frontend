@@ -17,6 +17,7 @@ interface WikiPageCardProps {
   coverImage: string | null;
   subtitle: string;
   children?: ReactNode;
+  menu?: ReactNode;
 }
 
 export function WikiPageCard({
@@ -26,6 +27,7 @@ export function WikiPageCard({
   coverImage,
   subtitle,
   children,
+  menu,
 }: WikiPageCardProps) {
   const cover = coverImage ? (
     <div
@@ -82,6 +84,7 @@ export function WikiPageCard({
           <div className="flex min-w-0 flex-1 items-start gap-3">{identity}</div>
         )}
         {children}
+        {menu}
       </div>
     </div>
   );

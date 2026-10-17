@@ -10,9 +10,11 @@ import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
 import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
+import { INLINE_READ_ERROR, optionalSignalRead } from "@/lib/query-error-policy";
 import { useCan, useModuleEnabled } from "@/hooks/api/access";
 import { invalidateHrWorkforceQueries } from "@/lib/hr-workforce-cache";
 import { useIdempotentOperation } from "@/hooks/common/use-idempotent-operation";
+import { invalidateCalendarProjectionWindows } from "@/lib/calendar-projection-cache";
 import type {
   UpdateProfileInput,
   OnboardEmployeeInput,
@@ -34,9 +36,17 @@ const _resendInviteContract = lazyContract(() =>
     (m) => m.resendEmployeeInviteResponseContract,
   ),
 );
+const _inviteLinkContract = lazyContract(() =>
+  import("@/hooks/api/hr/employee-profile-schema").then((m) => m.inviteLinkContract),
+);
 const _bulkOnboardContract = lazyContract(() =>
   import("@/hooks/api/hr/employee-profile-schema").then(
     (m) => m.bulkOnboardResultContract,
+  ),
+);
+const _bulkOnboardPreviewContract = lazyContract(() =>
+  import("@/hooks/api/hr/employee-profile-schema").then(
+    (m) => m.bulkOnboardPreviewContract,
   ),
 );
 const _employmentContract = lazyContract(() =>
@@ -68,6 +78,7 @@ export function useUpdateProfile() {
       ),
     onSuccess: (_, { userId }) => {
       void invalidateHrWorkforceQueries(qc, userId);
+      invalidateCalendarProjectionWindows(qc);
     },
   });
 }
@@ -84,8 +95,11 @@ export function useOnboardEmployee() {
         operation.configFor(data),
         _onboardEmployeeContract,
       ),
-    onSuccess: (result) => void invalidateHrWorkforceQueries(qc, result.userId),
-    onSettled: operation.settle,
+    onSuccess: (result) => {
+      operation.settle();
+      void invalidateHrWorkforceQueries(qc, result.userId);
+      invalidateCalendarProjectionWindows(qc);
+    },
   });
 }
 
@@ -104,18 +118,58 @@ export function useResendEmployeeInvite() {
   });
 }
 
+/**
+ * Mints a single-use join link for an employee.
+ *
+ * Deliberately not a query: each call issues a credential and retires the last
+ * one, so it must happen when an administrator asks for it and never on a
+ * render, a refetch or a cache warm.
+ */
+export function useCreateEmployeeInviteLink() {
+  return useAuthorizedMutation("hr:onboarding:manage", {
+    mutationKey: ["hr", "employee", "invite-link"],
+    mutationFn: (employeeId: string) =>
+      apiClient.post(
+        `/hr/employees/${employeeId}/invite-link`,
+        undefined,
+        undefined,
+        _inviteLinkContract,
+      ),
+  });
+}
+
+/**
+ * The key belongs to the upload, not the HTTP call: a retry of the same rows
+ * (timeout, network drop, double click) replays the first result instead of
+ * creating people twice. Only a completed commit releases it, so a failed
+ * attempt retried with the same rows keeps its key (PRD §7.3.10).
+ */
 export function useBulkOnboardEmployees() {
   const qc = useQueryClient();
+  const operation = useIdempotentOperation();
   return useAuthorizedMutation("hr:onboarding:manage", {
     mutationKey: ["hr", "employee", "onboard", "bulk"],
     mutationFn: (employees: BulkOnboardEmployeeRow[]) =>
       apiClient.post(
         "/hr/employees/onboard/bulk",
         { employees },
-        { headers: { "Idempotency-Key": crypto.randomUUID() } },
+        operation.configFor({ employees }),
         _bulkOnboardContract,
       ),
-    onSuccess: () => void invalidateHrWorkforceQueries(qc),
+    onSuccess: () => {
+      operation.settle();
+      void invalidateHrWorkforceQueries(qc);
+      invalidateCalendarProjectionWindows(qc);
+    },
+  });
+}
+
+/** Server-side dry run (CONTRACT §4.20): resolves managers and fallbacks, writes nothing. */
+export function useBulkOnboardPreview() {
+  return useAuthorizedMutation("hr:onboarding:manage", {
+    mutationKey: ["hr", "employee", "onboard", "bulk", "preview"],
+    mutationFn: (employees: BulkOnboardEmployeeRow[]) =>
+      apiClient.post("/hr/employees/onboard/bulk/preview", { employees }, undefined, _bulkOnboardPreviewContract),
   });
 }
 
@@ -124,12 +178,16 @@ export function useEmployeeEmployment(userId: string) {
   const hrEnabled = useModuleEnabled("hr");
   return useQuery({
     queryKey: humanResourcesQueryKeys.hr.employeeEmployment(userId),
+    // A member not yet hired has no employment: 404 is "absent", which every
+    // consumer already draws, not a failure that should take down the profile.
     queryFn: ({ signal }) =>
-      apiClient.get(
-        `/hr/employees/${userId}/employment`,
-        undefined,
-        signal,
-        _employmentContract,
+      optionalSignalRead(
+        apiClient.get(
+          `/hr/employees/${userId}/employment`,
+          undefined,
+          signal,
+          _employmentContract,
+        ),
       ),
     enabled: hrEnabled && !!userId && canView,
     staleTime: 5 * 60_000,
@@ -167,6 +225,10 @@ export function useEmployeeTimeline(
     getNextPageParam: (lastPage) => lastPage.pageInfo.nextCursor,
     enabled: hrEnabled && !!employmentId && canView,
     staleTime: 2 * 60_000,
+    // Ticket 02. The timeline tab draws its own error and retry through
+    // `usePageState`; on the provider default it never gets the chance, because
+    // the failure replaces the whole profile route first.
+    ...INLINE_READ_ERROR,
   });
 }
 
@@ -184,6 +246,7 @@ export function useEmployeeSensitive(employmentId: number | undefined) {
       ),
     enabled: hrEnabled && !!employmentId && canViewSensitive,
     staleTime: 30_000,
+    ...INLINE_READ_ERROR,
   });
 }
 

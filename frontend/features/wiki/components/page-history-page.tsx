@@ -1,136 +1,186 @@
 "use client";
 
 import { PageWrapper } from "@/components/ui/page-wrapper";
-
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useCallback } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { toast } from "sonner";
 import {
   KbArrowRightIcon,
-  KbClockIcon,
   KbRotateCcwIcon,
 } from "@/features/wiki/lib/kb-icons";
+import { GitCompare } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { TruncatedText } from "@/components/ui/truncated-text";
+import { InfiniteScrollSentinel } from "@/components/ui/infinite-scroll-sentinel";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
+import { ErrorState } from "@/components/shared/error-state";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { useKbPage } from "@/hooks/api/kb/pages";
 import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
-import { useKbPage, useKbPageVersions, useKbPageVersion, useRestoreKbPageVersion } from "@/hooks/api/kb";
+  useKbPageVersionsInfinite,
+  useKbPageVersionDetail,
+  useRestoreKbVersion,
+} from "@/hooks/api/kb/page-versions";
 import type { KbPageVersion } from "@/hooks/api/kb/page-types";
 import { getErrorMessage } from "@/lib/get-error-message";
-import PublicPageContent from "./public-page-content";
-import { computeVersionDiff } from "@/features/wiki/lib/version-diff";
-import { pageHref, KNOWLEDGE_BASE } from "@/lib/knowledge-routes";
+import { isApiError } from "@/lib/api-envelope";
+import {
+  pageHref,
+  projectPageHref,
+  KNOWLEDGE_BASE,
+} from "@/lib/knowledge-routes";
 import { kbTimeAgo } from "@/features/wiki/lib/kb-date-utils";
-
-interface DiffSummaryProps {
-  versionTitle: string;
-  versionContent: Record<string, unknown> | Record<string, unknown>[] | null;
-  currentTitle: string;
-  currentContentText: string | null;
-}
-
-function DiffSummary({ versionTitle, versionContent, currentTitle, currentContentText }: DiffSummaryProps) {
-  const diff = computeVersionDiff(versionTitle, versionContent, currentTitle, currentContentText);
-  const hasChanges = diff.titleChanged || diff.wordCountDelta !== 0 || diff.excerpt !== null;
-
-  return (
-    <div className="rounded-lg border border-border bg-muted/40 px-4 py-3 space-y-2">
-      <p className="text-xs font-semibold text-foreground">Diff vs current</p>
-      {!hasChanges && (
-        <p className="text-xs text-muted-foreground">Identical to the current page.</p>
-      )}
-      {diff.titleChanged && (
-        <p className="text-xs text-muted-foreground">
-          Title changed:{" "}
-          <span className="text-foreground font-medium">&ldquo;{diff.oldTitle}&rdquo;</span>
-          {" → "}
-          <span className="text-foreground font-medium">&ldquo;{diff.newTitle}&rdquo;</span>
-        </p>
-      )}
-      {diff.wordCountDelta !== 0 && (
-        <p className="text-xs text-muted-foreground">
-          Word count:{" "}
-          <span className={diff.wordCountDelta > 0 ? "text-status-success-ink font-medium" : "text-status-danger-ink font-medium"}>
-            {diff.wordCountDelta > 0 ? `+${diff.wordCountDelta}` : diff.wordCountDelta} vs current
-          </span>{" "}
-          ({diff.versionWordCount} in this version, {diff.currentWordCount} now)
-        </p>
-      )}
-      {diff.excerpt && (
-        <div>
-          <p className="text-xs text-muted-foreground mb-1">First difference (from this version):</p>
-          <p className="text-dense text-foreground bg-muted rounded px-2 py-1.5 font-mono break-all line-clamp-3">
-            &hellip;{diff.excerpt}&hellip;
-          </p>
-        </div>
-      )}
-    </div>
-  );
-}
+import { useCan } from "@/hooks/api/access";
+import { BlockDiffView, PageHistoryCompareDetail, PageHistorySelectPrompt } from "./page-history-presentation";
 
 interface PageHistoryPageProps {
   pageId: number;
+  projectId?: number;
+  initialVersion?: number;
+  initialCompare?: number;
 }
 
-export default function PageHistoryPage({ pageId }: PageHistoryPageProps) {
+export default function PageHistoryPage({
+  pageId,
+  projectId,
+  initialVersion,
+  initialCompare,
+}: PageHistoryPageProps) {
   const router = useRouter();
-  const [selectedVersionNumber, setSelectedVersionNumber] = useState<number | null>(null);
-  const [restoreAlertOpen, setRestoreAlertOpen] = useState(false);
+  const searchParams = useSearchParams();
 
-  const { data: currentPage, isLoading: pageLoading, isError: pageError } = useKbPage(pageId);
-  const { data: versionsData, isLoading: versionsLoading, hasNextPage, fetchNextPage, isFetchingNextPage } = useKbPageVersions(pageId);
+  const documentHref =
+    projectId !== undefined
+      ? projectPageHref(projectId, pageId)
+      : pageHref(pageId);
+  const unresolvedHref =
+    projectId !== undefined ? `/build/${projectId}/wiki` : KNOWLEDGE_BASE;
+
+  const versionParam = searchParams.get("version");
+  const compareParam = searchParams.get("compare");
+  const selectionSource = JSON.stringify([versionParam, compareParam, initialVersion, initialCompare]);
+  const parsedVersion = versionParam && /^[1-9]\d*$/.test(versionParam) ? Number(versionParam) : null;
+  const parsedCompare = compareParam && /^[1-9]\d*$/.test(compareParam) ? Number(compareParam) : null;
+  const initialA = parsedVersion !== null && Number.isSafeInteger(parsedVersion)
+    ? parsedVersion
+    : versionParam ? null : (initialVersion ?? null);
+  const initialB = parsedCompare !== null && Number.isSafeInteger(parsedCompare)
+    ? parsedCompare
+    : compareParam ? null : (initialCompare ?? null);
+  const initialSelection = {
+    source: selectionSource,
+    selectedA: initialA,
+    selectedB: initialB,
+    compareMode: initialB !== null,
+  };
+  const [selectionState, setSelectionState] = useState(initialSelection);
+  if (selectionState.source !== selectionSource) setSelectionState(initialSelection);
+  const { selectedA, selectedB, compareMode } = selectionState.source === selectionSource
+    ? selectionState
+    : initialSelection;
+  const [restoreAlert, setRestoreAlert] = useState({ source: selectionSource, open: false });
+  const restoreAlertOpen = restoreAlert.source === selectionSource && restoreAlert.open;
+
+  const {
+    data: currentPage,
+    isLoading: pageLoading,
+    isError: pageError,
+  } = useKbPage(pageId);
+  const {
+    data: versionsData,
+    isLoading: versionsLoading,
+    isError: versionsError,
+    error: versionsReadError,
+    isFetchNextPageError,
+    refetch: refetchVersions,
+    hasNextPage,
+    fetchNextPage,
+    isFetchingNextPage,
+  } = useKbPageVersionsInfinite(pageId);
+
   const versions = versionsData?.pages.flatMap((p) => p.data) ?? [];
-  const { data: versionDetail, isLoading: detailLoading } = useKbPageVersion(
-    pageId,
-    selectedVersionNumber ?? 0,
-  );
-  const restoreVersion = useRestoreKbPageVersion();
+  const currentVersionNumber = versions[0]?.versionNumber ?? null;
+
+  const { data: versionADetail, isLoading: detailALoading } =
+    useKbPageVersionDetail(pageId, selectedA ?? 0);
+  const { data: versionBDetail, isLoading: detailBLoading } =
+    useKbPageVersionDetail(pageId, selectedB ?? 0);
+  const restoreVersion = useRestoreKbVersion();
+  const canUpdate = useCan("kb:pages:update");
+
+  function syncUrl(a: number | null, b: number | null) {
+    const params = new URLSearchParams();
+    if (a) params.set("version", String(a));
+    if (b) params.set("compare", String(b));
+    const qs = params.toString();
+    router.replace(`${window.location.pathname}${qs ? `?${qs}` : ""}`, {
+      scroll: false,
+    });
+  }
 
   function handleVersionSelect(e: React.MouseEvent<HTMLButtonElement>) {
     const vn = e.currentTarget.dataset.versionNumber;
     if (!vn) return;
-    setSelectedVersionNumber(Number(vn));
+    const num = Number(vn);
+    if (compareMode) {
+      if (selectedA === num) return;
+      setSelectionState((previous) => ({ ...previous, selectedB: num }));
+      syncUrl(selectedA, num);
+    } else {
+      setSelectionState((previous) => ({ ...previous, selectedA: num, selectedB: null }));
+      syncUrl(num, null);
+    }
+  }
+
+  function handleToggleCompare() {
+    const next = !compareMode;
+    setSelectionState((previous) => ({ ...previous, compareMode: next, selectedB: next ? previous.selectedB : null }));
+    if (!next) {
+      syncUrl(selectedA, null);
+    }
   }
 
   function handleRestoreClick() {
-    setRestoreAlertOpen(true);
+    setRestoreAlert({ source: selectionSource, open: true });
   }
 
   function handleRestoreAlertOpenChange(open: boolean) {
-    setRestoreAlertOpen(open);
+    setRestoreAlert({ source: selectionSource, open });
   }
 
   function handleLoadMore() {
     void fetchNextPage();
   }
 
-  function handleConfirmRestore() {
-    if (!selectedVersionNumber) return;
+  function handleRetryVersions() {
+    if (isFetchNextPageError) {
+      void fetchNextPage();
+      return;
+    }
+    void refetchVersions();
+  }
+
+  const handleConfirmRestore = useCallback(() => {
+    if (!selectedA || !currentPage) return;
     restoreVersion.mutate(
-      { pageId, versionNumber: selectedVersionNumber },
+      { pageId, versionNumber: selectedA, expectedContentRevision: currentPage.contentRevision },
       {
         onSuccess: () => {
           toast.success("Version restored");
-          router.push(pageHref(pageId));
+          router.push(documentHref);
         },
-        onError: (err) => toast.error(getErrorMessage(err)),
+        onError: (err) => toast.error(isApiError(err) && err.status === 409
+          ? "Page changed before this restore. Refresh and review the latest version before trying again."
+          : getErrorMessage(err)),
       },
     );
-  }
+  }, [selectedA, currentPage, pageId, restoreVersion, router, documentHref]);
 
-  const backHref = pageLoading || pageError ? KNOWLEDGE_BASE : pageHref(pageId);
+  const backHref = pageLoading || pageError ? unresolvedHref : documentHref;
 
   if (pageLoading) {
     return (
@@ -157,22 +207,56 @@ export default function PageHistoryPage({ pageId }: PageHistoryPageProps) {
     );
   }
 
+  const showingCompare =
+    compareMode && selectedA !== null && selectedB !== null;
+  const showingDetail = !showingCompare && selectedA !== null;
+
   return (
     <>
       <PageWrapper
         title="Page history"
         subtitle={currentPage.title || "Untitled"}
-        backHref={pageHref(pageId)}
+        backHref={documentHref}
         noInternalScroll
       >
         <div className="h-full flex flex-col md:flex-row gap-4">
           <div className="w-full md:w-72 lg:w-80 shrink-0 flex flex-col">
             <div className="h-56 md:h-full border border-border rounded-xl bg-card flex flex-col overflow-hidden">
-              <div className="px-4 py-3 border-b border-border shrink-0">
+              <div className="px-4 py-3 border-b border-border shrink-0 flex items-center justify-between gap-2">
                 <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
                   Versions{versions.length > 0 ? ` (${versions.length})` : ""}
                 </p>
+                <button
+                  type="button"
+                  onClick={handleToggleCompare}
+                  aria-label={
+                    compareMode ? "Exit compare mode" : "Enter compare mode"
+                  }
+                  aria-pressed={compareMode}
+                  className={`inline-flex items-center gap-1 text-xs rounded-md px-2 py-1 transition-colors ${
+                    compareMode
+                      ? "bg-primary/10 text-primary"
+                      : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                  }`}
+                >
+                  <GitCompare className="h-3 w-3" />
+                  Compare
+                </button>
               </div>
+              {compareMode && (
+                <div className="px-3 py-1.5 bg-muted/60 border-b border-border text-xs text-muted-foreground">
+                  {selectedA ? (
+                    <span>
+                      Base: v{selectedA}
+                      {selectedB
+                        ? ` · Compare: v${selectedB}`
+                        : " · Pick a compare version"}
+                    </span>
+                  ) : (
+                    "Select base version"
+                  )}
+                </div>
+              )}
               <ScrollArea fill className="flex-1 min-h-0">
                 <div className="p-2">
                   {versionsLoading && (
@@ -182,7 +266,7 @@ export default function PageHistoryPage({ pageId }: PageHistoryPageProps) {
                       ))}
                     </div>
                   )}
-                  {!versionsLoading && versions.length === 0 && (
+                  {!versionsLoading && !versionsError && versions.length === 0 && (
                     <EmptyState
                       title="No versions yet"
                       description="Changes will be saved as versions automatically."
@@ -190,76 +274,144 @@ export default function PageHistoryPage({ pageId }: PageHistoryPageProps) {
                       className="min-h-[8rem]"
                     />
                   )}
-                  {versions.map((v: KbPageVersion) => (
-                    <button
-                      key={v.versionNumber}
-                      data-version-number={String(v.versionNumber)}
-                      onClick={handleVersionSelect}
-                      className={`w-full text-left px-3 py-2.5 rounded-lg transition-colors mb-1 ${
-                        selectedVersionNumber === v.versionNumber
-                          ? "bg-primary/10 border border-primary/20"
-                          : "hover:bg-muted border border-transparent"
-                      }`}
-                    >
-                      <div className="flex items-center justify-between gap-2">
-                        <div className="min-w-0">
-                          <p className="text-sm font-medium text-foreground">
-                            Version {v.versionNumber}
-                          </p>
-                          <p className="text-xs text-muted-foreground mt-0.5">
-                            {v.authorName ? `${v.authorName} · ` : ""}{kbTimeAgo(v.createdAt)}
-                          </p>
-                          {v.changeSummary && (
-                            <TruncatedText text={v.changeSummary} className="text-xs text-muted-foreground mt-0.5" />
+                  {versions.map((v: KbPageVersion) => {
+                    const isCurrentVersion =
+                      v.versionNumber === currentVersionNumber;
+                    const isSelectedA = selectedA === v.versionNumber;
+                    const isSelectedB = selectedB === v.versionNumber;
+                    const isSelected = isSelectedA || isSelectedB;
+                    return (
+                      <button
+                        key={v.versionNumber}
+                        type="button"
+                        data-version-number={String(v.versionNumber)}
+                        onClick={handleVersionSelect}
+                        aria-label={`Select version ${v.versionNumber}${isCurrentVersion ? " (current)" : ""}`}
+                        aria-pressed={isSelected}
+                        className={`w-full text-left px-3 py-2.5 rounded-lg transition-colors mb-1 ${
+                          isSelected
+                            ? "bg-primary/10 border border-primary/20"
+                            : "hover:bg-muted border border-transparent"
+                        }`}
+                      >
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="min-w-0 flex-1">
+                            <div className="flex items-center gap-1.5">
+                              <p className="text-sm font-medium text-foreground">
+                                Version {v.versionNumber}
+                              </p>
+                              {isCurrentVersion && (
+                                <Badge
+                                  variant="secondary"
+                                  className="text-xs px-1.5 py-0 h-4 leading-none shrink-0"
+                                >
+                                  Current
+                                </Badge>
+                              )}
+                              {compareMode && isSelectedA && !isSelectedB && (
+                                <Badge
+                                  variant="outline"
+                                  className="text-xs px-1.5 py-0 h-4 leading-none shrink-0 text-primary border-primary/30"
+                                >
+                                  Base
+                                </Badge>
+                              )}
+                              {compareMode && isSelectedB && (
+                                <Badge
+                                  variant="outline"
+                                  className="text-xs px-1.5 py-0 h-4 leading-none shrink-0 text-secondary-foreground"
+                                >
+                                  Compare
+                                </Badge>
+                              )}
+                            </div>
+                            <p className="text-xs text-muted-foreground mt-0.5">
+                              {v.authorName ? `${v.authorName} · ` : ""}
+                              {kbTimeAgo(v.createdAt)}
+                            </p>
+                            {v.changeSummary && (
+                              <TruncatedText
+                                text={v.changeSummary}
+                                className="text-xs text-muted-foreground mt-0.5"
+                              />
+                            )}
+                          </div>
+                          {isSelected && !compareMode && (
+                            <KbArrowRightIcon className="h-3.5 w-3.5 text-primary shrink-0 mt-1" />
                           )}
                         </div>
-                        {selectedVersionNumber === v.versionNumber && (
-                          <KbArrowRightIcon className="h-3.5 w-3.5 text-primary shrink-0" />
-                        )}
-                      </div>
-                    </button>
-                  ))}
-                  {hasNextPage && (
-                    <LoadingButton
-                      variant="ghost"
-                      size="sm"
-                      onClick={handleLoadMore}
-                      isPending={isFetchingNextPage}
-                      loadingText="Loading…"
-                      className="w-full text-xs h-8 text-muted-foreground"
-                    >
-                      Load more versions
-                    </LoadingButton>
+                      </button>
+                    );
+                  })}
+                  {versionsError && (
+                    <ErrorState
+                      title="Could not load versions"
+                      error={versionsReadError}
+                      onRetry={handleRetryVersions}
+                      compact
+                    />
                   )}
+                  <InfiniteScrollSentinel
+                    hasNextPage={!versionsError && (hasNextPage ?? false)}
+                    isFetchingNextPage={isFetchingNextPage}
+                    onLoadMore={handleLoadMore}
+                    label="Load more versions"
+                    rootMargin="0px"
+                  />
                 </div>
               </ScrollArea>
             </div>
           </div>
 
           <div className="flex-1 min-w-0 flex flex-col min-h-0">
-            {!selectedVersionNumber ? (
-              <div className="flex flex-col items-center justify-center h-full min-h-[20rem] border border-dashed border-border rounded-xl bg-card gap-3">
-                <KbClockIcon className="w-8 text-muted-foreground" />
-                <p className="text-sm text-muted-foreground">Select a version to preview</p>
-              </div>
-            ) : (
+            {!selectedA ? (
+              <PageHistorySelectPrompt compareMode={compareMode} />
+            ) : showingCompare && versionADetail && versionBDetail ? (
+              <PageHistoryCompareDetail versionA={versionADetail} versionB={versionBDetail} selectedA={selectedA} selectedB={selectedB} isLoading={detailALoading || detailBLoading} />
+            ) : showingDetail ? (
               <div className="border border-border rounded-xl bg-card flex flex-col h-full overflow-hidden">
                 <div className="px-6 py-4 border-b border-border shrink-0">
                   <div className="flex items-center justify-between gap-4">
                     <div className="min-w-0">
-                      <TruncatedText text={detailLoading ? "Loading…" : versionDetail?.title || "Untitled"} className="text-sm font-semibold text-foreground" />
+                      <div className="flex items-center gap-2">
+                        <TruncatedText
+                          text={
+                            detailALoading
+                              ? "Loading…"
+                              : (versionADetail?.title ?? "Untitled")
+                          }
+                          className="text-sm font-semibold text-foreground"
+                        />
+                        {selectedA === currentVersionNumber && (
+                          <Badge
+                            variant="secondary"
+                            className="text-xs px-1.5 py-0 h-4 leading-none shrink-0"
+                          >
+                            Current
+                          </Badge>
+                        )}
+                      </div>
                       <p className="text-xs text-muted-foreground mt-0.5">
-                        Version {selectedVersionNumber}
-                        {versionDetail?.authorName ? ` · ${versionDetail.authorName}` : ""}
+                        Version {selectedA}
+                        {versionADetail?.authorName
+                          ? ` · ${versionADetail.authorName}`
+                          : ""}
                       </p>
-                      {versionDetail?.changeSummary && (
-                        <p className="text-xs text-muted-foreground mt-0.5">{versionDetail.changeSummary}</p>
+                      {versionADetail?.changeSummary && (
+                        <p className="text-xs text-muted-foreground mt-0.5">
+                          {versionADetail.changeSummary}
+                        </p>
                       )}
                     </div>
                     <LoadingButton
                       size="sm"
                       onClick={handleRestoreClick}
-                      disabled={detailLoading || !versionDetail?.content}
+                      disabled={
+                        detailALoading ||
+                        !versionADetail?.content ||
+                        selectedA === currentVersionNumber ||
+                        !canUpdate
+                      }
                       isPending={restoreVersion.isPending}
                       loadingText="Restoring…"
                       className="shrink-0 gap-1.5 h-7 text-xs"
@@ -272,54 +424,64 @@ export default function PageHistoryPage({ pageId }: PageHistoryPageProps) {
 
                 <ScrollArea fill hideScrollbar className="min-h-0 flex-1">
                   <div className="overscroll-contain">
-                  {detailLoading ? (
-                    <div className="px-6 py-4 space-y-3">
-                      <Skeleton className="h-5 w-3/4" />
-                      <Skeleton className="h-4 w-full" />
-                      <Skeleton className="h-4 w-5/6" />
-                      <Skeleton className="h-4 w-4/6" />
-                      <Skeleton className="h-4 w-full" />
-                    </div>
-                  ) : (
-                    <div className="px-6 py-4 space-y-4">
-                      <PublicPageContent content={versionDetail?.content ?? null} />
-                      {versionDetail && (
-                        <DiffSummary
-                          versionTitle={versionDetail.title}
-                          versionContent={versionDetail.content}
-                          currentTitle={currentPage.title}
-                          currentContentText={currentPage.contentText}
-                        />
-                      )}
-                    </div>
-                  )}
+                    {detailALoading ? (
+                      <div className="px-6 py-4 space-y-3">
+                        <Skeleton className="h-5 w-3/4" />
+                        <Skeleton className="h-4 w-full" />
+                        <Skeleton className="h-4 w-5/6" />
+                        <Skeleton className="h-4 w-4/6" />
+                        <Skeleton className="h-4 w-full" />
+                      </div>
+                    ) : (
+                      <div className="px-6 py-4 space-y-4">
+                        {versionADetail && (
+                          <BlockDiffView
+                            heading="Block diff vs current"
+                            identicalLabel="Identical to the current page."
+                            beforeContent={versionADetail.content}
+                            afterContent={currentPage.content}
+                            beforeTitle={versionADetail.title}
+                            afterTitle={currentPage.title}
+                          />
+                        )}
+                      </div>
+                    )}
                   </div>
                 </ScrollArea>
               </div>
-            )}
+            ) : compareMode && selectedA && !selectedB ? (
+              <div className="flex flex-col items-center justify-center h-full min-h-[20rem] border border-dashed border-border rounded-xl bg-card gap-3">
+                <GitCompare className="w-8 text-muted-foreground" />
+                <p className="text-sm text-muted-foreground">
+                  Now select a second version to compare
+                </p>
+              </div>
+            ) : null}
           </div>
         </div>
       </PageWrapper>
 
-      <AlertDialog open={restoreAlertOpen} onOpenChange={handleRestoreAlertOpenChange}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Restore version {selectedVersionNumber}?</AlertDialogTitle>
-            <AlertDialogDescription>
-              The current content will be saved as a new version before restoring.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleConfirmRestore}
-              disabled={restoreVersion.isPending}
-            >
-              Restore
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <ConfirmDialog
+        open={restoreAlertOpen}
+        onOpenChange={handleRestoreAlertOpenChange}
+        title={`Restore version ${selectedA}?`}
+        description="The current content will be saved as a new version before restoring."
+        content={
+          versionADetail ? (
+            <BlockDiffView
+              heading={`Preview: how this page changes when version ${selectedA} is restored`}
+              identicalLabel="Restoring changes nothing — this version matches the current page."
+              beforeContent={currentPage.content}
+              afterContent={versionADetail.content}
+              beforeTitle={currentPage.title}
+              afterTitle={versionADetail.title}
+            />
+          ) : null
+        }
+        confirmLabel="Restore"
+        isPending={restoreVersion.isPending}
+        onConfirm={handleConfirmRestore}
+      />
     </>
   );
 }

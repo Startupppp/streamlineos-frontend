@@ -104,11 +104,11 @@ export function SavingsCalculator() {
       </div>
 
       <div className="mt-4 rounded-xl bg-status-info-fill px-5 py-4 text-white">
-        <p className="text-xs font-medium text-status-info-ink">Annual savings</p>
+        <p className="text-xs font-medium text-white/80">Annual savings</p>
         <div className="mt-1 flex flex-wrap items-end justify-between gap-3">
           <p className="font-display text-3xl font-extrabold tabular-nums">
             {INR(vsAllInOne.savings)}
-            <span className="ml-2 text-sm font-medium text-status-info-ink">/ year</span>
+            <span className="ml-2 text-sm font-medium text-white/80">/ year</span>
           </p>
           <span className="rounded-full bg-white/15 px-3 py-1 text-sm font-semibold">
             {vsAllInOne.savingsPct}% less

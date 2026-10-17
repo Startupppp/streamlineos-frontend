@@ -1,0 +1,478 @@
+{
+  "backendRevision": "8d5e583ee",
+  "run": "69548c8d",
+  "groups": [
+    2091,
+    2092
+  ],
+  "tokens": [
+    {
+      "label": "tickets",
+      "id": "f9bb8d27-4ea6-427b-892d-3f3047b7eb96",
+      "scopes": [
+        "build:tickets:view"
+      ],
+      "expiresAt": "2026-10-03T11:43:50.808Z"
+    },
+    {
+      "label": "read",
+      "id": "77a43072-975c-45fd-8563-3bd08f19445a",
+      "scopes": [
+        "build:access:view"
+      ],
+      "expiresAt": "2026-10-03T11:43:56.688Z"
+    },
+    {
+      "label": "manage",
+      "id": "19ab706d-eb92-4891-86fa-a781d04d602a",
+      "scopes": [
+        "build:access:manage"
+      ],
+      "expiresAt": "2026-10-03T11:44:00.120Z"
+    },
+    {
+      "label": "contained",
+      "id": "554433c8-58ac-4b49-8159-87500b954de2",
+      "scopes": [
+        "build:access:manage",
+        "build:tickets:view"
+      ],
+      "expiresAt": "2026-10-03T11:44:03.440Z"
+    }
+  ],
+  "checks": [
+    {
+      "case": "tickets read",
+      "status": 403,
+      "expected": 403,
+      "expectedGroupsPresent": null,
+      "code": "FORBIDDEN"
+    },
+    {
+      "case": "read read",
+      "status": 200,
+      "expected": 200,
+      "expectedGroupsPresent": true,
+      "code": null
+    },
+    {
+      "case": "manage read",
+      "status": 200,
+      "expected": 200,
+      "expectedGroupsPresent": true,
+      "code": null
+    },
+    {
+      "case": "contained read",
+      "status": 200,
+      "expected": 200,
+      "expectedGroupsPresent": true,
+      "code": null
+    },
+    {
+      "case": "tickets add 2091",
+      "status": 403,
+      "expected": 403,
+      "code": "FORBIDDEN",
+      "message": "You do not have permission to manage this module's access settings"
+    },
+    {
+      "case": "read add 2091",
+      "status": 403,
+      "expected": 403,
+      "code": "FORBIDDEN",
+      "message": "You do not have permission to manage this module's access settings"
+    },
+    {
+      "case": "manage add 2092",
+      "status": 403,
+      "expected": 403,
+      "code": "FORBIDDEN",
+      "message": "You cannot grant permissions you do not hold: build:tickets:view"
+    },
+    {
+      "case": "manage add 2091",
+      "status": 201,
+      "expected": 201,
+      "code": null
+    },
+    {
+      "case": "contained add 2092",
+      "status": 201,
+      "expected": 201,
+      "code": null
+    },
+    {
+      "case": "human generic ModuleOwner assignment",
+      "status": 403,
+      "expected": 403,
+      "message": "Module owner roles must be assigned through the ownership service, not the generic role-assignment path"
+    }
+  ],
+  "cleanup": [
+    {
+      "tokenId": "f9bb8d27-4ea6-427b-892d-3f3047b7eb96",
+      "status": 204
+    },
+    {
+      "tokenId": "77a43072-975c-45fd-8563-3bd08f19445a",
+      "status": 204
+    },
+    {
+      "tokenId": "19ab706d-eb92-4891-86fa-a781d04d602a",
+      "status": 204
+    },
+    {
+      "tokenId": "554433c8-58ac-4b49-8159-87500b954de2",
+      "status": 204
+    }
+  ],
+  "baseline": {
+    "readCompleted": true,
+    "roleVerified": true,
+    "tenantVerified": true,
+    "readOnly": true,
+    "isolation": "repeatable read",
+    "observedAt": "2026-10-03 11:28:08.293044+00",
+    "requestedTokenCount": 0,
+    "requestedGroupCount": 2,
+    "tokens": [],
+    "groups": [
+      {
+        "id": 2091,
+        "present": true,
+        "rank": 30,
+        "module": "build",
+        "assignmentCount": 0,
+        "activeAssignmentCount": 0,
+        "ownerAssignmentCount": 0,
+        "grantState": "empty",
+        "grantCount": 0,
+        "grants": []
+      },
+      {
+        "id": 2092,
+        "present": true,
+        "rank": 30,
+        "module": "build",
+        "assignmentCount": 0,
+        "activeAssignmentCount": 0,
+        "ownerAssignmentCount": 0,
+        "grantState": "present",
+        "grantCount": 1,
+        "grants": [
+          {
+            "permissionKey": "build:tickets:view",
+            "scope": "all"
+          }
+        ]
+      }
+    ],
+    "limits": [
+      "Exact synthetic IDs only",
+      "Persistence observation only",
+      "Absence and empty scope are not authorization proof",
+      "No browser or complete role matrix proof"
+    ]
+  },
+  "afterDenied": {
+    "readCompleted": true,
+    "roleVerified": true,
+    "tenantVerified": true,
+    "readOnly": true,
+    "isolation": "repeatable read",
+    "observedAt": "2026-10-03 11:30:03.557175+00",
+    "requestedTokenCount": 4,
+    "requestedGroupCount": 2,
+    "tokens": [
+      {
+        "id": "f9bb8d27-4ea6-427b-892d-3f3047b7eb96",
+        "present": true,
+        "state": "active",
+        "scopeState": "present",
+        "scopeCount": 1,
+        "hasManageScope": false,
+        "hasViewScope": false,
+        "expiresAt": "2026-10-03 11:43:50.808",
+        "revokedAt": null
+      },
+      {
+        "id": "77a43072-975c-45fd-8563-3bd08f19445a",
+        "present": true,
+        "state": "active",
+        "scopeState": "present",
+        "scopeCount": 1,
+        "hasManageScope": false,
+        "hasViewScope": true,
+        "expiresAt": "2026-10-03 11:43:56.688",
+        "revokedAt": null
+      },
+      {
+        "id": "19ab706d-eb92-4891-86fa-a781d04d602a",
+        "present": true,
+        "state": "active",
+        "scopeState": "present",
+        "scopeCount": 1,
+        "hasManageScope": true,
+        "hasViewScope": false,
+        "expiresAt": "2026-10-03 11:44:00.12",
+        "revokedAt": null
+      },
+      {
+        "id": "554433c8-58ac-4b49-8159-87500b954de2",
+        "present": true,
+        "state": "active",
+        "scopeState": "present",
+        "scopeCount": 2,
+        "hasManageScope": true,
+        "hasViewScope": false,
+        "expiresAt": "2026-10-03 11:44:03.44",
+        "revokedAt": null
+      }
+    ],
+    "groups": [
+      {
+        "id": 2091,
+        "present": true,
+        "rank": 30,
+        "module": "build",
+        "assignmentCount": 0,
+        "activeAssignmentCount": 0,
+        "ownerAssignmentCount": 0,
+        "grantState": "empty",
+        "grantCount": 0,
+        "grants": []
+      },
+      {
+        "id": 2092,
+        "present": true,
+        "rank": 30,
+        "module": "build",
+        "assignmentCount": 0,
+        "activeAssignmentCount": 0,
+        "ownerAssignmentCount": 0,
+        "grantState": "present",
+        "grantCount": 1,
+        "grants": [
+          {
+            "permissionKey": "build:tickets:view",
+            "scope": "all"
+          }
+        ]
+      }
+    ],
+    "limits": [
+      "Exact synthetic IDs only",
+      "Persistence observation only",
+      "Absence and empty scope are not authorization proof",
+      "No browser or complete role matrix proof"
+    ]
+  },
+  "afterPositive": {
+    "readCompleted": true,
+    "roleVerified": true,
+    "tenantVerified": true,
+    "readOnly": true,
+    "isolation": "repeatable read",
+    "observedAt": "2026-10-03 11:32:03.365657+00",
+    "requestedTokenCount": 4,
+    "requestedGroupCount": 2,
+    "tokens": [
+      {
+        "id": "f9bb8d27-4ea6-427b-892d-3f3047b7eb96",
+        "present": true,
+        "state": "revoked",
+        "scopeState": "present",
+        "scopeCount": 1,
+        "hasManageScope": false,
+        "hasViewScope": false,
+        "expiresAt": "2026-10-03 11:43:50.808",
+        "revokedAt": "2026-10-03 11:31:07.6"
+      },
+      {
+        "id": "77a43072-975c-45fd-8563-3bd08f19445a",
+        "present": true,
+        "state": "revoked",
+        "scopeState": "present",
+        "scopeCount": 1,
+        "hasManageScope": false,
+        "hasViewScope": true,
+        "expiresAt": "2026-10-03 11:43:56.688",
+        "revokedAt": "2026-10-03 11:31:10.072"
+      },
+      {
+        "id": "19ab706d-eb92-4891-86fa-a781d04d602a",
+        "present": true,
+        "state": "revoked",
+        "scopeState": "present",
+        "scopeCount": 1,
+        "hasManageScope": true,
+        "hasViewScope": false,
+        "expiresAt": "2026-10-03 11:44:00.12",
+        "revokedAt": "2026-10-03 11:31:12.52"
+      },
+      {
+        "id": "554433c8-58ac-4b49-8159-87500b954de2",
+        "present": true,
+        "state": "revoked",
+        "scopeState": "present",
+        "scopeCount": 2,
+        "hasManageScope": true,
+        "hasViewScope": false,
+        "expiresAt": "2026-10-03 11:44:03.44",
+        "revokedAt": "2026-10-03 11:31:15.041"
+      }
+    ],
+    "groups": [
+      {
+        "id": 2091,
+        "present": true,
+        "rank": 30,
+        "module": "build",
+        "assignmentCount": 1,
+        "activeAssignmentCount": 1,
+        "ownerAssignmentCount": 1,
+        "grantState": "empty",
+        "grantCount": 0,
+        "grants": []
+      },
+      {
+        "id": 2092,
+        "present": true,
+        "rank": 30,
+        "module": "build",
+        "assignmentCount": 1,
+        "activeAssignmentCount": 1,
+        "ownerAssignmentCount": 1,
+        "grantState": "present",
+        "grantCount": 1,
+        "grants": [
+          {
+            "permissionKey": "build:tickets:view",
+            "scope": "all"
+          }
+        ]
+      }
+    ],
+    "limits": [
+      "Exact synthetic IDs only",
+      "Persistence observation only",
+      "Absence and empty scope are not authorization proof",
+      "No browser or complete role matrix proof"
+    ]
+  },
+  "revokedReads": [
+    {
+      "label": "tickets",
+      "status": 401
+    },
+    {
+      "label": "read",
+      "status": 401
+    },
+    {
+      "label": "manage",
+      "status": 401
+    },
+    {
+      "label": "contained",
+      "status": 401
+    }
+  ],
+  "groupCleanup": [
+    {
+      "id": 2091,
+      "removeMember": 200,
+      "removeGroup": 200
+    },
+    {
+      "id": 2092,
+      "removeMember": 200,
+      "removeGroup": 200
+    }
+  ],
+  "afterCleanup": {
+    "readCompleted": true,
+    "roleVerified": true,
+    "tenantVerified": true,
+    "readOnly": true,
+    "isolation": "repeatable read",
+    "observedAt": "2026-10-03 11:39:38.7976+00",
+    "requestedTokenCount": 4,
+    "requestedGroupCount": 2,
+    "tokens": [
+      {
+        "id": "f9bb8d27-4ea6-427b-892d-3f3047b7eb96",
+        "present": true,
+        "state": "revoked",
+        "scopeState": "present",
+        "scopeCount": 1,
+        "hasManageScope": false,
+        "hasViewScope": false,
+        "expiresAt": "2026-10-03 11:43:50.808",
+        "revokedAt": "2026-10-03 11:31:07.6"
+      },
+      {
+        "id": "77a43072-975c-45fd-8563-3bd08f19445a",
+        "present": true,
+        "state": "revoked",
+        "scopeState": "present",
+        "scopeCount": 1,
+        "hasManageScope": false,
+        "hasViewScope": true,
+        "expiresAt": "2026-10-03 11:43:56.688",
+        "revokedAt": "2026-10-03 11:31:10.072"
+      },
+      {
+        "id": "19ab706d-eb92-4891-86fa-a781d04d602a",
+        "present": true,
+        "state": "revoked",
+        "scopeState": "present",
+        "scopeCount": 1,
+        "hasManageScope": true,
+        "hasViewScope": false,
+        "expiresAt": "2026-10-03 11:44:00.12",
+        "revokedAt": "2026-10-03 11:31:12.52"
+      },
+      {
+        "id": "554433c8-58ac-4b49-8159-87500b954de2",
+        "present": true,
+        "state": "revoked",
+        "scopeState": "present",
+        "scopeCount": 2,
+        "hasManageScope": true,
+        "hasViewScope": false,
+        "expiresAt": "2026-10-03 11:44:03.44",
+        "revokedAt": "2026-10-03 11:31:15.041"
+      }
+    ],
+    "groups": [
+      {
+        "id": 2091,
+        "present": false,
+        "assignmentCount": null,
+        "grantState": "unknown",
+        "grantCount": null
+      },
+      {
+        "id": 2092,
+        "present": false,
+        "assignmentCount": null,
+        "grantState": "unknown",
+        "grantCount": null
+      }
+    ],
+    "limits": [
+      "Exact synthetic IDs only",
+      "Persistence observation only",
+      "Absence and empty scope are not authorization proof",
+      "No browser or complete role matrix proof"
+    ]
+  },
+  "limits": [
+    "Synthetic human owner and genuine owner PATs only",
+    "No browser, nonowner/mixed-module runtime, concurrent authority, or full release proof",
+    "Removed group membership leaves the existing writer's enabled Build override; no full state restoration claimed",
+    "Denied commands may update token last-use telemetry; no assignment inserted in the observed denied phase"
+  ]
+}

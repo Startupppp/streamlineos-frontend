@@ -49,12 +49,13 @@ export function useDashboardAccess(): DashboardAccess {
       const key = homeSectionPermission(id);
       return key === null ? true : can(key);
     };
+    const hrEnabled = moduleOn("HR");
 
     return {
       accessLoading: isLoading,
       accessResolved: data !== undefined,
       refetchAccess: () => void refetch(),
-      hrEnabled: moduleOn("HR"),
+      hrEnabled,
       crmEnabled: moduleOn("CRM"),
       projectsEnabled: moduleOn("PROJECTS") && canUseBuild,
       payrollEnabled: moduleOn("PAYROLL"),
@@ -65,7 +66,7 @@ export function useDashboardAccess(): DashboardAccess {
       canSelfAttendance: can("self:attendance"),
       canViewLeaves: canSection("leaves-today"),
       canApproveLeaves: canSection("pending-approvals"),
-      canViewExecutive: canSection("executive"),
+      canViewExecutive: hrEnabled && canSection("executive"),
       canViewCrmLeads: canSection("today-activities"),
       canViewCrmReports: can("crm:reports:view"),
       canViewTickets: canSection("recent-activity"),

@@ -4,6 +4,7 @@ import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
 import { useCan, useModuleEnabled } from "@/hooks/api/access";
+import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
 import {
   leaveAnalyticsC,
   leaveApprovalsC,
@@ -28,9 +29,13 @@ import type {
   HrLeaveType,
   LeaveContextResult,
   LeavePolicyResponse,
-  LeaveRequestsPage,
 } from "@/hooks/api/hr/leaves-types";
-import type { HrHolidayRow, LeavesTeamPage } from "@/hooks/api/hr/leaves-schema";
+import type {
+  HrHolidayRow,
+  LeaveRequestsPageResult,
+  LeavesTeamPage,
+  LeavesThisWeekRow,
+} from "@/hooks/api/hr/leaves-schema";
 import { NULL_ID_CURSOR_YET } from "@/hooks/api/cursor-page-param";
 
 export interface LeaveTeamListParams {
@@ -39,6 +44,7 @@ export interface LeaveTeamListParams {
   from?: string;
   to?: string;
   limit?: number;
+  decidedBy?: "me";
 }
 
 export * from "@/hooks/api/hr/leave-request-mutations";
@@ -57,17 +63,20 @@ export function useLeaveTypesAdmin(options?: { enabled?: boolean }) {
     queryFn: ({ signal }) => apiClient.get<HrLeaveType[]>("/hr/leaves/types", undefined, signal, leaveTypesListC),
     staleTime: 2 * 60_000,
     enabled: hrEnabled && canView && (options?.enabled ?? true),
+    ...INLINE_READ_ERROR,
   });
 }
 
 export function useHrLeaveContext() {
   const canSelf = useCan("self:leaves");
+  const hrEnabled = useModuleEnabled("hr");
   const identity = useLeaveQueryIdentity();
   return useQuery({
     queryKey: leaveContextKey(identity),
     queryFn: ({ signal }) => apiClient.get<LeaveContextResult>("/me/time-off", undefined, signal, leaveContextC),
     staleTime: 2 * 60_000,
-    enabled: Boolean(identity.orgId && identity.userId) && canSelf,
+    enabled: Boolean(identity.orgId && identity.userId) && hrEnabled && canSelf,
+    ...INLINE_READ_ERROR,
   });
 }
 
@@ -93,53 +102,61 @@ export function useHrLeaveApprovals(
       hrEnabled &&
       canLeaves &&
       (enabled ?? true),
+    ...INLINE_READ_ERROR,
   });
 }
 
 export function useHrLeavesThisWeek(options?: { enabled?: boolean }) {
   const canSelf = useCan("self:leaves");
+  const hrEnabled = useModuleEnabled("hr");
   const identity = useLeaveQueryIdentity();
   return useQuery({
     queryKey: leaveThisWeekKey(identity),
-    queryFn: ({ signal }) => apiClient.get<unknown[]>("/me/time-off/team-calendar", undefined, signal, leavesThisWeekC),
+    queryFn: ({ signal }) => apiClient.get<LeavesThisWeekRow[]>("/me/time-off/team-calendar", undefined, signal, leavesThisWeekC),
     staleTime: 2 * 60_000,
     enabled:
       Boolean(identity.orgId && identity.userId) &&
+      hrEnabled &&
       canSelf &&
       (options?.enabled ?? true),
+    ...INLINE_READ_ERROR,
   });
 }
 
 export function useHrMyLeaveRequests(enabled = true) {
   const canSelf = useCan("self:leaves");
+  const hrEnabled = useModuleEnabled("hr");
   const identity = useLeaveQueryIdentity();
   return useQuery({
     queryKey: leaveMyRequestsKey(identity),
     queryFn: ({ signal }) =>
-      apiClient.get<LeaveRequestsPage>(
+      apiClient.get<LeaveRequestsPageResult>(
         "/me/time-off/requests",
         { limit: 100 }, signal, leaveRequestsPageC,
       ),
     select: (response) => ({ requests: response.data }),
     staleTime: 2 * 60_000,
-    enabled: Boolean(identity.orgId && identity.userId) && canSelf && enabled,
+    enabled: Boolean(identity.orgId && identity.userId) && hrEnabled && canSelf && enabled,
+    ...INLINE_READ_ERROR,
   });
 }
 
 export function useHrMyLeaveRequestsInfinite(enabled = true) {
   const canSelf = useCan("self:leaves");
+  const hrEnabled = useModuleEnabled("hr");
   const identity = useLeaveQueryIdentity();
   return useInfiniteQuery({
     queryKey: leaveMyRequestsPagesKey(identity),
     queryFn: ({ pageParam, signal }) =>
-      apiClient.get<LeaveRequestsPage>("/me/time-off/requests", {
+      apiClient.get<LeaveRequestsPageResult>("/me/time-off/requests", {
         limit: 50,
         ...(pageParam !== null ? { cursor: pageParam } : {}),
       }, signal, leaveRequestsPageC),
     initialPageParam: NULL_ID_CURSOR_YET,
     getNextPageParam: (lastPage) => lastPage.pageInfo.nextCursor ?? undefined,
     staleTime: 2 * 60_000,
-    enabled: Boolean(identity.orgId && identity.userId) && canSelf && enabled,
+    enabled: Boolean(identity.orgId && identity.userId) && hrEnabled && canSelf && enabled,
+    ...INLINE_READ_ERROR,
   });
 }
 
@@ -158,6 +175,7 @@ export function useHrHolidaysForCalendar(params: {
       ),
     staleTime: 2 * 60_000,
     enabled: hrEnabled && canAttendance,
+    ...INLINE_READ_ERROR,
   });
 }
 
@@ -173,6 +191,7 @@ export function useHrLeaveAnalytics(year?: number) {
       }, signal, leaveAnalyticsC),
     staleTime: 120_000,
     enabled: hrEnabled && canView,
+    ...INLINE_READ_ERROR,
   });
 }
 
@@ -183,5 +202,6 @@ export function useLeavePolicy() {
     queryFn: ({ signal }) => apiClient.get<LeavePolicyResponse>("/hr/leave-policy", undefined, signal, leavePolicyC),
     staleTime: 10 * 60 * 1000,
     enabled: canView,
+    ...INLINE_READ_ERROR,
   });
 }

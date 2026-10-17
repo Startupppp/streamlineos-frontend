@@ -1,13 +1,16 @@
-﻿"use client";
+"use client";
 
 import { useState, useEffect, useRef, useCallback } from "react";
-import { useLogTime } from "@/hooks/api/build";
+import { useLogTime } from "@/hooks/api/build/time-entries";
+import { useSubmitGuard } from "@/hooks/common/use-submit-guard";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { Timer, Square, Clock } from "lucide-react";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { PlayIcon, PlusIcon } from "@animateicons/react/lucide";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { cn } from "@/lib/utils";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useCan } from "@/hooks/api/access";
@@ -30,10 +33,12 @@ export function TicketTimeTracker({ ticketId, projectId, timeSpent }: TicketTime
   const canLogTime = useCan("build:timesheets:create");
   const logTime = useLogTime();
   const [running, setRunning] = useState(false);
+  const [paused, setPaused] = useState(false);
   const [elapsed, setElapsed] = useState(0);
   const [manualHours, setManualHours] = useState("");
   const [description, setDescription] = useState("");
   const [showManual, setShowManual] = useState(false);
+  const [discardConfirmOpen, setDiscardConfirmOpen] = useState(false);
 
   const startTimeRef = useRef<number | null>(null);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -45,6 +50,7 @@ export function TicketTimeTracker({ ticketId, projectId, timeSpent }: TicketTime
   }, []);
 
   const handleStart = useCallback(() => {
+    setPaused(false);
     setRunning(true);
     const startedAt = Date.now() - elapsed * 1000;
     startTimeRef.current = startedAt;
@@ -55,35 +61,58 @@ export function TicketTimeTracker({ ticketId, projectId, timeSpent }: TicketTime
 
   const handleStop = useCallback(() => {
     setRunning(false);
+    setPaused(true);
     if (intervalRef.current) clearInterval(intervalRef.current);
   }, []);
 
-  const handleSaveTimer = useCallback(() => {
+  const handleDiscardRequest = useCallback(() => {
+    setDiscardConfirmOpen(true);
+  }, []);
+
+  const handleDiscardConfirm = useCallback(() => {
+    setElapsed(0);
+    setPaused(false);
+    setRunning(false);
+    setDescription("");
+    startTimeRef.current = null;
+    setDiscardConfirmOpen(false);
+  }, []);
+
+  const handleDiscardCancel = useCallback(() => {
+    setDiscardConfirmOpen(false);
+  }, []);
+
+  const handleSaveTimerInner = useCallback(async () => {
     if (elapsed < 1) {
       toast.error("No time recorded");
       return;
     }
     const hours = Math.max(0.01, elapsed / 3600);
-    logTime.mutate(
-      {
+    try {
+      await logTime.mutateAsync({
         projectId,
         ticketId,
         date: new Date().toISOString().slice(0, 10),
         hours: Math.round(hours * 100) / 100,
         description: description || undefined,
-      },
-      {
-        onSuccess: () => {
-          toast.success("Time logged");
-          setElapsed(0);
-          setDescription("");
-          setRunning(false);
-          startTimeRef.current = null;
-        },
-        onError: (e: unknown) => toast.error(getErrorMessage(e)),
-      }
-    );
+      });
+      toast.success(`Time logged (${formatElapsed(elapsed)})`);
+      setElapsed(0);
+      setPaused(false);
+      setDescription("");
+      setRunning(false);
+      startTimeRef.current = null;
+      if (intervalRef.current) clearInterval(intervalRef.current);
+    } catch (e) {
+      toast.error(getErrorMessage(e));
+    }
   }, [elapsed, projectId, ticketId, description, logTime]);
+
+  const saveTimerGuard = useSubmitGuard(handleSaveTimerInner);
+
+  const handleSaveTimer = useCallback(() => {
+    void saveTimerGuard.submit();
+  }, [saveTimerGuard]);
 
   const handleLogManual = useCallback(() => {
     const h = parseFloat(manualHours);
@@ -122,6 +151,8 @@ export function TicketTimeTracker({ ticketId, projectId, timeSpent }: TicketTime
     ) : null;
   }
 
+  const isSaving = logTime.isPending || saveTimerGuard.isSubmitting;
+
   return (
     <div>
       <div className="flex items-center justify-between mb-2">
@@ -129,7 +160,7 @@ export function TicketTimeTracker({ ticketId, projectId, timeSpent }: TicketTime
           <Clock className="h-3.5 w-3.5" />
           Time Tracking
           {totalSpent > 0 && (
-            <span className="text-foreground font-semibold">{totalSpent}h logged</span>
+            <span className="text-foreground font-medium">{totalSpent}h logged</span>
           )}
         </h4>
         <AnimatedIconButton
@@ -153,28 +184,59 @@ export function TicketTimeTracker({ ticketId, projectId, timeSpent }: TicketTime
           <Timer className="h-3.5 w-3.5 shrink-0" />
           <span>{formatElapsed(elapsed)}</span>
         </div>
-        {!running ? (
+        {!running && !paused ? (
           <AnimatedIconButton size="sm" variant="outline" icon={PlayIcon} iconSize={12} iconClassName="mr-1" className="h-9 text-xs px-3" onClick={handleStart}>
             Start
           </AnimatedIconButton>
-        ) : (
+        ) : running ? (
           <>
             <Button size="sm" variant="outline" className="h-9 text-xs px-3 gap-1" onClick={handleStop}>
               <Square className="h-3 w-3" />Stop
             </Button>
-            <Button
+            <LoadingButton
               size="sm"
               className="h-9 text-xs px-3"
               onClick={handleSaveTimer}
-              disabled={logTime.isPending}
+              isPending={isSaving}
             >
               Save
+            </LoadingButton>
+          </>
+        ) : (
+          <>
+            <LoadingButton
+              size="sm"
+              className="h-9 text-xs px-3"
+              onClick={handleSaveTimer}
+              isPending={isSaving}
+            >
+              Save
+            </LoadingButton>
+            <Button
+              size="sm"
+              variant="outline"
+              className="h-9 text-xs px-3"
+              disabled={isSaving}
+              onClick={handleDiscardRequest}
+            >
+              Discard
             </Button>
+            <ConfirmDialog
+              open={discardConfirmOpen}
+              onOpenChange={(open) => {
+                if (!open) handleDiscardCancel();
+              }}
+              title="Discard tracked time?"
+              description={`This will discard the ${formatElapsed(elapsed)} you tracked. This cannot be undone.`}
+              confirmLabel="Discard"
+              destructive
+              onConfirm={handleDiscardConfirm}
+            />
           </>
         )}
       </div>
 
-      {(running || elapsed > 0) && (
+      {(running || paused || elapsed > 0) && (
         <Input
           value={description}
           onChange={(e) => setDescription(e.target.value)}
@@ -200,14 +262,14 @@ export function TicketTimeTracker({ ticketId, projectId, timeSpent }: TicketTime
             placeholder="Description (optional)"
             className="text-xs flex-1"
           />
-          <Button
+          <LoadingButton
             size="sm"
             className="text-xs px-3 shrink-0"
             onClick={handleLogManual}
-            disabled={logTime.isPending}
+            isPending={logTime.isPending}
           >
-            {logTime.isPending ? "..." : "Log"}
-          </Button>
+            Log
+          </LoadingButton>
         </div>
       )}
     </div>

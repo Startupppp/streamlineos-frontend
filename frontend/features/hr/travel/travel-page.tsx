@@ -10,7 +10,9 @@ import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
-import { ErrorState } from "@/components/shared/error-state";
+import { PageState } from "@/components/shared/page-state";
+import { usePageState } from "@/hooks/api/use-page-state";
+import { useCan } from "@/hooks/api/access";
 import { HrSheet } from "@/components/shared/hr-sheet";
 import { useMotionVariants } from "@/lib/motion-variants";
 import { useMyTravelRequests, useCreateTravelRequest } from "@/hooks/api/hr";
@@ -42,6 +44,8 @@ export function TravelPage() {
   const { staggerContainer } = useMotionVariants();
   const { data: requests, isLoading, isError, error, refetch } = useMyTravelRequests();
   const createRequest = useCreateTravelRequest();
+  const canCreate = useCan("hr:travel:create");
+  const pageState = usePageState({ permission: "hr:travel:view", module: "hr", isLoading, isError, error });
   const [sheetOpen, setSheetOpen] = useState(false);
 
   const handleRetry = useCallback(() => {
@@ -126,7 +130,7 @@ export function TravelPage() {
     )();
   }, [form, createRequest]);
 
-  if (isLoading) return <TravelLoading />;
+  if (pageState.kind === "loading") return <TravelLoading />;
 
   return (
     <PageWrapper
@@ -134,25 +138,21 @@ export function TravelPage() {
       subtitle="Plan and track your business travel"
       badge={undefined}
       actions={
-        <Button onClick={handleOpenSheet}>
-          <Plus className="h-4 w-4 mr-2" />
-          Request Travel
-        </Button>
+        canCreate ? (
+          <Button onClick={handleOpenSheet}>
+            <Plus className="h-4 w-4 mr-2" />
+            Request travel
+          </Button>
+        ) : undefined
       }
     >
-      {isError ? (
-        <ErrorState
-          className="flex-1"
-          title="Couldn't load travel requests"
-          description={getErrorMessage(error)}
-          onRetry={handleRetry}
-        />
-      ) : !requests?.length ? (
+      <PageState resolution={pageState} loading={null} onRetry={handleRetry} className="flex-1">
+      {!requests?.length ? (
         <EmptyState
           illustrationPreset="travel"
           title="No travel requests yet"
           description="Submit a travel request to get started."
-          action={{ label: "Request Travel", onClick: handleOpenSheet }}
+          action={canCreate ? { label: "Request travel", onClick: handleOpenSheet } : undefined}
         />
       ) : (
         <motion.div
@@ -169,6 +169,7 @@ export function TravelPage() {
           </div>
         </motion.div>
       )}
+      </PageState>
 
       <HrSheet
         open={sheetOpen}

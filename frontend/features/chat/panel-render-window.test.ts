@@ -2,7 +2,9 @@ import {
   PANEL_RENDER_PAGE_SIZE,
   resolvePanelVisibleCount,
   resolvePanelWindowStart,
+  usePanelRenderWindow,
 } from "./panel-render-window";
+import { act, renderHook } from "@testing-library/react";
 
 describe("resolvePanelVisibleCount — the mounted row count is bounded", () => {
   it("mounts the whole collection while it fits inside one page", () => {
@@ -53,5 +55,25 @@ describe("resolvePanelWindowStart — the tail window skips and repeats nothing"
     expect(seen.size).toBe(total);
     expect(Math.min(...seen)).toBe(0);
     expect(Math.max(...seen)).toBe(total - 1);
+  });
+});
+
+describe("usePanelRenderWindow — reset identity", () => {
+  it("returns to one page when a different panel identity opens", () => {
+    const fetchNextPage = jest.fn();
+    const { result, rerender } = renderHook(
+      ({ resetKey }) =>
+        usePanelRenderWindow(100, true, fetchNextPage, resetKey),
+      { initialProps: { resetKey: 1 } },
+    );
+
+    act(() => result.current.onLoadMore());
+    expect(result.current.visibleCount).toBe(PANEL_RENDER_PAGE_SIZE * 2);
+
+    rerender({ resetKey: 2 });
+    expect(result.current.visibleCount).toBe(PANEL_RENDER_PAGE_SIZE);
+
+    act(() => result.current.onLoadMore());
+    expect(result.current.visibleCount).toBe(PANEL_RENDER_PAGE_SIZE * 2);
   });
 });

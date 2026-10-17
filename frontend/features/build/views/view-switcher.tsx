@@ -10,23 +10,23 @@ import {
 } from "@animateicons/react/lucide";
 import type { IconHandle } from "@animateicons/react";
 import { cn } from "@/lib/utils";
+import { VIEW_TYPES, type ViewType } from "@/lib/build/view-types";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { VIEW_TYPES, isViewType, type ViewType } from "@/lib/build/view-types";
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 export type { ViewType } from "@/lib/build/view-types";
-export { parseViewType } from "@/lib/build/view-types";
+export { parseViewType, parseBoardPageView } from "@/lib/build/view-types";
 
 interface ViewSwitcherProps {
   activeView: ViewType;
   onViewChange: (view: ViewType) => void;
   className?: string;
   allowedViews?: readonly ViewType[];
+  iconOnly?: boolean;
 }
 
 type AnimatedViewIcon = ComponentType<{
@@ -59,51 +59,79 @@ export const ViewSwitcher = memo(function ViewSwitcher({
   onViewChange,
   className,
   allowedViews,
+  iconOnly = false,
 }: ViewSwitcherProps) {
   const views = allowedViews
     ? ALL_VIEWS.filter((v) => allowedViews.includes(v.value))
     : ALL_VIEWS;
 
-  const handleSelectChange = useCallback(
-    (value: string) => {
-      if (isViewType(value)) {
-        if (allowedViews && !allowedViews.includes(value)) return;
-        onViewChange(value);
-      }
+  const handleSelect = useCallback(
+    (value: ViewType) => {
+      if (allowedViews && !allowedViews.includes(value)) return;
+      onViewChange(value);
     },
     [allowedViews, onViewChange],
   );
 
-  const activeMeta = views.find((v) => v.value === activeView) ?? views[0];
-
-  return (
-    <div className={cn("flex min-w-0 items-center", className)}>
-      <Select value={activeView} onValueChange={handleSelectChange}>
-        <SelectTrigger
-          className="h-9 w-fit min-w-0 shrink-0 gap-1 px-2 sm:min-w-[7.5rem]"
-          aria-label="Select view"
-        >
-          <SelectValue placeholder={activeMeta?.label ?? "View"} />
-        </SelectTrigger>
-        <SelectContent className="min-w-[var(--radix-select-trigger-width)]">
-          {views.map((v) => {
-            const AnimatedIcon = v.animatedIcon;
-            const StaticIcon = v.staticIcon;
-            return (
-              <SelectItem key={v.value} value={v.value}>
-                <span className="flex items-center gap-1.5">
-                  {AnimatedIcon ? (
-                    <AnimatedIcon size={14} className="h-3.5 w-3.5 text-muted-foreground" />
-                  ) : StaticIcon ? (
-                    <StaticIcon className="h-3.5 w-3.5 text-muted-foreground" />
-                  ) : null}
-                  {v.label}
-                </span>
-              </SelectItem>
-            );
-          })}
-        </SelectContent>
-      </Select>
+  const switcher = (
+    <div
+      role="group"
+      aria-label="Select view"
+      className={cn(
+        "inline-flex h-9 max-w-full items-center gap-1 overflow-x-auto overscroll-x-contain rounded-lg border border-input bg-card p-1 scrollbar-hide",
+        className,
+      )}
+    >
+      {views.map((v) => {
+        const AnimatedIcon = v.animatedIcon;
+        const StaticIcon = v.staticIcon;
+        const isActive = v.value === activeView;
+        function onClick() {
+          handleSelect(v.value);
+        }
+        const button = (
+          <button
+            key={v.value}
+            type="button"
+            onClick={onClick}
+            aria-label={v.label}
+            aria-pressed={isActive}
+            className={cn(
+              "inline-flex shrink-0 items-center justify-center gap-1.5 rounded-md px-2.5 py-1.5 text-sm font-medium leading-none transition-colors press-scale outline-none motion-reduce:transition-none",
+              iconOnly && "size-8 px-0 py-0",
+              "focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 focus-visible:ring-offset-background",
+              isActive
+                ? "bg-foreground text-background shadow-sm [&_svg]:text-background"
+                : "bg-transparent text-muted-foreground hover:text-foreground",
+            )}
+          >
+            {AnimatedIcon ? (
+              <AnimatedIcon size={14} className="h-3.5 w-3.5" />
+            ) : StaticIcon ? (
+              <StaticIcon className="h-3.5 w-3.5" />
+            ) : null}
+            {!iconOnly ? (
+              <span className="hidden sm:inline">{v.label}</span>
+            ) : null}
+          </button>
+        );
+        return iconOnly ? (
+          <Tooltip key={v.value}>
+            <TooltipTrigger asChild>{button}</TooltipTrigger>
+            <TooltipContent side="bottom" className="text-xs">
+              {v.label}
+            </TooltipContent>
+          </Tooltip>
+        ) : (
+          button
+        );
+      })}
     </div>
+  );
+
+  return iconOnly ? (
+    <TooltipProvider delayDuration={200}>{switcher}</TooltipProvider>
+  ) : (
+    switcher
   );
 });

@@ -7,7 +7,6 @@ import {
 export const HRMS_ROUTE_ROOT = "/hr";
 
 export const HRMS_SMOKE_EXCLUDED_PREFIXES: readonly string[] = [
-  "/hr/recruitment",
   "/payroll",
 ];
 

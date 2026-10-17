@@ -336,6 +336,7 @@ export function CalendarManager({ month }: CalendarManagerProps) {
           className="border-0 bg-transparent shadow-none"
           title="Couldn't load calendar events"
           description={getErrorMessage(error)}
+          error={error}
           onRetry={handleRetry}
         />
       ) : events.length === 0 ? (

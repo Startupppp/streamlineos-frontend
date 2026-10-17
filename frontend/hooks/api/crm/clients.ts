@@ -1,6 +1,7 @@
 "use client";
 
-import { useMutation, useQueryClient, keepPreviousData } from "@tanstack/react-query";
+import { useModuleEnabled } from "@/hooks/api/access";
+import { useQueryClient, keepPreviousData } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { useGatedQuery } from "@/hooks/api/gated-query";
@@ -39,6 +40,9 @@ const onboardingItemsLazy = lazyContract(() =>
 const onboardingItemLazy = lazyContract(() =>
   import("@/hooks/api/crm/clients-schema").then((m) => m.onboardingItemContract),
 );
+const createClientResultLazy = lazyContract(() =>
+  import("@/hooks/api/crm/clients-schema").then((m) => m.createClientResultSchema),
+);
 export function useClientAccounts(filters?: ClientAccountFilters) {
   return useGatedQuery("crm:clients:read", {
     queryKey: queryKeys.clients.list(filters as Record<string, unknown>),
@@ -68,10 +72,12 @@ export function useClientTimeline(clientId: number) {
 }
 
 export function useSimpleClientsList() {
+  const crmEnabled = useModuleEnabled("crm");
   return useGatedQuery("crm:clients:read", {
     queryKey: queryKeys.clients.simpleList(),
     queryFn: ({ signal }) => apiClient.get<SimpleClient[]>("/clients/list", undefined, signal, simpleClientsLazy),
     staleTime: 2 * 60_000,
+    enabled: crmEnabled,
   });
 }
 
@@ -95,6 +101,18 @@ export function useClientOnboardingItems(clientId: number) {
     queryFn: ({ signal }) => apiClient.get<OnboardingItem[]>("/clients/onboarding/items", { clientId }, signal, onboardingItemsLazy),
     staleTime: 2 * 60_000,
     enabled: clientId > 0,
+  });
+}
+
+export function useCreateClient() {
+  const qc = useQueryClient();
+  return useAuthorizedMutation<SimpleClient, Error, { name: string }>("crm:clients:update", {
+    mutationKey: ["clients", "create"] as const,
+    mutationFn: (data: { name: string }) =>
+      apiClient.post<SimpleClient>("/clients", data, undefined, createClientResultLazy),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: queryKeys.clients.simpleList() });
+    },
   });
 }
 

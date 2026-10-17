@@ -3,6 +3,7 @@ import {
   ASK_OS_MAX_MESSAGE_CHARS,
   askOsComposerRefusal,
   askOsInputError,
+  askOsPageContext,
   boundedAskOsContext,
   prepareAskOsSend,
 } from "./ask-os-request-policy";
@@ -63,5 +64,55 @@ describe("prepareAskOsSend", () => {
     expect(
       askOsComposerRefusal(new ApiError("Validation failed.", 400, "VALIDATION_FAILED")),
     ).toBe("This message could not be sent. Check the text and try again.");
+  });
+});
+
+describe("askOsPageContext", () => {
+  it("names the project and ticket when a Build ticket route clearly identifies them", () => {
+    expect(askOsPageContext("/build/42/tickets/STRE-7")).toEqual({
+      route: "/build/42/tickets/STRE-7",
+      module: "build",
+      projectId: "42",
+      recordType: "ticket",
+      recordId: "STRE-7",
+    });
+  });
+
+  it("names the project alone on a project sub-page", () => {
+    expect(askOsPageContext("/build/42/bugs")).toEqual({
+      route: "/build/42/bugs",
+      module: "build",
+      projectId: "42",
+    });
+  });
+
+  it("does not mistake a static Build page for a project", () => {
+    expect(askOsPageContext("/build/my-work")).toEqual({ route: "/build/my-work", module: "build" });
+  });
+
+  it("reads a record from a numeric or uuid id under its collection", () => {
+    expect(askOsPageContext("/crm/leads/123")).toEqual({
+      route: "/crm/leads/123",
+      module: "crm",
+      recordType: "lead",
+      recordId: "123",
+    });
+    expect(askOsPageContext("/hr/employees/0b6f9c1e-8a52-4a0e-9d51-2c3f4a5b6c7d/edit")).toMatchObject({
+      module: "hr",
+      recordType: "employee",
+      recordId: "0b6f9c1e-8a52-4a0e-9d51-2c3f4a5b6c7d",
+    });
+  });
+
+  it("guesses nothing from a non-id segment", () => {
+    expect(askOsPageContext("/crm/leads/duplicates")).toEqual({
+      route: "/crm/leads/duplicates",
+      module: "crm",
+    });
+  });
+
+  it("caps the route at 300 characters and handles the root", () => {
+    expect(askOsPageContext(`/${"a".repeat(400)}`).route).toHaveLength(300);
+    expect(askOsPageContext("/")).toEqual({ route: "/" });
   });
 });

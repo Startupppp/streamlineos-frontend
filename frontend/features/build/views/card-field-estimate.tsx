@@ -9,17 +9,22 @@ import { useUpdateTicket } from "@/hooks/api/build/tickets";
 import { Gauge } from "lucide-react";
 import { InlineFieldWrapper } from "./card-field-wrapper";
 import { parseTicketPointsInput } from "../shared/ticket-points";
+import { MAX_TICKET_POINTS } from "@/lib/validation/projects";
 
 interface InlineEstimateProps {
   ticketId: number;
   projectId: number;
+  version: number;
   currentPoints?: number | null;
+  hideEmpty?: boolean;
 }
 
 export const InlineEstimate = memo(function InlineEstimate({
   ticketId,
   projectId,
+  version,
   currentPoints,
+  hideEmpty = false,
 }: InlineEstimateProps) {
   const [editing, setEditing] = useState(false);
   const [value, setValue] = useState(
@@ -37,12 +42,12 @@ export const InlineEstimate = memo(function InlineEstimate({
   function handleSubmit() {
     const next = parseTicketPointsInput(value);
     if (next === undefined) {
-      toast.error("Story points must be a non-negative integer");
+      toast.error(`Story points must be a whole number between 0 and ${MAX_TICKET_POINTS}`);
       return;
     }
     const prev = currentPoints ?? null;
     if (next !== prev) {
-      updateTicket.mutate({ ticketId, points: next });
+      updateTicket.mutate({ ticketId, version, points: next });
     }
     setEditing(false);
   }
@@ -73,6 +78,10 @@ export const InlineEstimate = memo(function InlineEstimate({
   }
 
   const display = currentPoints ?? null;
+
+  if (hideEmpty && display == null && !editing) {
+    return null;
+  }
 
   if (editing) {
     return (
@@ -119,7 +128,7 @@ export const InlineEstimate = memo(function InlineEstimate({
             display != null ? "text-foreground" : "text-muted-foreground",
           )}
         >
-          {display != null ? `${display} pts` : "pts"}
+          {display != null ? `${display} pts` : "Add pts"}
         </span>
       </button>
     </InlineFieldWrapper>

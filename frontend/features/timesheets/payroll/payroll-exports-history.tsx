@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { DataTable } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/shared/error-state";
-import { LoadingButton } from "@/components/ui/loading-button";
+import { InfiniteScrollSentinel } from "@/components/ui/infinite-scroll-sentinel";
 import { EmptyReportIllustration } from "@/components/illustrations";
 import type { DataTableColumn } from "@/components/ui/data-table";
 import { TruncatedText } from "@/components/ui/truncated-text";
@@ -181,8 +181,6 @@ export function PayrollExportsHistory({ fallbackMapping }: PayrollExportsHistory
 
   const handleRetry = useCallback(() => { void refetch(); }, [refetch]);
 
-  const handleLoadMore = useCallback(() => { void fetchNextPage(); }, [fetchNextPage]);
-
   const emptyState = (
     <EmptyState
       illustration={<EmptyReportIllustration className="h-32 w-32" />}
@@ -216,18 +214,12 @@ export function PayrollExportsHistory({ fallbackMapping }: PayrollExportsHistory
         pagination={{ pageSize: 20 }}
         minWidth="760px"
       />
-      {hasNextPage && (
-        <div className="flex justify-center pt-2 pb-1">
-          <LoadingButton
-            variant="outline"
-            size="sm"
-            isPending={isFetchingNextPage}
-            onClick={handleLoadMore}
-          >
-            Load more
-          </LoadingButton>
-        </div>
-      )}
+      <InfiniteScrollSentinel
+        hasNextPage={hasNextPage}
+        isFetchingNextPage={isFetchingNextPage}
+        onLoadMore={fetchNextPage}
+        label="Load more payroll exports"
+      />
 
       {ackTarget && (
         <AckExportDialog

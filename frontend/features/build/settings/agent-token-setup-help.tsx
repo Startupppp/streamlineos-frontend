@@ -58,7 +58,7 @@ export function SetupHelp() {
   return (
     <Accordion type="single" collapsible className="border-t border-border/60">
       <AccordionItem value="setup" className="border-0">
-        <AccordionTrigger className="py-2.5 text-xs font-medium text-muted-foreground hover:text-foreground hover:no-underline">
+        <AccordionTrigger className="py-2.5 text-xs font-normal text-muted-foreground hover:text-foreground hover:no-underline">
           Setup instructions
         </AccordionTrigger>
         <AccordionContent className="space-y-3 pb-1">

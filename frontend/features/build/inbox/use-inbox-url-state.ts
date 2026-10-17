@@ -2,35 +2,28 @@
 
 import { useCallback, useMemo, useTransition } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import type { NotificationSection, NotificationCategory } from "@/types/notifications";
-import { NOTIFICATION_CATEGORY_VALUES } from "@/types/notifications";
-
-export type InboxView = "notifications" | "drafts";
+import type {
+  NotificationSection,
+  NotificationCategory,
+} from "@/types/notifications";
+import { isBuildInboxCategory, BUILD_INBOX_ACTIVE_SECTIONS, BUILD_INBOX_TRIAGE_TABS } from "./inbox-categories";
+import { buildListSearchParams } from "../shared/use-build-list-url-state";
 
 const VALID_SECTIONS: readonly NotificationSection[] = [
-  "UNREAD",
-  "ALL",
-  "MENTIONS",
+  ...BUILD_INBOX_ACTIVE_SECTIONS.map((option) => option.value),
+  ...BUILD_INBOX_TRIAGE_TABS.map((option) => option.value),
 ];
 
-const FILTER_PARAMS = ["q", "type", "project"] as const;
+const FILTER_PARAMS = ["q", "type", "projectId"] as const;
 
 function parseSection(raw: string | null): NotificationSection {
   const match = VALID_SECTIONS.find((section) => section === raw);
-  return match ?? "UNREAD";
-}
-
-export function isNotificationCategory(v: string): v is NotificationCategory {
-  return NOTIFICATION_CATEGORY_VALUES.some((category) => category === v);
+  return match ?? "ALL";
 }
 
 function parseType(raw: string | null): NotificationCategory | null {
-  if (raw !== null && isNotificationCategory(raw)) return raw;
+  if (raw !== null && isBuildInboxCategory(raw)) return raw;
   return null;
-}
-
-function parseView(raw: string | null): InboxView {
-  return raw === "drafts" ? "drafts" : "notifications";
 }
 
 function parseProjectId(raw: string | null): number | null {
@@ -39,13 +32,18 @@ function parseProjectId(raw: string | null): number | null {
   return Number.isInteger(parsed) && parsed > 0 ? parsed : null;
 }
 
-export interface InboxUrlState {
-  view: InboxView;
+function parseCursor(raw: string | null): number | null {
+  if (raw === null) return null;
+  const parsed = Number(raw);
+  return Number.isInteger(parsed) && parsed > 0 ? parsed : null;
+}
+
+interface InboxUrlState {
   section: NotificationSection;
   q: string | null;
   type: NotificationCategory | null;
   projectId: number | null;
-  cursor: string | null;
+  cursor: number | null;
   hasActiveFilters: boolean;
   isPending: boolean;
   setParams: (updates: Record<string, string | null>) => void;
@@ -58,12 +56,11 @@ export function useInboxUrlState(): InboxUrlState {
   const searchParams = useSearchParams();
   const [isPending, startTransition] = useTransition();
 
-  const view = parseView(searchParams.get("view"));
   const section = parseSection(searchParams.get("section"));
   const q = searchParams.get("q");
   const type = parseType(searchParams.get("type"));
-  const projectId = parseProjectId(searchParams.get("project"));
-  const cursor = searchParams.get("cursor");
+  const projectId = parseProjectId(searchParams.get("projectId"));
+  const cursor = parseCursor(searchParams.get("cursor"));
 
   const replaceWith = useCallback(
     (next: URLSearchParams) => {
@@ -79,16 +76,11 @@ export function useInboxUrlState(): InboxUrlState {
 
   const setParams = useCallback(
     (updates: Record<string, string | null>) => {
-      const next = new URLSearchParams(searchParams.toString());
-      for (const [key, value] of Object.entries(updates)) {
-        if (value === null || value === "") {
-          next.delete(key);
-        } else {
-          next.set(key, value);
-        }
-      }
-      const filterChanged = Object.keys(updates).some((key) => key !== "cursor");
-      if (filterChanged) next.delete("cursor");
+      const next = buildListSearchParams(searchParams, updates, {
+        resetCursor: Object.keys(updates).some((key) => key !== "cursor"),
+      });
+      const nextType = next.get("type");
+      if (nextType !== null && !isBuildInboxCategory(nextType)) next.delete("type");
       replaceWith(next);
     },
     [replaceWith, searchParams],
@@ -107,7 +99,6 @@ export function useInboxUrlState(): InboxUrlState {
   );
 
   return {
-    view,
     section,
     q,
     type,

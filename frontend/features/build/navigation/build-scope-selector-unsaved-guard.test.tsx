@@ -6,7 +6,8 @@ import {
 } from "@/components/shared/dirty-state-context";
 import { BuildScopeSelector } from "./build-scope-selector";
 import { ORGANIZATION_BUILD_SCOPE } from "@/lib/build/build-scope";
-import type { BuildScopeRef } from "./use-build-nav-preferences";
+import { TooltipProvider } from "@/components/ui/tooltip";
+import type { BuildScopeRef } from "./build-nav-storage";
 import type { BuildScopeIdentity } from "./use-build-scope-identity";
 
 const push = jest.fn();
@@ -63,8 +64,6 @@ const targetRef: BuildScopeRef = {
   href: "/build/99",
 };
 
-let capturedOnSelect: ((ref: BuildScopeRef) => void) | null = null;
-
 jest.mock("./build-scope-browser", () => ({
   BuildScopeBrowser: ({
     onSelect,
@@ -73,7 +72,6 @@ jest.mock("./build-scope-browser", () => ({
     currentScopeKey: string;
     settingsHrefFor: (ref: BuildScopeRef) => string | null;
   }) => {
-    capturedOnSelect = onSelect;
     return (
       <button type="button" onClick={() => onSelect(targetRef)}>
         Select target project
@@ -113,21 +111,22 @@ function DirtySurface({ isDirty }: { isDirty: boolean }) {
   return null;
 }
 
-function renderSelector(isDirty: boolean) {
+function renderSelector(isDirty: boolean, isCollapsed = false) {
   return render(
-    <DirtyStateProvider>
-      <DirtySurface isDirty={isDirty} />
-      <BuildScopeSelector
-        scope={ORGANIZATION_BUILD_SCOPE}
-        isCollapsed={false}
-      />
-    </DirtyStateProvider>,
+    <TooltipProvider>
+      <DirtyStateProvider>
+        <DirtySurface isDirty={isDirty} />
+        <BuildScopeSelector
+          scope={ORGANIZATION_BUILD_SCOPE}
+          isCollapsed={isCollapsed}
+        />
+      </DirtyStateProvider>
+    </TooltipProvider>,
   );
 }
 
 beforeEach(() => {
   push.mockReset();
-  capturedOnSelect = null;
   jest.mocked(useRouter).mockReturnValue({
     push,
   } as unknown as ReturnType<typeof useRouter>);
@@ -170,5 +169,13 @@ describe("BuildScopeSelector — BSN-04-014 scope selector honours the unsaved-w
 
     expect(push).not.toHaveBeenCalled();
     expect(screen.queryByRole("alertdialog")).not.toBeInTheDocument();
+  });
+
+  it("keeps the collapsed trigger available without nesting tooltip and popover refs on the button", () => {
+    renderSelector(false, true);
+
+    expect(
+      screen.getByRole("button", { name: /switch build scope/i }),
+    ).toBeInTheDocument();
   });
 });

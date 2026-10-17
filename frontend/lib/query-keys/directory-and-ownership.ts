@@ -1,4 +1,30 @@
 import { queryKeyBase as base, type QueryKeyParams } from "./base";
+import type { MailMessagesParams } from "@/types/mail";
+
+function normalizeMailListingParams(
+  params: MailMessagesParams,
+): Record<string, unknown> {
+  const out: Record<string, unknown> = {};
+  if (params.folder) out.folder = params.folder;
+  if (params.accountId !== undefined) out.accountId = params.accountId;
+  if (params.q) out.q = params.q;
+  if (params.limit) out.limit = params.limit;
+  if (params.accountIds?.length)
+    out.accountIds = [...params.accountIds].sort().join(",");
+  return out;
+}
+
+export function mailListingSearchParams(
+  params: MailMessagesParams,
+  cursor?: string,
+): URLSearchParams {
+  const sp = new URLSearchParams();
+  for (const [key, value] of Object.entries(normalizeMailListingParams(params))) {
+    if (key !== "accountIds") sp.set(key, String(value));
+  }
+  if (cursor !== undefined) sp.set("cursor", cursor);
+  return sp;
+}
 
 export const directoryAndOwnershipQueryKeys = {
   platform: {
@@ -8,10 +34,10 @@ export const directoryAndOwnershipQueryKeys = {
   mail: {
     all: [...base, "mail"] as const,
     accounts: () => [...base, "mail", "accounts"] as const,
-    messages: (params?: QueryKeyParams) =>
+    messages: (params?: MailMessagesParams) =>
       params === undefined
         ? ([...base, "mail", "messages"] as const)
-        : ([...base, "mail", "messages", params] as const),
+        : ([...base, "mail", "messages", normalizeMailListingParams(params)] as const),
     thread: (accountId: number, threadId: string) =>
       [...base, "mail", "thread", accountId, threadId] as const,
     message: (accountId: number, messageId: string) =>
@@ -49,6 +75,8 @@ export const directoryAndOwnershipQueryKeys = {
     party: (partyId: string) => [...base, "party", "parties", partyId] as const,
     contacts: (partyId: string) =>
       [...base, "party", "parties", partyId, "contacts"] as const,
+    roles: (partyId: string) =>
+      [...base, "party", "parties", partyId, "roles"] as const,
     duplicates: (params?: Record<string, unknown>) =>
       params === undefined
         ? ([...base, "party", "duplicates"] as const)
@@ -102,6 +130,7 @@ export const directoryAndOwnershipQueryKeys = {
         search: string;
         userId?: string;
         excludeAssigned: boolean;
+        includeRevoked: boolean;
       },
     ) =>
       [...base, "moduleAccess", moduleKey, "member-candidates", params] as const,
@@ -123,7 +152,10 @@ export const directoryAndOwnershipQueryKeys = {
 
   portal: {
     all: [...base, "portal"] as const,
-    projects: () => [...base, "portal", "projects"] as const,
+    projects: (params?: QueryKeyParams) =>
+      params === undefined
+        ? ([...base, "portal", "projects"] as const)
+        : ([...base, "portal", "projects", params] as const),
     projectOverview: (projectId: number) =>
       [...base, "portal", "projects", projectId, "overview"] as const,
   },

@@ -30,9 +30,26 @@ jest.mock("@/hooks/common/use-debounce", () => ({
   useDebouncedValue: (v: string) => v,
 }));
 
+jest.mock("@/components/command-palette/hooks/use-people-search", () => ({
+  usePalettePeopleSearch: () => ({
+    people: [],
+    canSearchPeople: false,
+    isSearching: false,
+    isError: false,
+  }),
+}));
+
 jest.mock("@/components/command-palette/hooks/use-global-search", () => ({
   GLOBAL_SEARCH_MIN_LENGTH: 2,
   useGlobalSearch: jest.fn(),
+}));
+
+jest.mock("@/components/theme/app-theme-provider", () => ({
+  useAppTheme: () => ({ setMode: jest.fn(), theme: "light", mode: "system", isDark: false }),
+}));
+
+jest.mock("@/components/layout/command-palette-hrms-commands", () => ({
+  useHrmsCommands: () => [],
 }));
 
 jest.mock("@/components/command-palette", () => ({
@@ -60,7 +77,7 @@ const mockedUseGlobalSearch = useGlobalSearch as jest.MockedFunction<
 
 function typeQuery(value: string) {
   fireEvent.change(
-    screen.getByPlaceholderText("Search pages, leads, deals, contacts…"),
+    screen.getByPlaceholderText("Search people, pages and actions…"),
     { target: { value } },
   );
 }
@@ -102,7 +119,7 @@ describe("CommandPaletteDialogBody — global search failure", () => {
     });
 
     render(<CommandPaletteDialogBody />);
-    typeQuery("acme");
+    typeQuery("xyzqwerty");
 
     expect(screen.queryByRole("alert")).not.toBeInTheDocument();
     expect(screen.getByText(/No results for/)).toBeInTheDocument();

@@ -1,29 +1,18 @@
 "use client";
 
-import { memo } from "react";
+import { memo, useCallback, type MouseEvent } from "react";
 import Link from "next/link";
 import { Mail, Building2, Briefcase } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { resolveImageUrl, cn } from "@/lib/utils";
+import { getUserDisplayName, getUserInitials } from "@/lib/person-display";
 import type { EmployeeListItem } from "@/types/hr";
 
 interface EmployeeCardProps {
   employee: EmployeeListItem;
   department: string | null;
-}
-
-function employeeDisplayName(emp: EmployeeListItem): string {
-  if (emp.firstName && emp.lastName) return `${emp.firstName} ${emp.lastName}`;
-  return emp.name?.trim() || "—";
-}
-
-function employeeInitials(emp: EmployeeListItem): string {
-  const first = emp.firstName?.trim()?.[0];
-  const last = emp.lastName?.trim()?.[0];
-  if (first && last) return `${first}${last}`.toUpperCase();
-  const fromName = emp.name?.trim()?.[0];
-  return (fromName ?? "?").toUpperCase();
+  onOpen?: (employee: EmployeeListItem) => void;
 }
 
 /**
@@ -36,16 +25,38 @@ function employeeInitials(emp: EmployeeListItem): string {
 export const EmployeeCard = memo(function EmployeeCard({
   employee: emp,
   department,
+  onOpen,
 }: EmployeeCardProps) {
-  const displayName = employeeDisplayName(emp);
-  const initials = employeeInitials(emp);
+  const handleClick = useCallback(
+    (event: MouseEvent<HTMLAnchorElement>) => {
+      if (!onOpen || event.metaKey || event.ctrlKey || event.shiftKey) return;
+      event.preventDefault();
+      onOpen(emp);
+    },
+    [onOpen, emp],
+  );
+  // Ticket 07: one name policy for the card, the table, the export and the PDF.
+  const displayName = getUserDisplayName(emp);
+  const initials = getUserInitials(emp);
   const designation = emp.designation?.trim() || null;
   const employeeId = emp.employeeId?.trim() || null;
-  const isActive = emp.isActive;
+  // PROVISIONAL (product default E-4): an account exists from the moment an
+  // administrator creates it, so `isActive` alone badges a never-accepted
+  // invitee as "Active" right beside a summary counting them "Pending invite".
+  // Acceptance is the server-derived `hasAccepted`; absent, fall back to the
+  // old two-state reading rather than inventing a Pending.
+  const status: "active" | "pending" | "inactive" = !emp.isActive
+    ? "inactive"
+    : emp.hasAccepted === false
+      ? "pending"
+      : "active";
+  const statusLabel =
+    status === "active" ? "Active" : status === "pending" ? "Pending" : "Inactive";
 
   return (
     <Link
       href={`/hr/employees/${emp.id}`}
+      onClick={handleClick}
       className="group block h-full min-h-0 rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
     >
       <article
@@ -74,19 +85,29 @@ export const EmployeeCard = memo(function EmployeeCard({
                 <span
                   className={cn(
                     "inline-flex items-center gap-1 rounded-full border px-1.5 py-0.5 text-micro font-semibold leading-none",
-                    isActive
+                    status === "active"
                       ? "border-status-success-rule bg-status-success-surface text-status-success-ink"
-                      : "border-border bg-muted text-muted-foreground",
+                      : status === "pending"
+                        ? "border-status-warning-rule bg-status-warning-surface text-status-warning-ink"
+                        : "border-border bg-muted text-muted-foreground",
                   )}
-                  title={isActive ? "Active" : "Inactive"}
+                  title={
+                    status === "pending"
+                      ? "Invited, not yet accepted"
+                      : statusLabel
+                  }
                 >
                   <span
                     className={cn(
                       "h-1.5 w-1.5 rounded-full",
-                      isActive ? "bg-status-success-fill" : "bg-muted-foreground/60",
+                      status === "active"
+                        ? "bg-status-success-fill"
+                        : status === "pending"
+                          ? "bg-status-warning-fill"
+                          : "bg-muted-foreground/60",
                     )}
                   />
-                  {isActive ? "Active" : "Inactive"}
+                  {statusLabel}
                 </span>
               </div>
 

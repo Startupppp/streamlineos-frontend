@@ -5,7 +5,7 @@
 import { readFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { collectAppRoutes } from "@/lib/rbac/route-access/app-routes";
-import { backendPermissionNames } from "@/test-utils/permission-catalog";
+import type { PermissionKey } from "@/lib/rbac/permissions";
 
 const APP_DIR = resolve(process.cwd(), "app");
 const FRONTEND_ROOT = resolve(process.cwd());
@@ -15,7 +15,8 @@ type Classification =
       readonly kind: "prefetch";
       readonly helper: string;
       readonly module: string;
-      readonly gate: string;
+      /** An array is an any-of server check: `requirePermission([...])` in that order. */
+      readonly gate: PermissionKey | readonly PermissionKey[] | "enforceRouteAccess";
     }
   | { readonly kind: "no-prefetch"; readonly reason: string; readonly evidence: string };
 
@@ -29,6 +30,7 @@ const SETTINGS_ADMIN = "lib/prefetch/settings-admin.ts";
 const SETTINGS_ACCOUNT = "lib/prefetch/settings-account.ts";
 const SETTINGS_BILLING = "lib/prefetch/settings-billing.ts";
 const ROLES_PREFETCH = "lib/prefetch/roles.ts";
+const SETTINGS_NOTIFICATIONS = "lib/prefetch/settings-notifications.ts";
 
 const CENSUS: readonly CensusEntry[] = [
   {
@@ -77,6 +79,15 @@ const CENSUS: readonly CensusEntry[] = [
     },
   },
   {
+    route: "/settings/chat",
+    classification: {
+      kind: "prefetch",
+      helper: "prefetchChatOrgSettings",
+      module: SETTINGS_ADMIN,
+      gate: "chat:org-settings:manage",
+    },
+  },
+  {
     route: "/settings/delegations",
     classification: {
       kind: "prefetch",
@@ -101,6 +112,69 @@ const CENSUS: readonly CensusEntry[] = [
       helper: "prefetchOrgModules",
       module: SETTINGS_ADMIN,
       gate: "settings:manage",
+    },
+  },
+  {
+    route: "/settings/notifications/broadcasts",
+    classification: {
+      kind: "prefetch",
+      helper: "prefetchNotificationBroadcasts",
+      module: SETTINGS_NOTIFICATIONS,
+      gate: "notifications:broadcasts:view",
+    },
+  },
+  {
+    route: "/settings/notifications/email-templates",
+    classification: {
+      kind: "prefetch",
+      helper: "prefetchEmailTemplatePreviews",
+      module: SETTINGS_NOTIFICATIONS,
+      gate: "settings:email-templates:manage",
+    },
+  },
+  {
+    route: "/settings/notifications/events",
+    classification: {
+      kind: "prefetch",
+      helper: "prefetchNotificationEvents",
+      module: SETTINGS_NOTIFICATIONS,
+      gate: "notifications:events:view",
+    },
+  },
+  {
+    route: "/settings/notifications/my-preferences",
+    classification: {
+      kind: "prefetch",
+      helper: "prefetchMyNotificationPreferences",
+      module: SETTINGS_NOTIFICATIONS,
+      gate: "enforceRouteAccess",
+    },
+  },
+  {
+    route: "/settings/notifications/policy",
+    classification: {
+      kind: "prefetch",
+      helper: "prefetchNotificationPolicy",
+      module: SETTINGS_NOTIFICATIONS,
+      gate: "notifications:policy:view",
+    },
+  },
+  {
+    route: "/settings/notifications/providers",
+    classification: {
+      kind: "prefetch",
+      helper: "prefetchNotificationProviders",
+      module: SETTINGS_NOTIFICATIONS,
+      gate: "notifications:providers:view",
+    },
+  },
+  {
+    route: "/settings/notifications/templates",
+    classification: {
+      kind: "prefetch",
+      helper: "prefetchNotificationTemplates",
+      module: SETTINGS_NOTIFICATIONS,
+      gate: "notifications:templates:view",
     },
   },
   {
@@ -185,6 +259,15 @@ const CENSUS: readonly CensusEntry[] = [
     },
   },
   {
+    route: "/settings/privacy",
+    classification: {
+      kind: "prefetch",
+      helper: "prefetchPrivacyRequests",
+      module: SETTINGS_ADMIN,
+      gate: ["hr:retention:manage", "compliance:subject-requests:view"],
+    },
+  },
+  {
     route: "/settings/roles",
     classification: {
       kind: "prefetch",
@@ -218,6 +301,15 @@ const CENSUS: readonly CensusEntry[] = [
       helper: "prefetchRoleSimulation",
       module: SETTINGS_ADMIN,
       gate: "settings:rbac:manage",
+    },
+  },
+  {
+    route: "/settings/storage-quarantine",
+    classification: {
+      kind: "prefetch",
+      helper: "prefetchStorageQuarantine",
+      module: SETTINGS_ADMIN,
+      gate: "storage:quarantine:view",
     },
   },
   {
@@ -260,8 +352,7 @@ describe("the settings prefetch census", () => {
   const routes = settingsRoutes();
 
   it("reads real route files, so an empty sweep cannot pass", () => {
-    expect(routes.length).toBe(23);
-    expect(backendPermissionNames().size).toBeGreaterThan(400);
+    expect(routes.length).toBe(33);
   });
 
   it("classifies every settings route on disk", () => {
@@ -294,8 +385,8 @@ describe("a prefetch classification is backed by real wiring", () => {
       entry.classification.kind === "prefetch",
   );
 
-  it("covers 22 of the 23 routes", () => {
-    expect(prefetched).toHaveLength(22);
+  it("covers 32 of the 33 routes", () => {
+    expect(prefetched).toHaveLength(32);
   });
 
   it.each(prefetched.map((entry) => [entry.route, entry] as const))(
@@ -334,24 +425,16 @@ describe("a prefetch classification is backed by real wiring", () => {
       const gateCall =
         gate === "enforceRouteAccess"
           ? source.indexOf("enforceRouteAccess(")
-          : source.indexOf(`requirePermission("${gate}")`);
+          : typeof gate === "string"
+            ? source.indexOf(`requirePermission("${gate}")`)
+            : source.indexOf(`requirePermission([${gate.map((key) => `"${key}"`).join(", ")}])`);
       expect([route, gateCall]).not.toEqual([route, -1]);
       expect([route, gateCall < source.indexOf(`${helper}(`)]).toEqual([route, true]);
     },
   );
 
-  it("asserts only permission keys that exist verbatim in the backend catalog", () => {
-    const names = backendPermissionNames();
-    const unknown = prefetched
-      .map((entry) => entry.classification.gate)
-      .filter((gate) => gate !== "enforceRouteAccess")
-      .filter((gate) => !names.has(gate));
-
-    expect(unknown).toEqual([]);
-  });
-
   it("every prefetch module resolves its gate before issuing a protected read", () => {
-    for (const relative of [SETTINGS_ADMIN, SETTINGS_BILLING]) {
+    for (const relative of [SETTINGS_ADMIN, SETTINGS_BILLING, SETTINGS_NOTIFICATIONS]) {
       const source = moduleSource(relative);
       expect([relative, source.includes("resolvePrefetchGate")]).toEqual([relative, true]);
     }

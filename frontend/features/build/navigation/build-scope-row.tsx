@@ -21,7 +21,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { BUILD_SCOPE_TYPE_LABELS } from "@/lib/build/build-scope";
-import type { BuildScopeRef } from "./use-build-nav-preferences";
+import type { BuildScopeRef } from "./build-nav-storage";
 
 interface BuildScopeRowProps {
   scope: BuildScopeRef;
@@ -101,7 +101,7 @@ export function BuildScopeRow({
       >
         <span
           aria-hidden
-          className="flex h-6 w-6 shrink-0 items-center justify-center rounded bg-primary/10 text-micro font-bold text-primary"
+          className="flex h-6 w-6 shrink-0 items-center justify-center rounded bg-primary/10 text-micro font-medium text-primary"
         >
           {scopeInitials(scope)}
         </span>

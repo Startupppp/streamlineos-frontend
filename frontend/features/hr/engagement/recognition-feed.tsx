@@ -12,6 +12,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { ErrorState } from "@/components/shared/error-state";
+import { PageState } from "@/components/shared/page-state";
+import { usePageState } from "@/hooks/api/use-page-state";
 import { getErrorMessage } from "@/lib/get-error-message";
 import {
   Select,
@@ -46,7 +48,8 @@ interface RecognitionFeedProps {
   isError?: boolean;
   error?: unknown;
   onRetry?: () => void;
-  onGiveKudos: () => void;
+  /** Omitted when the viewer cannot POST /hr/recognition. */
+  onGiveKudos?: () => void;
 }
 
 const CATEGORY_COLORS: Record<string, string> = {
@@ -188,10 +191,12 @@ export function RecognitionFeed({ recognitions, isLoading, isError, error, onRet
         <Heart className="w-8 text-muted-foreground mb-3" />
         <p className="text-sm font-medium text-foreground">No kudos yet</p>
         <p className="text-xs text-muted-foreground mt-1">Be the first to recognize a colleague!</p>
-        <Button size="sm" className="mt-4 h-8 gap-1.5" onClick={onGiveKudos}>
-          <Heart className="h-3.5 w-3.5" />
-          Give Kudos
-        </Button>
+        {onGiveKudos && (
+          <Button size="sm" className="mt-4 gap-1.5" onClick={onGiveKudos}>
+            <Heart className="h-3.5 w-3.5" />
+            Give Kudos
+          </Button>
+        )}
       </div>
     );
   }
@@ -207,6 +212,8 @@ export function RecognitionFeed({ recognitions, isLoading, isError, error, onRet
 
 export function BadgesGrid() {
   const { data: badges, isLoading, isError, error, refetch } = useEngagementBadges();
+  // Denial first (FE-47); load/error keep their widget-specific copy below.
+  const badgesAccess = usePageState({ permission: "hr:engagement:view", isLoading: false, isError: false, error: null });
   const canManage = useCan("hr:engagement:manage");
   const award = useAwardBadge();
   const [awardBadgeId, setAwardBadgeId] = useState<number | null>(null);
@@ -238,6 +245,10 @@ export function BadgesGrid() {
   const handleReasonChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setReason(e.target.value);
   }, []);
+
+  if (badgesAccess.kind !== "ready") {
+    return <PageState resolution={badgesAccess} loading={null} compact>{null}</PageState>;
+  }
 
   if (isLoading) {
     return (
@@ -334,10 +345,15 @@ export function BadgesGrid() {
 
 export function PointsLeaderboard() {
   const { data: entries, isLoading, isError, error, refetch } = useLeaderboard(20);
+  const leaderboardAccess = usePageState({ permission: "hr:engagement:view", isLoading: false, isError: false, error: null });
   const { resolveMemberName, resolveMemberInitials } = useMemberLookup();
 
   function handleRetry(): void {
     void refetch();
+  }
+
+  if (leaderboardAccess.kind !== "ready") {
+    return <PageState resolution={leaderboardAccess} loading={null} compact>{null}</PageState>;
   }
 
   if (isLoading) {

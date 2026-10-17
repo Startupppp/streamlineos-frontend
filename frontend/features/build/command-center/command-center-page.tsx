@@ -1,107 +1,72 @@
 "use client";
 
-import { useMemo, useCallback, useState, type UIEvent } from "react";
-import { format, subDays } from "date-fns";
+import { useMemo, useCallback, useState } from "react";
+import dynamic from "next/dynamic";
+import { useRouter } from "next/navigation";
 import { motion, useReducedMotion } from "framer-motion";
-import { Briefcase, CheckSquare, AlertCircle } from "lucide-react";
+import { LayoutGrid } from "lucide-react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
-import { StatCard, StatCardGrid, StatCardGridSkeleton } from "@/components/ui/stat-card";
+import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { EmptyState } from "@/components/ui/empty-state";
 import { useCan } from "@/hooks/api/access";
 import { usePageState } from "@/hooks/api/use-page-state";
 import { PageState } from "@/components/shared/page-state";
-import { useProjects } from "@/hooks/api/build/projects";
-import {
-  COMMAND_CENTER_MY_ISSUES_FILTERS,
-  useAllWork,
-  useInfiniteAllWork,
-} from "@/hooks/api/build/all-work";
+import { useOnlineStatus } from "@/hooks/common/use-online-status";
 import { useCommandPalette } from "@/components/command-palette/hooks/use-command-palette";
-import { ProjectCreateWizard } from "@/features/build/project-create/project-create-wizard";
-import { QuickCreateMenu, PinnedNav } from "./command-center-actions";
-import {
-  PmPageShell,
-  PmSection,
-  PmPanel,
-  PM_PANEL,
-} from "@/components/pm-chrome";
+import { ShortcutHelpDialog } from "@/components/shared/shortcut-help-dialog";
+import { QuickCreateMenu } from "./command-center-actions";
+import { PmPageShell } from "@/components/pm-chrome";
 import { pmSnappy } from "@/lib/motion-presets";
-import { cn } from "@/lib/utils";
 import { useKeyboardShortcuts } from "./use-keyboard-shortcuts";
-import {
-  resolveMyIssuesEmptyActions,
-  mapAllWorkTicketToMyWorkItem,
-} from "./command-center-utils";
-import {
-  MY_ISSUES_LOAD_MORE_THRESHOLD,
-  COMMAND_CENTER_PAGE_SHELL,
-  COMMAND_CENTER_JUMP_PANEL,
-  COMMAND_CENTER_PANELS_GRID,
-} from "./command-center-constants";
-import { MyIssuesPanel } from "./command-center-my-issues-panel";
-import { ProjectsPanel } from "./command-center-projects-panel";
+import { useBuildListKeyboard } from "@/hooks/common/use-build-list-keyboard";
+import { getTicketDetailHref } from "@/components/shared/format-ticket-key";
+import { resolveMyIssuesEmptyActions } from "./command-center-utils";
+import { COMMAND_CENTER_PAGE_SHELL } from "./command-center-constants";
+import { useDashboardLayoutEditor } from "./use-dashboard-layout";
+import { CommandCenterLayoutControls } from "./command-center-layout-controls";
+import { CommandCenterLoading } from "./command-center-loading";
+import { useCommandCenterData } from "./use-command-center-data";
+import { useCommandCenterWidgets } from "./use-command-center-widgets";
+import { CommandCenterWidgetGrid } from "./command-center-widget-grid";
 
-export function resolveProjectsStatValue(count: number, hasMore: boolean): string | number {
-  if (hasMore) return `${count}+`;
-  return count;
-}
-
-function CommandCenterLoading() {
-  return (
-    <PmPageShell className={COMMAND_CENTER_PAGE_SHELL}>
-      <div className="min-w-0 w-full max-w-full">
-        <StatCardGridSkeleton cols={3} />
-      </div>
-      <Skeleton className={cn("h-56 rounded-xl", PM_PANEL)} />
-      <Skeleton className={cn("h-48 rounded-xl", PM_PANEL)} />
-      <div className="grid min-w-0 w-full max-w-full gap-3 sm:grid-cols-2 lg:grid-cols-3">
-        {Array.from({ length: 9 }).map((_, index) => (
-          <Skeleton key={index} className={cn("h-28 rounded-xl", PM_PANEL)} />
-        ))}
-      </div>
-    </PmPageShell>
-  );
-}
+const ProjectCreateWizard = dynamic(
+  () =>
+    import("@/features/build/project-create/project-create-wizard").then(
+      (m) => m.ProjectCreateWizard,
+    ),
+  { ssr: false },
+);
 
 export function CommandCenterPage() {
+  const router = useRouter();
+
   const [wizardOpen, setWizardOpen] = useState(false);
+  const [shortcutHelpOpen, setShortcutHelpOpen] = useState(false);
+  const [editing, setEditing] = useState(false);
   const { openCreateTicket } = useCommandPalette();
   const canCreateIssue = useCan("build:tickets:create");
   const canCreateProject = useCan("build:create");
   const canViewTickets = useCan("build:tickets:view");
   const shouldReduceMotion = useReducedMotion();
-  const overdueDueDateTo = format(subDays(new Date(), 1), "yyyy-MM-dd");
+  const isOnline = useOnlineStatus();
 
   const {
-    data: projectsData,
-    isLoading: projectsLoading,
-    isError: projectsError,
-    error: projectsRawError,
-    refetch: refetchProjects,
-  } = useProjects({ status: "ACTIVE" });
-
-  const {
-    data: myIssuesPages,
-    isLoading: myIssuesLoading,
-    isError: myIssuesError,
-    error: myIssuesRawError,
-    refetch: refetchMyIssues,
-    fetchNextPage,
-    hasNextPage,
+    projects,
+    myWorkItems,
+    stats,
+    projectsLoading,
+    projectsError,
+    projectsRawError,
+    myIssuesLoading,
+    myIssuesError,
+    myIssuesRawError,
     isFetchingNextPage,
-  } = useInfiniteAllWork(COMMAND_CENTER_MY_ISSUES_FILTERS, { enabled: canViewTickets });
-
-  const { data: openIssuesSummary } = useAllWork(
-    { ...COMMAND_CENTER_MY_ISSUES_FILTERS, limit: 1 },
-    { enabled: canViewTickets },
-  );
-
-  const { data: overdueIssuesSummary } = useAllWork(
-    { ...COMMAND_CENTER_MY_ISSUES_FILTERS, limit: 1, dueDateTo: overdueDueDateTo },
-    { enabled: canViewTickets },
-  );
-
-  const projects = useMemo(() => projectsData?.data ?? [], [projectsData]);
+    refetchProjects,
+    handleRetryAll,
+    handleMyIssuesRetry,
+    handleMyIssuesScroll,
+  } = useCommandCenterData(canViewTickets);
 
   const handleOpenWizard = useCallback(() => {
     if (!canCreateProject) return;
@@ -119,30 +84,33 @@ export function CommandCenterPage() {
     openCreateTicket();
   }, [canCreateIssue, projects.length, openCreateTicket]);
 
-  useKeyboardShortcuts(handleOpenWizard, handleCreateIssueShortcut);
+  const handleShortcutHelp = useCallback(() => setShortcutHelpOpen(true), []);
 
-  const handleRetry = useCallback(() => {
-    void refetchProjects();
-    void refetchMyIssues();
-  }, [refetchProjects, refetchMyIssues]);
+  useKeyboardShortcuts(
+    handleOpenWizard,
+    handleCreateIssueShortcut,
+    handleShortcutHelp,
+  );
 
-  const handleMyIssuesRetry = useCallback(() => void refetchMyIssues(), [refetchMyIssues]);
+  const handleOpenItem = useCallback(
+    (index: number) => {
+      const item = myWorkItems[index];
+      if (!item) return;
+      router.push(
+        getTicketDetailHref(item.projectId, item.projectKey, item.ticketNumber),
+      );
+    },
+    [myWorkItems, router],
+  );
 
-  const myWorkItems = useMemo(() => {
-    if (!myIssuesPages?.pages) return [];
-    return myIssuesPages.pages.flatMap((page) =>
-      page.data.map(mapAllWorkTicketToMyWorkItem),
-    );
-  }, [myIssuesPages]);
+  const handleClearMyIssuesSelection = useCallback(() => {}, []);
 
-  const stats = useMemo(() => {
-    const projectList = projectsData?.data ?? [];
-    return {
-      activeProjects: resolveProjectsStatValue(projectList.length, projectsData?.hasMore ?? false),
-      openIssues: openIssuesSummary?.total ?? openIssuesSummary?.data.length ?? 0,
-      overdueIssues: overdueIssuesSummary?.total ?? overdueIssuesSummary?.data.length ?? 0,
-    };
-  }, [projectsData, openIssuesSummary, overdueIssuesSummary]);
+  const { focusedIndex } = useBuildListKeyboard({
+    itemCount: myWorkItems.length,
+    onOpen: handleOpenItem,
+    onClearSelection: handleClearMyIssuesSelection,
+    onShortcutHelp: handleShortcutHelp,
+  });
 
   const myIssuesEmpty = useMemo(
     () =>
@@ -153,18 +121,13 @@ export function CommandCenterPage() {
         onCreateIssue: handleCreateIssueShortcut,
         onCreateProject: handleOpenWizard,
       }),
-    [canCreateIssue, canCreateProject, projects.length, handleCreateIssueShortcut, handleOpenWizard],
-  );
-
-  const handleMyIssuesScroll = useCallback(
-    (e: UIEvent<HTMLDivElement>) => {
-      const el = e.currentTarget;
-      const distanceFromBottom = el.scrollHeight - el.scrollTop - el.clientHeight;
-      if (distanceFromBottom <= MY_ISSUES_LOAD_MORE_THRESHOLD && hasNextPage && !isFetchingNextPage) {
-        void fetchNextPage();
-      }
-    },
-    [hasNextPage, isFetchingNextPage, fetchNextPage],
+    [
+      canCreateIssue,
+      canCreateProject,
+      projects.length,
+      handleCreateIssueShortcut,
+      handleOpenWizard,
+    ],
   );
 
   const pageState = usePageState({
@@ -176,89 +139,132 @@ export function CommandCenterPage() {
 
   const isReady = pageState.kind === "ready";
 
+  const layout = useDashboardLayoutEditor();
+  const { saveLayout } = layout;
+  const isEditing = editing && layout.canCustomize;
+  const placedTypes = useMemo(
+    () => new Set(layout.widgets.map((slot) => slot.type)),
+    [layout.widgets],
+  );
+  const handleStartCustomizing = useCallback(() => setEditing(true), []);
+  const handleFinishedSaving = useCallback(() => setEditing(false), []);
+  const handleDoneCustomizing = useCallback(
+    () => saveLayout(handleFinishedSaving),
+    [handleFinishedSaving, saveLayout],
+  );
+  const customizeAction = useMemo(
+    () =>
+      layout.canCustomize
+        ? { label: "Customize", onClick: handleStartCustomizing }
+        : undefined,
+    [layout.canCustomize, handleStartCustomizing],
+  );
+
+  const widgetContent = useCommandCenterWidgets({
+    stats,
+    myWorkItems,
+    projects,
+    myIssuesLoading,
+    myIssuesError,
+    myIssuesRawError,
+    isFetchingNextPage,
+    myIssuesEmpty,
+    focusedIndex,
+    canCreateIssue,
+    canCreateProject,
+    projectsError,
+    projectsRawError,
+    onMyIssuesRetry: handleMyIssuesRetry,
+    onMyIssuesScroll: handleMyIssuesScroll,
+    onCreateIssue: handleCreateIssueShortcut,
+    onCreateForProject: handleCreateForProject,
+    onCreateProject: handleOpenWizard,
+    onRetryProjects: refetchProjects,
+  });
+
   return (
     <>
       <PageWrapper
-        title="Home"
-        subtitle={isReady ? "Your issues, projects, and shortcuts" : undefined}
-        contentClassName="pb-0 sm:pb-0"
+        title="Command Center"
+        subtitle={
+          isReady ? "Your work, decisions, and delivery signals" : undefined
+        }
         actions={
           isReady ? (
-            <QuickCreateMenu
-              projects={projects}
-              onCreateProject={handleOpenWizard}
-              onCreateForProject={handleCreateForProject}
-              onCreateIssue={handleCreateIssueShortcut}
-            />
+            isEditing ? (
+              <CommandCenterLayoutControls
+                onDone={handleDoneCustomizing}
+                onReset={layout.resetLayout}
+                availableTypes={layout.availableTypes}
+                placedTypes={placedTypes}
+                onAdd={layout.addWidget}
+                isSaving={layout.isSaving}
+              />
+            ) : (
+              <div className="flex w-full items-center gap-2 sm:w-auto">
+                {layout.canCustomize ? (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="min-w-0 flex-1 gap-1.5 sm:flex-none"
+                    onClick={handleStartCustomizing}
+                    aria-label="Customize Command Center"
+                    title="Customize Command Center"
+                  >
+                    <LayoutGrid aria-hidden="true" />
+                    <span>Customize</span>
+                  </Button>
+                ) : null}
+                <QuickCreateMenu
+                  className="flex-1 sm:flex-none"
+                  projects={projects}
+                  onCreateProject={handleOpenWizard}
+                  onCreateForProject={handleCreateForProject}
+                  onCreateIssue={handleCreateIssueShortcut}
+                />
+              </div>
+            )
           ) : undefined
         }
       >
         <PageState
           resolution={pageState}
           loading={<CommandCenterLoading />}
-          onRetry={handleRetry}
+          onRetry={handleRetryAll}
           className="flex-1"
         >
           <PmPageShell className={COMMAND_CENTER_PAGE_SHELL}>
-            <PmSection index={0} className="min-w-0 w-full max-w-full">
-              <StatCardGrid cols={3}>
-                <motion.div
-                  whileHover={shouldReduceMotion ? undefined : { y: -2 }}
-                  transition={pmSnappy}
-                >
-                  <StatCard label="Projects" value={stats.activeProjects} icon={Briefcase} tone="default" index={0} href="/build" />
-                </motion.div>
-                <motion.div
-                  whileHover={shouldReduceMotion ? undefined : { y: -2 }}
-                  transition={pmSnappy}
-                >
-                  <StatCard label="Open issues" value={stats.openIssues} icon={CheckSquare} tone="default" index={1} href="/build/my-work" />
-                </motion.div>
-                <motion.div
-                  whileHover={shouldReduceMotion ? undefined : { y: -2 }}
-                  transition={pmSnappy}
-                  animate={
-                    stats.overdueIssues > 0 && !shouldReduceMotion
-                      ? { scale: [1, 1.015, 1] }
-                      : undefined
+            {!isOnline && (
+              <p className="text-sm text-muted-foreground px-4 py-2 bg-muted/50 rounded-md mb-2">
+                You are offline — content may not be up to date
+              </p>
+            )}
+            {layout.widgets.length === 0 ? (
+              layout.isLoading ? (
+                <Skeleton className="h-96 w-full rounded-xl" />
+              ) : (
+                <EmptyState
+                  title="Your Command Center is empty"
+                  description={
+                    layout.canCustomize
+                      ? "Add widgets to see your issues, projects and approvals here."
+                      : "There are no widgets you can view yet."
                   }
-                >
-                  <StatCard label="Overdue" value={stats.overdueIssues} icon={AlertCircle} tone={stats.overdueIssues > 0 ? "red" : "default"} index={2} href="/build/my-work" />
-                </motion.div>
-              </StatCardGrid>
-            </PmSection>
-
-            <PmSection index={1} className="min-w-0 w-full max-w-full overflow-hidden">
-              <PmPanel className={COMMAND_CENTER_JUMP_PANEL}>
-                <p className="mb-1.5 px-0.5 text-micro font-medium uppercase tracking-wider text-muted-foreground">
-                  Jump to
-                </p>
-                <PinnedNav defaultProjectId={projects[0]?.id ?? null} />
-              </PmPanel>
-            </PmSection>
-
-            <div className={COMMAND_CENTER_PANELS_GRID}>
-              <MyIssuesPanel
-                items={myWorkItems}
-                projects={projects}
-                isLoading={myIssuesLoading}
-                isError={myIssuesError}
-                error={myIssuesRawError}
-                isFetchingNextPage={isFetchingNextPage}
-                emptyActions={myIssuesEmpty}
-                onRetry={handleMyIssuesRetry}
-                onScroll={handleMyIssuesScroll}
-                onCreateIssue={handleCreateIssueShortcut}
-                onCreateForProject={handleCreateForProject}
+                  action={customizeAction}
+                />
+              )
+            ) : (
+              <CommandCenterWidgetGrid
+                widgets={layout.widgets}
+                content={widgetContent}
+                editing={isEditing && !layout.isSaving}
+                onLayoutChange={layout.applyLayout}
+                onStackedLayoutChange={layout.applyStackedLayout}
+                onRemove={layout.removeWidget}
+                onMove={layout.moveWidget}
               />
-              <ProjectsPanel
-                projects={projects}
-                canCreateProject={canCreateProject}
-                canCreateIssue={canCreateIssue}
-                onCreateProject={handleOpenWizard}
-                onCreateForProject={handleCreateForProject}
-              />
-            </div>
+            )}
 
             <motion.p
               className="hidden min-w-0 w-full max-w-full text-center text-micro text-muted-foreground md:block"
@@ -266,20 +272,47 @@ export function CommandCenterPage() {
               animate={{ opacity: 1 }}
               transition={{ ...pmSnappy, delay: 0.28 }}
             >
-              Shortcuts · <kbd className="rounded border border-border bg-muted/80 px-1">C</kbd>
-              <kbd className="ml-0.5 rounded border border-border bg-muted/80 px-1">P</kbd> project ·{" "}
-              <kbd className="rounded border border-border bg-muted/80 px-1">C</kbd>
-              <kbd className="ml-0.5 rounded border border-border bg-muted/80 px-1">T</kbd> issue ·{" "}
-              <kbd className="rounded border border-border bg-muted/80 px-1">G</kbd>
-              <kbd className="ml-0.5 rounded border border-border bg-muted/80 px-1">M</kbd> my issues ·{" "}
-              <kbd className="rounded border border-border bg-muted/80 px-1">G</kbd>
-              <kbd className="ml-0.5 rounded border border-border bg-muted/80 px-1">P</kbd> projects
+              Shortcuts ·{" "}
+              <kbd className="rounded border border-border bg-muted/80 px-1">
+                C
+              </kbd>
+              <kbd className="ml-0.5 rounded border border-border bg-muted/80 px-1">
+                P
+              </kbd>{" "}
+              project ·{" "}
+              <kbd className="rounded border border-border bg-muted/80 px-1">
+                C
+              </kbd>
+              <kbd className="ml-0.5 rounded border border-border bg-muted/80 px-1">
+                T
+              </kbd>{" "}
+              issue ·{" "}
+              <kbd className="rounded border border-border bg-muted/80 px-1">
+                G
+              </kbd>
+              <kbd className="ml-0.5 rounded border border-border bg-muted/80 px-1">
+                M
+              </kbd>{" "}
+              my issues ·{" "}
+              <kbd className="rounded border border-border bg-muted/80 px-1">
+                G
+              </kbd>
+              <kbd className="ml-0.5 rounded border border-border bg-muted/80 px-1">
+                P
+              </kbd>{" "}
+              projects
             </motion.p>
           </PmPageShell>
         </PageState>
       </PageWrapper>
 
-      {isReady && <ProjectCreateWizard open={wizardOpen} onOpenChange={setWizardOpen} />}
+      {isReady && (
+        <ProjectCreateWizard open={wizardOpen} onOpenChange={setWizardOpen} />
+      )}
+      <ShortcutHelpDialog
+        open={shortcutHelpOpen}
+        onOpenChange={setShortcutHelpOpen}
+      />
     </>
   );
 }

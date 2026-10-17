@@ -6,11 +6,27 @@ const kbPageTemplateContract = z.object({
   name: z.string(),
   icon: z.string().nullable(),
   description: z.string().nullable(),
-  content: z.record(z.string(), z.unknown()).nullable(),
+  content: z
+    .union([
+      z.array(z.record(z.string(), z.unknown())),
+      z.record(z.string(), z.unknown()),
+    ])
+    .nullable(),
   createdById: z.string().nullable(),
+  createdByName: z.string().nullable(),
+  useCount: z.number().int(),
+  lastUsedAt: z.string().nullable(),
   createdAt: z.string(),
   updatedAt: z.string(),
 });
 
-export const kbPageTemplateListContract = z.array(kbPageTemplateContract);
 export const kbPageTemplateSingleContract = kbPageTemplateContract;
+
+export const kbPageTemplateListPageContract = z.object({
+  data: z.array(kbPageTemplateContract),
+  pagination: z.object({
+    limit: z.number().int(),
+    hasMore: z.boolean(),
+    nextCursor: z.string().nullable(),
+  }),
+});

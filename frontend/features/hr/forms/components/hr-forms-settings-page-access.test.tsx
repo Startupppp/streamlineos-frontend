@@ -75,6 +75,7 @@ jest.mock("@/components/ui/sheet", () => ({
   SheetContent: ({ children }: { children: ReactNode }) => <div>{children}</div>,
   SheetHeader: ({ children }: { children: ReactNode }) => <div>{children}</div>,
   SheetTitle: ({ children }: { children: ReactNode }) => <div>{children}</div>,
+  SheetDescription: ({ children }: { children: ReactNode }) => <p>{children}</p>,
 }));
 
 jest.mock("@/components/ui/button", () => ({

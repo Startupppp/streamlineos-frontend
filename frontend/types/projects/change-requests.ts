@@ -2,11 +2,20 @@ import type { z } from "zod";
 import type {
   changeRequestRowContract,
   changeRequestListContract,
+  changeRequestAffectedItemContract,
+  changeRequestAffectedItemListContract,
   portalChangeRequestItemContract,
 } from "@/hooks/api/build/client-portal-schema";
 
 export type ChangeRequest = z.infer<typeof changeRequestRowContract>;
 export type ChangeRequestPage = z.infer<typeof changeRequestListContract>;
+
+export type ChangeRequestAffectedItem = z.infer<typeof changeRequestAffectedItemContract>;
+export type ChangeRequestAffectedItemPage = z.infer<typeof changeRequestAffectedItemListContract>;
+
+export interface LinkAffectedTicketInput {
+  ticketId: number;
+}
 
 export type ChangeRequestStatus = ChangeRequest["status"];
 

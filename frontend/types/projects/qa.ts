@@ -1,5 +1,9 @@
 import type { z } from "zod";
-import type { testRunRowContract, testRunListItemContract } from "@/hooks/api/build/qa-schema";
+import type {
+  testRunRowContract,
+  testRunListItemContract,
+  testRunResultRowContract,
+} from "@/hooks/api/build/qa-schema";
 import type { testCaseRowContract } from "@/hooks/api/build/qa-schema";
 export type TestCasePriority = "low" | "medium" | "high";
 export type TestCaseAutomationStatus = "manual" | "automated" | "planned";
@@ -37,11 +41,14 @@ export interface TestRunCounts {
 
 export type TestRun = z.infer<typeof testRunRowContract>;
 export type TestRunListItem = z.infer<typeof testRunListItemContract>;
+export type TestRunResultRow = z.infer<typeof testRunResultRowContract>;
 
 
 
 export interface TestRunResult {
   id: number;
+  orgId: string;
+  projectId: number;
   runId: number;
   testCaseId: number;
   status: TestResultStatus;
@@ -49,7 +56,7 @@ export interface TestRunResult {
   executedBy: string | null;
   executedAt: string | null;
   linkedWorkItemId: number | null;
-  testCase?: {
+  testCase: {
     caseNumber: number;
     title: string;
     priority: TestCasePriority;

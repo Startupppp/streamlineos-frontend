@@ -1,6 +1,6 @@
-import type { Incident } from "@/types/projects";
+import type { IncidentsCreateIncidentResponse } from "@/contracts/build-contracts.generated";
 
-export interface SlaState {
+interface SlaState {
   responseBreached: boolean;
   resolutionBreached: boolean;
   label: "On track" | "Response breached" | "Resolution breached" | "Met";
@@ -13,7 +13,7 @@ function isLate(dueAtIso: string, atIso: string | Date): boolean {
   return due < at;
 }
 
-export function getSlaState(incident: Incident, now?: Date): SlaState {
+export function getSlaState(incident: IncidentsCreateIncidentResponse, now?: Date): SlaState {
   const t = now ?? new Date();
 
   const responseBreached =

@@ -1,0 +1,362 @@
+"use client";
+
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { apiClient, isApiError } from "@/lib/api-client";
+import { lazyContract } from "@/lib/api-envelope";
+import { useCan } from "@/hooks/api/access";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import { knowledgeAndSurveysQueryKeys } from "@/lib/query-keys/knowledge-and-surveys";
+import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
+import type {
+  PublicRoadmapItem,
+  PublicFeedbackPost,
+  PublicChangelogEntry,
+} from "@/types/projects";
+import type { ManagedProductRelationsGetRoadmapPreviewResponse as ProductRoadmapPreview } from "@/contracts/build-contracts.generated";
+
+const publicRoadmapBoardContract = lazyContract(() =>
+  import("@/hooks/api/build/roadmap-schema").then(
+    (m) => m.publicRoadmapBoardContract,
+  ),
+);
+const publicVoteResultContract = lazyContract(() =>
+  import("@/hooks/api/build/roadmap-schema").then(
+    (m) => m.publicVoteResultContract,
+  ),
+);
+const publicFeedbackResultContract = lazyContract(() =>
+  import("@/hooks/api/build/roadmap-schema").then(
+    (m) => m.publicFeedbackResultContract,
+  ),
+);
+const roadmapPublicationLazy = lazyContract(() =>
+  import("@/hooks/api/build/roadmap-schema").then(
+    (m) => m.roadmapPublicationContract,
+  ),
+);
+const productRoadmapPreviewLazy = lazyContract(() =>
+  import("@/hooks/api/build/roadmap-schema").then(
+    (m) => m.productRoadmapPreviewContract,
+  ),
+);
+const productRoadmapPublicationLazy = lazyContract(() =>
+  import("@/hooks/api/build/roadmap-schema").then(
+    (m) => m.productRoadmapPublicationContract,
+  ),
+);
+const productRoadmapPublicationIssuedLazy = lazyContract(() =>
+  import("@/hooks/api/build/roadmap-schema").then(
+    (m) => m.productRoadmapPublicationIssuedContract,
+  ),
+);
+const noContentLazy = lazyContract(() =>
+  import("@/hooks/api/cursor-page-schema").then((m) => m.noContentContract),
+);
+
+interface RoadmapPublication {
+  token: string | null;
+  path: string | null;
+}
+
+export interface ProductRoadmapPublication {
+  published: boolean;
+  publicationVersion: number | null;
+  expiresAt: string | null;
+  issuedAt: string | null;
+}
+
+export interface ProductRoadmapPublicationIssued {
+  token: string;
+  path: string;
+  publicationVersion: number;
+  expiresAt: string | null;
+  issuedAt: string;
+}
+
+interface PublicRoadmapBoard {
+  orgName: string | null;
+  roadmap: {
+    planned: PublicRoadmapItem[];
+    in_progress: PublicRoadmapItem[];
+    completed: PublicRoadmapItem[];
+  };
+  feedback: PublicFeedbackPost[];
+  changelog: PublicChangelogEntry[];
+}
+
+interface PublicVoteInput {
+  type: "roadmap" | "feedback";
+  id: number;
+  voterKey: string;
+}
+
+interface PublicVoteResult {
+  id: number;
+  type: string;
+  votes: number;
+  voted: boolean;
+}
+
+interface SubmitPublicFeedbackInput {
+  title: string;
+  description?: string;
+  name?: string;
+  email?: string;
+}
+
+export function usePublicRoadmapByToken(shareToken: string) {
+  return useQuery({
+    queryKey: knowledgeAndSurveysQueryKeys.roadmap.byToken(shareToken),
+    queryFn: ({ signal }) =>
+      apiClient.get<PublicRoadmapBoard>(
+        "/public/roadmap/by-token",
+        { shareToken },
+        signal,
+        publicRoadmapBoardContract,
+      ),
+    enabled: Boolean(shareToken),
+    staleTime: 60_000,
+    retry: false,
+  });
+}
+
+export function usePublicRoadmap(orgId: string, managedProductId?: number) {
+  return useQuery({
+    queryKey: knowledgeAndSurveysQueryKeys.roadmap.publicBoard(
+      orgId,
+      managedProductId,
+    ),
+    queryFn: ({ signal }) =>
+      apiClient.get<PublicRoadmapBoard>(
+        "/public/roadmap",
+        managedProductId === undefined
+          ? { org: orgId }
+          : { org: orgId, managedProductId },
+        signal,
+        publicRoadmapBoardContract,
+      ),
+    enabled: Boolean(orgId),
+    staleTime: 60_000,
+    retry: false,
+  });
+}
+
+export function usePublicVote(orgId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationKey: ["projects", "roadmap", "vote"],
+    mutationFn: (input: PublicVoteInput) =>
+      apiClient.post<PublicVoteResult>(
+        `/public/roadmap/vote?org=${encodeURIComponent(orgId)}`,
+        input,
+        undefined,
+        publicVoteResultContract,
+      ),
+    onSuccess: (result) => {
+      qc.setQueriesData<PublicRoadmapBoard>(
+        { queryKey: knowledgeAndSurveysQueryKeys.roadmap.publicBoard(orgId) },
+        (prev) => {
+          if (!prev) return prev;
+          if (result.type === "roadmap") {
+            const patchItem = (items: PublicRoadmapItem[]) =>
+              items.map((item) =>
+                item.id === result.id ? { ...item, votes: result.votes } : item,
+              );
+            return {
+              ...prev,
+              roadmap: {
+                planned: patchItem(prev.roadmap.planned),
+                in_progress: patchItem(prev.roadmap.in_progress),
+                completed: patchItem(prev.roadmap.completed),
+              },
+            };
+          }
+          return {
+            ...prev,
+            feedback: prev.feedback.map((post) =>
+              post.id === result.id ? { ...post, votes: result.votes } : post,
+            ),
+          };
+        },
+      );
+    },
+  });
+}
+
+export function useSubmitPublicFeedback(orgId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationKey: ["projects", "feedback", "submit"],
+    mutationFn: (input: SubmitPublicFeedbackInput) =>
+      apiClient.post<{ id: number; message: string }>(
+        `/public/roadmap/feedback?org=${encodeURIComponent(orgId)}`,
+        input,
+        undefined,
+        publicFeedbackResultContract,
+      ),
+    onSuccess: () =>
+      qc.invalidateQueries({
+        queryKey: knowledgeAndSurveysQueryKeys.roadmap.publicBoard(orgId),
+      }),
+  });
+}
+
+export function useRoadmapPublication() {
+  const canView = useCan("build:roadmap:view");
+  return useQuery({
+    queryKey: knowledgeAndSurveysQueryKeys.roadmap.publication,
+    queryFn: async ({ signal }) => {
+      try {
+        return await apiClient.get<RoadmapPublication>(
+          "/build/roadmap-publication",
+          undefined,
+          signal,
+          roadmapPublicationLazy,
+        );
+      } catch (error) {
+        if (isApiError(error) && error.status === 400) return null;
+        throw error;
+      }
+    },
+    enabled: canView,
+    staleTime: 5 * 60_000,
+  });
+}
+
+export function usePublishRoadmap() {
+  const qc = useQueryClient();
+  return useAuthorizedMutation("build:roadmap:manage", {
+    mutationKey: ["projects", "roadmap", "publication", "publish"],
+    mutationFn: () =>
+      apiClient.post<RoadmapPublication>(
+        "/build/roadmap-publication",
+        {},
+        undefined,
+        roadmapPublicationLazy,
+      ),
+    onSuccess: (publication) =>
+      qc.setQueryData(
+        knowledgeAndSurveysQueryKeys.roadmap.publication,
+        publication,
+      ),
+  });
+}
+
+export function useUnpublishRoadmap() {
+  const qc = useQueryClient();
+  return useAuthorizedMutation("build:roadmap:manage", {
+    mutationKey: ["projects", "roadmap", "publication", "unpublish"],
+    mutationFn: () =>
+      apiClient.delete<void>(
+        "/build/roadmap-publication",
+        undefined,
+        undefined,
+        noContentLazy,
+      ),
+    onSuccess: () =>
+      qc.setQueryData(knowledgeAndSurveysQueryKeys.roadmap.publication, null),
+  });
+}
+
+export function useRoadmapPreview(managedProductId: number) {
+  const canView = useCan("build:roadmap:view");
+  return useQuery({
+    queryKey:
+      buildWorkQueryKeys.projects.managedProducts.roadmapPreview(
+        managedProductId,
+      ),
+    queryFn: ({ signal }) =>
+      apiClient.get<ProductRoadmapPreview>(
+        `/build/managed-products/${String(managedProductId)}/roadmap-preview`,
+        undefined,
+        signal,
+        productRoadmapPreviewLazy,
+      ),
+    enabled: canView,
+    staleTime: 30_000,
+  });
+}
+
+export function useProductRoadmapPublication(managedProductId: number) {
+  const canView = useCan("build:roadmap:view");
+  return useQuery({
+    queryKey:
+      buildWorkQueryKeys.projects.managedProducts.roadmapPublication(
+        managedProductId,
+      ),
+    queryFn: ({ signal }) =>
+      apiClient.get<ProductRoadmapPublication>(
+        `/build/managed-products/${String(managedProductId)}/roadmap-publication`,
+        undefined,
+        signal,
+        productRoadmapPublicationLazy,
+      ),
+    enabled: canView,
+    staleTime: 5 * 60_000,
+  });
+}
+
+export function usePublishProductRoadmap(managedProductId: number) {
+  const qc = useQueryClient();
+  return useAuthorizedMutation("build:roadmap:manage", {
+    mutationKey: [
+      "projects",
+      "managed-products",
+      managedProductId,
+      "roadmap-publication",
+      "publish",
+    ],
+    // expiresAt: ISO datetime, at most 365 days out; omitted = no expiry.
+    mutationFn: (input?: { expiresAt?: string }) =>
+      apiClient.post<ProductRoadmapPublicationIssued>(
+        `/build/managed-products/${String(managedProductId)}/roadmap-publication`,
+        input?.expiresAt ? { expiresAt: input.expiresAt } : {},
+        undefined,
+        productRoadmapPublicationIssuedLazy,
+      ),
+    onSuccess: (issued) =>
+      qc.setQueryData<ProductRoadmapPublication>(
+        buildWorkQueryKeys.projects.managedProducts.roadmapPublication(
+          managedProductId,
+        ),
+        {
+          published: true,
+          publicationVersion: issued.publicationVersion,
+          expiresAt: issued.expiresAt,
+          issuedAt: issued.issuedAt,
+        },
+      ),
+  });
+}
+
+export function useUnpublishProductRoadmap(managedProductId: number) {
+  const qc = useQueryClient();
+  return useAuthorizedMutation("build:roadmap:manage", {
+    mutationKey: [
+      "projects",
+      "managed-products",
+      managedProductId,
+      "roadmap-publication",
+      "unpublish",
+    ],
+    mutationFn: () =>
+      apiClient.delete<void>(
+        `/build/managed-products/${String(managedProductId)}/roadmap-publication`,
+        undefined,
+        undefined,
+        noContentLazy,
+      ),
+    onSuccess: () =>
+      qc.setQueryData<ProductRoadmapPublication>(
+        buildWorkQueryKeys.projects.managedProducts.roadmapPublication(
+          managedProductId,
+        ),
+        {
+          published: false,
+          publicationVersion: null,
+          expiresAt: null,
+          issuedAt: null,
+        },
+      ),
+  });
+}

@@ -67,7 +67,11 @@ export function decodeRowKey(key: string): string {
 }
 
 export function formatStatusName(name: string): string {
-  return name.replace(/_/g, " ");
+  const words = name.toLowerCase().split(/[_\s]+/).filter(Boolean);
+  if (words.length === 0) return name;
+  const [first, ...rest] = words;
+  if (!first) return name;
+  return [first.charAt(0).toUpperCase() + first.slice(1), ...rest].join(" ");
 }
 
 export function buildColumns(
@@ -102,17 +106,23 @@ export function applyColumnOrder(items: KanbanColumn[]): KanbanColumn[] {
   return [...items].sort((a, b) => a.order - b.order);
 }
 
-export function groupTicketsByStatus(
+export function groupTicketsByKey(
   tickets: KanbanTicket[],
+  getKey: (t: KanbanTicket) => string,
+  comparator?: ((a: KanbanTicket, b: KanbanTicket) => number) | null,
 ): Map<string, KanbanTicket[]> {
   const map = new Map<string, KanbanTicket[]>();
   for (const ticket of tickets) {
-    const list = map.get(ticket.status);
+    const key = getKey(ticket);
+    const list = map.get(key);
     if (list) list.push(ticket);
-    else map.set(ticket.status, [ticket]);
+    else map.set(key, [ticket]);
   }
-  for (const list of map.values()) {
-    list.sort(compareByRank);
+  const cmp = comparator === undefined ? compareByRank : comparator;
+  if (cmp !== null) {
+    for (const list of map.values()) {
+      list.sort(cmp);
+    }
   }
   return map;
 }

@@ -1,6 +1,8 @@
 "use client";
 
 import { useState } from "react";
+import dynamic from "next/dynamic";
+import type { AnimatedNavIconComponent } from "@/components/layout/sidebar/sidebar-animated-nav";
 import {
   KbBuilding2Icon,
   KbCheckIcon,
@@ -8,7 +10,7 @@ import {
   KbGlobeIcon,
   KbLockIcon,
   KbShare2Icon,
-  type KbIconComponent,
+  KbUsersIcon,
 } from "@/features/wiki/lib/kb-icons";
 import { Button } from "@/components/ui/button";
 import { TruncatedText } from "@/components/ui/truncated-text";
@@ -18,20 +20,39 @@ import {
   ResponsivePopoverContent,
 } from "@/components/ui/responsive-popover";
 import { toast } from "sonner";
+import { isApiError } from "@/lib/api-envelope";
 import { useSetKbPageVisibility } from "@/hooks/api/kb/pages";
 import type { KbPageDetail } from "@/hooks/api/kb/page-types";
+import { cn } from "@/lib/utils";
+
+const PageGrantsSheet = dynamic(() => import("./page-grants-sheet"));
 
 type Visibility = "private" | "org" | "public";
 
 const VISIBILITY_OPTIONS: Array<{
   value: Visibility;
-  icon: KbIconComponent;
+  icon: AnimatedNavIconComponent;
   label: string;
   description: string;
 }> = [
-  { value: "private", icon: KbLockIcon, label: "Private", description: "Only you can access" },
-  { value: "org", icon: KbBuilding2Icon, label: "Team", description: "Everyone in the organization" },
-  { value: "public", icon: KbGlobeIcon, label: "Public", description: "Anyone with the link" },
+  {
+    value: "private",
+    icon: KbLockIcon,
+    label: "Private",
+    description: "Only you",
+  },
+  {
+    value: "org",
+    icon: KbBuilding2Icon,
+    label: "Team",
+    description: "Org members",
+  },
+  {
+    value: "public",
+    icon: KbGlobeIcon,
+    label: "Public",
+    description: "Anyone with link",
+  },
 ];
 
 interface PageSharePopoverProps {
@@ -40,20 +61,40 @@ interface PageSharePopoverProps {
 
 export default function PageSharePopover({ page }: PageSharePopoverProps) {
   const [open, setOpen] = useState(false);
+  const [grantsOpen, setGrantsOpen] = useState(false);
   const setVisibility = useSetKbPageVisibility();
 
   const currentVisibility: Visibility = page.visibility ?? "private";
 
   function handleVisibilitySelect(e: React.MouseEvent<HTMLButtonElement>) {
-    const value = e.currentTarget.dataset.visibility as Visibility | undefined;
+    const selectedVisibility = e.currentTarget.dataset.visibility;
+    const value = VISIBILITY_OPTIONS.find(
+      (option) => option.value === selectedVisibility,
+    )?.value;
     if (!value || value === currentVisibility) return;
     setVisibility.mutate(
-      { pageId: page.id, visibility: value },
+      { pageId: page.id, visibility: value, expectedContentRevision: page.contentRevision },
       {
-        onSuccess: () => toast.success(`Visibility updated`),
-        onError: () => toast.error("Failed to update visibility"),
+        onSuccess: () => toast.success("Visibility updated"),
+        onError: (error) => toast.error(isApiError(error) && error.status === 409
+          ? "Page changed before visibility was saved. Refresh before trying again."
+          : "Failed to update visibility"),
       },
     );
+  }
+
+  function handleVisibilityKeyDown(e: React.KeyboardEvent<HTMLDivElement>) {
+    if (!["ArrowDown", "ArrowUp", "ArrowLeft", "ArrowRight"].includes(e.key)) return;
+    e.preventDefault();
+    const radios = Array.from(e.currentTarget.querySelectorAll<HTMLButtonElement>('[role="radio"]'));
+    const current = radios.findIndex((radio) => radio === document.activeElement);
+    const step = e.key === "ArrowDown" || e.key === "ArrowRight" ? 1 : -1;
+    radios[(current + step + radios.length) % radios.length]?.focus();
+  }
+
+  function handleOpenGrants() {
+    setOpen(false);
+    setGrantsOpen(true);
   }
 
   function handleCopyLink() {
@@ -67,8 +108,13 @@ export default function PageSharePopover({ page }: PageSharePopoverProps) {
 
   const origin = typeof window !== "undefined" ? window.location.origin : "";
   const publicUrl = `${origin}/wiki/${page.publicToken ?? ""}`;
+  const showPublicLink =
+    currentVisibility === "public" && Boolean(page.publicToken);
+  const publicLinkWaitsForPublish =
+    currentVisibility === "public" && page.status !== "published";
 
   return (
+    <>
     <ResponsivePopover open={open} onOpenChange={setOpen}>
       <ResponsivePopoverTrigger asChild>
         <Button
@@ -81,52 +127,100 @@ export default function PageSharePopover({ page }: PageSharePopoverProps) {
           <KbShare2Icon className="h-4 w-4" />
         </Button>
       </ResponsivePopoverTrigger>
-      <ResponsivePopoverContent align="end" title="Share" className="w-72 max-w-[85vw] p-0">
-        <div className="px-4 pt-3 pb-1">
-          <p className="text-xs font-semibold text-foreground">Share</p>
-        </div>
-        <div className="px-2 pb-2">
-          {VISIBILITY_OPTIONS.map(({ value, icon: Icon, label, description }) => (
-            <button
-              key={value}
-              type="button"
-              data-visibility={value}
-              className="flex items-center gap-3 w-full rounded-md px-2 py-2 text-left hover:bg-muted transition-colors disabled:opacity-50"
-              onClick={handleVisibilitySelect}
-              disabled={setVisibility.isPending}
-            >
-              <Icon className="h-4 w-4 shrink-0 text-muted-foreground" />
-              <span className="flex-1 min-w-0">
-                <span className="block text-label font-medium text-foreground">{label}</span>
-                <span className="block text-xs text-muted-foreground">{description}</span>
-              </span>
-              {currentVisibility === value && (
-                <KbCheckIcon className="h-4 w-4 shrink-0 text-primary" />
-              )}
-            </button>
-          ))}
-        </div>
-        {currentVisibility === "public" && page.publicToken && (
-          <>
-            <div className="h-px bg-border mx-4" />
-            <div className="px-4 py-3">
-              <div className="flex items-center gap-2 rounded-md border border-border bg-muted px-2 py-1.5">
-                <TruncatedText text={publicUrl} className="flex-1 min-w-0 text-xs text-muted-foreground" />
-                <Button
+      <ResponsivePopoverContent
+        align="end"
+        sideOffset={6}
+        title="Share"
+        className="w-56 max-w-[85vw] gap-0 p-1.5"
+      >
+        <div
+          role="radiogroup"
+          aria-label="Page visibility"
+          className="flex flex-col gap-0.5"
+          onKeyDown={handleVisibilityKeyDown}
+        >
+          {VISIBILITY_OPTIONS.map(
+            ({ value, icon: Icon, label, description }) => {
+              const selected = currentVisibility === value;
+              return (
+                <button
+                  key={value}
                   type="button"
-                  variant="ghost"
-                  size="sm"
-                  className="px-2 shrink-0 text-xs"
-                  onClick={handleCopyLink}
+                  role="radio"
+                  aria-checked={selected}
+                  tabIndex={selected ? 0 : -1}
+                  data-visibility={value}
+                  className={cn(
+                    "flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left transition-colors",
+                    "hover:bg-muted disabled:opacity-50",
+                    selected && "bg-muted/70",
+                  )}
+                  onClick={handleVisibilitySelect}
+                  disabled={setVisibility.isPending}
                 >
-                  <KbCopyIcon className="h-3 w-3 mr-1" />
-                  Copy
-                </Button>
-              </div>
-            </div>
-          </>
-        )}
+                  <Icon className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                  <span className="min-w-0 flex-1">
+                    <span className="block text-xs font-medium leading-tight text-foreground">
+                      {label}
+                    </span>
+                    <span className="block text-micro leading-tight text-muted-foreground">
+                      {description}
+                    </span>
+                  </span>
+                  {selected ? (
+                    <KbCheckIcon className="h-3.5 w-3.5 shrink-0 text-primary" />
+                  ) : (
+                    <span className="h-3.5 w-3.5 shrink-0" aria-hidden />
+                  )}
+                </button>
+              );
+            },
+          )}
+        </div>
+
+        {publicLinkWaitsForPublish ? (
+          <p className="mt-1 border-t border-border px-2 pt-1.5 text-micro text-muted-foreground">
+            The public link works once this page is published.
+          </p>
+        ) : null}
+
+        {showPublicLink ? (
+          <div className="mt-1 flex items-center gap-1 border-t border-border pt-1.5">
+            <TruncatedText
+              text={publicUrl}
+              className="min-w-0 flex-1 px-1 text-micro text-muted-foreground"
+            />
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              className="h-7 w-7 shrink-0"
+              onClick={handleCopyLink}
+              aria-label="Copy link"
+            >
+              <KbCopyIcon className="h-3.5 w-3.5" />
+            </Button>
+          </div>
+        ) : null}
+
+        <div className="mt-1 border-t border-border pt-1">
+          <button
+            type="button"
+            onClick={handleOpenGrants}
+            className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left transition-colors hover:bg-muted"
+          >
+            <KbUsersIcon className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+            <span className="text-xs font-medium text-foreground">Manage access</span>
+          </button>
+        </div>
       </ResponsivePopoverContent>
     </ResponsivePopover>
+
+    <PageGrantsSheet
+      pageId={page.id}
+      open={grantsOpen}
+      onOpenChange={setGrantsOpen}
+    />
+    </>
   );
 }

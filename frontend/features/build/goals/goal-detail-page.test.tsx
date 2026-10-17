@@ -1,5 +1,5 @@
 import React from "react";
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import { GoalDetailPage } from "./goal-detail-page";
 
 jest.mock("@/hooks/api/goals", () => ({
@@ -18,7 +18,8 @@ jest.mock("@/hooks/api/entitlements", () => ({
 }));
 
 jest.mock("next/navigation", () => ({
-  useRouter: () => ({ push: jest.fn() }),
+  useRouter: () => ({ push: jest.fn(), back: jest.fn() }),
+  useSearchParams: () => new URLSearchParams(""),
 }));
 
 jest.mock("@/components/ui/page-wrapper", () => ({
@@ -56,7 +57,8 @@ jest.mock("@/features/build/goals/goal-detail-skeleton", () => ({
 }));
 
 jest.mock("@/features/build/goals/goal-form-sheet", () => ({
-  GoalFormSheet: () => null,
+  GoalFormSheet: ({ open }: { open?: boolean }) =>
+    open ? <div data-testid="goal-form-sheet" /> : null,
 }));
 
 jest.mock("@/features/build/goals/check-in-dialog", () => ({
@@ -231,9 +233,29 @@ const FULL_GOAL_DETAIL = {
   dueDate: null,
   project: null,
   owner: null,
-  keyResults: [],
-  links: [],
-  updates: [],
+  keyResults: [
+    {
+      id: 7,
+      title: "Activation rate",
+      metricType: "percentage",
+      unit: "%",
+      currentValue: 40,
+      targetValue: 80,
+    },
+  ],
+  links: [
+    {
+      id: 9,
+      ticketId: 12,
+      projectId: null,
+      createdAt: "2026-09-25T00:00:00.000Z",
+      ticketTitle: "Improve activation",
+      ticketProjectId: 42,
+      projectName: null,
+      projectKey: "BLD",
+    },
+  ],
+  updates: [], measurementSources: [], linkedRoadmapItems: [], parentGoalId: null,
 };
 
 beforeEach(() => {
@@ -279,6 +301,8 @@ it("hides edit, delete and add-link controls when build:goals:manage is denied, 
   expect(screen.queryByText("Edit")).not.toBeInTheDocument();
   expect(screen.queryByText("Delete")).not.toBeInTheDocument();
   expect(screen.queryByText("Link")).not.toBeInTheDocument();
+  expect(screen.queryByText("Check in")).not.toBeInTheDocument();
+  expect(screen.queryByRole("button", { name: "Remove link" })).not.toBeInTheDocument();
 });
 
 it("shows edit, delete and add-link controls when build:goals:manage is granted", () => {
@@ -294,5 +318,39 @@ it("shows edit, delete and add-link controls when build:goals:manage is granted"
 
   expect(screen.getByText("Edit")).toBeInTheDocument();
   expect(screen.getByText("Delete")).toBeInTheDocument();
+  fireEvent.mouseDown(screen.getByRole("tab", { name: /Linked work/ }), { button: 0, ctrlKey: false });
   expect(screen.getByText("Link")).toBeInTheDocument();
+});
+
+it("separates key results, linked work, and updates into accessible tabs", () => {
+  mockUseGoal.mockReturnValue({
+    data: FULL_GOAL_DETAIL,
+    isLoading: false,
+    isError: false,
+    error: undefined,
+    refetch: jest.fn(),
+  });
+
+  render(<GoalDetailPage goalId={42} />);
+
+  expect(screen.getByRole("tab", { name: /Key results/ })).toHaveAttribute("aria-selected", "true");
+  fireEvent.mouseDown(screen.getByRole("tab", { name: /Linked work/ }), { button: 0, ctrlKey: false });
+  expect(screen.getByRole("tab", { name: /Linked work/ })).toHaveAttribute("aria-selected", "true");
+  fireEvent.mouseDown(screen.getByRole("tab", { name: /Updates/ }), { button: 0, ctrlKey: false });
+  expect(screen.getByRole("tab", { name: /Updates/ })).toHaveAttribute("aria-selected", "true");
+});
+
+it("e shortcut opens the edit form sheet when build:goals:manage is granted", () => {
+  mockUseGoal.mockReturnValue({
+    data: FULL_GOAL_DETAIL,
+    isLoading: false,
+    isError: false,
+    error: undefined,
+    refetch: jest.fn(),
+  });
+
+  render(<GoalDetailPage goalId={42} />);
+  fireEvent.keyDown(document, { key: "e" });
+
+  expect(screen.getByTestId("goal-form-sheet")).toBeInTheDocument();
 });

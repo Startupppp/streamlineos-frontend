@@ -1,27 +1,12 @@
 import { z } from "zod";
+import {
+  agentTokensCreateResponseSchema,
+  agentTokensListResponseSchema,
+} from "@/contracts/build-contracts.generated";
 
-export const agentTokenCreateContract = z.object({
-  token: z.string(),
-  id: z.number().int(),
-  name: z.string(),
-  tokenPrefix: z.string(),
-  scopes: z.array(z.string()),
-  expiresAt: z.string().nullable(),
-  createdAt: z.string(),
-});
+export const agentTokenCreateContract = agentTokensCreateResponseSchema;
 
-const agentTokenListItemContract = z.object({
-  id: z.number().int(),
-  name: z.string(),
-  tokenPrefix: z.string(),
-  scopes: z.array(z.string()),
-  lastUsedAt: z.string().nullable(),
-  expiresAt: z.string().nullable(),
-  revokedAt: z.string().nullable(),
-  createdAt: z.string(),
-});
+export const agentTokenListContract = agentTokensListResponseSchema;
 
-export const agentTokenListContract = z.array(agentTokenListItemContract);
-
-export type AgentToken = z.infer<typeof agentTokenListItemContract>;
-export type CreateAgentTokenResponse = z.infer<typeof agentTokenCreateContract>;
+export type AgentToken = z.infer<typeof agentTokensListResponseSchema>[number];
+export type CreateAgentTokenResponse = z.infer<typeof agentTokensCreateResponseSchema>;

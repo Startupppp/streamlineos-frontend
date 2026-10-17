@@ -52,3 +52,43 @@ describe("ColumnEmptyState", () => {
     expect(root?.className).not.toMatch(/\b(h-\d|min-h-\[)/);
   });
 });
+
+describe("ColumnEmptyState — a filtered column is not an empty column", () => {
+  it("says the column has no matches when filters are active, instead of inviting a drop", () => {
+    render(
+      <ColumnEmptyState
+        column={{ id: "todo", name: "To Do", color: null, order: 0 }}
+        compact={false}
+        hasActiveFilters
+      />,
+    );
+    expect(screen.getByText("No matches here")).toBeInTheDocument();
+    expect(screen.queryByText("No tickets")).not.toBeInTheDocument();
+  });
+
+  it("keeps the first-run invitation when no filter is active, so the two cases stay distinguishable", () => {
+    render(
+      <ColumnEmptyState
+        column={{ id: "todo", name: "To Do", color: null, order: 0 }}
+        compact={false}
+        hasActiveFilters={false}
+      />,
+    );
+    expect(screen.getByText("No tickets")).toBeInTheDocument();
+    expect(screen.queryByText("No matches here")).not.toBeInTheDocument();
+  });
+
+  it("explains when completed tickets are hidden instead of saying none are done", () => {
+    render(
+      <ColumnEmptyState
+        column={{ id: "DONE", name: "Done", color: null, order: 0 }}
+        compact={false}
+        completedTicketsHidden
+      />,
+    );
+
+    expect(screen.getByText("Completed tickets are hidden")).toBeInTheDocument();
+    expect(screen.getByText("Turn off Hide done to view completed tickets.")).toBeInTheDocument();
+    expect(screen.queryByText("Nothing done yet")).not.toBeInTheDocument();
+  });
+});

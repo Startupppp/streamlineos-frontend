@@ -30,11 +30,10 @@ describe("the boundary census sees a real route tree", () => {
     expect(coverage.boundaries.length).toBeGreaterThanOrEqual(300);
   });
 
-  it("the six segment roots that covered 101 routes between them are present", () => {
+  it("the five segment roots that carry a shared loading boundary are present", () => {
     for (const segment of [
       "accounting",
       "blog",
-      "build",
       "me",
       "portal",
       "subjects",

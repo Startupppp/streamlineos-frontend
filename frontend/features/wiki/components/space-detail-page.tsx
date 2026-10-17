@@ -1,18 +1,51 @@
 "use client";
 
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 import { PageWrapper } from "@/components/ui/page-wrapper";
-
 import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
+import { PageState } from "@/components/shared/page-state";
+import { usePageState } from "@/hooks/api/use-page-state";
+import { useCan } from "@/hooks/api/access";
+import {
+  useKbSpace,
+  useArchiveKbSpace,
+  useRestoreKbSpace,
+} from "@/hooks/api/kb/spaces";
+import { getErrorMessage } from "@/lib/get-error-message";
+import { pageHref } from "@/lib/knowledge-routes";
+import { useGuardedCreateKbPage } from "@/features/wiki/hooks/use-guarded-create-kb-page";
+import { getUserDisplayName } from "@/lib/person-display";
+import { kbTimeAgo } from "@/features/wiki/lib/kb-date-utils";
+import {
+  KbArchiveIcon,
+  KbLayoutGridIcon,
+  KbPlusIcon,
+  KbRotateCcwIcon,
+  KbUsersIcon,
+} from "@/features/wiki/lib/kb-icons";
 import { EmptyState } from "@/components/ui/empty-state";
 import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
-import { Skeleton } from "@/components/ui/skeleton";
-import { useKbSpace } from "@/hooks/api/kb/spaces";
-import { useKbPagesTree } from "@/hooks/api/kb/pages";
-import { KB_SPACES } from "@/lib/knowledge-routes";
-import { filterTreeWithAncestors } from "@/features/wiki/lib/tree-utils";
-import { KbLayoutGridIcon } from "@/features/wiki/lib/kb-icons";
+import { Button } from "@/components/ui/button";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import {
+  Sheet,
+  SheetBody,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
+import { WikiPageCollectionTable } from "./wiki-page-collection-table";
+import { SpaceMembersSheet } from "./space-members-sheet";
+import { SpaceManagerHealthSummary } from "./space-manager-health-summary";
+import { SpaceArchiveImpact } from "./space-archive-impact";
 import PageTree from "./page-tree";
+import { SpaceBreadcrumb } from "./page-document-breadcrumb";
 import type { KbAudience } from "@/types/kb";
+import { KB_ACCESS_LABELS, type KbSpaceRole } from "@/types/kb";
 
 const AUDIENCE_LABELS: Record<KbAudience, string> = {
   internal: "Internal",
@@ -22,8 +55,17 @@ const AUDIENCE_LABELS: Record<KbAudience, string> = {
 
 const AUDIENCE_BADGE_CLASS: Record<KbAudience, string> = {
   internal: "bg-muted text-muted-foreground border-border",
-  public: "bg-status-success-surface text-status-success-ink border-status-success-rule",
+  public:
+    "bg-status-success-surface text-status-success-ink border-status-success-rule",
   mixed: "bg-primary/10 text-foreground border-primary/20",
+};
+
+const ACCESS_BADGE_CLASS: Record<KbSpaceRole, string> = {
+  admin: "bg-primary/10 text-primary border-primary/30",
+  publisher: "bg-primary/10 text-primary border-primary/30",
+  editor: "bg-muted text-muted-foreground border-border",
+  commenter: "bg-muted text-muted-foreground border-border",
+  viewer: "bg-muted text-muted-foreground border-border",
 };
 
 interface SpaceDetailPageProps {
@@ -31,98 +73,288 @@ interface SpaceDetailPageProps {
 }
 
 export default function SpaceDetailPage({ spaceId }: SpaceDetailPageProps) {
-  const { data: space, isLoading, isError } = useKbSpace(spaceId);
-  const { data: treeNodes = [], isLoading: treeLoading } = useKbPagesTree();
+  const router = useRouter();
+  const {
+    data: space,
+    isLoading,
+    isError,
+    error,
+    refetch,
+  } = useKbSpace(spaceId);
+  const canCreatePage = useCan("kb:pages:create");
+  const canManage = useCan("kb:spaces:manage");
+  const createPage = useGuardedCreateKbPage((page) => router.push(pageHref(page.id)));
+  const archiveSpace = useArchiveKbSpace();
+  const restoreSpace = useRestoreKbSpace();
+  const [membersOpen, setMembersOpen] = useState(false);
+  const [archiveConfirmOpen, setArchiveConfirmOpen] = useState(false);
+  const [hierarchyOpen, setHierarchyOpen] = useState(false);
 
-  if (isLoading) {
-    return (
-      <PageWrapper title="Loading..." backHref={KB_SPACES}>
-        <div className="space-y-3">
-          <Skeleton className="h-24 w-full rounded-xl" />
-        </div>
-      </PageWrapper>
-    );
+  const pageState = usePageState({
+    permission: "kb:spaces:view",
+    isLoading,
+    isError,
+    error,
+    isEmpty: !isLoading && !isError && !space,
+  });
+  const visibleSpace = pageState.kind === "ready" ? space : undefined;
+
+  function handleRetry() {
+    void refetch();
   }
 
-  if (isError || !space) {
-    return (
-      <PageWrapper title="Space" backHref={KB_SPACES}>
-        <EmptyState
-          illustration={
-            <KbLayoutGridIcon className="w-8 text-muted-foreground" />
-          }
-          title="Could not load space"
-          description="There was a problem fetching this space."
-          className={CONTENT_FILL_PANEL}
-        />
-      </PageWrapper>
-    );
+  function handleNewPage() {
+    void createPage.submit({ spaceId });
   }
 
-  const audience = (space.audience ?? "internal") as KbAudience;
+  function handleMembersOpenChange(open: boolean) {
+    setMembersOpen(open);
+  }
 
-  const spacePageNodes = treeNodes.filter((n) => n.spaceId === spaceId);
-  const filteredNodes =
-    spacePageNodes.length > 0
-      ? filterTreeWithAncestors(treeNodes, (n) => n.spaceId === spaceId)
-      : [];
+  function handleCloseHierarchy() {
+    setHierarchyOpen(false);
+  }
+
+  function handleOpenHierarchy() {
+    setHierarchyOpen(true);
+  }
+
+  function handleOpenMembers() {
+    setMembersOpen(true);
+  }
+
+  function handleOpenArchiveConfirm() {
+    setArchiveConfirmOpen(true);
+  }
+
+  function handleArchiveConfirmOpenChange(open: boolean) {
+    setArchiveConfirmOpen(open);
+  }
+
+  function handleConfirmArchive() {
+    archiveSpace.mutate(spaceId, {
+      onSuccess: () => {
+        toast.success(`"${space?.name ?? "Space"}" archived`);
+        setArchiveConfirmOpen(false);
+      },
+      onError: (err) => toast.error(getErrorMessage(err)),
+    });
+  }
+
+  function handleRestore() {
+    restoreSpace.mutate(spaceId, {
+      onSuccess: () => toast.success(`"${space?.name ?? "Space"}" restored`),
+      onError: (err) => toast.error(getErrorMessage(err)),
+    });
+  }
+
+  const audience: KbAudience = space?.audience ?? "internal";
+  const isArchived =
+    space?.archivedAt !== undefined && space?.archivedAt !== null;
+  const pagesOverdueForReview = space?.pagesOverdueForReview ?? 0;
+  const pagesWithReviewPolicy = space?.pagesWithReviewPolicy ?? 0;
+
+  const headerActions = visibleSpace ? (
+    <div className="flex items-center gap-1.5">
+      {canCreatePage && (
+        <Button
+          size="sm"
+          onClick={handleNewPage}
+          disabled={createPage.isSubmitting}
+        >
+          <KbPlusIcon className="h-4 w-4 mr-1.5" />
+          New page
+        </Button>
+      )}
+      {canManage && (
+        <Button variant="outline" size="sm" onClick={handleOpenMembers}>
+          <KbUsersIcon className="h-4 w-4 mr-1.5" />
+          Members
+        </Button>
+      )}
+      {canManage &&
+        (isArchived ? (
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={handleRestore}
+            disabled={restoreSpace.isPending}
+          >
+            <KbRotateCcwIcon className="h-4 w-4 mr-1.5" />
+            Restore
+          </Button>
+        ) : (
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={handleOpenArchiveConfirm}
+          >
+            <KbArchiveIcon className="h-4 w-4 mr-1.5" />
+            Archive
+          </Button>
+        ))}
+    </div>
+  ) : undefined;
 
   return (
     <PageWrapper
-      title={space.name}
-      subtitle={space.description ?? undefined}
-      backHref={KB_SPACES}
+      title={visibleSpace?.name ?? "Space"}
+      subtitle={visibleSpace?.description ?? undefined}
+      leading={<SpaceBreadcrumb spaceName={visibleSpace?.name ?? "Space"} />}
+      actions={headerActions}
     >
-      <div className="space-y-4">
-        <div className="bg-card border border-border rounded-xl p-4 flex items-start gap-4">
-          <span className="text-3xl shrink-0">{space.icon ?? "📚"}</span>
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2 flex-wrap">
-              <span className="text-base font-semibold text-foreground">
-                {space.name}
-              </span>
-              <Badge
-                variant="outline"
-                className={`text-micro h-4 px-1.5 ${AUDIENCE_BADGE_CLASS[audience]}`}
-              >
-                {AUDIENCE_LABELS[audience]}
-              </Badge>
-            </div>
-            {space.description && (
-              <p className="mt-1 text-sm text-muted-foreground">
-                {space.description}
-              </p>
-            )}
+      <PageState
+        resolution={pageState}
+        onRetry={handleRetry}
+        loading={
+          <div className="space-y-4">
+            <Skeleton className="h-24 w-full rounded-xl" />
+            <Skeleton className="h-64 w-full rounded-xl" />
           </div>
-        </div>
-
-        <div>
-          <div className="flex items-center justify-between mb-3">
-            <p className="text-sm font-medium text-foreground">
-              Pages
-              {!treeLoading && (
-                <span className="ml-1.5 text-xs text-muted-foreground">
-                  ({spacePageNodes.length})
+        }
+        notFound={
+          <EmptyState
+            illustration={
+              <KbLayoutGridIcon className="w-8 text-muted-foreground" />
+            }
+            title="Space not found"
+            description="This space may have been deleted or you may not have access."
+            className={CONTENT_FILL_PANEL}
+          />
+        }
+        empty={
+          <EmptyState
+            illustration={<KbLayoutGridIcon className="w-8 text-muted-foreground" />}
+            title="Space unavailable"
+            description="Refresh to try loading this space again."
+            action={{ label: "Refresh", onClick: handleRetry }}
+            className={CONTENT_FILL_PANEL}
+          />
+        }
+      >
+        <div className="flex min-h-0 flex-1 flex-col gap-4">
+          <div className="bg-card border border-border rounded-xl p-4 flex items-start gap-4">
+            <span className="text-3xl shrink-0">{space?.icon ?? "📚"}</span>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="text-base font-semibold text-foreground">
+                  {space?.name}
                 </span>
+                <Badge
+                  variant="outline"
+                  className={`text-micro h-4 px-1.5 ${AUDIENCE_BADGE_CLASS[audience]}`}
+                >
+                  {AUDIENCE_LABELS[audience]}
+                </Badge>
+                {space?.viewerSpaceRole != null && (
+                  <Badge
+                    variant="outline"
+                    className={`text-micro h-4 px-1.5 ${ACCESS_BADGE_CLASS[space.viewerSpaceRole]}`}
+                  >
+                    {KB_ACCESS_LABELS[space.viewerSpaceRole]}
+                  </Badge>
+                )}
+                {isArchived && (
+                  <Badge
+                    variant="outline"
+                    className="text-micro h-4 px-1.5 bg-muted text-muted-foreground border-border"
+                  >
+                    Archived
+                  </Badge>
+                )}
+              </div>
+              {space?.description && (
+                <p className="mt-1 text-sm text-muted-foreground">
+                  {space.description}
+                </p>
               )}
-            </p>
-          </div>
-          {spacePageNodes.length === 0 && !treeLoading ? (
-            <EmptyState
-              illustration={
-                <KbLayoutGridIcon className="w-8 text-muted-foreground" />
-              }
-              title="No pages in this space yet"
-              description="Assign pages from Page settings"
-              className={CONTENT_FILL_PANEL}
-            />
-          ) : (
-            <div className="bg-card border border-border rounded-xl p-2">
-              <PageTree nodes={filteredNodes} isLoading={treeLoading} />
+              <div
+                className="mt-1.5 flex items-center gap-3 text-xs text-muted-foreground"
+                suppressHydrationWarning
+              >
+                {space?.ownerName != null && (
+                  <span>
+                    Owner: {getUserDisplayName({ name: space.ownerName })}
+                  </span>
+                )}
+                {space?.updatedAt && (
+                  <span>Updated {kbTimeAgo(space.updatedAt)}</span>
+                )}
+              </div>
             </div>
-          )}
+          </div>
+
+          <SpaceManagerHealthSummary
+            pagesWithReviewPolicy={pagesWithReviewPolicy}
+            pagesOverdueForReview={pagesOverdueForReview}
+          />
+
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="self-start md:hidden"
+            onClick={handleOpenHierarchy}
+          >
+            Browse hierarchy
+          </Button>
+
+          <div className="flex min-h-0 flex-1 gap-4">
+            <div className="hidden w-56 shrink-0 flex-col overflow-hidden rounded-xl border border-border bg-card/50 p-2 md:flex">
+              <p className="px-2 py-1 text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                Hierarchy
+              </p>
+              <div className="min-h-0 flex-1 overflow-y-auto">
+                <PageTree spaceId={spaceId} />
+              </div>
+            </div>
+            <div className="flex min-h-0 flex-1 flex-col">
+              <WikiPageCollectionTable
+                fixedParams={{ spaceId }}
+                emptyTitle="No pages in this space yet"
+                emptyDescription="Move or create pages inside this space to see them here."
+              />
+            </div>
+          </div>
         </div>
-      </div>
+      </PageState>
+
+      <SpaceMembersSheet
+        spaceId={spaceId}
+        spaceName={visibleSpace?.name ?? ""}
+        open={membersOpen && Boolean(visibleSpace)}
+        onOpenChange={handleMembersOpenChange}
+      />
+
+      <Sheet open={hierarchyOpen && Boolean(visibleSpace)} onOpenChange={setHierarchyOpen}>
+        <SheetContent side="left" className="gap-0 p-0 sm:max-w-sm">
+          <SheetHeader className="border-b border-border px-4 py-3">
+            <SheetTitle>Hierarchy</SheetTitle>
+            <SheetDescription>Pages in {visibleSpace?.name ?? "this space"}</SheetDescription>
+          </SheetHeader>
+          <SheetBody className="p-3">
+            {hierarchyOpen && visibleSpace && (
+              <PageTree spaceId={spaceId} onCloseMobile={handleCloseHierarchy} />
+            )}
+          </SheetBody>
+        </SheetContent>
+      </Sheet>
+
+      <ConfirmDialog
+        open={archiveConfirmOpen && Boolean(visibleSpace)}
+        onOpenChange={handleArchiveConfirmOpenChange}
+        title="Archive space?"
+        description={
+          <>
+            {`Archiving "${visibleSpace?.name ?? "this space"}" will hide it from users. Pages and content are preserved and can be restored.`}
+            {archiveConfirmOpen && visibleSpace && <SpaceArchiveImpact spaceId={spaceId} />}
+          </>
+        }
+        confirmLabel="Archive"
+        destructive
+        isPending={archiveSpace.isPending}
+        onConfirm={handleConfirmArchive}
+      />
     </PageWrapper>
   );
 }

@@ -103,6 +103,21 @@ describe("usePortfolios — cursor pagination contract", () => {
       expect.any(Function),
     );
   });
+
+  it("sends portfolio search to the server instead of filtering only loaded rows", () => {
+    const { apiClient } = jest.requireMock("@/lib/api-client");
+    (apiClient.get as jest.Mock).mockResolvedValue({ data: [], pagination: { limit: 20, nextCursor: null, hasMore: false } });
+
+    const opts = useCapturePortfolioOptions({ search: "platform", limit: 20 });
+    void opts.queryFn({});
+
+    expect(apiClient.get).toHaveBeenCalledWith(
+      "/build/portfolios",
+      expect.objectContaining({ q: "platform" }),
+      undefined,
+      expect.any(Function),
+    );
+  });
 });
 
 describe("useManagedProducts — cursor pagination contract", () => {

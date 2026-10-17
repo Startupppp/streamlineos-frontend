@@ -6,13 +6,13 @@ import type { Notification } from "@/types/notifications";
 
 function isInputTarget(e: KeyboardEvent): boolean {
   const target = e.target;
-  if (!(target instanceof Element)) return false;
+  if (!(target instanceof HTMLElement)) return false;
   const tag = target.tagName.toLowerCase();
   return (
     tag === "input" ||
     tag === "textarea" ||
     tag === "select" ||
-    (target as HTMLElement).isContentEditable
+    target.isContentEditable
   );
 }
 
@@ -22,6 +22,7 @@ interface UseInboxKeyboardNavParams {
   onSelect: (notification: Notification) => void;
   onClearSelection: () => void;
   searchInputRef: RefObject<HTMLInputElement | null>;
+  onShortcutHelp?: () => void;
 }
 
 export function useInboxKeyboardNav({
@@ -30,11 +31,18 @@ export function useInboxKeyboardNav({
   onSelect,
   onClearSelection,
   searchInputRef,
+  onShortcutHelp,
 }: UseInboxKeyboardNavParams): void {
   const handleKeyDown = useCallback(
     (e: KeyboardEvent) => {
       if (e.metaKey || e.ctrlKey || e.altKey) return;
       if (isInputTarget(e)) return;
+
+      if (e.key === "?") {
+        e.preventDefault();
+        onShortcutHelp?.();
+        return;
+      }
 
       if (e.key === "j" || e.key === "k") {
         e.preventDefault();
@@ -62,13 +70,20 @@ export function useInboxKeyboardNav({
         return;
       }
 
+      if (e.key === "Enter") {
+        if (selectedId == null) return;
+        const current = notifications.find((n) => n.id === selectedId);
+        if (current) onSelect(current);
+        return;
+      }
+
       if (e.key === "/") {
         e.preventDefault();
         searchInputRef.current?.focus();
         return;
       }
     },
-    [notifications, selectedId, onSelect, onClearSelection, searchInputRef],
+    [notifications, selectedId, onSelect, onClearSelection, searchInputRef, onShortcutHelp],
   );
 
   useEffect(() => {

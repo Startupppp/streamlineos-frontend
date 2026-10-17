@@ -1,5 +1,8 @@
 import { z } from "zod";
 
+const isoTimestamp = z.iso.datetime({ offset: true });
+const isoDate = z.iso.date();
+
 /**
  * Response contracts for the calendar module.
  * Derived from backend `calendar-response.schemas.ts`.
@@ -13,12 +16,12 @@ export const calendarEventsResponseContract = z.object({
     z.object({
       id: z.string(),
       title: z.string(),
-      start: z.string(),
-      end: z.string(),
-      allDay: z.boolean().optional(),
+      start: isoTimestamp,
+      end: isoTimestamp,
+      allDay: z.boolean(),
       color: z.string().nullable().optional(),
       category: z.string(),
-      source: z.enum(["event", "leave", "interview", "task", "holiday", "attendance"]),
+      source: z.string().min(1),
       timezone: z.string().nullable().optional(),
       location: z.string().nullable().optional(),
       description: z.string().nullable().optional(),
@@ -27,11 +30,72 @@ export const calendarEventsResponseContract = z.object({
       entityType: z.string().nullable().optional(),
       myRsvpStatus: z.string().nullable().optional(),
       projectId: z.number().int().nullable().optional(),
+      connectionId: z.number().int().optional(),
+      ownerMembershipId: z.number().int().nullable().optional(),
+      accountEmail: z.string().nullable().optional(),
+      meetingUrl: z.string().nullable().optional(),
+      webLink: z.string().nullable().optional(),
+      sourceKey: z.string().min(1),
+      sourceRecordId: z.string().min(1),
+      occurrenceId: z.string().min(1),
+      status: z.string().nullable(),
+      timeKind: z.enum(["timed", "date"]),
+      time: z.discriminatedUnion("kind", [
+        z.object({
+          kind: z.literal("timed"),
+          start: isoTimestamp,
+          end: isoTimestamp,
+          timezone: z.string().nullable(),
+        }),
+        z.object({
+          kind: z.literal("date"),
+          startDate: isoDate,
+          endDate: isoDate,
+        }),
+      ]),
+      availability: z.enum([
+        "busy",
+        "free",
+        "out-of-office",
+        "working-elsewhere",
+      ]),
+      sourceVersion: z.string().nullable(),
+      actions: z.object({
+        view: z.boolean(),
+        edit: z.boolean(),
+        delete: z.boolean(),
+        rsvp: z.boolean(),
+        complete: z.boolean(),
+      }),
+      freshness: z.object({
+        state: z.enum(["fresh", "stale", "unknown"]),
+        asOf: isoTimestamp.nullable(),
+      }),
     }),
   ),
   failures: z.array(z.object({ key: z.string(), label: z.string() })),
   truncated: z.boolean(),
+  coverageState: z.enum(["complete", "partial", "failed", "continued"]),
+  coverage: z.array(
+    z.object({
+      sourceKey: z.string(),
+      state: z.enum(["complete", "partial", "failed", "continued"]),
+      nextCursor: z.string().nullable(),
+    }),
+  ),
 });
+
+export const calendarHistoryResponseContract =
+  calendarEventsResponseContract.extend({
+    windowStart: isoTimestamp,
+    windowEnd: isoTimestamp,
+    nextCursor: z.string().min(1).nullable(),
+  });
+
+export const calendarSearchResponseContract =
+  calendarEventsResponseContract.extend({
+    nextCursor: z.string().nullable(),
+  });
 
 /** `calendarSourcesResponseSchema` */
 export const calendarSourcesContract = z.array(
@@ -59,13 +123,31 @@ export const calendarExternalEventsContract = z.object({
       accountEmail: z.string().nullable(),
       providerEventId: z.string(),
       title: z.string(),
-      start: z.string(),
-      end: z.string(),
+      start: isoTimestamp,
+      end: isoTimestamp,
       allDay: z.boolean(),
       timezone: z.string().nullable().optional(),
       location: z.string().nullable(),
       meetingUrl: z.string().nullable(),
       webLink: z.string().nullable(),
+      sourceKey: z.string().min(1),
+      sourceRecordId: z.string().min(1),
+      occurrenceId: z.string().min(1),
+      status: z.string().nullable(),
+      timeKind: z.enum(["timed", "date"]),
+      availability: z.enum(["busy", "free"]),
+      sourceVersion: z.string().nullable(),
+      actions: z.object({
+        view: z.boolean(),
+        edit: z.boolean(),
+        delete: z.boolean(),
+        rsvp: z.boolean(),
+        complete: z.boolean(),
+      }),
+      freshness: z.object({
+        state: z.enum(["fresh", "stale", "unknown"]),
+        asOf: isoTimestamp.nullable(),
+      }),
     }),
   ),
   errors: z.array(
@@ -73,6 +155,16 @@ export const calendarExternalEventsContract = z.object({
       connectionId: z.number().int(),
       accountEmail: z.string().nullable(),
       message: z.string(),
+    }),
+  ),
+  complete: z.boolean(),
+  accounts: z.array(
+    z.object({
+      connectionId: z.number().int(),
+      accountEmail: z.string().nullable(),
+      toolkit: z.enum(["googlecalendar", "outlook"]),
+      state: z.enum(["complete", "partial", "failed", "reauth_required"]),
+      hasMore: z.boolean(),
     }),
   ),
 });
@@ -197,6 +289,7 @@ export const calendarOccurrenceExceptionContract = z.object({
   occurrenceStart: z.string(),
   isCancelled: z.boolean(),
   modifiedTitle: z.string().nullable(),
+  modifiedDescription: z.string().nullable(),
   modifiedStart: z.string().nullable(),
   modifiedEnd: z.string().nullable(),
   createdAt: z.string(),
@@ -220,10 +313,20 @@ export const calendarSyncStatusContract = z.object({
   status: z.enum(["synced", "pending", "in_flight", "failed", "not_synced"]),
   attemptCount: z.number(),
   lastError: z.string().nullable(),
-  operation: z.enum(["create", "update", "delete"]).nullable(),
+  operation: z.enum(["create", "update", "delete", "restore"]).nullable(),
   queuedAt: z.string().nullable(),
   processedAt: z.string().nullable(),
   retryable: z.boolean(),
+  failureKind: z
+    .enum(["auth", "capability", "conference", "conflict", "transient"])
+    .nullable(),
+  repairAction: z.enum([
+    "none",
+    "retry",
+    "reconnect",
+    "change_event",
+    "review_conflict",
+  ]),
 });
 
 /** `attendanceRowSchema` from `time-attendance-response.schemas.ts` */
@@ -237,9 +340,7 @@ export const attendanceLogContract = z.object({
   status: z.string(),
   workHours: z.string().nullable(),
   breakHours: z.string(),
-  breaks: z.array(
-    z.object({ start: z.string(), end: z.string().optional() }),
-  ),
+  breaks: z.array(z.object({ start: z.string(), end: z.string().optional() })),
   locationData: z
     .object({
       lat: z.number().optional(),
@@ -276,7 +377,9 @@ export const hrCalendarEventListContract = z.array(
 export const attendanceLogListContract = z.array(attendanceLogContract);
 
 /** sync-retry response */
-export const calendarSyncRetryContract = z.object({ requeued: z.number().int() });
+export const calendarSyncRetryContract = z.object({
+  requeued: z.number().int(),
+});
 
 /**
  * `GET /org/members`. NOT `orgMemberListResponseSchema`, which declares

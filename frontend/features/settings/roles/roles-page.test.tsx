@@ -20,6 +20,10 @@ jest.mock("next/navigation", () => ({
   usePathname: () => "/settings/roles",
 }));
 
+jest.mock("next-auth/react", () => ({
+  useSession: () => ({ data: { orgId: "org-1" }, status: "authenticated" }),
+}));
+
 jest.mock("@animateicons/react/lucide", () => ({
   EllipsisIcon: () => null,
   PlusIcon: () => null,

@@ -35,6 +35,10 @@ jest.mock("@/components/renderer/use-tenant-layout", () => ({
   useTenantLayout: <T,>(layout: T): T => layout,
 }));
 
+jest.mock("@/hooks/api/entitlements", () => ({
+  useEntitlements: () => ({ data: undefined }),
+}));
+
 /**
  * The two sheets are stubbed down to what they were handed. What this page owes
  * them is the right subject — a create that carries no segment, an edit that
@@ -58,6 +62,10 @@ jest.mock("./segment-members-sheet", () => ({
     open: boolean;
     segment: SegmentSummary | null;
   }) => (open ? <div data-testid="members-sheet">{segment?.name}</div> : null),
+}));
+
+jest.mock("@/hooks/api/entitlements", () => ({
+  useEntitlements: () => ({ data: undefined }),
 }));
 
 const mockGranted = new Set<string>();
@@ -234,7 +242,9 @@ describe("SegmentsPage", () => {
     mockGranted.delete(VIEW);
     renderPage();
 
-    expect(await screen.findByText(/permission/i)).toBeInTheDocument();
+    expect(
+      await screen.findByText(/required permission for this section|You need the/i),
+    ).toBeInTheDocument();
     expect(listParams()).toBeUndefined();
   });
 

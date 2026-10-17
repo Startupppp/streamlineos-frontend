@@ -114,6 +114,9 @@ const chatMessageCore = {
   messageType: z.enum(["text", "lead_submission", "system"]),
   metadata: chatMessageMetadataContract,
   actionStatus: z.string().nullable(),
+  // `emoji -> userId[]`, folded by the backend's `foldReactions` on every message read.
+  // Omitting it here let the non-strict parse strip it, so reactions vanished on refetch.
+  reactions: z.record(z.string(), z.array(z.string())).default({}),
   createdAt: z.string(),
   updatedAt: z.string(),
 };
@@ -135,6 +138,32 @@ export const chatMessageContract = z.object({
   attachments: z.array(chatMessageAttachmentContract),
   replyTo: chatMessageReplyToContract.nullable(),
 });
+
+/**
+ * The POST /chat/channels/:id/messages response — matches `chatRawMessageSchema`
+ * on the backend. Unlike the timeline read, the send endpoint does NOT join
+ * `sender`, `attachments`, or `replyTo`, so parsing through `chatMessageContract`
+ * always fails because `sender` is required-and-non-nullable there.
+ */
+export const chatSendResponseContract = z.object({
+  id: z.number(),
+  orgId: z.string(),
+  channelId: z.number(),
+  senderMembershipId: z.number().nullable(),
+  content: z.string().nullable(),
+  replyToId: z.number().nullable(),
+  isEdited: z.boolean(),
+  isDeleted: z.boolean(),
+  messageType: z.enum(["text", "lead_submission", "system"]),
+  metadata: chatMessageMetadataContract,
+  actionStatus: z.string().nullable(),
+  clientKey: z.string().nullable(),
+  channelPosition: z.number().nullable(),
+  createdAt: z.string(),
+  updatedAt: z.string(),
+});
+
+export type ChatSendResponse = z.infer<typeof chatSendResponseContract>;
 
 export const chatMessagesPageContract = z.object({
   messages: z.array(chatMessageContract),

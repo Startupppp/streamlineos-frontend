@@ -1,9 +1,9 @@
 import React from "react";
-import { render, screen } from "@testing-library/react";
+import { act, fireEvent, render, screen } from "@testing-library/react";
 import { BuildTemplatesPage } from "./build-templates-page";
 import { ApiError } from "@/lib/api-envelope";
 
-jest.mock("@/hooks/api/build", () => ({
+jest.mock("@/hooks/api/build/templates", () => ({
   useProjectTemplates: jest.fn(),
   useDeleteProjectTemplate: jest.fn(),
 }));
@@ -39,14 +39,17 @@ jest.mock("@/components/ui/page-wrapper", () => ({
     children,
     title,
     actions,
+    filters,
   }: {
     children: React.ReactNode;
     title?: string;
     actions?: React.ReactNode;
+    filters?: React.ReactNode;
   }) => (
     <div>
       {title ? <h1>{title}</h1> : null}
       {actions}
+      {filters}
       {children}
     </div>
   ),
@@ -62,8 +65,21 @@ jest.mock("@/components/ui/button", () => ({
 }));
 
 jest.mock("@/components/ui/empty-state", () => ({
-  EmptyState: ({ title }: { title: string }) => (
-    <div data-testid="empty-state">{title}</div>
+  EmptyState: ({
+    title,
+    filteredTitle,
+    filtersActive,
+    onClearFilters,
+  }: {
+    title?: string;
+    filteredTitle?: string;
+    filtersActive?: boolean;
+    onClearFilters?: () => void;
+  }) => (
+    <div data-testid="empty-state">
+      {filtersActive ? filteredTitle : title}
+      {filtersActive ? <button onClick={onClearFilters}>Clear filters</button> : null}
+    </div>
   ),
 }));
 
@@ -89,7 +105,7 @@ jest.mock("@/components/pm-chrome", () => ({
   PmPageShell: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
   PmSection: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
   PmStaggerList: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
-  PM_FILL_PANEL: "pm-fill-panel",
+  CONTENT_FILL_PANEL: "pm-fill-panel",
   PM_PANEL: "pm-panel",
 }));
 
@@ -98,7 +114,9 @@ jest.mock("@/components/illustrations", () => ({
 }));
 
 jest.mock("./template-card", () => ({
-  TemplateCard: () => <div data-testid="template-card" />,
+  TemplateCard: ({ canManage }: { canManage: boolean }) => (
+    <div data-testid="template-card" data-can-manage={String(canManage)} />
+  ),
 }));
 
 jest.mock("./create-template-sheet", () => ({
@@ -106,10 +124,63 @@ jest.mock("./create-template-sheet", () => ({
 }));
 
 jest.mock("./apply-template-dialog", () => ({
-  ApplyTemplateDialog: () => null,
+  ApplyTemplateDialog: ({ template }: { template: { name: string } }) => (
+    <div data-testid="apply-template-dialog">{template.name}</div>
+  ),
 }));
 
-import { useProjectTemplates, useDeleteProjectTemplate } from "@/hooks/api/build";
+jest.mock("./templates-grid-skeleton", () => ({
+  TemplatesGridSkeleton: () => <div data-testid="templates-skeleton" />,
+}));
+
+const mockUseBuildListKeyboard = jest.fn();
+jest.mock("@/hooks/common/use-build-list-keyboard", () => ({
+  useBuildListKeyboard: (args: unknown) => mockUseBuildListKeyboard(args),
+}));
+
+const mockListFiltersState = {
+  search: "",
+  debouncedSearch: "",
+  cursor: null,
+  setSearch: jest.fn(),
+  setCursor: jest.fn(),
+  value: jest.fn((_param: string) => "all"),
+  isActive: jest.fn((_param: string) => false),
+  setValue: jest.fn(),
+  clearAll: jest.fn(),
+  activeCount: 0,
+  isFiltered: false,
+  resetKey: "0",
+  isPending: false,
+};
+jest.mock("@/features/build/shared/use-build-list-filters", () => ({
+  useBuildListFilters: () => mockListFiltersState,
+  BUILD_FILTER_ALL: "all",
+}));
+
+jest.mock("@/features/build/shared/build-list-toolbar", () => ({
+  BuildListToolbar: ({ search }: { search?: { value: string; onValueChange: (value: string) => void; inputRef?: React.RefObject<HTMLInputElement | null> } }) =>
+    search ? (
+      <input
+        type="search"
+        ref={search.inputRef}
+        aria-label="Search templates"
+        value={search.value}
+        onChange={(event) => search.onValueChange(event.target.value)}
+      />
+    ) : null,
+}));
+
+jest.mock("@/features/build/shared/build-filter-select", () => ({
+  BuildFilterSelect: () => null,
+}));
+
+const mockUseOnlineStatus = jest.fn(() => true);
+jest.mock("@/hooks/common/use-online-status", () => ({
+  useOnlineStatus: () => mockUseOnlineStatus(),
+}));
+
+import { useProjectTemplates, useDeleteProjectTemplate } from "@/hooks/api/build/templates";
 import { useCan, useAccess } from "@/hooks/api/access";
 
 const mockUseProjectTemplates = useProjectTemplates as jest.Mock;
@@ -134,15 +205,36 @@ function baseQueryResult(overrides = {}) {
     isError: false,
     error: undefined,
     refetch: jest.fn(),
+    hasNextPage: false,
+    fetchNextPage: jest.fn(),
+    isFetching: false,
+    isFetchingNextPage: false,
     ...overrides,
+  };
+}
+
+function templatePages(items: unknown[]) {
+  return {
+    pages: [{ data: items, hasMore: false, nextCursor: null }],
+    pageParams: [undefined],
   };
 }
 
 beforeEach(() => {
   mockUseCan.mockReturnValue(true);
   mockUseAccess.mockReturnValue(ACCESS_GRANTED);
-  mockUseProjectTemplates.mockReturnValue(baseQueryResult({ data: [] }));
+  mockUseProjectTemplates.mockReturnValue(baseQueryResult({ data: templatePages([]) }));
   mockUseDeleteProjectTemplate.mockReturnValue({ mutate: jest.fn(), isPending: false });
+  mockUseBuildListKeyboard.mockReset();
+  mockListFiltersState.value.mockReturnValue("all");
+  mockListFiltersState.isActive.mockReturnValue(false);
+  mockListFiltersState.setSearch.mockReset();
+  mockListFiltersState.clearAll.mockReset();
+  mockListFiltersState.search = "";
+  mockListFiltersState.debouncedSearch = "";
+  mockListFiltersState.activeCount = 0;
+  mockListFiltersState.isFiltered = false;
+  mockUseOnlineStatus.mockReturnValue(true);
 });
 
 it("shows a skeleton while the access snapshot is in flight, not an empty or denied state", () => {
@@ -184,4 +276,117 @@ it("hides the create template button when the user lacks build:manage permission
   mockUseCan.mockImplementation((key: string) => key !== "build:manage");
   render(<BuildTemplatesPage />);
   expect(screen.queryByText(/new template/i)).not.toBeInTheDocument();
+});
+
+it("wires useBuildListKeyboard with the template count so j/k navigate the grid", () => {
+  const templates = [
+    { id: 1, name: "Sprint", description: null, category: null, tickets: [] },
+    { id: 2, name: "Bug Bash", description: null, category: null, tickets: [] },
+  ];
+  mockUseProjectTemplates.mockReturnValue(baseQueryResult({ data: templatePages(templates) }));
+  render(<BuildTemplatesPage />);
+  expect(mockUseBuildListKeyboard).toHaveBeenCalledWith(
+    expect.objectContaining({ itemCount: 2, enabled: true }),
+  );
+});
+
+it("disables keyboard nav when the page is not yet ready", () => {
+  mockUseProjectTemplates.mockReturnValue(baseQueryResult({ isLoading: true, data: undefined }));
+  render(<BuildTemplatesPage />);
+  expect(mockUseBuildListKeyboard).toHaveBeenCalledWith(
+    expect.objectContaining({ enabled: false }),
+  );
+});
+
+it("opens the apply dialog via onOpen callback so Enter on a focused template applies it", () => {
+  const template = { id: 3, name: "Kanban", description: null, category: null, tickets: [] };
+  mockUseProjectTemplates.mockReturnValue(baseQueryResult({ data: templatePages([template]) }));
+  render(<BuildTemplatesPage />);
+  const [call] = mockUseBuildListKeyboard.mock.calls;
+  const { onOpen } = call[0] as { onOpen: (index: number) => void };
+  expect(screen.queryByTestId("apply-template-dialog")).not.toBeInTheDocument();
+  act(() => onOpen(0));
+  expect(screen.getByTestId("apply-template-dialog")).toHaveTextContent("Kanban");
+});
+
+it("renders a search input via BuildListToolbar so the / shortcut has a reachable DOM target", () => {
+  render(<BuildTemplatesPage />);
+  expect(screen.getByRole("searchbox", { name: /search templates/i })).toBeInTheDocument();
+});
+
+it("trims search text before sending it to the server query", () => {
+  mockListFiltersState.search = "  roadmap  ";
+  mockListFiltersState.debouncedSearch = "  roadmap  ";
+  render(<BuildTemplatesPage />);
+  expect(mockUseProjectTemplates).toHaveBeenCalledWith(
+    expect.objectContaining({ q: "roadmap" }),
+  );
+});
+
+it("shows a filtered-empty explanation and clears search and filters together", () => {
+  mockListFiltersState.search = "roadmap";
+  mockListFiltersState.debouncedSearch = "roadmap";
+  render(<BuildTemplatesPage />);
+  expect(screen.getByText(/no templates match your search or filters/i)).toBeInTheDocument();
+  fireEvent.click(screen.getByRole("button", { name: /clear filters/i }));
+  expect(mockListFiltersState.clearAll).toHaveBeenCalledTimes(1);
+});
+
+it("accepts categories produced by the create form instead of dropping them from URL state", () => {
+  mockListFiltersState.value.mockImplementation((param: string) =>
+    param === "category" ? "SOFTWARE" : "all",
+  );
+  mockListFiltersState.activeCount = 1;
+  render(<BuildTemplatesPage />);
+  expect(mockUseProjectTemplates).toHaveBeenCalledWith(
+    expect.objectContaining({ category: "SOFTWARE" }),
+  );
+});
+
+it("does not expose apply or delete controls to viewers without build:manage", () => {
+  mockUseCan.mockImplementation((key: string) => key !== "build:manage");
+  mockUseProjectTemplates.mockReturnValue(
+    baseQueryResult({
+      data: templatePages([
+        { id: 1, name: "Sprint", description: null, category: "GENERAL", tickets: [] },
+      ]),
+    }),
+  );
+  render(<BuildTemplatesPage />);
+  expect(screen.getByTestId("template-card")).toHaveAttribute("data-can-manage", "false");
+});
+
+it("wires onCreate to the keyboard hook so c creates a new template when build:manage is granted", () => {
+  render(<BuildTemplatesPage />);
+  const [call] = mockUseBuildListKeyboard.mock.calls;
+  const { onCreate } = call[0] as { onCreate?: () => void };
+  expect(typeof onCreate).toBe("function");
+});
+
+it("omits onCreate from the keyboard hook when the user lacks build:manage", () => {
+  mockUseCan.mockImplementation((key: string) => key !== "build:manage");
+  render(<BuildTemplatesPage />);
+  const [call] = mockUseBuildListKeyboard.mock.calls;
+  const { onCreate } = call[0] as { onCreate?: () => void };
+  expect(onCreate).toBeUndefined();
+});
+
+it("shows an offline empty state instead of the no-templates empty state when the device is offline", () => {
+  mockUseOnlineStatus.mockReturnValue(false);
+  render(<BuildTemplatesPage />);
+  expect(screen.getByText(/you are offline/i)).toBeInTheDocument();
+  expect(screen.queryByText(/no templates yet/i)).not.toBeInTheDocument();
+});
+
+it("warns that populated cached results may be stale while offline", () => {
+  mockUseOnlineStatus.mockReturnValue(false);
+  mockUseProjectTemplates.mockReturnValue(
+    baseQueryResult({
+      data: templatePages([
+        { id: 1, name: "Sprint", description: null, category: "GENERAL", tickets: [] },
+      ]),
+    }),
+  );
+  render(<BuildTemplatesPage />);
+  expect(screen.getByText(/these templates may be out of date/i)).toBeInTheDocument();
 });

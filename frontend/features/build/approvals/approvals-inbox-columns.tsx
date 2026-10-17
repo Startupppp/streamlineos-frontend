@@ -9,9 +9,10 @@ import { TruncatedText } from "@/components/ui/truncated-text";
 import { cn } from "@/lib/utils";
 import { TABLE_TITLE_CELL } from "@/lib/text-overflow";
 import type { NamedUser } from "@/lib/person-display";
-import { ApprovalStatusBadge, entityTypeLabel } from "./approval-status-badge";
+import { ApprovalStatusBadge } from "./approval-status-badge";
 import { BuildMobileCard } from "@/features/build/shared/build-mobile-card";
 import type { ApprovalInboxItem, ApprovalStatus } from "@/types/projects";
+import { DECIDABLE, entityTypeLabel } from "./approvals-constants";
 
 export const INBOX_TABLE_HEADERS = [
   "Project",
@@ -37,9 +38,10 @@ export interface DecideTarget {
   approvalId: number;
   projectId: number;
   title: string;
+  revision: number;
 }
 
-export function ProjectLinkCell({ row }: { row: ApprovalInboxItem }) {
+function ProjectLinkCell({ row }: { row: ApprovalInboxItem }) {
   const handleClick = useCallback((e: React.MouseEvent) => {
     e.stopPropagation();
   }, []);
@@ -142,7 +144,7 @@ export function buildApprovalsInboxColumns({
             className={cn(
               "tabular-nums",
               isOverdue
-                ? "font-medium text-status-danger-ink"
+                ? "font-medium text-status-danger-ink-strong"
                 : "text-muted-foreground",
             )}
           >
@@ -165,7 +167,7 @@ export function buildApprovalsInboxColumns({
       header: "Actions",
       headerClassName: "sr-only",
       cell: (row) =>
-        canDecide ? (
+        canDecide && DECIDABLE.has(row.status) ? (
           <DecideButtonCell row={row} onDecide={onDecide} />
         ) : null,
       className: "w-20",
@@ -176,9 +178,11 @@ export function buildApprovalsInboxColumns({
 export function ApprovalsInboxMobileCard({
   row,
   ownerOf,
+  onDecide,
 }: {
   row: ApprovalInboxItem;
   ownerOf: (userId: string | null) => NamedUser | null;
+  onDecide?: (item: ApprovalInboxItem) => void;
 }) {
   const narrowStatus =
     APPROVAL_STATUS_VALUES.find((v) => v === row.status) ?? "pending";
@@ -187,6 +191,11 @@ export function ApprovalsInboxMobileCard({
       eyebrow={row.projectKey ?? undefined}
       title={row.title}
       status={<ApprovalStatusBadge status={narrowStatus} />}
+      actions={
+        onDecide && DECIDABLE.has(row.status) ? (
+          <DecideButtonCell row={row} onDecide={onDecide} />
+        ) : undefined
+      }
       person={{ user: ownerOf(row.requestedById), role: "Requested by" }}
       meta={[
         { label: "Type", value: entityTypeLabel(row.entityType) },

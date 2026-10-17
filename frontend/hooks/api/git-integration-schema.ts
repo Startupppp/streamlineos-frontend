@@ -1,6 +1,7 @@
 import { z } from "zod";
 
 const wireDate = () => z.string();
+const wireDateNullable = () => z.string().nullable();
 
 const gitConnectionItemSchema = z.object({
   id: z.number().int(),
@@ -11,6 +12,8 @@ const gitConnectionItemSchema = z.object({
   isActive: z.boolean(),
   maskedSecret: z.string(),
   webhookUrl: z.string(),
+  lastEventAt: wireDateNullable(),
+  lastErrorAt: wireDateNullable(),
   createdAt: wireDate(),
   updatedAt: wireDate(),
 });

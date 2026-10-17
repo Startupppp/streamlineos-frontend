@@ -1,27 +1,40 @@
 "use client";
 
-import { useState } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/shared/error-state";
-import { TablePagination } from "@/components/ui/table-pagination";
+import { NoPermissionState } from "@/components/shared/no-permission-state";
+import { InfiniteScrollSentinel } from "@/components/ui/infinite-scroll-sentinel";
 import { useKbExportJobs } from "@/hooks/api/kb";
+import { usePermissionGate } from "@/hooks/api/access";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { isApiError } from "@/lib/api-envelope";
 import {
   KbDownloadIcon,
   KbFileTextIcon,
 } from "@/features/wiki/lib/kb-icons";
-import { kbTimeAgo } from "@/features/wiki/lib/kb-date-utils";
+import { kbTimeAgo, kbTimeUntil } from "@/features/wiki/lib/kb-date-utils";
 import type { KbExportJob } from "@/hooks/api/kb/import-export";
 
-const PAGE_SIZE = 10;
-
 function JobRow({ job }: { job: KbExportJob }) {
+  const expiryLabel =
+    job.status === "completed" && job.expiresAt !== null
+      ? kbTimeUntil(job.expiresAt)
+      : null;
+
   return (
     <div className="flex items-center gap-3 px-3 py-2 rounded-lg border border-border bg-card text-sm">
       <KbFileTextIcon className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
       <TruncatedText text={`${job.format} export`} className="flex-1 capitalize" />
+      {expiryLabel !== null ? (
+        <span
+          data-testid="export-expiry"
+          className={`text-xs shrink-0 tabular-nums ${expiryLabel === "Expired" ? "text-destructive" : "text-muted-foreground"}`}
+        >
+          {expiryLabel}
+        </span>
+      ) : null}
       <span className="text-xs text-muted-foreground shrink-0 capitalize">
         {job.status}
       </span>
@@ -33,29 +46,40 @@ function JobRow({ job }: { job: KbExportJob }) {
 }
 
 export function ExportJobsCard() {
-  const [page, setPage] = useState(1);
+  const exportGate = usePermissionGate("kb:pages:export");
   const {
     data: jobs = [],
     isLoading,
     isError,
+    isFetchNextPageError,
     error,
     refetch,
+    hasNextPage,
+    isFetchingNextPage,
+    fetchNextPage,
   } = useKbExportJobs();
-
-  const total = jobs.length;
-  const pageJobs = jobs.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+  const accessLost = exportGate.denied || (isError && isApiError(error) && (error.status === 401 || error.status === 403 || error.status === 404));
+  const accessReady = exportGate.allowed && !accessLost;
 
   function handleRetry() {
+    if (isFetchNextPageError) {
+      void fetchNextPage();
+      return;
+    }
     void refetch();
   }
 
-  function handlePageChange(nextPage: number) {
-    setPage(nextPage);
+  function handleLoadMore() {
+    void fetchNextPage();
   }
 
   return (
     <>
-      {isLoading && (
+      {accessLost && <NoPermissionState permission="kb:pages:export" compact />}
+      {!accessLost && exportGate.unavailable && (
+        <ErrorState compact title="Couldn't check export access" description="Refresh the page and try again." />
+      )}
+      {!accessLost && (exportGate.pending || (exportGate.allowed && isLoading)) && (
         <div className="space-y-1.5">
           {Array.from({ length: 3 }).map((_, index) => (
             <Skeleton key={index} className="h-9 w-full rounded-lg" />
@@ -63,16 +87,17 @@ export function ExportJobsCard() {
         </div>
       )}
 
-      {!isLoading && isError && (
+      {accessReady && !isLoading && isError && jobs.length === 0 && (
         <ErrorState
           compact
           title="Couldn't load export history"
           description={getErrorMessage(error)}
+          error={error}
           onRetry={handleRetry}
         />
       )}
 
-      {!isLoading && !isError && jobs.length === 0 && (
+      {accessReady && !isLoading && !isError && jobs.length === 0 && (
         <EmptyState
           compact
           illustration={
@@ -83,20 +108,27 @@ export function ExportJobsCard() {
         />
       )}
 
-      {!isLoading && !isError && jobs.length > 0 && (
+      {accessReady && !isLoading && jobs.length > 0 && (
         <div className="space-y-1.5">
-          {pageJobs.map((job) => (
+          {jobs.map((job) => (
             <JobRow key={job.id} job={job} />
           ))}
-          {total > PAGE_SIZE ? (
-            <TablePagination
-              page={page}
-              pageSize={PAGE_SIZE}
-              total={total}
-              onPageChange={handlePageChange}
-              className="px-1"
+          {isError ? (
+            <ErrorState
+              compact
+              title={isFetchNextPageError ? "Couldn't load more export jobs" : "Couldn't refresh export history"}
+              description={getErrorMessage(error)}
+              error={error}
+              onRetry={handleRetry}
             />
-          ) : null}
+          ) : (
+            <InfiniteScrollSentinel
+              hasNextPage={hasNextPage ?? false}
+              isFetchingNextPage={isFetchingNextPage}
+              onLoadMore={handleLoadMore}
+              label="Load more export jobs"
+            />
+          )}
         </div>
       )}
     </>

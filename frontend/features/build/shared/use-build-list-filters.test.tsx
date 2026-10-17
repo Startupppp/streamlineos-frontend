@@ -39,6 +39,103 @@ afterEach(() => {
 });
 
 describe("useBuildListFilters", () => {
+  it("follows Back to an older search after only the latest own write is acknowledged", () => {
+    const { result, rerender } = renderHook(() => useBuildListFilters({ filters: FILTERS }));
+    act(() => result.current.setSearch("lo"));
+    act(() => { jest.advanceTimersByTime(300); });
+    expect(lastParams().get("q")).toBe("lo");
+    act(() => result.current.setSearch("login"));
+    act(() => { jest.advanceTimersByTime(300); });
+    setUrl(lastParams().toString());
+    rerender();
+    expect(result.current.search).toBe("login");
+    replace.mockClear();
+    setUrl("q=lo");
+    rerender();
+    act(() => { jest.advanceTimersByTime(600); });
+    expect(result.current.search).toBe("lo");
+    expect(result.current.debouncedSearch).toBe("lo");
+    expect(replace).not.toHaveBeenCalled();
+  });
+  it("follows Back to an absent search after status-only Clear and an acknowledged search", () => {
+    setUrl("status=open");
+    const { result, rerender } = renderHook(() => useBuildListFilters({ filters: FILTERS }));
+    act(() => result.current.clearAll());
+    setUrl(lastParams().toString());
+    rerender();
+    act(() => result.current.setSearch("login"));
+    act(() => { jest.advanceTimersByTime(300); });
+    setUrl(lastParams().toString());
+    rerender();
+    expect(result.current.search).toBe("login");
+    replace.mockClear();
+    setUrl("");
+    rerender();
+    act(() => { jest.advanceTimersByTime(600); });
+    expect(result.current.search).toBe("");
+    expect(result.current.debouncedSearch).toBe("");
+    expect(replace).not.toHaveBeenCalled();
+  });
+  it.each([false, true])("keeps clear applied after debounce and URL acknowledgement (pending=%s)", (pending) => {
+    setUrl("q=login&status=open&cursor=abc");
+    const { result, rerender } = renderHook(() => useBuildListFilters({ filters: FILTERS }));
+    if (pending) act(() => result.current.setSearch("login again"));
+    act(() => result.current.clearAll());
+    setUrl(lastParams().toString());
+    rerender();
+    act(() => { jest.advanceTimersByTime(600); });
+    expect(lastParams().has("q")).toBe(false);
+    expect(result.current.search).toBe("");
+    expect(result.current.debouncedSearch).toBe("");
+    expect(replace).toHaveBeenCalledTimes(1);
+  });
+
+  it("does not restore pending input over external history navigation", () => {
+    setUrl("q=login");
+    const { result, rerender } = renderHook(() => useBuildListFilters({ filters: FILTERS }));
+    act(() => result.current.setSearch("pending input"));
+    setUrl("q=history&status=closed");
+    rerender();
+    act(() => { jest.advanceTimersByTime(600); });
+    expect(result.current.search).toBe("history");
+    expect(result.current.debouncedSearch).toBe("history");
+    expect(replace).not.toHaveBeenCalled();
+  });
+
+  it("preserves rapid input through multiple delayed own URL acknowledgements", () => {
+    const { result, rerender } = renderHook(() => useBuildListFilters({ filters: FILTERS }));
+    act(() => result.current.setSearch("lo"));
+    act(() => { jest.advanceTimersByTime(300); });
+    act(() => result.current.setSearch("log"));
+    act(() => { jest.advanceTimersByTime(300); });
+    act(() => result.current.setSearch("login"));
+    setUrl("q=lo");
+    rerender();
+    expect(result.current.search).toBe("login");
+    setUrl("q=log");
+    rerender();
+    expect(result.current.search).toBe("login");
+    act(() => { jest.advanceTimersByTime(300); });
+    expect(lastParams().get("q")).toBe("login");
+  });
+
+  it("keeps Clear authoritative when a previous search write is acknowledged first", () => {
+    setUrl("q=login");
+    const { result, rerender } = renderHook(() => useBuildListFilters({ filters: FILTERS }));
+    act(() => result.current.setSearch("login again"));
+    act(() => { jest.advanceTimersByTime(300); });
+    expect(lastParams().get("q")).toBe("login again");
+    act(() => result.current.clearAll());
+    setUrl("q=login+again");
+    rerender();
+    expect(result.current.search).toBe("");
+    setUrl("");
+    rerender();
+    act(() => { jest.advanceTimersByTime(600); });
+    expect(lastParams().has("q")).toBe(false);
+    expect(result.current.debouncedSearch).toBe("");
+    expect(replace).toHaveBeenCalledTimes(2);
+  });
   it("reads every filter from the URL", () => {
     setUrl("status=open&severity=high&q=login");
     const { result } = renderHook(() => useBuildListFilters({ filters: FILTERS }));
@@ -56,26 +153,69 @@ describe("useBuildListFilters", () => {
     expect(result.current.isActive("status")).toBe(false);
   });
 
-  it("removes the param instead of writing the all sentinel", () => {
-    setUrl("status=open");
+  it("accepts comma-separated values filtering to valid options only", () => {
+    setUrl("status=open,closed");
     const { result } = renderHook(() => useBuildListFilters({ filters: FILTERS }));
-    act(() => result.current.setValue("status", BUILD_FILTER_ALL));
+    expect(result.current.value("status")).toBe("open,closed");
+    expect(result.current.isActive("status")).toBe(true);
+  });
+
+  it("strips invalid parts from a comma-separated value and returns remaining valid ones", () => {
+    setUrl("status=open,exploded");
+    const { result } = renderHook(() => useBuildListFilters({ filters: FILTERS }));
+    expect(result.current.value("status")).toBe("open");
+    expect(result.current.isActive("status")).toBe(true);
+  });
+
+  it("returns the sentinel when all parts of a comma-separated value are invalid", () => {
+    setUrl("status=exploded,unknown");
+    const { result } = renderHook(() => useBuildListFilters({ filters: FILTERS }));
+    expect(result.current.value("status")).toBe(BUILD_FILTER_ALL);
+    expect(result.current.isActive("status")).toBe(false);
+  });
+
+  it("does not constrain a param with no options list", () => {
+    setUrl("severity=critical,high,any_string");
+    const { result } = renderHook(() => useBuildListFilters({ filters: FILTERS }));
+    expect(result.current.value("severity")).toBe("critical,high,any_string");
+    expect(result.current.isActive("severity")).toBe(true);
+  });
+
+  it.each([false, true])("removes the param instead of writing the all sentinel (batch=%s)", (batch) => {
+    setUrl("status=open&from=2026-10-01&to=2026-10-31");
+    const { result } = renderHook(() => useBuildListFilters({ filters: [...FILTERS, { param: "from", all: "any" }, { param: "to" }] }));
+    act(() => batch ? result.current.setValues({ status: BUILD_FILTER_ALL, from: "any", to: "" }) : result.current.setValue("status", BUILD_FILTER_ALL));
     expect(lastParams().has("status")).toBe(false);
+    if (batch) expect([lastParams().has("from"), lastParams().has("to")]).toEqual([false, false]);
+    expect(replace).toHaveBeenCalledTimes(1);
   });
 
-  it("writes a real value to the URL", () => {
+  it.each([false, true])("writes a real value to the URL (batch=%s)", (batch) => {
     const { result } = renderHook(() => useBuildListFilters({ filters: FILTERS }));
-    act(() => result.current.setValue("status", "closed"));
+    act(() => batch ? result.current.setValues({ status: "closed", from: "2026-10-01", to: "2026-10-31" }) : result.current.setValue("status", "closed"));
     expect(lastParams().get("status")).toBe("closed");
+    if (batch) expect([lastParams().get("from"), lastParams().get("to")]).toEqual(["2026-10-01", "2026-10-31"]);
+    expect(replace).toHaveBeenCalledTimes(1);
   });
 
-  it("drops the cursor and page when a filter changes", () => {
-    setUrl("cursor=abc&page=4&status=open");
+  it.each([false, true])("drops the cursor and page when a filter changes (batch=%s)", (batch) => {
+    setUrl("cursor=abc&page=4&status=open&severity=high&q=login");
     const { result } = renderHook(() => useBuildListFilters({ filters: FILTERS }));
-    act(() => result.current.setValue("status", "closed"));
+    act(() => batch ? result.current.setValues({ from: "2026-10-01", to: "2026-10-31" }) : result.current.setValue("status", "closed"));
     const params = lastParams();
     expect(params.has("cursor")).toBe(false);
     expect(params.has("page")).toBe(false);
+    expect([params.get("q"), params.get("status"), params.get("severity")]).toEqual(["login", batch ? "open" : "closed", "high"]);
+    expect(replace).toHaveBeenCalledTimes(1);
+  });
+
+  it("writes and clears a keyset cursor without disturbing active filters", () => {
+    setUrl("q=login&status=open");
+    const { result } = renderHook(() => useBuildListFilters({ filters: FILTERS }));
+    act(() => result.current.setCursor("cursor-2"));
+    expect(lastParams().toString()).toBe("q=login&status=open&cursor=cursor-2");
+    act(() => result.current.setCursor(null));
+    expect(lastParams().toString()).toBe("q=login&status=open");
   });
 
   it("holds a keystroke out of the URL until the debounce elapses", () => {
@@ -90,6 +230,45 @@ describe("useBuildListFilters", () => {
       jest.advanceTimersByTime(1);
     });
     expect(lastParams().get("q")).toBe("lo");
+  });
+
+  it("resets the debounce window when a second keystroke arrives before the timer fires, so rapid typing does not submit stale partial words", () => {
+    const { result } = renderHook(() => useBuildListFilters({ filters: FILTERS }));
+    act(() => result.current.setSearch("lo"));
+    act(() => { jest.advanceTimersByTime(200); });
+    act(() => result.current.setSearch("log"));
+    act(() => { jest.advanceTimersByTime(299); });
+    expect(replace).not.toHaveBeenCalled();
+    act(() => { jest.advanceTimersByTime(1); });
+    expect(lastParams().get("q")).toBe("log");
+  });
+
+  it("exposes the raw (undebounced) search for the controlled input so the typed characters appear immediately without waiting for the URL write", () => {
+    const { result } = renderHook(() => useBuildListFilters({ filters: FILTERS }));
+    act(() => result.current.setSearch("ty"));
+    expect(result.current.search).toBe("ty");
+    expect(result.current.debouncedSearch).toBe("");
+    act(() => { jest.advanceTimersByTime(300); });
+    expect(result.current.debouncedSearch).toBe("ty");
+  });
+
+  it("keeps a character typed while the URL write is still in flight", () => {
+    const { result, rerender } = renderHook(() =>
+      useBuildListFilters({ filters: FILTERS }),
+    );
+
+    act(() => result.current.setSearch("lo"));
+    act(() => { jest.advanceTimersByTime(300); });
+    expect(lastParams().get("q")).toBe("lo");
+
+    act(() => result.current.setSearch("log"));
+    setUrl("q=lo");
+    rerender();
+
+    expect(result.current.search).toBe("log");
+
+    act(() => { jest.advanceTimersByTime(300); });
+    expect(lastParams().get("q")).toBe("log");
   });
 
   it("clears every filter and the search in one write", () => {
@@ -135,5 +314,14 @@ describe("useBuildListFilters", () => {
     });
     expect(replace).not.toHaveBeenCalled();
     expect(result.current.isFiltered).toBe(false);
+  });
+
+  it("omits search fields entirely when withSearch is false so a page without a server seam cannot render a search input", () => {
+    const { result } = renderHook(() =>
+      useBuildListFilters({ filters: FILTERS, withSearch: false }),
+    );
+    expect("search" in result.current).toBe(false);
+    expect("debouncedSearch" in result.current).toBe(false);
+    expect("setSearch" in result.current).toBe(false);
   });
 });

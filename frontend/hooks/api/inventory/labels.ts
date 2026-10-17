@@ -6,9 +6,9 @@ import { queryKeys } from "@/lib/query-keys";
 import { useCan } from "@/hooks/api/access";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { lazyContract } from "@/lib/api-envelope";
-import { variantLabelContract } from "./restored-surfaces-schema";
-
-const variantLabelResponse = lazyContract<VariantLabel>(() => Promise.resolve(variantLabelContract as unknown as import("zod").ZodType<VariantLabel>));
+const variantLabelResponse = lazyContract(() =>
+  import("./restored-surfaces-schema").then((m) => m.variantLabelContract),
+);
 
 /** The exact key both label routes and both document routes declare. */
 export const LABELS_PRINT_KEY = "inventory:labels:print" as const;

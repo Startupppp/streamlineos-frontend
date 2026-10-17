@@ -120,7 +120,7 @@ function readArguments(source, openParen) {
   return null;
 }
 
-const CALL_RE = /apiClient\.(get|delete)\s*(?:<[^;()]*?>)?\s*\(/g;
+const CALL_RE = /apiClient\.(get)\s*(?:<[^;()]*?>)?\s*\(/g;
 
 export function scanSource(source, relPath, byRoute) {
   const findings = [];
@@ -183,7 +183,7 @@ function selfTest() {
   const document = {
     paths: {
       "/things": { get: { parameters: [{ in: "query", name: "cursor" }, { in: "query", name: "pageSize" }] } },
-      "/things/{thingId}/runs": { get: { parameters: [] } },
+      "/things/{thingId}/runs": { get: { parameters: [] }, delete: { parameters: [] } },
     },
   };
   const byRoute = declaredQueryParams(document);
@@ -213,6 +213,11 @@ function selfTest() {
       src: 'apiClient.get("/things", filters, signal)',
       expect: [],
       unresolved: 1,
+    },
+    {
+      name: "apiClient.delete sends its second argument as the JSON body, so it is not read as query params",
+      src: 'apiClient.delete(`/things/${id}/runs`, { reason: "r" }, undefined, contract)',
+      expect: [],
     },
     {
       name: "an undocumented route is skipped rather than reported",

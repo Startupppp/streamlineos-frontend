@@ -1,13 +1,17 @@
 "use client";
 
 import { useQuery, useQueryClient, keepPreviousData } from "@tanstack/react-query";
+import { useSession } from "next-auth/react";
 import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
+import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
+import { invalidateCalendarProjectionWindows } from "@/lib/calendar-projection-cache";
 
 const noContentC = lazyContract(() =>
   import("@/hooks/api/cursor-page-schema").then((m) => m.noContentContract),
 );
 import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
+import { knowledgeAndSurveysQueryKeys } from "@/lib/query-keys/knowledge-and-surveys";
 import { useCan, useModuleEnabled } from "@/hooks/api/access";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import type {
@@ -32,7 +36,9 @@ export function useCreateAsset() {
     mutationKey: ["hr", "assets", "create"],
     mutationFn: (data: CreateAssetInput) =>
       apiClient.post<Asset>("/hr/assets", data, undefined, lazyContract(() => import("@/hooks/api/hr/assets-schema").then(m => m.assetRowContract))),
-    onSuccess: () => qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.assets() }),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.assets() });
+    },
   });
 }
 
@@ -42,7 +48,9 @@ export function useUpdateAsset() {
     mutationKey: ["hr", "assets", "update"],
     mutationFn: ({ assetId, ...data }: UpdateAssetInput) =>
       apiClient.patch<{ success: boolean }>(`/hr/assets/${assetId}`, data, undefined, lazyContract(() => import("@/hooks/api/hr/hr-settings-schema").then(m => m.successResponseContract))),
-    onSuccess: () => qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.assets() }),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.assets() });
+    },
   });
 }
 
@@ -52,7 +60,9 @@ export function useAssignAsset() {
     mutationKey: ["hr", "assets", "assign"],
     mutationFn: (data: AssignAssetInput) =>
       apiClient.patch<{ success: boolean }>("/hr/assets", data, undefined, lazyContract(() => import("@/hooks/api/hr/hr-settings-schema").then(m => m.successResponseContract))),
-    onSuccess: () => qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.assets() }),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.assets() });
+    },
   });
 }
 
@@ -80,6 +90,8 @@ export function useUpdateDocument() {
       void qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.documentsAll });
       void qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.documentsStats() });
       void qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.documentsExpiryAll });
+      // A company document in the Knowledge Base is a live view of its HR document: editing or deleting the source changes or removes the entry.
+      void qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.kb.linkedDocuments() });
     },
   });
 }
@@ -94,6 +106,8 @@ export function useDeleteDocument() {
       void qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.documentsAll });
       void qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.documentsStats() });
       void qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.documentsExpiryAll });
+      // A company document in the Knowledge Base is a live view of its HR document: editing or deleting the source changes or removes the entry.
+      void qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.kb.linkedDocuments() });
     },
   });
 }
@@ -132,21 +146,28 @@ export function useCreateGoal() {
     mutationKey: ["hr", "goals", "create"],
     mutationFn: (data: CreateGoalInput) =>
       apiClient.post<Goal>("/hr/performance/goals", data, undefined, lazyContract(() => import("@/hooks/api/hr/hr-settings-schema").then(m => m.goalContract))),
-    onSuccess: () =>
-      qc.invalidateQueries({
+    onSuccess: () => {
+      void qc.invalidateQueries({
         queryKey: [...humanResourcesQueryKeys.hr.all, "goals"],
         exact: false,
-      }),
+      });
+    },
   });
 }
 
-export function useHrWfhRequests() {
+export function useHrWfhRequests(options?: { enabled?: boolean }) {
+  const { data: session } = useSession();
+  const orgId = session?.orgId ?? "";
+  const userId = session?.user?.id ?? "";
   const canSelf = useCan("self:attendance");
   return useQuery({
-    queryKey: humanResourcesQueryKeys.hr.wfhRequests(),
+    queryKey: humanResourcesQueryKeys.hr.wfhRequests(orgId, userId),
     queryFn: ({ signal }) => apiClient.get<WfhRequest[]>("/me/time-off/wfh", undefined, signal, lazyContract(() => import("@/hooks/api/hr/hr-settings-schema").then(m => m.wfhRequestListContract))),
     staleTime: 2 * 60_000,
-    enabled: canSelf,
+    enabled: Boolean(orgId && userId) && canSelf && (options?.enabled ?? true),
+    refetchOnWindowFocus: "always",
+    refetchOnReconnect: "always",
+    ...INLINE_READ_ERROR,
   });
 }
 
@@ -158,6 +179,7 @@ export function useHrPendingWfhRequests(options?: { enabled?: boolean }) {
     queryFn: ({ signal }) => apiClient.get<WfhRequest[]>("/hr/wfh/pending", undefined, signal, lazyContract(() => import("@/hooks/api/hr/hr-settings-schema").then(m => m.wfhRequestListContract))),
     staleTime: 2 * 60_000,
     enabled: hrEnabled && canAttendance && (options?.enabled ?? true),
+    ...INLINE_READ_ERROR,
   });
 }
 
@@ -168,8 +190,9 @@ export function useCreateWfhRequest() {
     mutationFn: (data: CreateWfhRequestInput) =>
       apiClient.post<{ success: boolean }>("/me/time-off/wfh", data, undefined, lazyContract(() => import("@/hooks/api/hr/hr-settings-schema").then(m => m.successResponseContract))),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.wfhRequests() });
+      qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.wfhRequestsAll });
       qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.pendingWfhRequests() });
+      invalidateCalendarProjectionWindows(qc);
     },
   });
 }
@@ -181,8 +204,9 @@ export function useProcessWfhRequest() {
     mutationFn: ({ requestId, ...data }: ProcessWfhRequestInput) =>
       apiClient.patch<{ success: boolean }>(`/hr/wfh/${requestId}`, data, undefined, lazyContract(() => import("@/hooks/api/hr/hr-settings-schema").then(m => m.successResponseContract))),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.wfhRequests() });
+      qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.wfhRequestsAll });
       qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.pendingWfhRequests() });
+      invalidateCalendarProjectionWindows(qc);
     },
   });
 }

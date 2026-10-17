@@ -149,15 +149,13 @@ describe("action visibility — matrix hidden cells", () => {
   it("Issue is absent at managed-product scope where no project context exists", async () => {
     const user = userEvent.setup();
     renderQuickCreate(PRODUCT_SCOPE, [PROJECT_ACTION]);
-    await user.click(screen.getByRole("button", { name: "Create" }));
+    await user.click(screen.getByRole("button", { name: "New project" }));
     expect(screen.queryByText("Issue")).not.toBeInTheDocument();
-    expect(screen.getByText("Project")).toBeInTheDocument();
+    expect(lastProjectDialogProps().open).toBe(true);
   });
 
   it("Product is absent at managed-product scope, because a product cannot nest under another product now that PM Workspace is gone", async () => {
-    const user = userEvent.setup();
     renderQuickCreate(PRODUCT_SCOPE, [PROJECT_ACTION]);
-    await user.click(screen.getByRole("button", { name: "Create" }));
     expect(screen.queryByText("Product")).not.toBeInTheDocument();
   });
 
@@ -187,10 +185,8 @@ describe("action visibility — matrix present cells", () => {
   });
 
   it("Project appears at managed-product scope", async () => {
-    const user = userEvent.setup();
     renderQuickCreate(PRODUCT_SCOPE, [PROJECT_ACTION]);
-    await user.click(screen.getByRole("button", { name: "Create" }));
-    expect(screen.getByText("Project")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "New project" })).toBeInTheDocument();
   });
 });
 
@@ -208,8 +204,7 @@ describe("BSN-03-011 — Issue preselects the active project", () => {
     const onNavigate = jest.fn();
     const user = userEvent.setup();
     renderQuickCreate(PROJECT_SCOPE, [ISSUE_ACTION], onNavigate);
-    await user.click(screen.getByRole("button", { name: "Create" }));
-    await user.click(screen.getByText("Issue"));
+    await user.click(screen.getByRole("button", { name: "New issue" }));
     expect(onNavigate).toHaveBeenCalledTimes(1);
     expect(mockOpenCreateTicket).toHaveBeenCalledWith(42);
   });
@@ -217,8 +212,7 @@ describe("BSN-03-011 — Issue preselects the active project", () => {
   it("passes projectId=99 for a different project scope, proving the id is read from the scope and not hardcoded", async () => {
     const user = userEvent.setup();
     renderQuickCreate(PROJECT_SCOPE_OTHER, [ISSUE_ACTION]);
-    await user.click(screen.getByRole("button", { name: "Create" }));
-    await user.click(screen.getByText("Issue"));
+    await user.click(screen.getByRole("button", { name: "New issue" }));
     expect(mockOpenCreateTicket).toHaveBeenCalledWith(99);
   });
 });
@@ -236,8 +230,7 @@ describe("Project dialog — scope preselection per matrix cell", () => {
   it("preselects managedProductId in the project dialog at product scope, with no PM Workspace id key since PM Workspace no longer exists", async () => {
     const user = userEvent.setup();
     renderQuickCreate(PRODUCT_SCOPE, [PROJECT_ACTION]);
-    await user.click(screen.getByRole("button", { name: "Create" }));
-    await user.click(screen.getByText("Project"));
+    await user.click(screen.getByRole("button", { name: "New project" }));
     expect(lastProjectDialogProps().scope).toEqual({ managedProductId: 7 });
   });
 
@@ -326,8 +319,7 @@ describe("cancellation", () => {
   it("closes the project dialog when the dialog calls onOpenChange with false", async () => {
     const user = userEvent.setup();
     renderQuickCreate(ORG_SCOPE, [PROJECT_ACTION]);
-    await user.click(screen.getByRole("button", { name: "Create" }));
-    await user.click(screen.getByText("Project"));
+    await user.click(screen.getByRole("button", { name: "New project" }));
     expect(lastProjectDialogProps().open).toBe(true);
 
     act(() => {

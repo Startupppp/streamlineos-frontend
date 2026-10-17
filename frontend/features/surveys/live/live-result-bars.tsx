@@ -1,7 +1,7 @@
 import { EmptyState } from "@/components/ui/empty-state";
 import type { LiveSessionResults } from "@/hooks/api/surveys/live-session";
 
-const CHART_COLOR = "#3B82F6";
+const CHART_COLOR = "var(--chart-1)";
 
 export function LiveResultBars({ results }: { results: LiveSessionResults }) {
   if (!results.question) {

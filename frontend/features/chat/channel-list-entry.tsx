@@ -11,6 +11,7 @@ export interface ChannelListEntryProps {
   onlineUserIds: Set<string>;
   onSelectChannel: (id: number) => void;
   compact?: boolean;
+  tabIndex?: number;
   onStartCall?: (channelId: number, type: "huddle") => void;
   onOpenSettings?: (channelId: number) => void;
 }
@@ -28,6 +29,7 @@ export const ChannelListEntry = memo(function ChannelListEntry({
   onlineUserIds,
   onSelectChannel,
   compact = false,
+  tabIndex,
   onStartCall,
   onOpenSettings,
 }: ChannelListEntryProps) {
@@ -40,6 +42,7 @@ export const ChannelListEntry = memo(function ChannelListEntry({
       currentUserId={currentUserId}
       onlineUserIds={onlineUserIds}
       compact={compact}
+      tabIndex={tabIndex}
       onStartCall={onStartCall}
       onOpenSettings={onOpenSettings}
     />

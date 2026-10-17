@@ -1,67 +1,47 @@
 "use client";
 
-import { useMemo, useCallback, useState, useEffect } from "react";
+import { useMemo, useCallback, useState } from "react";
 import { useRouter } from "next/navigation";
-import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
-import { UserIcon } from "@animateicons/react/lucide";
-import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { PageWrapper } from "@/components/ui/page-wrapper";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { PageTabsToolbar } from "@/components/ui/page-tabs-toolbar";
-import { EmptyState } from "@/components/ui/empty-state";
-import { Button } from "@/components/ui/button";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { BulkActionBar } from "@/features/build/backlog/bulk-action-bar";
-import { TicketFilterBar } from "@/features/build/shared/ticket-filter-bar";
-import { useAllWork, useProjects } from "@/hooks/api/build";
+import { BulkActionBar } from "@/features/build/shared/bulk-action-bar";
+import { useAllWork } from "@/hooks/api/build/all-work";
 import { usePageState } from "@/hooks/api/use-page-state";
 import { PageState } from "@/components/shared/page-state";
-import { useOrgCustomStates } from "@/hooks/api/build/custom-states";
 import { useOnlineStatus } from "@/hooks/common/use-online-status";
 import { cn } from "@/lib/utils";
 import {
   PmPageShell,
-  PmPanel,
   PmSection,
-  PM_FILL_PANEL,
+  CONTENT_FILL_PANEL,
   PM_FILL_SECTION,
 } from "@/components/pm-chrome";
-import { pmSnappy, viewSwap, viewSwapReduced } from "@/lib/motion-presets";
 import { groupTickets } from "./all-work-ticket-utils";
 import { getTicketDetailHref } from "@/components/shared/format-ticket-key";
-import { AllWorkViewSwitcher, AllWorkSkeleton } from "./all-work-view-switcher";
-import { AllWorkListSection } from "./all-work-list-section";
-import { AllWorkTableSection } from "./all-work-table-section";
-import { AllWorkBoardSection } from "./all-work-board-section";
-import { AllWorkViewsMenu } from "./all-work-views-menu";
+import { AllWorkSkeleton, AllWorkToolbarSkeleton } from "./all-work-view-switcher";
 import { useAllWorkFilters } from "./use-all-work-filters";
 import { useAllWorkBulk } from "./use-all-work-bulk";
+import { useAllWorkIds } from "@/hooks/api/build/all-work";
 import { useAllWorkKeyboard } from "./use-all-work-keyboard";
-
-const GROUP_OPTIONS = [
-  { value: "project", label: "By Project" },
-  { value: "status", label: "By Status" },
-  { value: "priority", label: "By Priority" },
-  { value: "assignee", label: "By Assignee" },
-  { value: "none", label: "No grouping" },
-] as const;
+import { useNavigationLeave } from "@/components/shared/dirty-state-context";
+import { AllWorkExportPreviewDialog } from "./all-work-export-preview-dialog";
+import { useAllWorkExport } from "./use-all-work-export";
+import { useAllWorkCursor } from "./use-all-work-cursor";
+import { AllWorkExpandBanner, AllWorkEmptyState } from "./all-work-expand-banner";
+import { useAllWorkPageData } from "./use-all-work-page-data";
+import { AllWorkPageToolbar } from "./all-work-page-toolbar";
+import { AllWorkViewContent } from "./all-work-view-content";
 
 export function AllWorkPage() {
   const router = useRouter();
-  const shouldReduceMotion = useReducedMotion();
-  const swapVariants = shouldReduceMotion ? viewSwapReduced : viewSwap;
+  const requestLeave = useNavigationLeave();
   const isOnline = useOnlineStatus();
 
   const {
     view,
     scopeMine,
     filters,
+    productIdFilter,
+    teamIdFilter,
     grouping,
     sortField,
     sortDirection,
@@ -75,10 +55,16 @@ export function AllWorkPage() {
   } = useAllWorkFilters();
 
   const { data, isLoading, isError, error, refetch } = useAllWork(filters);
-  const { data: projectsData } = useProjects({
-    limit: 100,
-  });
-  const { data: orgStates } = useOrgCustomStates();
+
+  const {
+    projectOptions,
+    buildMembers,
+    orgStates,
+    teamOptions,
+    productOptions,
+    handleTeamFilter,
+    handleProductFilter,
+  } = useAllWorkPageData({ setListParams, teamIdFilter, productIdFilter });
 
   const tickets = useMemo(() => data?.data ?? [], [data]);
   const loadedCount = tickets.length;
@@ -87,26 +73,8 @@ export function AllWorkPage() {
 
   const groups = useMemo(() => groupTickets(tickets, grouping), [tickets, grouping]);
 
-  const [cursorTrail, setCursorTrail] = useState<(string | null)[]>([null]);
-  const hasPrevious = cursorTrail.length > 1;
-  const pageNumber = cursorTrail.length;
-
-  useEffect(() => {
-    if (cursor === null) setCursorTrail([null]);
-  }, [cursor]);
-
-  const handleNext = useCallback(() => {
-    if (!nextCursor) return;
-    setCursorTrail((t) => [...t, nextCursor]);
-    setCursor(nextCursor);
-  }, [nextCursor, setCursor]);
-
-  const handlePrev = useCallback(() => {
-    if (cursorTrail.length <= 1) return;
-    const newTrail = cursorTrail.slice(0, -1);
-    setCursorTrail(newTrail);
-    setCursor(newTrail[newTrail.length - 1] ?? null);
-  }, [cursorTrail, setCursor]);
+  const { hasPrevious, pageNumber, handleNext, handlePrev, resetTrail } =
+    useAllWorkCursor({ cursor, nextCursor, setCursor });
 
   const pageState = usePageState({
     permission: "build:tickets:view",
@@ -116,34 +84,6 @@ export function AllWorkPage() {
     isEmpty: loadedCount === 0,
   });
 
-  const allProjects = useMemo(() => projectsData?.data ?? [], [projectsData]);
-  const projectOptions = useMemo(
-    () => allProjects.map((p) => ({ id: p.id, name: p.name, key: p.key })),
-    [allProjects],
-  );
-  const deduplicatedMembers = useMemo(
-    () =>
-      allProjects
-        .flatMap((p) => p.members)
-        .filter((m, i, arr) => arr.findIndex((x) => x.id === m.id) === i)
-        .map(
-          (m): {
-            id: string;
-            name: string | null;
-            firstName: string | null;
-            lastName: string | null;
-            image: string | null;
-          } => ({
-            id: m.id,
-            name: null,
-            firstName: m.firstName,
-            lastName: m.lastName,
-            image: m.image,
-          }),
-        ),
-    [allProjects],
-  );
-
   const {
     tableSelection,
     setTableSelection,
@@ -152,34 +92,61 @@ export function AllWorkPage() {
     handleBulkAssignee,
     handleBulkCycleNoOp,
     handleClearSelection,
+    isExpandedSelection,
+    expandedTotal,
+    expandedEntries,
+    expandToAllMatching,
   } = useAllWorkBulk(tickets);
 
+  const allPageSelected =
+    tickets.length > 0 && tickets.every((t) => tableSelection.has(t.id));
+  const showExpandBanner = allPageSelected && hasMore && !isExpandedSelection;
+
+  const { data: idsSnapshot } = useAllWorkIds(
+    showExpandBanner ? {
+      scope: filters.scope, search: filters.search, status: filters.status,
+      priority: filters.priority, type: filters.type, assigneeId: filters.assigneeId,
+      labelIds: filters.labelIds, cycleId: filters.cycleId, epicId: filters.epicId,
+      dueDateFrom: filters.dueDateFrom, dueDateTo: filters.dueDateTo, teamId: filters.teamId,
+      managedProductId: filters.managedProductId, excludeStatus: filters.excludeStatus,
+      projectIds: filters.projectIds,
+    } : undefined,
+    { enabled: showExpandBanner },
+  );
+
+  const handleExpandToAll = useCallback(() => {
+    if (idsSnapshot) expandToAllMatching(idsSnapshot);
+  }, [idsSnapshot, expandToAllMatching]);
+
   const [focusedIndex, setFocusedIndex] = useState(0);
+
+  const allWorkExport = useAllWorkExport(tableSelection, tickets, expandedEntries);
 
   const handleTicketClickForTable = useCallback(
     (ticketId: number) => {
       const ticket = tickets.find((t) => t.id === ticketId);
       if (!ticket || ticket.projectId === null) return;
-      router.push(
-        getTicketDetailHref(ticket.projectId, ticket.projectKey, ticket.ticketNumber),
+      const projectId = ticket.projectId;
+      requestLeave(() =>
+        router.push(
+          getTicketDetailHref(projectId, ticket.projectKey, ticket.ticketNumber),
+        ),
       );
     },
-    [tickets, router],
+    [tickets, requestLeave, router],
   );
 
   const handleViewChangeWithReset = useCallback(
     (v: Parameters<typeof handleViewChange>[0]) => {
       handleViewChange(v, () => {
         setTableSelection(new Set());
-        setCursorTrail([null]);
+        resetTrail();
       });
     },
-    [handleViewChange, setTableSelection],
+    [handleViewChange, setTableSelection, resetTrail],
   );
 
-  const handleRetry = useCallback(() => {
-    void refetch();
-  }, [refetch]);
+  const handleRetry = useCallback(() => { void refetch(); }, [refetch]);
 
   const handleFocusSearch = useCallback(() => {
     document
@@ -190,10 +157,13 @@ export function AllWorkPage() {
   const handleKeyboardOpen = useCallback(() => {
     const ticket = tickets[focusedIndex];
     if (!ticket || ticket.projectId === null) return;
-    router.push(
-      getTicketDetailHref(ticket.projectId, ticket.projectKey ?? "", ticket.ticketNumber),
+    const projectId = ticket.projectId;
+    requestLeave(() =>
+      router.push(
+        getTicketDetailHref(projectId, ticket.projectKey ?? "", ticket.ticketNumber),
+      ),
     );
-  }, [tickets, focusedIndex, router]);
+  }, [tickets, focusedIndex, requestLeave, router]);
 
   const handleKeyboardNext = useCallback(
     () => setFocusedIndex((i) => Math.min(i + 1, tickets.length - 1)),
@@ -225,217 +195,94 @@ export function AllWorkPage() {
   );
 
   const handleGroupChange = useCallback(
-    (value: string) => {
-      setListParams({ group: value });
-    },
+    (value: string) => { setListParams({ group: value }); },
     [setListParams],
   );
-
-  const subtitleText =
-    pageState.kind === "loading"
-      ? "Loading tickets…"
-      : `${loadedCount} ticket${loadedCount === 1 ? "" : "s"} loaded`;
-
-  const emptyNode =
-    !isOnline ? (
-      <EmptyState
-        className={PM_FILL_PANEL}
-        illustrationPreset="projects"
-        title="You are offline"
-        description="Showing cached data. Reconnect to see the latest tickets."
-      />
-    ) : (
-      <EmptyState
-        className={PM_FILL_PANEL}
-        illustrationPreset="projects"
-        title="No tickets yet"
-        description={
-          hasActiveFilters ? undefined : "Start by creating a ticket in any project."
-        }
-        filtersActive={hasActiveFilters}
-        onClearFilters={handleClearFilters}
-        action={!hasActiveFilters ? { label: "All Projects", href: "/build" } : undefined}
-      />
-    );
 
   return (
     <PageWrapper
       title="All Work"
-      subtitle={subtitleText}
       noInternalScroll
+      subtitle="Explore tickets across every project you can access"
+      filtersClassName="flex-col items-stretch gap-0 overflow-visible pb-2 [&>*]:w-full [&>*]:min-w-0 [&>*]:shrink"
+      filters={
+        pageState.kind === "loading" ? <AllWorkToolbarSkeleton /> : <AllWorkPageToolbar
+          view={view}
+          grouping={grouping}
+          scopeMine={scopeMine}
+          orgStates={orgStates}
+          teamOptions={teamOptions}
+          buildMembers={buildMembers}
+          teamIdFilter={teamIdFilter}
+          onTeamFilter={handleTeamFilter}
+          projectOptions={projectOptions}
+          productOptions={productOptions}
+          onGroupChange={handleGroupChange}
+          onScopeToggle={handleScopeToggle}
+          productIdFilter={productIdFilter}
+          hasActiveFilters={hasActiveFilters}
+          onProductFilter={handleProductFilter}
+          onViewChange={handleViewChangeWithReset}
+        />
+      }
     >
       <PmPageShell>
-        <PmSection index={0} className={cn(PM_FILL_SECTION, "gap-3")}>
-          <PageTabsToolbar
-            tabsDensity="icons"
-            tabs={
-              <div className="flex min-w-0 flex-nowrap items-center gap-1.5 overflow-x-auto scrollbar-hide sm:gap-2 [&>*]:shrink-0">
-                <AllWorkViewSwitcher
-                  activeView={view}
-                  onViewChange={handleViewChangeWithReset}
-                />
-                <AllWorkViewsMenu activeView={view} hasActiveFilters={hasActiveFilters} />
-                <Select value={grouping} onValueChange={handleGroupChange}>
-                  <SelectTrigger
-                    className="w-[120px] shrink-0 font-normal *:data-[slot=select-value]:font-normal"
-                    aria-label="Group tickets by"
-                  >
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {GROUP_OPTIONS.map((o) => (
-                      <SelectItem key={o.value} value={o.value}>
-                        {o.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <AnimatedIconButton
-                  type="button"
-                  variant="outline"
-                  size="icon"
-                  onClick={handleScopeToggle}
-                  aria-label={
-                    scopeMine
-                      ? "Showing my tickets – click to show all"
-                      : "Show only my tickets"
-                  }
-                  title={scopeMine ? "Showing my tickets" : "Show only my tickets"}
-                  aria-pressed={scopeMine}
-                  className={cn(
-                    "shrink-0",
-                    scopeMine &&
-                      "border-primary bg-primary text-primary-foreground hover:bg-primary/90 hover:text-primary-foreground",
-                  )}
-                  icon={UserIcon}
-                  iconSize={14}
-                  iconClassName={cn(scopeMine ? "text-primary-foreground" : undefined)}
-                />
-              </div>
-            }
-            filters={
-              <TicketFilterBar
-                members={deduplicatedMembers}
-                projectOptions={projectOptions}
-                showTypeFilter
-                showAssigneeFilter
-                statuses={orgStates}
-              />
-            }
-          />
-
+        <PmSection index={0} className={cn(PM_FILL_SECTION, "gap-0")}>
           <PageState
             resolution={pageState}
-            className={PM_FILL_PANEL}
+            className={CONTENT_FILL_PANEL}
             onRetry={handleRetry}
             loading={
-              <PmPanel solid className="flex-1 overflow-auto">
-                <div className="py-2">
-                  <AllWorkSkeleton view={view} />
-                </div>
-              </PmPanel>
+              <AllWorkSkeleton view={view} />
             }
-            empty={emptyNode}
+            empty={<AllWorkEmptyState isOnline={isOnline} hasActiveFilters={hasActiveFilters} onClearFilters={handleClearFilters} />}
           >
             <>
               {tableSelection.size > 0 ? (
-                <BulkActionBar
-                  selectedCount={tableSelection.size}
-                  members={deduplicatedMembers}
-                  cycles={[]}
-                  statuses={orgStates}
-                  hideCycle
-                  onBulkStatus={handleBulkStatus}
-                  onBulkPriority={handleBulkPriority}
-                  onBulkAssignee={handleBulkAssignee}
-                  onBulkCycle={handleBulkCycleNoOp}
-                  onClear={handleClearSelection}
-                />
+                <>
+                  <BulkActionBar
+                    selectedCount={isExpandedSelection ? expandedTotal : tableSelection.size}
+                    members={buildMembers}
+                    cycles={[]}
+                    statuses={orgStates}
+                    hideCycle
+                    onBulkStatus={handleBulkStatus}
+                    onBulkPriority={handleBulkPriority}
+                    onBulkAssignee={handleBulkAssignee}
+                    onBulkCycle={handleBulkCycleNoOp}
+                    onBulkExport={allWorkExport.handleOpen}
+                    onClear={handleClearSelection}
+                  />
+                  <AllWorkExportPreviewDialog
+                    open={allWorkExport.open}
+                    onOpenChange={allWorkExport.setOpen}
+                    groups={allWorkExport.groups}
+                    isExporting={allWorkExport.isExporting}
+                    onConfirm={allWorkExport.handleConfirm}
+                  />
+                  <AllWorkExpandBanner
+                    show={showExpandBanner}
+                    loadedCount={loadedCount}
+                    idsSnapshot={idsSnapshot}
+                    onExpandToAll={handleExpandToAll}
+                  />
+                </>
               ) : null}
               <div className="flex min-h-0 flex-1 flex-col gap-0">
-                <ScrollArea fill hideScrollbar className="min-h-0 flex-1">
-                  <div
-                    className={cn(
-                      "flex flex-1 flex-col overscroll-contain",
-                      view === "board" ? "h-full min-h-0" : "min-h-full",
-                    )}
-                  >
-                    <AnimatePresence mode="wait" initial={false}>
-                      {view === "list" ? (
-                        <motion.div
-                          key="list-view"
-                          variants={swapVariants}
-                          initial="initial"
-                          animate="animate"
-                          exit="exit"
-                          transition={pmSnappy}
-                        >
-                          <AllWorkListSection
-                            groups={groups}
-                            hasMore={hasMore}
-                            tableSelection={tableSelection}
-                            onSelectionChange={setTableSelection}
-                          />
-                        </motion.div>
-                      ) : null}
-                      {view === "table" ? (
-                        <motion.div
-                          key="table-view"
-                          variants={swapVariants}
-                          initial="initial"
-                          animate="animate"
-                          exit="exit"
-                          transition={pmSnappy}
-                        >
-                          <AllWorkTableSection
-                            tickets={tickets}
-                            tableSelection={tableSelection}
-                            onSelectionChange={setTableSelection}
-                            onTicketClick={handleTicketClickForTable}
-                            sortState={sortState}
-                            hasMore={hasMore}
-                            hasPrevious={hasPrevious}
-                            pageNumber={pageNumber}
-                            onNext={handleNext}
-                            onPrevious={handlePrev}
-                          />
-                        </motion.div>
-                      ) : null}
-                      {view === "board" ? (
-                        <motion.div
-                          key="board-view"
-                          variants={swapVariants}
-                          initial="initial"
-                          animate="animate"
-                          exit="exit"
-                          transition={pmSnappy}
-                          className="flex h-full min-h-0 w-full flex-1 flex-col"
-                        >
-                          <AllWorkBoardSection
-                            groups={groups}
-                            hasMore={hasMore}
-                            tableSelection={tableSelection}
-                            onSelectionChange={setTableSelection}
-                          />
-                        </motion.div>
-                      ) : null}
-                    </AnimatePresence>
-                  </div>
-                </ScrollArea>
-                {view !== "table" && (hasMore || hasPrevious) ? (
-                  <div className="flex items-center justify-center gap-2 border-t py-2">
-                    {hasPrevious ? (
-                      <Button variant="ghost" size="sm" onClick={handlePrev}>
-                        ← Previous
-                      </Button>
-                    ) : null}
-                    {hasMore ? (
-                      <Button variant="ghost" size="sm" onClick={handleNext}>
-                        Next →
-                      </Button>
-                    ) : null}
-                  </div>
-                ) : null}
+                <AllWorkViewContent
+                  view={view}
+                  tickets={tickets}
+                  groups={groups}
+                  tableSelection={tableSelection}
+                  onSelectionChange={setTableSelection}
+                  sortState={sortState}
+                  hasMore={hasMore}
+                  hasPrevious={hasPrevious}
+                  pageNumber={pageNumber}
+                  onNext={handleNext}
+                  onPrevious={handlePrev}
+                  onTicketClick={handleTicketClickForTable}
+                />
               </div>
             </>
           </PageState>

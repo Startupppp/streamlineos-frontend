@@ -1,22 +1,31 @@
 "use client";
 
-import { useMemo } from "react";
-import { motion, useReducedMotion } from "framer-motion";
+import {
+  Settings,
+  PenSquare,
+  Mail,
+  UsersRound,
+  ChevronDown,
+  Clock3,
+} from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Settings, PenSquare, Mail } from "lucide-react";
-import { SparklesIcon } from "@animateicons/react/lucide";
-import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
-import { useMailMessages } from "@/hooks/api/mail";
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuLabel,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { PAGE_CHROME_X } from "@/components/ui/content-fill-panel";
+import { Badge } from "@/components/ui/badge";
+import { MailDailyBrief } from "./mail-daily-brief";
+import { MAIL_COMPOSE_FAB_CLASS } from "./mail-presentation";
+import type { MailInboxSummaryState } from "./use-mail-inbox-summary";
 import type { MailAccount } from "@/types/mail";
+import { useUnifiedInboxCount } from "@/hooks/api/inbox";
 
 const SENTINEL = "__all__";
 
@@ -25,10 +34,15 @@ interface MailHeaderProps {
   accountsLoading: boolean;
   selectedAccountId: number | "all";
   canAi: boolean;
+  canCompose?: boolean;
+  showAccountSettings?: boolean;
+  summaryState: MailInboxSummaryState;
   onAccountChange: (value: string) => void;
   onCompose: () => void;
-  onSummarize: () => void;
+  onGenerateBrief: () => void;
+  onOpenBrief: () => void;
   onOpenAccounts: () => void;
+  onOpenRecent?: () => void;
 }
 
 export function MailHeader({
@@ -36,141 +50,171 @@ export function MailHeader({
   accountsLoading,
   selectedAccountId,
   canAi,
+  canCompose = true,
+  showAccountSettings = true,
+  summaryState,
   onAccountChange,
   onCompose,
-  onSummarize,
+  onGenerateBrief,
+  onOpenBrief,
   onOpenAccounts,
+  onOpenRecent,
 }: MailHeaderProps) {
-  const reduceMotion = useReducedMotion();
-  const { iconRef: sparklesRef, hoverHandlers: sparklesHover } =
-    useAnimatedIcon();
   const hasAccounts = accounts.length > 0;
-
-  const { data: inboxData } = useMailMessages({
-    folder: "inbox",
-    accountId: selectedAccountId,
-    limit: 40,
-  });
-
-  const unreadCount = useMemo(() => {
-    const messages = inboxData?.pages.flatMap((p) => p.messages) ?? [];
-    return messages.filter((m) => !m.isRead).length;
-  }, [inboxData]);
-
+  const { data: inboxCount } = useUnifiedInboxCount({ enabled: hasAccounts });
+  const unreadCount = hasAccounts ? (inboxCount?.mail ?? 0) : 0;
   const accountLabel =
     selectedAccountId === "all"
       ? "All accounts"
-      : (accounts.find((a) => a.id === selectedAccountId)?.accountEmail ??
-        accounts.find((a) => a.id === selectedAccountId)?.accountLabel ??
+      : (accounts.find((account) => account.id === selectedAccountId)
+          ?.accountEmail ??
+        accounts.find((account) => account.id === selectedAccountId)
+          ?.accountLabel ??
         "Account");
 
   return (
-    <header className="shrink-0 border-b border-border/50 bg-card/70 backdrop-blur-sm">
-      <div className="flex items-center gap-2 px-3 py-1.5 min-w-0">
-        <motion.div
-          className="flex items-center gap-2 min-w-0 shrink-0"
-          initial={reduceMotion ? false : { opacity: 0, y: -4 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.18, ease: "easeOut" }}
-        >
-          <div className="flex h-7 w-7 items-center justify-center rounded-md bg-primary/10 text-primary border border-primary/15 shrink-0">
-            <Mail className="h-3.5 w-3.5" aria-hidden />
+    <header className="shrink-0 border-b border-border bg-background">
+      <div
+        className={cn(
+          "flex min-h-14 min-w-0 items-center gap-2 py-2",
+          PAGE_CHROME_X,
+        )}
+      >
+        <div className="flex min-w-0 flex-1 items-center gap-2.5">
+          <span className="flex size-8 shrink-0 items-center justify-center rounded-lg border border-border bg-card text-muted-foreground">
+            <Mail className="size-4" aria-hidden="true" />
+          </span>
+          <div className="min-w-0">
+            <div className="flex items-center gap-2">
+              <h1 className="text-base font-semibold leading-tight tracking-tight text-foreground sm:text-lg">
+                Mail
+              </h1>
+              {unreadCount > 0 && (
+                <Badge
+                  variant="default"
+                  className="rounded-full px-2 py-0.5 text-xs font-medium"
+                >
+                  {unreadCount}
+                </Badge>
+              )}
+            </div>
+            <p className="hidden text-label leading-snug text-muted-foreground xl:block">
+              Messages and follow-ups across your connected accounts
+            </p>
           </div>
-          <div className="flex items-center gap-1.5 min-w-0">
-            <h1 className="text-sm font-semibold tracking-tight text-foreground leading-none">
-              Mail
-            </h1>
-            {hasAccounts && unreadCount > 0 ? (
-              <span className="inline-flex h-5 min-w-5 items-center justify-center rounded-md bg-primary/10 px-1.5 text-micro font-semibold tabular-nums text-foreground border border-primary/15">
-                {unreadCount}
-                <span className="sr-only"> unread in loaded inbox</span>
-              </span>
-            ) : null}
-          </div>
-        </motion.div>
+        </div>
 
-        <div className="flex-1 min-w-0" />
-
-        <div className="flex items-center gap-1 shrink-0 min-w-0">
-          {accountsLoading ? (
-            <Skeleton className="h-8 w-24 rounded-md" />
-          ) : hasAccounts ? (
-            <Select
-              value={
-                selectedAccountId === "all"
-                  ? SENTINEL
-                  : String(selectedAccountId)
-              }
-              onValueChange={onAccountChange}
-            >
-              <SelectTrigger
-                className={cn(
-                  "h-8 w-auto max-w-[8rem] sm:max-w-[11rem] lg:max-w-[13rem]",
-                  "border-transparent bg-transparent shadow-none text-dense gap-1 px-2",
-                  "text-muted-foreground hover:text-foreground hover:bg-muted/50",
-                  "focus:ring-0 data-[state=open]:bg-muted/50",
-                )}
-                aria-label={`Account: ${accountLabel}`}
-              >
-                <SelectValue placeholder="All accounts" />
-              </SelectTrigger>
-              <SelectContent className="min-w-[var(--radix-select-trigger-width)]">
-                <SelectItem value={SENTINEL} className="text-xs">
-                  All accounts
-                </SelectItem>
-                {accounts.map((account) => (
-                  <SelectItem
-                    key={account.id}
-                    value={String(account.id)}
-                    className="text-xs"
-                  >
-                    {account.accountEmail ??
-                      account.accountLabel ??
-                      `Account ${account.id}`}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          ) : null}
-
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-8 w-8 shrink-0 text-muted-foreground hover:text-foreground"
-            onClick={onOpenAccounts}
-            aria-label="Mail account settings"
-          >
-            <Settings className="h-3.5 w-3.5" aria-hidden />
-          </Button>
-
-          <div className="mx-0.5 h-4 w-px bg-border/70 shrink-0" aria-hidden />
-
-          {canAi && hasAccounts ? (
-            <button
+        <div className="ml-auto flex min-w-0 shrink-0 items-center gap-1">
+          {hasAccounts && onOpenRecent ? (
+            <Button
               type="button"
-              className="inline-flex h-8 items-center gap-1.5 rounded-md border border-border/60 bg-transparent px-2 sm:px-2.5 text-dense font-medium text-foreground/85 transition-colors hover:bg-muted/60 hover:border-border focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-              onClick={onSummarize}
-              aria-label="What needs me — AI inbox triage"
-              {...sparklesHover}
+              variant="ghost"
+              size="icon"
+              className="size-9 lg:hidden"
+              onClick={onOpenRecent}
+              aria-label="Open recent mail"
             >
-              <SparklesIcon ref={sparklesRef} size={13} />
-              <span className="hidden md:inline">What needs me</span>
-            </button>
+              <Clock3 className="size-4" aria-hidden="true" />
+            </Button>
+          ) : null}
+          {hasAccounts ? (
+            <MailDailyBrief
+              state={summaryState}
+              canAi={canAi}
+              onGenerate={onGenerateBrief}
+              onDetails={onOpenBrief}
+            />
           ) : null}
 
-          <Button
-            variant="default"
-            size="sm"
-            className="h-8 text-dense gap-1.5 px-2.5 sm:px-3"
-            onClick={onCompose}
-            disabled={!hasAccounts}
-            aria-label="Compose"
-          >
-            <PenSquare className="h-3.5 w-3.5" aria-hidden />
-            <span className="hidden sm:inline">Compose</span>
-          </Button>
+          {accountsLoading ? (
+            <Skeleton className="h-9 w-28 rounded-md" />
+          ) : hasAccounts ? (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="size-9 gap-1 px-0 md:h-9 md:w-auto md:max-w-44 md:px-2.5 lg:max-w-52"
+                  aria-label={`Switch mail account. Current: ${accountLabel}`}
+                >
+                  <UsersRound className="size-4 shrink-0" aria-hidden="true" />
+                  <span className="hidden min-w-0 truncate md:block">
+                    {accountLabel}
+                  </span>
+                  <ChevronDown
+                    className="hidden size-3.5 shrink-0 opacity-60 md:block"
+                    aria-hidden="true"
+                  />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-64">
+                <DropdownMenuLabel>Mail account</DropdownMenuLabel>
+                <DropdownMenuRadioGroup
+                  value={
+                    selectedAccountId === "all"
+                      ? SENTINEL
+                      : String(selectedAccountId)
+                  }
+                  onValueChange={onAccountChange}
+                >
+                  <DropdownMenuRadioItem value={SENTINEL}>
+                    All accounts
+                  </DropdownMenuRadioItem>
+                  {accounts.map((account) => (
+                    <DropdownMenuRadioItem
+                      key={account.id}
+                      value={String(account.id)}
+                    >
+                      <span className="truncate">
+                        {account.accountEmail ??
+                          account.accountLabel ??
+                          `Account ${account.id}`}
+                      </span>
+                    </DropdownMenuRadioItem>
+                  ))}
+                </DropdownMenuRadioGroup>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          ) : null}
+
+          {showAccountSettings ? (
+            <Button
+              variant="ghost"
+              size="icon"
+              className="size-9 shrink-0 text-muted-foreground"
+              onClick={onOpenAccounts}
+              aria-label="Mail account settings"
+            >
+              <Settings className="size-4" aria-hidden="true" />
+            </Button>
+          ) : null}
+
+          {hasAccounts ? (
+            <Button
+              size="sm"
+              className="hidden shrink-0 gap-2 md:inline-flex md:h-9 md:w-auto md:px-3"
+              onClick={onCompose}
+              disabled={!canCompose}
+              aria-label="Compose"
+            >
+              <PenSquare className="size-4" aria-hidden="true" />
+              <span className="hidden md:inline">Compose</span>
+            </Button>
+          ) : null}
         </div>
       </div>
+      {hasAccounts ? (
+        <Button
+          type="button"
+          size="icon"
+          className={MAIL_COMPOSE_FAB_CLASS}
+          onClick={onCompose}
+          disabled={!canCompose}
+          aria-label="Compose mail"
+        >
+          <PenSquare className="size-5" aria-hidden="true" />
+        </Button>
+      ) : null}
     </header>
   );
 }

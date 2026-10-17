@@ -18,6 +18,8 @@ import { DealSidebarCards } from "./deal-sidebar-cards";
 import { DealForecastScoreCard } from "./deal-forecast-score-card";
 import { DealLinkedRecordsCard } from "./deal-linked-records-card";
 import { DealStageHistory } from "./deal-stage-history";
+import { DealCustomFieldsCard } from "./deal-custom-fields-card";
+import { DealLinkedProjectCard } from "./deal-linked-project-card";
 import { DealQuotesSection } from "@/features/crm/deals/deal-quotes-section";
 
 interface DealDetailBodyProps {
@@ -147,6 +149,7 @@ export function DealDetailBody({
                 <Copy className="h-3.5 w-3.5 mr-1.5" />
                 Clone Deal
               </Button>
+              <DealCustomFieldsCard dealId={dealId} customData={deal.customData} />
             </>
           )}
         </motion.div>
@@ -175,6 +178,7 @@ export function DealDetailBody({
             partyId={deal.partyId}
             subjectId={deal.subjectId}
           />
+          <DealLinkedProjectCard dealId={dealId} />
           <DealStageHistory dealId={dealId} card />
           <DealQuotesSection dealId={dealId} />
         </motion.div>

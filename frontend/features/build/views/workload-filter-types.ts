@@ -19,10 +19,16 @@ export interface CycleOption {
   name: string;
 }
 
+export interface TeamOption {
+  id: number;
+  name: string;
+}
+
 export interface WorkloadFilterMenuProps {
   filters: FilterState;
   members: WorkloadMember[];
   cycles: CycleOption[];
+  teams: TeamOption[];
   projectStatuses?: StatusOption[];
   activeFilterCount: number;
   onFilterChange: <K extends keyof FilterState>(key: K, value: FilterState[K]) => void;
@@ -33,14 +39,16 @@ export type WorkloadFilterCategory =
   | "priority"
   | "type"
   | "status"
-  | "assignee";
+  | "assignee"
+  | "team";
 
 export type StringFilterKey =
   | "cycleId"
   | "priority"
   | "type"
   | "status"
-  | "assigneeId";
+  | "assigneeId"
+  | "teamId";
 
 export const TICKET_TYPES = ["TASK", "BUG", "STORY", "EPIC", "SUBTASK"] as const;
 export const PRIORITIES = ["URGENT", "HIGH", "MEDIUM", "LOW"] as const;

@@ -5,6 +5,10 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { useHrPerformanceReviews } from "@/hooks/api/hr";
 import type { PerformanceReviewListItem } from "@/types/hr";
 
+jest.mock("next-auth/react", () => ({
+  useSession: () => ({ data: { orgId: "org-1", user: { id: "user-1" } }, status: "authenticated" }),
+}));
+
 jest.mock("@/hooks/api/access", () => ({
   useCan: jest.fn(() => true),
   useCanState: jest.fn(() => "granted"),

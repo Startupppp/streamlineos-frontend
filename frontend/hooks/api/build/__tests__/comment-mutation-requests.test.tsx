@@ -57,7 +57,7 @@ function invalidatedKeys(spy: jest.SpyInstance): string[] {
   return spy.mock.calls.map((call) => JSON.stringify(call[0]?.queryKey));
 }
 
-const ticketKey = buildWorkQueryKeys.projects.ticket(TICKET_ID);
+const ticketKey = buildWorkQueryKeys.projects.ticket(PROJECT_ID, TICKET_ID);
 const activityKey = accountingAndSupportQueryKeys.ticketActivity.list(TICKET_ID);
 
 beforeEach(() => {

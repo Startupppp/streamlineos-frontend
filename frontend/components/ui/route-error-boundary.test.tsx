@@ -8,6 +8,8 @@ import {
   shouldReportRouteError,
 } from "./route-error-boundary";
 
+jest.mock("@/components/shared/enable-module-button", () => ({ EnableModuleButton: () => null }));
+
 function networkError(path: string): Error & { digest?: string } {
   return new ApiError(
     `Network error contacting localhost:1500 (GET ${path}). Check your connection and try again.`,
@@ -125,6 +127,10 @@ describe("shouldReportRouteError", () => {
 
   it("still reports a non-transient failure immediately", () => {
     expect(shouldReportRouteError(new Error("boom"), "/build/command-center")).toBe(true);
+  });
+
+  it("does not report an expected missing-record response", () => {
+    expect(shouldReportRouteError(new ApiError("Not found", 404, "NOT_FOUND"), "/build/teams/1")).toBe(false);
   });
 });
 

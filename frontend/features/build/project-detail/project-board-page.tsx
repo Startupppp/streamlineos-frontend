@@ -1,26 +1,29 @@
 "use client";
 
-import { use, useCallback, useMemo } from "react";
+import { use, useCallback, useMemo, useRef, useState } from "react";
 import { format, addDays } from "date-fns";
-import { useProject, useCycles, useBulkUpdateTickets } from "@/hooks/api";
+import { useProject, useProjectLabels } from "@/hooks/api/build/projects";
+import { useCycles } from "@/hooks/api/build/cycles";
 import { useWorkloadCapacity } from "@/hooks/api/build/workload-capacity";
-import type { BulkUpdateTicketsInput } from "@/hooks/api";
 import { useBoardUrlState } from "@/features/build/views/use-board-url-state";
-import { useBuildListKeyboard } from "@/features/build/shared/use-build-list-keyboard";
+import { useBuildListKeyboard } from "@/hooks/common/use-build-list-keyboard";
+import { useProjectBoardBulkActions } from "./use-project-board-bulk-actions";
 import { ProjectBoardContent } from "@/features/build/views/project-board-content";
 import { ProjectViewsToolbar } from "@/features/build/views/project-views-toolbar";
-import { CreateTicketDialog } from "@/features/build/tickets/create-ticket-dialog";
-import { ProjectAiMenu } from "@/features/build/ai/project-ai-menu";
-import { TicketImportExportDialog } from "@/features/build/import-export/components/ticket-import-export-dialog";
+import { ProjectBoardHeaderActions } from "@/features/build/project-detail/project-board-header-actions";
 import { SaveViewDialog } from "@/features/build/views/save-view-dialog";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { KanbanBoardSkeleton } from "@/components/ui/kanban-skeleton";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ProjectLoadFallback } from "@/features/build/shared/project-load-fallback";
-import { toast } from "sonner";
-import { getErrorMessage } from "@/lib/get-error-message";
+import { ShortcutHelpDialog } from "@/components/shared/shortcut-help-dialog";
 import { notFound } from "next/navigation";
 import type { ViewType } from "@/features/build/views/view-switcher";
+import { PageState } from "@/components/shared/page-state";
+import { useCan } from "@/hooks/api/access";
+import { usePageState } from "@/hooks/api/use-page-state";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { EmptyState } from "@/components/ui/empty-state";
 
 interface PageProps {
   params: Promise<{ projectId: string }>;
@@ -38,54 +41,21 @@ export function ProjectBoardPage({ params, defaultView }: PageProps) {
     refetch: refetchProject,
   } = useProject(projectId);
   const { data: cycles } = useCycles(projectId);
-  const bulkUpdate = useBulkUpdateTickets(projectId);
+  const { data: orgLabels } = useProjectLabels();
 
   const {
-    view,
-    filterType,
-    filterSeverity,
-    filterQaState,
-    displayOptions,
-    setDisplayOptions,
-    hideCompleted,
-    setHideCompleted,
-    workloadFilters,
-    saveViewOpen,
-    setSaveViewOpen,
-    saveViewName,
-    createView,
-    updateView,
-    selectedIds,
-    ticketsLoading,
-    ticketsError,
-    ticketsErrorValue,
-    refetchTickets,
-    isTruncated,
-    fetchMoreTickets,
-    isFetchingMoreTickets,
-    filteredTickets,
-    statuses,
-    members,
-    wipLimits,
-    doneCount,
-    showEmptyFilterState,
-    hasActiveFilters,
-    activeView,
-    createParamOpen,
-    createDefaultCycleId,
-    handleViewChange,
-    handleClearSearch,
-    handleQaFilterChange,
-    handleClearView,
-    handleCreateOpenChange,
-    handleOpenSaveView,
-    handleSaveViewNameChange,
-    handleSaveView,
-    handleUpdateActiveView,
-    handleWorkloadFilterChange,
-    handleClearWorkloadFilters,
-    handleTicketSelect,
-    handleSelectionChange,
+    view, filterType, filterSeverity, filterQaState,
+    displayOptions, setDisplayOptions, hideCompleted, setHideCompleted,
+    workloadFilters, saveViewOpen, setSaveViewOpen, saveViewName,
+    createView, updateView, selectedIds, ticketsLoading, ticketsError,
+    ticketsErrorValue, refetchTickets, isTruncated, fetchMoreTickets,
+    isFetchingMoreTickets, filteredTickets, statuses, members, wipLimits,
+    doneCount, showEmptyFilterState, showFirstRunState, hasActiveFilters,
+    boardFilters, activeView, createParamOpen, createDefaultCycleId,
+    handleViewChange, handleClearSearch, handleQaFilterChange, handleClearView,
+    handleCreateOpenChange, handleOpenSaveView, handleSaveViewNameChange,
+    handleSaveView, handleUpdateActiveView, handleWorkloadFilterChange,
+    handleClearWorkloadFilters, handleTicketSelect, handleSelectionChange,
     handleClearSelection,
   } = useBoardUrlState(projectId, defaultView);
 
@@ -99,12 +69,16 @@ export function ProjectBoardPage({ params, defaultView }: PageProps) {
     };
   }, []);
 
-  const capacityByMemberId = useWorkloadCapacity(
+  const { data: capacityByMemberId } = useWorkloadCapacity(
     projectId,
     capacityWindow.start,
     capacityWindow.end,
+    undefined,
     { enabled: view === "workload" },
   );
+
+  const searchInputRef = useRef<HTMLInputElement | null>(null);
+  const [shortcutHelpOpen, setShortcutHelpOpen] = useState(false);
 
   const handleOpenFocusedTicket = useCallback(
     (index: number) => {
@@ -114,90 +88,85 @@ export function ProjectBoardPage({ params, defaultView }: PageProps) {
     [filteredTickets, handleTicketSelect],
   );
 
+  const canCreateTicket = useCan("build:tickets:create");
+  const handleKeyboardCreate = useCallback(
+    () => handleCreateOpenChange(true),
+    [handleCreateOpenChange],
+  );
+  const handleShortcutHelp = useCallback(() => setShortcutHelpOpen(true), []);
+
   const { focusedIndex } = useBuildListKeyboard({
     itemCount: filteredTickets.length,
     onOpen: handleOpenFocusedTicket,
+    onEdit: handleOpenFocusedTicket,
     onClearSelection: handleClearSelection,
+    onCreate: canCreateTicket ? handleKeyboardCreate : undefined,
+    onShortcutHelp: handleShortcutHelp,
+    searchInputRef,
     enabled: view === "list",
   });
 
   const focusedTicketId =
-    focusedIndex === null ? null : Number(filteredTickets[focusedIndex]?.id ?? null);
+    focusedIndex === null
+      ? null
+      : Number(filteredTickets[focusedIndex]?.id ?? null);
 
-  const handleRetryProject = useCallback(() => void refetchProject(), [refetchProject]);
-  const handleRetryTickets = useCallback(() => void refetchTickets(), [refetchTickets]);
-
-  const handleBulkUpdate = useCallback(
-    (
-      update: Partial<
-        Pick<
-          BulkUpdateTicketsInput,
-          "assigneeId" | "status" | "cycleId" | "priority" | "parentTicketId"
-        >
-      >,
-    ) => {
-      if (selectedIds.size === 0) {
-        toast.error("No tickets selected");
-        return;
-      }
-      bulkUpdate.mutate(
-        { ticketIds: [...selectedIds].map(Number), ...update },
-        {
-          onSuccess: (d) => {
-            toast.success(`${d.updated} ticket${d.updated !== 1 ? "s" : ""} updated`);
-            handleClearSelection();
-          },
-          onError: (e) => toast.error(getErrorMessage(e)),
-        },
-      );
-    },
-    [selectedIds, bulkUpdate, handleClearSelection],
+  const handleRetryProject = useCallback(
+    () => void refetchProject(),
+    [refetchProject],
+  );
+  const handleRetryTickets = useCallback(
+    () => void refetchTickets(),
+    [refetchTickets],
   );
 
-  const handleBulkStatus = useCallback(
-    (v: string) => handleBulkUpdate({ status: v }),
-    [handleBulkUpdate],
-  );
-  const handleBulkPriority = useCallback(
-    (v: string) => {
-      if (v === "LOW" || v === "MEDIUM" || v === "HIGH" || v === "URGENT") {
-        handleBulkUpdate({ priority: v });
-      }
-    },
-    [handleBulkUpdate],
-  );
-  const handleBulkAssignee = useCallback(
-    (v: string) => handleBulkUpdate({ assigneeId: v }),
-    [handleBulkUpdate],
-  );
-  const handleBulkCycle = useCallback(
-    (v: string) => handleBulkUpdate({ cycleId: v === "backlog" ? null : Number(v) }),
-    [handleBulkUpdate],
-  );
-  const handleBulkParent = useCallback(
-    (parentTicketId: number | null) => handleBulkUpdate({ parentTicketId }),
-    [handleBulkUpdate],
+  const {
+    handleBulkStatus,
+    handleBulkPriority,
+    handleBulkAssignee,
+    handleBulkCycle,
+    handleBulkParent,
+    handleBulkLabel,
+    handleBulkArchiveRequest,
+    handleBulkArchiveConfirm,
+    handleBulkExport,
+    archiveConfirmOpen,
+    handleArchiveDialogChange,
+    isBulkPending,
+  } = useProjectBoardBulkActions({
+    projectId,
+    selectedIds,
+    onClearSelection: handleClearSelection,
+  });
+
+  const resolution = usePageState({
+    permission: "build:view",
+    isLoading,
+    isError: projectError,
+    error: projectErrorValue,
+  });
+
+  if (isLoading) return (
+    <PageWrapper title={<Skeleton className="h-5 w-40" />} noInternalScroll>
+      <KanbanBoardSkeleton />
+    </PageWrapper>
   );
 
-  if (isLoading) {
-    return (
-      <PageWrapper title={<Skeleton className="h-5 w-40" />} noInternalScroll>
-        <KanbanBoardSkeleton />
-      </PageWrapper>
-    );
-  }
+  if (resolution.kind !== "ready" && resolution.kind !== "error") return (
+    <PageWrapper title="Board" noInternalScroll>
+      <PageState resolution={resolution} loading={<KanbanBoardSkeleton />}>{null}</PageState>
+    </PageWrapper>
+  );
 
-  // A failure to READ the project is not the same fact as a project that is
-  // gone: only the fallback's resolved 404 reaches notFound().
-  if (projectError) {
-    return (
-      <ProjectLoadFallback
-        title="Board"
-        error={projectErrorValue}
-        onRetry={handleRetryProject}
-      />
-    );
-  }
+  if (projectError) return (
+    <ProjectLoadFallback title="Board" error={projectErrorValue} onRetry={handleRetryProject} />
+  );
+
+  if (resolution.kind !== "ready") return (
+    <PageWrapper title="Board" noInternalScroll>
+      <PageState resolution={resolution} loading={<KanbanBoardSkeleton />}>{null}</PageState>
+    </PageWrapper>
+  );
 
   if (!data) return notFound();
 
@@ -207,19 +176,15 @@ export function ProjectBoardPage({ params, defaultView }: PageProps) {
       subtitle={data.description ?? undefined}
       noInternalScroll
       filtersClassName="!gap-1 !px-3 sm:!gap-1.5 sm:!px-4 lg:!px-6"
-      contentClassName="!p-0 flex flex-col"
+      contentClassName="!p-0 flex min-h-0 min-w-0 flex-col overflow-hidden"
       className="relative"
       actions={
-        <div className="flex items-center gap-2">
-          <ProjectAiMenu projectId={projectId} />
-          <TicketImportExportDialog projectId={projectId} />
-          <CreateTicketDialog
-            projectId={projectId}
-            defaultCycleId={createDefaultCycleId}
-            externalOpen={createParamOpen}
-            onExternalOpenChange={handleCreateOpenChange}
-          />
-        </div>
+        <ProjectBoardHeaderActions
+          projectId={projectId}
+          createDefaultCycleId={createDefaultCycleId}
+          createOpen={createParamOpen}
+          onCreateOpenChange={handleCreateOpenChange}
+        />
       }
       filters={
         <ProjectViewsToolbar
@@ -245,51 +210,65 @@ export function ProjectBoardPage({ params, defaultView }: PageProps) {
           filterSeverity={filterSeverity}
           filterQaState={filterQaState}
           onQaFilterChange={handleQaFilterChange}
+          searchInputRef={searchInputRef}
         />
       }
     >
-      {/*
-        A 500 on GET /build/:id/tickets used to arrive here as `[]`, so the
-        board rendered its "No tickets yet — create a ticket to get started"
-        empty state over a project that has thousands, and people created
-        duplicates.
-      */}
-      <ProjectBoardContent
-        view={view}
-        focusedTicketId={focusedTicketId}
-        filteredTickets={filteredTickets}
-        showEmptyFilterState={showEmptyFilterState}
-        onClearSearch={handleClearSearch}
-        projectId={projectId}
-        projectKey={data.key}
-        statuses={statuses}
-        wipLimits={wipLimits}
-        members={members}
-        displayOptions={displayOptions}
-        hideCompleted={hideCompleted}
-        hasActiveFilters={hasActiveFilters}
-        workloadFilters={workloadFilters}
-        capacityByMemberId={capacityByMemberId}
-        onTicketSelect={handleTicketSelect}
-        onWorkloadFilterChange={handleWorkloadFilterChange}
-        onClearWorkloadFilters={handleClearWorkloadFilters}
-        cycles={cycles ?? []}
-        selectedIds={selectedIds}
-        onBulkStatus={handleBulkStatus}
-        onBulkPriority={handleBulkPriority}
-        onBulkAssignee={handleBulkAssignee}
-        onBulkCycle={handleBulkCycle}
-        onBulkParent={handleBulkParent}
-        onClearSelection={handleClearSelection}
-        onSelectionChange={handleSelectionChange}
-        isTruncated={isTruncated}
-        isFetchingMore={isFetchingMoreTickets}
-        onLoadMore={fetchMoreTickets}
-        isLoading={ticketsLoading}
-        isError={ticketsError}
-        error={ticketsErrorValue}
-        onRetry={handleRetryTickets}
-      />
+      {showFirstRunState ? (
+        <EmptyState
+          illustrationPreset="ticket"
+          title="No tickets yet"
+          description="Create your first ticket to get started tracking work."
+          action={
+            canCreateTicket
+              ? { label: "Create ticket", onClick: handleKeyboardCreate }
+              : undefined
+          }
+          className="min-h-full w-full flex-1"
+        />
+      ) : (
+        <ProjectBoardContent
+          view={view}
+          focusedTicketId={focusedTicketId}
+          filteredTickets={filteredTickets}
+          showEmptyFilterState={showEmptyFilterState}
+          onClearSearch={handleClearSearch}
+          projectId={projectId}
+          projectKey={data.key}
+          statuses={statuses}
+          wipLimits={wipLimits}
+          members={members}
+          displayOptions={displayOptions}
+          hideCompleted={hideCompleted}
+          hasActiveFilters={hasActiveFilters}
+          boardFilters={boardFilters}
+          workloadFilters={workloadFilters}
+          capacityByMemberId={capacityByMemberId}
+          onTicketSelect={handleTicketSelect}
+          onWorkloadFilterChange={handleWorkloadFilterChange}
+          onClearWorkloadFilters={handleClearWorkloadFilters}
+          cycles={cycles ?? []}
+          selectedIds={selectedIds}
+          onBulkStatus={handleBulkStatus}
+          onBulkPriority={handleBulkPriority}
+          onBulkAssignee={handleBulkAssignee}
+          onBulkCycle={handleBulkCycle}
+          onBulkParent={handleBulkParent}
+          onBulkLabel={handleBulkLabel}
+          onBulkArchive={handleBulkArchiveRequest}
+          onBulkExport={handleBulkExport}
+          labels={orgLabels}
+          onClearSelection={handleClearSelection}
+          onSelectionChange={handleSelectionChange}
+          isTruncated={isTruncated}
+          isFetchingMore={isFetchingMoreTickets}
+          onLoadMore={fetchMoreTickets}
+          isLoading={ticketsLoading}
+          isError={ticketsError}
+          error={ticketsErrorValue}
+          onRetry={handleRetryTickets}
+        />
+      )}
       <SaveViewDialog
         open={saveViewOpen}
         onOpenChange={setSaveViewOpen}
@@ -300,6 +279,20 @@ export function ProjectBoardPage({ params, defaultView }: PageProps) {
         displayOptions={{ ...displayOptions }}
         isSaving={createView.isPending}
         activeLayout={view}
+      />
+      <ShortcutHelpDialog
+        open={shortcutHelpOpen}
+        onOpenChange={setShortcutHelpOpen}
+      />
+      <ConfirmDialog
+        open={archiveConfirmOpen}
+        onOpenChange={handleArchiveDialogChange}
+        title="Archive selected tickets?"
+        description={`Archive ${selectedIds.size} ticket${selectedIds.size !== 1 ? "s" : ""}? Tickets with active sub-tasks not in your selection cannot be archived and nothing will change.`}
+        confirmLabel={`Archive ${selectedIds.size} ticket${selectedIds.size !== 1 ? "s" : ""}`}
+        destructive
+        isPending={isBulkPending}
+        onConfirm={handleBulkArchiveConfirm}
       />
     </PageWrapper>
   );

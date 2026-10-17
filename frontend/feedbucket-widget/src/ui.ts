@@ -40,6 +40,7 @@ export class FeedbucketWidget {
   private errorSubtitle: HTMLElement | null = null;
 
   private readonly container: HTMLDivElement;
+  private readonly launcher: HTMLDivElement;
   private readonly shadowRoot: ShadowRoot;
   private readonly panel: HTMLDivElement;
   private readonly formView: HTMLDivElement;
@@ -105,6 +106,15 @@ export class FeedbucketWidget {
     }
     this.pendingCapture = null;
   };
+  private readonly handleLauncherToggle = (): void => {
+    if (window.innerWidth > 1023) return;
+    this.launcher.classList.toggle("expanded");
+    this.launcher.setAttribute("aria-expanded", String(this.launcher.classList.contains("expanded")));
+    this.handleLauncherExpand();
+  };
+  private readonly handleLauncherExpand = (): void => {
+    window.setTimeout(() => this.drag.constrainToViewport(), 0);
+  };
   private cancelHoverPrefetch(): void {
     if (this.hoverTimer !== null) {
       clearTimeout(this.hoverTimer);
@@ -150,7 +160,8 @@ export class FeedbucketWidget {
   };
 
   private readonly handleFileSelected = (event: Event): void => {
-    const input = event.target as HTMLInputElement;
+    if (!(event.target instanceof HTMLInputElement)) return;
+    const input = event.target;
     const file = input.files?.[0];
     input.value = "";
     if (!file) return;
@@ -276,12 +287,17 @@ export class FeedbucketWidget {
       onComment: this.handleCommentLauncher,
       onHoverEnter: this.handleLauncherHover,
       onHoverLeave: this.handleLauncherLeave,
+      onToggle: this.handleLauncherToggle,
     });
+    this.launcher = launcher;
+    launcher.addEventListener("pointerenter", this.handleLauncherExpand);
+    launcher.addEventListener("focusin", this.handleLauncherExpand);
     this.container.appendChild(launcher);
 
     this.drag = new DragManager(this.container, {
       onDragStart: () => this.cancelHoverPrefetch(),
       onPositionChange: () => { if (this.isOpen) this.positionPanel(); },
+      onTap: this.handleLauncherToggle,
     });
     this.drag.init(logo);
 
@@ -490,9 +506,9 @@ export class FeedbucketWidget {
       ),
     ).filter((el) => {
       if (el.hidden) return false;
-      let node: Element | null = el.parentElement;
+      let node: HTMLElement | null = el.parentElement;
       while (node !== null && node !== this.panel) {
-        if ((node as HTMLElement).hidden) return false;
+        if (node.hidden) return false;
         node = node.parentElement;
       }
       return true;

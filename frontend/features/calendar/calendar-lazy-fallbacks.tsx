@@ -1,44 +1,50 @@
 "use client";
 
-import { Skeleton } from "@/components/ui/skeleton";
+import Image from "next/image";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import type { CalendarListItem } from "@/hooks/api/calendar";
 import { formatEventDate, formatEventTimeRange } from "@/lib/date-utils";
 import { EVENT_COLORS } from "./calendar-event-constants";
 
 function agendaWhen(event: CalendarListItem): string {
   if (event.allDay)
-    return `${formatEventDate(event.start, event.timezone ?? "UTC")} · All day`;
+    return `${event.time.kind === "date"
+      ? formatEventDate(`${event.time.startDate}T12:00:00.000Z`, "UTC")
+      : formatEventDate(event.start, event.timezone ?? "UTC")} · All day`;
   return formatEventTimeRange(event.start, event.end, event.timezone);
 }
 
 export function CalendarAgendaPreview({
   events,
   maxEvents = 6,
+  onSelectEvent,
 }: {
   events: CalendarListItem[];
   maxEvents?: number;
+  onSelectEvent?: (event: CalendarListItem) => void;
 }) {
-  const todayStart = new Date();
-  todayStart.setHours(0, 0, 0, 0);
-
   const upcoming = events
-    .filter((e) => new Date(e.start) >= todayStart)
+    .slice()
     .sort((a, b) => new Date(a.start).getTime() - new Date(b.start).getTime())
     .slice(0, maxEvents);
 
   if (upcoming.length === 0)
     return (
       <div className="flex min-h-0 flex-1 flex-col items-center justify-center p-6">
-        <p className="text-sm text-muted-foreground">No upcoming events</p>
+        <p className="text-sm text-muted-foreground">No events in this period</p>
       </div>
     );
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col gap-1.5 overflow-y-auto p-3">
+    <ScrollArea className="min-h-0 flex-1">
+    <div className="flex flex-col gap-1.5 p-3">
       {upcoming.map((event) => (
-        <div
+        <button
+          type="button"
           key={event.id}
-          className="flex items-start gap-3 rounded-md border border-border/50 bg-card px-3 py-2"
+          onClick={() => onSelectEvent?.(event)}
+          disabled={!event.actions.view}
+          className="flex w-full items-start gap-3 rounded-md border border-border/50 bg-card px-3 py-2 text-left transition-colors hover:bg-muted/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-60"
         >
           <div
             className="mt-1 h-2 w-2 shrink-0 rounded-full"
@@ -54,45 +60,27 @@ export function CalendarAgendaPreview({
               {agendaWhen(event)}
             </p>
           </div>
-        </div>
+        </button>
       ))}
     </div>
+    </ScrollArea>
   );
 }
 
-export function CalendarOverlayFallback({ label }: { label: string }) {
+export function CalendarLoadingStatus({ label }: { label: string }) {
   return (
-    <div
-      role="status"
-      aria-live="polite"
-      aria-label={label}
-      className="fixed inset-0 z-50 flex items-center justify-center bg-background/60 p-4"
-    >
-      <div className="flex w-full max-w-md flex-col gap-3 rounded-lg border border-border bg-card p-4 shadow-panel">
-        <Skeleton className="h-5 w-2/3" />
-        <Skeleton className="h-9 w-full" />
-        <Skeleton className="h-9 w-full" />
-        <Skeleton className="h-24 w-full" />
-        <Skeleton className="h-9 w-24 self-end" />
-      </div>
-    </div>
-  );
-}
-
-export function CalendarSheetFallback({ label }: { label: string }) {
-  return (
-    <div
-      role="status"
-      aria-live="polite"
-      aria-label={label}
-      className="fixed inset-y-0 right-0 z-50 flex w-full max-w-sm flex-col gap-3 border-l border-border bg-card p-5 shadow-panel"
-    >
-      <Skeleton className="h-6 w-3/5" />
-      <Skeleton className="h-4 w-4/5" />
-      <Skeleton className="h-4 w-2/3" />
-      <Skeleton className="h-4 w-1/2" />
-      <Skeleton className="h-32 w-full" />
-    </div>
+    <span className="inline-flex items-center gap-1.5 text-xs text-muted-foreground">
+      <span className="inline-flex size-3.5 shrink-0 animate-spin motion-reduce:animate-none">
+        <Image
+          src="/logo.svg"
+          alt=""
+          width={14}
+          height={14}
+          className="size-3.5 rounded-sm"
+        />
+      </span>
+      {label}
+    </span>
   );
 }
 
@@ -101,14 +89,9 @@ export function CalendarListFallback({ label }: { label: string }) {
     <div
       role="status"
       aria-live="polite"
-      aria-label={label}
-      className="flex min-h-0 flex-1 flex-col gap-2 p-4"
+      className="flex min-h-0 flex-1 items-center justify-center"
     >
-      <Skeleton className="h-10 w-full" />
-      <Skeleton className="h-10 w-full" />
-      <Skeleton className="h-10 w-full" />
-      <Skeleton className="h-10 w-5/6" />
-      <Skeleton className="h-10 w-4/6" />
+      <CalendarLoadingStatus label={label} />
     </div>
   );
 }

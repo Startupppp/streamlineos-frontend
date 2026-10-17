@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from "@testing-library/react";
+import { act, fireEvent, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import type { BuildNavDestination } from "@/lib/build/nav/build-nav-destination";
 import { BuildMoreToolsMenu } from "./build-more-tools-menu";
@@ -229,6 +229,38 @@ describe("BSN-03-034 — returns null with an empty tools list", () => {
   test("component renders nothing when tools list is empty", () => {
     const { container } = renderMenu({ tools: [] });
     expect(container.firstChild).toBeNull();
+  });
+});
+
+describe("BT-3e0fb2c86ce3 — command search debounce", () => {
+  test("search input carries aria-busy while the debounce is pending so backend queries fire once per interval", async () => {
+    jest.useFakeTimers();
+    try {
+      renderMenu();
+      const trigger = screen.getByRole("button", { name: "More Build tools" });
+      fireEvent.click(trigger);
+
+      const search = screen.getByRole("searchbox");
+      fireEvent.change(search, { target: { value: "Ana" } });
+
+      expect(search).toHaveAttribute("aria-busy", "true");
+
+      act(() => {
+        jest.runAllTimers();
+      });
+
+      expect(search).toHaveAttribute("aria-busy", "false");
+    } finally {
+      jest.useRealTimers();
+    }
+  });
+
+  test("search input is not aria-busy before the user types", async () => {
+    renderMenu();
+    await openMenu();
+
+    const search = screen.getByRole("searchbox");
+    expect(search).toHaveAttribute("aria-busy", "false");
   });
 });
 

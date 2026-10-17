@@ -5,8 +5,9 @@ import { format } from "date-fns";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { LoadingState } from "@/components/shared/loading-state";
-import { ErrorState } from "@/components/shared/error-state";
+import { PageState } from "@/components/shared/page-state";
 import { EmptyState } from "@/components/ui/empty-state";
 import { AiCitationChips, type Citation } from "@/components/ai/ai-citation-chips";
 import { ThumbsUpIcon, ThumbsDownIcon } from "@animateicons/react/lucide";
@@ -15,11 +16,17 @@ import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
-import { useKbResearchBrief, useRateResearchBrief } from "@/hooks/api/kb/research-briefs";
+import { useKbResearchBrief, useRateResearchBrief, useRetryResearchBrief, useCancelResearchBrief, useConvertResearchBriefToPage, useApproveResearchBrief } from "@/hooks/api/kb/research-briefs";
+import { useKbSpace } from "@/hooks/api/kb/spaces";
+import { pageHref } from "@/lib/knowledge-routes";
+import { useCan } from "@/hooks/api/access";
+import { usePageState } from "@/hooks/api/use-page-state";
+import { useRouter } from "next/navigation";
 import type { KbResearchBriefCitation, KbResearchBriefStatus } from "@/types/kb";
 
 interface KbResearchBriefDetailProps {
   briefId: number;
+  basePath: string;
 }
 
 const STATUS_LABELS: Record<KbResearchBriefStatus, string> = {
@@ -100,9 +107,24 @@ function BriefFeedback({ briefId, currentRating }: { briefId: number; currentRat
   );
 }
 
-export function KbResearchBriefDetail({ briefId }: KbResearchBriefDetailProps) {
-  const { data: brief, isLoading, error, refetch } = useKbResearchBrief(briefId);
+export function KbResearchBriefDetail({ briefId, basePath }: KbResearchBriefDetailProps) {
+  const { data: brief, isLoading, isError, error, refetch } = useKbResearchBrief(briefId);
+  const { data: scopeSpace } = useKbSpace(brief?.spaceId ?? 0);
+  const retryMutation = useRetryResearchBrief();
+  const cancelMutation = useCancelResearchBrief();
+  const convertMutation = useConvertResearchBriefToPage();
+  const approveMutation = useApproveResearchBrief();
+  const canCreatePages = useCan("kb:pages:create");
+  const canManagePages = useCan("kb:pages:manage");
+  const router = useRouter();
   const [showFullReport, setShowFullReport] = useState(false);
+  const pageState = usePageState({
+    permission: "kb:pages:view",
+    isLoading,
+    isError: isError && !brief,
+    error,
+    isEmpty: !brief,
+  });
 
   const citations = useMemo(() => {
     if (!brief?.citations) return [];
@@ -124,7 +146,7 @@ export function KbResearchBriefDetail({ briefId }: KbResearchBriefDetailProps) {
     return `${brief.report.slice(0, 600)}…`;
   }, [brief, showFullReport]);
 
-  function handleRetry() {
+  function handleRefetch() {
     void refetch();
   }
 
@@ -132,23 +154,58 @@ export function KbResearchBriefDetail({ briefId }: KbResearchBriefDetailProps) {
     setShowFullReport((prev) => !prev);
   }
 
-  if (isLoading) return <LoadingState variant="form" rows={6} />;
-  if (error) {
-    return <ErrorState description={getErrorMessage(error)} onRetry={handleRetry} />;
+  function handleRetry() {
+    retryMutation.mutate(briefId, { onError: (e) => toast.error(getErrorMessage(e)) });
   }
+
+  function handleCancel() {
+    cancelMutation.mutate(briefId, {
+      onSuccess: () => router.push(basePath),
+      onError: (e) => toast.error(getErrorMessage(e)),
+    });
+  }
+
+  function handleConvertToPage() {
+    convertMutation.mutate(briefId, {
+      onSuccess: (result) => {
+        toast.success("Brief converted to a page");
+        router.push(pageHref(result.pageId));
+      },
+      onError: (e) => toast.error(getErrorMessage(e)),
+    });
+  }
+
+  function handleApprove() {
+    approveMutation.mutate(briefId, {
+      onSuccess: () => toast.success("Research brief approved for publishing"),
+      onError: (e) => toast.error(getErrorMessage(e)),
+    });
+  }
+
   if (!brief) {
     return (
-      <EmptyState
-        title="Research brief not found"
-        description="This brief may have been deleted, or the link is out of date."
-        action={{ label: "Back to research briefs", href: "/support/kb/research-briefs" }}
-      />
+      <PageState
+        resolution={pageState}
+        loading={<LoadingState variant="form" rows={6} />}
+        onRetry={handleRefetch}
+      >
+        <EmptyState
+          title="Research brief not found"
+          description="This brief may have been deleted, or the link is out of date."
+          action={{ label: "Back to research briefs", href: basePath }}
+        />
+      </PageState>
     );
   }
 
   const isInProgress = brief.status === "queued" || brief.status === "running";
 
   return (
+    <PageState
+      resolution={pageState}
+      loading={<LoadingState variant="form" rows={6} />}
+      onRetry={handleRefetch}
+    >
     <div className="space-y-4">
       <Card>
         <CardHeader className="p-4 pb-0">
@@ -167,6 +224,18 @@ export function KbResearchBriefDetail({ briefId }: KbResearchBriefDetailProps) {
           </div>
         </CardHeader>
         <CardContent className="p-4 space-y-3">
+          <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
+            <span>
+              <span className="font-medium text-foreground">Owner: </span>
+              You
+            </span>
+            {brief.spaceId !== null && (
+              <span>
+                <span className="font-medium text-foreground">Scope: </span>
+                {scopeSpace?.name ?? `Space ${brief.spaceId}`}
+              </span>
+            )}
+          </div>
           {isInProgress && (
             <div className="flex items-center gap-2 rounded-lg bg-primary/5 border border-primary/10 px-3 py-2.5">
               <Loader2 className="h-4 w-4 animate-spin text-primary shrink-0" />
@@ -182,9 +251,73 @@ export function KbResearchBriefDetail({ briefId }: KbResearchBriefDetailProps) {
             </div>
           )}
 
+          {brief.status === "failed" && (
+            <LoadingButton
+              variant="outline"
+              size="sm"
+              className="h-7 text-xs"
+              onClick={handleRetry}
+              isPending={retryMutation.isPending}
+              loadingText="Retrying…"
+            >
+              Retry
+            </LoadingButton>
+          )}
+
+          <LoadingButton
+            variant="outline"
+            size="sm"
+            className="h-7 text-xs text-destructive hover:text-destructive"
+            onClick={handleCancel}
+            isPending={cancelMutation.isPending}
+            loadingText="Deleting…"
+          >
+            Delete
+          </LoadingButton>
+
+          {brief.status === "completed" && brief.approvedAt === null && canManagePages && (
+            <LoadingButton
+              variant="outline"
+              size="sm"
+              className="h-7 text-xs"
+              onClick={handleApprove}
+              isPending={approveMutation.isPending}
+              loadingText="Approving…"
+            >
+              Approve for publishing
+            </LoadingButton>
+          )}
+
+          {brief.status === "completed" && brief.approvedAt !== null && (
+            <p className="text-xs text-status-success-ink">
+              Approved for publishing
+            </p>
+          )}
+
+          {brief.status === "completed" && brief.report !== null && brief.approvedAt !== null && canCreatePages && (
+            <LoadingButton
+              variant="outline"
+              size="sm"
+              className="h-7 text-xs"
+              onClick={handleConvertToPage}
+              isPending={convertMutation.isPending}
+              loadingText="Converting…"
+            >
+              Convert to page
+            </LoadingButton>
+          )}
+
           {brief.sourceCount > 0 && (
             <p className="text-xs text-muted-foreground">
               {brief.sourceCount} source{brief.sourceCount !== 1 ? "s" : ""} consulted
+            </p>
+          )}
+
+          {brief.status === "completed" && (brief.model != null || brief.costCredits != null) && (
+            <p className="text-xs text-muted-foreground">
+              {brief.model != null ? brief.model : null}
+              {brief.model != null && brief.costCredits != null ? " · " : null}
+              {brief.costCredits != null ? `${brief.costCredits} credits` : null}
             </p>
           )}
 
@@ -219,5 +352,6 @@ export function KbResearchBriefDetail({ briefId }: KbResearchBriefDetailProps) {
         </Card>
       )}
     </div>
+    </PageState>
   );
 }

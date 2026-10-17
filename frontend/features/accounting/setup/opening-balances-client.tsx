@@ -1,5 +1,7 @@
 "use client";
 
+import { DatePicker } from "@/components/ui/date-picker";
+
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { toast } from "sonner";
@@ -160,11 +162,13 @@ export function OpeningBalancesClient() {
           </CardHeader>
           <CardContent className="space-y-2">
             <Label htmlFor="as-of">Books open on</Label>
-            <Input
+            <DatePicker
               id="as-of"
-              type="date"
+              ariaLabel="Books open on"
               value={asOfDate}
-              onChange={(event) => setAsOfDate(event.target.value)}
+              onChange={setAsOfDate}
+              placeholder="Pick a date"
+              dateFormat="dd MMM yyyy"
               className="max-w-xs"
             />
           </CardContent>

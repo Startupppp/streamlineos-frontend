@@ -2,6 +2,7 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import type { InfiniteData, QueryClient } from "@tanstack/react-query";
 import type { ReactNode } from "react";
 import { createElement } from "react";
+import { useSession } from "next-auth/react";
 import type { Notification } from "@/types/notifications";
 import type {
   NotificationInboxItem,
@@ -9,14 +10,6 @@ import type {
   UnifiedInboxResponse,
 } from "@/types/inbox";
 
-/**
- * The harness the notification-inbox specs share. `makeNotif` was once the
- * pre-inbox wire shape behind an `as Notification`: it carried eight fields the
- * type has not had for some time (isArchived, readAt, actionUrl, referenceType,
- * referenceId, actorId, actorName, actorAvatar) and omitted five it requires
- * (priority, category, sourceModule, link, channel). The cast is gone, so the
- * compiler holds it to the real shape.
- */
 export function makeNotif(id: number, isRead = false): Notification {
   return {
     id,
@@ -27,7 +20,7 @@ export function makeNotif(id: number, isRead = false): Notification {
     category: "SYSTEM",
     sourceModule: null,
     title: `Notification ${id}`,
-    message: null,
+    message: "",
     link: null,
     isRead,
     pinned: false,
@@ -47,7 +40,10 @@ export function makeInfiniteData(
   };
 }
 
-export function makeUnifiedNotif(id: number, isRead = false): NotificationInboxItem {
+export function makeUnifiedNotif(
+  id: number,
+  isRead = false,
+): NotificationInboxItem {
   return {
     kind: "notification",
     id,
@@ -67,7 +63,9 @@ export function makeUnifiedNotif(id: number, isRead = false): NotificationInboxI
   };
 }
 
-export function makeUnifiedPage(items: UnifiedInboxItem[]): UnifiedInboxResponse {
+export function makeUnifiedPage(
+  items: UnifiedInboxItem[],
+): UnifiedInboxResponse {
   return {
     items,
     hasMore: false,
@@ -90,6 +88,23 @@ export function wrapper(client: QueryClient) {
   return function Wrapper({ children }: { children: ReactNode }) {
     return createElement(QueryClientProvider, { client }, children);
   };
+}
+
+export function setNotificationSession(
+  sessionId = "session-1",
+  orgId = "org-1",
+  userId = "u-1",
+) {
+  jest.mocked(useSession).mockReturnValue({
+    data: {
+      orgId,
+      sessionId,
+      user: { id: userId, role: "OrgMember" },
+      expires: "2099-01-01",
+    },
+    status: "authenticated",
+    update: jest.fn(),
+  });
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -118,7 +133,12 @@ export function apiClientMock(): NotificationApiClientMock {
   const post = isRecord(client) ? client.post : undefined;
   const patch = isRecord(client) ? client.patch : undefined;
   const remove = isRecord(client) ? client.delete : undefined;
-  if (!isJestMock(get) || !isJestMock(post) || !isJestMock(patch) || !isJestMock(remove))
+  if (
+    !isJestMock(get) ||
+    !isJestMock(post) ||
+    !isJestMock(patch) ||
+    !isJestMock(remove)
+  )
     throw new Error(
       'apiClientMock: "@/lib/api-client" is not mocked with jest.fn() get/post/patch/delete',
     );
@@ -131,14 +151,27 @@ export function apiClientMock(): NotificationApiClientMock {
  */
 export function withInjectedClient(client: QueryClient): void {
   const mocked = jest.requireMock("./notifications-shared");
-  const hook = isRecord(mocked) ? mocked.useNotificationInboxInvalidation : undefined;
+  const hook = isRecord(mocked)
+    ? mocked.useNotificationInboxInvalidation
+    : undefined;
   if (!isJestMock(hook))
     throw new Error(
       'withInjectedClient: "./notifications-shared" is not mocked with a jest.fn() useNotificationInboxInvalidation',
     );
   hook.mockReturnValue({
-    invalidateInbox: jest.fn(),
+    invalidateInbox: jest.fn(() => {
+      const actual = jest.requireActual<
+        typeof import("./notifications-shared")
+      >("./notifications-shared");
+      actual.invalidateNotificationInbox(client);
+    }),
     orgId: "org-1",
     queryClient: client,
+    captureOwner: () => ({
+      queryClient: client,
+      identity: { orgId: "org-1", userId: "u-1", sessionId: "session-1" },
+      signal: new AbortController().signal,
+      isCurrent: () => true,
+    }),
   });
 }

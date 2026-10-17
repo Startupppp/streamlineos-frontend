@@ -1,4 +1,4 @@
-import { render, screen, fireEvent } from "@testing-library/react";
+import { act, render, screen, fireEvent } from "@testing-library/react";
 import { PresenceStatusPicker } from "./presence-status-picker";
 
 const mutate = jest.fn();
@@ -79,6 +79,26 @@ describe("PresenceStatusPicker", () => {
     );
   });
 
+  it("releases the optimistic pick on mutation success so later server state wins", () => {
+    const { rerender } = render(<PresenceStatusPicker layout="list" />);
+
+    fireEvent.click(screen.getByRole("button", { name: "Vacation" }));
+    expect(screen.getByRole("button", { name: "Vacation" })).toHaveAttribute(
+      "aria-pressed",
+      "true",
+    );
+
+    const callbacks = mutate.mock.calls[0]?.[1] as { onSuccess?: () => void };
+    act(() => callbacks.onSuccess?.());
+    presenceMap = new Map([["me", "BUSY"]]);
+    rerender(<PresenceStatusPicker layout="list" />);
+
+    expect(screen.getByRole("button", { name: "Busy" })).toHaveAttribute(
+      "aria-pressed",
+      "true",
+    );
+  });
+
   it("renders the same options in menu layout, so the account menu and chat agree", () => {
     render(<PresenceStatusPicker layout="menu" />);
 
@@ -94,6 +114,19 @@ describe("PresenceStatusPicker — custom status message", () => {
     render(<PresenceStatusPicker layout="list" />);
 
     expect(screen.getByLabelText("Status message")).toHaveValue("Heads-down until 3pm");
+  });
+
+  it("replaces a stale draft when a different server message arrives", () => {
+    customStatus = { statusMessage: "First status", statusExpiresAt: null };
+    const view = render(<PresenceStatusPicker layout="list" />);
+    fireEvent.change(screen.getByLabelText("Status message"), {
+      target: { value: "Unsaved draft" },
+    });
+
+    customStatus = { statusMessage: "Updated elsewhere", statusExpiresAt: null };
+    view.rerender(<PresenceStatusPicker layout="list" />);
+
+    expect(screen.getByLabelText("Status message")).toHaveValue("Updated elsewhere");
   });
 
   it("sends the typed message with the current status when the field blurs", () => {

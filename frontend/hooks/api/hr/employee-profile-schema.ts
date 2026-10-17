@@ -7,10 +7,75 @@ export const inviteDeliveryContract = z.object({
 
 export type InviteDelivery = z.infer<typeof inviteDeliveryContract>;
 
+/**
+ * A join link an administrator can pass on when email cannot be relied on.
+ * The token lives in `inviteUrl` and nowhere else.
+ */
+export const inviteLinkContract = z.object({
+  inviteUrl: z.string().url(),
+  expiresAt: z.string(),
+  email: z.string().email(),
+});
+
+export type InviteLink = z.infer<typeof inviteLinkContract>;
+
+const managerResolutionContract = z.enum(["SELECTED", "IN_FILE", "FALLBACK_CONFIGURED", "FALLBACK_UPLOADER"]);
+
+/** Addendum 2: kept unwrapped (it carries `success`). `resolution` only with hr:employees:view. */
 export const onboardEmployeeResponseContract = z.object({
   success: z.boolean(),
   userId: z.string(),
   invite: inviteDeliveryContract,
+  primaryManager: z
+    .object({ userId: z.string(), name: z.string(), resolution: managerResolutionContract.optional() })
+    .nullable()
+    .optional(),
+});
+
+const onboardingPrimaryManagerContract = z.object({
+  userId: z.string().nullable(),
+  name: z.string(),
+  email: z.string(),
+  resolution: managerResolutionContract,
+});
+
+const bulkOnboardRowStatusContract = z.enum(["READY", "WARNING", "ERROR", "SKIPPED"]);
+
+export const bulkOnboardPreviewContract = z.object({
+  rows: z.array(
+    z.object({
+      row: z.number().int(),
+      email: z.string(),
+      status: bulkOnboardRowStatusContract,
+      codes: z.array(z.string()),
+      messages: z.array(z.string()),
+      primaryManager: onboardingPrimaryManagerContract.nullable(),
+      secondaryManagers: z.array(z.object({ name: z.string(), email: z.string() })),
+      dependsOnRow: z.number().int().nullable(),
+    }),
+  ),
+  counts: z.object({
+    ready: z.number().int(),
+    warning: z.number().int(),
+    error: z.number().int(),
+    skipped: z.number().int(),
+  }),
+  /**
+   * BUG-HRMS-002. An onboarded employee is admitted as an organization member, so
+   * every row spends a plan seat. The preview said "15 rows · 15 ready to create"
+   * with one seat free and the confirm step answered 402 with nothing created.
+   * The backend now reports the seat arithmetic and marks the rows that will not
+   * fit with SEAT_LIMIT, so this surface can say so before the confirm.
+   *
+   * `limit` and `available` are null on an unlimited plan.
+   */
+  seats: z.object({
+    limit: z.number().int().nullable(),
+    used: z.number().int(),
+    available: z.number().int().nullable(),
+    required: z.number().int(),
+    blocked: z.number().int(),
+  }),
 });
 
 export const resendEmployeeInviteResponseContract = z.object({
@@ -18,16 +83,24 @@ export const resendEmployeeInviteResponseContract = z.object({
   invite: inviteDeliveryContract,
 });
 
+/**
+ * Addendum 2 names the commit statuses CREATED | FAILED | SKIPPED; the DTO reuses
+ * the preview's READY | WARNING | ERROR | SKIPPED. Both are accepted.
+ */
 export const bulkOnboardResultContract = z.object({
   total: z.number().int(),
   created: z.number().int(),
   failed: z.number().int(),
+  skipped: z.number().int(),
   results: z.array(z.object({
     row: z.number().int(),
     email: z.string(),
     success: z.boolean(),
     userId: z.string().optional(),
     error: z.string().optional(),
+    status: z.enum(["READY", "WARNING", "ERROR", "SKIPPED", "CREATED", "FAILED"]),
+    codes: z.array(z.string()),
+    primaryManager: onboardingPrimaryManagerContract.nullable(),
   })),
 });
 

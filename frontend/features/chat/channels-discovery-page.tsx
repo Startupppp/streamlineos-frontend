@@ -16,10 +16,11 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
-import { usePublicChannels, useJoinChannel, useLeaveChannel } from "@/hooks/api";
+import { usePublicChannels } from "@/hooks/api/chat-core-read";
+import { useJoinChannel, useLeaveChannel } from "@/hooks/api/chat-core-mutations-b";
 import { PublicChannelRow } from "./public-channel-row";
 import { NewGroupDialog } from "./new-group-dialog";
-import { ChannelLoadMore } from "./channel-load-more";
+import { InfiniteScrollSentinel } from "@/components/ui/infinite-scroll-sentinel";
 
 const PAGE_SIZE = 10;
 
@@ -108,6 +109,7 @@ export function ChannelsDiscoveryPage() {
     [router],
   );
   const handleOpenCreate = useCallback(() => setCreateOpen(true), []);
+  const handleClearSearch = useCallback(() => setSearch(""), []);
 
   return (
     <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden bg-background">
@@ -136,7 +138,7 @@ export function ChannelsDiscoveryPage() {
       </div>
 
       <ScrollArea fill hideScrollbar className="min-h-0 flex-1">
-        <div className="overscroll-contain px-4 py-4 pb-[calc(4rem+env(safe-area-inset-bottom))] sm:px-6 md:pb-4">
+        <div className="overscroll-contain px-4 py-4 pb-[calc(2.75rem+env(safe-area-inset-bottom))] sm:px-6 md:pb-4">
         {isLoading ? (
           <div className="space-y-2" aria-busy="true">
             <span role="status" className="sr-only">Loading channels…</span>
@@ -156,15 +158,16 @@ export function ChannelsDiscoveryPage() {
         ) : filtered.length === 0 && !hasMore ? (
           <EmptyState
             illustrationPreset={search ? "search" : "chat"}
-            title={search ? "No channels match your search" : "No public channels yet"}
+            title="No public channels yet"
+            filtersActive={search.length > 0}
+            filteredTitle="No channels match your search"
+            onClearFilters={handleClearSearch}
             description={
               search
                 ? "Try a different search term"
                 : "Create a public channel to get started"
             }
-            action={
-              search ? undefined : { label: "Create Channel", onClick: handleOpenCreate }
-            }
+            action={{ label: "Create Channel", onClick: handleOpenCreate }}
             className={CONTENT_FILL_PANEL}
           />
         ) : (
@@ -184,15 +187,19 @@ export function ChannelsDiscoveryPage() {
               ))}
             </div>
 
-            <ChannelLoadMore
-              hasMore={hasMore}
-              isTruncated={isTruncated}
-              isLoading={isFetchingNextPage}
-              onLoadMore={loadMore}
-              label="Load more channels"
-              truncatedHint="Search by name to reach the rest."
-              className="mt-3"
-            />
+            {isTruncated ? (
+              <p role="status" className="px-2 py-1.5 text-dense text-muted-foreground mt-3">
+                {"Showing the channels loaded so far. Search by name to reach the rest."}
+              </p>
+            ) : (
+              <InfiniteScrollSentinel
+                hasNextPage={hasMore}
+                isFetchingNextPage={isFetchingNextPage}
+                onLoadMore={loadMore}
+                label="Load more channels"
+                className="mt-3"
+              />
+            )}
 
             <div className="flex items-center justify-end gap-3 mt-4 text-xs text-muted-foreground">
               <span>

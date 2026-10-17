@@ -40,12 +40,70 @@ export function contrastRatio(hex1: string, hex2: string): number {
   return (lighter + 0.05) / (darker + 0.05);
 }
 
-export function extractTokenValue(css: string, tokenName: string): string | undefined {
+const HEX_VALUE = /^#[0-9a-fA-F]{3,8}$/;
+const VAR_VALUE = /^var\(\s*--([a-zA-Z0-9-]+)\s*(?:,\s*(.+?)\s*)?\)$/;
+const COLOR_MIX_VALUE =
+  /^color-mix\(\s*in srgb\s*,\s*(.+?)\s+(\d+(?:\.\d+)?)%\s*,\s*(.+?)\s*\)$/;
+
+function expandHex(hex: string): string {
+  const body = hex.slice(1);
+  if (body.length !== 3) return hex;
+  return `#${body
+    .split("")
+    .map((channel) => channel + channel)
+    .join("")}`;
+}
+
+function toHexChannel(value: number): string {
+  return Math.round(Math.min(255, Math.max(0, value)))
+    .toString(16)
+    .padStart(2, "0");
+}
+
+function rawDeclaration(css: string, tokenName: string): string | undefined {
   const pattern = new RegExp(
-    String.raw`--${tokenName}:\s*(#[0-9a-fA-F]{3,8})`,
+    String.raw`(?:^|[^a-zA-Z0-9-])--${tokenName}:\s*([^;]+);`,
   );
-  const match = pattern.exec(css);
-  return match?.[1];
+  return pattern.exec(css)?.[1].trim();
+}
+
+export function extractTokenValue(
+  css: string,
+  tokenName: string,
+  seen: Set<string> = new Set(),
+): string | undefined {
+  if (seen.has(tokenName)) return undefined;
+  seen.add(tokenName);
+  const raw = rawDeclaration(css, tokenName);
+  return raw === undefined ? undefined : resolveCssColor(css, raw, seen);
+}
+
+function resolveCssColor(
+  css: string,
+  value: string,
+  seen: Set<string>,
+): string | undefined {
+  if (HEX_VALUE.test(value)) return expandHex(value);
+
+  const varMatch = VAR_VALUE.exec(value);
+  if (varMatch) {
+    const referenced = extractTokenValue(css, varMatch[1], new Set(seen));
+    if (referenced) return referenced;
+    return varMatch[2] ? resolveCssColor(css, varMatch[2], seen) : undefined;
+  }
+
+  const mixMatch = COLOR_MIX_VALUE.exec(value);
+  if (!mixMatch) return undefined;
+  const first = resolveCssColor(css, mixMatch[1], new Set(seen));
+  const second = resolveCssColor(css, mixMatch[3], new Set(seen));
+  if (!first || !second) return undefined;
+
+  const weight = Number(mixMatch[2]) / 100;
+  const [r1, g1, b1] = hexToRgb(first);
+  const [r2, g2, b2] = hexToRgb(second);
+  return `#${toHexChannel(r1 * weight + r2 * (1 - weight))}${toHexChannel(
+    g1 * weight + g2 * (1 - weight),
+  )}${toHexChannel(b1 * weight + b2 * (1 - weight))}`;
 }
 
 const CSS_PATH = join(__dirname, "..", "globals.css");
@@ -99,17 +157,12 @@ export function resolvePair(
 export const WCAG_NON_TEXT = 3.0;
 
 export function extractTokenAnyValue(css: string, tokenName: string): string | undefined {
-  const direct = new RegExp(String.raw`--${tokenName}:\s*(#[0-9a-fA-F]{3,8})`).exec(css);
-  if (direct) return direct[1];
-  const viaVar = new RegExp(
-    String.raw`--${tokenName}:\s*var\([^,]+,\s*(#[0-9a-fA-F]{3,8})\s*\)`,
-  ).exec(css);
-  return viaVar?.[1];
+  return extractTokenValue(css, tokenName);
 }
 
 export function ratioOf(css: string, fgToken: string, bgToken: string): number {
-  const fg = extractTokenAnyValue(css, fgToken);
-  const bg = extractTokenAnyValue(css, bgToken);
+  const fg = extractTokenValue(css, fgToken);
+  const bg = extractTokenValue(css, bgToken);
   if (!fg || !bg) throw new Error(`Token not found in CSS: ${fgToken} / ${bgToken}`);
   return contrastRatio(fg, bg);
 }

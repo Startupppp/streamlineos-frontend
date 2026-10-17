@@ -10,7 +10,6 @@ import {
   CheckIcon,
   ChevronDownIcon,
   ChevronRightIcon,
-  ChevronUpIcon,
   CircleCheckIcon,
   ClipboardIcon,
   CopyIcon,
@@ -39,6 +38,7 @@ import {
   DownloadIcon,
 } from "@animateicons/react/lucide";
 import {
+  Archive,
   Building2,
   Clock,
   FileDown,
@@ -59,8 +59,6 @@ type KbIconProps = {
   className?: string;
   size?: number;
 };
-
-export type KbIconComponent = AnimatedNavIconComponent;
 
 const TAILWIND_UNIT_PX = 4;
 const TAILWIND_SIZE_TOKEN_RE = /^(?:h|w|size)-(\d+(?:\.\d+)?)$/;
@@ -95,7 +93,7 @@ type AnimateIconSource = React.ForwardRefExoticComponent<
   KbIconProps & React.RefAttributes<IconHandle>
 >;
 
-function createAnimatedIcon(Icon: AnimateIconSource): KbIconComponent {
+function createAnimatedIcon(Icon: AnimateIconSource): AnimatedNavIconComponent {
   return forwardRef<IconHandle, KbIconProps>(function KbAnimatedIcon(
     { className, size },
     ref,
@@ -110,7 +108,7 @@ function createAnimatedIcon(Icon: AnimateIconSource): KbIconComponent {
   });
 }
 
-function createLucideIcon(Icon: LucideIcon): KbIconComponent {
+function createLucideIcon(Icon: LucideIcon): AnimatedNavIconComponent {
   return forwardRef<IconHandle, KbIconProps>(function KbLucideIcon(
     { className, size },
     _,
@@ -159,6 +157,7 @@ export const KbEdit2Icon = createAnimatedIcon(UserPenIcon);
 
 export const KbClockIcon = createLucideIcon(Clock);
 export const KbRotateCcwIcon = createLucideIcon(RotateCcw);
+export const KbArchiveIcon = createLucideIcon(Archive);
 export const KbHistoryIcon = createLucideIcon(History);
 export const KbPanelRightOpenIcon = createLucideIcon(PanelRightOpen);
 export const KbPanelRightCloseIcon = createLucideIcon(PanelRightClose);
@@ -170,4 +169,3 @@ export const KbUnlockIcon = createLucideIcon(Unlock);
 export const KbFileDownIcon = createLucideIcon(FileDown);
 export const KbSaveIcon = createLucideIcon(Save);
 export const KbPenLineIcon = createLucideIcon(PenLine);
-export const KbChevronUpIcon = createAnimatedIcon(ChevronUpIcon);

@@ -30,6 +30,7 @@ export interface Quote {
   signedAt: string | null;
   signedDocumentRef: string | null;
   convertedInvoiceId: number | null;
+  projectId?: number | null;
   createdAt: string;
   updatedAt: string;
   createdBy?: { id: string; name: string | null; image: string | null } | null;

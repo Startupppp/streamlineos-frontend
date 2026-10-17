@@ -1,24 +1,39 @@
 import { apiClient } from "@/lib/api-client";
+import { lazyContract } from "@/lib/api-envelope";
 import { IDEMPOTENCY_HEADER } from "@/lib/idempotency-key";
-import {
-  importPreviewSchema,
-  importReportSchema,
-  ticketExportSchema,
-  type ImportFormat,
-  type ImportMode,
-  type TicketExport,
-  type TicketImportPreview,
-  type TicketImportReport,
-} from "./import-export-contract";
+import type {
+  TicketImportExportPreviewImportResponse,
+  TicketImportExportCommitImportResponse,
+  TicketImportExportExportTicketsResponse,
+} from "@/contracts/build-contracts.generated";
+import type { ImportFormat, ImportMode } from "./import-export-contract";
 
-export interface PreviewTicketImportInput {
+const previewContract = lazyContract(() =>
+  import("@/contracts/build-contracts.generated").then(
+    (m) => m.ticketImportExportPreviewImportResponseSchema,
+  ),
+);
+
+const commitContract = lazyContract(() =>
+  import("@/contracts/build-contracts.generated").then(
+    (m) => m.ticketImportExportCommitImportResponseSchema,
+  ),
+);
+
+const exportContract = lazyContract(() =>
+  import("@/contracts/build-contracts.generated").then(
+    (m) => m.ticketImportExportExportTicketsResponseSchema,
+  ),
+);
+
+interface PreviewTicketImportInput {
   projectId: number;
   format: ImportFormat;
   content: string;
   signal?: AbortSignal;
 }
 
-export interface CommitTicketImportInput {
+interface CommitTicketImportInput {
   projectId: number;
   format: ImportFormat;
   content: string;
@@ -28,28 +43,29 @@ export interface CommitTicketImportInput {
   signal?: AbortSignal;
 }
 
-export interface ExportTicketsInput {
+interface ExportTicketsInput {
   projectId: number;
   format: ImportFormat;
   limit?: number;
+  ticketIds?: number[];
   signal?: AbortSignal;
 }
 
 export function previewTicketImport(
   input: PreviewTicketImportInput,
-): Promise<TicketImportPreview> {
-  return apiClient.post<TicketImportPreview>(
+): Promise<TicketImportExportPreviewImportResponse> {
+  return apiClient.post<TicketImportExportPreviewImportResponse>(
     `/build/${input.projectId}/import-export/tickets/preview`,
     { format: input.format, content: input.content },
     input.signal ? { signal: input.signal } : undefined,
-    importPreviewSchema,
+    previewContract,
   );
 }
 
 export function commitTicketImport(
   input: CommitTicketImportInput,
-): Promise<TicketImportReport> {
-  return apiClient.post<TicketImportReport>(
+): Promise<TicketImportExportCommitImportResponse> {
+  return apiClient.post<TicketImportExportCommitImportResponse>(
     `/build/${input.projectId}/import-export/tickets`,
     {
       format: input.format,
@@ -61,17 +77,19 @@ export function commitTicketImport(
       headers: { [IDEMPOTENCY_HEADER]: input.idempotencyKey },
       ...(input.signal ? { signal: input.signal } : {}),
     },
-    importReportSchema,
+    commitContract,
   );
 }
 
-export function exportTickets(input: ExportTicketsInput): Promise<TicketExport> {
-  return apiClient.get<TicketExport>(
+export function exportTickets(input: ExportTicketsInput): Promise<TicketImportExportExportTicketsResponse> {
+  const params: Record<string, unknown> = { format: input.format };
+  if (input.limit !== undefined) params.limit = input.limit;
+  if (input.ticketIds !== undefined && input.ticketIds.length > 0)
+    params.ticketIds = input.ticketIds.join(",");
+  return apiClient.get<TicketImportExportExportTicketsResponse>(
     `/build/${input.projectId}/import-export/tickets/export`,
-    input.limit === undefined
-      ? { format: input.format }
-      : { format: input.format, limit: input.limit },
+    params,
     input.signal,
-    ticketExportSchema,
+    exportContract,
   );
 }

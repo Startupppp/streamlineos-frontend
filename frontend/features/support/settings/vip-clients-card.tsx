@@ -108,7 +108,7 @@ export function VipClientsCard() {
                 <CommandEmpty>No clients found.</CommandEmpty>
                 <CommandGroup>
                   {availableClients.map((c) => (
-                    <VipClientOption key={c.id} clientId={c.id} name={c.name} onSelect={handleAdd} />
+                    <VipClientOption key={c.id} clientId={c.id} name={c.name ?? "(unnamed)"} onSelect={handleAdd} />
                   ))}
                 </CommandGroup>
               </CommandList>

@@ -1,8 +1,9 @@
 import type {
   ReportingComparisonOperator,
+  ReportingFieldType,
   ReportingFilterLeaf,
+  ReportingFilterNode,
 } from "@/types/crm/reporting";
-import type { SegmentFieldType, SegmentFilterNode } from "@/types/crm/segments";
 
 /**
  * The criteria a person assembles, and the tree the server stores.
@@ -35,8 +36,6 @@ import type { SegmentFieldType, SegmentFilterNode } from "@/types/crm/segments";
  * why nothing below adds an operator the compiler's own table lacks.
  */
 
-export type SegmentOperator = ReportingComparisonOperator;
-
 /**
  * Which comparisons this control offers per field type.
  *
@@ -47,8 +46,8 @@ export type SegmentOperator = ReportingComparisonOperator;
  * question.
  */
 export const SEGMENT_OPERATORS_FOR_TYPE: Record<
-  SegmentFieldType,
-  readonly SegmentOperator[]
+  ReportingFieldType,
+  readonly ReportingComparisonOperator[]
 > = {
   text: [
     "eq",
@@ -75,7 +74,7 @@ export const SEGMENT_OPERATORS_FOR_TYPE: Record<
  * building a segment is describing customers, and a row that reads
  * `industry is any of Textiles, Jute` is a sentence they can check.
  */
-export const SEGMENT_OPERATOR_LABELS: Record<SegmentOperator, string> = {
+export const SEGMENT_OPERATOR_LABELS: Record<ReportingComparisonOperator, string> = {
   eq: "is",
   ne: "is not",
   lt: "is before or under",
@@ -94,7 +93,7 @@ export const SEGMENT_OPERATOR_LABELS: Record<SegmentOperator, string> = {
 
 export type SegmentOperatorArity = "unary" | "binary" | "list";
 
-export function segmentOperatorArity(operator: SegmentOperator): SegmentOperatorArity {
+export function segmentOperatorArity(operator: ReportingComparisonOperator): SegmentOperatorArity {
   if (operator === "is_null" || operator === "is_not_null") return "unary";
   if (operator === "in" || operator === "not_in") return "list";
   return "binary";
@@ -104,8 +103,8 @@ export function segmentOperatorArity(operator: SegmentOperator): SegmentOperator
  * rules are decidable without reaching back into the source catalogue. */
 export interface SegmentCriterionDraft {
   field: string;
-  fieldType: SegmentFieldType | "";
-  operator: SegmentOperator;
+  fieldType: ReportingFieldType | "";
+  operator: ReportingComparisonOperator;
   value: string;
   /** `in`/`not_in` lists, one value per line, so a value may contain a comma. */
   values: string;
@@ -137,7 +136,7 @@ export function splitCriterionValues(raw: string): string[] {
  */
 export function toScalar(
   raw: string,
-  type: SegmentFieldType,
+  type: ReportingFieldType,
 ): string | number | boolean | null {
   const trimmed = raw.trim();
   if (trimmed === "") return null;
@@ -196,7 +195,7 @@ function toLeaf(row: SegmentCriterionDraft): ReportingFilterLeaf | null {
  */
 export function toSegmentCriteria(
   rows: readonly SegmentCriterionDraft[],
-): SegmentFilterNode | null {
+): ReportingFilterNode | null {
   const leaves: ReportingFilterLeaf[] = [];
   for (const row of rows) {
     const leaf = toLeaf(row);
@@ -212,7 +211,7 @@ export function toSegmentCriteria(
 
 function rowFromLeaf(
   leaf: ReportingFilterLeaf,
-  typeOf: (field: string) => SegmentFieldType | undefined,
+  typeOf: (field: string) => ReportingFieldType | undefined,
 ): SegmentCriterionDraft | null {
   const fieldType = typeOf(leaf.field);
   /**
@@ -241,8 +240,8 @@ function rowFromLeaf(
  * read-only and says where they came from.
  */
 export function toCriterionRows(
-  criteria: SegmentFilterNode,
-  typeOf: (field: string) => SegmentFieldType | undefined,
+  criteria: ReportingFilterNode,
+  typeOf: (field: string) => ReportingFieldType | undefined,
 ): SegmentCriterionDraft[] | null {
   if (criteria.kind === "compare") {
     const row = rowFromLeaf(criteria, typeOf);
@@ -270,7 +269,7 @@ export function toCriterionRows(
  * inventing a description.
  */
 export function describeSegmentCriteria(
-  criteria: SegmentFilterNode,
+  criteria: ReportingFilterNode,
   labelOf: (field: string) => string,
 ): string {
   const parts = describeNode(criteria, labelOf);
@@ -279,7 +278,7 @@ export function describeSegmentCriteria(
 }
 
 function describeNode(
-  node: SegmentFilterNode,
+  node: ReportingFilterNode,
   labelOf: (field: string) => string,
 ): string | null {
   if (node.kind === "compare") {

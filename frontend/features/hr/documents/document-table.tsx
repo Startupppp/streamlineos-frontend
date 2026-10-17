@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useMemo, useState } from "react";
-import { Download, Folder, Upload } from "lucide-react";
+import { Download, Folder } from "lucide-react";
 import { EmptyState } from "@/components/ui/empty-state";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { DataTable } from "@/components/ui/data-table";
@@ -35,6 +35,7 @@ export interface DocumentTableProps {
   onEdit: (doc: Document) => void;
   onOpenUpload: () => void;
   onSendForSignature: (doc: Document) => void;
+  onClassify?: (doc: Document) => void;
 }
 
 export function DocumentTable({
@@ -52,6 +53,7 @@ export function DocumentTable({
   onEdit,
   onOpenUpload,
   onSendForSignature,
+  onClassify,
 }: DocumentTableProps) {
   const [isZipping, setIsZipping] = useState(false);
 
@@ -71,12 +73,19 @@ export function DocumentTable({
           if (!response.ok)
             throw new Error(`Failed to fetch ${doc.fileName ?? doc.name}`);
           const blob = await response.blob();
+          // An empty body is a failed fetch, not an empty document (HRMS-E2E-009).
+          if (blob.size === 0)
+            throw new Error(`${doc.fileName ?? doc.name} came back empty`);
           zip.file(doc.fileName ?? `${doc.name}.bin`, blob);
         }),
       );
       const failed = results.filter(
         (downloadResult) => downloadResult.status === "rejected",
       ).length;
+      if (failed === filesWithUrl.length) {
+        toast.error(`None of the ${failed} files could be downloaded. Nothing was saved.`);
+        return;
+      }
       const zipBlob = await zip.generateAsync({ type: "blob" });
       const url = URL.createObjectURL(zipBlob);
       const anchor = document.createElement("a");
@@ -102,13 +111,13 @@ export function DocumentTable({
     page === 1 && selectedCategory === "All Files" && searchTerm === "";
 
   const columns = useMemo(
-    () => createDocumentColumns(onDelete, onEdit, onSendForSignature),
-    [onDelete, onEdit, onSendForSignature],
+    () => createDocumentColumns(onDelete, onEdit, onSendForSignature, onClassify),
+    [onDelete, onEdit, onSendForSignature, onClassify],
   );
 
   const emptyState = (
     <EmptyState
-      illustration={<Upload className="w-8 text-muted-foreground" />}
+      illustrationPreset="upload"
       title="No documents found"
       description="Upload your first document to get started"
       action={
@@ -150,10 +159,10 @@ export function DocumentTable({
           </p>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
             {folders.map((folder) => (
-              <button
+              // A summary tile: it was a <button> with no handler (rubric test 1).
+              <div
                 key={folder.name}
-                type="button"
-                className="flex items-center gap-2.5 p-2.5 rounded-xl border border-border bg-card hover:bg-muted/40 transition-colors duration-200 text-left"
+                className="flex items-center gap-2.5 p-2.5 rounded-xl border border-border bg-card text-left"
               >
                 <div
                   className={cn(
@@ -172,7 +181,7 @@ export function DocumentTable({
                     {folder.count} files
                   </p>
                 </div>
-              </button>
+              </div>
             ))}
           </div>
         </div>

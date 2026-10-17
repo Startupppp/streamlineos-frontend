@@ -1,6 +1,7 @@
 import type { Session } from "next-auth";
-import { gateCookieName } from "./onboarding-gate";
-import { resolveWizardGate } from "./wizard-gate";
+import type { AccessResponse } from "@/types/access";
+import { gateCookieName, GATE_COOKIE_MAX_AGE, ONBOARDING_DEFERRED_MAX_AGE } from "./onboarding-gate";
+import { onboardingGateYieldsToDenial, resolveWizardGate } from "./wizard-gate";
 
 function session(overrides: Partial<Session> = {}): Session {
   return {
@@ -39,6 +40,7 @@ describe("resolveWizardGate", () => {
             isPlatformAdmin: true,
           }),
           noCookies,
+          "/",
         ),
       ).toBe("/owner");
     });
@@ -48,6 +50,7 @@ describe("resolveWizardGate", () => {
         resolveWizardGate(
           session({ orgId: null, organizationAccess: "none" }),
           noCookies,
+          "/",
         ),
       ).toBe("/org-setup");
     });
@@ -61,6 +64,7 @@ describe("resolveWizardGate", () => {
             isPlatformAdmin: true,
           }),
           noCookies,
+          "/",
         ),
       ).toBe("/access-suspended");
     });
@@ -75,6 +79,7 @@ describe("resolveWizardGate", () => {
             userOnboardingCompletedAt: "2026-01-01T00:00:00.000Z",
           }),
           noCookies,
+          "/dashboard",
         ),
       ).toBeNull();
     });
@@ -97,16 +102,18 @@ describe("resolveWizardGate", () => {
             },
           }),
           noCookies,
+          "/hr/directory",
         ),
       ).toBeNull();
     });
 
-    it("non-owner with no userOnboardingCompletedAt and no cookie IS routed to /employee-onboarding", () => {
+    it("non-owner with no userOnboardingCompletedAt and no cookie IS routed to /employee-onboarding when HR is enabled", () => {
       expect(
         resolveWizardGate(
           session({
             orgId: "org-1",
             organizationAccess: "active",
+            enabledModules: ["hr"],
             user: {
               id: "member-1",
               email: "member@example.com",
@@ -116,6 +123,7 @@ describe("resolveWizardGate", () => {
             },
           }),
           noCookies,
+          "/hr/directory",
         ),
       ).toBe("/employee-onboarding");
     });
@@ -129,12 +137,13 @@ describe("resolveWizardGate", () => {
           suspendedOrganizationName: "Original workspace",
         }),
         noCookies,
+        "/",
       ),
     ).toBe("/access-suspended");
   });
 
   it("routes a genuinely unaffiliated account to organization setup", () => {
-    expect(resolveWizardGate(session(), noCookies)).toBe("/org-setup");
+    expect(resolveWizardGate(session(), noCookies, "/")).toBe("/org-setup");
   });
 
   it("allows a restored membership into its organization", () => {
@@ -146,6 +155,7 @@ describe("resolveWizardGate", () => {
           userOnboardingCompletedAt: "2026-01-01T00:00:00.000Z",
         }),
         noCookies,
+        "/dashboard",
       ),
     ).toBeNull();
   });
@@ -160,6 +170,7 @@ describe("resolveWizardGate", () => {
             userOnboardingCompletedAt: "2026-08-01T00:00:00.000Z",
           }),
           noCookies,
+          "/hr/directory",
         ),
       ).toBeNull();
     });
@@ -170,8 +181,10 @@ describe("resolveWizardGate", () => {
           session({
             orgId: "org-1",
             organizationAccess: "active",
+            enabledModules: ["hr"],
           }),
           withCookie(gateCookieName("onboarding-done", "user-1--org-1")),
+          "/hr/directory",
         ),
       ).toBeNull();
     });
@@ -182,8 +195,10 @@ describe("resolveWizardGate", () => {
           session({
             orgId: "org-1",
             organizationAccess: "active",
+            enabledModules: ["hr"],
           }),
           withCookie(gateCookieName("onboarding-done", "user-1")),
+          "/hr/directory",
         ),
       ).toBe("/employee-onboarding");
     });
@@ -194,8 +209,10 @@ describe("resolveWizardGate", () => {
           session({
             orgId: "org-2",
             organizationAccess: "active",
+            enabledModules: ["hr"],
           }),
           withCookie(gateCookieName("onboarding-done", "user-1--org-1")),
+          "/hr/directory",
         ),
       ).toBe("/employee-onboarding");
     });
@@ -206,8 +223,10 @@ describe("resolveWizardGate", () => {
           session({
             orgId: "org-1",
             organizationAccess: "active",
+            enabledModules: ["hr"],
           }),
           noCookies,
+          "/hr/directory",
         ),
       ).toBe("/employee-onboarding");
     });
@@ -230,6 +249,7 @@ describe("resolveWizardGate", () => {
             orgOnboardingCompletedAt: "2026-08-01T00:00:00.000Z",
           }),
           noCookies,
+          "/org-setup",
         ),
       ).toBeNull();
     });
@@ -249,6 +269,7 @@ describe("resolveWizardGate", () => {
             },
           }),
           withCookie(gateCookieName("org-setup-done", "org-1")),
+          "/org-setup",
         ),
       ).toBeNull();
     });
@@ -268,8 +289,356 @@ describe("resolveWizardGate", () => {
             },
           }),
           noCookies,
+          "/org-setup",
         ),
       ).toBe("/org-setup");
     });
+  });
+
+  describe("HR module gate — BUG-018 / BUG-030 / FE-122", () => {
+    it("a MEMBER is not gated when the HR module is disabled", () => {
+      expect(
+        resolveWizardGate(
+          session({
+            orgId: "org-1",
+            organizationAccess: "active",
+            enabledModules: [],
+            user: {
+              id: "member-1",
+              email: "member@example.com",
+              name: "Member",
+              role: "MEMBER",
+              isOrgOwner: false,
+            },
+          }),
+          noCookies,
+          "/hr/directory",
+        ),
+      ).toBeNull();
+    });
+
+    it("a MEMBER is not gated when enabledModules is absent from the session", () => {
+      expect(
+        resolveWizardGate(
+          session({
+            orgId: "org-1",
+            organizationAccess: "active",
+            user: {
+              id: "member-1",
+              email: "member@example.com",
+              name: "Member",
+              role: "MEMBER",
+              isOrgOwner: false,
+            },
+          }),
+          noCookies,
+          "/hr/directory",
+        ),
+      ).toBeNull();
+    });
+
+    it("a MEMBER with HR enabled and no wizard complete is still sent to /employee-onboarding when navigating to /hr", () => {
+      expect(
+        resolveWizardGate(
+          session({
+            orgId: "org-1",
+            organizationAccess: "active",
+            enabledModules: ["hr"],
+            user: {
+              id: "member-1",
+              email: "member@example.com",
+              name: "Member",
+              role: "MEMBER",
+              isOrgOwner: false,
+            },
+          }),
+          noCookies,
+          "/hr/directory",
+        ),
+      ).toBe("/employee-onboarding");
+    });
+
+    it("a MEMBER with HR enabled may defer and be admitted — BUG-018 / FE-122", () => {
+      const userId = "member-1";
+      const orgId = "org-1";
+      expect(
+        resolveWizardGate(
+          session({
+            orgId,
+            organizationAccess: "active",
+            enabledModules: ["hr"],
+            user: {
+              id: userId,
+              email: "member@example.com",
+              name: "Member",
+              role: "MEMBER",
+              isOrgOwner: false,
+            },
+          }),
+          withCookie(gateCookieName("onboarding-deferred", `${userId}--${orgId}`)),
+          "/hr/directory",
+        ),
+      ).toBeNull();
+    });
+  });
+
+  describe("BUG-A: HR wizard must not intercept non-HR routes", () => {
+    it("a MEMBER with HR enabled and incomplete profile navigating to /build/45 is allowed through — BUG-A", () => {
+      expect(
+        resolveWizardGate(
+          session({
+            orgId: "org-1",
+            organizationAccess: "active",
+            enabledModules: ["hr"],
+            user: {
+              id: "member-1",
+              email: "member@example.com",
+              name: "Member",
+              role: "MEMBER",
+              isOrgOwner: false,
+            },
+          }),
+          noCookies,
+          "/build/45",
+        ),
+      ).toBeNull();
+    });
+
+    it("the same MEMBER navigating to /hr/directory IS redirected to /employee-onboarding — BUG-A", () => {
+      expect(
+        resolveWizardGate(
+          session({
+            orgId: "org-1",
+            organizationAccess: "active",
+            enabledModules: ["hr"],
+            user: {
+              id: "member-1",
+              email: "member@example.com",
+              name: "Member",
+              role: "MEMBER",
+              isOrgOwner: false,
+            },
+          }),
+          noCookies,
+          "/hr/directory",
+        ),
+      ).toBe("/employee-onboarding");
+    });
+
+    it("a MEMBER with HR enabled navigating to /settings is allowed through — BUG-A", () => {
+      expect(
+        resolveWizardGate(
+          session({
+            orgId: "org-1",
+            organizationAccess: "active",
+            enabledModules: ["hr"],
+            user: {
+              id: "member-1",
+              email: "member@example.com",
+              name: "Member",
+              role: "MEMBER",
+              isOrgOwner: false,
+            },
+          }),
+          noCookies,
+          "/settings",
+        ),
+      ).toBeNull();
+    });
+
+    it("a MEMBER with HR enabled navigating to /dashboard is allowed through — BUG-A", () => {
+      expect(
+        resolveWizardGate(
+          session({
+            orgId: "org-1",
+            organizationAccess: "active",
+            enabledModules: ["hr"],
+            user: {
+              id: "member-1",
+              email: "member@example.com",
+              name: "Member",
+              role: "MEMBER",
+              isOrgOwner: false,
+            },
+          }),
+          noCookies,
+          "/dashboard",
+        ),
+      ).toBeNull();
+    });
+  });
+
+  describe("BUG-B: ORG_ADMIN and MEMBER get identical outcomes — one gate policy", () => {
+    const hrMember = (role: "ORG_ADMIN" | "MEMBER") =>
+      session({
+        orgId: "org-1",
+        organizationAccess: "active",
+        enabledModules: ["hr"],
+        user: {
+          id: "user-1",
+          email: "user@example.com",
+          name: "User",
+          role,
+          isOrgOwner: false,
+        },
+      });
+
+    it("ORG_ADMIN navigating to /hr without wizard complete is sent to /employee-onboarding — BUG-B", () => {
+      expect(resolveWizardGate(hrMember("ORG_ADMIN"), noCookies, "/hr/team")).toBe("/employee-onboarding");
+    });
+
+    it("MEMBER navigating to /hr without wizard complete is sent to /employee-onboarding — BUG-B", () => {
+      expect(resolveWizardGate(hrMember("MEMBER"), noCookies, "/hr/team")).toBe("/employee-onboarding");
+    });
+
+    it("ORG_ADMIN navigating to /build is allowed through without wizard — BUG-B", () => {
+      expect(resolveWizardGate(hrMember("ORG_ADMIN"), noCookies, "/build/1")).toBeNull();
+    });
+
+    it("MEMBER navigating to /build is allowed through without wizard — BUG-B", () => {
+      expect(resolveWizardGate(hrMember("MEMBER"), noCookies, "/build/1")).toBeNull();
+    });
+  });
+
+  describe("deferral is available to every non-owner role", () => {
+    it("a VIEWER role can defer the wizard and be admitted to /hr", () => {
+      const userId = "viewer-1";
+      const orgId = "org-1";
+      expect(
+        resolveWizardGate(
+          session({
+            orgId,
+            organizationAccess: "active",
+            enabledModules: ["hr"],
+            user: {
+              id: userId,
+              email: "viewer@example.com",
+              name: "Viewer",
+              role: "VIEWER",
+              isOrgOwner: false,
+            },
+          }),
+          withCookie(gateCookieName("onboarding-deferred", `${userId}--${orgId}`)),
+          "/hr/directory",
+        ),
+      ).toBeNull();
+    });
+  });
+
+  describe("path-independent branches still fire on non-HR destinations — proves only branch 5 was scoped", () => {
+    it("suspended membership fires on /build", () => {
+      expect(
+        resolveWizardGate(
+          session({ organizationAccess: "suspended" }),
+          noCookies,
+          "/build/1",
+        ),
+      ).toBe("/access-suspended");
+    });
+
+    it("no-org account fires on /settings", () => {
+      expect(resolveWizardGate(session(), noCookies, "/settings")).toBe("/org-setup");
+    });
+
+    it("owner with incomplete org setup fires on /dashboard", () => {
+      expect(
+        resolveWizardGate(
+          session({
+            orgId: "org-1",
+            organizationAccess: "active",
+            user: {
+              id: "owner-1",
+              email: "owner@example.com",
+              name: "Owner",
+              role: "OWNER",
+              isOrgOwner: true,
+            },
+          }),
+          noCookies,
+          "/dashboard",
+        ),
+      ).toBe("/org-setup");
+    });
+  });
+
+  describe("cookie max-age constants", () => {
+    it("the deferral cookie uses the 7-day max-age, not the 5-minute bridge window", () => {
+      expect(ONBOARDING_DEFERRED_MAX_AGE).toBe(7 * 24 * 60 * 60);
+    });
+
+    it("the done-bridge cookies keep the 5-minute max-age that guards the session-refresh window", () => {
+      expect(GATE_COOKIE_MAX_AGE).toBe(5 * 60);
+    });
+
+    it("the deferred max-age is longer than the done max-age", () => {
+      expect(ONBOARDING_DEFERRED_MAX_AGE).toBeGreaterThan(GATE_COOKIE_MAX_AGE);
+    });
+  });
+
+  describe("missing x-pathname header — safe default when proxy is bypassed", () => {
+    it("an empty pathname does not trigger the HR wizard gate — failing open keeps the user on their page", () => {
+      expect(
+        resolveWizardGate(
+          session({
+            orgId: "org-1",
+            organizationAccess: "active",
+            enabledModules: ["hr"],
+            user: {
+              id: "member-1",
+              email: "member@example.com",
+              name: "Member",
+              role: "MEMBER",
+              isOrgOwner: false,
+            },
+          }),
+          noCookies,
+          "",
+        ),
+      ).toBeNull();
+    });
+  });
+});
+
+describe("onboardingGateYieldsToDenial (QA 2026-10-13: denial wins over the onboarding detour)", () => {
+  const employee: Pick<AccessResponse, "isOrgOwner" | "scopes"> = {
+    isOrgOwner: false,
+    scopes: { "hr:leaves:view": "own" },
+  };
+
+  it("lets the denial win on a route whose permission the user lacks", () => {
+    expect(onboardingGateYieldsToDenial("/hr/employees", employee)).toBe(true);
+  });
+
+  it("keeps the onboarding gate on a route the user may open", () => {
+    expect(
+      onboardingGateYieldsToDenial("/hr/employees", {
+        isOrgOwner: false,
+        scopes: { "hr:employees:view": "all" },
+      }),
+    ).toBe(false);
+  });
+
+  // RBAC-B-003: "HR = No access" still holds the member-default self:leaves, which /hr/leaves accepts.
+  it("yields on /hr/leaves for a member whose only HR keys are member defaults", () => {
+    expect(
+      onboardingGateYieldsToDenial("/hr/leaves", {
+        isOrgOwner: false,
+        scopes: { "self:leaves": "own", "hr:leaves:create": "own" },
+      }),
+    ).toBe(true);
+  });
+
+  it("keeps the onboarding gate on /hr/leaves for an HR-managed member", () => {
+    expect(
+      onboardingGateYieldsToDenial("/hr/leaves", {
+        isOrgOwner: false,
+        scopes: { "self:leaves": "own", "hr:leaves:view": "own" },
+      }),
+    ).toBe(false);
+  });
+
+  it("keeps the onboarding gate for an owner and for routes with no permission", () => {
+    expect(onboardingGateYieldsToDenial("/hr/employees", { isOrgOwner: true, scopes: {} })).toBe(false);
+    expect(onboardingGateYieldsToDenial("/dashboard", employee)).toBe(false);
   });
 });

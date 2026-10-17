@@ -161,7 +161,7 @@ describe("ReportResultsPanel", () => {
         offset: 2,
       });
 
-      expect(screen.getByText("Showing 3-4 of 5")).toBeInTheDocument();
+      expect(screen.getByText("Showing 3–4 of 5")).toBeInTheDocument();
     });
 
     /**
@@ -256,14 +256,14 @@ describe("ReportResultsPanel", () => {
             { alias: "c3", projection: { kind: "field", field: "name" }, type: "text" },
           ],
           rows: [
-            { c0: "1234", c1: "2026-03-14T00:00:00.000Z", c2: false, c3: null },
+            { c0: "1234", c1: "2026-03-14T06:00:00.000Z", c2: false, c3: null },
           ],
         }),
       });
 
       expect(screen.getByText("1,234")).toBeInTheDocument();
       expect(screen.getByText(/14\s+\w+\s+2026/)).toBeInTheDocument();
-      expect(screen.queryByText("2026-03-14T00:00:00.000Z")).not.toBeInTheDocument();
+      expect(screen.queryByText("2026-03-14T06:00:00.000Z")).not.toBeInTheDocument();
       expect(screen.getByText("No")).toBeInTheDocument();
       expect(screen.getByText("—")).toBeInTheDocument();
     });

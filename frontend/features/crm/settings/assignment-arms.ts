@@ -5,7 +5,7 @@ import type {
   BaseAssignmentType,
   CreateAssignmentRuleInput,
   WeightedMember,
-} from "@/hooks/api/crm-settings";
+} from "@/hooks/api/crm/settings/assignment-rules";
 
 /**
  * How the five arms this screen offers map onto the two columns that store

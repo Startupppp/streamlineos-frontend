@@ -1,221 +1,370 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useCallback, useMemo, useRef } from "react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
-import { StatCard, StatCardGrid, StatCardGridSkeleton } from "@/components/ui/stat-card";
-import { Skeleton } from "@/components/ui/skeleton";
+import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
 import { EmptyState } from "@/components/ui/empty-state";
-import { ErrorState } from "@/components/shared/error-state";
 import { PageState } from "@/components/shared/page-state";
 import { usePageState } from "@/hooks/api/use-page-state";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
-import { Diamond, CheckCircle2, Clock, AlertCircle } from "lucide-react";
+import { TablePagination } from "@/components/ui/table-pagination";
+import { BuildPaginatedContent } from "@/features/build/shared/build-paginated-content";
+import { useBuildCursorPager } from "@/features/build/shared/use-build-cursor-pager";
+import {
+  Diamond,
+  CheckCircle2,
+  Clock,
+  AlertCircle,
+  X,
+  WifiOff,
+} from "lucide-react";
 import { PlusIcon } from "@animateicons/react/lucide";
 import {
+  BUILD_FILTER_ALL,
+  useBuildListFilters,
+} from "@/features/build/shared/use-build-list-filters";
+import {
   useProjectMilestones,
-  useDeleteMilestone,
   type ProjectMilestone,
-} from "@/hooks/api/build";
+} from "@/hooks/api/build/milestones";
+import { useCan } from "@/hooks/api/access";
+import { useOnlineStatus } from "@/hooks/common/use-online-status";
+import { useBuildMembers } from "@/hooks/api/build/build-members";
+import { useOrgMembersByIds } from "@/hooks/api/organization";
+import { getUserDisplayName } from "@/lib/person-display";
 import { MilestoneUpsertSheet } from "@/features/build/milestones/milestone-upsert-sheet";
 import { MilestoneCard } from "@/features/build/milestones/milestone-card";
-import { toast } from "sonner";
-import { getErrorMessage } from "@/lib/get-error-message";
+import { toMilestoneTargetDate } from "@/features/build/milestones/milestone-status";
 import { isPast, isToday } from "date-fns";
-import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import {
   PmPageShell,
   PmSection,
   PmStaggerList,
-  PM_FILL_PANEL,
+  CONTENT_FILL_PANEL,
+  PM_TOOLBAR,
 } from "@/components/pm-chrome";
+import {
+  Select,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectItem,
+} from "@/components/ui/select";
+import { cn } from "@/lib/utils";
+import { MilestonesPageSkeleton } from "./milestones-page-skeleton";
+import { MilestonesFilterToolbar } from "./milestones-filter-toolbar";
+import { useMilestonesPageActions } from "./use-milestones-page-actions";
 
-function NewMilestoneButton({ onClick }: { onClick: () => void }) {
-  const { iconRef, hoverHandlers } = useAnimatedIcon();
-  return (
-    <Button size="sm" className="gap-1.5" onClick={onClick} {...hoverHandlers}>
-      <PlusIcon ref={iconRef} size={14} />
-      New Milestone
-    </Button>
-  );
+const MILESTONE_FILTER_DEFINITIONS = [
+  {
+    param: "status",
+    options: [BUILD_FILTER_ALL, "PENDING", "ACHIEVED", "MISSED"],
+  },
+  { param: "ownerId" },
+  { param: "from" },
+  { param: "to" },
+] as const;
+
+function readDateFilter(value: string): string | undefined {
+  return /^\d{4}-\d{2}-\d{2}$/.test(value) ? value : undefined;
 }
 
 interface ProjectMilestonesPageProps {
   projectId: string;
 }
 
-export function ProjectMilestonesPage({ projectId: projectIdStr }: ProjectMilestonesPageProps) {
+export function ProjectMilestonesPage({
+  projectId: projectIdStr,
+}: ProjectMilestonesPageProps) {
   const projectId = Number(projectIdStr);
-  const {
-    data: milestones,
-    isLoading,
-    isError,
-    error,
-    refetch,
-  } = useProjectMilestones(projectId);
+  const canManage = useCan("build:workspace:manage");
+  const listFilters = useBuildListFilters({
+    filters: MILESTONE_FILTER_DEFINITIONS,
+  });
+  const pager = useBuildCursorPager(listFilters.resetKey);
+  const searchInputRef = useRef<HTMLInputElement>(null);
+  const isOnline = useOnlineStatus();
+  const { data: buildMembersPage } = useBuildMembers({ limit: 100 });
+  const buildMembers = useMemo(() => buildMembersPage?.data ?? [], [buildMembersPage]);
+  const { data: orgMembersPage } = useOrgMembersByIds(buildMembers.map((member) => member.id));
+  const membershipByUserId = useMemo(
+    () => new Map((orgMembersPage?.data ?? []).map((member) => [member.userId, member])),
+    [orgMembersPage],
+  );
+  const ownerOptions = useMemo(
+    () => [
+      { value: BUILD_FILTER_ALL, label: "Any owner" },
+      ...buildMembers
+        .filter((member) => membershipByUserId.has(member.id))
+        .map((member) => ({
+          value: String(member.membershipId),
+          label: getUserDisplayName(member),
+        })),
+    ],
+    [buildMembers, membershipByUserId],
+  );
+
+  const statusFilterValue = listFilters.value("status");
+  const serverStatus =
+    statusFilterValue !== BUILD_FILTER_ALL &&
+    (statusFilterValue === "PENDING" ||
+      statusFilterValue === "ACHIEVED" ||
+      statusFilterValue === "MISSED")
+      ? statusFilterValue
+      : undefined;
+  const fromValue = readDateFilter(listFilters.value("from"));
+  const toValue = readDateFilter(listFilters.value("to"));
+  const ownerIdValue = listFilters.value("ownerId");
+  const ownerId = /^\d+$/.test(ownerIdValue) ? Number(ownerIdValue) : undefined;
+
+  const { data, isLoading, isError, error, refetch } = useProjectMilestones(
+    projectId,
+    {
+      cursor: pager.cursor,
+      status: serverStatus,
+      q: listFilters.debouncedSearch || undefined,
+      from: fromValue,
+      to: toValue,
+      ownerId,
+    },
+  );
   const pageState = usePageState({
     permission: "build:view",
     isLoading,
     isError,
     error,
   });
-  const deleteMilestone = useDeleteMilestone(projectId);
 
-  const [createOpen, setCreateOpen] = useState(false);
-  const [editTarget, setEditTarget] = useState<ProjectMilestone | null>(null);
-  const [deleteTarget, setDeleteTarget] = useState<ProjectMilestone | null>(null);
+  const milestones: ProjectMilestone[] = data?.data ?? [];
+  const pagination = data?.pagination;
 
-  const total = milestones?.length ?? 0;
-  const achieved = milestones?.filter((m) => m.status === "ACHIEVED").length ?? 0;
-  const pending = milestones?.filter((m) => m.status === "PENDING").length ?? 0;
-  const overdue =
-    milestones?.filter((m) => {
-      const d = new Date(m.targetDate);
-      return isPast(d) && !isToday(d) && m.status === "PENDING";
-    }).length ?? 0;
+  const achieved = milestones.filter((m) => m.status === "ACHIEVED").length;
+  const pending = milestones.filter((m) => m.status === "PENDING").length;
+  const overdue = milestones.filter((m) => {
+    const d = toMilestoneTargetDate(m.targetDate);
+    return d !== null && isPast(d) && !isToday(d) && m.status === "PENDING";
+  }).length;
 
-  const handleRetry = useCallback(() => {
-    void refetch();
-  }, [refetch]);
+  const actions = useMilestonesPageActions({
+    projectId,
+    milestones,
+    searchInputRef,
+  });
 
-  const handleOpenCreate = useCallback(() => setCreateOpen(true), []);
-  const handleCloseCreate = useCallback(() => setCreateOpen(false), []);
-  const handleEditTarget = useCallback((m: ProjectMilestone) => setEditTarget(m), []);
-  const handleCloseEdit = useCallback(() => setEditTarget(null), []);
-  const handleDeleteTarget = useCallback((m: ProjectMilestone) => setDeleteTarget(m), []);
+  const handleMilestonesNext = useCallback(() => {
+    pager.goNext(pagination?.nextCursor);
+  }, [pager, pagination?.nextCursor]);
 
-  const handleDeleteDialogOpenChange = useCallback((open: boolean) => {
-    if (!open) setDeleteTarget(null);
-  }, []);
-
-  const handleDelete = useCallback(() => {
-    if (!deleteTarget) return;
-    deleteMilestone.mutate(deleteTarget.id, {
-      onSuccess: () => {
-        toast.success("Milestone deleted");
-        setDeleteTarget(null);
-      },
-      onError: (err) => toast.error(getErrorMessage(err)),
-    });
-  }, [deleteTarget, deleteMilestone]);
+  if (isLoading) return <MilestonesPageSkeleton />;
 
   if (
     pageState.kind !== "ready" &&
     pageState.kind !== "empty" &&
-    pageState.kind !== "error" &&
     pageState.kind !== "loading"
   )
-    return (
-      <PageWrapper title="Milestones">
-        <PageState resolution={pageState} loading={null} onRetry={handleRetry} className="flex-1">
-          {null}
-        </PageState>
-      </PageWrapper>
-    );
-
-  if (isLoading) {
-    return (
-      <PageWrapper
-        title="Milestones"
-        actions={<Skeleton className="h-8 w-36 rounded-md" />}
-      >
-        <PmPageShell>
-          <div className="space-y-4">
-            <StatCardGridSkeleton cols={4} />
-            <div className="space-y-2.5">
-              {Array.from({ length: 3 }).map((_, i) => (
-                <Skeleton key={i} className="h-20 rounded-xl" />
-              ))}
-            </div>
-          </div>
-        </PmPageShell>
-      </PageWrapper>
-    );
-  }
-
-  if (isError) {
     return (
       <PageWrapper
         title="Milestones"
         subtitle="Key checkpoints and target dates for this project"
       >
         <PmPageShell>
-          <ErrorState
+          <PageState
+            resolution={pageState}
+            loading={null}
+            onRetry={() => void refetch()}
             className="flex-1"
-            title="Couldn't load milestones"
-            description={getErrorMessage(error)}
-            onRetry={handleRetry}
-          />
+          >
+            {null}
+          </PageState>
         </PmPageShell>
       </PageWrapper>
     );
-  }
 
   return (
     <PageWrapper
       title="Milestones"
       subtitle="Key checkpoints and target dates for this project"
-      actions={<NewMilestoneButton onClick={handleOpenCreate} />}
+      actions={
+        canManage ? (
+          <AnimatedIconButton icon={PlusIcon} size="sm" className="gap-1.5" onClick={actions.handleOpenCreate}>New Milestone</AnimatedIconButton>
+        ) : undefined
+      }
+      filters={
+        <MilestonesFilterToolbar
+          listFilters={listFilters}
+          ownerOptions={ownerOptions}
+          statusFilterValue={statusFilterValue}
+          ownerId={ownerId}
+          fromValue={fromValue}
+          toValue={toValue}
+          searchInputRef={searchInputRef}
+        />
+      }
     >
       <PmPageShell>
-          <PmSection index={0} className="shrink-0">
-            <StatCardGrid cols={4}>
-              <StatCard label="Total" value={total} icon={Diamond} tone="default" index={0} />
-              <StatCard
-                label="Achieved"
-                value={achieved}
-                icon={CheckCircle2}
-                tone="emerald"
-                index={1}
-              />
-              <StatCard label="Pending" value={pending} icon={Clock} tone="amber" index={2} />
-              <StatCard label="Overdue" value={overdue} icon={AlertCircle} tone="red" index={3} />
-            </StatCardGrid>
-          </PmSection>
+        {!isOnline ? (
+          <div className="flex shrink-0 items-center gap-2 border-b border-border/60 bg-muted/40 px-4 py-2">
+            <WifiOff
+              className="h-4 w-4 shrink-0 text-muted-foreground"
+              aria-hidden
+            />
+            <p className="text-xs text-muted-foreground">
+              You&apos;re offline — results may not be up to date.
+            </p>
+          </div>
+        ) : null}
+        <PmSection index={0} className="shrink-0">
+          <StatCardGrid cols={4}>
+            <StatCard
+              label="This page"
+              value={milestones.length}
+              icon={Diamond}
+              tone="default"
+              index={0}
+            />
+            <StatCard
+              label="Achieved"
+              value={achieved}
+              icon={CheckCircle2}
+              tone="emerald"
+              index={1}
+            />
+            <StatCard
+              label="Pending"
+              value={pending}
+              icon={Clock}
+              tone="amber"
+              index={2}
+            />
+            <StatCard
+              label="Overdue"
+              value={overdue}
+              icon={AlertCircle}
+              tone="red"
+              index={3}
+            />
+          </StatCardGrid>
+        </PmSection>
 
-          <PmSection index={1} className="flex min-h-0 flex-1 flex-col">
-            {milestones && milestones.length > 0 ? (
-              <PmStaggerList className="space-y-2.5" aria-label="Project milestones">
-                {milestones.map((m) => (
-                  <MilestoneCard
-                    key={m.id}
-                    milestone={m}
-                    onEdit={handleEditTarget}
-                    onDelete={handleDeleteTarget}
-                  />
-                ))}
-              </PmStaggerList>
-            ) : (
-              <EmptyState
-                  className={PM_FILL_PANEL}
+        <PmSection index={1} className="flex min-h-0 flex-1 flex-col">
+          {actions.selectedMilestoneIds.size > 0 && (
+            <div
+              className={cn(
+                PM_TOOLBAR,
+                "mb-2 rounded-lg border border-border/80 bg-card px-3 py-2",
+              )}
+            >
+              <span className="text-sm font-normal">
+                {actions.selectedMilestoneIds.size} selected
+              </span>
+              <div className="flex items-center gap-2">
+                <Select onValueChange={actions.handleBulkStatusChange}>
+                  <SelectTrigger className="w-40">
+                    <SelectValue placeholder="Set status…" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="PENDING">Pending</SelectItem>
+                    <SelectItem value="ACHIEVED">Achieved</SelectItem>
+                    <SelectItem value="MISSED">Missed</SelectItem>
+                  </SelectContent>
+                </Select>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  aria-label="Clear selection"
+                  onClick={actions.handleClearSelection}
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+          )}
+          <BuildPaginatedContent
+            ariaLabel="Project milestones"
+            footer={
+              milestones.length > 0 || pager.hasPrevious ? (
+                <TablePagination
+                  mode="cursor"
+                  rowCount={milestones.length}
+                  pageNumber={pager.pageNumber}
+                  hasMore={pagination?.hasMore ?? false}
+                  hasPrevious={pager.hasPrevious}
+                  onNext={handleMilestonesNext}
+                  onPrevious={pager.goPrevious}
+                />
+              ) : null
+            }
+          >
+            <div>
+              {milestones.length > 0 ? (
+                <PmStaggerList
+                  className="space-y-2.5"
+                  aria-label="Project milestones"
+                >
+                  {milestones.map((m) => (
+                    <MilestoneCard
+                      key={m.id}
+                      milestone={m}
+                      onEdit={canManage ? actions.handleEditTarget : undefined}
+                      onDelete={
+                        canManage ? actions.handleDeleteTarget : undefined
+                      }
+                      selected={actions.selectedMilestoneIds.has(m.id)}
+                      onSelect={actions.handleMilestoneSelect}
+                    />
+                  ))}
+                </PmStaggerList>
+              ) : (
+                <EmptyState
+                  className={CONTENT_FILL_PANEL}
                   illustrationPreset="projects"
                   title="No milestones yet"
-                  description="Add milestones to track key checkpoints and target dates."
-                  action={{ label: "Add Milestone", onClick: handleOpenCreate }}
+                  description={
+                    listFilters.isFiltered
+                      ? undefined
+                      : "Add milestones to track key checkpoints and target dates."
+                  }
+                  filtersActive={listFilters.isFiltered}
+                  onClearFilters={listFilters.clearAll}
+                  action={
+                    listFilters.isFiltered || !canManage
+                      ? undefined
+                      : {
+                          label: "Add Milestone",
+                          onClick: actions.handleOpenCreate,
+                        }
+                  }
                 />
-            )}
-          </PmSection>
+              )}
+            </div>
+          </BuildPaginatedContent>
+        </PmSection>
 
-        {createOpen ? (
-          <MilestoneUpsertSheet projectId={projectId} onClose={handleCloseCreate} />
-        ) : null}
-        {editTarget ? (
+        {actions.createOpen ? (
           <MilestoneUpsertSheet
             projectId={projectId}
-            milestone={editTarget}
-            onClose={handleCloseEdit}
+            onClose={actions.handleCloseCreate}
+          />
+        ) : null}
+        {actions.editTarget ? (
+          <MilestoneUpsertSheet
+            projectId={projectId}
+            milestone={actions.editTarget}
+            onClose={actions.handleCloseEdit}
           />
         ) : null}
 
         <ConfirmDialog
-          open={!!deleteTarget}
-          onOpenChange={handleDeleteDialogOpenChange}
+          open={!!actions.deleteTarget}
+          onOpenChange={actions.handleDeleteDialogOpenChange}
           title="Delete milestone?"
-          description={`“${deleteTarget?.name ?? ""}” will be permanently deleted.`}
+          description={`"${actions.deleteTarget?.name ?? ""}" will be permanently deleted.`}
           confirmLabel="Delete"
           destructive
-          isPending={deleteMilestone.isPending}
-          onConfirm={handleDelete}
+          isPending={actions.deleteMilestone.isPending}
+          onConfirm={actions.handleDelete}
         />
       </PmPageShell>
     </PageWrapper>

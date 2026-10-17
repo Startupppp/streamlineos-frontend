@@ -1,12 +1,16 @@
 "use client";
 
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useSession } from "next-auth/react";
 import { apiClient } from "@/lib/api-client";
+import { downloadExport } from "@/lib/download-export";
 import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
 import { lazyContract } from "@/lib/api-envelope";
+import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
 import { useAccess, useCan, useModuleEnabled } from "@/hooks/api/access";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import { useIdempotentOperation } from "@/hooks/common/use-idempotent-operation";
+import { invalidateHrWorkforceQueries } from "@/lib/hr-workforce-cache";
 
 export type HrImportEntity =
   | "employees"
@@ -40,6 +44,10 @@ export interface HrImportJob {
   totalRows: number;
   validRows: number;
   errorRows: number;
+  /** What a commit did with its valid rows: `validRows` split into new, changed and already-there. Zero before a commit. */
+  createdRows: number;
+  updatedRows: number;
+  unchangedRows: number;
   errors: HrImportError[] | null;
   createdBy: string | null;
   committedAt: string | null;
@@ -49,14 +57,21 @@ export interface HrImportJob {
 
 export interface HrImportRow {
   id: string;
+  orgId: string;
   jobId: string;
   rowNumber: number;
   payload: Record<string, unknown>;
   status: HrImportRowStatus;
   error: string | null;
-  createdRecordRef: { table: string; id: string | number } | null;
+  createdRecordRef: { table: string; id: string | number; outcome?: "created" | "updated" | "unchanged" } | null;
 }
 
+/**
+ * `errorRows` is a SAMPLE of the rows that ended in error: the server returns every status='error' row — failed
+ * validation and failed at commit alike, with nothing to tell the two apart — capped at 50 and unordered. How many
+ * rows a job has in error comes from the counters on `job` (see `tallyImportRows`); `errorRows.length` is only how many
+ * the server sent.
+ */
 export interface HrImportJobDetail {
   job: HrImportJob;
   errorRows: HrImportRow[];
@@ -96,7 +111,7 @@ export type HrExportJobStatus =
 export interface HrEmployeeExportFilters {
   search?: string;
   departmentId?: string;
-  isActive?: "true" | "false" | "all";
+  isActive?: "true" | "false" | "all" | "pending";
   role?: string;
 }
 
@@ -137,6 +152,11 @@ export function useHrImportJobs(
         ...(entity ? { entity } : {}),
       }, signal, lazyContract(() => import("@/hooks/api/hr/import-export-schema").then(m => m.hrImportJobListContract))),
     staleTime: 30_000,
+    // Import history is one section of Import / Export. JobHistoryTable renders
+    // its own inline error and retry; left to the provider default, one failed
+    // read replaced the whole page — export and import cards included — with
+    // the /hr route boundary's "Failed to load".
+    ...INLINE_READ_ERROR,
     enabled: hrEnabled && canImport,
   });
 }
@@ -165,15 +185,24 @@ export function useCreateImportJob() {
   });
 }
 
+/**
+ * The commit is `@Idempotent("hr.import.jobs.commit")` (HRM-15 Addendum 2): one
+ * key per job commit, reused by a retry, released once it completes.
+ */
 export function useCommitImportJob() {
   const qc = useQueryClient();
+  const operation = useIdempotentOperation();
   return useAuthorizedMutation<HrImportJob, Error, { jobId: string }>("hr:import:manage", {
     mutationKey: ["hr", "import", "jobs", "commit"],
     mutationFn: ({ jobId }) =>
-      apiClient.post<HrImportJob>(`/hr/import/jobs/${jobId}/commit`, {}, undefined, lazyContract(() => import("@/hooks/api/hr/import-export-schema").then(m => m.hrImportJobRowContract))),
-    onSuccess: (_, { jobId }) => {
+      apiClient.post<HrImportJob>(`/hr/import/jobs/${jobId}/commit`, {}, operation.configFor({ jobId }), lazyContract(() => import("@/hooks/api/hr/import-export-schema").then(m => m.hrImportJobRowContract))),
+    onSuccess: (job, { jobId }) => {
+      operation.settle();
       qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.importJobs() });
       qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.importJob(jobId) });
+      // An employees import writes reporting lines (HRM-15 §7.4).
+      if (job.entity === "employees")
+        void invalidateHrWorkforceQueries(qc, undefined, [humanResourcesQueryKeys.hr.reportingLinesAll()]);
     },
   });
 }
@@ -244,12 +273,16 @@ export function useHrEmployeeExportJob(exportJobId: string | null) {
 export function useDownloadHrEmployeeExportJob() {
   const canExport = useCan("hr:export:manage");
   const hrEnabled = useModuleEnabled("hr");
-  return useAuthorizedMutation<Blob, Error, string>("hr:export:manage", {
+  return useAuthorizedMutation<{ filename: string; bytes: number }, Error, string>("hr:export:manage", {
     mutationKey: ["hr", "employee-export", "download"],
     mutationFn: (exportJobId) => {
       if (!hrEnabled || !canExport)
         return Promise.reject(new Error("Employee export access is required"));
-      return apiClient.download(`/hr/export/jobs/${exportJobId}/download`);
+      // Saves the file itself, and refuses an empty or non-file body (HRMS-E2E-009).
+      return downloadExport(`/hr/export/jobs/${exportJobId}/download`, {
+        label: "employee directory",
+        fallbackName: "employee-directory.csv",
+      });
     },
   });
 }

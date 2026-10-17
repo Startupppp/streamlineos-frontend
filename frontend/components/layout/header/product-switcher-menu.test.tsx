@@ -1,4 +1,4 @@
-import { fireEvent, render as rtlRender, screen } from "@testing-library/react";
+import { fireEvent, render as rtlRender, screen, waitFor } from "@testing-library/react";
 import type { AnchorHTMLAttributes, PropsWithChildren, ReactElement } from "react";
 
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -42,9 +42,19 @@ jest.mock("@/hooks/api/access/org-modules", () => ({
   useEnabledModules: () => [],
 }));
 
+const refetchAccess = jest.fn();
+let accessResult: { data?: { isOrgOwner: boolean; scopes: Record<string, string>; modules: Record<string, boolean> }; error: Error | null } = {
+  data: { isOrgOwner: false, scopes: {}, modules: {} },
+  error: null,
+};
+
 jest.mock("@/hooks/api/access", () => ({
   useCan: () => false,
-  useAccess: () => ({ data: undefined, isLoading: false }),
+  useAccess: () => ({ ...accessResult, refetch: refetchAccess }),
+}));
+
+jest.mock("@/hooks/api/entitlements", () => ({
+  useEntitlements: () => ({ data: undefined }),
 }));
 
 jest.mock("framer-motion", () => {
@@ -74,12 +84,38 @@ jest.mock("framer-motion", () => {
 });
 
 describe("ProductSwitcherMenu", () => {
-  it("marks Home as selected without rendering a removal control", () => {
+  beforeEach(() => {
+    accessResult = { data: { isOrgOwner: false, scopes: {}, modules: {} }, error: null };
+  });
+
+  it("says the modules could not load, with Retry, when the access read failed (BUG-001b)", async () => {
+    accessResult = { error: new Error("Service Unavailable") };
     render(<ProductSwitcherMenu />);
 
     fireEvent.mouseEnter(screen.getByRole("button", { name: "Switch module" }));
 
-    expect(screen.getByLabelText("Selected module")).toBeInTheDocument();
+    await waitFor(() => expect(screen.getByText("Couldn't load your modules")).toBeInTheDocument());
+    fireEvent.click(screen.getByRole("button", { name: /try again|retry/i }));
+    expect(refetchAccess).toHaveBeenCalled();
+    expect(screen.queryByLabelText("Selected module")).not.toBeInTheDocument();
+  });
+
+  it("shows a skeleton, not an empty grid, while access is still loading", async () => {
+    accessResult = { error: null };
+    render(<ProductSwitcherMenu />);
+
+    fireEvent.mouseEnter(screen.getByRole("button", { name: "Switch module" }));
+
+    await waitFor(() => expect(screen.queryByLabelText("Selected module")).not.toBeInTheDocument());
+    expect(screen.queryByText("Couldn't load your modules")).not.toBeInTheDocument();
+  });
+
+  it("marks Home as selected without rendering a removal control", async () => {
+    render(<ProductSwitcherMenu />);
+
+    fireEvent.mouseEnter(screen.getByRole("button", { name: "Switch module" }));
+
+    await waitFor(() => expect(screen.getByLabelText("Selected module")).toBeInTheDocument());
     expect(screen.getAllByRole("button")).toHaveLength(1);
   });
 });

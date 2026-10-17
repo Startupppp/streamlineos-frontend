@@ -23,7 +23,11 @@ interface BulkResponse {
   results: BulkRow[];
 }
 
-type BulkVariables = { emails: string[]; role: string };
+type BulkVariables = {
+  emails: string[];
+  role: string;
+  moduleAccess?: Array<{ moduleKey: string; standing: "MEMBER" | "ADMIN" }>;
+};
 type BulkHandlers = {
   onSuccess?: (data: BulkResponse) => void;
   onError?: (error: Error) => void;
@@ -36,9 +40,23 @@ jest.mock("@/hooks/api/users", () => ({
   useBulkInviteUsers: () => ({ mutate, isPending }),
 }));
 
+let canManageRbac = false;
+jest.mock("@/hooks/api/access", () => ({
+  useCan: (key: string) => key === "settings:rbac:manage" && canManageRbac,
+}));
+
 const toastSuccess = jest.fn();
 const toastError = jest.fn();
 
+/**
+ * The dialog now states how many seats are free before the invite is sent
+ * (BUG-HRMS-008). That read goes through `useSeatInfo`, which needs a session; the
+ * cases in this file are about duplicate parsing and submission, so an unlimited
+ * plan keeps the notice silent.
+ */
+jest.mock("@/hooks/api/subscription", () => ({
+  useSeatInfo: () => ({ data: { total: null, used: 1, available: null } }),
+}));
 jest.mock("sonner", () => ({
   toast: {
     success: (message: string) => toastSuccess(message),
@@ -91,7 +109,9 @@ function typeEmails(value: string): void {
 }
 
 function chooseRole(): void {
-  fireEvent.click(screen.getByRole("button", { name: "Choose Member role" }));
+  const [roleSelect] = screen.getAllByRole("button", { name: "Choose Member role" });
+  if (!roleSelect) throw new Error("no role select rendered");
+  fireEvent.click(roleSelect);
 }
 
 function submit(): void {
@@ -114,6 +134,7 @@ beforeEach(() => {
   toastSuccess.mockClear();
   toastError.mockClear();
   isPending = false;
+  canManageRbac = false;
 });
 
 afterEach(cleanup);
@@ -358,5 +379,36 @@ describe("UserBulkInviteDialog — repeat submission and timeout recovery", () =
       "alice@example.com",
       "bob@example.com",
     ]);
+  });
+});
+
+describe("UserBulkInviteDialog — module access (BUG-HRMS-003)", () => {
+  it("offers module access to someone who may grant it, and sends it for every invitee", async () => {
+    canManageRbac = true;
+    renderDialog();
+    typeEmails("alice@example.com\nbob@example.com");
+
+    expect(screen.getByText("Module access for all invitees")).toBeInTheDocument();
+    const [roleSelect, firstModule] = screen.getAllByRole("button", { name: "Choose Member role" });
+    if (!roleSelect || !firstModule) throw new Error("expected the role and module selects");
+    fireEvent.click(roleSelect);
+    fireEvent.click(firstModule);
+    submit();
+
+    await waitFor(() => expect(mutate).toHaveBeenCalledTimes(1));
+    const sent = lastSubmission().variables.moduleAccess;
+    expect(sent).toHaveLength(1);
+    expect(sent?.[0]?.standing).toBe("MEMBER");
+  });
+
+  it("shows no module picker, and sends no module access, without rbac authority", async () => {
+    renderDialog();
+    typeEmails("alice@example.com");
+    chooseRole();
+    submit();
+
+    await waitFor(() => expect(mutate).toHaveBeenCalledTimes(1));
+    expect(screen.queryByText("Module access for all invitees")).toBeNull();
+    expect(lastSubmission().variables).not.toHaveProperty("moduleAccess");
   });
 });

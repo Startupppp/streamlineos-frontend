@@ -12,7 +12,7 @@ import { Label } from "@/components/ui/label";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { statusToneClasses } from "@/lib/design-tokens";
 import { downloadBlob } from "@/lib/download-blob";
-import { formatCurrency } from "@/lib/format-utils";
+import { formatINRCompact } from "@/lib/format-utils";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { cn } from "@/lib/utils";
 import {
@@ -432,7 +432,7 @@ function previewColumns(entity: BulkEntity): DataTableColumn<PreviewRow>[] {
         return <span className="text-label text-muted-foreground">—</span>;
 
       if (column.kind === "money" && typeof value === "number")
-        return <span className="text-label">{formatCurrency(value)}</span>;
+        return <span className="text-label">{formatINRCompact(value)}</span>;
 
       const text = Array.isArray(value) ? value.join(", ") : String(value);
 

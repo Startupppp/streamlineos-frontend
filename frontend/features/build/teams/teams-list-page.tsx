@@ -1,151 +1,53 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useMemo } from "react";
 import { Plus } from "lucide-react";
-import { useQueryParamOpen } from "@/hooks/common/use-query-param-open";
-import { toast } from "sonner";
-import {
-  useProjectTeams,
-  useCreateProjectTeam,
-  useUpdateProjectTeam,
-  useDeleteProjectTeam,
-} from "@/hooks/api/build/teams";
-import { useCan } from "@/hooks/api/access";
-import { usePageState } from "@/hooks/api/use-page-state";
 import { PageWrapper } from "@/components/ui/page-wrapper";
-import { DataTable, DataTableSkeleton } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/empty-state";
-import { PageState } from "@/components/shared/page-state";
-import { useCursorPager } from "@/components/ui/table-pagination";
+import { BuildListSurface } from "@/features/build/shared/build-list-surface";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { TeamFormSheet } from "./team-form-sheet";
-import type {
-  ProjectTeam,
-  CreateTeamInput,
-  UpdateTeamInput,
-} from "@/types/projects";
-import { getErrorMessage } from "@/lib/get-error-message";
-import { PmPageShell, PmSection, PM_FILL_PANEL } from "@/components/pm-chrome";
+import type { ProjectTeam } from "@/types/projects";
+import { PmPageShell, PmSection, CONTENT_FILL_PANEL } from "@/components/pm-chrome";
 import { BuildHeaderActions } from "@/features/build/shared/build-header-actions";
 import { BuildListToolbar } from "@/features/build/shared/build-list-toolbar";
-import { useBuildListFilters } from "@/features/build/shared/use-build-list-filters";
 import {
   TEAM_TABLE_HEADERS,
   TeamMobileCard,
   buildTeamColumns,
 } from "./team-table-columns";
-
-const PAGE_SIZE = 50;
-
-const FILTER_DEFINITIONS = [] as const;
+import { useTeamsListPage, PAGE_SIZE } from "./use-teams-list-page";
 
 export function TeamsListPage() {
-  const canCreate = useCan("build:teams:create");
-  const canManage = useCan("build:teams:manage");
-
-  const listFilters = useBuildListFilters({ filters: FILTER_DEFINITIONS });
-  const { cursor, hasPrevious, goNext, goPrevious } = useCursorPager(
-    listFilters.resetKey,
-  );
-
   const {
-    open: createOpen,
-    onOpenChange: setCreateOpen,
-    setOpen: openCreate,
-  } = useQueryParamOpen("create");
-  const [editTarget, setEditTarget] = useState<ProjectTeam | null>(null);
-  const [deleteTarget, setDeleteTarget] = useState<ProjectTeam | null>(null);
-
-  const { data, isLoading, isError, error, refetch } = useProjectTeams({
-    cursor,
-    pageSize: PAGE_SIZE,
-    search: listFilters.debouncedSearch.trim() || undefined,
-  });
-  const createTeam = useCreateProjectTeam();
-  const updateTeam = useUpdateProjectTeam();
-  const deleteTeam = useDeleteProjectTeam();
-
-  const teams = useMemo(() => data?.data ?? [], [data]);
-
-  const resolution = usePageState({
-    permission: "build:teams:view",
+    canCreate,
+    canManage,
+    isOnline,
+    searchRef,
+    listFilters,
+    createOpen,
+    editTarget,
+    deleteTarget,
+    teams,
+    data,
     isLoading,
     isError,
     error,
-    isEmpty: teams.length === 0,
-  });
-
-  const handleCreate = useCallback(
-    (input: CreateTeamInput) => {
-      createTeam.mutate(input, {
-        onSuccess: () => {
-          toast.success("Team created");
-          setCreateOpen(false);
-        },
-        onError: (e) => toast.error(getErrorMessage(e)),
-      });
-    },
-    [createTeam, setCreateOpen],
-  );
-
-  const handleEdit = useCallback(
-    (input: UpdateTeamInput & { teamId: number }) => {
-      updateTeam.mutate(input, {
-        onSuccess: () => {
-          toast.success("Team updated");
-          setEditTarget(null);
-        },
-        onError: (e) => toast.error(getErrorMessage(e)),
-      });
-    },
-    [updateTeam],
-  );
-
-  const handleDeleteConfirm = useCallback(() => {
-    if (!deleteTarget) return;
-    deleteTeam.mutate(deleteTarget.id, {
-      onSuccess: () => {
-        toast.success("Team deleted");
-        setDeleteTarget(null);
-      },
-      onError: (e) => toast.error(getErrorMessage(e)),
-    });
-  }, [deleteTarget, deleteTeam]);
-
-  const handleOpenCreate = useCallback(() => {
-    openCreate();
-  }, [openCreate]);
-
-  const handleSheetOpenChange = useCallback(
-    (open: boolean) => {
-      if (!open) {
-        setCreateOpen(false);
-        setEditTarget(null);
-      }
-    },
-    [setCreateOpen],
-  );
-
-  const handleDeleteDialogChange = useCallback((open: boolean) => {
-    if (!open) setDeleteTarget(null);
-  }, []);
-
-  const handleRetry = useCallback(() => {
-    void refetch();
-  }, [refetch]);
-
-  const handleEditRow = useCallback(
-    (row: ProjectTeam) => setEditTarget(row),
-    [],
-  );
-  const handleDeleteRow = useCallback(
-    (row: ProjectTeam) => setDeleteTarget(row),
-    [],
-  );
-
-  const handleNextPage = useCallback(() => {
-    goNext(data?.pagination.nextCursor);
-  }, [data, goNext]);
+    pageNumber,
+    hasPrevious,
+    goPrevious,
+    formIsPending,
+    handleCreate,
+    handleEdit,
+    handleDeleteConfirm,
+    handleOpenCreate,
+    handleSheetOpenChange,
+    handleDeleteDialogChange,
+    handleRetry,
+    handleEditRow,
+    handleDeleteRow,
+    handleNextPage,
+  } = useTeamsListPage();
 
   const columns = useMemo(
     () =>
@@ -180,8 +82,9 @@ export function TeamsListPage() {
             onValueChange: listFilters.setSearch,
             placeholder: "Search teams…",
             label: "Search teams",
+            inputRef: searchRef,
           }}
-          onClearAll={listFilters.clearAll}
+          onClearAll={listFilters.activeCount > 0 ? listFilters.clearAll : undefined}
         />
       }
       actions={
@@ -204,51 +107,66 @@ export function TeamsListPage() {
     >
       <PmPageShell>
         <PmSection index={0} className="flex min-h-0 flex-1 flex-col">
-          <PageState
-            resolution={resolution}
-            loading={
-              <DataTableSkeleton
-                mobileCards
-                rows={12}
-                headers={TEAM_TABLE_HEADERS}
-                className="flex-1"
-              />
-            }
+          <BuildListSurface<ProjectTeam>
+            permission="build:teams:view"
+            rows={teams}
+            columns={columns}
+            isLoading={isLoading}
+            isError={isError}
+            error={error}
+            isFiltered={listFilters.isFiltered}
+            getRowKey={(row) => row.id}
+            minWidth="560px"
+            mobileCard={renderMobileCard}
+            pagination={{
+              mode: "cursor",
+              pageSize: PAGE_SIZE,
+              pageNumber,
+              hasMore: Boolean(data?.pagination.hasMore),
+              hasPrevious,
+              onNext: handleNextPage,
+              onPrevious: goPrevious,
+            }}
             empty={
-              <EmptyState
-                className={PM_FILL_PANEL}
-                illustrationPreset="projects"
-                title="No teams yet"
-                description="Create a team to group members and track work together."
-                filtersActive={listFilters.isFiltered}
-                onClearFilters={listFilters.clearAll}
-                action={
-                  canCreate
-                    ? { label: "New team", onClick: handleOpenCreate }
-                    : undefined
-                }
-              />
+              !isOnline ? (
+                <EmptyState
+                  className={CONTENT_FILL_PANEL}
+                  illustrationPreset="projects"
+                  title="You are offline"
+                  description="Reconnect to see the latest teams."
+                />
+              ) : (
+                <EmptyState
+                  className={CONTENT_FILL_PANEL}
+                  illustrationPreset="team"
+                  title="No teams yet"
+                  description="Create a team to group members and track work together."
+                  action={canCreate ? { label: "New team", onClick: handleOpenCreate } : undefined}
+                />
+              )
             }
+            filteredEmpty={
+              !isOnline ? (
+                <EmptyState
+                  className={CONTENT_FILL_PANEL}
+                  illustrationPreset="projects"
+                  title="You are offline"
+                  description="Reconnect to see the latest teams."
+                />
+              ) : (
+                <EmptyState
+                  className={CONTENT_FILL_PANEL}
+                  illustrationPreset="projects"
+                  title="No teams match your filters"
+                  description="Try adjusting the filters to see more teams."
+                  onClearFilters={listFilters.clearAll}
+                />
+              )
+            }
+            loadingHeaders={TEAM_TABLE_HEADERS}
+            loadingRows={12}
             onRetry={handleRetry}
-            className={PM_FILL_PANEL}
-          >
-            <DataTable
-              data={teams}
-              columns={columns}
-              getRowKey={(row) => row.id}
-              minWidth="560px"
-              mobileCard={renderMobileCard}
-              className={PM_FILL_PANEL}
-              pagination={{
-                mode: "cursor",
-                pageSize: PAGE_SIZE,
-                hasMore: Boolean(data?.pagination.hasMore),
-                hasPrevious,
-                onNext: handleNextPage,
-                onPrevious: goPrevious,
-              }}
-            />
-          </PageState>
+          />
         </PmSection>
       </PmPageShell>
 
@@ -259,7 +177,7 @@ export function TeamsListPage() {
         defaultValues={editTarget ?? undefined}
         onSubmitCreate={handleCreate}
         onSubmitEdit={handleEdit}
-        isPending={createTeam.isPending || updateTeam.isPending}
+        isPending={formIsPending}
       />
 
       <ConfirmDialog

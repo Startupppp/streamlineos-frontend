@@ -61,7 +61,12 @@ export function MessageActions({
   onQuickReact: (emoji: string) => void;
 }) {
   return (
-    <div className={cn("absolute -top-3 opacity-0 group-hover:opacity-100 transition-all z-50 pointer-events-none group-hover:pointer-events-auto", isOwn ? "right-0" : "left-0")}>
+    // `focus-within` beside `group-hover` is CHAT-S01. The row was reachable only by
+    // putting the pointer on it, so these controls had no keyboard route at all
+    // (FE-120) and anything floating over that corner of the viewport — the in-app
+    // feedback launcher at 1280x720, a cookie bar, a toast — took Reply, Edit and React
+    // with it. Tabbing to a control now reveals the group it is in.
+    <div className={cn("absolute -top-3 opacity-0 transition-all z-50 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto focus-within:opacity-100 focus-within:pointer-events-auto", isOwn ? "right-0" : "left-0")}>
       <div className="relative flex items-center bg-background border border-border/60 rounded-lg shadow-md overflow-visible pointer-events-auto">
         <IconButton onClick={onReply} className="p-1.5 hover:bg-muted/50 text-muted-foreground hover:text-foreground" title="Reply" aria-label="Reply"><ReplyIcon size={14} /></IconButton>
         <button onClick={onOpenThread} className="p-1.5 hover:bg-muted/50 text-muted-foreground hover:text-foreground" title="Open thread" aria-label="Open thread"><MessageSquare className="h-3.5 w-3.5" /></button>
@@ -75,7 +80,7 @@ export function MessageActions({
         {canAssignTicket && <IconButton onClick={onAssignTicket} className="p-1.5 hover:bg-muted/50 text-muted-foreground hover:text-foreground" title="Assign ticket" aria-label="Assign ticket"><UserPlusIcon size={14} /></IconButton>}
         {canSetDueDate && <button onClick={onSetDueDate} className="p-1.5 hover:bg-muted/50 text-muted-foreground hover:text-foreground" title="Set due date" aria-label="Set due date"><CalendarClock className="h-3.5 w-3.5" /></button>}
         {isOwn && <button onClick={onStartEdit} className="p-1.5 hover:bg-muted/50 text-muted-foreground hover:text-foreground" title="Edit" aria-label="Edit"><Pencil className="h-3.5 w-3.5" /></button>}
-        {isOwn && <div className="relative group/delete"><IconButton className="p-1.5 hover:bg-status-danger-surface text-muted-foreground hover:text-status-danger-ink" title="Delete" aria-label="Delete"><Trash2Icon size={14} /></IconButton><div className="absolute right-0 top-full mt-1 hidden group-hover/delete:flex flex-col bg-background border border-border rounded-lg shadow-lg overflow-hidden z-50 min-w-[160px]"><button onClick={onDelete} className="px-3 py-2 text-dense text-left hover:bg-status-danger-surface text-status-danger-ink font-medium whitespace-nowrap">Delete for Everyone</button></div></div>}
+        {isOwn && <div className="relative group/delete"><IconButton className="p-1.5 hover:bg-status-danger-surface text-muted-foreground hover:text-status-danger-ink" title="Delete" aria-label="Delete"><Trash2Icon size={14} /></IconButton><div className="absolute right-0 top-full mt-1 hidden group-hover/delete:flex flex-col bg-background border border-border rounded-lg shadow-lg overflow-hidden z-50 min-w-[160px]"><button type="button" onClick={onDelete} className="px-3 py-2 text-dense text-left hover:bg-status-danger-surface text-status-danger-ink font-medium whitespace-nowrap">Delete for Everyone</button></div></div>}
         {showReactionPicker && <div className={cn("absolute top-full mt-1 z-50 bg-background border border-border/60 rounded-xl shadow-lg p-1.5 flex gap-1", isOwn ? "right-0" : "left-0")}>{QUICK_REACTIONS.map((emoji) => <button key={emoji} onClick={() => onQuickReact(emoji)} className="w-7 flex items-center justify-center rounded-lg hover:bg-muted/60 text-base transition-colors" aria-label={`React with ${emoji}`}>{emoji}</button>)}</div>}
       </div>
     </div>

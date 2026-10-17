@@ -6,6 +6,7 @@ import { lazyContract } from "@/lib/api-envelope";
 import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { useGatedQuery } from "@/hooks/api/gated-query";
+import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
 
 const externalReferralListContract = lazyContract(() =>
   import("@/hooks/api/hr/recruitment/external-referrals-schema").then(
@@ -70,6 +71,7 @@ export function useExternalReferrals() {
     queryKey: humanResourcesQueryKeys.hr.externalReferrals(),
     queryFn: ({ signal }) => apiClient.get<ExternalReferral[]>("/hr/recruitment/external-referrals", undefined, signal, externalReferralListContract),
     staleTime: 60_000,
+    ...INLINE_READ_ERROR,
   });
 }
 
@@ -90,6 +92,7 @@ export function useExternalReferrers() {
     queryKey: humanResourcesQueryKeys.hr.externalReferrers(),
     queryFn: ({ signal }) => apiClient.get<ExternalReferrer[]>("/hr/recruitment/external-referrers", undefined, signal, externalReferrerListContract),
     staleTime: 60_000,
+    ...INLINE_READ_ERROR,
   });
 }
 

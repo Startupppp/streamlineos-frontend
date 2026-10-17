@@ -56,7 +56,7 @@ function ImportPendingRow({
         variant="ghost"
         onClick={handleRemove}
         className="h-6 w-6 p-0 text-muted-foreground hover:text-destructive"
-        aria-label="Remove"
+        aria-label={`Remove ${item.title || "Untitled"} from import`}
       >
         <KbXIcon className="h-3.5 w-3.5" />
       </Button>

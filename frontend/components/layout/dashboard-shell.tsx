@@ -23,13 +23,23 @@ import { useAccess } from "@/hooks/api/access";
 import { LazyAppLoadingScreen } from "@/components/ui/app-loading-screen-lazy";
 import { ErrorState } from "@/components/shared/error-state";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { signOutStaleSession } from "@/lib/stale-session-sign-out";
+import { Button } from "@/components/ui/button";
 import { AskOsProvider } from "@/components/assistant/ask-os-provider";
 import { CommandPaletteProvider } from "@/components/command-palette";
 import { DirtyStateProvider } from "@/components/shared/dirty-state-context";
 import { getChatMobileContentPaddingClassName } from "./mobile/chat-mobile-chrome-layout";
 import { MobileModuleBottomNav } from "./mobile/mobile-module-bottom-nav";
 import { MobileShellFab } from "./mobile/mobile-shell-fab";
-import { shouldShowMobileModuleBottomNav } from "./mobile/mobile-module-nav-items";
+import {
+  MOBILE_MODULE_CONTENT_PADDING_CLASS,
+  shouldShowMobileModuleBottomNav,
+} from "./mobile/mobile-module-nav-items";
+import {
+  fabBottomCssPx,
+  launcherBottomCssPx,
+  scrollGutterCssPx,
+} from "./mobile/mobile-bottom-chrome-geometry";
 import { isPortalChromelessPath } from "./sidebar/sidebar-nav-items";
 import type { BuildSidebarSlot } from "./sidebar/build-sidebar-slot";
 import { ShellOfflineBanner } from "./shell-offline-banner";
@@ -90,18 +100,17 @@ export function DashboardShell({
   const isPortalRoute = isPortalChromelessPath(route);
 
   useRouteFocus();
+  usePushSubscription(userId);
 
   const [isSidebarCollapsed, setIsSidebarCollapsed] =
     useState(defaultCollapsed);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [productSwitcherOpen, setProductSwitcherOpen] = useState(false);
   const [orgSwitcherOpen, setOrgSwitcherOpen] = useState(false);
-  const [isChatConversationOpen, setIsChatConversationOpen] = useState(false);
-  const [welcomeToastActive, setWelcomeToastActive] = useState(false);
   const [enhancementsReady, setEnhancementsReady] = useState(false);
+  const [welcomeToastActive, setWelcomeToastActive] = useState(false);
+  const [productSwitcherOpen, setProductSwitcherOpen] = useState(false);
+  const [isChatConversationOpen, setIsChatConversationOpen] = useState(false);
 
-  const { hideSidebar, showSidebarToggle, navGroups } =
-    useProductSidebarVisibility();
   const {
     data: access,
     error: accessErr,
@@ -109,7 +118,8 @@ export function DashboardShell({
     refetch: refetchAccess,
     isLoading: accessLoading,
   } = useAccess();
-  usePushSubscription(userId);
+  const { hideSidebar, showSidebarToggle, navGroups } =
+    useProductSidebarVisibility();
 
   const rafIdRef = useRef<number | null>(null);
 
@@ -131,6 +141,14 @@ export function DashboardShell({
       return;
     }
     setMobileMenuOpen(true);
+  }, [hideSidebar]);
+
+  const handleToggleMobileMenu = useCallback(() => {
+    if (hideSidebar) {
+      setProductSwitcherOpen(true);
+      return;
+    }
+    setMobileMenuOpen((open) => !open);
   }, [hideSidebar]);
   const handleCloseMobileMenu = useCallback(() => setMobileMenuOpen(false), []);
 
@@ -203,6 +221,19 @@ export function DashboardShell({
   }, []);
 
   useEffect(() => {
+    const root = document.documentElement;
+    root.style.setProperty("--mb-fab-bottom", `${fabBottomCssPx(showAboveBottomNav)}px`);
+    root.style.setProperty(
+      "--mb-launcher-bottom",
+      `${launcherBottomCssPx(showAboveBottomNav)}px`,
+    );
+    return () => {
+      root.style.removeProperty("--mb-fab-bottom");
+      root.style.removeProperty("--mb-launcher-bottom");
+    };
+  }, [showAboveBottomNav]);
+
+  useEffect(() => {
     if (access?.isOrgOwner !== true) return;
 
     if (typeof window.requestIdleCallback === "function") {
@@ -222,11 +253,16 @@ export function DashboardShell({
       <div className="flex h-dvh flex-col overflow-hidden">
         {accessError ? (
           <ErrorState
-            className="flex-1"
-            title="Couldn't load your organization"
+            fullPage
+            title="Couldn't load your workspace"
             description={getErrorMessage(accessErr)}
+            error={accessErr}
             onRetry={handleRetryAccess}
-          />
+          >
+            <Button variant="ghost" onClick={signOutStaleSession}>
+              Sign out
+            </Button>
+          </ErrorState>
         ) : (
           <LazyAppLoadingScreen className="flex-1" />
         )}
@@ -234,7 +270,13 @@ export function DashboardShell({
     );
 
   return (
-    <div className="flex h-dvh flex-col overflow-hidden overscroll-none md:pb-6">
+    <div
+      className="flex h-dvh flex-col overflow-hidden overscroll-none lg:pb-6"
+      style={{
+        "--mb-fab-bottom": `${fabBottomCssPx(showAboveBottomNav)}px`,
+        "--mb-launcher-bottom": `${launcherBottomCssPx(showAboveBottomNav)}px`,
+      } as React.CSSProperties}
+    >
       <Link
         href="#dashboard-content"
         className="sr-only focus:not-sr-only focus:absolute focus:top-3 focus:left-3 focus:z-[200] focus:px-4 focus:py-2 focus:bg-primary focus:text-primary-foreground focus:rounded-lg focus:text-sm focus:font-medium"
@@ -257,6 +299,7 @@ export function DashboardShell({
                 <GlobalHeader
                   isSidebarCollapsed={isSidebarCollapsed}
                   onToggleSidebar={handleToggleSidebar}
+                  onOpenMobileMenu={handleToggleMobileMenu}
                   showSidebarToggle={showSidebarToggle}
                   mobileNavOpen={mobileMenuOpen}
                   hideAdminChrome={isPortalRoute}
@@ -283,6 +326,11 @@ export function DashboardShell({
                   <main
                     id="dashboard-content"
                     aria-label="Main content"
+                    style={{
+                      "--mb-scroll-gutter": `${scrollGutterCssPx(showAboveBottomNav)}px`,
+                      "--mb-fab-lane": `${scrollGutterCssPx(showAboveBottomNav)}px`,
+                    } as React.CSSProperties}
+                    tabIndex={-1}
                     className={cn(
                       "flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden outline-none",
                       showModuleBottomNav && "mobile-nav-active",
@@ -291,10 +339,13 @@ export function DashboardShell({
                     <div
                       className={cn(
                         "flex h-full min-h-0 flex-1 flex-col overflow-hidden",
-                        isChatRoute &&
-                          getChatMobileContentPaddingClassName(
-                            isChatConversationOpen,
-                          ),
+                        isChatRoute
+                          ? getChatMobileContentPaddingClassName(
+                              isChatConversationOpen,
+                            )
+                          : showModuleBottomNav
+                            ? MOBILE_MODULE_CONTENT_PADDING_CLASS
+                            : "max-lg:pb-[var(--mb-fab-lane)]",
                       )}
                     >
                       <div className="flex h-full min-h-0 flex-1 flex-col overflow-hidden [&>:first-child]:h-full [&>:first-child]:min-h-0 [&>:first-child]:flex-1">

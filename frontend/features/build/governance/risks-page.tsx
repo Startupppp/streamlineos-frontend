@@ -1,253 +1,86 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
-import { toast } from "sonner";
+import { useCallback } from "react";
 import { ShieldAlert, AlertTriangle, CheckCircle2, Plus } from "lucide-react";
-import {
-  useProjectRisks,
-  useProjectRiskStats,
-  useCreateRisk,
-  useUpdateRisk,
-  useDeleteRisk,
-  useProjectMembers,
-  GOVERNANCE_PAGE_SIZE,
-} from "@/hooks/api/build";
-import { useCan } from "@/hooks/api/access";
-import { usePageState } from "@/hooks/api/use-page-state";
-import { PageState } from "@/components/shared/page-state";
-import type {
-  Risk,
-  RiskProbability,
-  RiskImpact,
-  CreateRiskInput,
-  UpdateRiskInput,
-} from "@/types/projects";
+import { GOVERNANCE_PAGE_SIZE } from "@/hooks/api/build/governance";
+import type { Risk } from "@/types/projects";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
-import { DataTable, DataTableSkeleton } from "@/components/ui/data-table";
-import { useCursorPager } from "@/components/ui/table-pagination";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
-import { getErrorMessage } from "@/lib/get-error-message";
-import { getUserDisplayName, type NamedUser } from "@/lib/person-display";
 import { RiskMatrix } from "./risk-matrix";
 import { RiskFormSheet } from "./risk-form-sheet";
 import {
   PmPageShell,
   PmSection,
   PmPanel,
-  PM_FILL_PANEL,
+  CONTENT_FILL_PANEL,
 } from "@/components/pm-chrome";
 import { BuildHeaderActions } from "@/features/build/shared/build-header-actions";
+import { BuildListSurface } from "@/features/build/shared/build-list-surface";
 import { BuildListToolbar } from "@/features/build/shared/build-list-toolbar";
 import { BuildFilterSelect } from "@/features/build/shared/build-filter-select";
-import {
-  BUILD_FILTER_ALL,
-  useBuildListFilters,
-} from "@/features/build/shared/use-build-list-filters";
-import {
-  RISK_TABLE_HEADERS,
-  buildRiskColumns,
-  RiskMobileCard,
-} from "./risks-table-columns";
-
-const STATUS_OPTIONS = [
-  { value: BUILD_FILTER_ALL, label: "All statuses" },
-  { value: "open", label: "Open" },
-  { value: "mitigating", label: "Mitigating" },
-  { value: "monitoring", label: "Monitoring" },
-  { value: "accepted", label: "Accepted" },
-  { value: "closed", label: "Closed" },
-];
-
-const FILTER_DEFINITIONS = [
-  {
-    param: "status",
-    options: STATUS_OPTIONS.map((o) => o.value),
-  },
-] as const;
+import { RISK_TABLE_HEADERS, RiskMobileCard } from "./risks-table-columns";
+import { RiskBulkActionBar } from "./risk-bulk-action-bar";
+import { STATUS_OPTIONS, PROBABILITY_OPTIONS, IMPACT_OPTIONS } from "./risks-filter-options";
+import { useRisksPage } from "./use-risks-page";
 
 interface RisksPageProps {
   projectId: number;
 }
 
 export function RisksPage({ projectId }: RisksPageProps) {
-  const canManage = useCan("build:risks:manage");
-  const listFilters = useBuildListFilters({ filters: FILTER_DEFINITIONS });
-
-  const [matrixCell, setMatrixCell] = useState<{
-    probability: RiskProbability;
-    impact: RiskImpact;
-  } | null>(null);
-  const [sheetOpen, setSheetOpen] = useState(false);
-  const [editRisk, setEditRisk] = useState<Risk | null>(null);
-  const [deleteTarget, setDeleteTarget] = useState<Risk | null>(null);
-
-  const { cursor, hasPrevious, goNext, goPrevious } = useCursorPager(
-    listFilters.resetKey,
-  );
-
-  const statusValue = listFilters.value("status");
-  const { data, isLoading, isError, error, refetch } = useProjectRisks(
-    projectId,
-    {
-      status: statusValue !== BUILD_FILTER_ALL ? statusValue : undefined,
-      cursor: cursor === undefined ? undefined : Number(cursor),
-    },
-  );
-  const { data: stats, isLoading: isStatsLoading } =
-    useProjectRiskStats(projectId);
-
-  const pageState = usePageState({
-    permission: "build:risks:view",
+  const {
+    canManage,
+    listFilters,
+    statusValue,
+    probabilityValue,
+    impactValue,
+    matrixCell,
+    sheetOpen,
+    editRisk,
+    deleteTarget,
+    data,
     isLoading,
     isError,
     error,
-  });
-  const { data: members = [] } = useProjectMembers(projectId);
-
-  const createRisk = useCreateRisk(projectId);
-  const updateRisk = useUpdateRisk(projectId);
-  const deleteRisk = useDeleteRisk(projectId);
-
-  const memberName = useCallback(
-    (userId: string | null): string => {
-      if (!userId) return "—";
-      const m = members.find((x) => x.id === userId);
-      return getUserDisplayName(m) || userId;
-    },
-    [members],
-  );
-
-  const ownerOf = useCallback(
-    (userId: string | null): NamedUser | null => {
-      if (!userId) return null;
-      const m = members.find((x) => x.id === userId);
-      return m ? { name: m.name ?? undefined, email: m.email } : null;
-    },
-    [members],
-  );
-
-  const filteredRisks = useMemo(() => data?.data ?? [], [data]);
-  const openCount = stats?.open ?? 0;
-  const highCritCount = stats?.highCritical ?? 0;
-  const closedCount = stats?.closed ?? 0;
-
-  const search = listFilters.debouncedSearch.trim().toLowerCase();
-  const isFiltered = listFilters.isFiltered || !!matrixCell;
-
-  const displayed = useMemo(() => {
-    let items = filteredRisks;
-    if (matrixCell) {
-      items = items.filter(
-        (r) =>
-          r.probability === matrixCell.probability &&
-          r.impact === matrixCell.impact,
-      );
-    }
-    if (search) {
-      items = items.filter(
-        (r) =>
-          r.title.toLowerCase().includes(search) ||
-          `risk-${r.riskNumber}`.includes(search),
-      );
-    }
-    return items;
-  }, [filteredRisks, matrixCell, search]);
-
-  const handleCreate = useCallback(
-    (input: CreateRiskInput) => {
-      createRisk.mutate(input, {
-        onSuccess: () => {
-          toast.success("Risk added");
-          setSheetOpen(false);
-        },
-        onError: (e) => toast.error(getErrorMessage(e)),
-      });
-    },
-    [createRisk],
-  );
-
-  const handleUpdate = useCallback(
-    (input: UpdateRiskInput & { riskId: number }) => {
-      updateRisk.mutate(input, {
-        onSuccess: () => {
-          toast.success("Risk updated");
-          setEditRisk(null);
-        },
-        onError: (e) => toast.error(getErrorMessage(e)),
-      });
-    },
-    [updateRisk],
-  );
-
-  const handleDeleteConfirm = useCallback(() => {
-    if (!deleteTarget) return;
-    deleteRisk.mutate(deleteTarget.id, {
-      onSuccess: () => {
-        toast.success("Risk deleted");
-        setDeleteTarget(null);
-      },
-      onError: (e) => toast.error(getErrorMessage(e)),
-    });
-  }, [deleteRisk, deleteTarget]);
-
-  const handleStatusChange = useCallback(
-    (value: string) => listFilters.setValue("status", value),
-    [listFilters],
-  );
-
-  const handleNewRisk = useCallback(() => setSheetOpen(true), []);
-
-  const handleClearAll = useCallback(() => {
-    listFilters.clearAll();
-    setMatrixCell(null);
-  }, [listFilters]);
-
-  const handleRetry = useCallback(() => {
-    void refetch();
-  }, [refetch]);
-
-  const handleNextPage = useCallback(() => {
-    goNext(data?.nextCursor == null ? null : String(data.nextCursor));
-  }, [goNext, data]);
-
-  const handleAlertOpenChange = useCallback((open: boolean) => {
-    if (!open) setDeleteTarget(null);
-  }, []);
-
-  const handleSheetOpenChange = useCallback((open: boolean) => {
-    if (!open) {
-      setSheetOpen(false);
-      setEditRisk(null);
-    }
-  }, []);
-
-  const handleCellClick = useCallback(
-    (probability: RiskProbability, impact: RiskImpact) => {
-      setMatrixCell((prev) =>
-        prev?.probability === probability && prev?.impact === impact
-          ? null
-          : { probability, impact },
-      );
-    },
-    [],
-  );
-
-  const handleEditRow = useCallback((r: Risk) => setEditRisk(r), []);
-  const handleDeleteRow = useCallback((r: Risk) => setDeleteTarget(r), []);
-
-  const columns = useMemo(
-    () =>
-      buildRiskColumns({
-        canManage,
-        memberName,
-        ownerOf,
-        onEdit: handleEditRow,
-        onDelete: handleDeleteRow,
-      }),
-    [canManage, memberName, ownerOf, handleEditRow, handleDeleteRow],
-  );
+    stats,
+    isStatsLoading,
+    members,
+    createRisk,
+    updateRisk,
+    riskFieldErrors,
+    handleCreate,
+    handleUpdate,
+    handleDeleteConfirm,
+    displayed,
+    isFiltered,
+    selectedIds,
+    setSelectedIds,
+    handleBulkStatus,
+    handleBulkOwner,
+    handleBulkClear,
+    openCount,
+    highCritCount,
+    closedCount,
+    columns,
+    pageNumber,
+    hasPrevious,
+    goPrevious,
+    handleStatusChange,
+    handleProbabilityChange,
+    handleImpactChange,
+    handleNewRisk,
+    handleClearAll,
+    handleRetry,
+    handleNextPage,
+    handleAlertOpenChange,
+    handleSheetOpenChange,
+    handleCellClick,
+    handleEditRow,
+    handleDeleteRow,
+    ownerOf,
+  } = useRisksPage(projectId);
 
   const renderMobileCard = useCallback(
     (row: Risk) => (
@@ -285,6 +118,32 @@ export function RisksPage({ projectId }: RisksPageProps) {
                   value={statusValue}
                   onValueChange={handleStatusChange}
                   options={STATUS_OPTIONS}
+                />
+              ),
+            },
+            {
+              id: "probability",
+              label: "Probability",
+              active: listFilters.isActive("probability"),
+              control: (
+                <BuildFilterSelect
+                  label="Probability"
+                  value={probabilityValue}
+                  onValueChange={handleProbabilityChange}
+                  options={PROBABILITY_OPTIONS}
+                />
+              ),
+            },
+            {
+              id: "impact",
+              label: "Impact",
+              active: listFilters.isActive("impact"),
+              control: (
+                <BuildFilterSelect
+                  label="Impact"
+                  value={impactValue}
+                  onValueChange={handleImpactChange}
+                  options={IMPACT_OPTIONS}
                 />
               ),
             },
@@ -337,7 +196,7 @@ export function RisksPage({ projectId }: RisksPageProps) {
           </StatCardGrid>
         </PmSection>
 
-        {!isStatsLoading && pageState.kind !== "loading" ? (
+        {!isStatsLoading && !isLoading ? (
           <PmSection index={1} className="shrink-0">
             <PmPanel className="p-3" solid>
               <RiskMatrix
@@ -350,23 +209,48 @@ export function RisksPage({ projectId }: RisksPageProps) {
         ) : null}
 
         <PmSection index={2} className="flex min-h-0 flex-1 flex-col">
-          <PageState
-            resolution={pageState}
-            loading={
-              <DataTableSkeleton mobileCards
-                rows={12}
-                headers={RISK_TABLE_HEADERS}
-                className="flex-1"
-              />
-            }
+          {selectedIds.size > 0 && (
+            <RiskBulkActionBar
+              selectedCount={selectedIds.size}
+              onBulkStatus={handleBulkStatus}
+              onBulkOwner={handleBulkOwner}
+              members={members}
+              onClear={handleBulkClear}
+            />
+          )}
+          <BuildListSurface<Risk>
+            permission="build:risks:view"
+            rows={displayed}
+            columns={columns}
+            isLoading={isLoading}
+            isError={isError}
+            error={error}
+            isFiltered={isFiltered}
+            getRowKey={(row) => row.id}
+            minWidth="780px"
+            mobileCard={renderMobileCard}
+            loadingHeaders={RISK_TABLE_HEADERS}
+            loadingRows={12}
+            selection={{
+              selected: selectedIds,
+              onChange: setSelectedIds,
+              getRowLabel: (row) => row.title,
+            }}
+            pagination={{
+              mode: "cursor",
+              pageSize: GOVERNANCE_PAGE_SIZE,
+              pageNumber,
+              hasMore: data?.hasMore ?? false,
+              hasPrevious,
+              onNext: handleNextPage,
+              onPrevious: goPrevious,
+            }}
             empty={
               <EmptyState
-                className={PM_FILL_PANEL}
+                className={CONTENT_FILL_PANEL}
                 illustrationPreset="alert"
                 title="No risks logged"
                 description="Log risks to track probability, impact, and mitigation plans."
-                filtersActive={isFiltered}
-                onClearFilters={handleClearAll}
                 action={
                   canManage
                     ? { label: "New Risk", onClick: handleNewRisk }
@@ -374,26 +258,17 @@ export function RisksPage({ projectId }: RisksPageProps) {
                 }
               />
             }
+            filteredEmpty={
+              <EmptyState
+                className={CONTENT_FILL_PANEL}
+                illustrationPreset="alert"
+                title="No risks match your filters"
+                description="Try adjusting the filters to see more risks."
+                onClearFilters={handleClearAll}
+              />
+            }
             onRetry={handleRetry}
-            className={PM_FILL_PANEL}
-          >
-            <DataTable
-              data={displayed}
-              columns={columns}
-              getRowKey={(row) => row.id}
-              minWidth="780px"
-              mobileCard={renderMobileCard}
-              className={PM_FILL_PANEL}
-              pagination={{
-                mode: "cursor",
-                pageSize: GOVERNANCE_PAGE_SIZE,
-                hasMore: data?.hasMore ?? false,
-                hasPrevious,
-                onNext: handleNextPage,
-                onPrevious: goPrevious,
-              }}
-            />
-          </PageState>
+          />
         </PmSection>
       </PmPageShell>
 
@@ -406,6 +281,7 @@ export function RisksPage({ projectId }: RisksPageProps) {
         onSubmitEdit={handleUpdate}
         isPending={createRisk.isPending || updateRisk.isPending}
         projectId={projectId}
+        serverErrors={riskFieldErrors}
       />
 
       <ConfirmDialog

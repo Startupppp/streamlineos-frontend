@@ -2,12 +2,15 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { useNavigationLeave } from "@/components/shared/dirty-state-context";
 
 export function useKeyboardShortcuts(
   onCreateProject: () => void,
   onCreateIssue: () => void,
+  onShortcutHelp?: () => void,
 ) {
   const router = useRouter();
+  const requestLeave = useNavigationLeave();
   const [pendingKey, setPendingKey] = useState<string | null>(null);
 
   useEffect(() => {
@@ -21,8 +24,16 @@ export function useKeyboardShortcuts(
         target.tagName === "INPUT" ||
         target.tagName === "TEXTAREA" ||
         target.tagName === "SELECT" ||
-        target.isContentEditable
+        target.isContentEditable ||
+        target.contentEditable === "true"
       ) {
+        return;
+      }
+
+      if (e.key === "?") {
+        clearTimeout(timer);
+        setPendingKey(null);
+        onShortcutHelp?.();
         return;
       }
 
@@ -40,13 +51,13 @@ export function useKeyboardShortcuts(
 
       if (pendingKey === "g" && e.key === "m") {
         setPendingKey(null);
-        router.push("/build/my-work");
+        requestLeave(() => router.push("/build/my-work"));
         return;
       }
 
       if (pendingKey === "g" && e.key === "p") {
         setPendingKey(null);
-        router.push("/build");
+        requestLeave(() => router.push("/build/projects"));
         return;
       }
 
@@ -70,5 +81,5 @@ export function useKeyboardShortcuts(
       document.removeEventListener("keydown", handleKeyDown);
       clearTimeout(timer);
     };
-  }, [pendingKey, onCreateProject, onCreateIssue, router]);
+  }, [pendingKey, onCreateProject, onCreateIssue, onShortcutHelp, requestLeave, router]);
 }

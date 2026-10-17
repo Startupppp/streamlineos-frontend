@@ -12,9 +12,10 @@ import { KNOWLEDGE_SUPPORT_NAV_GROUPS } from "./sidebar-nav-groups-knowledge-sup
 import { ADMINISTRATION_NAV_GROUPS } from "./sidebar-nav-groups-administration";
 import { isModuleEnabled, PRODUCT_MODULE_KEY } from "./sidebar-products";
 import { matchesOrgModule } from "@/lib/org-module-keys";
+import type { PermissionKey } from "@/lib/rbac/permissions";
 
 type GrantedScopes = Readonly<Record<string, unknown>>;
-type GrantedPredicate = (permissionKey: string) => boolean;
+type GrantedPredicate = (permissionKey: PermissionKey) => boolean;
 
 const grantedFrom =
   (scopes: GrantedScopes | undefined): GrantedPredicate =>
@@ -51,10 +52,8 @@ export interface ProductPathException {
 
 /** Paths with no navigation entry to derive from. Longest prefix wins over these too. */
 export const PRODUCT_PATH_EXCEPTIONS: ProductPathException[] = [
-  { prefix: "/me", product: "home", reason: "Self-service index; only its children are navigable." },
+  { prefix: "/build", product: "build", reason: "Build entry resolves to the authorized landing page." },
   { prefix: "/knowledge", product: "documents", reason: "Knowledge index; nav lists /knowledge/chat and /knowledge/wiki." },
-  { prefix: "/support/kb", product: "documents", reason: "Knowledge base served under the support prefix." },
-  { prefix: "/recruitment", product: "recruitment", reason: "Hiring pipeline reached from the Recruitment group's children." },
   { prefix: "/sales", product: "crm", reason: "CRM operational surface with no nav entry." },
   { prefix: "/customer-executive", product: "crm", reason: "CRM operational surface with no nav entry." },
   { prefix: "/billing/invoices", product: "finance", reason: "The org's own customer invoicing, not platform billing." },

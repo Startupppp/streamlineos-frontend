@@ -8,6 +8,7 @@ import { useCan } from "@/hooks/api/access";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { useIdempotentOperation } from "@/hooks/common/use-idempotent-operation";
 import { NO_CURSOR_YET } from "@/hooks/api/cursor-page-param";
+import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
 
 export interface KbSource {
   id: number;
@@ -20,6 +21,7 @@ export interface KbSource {
   chunkCount: number;
   errorMessage: string | null;
   spaceId: number | null;
+  createdById?: string | null;
   createdAt: string;
 }
 
@@ -66,19 +68,27 @@ const kbSourceSuccessContract = lazyContract(() =>
   import("@/hooks/api/kb/kb-sources-schema").then((m) => m.kbSourceSuccessContract),
 );
 
-export function useKbSources() {
+export interface KbSourcesParams {
+  kind?: "file" | "note";
+  createdById?: string;
+}
+
+export function useKbSources(filters?: KbSourcesParams) {
   const canView = useCan("kb:pages:view");
   return useInfiniteQuery({
-    queryKey: knowledgeAndSurveysQueryKeys.kb.sources(),
+    queryKey: knowledgeAndSurveysQueryKeys.kb.sources(filters),
     queryFn: ({ pageParam, signal }) => {
       const params: Record<string, unknown> = { limit: SOURCES_PAGE_SIZE };
       if (pageParam !== undefined) params.cursor = pageParam;
+      if (filters?.kind !== undefined) params.kind = filters.kind;
+      if (filters?.createdById !== undefined) params.createdById = filters.createdById;
       return apiClient.get<KbSourcePage>("/kb/sources", params, signal, kbSourcePageContract);
     },
     initialPageParam: NO_CURSOR_YET,
     getNextPageParam: (lastPage) => lastPage.pagination.nextCursor ?? undefined,
     staleTime: 15_000,
     enabled: canView,
+    ...INLINE_READ_ERROR,
     refetchInterval: (query) =>
       kbSourcePollInterval((query.state.data?.pages ?? []).flatMap((page) => page.data)),
   });

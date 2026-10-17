@@ -10,8 +10,14 @@ import { lazyContract } from "@/lib/api-envelope";
 import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
 import { knowledgeAndSurveysQueryKeys } from "@/lib/query-keys/knowledge-and-surveys";
 import { useCan } from "@/hooks/api/access";
+import { NO_CURSOR_YET } from "@/hooks/api/cursor-page-param";
+import { selectFlatPages, type Page } from "@/lib/api/select-flat-pages";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import { useIdempotentOperation } from "@/hooks/common/use-idempotent-operation";
 import { useKbSpaces } from "./spaces";
+import { kbPageTreeLevelContract } from "./kb-page-tree-schema";
+import type { KbSpaceListPage } from "./spaces";
+import type { KbPageTrashPurgeImpact } from "./kb-pages-schema";
 import type {
   CreateKbPageInput,
   KbPage,
@@ -20,19 +26,22 @@ import type {
   KbPageListItem,
   KbPageSearchPage,
   KbPageTreeNode,
-  KbPageVersion,
   MoveKbPageInput,
   UpdateKbPageInput,
 } from "./page-types";
-import { NO_CURSOR_YET } from "@/hooks/api/cursor-page-param";
 
-function deriveAclVersion(ids: number[]): string {
-  return [...ids].sort((a, b) => a - b).join(",");
+type KbPageTreeLevel = {
+  data: KbPageTreeNode[];
+  pagination: { limit: number; hasMore: boolean; nextCursor: string | null };
+};
+
+export const ACL_VERSION_SPACE_LIMIT = 100;
+
+export function deriveAclVersion(page: KbSpaceListPage | undefined): string {
+  if (page === undefined) return "";
+  const ids = page.data.map((s) => s.id).sort((a, b) => a - b);
+  return page.pagination.hasMore ? `${ids.join(",")}~truncated` : ids.join(",");
 }
-
-const kbPageTreeContract = lazyContract(() =>
-  import("@/hooks/api/kb/kb-pages-schema").then((m) => m.kbPageTreeContract),
-);
 
 const kbPageSearchResponseContract = lazyContract(() =>
   import("@/hooks/api/kb/kb-pages-schema").then(
@@ -51,26 +60,41 @@ const kbPageContract = lazyContract(() =>
 const kbPageListContract = lazyContract(() =>
   import("@/hooks/api/kb/kb-pages-schema").then((m) => m.kbPageListContract),
 );
+const kbFavoritePageListContract = lazyContract(() =>
+  import("@/hooks/api/kb/kb-pages-schema").then((m) => m.kbFavoritePageListContract),
+);
+
+const kbTrashDeletersContract = lazyContract(() =>
+  import("@/hooks/api/kb/kb-pages-schema").then((m) => m.kbTrashDeletersContract),
+);
 
 const kbPageBacklinkContract = lazyContract(() =>
   import("@/hooks/api/kb/kb-pages-schema").then(
-    (m) => m.kbPageBacklinkContract,
+    (m) => m.kbPageBacklinksPageContract,
   ),
-);
-
-const kbPageVersionListContract = lazyContract(() =>
-  import("@/hooks/api/kb/kb-pages-schema").then(
-    (m) => m.kbPageVersionListContract,
-  ),
-);
-
-const kbPageVersionContract = lazyContract(() =>
-  import("@/hooks/api/kb/kb-pages-schema").then((m) => m.kbPageVersionContract),
 );
 
 const kbPageSoftDeleteContract = lazyContract(() =>
   import("@/hooks/api/kb/kb-pages-schema").then(
     (m) => m.kbPageSoftDeleteContract,
+  ),
+);
+
+const kbTrashPageListContract = lazyContract(() =>
+  import("@/hooks/api/kb/kb-pages-schema").then(
+    (m) => m.kbTrashPageListContract,
+  ),
+);
+
+const kbPageTrashPurgeImpactContract = lazyContract(() =>
+  import("@/hooks/api/kb/kb-pages-schema").then(
+    (m) => m.kbPageTrashPurgeImpactContract,
+  ),
+);
+
+const kbBulkPageResultContract = lazyContract(() =>
+  import("@/hooks/api/kb/kb-pages-schema").then(
+    (m) => m.kbBulkPageResultContract,
   ),
 );
 
@@ -90,41 +114,84 @@ const kbPagePermanentDeleteContract = lazyContract(() =>
   ),
 );
 
-export function useKbPagesTree() {
+export function useKbProjectPagesTree(projectId: number) {
   const canView = useCan("kb:pages:view");
   return useQuery({
-    queryKey: knowledgeAndSurveysQueryKeys.kb.pagesTree(),
-    queryFn: ({ signal }) =>
-      apiClient.get<KbPageTreeNode[]>(
+    queryKey: knowledgeAndSurveysQueryKeys.kb.pagesTreeByProject(projectId),
+    queryFn: async ({ signal }) => {
+      const page = await apiClient.get<KbPageTreeLevel>(
         "/kb/pages/tree",
-        undefined,
+        { projectId },
         signal,
-        kbPageTreeContract,
+        kbPageTreeLevelContract,
+      );
+      return page.data;
+    },
+    staleTime: 30_000,
+    enabled: canView && Number.isFinite(projectId) && projectId > 0,
+  });
+}
+
+export function useKbPageTreeInfinite(params: {
+  spaceId?: number;
+  projectId?: number;
+}) {
+  const canView = useCan("kb:pages:view");
+  return useInfiniteQuery({
+    ...INLINE_READ_ERROR,
+    queryKey: knowledgeAndSurveysQueryKeys.kb.pagesTreeLevelInfinite(params),
+    queryFn: ({ pageParam, signal }) =>
+      apiClient.get<KbPageTreeLevel>(
+        "/kb/pages/tree",
+        {
+          ...params,
+          ...(pageParam === undefined ? {} : { cursor: pageParam }),
+        },
+        signal,
+        kbPageTreeLevelContract,
       ),
+    initialPageParam: NO_CURSOR_YET,
+    getNextPageParam: (lastPage) =>
+      lastPage.pagination.nextCursor ?? undefined,
     staleTime: 30_000,
     enabled: canView,
   });
 }
 
-export function useKbProjectPagesTree(projectId: number) {
+export function useKbPageChildrenLevel(
+  nodeId: number,
+  enabled: boolean,
+  spaceId?: number,
+  projectId?: number,
+) {
   const canView = useCan("kb:pages:view");
-  return useQuery({
-    queryKey: knowledgeAndSurveysQueryKeys.kb.pagesTreeByProject(projectId),
-    queryFn: ({ signal }) =>
-      apiClient.get<KbPageTreeNode[]>(
+  return useInfiniteQuery({
+    ...INLINE_READ_ERROR,
+    queryKey: knowledgeAndSurveysQueryKeys.kb.pagesTreeLevelInfinite({ parentId: nodeId, spaceId, projectId }),
+    queryFn: ({ pageParam, signal }) =>
+      apiClient.get<KbPageTreeLevel>(
         "/kb/pages/tree",
-        { projectId },
+        {
+          parentId: nodeId,
+          ...(spaceId === undefined ? {} : { spaceId }),
+          ...(projectId === undefined ? {} : { projectId }),
+          ...(pageParam === undefined ? {} : { cursor: pageParam }),
+        },
         signal,
-        kbPageTreeContract,
+        kbPageTreeLevelContract,
       ),
+    initialPageParam: NO_CURSOR_YET,
+    getNextPageParam: (lastPage) =>
+      lastPage.pagination.nextCursor ?? undefined,
     staleTime: 30_000,
-    enabled: canView && Number.isFinite(projectId) && projectId > 0,
+    enabled: canView && enabled,
   });
 }
 
 export function useKbPagesRecent() {
   const canView = useCan("kb:pages:view");
   return useQuery({
+    ...INLINE_READ_ERROR,
     queryKey: knowledgeAndSurveysQueryKeys.kb.pagesRecent(),
     queryFn: ({ signal }) =>
       apiClient.get<KbPageListItem[]>(
@@ -140,42 +207,164 @@ export function useKbPagesRecent() {
 
 export function useKbPagesFavorites() {
   const canView = useCan("kb:pages:view");
-  return useQuery({
+  return useInfiniteQuery({
+    ...INLINE_READ_ERROR,
     queryKey: knowledgeAndSurveysQueryKeys.kb.pagesFavorites(),
-    queryFn: ({ signal }) =>
-      apiClient.get<KbPageListItem[]>(
+    initialPageParam: NO_CURSOR_YET,
+    queryFn: ({ signal, pageParam }) =>
+      apiClient.get<Page<KbPageListItem>>(
         "/kb/pages/favorites",
-        undefined,
+        pageParam !== undefined ? { cursor: pageParam } : undefined,
         signal,
-        kbPageListContract,
+        kbFavoritePageListContract,
+      ),
+    getNextPageParam: (last) => last.pagination.nextCursor ?? undefined,
+    select: selectFlatPages,
+    staleTime: 30_000,
+    enabled: canView,
+  });
+}
+
+export type TrashPageParams = {
+  cursor?: string;
+  limit?: number;
+  q?: string;
+  spaceId?: number;
+  deletedByMembershipId?: number;
+  deletedFrom?: string;
+  deletedBefore?: string;
+};
+
+export type KbTrashCursorPage = {
+  data: KbPageListItem[];
+  pagination: { limit: number; nextCursor: string | null; hasMore: boolean };
+};
+
+export function useKbPagesTrash(params?: TrashPageParams) {
+  const canView = useCan("kb:pages:view");
+  return useQuery({
+    queryKey: knowledgeAndSurveysQueryKeys.kb.pagesTrash(params),
+    queryFn: ({ signal }) =>
+      apiClient.get<KbTrashCursorPage>(
+        "/kb/pages/trash",
+        params,
+        signal,
+        kbTrashPageListContract,
       ),
     staleTime: 30_000,
     enabled: canView,
   });
 }
 
-export function useKbPagesTrash() {
+export interface KbTrashDeleter {
+  membershipId: number;
+  name: string;
+}
+
+export type KbTrashDeletersPage = Page<KbTrashDeleter> & {
+  selected: KbTrashDeleter | null;
+};
+
+export function useKbTrashDeleters(search: string, selectedMembershipId?: number) {
   const canView = useCan("kb:pages:view");
-  return useQuery({
-    queryKey: knowledgeAndSurveysQueryKeys.kb.pagesTrash(),
-    queryFn: ({ signal }) =>
-      apiClient.get<KbPageListItem[]>(
-        "/kb/pages/trash",
-        undefined,
+  return useInfiniteQuery({
+    ...INLINE_READ_ERROR,
+    queryKey: knowledgeAndSurveysQueryKeys.kb.pagesTrashDeleters(search, selectedMembershipId),
+    initialPageParam: NO_CURSOR_YET,
+    queryFn: ({ signal, pageParam }) =>
+      apiClient.get<KbTrashDeletersPage>(
+        "/kb/pages/trash/deleters",
+        { limit: 50, search: search || undefined, selectedMembershipId, cursor: pageParam },
         signal,
-        kbPageListContract,
+        kbTrashDeletersContract,
       ),
+    getNextPageParam: (last) => last.pagination.nextCursor ?? undefined,
     staleTime: 30_000,
     enabled: canView,
+  });
+}
+
+export type BulkPageResult = {
+  results: Array<{
+    pageId: number;
+    result: "succeeded" | "denied" | "conflict" | "notFound";
+  }>;
+};
+
+export function useKbBulkRestorePages() {
+  const qc = useQueryClient();
+  const operation = useIdempotentOperation();
+  return useAuthorizedMutation("kb:pages:update", {
+    mutationKey: ["kb", "pages", "trash", "bulk-restore"],
+    mutationFn: (pageIds: number[]) =>
+      apiClient.post<BulkPageResult>(
+        "/kb/pages/trash/restore",
+        { pageIds },
+        operation.configFor({ pageIds }),
+        kbBulkPageResultContract,
+      ),
+    onSuccess: () => {
+      operation.settle();
+      qc.invalidateQueries({
+        queryKey: knowledgeAndSurveysQueryKeys.kb.pagesTrash(),
+      });
+      qc.invalidateQueries({
+        queryKey: knowledgeAndSurveysQueryKeys.kb.pagesTree(),
+      });
+      qc.invalidateQueries({
+        queryKey: knowledgeAndSurveysQueryKeys.kb.kbPages(),
+      });
+    },
+  });
+}
+
+export function useKbTrashPurgeImpact(
+  pageIds: number[],
+  options?: { enabled?: boolean },
+) {
+  const canPurge = useCan("kb:pages:purge");
+  return useQuery({
+    ...INLINE_READ_ERROR,
+    queryKey: knowledgeAndSurveysQueryKeys.kb.pagesTrashPurgeImpact(pageIds),
+    queryFn: ({ signal }) =>
+      apiClient.post<KbPageTrashPurgeImpact>(
+        "/kb/pages/trash/purge-impact",
+        { pageIds },
+        { signal },
+        kbPageTrashPurgeImpactContract,
+      ),
+    staleTime: 15_000,
+    enabled: canPurge && pageIds.length > 0 && (options?.enabled ?? true),
+  });
+}
+
+export function useKbBulkPurgePages() {
+  const qc = useQueryClient();
+  const operation = useIdempotentOperation();
+  return useAuthorizedMutation("kb:pages:purge", {
+    mutationKey: ["kb", "pages", "trash", "bulk-purge"],
+    mutationFn: (pageIds: number[]) =>
+      apiClient.delete<BulkPageResult>(
+        "/kb/pages/trash/purge",
+        { pageIds },
+        operation.configFor({ pageIds }),
+        kbBulkPageResultContract,
+      ),
+    onSuccess: () => {
+      operation.settle();
+      qc.invalidateQueries({
+        queryKey: knowledgeAndSurveysQueryKeys.kb.pagesTrash(),
+      });
+    },
   });
 }
 
 export function useKbPagesSearch(q: string) {
   const canView = useCan("kb:pages:view");
-  const { data: spaces, isLoading: spacesLoading } = useKbSpaces();
-  const aclVersion = spacesLoading
-    ? null
-    : deriveAclVersion((spaces ?? []).map((s) => s.id));
+  const { data: spaces, isLoading: spacesLoading } = useKbSpaces({
+    limit: ACL_VERSION_SPACE_LIMIT,
+  });
+  const aclVersion = spacesLoading ? null : deriveAclVersion(spaces);
   return useQuery({
     queryKey: knowledgeAndSurveysQueryKeys.kb.pagesSearch(q, aclVersion ?? ""),
     queryFn: ({ signal }) =>
@@ -210,70 +399,26 @@ export function useKbPage(pageId: number) {
 export function useKbPageBacklinks(pageId: number) {
   const canView = useCan("kb:pages:view");
   return useQuery({
+    ...INLINE_READ_ERROR,
     queryKey: knowledgeAndSurveysQueryKeys.kb.pageBacklinks(pageId),
-    queryFn: ({ signal }) =>
-      apiClient.get<KbPageBacklink[]>(
+    queryFn: async ({ signal }) => {
+      const page = await apiClient.get<{
+        data: KbPageBacklink[];
+        pagination: {
+          limit: number;
+          hasMore: boolean;
+          nextCursor: string | null;
+        };
+      }>(
         `/kb/pages/${pageId}/backlinks`,
         undefined,
         signal,
         kbPageBacklinkContract,
-      ),
-    staleTime: 60_000,
-    enabled: canView && Number.isFinite(pageId) && pageId > 0,
-  });
-}
-
-type CursorPage<T> = {
-  data: T[];
-  pagination: {
-    limit: number;
-    nextCursor: string | null;
-    hasMore: boolean;
-  };
-};
-
-export function useKbPageVersions(pageId: number) {
-  const canView = useCan("kb:pages:view");
-  return useInfiniteQuery({
-    queryKey: knowledgeAndSurveysQueryKeys.kb.pageVersions(pageId),
-    queryFn: ({ pageParam, signal }) => {
-      const params: Record<string, unknown> = {};
-      if (pageParam !== undefined) params.cursor = pageParam;
-      return apiClient.get<CursorPage<KbPageVersion>>(
-        `/kb/pages/${pageId}/versions`,
-        params,
-        signal,
-        kbPageVersionListContract,
       );
+      return page.data;
     },
-    initialPageParam: NO_CURSOR_YET,
-    getNextPageParam: (lastPage) => lastPage.pagination.nextCursor ?? undefined,
     staleTime: 60_000,
     enabled: canView && Number.isFinite(pageId) && pageId > 0,
-  });
-}
-
-export function useKbPageVersion(pageId: number, versionNumber: number) {
-  const canView = useCan("kb:pages:view");
-  return useQuery({
-    queryKey: knowledgeAndSurveysQueryKeys.kb.pageVersion(
-      pageId,
-      versionNumber,
-    ),
-    queryFn: ({ signal }) =>
-      apiClient.get<KbPageVersion>(
-        `/kb/pages/${pageId}/versions/${versionNumber}`,
-        undefined,
-        signal,
-        kbPageVersionContract,
-      ),
-    staleTime: 300_000,
-    enabled:
-      canView &&
-      Number.isFinite(pageId) &&
-      pageId > 0 &&
-      Number.isFinite(versionNumber) &&
-      versionNumber > 0,
   });
 }
 
@@ -348,6 +493,9 @@ export function useUpdateKbPage() {
       });
       qc.invalidateQueries({
         queryKey: knowledgeAndSurveysQueryKeys.kb.pagesFavorites(),
+      });
+      qc.invalidateQueries({
+        queryKey: knowledgeAndSurveysQueryKeys.kb.pageCollection(),
       });
     },
   });
@@ -424,16 +572,18 @@ export function useHardDeleteKbPage() {
 
 export function useEmptyKbTrash() {
   const qc = useQueryClient();
+  const operation = useIdempotentOperation();
   return useAuthorizedMutation("kb:pages:purge", {
     mutationKey: ["kb", "pages", "emptyTrash"],
     mutationFn: () =>
       apiClient.delete<{ purgedCount: number }>(
         "/kb/pages/trash/empty",
         undefined,
-        undefined,
+        operation.configFor({ command: "kb.pages.trash-empty" }),
         kbPageEmptyTrashContract,
       ),
     onSuccess: () => {
+      operation.settle();
       qc.invalidateQueries({
         queryKey: knowledgeAndSurveysQueryKeys.kb.pagesTrash(),
       });
@@ -462,6 +612,9 @@ export function useDuplicateKbPage() {
       qc.invalidateQueries({
         queryKey: knowledgeAndSurveysQueryKeys.kb.pagesRecent(),
       });
+      qc.invalidateQueries({
+        queryKey: knowledgeAndSurveysQueryKeys.kb.pageCollection(),
+      });
     },
   });
 }
@@ -483,6 +636,9 @@ export function useMoveKbPage() {
       });
       qc.invalidateQueries({
         queryKey: knowledgeAndSurveysQueryKeys.kb.page(variables.pageId),
+      });
+      qc.invalidateQueries({
+        queryKey: knowledgeAndSurveysQueryKeys.kb.pageCollection(),
       });
     },
   });
@@ -590,20 +746,23 @@ export function useSetKbPageVisibility() {
     mutationFn: ({
       pageId,
       visibility,
+      expectedContentRevision,
     }: {
       pageId: number;
       visibility: "private" | "org" | "public";
+      expectedContentRevision: number;
     }) =>
       apiClient.patch<KbPage>(
         `/kb/pages/${pageId}/visibility`,
-        { visibility },
+        { visibility, expectedContentRevision },
         undefined,
         kbPageContract,
       ),
-    onSuccess: (_, variables) => {
-      qc.invalidateQueries({
-        queryKey: knowledgeAndSurveysQueryKeys.kb.page(variables.pageId),
-      });
+    onSuccess: (updated, variables) => {
+      qc.setQueryData<KbPageDetail>(
+        knowledgeAndSurveysQueryKeys.kb.page(variables.pageId),
+        applyUpdatedKbPage(updated),
+      );
       qc.invalidateQueries({
         queryKey: knowledgeAndSurveysQueryKeys.kb.pagesTree(),
       });
@@ -611,48 +770,20 @@ export function useSetKbPageVisibility() {
   });
 }
 
-export function useRestoreKbPageVersion() {
-  const qc = useQueryClient();
-  return useAuthorizedMutation("kb:pages:update", {
-    mutationKey: ["kb", "pages", "restoreVersion"],
-    mutationFn: ({
-      pageId,
-      versionNumber,
-    }: {
-      pageId: number;
-      versionNumber: number;
-    }) =>
-      apiClient.post<KbPage>(
-        `/kb/pages/${pageId}/versions/${versionNumber}/restore`,
-        undefined,
-        undefined,
-        kbPageContract,
-      ),
-    onSuccess: (_, variables) => {
-      qc.invalidateQueries({
-        queryKey: knowledgeAndSurveysQueryKeys.kb.page(variables.pageId),
-      });
-      qc.invalidateQueries({
-        queryKey: knowledgeAndSurveysQueryKeys.kb.pageVersions(
-          variables.pageId,
-        ),
-      });
-    },
-  });
-}
-
 export function usePublishKbPage() {
   const qc = useQueryClient();
+  const operation = useIdempotentOperation();
   return useAuthorizedMutation("kb:pages:update", {
     mutationKey: ["kb", "pages", "publish"],
-    mutationFn: (pageId: number) =>
+    mutationFn: ({ pageId, expectedContentRevision }: { pageId: number; expectedContentRevision: number }) =>
       apiClient.post<KbPage>(
         `/kb/pages/${pageId}/publish`,
-        {},
-        undefined,
+        { expectedContentRevision },
+        operation.configFor({ pageId, expectedContentRevision }),
         kbPageContract,
       ),
-    onSuccess: (_, pageId) => {
+    onSuccess: (_, { pageId }) => {
+      operation.settle();
       qc.invalidateQueries({
         queryKey: knowledgeAndSurveysQueryKeys.kb.page(pageId),
       });
@@ -667,14 +798,14 @@ export function useArchiveKbPage() {
   const qc = useQueryClient();
   return useAuthorizedMutation("kb:pages:update", {
     mutationKey: ["kb", "pages", "archive"],
-    mutationFn: (pageId: number) =>
+    mutationFn: ({ pageId, expectedContentRevision }: { pageId: number; expectedContentRevision: number }) =>
       apiClient.post<KbPage>(
         `/kb/pages/${pageId}/archive`,
-        {},
+        { expectedContentRevision },
         undefined,
         kbPageContract,
       ),
-    onSuccess: (_, pageId) => {
+    onSuccess: (_, { pageId }) => {
       qc.invalidateQueries({
         queryKey: knowledgeAndSurveysQueryKeys.kb.page(pageId),
       });
@@ -689,14 +820,14 @@ export function useUnarchiveKbPage() {
   const qc = useQueryClient();
   return useAuthorizedMutation("kb:pages:update", {
     mutationKey: ["kb", "pages", "unarchive"],
-    mutationFn: (pageId: number) =>
+    mutationFn: ({ pageId, expectedContentRevision }: { pageId: number; expectedContentRevision: number }) =>
       apiClient.post<KbPage>(
         `/kb/pages/${pageId}/unarchive`,
-        {},
+        { expectedContentRevision },
         undefined,
         kbPageContract,
       ),
-    onSuccess: (_, pageId) => {
+    onSuccess: (_, { pageId }) => {
       qc.invalidateQueries({
         queryKey: knowledgeAndSurveysQueryKeys.kb.page(pageId),
       });

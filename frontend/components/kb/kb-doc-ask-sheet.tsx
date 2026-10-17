@@ -65,6 +65,7 @@ export function KbDocAskSheet({
   const [question, setQuestion] = useState("");
   const [lastQuestion, setLastQuestion] = useState("");
   const invokeRef = useRef(0);
+  const runningRef = useRef(false);
   const idRef = useRef(0);
   const threadEndRef = useRef<HTMLDivElement>(null);
   const ask = useAiTextStream();
@@ -80,6 +81,8 @@ export function KbDocAskSheet({
   }
 
   async function runAsk(q: string, retry = false) {
+    if (runningRef.current) return;
+    runningRef.current = true;
     const stamp = ++invokeRef.current;
     setLastQuestion(q);
     setQuestion("");
@@ -121,6 +124,8 @@ export function KbDocAskSheet({
     } catch (error) {
       if (invokeRef.current !== stamp) return;
       setPanel(classifyAiError(error));
+    } finally {
+      runningRef.current = false;
     }
   }
 

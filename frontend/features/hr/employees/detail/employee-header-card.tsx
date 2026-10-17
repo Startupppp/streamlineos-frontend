@@ -9,18 +9,31 @@ import { AvailabilityBadge, InfoField, StatBlock } from "@/features/hr/employees
 import { LIFECYCLE_BADGE } from "@/features/hr/employees/detail/employee-detail-constants";
 import { cn, resolveImageUrl } from "@/lib/utils";
 import { getInitials } from "@/lib/format-utils";
+import { getUserDisplayName } from "@/lib/person-display";
 import { format } from "date-fns";
 import {
   Building2,
   Calendar,
   CheckCircle2,
   Mail,
+  MailQuestion,
   Phone,
   Tag,
   XCircle,
 } from "lucide-react";
 import type { EmployeeData } from "@/features/hr/employees/detail/edit-employee-form";
 import { ResendInviteButton } from "@/components/hr/resend-invite-button";
+import { CopyInviteLinkButton } from "@/components/hr/copy-invite-link-button";
+import { useRef, type ChangeEvent } from "react";
+import { toast } from "sonner";
+import { useCan } from "@/hooks/api/access";
+import { useUpdateProfile } from "@/hooks/api/hr";
+import { useUploadFile } from "@/hooks/api/use-upload-file";
+import { getErrorMessage } from "@/lib/get-error-message";
+import {
+  InviteDeliveryBadge,
+  InviteDeliveryNote,
+} from "@/features/hr/employees/detail/invite-delivery-badge";
 
 interface EmployeeStats {
   attendance?: { daysPresent?: number } | null;
@@ -58,8 +71,35 @@ export function EmployeeHeaderCard({
   showLegacyEmployeeId,
   legacyEmployeeId,
 }: EmployeeHeaderCardProps) {
-  const employeeName =
-    `${employee.firstName ?? ""} ${employee.lastName ?? ""}`.trim() || "Employee";
+  // V-023/V-025: one name, from one place. Composing first+last here ignored
+  // `employee.name`, so a person carrying only a display name read "Employee"
+  // and an owner read their email local part.
+  const employeeName = getUserDisplayName(employee);
+  const canUpdate = useCan("hr:employees:update");
+  const uploadPhoto = useUploadFile();
+  const updateProfile = useUpdateProfile();
+  const photoInput = useRef<HTMLInputElement>(null);
+
+  async function onPhotoSelected(file: File | undefined) {
+    if (!file) return;
+    if (!file.type.startsWith("image/")) {
+      toast.error("Choose an image file");
+      return;
+    }
+    try {
+      const uploaded = await uploadPhoto.mutateAsync({ file, folder: "hr-photos" });
+      await updateProfile.mutateAsync({ userId: employee.id, image: uploaded.key });
+      toast.success("Photo updated");
+    } catch (error) {
+      toast.error(getErrorMessage(error));
+    }
+  }
+
+  function handlePhotoInputChange(event: ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+    event.target.value = "";
+    void onPhotoSelected(file);
+  }
 
   const lifecycleBadge = lifecycleStatus
     ? LIFECYCLE_BADGE[lifecycleStatus] ?? {
@@ -77,37 +117,48 @@ export function EmployeeHeaderCard({
     >
       <CardContent className="p-4 sm:p-5">
         <div className="flex flex-col gap-4 sm:flex-row sm:gap-5">
-          <div className="flex items-start gap-3 sm:block sm:shrink-0">
-            <Avatar className="h-16 w-16 sm:h-20 sm:w-20">
-              <AvatarImage
-                src={resolveImageUrl(
-                  typeof employee.image === "string" ? employee.image : null,
-                )}
-              />
-              <AvatarFallback className="bg-muted text-lg font-bold text-muted-foreground sm:text-xl">
-                {getInitials(undefined, employee.firstName, employee.lastName)}
-              </AvatarFallback>
-            </Avatar>
-            <div className="min-w-0 flex-1 sm:hidden">
-              <h2 className="text-base font-bold leading-tight text-foreground">
-                {employeeName}
-              </h2>
-              {employee.designation && (
-                <p className="mt-0.5 text-sm text-muted-foreground">
-                  {employee.designation}
-                </p>
-              )}
-            </div>
-          </div>
-
           <div className="min-w-0 flex-1 space-y-3.5">
-            <div className="hidden items-start gap-2 sm:flex">
+            {/* V-023: one heading, not a mobile copy and a desktop copy. */}
+            <div className="flex items-start gap-3">
+              <div className="flex shrink-0 flex-col items-center gap-1">
+              <Avatar className="h-16 w-16 sm:h-20 sm:w-20">
+                <AvatarImage
+                  src={resolveImageUrl(
+                    typeof employee.image === "string" ? employee.image : null,
+                  )}
+                  alt=""
+                />
+                <AvatarFallback className="bg-muted text-lg font-bold text-muted-foreground sm:text-xl">
+                  {getInitials(undefined, employee.firstName, employee.lastName)}
+                </AvatarFallback>
+              </Avatar>
+              {canUpdate ? (
+                <>
+                  <button
+                    type="button"
+                    className="text-xs font-medium text-primary underline-offset-2 hover:underline disabled:opacity-50"
+                    disabled={uploadPhoto.isPending || updateProfile.isPending}
+                    onClick={() => photoInput.current?.click()}
+                  >
+                    {uploadPhoto.isPending || updateProfile.isPending ? "Uploading…" : "Upload photo"}
+                  </button>
+                  <input
+                    ref={photoInput}
+                    type="file"
+                    accept="image/*"
+                    className="sr-only"
+                    aria-label={`Upload photo for ${employeeName}`}
+                    onChange={handlePhotoInputChange}
+                  />
+                </>
+              ) : null}
+              </div>
               <div className="min-w-0 flex-1">
-                <h2 className="text-lg font-bold text-foreground">
+                <h2 className="text-base font-bold leading-tight text-foreground sm:text-lg">
                   {employeeName}
                 </h2>
                 {employee.designation && (
-                  <p className="text-sm text-muted-foreground">
+                  <p className="mt-0.5 text-sm text-muted-foreground">
                     {employee.designation}
                   </p>
                 )}
@@ -141,6 +192,17 @@ export function EmployeeHeaderCard({
                   <XCircle className="h-3 w-3" />
                   Terminated
                 </span>
+              ) : employee.hasAccepted === false ? (
+                // PROVISIONAL (product default E-4): the account flag is set at
+                // creation, so an invitee who never accepted must not read
+                // "Active" here while the directory counts them "Pending invite".
+                <span
+                  className="inline-flex items-center gap-1 rounded-full border border-status-warning-rule bg-status-warning-surface px-2 py-0.5 text-micro font-semibold text-status-warning-ink"
+                  title="Invited, not yet accepted"
+                >
+                  <MailQuestion className="h-3 w-3" />
+                  Pending
+                </span>
               ) : showEmploymentActiveBadge ? (
                 <span className="inline-flex items-center gap-1 rounded-full border border-status-success-rule bg-status-success-surface px-2 py-0.5 text-micro font-semibold text-status-success-ink">
                   <CheckCircle2 className="h-3 w-3" />
@@ -158,6 +220,7 @@ export function EmployeeHeaderCard({
                 </span>
               )}
               <AvailabilityBadge userId={employee.id} />
+              {!isSelf && <InviteDeliveryBadge delivery={employee.inviteDelivery} />}
             </div>
 
             <div className="grid grid-cols-1 gap-3 min-[380px]:grid-cols-2 sm:flex sm:flex-wrap sm:gap-x-5 sm:gap-y-2.5">
@@ -184,7 +247,19 @@ export function EmployeeHeaderCard({
             </div>
 
             {!isSelf && !isAlreadyTerminated && (
-              <ResendInviteButton employeeId={employee.id} employeeName={employeeName} />
+              // Two ways in, beside each other. Resend is the ordinary one;
+              // Copy invite link is what keeps onboarding moving when email
+              // delivery is unconfigured or silently dropping, which is the
+              // state the audited environment was in.
+              <div className="space-y-1.5">
+                <div className="flex flex-wrap items-center gap-2">
+                  <ResendInviteButton employeeId={employee.id} employeeName={employeeName} />
+                  <CopyInviteLinkButton employeeId={employee.id} employeeName={employeeName} />
+                </div>
+                {/* HRMS-E2E-018. Beside the two buttons, because the whole reason
+                    an administrator reads the status is to decide between them. */}
+                <InviteDeliveryNote delivery={employee.inviteDelivery} />
+              </div>
             )}
 
             {typeof employee.bio === "string" && employee.bio && (

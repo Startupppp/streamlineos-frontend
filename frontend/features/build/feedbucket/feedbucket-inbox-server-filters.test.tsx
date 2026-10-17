@@ -1,4 +1,5 @@
-import { fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, within } from "@testing-library/react";
+import type { ComponentProps } from "react";
 import * as mockInboxModules from "./inbox-test-mocks";
 import { ProjectSubmissionsInbox } from "./project-submissions-inbox";
 
@@ -7,6 +8,9 @@ const { SAMPLE_SUBMISSION_ROW, baseInboxQueryResult, makeCursorPage } = mockInbo
 const mockUseSearchParams = jest.fn(() => new URLSearchParams());
 const mockRouterReplace = jest.fn();
 const mockRouterPush = jest.fn();
+const mockCan = jest.fn(() => false);
+const mockIsMobile = jest.fn(() => false);
+jest.mock("@/hooks/common/use-mobile", () => ({ useIsMobile: () => mockIsMobile() }));
 
 jest.mock("next/navigation", () => ({
   useSearchParams: () => mockUseSearchParams(),
@@ -22,17 +26,31 @@ jest.mock("@/hooks/api/feedbucket", () => ({
   useDeleteFeedbucketSubmission: () => mockUseDeleteFeedbucketSubmission(),
 }));
 
-jest.mock("@/hooks/api/access", () => ({ useCan: () => false }));
+jest.mock("@/hooks/api/entitlements", () => ({
+  useEntitlements: () => ({ data: undefined }),
+}));
+
+jest.mock("@/hooks/api/access", () => ({
+  useCan: () => mockCan(),
+  useAccess: () => ({ data: { isOrgOwner: true, scopes: {}, modules: {} }, isLoading: false }),
+}));
 jest.mock("@/hooks/common/use-animated-icon", () => mockInboxModules.animatedIconModule);
 jest.mock("date-fns", () => mockInboxModules.dateFnsModule);
 jest.mock("sonner", () => ({ toast: { success: jest.fn(), error: jest.fn() } }));
 jest.mock("@/lib/utils", () => mockInboxModules.utilsModule);
-jest.mock("@/components/ui/data-table", () => mockInboxModules.dataTableModule);
-jest.mock("./submission-bulk-toolbar", () => mockInboxModules.bulkToolbarModule);
+jest.mock("@/components/ui/data-table", () => ({
+  ...mockInboxModules.dataTableModule,
+  DataTable: (props: Omit<ComponentProps<typeof mockInboxModules.dataTableModule.DataTable>, "selection"> & { selection?: { selected: Set<string | number>; onChange: (selected: Set<string | number>) => void } }) => {
+    function selectRow() { props.selection?.onChange(new Set([SAMPLE_SUBMISSION_ROW.id])); }
+    return <><mockInboxModules.dataTableModule.DataTable {...props} /><button type="button" onClick={selectRow}>Select submission</button></>;
+  },
+}));
+jest.mock("@/components/shared/submission-bulk-toolbar", () => mockInboxModules.bulkToolbarModule);
 jest.mock("@/components/ui/search-input", () => mockInboxModules.searchInputModule);
 jest.mock("@/components/ui/user-combobox", () => mockInboxModules.userComboboxModule);
 jest.mock("@/components/ui/empty-state", () => mockInboxModules.emptyStateModule);
 jest.mock("@/components/shared", () => mockInboxModules.sharedModule);
+jest.mock("@/components/shared/error-state", () => mockInboxModules.errorStateLeafModule);
 jest.mock("@/components/ui/skeleton", () => mockInboxModules.skeletonModule);
 jest.mock("@/components/ui/confirm-dialog", () => mockInboxModules.confirmDialogModule);
 jest.mock("@/components/illustrations", () => mockInboxModules.illustrationsModule);
@@ -62,6 +80,8 @@ function renderWalkablePage() {
 
 beforeEach(() => {
   jest.clearAllMocks();
+  mockCan.mockReturnValue(false);
+  mockIsMobile.mockReturnValue(false);
   mockUseSearchParams.mockReturnValue(new URLSearchParams());
   mockUseDeleteFeedbucketSubmission.mockReturnValue({ mutate: jest.fn(), isPending: false });
   mockUseFeedbucketSubmissions.mockReturnValue(
@@ -78,7 +98,7 @@ describe("ProjectSubmissionsInbox — every filter is sent to the server, none a
 
   it("sends the status param from the URL", () => {
     renderWithParams("status=in_progress", 2);
-    expect(lastQueryArgs()).toMatchObject({ widgetId: 2, status: "in_progress" });
+    expect(lastQueryArgs()).toMatchObject({ widgetId: 2, status: ["in_progress"] });
   });
 
   it("sends the type param from the URL", () => {
@@ -124,7 +144,7 @@ describe("ProjectSubmissionsInbox — every filter is sent to the server, none a
 
   it("sends the assigneeId owner filter to the server rather than filtering loaded rows by owner", () => {
     renderWithParams("assigneeId=user-owner", 6);
-    expect(lastQueryArgs()).toMatchObject({ widgetId: 6, assigneeId: "user-owner" });
+    expect(lastQueryArgs()).toMatchObject({ widgetId: 6, assigneeId: ["user-owner"] });
   });
 
   it("omits assigneeId when no owner is chosen so every owner's submissions are returned", () => {
@@ -142,6 +162,21 @@ describe("ProjectSubmissionsInbox — every filter is sent to the server, none a
     expect(lastQueryArgs().search).toBeUndefined();
   });
 
+  it("sends duplicate=true to the server so callers can filter to submissions that share a title", () => {
+    renderWithParams("duplicate=true", 8);
+    expect(lastQueryArgs()).toMatchObject({ widgetId: 8, duplicate: "true" });
+  });
+
+  it("sends duplicate=false to the server so callers can filter out known-duplicate titles", () => {
+    renderWithParams("duplicate=false", 8);
+    expect(lastQueryArgs()).toMatchObject({ widgetId: 8, duplicate: "false" });
+  });
+
+  it("omits duplicate when the URL carries none so all submissions are returned unfiltered", () => {
+    renderWithParams("status=open", 8);
+    expect(lastQueryArgs().duplicate).toBeUndefined();
+  });
+
   it("writes the owner filter into the URL rather than holding it in component state", () => {
     renderWithParams("");
 
@@ -155,6 +190,23 @@ describe("ProjectSubmissionsInbox — every filter is sent to the server, none a
 });
 
 describe("ProjectSubmissionsInbox — keyset pagination", () => {
+  it("clears every facet in one mobile drawer URL write while resetting cursor and selection", () => {
+    mockCan.mockReturnValue(true);
+    mockIsMobile.mockReturnValue(true);
+    mockUseSearchParams.mockReturnValue(new URLSearchParams("search=crash&status=open&type=feature&linked=linked&duplicate=true&assigneeId=user-owner&from=2026-01-01&to=2026-06-01&keep=context"));
+    renderWalkablePage();
+    fireEvent.click(screen.getByTestId("page-next"));
+    expect(lastQueryArgs().cursor).toBe("cursor-2");
+    fireEvent.click(screen.getByRole("button", { name: "Select submission" }));
+    expect(screen.getByTestId("bulk-toolbar")).toHaveAttribute("data-selected-count", "1");
+    fireEvent.click(screen.getByRole("button", { name: /^Filters/ }));
+    fireEvent.click(within(screen.getByRole("dialog")).getByRole("button", { name: "Clear all" }));
+    expect(mockRouterReplace).toHaveBeenCalledTimes(1);
+    expect(mockRouterReplace).toHaveBeenCalledWith("/build/1/feedbucket?keep=context", { scroll: false });
+    expect(lastQueryArgs().cursor).toBeUndefined();
+    expect(screen.queryByTestId("bulk-toolbar")).not.toBeInTheDocument();
+  });
+
   it("drives the table in cursor mode so no page number is presented for a live list", () => {
     renderWalkablePage();
     expect(screen.getByTestId("data-table")).toHaveAttribute("data-pagination-mode", "cursor");

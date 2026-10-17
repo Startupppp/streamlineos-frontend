@@ -1,14 +1,11 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ArrowRight, BadgeCheck, Layers, Sparkles } from "lucide-react";
 import { PublicShell, PublicEyebrow } from "@/features/landing/public-shell";
-import { Button } from "@/components/ui/button";
 import { BRAND_NAME, BRAND_URL, BRAND_SUPPORT_EMAIL } from "@/lib/branding";
 import {
   PRICING,
   COMPETITOR_PRICES,
   cheapestAnnualLabel,
-  type PricingTier,
 } from "@/lib/pricing";
 import { faqs } from "@/features/landing/data/faqs";
 import { FAQJsonLd } from "@/features/seo/structured-data";
@@ -24,46 +21,44 @@ import { SavingsCalculator } from "@/features/landing/components/savings-calcula
 import {
   PricingFeatureMatrix,
   PricingFaqAccordion,
+  type PricingComparisonGroup,
 } from "@/features/landing/components/pricing-page-sections";
 
 export const metadata: Metadata = {
   title: `Pricing — ${BRAND_NAME}`,
-  description: `From ${cheapestAnnualLabel()}/seat/month annual. Free forever for ${PRICING.freeSeatLimit} seats. All apps in one plan.`,
+  description: `From ${cheapestAnnualLabel()} per organisation / month on annual billing. Free for ${PRICING.freeSeatLimit} seats. Every app in one plan.`,
   alternates: { canonical: "/pricing" },
   openGraph: {
     type: "website",
     url: `${BRAND_URL}/pricing`,
     title: `Pricing — ${BRAND_NAME}`,
-    description: `From ${cheapestAnnualLabel()}/seat/month on annual billing. Free tier, no per-module fees.`,
+    description: `From ${cheapestAnnualLabel()} per organisation / month on annual billing. Free tier, no per-module fees.`,
   },
 };
 
-const featureMatrix: { feature: string; tiers: (boolean | string)[] }[] = [
-  { feature: "Seats", tiers: [`Up to ${PRICING.starterSeatLimit}`, "Unlimited", "Unlimited", "Unlimited"] },
-  { feature: "All apps (HR, CRM, Projects, Chat, Accounting…)", tiers: [true, true, true, true] },
-  { feature: "Core HR (employees, leave, attendance)", tiers: [true, true, true, true] },
-  { feature: "Recruitment & ATS", tiers: [true, true, true, true] },
-  { feature: "Projects, sprints, kanban", tiers: [true, true, true, true] },
-  { feature: "CRM (leads, deals, pipeline)", tiers: [true, true, true, true] },
-  { feature: "Accounting & billing", tiers: [true, true, true, true] },
-  { feature: "Helpdesk & knowledge base", tiers: [true, true, true, true] },
-  { feature: "Real-time chat & calendar", tiers: [true, true, true, true] },
-  { feature: "Storage per organization", tiers: ["5 GB", "100 GB", "1 TB", "Unlimited"] },
-  { feature: "Workflow automation", tiers: [false, true, true, true] },
-  { feature: "Custom roles & permissions", tiers: [false, true, true, true] },
-  { feature: "Public API access", tiers: [false, true, true, true] },
-  { feature: "AI assistance (Gemini / OpenAI)", tiers: [false, false, true, true] },
-  { feature: "Multi-org / multi-branch", tiers: [false, false, true, true] },
-  { feature: "SAML SSO + SCIM", tiers: [false, false, true, true] },
-  { feature: "Advanced analytics & scheduled reports", tiers: [false, false, true, true] },
-  { feature: "Audit logs & compliance pack", tiers: [false, false, false, true] },
-  { feature: "Dedicated infrastructure / VPC", tiers: [false, false, false, true] },
-  { feature: "Custom data residency", tiers: [false, false, false, true] },
-  { feature: "Self-hosting option", tiers: [false, false, false, true] },
-  { feature: "Custom SLA (99.99% uptime)", tiers: [false, false, false, true] },
+const comparison: PricingComparisonGroup[] = [
   {
-    feature: "Support",
-    tiers: ["Community", "Email & chat", "Priority (4hr)", "Dedicated CSM + SE"],
+    title: "Workspace",
+    rows: [
+      { feature: "Seats", tiers: [`Up to ${PRICING.freeSeatLimit}`, "Up to 10", "Up to 50", "Negotiated"] },
+      { feature: "Storage", tiers: [`${PRICING.freeStorageGb} GB`, `${PRICING.starterStorageGb} GB`, "1 TB", "Unlimited"] },
+      { feature: "Every app — HR, CRM, projects, chat, accounting", tiers: [true, true, true, true] },
+    ],
+  },
+  {
+    title: "Scale",
+    rows: [
+      { feature: "Workflows, custom roles, and API", tiers: [false, true, true, true] },
+      { feature: "AI assistance and advanced reports", tiers: [false, false, true, true] },
+      { feature: "SSO and multi-branch", tiers: [false, false, true, true] },
+    ],
+  },
+  {
+    title: "Enterprise",
+    rows: [
+      { feature: "Audit logs, residency, and custom SLA", tiers: [false, false, false, true] },
+      { feature: "Support", tiers: ["Community", "Email", "Priority", "Dedicated"] },
+    ],
   },
 ];
 
@@ -75,11 +70,11 @@ const pricingFaqs = [
   },
   {
     question: "How does pricing compare to other all-in-one platforms?",
-    answer: `Many all-in-one business platforms charge around ₹${COMPETITOR_PRICES.allInOneErp} per seat per month for a full app bundle. Our Startup plan is ${cheapestAnnualLabel()} per seat per month on annual billing — every app included, no per-module fees.`,
+    answer: `Many all-in-one platforms charge about ₹${COMPETITOR_PRICES.allInOneErp} per seat per month. Starter is ${cheapestAnnualLabel()} per organisation per month on annual billing, with a seat cap on the plan rather than a per-seat price.`,
   },
   {
     question: "Is there really a free plan with no time limit?",
-    answer: `Yes. The Free plan works forever for up to ${PRICING.starterSeatLimit} seats. No credit card required. You get all core apps with 5 GB storage per workspace.`,
+    answer: `Yes. Free works forever for up to ${PRICING.freeSeatLimit} seats. No credit card. Core apps and ${PRICING.freeStorageGb} GB of storage are included.`,
   },
   {
     question: "What counts as a paying user?",
@@ -105,39 +100,6 @@ const pricingFaqs = [
     answer: `Registered non-profits get 50% off Starter and Professional. YC, Sequoia Surge, and Antler portfolio startups get 12 months free on Starter. Email ${BRAND_SUPPORT_EMAIL} with proof.`,
   },
 ];
-
-/**
- * The headline figure, from the same tiers the cards below use.
- *
- * Built from the resolved tiers rather than from `cheapestAnnualLabel()`,
- * because a band quoting a rupee price directly above a grid quoting euros is
- * worse than either alone -- a visitor cannot tell which one they will be
- * charged, and the page has answered the only question they came with twice,
- * differently.
- */
-function highlightsFor(tiers: readonly PricingTier[]) {
-  const cheapestPaid = tiers
-    .filter((tier) => tier.annual !== null && tier.annual > 0)
-    .sort((a, b) => (a.annual ?? 0) - (b.annual ?? 0))[0];
-
-  return [
-    {
-      icon: Sparkles,
-      label: `${cheapestPaid?.priceLabel.annual ?? cheapestAnnualLabel()} / mo`,
-      detail: `${cheapestPaid?.name ?? "Starter"} on annual billing`,
-    },
-    {
-      icon: BadgeCheck,
-      label: "Every app included",
-      detail: "no per-module fees",
-    },
-    {
-      icon: Layers,
-      label: `Free for ${PRICING.starterSeatLimit} seats`,
-      detail: "no credit card required",
-    },
-  ];
-}
 
 /**
  * Ticket 12. The prices and the residency list are read from the public API at
@@ -166,116 +128,62 @@ export default async function PricingPage({
 
   const tiers = applyLivePrices(livePricing);
   const notice = currencyNotice(livePricing);
-  const highlights = highlightsFor(tiers);
 
   return (
     <>
       <FAQJsonLd faqs={[...faqs, ...pricingFaqs]} />
       <PublicShell>
-        {/* Hero */}
-        <section className="container mx-auto px-4 lg:px-8 max-w-3xl text-center">
+        <section className="container mx-auto max-w-2xl px-4 text-center lg:px-8">
           <PublicEyebrow>Pricing</PublicEyebrow>
-          <h1 className="font-display text-4xl sm:text-5xl font-extrabold tracking-tight text-foreground leading-[1.08]">
-            Simple pricing.{" "}
-            <span className="text-status-info-ink">Every app included.</span>
+          <h1 className="font-display text-4xl font-extrabold leading-[1.08] tracking-tight text-foreground sm:text-5xl">
+            One price per organisation.
           </h1>
-          <p className="mt-4 text-muted-foreground text-base sm:text-lg leading-relaxed max-w-2xl mx-auto">
-            One price per seat. No per-module fees, no surprise upsells — just the full platform
-            for your team.
+          <p className="mx-auto mt-4 max-w-xl text-base leading-relaxed text-muted-foreground sm:text-lg">
+            Free, Starter, Professional, or Enterprise. Seat caps sit on the plan. There is no per-seat meter and no per-app fee.
           </p>
-
-          <div className="mt-8 flex flex-wrap items-stretch justify-center gap-3">
-            {highlights.map((item) => (
-              <div
-                key={item.label}
-                className="flex items-center gap-3 rounded-xl border border-border bg-white px-4 py-3 text-left shadow-sm min-w-[200px]"
-              >
-                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-status-info-surface text-status-info-ink">
-                  <item.icon className="h-4 w-4" aria-hidden />
-                </span>
-                <span>
-                  <span className="block text-sm font-semibold text-foreground">{item.label}</span>
-                  <span className="block text-xs text-muted-foreground">{item.detail}</span>
-                </span>
-              </div>
-            ))}
-          </div>
         </section>
 
-        {/* Plans */}
-        <section className="mt-14 lg:mt-16">
-          <div className="container mx-auto px-4 lg:px-8 max-w-6xl">
-            <PricingTierGrid showAppsGrid tiers={tiers} />
+        <section className="mt-10">
+          <div className="container mx-auto max-w-6xl px-4 lg:px-8">
+            <PricingTierGrid showAppsGrid={false} tiers={tiers} />
             {notice ? (
               <p className="mt-6 text-center text-xs text-muted-foreground">{notice}</p>
             ) : null}
           </div>
         </section>
 
-        <DataResidencySection residency={residency} />
+        <section className="mt-16">
+          <div className="container mx-auto max-w-6xl px-4 lg:px-8">
+            <h2 className="mb-6 text-center font-display text-2xl font-bold tracking-tight text-foreground">
+              Compare plans
+            </h2>
+            <PricingFeatureMatrix groups={comparison} />
+          </div>
+        </section>
 
-        {/* Savings */}
-        <section className="mt-20 lg:mt-24 border-t border-border bg-muted">
-          <div className="container mx-auto px-4 lg:px-8 max-w-3xl py-16 lg:py-20">
-            <div className="text-center mb-10">
-              <PublicEyebrow>Savings</PublicEyebrow>
-              <h2 className="font-display text-2xl sm:text-3xl font-bold text-foreground tracking-tight">
-                See what you&apos;d save
-              </h2>
-              <p className="mt-2 text-sm text-muted-foreground max-w-md mx-auto">
-                Compare StreamlineOS against typical all-in-one platforms and a per-tool stack.
-              </p>
-            </div>
+        <section className="mt-16 border-t border-border bg-muted">
+          <div className="container mx-auto max-w-3xl px-4 py-14 lg:px-8">
+            <h2 className="mb-8 text-center font-display text-2xl font-bold tracking-tight text-foreground">
+              What the same team costs elsewhere
+            </h2>
             <SavingsCalculator />
           </div>
         </section>
 
-        {/* Feature matrix */}
-        <section className="mt-0">
-          <div className="container mx-auto px-4 lg:px-8 max-w-6xl py-16 lg:py-20">
-            <div className="text-center mb-10">
-              <PublicEyebrow>Compare</PublicEyebrow>
-              <h2 className="font-display text-2xl sm:text-3xl font-bold text-foreground tracking-tight">
-                Plan comparison
-              </h2>
-              <p className="mt-2 text-sm text-muted-foreground max-w-lg mx-auto">
-                All paid plans include every app. Differences are scale, AI, and enterprise
-                controls.
-              </p>
-            </div>
-            <PricingFeatureMatrix rows={featureMatrix} />
-          </div>
-        </section>
+        <DataResidencySection residency={residency} />
 
-        {/* FAQ */}
-        <section className="border-t border-border bg-muted">
-          <div className="container mx-auto px-4 lg:px-8 max-w-2xl py-16 lg:py-20">
-            <div className="text-center mb-10">
-              <PublicEyebrow>FAQ</PublicEyebrow>
-              <h2 className="font-display text-2xl sm:text-3xl font-bold text-foreground tracking-tight">
-                Common questions
-              </h2>
-            </div>
-            <PricingFaqAccordion items={pricingFaqs} />
-          </div>
-        </section>
-
-        {/* CTA */}
-        <section className="container mx-auto px-4 lg:px-8 max-w-2xl pb-4">
-          <div className="rounded-2xl border border-border bg-white p-8 sm:p-10 text-center shadow-sm">
-            <h2 className="font-display text-xl sm:text-2xl font-bold text-foreground tracking-tight">
-              Not sure which plan fits?
+        <section className="border-t border-border">
+          <div className="container mx-auto max-w-2xl px-4 py-14 lg:px-8">
+            <h2 className="mb-6 text-center font-display text-2xl font-bold tracking-tight text-foreground">
+              Questions
             </h2>
-            <p className="mt-2 text-sm text-muted-foreground leading-relaxed max-w-md mx-auto">
-              Book a 30-minute call with a founder. We&apos;ll map your stack and tell you honestly
-              whether StreamlineOS is the right fit.
-            </p>
-            <Link href="/contact?topic=sales" className="inline-block mt-6">
-              <Button className="h-11 px-6">
+            <PricingFaqAccordion items={pricingFaqs} />
+            <p className="mt-8 text-center text-sm text-muted-foreground">
+              Not sure which plan fits?{" "}
+              <Link href="/contact?topic=sales" className="font-medium text-foreground underline-offset-4 hover:underline">
                 Book a call
-                <ArrowRight className="ml-2 h-4 w-4" aria-hidden />
-              </Button>
-            </Link>
+              </Link>
+            </p>
           </div>
         </section>
       </PublicShell>

@@ -2,7 +2,11 @@ import { isMemberOverCapacity, type MemberCapacityData } from "./workload-types"
 
 const OVER: MemberCapacityData = {
   capacityHours: 40,
+  leaveDays: 0,
   loggedHours: 45,
+  estimateHours: 50,
+  allocationPercent: 125,
+  varianceHours: -5,
   isOverAllocated: true,
   isZeroCapacity: false,
   utilizationPercent: 112.5,
@@ -10,7 +14,11 @@ const OVER: MemberCapacityData = {
 
 const UNDER: MemberCapacityData = {
   capacityHours: 40,
+  leaveDays: 0,
   loggedHours: 32,
+  estimateHours: 30,
+  allocationPercent: 75,
+  varianceHours: 2,
   isOverAllocated: false,
   isZeroCapacity: false,
   utilizationPercent: 80,
@@ -18,7 +26,11 @@ const UNDER: MemberCapacityData = {
 
 const ZERO_CAP_LOGGED: MemberCapacityData = {
   capacityHours: 0,
+  leaveDays: 5,
   loggedHours: 2,
+  estimateHours: null,
+  allocationPercent: null,
+  varianceHours: null,
   isOverAllocated: true,
   isZeroCapacity: true,
   utilizationPercent: null,
@@ -26,7 +38,11 @@ const ZERO_CAP_LOGGED: MemberCapacityData = {
 
 const ZERO_CAP_EMPTY: MemberCapacityData = {
   capacityHours: 0,
+  leaveDays: 5,
   loggedHours: 0,
+  estimateHours: null,
+  allocationPercent: null,
+  varianceHours: null,
   isOverAllocated: false,
   isZeroCapacity: true,
   utilizationPercent: null,
@@ -34,7 +50,11 @@ const ZERO_CAP_EMPTY: MemberCapacityData = {
 
 const NULL_HOURS: MemberCapacityData = {
   capacityHours: null,
+  leaveDays: 0,
   loggedHours: 99,
+  estimateHours: 10,
+  allocationPercent: null,
+  varianceHours: 89,
   isOverAllocated: false,
   isZeroCapacity: false,
   utilizationPercent: null,

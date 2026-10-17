@@ -1,5 +1,7 @@
 "use client";
 
+import { DatePicker } from "@/components/ui/date-picker";
+
 import { useCallback } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -8,7 +10,6 @@ import { toast } from "sonner";
 
 import { HrSheet } from "@/components/shared/hr-sheet";
 import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useConfirmProbation, type ProbationReview } from "@/hooks/api/hr/probation";
@@ -29,7 +30,7 @@ interface ProbationConfirmSheetProps {
 export function ProbationConfirmSheet({ review, open, onOpenChange }: ProbationConfirmSheetProps) {
   const confirm = useConfirmProbation();
 
-  const { register, handleSubmit, reset, formState: { errors } } = useForm<ConfirmFormValues>({
+  const { register, handleSubmit, reset, setValue, watch, formState: { errors } } = useForm<ConfirmFormValues>({
     resolver: zodResolver(confirmSchema),
     defaultValues: { confirmedAt: "", notes: "" },
   });
@@ -80,9 +81,13 @@ export function ProbationConfirmSheet({ review, open, onOpenChange }: ProbationC
           Confirmed At{" "}
           <span className="text-muted-foreground font-normal">(optional — defaults to today)</span>
         </Label>
-        <Input
-          type="date"
-          {...register("confirmedAt")}
+        <DatePicker
+          ariaLabel="Confirmed At"
+          value={watch("confirmedAt") ?? ""}
+          onChange={(value) => setValue("confirmedAt", value, { shouldDirty: true, shouldValidate: true })}
+          placeholder="Pick a date"
+          dateFormat="dd MMM yyyy"
+          clearable
           aria-invalid={!!errors.confirmedAt}
         />
         {errors.confirmedAt && (

@@ -3,7 +3,7 @@
 import Image from "next/image";
 import { ExternalLink } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useLinkPreview } from "@/hooks/api";
+import { useLinkPreview } from "@/hooks/api/chat-entities";
 import { TruncatedText } from "@/components/ui/truncated-text";
 
 function extractFirstUrl(content: string): string | null {

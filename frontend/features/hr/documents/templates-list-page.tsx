@@ -13,7 +13,6 @@ import {
   FileLock,
   FileKey,
   Smile,
-  AlertCircle,
 } from "lucide-react";
 import { EllipsisIcon } from "@animateicons/react/lucide";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
@@ -44,6 +43,8 @@ import {
 import { getErrorMessage } from "@/lib/get-error-message";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { useCan } from "@/hooks/api/access";
+import { PageState } from "@/components/shared/page-state";
+import { usePageState } from "@/hooks/api/use-page-state";
 import {
   VariableChips,
   PreviewDialog,
@@ -273,7 +274,8 @@ function buildTemplateColumns(
 export function TemplatesListPage() {
   const router = useRouter();
   const canManage = useCan("hr:documents:manage");
-  const { data: templates, isLoading, isError, refetch } = useDocumentTemplates();
+  const { data: templates, isLoading, isError, error, refetch } = useDocumentTemplates();
+  const pageState = usePageState({ permission: "hr:documents:view", isLoading, isError, error });
   const deleteMutation = useDeleteDocumentTemplate();
   const setDefaultMutation = useSetDocumentTemplateDefault();
 
@@ -305,22 +307,18 @@ export function TemplatesListPage() {
     void refetch();
   }, [refetch]);
 
-  if (isLoading) return <TemplatesPageSkeleton />;
+  if (pageState.kind === "loading") return <TemplatesPageSkeleton />;
 
-  if (isError) {
+  if (pageState.kind !== "ready" && pageState.kind !== "empty") {
+    // Was a hand-rolled "Something went wrong" that dropped the error (FE-41).
     return (
       <PageWrapper
         title="Document Templates"
         subtitle="Manage reusable HTML templates for offer letters, NDAs, and policies."
       >
-        <div className="flex flex-col items-center justify-center py-14 text-center gap-3">
-          <AlertCircle className="w-8 text-destructive" />
-          <div>
-            <p className="text-sm font-medium text-foreground">Failed to load document templates</p>
-            <p className="text-xs text-muted-foreground mt-0.5">Something went wrong. Please try again.</p>
-          </div>
-          <Button size="sm" variant="outline" onClick={handleRetry}>Try again</Button>
-        </div>
+        <PageState resolution={pageState} loading={null} onRetry={handleRetry} className="flex-1">
+          {null}
+        </PageState>
       </PageWrapper>
     );
   }

@@ -1,0 +1,229 @@
+import { render, screen } from "@testing-library/react";
+import { BulkActionBar } from "./bulk-action-bar";
+
+let grantedKeys: string[] = ["build:tickets:update"];
+
+jest.mock("@/hooks/api/access", () => ({
+  useCan: (key: string) => grantedKeys.includes(key),
+}));
+jest.mock("@/hooks/api/build/ticket-search", () => ({
+  useTicketSearch: () => ({ data: [] }),
+}));
+jest.mock("@/components/ui/select", () => ({
+  Select: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+  SelectTrigger: ({
+    children,
+    className,
+  }: {
+    children: React.ReactNode;
+    className?: string;
+  }) => <div className={className}>{children}</div>,
+  SelectValue: ({ placeholder }: { placeholder?: string }) => <span>{placeholder}</span>,
+  SelectContent: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+  SelectItem: ({ value, children }: { value: string; children: React.ReactNode }) => (
+    <div data-testid="status-option" data-value={value}>
+      {children}
+    </div>
+  ),
+}));
+
+const noop = () => {};
+const noopString = (_value: string) => {};
+
+beforeEach(() => {
+  grantedKeys = ["build:tickets:update"];
+});
+
+function mountBar(
+  statuses: { name: string; color: string | null; type: string | null }[] | undefined,
+) {
+  render(
+    <BulkActionBar
+      selectedCount={2}
+      members={[]}
+      cycles={[]}
+      statuses={statuses}
+      hideCycle
+      onBulkStatus={noopString}
+      onBulkPriority={noopString}
+      onBulkAssignee={noopString}
+      onBulkCycle={noopString}
+      onBulkArchive={noop}
+      onBulkExport={noop}
+      onClear={noop}
+    />,
+  );
+}
+
+function renderBar(statuses: { name: string; color: string | null; type: string | null }[] | undefined) {
+  mountBar(statuses);
+  return screen
+    .getAllByTestId("status-option")
+    .map((node) => node.getAttribute("data-value"));
+}
+
+describe("BulkActionBar — permission gate (FE-44)", () => {
+  const statuses = [{ name: "TODO", color: null, type: "unstarted" }];
+
+  it("renders no bulk controls at all when build:tickets:update is denied", () => {
+    grantedKeys = [];
+    mountBar(statuses);
+    expect(screen.queryByTestId("status-option")).not.toBeInTheDocument();
+    expect(screen.queryByText("Set Status")).not.toBeInTheDocument();
+    expect(screen.queryByText("Archive")).not.toBeInTheDocument();
+    expect(screen.queryByText("Export")).not.toBeInTheDocument();
+  });
+
+  it("renders the bulk controls when build:tickets:update is granted, proving the denial test is not passing on a control that cannot render", () => {
+    grantedKeys = ["build:tickets:update"];
+    mountBar(statuses);
+    expect(screen.getAllByTestId("status-option").length).toBeGreaterThan(0);
+    expect(screen.getByText("Set Status")).toBeInTheDocument();
+    expect(screen.getByText("Archive")).toBeInTheDocument();
+    expect(screen.getByText("Export")).toBeInTheDocument();
+  });
+
+  it("hides the assign control when build:tickets:assign is denied even though update is granted", () => {
+    grantedKeys = ["build:tickets:update"];
+    mountBar(statuses);
+    expect(screen.queryByText("Assign to")).not.toBeInTheDocument();
+  });
+
+  it("shows the assign control once build:tickets:assign is granted", () => {
+    grantedKeys = ["build:tickets:update", "build:tickets:assign"];
+    mountBar(statuses);
+    expect(screen.getByText("Assign to")).toBeInTheDocument();
+  });
+});
+
+describe("the bulk Set Status menu", () => {
+  it("offers the organisation's configured workflow states, because a bulk transition to a state absent from the menu cannot be performed at all", () => {
+    const values = renderBar([
+      { name: "CODE_REVIEW", color: "#0f0", type: "started" },
+      { name: "BLOCKED", color: "#f00", type: "started" },
+    ]);
+    expect(values).toEqual(
+      expect.arrayContaining(["CODE_REVIEW", "BLOCKED", "LOW", "MEDIUM", "HIGH", "URGENT"]),
+    );
+    expect(values).not.toContain("IN_REVIEW");
+  });
+
+  it("falls back to the four default states while the org's states are still loading, so the menu is never empty", () => {
+    const values = renderBar(undefined);
+    expect(values).toEqual(
+      expect.arrayContaining(["TODO", "IN_PROGRESS", "IN_REVIEW", "DONE"]),
+    );
+  });
+
+  it("labels a custom state without its underscores rather than echoing the stored enum value", () => {
+    renderBar([{ name: "CODE_REVIEW", color: null, type: "started" }]);
+    expect(screen.getByText("CODE REVIEW")).toBeInTheDocument();
+  });
+});
+
+describe("BulkActionBar — readable dynamic selections", () => {
+  it("lets data-driven triggers size to their selected text within responsive bounds", () => {
+    grantedKeys = ["build:tickets:update", "build:tickets:assign"];
+    render(
+      <BulkActionBar
+        selectedCount={2}
+        members={[{ id: "member-1", name: "Member with a long display name" }]}
+        cycles={[
+          {
+            id: 1,
+            projectId: 1,
+            orgId: "org-1",
+            name: "Cycle with a long descriptive name",
+            description: null,
+            goal: null,
+            capacity: null,
+            status: "active",
+            version: 1,
+            startDate: "2026-09-01",
+            endDate: "2026-09-30",
+            createdBy: "member-1",
+            createdAt: null,
+            updatedAt: null,
+          },
+        ]}
+        statuses={[{ name: "READY_FOR_CUSTOMER_REVIEW", color: null, type: "started" }]}
+        labels={[{ id: 1, name: "Customer escalation requiring attention" }]}
+        onBulkStatus={noopString}
+        onBulkPriority={noopString}
+        onBulkAssignee={noopString}
+        onBulkCycle={noopString}
+        onBulkLabel={noopString}
+        onClear={noop}
+      />,
+    );
+
+    for (const placeholder of ["Set Status", "Assign to", "Add Label", "Move to Cycle"]) {
+      expect(screen.getByText(placeholder).parentElement).toHaveClass(
+        "w-fit",
+        "min-w-40",
+        "max-w-[calc(100vw-3rem)]",
+        "sm:max-w-80",
+      );
+    }
+  });
+});
+
+describe("BulkActionBar — archive and export carry their endpoints' own keys, not an invented one", () => {
+  const statuses = [{ name: "TODO", color: null, type: "unstarted" }];
+
+  it("offers Archive to a viewer with build:tickets:update, the key the bulk endpoint declares", () => {
+    mountBar(statuses);
+    expect(screen.getByRole("button", { name: "Archive" })).toBeInTheDocument();
+  });
+
+  it("offers Export beside it, whose own mutation gates on build:tickets:view", () => {
+    mountBar(statuses);
+    expect(screen.getByRole("button", { name: "Export" })).toBeInTheDocument();
+  });
+
+  it("offers neither once build:tickets:update is denied, because the whole selection-driven bar goes away", () => {
+    grantedKeys = [];
+    mountBar(statuses);
+    expect(screen.queryByRole("button", { name: "Archive" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Export" })).not.toBeInTheDocument();
+  });
+
+  it("omits each of them when the caller wires no handler, so the bar never shows a command it cannot run", () => {
+    render(
+      <BulkActionBar
+        selectedCount={2}
+        members={[]}
+        cycles={[]}
+        statuses={statuses}
+        hideCycle
+        onBulkStatus={noopString}
+        onBulkPriority={noopString}
+        onBulkAssignee={noopString}
+        onBulkCycle={noopString}
+        onClear={noop}
+      />,
+    );
+    expect(screen.queryByRole("button", { name: "Archive" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Export" })).not.toBeInTheDocument();
+  });
+
+  it("offers Set parent as the bar's linking control, which is the only bulk link the endpoint accepts", () => {
+    render(
+      <BulkActionBar
+        selectedCount={2}
+        members={[]}
+        cycles={[]}
+        statuses={statuses}
+        hideCycle
+        projectId={1}
+        onBulkStatus={noopString}
+        onBulkPriority={noopString}
+        onBulkAssignee={noopString}
+        onBulkCycle={noopString}
+        onBulkParent={noop}
+        onClear={noop}
+      />,
+    );
+    expect(screen.getByRole("button", { name: "Set parent" })).toBeInTheDocument();
+  });
+});

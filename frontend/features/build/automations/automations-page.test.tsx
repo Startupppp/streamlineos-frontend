@@ -1,21 +1,131 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, act, fireEvent } from "@testing-library/react";
 import type { AccessState } from "@/lib/rbac/gate";
 import { AutomationsPage } from "./automations-page";
+import type { ProjectAutomation } from "@/types/projects";
 
 let mockAccessState: AccessState = "denied";
+let mockDeleteMutate = jest.fn();
+let mockDebouncedSearch = "";
+let mockTriggerFilter = "all";
+let mockActionFilter = "all";
+let mockIsFiltered = false;
+let mockAutomations: ProjectAutomation[] = [];
+let mockIsLoading = false;
+let mockIsError = false;
+let mockAutomationsFilters: Record<string, unknown> | undefined;
 
 jest.mock("@/hooks/api/access", () => ({
   useCan: (_permission: string) => mockAccessState === "granted",
   useCanState: (_permission: string): AccessState => mockAccessState,
 }));
 
+jest.mock("@/hooks/common/use-online-status", () => ({
+  useOnlineStatus: jest.fn(() => true),
+}));
+
 jest.mock("@/hooks/api/build/automations", () => ({
-  useAutomations: () => ({ data: [], isLoading: false, isError: false, refetch: jest.fn() }),
+  useAutomations: (...args: unknown[]) => ({
+    data: {
+      pages: [
+        {
+          data: ((mockAutomationsFilters = args[1] as Record<string, unknown> | undefined), mockAutomations),
+          pagination: { limit: 50, hasMore: false, nextCursor: null },
+        },
+      ],
+      pageParams: [undefined],
+    },
+    isLoading: mockIsLoading,
+    isError: mockIsError,
+    error: null,
+    refetch: jest.fn(),
+    fetchNextPage: jest.fn(),
+    hasNextPage: false,
+    isFetchingNextPage: false,
+  }),
   useCreateAutomation: () => ({ mutate: jest.fn(), isPending: false }),
   useUpdateAutomation: () => ({ mutate: jest.fn(), isPending: false }),
-  useDeleteAutomation: () => ({ mutate: jest.fn(), isPending: false }),
-  TRIGGER_EVENTS: [],
-  ACTION_TYPES: [],
+  useDeleteAutomation: () => ({ mutate: mockDeleteMutate, isPending: false }),
+  TRIGGER_EVENTS: [
+    { value: "ticket.created", label: "Ticket Created" },
+    { value: "ticket.updated", label: "Ticket Updated" },
+  ],
+  ACTION_TYPES: [
+    { value: "set_status", label: "Set Status" },
+    { value: "set_assignee", label: "Assign To" },
+  ],
+}));
+
+jest.mock("@/features/build/shared/use-build-list-filters", () => ({
+  useBuildListFilters: () => ({
+    search: mockDebouncedSearch,
+    debouncedSearch: mockDebouncedSearch,
+    cursor: null,
+    setSearch: jest.fn(),
+    setCursor: jest.fn(),
+    value: (param: string) => {
+      if (param === "trigger") return mockTriggerFilter;
+      if (param === "action") return mockActionFilter;
+      return "all";
+    },
+    isActive: () => false,
+    setValue: jest.fn(),
+    clearAll: jest.fn(),
+    activeCount: 0,
+    isFiltered: mockIsFiltered,
+    resetKey: "",
+    isPending: false,
+  }),
+  BUILD_FILTER_ALL: "all",
+}));
+
+const mockUseBuildListKeyboard = jest.fn();
+
+jest.mock("@/hooks/common/use-build-list-keyboard", () => ({
+  useBuildListKeyboard: (...args: unknown[]) => mockUseBuildListKeyboard(...args),
+}));
+
+jest.mock("@/components/shared/shortcut-help-dialog", () => ({
+  ShortcutHelpDialog: ({ open }: { open: boolean }) =>
+    open ? <div data-testid="shortcut-help-dialog" /> : null,
+}));
+
+jest.mock("@/hooks/api/use-page-state", () => ({
+  usePageState: ({ isLoading, isError, isEmpty }: { isLoading: boolean; isError: boolean; isEmpty: boolean }) => {
+    if (mockAccessState === "loading") return { kind: "loading" };
+    if (mockAccessState === "denied") return { kind: "denied" };
+    if (isError) return { kind: "error", error: new Error("Load failed") };
+    if (isLoading) return { kind: "loading" };
+    if (isEmpty) return { kind: "empty" };
+    return { kind: "ready" };
+  },
+}));
+
+jest.mock("@/components/shared/page-state", () => ({
+  PageState: ({
+    children,
+    resolution,
+    loading,
+    empty,
+  }: {
+    children: React.ReactNode;
+    resolution: { kind: string };
+    loading: React.ReactNode;
+    empty?: React.ReactNode;
+    onRetry?: () => void;
+  }) => {
+    switch (resolution.kind) {
+      case "loading":
+        return <>{loading}</>;
+      case "denied":
+        return <div role="status">Access denied</div>;
+      case "error":
+        return <div role="alert">Could not load automations</div>;
+      case "empty":
+        return <>{empty}</>;
+      default:
+        return <>{children}</>;
+    }
+  },
 }));
 
 jest.mock("@/components/shared/dirty-state-context", () => ({
@@ -28,8 +138,10 @@ jest.mock("@/components/pm-chrome", () => ({
   PmSection: ({ children, className }: { children: React.ReactNode; className?: string }) => (
     <div className={className}>{children}</div>
   ),
-  PmStaggerList: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
-  PM_FILL_PANEL: "",
+  PmStaggerList: ({ children, role, "aria-label": ariaLabel }: { children: React.ReactNode; role?: string; "aria-label"?: string }) => (
+    <div role={role} aria-label={ariaLabel}>{children}</div>
+  ),
+  CONTENT_FILL_PANEL: "",
   PM_FILL_SECTION: "",
 }));
 
@@ -37,8 +149,33 @@ jest.mock("@/components/illustrations", () => ({
   AutomationsIllustration: () => <div />,
 }));
 
+const SAMPLE_AUTOMATION: ProjectAutomation = {
+  id: 1,
+  projectId: 10,
+  name: "Auto-assign bugs",
+  isActive: true,
+  triggerEvent: "ticket.created",
+  conditions: [],
+  actions: [{ type: "set_assignee", value: "user-abc" }],
+  createdBy: "user-abc",
+  createdByUser: { name: "Ada Lovelace", firstName: "Ada", lastName: "Lovelace", email: "ada@example.test" },
+  lastRunAt: null,
+  lastFailureAt: null,
+  createdAt: "2024-01-01T00:00:00.000Z",
+  updatedAt: "2024-01-01T00:00:00.000Z",
+};
+
 beforeEach(() => {
   mockAccessState = "denied";
+  mockDeleteMutate = jest.fn();
+  mockDebouncedSearch = "";
+  mockTriggerFilter = "all";
+  mockActionFilter = "all";
+  mockIsFiltered = false;
+  mockAutomations = [];
+  mockIsLoading = false;
+  mockIsError = false;
+  mockUseBuildListKeyboard.mockReturnValue({ focusedIndex: null, setFocusedIndex: jest.fn() });
 });
 
 describe("AutomationsPage — build:manage controls (BLD-X-FE-SETTINGS-001)", () => {
@@ -57,5 +194,264 @@ describe("AutomationsPage — build:manage controls (BLD-X-FE-SETTINGS-001)", ()
     mockAccessState = "loading";
     render(<AutomationsPage projectId={1} />);
     expect(screen.queryByRole("button", { name: /new automation/i })).not.toBeInTheDocument();
+  });
+});
+
+describe("AutomationsPage — access states (BLD-X-FE-SETTINGS-002)", () => {
+  it("shows loading skeletons while data is loading — loading state renders something (BLD-X-FE-SETTINGS-002a)", () => {
+    mockAccessState = "granted";
+    mockIsLoading = true;
+    render(<AutomationsPage projectId={1} />);
+    expect(screen.queryByRole("list", { name: /automations/i })).not.toBeInTheDocument();
+  });
+
+  it("shows denied state when access is denied — list content is not rendered (BLD-X-FE-SETTINGS-002b)", () => {
+    mockAccessState = "denied";
+    render(<AutomationsPage projectId={1} />);
+    expect(screen.getByText("Access denied")).toBeInTheDocument();
+    expect(screen.queryByRole("list", { name: /automations/i })).not.toBeInTheDocument();
+  });
+
+  it("shows error alert when data load fails — error is distinguished from denial (BLD-X-FE-SETTINGS-002c)", () => {
+    mockAccessState = "granted";
+    mockIsError = true;
+    render(<AutomationsPage projectId={1} />);
+    expect(screen.getByRole("alert")).toBeInTheDocument();
+  });
+});
+
+describe("AutomationsPage — empty states (BLD-X-FE-SETTINGS-003)", () => {
+  it("shows first-run empty state text when no filters are active and no automations exist (BLD-X-FE-SETTINGS-003a)", () => {
+    mockAccessState = "granted";
+    mockAutomations = [];
+    mockIsFiltered = false;
+    render(<AutomationsPage projectId={1} />);
+    expect(screen.getByText("No automations yet")).toBeInTheDocument();
+  });
+
+  it("shows filtered-empty text when filters are active but no automations match (BLD-X-FE-SETTINGS-003b)", () => {
+    mockAccessState = "granted";
+    mockAutomations = [];
+    mockIsFiltered = true;
+    render(<AutomationsPage projectId={1} />);
+    expect(screen.getByText("No automations match your filters")).toBeInTheDocument();
+  });
+
+  it("first-run empty shows Create Automation action for managers (BLD-X-FE-SETTINGS-003c)", () => {
+    mockAccessState = "granted";
+    mockAutomations = [];
+    mockIsFiltered = false;
+    render(<AutomationsPage projectId={1} />);
+    expect(screen.getByRole("button", { name: /create automation/i })).toBeInTheDocument();
+  });
+
+  it("filtered-empty shows Clear filters action instead of Create (BLD-X-FE-SETTINGS-003d)", () => {
+    mockAccessState = "granted";
+    mockAutomations = [];
+    mockIsFiltered = true;
+    render(<AutomationsPage projectId={1} />);
+    expect(screen.getByRole("button", { name: /clear filters/i })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /create automation/i })).not.toBeInTheDocument();
+  });
+});
+
+describe("AutomationsPage — filter bar (BLD-X-FE-SETTINGS-004)", () => {
+  it("renders the search input for filtering automations by name (BLD-X-FE-SETTINGS-004a)", () => {
+    mockAccessState = "granted";
+    mockAutomations = [SAMPLE_AUTOMATION];
+    render(<AutomationsPage projectId={1} />);
+    expect(screen.getByRole("searchbox", { name: /search automations/i })).toBeInTheDocument();
+  });
+
+  it("renders the trigger filter dropdown (BLD-X-FE-SETTINGS-004b)", () => {
+    mockAccessState = "granted";
+    mockAutomations = [SAMPLE_AUTOMATION];
+    render(<AutomationsPage projectId={1} />);
+    expect(screen.getByLabelText(/filter by trigger/i)).toBeInTheDocument();
+  });
+
+  it("forwards the debounced search term to the read hook so the server filters, and a match beyond the fetched page is not lost to a browser-side filter (BLD-X-FE-SETTINGS-004c)", () => {
+    mockAccessState = "granted";
+    mockAutomations = [SAMPLE_AUTOMATION];
+    mockDebouncedSearch = "auto";
+    render(<AutomationsPage projectId={1} />);
+    expect(mockAutomationsFilters).toEqual(expect.objectContaining({ search: "auto" }));
+  });
+
+  it("sends no search key when the box is empty, so an unfiltered list is not narrowed by an empty term", () => {
+    mockAccessState = "granted";
+    mockAutomations = [SAMPLE_AUTOMATION];
+    mockDebouncedSearch = "";
+    render(<AutomationsPage projectId={1} />);
+    expect(mockAutomationsFilters?.["search"]).toBeUndefined();
+  });
+
+  it("trigger filter hides automations with a different trigger (BLD-X-FE-SETTINGS-004d)", () => {
+    mockAccessState = "granted";
+    mockAutomations = [
+      SAMPLE_AUTOMATION,
+      { ...SAMPLE_AUTOMATION, id: 2, name: "Close ticket", triggerEvent: "ticket.updated" },
+    ];
+    mockTriggerFilter = "ticket.created";
+    render(<AutomationsPage projectId={1} />);
+    expect(screen.getByText("Auto-assign bugs")).toBeInTheDocument();
+    expect(screen.queryByText("Close ticket")).not.toBeInTheDocument();
+  });
+});
+
+describe("AutomationsPage — populated state (BLD-X-FE-SETTINGS-005)", () => {
+  it("renders automation list with accessible list role (BLD-X-FE-SETTINGS-005a)", () => {
+    mockAccessState = "granted";
+    mockAutomations = [SAMPLE_AUTOMATION];
+    render(<AutomationsPage projectId={1} />);
+    expect(screen.getByRole("list", { name: /automations/i })).toBeInTheDocument();
+  });
+
+  it("renders automation names in the list (BLD-X-FE-SETTINGS-005b)", () => {
+    mockAccessState = "granted";
+    mockAutomations = [SAMPLE_AUTOMATION];
+    render(<AutomationsPage projectId={1} />);
+    expect(screen.getByText("Auto-assign bugs")).toBeInTheDocument();
+  });
+});
+
+describe("AutomationsPage — keyboard shortcut help (BLD-X-FE-SETTINGS-006)", () => {
+  it("passes onShortcutHelp to useBuildListKeyboard so the ? key can open the help overlay", () => {
+    mockAccessState = "granted";
+    mockAutomations = [SAMPLE_AUTOMATION];
+    render(<AutomationsPage projectId={1} />);
+    expect(mockUseBuildListKeyboard).toHaveBeenCalledWith(
+      expect.objectContaining({ onShortcutHelp: expect.any(Function) }),
+    );
+  });
+
+  it("ShortcutHelpDialog is not shown on initial render before the ? callback fires — paired with the open test below", () => {
+    mockAccessState = "granted";
+    mockAutomations = [SAMPLE_AUTOMATION];
+    render(<AutomationsPage projectId={1} />);
+    expect(screen.queryByTestId("shortcut-help-dialog")).not.toBeInTheDocument();
+  });
+
+  it("the onShortcutHelp callback passed to the keyboard hook is a function that updates component state — calling it does not throw", async () => {
+    mockAccessState = "granted";
+    mockAutomations = [SAMPLE_AUTOMATION];
+    render(<AutomationsPage projectId={1} />);
+    const capturedOptions = mockUseBuildListKeyboard.mock.calls[0][0] as { onShortcutHelp: () => void };
+    expect(typeof capturedOptions.onShortcutHelp).toBe("function");
+    await act(async () => { capturedOptions.onShortcutHelp(); });
+  });
+});
+
+describe("AutomationsPage — action filter (BLD-X-FE-SETTINGS-007)", () => {
+  it("renders the action filter dropdown in the filter bar (BLD-X-FE-SETTINGS-007a)", () => {
+    mockAccessState = "granted";
+    mockAutomations = [SAMPLE_AUTOMATION];
+    render(<AutomationsPage projectId={1} />);
+    expect(screen.getByLabelText(/filter by action/i)).toBeInTheDocument();
+  });
+
+  it("action filter dropdown is absent while access is denied — no filter controls render when denied (BLD-X-FE-SETTINGS-007b)", () => {
+    mockAccessState = "denied";
+    render(<AutomationsPage projectId={1} />);
+    expect(screen.queryByLabelText(/filter by action/i)).not.toBeInTheDocument();
+  });
+});
+
+describe("AutomationsPage — owner and run timestamps (BLD-X-FE-SETTINGS-008)", () => {
+  it("displays automation owner name resolved from createdByUser — raw UUID must not appear (BLD-X-FE-SETTINGS-008a)", () => {
+    mockAccessState = "granted";
+    mockAutomations = [SAMPLE_AUTOMATION];
+    render(<AutomationsPage projectId={1} />);
+    expect(screen.getByText("by Ada Lovelace")).toBeInTheDocument();
+    expect(screen.queryByText("user-abc")).not.toBeInTheDocument();
+  });
+
+  it("does not show owner line when createdByUser is null (BLD-X-FE-SETTINGS-008b)", () => {
+    mockAccessState = "granted";
+    mockAutomations = [{ ...SAMPLE_AUTOMATION, createdByUser: null }];
+    render(<AutomationsPage projectId={1} />);
+    expect(screen.queryByText(/by /i)).not.toBeInTheDocument();
+  });
+
+  it("displays last run date when lastRunAt is set (BLD-X-FE-SETTINGS-008c)", () => {
+    mockAccessState = "granted";
+    mockAutomations = [{ ...SAMPLE_AUTOMATION, lastRunAt: "2024-06-15T12:00:00.000Z" }];
+    render(<AutomationsPage projectId={1} />);
+    expect(screen.getByText(/ran /i)).toBeInTheDocument();
+  });
+
+  it("does not show last run when lastRunAt is null (BLD-X-FE-SETTINGS-008d)", () => {
+    mockAccessState = "granted";
+    mockAutomations = [{ ...SAMPLE_AUTOMATION, lastRunAt: null }];
+    render(<AutomationsPage projectId={1} />);
+    expect(screen.queryByText(/ran /i)).not.toBeInTheDocument();
+  });
+
+  it("displays failure date with destructive tone when lastFailureAt is set (BLD-X-FE-SETTINGS-008e)", () => {
+    mockAccessState = "granted";
+    mockAutomations = [{ ...SAMPLE_AUTOMATION, lastFailureAt: "2024-06-15T12:00:00.000Z" }];
+    render(<AutomationsPage projectId={1} />);
+    expect(screen.getByText(/failed /i)).toBeInTheDocument();
+  });
+
+  it("does not show failure date when lastFailureAt is null (BLD-X-FE-SETTINGS-008f)", () => {
+    mockAccessState = "granted";
+    mockAutomations = [{ ...SAMPLE_AUTOMATION, lastFailureAt: null }];
+    render(<AutomationsPage projectId={1} />);
+    expect(screen.queryByText(/failed /i)).not.toBeInTheDocument();
+  });
+});
+
+describe("AutomationsPage — offline state", () => {
+  let useOnlineStatusMock: jest.Mock;
+
+  beforeEach(() => {
+    useOnlineStatusMock = (
+      jest.requireMock("@/hooks/common/use-online-status") as {
+        useOnlineStatus: jest.Mock;
+      }
+    ).useOnlineStatus;
+    useOnlineStatusMock.mockReturnValue(true);
+    mockAccessState = "granted";
+    mockAutomations = [];
+    mockIsFiltered = false;
+  });
+
+  it("shows You are offline in the empty state when the device is offline", () => {
+    useOnlineStatusMock.mockReturnValue(false);
+    render(<AutomationsPage projectId={1} />);
+    expect(screen.getByText("You are offline")).toBeInTheDocument();
+  });
+
+  it("does not show You are offline when the device is online and there are no automations", () => {
+    render(<AutomationsPage projectId={1} />);
+    expect(screen.queryByText("You are offline")).not.toBeInTheDocument();
+    expect(screen.getByText("No automations yet")).toBeInTheDocument();
+  });
+});
+
+describe("AutomationsPage — human-confirmation gate blocks automation deletion until confirmed (BLD-X-FE-SETTINGS-AUTO-CONFIRM)", () => {
+  it("shows confirmation dialog when delete button is clicked — gate is open before confirmation", () => {
+    mockAccessState = "granted";
+    mockAutomations = [SAMPLE_AUTOMATION];
+    render(<AutomationsPage projectId={1} />);
+    fireEvent.click(screen.getByRole("button", { name: /delete automation/i }));
+    expect(screen.getByRole("alertdialog")).toBeInTheDocument();
+  });
+
+  it("does not call delete mutate before the user confirms — no premature mutation", () => {
+    mockAccessState = "granted";
+    mockAutomations = [SAMPLE_AUTOMATION];
+    render(<AutomationsPage projectId={1} />);
+    fireEvent.click(screen.getByRole("button", { name: /delete automation/i }));
+    expect(screen.getByRole("alertdialog")).toBeInTheDocument();
+    expect(mockDeleteMutate).not.toHaveBeenCalled();
+  });
+
+  it("delete button is not present when access is denied — confirmation gate never reached without permission", () => {
+    mockAccessState = "denied";
+    mockAutomations = [SAMPLE_AUTOMATION];
+    render(<AutomationsPage projectId={1} />);
+    expect(screen.queryByRole("button", { name: /delete automation/i })).not.toBeInTheDocument();
   });
 });

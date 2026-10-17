@@ -1,17 +1,6 @@
 "use client";
 
-import { useId, useState, type ChangeEvent, type KeyboardEvent, type PointerEvent } from "react";
-import {
-  BellOff,
-  Circle,
-  Clock,
-  Home,
-  MinusCircle,
-  Plane,
-  TreePalm,
-  Video,
-  type LucideIcon,
-} from "lucide-react";
+import { useEffect, useId, useState, type ChangeEvent, type KeyboardEvent, type PointerEvent } from "react";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { formatDateTime } from "@/lib/date-utils";
@@ -35,18 +24,6 @@ const MANUAL_STATUSES = PRESENCE_STATUSES.filter(
   (status) => !AUTO_PRESENCE_STATUSES.includes(status),
 );
 
-const STATUS_ICONS: Record<PresenceStatus, LucideIcon> = {
-  ONLINE: Circle,
-  AWAY: Clock,
-  OFFLINE: Circle,
-  BUSY: MinusCircle,
-  DO_NOT_DISTURB: BellOff,
-  IN_A_MEETING: Video,
-  ON_LEAVE: TreePalm,
-  VACATION: Plane,
-  WORKING_REMOTELY: Home,
-};
-
 interface PresenceStatusPickerProps {
   layout: "menu" | "list";
   className?: string;
@@ -56,14 +33,12 @@ export function PresenceStatusPicker({ layout, className }: PresenceStatusPicker
   const { status, statusMessage, statusExpiresAt, selectStatus, isPending } =
     usePresenceSelection();
   const messageInputId = useId();
-  const [syncedMessage, setSyncedMessage] = useState(statusMessage);
   const [messageDraft, setMessageDraft] = useState(statusMessage);
   const [clearAfter, setClearAfter] = useState<PresenceClearAfter>(DEFAULT_CLEAR_AFTER);
 
-  if (syncedMessage !== statusMessage) {
-    setSyncedMessage(statusMessage);
+  useEffect(() => {
     setMessageDraft(statusMessage);
-  }
+  }, [statusMessage]);
 
   function commit(next: {
     status: PresenceStatus;
@@ -119,7 +94,7 @@ export function PresenceStatusPicker({ layout, className }: PresenceStatusPicker
       onPointerDown={handleFieldPointerDown}
       onKeyDown={handleFieldKeyDown}
     >
-      <div className="flex flex-wrap gap-1">
+      <div className="grid grid-cols-2 gap-1">
         {pickerStatuses.map((option) => (
           <PresenceStatusChip
             key={option}
@@ -178,7 +153,6 @@ function PresenceStatusChip({
   disabled,
   onSelect,
 }: PresenceStatusChipProps) {
-  const Icon = STATUS_ICONS[status];
   const isCurrent = status === current;
 
   function handleSelect() {
@@ -193,15 +167,14 @@ function PresenceStatusChip({
       aria-pressed={isCurrent}
       aria-label={PRESENCE_LABELS[status]}
       className={cn(
-        "inline-flex h-7 items-center gap-1 rounded-md border px-2 text-[11px] font-medium transition-colors",
+        "inline-flex h-7 min-w-0 w-full items-center gap-1.5 rounded-md border px-2 text-dense font-medium transition-colors",
         isCurrent
           ? "border-primary/30 bg-primary/10 text-foreground"
           : "border-border bg-card text-muted-foreground hover:bg-muted hover:text-foreground",
       )}
     >
       <span className={cn("size-1.5 shrink-0 rounded-full", presenceDotClass(status))} />
-      <Icon className="h-3 w-3 shrink-0" />
-      {PRESENCE_LABELS[status]}
+      <span className="truncate">{PRESENCE_LABELS[status]}</span>
     </button>
   );
 }

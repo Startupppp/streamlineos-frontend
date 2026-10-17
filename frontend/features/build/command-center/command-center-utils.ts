@@ -1,4 +1,29 @@
+import { addDays, format, subDays } from "date-fns";
 import type { MyWorkItem } from "@/types/projects/my-work";
+
+export const COMMAND_CENTER_DUE_VALUES = ["overdue", "today", "week"] as const;
+
+type CommandCenterDue = (typeof COMMAND_CENTER_DUE_VALUES)[number];
+
+interface CommandCenterDueWindow {
+  dueDateFrom?: string;
+  dueDateTo?: string;
+}
+
+export function isCommandCenterDue(value: string): value is CommandCenterDue {
+  return COMMAND_CENTER_DUE_VALUES.some((v) => v === value);
+}
+
+export function resolveDueWindow(
+  due: string | null,
+  today: Date,
+): CommandCenterDueWindow | undefined {
+  if (due === null || !isCommandCenterDue(due)) return undefined;
+  const day = format(today, "yyyy-MM-dd");
+  if (due === "overdue") return { dueDateTo: format(subDays(today, 1), "yyyy-MM-dd") };
+  if (due === "today") return { dueDateFrom: day, dueDateTo: day };
+  return { dueDateFrom: day, dueDateTo: format(addDays(today, 7), "yyyy-MM-dd") };
+}
 
 export type EmptyAction = {
   label: string;
@@ -31,13 +56,13 @@ export function resolveMyIssuesEmptyActions(params: {
       action: { label: "New project", onClick: onCreateProject },
       secondaryAction: hasProjects
         ? { label: "View all", href: "/build/my-work" }
-        : { label: "All projects", href: "/build" },
+        : { label: "All projects", href: "/build/projects" },
     };
 
   if (hasProjects)
     return { action: { label: "View all", href: "/build/my-work" } };
 
-  return { action: { label: "All projects", href: "/build" } };
+  return { action: { label: "All projects", href: "/build/projects" } };
 }
 
 export function mapAllWorkTicketToMyWorkItem(ticket: {

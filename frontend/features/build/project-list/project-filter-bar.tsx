@@ -69,8 +69,13 @@ export function ProjectFilterBar({
         {
           id: "filters",
           label: "Filters",
+          presentation: "trigger",
           control: (
-            <AddFilterPopover filters={filters} onFiltersChange={onFiltersChange} />
+            <AddFilterPopover
+              filters={filters}
+              onFiltersChange={onFiltersChange}
+              showMobileLabel
+            />
           ),
           active: hasActiveFilters,
         },
@@ -81,16 +86,17 @@ export function ProjectFilterBar({
             prefs={prefs}
             onToggle={onTogglePrefs}
             onSet={onSetPrefs}
+            showMobileLabel
           />
           <ViewToggle value={viewMode} options={VIEW_OPTIONS} onChange={handleViewChange} />
-          {viewMode === "list" && onToggleGroupingSidebar ? (
+          {onToggleGroupingSidebar ? (
             <Button
               type="button"
               variant="outline"
               size="icon"
               className={cn(
-                "size-9 shrink-0",
-                showGroupingSidebar && "border-primary bg-primary/10 text-primary",
+                "size-9 shrink-0 motion-reduce:transition-none",
+                showGroupingSidebar && "border-foreground bg-foreground text-background",
               )}
               aria-label="Toggle grouping sidebar"
               aria-pressed={showGroupingSidebar}
@@ -102,6 +108,7 @@ export function ProjectFilterBar({
         </>
       }
       onClearAll={onClearAll}
+      fillMobileActions
     />
   );
 }

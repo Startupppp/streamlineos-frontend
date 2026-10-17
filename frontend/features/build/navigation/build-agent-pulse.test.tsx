@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, within } from "@testing-library/react";
 import { BuildAgentPulse } from "./build-agent-pulse";
 import type { AgentPulseSignal } from "@/hooks/api/build/agent-pulse-schema";
 
@@ -71,7 +71,7 @@ describe("BuildAgentPulse", () => {
     const link = screen.getByRole("link");
     expect(link).toHaveAttribute("href", "/build/approvals");
     expect(link).toHaveAttribute("aria-label", "Overdue approval: Budget approval");
-    expect(screen.getByText("Overdue approval: Budget approval")).toBeInTheDocument();
+    expect(within(link).getByText("Overdue approval: Budget approval")).toBeInTheDocument();
   });
 
   it("renders blocked_milestone with project-scoped href", () => {
@@ -100,7 +100,7 @@ describe("BuildAgentPulse", () => {
     const signal = makeSignal({ type: "comment_draft", title: "Add test coverage" });
     mockUseAgentPulse.mockReturnValue({ data: signal });
     render(<BuildAgentPulse isCollapsed={false} />);
-    expect(screen.getByRole("link")).toHaveAttribute("href", "/build/drafts");
+    expect(screen.getByRole("link")).toHaveAttribute("href", "/build/my-work?section=drafts");
   });
 
   it("shows only the icon in collapsed mode — summary text is absent from the link itself", () => {
@@ -183,6 +183,35 @@ describe("BuildAgentPulse", () => {
     mockUseAgentPulse.mockReturnValue({ data: null });
     const { container } = render(<BuildAgentPulse isCollapsed={false} />);
     expect(container.firstChild).toBeNull();
+  });
+
+  it("B-040 — expanded link carries min-w-0 and overflow-hidden so long titles cannot overflow the sidebar", () => {
+    const longTitle = "A".repeat(120);
+    mockUseAgentPulse.mockReturnValue({
+      data: makeSignal({ type: "comment_draft", title: longTitle }),
+    });
+    render(<BuildAgentPulse isCollapsed={false} />);
+    const link = screen.getByRole("link");
+    expect(link.className).toContain("min-w-0");
+    expect(link.className).toContain("overflow-hidden");
+    const summarySpan = within(link).getByText(`Draft awaiting review: ${longTitle}`);
+    expect(summarySpan.className).toContain("truncate");
+  });
+
+  it("B-040 — tooltip is present in expanded mode for accessible text recovery on truncation", () => {
+    mockUseAgentPulse.mockReturnValue({ data: makeSignal() });
+    render(<BuildAgentPulse isCollapsed={false} />);
+    expect(screen.getByTestId("tooltip-content")).toBeInTheDocument();
+  });
+
+  it("B-040 — link carries a title attribute with the full summary text for native tooltip fallback", () => {
+    const longTitle = "A".repeat(323);
+    mockUseAgentPulse.mockReturnValue({
+      data: makeSignal({ type: "comment_draft", title: longTitle }),
+    });
+    render(<BuildAgentPulse isCollapsed={false} />);
+    const link = screen.getByRole("link");
+    expect(link).toHaveAttribute("title", `Draft awaiting review: ${longTitle}`);
   });
 
   it("resolves scope from pathname and passes it to useAgentPulse — two scopes must not share a cache (BSN-03-040)", () => {

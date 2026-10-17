@@ -1,10 +1,4 @@
-/**
- * A board autoloads up to 500 tickets and the timeline drew one SVG group per
- * dated ticket — a hit target, a rule, a label and a bar each — to show the ~15
- * rows a viewport holds. These assert the mounted row count follows the
- * viewport, that a row far down the board is still reachable by scrolling, and
- * that the bound did not cost the chart its list semantics or its keyboard.
- */
+
 import { fireEvent, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { GanttView } from "./gantt-view";
@@ -21,7 +15,11 @@ jest.mock("@/hooks/api/build/milestones", () => ({
   useProjectMilestones: () => ({ data: [] }),
 }));
 
-const ROW_HEIGHT = 36;
+jest.mock("@/hooks/api/use-page-state", () => ({
+  usePageState: () => ({ kind: "ready" }),
+}));
+
+const ROW_HEIGHT = 40;
 const HEADER_HEIGHT = 40;
 const TOTAL = 500;
 
@@ -44,6 +42,16 @@ function makeTickets(count: number): GanttTestTicket[] {
     startDate: "2026-01-05",
     dueDate: "2026-01-07",
     ticketNumber: i + 1,
+  }));
+}
+
+function makeUndatedTickets(count: number) {
+  return Array.from({ length: count }, (_, i) => ({
+    id: 1000 + i + 1,
+    title: `Unscheduled item ${i + 1}`,
+    status: "TODO",
+    type: "TASK",
+    ticketNumber: 1000 + i + 1,
   }));
 }
 
@@ -103,6 +111,30 @@ describe("GanttView — nothing is lost behind the bound", () => {
   });
 });
 
+describe("GanttView — undated tickets appear as rows", () => {
+  it("renders undated tickets as rows so tickets without dates are never silently dropped from the timeline (BUG-032)", () => {
+    render(
+      <GanttView
+        tickets={makeUndatedTickets(5)}
+        projectId={1}
+        onTicketClick={onTicketClick}
+      />,
+    );
+    expect(screen.getAllByRole("listitem")).toHaveLength(5);
+  });
+
+  it("preserves the total ticket count when dated and undated tickets are mixed so no item is silently omitted (BUG-032)", () => {
+    render(
+      <GanttView
+        tickets={[...makeTickets(3), ...makeUndatedTickets(3)]}
+        projectId={1}
+        onTicketClick={onTicketClick}
+      />,
+    );
+    expect(screen.getAllByRole("listitem")).toHaveLength(6);
+  });
+});
+
 describe("GanttView — the windowed rows keep their semantics", () => {
   it("names the row list", () => {
     renderTimeline();
@@ -123,5 +155,23 @@ describe("GanttView — the windowed rows keep their semantics", () => {
     renderTimeline();
     await user.click(screen.getByLabelText("#4 Work item 4"));
     expect(onTicketClick).toHaveBeenCalledWith(4);
+  });
+});
+
+describe("GanttView — B-069: drag on a bar suppresses click so accidental scrolls do not open tickets", () => {
+  it("does not open the ticket when the pointer moved more than 4 pixels between mousedown and click", () => {
+    renderTimeline();
+    const row = screen.getByLabelText("#2 Work item 2");
+    fireEvent.mouseDown(row, { clientX: 100, clientY: 100 });
+    fireEvent.click(row, { clientX: 115, clientY: 100 });
+    expect(onTicketClick).not.toHaveBeenCalled();
+  });
+
+  it("opens the ticket when the pointer did not move between mousedown and click", () => {
+    renderTimeline();
+    const row = screen.getByLabelText("#2 Work item 2");
+    fireEvent.mouseDown(row, { clientX: 100, clientY: 100 });
+    fireEvent.click(row, { clientX: 100, clientY: 100 });
+    expect(onTicketClick).toHaveBeenCalledWith(2);
   });
 });

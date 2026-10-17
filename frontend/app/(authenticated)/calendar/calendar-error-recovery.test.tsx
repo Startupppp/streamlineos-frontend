@@ -13,6 +13,8 @@ import type { AccessResponse } from "@/types/access";
 import { useCalendarEvents } from "@/hooks/api/calendar";
 import CalendarError from "./error";
 
+jest.mock("next/navigation", () => ({ useRouter: () => ({ refresh: jest.fn() }) }));
+
 /**
  * A 500 on `GET /calendar/events` reaches this route's boundary by the
  * `query-error-policy` default, so "Try Again" is the reader's only way back.

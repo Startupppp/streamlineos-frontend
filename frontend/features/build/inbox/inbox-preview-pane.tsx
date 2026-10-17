@@ -19,43 +19,28 @@ import { XIcon } from "@animateicons/react/lucide";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
-import { formatDistanceToNow, format } from "date-fns";
+import { format } from "date-fns";
+import { formatRelativeTime } from "@/lib/date-utils";
 import Link from "next/link";
 import type {
   NotificationType,
   NotificationCategory,
 } from "@/types/notifications";
 import dynamic from "next/dynamic";
-import { Skeleton } from "@/components/ui/skeleton";
 import {
   normalizeBuildDeepLink,
   parseInboxTicketLink,
+  extractBuildProjectId,
 } from "./parse-inbox-ticket-link";
 
 const InboxTicketPreview = dynamic(
-  () => import("./inbox-ticket-preview").then((m) => ({ default: m.InboxTicketPreview })),
+  () =>
+    import("./inbox-ticket-preview").then((m) => ({
+      default: m.InboxTicketPreview,
+    })),
   {
     ssr: false,
-    loading: () => (
-      <div className="flex min-h-0 flex-1 flex-col overflow-hidden lg:flex-row">
-        <div className="min-h-0 min-w-0 flex-1 space-y-4 overflow-y-auto px-4 pb-4 pt-3 scrollbar-hide lg:px-5">
-          <Skeleton className="h-6 w-2/3" />
-          <Skeleton className="h-4 w-1/3" />
-          <Skeleton className="h-32 w-full rounded-lg" />
-          <Skeleton className="h-24 w-full rounded-lg" />
-          <Skeleton className="h-40 w-full rounded-lg" />
-        </div>
-        <div className="hidden shrink-0 space-y-3 border-t border-border px-4 py-3 lg:block lg:w-72 lg:min-w-72 lg:overflow-y-auto lg:border-l lg:border-t-0 lg:scrollbar-hide xl:w-80 xl:min-w-80">
-          <div className="flex gap-2">
-            <Skeleton className="h-5 w-16 rounded-md" />
-            <Skeleton className="h-5 w-20 rounded-md" />
-          </div>
-          {Array.from({ length: 6 }).map((_, i) => (
-            <Skeleton key={i} className="h-9 w-full rounded-md" />
-          ))}
-        </div>
-      </div>
-    ),
+    loading: () => null,
   },
 );
 
@@ -79,6 +64,7 @@ function getCategoryLabel(category: NotificationCategory): string {
     SURVEYS: "Surveys",
     CALENDAR: "Calendar",
     SUPPORT: "Support",
+    ACCOUNTING: "Accounting",
   };
   return labels[category] ?? category;
 }
@@ -129,7 +115,7 @@ function NotificationFallbackPreview({
               type="button"
               size="icon"
               variant="ghost"
-              className="mt-0.5 h-8 w-8 shrink-0 text-muted-foreground hover:text-foreground lg:hidden"
+              className="mt-0.5 shrink-0 text-muted-foreground hover:text-foreground lg:hidden"
               onClick={onClose}
               aria-label="Back to inbox"
             >
@@ -144,7 +130,7 @@ function NotificationFallbackPreview({
             {getTypeIcon(notification.type, notification.category)}
           </div>
           <div className="min-w-0 flex-1 overflow-hidden">
-            <h2 className="break-words text-sm font-semibold leading-snug text-foreground [overflow-wrap:anywhere]">
+            <h2 className="break-words text-sm font-medium leading-snug text-foreground [overflow-wrap:anywhere]">
               {notification.title}
             </h2>
             <div className="mt-1 flex min-w-0 flex-wrap items-center gap-2">
@@ -156,7 +142,7 @@ function NotificationFallbackPreview({
                 className="tabular-nums text-xs text-muted-foreground"
                 title={format(createdAt, "PPpp")}
               >
-                {formatDistanceToNow(createdAt, { addSuffix: true })}
+                {formatRelativeTime(createdAt)}
               </span>
               {!notification.isRead && (
                 <>
@@ -193,12 +179,7 @@ function NotificationFallbackPreview({
 
         {notification.link && (
           <div className="mt-5">
-            <Button
-              asChild
-              variant="outline"
-              size="sm"
-              className="h-8 gap-1.5 text-xs"
-            >
+            <Button asChild variant="outline" size="sm" className="gap-1.5">
               <Link href={normalizeBuildDeepLink(notification.link)}>
                 <ExternalLink className="h-3.5 w-3.5" />
                 View in app
@@ -209,6 +190,35 @@ function NotificationFallbackPreview({
       </div>
     </div>
   );
+}
+
+function resolveTicketTarget(
+  parsedTarget: ReturnType<typeof parseInboxTicketLink>,
+  notification: Notification,
+): ReturnType<typeof parseInboxTicketLink> {
+  if (parsedTarget) return parsedTarget;
+  const ctx = notification.ticketContext;
+  if (!ctx?.ticketId) return null;
+  const metadataProjectId = notification.metadata?.projectId;
+  const projectId =
+    ctx.projectId ??
+    extractBuildProjectId(notification.link) ??
+    (typeof metadataProjectId === "number" &&
+    Number.isSafeInteger(metadataProjectId) &&
+    metadataProjectId > 0
+      ? metadataProjectId
+      : null);
+  if (!projectId) return null;
+  const href = notification.link
+    ? normalizeBuildDeepLink(notification.link)
+    : `/build/${projectId}/tickets/${encodeURIComponent(ctx.ticketKey)}`;
+  return {
+    projectId,
+    ticketId: ctx.ticketId,
+    ticketKey: null,
+    commentId: null,
+    href,
+  };
 }
 
 export function InboxPreviewPane({
@@ -222,12 +232,14 @@ export function InboxPreviewPane({
           illustrationPreset="mail"
           title="Select a notification"
           description="Choose a notification from the list to view its details here."
+          descriptionClassName="text-foreground"
           compact={false}
         />
       </div>
     );
 
-  const ticketTarget = parseInboxTicketLink(notification.link);
+  const parsedTicketTarget = parseInboxTicketLink(notification.link);
+  const ticketTarget = resolveTicketTarget(parsedTicketTarget, notification);
 
   if (ticketTarget)
     return (

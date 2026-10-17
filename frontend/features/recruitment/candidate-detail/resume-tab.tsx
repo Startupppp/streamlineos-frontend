@@ -1,0 +1,44 @@
+"use client";
+
+import { RecruitmentEmptyState } from "@/features/recruitment/components/recruitment-empty-state";
+import { Button } from "@/components/ui/button";
+import { ExternalLinkIcon } from "@animateicons/react/lucide";
+import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
+
+interface Props {
+  resumeUrl: string | null;
+}
+
+export function ResumeTab({ resumeUrl }: Props) {
+  const { iconRef: externalLinkIconRef, hoverHandlers: externalLinkHoverHandlers } = useAnimatedIcon();
+
+  if (!resumeUrl) {
+    return (
+      <RecruitmentEmptyState
+        illustrationPreset="documents"
+        title="No resume on file"
+        description="This candidate hasn't uploaded a resume yet."
+        compact
+      />
+    );
+  }
+
+  return (
+    <div className="space-y-3">
+      {resumeUrl && (
+        <div className="rounded-2xl border border-border bg-card overflow-hidden">
+          <div className="flex items-center justify-between px-4 py-2.5 border-b border-border/60 bg-muted/30">
+            <span className="text-xs font-semibold text-foreground">Resume</span>
+            <Button variant="ghost" asChild {...externalLinkHoverHandlers}>
+              <a href={resumeUrl} target="_blank" rel="noopener noreferrer">
+                <ExternalLinkIcon ref={externalLinkIconRef} size={12} />
+                Open
+              </a>
+            </Button>
+          </div>
+          <iframe src={resumeUrl} className="w-full h-[600px]" title="Resume" />
+        </div>
+      )}
+    </div>
+  );
+}

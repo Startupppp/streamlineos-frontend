@@ -14,16 +14,20 @@ import { Tag } from "lucide-react";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { PlusIcon, XIcon } from "@animateicons/react/lucide";
+import { useProjectLabels } from "@/hooks/api/build/projects";
 import {
-  useProjectLabels,
   useCreateOrgLabel,
   useAddLabelToTicket,
   useRemoveLabelFromTicket,
-} from "@/hooks/api";
-import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
-import { useQueryClient } from "@tanstack/react-query";
+} from "@/hooks/api/build/tickets";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 interface LabelPickerProps {
   ticketId: number;
@@ -33,17 +37,40 @@ interface LabelPickerProps {
   }>;
 }
 
-function RemoveLabelButton({ labelId, labelName, onRemove }: { labelId: number; labelName: string; onRemove: (id: number) => () => void }) {
+export function TicketLabelChip({
+  label,
+  onRemove,
+}: {
+  label: { id: number; name: string; color: string | null };
+  onRemove?: (id: number) => void;
+}) {
   const { iconRef, hoverHandlers } = useAnimatedIcon();
+  function handleRemove() {
+    onRemove?.(label.id);
+  }
   return (
-    <button
-      onClick={onRemove(labelId)}
-      aria-label={`Remove ${labelName} label`}
-      className="hover:bg-destructive/20 rounded-full p-0.5 transition-colors"
-      {...hoverHandlers}
+    <Badge
+      variant="secondary"
+      className="h-7 gap-1.5 rounded-full border border-border/70 bg-muted/60 px-2 text-xs font-medium text-foreground shadow-none"
     >
-      <XIcon ref={iconRef} size={10} />
-    </button>
+      <span
+        aria-hidden="true"
+        className="size-2 shrink-0 rounded-full"
+        style={{ backgroundColor: label.color || DEFAULT_LABEL_COLOR }}
+      />
+      <span className="max-w-36 truncate">{label.name}</span>
+      {onRemove ? (
+        <button
+          type="button"
+          onClick={handleRemove}
+          aria-label={`Remove ${label.name} label`}
+          className="hover:bg-destructive/20 rounded-full p-0.5 transition-colors"
+          {...hoverHandlers}
+        >
+          <XIcon ref={iconRef} size={10} />
+        </button>
+      ) : null}
+    </Badge>
   );
 }
 
@@ -52,18 +79,17 @@ export function LabelPicker({
   projectId,
   currentLabels,
 }: LabelPickerProps) {
-  const { iconRef: plusIconRef, hoverHandlers: plusHoverHandlers } = useAnimatedIcon();
+  const { iconRef: plusIconRef, hoverHandlers: plusHoverHandlers } =
+    useAnimatedIcon();
   const [open, setOpen] = useState(false);
   const [newLabelName, setNewLabelName] = useState("");
   const [selectedColor, setSelectedColor] = useState<string>(DEFAULT_LABEL_COLOR);
-  const queryClient = useQueryClient();
 
   const { data: allLabels } = useProjectLabels(undefined, { enabled: open });
 
   const createLabel = useCreateOrgLabel({
     onSuccess: (newLabel) => {
       setNewLabelName("");
-      queryClient.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.labels() });
       if (projectId !== undefined) {
         addLabel.mutate({ ticketId, projectId, labelId: newLabel.id });
       }
@@ -72,20 +98,10 @@ export function LabelPicker({
   });
 
   const addLabel = useAddLabelToTicket({
-    onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: buildWorkQueryKeys.projects.ticket(ticketId),
-      });
-    },
     onError: (error) => toast.error(getErrorMessage(error)),
   });
 
   const removeLabel = useRemoveLabelFromTicket({
-    onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: buildWorkQueryKeys.projects.ticket(ticketId),
-      });
-    },
     onError: (error) => toast.error(getErrorMessage(error)),
   });
 
@@ -93,7 +109,7 @@ export function LabelPicker({
   const availableLabels =
     allLabels?.filter((l) => !currentLabelIds.has(l.id)) ?? [];
 
-  const handleRemoveLabel = (labelId: number) => () => {
+  const handleRemoveLabel = (labelId: number) => {
     if (projectId === undefined) return;
     removeLabel.mutate({ ticketId, projectId, labelId });
   };
@@ -111,34 +127,38 @@ export function LabelPicker({
 
   return (
     <div className="space-y-2">
-      <div className="flex items-center gap-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+      <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground uppercase tracking-wider">
         <Tag className="h-3.5 w-3.5" />
         Labels
       </div>
       <div className="flex flex-wrap gap-1.5">
         {currentLabels.map(({ label }) => (
-          <Badge
+          <TicketLabelChip
             key={label.id}
-            variant="secondary"
-            className="gap-1 pl-1.5 pr-1 py-0.5 text-xs cursor-default"
-            style={{ borderLeft: `3px solid ${label.color || "#3b82f6"}` }}
-          >
-            {label.name}
-            <RemoveLabelButton labelId={label.id} labelName={label.name} onRemove={handleRemoveLabel} />
-          </Badge>
+            label={label}
+            onRemove={handleRemoveLabel}
+          />
         ))}
         <ResponsivePopover open={open} onOpenChange={setOpen}>
-          <ResponsivePopoverTrigger asChild>
-            <Button
-              variant="ghost"
-              size="sm"
-              aria-label="Add label"
-              className="h-9 w-9 touch-manipulation rounded-full p-0 sm:h-7 sm:w-7"
-              {...plusHoverHandlers}
-            >
-              <PlusIcon ref={plusIconRef} size={14} />
-            </Button>
-          </ResponsivePopoverTrigger>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <ResponsivePopoverTrigger asChild>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon-sm"
+                    aria-label="Add label"
+                    className="text-muted-foreground"
+                    {...plusHoverHandlers}
+                  >
+                    <PlusIcon ref={plusIconRef} size={14} />
+                  </Button>
+                </ResponsivePopoverTrigger>
+              </TooltipTrigger>
+              <TooltipContent>Add label</TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
           <ResponsivePopoverContent
             title="Labels"
             className="w-[min(20rem,calc(100vw-2rem))] p-4"
@@ -150,13 +170,17 @@ export function LabelPicker({
                   <div className="space-y-1">
                     {availableLabels.map((label) => (
                       <button
+                        type="button"
                         key={label.id}
                         onClick={handleAddLabel(label.id)}
                         className="flex items-center gap-2 w-full p-1.5 text-sm rounded hover:bg-muted transition-colors text-left"
                       >
                         <span
                           className="w-3 h-3 rounded-full shrink-0"
-                          style={{ backgroundColor: label.color || "#3b82f6" }}
+                          style={{
+                            backgroundColor:
+                              label.color || DEFAULT_LABEL_COLOR,
+                          }}
                         />
                         {label.name}
                       </button>

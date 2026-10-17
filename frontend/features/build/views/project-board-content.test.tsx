@@ -1,6 +1,7 @@
 import React from "react";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { ApiError } from "@/lib/api-envelope";
 
 jest.mock("framer-motion", () => ({
   AnimatePresence: ({ children }: { children: React.ReactNode }) => <>{children}</>,
@@ -18,6 +19,7 @@ jest.mock("framer-motion", () => ({
 jest.mock("next/dynamic", () => () => () => null);
 
 let mockScopes: Record<string, boolean> = { "build:tickets:view": true };
+let mockIsOnline = true;
 
 jest.mock("@/hooks/api/access", () => ({
   useCan: () => false,
@@ -27,12 +29,19 @@ jest.mock("@/hooks/api/access", () => ({
   }),
 }));
 
+jest.mock("@/hooks/common/use-online-status", () => ({
+  useOnlineStatus: () => mockIsOnline,
+}));
+
+jest.mock("@/hooks/api/build/modules", () => ({
+  useModules: () => ({ data: [{ id: 11, name: "Payments" }] }),
+}));
+
 jest.mock("@/hooks/api/entitlements", () => ({
   useEntitlements: () => ({ data: undefined }),
 }));
 
 jest.mock("./table-view", () => ({ TableView: () => null }));
-jest.mock("./calendar-view", () => ({ CalendarView: () => null }));
 jest.mock("./gantt-view", () => ({ GanttView: () => null }));
 let lastWorkloadViewProps: Record<string, unknown> | null = null;
 jest.mock("./workload-view", () => ({
@@ -42,7 +51,7 @@ jest.mock("./workload-view", () => ({
   },
 }));
 
-jest.mock("@/features/build/backlog/bulk-action-bar", () => ({
+jest.mock("@/features/build/shared/bulk-action-bar", () => ({
   BulkActionBar: () => null,
 }));
 
@@ -85,6 +94,7 @@ import { buildBaseProps } from "./project-board-content-test-harness";
 
 beforeEach(() => {
   mockScopes = { "build:tickets:view": true };
+  mockIsOnline = true;
 });
 
 describe("ProjectBoardContent — render-ladder exhaustiveness", () => {
@@ -105,12 +115,11 @@ describe("ProjectBoardContent — truncation notice", () => {
     jest.clearAllMocks();
   });
 
-  it("renders a truncation notice when the board query has a next page that was not auto-loaded because filters were active", () => {
+  it("renders a load-more sentinel when the board query has a next page", () => {
     const tickets = Array.from({ length: 3 }, (_, i) => ({ id: i })) as unknown as KanbanTicket[];
     render(<ProjectBoardContent {...buildBaseProps(tickets, { isTruncated: true })} />);
 
-    expect(screen.getByRole("status")).toBeInTheDocument();
-    expect(screen.getByRole("status")).toHaveTextContent("Showing the first 3");
+    expect(screen.getByRole("button", { name: /load more tickets/i })).toBeInTheDocument();
   });
 
   it("does not render a truncation notice when all matching tickets fit within the first page", () => {
@@ -131,6 +140,20 @@ describe("ProjectBoardContent — truncation notice", () => {
     await userEvent.click(screen.getByRole("button", { name: /load more/i }));
 
     expect(onLoadMore).toHaveBeenCalledTimes(1);
+  });
+
+  it("shows a loading status indicator instead of a button while the next page is loading", () => {
+    render(
+      <ProjectBoardContent
+        {...buildBaseProps([{ id: 1, title: "Ticket", type: "TASK", status: "TODO", version: 1 }], {
+          isTruncated: true,
+          isFetchingMore: true,
+        })}
+      />,
+    );
+
+    expect(screen.queryByRole("button", { name: /load more/i })).not.toBeInTheDocument();
+    expect(screen.getByRole("status")).toBeInTheDocument();
   });
 });
 
@@ -177,6 +200,72 @@ describe("ProjectBoardContent — the ticket query's loading, error, empty and d
   });
 });
 
+describe("ProjectBoardContent — offline state", () => {
+  beforeEach(() => {
+    mockIsOnline = false;
+    mockScopes = { "build:tickets:view": true };
+  });
+
+  it("renders the offline panel instead of the filtered-empty state when the device is offline, so the user sees a freshness warning rather than an empty list", () => {
+    render(
+      <ProjectBoardContent {...buildBaseProps()} showEmptyFilterState />,
+    );
+
+    expect(screen.getByText(/you're offline/i)).toBeInTheDocument();
+    expect(screen.queryByText("No tickets match your filters")).not.toBeInTheDocument();
+  });
+
+  it("renders the online filtered-empty state when the device is online, confirming the offline branch is not always shown", () => {
+    mockIsOnline = true;
+    render(
+      <ProjectBoardContent {...buildBaseProps()} showEmptyFilterState />,
+    );
+
+    expect(screen.getByText("No tickets match your filters")).toBeInTheDocument();
+    expect(screen.queryByText(/you're offline/i)).not.toBeInTheDocument();
+  });
+});
+
+describe("ProjectBoardContent — offline freshness timestamp", () => {
+  beforeEach(() => {
+    mockIsOnline = false;
+    mockScopes = { "build:tickets:view": true };
+  });
+
+  it("renders the last-updated timestamp inside the offline panel when dataUpdatedAt is provided", () => {
+    render(
+      <ProjectBoardContent
+        {...buildBaseProps()}
+        showEmptyFilterState
+        dataUpdatedAt={Date.now()}
+      />,
+    );
+
+    expect(screen.getByText(/last updated/i)).toBeInTheDocument();
+  });
+
+  it("does not render a timestamp inside the offline panel when dataUpdatedAt is absent", () => {
+    render(
+      <ProjectBoardContent {...buildBaseProps()} showEmptyFilterState />,
+    );
+
+    expect(screen.queryByText(/last updated/i)).not.toBeInTheDocument();
+  });
+
+  it("does not render the timestamp on the online path so the online state is unchanged", () => {
+    mockIsOnline = true;
+
+    render(
+      <ProjectBoardContent
+        {...buildBaseProps()}
+        dataUpdatedAt={Date.now()}
+      />,
+    );
+
+    expect(screen.queryByText(/last updated/i)).not.toBeInTheDocument();
+  });
+});
+
 describe("ProjectBoardContent — workload capacity wiring", () => {
   beforeEach(() => {
     lastWorkloadViewProps = null;
@@ -189,7 +278,11 @@ describe("ProjectBoardContent — workload capacity wiring", () => {
         "user-1",
         {
           capacityHours: 40,
+          leaveDays: 0,
           loggedHours: 48,
+          estimateHours: 44,
+          allocationPercent: 120,
+          varianceHours: 8,
           isOverAllocated: true,
           isZeroCapacity: false,
           utilizationPercent: 120,
@@ -211,12 +304,130 @@ describe("ProjectBoardContent — workload capacity wiring", () => {
   it("a member with low ticket count but isOverAllocated=true is flagged over-capacity — revert the wiring and this fails", () => {
     const overAllocated: MemberCapacityData = {
       capacityHours: 8,
+      leaveDays: 0,
       loggedHours: 10,
+      estimateHours: 9,
+      allocationPercent: 125,
+      varianceHours: 2,
       isOverAllocated: true,
       isZeroCapacity: false,
       utilizationPercent: 125,
     };
     expect(isMemberOverCapacity(1, overAllocated)).toBe(true);
     expect(isMemberOverCapacity(1, undefined)).toBe(false);
+  });
+});
+
+describe("ProjectBoardContent — a first run and a filtered-out list are different screens", () => {
+  beforeEach(() => {
+    mockScopes = { "build:tickets:view": true };
+    mockIsOnline = true;
+  });
+
+  it("offers the first-run copy when the collection is empty and no filter is active", () => {
+    render(<ProjectBoardContent {...buildBaseProps()} hasActiveFilters={false} />);
+    expect(screen.getByText("No tickets yet")).toBeInTheDocument();
+    expect(screen.queryByText("No tickets match your filters")).not.toBeInTheDocument();
+  });
+
+  it("offers the filtered copy with a clear action when a filter is active, not the first-run copy", () => {
+    render(<ProjectBoardContent {...buildBaseProps()} hasActiveFilters />);
+    expect(screen.getByText("No tickets match your filters")).toBeInTheDocument();
+    expect(screen.queryByText("No tickets yet")).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /clear all filters/i })).toBeInTheDocument();
+  });
+
+  it("offers the filtered copy when the page reports a filtered-empty result even without the filter flag", () => {
+    render(<ProjectBoardContent {...buildBaseProps()} showEmptyFilterState />);
+    expect(screen.getByText("No tickets match your filters")).toBeInTheDocument();
+  });
+
+  it("prefers the offline panel over either empty copy, because the list may be stale rather than empty", () => {
+    mockIsOnline = false;
+    render(<ProjectBoardContent {...buildBaseProps()} hasActiveFilters />);
+    expect(screen.getByText(/you're offline/i)).toBeInTheDocument();
+    expect(screen.queryByText("No tickets match your filters")).not.toBeInTheDocument();
+    expect(screen.queryByText("No tickets yet")).not.toBeInTheDocument();
+  });
+
+  it("renders neither empty copy once the collection has a row", () => {
+    render(
+      <ProjectBoardContent
+        {...buildBaseProps([
+          { id: 1, title: "Widen the grain", type: "TASK", status: "TODO", version: 1 },
+        ])}
+        hasActiveFilters={false}
+      />,
+    );
+    expect(screen.queryByText("No tickets yet")).not.toBeInTheDocument();
+    expect(screen.queryByText("No tickets match your filters")).not.toBeInTheDocument();
+  });
+
+  it("keeps the workload view rendering with no tickets, because it aggregates people and not only work", () => {
+    render(<ProjectBoardContent {...buildBaseProps()} hasActiveFilters={false} view="workload" />);
+    expect(screen.queryByText("No tickets yet")).not.toBeInTheDocument();
+  });
+});
+
+describe("ProjectBoardContent — the tickets read's own failure keeps its backend semantics", () => {
+  beforeEach(() => {
+    mockScopes = { "build:tickets:view": true };
+    mockIsOnline = true;
+  });
+
+  it("resolves a 402 on the tickets read as a plan-locked module with its upgrade path, not as a generic failure (FE-41)", () => {
+    render(
+      <ProjectBoardContent
+        {...buildBaseProps()}
+        isError
+        error={
+          new ApiError("module not enabled", 402, "MODULE_NOT_ENABLED", {
+            moduleKey: "build",
+            reason: "not-in-plan",
+            upgradePath: "/settings/billing",
+          })
+        }
+      />,
+    );
+    expect(screen.getByRole("link", { name: /upgrade|billing|plan/i })).toHaveAttribute(
+      "href",
+      "/settings/billing",
+    );
+    expect(screen.queryByText("No tickets yet")).not.toBeInTheDocument();
+  });
+
+  it("keeps the backend message for an ordinary tickets-read failure, so the 402 branch did not swallow errors", () => {
+    render(
+      <ProjectBoardContent
+        {...buildBaseProps()}
+        isError
+        error={new ApiError("the ticket index is rebuilding", 500, "INTERNAL")}
+      />,
+    );
+    expect(screen.getByText(/the ticket index is rebuilding/i)).toBeInTheDocument();
+  });
+
+  it("exposes the request id of a failed tickets read, so a person can quote it to support", () => {
+    render(
+      <ProjectBoardContent
+        {...buildBaseProps()}
+        isError
+        error={
+          new ApiError("boom", 500, "INTERNAL", { correlationId: "req-42ab" })
+        }
+      />,
+    );
+    expect(screen.getByText("req-42ab")).toBeInTheDocument();
+  });
+
+  it("renders no request id for a failure that carries none, so the reference tracks the envelope", () => {
+    render(
+      <ProjectBoardContent
+        {...buildBaseProps()}
+        isError
+        error={new ApiError("boom", 500, "INTERNAL")}
+      />,
+    );
+    expect(screen.queryByText(/^req-/)).not.toBeInTheDocument();
   });
 });

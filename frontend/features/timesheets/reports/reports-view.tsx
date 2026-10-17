@@ -6,22 +6,10 @@ import { motion, useReducedMotion } from "framer-motion";
 import { format, subDays, parseISO, isValid } from "date-fns";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Tabs, TabsContent, TabsList, TabsTrigger, TABS_CONTENT_PAGE_BODY_CLASS } from "@/components/ui/tabs";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Card, CardContent } from "@/components/ui/card";
-import { StatCardGridSkeleton } from "@/components/ui/stat-card";
 import { DateRangePicker } from "@/components/ui/date-range-picker";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/shared/error-state";
 import { EmptyReportIllustration } from "@/components/illustrations";
-import { FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
-import { cn } from "@/lib/utils";
 import { useCan } from "@/hooks/api/access";
 import { useReportsOverview } from "@/hooks/api/timesheets-core/reports";
 import { AiActionsMenu, type AiAction } from "@/components/ai/ai-actions-menu";
@@ -33,6 +21,7 @@ import { ClientProfitabilityTab } from "./client-profitability-tab";
 import { ComplianceTab } from "./compliance-tab";
 import { ApprovalSlaTab } from "./approval-sla-tab";
 import { BillingLeakageTab } from "./billing-leakage-tab";
+import { ProjectHoursTab } from "./project-hours-tab";
 
 const REPORT_TABS = [
   { value: "overview", label: "Overview" },
@@ -42,7 +31,13 @@ const REPORT_TABS = [
   { value: "compliance", label: "Compliance" },
   { value: "approval-sla", label: "Approval SLA" },
   { value: "billing-leakage", label: "Billing Leakage" },
+  { value: "project-hours", label: "Project Hours" },
 ] as const;
+
+function parseProjectId(raw: string | null): number | null {
+  const n = Number(raw);
+  return raw && Number.isInteger(n) && n > 0 ? n : null;
+}
 
 function buildSubtitle(start: string, end: string): string {
   try {
@@ -72,8 +67,13 @@ export function ReportsView() {
 
   const startDate = searchParams.get("start") ?? defaults.start;
   const endDate = searchParams.get("end") ?? defaults.end;
+  // Still honoured so an existing deep link keeps filtering; there is no
+  // control that sets it. The picker that used to sit in the filter row offered
+  // "All members" and nothing else - no member list was ever loaded - so it
+  // promised a filter it could not apply. It comes back when it has options.
   const userId = searchParams.get("userId") ?? undefined;
   const activeTab = searchParams.get("tab") ?? "overview";
+  const projectId = parseProjectId(searchParams.get("projectId"));
 
   const updateParams = useCallback(
     (updates: Record<string, string | null>) => {
@@ -94,8 +94,9 @@ export function ReportsView() {
     [updateParams],
   );
 
-  const handleUserChange = useCallback(
-    (value: string) => updateParams({ userId: value === "ALL" ? null : value }),
+
+  const handleProjectChange = useCallback(
+    (id: number) => updateParams({ projectId: String(id) }),
     [updateParams],
   );
 
@@ -163,17 +164,6 @@ export function ReportsView() {
         to={endDate}
         onChange={handleDateRangeChange}
       />
-      <Select value={userId ?? "ALL"} onValueChange={handleUserChange}>
-        <SelectTrigger
-          className={cn(FILTER_SELECT_TRIGGER, "w-[160px]")}
-          aria-label="Filter by member"
-        >
-          <SelectValue />
-        </SelectTrigger>
-        <SelectContent className="min-w-[var(--radix-select-trigger-width)]">
-          <SelectItem value="ALL">All members</SelectItem>
-        </SelectContent>
-      </Select>
     </>
   );
 
@@ -270,39 +260,17 @@ export function ReportsView() {
               enabled={queryEnabled && activeTab === "billing-leakage"}
             />
           </TabsContent>
+
+          <TabsContent value="project-hours" className={TABS_CONTENT_PAGE_BODY_CLASS}>
+            <ProjectHoursTab
+              params={rangeParams}
+              projectId={projectId}
+              onProjectChange={handleProjectChange}
+              enabled={queryEnabled && activeTab === "project-hours"}
+            />
+          </TabsContent>
         </Tabs>
       </motion.div>
-    </PageWrapper>
-  );
-}
-
-export function ReportsPageSkeleton() {
-  return (
-    <PageWrapper
-      title="Reports"
-      filters={
-        <div className="flex items-center gap-2">
-          <Skeleton className="h-9 w-48 rounded-md" />
-          <Skeleton className="h-9 w-36 rounded-md" />
-        </div>
-      }
-    >
-      <div className="flex flex-1 min-h-0 flex-col gap-4">
-        <StatCardGridSkeleton cols={4} count={4} />
-        <div className="grid gap-4 md:grid-cols-2">
-          <Card>
-            <CardContent className="pt-4">
-              <Skeleton className="h-[220px] w-full rounded-md" />
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="pt-4">
-              <Skeleton className="h-[220px] w-full rounded-md" />
-            </CardContent>
-          </Card>
-        </div>
-        <Skeleton className="h-[120px] rounded-lg" />
-      </div>
     </PageWrapper>
   );
 }

@@ -13,7 +13,7 @@ const unifiedInboxCountContract = lazyContract(() =>
   import("@/hooks/api/inbox-schema").then((m) => m.unifiedInboxCountContract),
 );
 import { platformCoreQueryKeys } from "@/lib/query-keys/platform-core";
-import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
+import { INLINE_READ_ERROR, isTransientNetworkError } from "@/lib/query-error-policy";
 import type { InboxKind, UnifiedInboxCount, UnifiedInboxResponse } from "@/types/inbox";
 import { NO_CURSOR_YET } from "@/hooks/api/cursor-page-param";
 
@@ -24,6 +24,8 @@ export interface UnifiedInboxParams {
   q?: string;
   category?: string;
   priority?: string;
+  eventKeys?: string[];
+  module?: string;
   triage?: "active" | "later" | "done";
 }
 
@@ -34,6 +36,9 @@ export function inboxErrorRecoveryInterval(query: {
 }): number | false {
   if (query.state.status !== "error") return false;
   const error = query.state.error;
+  // An origin outage is paced by the api-client outage circuit; a 3s poll on
+  // top only re-fails fast against it (SEC-HRMS-003).
+  if (isTransientNetworkError(error)) return false;
   if (
     isApiError(error) &&
     error.status !== undefined &&
@@ -81,6 +86,10 @@ export function useUnifiedInbox(
   const q = params?.q?.trim() || undefined;
   const category = params?.category || undefined;
   const priority = params?.priority || undefined;
+  const eventKeys = params?.eventKeys?.length
+    ? [...params.eventKeys].sort()
+    : undefined;
+  const moduleFilter = params?.module || undefined;
   const triage = params?.triage;
 
   return useInfiniteQuery<UnifiedInboxResponse, Error>({
@@ -92,6 +101,8 @@ export function useUnifiedInbox(
       q,
       category,
       priority,
+      eventKeys,
+      module: moduleFilter,
       triage,
       infinite: true,
     }),
@@ -104,6 +115,8 @@ export function useUnifiedInbox(
       if (q) query["q"] = q;
       if (category) query["category"] = category;
       if (priority) query["priority"] = priority;
+      if (eventKeys) query["eventKeys"] = eventKeys.join(",");
+      if (moduleFilter) query["module"] = moduleFilter;
       if (triage) query["triage"] = triage;
       return apiClient.get<UnifiedInboxResponse>("/me/inbox/unified", query, signal, unifiedInboxContract);
     },

@@ -8,8 +8,10 @@ import { CursorPageControls } from "@/components/ui/cursor-page-controls";
 import { useCursorPageStack } from "@/hooks/common/use-cursor-page-stack";
 import { StateIllustration } from "@/components/illustrations";
 import { EmptyState } from "@/components/ui/empty-state";
-import { ErrorState } from "@/components/shared/error-state";
-import { getErrorMessage } from "@/lib/get-error-message";
+import { PageState } from "@/components/shared/page-state";
+import { usePageState } from "@/hooks/api/use-page-state";
+import { DataTableSkeleton } from "@/components/ui/data-table-skeleton";
+import { format } from "date-fns";
 import { useOrgMembersByIds } from "@/hooks/api/organization";
 import { getUserDisplayName, type NamedUser } from "@/lib/person-display";
 import { useDisciplinaryActions } from "@/hooks/api/hr/cases";
@@ -31,9 +33,11 @@ export function DisciplinaryActionsTab({ canManage, onIssueAction }: Disciplinar
   const { data, isLoading, isError, error, refetch } = useDisciplinaryActions({
     cursor: pagination.cursor,
   });
+  const pageState = usePageState({ permission: "hr:cases:view", isLoading, isError, error });
 
+  // Issuers resolve through the same lookup so no raw user id is shown (FE-85).
   const employeeIds = useMemo(
-    () => [...new Set((data?.data ?? []).map((r) => r.employeeId))],
+    () => [...new Set((data?.data ?? []).flatMap((r) => [r.employeeId, r.issuedBy]))],
     [data?.data],
   );
   const { data: membersData } = useOrgMembersByIds(employeeIds);
@@ -67,14 +71,16 @@ export function DisciplinaryActionsTab({ canManage, onIssueAction }: Disciplinar
         header: "Effective Date",
         cell: (row) => (
           <span className="text-xs text-muted-foreground">
-            {new Date(row.effectiveDate).toLocaleDateString()}
+            {format(new Date(row.effectiveDate), "dd MMM yyyy")}
           </span>
         ),
       },
       {
         key: "issuedBy",
         header: "Issued By",
-        cell: (row) => <span className="font-mono text-xs">{row.issuedBy}</span>,
+        cell: (row) => (
+          <span className="text-sm">{getUserDisplayName(memberById.get(row.issuedBy))}</span>
+        ),
       },
     ],
     [memberById],
@@ -99,26 +105,18 @@ export function DisciplinaryActionsTab({ canManage, onIssueAction }: Disciplinar
             iconSize={14}
             iconClassName="mr-1.5"
             size="sm"
-            className="gap-1.5 text-sm"
+            className="gap-1.5"
             onClick={onIssueAction}
           >
             Issue Action
           </AnimatedIconButton>
         </div>
       )}
-      {isError ? (
-        <ErrorState
-          className="flex-1"
-          title="Couldn't load disciplinary actions"
-          description={getErrorMessage(error)}
-          onRetry={handleRetry}
-        />
-      ) : (
+      <PageState resolution={pageState} loading={<DataTableSkeleton />} onRetry={handleRetry} className="flex-1">
         <DataTable
           className="flex-1 min-h-0"
           columns={columns}
           data={data?.data ?? []}
-          isLoading={isLoading}
           getRowKey={(row) => row.id}
           emptyState={
             <EmptyState
@@ -130,8 +128,8 @@ export function DisciplinaryActionsTab({ canManage, onIssueAction }: Disciplinar
             />
           }
         />
-      )}
-      {!isError && (pagination.hasPrevious || hasMore) ? (
+      </PageState>
+      {pageState.kind === "ready" && (pagination.hasPrevious || hasMore) ? (
         <CursorPageControls
           page={pagination.page}
           hasNext={hasMore}

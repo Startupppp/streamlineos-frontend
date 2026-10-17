@@ -16,7 +16,7 @@ import { ProfessionalInfoSection } from "@/features/hr/employees/detail/professi
 import { UnsavedChangesDialog } from "@/components/ui/unsaved-changes-dialog";
 import { useUnsavedChangesGuard } from "@/hooks/common/use-unsaved-changes-guard";
 import {
-  employeeFormSchema,
+  makeEmployeeFormSchema,
   type EmployeeFormValues,
 } from "@/features/hr/employees/detail/employee-form-schema";
 import type { EmployeeData } from "@/features/hr/employees/detail/employee-data";
@@ -41,6 +41,11 @@ export function EditEmployeeForm({
   const router = useRouter();
   const updateProfileMutation = useUpdateProfile();
 
+  const schema = useMemo(
+    () => makeEmployeeFormSchema(employee.firstName || "", employee.lastName || ""),
+    [employee.firstName, employee.lastName],
+  );
+
   const defaultValues = useMemo<EmployeeFormValues>(
     () => ({
       firstName: employee.firstName || "",
@@ -52,13 +57,12 @@ export function EditEmployeeForm({
       joiningDate: employee.joiningDate
         ? new Date(employee.joiningDate)
         : undefined,
-      reportingTo: employee.reportingTo,
     }),
     [employee],
   );
 
   const form = useForm<EmployeeFormValues>({
-    resolver: zodResolver(employeeFormSchema),
+    resolver: zodResolver(schema),
     defaultValues,
   });
 
@@ -70,21 +74,21 @@ export function EditEmployeeForm({
 
   const persist = useCallback(
     async (values: EmployeeFormValues) => {
+      const { dirtyFields } = form.formState;
       await updateProfileMutation.mutateAsync({
         userId: employee.id,
-        firstName: values.firstName,
-        lastName: values.lastName,
+        ...(dirtyFields.firstName ? { firstName: values.firstName } : {}),
+        ...(dirtyFields.lastName ? { lastName: values.lastName } : {}),
         designation: values.designation,
         departmentId: values.departmentId,
         phone: values.phone,
         gender: values.gender,
         joiningDate: values.joiningDate?.toISOString().slice(0, 10),
-        ...(values.reportingTo !== employee.reportingTo ? { reportingTo: values.reportingTo ?? null } : {}),
       });
       form.reset(values);
       router.refresh();
     },
-    [employee.id, employee.reportingTo, form, router, updateProfileMutation],
+    [employee.id, form, router, updateProfileMutation],
   );
 
   const { requestLeave, dialogProps } = useUnsavedChangesGuard({
@@ -131,7 +135,7 @@ export function EditEmployeeForm({
           </div>
           <Separator />
           <div className="p-5">
-            <ProfessionalInfoSection employeeUserId={employee.id} />
+            <ProfessionalInfoSection />
           </div>
           <div className="flex shrink-0 justify-end gap-2 border-t border-border bg-muted/30 px-5 py-3.5">
             <Button

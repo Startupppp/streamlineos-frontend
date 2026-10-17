@@ -1,0 +1,355 @@
+import React from "react";
+import { render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+
+let mockFetchedModules: { id: number; name: string }[] = [];
+let lastFilterBarProps: Record<string, unknown> = {};
+const mockReplace = jest.fn();
+let mockSearchParams = new URLSearchParams();
+
+jest.mock("@/hooks/api/build/modules", () => ({
+  useModules: () => ({ data: mockFetchedModules }),
+}));
+
+jest.mock("next/navigation", () => ({
+  useRouter: () => ({ replace: mockReplace, push: jest.fn() }),
+  usePathname: () => "/build/1/issues",
+  useSearchParams: () => mockSearchParams,
+}));
+
+jest.mock("@/components/ui/select", () => {
+  const Reactm = jest.requireActual<typeof import("react")>("react");
+  const Ctx = Reactm.createContext<{ onValueChange?: (v: string) => void }>({});
+
+  function Select({
+    onValueChange,
+    children,
+  }: {
+    value?: string;
+    onValueChange?: (v: string) => void;
+    children?: React.ReactNode;
+  }) {
+    return <Ctx.Provider value={{ onValueChange }}>{children}</Ctx.Provider>;
+  }
+
+  function SelectTrigger({
+    children,
+    "aria-label": ariaLabel,
+    className,
+  }: {
+    children?: React.ReactNode;
+    "aria-label"?: string;
+    className?: string;
+  }) {
+    return (
+      <button type="button" role="combobox" aria-label={ariaLabel} className={className}>
+        {children}
+      </button>
+    );
+  }
+
+  function SelectValue({ placeholder }: { placeholder?: string }) {
+    return <span>{placeholder}</span>;
+  }
+
+  function SelectContent({ children }: { children?: React.ReactNode }) {
+    return <>{children}</>;
+  }
+
+  function SelectItem({
+    value,
+    children,
+    className,
+  }: {
+    value: string;
+    children?: React.ReactNode;
+    className?: string;
+  }) {
+    const { onValueChange } = Reactm.useContext(Ctx);
+    return (
+      <button
+        type="button"
+        role="option"
+        className={className}
+        onClick={() => onValueChange?.(value)}
+      >
+        {children}
+      </button>
+    );
+  }
+
+  return { Select, SelectTrigger, SelectValue, SelectContent, SelectItem };
+});
+
+jest.mock("@/hooks/api/access", () => ({
+  useCan: () => false,
+  useAccess: () => ({
+    data: { isOrgOwner: false, scopes: {}, modules: {} },
+    isLoading: false,
+  }),
+}));
+
+jest.mock("@/hooks/api/entitlements", () => ({
+  useEntitlements: () => ({ data: undefined }),
+}));
+
+jest.mock("@/features/build/views/view-switcher", () => ({
+  ViewSwitcher: () => null,
+  parseViewType: (v: string) => v,
+}));
+
+jest.mock("@/features/build/views/display-options-panel", () => ({
+  DisplayOptionsPanel: () => null,
+}));
+
+jest.mock("@/features/build/views/saved-views-menu", () => ({
+  SavedViewsMenu: () => null,
+}));
+
+jest.mock("@/features/build/views/workload-filter-bar", () => ({
+  WorkloadFilterBar: () => null,
+}));
+
+jest.mock("@/features/build/views/bug-qa-filters", () => ({
+  BugQaFilters: () => null,
+}));
+
+jest.mock("@/features/build/shared/ticket-filter-bar", () => ({
+  TicketFilterBar: (props: { leading?: React.ReactNode }) => {
+    lastFilterBarProps = props as Record<string, unknown>;
+    return <>{props.leading}</>;
+  },
+}));
+
+jest.mock("@/components/ui/animated-icon-button", () => ({
+  AnimatedIconButton: () => null,
+}));
+
+jest.mock("@animateicons/react/lucide", () => ({
+  BookmarkIcon: React.forwardRef(function BookmarkIcon() {
+    return null;
+  }),
+}));
+
+jest.mock("@/components/ui/loading-button", () => ({
+  LoadingButton: ({ children, onClick }: { children: React.ReactNode; onClick?: () => void }) => (
+    <button type="button" onClick={onClick}>{children}</button>
+  ),
+}));
+
+import { ProjectViewsToolbar } from "./project-views-toolbar";
+import type { DisplayOptions } from "@/features/build/shared/types";
+
+const DISPLAY_OPTIONS: DisplayOptions = {
+  columnBy: "status",
+  rowBy: "none",
+  groupBy: "status",
+  orderBy: "manual",
+  orderCompleteByRecency: false,
+  completedIssues: "all",
+  showSubIssues: false,
+  showEmptyGroups: false,
+  showEmptyColumns: false,
+  showEmptyRows: false,
+  showId: false,
+  showStatus: true,
+  showAssignee: true,
+  showPriority: true,
+  showEstimate: false,
+  showCycle: false,
+  showLabels: false,
+  showDescription: false,
+  showDueDate: false,
+  showProject: false,
+  showMilestone: false,
+  showLinks: false,
+  showTimeInStatus: false,
+  showCreated: false,
+  showUpdated: false,
+  showPRs: false,
+};
+
+const WORKLOAD_FILTERS = {
+  statCard: "all" as const,
+  cycleId: "all" as const,
+  priority: "all" as const,
+  type: "all" as const,
+  status: "all" as const,
+  assigneeId: "all" as const,
+  teamId: "all" as const,
+  showUnassigned: true,
+};
+
+const noop = () => undefined;
+
+function buildBaseToolbarProps() {
+  return {
+    view: "list" as const,
+    onViewChange: noop,
+    displayOptions: DISPLAY_OPTIONS,
+    onDisplayOptionsChange: noop,
+    projectId: 1,
+    members: [],
+    hideCompleted: false,
+    onHideCompletedChange: noop,
+    doneCount: 0,
+    workloadFilters: WORKLOAD_FILTERS,
+    onWorkloadFilterChange: noop,
+    onClearWorkloadFilters: noop,
+    filterType: "TASK",
+    filterSeverity: "",
+    filterQaState: "",
+    onQaFilterChange: noop,
+    onOpenSaveView: noop,
+  };
+}
+
+beforeEach(() => {
+  mockFetchedModules = [];
+  lastFilterBarProps = {};
+  mockReplace.mockClear();
+  mockSearchParams = new URLSearchParams();
+});
+
+describe("B-029 — the issues toolbar stays reachable at 768 px", () => {
+  it("asks for a wrapping action row and holds the single-row layout back to the large breakpoint, so Add filter, Hide done and search are not pushed off a 768 px viewport", () => {
+    render(<ProjectViewsToolbar {...buildBaseToolbarProps()} />);
+
+    expect(lastFilterBarProps.wrapActions).toBe(true);
+    expect(lastFilterBarProps.mobileSearchFirstBreakpoint).toBe("lg");
+  });
+
+  it("does not ask for a wrapping action row on the workload view, which renders its own filter bar", () => {
+    render(<ProjectViewsToolbar {...buildBaseToolbarProps()} view="workload" />);
+
+    expect(lastFilterBarProps.wrapActions).toBeUndefined();
+  });
+});
+
+describe("ProjectViewsToolbar — the module filter is a real control, not a declared one", () => {
+  it("renders the select from the project's own modules when the caller passes none", () => {
+    mockFetchedModules = [{ id: 7, name: "Payments" }];
+
+    render(<ProjectViewsToolbar {...buildBaseToolbarProps()} />);
+
+    expect(screen.getByRole("combobox", { name: /filter by module/i })).toBeInTheDocument();
+    expect(screen.getByRole("option", { name: "Payments" })).toBeInTheDocument();
+  });
+
+  it("renders no select when the project has no modules at all, so an empty control never appears", () => {
+    render(<ProjectViewsToolbar {...buildBaseToolbarProps()} />);
+
+    expect(screen.queryByRole("combobox", { name: /filter by module/i })).not.toBeInTheDocument();
+  });
+
+  it("writes the picked module into the URL when the caller wires no handler", async () => {
+    mockFetchedModules = [{ id: 7, name: "Payments" }];
+
+    render(<ProjectViewsToolbar {...buildBaseToolbarProps()} />);
+    await userEvent.click(screen.getByRole("option", { name: "Payments" }));
+
+    expect(mockReplace).toHaveBeenCalledWith(
+      expect.stringContaining("module=7"),
+      { scroll: false },
+    );
+  });
+
+  it("clears the module parameter rather than writing an empty one", async () => {
+    mockFetchedModules = [{ id: 7, name: "Payments" }];
+    mockSearchParams = new URLSearchParams("module=7");
+
+    render(<ProjectViewsToolbar {...buildBaseToolbarProps()} />);
+    await userEvent.click(screen.getByRole("option", { name: /all modules/i }));
+
+    const url = String(mockReplace.mock.calls.at(-1)?.[0] ?? "");
+    expect(url).not.toContain("module=");
+  });
+
+  it("still defers to a caller's own handler when one is passed, so the page keeps control", async () => {
+    const onModuleFilterChange = jest.fn();
+    mockFetchedModules = [{ id: 7, name: "Payments" }];
+
+    render(
+      <ProjectViewsToolbar
+        {...buildBaseToolbarProps()}
+        onModuleFilterChange={onModuleFilterChange}
+      />,
+    );
+    await userEvent.click(screen.getByRole("option", { name: "Payments" }));
+
+    expect(onModuleFilterChange).toHaveBeenCalledWith("7");
+    expect(mockReplace).not.toHaveBeenCalled();
+  });
+});
+
+describe("ProjectViewsToolbar — module filter", () => {
+  it("renders the module select when modules are provided", () => {
+    const modules = [
+      { id: 1, name: "Auth" },
+      { id: 2, name: "Payments" },
+    ];
+
+    render(
+      <ProjectViewsToolbar
+        {...buildBaseToolbarProps()}
+        modules={modules}
+        onModuleFilterChange={noop}
+      />,
+    );
+
+    expect(screen.getByRole("combobox", { name: /filter by module/i })).toBeInTheDocument();
+  });
+
+  it("does not render the module select when modules is empty", () => {
+    render(
+      <ProjectViewsToolbar
+        {...buildBaseToolbarProps()}
+        modules={[]}
+        onModuleFilterChange={noop}
+      />,
+    );
+
+    expect(screen.queryByRole("combobox", { name: /filter by module/i })).not.toBeInTheDocument();
+  });
+
+  it("selecting a module calls onModuleFilterChange with the module id, which writes the URL param", async () => {
+    const onModuleFilterChange = jest.fn();
+    const modules = [
+      { id: 42, name: "Billing" },
+      { id: 99, name: "Reporting" },
+    ];
+
+    render(
+      <ProjectViewsToolbar
+        {...buildBaseToolbarProps()}
+        modules={modules}
+        filterModule=""
+        onModuleFilterChange={onModuleFilterChange}
+      />,
+    );
+
+    await userEvent.click(screen.getByRole("combobox", { name: /filter by module/i }));
+    await userEvent.click(screen.getByRole("option", { name: "Billing" }));
+
+    expect(onModuleFilterChange).toHaveBeenCalledWith("42");
+  });
+
+  it("selecting All modules calls onModuleFilterChange with an empty string, clearing the filter", async () => {
+    const onModuleFilterChange = jest.fn();
+    const modules = [{ id: 7, name: "Sprint 1" }];
+
+    render(
+      <ProjectViewsToolbar
+        {...buildBaseToolbarProps()}
+        modules={modules}
+        filterModule="7"
+        onModuleFilterChange={onModuleFilterChange}
+      />,
+    );
+
+    await userEvent.click(screen.getByRole("combobox", { name: /filter by module/i }));
+    await userEvent.click(screen.getByRole("option", { name: /all modules/i }));
+
+    expect(onModuleFilterChange).toHaveBeenCalledWith("");
+  });
+});

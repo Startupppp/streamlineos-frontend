@@ -22,11 +22,11 @@ function AssetReturnActionButton({
     <Button
       size="sm"
       variant="outline"
-      className="text-xs gap-1.5"
+      className="gap-1.5"
       onClick={handleClick}
     >
       <CheckCircle2 className="h-3 w-3" />
-      Received
+      Mark returned
     </Button>
   );
 }

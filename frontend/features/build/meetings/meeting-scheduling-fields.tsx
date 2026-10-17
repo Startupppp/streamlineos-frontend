@@ -9,6 +9,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { BuildDateTimeField } from "@/features/build/shared/build-datetime-field";
 import type { MeetingFormValues } from "./meeting-form-schema";
 
 export function MeetingSchedulingFields() {
@@ -17,16 +18,19 @@ export function MeetingSchedulingFields() {
 
   return (
     <>
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid gap-4">
         <FormField
           control={control}
           name="scheduledAt"
           render={({ field }) => (
             <FormItem>
               <FormLabel>Start <span className="text-destructive">*</span></FormLabel>
-              <FormControl>
-                <Input {...field} type="datetime-local" className="text-sm" />
-              </FormControl>
+              <BuildDateTimeField
+                value={field.value}
+                onChange={field.onChange}
+                dateLabel="Start date"
+                timeLabel="Start time"
+              />
               <FormMessage />
             </FormItem>
           )}
@@ -37,16 +41,20 @@ export function MeetingSchedulingFields() {
           render={({ field }) => (
             <FormItem>
               <FormLabel>End</FormLabel>
-              <FormControl>
-                <Input {...field} type="datetime-local" className="text-sm" />
-              </FormControl>
+              <BuildDateTimeField
+                value={field.value}
+                onChange={field.onChange}
+                dateLabel="End date"
+                timeLabel="End time"
+                clearable
+              />
               <FormMessage />
             </FormItem>
           )}
         />
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <FormField
           control={control}
           name="durationMinutes"
@@ -54,7 +62,7 @@ export function MeetingSchedulingFields() {
             <FormItem>
               <FormLabel>Duration (min)</FormLabel>
               <FormControl>
-                <Input {...field} type="number" min="1" placeholder="30" className="text-sm" />
+                <Input {...field} type="number" min="1" placeholder="30" />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -67,7 +75,7 @@ export function MeetingSchedulingFields() {
             <FormItem>
               <FormLabel>Timezone</FormLabel>
               <FormControl>
-                <Input {...field} placeholder="UTC" className="text-sm" />
+                <Input {...field} placeholder="UTC" />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -75,11 +83,11 @@ export function MeetingSchedulingFields() {
         />
       </div>
 
-      {tz && (
-        <p className="text-dense text-muted-foreground -mt-2">
-          Timezone: <span className="font-medium">{tz}</span>
+      {tz ? (
+        <p className="text-sm text-muted-foreground">
+          Times use {tz}.
         </p>
-      )}
+      ) : null}
     </>
   );
 }

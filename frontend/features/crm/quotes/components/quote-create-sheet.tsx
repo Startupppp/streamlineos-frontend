@@ -1,5 +1,7 @@
 "use client";
 
+import { DatePicker } from "@/components/ui/date-picker";
+
 import { useEffect, useRef, useCallback } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -260,7 +262,7 @@ export function QuoteCreateSheet({
                     <FormItem>
                       <FormLabel>Valid Until</FormLabel>
                       <FormControl>
-                        <Input type="date" {...field} />
+                        <DatePicker value={field.value ?? ""} onChange={field.onChange} placeholder="Pick a date" dateFormat="dd MMM yyyy" clearable />
                       </FormControl>
                       <FormMessage />
                     </FormItem>

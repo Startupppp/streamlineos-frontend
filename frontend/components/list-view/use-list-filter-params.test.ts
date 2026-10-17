@@ -1,5 +1,5 @@
 import { act, renderHook } from "@testing-library/react";
-import type { ListFilterSpec } from "./list-filter-spec";
+import { DEFAULT_SEARCH_DEBOUNCE_MS, type ListFilterSpec } from "./list-filter-spec";
 import { useListFilterParams } from "./use-list-filter-params";
 
 const mockReplace = jest.fn();
@@ -183,6 +183,87 @@ describe("list filter params, driven by a spec", () => {
       jest.advanceTimersByTime(300);
     });
 
+    expect(mockReplace).toHaveBeenCalledTimes(1);
+  });
+
+  it("keeps a character typed while the URL write is still in flight", () => {
+    jest.useFakeTimers();
+    const { result, rerender } = renderWith("");
+
+    act(() => result.current.setSearch("annua"));
+    act(() => {
+      jest.advanceTimersByTime(300);
+    });
+    expect(lastParams().get("search")).toBe("annua");
+
+    act(() => result.current.setSearch("annual"));
+    mockSearchParams = new URLSearchParams("search=annua");
+    window.history.replaceState(null, "", "/payroll/runs?search=annua");
+    rerender();
+
+    expect(result.current.localSearch).toBe("annual");
+
+    act(() => {
+      jest.advanceTimersByTime(300);
+    });
+    expect(lastParams().get("search")).toBe("annual");
+  });
+
+  it("does not resurrect committed search text when the URL is cleared back to its original value", () => {
+    jest.useFakeTimers();
+    const { result, rerender } = renderWith("");
+
+    act(() => result.current.setSearch("annual"));
+    act(() => {
+      jest.advanceTimersByTime(300);
+    });
+
+    mockSearchParams = new URLSearchParams("search=annual");
+    window.history.replaceState(null, "", "/payroll/runs?search=annual");
+    rerender();
+    expect(result.current.localSearch).toBe("annual");
+
+    mockSearchParams = new URLSearchParams();
+    window.history.replaceState(null, "", "/payroll/runs");
+    rerender();
+
+    expect(result.current.localSearch).toBe("");
+  });
+
+  it("holds the navigation at 299 ms and releases it on the 300th, so a shorter debounce fails this test", () => {
+    jest.useFakeTimers();
+    const { result } = renderWith("");
+
+    act(() => result.current.setSearch("annual"));
+    act(() => {
+      jest.advanceTimersByTime(299);
+    });
+    expect(mockReplace).not.toHaveBeenCalled();
+
+    act(() => {
+      jest.advanceTimersByTime(1);
+    });
+    expect(mockReplace).toHaveBeenCalledTimes(1);
+    expect(lastParams().get("search")).toBe("annual");
+    expect(DEFAULT_SEARCH_DEBOUNCE_MS).toBe(300);
+  });
+
+  it("waits the spec's own debounce when the list declares one, so the default is not hardcoded into the hook", () => {
+    jest.useFakeTimers();
+    mockSearchParams = new URLSearchParams("");
+    const { result } = renderHook(() =>
+      useListFilterParams({ ...PAYROLL_RUN_SPEC, searchDebounceMs: 900 }),
+    );
+
+    act(() => result.current.setSearch("annual"));
+    act(() => {
+      jest.advanceTimersByTime(899);
+    });
+    expect(mockReplace).not.toHaveBeenCalled();
+
+    act(() => {
+      jest.advanceTimersByTime(1);
+    });
     expect(mockReplace).toHaveBeenCalledTimes(1);
   });
 

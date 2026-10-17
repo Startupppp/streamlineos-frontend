@@ -79,7 +79,7 @@ function ProgressBar({ approved, total }: { approved: number; total: number }) {
     pct === 100 ? "bg-status-success-fill" : pct > 50 ? "bg-status-info-fill" : "bg-status-warning-fill";
 
   return (
-    <div className="flex flex-col gap-1 min-w-[160px]">
+    <div className="flex flex-col gap-1 min-w-40">
       <div className="flex items-center gap-2">
         <div className="flex-1 h-1.5 rounded-full bg-muted overflow-hidden">
           <div
@@ -149,16 +149,19 @@ export function ReviewTable({ list, canReview, onOpenReview, pagination }: Revie
     {
       key: "status",
       header: "Status",
-      cell: (emp) => (
+      cell: (emp) => {
+        const status = emp.totalRequired === 0 ? null : emp.onboardingDocStatus;
+        return (
         <span
           className={cn(
             "inline-flex items-center gap-1 text-micro font-semibold px-2 py-0.5 rounded-full border",
-            getStatusBadgeClass(emp.onboardingDocStatus),
+            getStatusBadgeClass(status),
           )}
         >
-          {getStatusLabel(emp.onboardingDocStatus)}
+          {emp.totalRequired === 0 ? "Not started" : getStatusLabel(status)}
         </span>
-      ),
+        );
+      },
     },
     {
       key: "actions",

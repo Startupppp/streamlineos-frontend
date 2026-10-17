@@ -22,6 +22,8 @@ import { Progress } from "@/components/ui/progress";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/shared/error-state";
+import { PageState } from "@/components/shared/page-state";
+import { usePageState } from "@/hooks/api/use-page-state";
 import { EmptyUploadIllustration } from "@/components/illustrations";
 import { cn } from "@/lib/utils";
 import { apiClient } from "@/lib/api-client";
@@ -35,12 +37,10 @@ const storageUploadContract = lazyContract(() =>
 const onboardingDocRowContract = lazyContract(() =>
   import("@/features/hr/onboarding/onboarding-schema").then((m) => m.onboardingDocumentRowContract),
 );
-import { useHrDocumentTypes } from "@/hooks/api/hr/document-types";
+import { useHrDocumentTypes, type HrDocumentType } from "@/hooks/api/hr/document-types";
 import { useMyOnboardingDocList, useSubmitOnboardingDoc } from "@/hooks/api/hr/onboarding";
-
 import {
   DocumentChecklistRow,
-  type DocumentType,
   type OnboardingDoc,
 } from "./onboarding-document-checklist-row";
 import { UploadSheet, ACCEPTED_EXTENSIONS, validateDocumentFile } from "./onboarding-upload-sheet";
@@ -87,16 +87,19 @@ export const EmployeeDocumentsTab = forwardRef<
   } = useHrDocumentTypes();
   const submitDoc = useSubmitOnboardingDoc();
 
-  const [uploadTarget, setUploadTarget] = useState<DocumentType | null>(null);
+  const [uploadTarget, setUploadTarget] = useState<HrDocumentType | null>(null);
   const [uploadExisting, setUploadExisting] = useState<OnboardingDoc | null>(null);
   const [uploadSheetOpen, setUploadSheetOpen] = useState(false);
   const [pendingFiles, setPendingFiles] = useState<ReadonlyMap<number, File>>(new Map());
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const pickTargetRef = useRef<DocumentType | null>(null);
+  const pickTargetRef = useRef<HrDocumentType | null>(null);
 
   const isLoading = docsLoading || typesLoading;
   const isError = docsFailed || typesFailed;
   const isWizard = variant === "wizard";
+  // Both reads are disabled without self:onboarding-docs, which used to land on
+  // "No documents required" (FE-47). Resolve the surface's permission first.
+  const accessState = usePageState({ permission: "self:onboarding-docs", isLoading: false, isError: false, error: null });
 
   const handleRetryLoad = useCallback(() => {
     void refetchDocs();
@@ -133,13 +136,13 @@ export const EmployeeDocumentsTab = forwardRef<
     onCanContinueChange?.(!mandatoryUnsubmitted);
   }, [mandatoryUnsubmitted, onCanContinueChange]);
 
-  const handleOpenUpload = useCallback((dt: DocumentType, existing: OnboardingDoc | null) => {
+  const handleOpenUpload = useCallback((dt: HrDocumentType, existing: OnboardingDoc | null) => {
     setUploadTarget(dt);
     setUploadExisting(existing);
     setUploadSheetOpen(true);
   }, []);
 
-  const handlePickFile = useCallback((dt: DocumentType) => {
+  const handlePickFile = useCallback((dt: HrDocumentType) => {
     pickTargetRef.current = dt;
     fileInputRef.current?.click();
   }, []);
@@ -213,6 +216,10 @@ export const EmployeeDocumentsTab = forwardRef<
     },
     [uploadTarget, submitDoc],
   );
+
+  if (accessState.kind !== "ready") {
+    return <PageState resolution={accessState} loading={null} compact>{null}</PageState>;
+  }
 
   if (isLoading) {
     return (

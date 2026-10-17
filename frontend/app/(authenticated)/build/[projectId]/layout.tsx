@@ -18,14 +18,16 @@ function getApiErrorDetails(error: { details?: unknown }): Record<string, unknow
 
 export default async function ProjectLayout({
   children,
+  panel,
   params,
 }: {
   children: React.ReactNode;
+  panel: React.ReactNode;
   params: Promise<{ projectId: string }>;
 }) {
   const { projectId } = await params;
   const numId = Number(projectId);
-  if (isNaN(numId)) return notFound();
+  if (!Number.isInteger(numId) || numId <= 0) return notFound();
 
   let project: ProjectWithDetails | null = null;
   let hydrated: DehydratedState | null = null;
@@ -64,6 +66,7 @@ export default async function ProjectLayout({
         <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
           <RememberLastProject projectId={projectId} />
           {children}
+          {panel}
         </div>
       </HydrationBoundary>
     </ProjectHydrationProvider>

@@ -10,7 +10,7 @@ interface PanelHeaderProps {
 export function PanelHeader({ title, actions }: PanelHeaderProps) {
   return (
     <div className="flex shrink-0 min-w-0 items-center justify-between gap-2 border-b border-border/50 px-3 py-2">
-      <h2 className="min-w-0 truncate text-xs font-semibold tracking-wide text-foreground">
+      <h2 className="min-w-0 truncate text-xs font-medium tracking-wide text-foreground">
         {title}
       </h2>
       {actions ? (

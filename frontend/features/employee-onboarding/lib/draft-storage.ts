@@ -17,7 +17,7 @@ export function loadOnboardingDraft(
   try {
     const raw = localStorage.getItem(storageKey(userId, orgId));
     if (!raw) return null;
-    return parseWizardDraft(JSON.parse(raw) as unknown);
+    return parseWizardDraft(JSON.parse(raw));
   } catch {
     return null;
   }

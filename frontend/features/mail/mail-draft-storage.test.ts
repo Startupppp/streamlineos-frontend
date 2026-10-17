@@ -23,6 +23,10 @@ describe("draft keys separate compose from each reply", () => {
     expect(mailDraftKey(COMPOSE)).toBe(mailDraftKey({ type: "compose" }));
   });
 
+  it("isolates compose recovery across mailbox accounts", () => {
+    expect(mailDraftKey(COMPOSE, 7)).not.toBe(mailDraftKey(COMPOSE, 8));
+  });
+
   it("keys a reply by the message it answers, so two replies never collide", () => {
     const other: MailComposeMode = { ...REPLY, messageId: "msg-99" };
     expect(mailDraftKey(REPLY)).not.toBe(mailDraftKey(other));
@@ -31,6 +35,16 @@ describe("draft keys separate compose from each reply", () => {
 });
 
 describe("a draft survives the round trip", () => {
+  it("preserves recipients and sending account, including a recipient-only draft", () => {
+    const draft = { bodyHtml: "", accountId: 7, to: ["to@example.com"], cc: ["cc@example.com"], bcc: ["private@example.com"] };
+    writeMailDraft(mailDraftKey(COMPOSE), draft);
+    expect(readMailDraft(mailDraftKey(COMPOSE))).toEqual(draft);
+  });
+
+  it("does not share a reply draft between accounts with the same message ID", () => {
+    expect(mailDraftKey(REPLY)).not.toBe(mailDraftKey({ ...REPLY, accountId: 8 }));
+  });
+
   it("restores body and subject byte-identically", () => {
     const key = mailDraftKey(COMPOSE);
     const body = '<p>Hello &amp; welcome — "quoted", éàü</p>';

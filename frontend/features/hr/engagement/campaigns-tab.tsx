@@ -20,7 +20,8 @@ import {
 } from "@/components/ui/select";
 import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyCampaignsIllustration } from "@/components/illustrations";
-import { ErrorState } from "@/components/shared/error-state";
+import { PageState } from "@/components/shared/page-state";
+import { usePageState } from "@/hooks/api/use-page-state";
 import { HrSheet } from "@/components/shared/hr-sheet";
 import { ConfirmSheet } from "@/components/ui/confirm-sheet";
 import {
@@ -50,6 +51,8 @@ const STATUS_COLORS: Record<HrCampaign["status"], string> = {
 
 export function CampaignsTab() {
   const { data: campaigns, isLoading, isError, error, refetch } = useEngagementCampaigns();
+  const pageState = usePageState({ permission: "hr:engagement:view", isLoading, isError, error });
+  const handleRetry = useCallback(() => void refetch(), [refetch]);
   const canManage = useCan("hr:engagement:manage");
   const create = useCreateCampaign();
   const update = useUpdateCampaign();
@@ -135,16 +138,21 @@ export function CampaignsTab() {
     if (next) setStatus(next);
   }
 
-  if (isLoading) {
+  if (pageState.kind !== "ready" && pageState.kind !== "empty") {
     return (
-      <div className="space-y-3">
-        {Array.from({ length: 12 }).map((_, i) => <Skeleton key={i} className="h-24 rounded-lg" />)}
-      </div>
+      <PageState
+        resolution={pageState}
+        onRetry={handleRetry}
+        className="flex-1"
+        loading={
+          <div className="space-y-3">
+            {Array.from({ length: 12 }).map((_, i) => <Skeleton key={i} className="h-24 rounded-lg" />)}
+          </div>
+        }
+      >
+        {null}
+      </PageState>
     );
-  }
-
-  if (isError) {
-    return <ErrorState className="flex-1" title="Couldn't load campaigns" description={getErrorMessage(error)} onRetry={() => void refetch()} />;
   }
 
   return (

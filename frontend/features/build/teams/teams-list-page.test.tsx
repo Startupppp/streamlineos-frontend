@@ -1,3 +1,4 @@
+import React from "react";
 import { render, screen } from "@testing-library/react";
 import { TeamsListPage } from "./teams-list-page";
 
@@ -69,7 +70,7 @@ jest.mock("@/components/ui/page-wrapper", () => ({
 jest.mock("@/components/pm-chrome", () => ({
   PmPageShell: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
   PmSection: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
-  PM_FILL_PANEL: "",
+  CONTENT_FILL_PANEL: "",
 }));
 
 jest.mock("@/components/shared/error-state", () => ({
@@ -77,7 +78,9 @@ jest.mock("@/components/shared/error-state", () => ({
 }));
 
 jest.mock("@/components/ui/empty-state", () => ({
-  EmptyState: () => <div data-testid="empty-state" />,
+  EmptyState: ({ title }: { title?: string }) => (
+    <div data-testid="empty-state">{title ? <span>{title}</span> : null}</div>
+  ),
 }));
 
 jest.mock("@/components/ui/data-table", () => ({
@@ -122,7 +125,45 @@ jest.mock("@animateicons/react/lucide", () => ({
   EllipsisIcon: () => null,
 }));
 
-jest.mock("sonner", () => ({ toast: { success: jest.fn(), error: jest.fn() } }));
+jest.mock("sonner", () => ({ toast: { success: jest.fn(), error: jest.fn(), info: jest.fn() } }));
+
+const mockUseBuildListKeyboard = jest.fn();
+jest.mock("@/hooks/common/use-build-list-keyboard", () => ({
+  useBuildListKeyboard: (args: unknown) => mockUseBuildListKeyboard(args),
+}));
+
+const mockUseBuildListFilters = {
+  search: "",
+  debouncedSearch: "",
+  cursor: null,
+  setSearch: jest.fn(),
+  value: jest.fn((_p: string) => "all"),
+  isActive: jest.fn(() => false),
+  setValue: jest.fn(),
+  clearAll: jest.fn(),
+  activeCount: 0,
+  isFiltered: false,
+  resetKey: "0",
+  isPending: false,
+};
+jest.mock("@/features/build/shared/use-build-list-filters", () => ({
+  useBuildListFilters: () => mockUseBuildListFilters,
+  BUILD_FILTER_ALL: "all",
+}));
+
+jest.mock("@/features/build/shared/build-list-toolbar", () => ({
+  BuildListToolbar: ({ search }: { search?: { inputRef?: React.RefObject<HTMLInputElement | null>; value: string } }) =>
+    search ? <input type="search" ref={search.inputRef} aria-label="Search teams" /> : null,
+}));
+
+jest.mock("@/features/build/shared/build-header-actions", () => ({
+  BuildHeaderActions: () => null,
+}));
+
+const mockUseOnlineStatus = jest.fn(() => true);
+jest.mock("@/hooks/common/use-online-status", () => ({
+  useOnlineStatus: () => mockUseOnlineStatus(),
+}));
 
 jest.mock("@/lib/get-error-message", () => ({
   getErrorMessage: (e: unknown) => String(e),
@@ -185,6 +226,10 @@ beforeEach(() => {
   jest.clearAllMocks();
   useProjectTeams.mockReturnValue(EMPTY_TEAMS_RESULT);
   usePageState.mockReturnValue({ kind: "ready" });
+  mockUseBuildListKeyboard.mockReset();
+  mockUseBuildListFilters.value.mockReturnValue("all");
+  mockUseBuildListFilters.isFiltered = false;
+  mockUseOnlineStatus.mockReturnValue(true);
 });
 
 describe("TeamsListPage — usePageState integration (FE-40, FE-41, FE-47, FE-49)", () => {
@@ -318,6 +363,62 @@ describe("TeamsListPage — usePageState integration (FE-40, FE-41, FE-47, FE-49
     render(<TeamsListPage />);
     expect(usePageState).toHaveBeenCalledWith(
       expect.objectContaining({ isError: false }),
+    );
+  });
+
+  it("passes leadId to useProjectTeams when the leadId URL param is set", () => {
+    const LEAD_ID = "11111111-1111-1111-1111-111111111111";
+    mockUseBuildListFilters.value.mockImplementation((p: string) =>
+      p === "leadId" ? LEAD_ID : "all",
+    );
+    render(<TeamsListPage />);
+    expect(useProjectTeams).toHaveBeenCalledWith(
+      expect.objectContaining({ leadId: LEAD_ID }),
+    );
+  });
+
+  it("passes memberId to useProjectTeams when the memberId URL param is set", () => {
+    const MEMBER_ID = "22222222-2222-2222-2222-222222222222";
+    mockUseBuildListFilters.value.mockImplementation((p: string) =>
+      p === "memberId" ? MEMBER_ID : "all",
+    );
+    render(<TeamsListPage />);
+    expect(useProjectTeams).toHaveBeenCalledWith(
+      expect.objectContaining({ memberId: MEMBER_ID }),
+    );
+  });
+
+  it("renders an offline empty state when the device is offline", () => {
+    mockUseOnlineStatus.mockReturnValue(false);
+    usePageState.mockReturnValue({ kind: "empty" });
+    render(<TeamsListPage />);
+    expect(screen.getByText("You are offline")).toBeInTheDocument();
+  });
+
+  it("shows 'No teams yet' empty copy when there are no teams and no filters are active", () => {
+    usePageState.mockReturnValue({ kind: "empty" });
+    render(<TeamsListPage />);
+    expect(screen.getByText("No teams yet")).toBeInTheDocument();
+    expect(screen.queryByText("No teams match your filters")).not.toBeInTheDocument();
+  });
+
+  it("shows 'No teams match your filters' empty copy when filters are active and no teams match", () => {
+    mockUseBuildListFilters.isFiltered = true;
+    usePageState.mockReturnValue({ kind: "empty" });
+    render(<TeamsListPage />);
+    expect(screen.getByText("No teams match your filters")).toBeInTheDocument();
+    expect(screen.queryByText("No teams yet")).not.toBeInTheDocument();
+  });
+
+  it("renders a search input via BuildListToolbar so the keyboard / shortcut has a reachable DOM target", () => {
+    render(<TeamsListPage />);
+    expect(screen.getByRole("searchbox", { name: /search teams/i })).toBeInTheDocument();
+  });
+
+  it("wires onCreate to useBuildListKeyboard when the caller has build:teams:create permission", () => {
+    render(<TeamsListPage />);
+    expect(mockUseBuildListKeyboard).toHaveBeenCalledWith(
+      expect.objectContaining({ onCreate: expect.any(Function) }),
     );
   });
 });

@@ -7,8 +7,7 @@ export type PeriodStatus =
   | "SUBMITTED"
   | "APPROVED"
   | "REJECTED"
-  | "LOCKED"
-  | "REOPENED";
+  | "LOCKED";
 export type TimerStatus = "RUNNING" | "PAUSED" | "STOPPED" | "DISCARDED" | "CONVERTED";
 export type BillingType = "BILLABLE" | "NON_BILLABLE" | "FIXED";
 export type InvoicingStatus = "UNINVOICED" | "INVOICE_DRAFTED" | "INVOICED";
@@ -259,7 +258,6 @@ export const PERIOD_STATUS_BADGE: Record<PeriodStatus, string> = {
   APPROVED: "bg-status-success-surface text-status-success-ink border-status-success-rule",
   REJECTED: "bg-status-danger-surface text-status-danger-ink border-status-danger-rule",
   LOCKED: "bg-muted text-foreground border-border",
-  REOPENED: "bg-status-info-surface text-status-info-ink border-status-info-rule",
 };
 
 export const PERIOD_STATUS_LABEL: Record<PeriodStatus, string> = {
@@ -269,7 +267,6 @@ export const PERIOD_STATUS_LABEL: Record<PeriodStatus, string> = {
   APPROVED: "Approved",
   REJECTED: "Rejected",
   LOCKED: "Locked",
-  REOPENED: "Reopened",
 };
 
 export const ENTRY_STATUS_BADGE: Record<EntryStatus, string> = {

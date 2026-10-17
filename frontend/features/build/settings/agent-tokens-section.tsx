@@ -1,10 +1,11 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { Bot } from "lucide-react";
 import { PlusIcon } from "@animateicons/react/lucide";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { toast } from "sonner";
+import { useCan, usePermissionGate } from "@/hooks/api/access";
 import {
   useAgentTokens,
   useRevokeAgentToken,
@@ -14,17 +15,33 @@ import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { cn } from "@/lib/utils";
 import { PM_PANEL } from "@/components/pm-chrome";
-import { TokenRow, TokenListSkeleton, TokensEmptyHint } from "./agent-token-list";
+import { EmptyState } from "@/components/ui/empty-state";
+import { TokenRow, TokenListSkeleton } from "./agent-token-list";
 import { CreateTokenDialog } from "./agent-token-create-dialog";
 import { SetupHelp } from "./agent-token-setup-help";
 
-export function AgentTokensSection() {
+interface AgentTokensSectionProps {
+  createRef?: React.RefObject<(() => void) | null>;
+}
+
+export function AgentTokensSection({ createRef }: AgentTokensSectionProps = {}) {
+  const canManageTokens = useCan("settings:api-tokens:write");
+  const readGate = usePermissionGate("settings:api-tokens:read");
   const { data: tokens, isLoading, isError, refetch } = useAgentTokens();
   const revokeToken = useRevokeAgentToken();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [revokeId, setRevokeId] = useState<number | null>(null);
 
   const handleOpenDialog = useCallback(() => setDialogOpen(true), []);
+
+  useEffect(() => {
+    if (createRef && canManageTokens) {
+      createRef.current = handleOpenDialog;
+    }
+    return () => {
+      if (createRef) createRef.current = null;
+    };
+  }, [createRef, canManageTokens, handleOpenDialog]);
 
   const handleRevoke = useCallback((id: number) => setRevokeId(id), []);
 
@@ -55,7 +72,7 @@ export function AgentTokensSection() {
         <div className="min-w-0 space-y-0.5">
           <div className="flex items-center gap-2">
             <Bot className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />
-            <h3 className="text-sm font-semibold tracking-tight text-foreground">
+            <h3 className="text-sm font-medium tracking-tight text-foreground">
               AI Agent Access (MCP)
             </h3>
           </div>
@@ -64,16 +81,18 @@ export function AgentTokensSection() {
             In Review — scoped to your access.
           </p>
         </div>
-        <AnimatedIconButton
-          size="sm"
-          className="h-9 w-full shrink-0 sm:h-8 sm:w-auto"
-          onClick={handleOpenDialog}
-          icon={PlusIcon}
-          iconSize={16}
-          iconClassName="mr-1"
-        >
-          New token
-        </AnimatedIconButton>
+        {canManageTokens ? (
+          <AnimatedIconButton
+            size="sm"
+            className="h-9 w-full shrink-0 sm:h-8 sm:w-auto"
+            onClick={handleOpenDialog}
+            icon={PlusIcon}
+            iconSize={16}
+            iconClassName="mr-1"
+          >
+            New token
+          </AnimatedIconButton>
+        ) : null}
       </div>
 
       {isLoading ? (
@@ -88,11 +107,26 @@ export function AgentTokensSection() {
       ) : tokens && tokens.length > 0 ? (
         <div className="overflow-hidden rounded-lg border border-border/50">
           {tokens.map((token) => (
-            <TokenRow key={token.id} token={token} onRevoke={handleRevoke} />
+            <TokenRow
+              key={token.id}
+              token={token}
+              onRevoke={handleRevoke}
+              canRevoke={canManageTokens}
+            />
           ))}
         </div>
       ) : (
-        <TokensEmptyHint />
+        <EmptyState
+          compact
+          illustrationSize="xs"
+          access={readGate}
+          title="No tokens yet"
+          description={
+            canManageTokens
+              ? "Use New token above to connect an AI agent to your projects."
+              : "Ask a member who can manage API tokens to issue one for your agent."
+          }
+        />
       )}
 
       <SetupHelp />

@@ -3,23 +3,97 @@ import { queryKeyBase as base, type QueryKeyParams } from "./base";
 export const platformHierarchyQueryKeys = {
   calendar: {
     all: [...base, "calendar"] as const,
-    events: (start: string, end: string, sources?: readonly string[]) =>
+    eventsAll: [...base, "calendar", "events"] as const,
+    eventsForIdentity: (orgId: string, userId: string) =>
+      [...base, "calendar", "events", orgId, userId] as const,
+    events: (
+      orgId: string,
+      userId: string,
+      start: string,
+      end: string,
+      sources?: readonly string[],
+      timeZone?: string,
+    ) =>
       sources === undefined
-        ? ([...base, "calendar", "events", start, end] as const)
-        : ([...base, "calendar", "events", start, end, sources] as const),
+        ? (timeZone === undefined
+            ? ([...base, "calendar", "events", orgId, userId, start, end] as const)
+            : ([...base, "calendar", "events", orgId, userId, start, end, timeZone] as const))
+        : ([
+            ...base,
+            "calendar",
+            "events",
+            orgId,
+            userId,
+            start,
+            end,
+            sources,
+            ...(timeZone === undefined ? [] : [timeZone]),
+          ] as const),
+    history: (orgId: string, userId: string, before: string) =>
+      [
+        ...base,
+        "calendar",
+        "events",
+        "history",
+        orgId,
+        userId,
+        before,
+      ] as const,
+    searchAll: [...base, "calendar", "search"] as const,
+    search: (orgId: string, userId: string, membershipId: number | null, accessVersion: number, readScope: string, canView: boolean, filters: Readonly<object>) =>
+      [...base, "calendar", "search", orgId, userId, membershipId, accessVersion, readScope, canView, filters] as const,
+    savedViews: [...base, "calendar", "saved-views"] as const,
+    savedViewsForAccess: (membershipId: number | null, version: number, readScope: string, peopleScope: string, adminScope: string, isOrgOwner: boolean) =>
+      [...base, "calendar", "saved-views", membershipId, version, readScope, peopleScope, adminScope, isOrgOwner] as const,
+    protectedWork: [...base, "calendar", "protected-work"] as const,
+    commitments: [...base, "calendar", "commitments"] as const,
+    coach: (orgId: string, userId: string) => [...base, "calendar", "coach", orgId, userId] as const,
+    capacity: (orgId: string, userId: string, input?: Readonly<object>) => [...base, "calendar", "capacity", orgId, userId, input] as const,
+    offlinePolicy: (orgId: string, userId: string) => [...base, "calendar", "offline-policy", orgId, userId] as const,
     attendees: (eventId: number) =>
       [...base, "calendar", "attendees", eventId] as const,
-    orgMembers: (limit: number) => [...base, "calendar", "orgMembers", limit] as const,
+    orgMembers: (limit: number) =>
+      [...base, "calendar", "orgMembers", limit] as const,
     orgMembersAll: [...base, "calendar", "orgMembers"] as const,
     memberSearch: (search: string, limit: number) =>
       [...base, "calendar", "memberSearch", search, limit] as const,
     memberSearchAll: [...base, "calendar", "memberSearch"] as const,
-    externalEvents: (start: string, end: string) =>
-      [...base, "calendar", "externalEvents", start, end] as const,
-    hrSupplemental: (from: string, to: string) =>
-      [...base, "calendar", "hr-supplemental", from, to] as const,
-    sources: () => [...base, "calendar", "sources"] as const,
-    eventDetail: (eventId: number) => [...base, "calendar", "event", eventId] as const,
+    externalEventsAll: [...base, "calendar", "externalEvents"] as const,
+    externalEvents: (
+      orgId: string,
+      userId: string,
+      start: string,
+      end: string,
+    ) =>
+      [
+        ...base,
+        "calendar",
+        "externalEvents",
+        orgId,
+        userId,
+        start,
+        end,
+      ] as const,
+    hrSupplemental: (orgId: string, from: string, to: string) =>
+      [...base, "calendar", "hr-supplemental", orgId, from, to] as const,
+    hrSupplementalAll: [...base, "calendar", "hr-supplemental"] as const,
+    sourcesAll: [...base, "calendar", "sources"] as const,
+    sources: (orgId: string, userId: string) =>
+      [...base, "calendar", "sources", orgId, userId] as const,
+    eventDetail: (eventId: number) =>
+      [...base, "calendar", "event", eventId] as const,
+    sourceActionCapabilities: [
+      ...base,
+      "calendar",
+      "source-actions",
+      "capabilities",
+    ] as const,
+    sourceActionProposals: (orgId: string, userId: string) =>
+      [...base, "calendar", "source-actions", "proposals", orgId, userId] as const,
+    sourceActionProposal: (orgId: string, userId: string, proposalId: string) =>
+      [...base, "calendar", "source-actions", "proposal", orgId, userId, proposalId] as const,
+    meetingWorkspace: (eventId: number) =>
+      [...base, "calendar", "meeting-workspace", eventId] as const,
   },
 
   integrations: {
@@ -56,7 +130,13 @@ export const platformHierarchyQueryKeys = {
         ? ([...base, "salesAnalytics", "repComparison"] as const)
         : rep2Id === undefined
           ? ([...base, "salesAnalytics", "repComparison", rep1Id] as const)
-          : ([...base, "salesAnalytics", "repComparison", rep1Id, rep2Id] as const),
+          : ([
+              ...base,
+              "salesAnalytics",
+              "repComparison",
+              rep1Id,
+              rep2Id,
+            ] as const),
     sourceReport: () => [...base, "salesAnalytics", "sourceReport"] as const,
   },
 
@@ -91,5 +171,4 @@ export const platformHierarchyQueryKeys = {
         : ([...base, "hierarchy", "costCenters"] as const),
     tree: () => [...base, "hierarchy", "tree"] as const,
   },
-
 } as const;

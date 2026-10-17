@@ -1,6 +1,7 @@
-﻿"use client";
+"use client";
 
-import { useState, useEffect, memo } from "react";
+import { useState, memo } from "react";
+import { useSourceOverride } from "@/hooks/common/use-source-override";
 import {
   ResponsivePopover,
   ResponsivePopoverContent,
@@ -12,95 +13,13 @@ import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useUpdateTicket, useAddLabelToTicket, useRemoveLabelFromTicket } from "@/hooks/api/build/tickets";
 import { useProjectLabels } from "@/hooks/api/build/projects";
-import { useCycles } from "@/hooks/api/build/advanced";
+import { useModules } from "@/hooks/api/build/modules";
 import { popoverOptionBaseClass, popoverOptionSelectedClass } from "../shared/popover-option-classes";
 import { LabelsSearchCommand } from "../shared/labels-search-command";
-import { typeConfig } from "../shared/types";
-import { TicketTypeIcon } from "../shared/ticket-type-icon";
-import { InlineFieldWrapper } from "./card-inline-fields";
-import { Check, Tag, RefreshCw } from "lucide-react";
+import { InlineFieldWrapper } from "./card-field-wrapper";
+import { Boxes, Check, Tag } from "lucide-react";
 import type { TicketLabel } from "@/types/projects";
 import { resolveLabelColor } from "@/components/labels/label-colors";
-
-const INLINE_TYPES = ["TASK", "BUG", "STORY", "EPIC"] as const;
-
-const TYPE_PILL_CLASS: Record<string, string> = {
-  BUG: "bg-status-info-surface text-status-info-ink",
-  TASK: "bg-muted text-muted-foreground",
-  STORY: "bg-status-success-surface text-status-success-ink",
-  EPIC: "bg-category-orange-surface text-category-orange-ink",
-  SUBTASK: "bg-muted text-muted-foreground",
-};
-
-interface InlineTypeProps {
-  ticketId: number;
-  projectId: number;
-  currentType?: string | null;
-  showLabel?: boolean;
-}
-
-export const InlineType = memo(function InlineType({
-  ticketId,
-  projectId,
-  currentType,
-  showLabel = false,
-}: InlineTypeProps) {
-  const [open, setOpen] = useState(false);
-  const updateTicket = useUpdateTicket(projectId, {
-    onError: (e) => toast.error(getErrorMessage(e)),
-  });
-
-  function makeTypeHandler(type: string) {
-    return function selectType() {
-      updateTicket.mutate({ ticketId, type });
-      setOpen(false);
-    };
-  }
-
-  return (
-    <InlineFieldWrapper>
-      <ResponsivePopover open={open} onOpenChange={setOpen}>
-        <ResponsivePopoverTrigger asChild>
-          <button
-            type="button"
-            className={cn(
-              "inline-flex items-center rounded p-0.5 hover:bg-muted/60 transition-colors",
-              showLabel &&
-                cn(
-                  "gap-1 rounded-full px-2 py-0.5 text-xs font-medium hover:opacity-90",
-                  TYPE_PILL_CLASS[currentType ?? "TASK"] ?? TYPE_PILL_CLASS.TASK,
-                ),
-            )}
-            aria-label="Change type"
-          >
-            {showLabel ? (
-              typeConfig[currentType ?? "TASK"]?.label ?? currentType ?? "Task"
-            ) : (
-              <TicketTypeIcon type={currentType ?? "TASK"} size="sm" />
-            )}
-          </button>
-        </ResponsivePopoverTrigger>
-        <ResponsivePopoverContent title="Type" className={cn("p-1", INLINE_POPOVER_MIN_CLASS, "min-w-32")} align="start">
-          {INLINE_TYPES.map((t) => (
-            <button
-              key={t}
-              type="button"
-              onClick={makeTypeHandler(t)}
-              className={cn(
-                popoverOptionBaseClass,
-                currentType === t && popoverOptionSelectedClass,
-              )}
-            >
-              <TicketTypeIcon type={t} size="sm" />
-              {typeConfig[t]?.label ?? t}
-              {currentType === t && <Check className="ml-auto h-3 w-3" />}
-            </button>
-          ))}
-        </ResponsivePopoverContent>
-      </ResponsivePopover>
-    </InlineFieldWrapper>
-  );
-});
 
 interface InlineLabelsProps {
   ticketId: number;
@@ -114,26 +33,20 @@ export const InlineLabels = memo(function InlineLabels({
   currentLabelIds = [],
 }: InlineLabelsProps) {
   const [open, setOpen] = useState(false);
-  const [optimisticIds, setOptimisticIds] = useState<number[] | null>(null);
   const { data: labels = [] } = useProjectLabels(projectId);
   const currentIdsKey = currentLabelIds.join(",");
-
-  useEffect(() => {
-    setOptimisticIds(null);
-  }, [currentIdsKey]);
-
-  const selectedIds = optimisticIds ?? currentLabelIds;
+  const [selectedIds, setOptimisticIds] = useSourceOverride(currentIdsKey, currentLabelIds);
   const selectedLabels = labels.filter((label) => selectedIds.includes(label.id));
 
   const addLabel = useAddLabelToTicket({
     onError: (e) => {
-      setOptimisticIds(null);
+      setOptimisticIds(currentLabelIds);
       toast.error(getErrorMessage(e));
     },
   });
   const removeLabel = useRemoveLabelFromTicket({
     onError: (e) => {
-      setOptimisticIds(null);
+      setOptimisticIds(currentLabelIds);
       toast.error(getErrorMessage(e));
     },
   });
@@ -170,7 +83,8 @@ export const InlineLabels = memo(function InlineLabels({
                 {selectedLabels.slice(0, 2).map((label) => (
                   <span
                     key={label.id}
-                    className="max-w-[7.5rem] truncate rounded-full bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground"
+                    title={label.name}
+                    className="max-w-[7.5rem] truncate rounded-full bg-muted px-2 py-0.5 text-xs font-normal text-muted-foreground"
                     style={{
                       backgroundColor: `${resolveLabelColor(label.color)}1a`,
                       color: resolveLabelColor(label.color),
@@ -204,28 +118,36 @@ export const InlineLabels = memo(function InlineLabels({
   );
 });
 
-interface InlineCycleProps {
+interface InlineModuleProps {
   ticketId: number;
   projectId: number;
-  currentCycleId?: number | null;
+  version: number;
+  currentModuleId?: number | null;
+  hideEmpty?: boolean;
 }
 
-export const InlineCycle = memo(function InlineCycle({
+export const InlineModule = memo(function InlineModule({
   ticketId,
   projectId,
-  currentCycleId,
-}: InlineCycleProps) {
+  version,
+  currentModuleId,
+  hideEmpty = false,
+}: InlineModuleProps) {
   const [open, setOpen] = useState(false);
-  const { data: cycles = [] } = useCycles(projectId);
+  const { data: modules = [] } = useModules(projectId);
   const updateTicket = useUpdateTicket(projectId, {
     onError: (e) => toast.error(getErrorMessage(e)),
   });
 
-  const currentCycle = cycles.find((c) => c.id === currentCycleId);
+  const currentModule = modules.find((module) => module.id === currentModuleId);
 
-  function makeCycleHandler(cycleId: number | null) {
-    return function selectCycle() {
-      updateTicket.mutate({ ticketId, cycleId });
+  if (hideEmpty && currentModuleId == null) {
+    return null;
+  }
+
+  function makeModuleHandler(moduleId: number | null) {
+    return function selectModule() {
+      updateTicket.mutate({ ticketId, version, moduleId });
       setOpen(false);
     };
   }
@@ -236,48 +158,57 @@ export const InlineCycle = memo(function InlineCycle({
         <ResponsivePopoverTrigger asChild>
           <button
             type="button"
-            className="inline-flex items-center gap-1 rounded px-1 py-0.5 hover:bg-muted/60 transition-colors"
-            aria-label="Change cycle"
+            className="inline-flex max-w-full items-center gap-1 rounded px-1 py-0.5 transition-colors hover:bg-muted/60"
+            aria-label="Change module"
           >
-            <RefreshCw
+            <Boxes
               className={cn(
                 "h-3 w-3 shrink-0",
-                currentCycle ? "text-foreground" : "text-muted-foreground",
+                currentModule ? "text-foreground" : "text-muted-foreground",
               )}
             />
             <span
               className={cn(
-                "max-w-[60px] truncate text-micro",
-                currentCycle ? "text-foreground" : "text-muted-foreground",
+                "max-w-[7.5rem] truncate text-micro",
+                currentModule ? "text-foreground" : "text-muted-foreground",
               )}
             >
-              {currentCycle ? currentCycle.name : "No cycle"}
+              {currentModule?.name ?? "No module"}
             </span>
           </button>
         </ResponsivePopoverTrigger>
-        <ResponsivePopoverContent title="Cycle" className={cn("p-1", INLINE_POPOVER_MIN_CLASS, "min-w-44")} align="start">
+        <ResponsivePopoverContent
+          title="Module"
+          className={cn("p-1", INLINE_POPOVER_MIN_CLASS, "min-w-44")}
+          align="start"
+        >
           <button
             type="button"
-            onClick={makeCycleHandler(null)}
-            className={cn(popoverOptionBaseClass, !currentCycleId && popoverOptionSelectedClass)}
+            onClick={makeModuleHandler(null)}
+            className={cn(
+              popoverOptionBaseClass,
+              currentModuleId == null && popoverOptionSelectedClass,
+            )}
           >
-            <RefreshCw className="h-3 w-3 shrink-0 text-muted-foreground" />
-            No cycle
-            {!currentCycleId && <Check className="ml-auto h-3 w-3" />}
+            <Boxes className="h-3 w-3 shrink-0 text-muted-foreground" />
+            No module
+            {currentModuleId == null ? <Check className="ml-auto h-3 w-3" /> : null}
           </button>
-          {cycles.map((cycle) => (
+          {modules.map((module) => (
             <button
-              key={cycle.id}
+              key={module.id}
               type="button"
-              onClick={makeCycleHandler(cycle.id)}
+              onClick={makeModuleHandler(module.id)}
               className={cn(
                 popoverOptionBaseClass,
-                currentCycleId === cycle.id && popoverOptionSelectedClass,
+                currentModuleId === module.id && popoverOptionSelectedClass,
               )}
             >
-              <RefreshCw className="h-3 w-3 shrink-0 text-muted-foreground" />
-              <span className="truncate">{cycle.name}</span>
-              {currentCycleId === cycle.id && <Check className="ml-auto h-3 w-3 shrink-0" />}
+              <Boxes className="h-3 w-3 shrink-0 text-muted-foreground" />
+              <span className="truncate">{module.name}</span>
+              {currentModuleId === module.id ? (
+                <Check className="ml-auto h-3 w-3 shrink-0" />
+              ) : null}
             </button>
           ))}
         </ResponsivePopoverContent>

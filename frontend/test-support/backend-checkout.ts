@@ -43,6 +43,11 @@ function pairedWorktree(here: string): string | null {
 }
 
 export function backendRoot(): string | null {
+  const override = process.env.STREAMLINE_BACKEND_ROOT;
+  if (override) {
+    const root = path.resolve(override);
+    return fs.existsSync(path.join(root, "src", "modules")) ? root : null;
+  }
   const here = path.resolve(__dirname, "..");
   const paired = pairedWorktree(here);
   const candidates = paired === null ? CANDIDATES : [paired, ...CANDIDATES];

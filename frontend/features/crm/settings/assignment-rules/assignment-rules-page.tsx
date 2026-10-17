@@ -32,7 +32,7 @@ import {
   useUpdateAssignmentRule,
   type AssignmentRule,
   type CreateAssignmentRuleInput,
-} from "@/hooks/api/crm-settings";
+} from "@/hooks/api/crm/settings/assignment-rules";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { queryKeys } from "@/lib/query-keys";
 import { ASSIGNMENT_RULE_LAYOUT } from "@/lib/renderer/crm/settings/assignment-rule-layout";

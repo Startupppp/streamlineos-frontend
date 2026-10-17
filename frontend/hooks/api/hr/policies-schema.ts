@@ -38,7 +38,8 @@ const hrPolicyScopeRowSchema = z.object({
   policyId: z.number().int(),
   scopeType: z.enum(HR_SCOPE_TYPE_ENUM),
   scopeValue: z.string(),
-  createdAt: z.string(),
+  // Seeded scopes predate the column. A missing timestamp must not crash the list.
+  createdAt: z.string().optional(),
 });
 
 export const hrPolicyRowContract = z.object({

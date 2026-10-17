@@ -1,13 +1,20 @@
-﻿"use client";
+"use client";
 
-import { useMemo } from "react";
+import { useMemo, type ReactNode } from "react";
+import { AlertTriangle, CheckCircle2, FolderKanban, Settings2, Users } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 import { useProjectTemplates } from "@/hooks/api/build/templates";
-import { useOrgMembers } from "@/hooks/api/organization";
-import { getUserDisplayName } from "@/lib/person-display";
+import { useSimpleClientsList } from "@/hooks/api/crm/clients";
 import type { WizardDraft } from "../use-project-create";
+import { useWizardMembers, useWizardSessionUser } from "../use-wizard-members";
+import { resolveWizardMemberLabel } from "../resolve-wizard-member-label";
 
 interface StepReviewProps {
   draft: WizardDraft;
+  keyConflictMessage?: string | null;
+  onGoToBasics?: () => void;
 }
 
 const WORKFLOW_LABELS: Record<string, string> = {
@@ -19,92 +26,171 @@ const WORKFLOW_LABELS: Record<string, string> = {
   custom: "Custom",
 };
 
-export function StepReview({ draft }: StepReviewProps) {
-  const { data: templates } = useProjectTemplates();
-  const { data: membersData } = useOrgMembers(1, 100);
-  const members = useMemo(() => membersData?.data ?? [], [membersData]);
+const FEATURE_LABELS: Record<string, string> = {
+  backlog: "Backlog",
+  kanban: "Kanban Board",
+  epics: "Epics",
+  bugs: "Bug Tracker",
+  qa: "QA / Testing",
+  releases: "Releases",
+  timeTracking: "Time Tracking",
+  approvals: "Approvals",
+  devops: "DevOps / CI",
+  chat: "Chat",
+  docs: "Docs / Wiki",
+  budget: "Budget",
+  clientPortal: "Client Portal",
+  changeRequests: "Change Requests",
+  forms: "Forms",
+  automations: "Automations",
+  ai: "AI Assistant",
+};
+
+export function StepReview({ draft, keyConflictMessage, onGoToBasics }: StepReviewProps) {
+  const sessionUser = useWizardSessionUser();
+  const { data: templatePages } = useProjectTemplates();
+  const members = useWizardMembers(100);
+  const { data: clientsList } = useSimpleClientsList();
 
   const selectedLabels = useMemo(
-    () =>
-      draft.memberIds.map((id) => {
-        const m = members.find((x) => x.userId === id);
-        if (!m) return "Unknown member";
-        return getUserDisplayName({ name: m.name, email: m.email });
-      }),
-    [draft.memberIds, members],
+    () => draft.memberIds.map((id) => resolveWizardMemberLabel(id, members, sessionUser, "Unknown member")),
+    [draft.memberIds, members, sessionUser],
   );
-
-  const teamLabel =
-    selectedLabels.length === 0
-      ? "No members added"
-      : [
-          ...selectedLabels.slice(0, 2),
-          ...(selectedLabels.length > 2
-            ? [`+${selectedLabels.length - 2} more`]
-            : []),
-        ].join(", ");
-  const templateName =
-    draft.templateId !== null
-      ? (templates ?? []).find((t) => t.id === draft.templateId)?.name ?? "Unknown template"
-      : "Blank";
-
-  const moduleEntries: Array<[string, boolean]> = [
-    ["Sprints", draft.modules.sprints],
-    ["Epics", draft.modules.epics],
-    ["Time Tracking", draft.modules.timeTracking],
-    ["Wiki", draft.modules.wiki],
-  ];
-  const enabledModules = moduleEntries.filter(([, enabled]) => enabled).map(([name]) => name);
+  const templateName = draft.templateId !== null
+    ? ((templatePages?.pages.flatMap((page) => page.data) ?? []).find((template) => template.id === draft.templateId)?.name ?? "Unknown template")
+    : "Blank project";
+  const managerLabel = useMemo(
+    () => resolveWizardMemberLabel(draft.managerId, members, sessionUser, "No manager"),
+    [draft.managerId, members, sessionUser],
+  );
+  const clientLabel = useMemo(() => {
+    if (!draft.clientId) return "No client";
+    return clientsList?.find((client) => String(client.id) === draft.clientId)?.name ?? "Unknown client";
+  }, [draft.clientId, clientsList]);
+  const enabledFeatures = useMemo(() => {
+    const labels = Object.entries(draft.features)
+      .filter(([, enabled]) => enabled)
+      .flatMap(([key]) => FEATURE_LABELS[key] ? [FEATURE_LABELS[key]] : []);
+    if (draft.modules.epics && !draft.features.epics) labels.push("Epics");
+    if (draft.modules.wiki && !draft.features.docs) labels.push("Wiki");
+    return labels;
+  }, [draft.features, draft.modules]);
 
   return (
     <div className="space-y-4">
-      <p className="text-sm text-muted-foreground">Review your settings before creating the project.</p>
+      <p className="text-sm text-muted-foreground">Review the details before creating the project.</p>
+      {keyConflictMessage ? (
+        <div className="flex items-start gap-3 rounded-xl border border-status-warning-rule bg-status-warning-surface p-3">
+          <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-status-warning-fill text-foreground">
+            <AlertTriangle className="size-4" aria-hidden="true" />
+          </span>
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-medium text-foreground">Project key already taken</p>
+            <p className="text-xs text-muted-foreground">{keyConflictMessage}</p>
+            {onGoToBasics && (
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="mt-2"
+                onClick={onGoToBasics}
+              >
+                Fix Key
+              </Button>
+            )}
+          </div>
+        </div>
+      ) : (
+        <div className="flex items-start gap-3 rounded-xl border border-status-success-rule bg-status-success-surface p-3">
+          <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-status-success-fill text-primary-foreground">
+            <CheckCircle2 className="size-4" aria-hidden="true" />
+          </span>
+          <div>
+            <p className="text-sm font-medium text-foreground">Ready to create</p>
+            <p className="text-xs text-muted-foreground">Review the project scope, delivery setup, and Build members below.</p>
+          </div>
+        </div>
+      )}
 
-      <div className="rounded-xl border divide-y">
-        <ReviewRow label="Project Name" value={draft.name} />
-        {!draft.templateId && <ReviewRow label="Project Key" value={draft.key} />}
-        {draft.description && <ReviewRow label="Description" value={draft.description} />}
-        {draft.startDate && <ReviewRow label="Start Date" value={draft.startDate} />}
-        {draft.endDate && <ReviewRow label="End Date" value={draft.endDate} />}
+      <ReviewSection icon={<FolderKanban className="size-4" />} title="Project">
+        <ReviewGrid>
+          <ReviewField label="Name" value={draft.name} />
+          {!draft.templateId ? <ReviewField label="Key" value={draft.key} mono /> : null}
+          <ReviewField label="Type" value={draft.projectType || "Not specified"} muted={!draft.projectType} />
+          <ReviewField label="Template" value={templateName} />
+          {draft.clientId ? <ReviewField label="Client" value={clientLabel} /> : null}
+          {draft.description ? <ReviewField label="Description" value={draft.description} wide /> : null}
+        </ReviewGrid>
+      </ReviewSection>
 
-        <ReviewRow
-          label="Project Type"
-          value={draft.projectType || "Not specified"}
-          muted={!draft.projectType}
-        />
-        <ReviewRow label="Template" value={templateName} />
-        <ReviewRow
-          label="Modules"
-          value={enabledModules.length > 0 ? enabledModules.join(", ") : "None"}
-          muted={enabledModules.length === 0}
-        />
-        <ReviewRow
-          label="Workflow"
-          value={WORKFLOW_LABELS[draft.workflow] ?? draft.workflow}
-        />
-        <ReviewRow
-          label="Team"
-          value={teamLabel}
-          muted={draft.memberIds.length === 0}
-        />
-      </div>
+      <ReviewSection icon={<Settings2 className="size-4" />} title="Delivery">
+        <ReviewGrid>
+          <ReviewField label="Workflow" value={WORKFLOW_LABELS[draft.workflow] ?? draft.workflow} />
+          <ReviewField label="Schedule" value={formatSchedule(draft.startDate, draft.endDate)} muted={!draft.startDate && !draft.endDate} />
+        </ReviewGrid>
+        <div className="mt-3 border-t border-border pt-3">
+          <p className="mb-2 text-micro font-medium uppercase tracking-wide text-muted-foreground">Enabled features</p>
+          <div className="flex flex-wrap gap-1.5">
+            {enabledFeatures.length ? enabledFeatures.map((feature) => (
+              <Badge key={feature} variant="secondary" className="font-normal">{feature}</Badge>
+            )) : <span className="text-xs text-muted-foreground">None</span>}
+          </div>
+        </div>
+      </ReviewSection>
+
+      <ReviewSection icon={<Users className="size-4" />} title="People">
+        <ReviewGrid>
+          <ReviewField label="Project manager" value={managerLabel} muted={!draft.managerId} />
+          <ReviewField label="Build members" value={selectedLabels.length ? `${selectedLabels.length} selected` : "No members added"} muted={!selectedLabels.length} />
+        </ReviewGrid>
+        {selectedLabels.length ? (
+          <div className="mt-3 flex flex-wrap gap-1.5 border-t border-border pt-3">
+            {selectedLabels.slice(0, 2).map((label) => <Badge key={label} variant="outline">{label}</Badge>)}
+            {selectedLabels.length > 2 ? <Badge variant="secondary">+{selectedLabels.length - 2} more</Badge> : null}
+          </div>
+        ) : null}
+      </ReviewSection>
     </div>
   );
 }
 
-interface ReviewRowProps {
+function formatSchedule(startDate: string | undefined, endDate: string | undefined): string {
+  if (startDate && endDate) return `${startDate} – ${endDate}`;
+  if (startDate) return `Starts ${startDate}`;
+  if (endDate) return `Due ${endDate}`;
+  return "No dates set";
+}
+
+function ReviewSection({ icon, title, children }: { icon: ReactNode; title: string; children: ReactNode }) {
+  return (
+    <section className="rounded-xl border border-border bg-card p-4 shadow-xs">
+      <div className="mb-3 flex items-center gap-2">
+        <span className="flex size-7 items-center justify-center rounded-md bg-muted text-muted-foreground" aria-hidden="true">{icon}</span>
+        <h3 className="text-sm font-medium text-foreground">{title}</h3>
+      </div>
+      {children}
+    </section>
+  );
+}
+
+function ReviewGrid({ children }: { children: ReactNode }) {
+  return <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">{children}</div>;
+}
+
+function ReviewField({ label, value, muted = false, mono = false, wide = false }: {
   label: string;
   value: string;
   muted?: boolean;
-}
-
-function ReviewRow({ label, value, muted = false }: ReviewRowProps) {
+  mono?: boolean;
+  wide?: boolean;
+}) {
   return (
-    <div className="flex items-start justify-between gap-4 px-4 py-3">
-      <span className="text-xs font-medium text-muted-foreground shrink-0 pt-px">{label}</span>
-      <span className={muted ? "text-sm text-muted-foreground text-right" : "text-sm font-medium text-right"}>
-        {value}
-      </span>
+    <div className={cn(wide ? "sm:col-span-2" : undefined, "min-w-0")}>
+      <p className="text-micro font-medium uppercase tracking-wide text-muted-foreground">{label}</p>
+      <p className={cn(
+        "mt-1 text-sm break-words",
+        muted ? "text-muted-foreground" : mono ? "font-mono text-foreground" : "font-medium text-foreground",
+      )}>{value}</p>
     </div>
   );
 }

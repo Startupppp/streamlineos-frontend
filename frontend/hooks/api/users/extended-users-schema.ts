@@ -162,6 +162,7 @@ const invitationItemContract = z.object({
   status: z.enum(["PENDING", "ACCEPTED", "DECLINED", "EXPIRED", "REVOKED"]),
   revokedAt: z.string().nullable(),
   declinedAt: z.string().nullable(),
+  moduleAccess: z.array(z.object({ moduleKey: z.string(), standing: z.enum(["MEMBER", "ADMIN"]) })).default([]),
   deliveryFailed: z.boolean(),
 });
 
@@ -187,6 +188,13 @@ export const bulkInviteContract = z.object({
 });
 
 export const userSuccessContract = z.object({ success: z.literal(true) });
+
+export const invitationResendContract = z.object({
+  success: z.literal(true),
+  deliveryQueued: z.boolean(),
+  deliveryFailureReason: z.string().nullable(),
+}).strict();
+export type InvitationResendResponse = z.infer<typeof invitationResendContract>;
 
 export const invitationJoinLinkContract = z.object({
   joinUrl: z.string(),

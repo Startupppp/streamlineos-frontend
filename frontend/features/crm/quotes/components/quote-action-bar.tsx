@@ -8,6 +8,9 @@ import {
   Trash2,
   FileCheck2,
   Receipt,
+  FolderKanban,
+  ExternalLink,
+  PenLine,
   Pencil,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -35,6 +38,9 @@ interface QuoteActionBarProps {
   onApprove: () => void;
   onApprovalRejectOpen: () => void;
   onConvertToInvoice: () => void;
+  onOpenProject?: () => void;
+  onOpenInvoice?: () => void;
+  onCreateSigningEnvelope: () => void;
   onMarkSignedOpen: () => void;
   onDelete: () => void;
   updateStatusPending: boolean;
@@ -54,6 +60,9 @@ export function QuoteActionBar({
   onApprove,
   onApprovalRejectOpen,
   onConvertToInvoice,
+  onOpenProject,
+  onOpenInvoice,
+  onCreateSigningEnvelope,
   onMarkSignedOpen,
   onDelete,
   updateStatusPending,
@@ -62,10 +71,12 @@ export function QuoteActionBar({
   convertPending,
   deletePending,
 }: QuoteActionBarProps) {
-  const canSend = quote.status === "DRAFT" && quote.approvalStatus !== "pending";
+  const canSend =
+    quote.status === "DRAFT" && quote.approvalStatus !== "pending";
   const canAcceptOrReject = quote.status === "SENT";
   const canDelete = quote.status === "DRAFT";
-  const canConvert = quote.status === "ACCEPTED" && quote.convertedInvoiceId === null;
+  const canConvert =
+    quote.status === "ACCEPTED" && quote.convertedInvoiceId === null;
   const canMarkSigned = quote.status === "ACCEPTED" && quote.signedAt === null;
 
   const handleEditClick = useCallback(() => onEdit(), [onEdit]);
@@ -108,7 +119,9 @@ export function QuoteActionBar({
           variant="outline"
           onClick={onSend}
           isPending={updateStatusPending}
-          title={quote.approvalStatus === "pending" ? "Pending approval" : undefined}
+          title={
+            quote.approvalStatus === "pending" ? "Pending approval" : undefined
+          }
         >
           <Send className="h-3.5 w-3.5 mr-1.5" />
           Send
@@ -151,6 +164,24 @@ export function QuoteActionBar({
         </LoadingButton>
       )}
       {canMarkSigned && (
+        <Button size="sm" variant="outline" onClick={onCreateSigningEnvelope}>
+          <PenLine className="h-3.5 w-3.5 mr-1.5" />
+          Create Signing Envelope
+        </Button>
+      )}
+      {quote.projectId != null && onOpenProject && (
+        <Button size="sm" variant="outline" onClick={onOpenProject}>
+          <FolderKanban className="h-3.5 w-3.5 mr-1.5" />
+          Open Project
+        </Button>
+      )}
+      {quote.convertedInvoiceId != null && onOpenInvoice && (
+        <Button size="sm" variant="outline" onClick={onOpenInvoice}>
+          <ExternalLink className="h-3.5 w-3.5 mr-1.5" />
+          Open Invoice
+        </Button>
+      )}
+      {canMarkSigned && (
         <Button size="sm" variant="outline" onClick={onMarkSignedOpen}>
           <FileCheck2 className="h-3.5 w-3.5 mr-1.5" />
           Mark Signed
@@ -172,7 +203,8 @@ export function QuoteActionBar({
             <AlertDialogHeader>
               <AlertDialogTitle>Delete quote?</AlertDialogTitle>
               <AlertDialogDescription>
-                This action cannot be undone. The quote will be permanently removed.
+                This action cannot be undone. The quote will be permanently
+                removed.
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>

@@ -1,10 +1,12 @@
 "use client";
 
 import Link from "next/link";
-import { format, parseISO } from "date-fns";
+import { motion, useReducedMotion } from "framer-motion";
 import { AlertOctagon, CheckCircle2, Circle, MinusCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { formatDateTime } from "@/lib/date-utils";
 import { statusToneClasses } from "@/lib/design-tokens";
+import { hrmsListStagger, hrmsRowEnter, hrmsRowEnterReduced, hrmsTransition, hrmsVariants } from "@/lib/hrms/motion";
 import { cn } from "@/lib/utils";
 import type { ReadinessStage } from "@/hooks/api/payroll/readiness-schema";
 
@@ -22,41 +24,57 @@ function stageIconClass(status: ReadinessStage["status"]): string {
 }
 
 interface ReadinessStageListProps {
-  stages: ReadinessStage[];
+  stages: readonly ReadinessStage[];
 }
 
 export function ReadinessStageList({ stages }: ReadinessStageListProps) {
+  const reduced = useReducedMotion();
   const doneCount = stages.filter((stage) => stage.status === "done").length;
+
   return (
-    <section className="rounded-xl border border-border bg-card p-4 space-y-3" aria-label="Payroll readiness chain">
+    <section className="rounded-xl border border-border bg-card p-4 space-y-2" aria-label="Payroll readiness chain">
       <div className="flex items-center justify-between">
-        <h3 className="text-sm font-semibold text-foreground">Handoff chain</h3>
-        <span className="text-dense text-muted-foreground tabular-nums">
+        <h3 className="text-sm font-semibold text-foreground">Finance handoff</h3>
+        <span className="text-dense tabular-nums text-muted-foreground">
           {doneCount}/{stages.length}
         </span>
       </div>
       <ol className="divide-y divide-border">
-        {stages.map((stage) => {
+        {stages.map((stage, index) => {
           const Icon = STAGE_ICON[stage.status];
           return (
-            <li key={stage.key} className="flex items-start gap-3 py-2.5">
+            <motion.li
+              key={stage.key}
+              className="flex items-start gap-2.5 py-2"
+              variants={hrmsVariants(reduced, hrmsRowEnter, hrmsRowEnterReduced)}
+              initial="hidden"
+              animate="show"
+              transition={hrmsTransition(reduced, hrmsListStagger(index))}
+            >
               <Icon className={cn("mt-0.5 h-4 w-4 shrink-0", stageIconClass(stage.status))} aria-hidden />
               <div className="min-w-0 flex-1">
                 <div className="flex flex-wrap items-baseline gap-x-2">
-                  <p className={cn("text-sm font-medium", stage.status === "done" ? "text-muted-foreground" : "text-foreground")}>{stage.label}</p>
+                  <p
+                    className={cn(
+                      "text-dense font-medium",
+                      stage.status === "done" ? "text-muted-foreground" : "text-foreground",
+                    )}
+                  >
+                    {stage.label}
+                  </p>
                   <span className="text-micro text-muted-foreground">{stage.owner.label}</span>
                   {stage.at ? (
-                    <span className="text-micro text-muted-foreground tabular-nums">{format(parseISO(stage.at), "MMM d, h:mm a")}</span>
+                    <span className="text-micro tabular-nums text-muted-foreground">{formatDateTime(stage.at)}</span>
                   ) : null}
                 </div>
-                <p className="text-dense text-muted-foreground leading-snug">{stage.detail}</p>
+                <p className="text-micro leading-snug text-muted-foreground">{stage.detail}</p>
               </div>
               {stage.action && stage.status !== "done" ? (
                 <Button size="sm" variant="outline" className="h-7 shrink-0 text-xs" asChild>
                   <Link href={stage.action.href}>{stage.action.label}</Link>
                 </Button>
               ) : null}
-            </li>
+            </motion.li>
           );
         })}
       </ol>

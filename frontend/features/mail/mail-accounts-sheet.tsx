@@ -1,18 +1,7 @@
 "use client";
 
 import { memo, useCallback, useState } from "react";
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-} from "@/components/ui/sheet";
-import {
-  Drawer,
-  DrawerContent,
-  DrawerHeader,
-  DrawerTitle,
-} from "@/components/ui/drawer";
+import { AppSheet } from "@/components/shared/app-sheet";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -28,6 +17,7 @@ import { LoadingButton } from "@/components/ui/loading-button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/ui/empty-state";
+import { EmptyMailIllustration } from "@/components/illustrations";
 import { ErrorState } from "@/components/shared/error-state";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { TruncatedText } from "@/components/ui/truncated-text";
@@ -44,7 +34,6 @@ import {
   type IntegrationToolkit,
 } from "@/hooks/api/integrations";
 import { useCan } from "@/hooks/api/access";
-import { useIsMobile } from "@/hooks/common/use-mobile";
 
 const TOOLKIT_LABELS: Record<string, string> = {
   gmail: "Gmail",
@@ -168,7 +157,6 @@ export function MailAccountsSheet({ open, onClose }: MailAccountsSheetProps) {
   const disconnect = useDisconnectIntegration();
   const setPrimary = useSetPrimaryIntegration();
   const canManage = useCan("integrations:connections:manage");
-  const isMobile = useIsMobile();
   const [pendingToolkit, setPendingToolkit] = useState<IntegrationToolkit | null>(null);
   const [disconnectTarget, setDisconnectTarget] = useState<IntegrationConnection | null>(null);
 
@@ -243,11 +231,11 @@ export function MailAccountsSheet({ open, onClose }: MailAccountsSheetProps) {
   ) : !connections || connections.length === 0 ? (
     <EmptyState
       compact
-      illustrationPreset="mail"
       illustrationSize="sm"
-      className="w-full flex-1 border-0 bg-transparent py-2 px-0"
+      illustration={<EmptyMailIllustration className="h-20 w-20" />}
+      className="h-full w-full border-0 bg-transparent px-0 py-6"
       title="No mail accounts connected"
-      description="Connect a Gmail or Outlook account to manage your email here."
+      description="Connect Gmail or Microsoft Outlook to bring your inbox into StreamlineOS."
     />
   ) : (
     <div className="space-y-2">
@@ -265,11 +253,11 @@ export function MailAccountsSheet({ open, onClose }: MailAccountsSheetProps) {
   );
 
   const connectActions = canManage ? (
-    <div className="px-4 py-3 border-t shrink-0 flex flex-row flex-wrap gap-2">
+    <div className="contents">
       <LoadingButton
         variant="outline"
         size="sm"
-        className="flex-1 h-11 px-4 text-xs bg-card justify-center gap-2 min-w-[9rem]"
+        className="h-9 min-w-[9rem] flex-1 justify-center gap-2 bg-card px-3 text-sm font-medium"
         disabled={pendingToolkit !== null && pendingToolkit !== "gmail"}
         isPending={pendingToolkit === "gmail"}
         onClick={handleConnectGmail}
@@ -287,7 +275,7 @@ export function MailAccountsSheet({ open, onClose }: MailAccountsSheetProps) {
       <LoadingButton
         variant="outline"
         size="sm"
-        className="flex-1 h-11 px-4 text-xs bg-card justify-center gap-2 min-w-[9rem]"
+        className="h-9 min-w-[9rem] flex-1 justify-center gap-2 bg-card px-3 text-sm font-medium"
         disabled={pendingToolkit !== null && pendingToolkit !== "outlook"}
         isPending={pendingToolkit === "outlook"}
         onClick={handleConnectOutlook}
@@ -300,45 +288,23 @@ export function MailAccountsSheet({ open, onClose }: MailAccountsSheetProps) {
             <rect x="11" y="11" width="9" height="9" fill="#ffb900" />
           </svg>
         )}
-        Connect Outlook
+        Microsoft Outlook
       </LoadingButton>
     </div>
   ) : null;
 
   return (
     <>
-      {isMobile ? (
-        <Drawer open={open} onOpenChange={onClose} direction="bottom">
-          <DrawerContent
-            aria-describedby={undefined}
-            className="w-full max-h-[92dvh] gap-0 p-0 pb-[env(safe-area-inset-bottom)] overflow-hidden bg-card"
-          >
-            <DrawerHeader className="px-4 py-3 border-b shrink-0">
-              <DrawerTitle className="text-base">Mail accounts</DrawerTitle>
-            </DrawerHeader>
-            <div className="min-h-0 flex-1 overflow-y-auto px-4 py-3">
-              {accountsContent}
-            </div>
-            {connectActions}
-          </DrawerContent>
-        </Drawer>
-      ) : (
-        <Sheet open={open} onOpenChange={onClose}>
-          <SheetContent
-            side="right"
-            aria-describedby={undefined}
-            className="w-full sm:max-w-lg gap-0 p-0 flex flex-col overflow-hidden"
-          >
-            <SheetHeader className="px-4 py-3 border-b shrink-0">
-              <SheetTitle className="text-base">Mail accounts</SheetTitle>
-            </SheetHeader>
-            <div className="flex-1 overflow-y-auto px-4 py-3 min-h-0">
-              {accountsContent}
-            </div>
-            {connectActions}
-          </SheetContent>
-        </Sheet>
-      )}
+      <AppSheet
+        open={open}
+        onOpenChange={(value) => { if (!value) onClose(); }}
+        title="Mail accounts"
+        description="Manage connected Gmail and Outlook accounts."
+        footer={connectActions}
+        className="sm:max-w-md"
+      >
+        {accountsContent}
+      </AppSheet>
 
       <AlertDialog open={disconnectTarget !== null} onOpenChange={handleDisconnectAlertOpenChange}>
         <AlertDialogContent>

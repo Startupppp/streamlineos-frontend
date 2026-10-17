@@ -29,7 +29,7 @@ export const MODULE_ICON: Record<string, ModuleIcon> = {
 const MODULE_OUTCOMES: Record<string, readonly string[]> = {
   crm: ["Lead inbox + pipeline", "Deal stages ready", "Follow-ups tracked"],
   hr: ["Leave & attendance", "Team directory", "Onboarding checklist"],
-  build: ["Task boards", "Sprint tracking", "Delivery updates"],
+  build: ["Task boards", "Cycle tracking", "Delivery updates"],
   accounting: ["Invoices & payments", "Bank reconcile", "Tax-ready reports"],
   inventory: ["Stock levels", "Warehouses", "Purchase orders"],
   support: ["Ticket queue", "SLA timers", "Customer replies"],
@@ -64,7 +64,6 @@ function isOrgModuleKey(value: string): value is OrgModuleKey {
 export function resolvePreviewModules(
   snapshot: WorkspacePreviewSnapshot,
 ): OrgModuleKey[] {
-  if (snapshot.goals.length === 0) return [];
   if (snapshot.modules.length > 0) return [...snapshot.modules];
   return snapshot.installedApps.filter(isOrgModuleKey);
 }
@@ -150,8 +149,8 @@ export function buildWidgets(
 }
 
 export function emptyPreviewCopy(snapshot: WorkspacePreviewSnapshot): string {
-  if (snapshot.goals.length === 0) {
-    return "Pick goals to preview your organization";
+  if (snapshot.modules.length === 0) {
+    return "Pick products to preview your organization";
   }
   return "Your organization preview updates as you go";
 }

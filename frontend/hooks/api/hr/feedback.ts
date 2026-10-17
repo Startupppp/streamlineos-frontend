@@ -5,6 +5,7 @@ import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
 import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
 import { useCan, useModuleEnabled } from "@/hooks/api/access";
+import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 export interface CreateFeedbackCycleInput {
@@ -135,5 +136,6 @@ export function useFeedbackResults(subjectId: string) {
       apiClient.get<FeedbackResult>(`/hr/feedback/results/${subjectId}`, undefined, signal, lazyContract(() => import("@/hooks/api/hr/feedback-schema").then(m => m.getFeedbackResultsContract))),
     staleTime: 2 * 60_000,
     enabled: subjectId.length > 0 && canView && hrEnabled,
+    ...INLINE_READ_ERROR,
   });
 }

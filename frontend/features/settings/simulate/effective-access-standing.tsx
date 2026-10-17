@@ -58,10 +58,10 @@ export function OrgStandingCard({
             </Badge>
           ) : null}
         </div>
-        <p className="text-[13px] text-muted-foreground">
+        <p className="text-label text-muted-foreground">
           {ORG_STANDING_DESCRIPTIONS[standing]}
         </p>
-        <p className="text-[13px] text-muted-foreground">
+        <p className="text-label text-muted-foreground">
           <span className="font-mono tabular-nums text-foreground">
             {permissionCount}
           </span>{" "}
@@ -90,7 +90,7 @@ export function ModuleStandingList({ moduleStandings }: ModuleStandingListProps)
           ))}
         </div>
         {hasUnavailable ? (
-          <p className="text-[13px] text-muted-foreground">
+          <p className="text-label text-muted-foreground">
             {UNAVAILABLE_MODULE_EXPLANATION}
           </p>
         ) : null}
@@ -110,21 +110,21 @@ function ModuleStandingChip({ standing }: ModuleStandingChipProps) {
 
   return (
     <div className="flex items-center gap-2 rounded-md border border-border bg-card px-2.5 py-1.5">
-      <span className="text-[13px] font-medium">{label}</span>
+      <span className="text-label font-medium">{label}</span>
       <Badge
         variant="outline"
-        className={cn("h-5 px-2 py-0.5 text-[10px]", tone.surface, tone.ink, tone.rule)}
+        className={cn("h-5 px-2 py-0.5 text-micro", tone.surface, tone.ink, tone.rule)}
       >
         {MODULE_STANDING_LABELS[standing.standing]}
       </Badge>
-      <span className="font-mono text-[11px] tabular-nums text-muted-foreground">
+      <span className="font-mono text-dense tabular-nums text-muted-foreground">
         {standing.permissionCount}
       </span>
       {standing.available ? null : (
         <Badge
           variant="outline"
           className={cn(
-            "h-5 px-2 py-0.5 text-[10px]",
+            "h-5 px-2 py-0.5 text-micro",
             unavailable.surface,
             unavailable.ink,
             unavailable.rule,
@@ -160,7 +160,7 @@ export function ModuleGrantabilityNote({
   if (isPending)
     return (
       <div className="flex items-center gap-2" aria-live="polite">
-        <span className="text-[13px] text-muted-foreground">
+        <span className="text-label text-muted-foreground">
           Pending — checking what you can grant in {label}…
         </span>
         <Skeleton className="h-4 w-40" />
@@ -169,7 +169,7 @@ export function ModuleGrantabilityNote({
 
   if (isError || !grantable)
     return (
-      <p className="text-[13px] text-muted-foreground">
+      <p className="text-label text-muted-foreground">
         Your grant options in {label} could not be read, so none are offered
         here.
       </p>
@@ -182,13 +182,13 @@ export function ModuleGrantabilityNote({
 
   if (options.length === 0)
     return (
-      <p className="text-[13px] text-muted-foreground">
+      <p className="text-label text-muted-foreground">
         You cannot grant standing in {label}.
       </p>
     );
 
   return (
-    <p className="text-[13px] text-muted-foreground">
+    <p className="text-label text-muted-foreground">
       You may grant in {label}:{" "}
       <span className="text-foreground">{options.join(", ")}</span> — up to{" "}
       <span className="text-foreground">

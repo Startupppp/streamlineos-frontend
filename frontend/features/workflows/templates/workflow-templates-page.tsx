@@ -112,6 +112,11 @@ export function WorkflowTemplatesPage() {
     );
   }
 
+  function handleClearFilters() {
+    setSearch("");
+    setActiveCategory("all");
+  }
+
   function handleRetry() {
     void refetch();
   }
@@ -162,9 +167,12 @@ export function WorkflowTemplatesPage() {
       ) : filtered.length === 0 ? (
         <EmptyState
           illustration={<EmptySearchIllustration />}
-          title={search ? "No templates match your search" : "No templates available"}
+          title="No templates available"
+          filtersActive={search.length > 0 || activeCategory !== "all"}
+          filteredTitle="No templates match your search"
+          onClearFilters={handleClearFilters}
           description={
-            search
+            search || activeCategory !== "all"
               ? "Try a different search term or category."
               : "Templates will appear here once added."
           }

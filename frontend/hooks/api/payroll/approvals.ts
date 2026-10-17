@@ -2,6 +2,7 @@
 
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
+import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
 import { lazyContract } from "@/lib/api-envelope";
 import { payrollQueryKeys } from "@/lib/query-keys/payroll";
 import { useCan } from "@/hooks/api/access";
@@ -38,6 +39,7 @@ export function useRunApprovals(runId: number, options?: { enabled?: boolean }) 
     queryFn: ({ signal }) => apiClient.get<ApprovalList>(`/payroll/runs/${runId}/approvals`, undefined, signal, approvalListC),
     staleTime: 30_000,
     enabled: canView && runId > 0 && (options?.enabled ?? true),
+    ...INLINE_READ_ERROR,
   });
 }
 

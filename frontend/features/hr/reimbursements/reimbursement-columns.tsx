@@ -1,9 +1,8 @@
 "use client";
 
 import { format } from "date-fns";
-import { FileText } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { TruncatedText } from "@/components/ui/truncated-text";
+import { formatMoney, type MoneyDisplay } from "@/lib/format-utils";
 import type { DataTableColumn } from "@/components/ui/data-table";
 import type { Reimbursement } from "@/hooks/api/hr";
 import { getStatusConfig } from "./reimbursement-status";
@@ -13,6 +12,8 @@ interface ReimbursementColumnDeps {
   currentUserId: string | undefined;
   isAdmin: boolean;
   isProcessing: boolean;
+  processingId: number | null;
+  money: MoneyDisplay;
   onApprove: (id: number) => void;
   onStartReject: (id: number) => void;
 }
@@ -21,6 +22,8 @@ export function buildReimbursementColumns({
   currentUserId,
   isAdmin,
   isProcessing,
+  processingId,
+  money,
   onApprove,
   onStartReject,
 }: ReimbursementColumnDeps): DataTableColumn<Reimbursement>[] {
@@ -53,8 +56,6 @@ export function buildReimbursementColumns({
           {r.createdAt ? format(new Date(r.createdAt), "MMM d, yyyy") : "—"}
         </span>
       ),
-      sortable: true,
-      sortValue: (r) => r.createdAt ? new Date(r.createdAt).getTime() : 0,
     },
     {
       key: "status",
@@ -76,11 +77,9 @@ export function buildReimbursementColumns({
       className: "text-right",
       cell: (r) => (
         <span className="text-sm font-semibold tabular-nums whitespace-nowrap">
-          ₹{Number(r.amount).toLocaleString("en-IN")}
+          {formatMoney(r.amount, money)}
         </span>
       ),
-      sortable: true,
-      sortValue: (r) => Number(r.amount),
     },
     {
       key: "actions",
@@ -95,6 +94,7 @@ export function buildReimbursementColumns({
             currentUserId={currentUserId}
             isAdmin={isAdmin}
             isPending={isProcessing}
+            isRowPending={isProcessing && processingId === r.id}
             onApprove={onApprove}
             onStartReject={onStartReject}
           />

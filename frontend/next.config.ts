@@ -1,4 +1,5 @@
 import type { NextConfig } from "next";
+import { BUILD_COMPAT_REDIRECTS } from "./lib/build/build-compat-redirects";
 
 function isLocalOrLoopbackAppUrl(): boolean {
   for (const raw of [process.env.NEXTAUTH_URL]) {
@@ -87,6 +88,159 @@ const nextConfig: NextConfig = {
       permanent: true,
     },
     {
+      source: "/login",
+      destination: "/signin",
+      permanent: true,
+    },
+    {
+      source: "/register",
+      destination: "/signin",
+      permanent: true,
+    },
+    {
+      source: "/auth/login",
+      destination: "/signin",
+      permanent: true,
+    },
+    {
+      source: "/auth/signin",
+      destination: "/signin",
+      permanent: true,
+    },
+    {
+      source: "/auth/register",
+      destination: "/signin",
+      permanent: true,
+    },
+    {
+      source: "/sign-in",
+      destination: "/signin",
+      permanent: true,
+    },
+    {
+      source: "/payroll/workers",
+      destination: "/payroll/employees",
+      permanent: false,
+    },
+    {
+      source: "/hr/payroll",
+      destination: "/payroll",
+      permanent: false,
+    },
+    // BUG-HRMS-013. Three paths the product implies but never served. The pages
+    // exist and the sidebar links them correctly; these are the addresses an
+    // operator guesses, bookmarks or reads in a training doc, and each answered
+    // "Page Not Found" instead of the page it names.
+    {
+      source: "/hr/skills",
+      destination: "/hr/employees/skills-matrix",
+      permanent: false,
+    },
+    {
+      source: "/hr/probation",
+      destination: "/hr/onboarding/probation",
+      permanent: false,
+    },
+    // Singular vs plural: the sidebar says /hr/leaves, so half the product's own
+    // prose says /hr/leave.
+    {
+      source: "/hr/leave",
+      destination: "/hr/leaves",
+      permanent: false,
+    },
+    {
+      source: "/hr/directory",
+      destination: "/hr/employees",
+      permanent: false,
+    },
+    {
+      source: "/hr/policies",
+      destination: "/hr/settings/policies",
+      permanent: false,
+    },
+    {
+      source: "/pay",
+      destination: "/me/pay",
+      permanent: false,
+    },
+    {
+      source: "/expenses",
+      destination: "/me/expenses",
+      permanent: false,
+    },
+    {
+      source: "/hr/people",
+      destination: "/hr/employees",
+      permanent: false,
+    },
+    {
+      source: "/hr/time-clocks",
+      destination: "/hr/devices",
+      permanent: false,
+    },
+    {
+      source: "/hr/support",
+      destination: "/hr/helpdesk",
+      permanent: false,
+    },
+    {
+      source: "/hr/compensation",
+      destination: "/hr/compensation-planning",
+      permanent: false,
+    },
+    {
+      source: "/hr/doc-types",
+      destination: "/hr/document-types",
+      permanent: false,
+    },
+    {
+      source: "/hr/doc-review",
+      destination: "/hr/document-review",
+      permanent: false,
+    },
+    {
+      source: "/hr/payroll/salary-structures",
+      destination: "/payroll/salary-structures",
+      permanent: false,
+    },
+
+    // Recruitment OS moved out of HRMS. Old links (bookmarks, sent emails) keep working.
+    {
+      source: "/hr/recruitment",
+      destination: "/recruitment",
+      permanent: true,
+    },
+    {
+      source: "/hr/recruitment/:path*",
+      destination: "/recruitment/:path*",
+      permanent: true,
+    },
+    {
+      source: "/hr/configuration",
+      destination: "/hr/settings",
+      permanent: false,
+    },
+    {
+      source: "/hrms",
+      destination: "/hr",
+      permanent: false,
+    },
+    {
+      source: "/hr/dashboard",
+      destination: "/hr",
+      permanent: false,
+    },
+    {
+      source: "/hr/settings/company",
+      destination: "/settings/organization",
+      permanent: false,
+    },
+    {
+      source: "/hr/settings/managers",
+      destination: "/hr/settings/reporting-managers",
+      permanent: true,
+    },
+    {
       source: "/build/:projectId(\\d+)",
       has: [{ type: "query", key: "view", value: "workload" }],
       destination: "/build/:projectId/workload",
@@ -105,6 +259,16 @@ const nextConfig: NextConfig = {
     {
       source: "/build/:projectId(\\d+)/timeline",
       destination: "/build/:projectId/issues?view=timeline",
+      permanent: false,
+    },
+    {
+      source: "/build/:projectId(\\d+)/gantt",
+      destination: "/build/:projectId/issues?view=timeline",
+      permanent: false,
+    },
+    {
+      source: "/build/:projectId(\\d+)/roadmap",
+      destination: "/build/:projectId/milestones",
       permanent: false,
     },
     {
@@ -159,12 +323,17 @@ const nextConfig: NextConfig = {
     },
     {
       source: "/build/pm-workspaces",
-      destination: "/build",
+      destination: "/build/projects",
       permanent: false,
     },
     {
       source: "/build/customers",
       destination: "/crm",
+      permanent: false,
+    },
+    {
+      source: "/settings/members",
+      destination: "/settings/users",
       permanent: false,
     },
     {
@@ -182,11 +351,7 @@ const nextConfig: NextConfig = {
       destination: "/build/settings/client-access",
       permanent: false,
     },
-    {
-      source: "/build/drafts",
-      destination: "/build/inbox?view=drafts",
-      permanent: false,
-    },
+    ...BUILD_COMPAT_REDIRECTS,
     {
       source: "/build/:projectId(\\d+)/my-tickets",
       destination: "/build/my-work?projectId=:projectId",
@@ -229,12 +394,12 @@ const nextConfig: NextConfig = {
     },
     {
       source: "/build/workspaces/:pmWorkspaceId",
-      destination: "/build",
+      destination: "/build/projects",
       permanent: false,
     },
     {
       source: "/build/workspaces",
-      destination: "/build",
+      destination: "/build/projects",
       permanent: false,
     },
     {
@@ -282,6 +447,31 @@ const nextConfig: NextConfig = {
       destination: "/settings/notifications/my-preferences",
       permanent: false,
     },
+    {
+      source: "/announcements",
+      destination: "/hr/announcements",
+      permanent: false,
+    },
+    {
+      source: "/chat/settings",
+      destination: "/chat",
+      permanent: false,
+    },
+    {
+      source: "/docs",
+      destination: "/knowledge/wiki",
+      permanent: false,
+    },
+    {
+      source: "/kb",
+      destination: "/knowledge/wiki",
+      permanent: false,
+    },
+    {
+      source: "/ask",
+      destination: "/knowledge/chat",
+      permanent: false,
+    },
   ],
   images: {
     formats: ["image/webp"],
@@ -312,14 +502,34 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+  // RSS is produced by the backend (the site ships no business route handlers, FE-06). The feed
+  // is served at /blogs/rss.xml on this origin so its links and self-reference stay canonical.
+  rewrites: async () => {
+    const api = (
+      process.env.API_INTERNAL_URL?.trim() ||
+      process.env.NEXT_PUBLIC_API_URL ||
+      ""
+    ).replace(/\/$/, "");
+    return api
+      ? [{ source: "/blogs/rss.xml", destination: `${api}/blog/rss.xml` }]
+      : [];
+  },
   headers: async () => [
     {
-      source:
-        "/:asset(logo.svg|logo-email.svg|bimi-logo.svg|feedbucket-widget.js)",
+      source: "/:asset(logo.svg|logo-email.svg|bimi-logo.svg)",
       headers: [
         {
           key: "Cache-Control",
           value: "public, max-age=86400, stale-while-revalidate=604800",
+        },
+      ],
+    },
+    {
+      source: "/feedbucket-widget.js",
+      headers: [
+        {
+          key: "Cache-Control",
+          value: "no-cache, must-revalidate",
         },
       ],
     },
@@ -337,7 +547,6 @@ const nextConfig: NextConfig = {
       headers: [
         { key: "Accept-CH", value: "Sec-CH-UA-Mobile" },
         { key: "Vary", value: "Sec-CH-UA-Mobile, User-Agent" },
-        { key: "X-Frame-Options", value: "DENY" },
         { key: "X-Content-Type-Options", value: "nosniff" },
         { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
         {

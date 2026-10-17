@@ -21,6 +21,8 @@ import {
   RotateCcw,
 } from "lucide-react";
 import { parseTicketPointsInput } from "../shared/ticket-points";
+import { MAX_TICKET_POINTS } from "@/lib/validation/projects";
+import { statusConfig } from "@/features/build/shared/types";
 
 interface Epic {
   id: number;
@@ -43,7 +45,7 @@ interface Status {
   id: number;
 }
 
-export interface SidebarSelectFieldsProps {
+interface SidebarSelectFieldsProps {
   ticket: {
     id: number;
     status?: string | null;
@@ -97,21 +99,30 @@ export function SidebarSelectFields({
   const [pointsDraft, setPointsDraft] = useState(
     ticket.points == null ? "" : String(ticket.points),
   );
+  const [pointsError, setPointsError] = useState<string | null>(null);
 
   function commitPoints() {
     const points = parseTicketPointsInput(pointsDraft);
     if (points === undefined) {
+      setPointsError(`Must be 0–${MAX_TICKET_POINTS}`);
       setPointsDraft(ticket.points == null ? "" : String(ticket.points));
       return;
     }
+    setPointsError(null);
     setPointsDraft(points == null ? "" : String(points));
     if (points !== (ticket.points ?? null)) onPointsChange(points);
+  }
+
+  function handlePointsChange(event: React.ChangeEvent<HTMLInputElement>) {
+    setPointsError(null);
+    setPointsDraft(event.target.value);
   }
 
   function handlePointsKeyDown(event: React.KeyboardEvent<HTMLInputElement>) {
     if (event.key === "Enter") event.currentTarget.blur();
     if (event.key === "Escape") {
       setPointsDraft(ticket.points == null ? "" : String(ticket.points));
+      setPointsError(null);
       event.currentTarget.blur();
     }
   }
@@ -122,13 +133,13 @@ export function SidebarSelectFields({
         <div className="min-w-0">
           <FieldLabel>Status</FieldLabel>
           <Select value={ticket.status || "TODO"} onValueChange={onStatusChange} disabled={disabled}>
-            <SelectTrigger className={CONTROL_CLASS}>
+            <SelectTrigger className={CONTROL_CLASS} aria-label="Status">
               <SelectValue />
             </SelectTrigger>
             <SelectContent className={FIELD_SELECT_CONTENT_CLASS}>
               {statuses?.map((s) => (
                 <SelectItem key={s.id} value={s.name}>
-                  {s.name.replace(/_/g, " ")}
+                  {statusConfig[s.name]?.label ?? s.name.replace(/_/g, " ")}
                 </SelectItem>
               )) || (
                 <>
@@ -160,7 +171,7 @@ export function SidebarSelectFields({
         <div className="min-w-0">
           <FieldLabel>Priority</FieldLabel>
           <Select value={ticket.priority || "MEDIUM"} onValueChange={onPriorityChange} disabled={disabled}>
-            <SelectTrigger className={CONTROL_CLASS}>
+            <SelectTrigger className={CONTROL_CLASS} aria-label="Priority">
               <SelectValue />
             </SelectTrigger>
             <SelectContent className={FIELD_SELECT_CONTENT_CLASS}>
@@ -177,7 +188,7 @@ export function SidebarSelectFields({
         <div className="min-w-0">
           <FieldLabel>Type</FieldLabel>
           <Select value={ticket.type || "TASK"} onValueChange={onTypeChange} disabled={disabled}>
-            <SelectTrigger className={CONTROL_CLASS}>
+            <SelectTrigger className={CONTROL_CLASS} aria-label="Type">
               <SelectValue />
             </SelectTrigger>
             <SelectContent className={FIELD_SELECT_CONTENT_CLASS}>
@@ -193,14 +204,22 @@ export function SidebarSelectFields({
           <Input
             type="number"
             min={0}
+            max={MAX_TICKET_POINTS}
             value={pointsDraft}
-            onChange={(event) => setPointsDraft(event.target.value)}
+            onChange={handlePointsChange}
             onBlur={commitPoints}
             onKeyDown={handlePointsKeyDown}
             className={CONTROL_CLASS}
             placeholder="0"
             disabled={disabled}
+            aria-label="Points"
+            aria-invalid={pointsError ? true : undefined}
           />
+          {pointsError ? (
+            <p className="mt-0.5 text-xs text-status-danger-ink" role="alert">
+              {pointsError}
+            </p>
+          ) : null}
         </div>
       </div>
 
@@ -211,7 +230,7 @@ export function SidebarSelectFields({
             Epic
           </FieldLabel>
           <Select value={ticket.epicId?.toString() || "none"} onValueChange={onEpicChange} disabled={disabled}>
-            <SelectTrigger className={CONTROL_CLASS}>
+            <SelectTrigger className={CONTROL_CLASS} aria-label="Epic">
               <SelectValue placeholder="None" />
             </SelectTrigger>
             <SelectContent className={FIELD_SELECT_CONTENT_CLASS}>
@@ -227,10 +246,10 @@ export function SidebarSelectFields({
         <div className="min-w-0">
           <FieldLabel>
             <Boxes className="mr-0.5 inline h-3 w-3" />
-            Module
+            Workstream
           </FieldLabel>
           <Select value={ticket.moduleId?.toString() || "none"} onValueChange={onModuleChange} disabled={disabled}>
-            <SelectTrigger className={CONTROL_CLASS}>
+            <SelectTrigger className={CONTROL_CLASS} aria-label="Workstream">
               <SelectValue placeholder="None" />
             </SelectTrigger>
             <SelectContent className={FIELD_SELECT_CONTENT_CLASS}>
@@ -249,7 +268,7 @@ export function SidebarSelectFields({
             Cycle
           </FieldLabel>
           <Select value={ticket.cycleId?.toString() || "none"} onValueChange={onCycleChange} disabled={disabled}>
-            <SelectTrigger className={CONTROL_CLASS}>
+            <SelectTrigger className={CONTROL_CLASS} aria-label="Cycle">
               <SelectValue placeholder="None" />
             </SelectTrigger>
             <SelectContent className={FIELD_SELECT_CONTENT_CLASS}>

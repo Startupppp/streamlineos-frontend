@@ -4,8 +4,12 @@ import { motion, useReducedMotion } from "framer-motion";
 import { ChevronDown } from "lucide-react";
 import { AnimatedLogo } from "@/components/brand/animated-logo";
 import { useAskOs } from "./ask-os-context";
+import { useAskOsCompanionState } from "./ask-os-companion-state";
+import { CompanionLauncher, useCompanionPresence } from "./companion-launcher";
+import type { CompanionVoiceSettings } from "./companion-voice-settings";
+import { useOrgStorageScope } from "@/lib/org-scoped-storage";
 
-export function AskOsLauncher() {
+function LegacyAskOsLauncher() {
   const { open, toggle } = useAskOs();
   const reduce = useReducedMotion();
   return (
@@ -25,4 +29,43 @@ export function AskOsLauncher() {
       <ChevronDown className={`h-2.5 w-2.5 shrink-0 text-primary-foreground/70 transition-transform duration-200 ${open ? "rotate-180" : ""}`} aria-hidden />
     </motion.button>
   );
+}
+
+interface AskOsLauncherProps {
+  compact?: boolean;
+  onVoiceStart?: () => void;
+  onVoiceDismiss?: () => void;
+  onVoiceReview?: () => void;
+  voiceState?: "idle" | "connecting" | "listening" | "thinking" | "working" | "speaking" | "error";
+  voiceSupported?: boolean;
+  voiceMessage?: string | null;
+  voiceOverlayOpen?: boolean;
+  voiceSettings?: CompanionVoiceSettings;
+  onVoiceSettingsChange?: (settings: CompanionVoiceSettings) => void;
+}
+
+export function AskOsLauncher({ compact, onVoiceStart, onVoiceDismiss, onVoiceReview, voiceState, voiceSupported, voiceMessage, voiceOverlayOpen, voiceSettings, onVoiceSettingsChange }: AskOsLauncherProps = {}) {
+  const companion = useCompanionPresence();
+  const scope = useOrgStorageScope();
+  const state = useAskOsCompanionState();
+  if (companion) {
+    return (
+      <CompanionLauncher
+        key={`${scope}:${compact ? "compact" : "desktop"}`}
+        state={state}
+        preferences={companion}
+        compact={compact}
+        onVoiceStart={onVoiceStart}
+        onVoiceDismiss={onVoiceDismiss}
+        onVoiceReview={onVoiceReview}
+        voiceState={voiceState}
+        voiceSupported={voiceSupported}
+        voiceMessage={voiceMessage}
+        voiceOverlayOpen={voiceOverlayOpen}
+        voiceSettings={voiceSettings}
+        onVoiceSettingsChange={onVoiceSettingsChange}
+      />
+    );
+  }
+  return <LegacyAskOsLauncher />;
 }

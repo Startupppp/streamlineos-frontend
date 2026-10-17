@@ -3,6 +3,7 @@ import type {
   CustomerLifecycleStatus,
   LifecycleRiskBand,
 } from "@/types/crm/lifecycle";
+import type { LifecycleSweepEntry } from "@/hooks/api/crm/lifecycle-schema";
 import { formatMoneyRounded, formatRatioAsPercent } from "@/lib/format-utils";
 
 export const RISK_LABEL: Record<LifecycleRiskBand, string> = {
@@ -50,4 +51,13 @@ export function formatMinor(value: number, currency: string, locale: string) {
 
 export function formatBps(value: number, locale: string) {
   return formatRatioAsPercent(value / 10_000, locale, 0);
+}
+
+/** What the sweep's decider said about one contract, in a sentence. */
+export function describeSweepEntry(entry: LifecycleSweepEntry): string {
+  if (entry.action === "stood-down") return entry.reason ?? "Nothing due yet.";
+  const opened = entry.action === "opened" ? "Opened a renewal opportunity" : "Re-offered the renewal";
+  if (entry.outcome === "held") return `${opened}; a draft is waiting in its hold window.`;
+  if (entry.outcome === "skipped") return `${opened}; the outbound loop declined: ${entry.reason ?? "no reason given"}.`;
+  return `${opened}.`;
 }

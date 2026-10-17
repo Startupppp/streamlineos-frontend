@@ -12,7 +12,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { FIELD_SELECT_CONTENT_CLASS } from "@/components/ui/field-control";
-import { useHrSettingsMode } from "@/features/hr/settings-hub/use-hr-settings-mode";
+import { useHrSettingsMode } from "@/hooks/common/use-hr-settings-mode";
 import { useAccess } from "@/hooks/api/access";
 import type { PermissionKey } from "@/lib/rbac/permissions";
 
@@ -31,6 +31,7 @@ const SETTINGS_OVERVIEW_PERMISSIONS: PermissionKey[] = [
   "hr:forms:view",
   "hr:custom-fields:manage",
   "hr:automations:view",
+  "hr:reporting-lines:override",
 ];
 
 const TABS: {
@@ -41,6 +42,7 @@ const TABS: {
 }[] = [
   { label: "Overview", href: "/hr/settings", permission: SETTINGS_OVERVIEW_PERMISSIONS },
   { label: "Policies", href: "/hr/settings/policies", permission: "hr:policies:view" },
+  { label: "Reporting managers", href: "/hr/settings/reporting-managers", permission: "hr:reporting-lines:manage" },
   { label: "Workflows", href: "/hr/settings/workflows", permission: "hr:workflows:view", advanced: true },
   { label: "Automations", href: "/hr/settings/automations", permission: "hr:automations:view", advanced: true },
   { label: "Templates", href: "/hr/settings/templates", permission: "hr:templates:view" },
@@ -88,7 +90,9 @@ export default function HrSettingsLayout({
   useEffect(() => {
     if (activeTabRef.current) {
       activeTabRef.current.scrollIntoView({
-        behavior: "smooth",
+        behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches
+          ? "auto"
+          : "smooth",
         block: "nearest",
         inline: "center",
       });
@@ -125,17 +129,15 @@ export default function HrSettingsLayout({
                 key={tab.href}
                 href={tab.href}
                 ref={isActive ? activeTabRef : null}
+                aria-current={isActive ? "page" : undefined}
                 className={cn(
-                  "inline-flex h-7 shrink-0 items-center rounded-md px-3 text-sm font-medium whitespace-nowrap transition-colors",
+                  "inline-flex h-7 shrink-0 items-center rounded-md px-3 text-sm font-medium whitespace-nowrap transition-colors outline-none focus-visible:ring-1 focus-visible:ring-ring",
                   isActive
                     ? "bg-muted text-foreground"
                     : "text-muted-foreground hover:text-foreground",
                 )}
               >
                 {tab.label}
-                {isActive && (
-                  <span className="absolute bottom-0 left-1 right-1 sm:left-0 sm:right-0 h-0.5 bg-primary rounded-full" />
-                )}
               </Link>
             );
           })}

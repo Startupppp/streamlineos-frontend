@@ -12,7 +12,7 @@ jest.mock("framer-motion", () => ({
   useReducedMotion: () => false,
 }));
 
-jest.mock("@/hooks/api/build/roadmap", () => ({
+jest.mock("@/hooks/api/build/feedback-posts", () => ({
   useUpdateFeedbackPost: jest.fn(() => ({ mutate: jest.fn(), isPending: false })),
 }));
 
@@ -118,6 +118,7 @@ jest.mock("@/lib/text-overflow", () => ({
 }));
 
 jest.mock("./roadmap-constants", () => ({
+  ...jest.requireActual("./roadmap-constants"),
   FEEDBACK_STATUS_OPTIONS: [
     { value: "open", label: "Open" },
     { value: "planned", label: "Planned" },
@@ -138,6 +139,8 @@ function makePost(overrides: Partial<FeedbackPost> = {}): FeedbackPost {
     submittedByEmail: null,
     crmContactId: null,
     crmOrganizationId: null,
+    accountValueSnapshot: null,
+    accountTierSnapshot: null,
     linkedRoadmapItemId: null,
     duplicateOfId: null,
     mergedAt: null,
@@ -148,7 +151,7 @@ function makePost(overrides: Partial<FeedbackPost> = {}): FeedbackPost {
   };
 }
 
-function makeItem(overrides: Partial<RoadmapItem> = {}): RoadmapItem {
+function makeItem(overrides: Partial<RoadmapItem> = {}): RoadmapItem & { allowedActions: string[]; sourceFreshness: string | null } {
   return {
     id: 10,
     orgId: "org-1",
@@ -158,13 +161,26 @@ function makeItem(overrides: Partial<RoadmapItem> = {}): RoadmapItem {
     category: null,
     isPublic: true,
     projectId: null,
+    managedProductId: null,
     epicTicketId: null,
     targetQuarter: null,
     sortOrder: 0,
     votes: 0,
+    horizon: "now",
+    goalId: null,
+    releaseId: null,
+    teamId: null,
+    opportunityId: null,
+    targetStart: null,
+    targetEnd: null,
+    decisionSnapshot: null,
+    version: 1,
     createdBy: null,
     createdAt: "2026-01-01T00:00:00Z",
     updatedAt: "2026-01-01T00:00:00Z",
+    deletedAt: null,
+    allowedActions: [],
+    sourceFreshness: null,
     ...overrides,
   };
 }
@@ -207,6 +223,57 @@ describe("Chain navigability — FeedbackRow", () => {
       "href",
       "/build/roadmap",
     );
+  });
+});
+
+describe("FeedbackRow — dedup provenance (BT-e960abeb9f8b)", () => {
+  it("shows Merged duplicate badge when duplicateOfId is set so the surviving record carries its merge provenance", () => {
+    render(
+      <FeedbackRow
+        post={makePost({ duplicateOfId: 77 })}
+        roadmapItems={[]}
+        onDelete={jest.fn()}
+        onMerge={jest.fn()}
+      />,
+    );
+    expect(screen.getByText("Merged duplicate")).toBeInTheDocument();
+  });
+
+  it("does not show Merged duplicate badge when duplicateOfId is null so unmerged records are not labelled", () => {
+    render(
+      <FeedbackRow
+        post={makePost({ duplicateOfId: null })}
+        roadmapItems={[]}
+        onDelete={jest.fn()}
+        onMerge={jest.fn()}
+      />,
+    );
+    expect(screen.queryByText("Merged duplicate")).not.toBeInTheDocument();
+  });
+
+  it("hides the merge action for a merged duplicate so the user cannot re-merge an already-merged record", () => {
+    const onMerge = jest.fn();
+    render(
+      <FeedbackRow
+        post={makePost({ duplicateOfId: 77 })}
+        roadmapItems={[]}
+        onDelete={jest.fn()}
+        onMerge={onMerge}
+      />,
+    );
+    expect(screen.queryByRole("button", { name: /merge/i })).not.toBeInTheDocument();
+  });
+
+  it("shows the merge action for a non-merged record (FE-122 positive pair)", () => {
+    render(
+      <FeedbackRow
+        post={makePost({ duplicateOfId: null })}
+        roadmapItems={[]}
+        onDelete={jest.fn()}
+        onMerge={jest.fn()}
+      />,
+    );
+    expect(screen.getByRole("button", { name: /merge/i })).toBeInTheDocument();
   });
 });
 

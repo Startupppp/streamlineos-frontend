@@ -10,6 +10,7 @@ import { PlusIcon, Trash2Icon } from "@animateicons/react/lucide";
 import { motion, AnimatePresence } from "framer-motion";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
+import { InfiniteScrollSentinel } from "@/components/ui/infinite-scroll-sentinel";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -270,10 +271,6 @@ export function SecretsManagerPage() {
     void refetch();
   }
 
-  function handleLoadMore() {
-    void fetchNextPage();
-  }
-
   const list = useMemo(
     () => secrets?.pages.flatMap((page) => page.data) ?? [],
     [secrets],
@@ -319,17 +316,12 @@ export function SecretsManagerPage() {
                 onDelete={handleDeleteTarget}
               />
             ))}
-            {hasNextPage ? (
-              <Button
-                variant="outline"
-                size="sm"
-                className="self-center"
-                onClick={handleLoadMore}
-                disabled={isFetchingNextPage}
-              >
-                {isFetchingNextPage ? "Loading…" : "Load more secrets"}
-              </Button>
-            ) : null}
+            <InfiniteScrollSentinel
+              hasNextPage={hasNextPage}
+              isFetchingNextPage={isFetchingNextPage}
+              onLoadMore={fetchNextPage}
+              label="Load more secrets"
+            />
           </div>
         </AnimatePresence>
       )}

@@ -1,9 +1,29 @@
 "use client";
 
-import { useState } from "react";
-import { toast } from "sonner";
-import { DataTable, type DataTableColumn, DataTableSkeleton } from "@/components/ui/data-table";
+import { useCallback, useState } from "react";
+import { TriangleAlert } from "lucide-react";
+import type { DataTableColumn } from "@/components/ui/data-table";
 import { BuildMobileCard } from "@/features/build/shared/build-mobile-card";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Badge } from "@/components/ui/badge";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { EmptyState } from "@/components/ui/empty-state";
+import { useFormSubmissions } from "@/hooks/api/build/forms";
+import { BuildListSurface } from "@/features/build/shared/build-list-surface";
+import type {
+  FormSubmission,
+  FormSubmissionStatus,
+} from "@/types/projects/forms";
+import { SubmissionActionsCell } from "./submission-actions-cell";
+import { useBuildCursorPager } from "@/features/build/shared/use-build-cursor-pager";
+
+const PAGE_SIZE = 25;
 
 const FORM_SUBMISSION_TABLE_HEADERS = [
   "Submitter",
@@ -12,19 +32,11 @@ const FORM_SUBMISSION_TABLE_HEADERS = [
   "Submitted",
   "Actions",
 ] as const;
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { EmptyState } from "@/components/ui/empty-state";
-import { PageState } from "@/components/shared/page-state";
-import { useCan } from "@/hooks/api/access";
-import { useFormSubmissions, useUpdateSubmission } from "@/hooks/api/build";
-import { getErrorMessage } from "@/lib/get-error-message";
-import { usePageState } from "@/hooks/api/use-page-state";
-import type { FormSubmission, FormSubmissionStatus } from "@/types/projects/forms";
 
-const STATUS_VARIANT: Record<FormSubmissionStatus, "default" | "secondary" | "destructive"> = {
+const STATUS_VARIANT: Record<
+  FormSubmissionStatus,
+  "default" | "secondary" | "destructive"
+> = {
   submitted: "secondary",
   processed: "default",
   rejected: "destructive",
@@ -39,84 +51,46 @@ const STATUS_LABEL: Record<FormSubmissionStatus, string> = {
 interface FormSubmissionsTabProps {
   projectId: number;
   formId: number;
+  hasActions?: boolean;
 }
 
-interface SubmissionActionsCellProps {
-  row: FormSubmission;
-  canManage: boolean;
-  onView: (row: FormSubmission) => void;
-  onStatusUpdate: (row: FormSubmission, status: FormSubmissionStatus) => void;
-}
-
-function SubmissionActionsCell({ row, canManage, onView, onStatusUpdate }: SubmissionActionsCellProps) {
-  function handleView() { onView(row); }
-  function handleProcess() { onStatusUpdate(row, "processed"); }
-  function handleReject() { onStatusUpdate(row, "rejected"); }
-
-  return (
-    <div className="flex items-center gap-1">
-      <Button variant="ghost" size="sm" className="text-xs" onClick={handleView}>
-        View
-      </Button>
-      {canManage && row.status === "submitted" && (
-        <>
-          <Button
-            variant="ghost"
-            size="sm"
-            className="text-xs text-status-success-ink hover:text-status-success-ink"
-            onClick={handleProcess}
-          >
-            Process
-          </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            className="text-xs text-destructive hover:text-destructive"
-            onClick={handleReject}
-          >
-            Reject
-          </Button>
-        </>
-      )}
-    </div>
-  );
-}
-
-export function FormSubmissionsTab({ projectId, formId }: FormSubmissionsTabProps) {
-  const canManage = useCan("build:forms:manage");
+export function FormSubmissionsTab({
+  projectId,
+  formId,
+  hasActions = true,
+}: FormSubmissionsTabProps) {
   const [viewTarget, setViewTarget] = useState<FormSubmission | null>(null);
+  const pager = useBuildCursorPager(
+    `${projectId}:${formId}`,
+    "submissionCursors",
+  );
 
-  const { data, isLoading, isError, error, refetch } = useFormSubmissions(projectId, formId);
-  const updateSubmission = useUpdateSubmission(projectId, formId);
-
-  const pageState = usePageState({
-    permission: "build:forms:manage",
+  const {
+    data,
     isLoading,
     isError,
     error,
+    refetch,
+  } = useFormSubmissions(projectId, formId, {
+    cursor: pager.cursor,
+    limit: PAGE_SIZE,
   });
 
-  function handleStatusUpdate(submission: FormSubmission, status: FormSubmissionStatus) {
-    updateSubmission.mutate(
-      { submissionId: submission.id, status },
-      {
-        onSuccess: () => toast.success("Status updated"),
-        onError: (e) => toast.error(getErrorMessage(e)),
-      },
-    );
-  }
-
-  function handleViewOpen(row: FormSubmission) {
+  const handleViewOpen = useCallback((row: FormSubmission) => {
     setViewTarget(row);
-  }
+  }, []);
 
-  function handleViewClose(open: boolean) {
+  const handleViewClose = useCallback((open: boolean) => {
     if (!open) setViewTarget(null);
-  }
+  }, []);
 
-  function handleRetry() {
+  const handleRetry = useCallback(() => {
     void refetch();
-  }
+  }, [refetch]);
+
+  const handleNextPage = useCallback(() => {
+    pager.goNext(data?.pagination.nextCursor);
+  }, [data?.pagination.nextCursor, pager]);
 
   const columns: DataTableColumn<FormSubmission>[] = [
     {
@@ -133,7 +107,9 @@ export function FormSubmissionsTab({ projectId, formId }: FormSubmissionsTabProp
       key: "status",
       header: "Status",
       cell: (row) => (
-        <Badge variant={STATUS_VARIANT[row.status]}>{STATUS_LABEL[row.status]}</Badge>
+        <Badge variant={STATUS_VARIANT[row.status]}>
+          {STATUS_LABEL[row.status]}
+        </Badge>
       ),
     },
     {
@@ -141,7 +117,9 @@ export function FormSubmissionsTab({ projectId, formId }: FormSubmissionsTabProp
       header: "Ticket",
       cell: (row) =>
         row.convertedTicketId ? (
-          <Badge variant="outline" className="text-xs">Converted</Badge>
+          <Badge variant="outline" className="text-xs">
+            Converted
+          </Badge>
         ) : (
           <span className="text-muted-foreground">—</span>
         ),
@@ -150,7 +128,9 @@ export function FormSubmissionsTab({ projectId, formId }: FormSubmissionsTabProp
       key: "createdAt",
       header: "Submitted",
       cell: (row) => (
-        <span className="text-xs text-muted-foreground tabular-nums">{row.createdAt.slice(0, 10)}</span>
+        <span className="text-xs text-muted-foreground tabular-nums">
+          {row.createdAt.slice(0, 10)}
+        </span>
       ),
     },
     {
@@ -161,75 +141,84 @@ export function FormSubmissionsTab({ projectId, formId }: FormSubmissionsTabProp
       cell: (row) => (
         <SubmissionActionsCell
           row={row}
-          canManage={canManage}
           onView={handleViewOpen}
-          onStatusUpdate={handleStatusUpdate}
         />
       ),
     },
   ];
 
-  const items = data ?? [];
+  const items = data?.data ?? [];
 
-  const renderMobileCard = (row: FormSubmission) => (
-    <BuildMobileCard
-      eyebrow={`#${row.id}`}
-      title={row.submittedByName ?? "Anonymous"}
-      status={
-        <Badge variant={STATUS_VARIANT[row.status]}>{STATUS_LABEL[row.status]}</Badge>
-      }
-      meta={[
-        { label: "Submitted", value: row.createdAt.slice(0, 10) },
-        { label: "Ticket", value: row.convertedTicketId ? "Converted" : "—" },
-      ]}
-      actions={
-        <SubmissionActionsCell
-          row={row}
-          canManage={canManage}
-          onView={handleViewOpen}
-          onStatusUpdate={handleStatusUpdate}
-        />
-      }
-    />
+  const renderMobileCard = useCallback(
+    (row: FormSubmission) => (
+      <BuildMobileCard
+        eyebrow={`#${row.id}`}
+        title={row.submittedByName ?? "Anonymous"}
+        status={
+          <Badge variant={STATUS_VARIANT[row.status]}>
+            {STATUS_LABEL[row.status]}
+          </Badge>
+        }
+        meta={[
+          { label: "Submitted", value: row.createdAt.slice(0, 10) },
+          { label: "Ticket", value: row.convertedTicketId ? "Converted" : "—" },
+        ]}
+        actions={
+          <SubmissionActionsCell
+            row={row}
+            onView={handleViewOpen}
+          />
+        }
+      />
+    ),
+    [handleViewOpen],
   );
 
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-3 pt-3">
-      <PageState
-        resolution={pageState}
-        loading={
-          <DataTableSkeleton
-            mobileCards
-            rows={12}
-            headers={FORM_SUBMISSION_TABLE_HEADERS}
-            className="flex-1 min-h-0"
-          />
-        }
-        onRetry={handleRetry}
-        className="flex min-h-0 flex-1 flex-col"
-      >
-        {items.length === 0 ? (
+      {!hasActions && (
+        <Alert variant="default" className="border-warning/40 bg-warning/5">
+          <TriangleAlert className="h-4 w-4 text-warning" />
+          <AlertDescription className="text-sm">
+            This form has no Actions on Submit configured. Submissions will be marked Processed with no ticket created.
+          </AlertDescription>
+        </Alert>
+      )}
+      <BuildListSurface<FormSubmission>
+        permission="build:forms:manage"
+        rows={items}
+        columns={columns}
+        isLoading={isLoading}
+        isError={isError}
+        error={error}
+        getRowKey={(row) => row.id}
+        minWidth="640px"
+        mobileCard={renderMobileCard}
+        loadingHeaders={FORM_SUBMISSION_TABLE_HEADERS}
+        loadingRows={12}
+        pagination={{
+          mode: "cursor",
+          pageSize: PAGE_SIZE,
+          pageNumber: pager.pageNumber,
+          hasMore: Boolean(data?.pagination.hasMore),
+          hasPrevious: pager.hasPrevious,
+          onNext: handleNextPage,
+          onPrevious: pager.goPrevious,
+        }}
+        empty={
           <EmptyState
             className="min-h-0 flex-1"
             illustrationPreset="documents"
             title="No submissions yet"
             description="Submissions will appear here once the form is filled out."
           />
-        ) : (
-          <DataTable
-            data={items}
-            columns={columns}
-            getRowKey={(row) => row.id}
-            minWidth="640px"
-            mobileCard={renderMobileCard}
-            className="min-h-0 flex-1"
-            pagination={{ pageSize: 25 }}
-          />
-        )}
-      </PageState>
+        }
+        onRetry={handleRetry}
+        className="flex min-h-0 flex-1 flex-col"
+      />
 
       <Dialog open={!!viewTarget} onOpenChange={handleViewClose}>
-        <DialogContent className="max-w-lg">
+        <DialogContent aria-describedby={undefined} className="max-w-lg">
           <DialogHeader>
             <DialogTitle>Submission #{viewTarget?.id}</DialogTitle>
           </DialogHeader>
@@ -237,8 +226,11 @@ export function FormSubmissionsTab({ projectId, formId }: FormSubmissionsTabProp
             <div className="space-y-2">
               {viewTarget &&
                 Object.entries(viewTarget.values).map(([key, val]) => (
-                  <div key={key} className="flex gap-3 text-sm py-1 border-b last:border-0">
-                    <span className="font-medium text-muted-foreground min-w-[130px] capitalize shrink-0">
+                  <div
+                    key={key}
+                    className="flex gap-3 text-sm py-1 border-b last:border-0"
+                  >
+                    <span className="font-normal text-muted-foreground min-w-[130px] capitalize shrink-0">
                       {key.replace(/_/g, " ")}
                     </span>
                     <span className="text-foreground break-all">

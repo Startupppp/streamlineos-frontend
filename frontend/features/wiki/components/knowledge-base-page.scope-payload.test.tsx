@@ -1,0 +1,312 @@
+import { render, screen, waitFor, fireEvent, act } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+
+const mockAskMutate = jest.fn();
+const mockCreateGapMutate = jest.fn();
+
+jest.mock("next/navigation", () => ({
+  useRouter: () => ({ push: jest.fn(), replace: jest.fn() }),
+  usePathname: () => "/knowledge/chat",
+}));
+
+jest.mock("next-auth/react", () => ({
+  useSession: () => ({ data: { user: { id: "user-1" } } }),
+}));
+
+jest.mock("@/hooks/api/kb/ask", () => ({
+  ...jest.requireActual("@/hooks/api/kb/ask"),
+  useKbAsk: () => ({
+    mutate: mockAskMutate,
+    isPending: false,
+    isError: false,
+    stop: jest.fn(),
+    resetAttempt: jest.fn(),
+  }),
+  useKbAskPageOwners: () => ({
+    data: { pages: [{ data: [{ membershipId: 77, name: "Ada Lovelace" }, { membershipId: 88, name: "Grace Hopper" }], pagination: { limit: 50, hasMore: false, nextCursor: null }, selected: null }] },
+    isLoading: false,
+    hasNextPage: false,
+    isFetchingNextPage: false,
+    fetchNextPage: jest.fn(),
+    error: null,
+    refetch: jest.fn(),
+  }),
+  useKbAiAnswerFeedback: () => ({ mutate: jest.fn(), isPending: false }),
+  useCreateKbKnowledgeGap: () => ({ mutate: mockCreateGapMutate, isPending: false }),
+}));
+
+jest.mock("@/hooks/api/access", () => ({
+  useCan: () => true,
+  useAccess: () => ({ data: { permissions: ["kb:ai:generate"] }, refetch: jest.fn() }),
+}));
+
+jest.mock("@/hooks/api/kb/chat-history", () => ({
+  useKbConversations: () => ({ data: { pages: [] }, hasNextPage: false, isFetchingNextPage: false, fetchNextPage: jest.fn() }),
+  useRenameKbConversation: () => ({ mutate: jest.fn() }),
+  useDeleteKbConversation: () => ({ mutate: jest.fn() }),
+  useKbConversationMessages: () => ({
+    data: { pages: [{ messages: [], nextCursor: null }] },
+    hasNextPage: false,
+    isFetchingNextPage: false,
+    fetchNextPage: jest.fn(),
+    isLoading: false,
+  }),
+}));
+
+const READY_SOURCE = {
+  id: 1, kind: "file", title: "Engineering Spec", spaceId: 10, status: "ready",
+  chunkCount: 4, mimeType: null, fileSize: null, fileUrl: null, errorMessage: null,
+  createdById: "user-1", createdAt: "2026-09-01T00:00:00.000Z",
+};
+
+jest.mock("@/hooks/api/kb/sources", () => ({
+  useKbSources: () => ({
+    data: { pages: [{ data: [READY_SOURCE], pagination: { limit: 50, nextCursor: null, hasMore: false } }] },
+    isLoading: false,
+  }),
+  useUploadKbSource: () => ({ mutate: jest.fn(), isPending: false }),
+  useDeleteKbSource: () => ({ mutate: jest.fn(), isPending: false, variables: undefined }),
+  useCreateKbSourceNote: () => ({ mutate: jest.fn(), isPending: false }),
+}));
+
+jest.mock("@/hooks/api/kb/spaces", () => ({
+  useKbSpaces: () => ({
+    data: {
+      data: [{ id: 10, name: "Engineering" }, { id: 20, name: "Marketing" }],
+      pagination: { limit: 50, nextCursor: null, hasMore: false },
+    },
+    isLoading: false,
+  }),
+}));
+
+jest.mock("@/hooks/api/kb/pages", () => ({
+  useKbPagesSearch: () => ({
+    data: { items: [{ id: 5, title: "Onboarding Guide" }] },
+    isLoading: false,
+  }),
+}));
+
+import KnowledgeBasePage from "./knowledge-base-page";
+
+function renderPage() {
+  const qc = new QueryClient({ defaultOptions: { queries: { retry: false }, mutations: { retry: false } } });
+  render(
+    <QueryClientProvider client={qc}>
+      <KnowledgeBasePage />
+    </QueryClientProvider>,
+  );
+  return userEvent.setup({ pointerEventsCheck: 0 });
+}
+
+/** The object ask.mutate was handed as its first argument (the scoped input). */
+async function sentBody(): Promise<Record<string, unknown>> {
+  await waitFor(() => expect(mockAskMutate).toHaveBeenCalled());
+  return mockAskMutate.mock.calls[0][0] as Record<string, unknown>;
+}
+
+async function openScopeSheet(user: ReturnType<typeof userEvent.setup>) {
+  await user.click(screen.getByRole("button", { name: /choose sources to search/i }));
+  await screen.findByRole("button", { name: /search all sources and pages|^Search \d+ item/i });
+}
+
+async function confirmAndAsk(user: ReturnType<typeof userEvent.setup>) {
+  await user.click(screen.getByRole("button", { name: /search all sources and pages|apply page scope|^Search \d+ (item|page)/i }));
+  await user.type(screen.getByPlaceholderText(/ask anything/i), "What is the policy?");
+  await user.click(screen.getByRole("button", { name: "Send" }));
+}
+
+beforeEach(() => {
+  mockAskMutate.mockReset();
+  mockCreateGapMutate.mockReset();
+});
+
+describe("KnowledgeBasePage — every scope dimension the sheet edits reaches the ask request body", () => {
+  it("states the broad default search scope beside the composer before the user sends a question", async () => {
+    const user = renderPage();
+
+    expect(screen.getByText("Searching all accessible knowledge.")).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Edit" }));
+    expect(screen.getByText(/all ready sources and pages will be searched/i)).toBeInTheDocument();
+  });
+
+  it("sends status when the status control is set, because a control that renders without reaching the payload scopes nothing", async () => {
+    const user = renderPage();
+    await openScopeSheet(user);
+
+    await user.click(screen.getByRole("button", { name: "Draft" }));
+    await confirmAndAsk(user);
+
+    expect(await sentBody()).toHaveProperty("status", "draft");
+    expect(screen.getByRole("button", { name: "Searching Filtered" })).toBeInTheDocument();
+  });
+
+  it("omits status entirely when the status control is left on Any, rather than sending an undefined that vanishes in JSON", async () => {
+    const user = renderPage();
+    await openScopeSheet(user);
+    await confirmAndAsk(user);
+
+    expect(Object.keys(await sentBody())).not.toContain("status");
+  });
+
+  it("sends ownerMembershipId as the member's numeric membership id when an owner is picked", async () => {
+    const user = renderPage();
+    await openScopeSheet(user);
+
+    await user.click(screen.getByRole("combobox", { name: /restrict answer to pages owned by a member/i }));
+    await user.click(await screen.findByText("Grace Hopper"));
+    await confirmAndAsk(user);
+
+    expect(await sentBody()).toHaveProperty("ownerMembershipId", 88);
+  });
+
+  it("omits ownerMembershipId when no owner is picked", async () => {
+    const user = renderPage();
+    await openScopeSheet(user);
+    await confirmAndAsk(user);
+
+    expect(Object.keys(await sentBody())).not.toContain("ownerMembershipId");
+  });
+
+  it("sends spaceId when a space is chosen, which the space control previously filtered the list by without ever scoping the answer", async () => {
+    const user = renderPage();
+    await openScopeSheet(user);
+
+    await user.click(screen.getByRole("button", { name: "Engineering" }));
+    await confirmAndAsk(user);
+
+    expect(await sentBody()).toHaveProperty("spaceId", 10);
+  });
+
+  it("reports the selected question space on an insufficient-evidence gap", async () => {
+    mockAskMutate.mockImplementation((_input, options) =>
+      options.onSuccess({ hasContext: false, answer: "", citations: [], conversationId: 9 }),
+    );
+    const user = renderPage();
+    await openScopeSheet(user);
+    await user.click(screen.getByRole("button", { name: "Engineering" }));
+    await confirmAndAsk(user);
+
+    await user.click(await screen.findByRole("button", { name: /create a knowledge gap/i }));
+
+    expect(mockCreateGapMutate).toHaveBeenCalledWith(
+      { question: "What is the policy?", spaceId: 10 },
+      expect.objectContaining({ onSuccess: expect.any(Function), onError: expect.any(Function) }),
+    );
+  });
+
+  it("omits spaceId when the space control is left on All", async () => {
+    const user = renderPage();
+    await openScopeSheet(user);
+    await confirmAndAsk(user);
+
+    expect(Object.keys(await sentBody())).not.toContain("spaceId");
+  });
+
+  it("sends verifiedOnly when the verified toggle is on", async () => {
+    const user = renderPage();
+    await openScopeSheet(user);
+
+    await user.click(screen.getByRole("switch", { name: /verified pages and articles only/i }));
+    await confirmAndAsk(user);
+
+    expect(await sentBody()).toHaveProperty("verifiedOnly", true);
+  });
+
+  it("omits verifiedOnly when the verified toggle is off", async () => {
+    const user = renderPage();
+    await openScopeSheet(user);
+    await confirmAndAsk(user);
+
+    expect(Object.keys(await sentBody())).not.toContain("verifiedOnly");
+  });
+
+  it("sends sourceIds for a file or note ticked in the sources list", async () => {
+    const user = renderPage();
+    await openScopeSheet(user);
+
+    await user.click(screen.getByRole("checkbox", { name: /include engineering spec in search/i }));
+    await confirmAndAsk(user);
+
+    expect(await sentBody()).toHaveProperty("sourceIds", [1]);
+  });
+
+  it("sends pageIds for a wiki page ticked in the page picker", async () => {
+    const user = renderPage();
+    await openScopeSheet(user);
+
+    await user.click(screen.getByRole("checkbox", { name: /include onboarding guide in search/i }));
+    await confirmAndAsk(user);
+
+    expect(await sentBody()).toHaveProperty("pageIds", [5]);
+  });
+
+  it("omits sourceIds and pageIds when nothing is ticked", async () => {
+    const user = renderPage();
+    await openScopeSheet(user);
+    await confirmAndAsk(user);
+
+    const keys = Object.keys(await sentBody());
+    expect(keys).not.toContain("sourceIds");
+    expect(keys).not.toContain("pageIds");
+  });
+
+  it("requires a compatible page selection when a page-only filter excludes selected files and notes", async () => {
+    const user = renderPage();
+    await openScopeSheet(user);
+
+    await user.click(screen.getByRole("checkbox", { name: /include engineering spec in search/i }));
+    await user.click(screen.getByRole("button", { name: "Draft" }));
+
+    expect(screen.getByText(/selected files and notes are excluded/i)).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Search 0 pages" })).toBeDisabled();
+
+    await user.click(screen.getByRole("checkbox", { name: /include onboarding guide in search/i }));
+    expect(screen.getByRole("button", { name: "Search 1 page" })).toBeEnabled();
+  });
+
+  it("carries all six dimensions together in one request, so no dimension overwrites another on the way to the body", async () => {
+    const user = renderPage();
+    await openScopeSheet(user);
+
+    await user.click(screen.getByRole("button", { name: "Published" }));
+    await user.click(screen.getByRole("button", { name: "Engineering" }));
+    await user.click(screen.getByRole("switch", { name: /verified pages and articles only/i }));
+    await user.click(screen.getByRole("checkbox", { name: /include engineering spec in search/i }));
+    await user.click(screen.getByRole("checkbox", { name: /include onboarding guide in search/i }));
+    await user.click(screen.getByRole("combobox", { name: /restrict answer to pages owned by a member/i }));
+    await user.click(await screen.findByText("Ada Lovelace"));
+    expect(screen.getByText(/selected files and notes are excluded/i)).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Search 1 page" })).toBeEnabled();
+    await confirmAndAsk(user);
+
+    expect(await sentBody()).toMatchObject({
+      question: "What is the policy?",
+      status: "published",
+      spaceId: 10,
+      verifiedOnly: true,
+      sourceIds: [1],
+      pageIds: [5],
+      ownerMembershipId: 77,
+    });
+  });
+});
+
+describe("KnowledgeBasePage — Suggestion placeholder double-send prevention", () => {
+  it("fires the ask request exactly once when the same suggestion button is clicked twice before React re-renders so the user does not receive two responses or an error toast", async () => {
+    renderPage();
+
+    const suggestion = await screen.findByRole("button", {
+      name: "Summarize the key points across my documents",
+    });
+
+    // Fire two clicks synchronously before any React re-render flushes;
+    // the second click happens while sendingRef.current is already true.
+    fireEvent.click(suggestion);
+    fireEvent.click(suggestion);
+
+    await act(async () => {});
+
+    expect(mockAskMutate).toHaveBeenCalledTimes(1);
+  });
+});

@@ -1,13 +1,36 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, fireEvent } from "@testing-library/react";
 import { ClientAccessPage } from "./client-access-page";
 import { ApiError } from "@/lib/api-envelope";
 
 jest.mock("@/components/ui/page-wrapper", () => ({
-  PageWrapper: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+  PageWrapper: ({
+    children,
+    actions,
+    filters,
+  }: {
+    children: React.ReactNode;
+    actions?: React.ReactNode;
+    filters?: React.ReactNode;
+  }) => (
+    <div>
+      {actions}
+      {filters}
+      {children}
+    </div>
+  ),
 }));
 
 jest.mock("@/components/ui/data-table", () => ({
-  DataTable: () => <div data-testid="data-table" />,
+  DataTable: ({ selection }: { selection?: { onChange: (sel: Set<string | number>) => void } }) => {
+    const handleSelectGrant = () => selection?.onChange(new Set(["grant-1"]));
+    return (
+      <div
+        data-testid="data-table"
+        data-has-selection={String(selection !== undefined)}
+        onClick={handleSelectGrant}
+      />
+    );
+  },
   DataTableSkeleton: () => <div data-testid="data-table-skeleton" />,
 }));
 
@@ -61,6 +84,53 @@ jest.mock("./grant-form-dialog", () => ({
   GrantFormDialog: () => <div data-testid="grant-form-dialog" />,
 }));
 
+let capturedOnInvited: ((result: unknown) => void) | undefined;
+
+jest.mock("./invite-client-dialog", () => ({
+  InviteClientDialog: ({
+    open,
+    onInvited,
+  }: {
+    open: boolean;
+    onOpenChange: (v: boolean) => void;
+    onInvited: (result: unknown) => void;
+  }) => {
+    capturedOnInvited = onInvited;
+    return open ? (
+      <div data-testid="invite-client-dialog">
+        <button
+          type="button"
+          data-testid="trigger-queued"
+          onClick={() =>
+            onInvited({
+              portalMembershipId: "mem-1",
+              projectClientGrantId: "grant-1",
+              maskedRecipient: "j***@example.com",
+              deliveryOutcome: "QUEUED",
+            })
+          }
+        >
+          Trigger Queued
+        </button>
+        <button
+          type="button"
+          data-testid="trigger-suppressed"
+          onClick={() =>
+            onInvited({
+              portalMembershipId: "mem-2",
+              projectClientGrantId: "grant-2",
+              maskedRecipient: "b***@example.com",
+              deliveryOutcome: "SUPPRESSED",
+            })
+          }
+        >
+          Trigger Suppressed
+        </button>
+      </div>
+    ) : null;
+  },
+}));
+
 jest.mock("sonner", () => ({
   toast: { error: jest.fn(), success: jest.fn() },
 }));
@@ -86,14 +156,33 @@ jest.mock("@/hooks/common/use-animated-icon", () => ({
   useAnimatedIcon: () => ({ iconRef: { current: null }, hoverHandlers: {} }),
 }));
 
+jest.mock("lucide-react", () => ({
+  ...(jest.requireActual("lucide-react") as object),
+  X: () => <span data-testid="x-icon" />,
+}));
+
+jest.mock("@/components/pm-chrome", () => ({
+  PM_TOOLBAR: "",
+}));
+
+const mockUseBuildListKeyboard = jest.fn();
+
+jest.mock("@/hooks/common/use-build-list-keyboard", () => ({
+  useBuildListKeyboard: (...args: unknown[]) => mockUseBuildListKeyboard(...args),
+}));
+
 const mockUseProjectClientGrants = jest.fn();
 const mockUseRevokeGrant = jest.fn();
+const mockUseBulkRevokeGrant = jest.fn();
 const mockUseAccess = jest.fn();
 const mockUseCan = jest.fn<boolean, [string]>(() => false);
+const mockSetFilter = jest.fn();
+const mockResetFilters = jest.fn();
 
 jest.mock("@/hooks/api/portal-access/grants", () => ({
   useProjectClientGrants: (...args: unknown[]) => mockUseProjectClientGrants(...args),
   useRevokeGrant: (...args: unknown[]) => mockUseRevokeGrant(...args),
+  useBulkRevokeGrant: (...args: unknown[]) => mockUseBulkRevokeGrant(...args),
 }));
 
 jest.mock("@/hooks/api/access", () => ({
@@ -128,8 +217,8 @@ jest.mock("./use-client-access-url-state", () => ({
     hasActiveFilters: Object.keys(mockSearchParamsMap).some((k) =>
       ["q", "state", "permission"].includes(k),
     ),
-    setFilter: jest.fn(),
-    resetFilters: jest.fn(),
+    setFilter: mockSetFilter,
+    resetFilters: mockResetFilters,
   }),
 }));
 
@@ -179,12 +268,16 @@ beforeEach(() => {
   jest.clearAllMocks();
   mockSearchParamsMap = {};
   mockRouterReplace.mockReset();
+  mockSetFilter.mockReset();
+  mockResetFilters.mockReset();
   mockUseAccess.mockReturnValue(ACCESS_GRANTED);
   mockUseCan.mockReturnValue(true);
   mockUseProjectClientGrants.mockReturnValue(
     baseQueryResult({ data: emptyGrantsPage }),
   );
   mockUseRevokeGrant.mockReturnValue({ mutate: jest.fn(), isPending: false });
+  mockUseBulkRevokeGrant.mockReturnValue({ mutate: jest.fn(), isPending: false });
+  mockUseBuildListKeyboard.mockReturnValue({ focusedIndex: null, setFocusedIndex: jest.fn() });
 });
 
 describe("ClientAccessPage — page state correctness", () => {
@@ -274,6 +367,19 @@ describe("ClientAccessPage — page state correctness", () => {
 });
 
 describe("ClientAccessPage — URL filter wiring", () => {
+  it("renders lifecycle and capability filters instead of exposing search as the only discovery control", () => {
+    render(<ClientAccessPage />);
+    expect(screen.getByRole("combobox", { name: /filter by grant status/i })).toBeInTheDocument();
+    expect(screen.getByRole("combobox", { name: /filter by client permission/i })).toBeInTheDocument();
+  });
+
+  it("clears every URL-owned filter from the visible clear action", () => {
+    mockSearchParamsMap = { state: "expired" };
+    render(<ClientAccessPage />);
+    fireEvent.click(screen.getAllByRole("button", { name: /clear filters/i })[0]);
+    expect(mockResetFilters).toHaveBeenCalledTimes(1);
+  });
+
   it("passes q from URL search params to useProjectClientGrants so search is server-side rather than client-side filtering one page", () => {
     mockSearchParamsMap = { q: "alice" };
     render(<ClientAccessPage />);
@@ -328,5 +434,138 @@ describe("ClientAccessPage — URL filter wiring", () => {
     );
     render(<ClientAccessPage />);
     expect(screen.getByTestId("data-table")).toBeInTheDocument();
+  });
+});
+
+const oneGrantPage = {
+  data: [
+    {
+      projectClientGrantId: "grant-1",
+      partyContactId: "contact-1",
+      contactFirstName: "Alice",
+      contactLastName: "Smith",
+      projectId: 42,
+      portalMembershipId: "membership-1",
+      status: "ACTIVE" as const,
+      canViewMilestones: true,
+      canViewTasks: false,
+      canViewAttachments: false,
+      canViewComments: false,
+      canSubmitChangeRequests: false,
+    },
+  ],
+  pagination: { hasMore: false, nextCursor: undefined },
+};
+
+describe("ClientAccessPage — keyboard shortcuts (Requirement C3)", () => {
+  it("passes onCreate when the user has build:clientvisibility:manage permission so the c key opens the grant form", () => {
+    mockUseCan.mockReturnValue(true);
+    mockUseProjectClientGrants.mockReturnValue(baseQueryResult({ data: oneGrantPage }));
+    render(<ClientAccessPage />);
+    const call = mockUseBuildListKeyboard.mock.calls.find(
+      ([opts]: [{ onCreate?: () => void }]) => opts.onCreate !== undefined,
+    );
+    expect(call).toBeDefined();
+  });
+
+  it("omits onCreate when the user lacks build:clientvisibility:manage permission so the c key does not open the form", () => {
+    mockUseCan.mockReturnValue(false);
+    mockUseProjectClientGrants.mockReturnValue(baseQueryResult({ data: emptyGrantsPage }));
+    render(<ClientAccessPage />);
+    const lastCall = mockUseBuildListKeyboard.mock.calls.at(-1) as [{ onCreate?: () => void; onOpen?: () => void; onEdit?: (index: number) => void }];
+    expect(lastCall?.[0]?.onCreate).toBeUndefined();
+    expect(typeof lastCall?.[0]?.onOpen).toBe("function");
+    expect(lastCall?.[0]?.onEdit).toBeUndefined();
+  });
+
+  it("passes onEdit so the e key opens the focused grant in the edit dialog", () => {
+    mockUseCan.mockReturnValue(true);
+    mockUseProjectClientGrants.mockReturnValue(baseQueryResult({ data: oneGrantPage }));
+    render(<ClientAccessPage />);
+    const lastCall = mockUseBuildListKeyboard.mock.calls.at(-1) as [{ onEdit?: (index: number) => void }];
+    expect(lastCall?.[0]?.onEdit).toBeDefined();
+  });
+});
+
+describe("ClientAccessPage — bulk revoke selection (Requirement C3)", () => {
+  it("does not render row selection for a read-only viewer", () => {
+    mockUseCan.mockReturnValue(false);
+    mockUseProjectClientGrants.mockReturnValue(baseQueryResult({ data: oneGrantPage }));
+    render(<ClientAccessPage />);
+    expect(screen.getByTestId("data-table")).toHaveAttribute("data-has-selection", "false");
+  });
+
+  it("shows the bulk revoke bar with selected count after a row is selected", () => {
+    mockUseCan.mockReturnValue(true);
+    mockUseProjectClientGrants.mockReturnValue(baseQueryResult({ data: oneGrantPage }));
+    render(<ClientAccessPage />);
+    fireEvent.click(screen.getByTestId("data-table"));
+    expect(screen.getByText("1 selected")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /revoke selected/i })).toBeInTheDocument();
+  });
+
+  it("hides the bulk revoke bar after the clear button is clicked", () => {
+    mockUseCan.mockReturnValue(true);
+    mockUseProjectClientGrants.mockReturnValue(baseQueryResult({ data: oneGrantPage }));
+    render(<ClientAccessPage />);
+    fireEvent.click(screen.getByTestId("data-table"));
+    expect(screen.getByText("1 selected")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: /clear selection/i }));
+    expect(screen.queryByText("1 selected")).not.toBeInTheDocument();
+  });
+});
+
+describe("ClientAccessPage — Invite Client CTA", () => {
+  it("renders the Invite Client button when the user has build:clientvisibility:manage so they can create a membership without leaving the page", () => {
+    mockUseCan.mockReturnValue(true);
+    mockUseProjectClientGrants.mockReturnValue(baseQueryResult({ data: emptyGrantsPage }));
+    render(<ClientAccessPage />);
+    expect(screen.getByRole("button", { name: /invite client/i })).toBeInTheDocument();
+  });
+
+  it("does not render the Invite Client button when the user lacks build:clientvisibility:manage so an unauthorized viewer cannot start an invite flow", () => {
+    mockUseCan.mockReturnValue(false);
+    mockUseProjectClientGrants.mockReturnValue(baseQueryResult({ data: emptyGrantsPage }));
+    render(<ClientAccessPage />);
+    expect(screen.queryByRole("button", { name: /invite client/i })).not.toBeInTheDocument();
+  });
+
+  it("opens the InviteClientDialog when the Invite Client button is clicked", () => {
+    mockUseCan.mockReturnValue(true);
+    mockUseProjectClientGrants.mockReturnValue(baseQueryResult({ data: emptyGrantsPage }));
+    render(<ClientAccessPage />);
+    fireEvent.click(screen.getByRole("button", { name: /invite client/i }));
+    expect(screen.getByTestId("invite-client-dialog")).toBeInTheDocument();
+  });
+});
+
+describe("ClientAccessPage — activation delivery outcomes", () => {
+  it("activation success with queued delivery: onInvited is called and the dialog is still rendered — the page grants observer access without forcing a reload", () => {
+    mockUseCan.mockReturnValue(true);
+    mockUseProjectClientGrants.mockReturnValue(baseQueryResult({ data: emptyGrantsPage }));
+    render(<ClientAccessPage />);
+    fireEvent.click(screen.getByRole("button", { name: /invite client/i }));
+    expect(screen.getByTestId("invite-client-dialog")).toBeInTheDocument();
+    fireEvent.click(screen.getByTestId("trigger-queued"));
+    expect(capturedOnInvited).toBeDefined();
+  });
+
+  it("suppressed delivery state: onInvited is called with SUPPRESSED outcome — the page does not crash and remains consistent for a follow-up resend", () => {
+    mockUseCan.mockReturnValue(true);
+    mockUseProjectClientGrants.mockReturnValue(baseQueryResult({ data: emptyGrantsPage }));
+    render(<ClientAccessPage />);
+    fireEvent.click(screen.getByRole("button", { name: /invite client/i }));
+    expect(screen.getByTestId("invite-client-dialog")).toBeInTheDocument();
+    fireEvent.click(screen.getByTestId("trigger-suppressed"));
+    expect(capturedOnInvited).toBeDefined();
+  });
+
+  it("the Invite Client button re-appears after a successful activation so the user can invite another client without reloading", () => {
+    mockUseCan.mockReturnValue(true);
+    mockUseProjectClientGrants.mockReturnValue(baseQueryResult({ data: emptyGrantsPage }));
+    render(<ClientAccessPage />);
+    fireEvent.click(screen.getByRole("button", { name: /invite client/i }));
+    fireEvent.click(screen.getByTestId("trigger-queued"));
+    expect(screen.getByRole("button", { name: /invite client/i })).toBeInTheDocument();
   });
 });

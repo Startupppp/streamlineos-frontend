@@ -5,6 +5,7 @@ import {
   ClipboardList,
   FileText,
   FolderPlus,
+  Gift,
   ListPlus,
   MessageSquareText,
   Package,
@@ -14,6 +15,7 @@ import {
   TicketPlus,
   UserPlus,
   Users,
+  Wallet,
 } from "lucide-react"
 import type { PermissionKey } from "@/lib/rbac/permissions"
 import type { ProductKey } from "@/components/layout/sidebar/sidebar-nav-types"
@@ -25,7 +27,7 @@ export interface CreateAction {
   icon: LucideIcon
   permission?: PermissionKey | readonly PermissionKey[]
   module?: string
-  action?: "create-issue"
+  action?: "create-issue" | "compose-mail"
 }
 
 export interface CreateGroup {
@@ -50,9 +52,9 @@ export const QUICK_CREATE_GROUPS: CreateGroup[] = [
       {
         id: "send-mail",
         label: "Send mail",
-        href: "/mail?compose=1",
         icon: Send,
         permission: "mail:messages:send",
+        action: "compose-mail",
       },
       {
         id: "calendar-event",
@@ -78,7 +80,7 @@ export const QUICK_CREATE_GROUPS: CreateGroup[] = [
       {
         id: "new-project",
         label: "New project",
-        href: "/build?create=1",
+        href: "/build/projects?create=1",
         icon: FolderPlus,
         permission: "build:create",
         module: "BUILD",
@@ -143,7 +145,7 @@ export const QUICK_CREATE_GROUPS: CreateGroup[] = [
   {
     id: "people",
     label: "People",
-    products: ["hrms", "payroll", "timesheets", "administration"],
+    products: ["hrms", "timesheets", "administration"],
     items: [
       {
         id: "add-employee",
@@ -171,6 +173,37 @@ export const QUICK_CREATE_GROUPS: CreateGroup[] = [
     ],
   },
   {
+    id: "payroll",
+    label: "Payroll",
+    products: ["payroll"],
+    items: [
+      {
+        id: "payroll-run",
+        label: "Payroll run",
+        href: "/payroll/runs",
+        icon: Wallet,
+        permission: "payroll:runs:manage",
+        module: "PAYROLL",
+      },
+      {
+        id: "add-bonus",
+        label: "Bonus",
+        href: "/payroll/bonuses?create=1",
+        icon: Gift,
+        permission: "hr:bonuses:manage",
+        module: "PAYROLL",
+      },
+      {
+        id: "expense-claim",
+        label: "Expense claim",
+        href: "/payroll/reimbursements?create=1",
+        icon: Receipt,
+        permission: "hr:payroll:view",
+        module: "PAYROLL",
+      },
+    ],
+  },
+  {
     id: "docs",
     label: "Docs & more",
     products: ["documents", "surveys", "sign", "finance", "inventory"],
@@ -188,7 +221,7 @@ export const QUICK_CREATE_GROUPS: CreateGroup[] = [
         label: "Help article",
         href: "/support/kb?create=1",
         icon: FileText,
-        permission: "kb:articles:create",
+        permission: "support:kb:manage",
         module: "HELPDESK",
       },
       {

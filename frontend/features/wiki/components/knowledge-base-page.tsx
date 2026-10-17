@@ -1,19 +1,21 @@
 "use client";
 
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { useSession } from "next-auth/react";
 import { usePathname, useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { motion, useReducedMotion } from "framer-motion";
 import { type InfiniteData, useQueryClient } from "@tanstack/react-query";
 import { BookOpenTextIcon } from "@animateicons/react/lucide";
-import { ChevronUp, Loader2, MessageSquare, Send } from "lucide-react";
+import { ChevronUp, Loader2, MessageSquare, Send, SlidersHorizontal } from "lucide-react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Input } from "@/components/ui/input";
-import { useKbAsk } from "@/hooks/api/kb/ask";
+import { useKbAsk, useKbAskPageOwners } from "@/hooks/api/kb/ask";
 import { isAiStreamAbort } from "@/hooks/api/ai-text-stream";
+import { isApiError } from "@/lib/api-envelope";
 import {
   useKbConversations,
   useRenameKbConversation,
@@ -26,9 +28,20 @@ import {
   useKbSources,
   useUploadKbSource,
   useDeleteKbSource,
+  type KbSourcesParams,
 } from "@/hooks/api/kb/sources";
-import { pageHref } from "@/lib/knowledge-routes";
-import { KbSourcesSheet } from "@/features/wiki/components/kb-sources-sheet";
+import { useKbPagesSearch } from "@/hooks/api/kb/pages";
+import { useDebouncedValue } from "@/hooks/common/use-debounce";
+import { companyDocumentHref, pageHref } from "@/lib/knowledge-routes";
+import {
+  KbSourcesSheet,
+  type SourceKindFilter,
+  type OwnerFilter,
+  type SpaceIdFilter,
+  type OwnerMembershipFilter,
+  type StatusScopeFilter,
+} from "@/features/wiki/components/kb-sources-sheet";
+import { useKbSpaces } from "@/hooks/api/kb/spaces";
 import { KbNoteSheet } from "@/features/wiki/components/kb-note-sheet";
 import { KbConversationList } from "@/features/wiki/components/kb-conversation-list";
 import {
@@ -39,16 +52,32 @@ import {
 import {
   DaySeparator,
   EmptyChat,
+  InsufficientEvidenceBanner,
+  OverQuotaBanner,
+  DisagreementBanner,
+  CopyAnswerButton,
+  AnswerFeedbackBar,
+  CitationEvidenceList,
   buildKbHistoryRows,
+  questionForAssistantId,
 } from "@/features/wiki/components/kb-chat-parts";
+import type { KbAskCitation } from "@/types/kb";
 import { knowledgeAndSurveysQueryKeys } from "@/lib/query-keys/knowledge-and-surveys";
 import { getErrorMessage } from "@/lib/get-error-message";
 
 interface Pending {
   question: string;
+  spaceId?: number;
   answer?: string;
   error?: string;
+  citations?: KbAskCitation[];
+  hasContext?: boolean;
+  disagreement?: { summary: string };
+  isQuotaError?: boolean;
+  quotaMessage?: string;
 }
+
+type SourcesSheetState = { kind: "closed" } | { kind: "manage" } | { kind: "scope" };
 
 export default function KnowledgeBasePage() {
   const router = useRouter();
@@ -62,7 +91,23 @@ export default function KnowledgeBasePage() {
   const [conversationsSearch, setConversationsSearch] = useState("");
   const [activeConversationId, setActiveConversationId] = useState<number | null>(null);
 
-  const [sourcesSheetOpen, setSourcesSheetOpen] = useState(false);
+  const [sourcesSheet, setSourcesSheet] = useState<SourcesSheetState>({ kind: "closed" });
+  const [scopeSourceIds, setScopeSourceIds] = useState<number[]>([]);
+  const [pendingScopeIds, setPendingScopeIds] = useState<number[]>([]);
+  const [scopeVerifiedOnly, setScopeVerifiedOnly] = useState(false);
+  const [pendingVerifiedOnly, setPendingVerifiedOnly] = useState(false);
+  const [scopePageIds, setScopePageIds] = useState<number[]>([]);
+  const [pendingPageIds, setPendingPageIds] = useState<number[]>([]);
+  const [scopeSpaceId, setScopeSpaceId] = useState<SpaceIdFilter>(null);
+  const [pendingSpaceId, setPendingSpaceId] = useState<SpaceIdFilter>(null);
+  const [scopeOwnerMembershipId, setScopeOwnerMembershipId] =
+    useState<OwnerMembershipFilter>(null);
+  const [pendingOwnerMembershipId, setPendingOwnerMembershipId] =
+    useState<OwnerMembershipFilter>(null);
+  const [scopeStatus, setScopeStatus] = useState<StatusScopeFilter>(null);
+  const [pendingStatus, setPendingStatus] = useState<StatusScopeFilter>(null);
+  const [ownerSearch, setOwnerSearch] = useState("");
+  const [pageSearchQuery, setPageSearchQuery] = useState("");
   const [noteOpen, setNoteOpen] = useState(false);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -74,6 +119,10 @@ export default function KnowledgeBasePage() {
   const tempIdRef = useRef(0);
   const generationRef = useRef(0);
   const initializedRef = useRef(false);
+  const sendingRef = useRef(false);
+
+  const { data: session } = useSession();
+  const currentUserId = session?.user?.id;
 
   const ask = useKbAsk();
   const conversationMessages = useKbConversationMessages(activeConversationId, true);
@@ -86,6 +135,42 @@ export default function KnowledgeBasePage() {
   const sourcesQuery = useKbSources();
   const uploadSource = useUploadKbSource();
   const deleteSource = useDeleteKbSource();
+
+  const [scopeKindFilter, setScopeKindFilter] = useState<SourceKindFilter>("all");
+  const [scopeOwnerFilter, setScopeOwnerFilter] = useState<OwnerFilter>("all");
+
+  const scopeFilters: KbSourcesParams = {
+    kind: scopeKindFilter !== "all" ? scopeKindFilter : undefined,
+    createdById: scopeOwnerFilter === "mine" && currentUserId ? currentUserId : undefined,
+  };
+  const hasScopeFilters = scopeFilters.kind !== undefined || scopeFilters.createdById !== undefined;
+  const scopeSourcesQuery = useKbSources(hasScopeFilters ? scopeFilters : undefined);
+  const scopeSources = (scopeSourcesQuery.data?.pages ?? []).flatMap((page) => page.data);
+
+  const spacesQuery = useKbSpaces();
+  const kbSpaces = spacesQuery.data?.data ?? [];
+
+  const debouncedOwnerSearch = useDebouncedValue(ownerSearch.trim(), 300);
+  const ownersQuery = useKbAskPageOwners(
+    debouncedOwnerSearch,
+    pendingOwnerMembershipId ?? undefined,
+    sourcesSheet.kind === "scope",
+  );
+  const scopeOwners = (ownersQuery.data?.pages ?? []).flatMap((page) => page.data);
+  const selectedScopeOwner = ownersQuery.data?.pages[0]?.selected ?? null;
+
+  function handleOwnersLoadMore() {
+    void ownersQuery.fetchNextPage();
+  }
+
+  function handleOwnersRetry() {
+    void ownersQuery.refetch();
+  }
+
+  const debouncedPageSearchQuery = useDebouncedValue(pageSearchQuery.trim(), 300);
+  const pageSearchResult = useKbPagesSearch(debouncedPageSearchQuery);
+  const pageSearchResults = pageSearchResult.data?.items ?? [];
+  const pageSearchIsLoading = pageSearchResult.isLoading;
 
   const allConversations = useMemo(
     () => (conversationsQuery.data?.pages ?? []).flatMap((p) => p.conversations),
@@ -109,6 +194,7 @@ export default function KnowledgeBasePage() {
   );
 
   const rows = useMemo(() => buildKbHistoryRows(persisted), [persisted]);
+  const questionByAssistantId = useMemo(() => questionForAssistantId(persisted), [persisted]);
 
   const loadOlder = useCallback(() => {
     const el = scrollRef.current;
@@ -179,19 +265,31 @@ export default function KnowledgeBasePage() {
 
   function sendMessage(text: string) {
     const trimmed = text.trim();
-    if (!trimmed || ask.isPending) return;
+    if (!trimmed || ask.isPending || sendingRef.current) return;
+    sendingRef.current = true;
     setInput("");
     isNearBottomRef.current = true;
-    setPending({ question: trimmed });
+    setPending({ question: trimmed, ...(scopeSpaceId !== null ? { spaceId: scopeSpaceId } : {}) });
     const generation = ++generationRef.current;
     function handleToken(token: string) {
       if (generationRef.current === generation)
         setPending((current) => current ? { ...current, answer: (current.answer ?? "") + token } : current);
     }
+    const scopePayload = {
+      ...(scopeSourceIds.length > 0 ? { sourceIds: scopeSourceIds } : {}),
+      ...(scopePageIds.length > 0 ? { pageIds: scopePageIds } : {}),
+      ...(scopeVerifiedOnly ? { verifiedOnly: true } : {}),
+      ...(scopeSpaceId !== null ? { spaceId: scopeSpaceId } : {}),
+      ...(scopeOwnerMembershipId !== null
+        ? { ownerMembershipId: scopeOwnerMembershipId }
+        : {}),
+      ...(scopeStatus !== null ? { status: scopeStatus } : {}),
+    };
     ask.mutate(
-      { question: trimmed, conversationId: activeConversationId ?? undefined, onToken: handleToken },
+      { question: trimmed, conversationId: activeConversationId ?? undefined, onToken: handleToken, ...scopePayload },
       {
         onSuccess: (data) => {
+          sendingRef.current = false;
           if (generationRef.current !== generation) return;
           const convId = activeConversationId ?? data.conversationId;
           const now = new Date().toISOString();
@@ -205,12 +303,23 @@ export default function KnowledgeBasePage() {
           });
           if (activeConversationId === null) setConversation(data.conversationId);
           void qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.kb.chatConversations() });
-          setPending(null);
+          if (!data.hasContext) {
+            setPending((prev) => prev ? { ...prev, answer: undefined, hasContext: false, citations: data.citations } : prev);
+          } else if (data.disagreement) {
+            setPending((prev) => prev ? { ...prev, answer: undefined, hasContext: true, disagreement: data.disagreement, citations: data.citations } : prev);
+          } else {
+            setPending(null);
+          }
         },
         onError: (error) => {
+          sendingRef.current = false;
           if (generationRef.current !== generation) return;
           if (isAiStreamAbort(error)) {
             setPending((current) => current ? { ...current, error: "Generation stopped. This answer is incomplete." } : current);
+            return;
+          }
+          if (isApiError(error) && error.status === 402) {
+            setPending((current) => current ? { ...current, isQuotaError: true, quotaMessage: error.message } : current);
             return;
           }
           const message = getErrorMessage(error);
@@ -228,6 +337,8 @@ export default function KnowledgeBasePage() {
   function handleCitationClick(e: React.MouseEvent<HTMLButtonElement>) {
     const pageId = Number(e.currentTarget.dataset.pageId);
     if (pageId) router.push(pageHref(pageId));
+    const linkedDocumentId = Number(e.currentTarget.dataset.linkedDocumentId);
+    if (linkedDocumentId) router.push(companyDocumentHref(linkedDocumentId));
   }
 
   function handleToggleConversations() {
@@ -238,6 +349,7 @@ export default function KnowledgeBasePage() {
   function handleRegenerate() {
     if (!pending || ask.isPending) return;
     ask.resetAttempt();
+    setPending(null);
     sendMessage(pending.question);
   }
   function handleSelectConversation(id: number) { generationRef.current += 1; ask.stop(); setPending(null); setConversation(id); setConversationsOpen(false); }
@@ -268,8 +380,43 @@ export default function KnowledgeBasePage() {
       onError: (error) => toast.error("Upload failed", { description: getErrorMessage(error) }),
     });
   }
-  function handleSourcesClick() { setSourcesSheetOpen(true); }
-  function handleAddNoteClick() { setSourcesSheetOpen(false); setNoteOpen(true); }
+  function handleManageSourcesClick() {
+    setSourcesSheet({ kind: "manage" });
+  }
+  function handleScopeClick() {
+    setPendingScopeIds(scopeSourceIds);
+    setPendingVerifiedOnly(scopeVerifiedOnly);
+    setPendingPageIds(scopePageIds);
+    setPendingSpaceId(scopeSpaceId);
+    setPendingOwnerMembershipId(scopeOwnerMembershipId);
+    setPendingStatus(scopeStatus);
+    setPageSearchQuery("");
+    setSourcesSheet({ kind: "scope" });
+  }
+  function handleSourcesSheetOpenChange(open: boolean) {
+    if (!open) setSourcesSheet({ kind: "closed" });
+  }
+  function handleAddNoteClick() { setSourcesSheet({ kind: "closed" }); setNoteOpen(true); }
+
+  function handleScopeSelectionChange(ids: number[]) { setPendingScopeIds(ids); }
+  function handleScopeVerifiedOnlyChange(v: boolean) { setPendingVerifiedOnly(v); }
+  function handleScopeConfirm() {
+    setScopeSourceIds(pendingScopeIds);
+    setScopeVerifiedOnly(pendingVerifiedOnly);
+    setScopePageIds(pendingPageIds);
+    setScopeSpaceId(pendingSpaceId);
+    setScopeOwnerMembershipId(pendingOwnerMembershipId);
+    setScopeStatus(pendingStatus);
+    setSourcesSheet({ kind: "closed" });
+  }
+  function handleClearScope() {
+    setScopeSourceIds([]);
+    setScopeVerifiedOnly(false);
+    setScopePageIds([]);
+    setScopeSpaceId(null);
+    setScopeOwnerMembershipId(null);
+    setScopeStatus(null);
+  }
 
   function makeDeleteHandler(id: number) {
     return function handleDeleteSource() {
@@ -280,22 +427,59 @@ export default function KnowledgeBasePage() {
     };
   }
 
+  function handleDismissPending() { setPending(null); }
+
   const sources = (sourcesQuery.data?.pages ?? []).flatMap((page) => page.data);
   const readyCount = sources.filter((s) => s.status === "ready").length;
+  const scopeActive =
+    scopeSourceIds.length > 0 ||
+    scopeVerifiedOnly ||
+    scopePageIds.length > 0 ||
+    scopeSpaceId !== null ||
+    scopeOwnerMembershipId !== null ||
+    scopeStatus !== null;
+  const scopeItemCount = scopeSourceIds.length + scopePageIds.length;
+  const scopeSummary = scopeItemCount > 0
+    ? `${scopeItemCount} item${scopeItemCount === 1 ? "" : "s"}`
+    : "Filtered";
+  const clientFilteredSources = sources.filter((source) => {
+    if (scopeFilters.kind !== undefined && source.kind !== scopeFilters.kind) return false;
+    if (scopeFilters.createdById !== undefined && source.createdById !== scopeFilters.createdById) return false;
+    return true;
+  });
+  const baseDisplaySources = !hasScopeFilters
+    ? sources
+    : scopeSourcesQuery.isError
+      ? clientFilteredSources
+      : scopeSources;
+  const scopeDisplaySources = pendingSpaceId !== null
+    ? baseDisplaySources.filter((s) => s.spaceId === pendingSpaceId)
+    : baseDisplaySources;
+  const activeScopeSourcesQuery = hasScopeFilters ? scopeSourcesQuery : sourcesQuery;
 
   return (
     <PageWrapper
       title="Knowledge Base"
       subtitle="Chat with your files, notes and wiki — answers are grounded in your content."
       noInternalScroll
-      contentClassName="flex flex-col min-h-0 px-4 sm:px-6"
+      contentClassName="flex min-h-0 min-w-0 flex-col px-4 sm:px-6"
       actions={
         <div className="flex items-center gap-2">
           <Button variant="outline" size="sm" className="gap-1.5" onClick={handleToggleConversations} aria-pressed={conversationsOpen}>
             <MessageSquare className="h-4 w-4" />
             Conversations
           </Button>
-          <LoadingButton variant="outline" size="sm" className="gap-1.5" isPending={uploadSource.isPending} onClick={handleSourcesClick}>
+          <Button
+            variant={scopeActive ? "default" : "outline"}
+            size="sm"
+            className="gap-1.5"
+            onClick={handleScopeClick}
+            aria-label={scopeActive ? `Searching ${scopeSummary}` : "Choose sources to search"}
+          >
+            <SlidersHorizontal className="h-4 w-4" />
+            {scopeActive ? scopeSummary : "Scope"}
+          </Button>
+          <LoadingButton variant="outline" size="sm" className="gap-1.5" isPending={uploadSource.isPending} onClick={handleManageSourcesClick}>
             {!uploadSource.isPending && <BookOpenTextIcon size={16} />}
             Sources
           </LoadingButton>
@@ -357,18 +541,71 @@ export default function KnowledgeBasePage() {
                       row.type === "sep" ? (
                         <DaySeparator key={row.id} label={row.label} />
                       ) : (
-                        <ChatBubble key={row.message.id} message={row.message} onCitation={handleCitationClick} reduce={Boolean(reduce)} />
+                        <ChatBubble
+                          key={row.message.id}
+                          message={row.message}
+                          onCitation={handleCitationClick}
+                          reduce={Boolean(reduce)}
+                          evidence={
+                            row.message.role === "assistant" && row.message.citations?.length ? (
+                              <CitationEvidenceList citations={row.message.citations} />
+                            ) : undefined
+                          }
+                          actions={
+                            row.message.role === "assistant" && questionByAssistantId.has(row.message.id) ? (
+                              <>
+                                <CopyAnswerButton text={row.message.content} />
+                                <AnswerFeedbackBar question={questionByAssistantId.get(row.message.id) ?? ""} />
+                              </>
+                            ) : undefined
+                          }
+                        />
                       ),
                     )}
-                    {pending && (
+                    {pending && (ask.isPending || pending.error || pending.isQuotaError) && (
                       <ChatBubble key="pending-user" message={{ id: "pending-user", role: "user", content: pending.question }} onCitation={handleCitationClick} reduce={Boolean(reduce)} />
                     )}
-                    {pending?.error && (
+                    {pending?.isQuotaError && (
+                      <OverQuotaBanner limit={pending.quotaMessage ?? "AI credit limit reached"} />
+                    )}
+                    {pending?.error && !pending.isQuotaError && (
                       <ChatBubble key="pending-error" message={{ id: "pending-error", role: "assistant", content: pending.error, isError: true }} onCitation={handleCitationClick} reduce={Boolean(reduce)} />
                     )}
-                    {pending?.error && !ask.isPending && <Button variant="outline" onClick={handleRegenerate}>Generate a new answer</Button>}
-                    {pending?.answer && <ChatBubble message={{ id: "pending-answer", role: "assistant", content: pending.answer }} onCitation={handleCitationClick} reduce={Boolean(reduce)} />}
+                    {pending?.error && !pending.isQuotaError && !ask.isPending && <Button variant="outline" onClick={handleRegenerate}>Generate a new answer</Button>}
+                    {pending?.answer && pending.error && (
+                      <p role="status" className="text-xs text-muted-foreground">Partial answer — generation did not complete.</p>
+                    )}
+                    {pending?.hasContext === false && (
+                      <InsufficientEvidenceBanner question={pending.question} spaceId={pending.spaceId} />
+                    )}
+                    {pending?.disagreement && (
+                      <DisagreementBanner summary={pending.disagreement.summary} />
+                    )}
+                    {pending?.answer && (
+                      <ChatBubble
+                        message={{ id: "pending-answer", role: "assistant", content: pending.answer, citations: pending.citations }}
+                        onCitation={handleCitationClick}
+                        reduce={Boolean(reduce)}
+                        evidence={
+                          pending.citations?.length ? <CitationEvidenceList citations={pending.citations} /> : undefined
+                        }
+                        actions={
+                          !ask.isPending && !pending.error && !pending.isQuotaError ? (
+                            <>
+                              <CopyAnswerButton text={pending.answer} />
+                              <AnswerFeedbackBar question={pending.question} />
+                            </>
+                          ) : undefined
+                        }
+                      />
+                    )}
                     {ask.isPending && !pending?.answer && <TypingBubble reduce={Boolean(reduce)} />}
+                    {(pending?.hasContext === false || pending?.disagreement) && !ask.isPending && (
+                      <div className="flex gap-2">
+                        <Button variant="outline" size="sm" onClick={handleDismissPending}>Dismiss</Button>
+                        <Button variant="outline" size="sm" onClick={handleRegenerate}>Try again</Button>
+                      </div>
+                    )}
                   </>
                 )}
                 </div>
@@ -376,33 +613,99 @@ export default function KnowledgeBasePage() {
 
               <div className="shrink-0 border-t border-border bg-background/60 p-3">
                 <div className="flex items-center gap-2">
-                  <Input value={input} onChange={handleInputChange} onKeyDown={handleKeyDown} placeholder="Ask anything about your files, notes and wiki…" className="h-11 rounded-xl text-sm" autoFocus />
+                  <Input value={input} onChange={handleInputChange} onKeyDown={handleKeyDown} placeholder="Ask anything about your files, notes and wiki…" className="h-9 min-w-0 flex-1 rounded-xl text-sm" autoFocus />
                   {ask.isPending && <Button variant="outline" onClick={handleStop}>Stop</Button>}
-                  <Button onClick={handleSend} disabled={ask.isPending || !input.trim()} className="h-11 w-11 shrink-0 rounded-xl p-0" aria-label="Send">
+                  <Button onClick={handleSend} disabled={ask.isPending || !input.trim()} className="h-9 w-9 shrink-0 rounded-xl p-0" aria-label="Send">
                     <motion.span whileTap={reduce ? undefined : { scale: 0.85 }}>
                       <Send className="h-4 w-4" />
                     </motion.span>
                   </Button>
                 </div>
+                <p className="mt-1.5 text-micro text-muted-foreground">
+                  {scopeActive
+                    ? scopeItemCount > 0
+                      ? `Searching ${scopeItemCount} selected item${scopeItemCount === 1 ? "" : "s"}.`
+                      : "Searching with selected filters."
+                    : "Searching all accessible knowledge."}{" "}
+                  <button type="button" onClick={handleScopeClick} className="underline hover:text-foreground">Edit</button>
+                  {scopeActive && (
+                    <>{" · "}<button type="button" onClick={handleClearScope} className="underline hover:text-foreground">Clear</button></>
+                  )}
+                </p>
               </div>
             </>
           )}
         </div>
       </div>
 
-      <KbSourcesSheet
-        open={sourcesSheetOpen}
-        onOpenChange={setSourcesSheetOpen}
-        sources={sources}
-        isLoading={sourcesQuery.isLoading}
-        readyCount={readyCount}
-        onUploadClick={handleUploadClick}
-        uploadPending={uploadSource.isPending}
-        onAddNoteClick={handleAddNoteClick}
-        makeDeleteHandler={makeDeleteHandler}
-        deletingId={deleteSource.variables}
-        isDeleting={deleteSource.isPending}
-      />
+      {sourcesSheet.kind === "manage" && (
+        <KbSourcesSheet
+          mode="manage"
+          open
+          onOpenChange={handleSourcesSheetOpenChange}
+          sources={sources}
+          isLoading={sourcesQuery.isLoading}
+          sourceError={sourcesQuery.isError ? sourcesQuery.error : null}
+          sourceHasMore={sourcesQuery.hasNextPage}
+          sourceIsFetchingMore={sourcesQuery.isFetchingNextPage}
+          onSourceLoadMore={() => { void sourcesQuery.fetchNextPage(); }}
+          onSourceRetry={() => { void sourcesQuery.refetch(); }}
+          readyCount={readyCount}
+          onUploadClick={handleUploadClick}
+          uploadPending={uploadSource.isPending}
+          onAddNoteClick={handleAddNoteClick}
+          makeDeleteHandler={makeDeleteHandler}
+          deletingId={deleteSource.variables}
+          isDeleting={deleteSource.isPending}
+        />
+      )}
+
+      {sourcesSheet.kind === "scope" && (
+        <KbSourcesSheet
+          mode="scope"
+          open
+          onOpenChange={handleSourcesSheetOpenChange}
+          sources={scopeDisplaySources}
+          isLoading={hasScopeFilters ? scopeSourcesQuery.isLoading : sourcesQuery.isLoading}
+          sourceError={activeScopeSourcesQuery.isError ? activeScopeSourcesQuery.error : null}
+          sourceHasMore={activeScopeSourcesQuery.hasNextPage}
+          sourceIsFetchingMore={activeScopeSourcesQuery.isFetchingNextPage}
+          onSourceLoadMore={() => { void activeScopeSourcesQuery.fetchNextPage(); }}
+          onSourceRetry={() => { void activeScopeSourcesQuery.refetch(); }}
+          selectedIds={pendingScopeIds}
+          onSelectionChange={handleScopeSelectionChange}
+          verifiedOnly={pendingVerifiedOnly}
+          onVerifiedOnlyChange={handleScopeVerifiedOnlyChange}
+          currentUserId={currentUserId ?? undefined}
+          kindFilter={scopeKindFilter}
+          onKindFilterChange={setScopeKindFilter}
+          ownerFilter={scopeOwnerFilter}
+          onOwnerFilterChange={setScopeOwnerFilter}
+          spaceIdFilter={pendingSpaceId}
+          onSpaceIdFilterChange={setPendingSpaceId}
+          spaces={kbSpaces}
+          ownerMembershipId={pendingOwnerMembershipId}
+          onOwnerMembershipIdChange={setPendingOwnerMembershipId}
+          owners={scopeOwners}
+          selectedOwner={selectedScopeOwner}
+          onOwnerSearchChange={setOwnerSearch}
+          ownersAreLoading={ownersQuery.isLoading}
+          ownersHasMore={ownersQuery.hasNextPage}
+          ownersAreFetchingMore={ownersQuery.isFetchingNextPage}
+          onOwnersLoadMore={handleOwnersLoadMore}
+          ownersError={ownersQuery.error}
+          onOwnersRetry={handleOwnersRetry}
+          statusScope={pendingStatus}
+          onStatusScopeChange={setPendingStatus}
+          onConfirm={handleScopeConfirm}
+          pageSearchQuery={pageSearchQuery}
+          onPageSearchQueryChange={setPageSearchQuery}
+          pageSearchResults={pageSearchResults}
+          pageSearchIsLoading={pageSearchIsLoading}
+          selectedPageIds={pendingPageIds}
+          onPageSelectionChange={setPendingPageIds}
+        />
+      )}
 
       <KbNoteSheet open={noteOpen} onOpenChange={setNoteOpen} />
     </PageWrapper>

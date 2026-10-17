@@ -12,7 +12,7 @@ export const metadata: Metadata = {
 
 export default async function AccessSuspendedPage() {
   const session = await requireSession();
-  const gate = resolveWizardGate(session, await cookies());
+  const gate = resolveWizardGate(session, await cookies(), "/access-suspended");
 
   if (gate !== "/access-suspended") redirect(gate ?? "/dashboard");
 

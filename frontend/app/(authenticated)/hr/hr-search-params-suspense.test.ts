@@ -2,14 +2,17 @@ import { existsSync, readdirSync, readFileSync } from "node:fs";
 import path from "node:path";
 
 const ROOT = path.resolve(__dirname, "../../..");
-const HR_ROUTES = path.resolve(__dirname);
+// Recruitment OS moved out of /hr to /recruitment; its pages keep the same invariant.
+const ROUTE_ROOTS = ["hr", "recruitment"];
 
 function hrPageFiles(): string[] {
   const found: string[] = [];
-  for (const entry of readdirSync(HR_ROUTES, { recursive: true })) {
-    const relative = String(entry).split(path.sep).join("/");
-    if (relative === "page.tsx" || relative.endsWith("/page.tsx"))
-      found.push(`app/(authenticated)/hr/${relative}`);
+  for (const root of ROUTE_ROOTS) {
+    for (const entry of readdirSync(path.resolve(__dirname, "..", root), { recursive: true })) {
+      const relative = String(entry).split(path.sep).join("/");
+      if (relative === "page.tsx" || relative.endsWith("/page.tsx"))
+        found.push(`app/(authenticated)/${root}/${relative}`);
+    }
   }
   return found.sort();
 }

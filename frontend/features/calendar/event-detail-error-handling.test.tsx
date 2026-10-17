@@ -2,6 +2,12 @@ import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import React from "react";
 import { EventDetailSheet } from "./event-detail-sheet";
 
+const mockIsMobile = jest.fn(() => false);
+
+jest.mock("@/hooks/common/use-mobile", () => ({ useIsMobile: () => mockIsMobile() }));
+
+jest.mock("./calendar-source-action-panel", () => ({ CalendarSourceActionPanel: () => null }));
+
 jest.mock("sonner", () => ({
   toast: { error: jest.fn(), success: jest.fn() },
 }));
@@ -64,6 +70,7 @@ jest.mock("@/hooks/common/use-animated-icon", () => ({
 jest.mock("next/dynamic", () => () => () => null);
 
 import type { CalendarListItem } from "@/hooks/api/calendar";
+import { calendarProjectionFields } from "./calendar-projection-fixtures";
 
 type CalendarMock = {
   useDeleteCalendarEvent: jest.Mock;
@@ -88,11 +95,13 @@ const baseEvent: CalendarListItem = {
   source: "event",
   category: "meeting",
   color: "blue",
+  ...calendarProjectionFields("event-1", "2026-09-12T10:00:00Z", "2026-09-12T11:00:00Z"),
 };
 
 describe("EventDetailSheet — error messages go through getErrorMessage", () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    mockIsMobile.mockReturnValue(false);
     getCalendarMock().useDeleteCalendarEvent.mockReturnValue({
       mutateAsync: jest.fn().mockRejectedValue(new Error("Event not found")),
       isPending: false,
@@ -116,5 +125,21 @@ describe("EventDetailSheet — error messages go through getErrorMessage", () =>
         "Failed to delete event",
       );
     });
+  });
+});
+
+describe("Meeting workspace sheet", () => {
+  afterEach(() => mockIsMobile.mockReturnValue(false));
+
+  it.each([
+    [true, "data-[state=open]:slide-in-from-bottom"],
+    [false, "data-[state=open]:slide-in-from-right"],
+  ])("opens from the responsive side when mobile is %s", (isMobile, slideClass) => {
+    mockIsMobile.mockReturnValue(isMobile);
+    render(<EventDetailSheet event={baseEvent} onClose={jest.fn()} />);
+    fireEvent.click(screen.getByRole("button", { name: /Meeting workspace/i }));
+    const sheets = document.querySelectorAll('[data-slot="sheet-content"]');
+    expect(sheets).toHaveLength(2);
+    expect(sheets[1]).toHaveClass(slideClass, "z-[110]");
   });
 });

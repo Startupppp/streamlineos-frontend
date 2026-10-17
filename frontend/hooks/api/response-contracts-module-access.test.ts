@@ -56,6 +56,7 @@ const CANDIDATE = {
   displayName: "Bob",
   email: "bob@example.com",
   avatarUrl: "https://cdn.example.com/bob.png",
+  moduleAccessRevoked: false,
 };
 
 const AUDIT_ROW = {
@@ -122,6 +123,20 @@ describe("the module-access contracts accept what the backend actually builds", 
         nextCursor: null,
       }).success,
     ).toBe(true);
+  });
+
+  it("requires a concrete revoked state for module member candidates", () => {
+    const { moduleAccessRevoked: _moduleAccessRevoked, ...withoutStatus } = CANDIDATE;
+    expect(moduleMemberCandidatePageContract.safeParse({
+      data: [withoutStatus],
+      hasMore: false,
+      nextCursor: null,
+    }).success).toBe(false);
+    expect(moduleMemberCandidatePageContract.safeParse({
+      data: [{ ...CANDIDATE, moduleAccessRevoked: true }],
+      hasMore: false,
+      nextCursor: null,
+    }).success).toBe(true);
   });
 
   it("accepts a member with no avatar, which arrives as null and not as a missing key", () => {

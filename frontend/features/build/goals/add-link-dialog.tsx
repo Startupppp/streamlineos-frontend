@@ -28,7 +28,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { toast } from "sonner";
-import { useProjects, useTickets } from "@/hooks/api/build";
+import { useProjects } from "@/hooks/api/build/projects";
+import { useTickets } from "@/hooks/api/build/tickets";
 import { useAddGoalLink } from "@/hooks/api/goals";
 import { getErrorMessage } from "@/lib/get-error-message";
 
@@ -85,7 +86,9 @@ export function AddLinkDialog({ goalId, onClose }: AddLinkDialogProps) {
               name="projectId"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Project <span className="text-destructive">*</span></FormLabel>
+                  <FormLabel>
+                    Project <span className="text-destructive">*</span>
+                  </FormLabel>
                   <Select
                     value={field.value}
                     onValueChange={(v) => handleProjectChange(v, field.onChange)}
@@ -115,7 +118,7 @@ export function AddLinkDialog({ goalId, onClose }: AddLinkDialogProps) {
                   <FormLabel>Ticket (optional)</FormLabel>
                   <Select
                     value={field.value}
-                    onValueChange={field.onChange}
+                    onValueChange={(v) => v && field.onChange(v)}
                     disabled={!selectedProjectId}
                   >
                     <FormControl>

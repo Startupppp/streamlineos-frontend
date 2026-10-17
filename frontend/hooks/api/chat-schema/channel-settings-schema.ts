@@ -21,7 +21,7 @@ export const chatNotifPrefResponseContract = z.object({
   notificationPreference: z.enum(["DEFAULT", "ALL", "MENTIONS", "NOTHING"]),
 });
 
-/** `chatOrgSettingsResponseSchema` — strict there, so strict here. */
+/** `chatOrgSettingsResponseSchema` */
 export const chatOrgSettingsContract = z
   .object({
     orgId: z.string().min(1),
@@ -31,4 +31,4 @@ export const chatOrgSettingsContract = z
   })
   .strict();
 
-export type ChatOrgSettingsWire = z.infer<typeof chatOrgSettingsContract>;
+export type ChatOrgSettings = z.infer<typeof chatOrgSettingsContract>;

@@ -21,10 +21,7 @@ import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useUpdateTicket } from "@/hooks/api/build/tickets";
 import { useProjectMembers } from "@/hooks/api/build/projects";
-import {
-  getUserDisplayName,
-  getUserInitials,
-} from "@/lib/person-display";
+import { getUserDisplayName, getUserInitials } from "@/lib/person-display";
 import { User, Check } from "lucide-react";
 import { InlineFieldWrapper } from "./card-field-wrapper";
 import { usePresenceMap } from "@/hooks/api/chat-core-read";
@@ -33,6 +30,7 @@ import { AvatarWithPresence } from "@/components/shared/presence-dot";
 interface InlineAssigneeProps {
   ticketId: number;
   projectId: number;
+  version: number;
   currentAssigneeId?: string | null;
   assignee?: {
     id: string;
@@ -46,11 +44,15 @@ interface InlineAssigneeProps {
 export const InlineAssignee = memo(function InlineAssignee({
   ticketId,
   projectId,
+  version,
   currentAssigneeId,
   assignee,
 }: InlineAssigneeProps) {
   const [open, setOpen] = useState(false);
-  const { data: members = [] } = useProjectMembers(projectId);
+  const { data: membersResponse } = useProjectMembers(projectId);
+  const members = Array.isArray(membersResponse)
+    ? membersResponse
+    : (membersResponse?.data ?? []);
   const updateTicket = useUpdateTicket(projectId, {
     onError: (e) => toast.error(getErrorMessage(e)),
   });
@@ -59,9 +61,9 @@ export const InlineAssignee = memo(function InlineAssignee({
   function makeAssigneeHandler(userId: string | null) {
     return function selectAssignee() {
       if (userId === null) {
-        updateTicket.mutate({ ticketId, assigneeIds: [] });
+        updateTicket.mutate({ ticketId, version, assigneeIds: [] });
       } else {
-        updateTicket.mutate({ ticketId, assigneeId: userId });
+        updateTicket.mutate({ ticketId, version, assigneeId: userId });
       }
       setOpen(false);
     };
@@ -75,8 +77,8 @@ export const InlineAssignee = memo(function InlineAssignee({
       avatarClassName="h-5 w-5 border border-background cursor-pointer hover:ring-2 hover:ring-primary/20 transition-all"
     />
   ) : (
-    <div className="h-5 w-5 rounded-full bg-muted border border-dashed border-muted-foreground/30 flex items-center justify-center shrink-0 cursor-pointer hover:border-muted-foreground/60 transition-colors">
-      <span className="text-micro text-muted-foreground">?</span>
+    <div className="flex h-5 w-5 shrink-0 cursor-pointer items-center justify-center rounded-full border border-dashed border-muted-foreground/30 bg-muted transition-colors hover:border-muted-foreground/60">
+      <User className="h-3 w-3 text-muted-foreground" aria-hidden="true" />
     </div>
   );
 

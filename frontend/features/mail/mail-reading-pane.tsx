@@ -2,7 +2,7 @@
 
 import { useState, useCallback, useMemo } from "react";
 import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
+import { ArrowLeft } from "lucide-react";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/shared";
 import type { AiAction } from "@/components/ai";
@@ -10,22 +10,19 @@ import { useCan } from "@/hooks/api/access";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import {
-  useMailThread,
-  useMailMessage,
   useMailAction,
   useMailThreadSummary,
   useMailAiDraft,
 } from "@/hooks/api/mail";
+import { useMailThreadView } from "./mail-thread-view";
 import { MailThreadMessage } from "./mail-thread-message";
 import { MailReadingToolbar } from "./mail-reading-toolbar";
+import { MailReadingPaneSkeleton } from "./mail-shell-skeletons";
 import {
   buildMailReadingAiActions,
   type MailReplyParams,
 } from "./mail-reading-ai-actions";
-import type {
-  MailMessageSummary,
-  MailMessageDetail,
-} from "@/types/mail";
+import type { MailMessageSummary } from "@/types/mail";
 
 export type { MailReplyParams };
 
@@ -43,47 +40,18 @@ export function MailReadingPane({
   const threadId = selectedMessage.threadId ?? undefined;
   const accountId = selectedMessage.accountId;
 
-  const {
-    data: threadMessages,
-    isLoading: threadLoading,
-    isFetching: threadFetching,
-    isError: threadError,
-    error: threadErr,
-    refetch: retryThread,
-  } = useMailThread(accountId, threadId);
-
-  const {
-    data: singleMessage,
-    isLoading: singleLoading,
-    isFetching: singleFetching,
-    isError: singleError,
-    error: singleErr,
-    refetch: retrySingle,
-  } = useMailMessage(accountId, threadId ? undefined : selectedMessage.id);
+  const view = useMailThreadView({
+    accountId,
+    threadId,
+    messageId: selectedMessage.id,
+  });
 
   const mailAction = useMailAction();
   const threadSummaryMutation = useMailThreadSummary();
   const aiDraftMutation = useMailAiDraft();
   const canAi = useCan("mail:ai:use");
 
-  const isLoading = threadId ? threadLoading : singleLoading;
-  const isFetching = threadId ? threadFetching : singleFetching;
-  const isError = threadId ? threadError : singleError;
-  const errorVal = threadId ? threadErr : singleErr;
-  const retry = threadId ? retryThread : retrySingle;
-
-  const messages: MailMessageDetail[] = useMemo(() => {
-    if (threadId && threadMessages) return threadMessages;
-    if (!threadId && singleMessage) return [singleMessage];
-    return [];
-  }, [threadId, threadMessages, singleMessage]);
-
-  const latestMessage = messages[messages.length - 1];
-
-  const isHydrating =
-    isFetching &&
-    messages.length > 0 &&
-    messages.every((m) => m.bodyHtml === null && m.bodyText === null);
+  const latestMessage = view.messages[view.messages.length - 1];
 
   const [expandedIds, setExpandedIds] = useState<Set<string>>(() => {
     if (latestMessage) return new Set([latestMessage.id]);
@@ -194,43 +162,27 @@ export function MailReadingPane({
     aiDraftMutation,
   ]);
 
-  const handleRetry = useCallback(() => { void retry(); }, [retry]);
+  const retryView = view.retry;
 
-  if (isLoading) {
-    return (
-      <div className="flex flex-col h-full min-h-0 p-4 gap-3">
-        <div className="flex items-start justify-between gap-2">
-          <Skeleton className="h-5 w-2/3 rounded" />
-          <Skeleton className="h-8 w-28 rounded" />
-        </div>
-        <div className="flex items-center gap-2">
-          <Skeleton className="h-4 w-24 rounded" />
-          <Skeleton className="h-4 w-32 rounded" />
-        </div>
-        <div className="flex flex-col gap-2 mt-2">
-          <Skeleton className="h-4 w-full rounded" />
-          <Skeleton className="h-4 w-5/6 rounded" />
-          <Skeleton className="h-4 w-4/5 rounded" />
-          <Skeleton className="h-4 w-full rounded" />
-          <Skeleton className="h-4 w-3/4 rounded" />
-        </div>
-      </div>
-    );
-  }
+  const handleRetry = useCallback(() => {
+    void retryView();
+  }, [retryView]);
 
-  if (isError) {
+  if (view.isLoading) return <MailReadingPaneSkeleton />;
+
+  if (view.status === "error") {
     return (
       <ErrorState
         className="flex-1 m-4"
         compact
         title="Couldn't load message"
-        description={getErrorMessage(errorVal)}
+        description={getErrorMessage(view.error)}
         onRetry={handleRetry}
       />
     );
   }
 
-  if (messages.length === 0) {
+  if (view.messages.length === 0) {
     return (
       <EmptyState
         illustrationPreset="mail"
@@ -241,30 +193,37 @@ export function MailReadingPane({
   }
 
   return (
-    <div className="flex flex-col h-full min-h-0">
-      <div className="shrink-0 border-b border-border/40 px-4 py-3 bg-card/60">
-        {onBack && (
-          <Button
-            variant="ghost"
-            size="sm"
-            className="h-7 text-xs mb-2 -ml-1 lg:hidden"
-            onClick={onBack}
-          >
-            ← Back
-          </Button>
-        )}
-        <div className="flex items-start justify-between gap-3 min-w-0">
-          <div className="min-w-0 flex-1">
+    <div
+      className="flex h-full w-full min-h-0 min-w-0 max-w-full flex-col overflow-hidden"
+      data-testid="mail-reading-pane"
+    >
+      <div className="shrink-0 border-b border-border bg-background px-3 py-2.5 sm:px-4 sm:py-3">
+        <div className="flex min-w-0 items-start gap-2 sm:gap-3">
+          {onBack ? (
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              className="-ml-1 h-9 shrink-0 px-2 lg:px-2.5"
+              onClick={onBack}
+              aria-label="Back to messages"
+            >
+              <ArrowLeft className="size-4" aria-hidden="true" />
+            </Button>
+          ) : null}
+
+          <div className="min-w-0 flex-1 pt-0.5">
             <h2 className="text-sm font-semibold text-foreground leading-tight line-clamp-2">
               {selectedMessage.subject || "(no subject)"}
             </h2>
-            <p className="mt-1 text-dense text-muted-foreground">
-              {messages.length > 1
-                ? `${messages.length} messages in thread`
+            <p className="mt-1 truncate text-dense text-muted-foreground">
+              {view.messages.length > 1
+                ? `${view.messages.length} messages in thread`
                 : "Single message"}
               {canAi && threadId ? " · AI assist available" : null}
             </p>
           </div>
+
           <MailReadingToolbar
             message={selectedMessage}
             onReply={handleReply}
@@ -278,16 +237,15 @@ export function MailReadingPane({
         </div>
       </div>
 
-      <div className="flex-1 min-h-0 overflow-y-auto">
-        {messages.map((msg, index) => (
+      <div className="min-h-0 min-w-0 max-w-full flex-1 overflow-x-hidden overflow-y-auto">
+        {view.messages.map((msg, index) => (
           <MailThreadMessage
             key={msg.id}
             message={msg}
             isExpanded={
-              expandedIds.has(msg.id) || index === messages.length - 1
+              expandedIds.has(msg.id) || index === view.messages.length - 1
             }
-            isLatest={index === messages.length - 1}
-            isHydrating={isHydrating}
+            isLatest={index === view.messages.length - 1}
             onToggle={handleToggleExpand}
           />
         ))}

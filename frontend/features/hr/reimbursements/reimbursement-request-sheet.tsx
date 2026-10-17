@@ -161,7 +161,7 @@ export function ReimbursementRequestSheet({
             render={({ field }) => (
               <FormItem>
                 <FormLabel>
-                  What is the other category? <span className="text-destructive">*</span>
+                  Category name <span className="text-destructive">*</span>
                 </FormLabel>
                 <FormControl>
                   <Input placeholder="e.g. Client entertainment, Team offsite" {...field} />
@@ -216,7 +216,7 @@ export function ReimbursementRequestSheet({
           )}
         />
         <div className="space-y-1.5">
-          <label className="text-sm font-medium">Receipt</label>
+          <p className="text-sm font-medium">Receipt</p>
           {!receiptUrl ? (
             <button
               type="button"

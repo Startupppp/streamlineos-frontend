@@ -1,197 +1,240 @@
 "use client";
 
 import Link from "next/link";
-import { useManagedProduct } from "@/hooks/api/build/managed-products";
-import { useProjects } from "@/hooks/api/build/projects";
-import { useRoadmapItems } from "@/hooks/api/build/roadmap";
-import { useGoalsPage } from "@/hooks/api/goals";
-import { usePageState } from "@/hooks/api/use-page-state";
+import { useMemo } from "react";
+import { motion } from "framer-motion";
+import { useMotionVariants } from "@/lib/motion-variants";
+import { Button } from "@/components/ui/button";
+import { ManagedProductFormSheet } from "@/features/build/managed-products/managed-product-form-sheet";
+import { LinkExistingGoalDialog } from "@/features/build/managed-products/link-existing-goal-dialog";
+import { OpportunityCreateSheet } from "@/features/build/managed-products/insights/opportunity-create-sheet";
+import { ManagedProductUpdateDialog } from "./managed-product-update-dialog";
+import { BuildHeaderActions } from "@/features/build/shared/build-header-actions";
 import { PageState } from "@/components/shared/page-state";
 import { PageWrapper } from "@/components/ui/page-wrapper";
-import { StatCard, StatCardGrid, StatCardGridSkeleton } from "@/components/ui/stat-card";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { EmptyState } from "@/components/ui/empty-state";
-import { Briefcase, Map, Target } from "lucide-react";
+import { BuildOfflineNotice } from "@/features/build/shared/build-offline-notice";
+import { ManagedProductOverviewFilters } from "./managed-product-overview-filters";
+import { ManagedProductOverviewSkeleton } from "@/features/build/managed-products/managed-product-page-skeletons";
+import { ManagedProductOverviewStrategyCard } from "./managed-product-overview-strategy-card";
+import { ManagedProductOverviewEvidenceCard } from "./managed-product-overview-evidence-card";
+import { ManagedProductOverviewDeliveryCard } from "./managed-product-overview-delivery-card";
+import { ManagedProductOverviewOutcomesCard } from "./managed-product-overview-outcomes-card";
+import { ManagedProductOverviewDecisionsCard } from "./managed-product-overview-decisions-card";
+import { ManagedProductOverviewUpdatesCard } from "./managed-product-overview-updates-card";
+import { ManagedProductOverviewHero } from "./managed-product-overview-hero";
+import { ManagedProductOverviewAttention } from "./managed-product-overview-attention";
+import { ManagedProductOverviewPulse } from "./managed-product-overview-pulse";
+import { ManagedProductOverviewFlow } from "./managed-product-overview-flow";
+import { OverviewEmptyState } from "./overview-metric";
+import { deriveAttentionSignals } from "./overview-attention-signals";
+import { useManagedProductOverview } from "./use-managed-product-overview";
 
 interface ManagedProductOverviewPageProps {
   managedProductId: number;
 }
 
-function ManagedProductOverviewSkeleton() {
-  return (
-    <div className="flex flex-1 min-h-0 flex-col gap-6">
-      <StatCardGridSkeleton cols={2} count={1} />
-      <Skeleton className="h-40 rounded-xl" />
-    </div>
+export function ManagedProductOverviewPage({
+  managedProductId,
+}: ManagedProductOverviewPageProps) {
+  const {
+    listFilters,
+    rawPeriod,
+    product,
+    editOpen,
+    setEditOpen,
+    createOpen,
+    setCreateOpen,
+    linkGoalOpen,
+    setLinkGoalOpen,
+    postUpdateOpen,
+    setPostUpdateOpen,
+    resolution,
+    overviewSubtitle,
+    now,
+    overviewRet,
+    markReviewed,
+    isMarkingReviewed,
+    editActions,
+    summaryData,
+    summaryDataUpdatedAt,
+    teamOptions,
+    segmentOptions,
+    teamSelectValue,
+    segmentSelectValue,
+    isFiltered,
+    handleClearFilters,
+    handleBack,
+    handleRetry,
+    handlePeriodChange,
+    handleTeamChange,
+    handleInitiativeStatusChange,
+    handleSegmentChange,
+    from,
+    to,
+    handleDateRangeChange,
+  } = useManagedProductOverview(managedProductId);
+  const { staggerContainer, fadeUp } = useMotionVariants();
+  const attentionSignals = useMemo(
+    () =>
+      summaryData
+        ? deriveAttentionSignals(summaryData, managedProductId, now)
+        : [],
+    [summaryData, managedProductId, now],
   );
-}
-
-export function ManagedProductOverviewPage({ managedProductId }: ManagedProductOverviewPageProps) {
-  const productQuery = useManagedProduct(managedProductId);
-  const projectsQuery = useProjects(
-    { managedProductId, limit: 10 },
-    { enabled: !!managedProductId },
-  );
-  const roadmapQuery = useRoadmapItems({ managedProductId, limit: 5 });
-  const goalsQuery = useGoalsPage({ managedProductId });
-
-  const isLoading = productQuery.isLoading || projectsQuery.isLoading;
-
-  const isError = productQuery.isError || projectsQuery.isError;
-
-  const error = productQuery.error ?? projectsQuery.error;
-
-  const resolution = usePageState({
-    permission: "build:managed-products:view",
-    isLoading,
-    isError,
-    error,
-    isEmpty: !productQuery.data,
-  });
-
-  const product = productQuery.data;
-  const projectsPage = projectsQuery.data;
-
-  const firstPageProjectCount = projectsPage?.data?.length ?? 0;
-  const hasMoreProjects = projectsPage?.hasMore ?? false;
-  const linkedProjectsLabel = hasMoreProjects
-    ? `${firstPageProjectCount}+`
-    : String(firstPageProjectCount);
-
-  function handleRetry() {
-    void productQuery.refetch();
-    void projectsQuery.refetch();
-    void roadmapQuery.refetch();
-    void goalsQuery.refetch();
-  }
-
-  const linkedProjects = projectsPage?.data ?? [];
-  const roadmapItems = roadmapQuery.data?.data ?? [];
-  const hasMoreRoadmap = roadmapQuery.data?.pagination?.hasMore ?? false;
-  const goalsLabel = String(goalsQuery.data?.total ?? 0);
 
   return (
     <PageWrapper
       title={product?.name ?? "Product overview"}
       badge={product?.key}
-      subtitle={product?.description ?? undefined}
+      subtitle={overviewSubtitle}
+      onBack={handleBack}
+      actions={<BuildHeaderActions actions={editActions} />}
+      filters={
+        <ManagedProductOverviewFilters
+          rawPeriod={rawPeriod}
+          teamSelectValue={teamSelectValue}
+          initiativeStatus={listFilters.value("initiativeStatus") ?? "all"}
+          segmentSelectValue={segmentSelectValue}
+          teamOptions={teamOptions}
+          segmentOptions={segmentOptions}
+          from={from}
+          to={to}
+          isFiltered={isFiltered}
+          onPeriodChange={handlePeriodChange}
+          onTeamChange={handleTeamChange}
+          onInitiativeStatusChange={handleInitiativeStatusChange}
+          onSegmentChange={handleSegmentChange}
+          onDateRangeChange={handleDateRangeChange}
+          onClearFilters={handleClearFilters}
+        />
+      }
     >
+      {product ? (
+        <ManagedProductFormSheet
+          open={editOpen}
+          onOpenChange={setEditOpen}
+          mode="edit"
+          defaultValues={product}
+        />
+      ) : null}
+      <OpportunityCreateSheet
+        managedProductId={managedProductId}
+        open={createOpen}
+        onOpenChange={setCreateOpen}
+      />
+      <LinkExistingGoalDialog
+        managedProductId={managedProductId}
+        open={linkGoalOpen}
+        onOpenChange={setLinkGoalOpen}
+      />
+      <ManagedProductUpdateDialog
+        managedProductId={managedProductId}
+        open={postUpdateOpen}
+        onOpenChange={setPostUpdateOpen}
+      />
       <PageState
         resolution={resolution}
         loading={<ManagedProductOverviewSkeleton />}
-        empty={<EmptyState title="Product not found" description="This product may have been deleted or moved." className="flex-1" />}
         onRetry={handleRetry}
-        className="flex-1 min-h-0"
       >
-        <div className="flex flex-1 min-h-0 flex-col gap-6">
-          <StatCardGrid cols={2}>
-            <StatCard
-              label="Linked projects"
-              value={linkedProjectsLabel}
-              icon={Briefcase}
-              tone="blue"
-              isLoading={projectsQuery.isLoading}
-              hint={hasMoreProjects ? "First page shown" : undefined}
-              href={`/build/managed-products/${managedProductId}/projects`}
+        <motion.div
+          className="flex min-h-0 w-full min-w-0 flex-1 flex-col gap-4 pb-8"
+          variants={staggerContainer}
+          initial="hidden"
+          animate="visible"
+        >
+          {summaryData ? (
+            <ManagedProductOverviewPulse
+              managedProductId={managedProductId}
+              summary={summaryData}
             />
-            <StatCard
-              label="Goals"
-              value={goalsLabel}
-              icon={Target}
-              tone="emerald"
-              isLoading={goalsQuery.isLoading}
-              href={`/build/managed-products/${managedProductId}/goals`}
-            />
-          </StatCardGrid>
+          ) : null}
 
-          <Card>
-            <CardHeader className="pb-2">
-              <div className="flex items-center gap-2">
-                <Map className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
-                <h2 className="text-sm font-semibold">Roadmap</h2>
-              </div>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              {roadmapItems.length === 0 ? (
-                <p className="text-sm text-muted-foreground">
-                  No roadmap items for this product yet.
-                </p>
-              ) : (
-                roadmapItems.map((item) => (
-                  <div
-                    key={item.id}
-                    className="flex items-center justify-between gap-2 text-sm"
-                  >
-                    <span className="truncate">{item.title}</span>
-                    <Badge variant="outline" className="h-5 shrink-0 px-2 py-0.5 text-micro">
-                      {item.status}
-                    </Badge>
-                  </div>
-                ))
-              )}
-              {hasMoreRoadmap && (
-                <Link
-                  href={`/build/managed-products/${managedProductId}/roadmap`}
-                  className="block text-dense text-primary hover:underline"
-                >
-                  View full roadmap
+          <BuildOfflineNotice dataUpdatedAt={summaryDataUpdatedAt} />
+
+          {summaryData ? (
+            <>
+              <motion.div variants={fadeUp} className="min-w-0">
+                <ManagedProductOverviewHero
+                  product={summaryData.product}
+                  now={now}
+                />
+              </motion.div>
+              <motion.div variants={fadeUp} className="min-w-0">
+                <ManagedProductOverviewAttention
+                  signals={attentionSignals}
+                  onMarkReviewed={markReviewed}
+                  isMarkingReviewed={isMarkingReviewed}
+                />
+              </motion.div>
+              <ManagedProductOverviewStrategyCard
+                managedProductId={managedProductId}
+                product={summaryData.product}
+              />
+              <motion.div variants={fadeUp} className="min-w-0">
+                <ManagedProductOverviewUpdatesCard managedProductId={managedProductId} />
+              </motion.div>
+              <motion.div variants={fadeUp} className="min-w-0">
+                <ManagedProductOverviewFlow
+                  managedProductId={managedProductId}
+                  summary={summaryData}
+                />
+              </motion.div>
+              <motion.div
+                variants={fadeUp}
+                className="grid grid-cols-1 items-start gap-4 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,0.85fr)]"
+              >
+                <ManagedProductOverviewDeliveryCard
+                  managedProductId={managedProductId}
+                  delivery={summaryData.delivery}
+                  previews={summaryData.previews}
+                  now={now}
+                  ret={overviewRet}
+                />
+                <ManagedProductOverviewEvidenceCard
+                  managedProductId={managedProductId}
+                  evidence={summaryData.evidence}
+                  previews={summaryData.previews}
+                  ret={overviewRet}
+                />
+              </motion.div>
+              <motion.div
+                variants={fadeUp}
+                className="grid grid-cols-1 items-start gap-4 lg:grid-cols-2"
+              >
+                <ManagedProductOverviewOutcomesCard
+                  managedProductId={managedProductId}
+                  outcomes={summaryData.outcomes}
+                  goals={summaryData.previews.goals}
+                />
+                <ManagedProductOverviewDecisionsCard
+                  managedProductId={managedProductId}
+                  decisions={summaryData.previews.decisions}
+                />
+              </motion.div>
+            </>
+          ) : isFiltered ? (
+            <OverviewEmptyState>
+              <p className="max-w-sm text-pretty text-sm text-muted-foreground">
+                No data matches the current filters.
+              </p>
+              <Button type="button" variant="outline" onClick={handleClearFilters}>
+                Clear filters
+              </Button>
+            </OverviewEmptyState>
+          ) : (
+            <OverviewEmptyState>
+              <p className="max-w-sm text-pretty text-sm text-muted-foreground">
+                No summary is available for this product yet.
+              </p>
+              <Button asChild>
+                <Link href={`/build/managed-products/${managedProductId}/insights`}>
+                  Explore insights
                 </Link>
-              )}
-            </CardContent>
-          </Card>
-
-          {linkedProjects.length > 0 && (
-            <Card>
-              <CardHeader className="pb-2">
-                <h2 className="text-sm font-semibold">Linked projects</h2>
-              </CardHeader>
-              <CardContent className="space-y-2">
-                {linkedProjects.map((proj) => (
-                  <div
-                    key={proj.id}
-                    className="flex items-center justify-between gap-2 text-sm"
-                  >
-                    <Link
-                      href={`/build/${proj.id}`}
-                      className="truncate text-primary hover:underline"
-                    >
-                      {proj.name}
-                    </Link>
-                    <div className="flex shrink-0 items-center gap-2">
-                      <span className="font-mono text-dense text-muted-foreground">{proj.key}</span>
-                      {proj.status && (
-                        <Badge variant="outline" className="h-5 px-2 py-0.5 text-micro">
-                          {proj.status}
-                        </Badge>
-                      )}
-                    </div>
-                  </div>
-                ))}
-                {hasMoreProjects && (
-                  <Link
-                    href={`/build/managed-products/${managedProductId}/projects`}
-                    className="block text-dense text-primary hover:underline"
-                  >
-                    View all linked projects
-                  </Link>
-                )}
-              </CardContent>
-            </Card>
+              </Button>
+            </OverviewEmptyState>
           )}
-
-          {product?.vision && (
-            <Card>
-              <CardHeader className="pb-2">
-                <h2 className="text-sm font-semibold">Vision</h2>
-              </CardHeader>
-              <CardContent>
-                <p className="text-sm text-muted-foreground">{product.vision}</p>
-              </CardContent>
-            </Card>
-          )}
-        </div>
+        </motion.div>
       </PageState>
     </PageWrapper>
   );

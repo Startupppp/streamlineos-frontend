@@ -1,8 +1,19 @@
-import { BarChart2, LayoutDashboard, LayoutGrid, Map, MessageSquare, Target } from "lucide-react";
+import {
+  BarChart2,
+  LayoutDashboard,
+  LayoutGrid,
+  Map,
+  MessageSquare,
+  Rocket,
+  Settings,
+  Target,
+} from "lucide-react";
 import type { BuildScopeCatalog } from "./build-nav-destination";
 import { BUILD_FEEDBACK_ORG_MODULE } from "./build-nav-destination";
 
-export function buildManagedProductCatalog(basePath: string): BuildScopeCatalog {
+export function buildManagedProductCatalog(
+  basePath: string,
+): BuildScopeCatalog {
   return {
     primary: [
       {
@@ -40,6 +51,14 @@ export function buildManagedProductCatalog(basePath: string): BuildScopeCatalog 
         mobilePriority: 40,
       },
       {
+        id: "product-releases",
+        label: "Releases",
+        href: `${basePath}/releases`,
+        icon: Rocket,
+        requiredPermission: "build:managed-products:view",
+        mobilePriority: 45,
+      },
+      {
         id: "product-goals",
         label: "Goals",
         href: `${basePath}/goals`,
@@ -57,6 +76,12 @@ export function buildManagedProductCatalog(basePath: string): BuildScopeCatalog 
       },
     ],
     moreTools: [],
-    settings: null,
+    settings: {
+      id: "product-settings",
+      label: "Product settings",
+      href: `${basePath}/settings`,
+      icon: Settings,
+      requiredPermission: "build:managed-products:view",
+    },
   };
 }

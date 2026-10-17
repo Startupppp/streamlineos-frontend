@@ -28,6 +28,7 @@ jest.mock("@/components/ui/button", () => ({
 
 jest.mock("@/hooks/api/access", () => ({
   useAccess: jest.fn(),
+  useCan: () => false,
 }));
 
 jest.mock("@/hooks/api/entitlements", () => ({

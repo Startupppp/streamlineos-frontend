@@ -6,7 +6,7 @@ import { useOnboardingSessionQuery } from "@/hooks/api/onboarding-flow";
 import {
   useBankDetailsQuery,
   usePersonalDetailsQuery,
-} from "@/lib/api/hooks/onboarding";
+} from "@/hooks/api/onboarding/employee-onboarding";
 import {
   DATA_STEP_IDS,
   ONBOARDING_SEQUENCE,

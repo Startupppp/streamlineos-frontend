@@ -1,17 +1,21 @@
 ﻿"use client";
 
-import { memo, useCallback } from "react";
+import { memo, useCallback, useState, type MouseEvent } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Diamond, Pencil, CalendarCheck2 } from "lucide-react";
-import { Trash2Icon } from "@animateicons/react/lucide";
-import type { ProjectMilestone } from "@/hooks/api/build";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Diamond, CalendarCheck2 } from "lucide-react";
+import { EllipsisIcon } from "@animateicons/react/lucide";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import type { ProjectMilestone } from "@/hooks/api/build/milestones";
 import { cn } from "@/lib/utils";
 import { format, isPast, isToday, differenceInDays } from "date-fns";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { PM_PANEL } from "@/components/pm-chrome";
 import { TEXT_TWO_LINES } from "@/lib/text-overflow";
 import { TruncatedText } from "@/components/ui/truncated-text";
+import { toMilestoneStatus, toMilestoneTargetDate } from "./milestone-status";
+import { getUserDisplayName } from "@/lib/person-display";
 
 const STATUS_CONFIG = {
   PENDING: {
@@ -22,56 +26,57 @@ const STATUS_CONFIG = {
   },
   ACHIEVED: {
     label: "Achieved",
-    color: "text-status-success-ink",
+    color: "text-status-success-ink-strong",
     badgeClassName:
-      "bg-status-success-surface text-status-success-ink border-0",
+      "bg-status-success-surface text-status-success-ink-strong border-0",
     stripeClassName: "border-l-emerald-500",
   },
   MISSED: {
     label: "Missed",
-    color: "text-status-danger-ink",
-    badgeClassName: "bg-status-danger-surface text-status-danger-ink border-0",
+    color: "text-status-danger-ink-strong",
+    badgeClassName: "bg-status-danger-surface text-status-danger-ink-strong border-0",
     stripeClassName: "border-l-red-500",
   },
 } as const;
 
 interface MilestoneCardProps {
   milestone: ProjectMilestone;
-  onEdit: (milestone: ProjectMilestone) => void;
-  onDelete: (milestone: ProjectMilestone) => void;
-}
-
-function DeleteButton({ onClick, label }: { onClick: () => void; label: string }) {
-  const { iconRef, hoverHandlers } = useAnimatedIcon();
-  return (
-    <Button
-      size="icon"
-      variant="ghost"
-      className="w-7 text-destructive hover:text-destructive"
-      onClick={onClick}
-      aria-label={label}
-      {...hoverHandlers}
-    >
-      <Trash2Icon ref={iconRef} size={12} />
-    </Button>
-  );
+  onEdit?: (milestone: ProjectMilestone) => void;
+  onDelete?: (milestone: ProjectMilestone) => void;
+  selected?: boolean;
+  onSelect?: (milestone: ProjectMilestone, checked: boolean) => void;
 }
 
 export const MilestoneCard = memo(function MilestoneCard({
   milestone,
   onEdit,
   onDelete,
+  selected,
+  onSelect,
 }: MilestoneCardProps) {
-  const cfg = STATUS_CONFIG[milestone.status];
-  const dateObj = new Date(milestone.targetDate);
-  const daysLeft = differenceInDays(dateObj, new Date());
-  const overdue = isPast(dateObj) && !isToday(dateObj) && milestone.status === "PENDING";
+  const status = toMilestoneStatus(milestone.status);
+  const cfg = STATUS_CONFIG[status];
+  const dateObj = toMilestoneTargetDate(milestone.targetDate);
+  const daysLeft = dateObj ? differenceInDays(dateObj, new Date()) : null;
+  const overdue =
+    dateObj !== null && isPast(dateObj) && !isToday(dateObj) && status === "PENDING";
+  const { iconRef, hoverHandlers } = useAnimatedIcon();
 
-  const handleEdit = useCallback(() => onEdit(milestone), [onEdit, milestone]);
-  const handleDelete = useCallback(() => onDelete(milestone), [onDelete, milestone]);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const handleEdit = useCallback(() => onEdit?.(milestone), [onEdit, milestone]);
+  const handleDelete = useCallback(() => onDelete?.(milestone), [onDelete, milestone]);
+  const handleContextMenu = useCallback((event: MouseEvent<HTMLDivElement>) => {
+    event.preventDefault();
+    setMenuOpen(true);
+  }, []);
+
+  const progressPercent =
+    milestone.linkedTicketCount > 0
+      ? Math.round((milestone.completedTicketCount / milestone.linkedTicketCount) * 100)
+      : null;
 
   const daysLabel =
-    milestone.status !== "PENDING"
+    status !== "PENDING" || daysLeft === null
       ? null
       : overdue
         ? `${Math.abs(daysLeft)}d overdue`
@@ -89,8 +94,18 @@ export const MilestoneCard = memo(function MilestoneCard({
         overdue ? "border-l-destructive" : cfg.stripeClassName,
         overdue && "border-destructive/40",
       )}
+      onContextMenu={handleContextMenu}
     >
       <div className="flex min-w-0 items-start gap-2.5">
+        {onSelect ? (
+          <Checkbox
+            checked={selected ?? false}
+            onCheckedChange={(checked) => onSelect(milestone, checked === true)}
+            aria-label={`Select ${milestone.name}`}
+            className="mt-0.5 shrink-0"
+            onClick={(e) => e.stopPropagation()}
+          />
+        ) : null}
         <Diamond
           className={cn("mt-0.5 h-4 w-4 shrink-0", overdue ? "text-destructive" : cfg.color)}
           fill="currentColor"
@@ -99,7 +114,7 @@ export const MilestoneCard = memo(function MilestoneCard({
         <div className="min-w-0 flex-1">
           <div className="flex min-w-0 items-start justify-between gap-2">
             <div className="min-w-0 space-y-0.5">
-              <TruncatedText text={milestone.name} className="text-label font-semibold text-foreground" />
+              <TruncatedText text={milestone.name} className="text-label font-medium text-foreground" />
               {milestone.description ? (
                 <p
                   className={cn(TEXT_TWO_LINES, "text-dense text-muted-foreground")}
@@ -112,7 +127,7 @@ export const MilestoneCard = memo(function MilestoneCard({
             <Badge
               variant="secondary"
               className={cn(
-                "h-5 shrink-0 rounded-full px-1.5 text-micro font-semibold uppercase tracking-wide",
+                "h-5 shrink-0 rounded-full px-1.5 text-micro font-medium",
                 cfg.badgeClassName,
               )}
             >
@@ -123,7 +138,9 @@ export const MilestoneCard = memo(function MilestoneCard({
           <div className="mt-2 flex min-w-0 items-center justify-between gap-2">
             <div className="flex min-w-0 items-center gap-1.5 text-dense text-muted-foreground">
               <CalendarCheck2 className="h-3.5 w-3.5 shrink-0" aria-hidden />
-              <span className="shrink-0 tabular-nums">{format(dateObj, "MMM d, yyyy")}</span>
+              <span className="shrink-0 tabular-nums">
+                {dateObj ? format(dateObj, "MMM d, yyyy") : "No target date"}
+              </span>
               {daysLabel ? (
                 <span
                   className={cn(
@@ -134,19 +151,40 @@ export const MilestoneCard = memo(function MilestoneCard({
                   · {daysLabel}
                 </span>
               ) : null}
+              {milestone.owner ? (
+                <span className="min-w-0 truncate">
+                  · {getUserDisplayName(milestone.owner)}
+                </span>
+              ) : null}
+              {milestone.linkedTicketCount > 0 ? (
+                <span className="shrink-0 tabular-nums">
+                  · {milestone.linkedTicketCount} {milestone.linkedTicketCount === 1 ? "ticket" : "tickets"}
+                </span>
+              ) : null}
+              {progressPercent !== null ? (
+                <span
+                  className="shrink-0 tabular-nums"
+                  aria-label={`Progress ${progressPercent}%`}
+                >
+                  · {milestone.completedTicketCount}/{milestone.linkedTicketCount} done ({progressPercent}%)
+                </span>
+              ) : null}
             </div>
-            <div className="flex shrink-0 items-center gap-0.5 opacity-100 transition-opacity sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100">
-              <Button
-                size="icon"
-                variant="ghost"
-                className="w-7"
-                onClick={handleEdit}
-                aria-label={`Edit ${milestone.name}`}
-              >
-                <Pencil className="h-3 w-3" />
-              </Button>
-              <DeleteButton onClick={handleDelete} label={`Delete ${milestone.name}`} />
-            </div>
+            {(onEdit || onDelete) ? (
+              <div className="flex shrink-0 items-center gap-0.5 opacity-100 transition-opacity sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100">
+                <DropdownMenu open={menuOpen} onOpenChange={setMenuOpen}>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="icon" className="w-7" aria-label={`Actions for ${milestone.name}`} {...hoverHandlers}>
+                      <EllipsisIcon ref={iconRef} size={14} />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    {onEdit ? <DropdownMenuItem onSelect={handleEdit}>Edit</DropdownMenuItem> : null}
+                    {onDelete ? <DropdownMenuItem variant="destructive" onSelect={handleDelete}>Delete</DropdownMenuItem> : null}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
+            ) : null}
           </div>
         </div>
       </div>

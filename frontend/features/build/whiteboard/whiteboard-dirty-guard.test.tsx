@@ -15,8 +15,16 @@ jest.mock("./use-whiteboard-autosave", () => ({
   }),
 }));
 
-jest.mock("@/hooks/api/build", () => ({
-  useWhiteboards: () => ({ data: [], isLoading: false, isError: false, refetch: jest.fn() }),
+jest.mock("@/hooks/api/build/whiteboards", () => ({
+  useWhiteboards: () => ({
+    data: { pages: [{ data: [], hasMore: false, nextCursor: null }], pageParams: [undefined] },
+    isLoading: false,
+    isError: false,
+    refetch: jest.fn(),
+    hasNextPage: false,
+    fetchNextPage: jest.fn(),
+    isFetchingNextPage: false,
+  }),
   useWhiteboard: () => ({ data: undefined, isLoading: false, isError: false, refetch: jest.fn() }),
   useCreateWhiteboard: () => ({ mutate: jest.fn(), isPending: false }),
   useDeleteWhiteboard: () => ({ mutate: jest.fn(), isPending: false }),
@@ -44,7 +52,7 @@ jest.mock("next/dynamic", () => () => MockExcalidrawCanvas);
 jest.mock("@/components/pm-chrome", () => ({
   PmPageShell: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
   PmPanel: ({ children, className }: { children: React.ReactNode; className?: string; solid?: boolean }) => <div className={className}>{children}</div>,
-  PM_FILL_PANEL: "fill-panel",
+  CONTENT_FILL_PANEL: "fill-panel",
   PM_ROW: "pm-row",
 }));
 
@@ -71,6 +79,7 @@ jest.mock("./share-dialog", () => ({
 }));
 
 jest.mock("./scene-utils", () => ({
+  ...jest.requireActual("./scene-utils"),
   computeStoredVersion: () => 0,
 }));
 

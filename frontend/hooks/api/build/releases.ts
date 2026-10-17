@@ -1,14 +1,22 @@
 ﻿"use client";
 
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useCan } from "@/hooks/api/access";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useCanState } from "@/hooks/api/access";
 import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
 import type { Release, CreateReleaseInput, UpdateReleaseInput } from "@/types/projects";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
 
-const projectReleaseListContract = lazyContract(() =>
-  import("@/hooks/api/build/build-project-schema").then((m) => m.projectReleaseListContract),
+type ReleasePage = {
+  data: Release[];
+  pagination: { limit: number; hasMore: boolean; nextCursor: string | null };
+};
+
+const projectReleaseListContract = lazyContract<ReleasePage>(() =>
+  import("@/hooks/api/build/build-project-schema").then(
+    (m) => m.projectReleaseListContract,
+  ),
 );
 const projectReleaseRowContract = lazyContract(() =>
   import("@/hooks/api/build/build-project-schema").then((m) => m.projectReleaseRowContract),
@@ -17,18 +25,50 @@ const noContentContract = lazyContract(() =>
   import("@/hooks/api/cursor-page-schema").then((m) => m.noContentContract),
 );
 import { queryKeyBase } from "@/lib/query-keys/base";
-export type { Release } from "@/types/projects";
 
-function releaseKey(projectId: number) {
+interface ReleaseListQuery {
+  cursor?: string;
+  limit?: number;
+  status?: "draft" | "released" | "archived";
+  q?: string;
+  from?: string;
+  to?: string;
+}
+
+export function releaseBaseKey(projectId: number) {
   return [...queryKeyBase, "projects", projectId, "releases"] as const;
 }
 
-export function useReleases(projectId: number) {
-  const canView = useCan("build:view");
-  return useQuery<Release[]>({
-    queryKey: releaseKey(projectId),
-    queryFn: ({ signal }) => apiClient.get<Release[]>(`/build/${projectId}/releases`, undefined, signal, projectReleaseListContract),
-    enabled: canView && !!projectId,
+function releaseKey(projectId: number, query?: ReleaseListQuery) {
+  return [...releaseBaseKey(projectId), query ?? {}] as const;
+}
+
+interface OrgReleaseFilters {
+  status?: "draft" | "released" | "archived";
+  cursor?: string;
+}
+
+export function useOrgReleases(filters?: OrgReleaseFilters) {
+  const canState = useCanState("build:view");
+  const params: Record<string, string> = {};
+  if (filters?.status) params["status"] = filters.status;
+  if (filters?.cursor) params["cursor"] = filters.cursor;
+
+  return useQuery({
+    queryKey: buildWorkQueryKeys.projects.orgReleases(Object.keys(params).length > 0 ? params : undefined),
+    queryFn: ({ signal }) => apiClient.get("/build/releases", Object.keys(params).length > 0 ? params : undefined, signal, projectReleaseListContract),
+    enabled: canState !== "denied",
+    staleTime: 60_000,
+    throwOnError: false,
+  });
+}
+
+export function useReleases(projectId: number, query: ReleaseListQuery = {}) {
+  const canViewState = useCanState("build:view");
+  return useQuery({
+    queryKey: releaseKey(projectId, query),
+    queryFn: ({ signal }) => apiClient.get(`/build/${projectId}/releases`, query, signal, projectReleaseListContract),
+    enabled: canViewState !== "denied" && !!projectId,
     staleTime: 60_000,
   });
 }
@@ -38,8 +78,13 @@ export function useCreateRelease(projectId: number) {
   return useAuthorizedMutation("build:manage", {
     mutationKey: ["projects", projectId, "releases", "create"],
     mutationFn: (data: CreateReleaseInput) =>
-      apiClient.post<Release>(`/build/${projectId}/releases`, data, undefined, projectReleaseRowContract),
-    onSuccess: () => qc.invalidateQueries({ queryKey: releaseKey(projectId) }),
+      apiClient.post(`/build/${projectId}/releases`, data, undefined, projectReleaseRowContract),
+    onSuccess: (created) => {
+      qc.setQueriesData<ReleasePage>(
+        { queryKey: releaseBaseKey(projectId) },
+        (old) => old ? { ...old, data: [{ ...created, createdByUser: null }, ...old.data] } : old,
+      );
+    },
   });
 }
 
@@ -48,8 +93,13 @@ export function useUpdateRelease(projectId: number) {
   return useAuthorizedMutation("build:manage", {
     mutationKey: ["projects", projectId, "releases", "update"],
     mutationFn: ({ releaseId, ...data }: UpdateReleaseInput) =>
-      apiClient.patch<Release>(`/build/${projectId}/releases/${releaseId}`, data, undefined, projectReleaseRowContract),
-    onSuccess: () => qc.invalidateQueries({ queryKey: releaseKey(projectId) }),
+      apiClient.patch(`/build/${projectId}/releases/${releaseId}`, data, undefined, projectReleaseRowContract),
+    onSuccess: (updated) => {
+      qc.setQueriesData<ReleasePage>(
+        { queryKey: releaseBaseKey(projectId) },
+        (old) => old ? { ...old, data: old.data.map((r) => r.id === updated.id ? { ...r, ...updated } : r) } : old,
+      );
+    },
   });
 }
 
@@ -59,6 +109,11 @@ export function useDeleteRelease(projectId: number) {
     mutationKey: ["projects", projectId, "releases", "delete"],
     mutationFn: (releaseId: number) =>
       apiClient.delete<void>(`/build/${projectId}/releases/${releaseId}`, undefined, undefined, noContentContract),
-    onSuccess: () => qc.invalidateQueries({ queryKey: releaseKey(projectId) }),
+    onSuccess: (_, releaseId) => {
+      qc.setQueriesData<ReleasePage>(
+        { queryKey: releaseBaseKey(projectId) },
+        (old) => old ? { ...old, data: old.data.filter((r) => r.id !== releaseId) } : old,
+      );
+    },
   });
 }

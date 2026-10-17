@@ -2,22 +2,30 @@
 
 import * as React from "react";
 import { X } from "lucide-react";
-import { SearchInput } from "@/components/ui/search-input";
-import { Button } from "@/components/ui/button";
+import { BuildFilterSelect } from "@/features/build/shared/build-filter-select";
+import { BuildListToolbar } from "@/features/build/shared/build-list-toolbar";
+import { useDebouncedValue } from "@/hooks/common/use-debounce";
+import { useSourceOverride } from "@/hooks/common/use-source-override";
+import type {
+  NotificationCategory,
+  NotificationSection,
+} from "@/types/notifications";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import type { NotificationCategory } from "@/types/notifications";
-import { NOTIFICATION_CATEGORY_VALUES } from "@/types/notifications";
-import { isNotificationCategory } from "./use-inbox-url-state";
+  BUILD_INBOX_ACTIVE_SECTIONS,
+  BUILD_INBOX_CATEGORIES,
+  getBuildInboxTriageSection,
+  isBuildInboxCategory,
+} from "./inbox-categories";
 
 const ALL_TYPES_SENTINEL = "__all__" as const;
+const TYPE_OPTIONS = [
+  { value: ALL_TYPES_SENTINEL, label: "All types" },
+  ...BUILD_INBOX_CATEGORIES,
+] as const;
 
 interface InboxFilterBarProps {
+  section?: NotificationSection;
+  onSectionChange?: (section: NotificationSection) => void;
   q: string | null;
   type: NotificationCategory | null;
   projectId?: number | null;
@@ -30,6 +38,8 @@ interface InboxFilterBarProps {
 }
 
 export function InboxFilterBar({
+  section = "UNREAD",
+  onSectionChange,
   q,
   type,
   projectId = null,
@@ -40,25 +50,21 @@ export function InboxFilterBar({
   onClearFilters,
   searchInputRef,
 }: InboxFilterBarProps) {
-  const [localQ, setLocalQ] = React.useState(q ?? "");
+  const sourceQ = q ?? "";
+  const [localQ, setLocalQ] = useSourceOverride(sourceQ, sourceQ);
+  const debouncedQ = useDebouncedValue(localQ, 300);
+
+  const onQChangeRef = React.useRef(onQChange);
+  React.useLayoutEffect(() => {
+    onQChangeRef.current = onQChange;
+  });
 
   React.useEffect(() => {
-    setLocalQ(q ?? "");
-  }, [q]);
-
-  React.useEffect(() => {
-    const timer = setTimeout(() => {
-      onQChange(localQ);
-    }, 300);
-    return () => clearTimeout(timer);
-  }, [localQ, onQChange]);
+    if (debouncedQ !== sourceQ) onQChangeRef.current(debouncedQ);
+  }, [debouncedQ, sourceQ]);
 
   function handleValueChange(value: string) {
     setLocalQ(value);
-  }
-
-  function handleClearFilters() {
-    onClearFilters();
   }
 
   function handleTypeSelectChange(value: string) {
@@ -66,56 +72,81 @@ export function InboxFilterBar({
       onTypeChange(null);
       return;
     }
-    if (isNotificationCategory(value)) {
-      onTypeChange(value);
-    }
+    if (isBuildInboxCategory(value)) onTypeChange(value);
+  }
+
+  function handleActiveSectionChange(value: string) {
+    const option = BUILD_INBOX_ACTIVE_SECTIONS.find(
+      (entry) => entry.value === value,
+    );
+    if (option) onSectionChange?.(option.value);
   }
 
   return (
-    <div className="flex shrink-0 items-center gap-2 border-b border-border px-3 py-2">
-      <SearchInput
-        ref={searchInputRef}
-        value={localQ}
-        onValueChange={handleValueChange}
-        placeholder="Search notifications…"
-        fill
-        inputClassName="h-9"
-      />
-      <Select value={type ?? ALL_TYPES_SENTINEL} onValueChange={handleTypeSelectChange}>
-        <SelectTrigger className="w-36 shrink-0" aria-label="Filter by category">
-          <SelectValue placeholder="All types" />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value={ALL_TYPES_SENTINEL}>All types</SelectItem>
-          {NOTIFICATION_CATEGORY_VALUES.map((cat) => (
-            <SelectItem key={cat} value={cat}>{cat}</SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-      {projectId !== null && onProjectClear && (
-        <button
-          type="button"
-          className="inline-flex h-8 shrink-0 items-center gap-1 rounded-md border border-border bg-muted/50 px-2 text-xs text-foreground hover:bg-muted"
-          onClick={onProjectClear}
-          aria-label={`Remove project filter (project ${projectId})`}
-        >
-          <span>Project #{projectId}</span>
-          <X className="h-3 w-3 text-muted-foreground" aria-hidden="true" />
-        </button>
-      )}
-      {hasActiveFilters ? (
-        <Button
-          type="button"
-          variant="ghost"
-          size="sm"
-          className="h-8 shrink-0 gap-1 px-2 text-xs text-muted-foreground"
-          onClick={handleClearFilters}
-          aria-label="Clear filters"
-        >
-          <X className="h-3.5 w-3.5" aria-hidden="true" />
-          <span>Clear filters</span>
-        </Button>
-      ) : null}
-    </div>
+    <BuildListToolbar
+      collapseActionsOnSearchFocus
+      className="shrink-0 flex-nowrap overflow-x-auto border-b border-border px-2 py-1.5 scrollbar-hide [&>[data-slot=search-input]]:md:max-w-none [&>[data-slot=build-toolbar-actions]]:shrink-0"
+      search={{
+        value: localQ,
+        onValueChange: handleValueChange,
+        placeholder: "Search notifications…",
+        label: "Search notifications",
+        inputRef: searchInputRef,
+        inputClassName: "focus-visible:ring-1 focus-visible:ring-offset-0",
+      }}
+      filters={[
+        ...(getBuildInboxTriageSection(section) === "ALL" && onSectionChange
+          ? [
+              {
+                id: "attention",
+                label: "Attention",
+                active: section !== "ALL",
+                control: (
+                  <BuildFilterSelect
+                    label="Filter active notifications"
+                    value={section}
+                    onValueChange={handleActiveSectionChange}
+                    options={BUILD_INBOX_ACTIVE_SECTIONS}
+                    className="md:min-w-28 md:max-w-32"
+                  />
+                ),
+              },
+            ]
+          : []),
+        {
+          id: "type",
+          label: "Category",
+          active: type !== null,
+          control: (
+            <BuildFilterSelect
+              label="Filter by category"
+              value={type ?? ALL_TYPES_SENTINEL}
+              onValueChange={handleTypeSelectChange}
+              options={TYPE_OPTIONS}
+              className="md:min-w-28 md:max-w-32"
+            />
+          ),
+        },
+      ]}
+      trailing={
+        <>
+          {projectId !== null && onProjectClear ? (
+            <button
+              type="button"
+              className="inline-flex h-8 max-w-36 shrink-0 items-center gap-1 rounded-md border border-border bg-muted/50 px-2 text-xs text-foreground hover:bg-muted"
+              onClick={onProjectClear}
+              aria-label={`Remove project filter (project ${projectId})`}
+            >
+              <span className="truncate">Project #{projectId}</span>
+              <X
+                className="h-3 w-3 shrink-0 text-muted-foreground"
+                aria-hidden="true"
+              />
+            </button>
+          ) : null}
+        </>
+      }
+      onClearAll={hasActiveFilters ? onClearFilters : undefined}
+    />
   );
 }

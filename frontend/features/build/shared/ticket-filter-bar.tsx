@@ -1,58 +1,16 @@
 "use client";
 
-import {
-  useMemo,
-  useState,
-  useCallback,
-  type ReactNode,
-} from "react";
-import dynamic from "next/dynamic";
+import { type ReactNode, type RefObject } from "react";
+import { SearchIcon } from "@animateicons/react/lucide";
+import { motion } from "framer-motion";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { SearchInput } from "@/components/ui/search-input";
-import { Button } from "@/components/ui/button";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
-import { CircleCheckIcon, XIcon } from "@animateicons/react/lucide";
-import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
+import { LIST_SEARCH_MAX } from "@/lib/build/normalize-list-search";
 import { cn } from "@/lib/utils";
-import { getUserDisplayName } from "@/lib/person-display";
-import { useCycles } from "@/hooks/api/build/advanced";
-import { useProjectLabels } from "@/hooks/api/build/projects";
-import { FilterChip } from "@/components/list-view/filter-chip";
-import { FilterTriggerButton } from "@/components/list-view/filter-trigger-button";
-import type { StatusFilterOption } from "@/components/list-view/filter-types";
-import {
-  buildStatusConfig,
-  resolveStatusOptions,
-  type StatusOptionSource,
-} from "@/features/build/shared/types";
+import type { StatusOptionSource } from "@/features/build/shared/types";
 import { useTicketFilterParams } from "./use-ticket-filter-params";
-
-const FilterCommandMenu = dynamic(
-  () =>
-    import("./filter-command-menu").then((m) => ({
-      default: m.FilterCommandMenu,
-    })),
-  { ssr: false },
-);
-
-interface Member {
-  id: string;
-  name: string | null;
-  firstName: string | null;
-  lastName: string | null;
-  image?: string | null;
-  email?: string | null;
-}
-
-interface ProjectOption {
-  id: number;
-  name: string;
-  key: string;
-}
+import { TicketFilterActions } from "./ticket-filter-actions";
+import { TicketFilterChips, type Member, type ProjectOption } from "./ticket-filter-chips";
 
 interface TicketFilterBarProps {
   members?: Member[];
@@ -70,12 +28,21 @@ interface TicketFilterBarProps {
   leading?: ReactNode;
   trailing?: ReactNode;
   mobileSearchFirst?: boolean;
-}
-
-function formatDueRange(from: string, to: string): string {
-  if (from && to) return `${from} → ${to}`;
-  if (from) return `From ${from}`;
-  return `Until ${to}`;
+  mobileSearchFirstBreakpoint?: "sm" | "md" | "lg";
+  wrapActions?: boolean;
+  mobileCompactToolbar?: boolean;
+  searchInputRef?: RefObject<HTMLInputElement | null>;
+  presentation?: "default" | "all-work";
+  hideChipsBelow?: "md" | "lg";
+  showSearch?: boolean;
+  showFilters?: boolean;
+  showChips?: boolean;
+  fillSearch?: boolean;
+  iconOnlyFilters?: boolean;
+  desktopIconOnlyFilters?: boolean;
+  collapsibleSearch?: boolean;
+  searchExpanded?: boolean;
+  onSearchExpandedChange?: (expanded: boolean) => void;
 }
 
 export function TicketFilterBar({
@@ -94,219 +61,188 @@ export function TicketFilterBar({
   leading,
   trailing,
   mobileSearchFirst = false,
+  mobileSearchFirstBreakpoint = "sm",
+  wrapActions = false,
+  mobileCompactToolbar = false,
+  searchInputRef,
+  presentation = "default",
+  hideChipsBelow,
+  showSearch = true,
+  showFilters = true,
+  showChips = true,
+  fillSearch = false,
+  iconOnlyFilters = false,
+  desktopIconOnlyFilters = false,
+  collapsibleSearch = false,
+  searchExpanded = true,
+  onSearchExpandedChange,
 }: TicketFilterBarProps) {
-  const [filterMounted, setFilterMounted] = useState(false);
-  const handleFilterOpen = useCallback(() => setFilterMounted(true), []);
-
-  const { iconRef: hideDoneIconRef, hoverHandlers: hideDoneHoverHandlers } =
-    useAnimatedIcon();
-  const { iconRef: clearAllIconRef, hoverHandlers: clearAllHoverHandlers } =
-    useAnimatedIcon();
-
-  const {
-    dueDateFrom,
-    dueDateTo,
-    selectedStatuses,
-    selectedPriorities,
-    selectedTypes,
-    selectedAssignees,
-    selectedLabels,
-    selectedCycles,
-    selectedProjectIds,
-    localSearch,
-    activeFilterCount,
-    handleSearchChange,
-    handleToggleStatus,
-    handleTogglePriority,
-    handleToggleType,
-    handleToggleAssignee,
-    handleToggleLabel,
-    handleToggleCycle,
-    handleToggleProject,
-    handleDueDateFromChange,
-    handleDueDateToChange,
-    makeRemoveStatus,
-    makeRemovePriority,
-    makeRemoveType,
-    makeRemoveAssignee,
-    makeRemoveLabel,
-    makeRemoveCycle,
-    makeRemoveProject,
-    handleRemoveDueDate,
-    clearAll,
-  } = useTicketFilterParams();
-
-  const loadTaxonomyOptions =
-    filterMounted || selectedLabels.length > 0 || selectedCycles.length > 0;
-  const { data: cycles = [] } = useCycles(
-    loadTaxonomyOptions ? (projectId ?? 0) : 0,
-  );
-  const { data: labels = [] } = useProjectLabels(projectId, {
-    enabled: loadTaxonomyOptions,
-  });
-
-  const statusItems = useMemo<StatusFilterOption[]>(
-    () => resolveStatusOptions(statuses),
-    [statuses],
-  );
-
-  const statusConfig = useMemo(
-    () => buildStatusConfig(statusItems),
-    [statusItems],
-  );
-
-  const labelMap = useMemo(
-    () => new Map(labels.map((l) => [String(l.id), l])),
-    [labels],
-  );
-  const cycleMap = useMemo(
-    () => new Map(cycles.map((c) => [String(c.id), c])),
-    [cycles],
-  );
-  const memberMap = useMemo(
-    () => new Map((members ?? []).map((m) => [m.id, m])),
-    [members],
-  );
-  const projectMap = useMemo(
-    () => new Map((projectOptions ?? []).map((p) => [String(p.id), p])),
-    [projectOptions],
-  );
-
-  const filterState = {
-    selectedStatuses,
-    selectedPriorities,
-    selectedTypes,
-    selectedAssignees,
-    selectedLabels,
-    selectedCycles,
-    selectedProjectIds,
-    dueDateFrom,
-    dueDateTo,
-  };
-
-  function handleHideDoneClick() {
-    onHideCompletedChange?.(!hideCompleted);
-  }
-
-  const hasFilterChips = activeFilterCount > 0;
+  const { localSearch, handleSearchChange, handleFlushSearch } = useTicketFilterParams();
 
   const searchField = (
     <div
       className={cn(
-        "relative min-w-0",
-        mobileSearchFirst
-          ? "w-full sm:w-[220px] sm:flex-none md:w-[240px]"
-          : leading
-            ? "w-[min(100%,240px)] min-w-[10rem] flex-1 sm:w-[220px] sm:flex-none md:w-[240px]"
-            : align === "end"
-              ? "w-full max-w-[240px] min-w-[10rem] flex-1 sm:w-[220px] sm:flex-none md:w-[240px]"
-              : "w-full max-w-[240px] min-w-[10rem] flex-1 sm:max-w-[220px] md:max-w-[240px]",
+        fillSearch
+          ? "relative w-full min-w-0 flex-1"
+          : cn(
+              "relative min-w-0",
+              mobileSearchFirst
+                ? MOBILE_SEARCH_FIRST_LAYOUT[mobileSearchFirstBreakpoint].searchField
+                : leading
+                  ? "w-[min(100%,240px)] min-w-[10rem] flex-1 sm:w-[220px] sm:flex-none md:w-[240px]"
+                  : align === "end"
+                    ? "w-full max-w-[240px] min-w-[10rem] flex-1 sm:w-[220px] sm:flex-none md:w-[240px]"
+                    : "w-full max-w-[240px] min-w-[10rem] flex-1 sm:max-w-[220px] md:max-w-[240px]",
+            ),
       )}
     >
       <SearchInput
+        ref={searchInputRef}
         placeholder="Search..."
+        maxLength={LIST_SEARCH_MAX}
+        title={`Search is limited to ${LIST_SEARCH_MAX} characters`}
         value={localSearch}
         onValueChange={handleSearchChange}
-        className="[&_svg]:left-2 [&_svg]:h-3.5 [&_svg]:w-3.5"
+        onSubmitSearch={handleFlushSearch}
+        fill={fillSearch}
+        className="min-w-0 [&_svg]:left-2 [&_svg]:h-3.5 [&_svg]:w-3.5"
         inputClassName="h-9 pl-7 pr-7"
+        onBlur={(event) => {
+          if (collapsibleSearch && !event.currentTarget.value.trim()) {
+            onSearchExpandedChange?.(false);
+          }
+        }}
       />
     </div>
   );
 
-  const filterMenuProps = {
-    activeFilterCount,
-    statusItems,
-    statusConfig,
-    members: members ?? [],
-    labels,
-    cycles,
-    projectOptions,
-    showTypeFilter,
-    showAssigneeFilter,
-    filterState,
-    onToggleStatus: handleToggleStatus,
-    onTogglePriority: handleTogglePriority,
-    onToggleType: handleToggleType,
-    onToggleAssignee: handleToggleAssignee,
-    onToggleLabel: handleToggleLabel,
-    onToggleCycle: handleToggleCycle,
-    onToggleProject: handleToggleProject,
-    onDueDateFromChange: handleDueDateFromChange,
-    onDueDateToChange: handleDueDateToChange,
-  };
-
-  const filterActions = (
-    <>
-      {filterMounted ? (
-        <FilterCommandMenu {...filterMenuProps} defaultOpen />
-      ) : (
-        <FilterTriggerButton
-          activeFilterCount={activeFilterCount}
-          onClick={handleFilterOpen}
+  const searchControl = collapsibleSearch ? (
+    searchExpanded ? (
+      <motion.div
+        key="expanded-search"
+        initial={{ opacity: 0, width: 36 }}
+        animate={{ opacity: 1, width: "100%" }}
+        transition={{ duration: 0.18, ease: "easeOut" }}
+        className="min-w-0 flex-1"
+      >
+        {searchField}
+      </motion.div>
+    ) : (
+      <motion.div
+        key="collapsed-search"
+        initial={{ opacity: 0, scale: 0.9 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.16, ease: "easeOut" }}
+        className="shrink-0"
+      >
+        <AnimatedIconButton
+          type="button"
+          icon={SearchIcon}
+          iconSize={15}
+          variant="outline"
+          size="icon"
+          className="size-9"
+          aria-label="Expand search"
+          onClick={() => {
+            onSearchExpandedChange?.(true);
+            requestAnimationFrame(() => searchInputRef?.current?.focus());
+          }}
         />
-      )}
+      </motion.div>
+    )
+  ) : searchField;
 
-      {showDoneToggle &&
-        onHideCompletedChange !== undefined &&
-        hideCompleted !== undefined && (
-          <TooltipProvider delayDuration={200}>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="icon"
-                  onClick={handleHideDoneClick}
-                  className={cn(
-                    "size-9 shrink-0",
-                    hideCompleted &&
-                      "border-primary bg-primary/10 text-primary",
-                  )}
-                  aria-label={
-                    doneCount > 0 ? `Hide done (${doneCount})` : "Hide done"
-                  }
-                  aria-pressed={hideCompleted}
-                  {...hideDoneHoverHandlers}
-                >
-                  <CircleCheckIcon
-                    ref={hideDoneIconRef}
-                    size={14}
-                    className={hideCompleted ? "text-primary" : undefined}
-                  />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent side="bottom" className="text-xs">
-                {doneCount > 0 ? `Hide done (${doneCount})` : "Hide done"}
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-        )}
-    </>
-  );
+  const actions = showFilters ? (
+    <TicketFilterActions
+      presentation={presentation}
+      statuses={statuses}
+      members={members}
+      projectId={projectId}
+      projectOptions={projectOptions}
+      showTypeFilter={showTypeFilter}
+      showAssigneeFilter={showAssigneeFilter}
+      showDoneToggle={showDoneToggle}
+      hideCompleted={hideCompleted}
+      onHideCompletedChange={onHideCompletedChange}
+      doneCount={doneCount}
+      iconOnly={iconOnlyFilters}
+      desktopIconOnly={desktopIconOnlyFilters}
+    />
+  ) : null;
 
-  const toolbar = mobileSearchFirst ? (
+  const toolbar = !showSearch ? (
+    <div className="flex w-full min-w-0 items-center gap-2">
+      {actions}
+      {trailing}
+    </div>
+  ) : !showFilters ? (
+    <div className="flex w-full min-w-0 items-center gap-2">
+      <div className={cn("min-w-0 flex-1", fillSearch && "w-full")}>
+        {searchControl}
+      </div>
+      {trailing}
+    </div>
+  ) : mobileCompactToolbar ? (
+    <div className="flex w-full min-w-0 flex-col gap-2 lg:flex-row lg:flex-nowrap lg:items-center lg:gap-1.5">
+      <div className="flex w-full min-w-0 items-center gap-2 lg:contents">
+        <div className="min-w-0 flex-1 lg:w-auto lg:flex-none">
+          {searchControl}
+        </div>
+        <div className="shrink-0 lg:order-2">{actions}</div>
+      </div>
+      <div className="flex min-w-0 items-center gap-1 overflow-x-auto overscroll-x-contain scrollbar-hide lg:contents">
+        {leading ? <div className="shrink-0">{leading}</div> : null}
+        {trailing ? <div className="flex shrink-0 items-center gap-1">{trailing}</div> : null}
+      </div>
+    </div>
+  ) : mobileSearchFirst ? (
     <div
       className={cn(
-        "flex w-full min-w-0 flex-col gap-2 sm:flex-row sm:flex-nowrap sm:items-center sm:gap-1.5",
+        "flex w-full min-w-0 flex-col gap-2",
+        MOBILE_SEARCH_FIRST_LAYOUT[mobileSearchFirstBreakpoint].toolbar,
         align === "end" && !leading ? "sm:justify-end" : "sm:justify-start",
       )}
     >
-      <div className="order-1 w-full min-w-0 sm:order-2 sm:w-auto sm:shrink-0">
-        {searchField}
+      <div
+        className={cn(
+          "order-1 w-full min-w-0",
+          MOBILE_SEARCH_FIRST_LAYOUT[mobileSearchFirstBreakpoint].searchSlot,
+        )}
+      >
+        {searchControl}
       </div>
       <div
         className={cn(
-          "order-2 flex w-full min-w-0 items-center gap-1 sm:contents",
-          !leading && "justify-end",
+          "order-2 flex w-full min-w-0 items-center gap-1",
+          wrapActions
+            ? "flex-wrap"
+            : "flex-nowrap overflow-x-auto overscroll-x-contain scrollbar-hide",
+          MOBILE_SEARCH_FIRST_LAYOUT[mobileSearchFirstBreakpoint].actionsRow,
+          !leading && "justify-start",
         )}
       >
         {leading ? (
-          <div className="order-1 min-w-0 flex-1 sm:flex-none sm:shrink-0">
+          <div
+            className={cn(
+              "order-1 min-w-0",
+              wrapActions && "flex-1",
+              MOBILE_SEARCH_FIRST_LAYOUT[mobileSearchFirstBreakpoint].leading,
+            )}
+          >
             {leading}
           </div>
         ) : null}
-        <div className="order-3 flex shrink-0 items-center gap-0.5 sm:gap-1">
-          {filterActions}
+        <div
+          className={cn(
+            "order-3 flex items-center gap-0.5",
+            // A shrink-0 group of filter chips + Hide done is wider than a
+            // 768px content column; wrapping the row alone moved the whole
+            // group off-screen (B-029), so the group wraps too.
+            wrapActions ? "min-w-0 max-w-full flex-wrap" : "shrink-0",
+            MOBILE_SEARCH_FIRST_LAYOUT[mobileSearchFirstBreakpoint].actions,
+          )}
+        >
+          {actions}
           {trailing}
         </div>
       </div>
@@ -314,20 +250,24 @@ export function TicketFilterBar({
   ) : (
     <div
       className={cn(
-        "flex w-full min-w-0 flex-nowrap items-center gap-1 sm:gap-1.5",
-        leading ? "justify-between" : align === "end" ? "sm:justify-end" : "justify-start",
+        "flex w-full min-w-0 flex-wrap items-center gap-1 sm:gap-1.5",
+        leading
+          ? "justify-between"
+          : align === "end"
+            ? "sm:justify-end"
+            : "justify-start",
       )}
     >
       {leading}
       <div
         className={cn(
-          "flex min-w-0 items-center gap-0.5 sm:gap-1",
+          "flex min-w-0 flex-wrap items-center gap-0.5 sm:gap-1",
           !leading && align === "end" && "sm:justify-end",
           leading ? "shrink-0" : "flex-1",
         )}
       >
-        {searchField}
-        {filterActions}
+        {searchControl}
+        {actions}
         {trailing}
       </div>
     </div>
@@ -336,101 +276,47 @@ export function TicketFilterBar({
   return (
     <div className={cn("flex w-full min-w-0 flex-col gap-1.5", className)}>
       {toolbar}
-
-      {hasFilterChips ? (
-        <div className="flex w-full min-w-0 items-center gap-1.5">
-          <div className="flex min-w-0 flex-1 flex-nowrap items-center gap-1 overflow-x-auto scrollbar-hide [&>*]:shrink-0">
-            {selectedStatuses.map((s) => (
-              <FilterChip
-                key={`status-${s}`}
-                label={s.replace(/_/g, " ")}
-                onRemove={makeRemoveStatus(s)}
-              />
-            ))}
-            {selectedPriorities.map((p) => (
-              <FilterChip
-                key={`priority-${p}`}
-                label={p.charAt(0) + p.slice(1).toLowerCase()}
-                onRemove={makeRemovePriority(p)}
-              />
-            ))}
-            {selectedTypes.map((t) => (
-              <FilterChip
-                key={`type-${t}`}
-                label={t.charAt(0) + t.slice(1).toLowerCase()}
-                onRemove={makeRemoveType(t)}
-              />
-            ))}
-            {selectedAssignees.map((id) => {
-              const member = memberMap.get(id);
-              const label =
-                id === "@me"
-                  ? "Me"
-                  : id === "__unassigned__"
-                    ? "Unassigned"
-                    : member
-                      ? getUserDisplayName(member)
-                      : id;
-              return (
-                <FilterChip
-                  key={`assignee-${id}`}
-                  label={label}
-                  onRemove={makeRemoveAssignee(id)}
-                />
-              );
-            })}
-            {selectedLabels.map((id) => {
-              const l = labelMap.get(id);
-              return (
-                <FilterChip
-                  key={`label-${id}`}
-                  label={l?.name ?? id}
-                  color={l?.color ?? undefined}
-                  onRemove={makeRemoveLabel(id)}
-                />
-              );
-            })}
-            {selectedCycles.map((id) => {
-              const c = cycleMap.get(id);
-              return (
-                <FilterChip
-                  key={`cycle-${id}`}
-                  label={c?.name ?? id}
-                  onRemove={makeRemoveCycle(id)}
-                />
-              );
-            })}
-            {selectedProjectIds.map((id) => {
-              const p = projectMap.get(id);
-              return (
-                <FilterChip
-                  key={`project-${id}`}
-                  label={p?.name ?? id}
-                  onRemove={makeRemoveProject(id)}
-                />
-              );
-            })}
-            {dueDateFrom || dueDateTo ? (
-              <FilterChip
-                key="due-date"
-                label={formatDueRange(dueDateFrom, dueDateTo)}
-                onRemove={handleRemoveDueDate}
-              />
-            ) : null}
-          </div>
-
-          <button
-            type="button"
-            onClick={clearAll}
-            className="inline-flex h-6 shrink-0 items-center gap-1 rounded-md px-1.5 text-xs text-muted-foreground transition-colors hover:bg-muted/60 hover:text-foreground"
-            aria-label="Clear all filters"
-            {...clearAllHoverHandlers}
-          >
-            <XIcon ref={clearAllIconRef} size={12} className="shrink-0" />
-            <span>Clear</span>
-          </button>
-        </div>
+      {showChips ? (
+        <TicketFilterChips
+          members={members}
+          projectId={projectId}
+          projectOptions={projectOptions}
+          className={
+            hideChipsBelow === "lg"
+              ? "max-lg:hidden"
+              : hideChipsBelow === "md"
+                ? "max-md:hidden"
+                : undefined
+          }
+        />
       ) : null}
     </div>
   );
 }
+
+const MOBILE_SEARCH_FIRST_LAYOUT = {
+  sm: {
+    toolbar: "sm:flex-row sm:flex-nowrap sm:items-center sm:gap-1.5",
+    searchField: "sm:w-[220px] sm:flex-none md:w-[240px]",
+    searchSlot: "sm:order-2 sm:w-auto sm:shrink-0",
+    actionsRow: "sm:contents",
+    leading: "sm:flex-none sm:shrink-0",
+    actions: "sm:gap-1",
+  },
+  md: {
+    toolbar: "md:flex-row md:flex-nowrap md:items-center md:gap-1.5",
+    searchField: "md:w-[220px] md:flex-none lg:w-[240px]",
+    searchSlot: "md:order-2 md:w-auto md:shrink-0",
+    actionsRow: "md:contents",
+    leading: "md:flex-none md:shrink-0",
+    actions: "md:gap-1",
+  },
+  lg: {
+    toolbar: "lg:flex-row lg:flex-nowrap lg:items-center lg:gap-1.5",
+    searchField: "lg:w-[220px] lg:flex-none xl:w-[240px]",
+    searchSlot: "lg:order-2 lg:w-auto lg:shrink-0",
+    actionsRow: "lg:contents",
+    leading: "lg:flex-none lg:shrink-0",
+    actions: "lg:gap-1",
+  },
+} as const;

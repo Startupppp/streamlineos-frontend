@@ -8,16 +8,7 @@ import { Button } from "@/components/ui/button";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/shared/error-state";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { EmptyDocumentsIllustration } from "@/components/illustrations";
 import { useTaxWindows, useUpdateTaxWindow } from "@/hooks/api/payroll/tax-windows";
 import type { TaxWindow, TaxWindowStatus } from "@/types/payroll/reports";
@@ -141,6 +132,10 @@ export function TaxWindowsTab() {
     );
   }
 
+  function handleAdvanceOpenChange(open: boolean) {
+    if (!open) setAdvanceTarget(null);
+  }
+
   function handleSheetClose() {
     setSheetWindow(null);
   }
@@ -189,21 +184,17 @@ export function TaxWindowsTab() {
         />
       )}
 
-      <AlertDialog
+      <ConfirmDialog
         open={advanceTarget !== null}
-        onOpenChange={(open) => { if (!open) setAdvanceTarget(null); }}
-      >
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Confirm Status Change</AlertDialogTitle>
-            <AlertDialogDescription>{advanceTarget?.confirm}</AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleConfirmAdvance}>Confirm</AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+        onOpenChange={handleAdvanceOpenChange}
+        title="Confirm Status Change"
+        description={advanceTarget?.confirm ?? ""}
+        confirmLabel="Confirm"
+        destructive={advanceTarget?.next === "LOCKED"}
+        keepOpenOnConfirm
+        isPending={updateMutation.isPending}
+        onConfirm={handleConfirmAdvance}
+      />
     </>
   );
 }

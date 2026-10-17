@@ -8,50 +8,90 @@ import {
 } from "@/features/wiki/lib/kb-icons";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { cn } from "@/lib/utils";
 import { ErrorState } from "@/components/shared";
+import { ErrorReference } from "@/components/shared/error-reference";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { EmptyState } from "@/components/ui/empty-state";
 import { LoadingButton } from "@/components/ui/loading-button";
+import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
   useKbPageComments,
   useCreateKbPageComment,
 } from "@/hooks/api/kb";
 import { useCan } from "@/hooks/api/access";
 import type { KbPageComment } from "@/hooks/api/kb/page-comments";
+import {
+  extractCommentAnchorTargets,
+  findCommentAnchorTarget,
+  type PageAnchorContent,
+} from "@/features/wiki/lib/page-comment-anchors";
 import { PageCommentThread } from "./page-comment-thread";
+import { isApiError } from "@/lib/api-envelope";
+
+const ANCHOR_CHIP_CLASS =
+  "rounded-full border border-border px-2 py-0.5 text-xs text-muted-foreground transition-colors hover:text-foreground";
+const ANCHOR_CHIP_SELECTED_CLASS = "border-primary/30 bg-primary/10 text-primary";
 
 interface PageCommentsSheetProps {
   pageId: number;
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  content?: PageAnchorContent;
 }
 
-export default function PageCommentsSheet({ pageId, open, onOpenChange }: PageCommentsSheetProps) {
+export default function PageCommentsSheet({ pageId, open, onOpenChange, content = null }: PageCommentsSheetProps) {
   const { data: session } = useSession();
   const currentUserId = session?.user?.id ?? null;
   const canUpdate = useCan("kb:pages:update");
-  const { data: comments = [], isLoading, isError, error, refetch } = useKbPageComments(pageId);
+  const canManage = useCan("kb:pages:manage");
+  const {
+    data: comments = [],
+    isLoading,
+    isError,
+    isFetchNextPageError,
+    error,
+    refetch,
+    hasNextPage,
+    isFetchingNextPage,
+    fetchNextPage,
+  } = useKbPageComments(pageId);
   const createComment = useCreateKbPageComment();
   const [newContent, setNewContent] = useState("");
   const [replyingTo, setReplyingTo] = useState<KbPageComment | null>(null);
+  const [anchorBlockIndex, setAnchorBlockIndex] = useState<number | null>(null);
   const [postAnnouncement, setPostAnnouncement] = useState("");
+
+  const anchorTargets = extractCommentAnchorTargets(content);
+  const selectedAnchor = findCommentAnchorTarget(anchorTargets, anchorBlockIndex);
 
   const topLevel = comments.filter((c) => c.parentId === null && !c.resolvedAt);
   const resolved = comments.filter((c) => c.parentId === null && !!c.resolvedAt);
+  const accessLost = isError && isApiError(error) && (error.status === 401 || error.status === 403 || error.status === 404);
+  const showReadError = isError && (accessLost || (!isFetchNextPageError && comments.length === 0));
+  const showCachedReadError = isError && !isFetchNextPageError && comments.length > 0 && !accessLost;
 
   function handlePost() {
-    if (!newContent.trim()) return;
+    if (!canUpdate || !newContent.trim()) return;
     const isReply = replyingTo !== null;
     createComment.mutate(
-      { pageId, content: newContent.trim(), parentId: replyingTo?.id ?? null },
+      {
+        pageId,
+        content: newContent.trim(),
+        parentId: replyingTo?.id ?? null,
+        anchorBlockIndex: isReply ? null : (selectedAnchor?.blockIndex ?? null),
+        anchorQuote: isReply ? null : (selectedAnchor?.quote ?? null),
+      },
       {
         onSuccess: () => {
           setNewContent("");
           setReplyingTo(null);
+          setAnchorBlockIndex(null);
           setPostAnnouncement(isReply ? "Reply posted." : "Comment posted.");
         },
         onError: (error) => toast.error(getErrorMessage(error)),
@@ -61,10 +101,20 @@ export default function PageCommentsSheet({ pageId, open, onOpenChange }: PageCo
 
   function handleSetReplyingTo(comment: KbPageComment) {
     setReplyingTo(comment);
+    setAnchorBlockIndex(null);
   }
 
   function handleClearReply() {
     setReplyingTo(null);
+  }
+
+  function handleAnchorSelect(e: React.MouseEvent<HTMLButtonElement>) {
+    const raw = e.currentTarget.dataset.blockIndex;
+    setAnchorBlockIndex(raw === undefined ? null : Number(raw));
+  }
+
+  function handleMobileAnchorSelect(value: string) {
+    setAnchorBlockIndex(value === "page" ? null : Number(value));
   }
 
   function handleNewContentChange(e: React.ChangeEvent<HTMLTextAreaElement>) {
@@ -73,6 +123,10 @@ export default function PageCommentsSheet({ pageId, open, onOpenChange }: PageCo
 
   function handleRetryComments() {
     void refetch();
+  }
+
+  function handleLoadMoreComments() {
+    void fetchNextPage();
   }
 
   return (
@@ -90,10 +144,11 @@ export default function PageCommentsSheet({ pageId, open, onOpenChange }: PageCo
         </SheetHeader>
         <ScrollArea className="flex-1 min-h-0">
           <div className="px-6 py-4">
-            {isError && (
+            {showReadError && (
               <ErrorState
                 title="Couldn't load comments"
                 description={getErrorMessage(error)}
+                error={error}
                 onRetry={handleRetryComments}
                 compact
               />
@@ -111,7 +166,7 @@ export default function PageCommentsSheet({ pageId, open, onOpenChange }: PageCo
                 ))}
               </div>
             )}
-            {!isLoading && !isError && topLevel.length === 0 && resolved.length === 0 && (
+            {!isLoading && !isError && !hasNextPage && topLevel.length === 0 && resolved.length === 0 && (
               <EmptyState
                 title="No comments yet"
                 description="Be the first to add a comment."
@@ -119,7 +174,16 @@ export default function PageCommentsSheet({ pageId, open, onOpenChange }: PageCo
                 className="flex-1 min-h-[40dvh]"
               />
             )}
-            <div className="space-y-5">
+            {!accessLost && <div className="space-y-5">
+              {showCachedReadError && (
+                <div role="alert" className="space-y-2 text-sm text-destructive">
+                  <p>Could not refresh comments. {getErrorMessage(error)}</p>
+                  <ErrorReference error={error} />
+                  <Button type="button" variant="outline" size="sm" onClick={handleRetryComments}>
+                    Retry loading comments
+                  </Button>
+                </div>
+              )}
               <ul className="space-y-5">
                 {topLevel.map((comment) => (
                   <li key={comment.id}>
@@ -130,6 +194,7 @@ export default function PageCommentsSheet({ pageId, open, onOpenChange }: PageCo
                       onReply={handleSetReplyingTo}
                       currentUserId={currentUserId}
                       canUpdate={canUpdate}
+                      canManage={canManage}
                     />
                   </li>
                 ))}
@@ -150,16 +215,34 @@ export default function PageCommentsSheet({ pageId, open, onOpenChange }: PageCo
                           onReply={handleSetReplyingTo}
                           currentUserId={currentUserId}
                           canUpdate={canUpdate}
+                          canManage={canManage}
                         />
                       </li>
                     ))}
                   </ul>
                 </>
               )}
-            </div>
+              {isFetchNextPageError && (
+                <div role="alert" className="space-y-2 text-sm text-destructive">
+                  <p>Could not load more comments. {getErrorMessage(error)}</p>
+                  <ErrorReference error={error} />
+                </div>
+              )}
+              {hasNextPage && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={handleLoadMoreComments}
+                  disabled={isFetchingNextPage}
+                >
+                  {isFetchingNextPage ? "Loading comments…" : isFetchNextPageError ? "Retry loading comments" : "Load more comments"}
+                </Button>
+              )}
+            </div>}
           </div>
         </ScrollArea>
-        <div className="shrink-0 border-t px-6 py-4 space-y-2">
+        {canUpdate && !accessLost && <div className="shrink-0 border-t px-6 py-4 space-y-2">
           {replyingTo && (
             <div className="flex items-center gap-2 text-xs text-muted-foreground bg-muted px-2 py-1 rounded">
               <span>Replying to comment…</span>
@@ -172,6 +255,61 @@ export default function PageCommentsSheet({ pageId, open, onOpenChange }: PageCo
                 <KbXIcon className="h-3 w-3" />
               </button>
             </div>
+          )}
+          {!replyingTo && anchorTargets.length > 0 && (
+            <>
+              <Select
+                value={anchorBlockIndex === null ? "page" : String(anchorBlockIndex)}
+                onValueChange={handleMobileAnchorSelect}
+              >
+                <SelectTrigger className="sm:hidden" aria-label="Anchor this comment to a block">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="page">Whole page</SelectItem>
+                  {anchorTargets.map((target) => (
+                    <SelectItem key={target.blockIndex} value={String(target.blockIndex)}>
+                      {target.quote}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <div
+                role="group"
+                aria-label="Anchor this comment to a block"
+                className="hidden flex-wrap gap-1 sm:flex"
+              >
+                <button
+                  type="button"
+                  aria-pressed={anchorBlockIndex === null}
+                  onClick={handleAnchorSelect}
+                  className={cn(ANCHOR_CHIP_CLASS, anchorBlockIndex === null && ANCHOR_CHIP_SELECTED_CLASS)}
+                >
+                  Whole page
+                </button>
+                {anchorTargets.map((target) => (
+                  <button
+                    key={target.blockIndex}
+                    type="button"
+                    data-block-index={String(target.blockIndex)}
+                    aria-pressed={anchorBlockIndex === target.blockIndex}
+                    onClick={handleAnchorSelect}
+                    className={cn(
+                      ANCHOR_CHIP_CLASS,
+                      "max-w-[12rem] truncate",
+                      anchorBlockIndex === target.blockIndex && ANCHOR_CHIP_SELECTED_CLASS,
+                    )}
+                  >
+                    {target.quote}
+                  </button>
+                ))}
+              </div>
+            </>
+          )}
+          {selectedAnchor && (
+            <blockquote className="line-clamp-2 border-l-2 border-border pl-2 text-xs italic text-muted-foreground">
+              {selectedAnchor.quote}
+            </blockquote>
           )}
           <Textarea
             aria-label={replyingTo ? "Reply to comment" : "Write a comment"}
@@ -190,7 +328,7 @@ export default function PageCommentsSheet({ pageId, open, onOpenChange }: PageCo
               Post comment
             </LoadingButton>
           </div>
-        </div>
+        </div>}
       </SheetContent>
     </Sheet>
   );

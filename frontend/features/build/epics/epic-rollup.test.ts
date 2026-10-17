@@ -1,6 +1,6 @@
 import type { Ticket } from "@/types/projects/tasks";
 import type { ProjectStatusRecord } from "@/types/projects/projects";
-import { computeEpicRollup } from "./epic-card";
+import { computeEpicRollup } from "./epic-card-model";
 
 const BASE_TICKET: Ticket = {
   id: 1,
@@ -26,6 +26,7 @@ const BASE_TICKET: Ticket = {
   cycleId: null,
   sequenceId: null,
   estimate: null,
+  version: 1,
   createdAt: null,
   updatedAt: null,
 };

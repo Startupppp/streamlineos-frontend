@@ -1,6 +1,8 @@
 "use client";
 
-import { memo } from "react";
+import { memo, useCallback } from "react";
+import { TablePagination } from "@/components/ui/table-pagination";
+import { useBuildCursorPager } from "@/features/build/shared/use-build-cursor-pager";
 import { toast } from "sonner";
 import {
   Select,
@@ -14,12 +16,15 @@ import { getErrorMessage } from "@/lib/get-error-message";
 import {
   useProjectMembers,
   useUpdateProjectMemberRole,
-} from "@/hooks/api/build";
+} from "@/hooks/api/build/project-members";
 import { useCan } from "@/hooks/api/access";
-import { ErrorState } from "@/components/shared/error-state";
+import { usePageState } from "@/hooks/api/use-page-state";
+import { PageState } from "@/components/shared/page-state";
+import { EmptyState } from "@/components/ui/empty-state";
 import { getUserDisplayName, getUserInitials } from "@/lib/person-display";
 import type { ProjectMemberRecord } from "@/types/projects";
 import { resolveImageUrl } from "@/lib/utils";
+import { matchesAccessSearch } from "./access-search";
 
 type ProjectMemberRole = "ADMIN" | "MEMBER" | "VIEWER";
 
@@ -87,7 +92,7 @@ const MemberRoleRow = memo(function MemberRoleRow({
           onValueChange={handleRoleChange}
           disabled={updateRole.isPending}
         >
-          <SelectTrigger className="w-[100px]">
+          <SelectTrigger className="w-32">
             <SelectValue />
           </SelectTrigger>
           <SelectContent className="min-w-[var(--radix-select-trigger-width)]">
@@ -109,62 +114,95 @@ const MemberRoleRow = memo(function MemberRoleRow({
 
 interface ProjectMemberRolesSectionProps {
   projectId: number;
+  search?: string;
+  onClearSearch?: () => void;
 }
 
 export function ProjectMemberRolesSection({
   projectId,
+  search = "",
+  onClearSearch,
 }: ProjectMemberRolesSectionProps) {
   const canManage = useCan("build:manage");
+  const pager = useBuildCursorPager();
   const {
-    data: members,
+    data: page,
     isLoading,
     isError,
     error,
     refetch,
-  } = useProjectMembers(projectId);
+  } = useProjectMembers(projectId, {
+    cursor: pager.cursor,
+    search: search || undefined,
+  });
 
-  if (isLoading) {
-    return (
-      <div className="space-y-2 pt-2">
-        {Array.from({ length: 3 }).map((_, i) => (
-          <div key={i} className="flex items-center gap-3 py-2 animate-pulse">
-            <div className="h-7 w-7 rounded-full bg-muted shrink-0" />
-            <div className="flex-1 space-y-1">
-              <div className="h-3 w-24 rounded bg-muted" />
-              <div className="h-2.5 w-32 rounded bg-muted" />
-            </div>
-            <div className="h-7 w-[100px] rounded bg-muted" />
+  const resolution = usePageState({ permission: "build:view", isLoading, isError, error });
+
+  const handleRetry = useCallback(() => {
+    void refetch();
+  }, [refetch]);
+
+  const loadingSkeleton = (
+    <div className="space-y-2 pt-2">
+      {Array.from({ length: 3 }).map((_, i) => (
+        <div key={i} className="flex items-center gap-3 py-2 animate-pulse">
+          <div className="h-7 w-7 rounded-full bg-muted shrink-0" />
+          <div className="flex-1 space-y-1">
+            <div className="h-3 w-24 rounded bg-muted" />
+            <div className="h-2.5 w-32 rounded bg-muted" />
           </div>
-        ))}
-      </div>
-    );
-  }
-
-  if (isError)
-    return (
-      <ErrorState
-        compact
-        title="Couldn't load member roles"
-        description={getErrorMessage(error)}
-        onRetry={() => void refetch()}
-      />
-    );
-
-  if (!members?.length)
-    return (
-      <p className="text-sm text-muted-foreground py-2">No members yet.</p>
-    );
-
-  return (
-    <div className="divide-y divide-border">
-      {members.map((member) => (
-        <MemberRoleRow
-          key={member.id}
-          member={member}
-          projectId={projectId}
-          canManage={canManage}
-        />
+          <div className="h-7 w-[100px] rounded bg-muted" />
+        </div>
       ))}
     </div>
+  );
+
+  const members = page?.data ?? [];
+  const filteredMembers = members.filter((member) =>
+    matchesAccessSearch(search, [
+      getUserDisplayName(member),
+      member.email,
+      member.role,
+    ]),
+  );
+  const pagination = page?.pagination;
+
+  return (
+    <PageState resolution={resolution} loading={loadingSkeleton} onRetry={handleRetry} compact>
+      {!filteredMembers.length ? (
+        <EmptyState
+          compact
+          illustrationSize="xs"
+          title="No members yet."
+          filtersActive={search.trim().length > 0}
+          filteredTitle="No direct members match your search."
+          onClearFilters={onClearSearch}
+        />
+      ) : (
+        <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
+          <div className="min-h-0 flex-1 divide-y divide-border overflow-y-auto">
+            {filteredMembers.map((member) => (
+              <MemberRoleRow
+                key={member.id}
+                member={member}
+                projectId={projectId}
+                canManage={canManage}
+              />
+            ))}
+          </div>
+          {(pagination?.hasMore || pager.hasPrevious) ? (
+            <TablePagination
+              mode="cursor"
+              rowCount={filteredMembers.length}
+              pageNumber={pager.pageNumber}
+              hasMore={pagination?.hasMore ?? false}
+              hasPrevious={pager.hasPrevious}
+              onNext={() => pager.goNext(pagination?.nextCursor)}
+              onPrevious={pager.goPrevious}
+            />
+          ) : null}
+        </div>
+      )}
+    </PageState>
   );
 }

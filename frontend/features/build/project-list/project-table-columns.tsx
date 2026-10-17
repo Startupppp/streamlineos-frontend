@@ -2,40 +2,31 @@
 
 import { useMemo } from "react";
 import Link from "next/link";
-import { Calendar, Ticket, User } from "lucide-react";
+import { User } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { AvatarStack } from "@/components/ui/avatar-stack";
 import { type DataTableColumn } from "@/components/ui/data-table";
 import { cn, resolveImageUrl } from "@/lib/utils";
-import { format } from "date-fns";
-import {
-  getColorSafe,
-  healthDotColors,
-  healthStatusColors,
-  projectStatusColors,
-  projectStatusDisplayLabels,
-} from "@/lib/theme-constants";
-import {
-  getUserDisplayName,
-  getUserInitials,
-} from "@/lib/person-display";
+import { getUserDisplayName, getUserInitials } from "@/lib/person-display";
 import { TEXT_FLEX_CHILD } from "@/lib/text-overflow";
 import { TruncatedText } from "@/components/ui/truncated-text";
-import type { ProjectListItem, ProjectHealth } from "@/types/projects/projects";
+import type { ProjectListItem } from "@/types/projects/projects";
 import type { DisplayPrefs } from "./use-display-prefs";
 import {
   InlineProjectLead,
   InlineProjectMembers,
-  InlineProjectPriority,
-} from "./project-card-inline-fields";
+} from "./project-field-people";
+import { InlineProjectPriority } from "./project-field-status-priority";
+import { ActionsCell } from "./project-table-actions";
 import {
-  ActionsCell,
-  StatusDot,
-  resolveTargetDate,
-  dateToneClasses,
-} from "./project-table-actions";
+  ProjectStatusCell,
+  ProjectHealthCell,
+  ProjectTargetDateCell,
+  ProjectStartDateCell,
+  ProjectIssueCountCell,
+  ProjectProgressCell,
+} from "./project-table-column-cells";
 
 interface UseProjectTableColumnsParams {
   prefs: DisplayPrefs | undefined;
@@ -57,7 +48,7 @@ export function useProjectTableColumns({
       {
         key: "name",
         header: "Name",
-        className: "min-w-[200px] w-[240px] max-w-[320px]",
+        className: "min-w-[200px] w-[260px] max-w-[360px]",
         cell: (p) => (
           <div
             className={cn(
@@ -66,7 +57,7 @@ export function useProjectTableColumns({
             )}
           >
             <span
-              className="flex h-5 w-5 shrink-0 items-center justify-center rounded text-micro font-bold tracking-tight bg-primary/10 text-primary ring-1 ring-primary/10"
+              className="flex h-5 w-5 shrink-0 items-center justify-center rounded text-micro font-medium tracking-tight bg-primary/10 text-primary ring-1 ring-primary/10"
               aria-hidden="true"
             >
               {p.key.slice(0, 2).toUpperCase()}
@@ -106,24 +97,8 @@ export function useProjectTableColumns({
       cols.push({
         key: "status",
         header: "Status",
-        className: "w-[100px]",
-        cell: (p) => {
-          const status = p.status ?? "ACTIVE";
-          const displayLabel = projectStatusDisplayLabels[status] ?? status;
-          const statusColor = getColorSafe(projectStatusColors, status);
-          return (
-            <Badge
-              variant="secondary"
-              className={cn(
-                "gap-1 rounded-full border-0 px-1.5 py-0 text-micro font-medium",
-                statusColor,
-              )}
-            >
-              <StatusDot status={status} />
-              {displayLabel}
-            </Badge>
-          );
-        },
+        className: "w-[120px]",
+        cell: (p) => <ProjectStatusCell p={p} />,
       });
     }
 
@@ -146,33 +121,7 @@ export function useProjectTableColumns({
         key: "health",
         header: "Health",
         className: "w-[96px]",
-        cell: (p) => {
-          const healthLabels: Record<ProjectHealth, string> = {
-            on_track: "On Track",
-            at_risk: "At Risk",
-            off_track: "Off Track",
-          };
-          const dotColor = getColorSafe(healthDotColors, p.health);
-          const badgeColor = getColorSafe(healthStatusColors, p.health);
-          return (
-            <Badge
-              variant="secondary"
-              className={cn(
-                "gap-1 rounded-full border-0 px-1.5 py-0 text-micro font-medium",
-                badgeColor,
-              )}
-            >
-              <span
-                className={cn(
-                  "inline-block h-1.5 w-1.5 shrink-0 rounded-full",
-                  dotColor,
-                )}
-                aria-hidden="true"
-              />
-              {healthLabels[p.health]}
-            </Badge>
-          );
-        },
+        cell: (p) => <ProjectHealthCell p={p} />,
       });
     }
 
@@ -180,7 +129,7 @@ export function useProjectTableColumns({
       cols.push({
         key: "lead",
         header: "Lead",
-        className: "w-[130px]",
+        className: "min-w-[148px] w-[160px]",
         cell: (p) =>
           canEdit ? (
             <InlineProjectLead projectId={p.id} manager={p.manager} />
@@ -199,7 +148,7 @@ export function useProjectTableColumns({
               </Avatar>
               <TruncatedText
                 text={getUserDisplayName(p.manager)}
-                className="max-w-[96px] text-xs text-muted-foreground"
+                className="min-w-0 text-xs text-muted-foreground"
               />
             </div>
           ) : (
@@ -270,23 +219,7 @@ export function useProjectTableColumns({
         key: "endDate",
         header: "Target",
         className: "w-[84px]",
-        cell: (p) => {
-          const status = p.status ?? "ACTIVE";
-          const targetDate = resolveTargetDate(p.endDate, status);
-          return targetDate ? (
-            <div
-              className={cn(
-                "flex items-center gap-1 text-xs font-medium",
-                dateToneClasses[targetDate.tone],
-              )}
-            >
-              <Calendar className="h-3 w-3 shrink-0" aria-hidden="true" />
-              {targetDate.label}
-            </div>
-          ) : (
-            <span className="text-xs text-muted-foreground">—</span>
-          );
-        },
+        cell: (p) => <ProjectTargetDateCell p={p} />,
       });
     }
 
@@ -295,14 +228,7 @@ export function useProjectTableColumns({
         key: "startDate",
         header: "Start",
         className: "w-[80px]",
-        cell: (p) =>
-          p.startDate ? (
-            <span className="text-xs text-muted-foreground">
-              {format(new Date(p.startDate), "MMM d")}
-            </span>
-          ) : (
-            <span className="text-xs text-muted-foreground">—</span>
-          ),
+        cell: (p) => <ProjectStartDateCell p={p} />,
       });
     }
 
@@ -311,12 +237,7 @@ export function useProjectTableColumns({
         key: "issues",
         header: "Issues",
         className: "w-[72px]",
-        cell: (p) => (
-          <div className="flex items-center gap-1 text-xs tabular-nums text-muted-foreground">
-            <Ticket className="h-3 w-3 shrink-0" aria-hidden="true" />
-            <span>{p.progress.total}</span>
-          </div>
-        ),
+        cell: (p) => <ProjectIssueCountCell p={p} />,
       });
     }
 
@@ -324,25 +245,8 @@ export function useProjectTableColumns({
       cols.push({
         key: "progress",
         header: "Progress",
-        className: "w-[110px]",
-        cell: (p) => {
-          const progressValue =
-            p.progress.total > 0 ? p.progress.percentage : 0;
-          return p.progress.total > 0 ? (
-            <div className="flex items-center gap-2">
-              <Progress
-                value={progressValue}
-                aria-label={`${p.name} progress`}
-                className="h-1 min-w-0 flex-1"
-              />
-              <span className="w-7 shrink-0 text-right text-micro tabular-nums text-muted-foreground">
-                {Math.round(progressValue)}%
-              </span>
-            </div>
-          ) : (
-            <span className="text-xs text-muted-foreground">—</span>
-          );
-        },
+        className: "min-w-[120px] w-[132px]",
+        cell: (p) => <ProjectProgressCell p={p} />,
       });
     }
 

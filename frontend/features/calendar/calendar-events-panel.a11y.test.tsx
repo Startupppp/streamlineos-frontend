@@ -4,6 +4,7 @@ import { render, screen, fireEvent } from "@testing-library/react";
 import React from "react";
 import { CalendarEventsPanel } from "./calendar-events-panel";
 import type { CalendarListItem } from "@/hooks/api/calendar";
+import { calendarProjectionFields } from "./calendar-projection-fixtures";
 
 jest.mock("@/components/ui/empty-state", () => ({
   EmptyState: ({ title }: { title: string }) => (
@@ -28,12 +29,12 @@ jest.mock("react-window", () => ({
       style: React.CSSProperties;
       ariaAttributes: Record<string, string>;
       rows: unknown[];
-      onSelectEvent: (id: string) => void;
+      onSelectEvent: (event: CalendarListItem) => void;
     }>;
     rowCount: number;
     rowProps: {
       rows: unknown[];
-      onSelectEvent: (id: string) => void;
+      onSelectEvent: (event: CalendarListItem) => void;
     };
   }) {
     return (
@@ -64,6 +65,7 @@ function makeEvent(id: string, start: string, title = `Event ${id}`): CalendarLi
     color: "blue",
     category: "general",
     source: "event",
+    ...calendarProjectionFields(id, start),
   };
 }
 
@@ -78,14 +80,14 @@ describe("CalendarEventsPanel — keyboard accessibility", () => {
     ).toBeInTheDocument();
   });
 
-  it("keyboard Enter on an event button fires onSelectEvent with the event id", () => {
+  it("keyboard Enter on an event button returns the canonical event", () => {
     const onSelectEvent = jest.fn();
     const events = [makeEvent("ev-42", "2026-09-12T10:00:00", "Sprint planning")];
     render(
       <CalendarEventsPanel mode="list" events={events} onSelectEvent={onSelectEvent} />,
     );
     fireEvent.click(screen.getByRole("button", { name: "Sprint planning" }));
-    expect(onSelectEvent).toHaveBeenCalledWith("ev-42");
+    expect(onSelectEvent).toHaveBeenCalledWith(events[0]);
   });
 
   it("multiple events all get distinct aria-labels", () => {

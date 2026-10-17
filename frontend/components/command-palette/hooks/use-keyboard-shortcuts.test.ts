@@ -19,6 +19,9 @@ jest.mock("next/navigation", () => ({
 }));
 
 import { useKeyboardShortcuts } from "./use-keyboard-shortcuts";
+import {
+  claimBuildListSearchTarget,
+} from "@/lib/build/build-list-search-target";
 
 function press(key: string) {
   document.dispatchEvent(
@@ -29,6 +32,7 @@ function press(key: string) {
 beforeEach(() => {
   jest.clearAllMocks();
   mockPathname.current = "/build/1/backlog";
+  claimBuildListSearchTarget({ current: null })();
 });
 
 describe("extractProjectId — regex fix", () => {
@@ -84,6 +88,42 @@ describe("extractProjectId — regex fix", () => {
   });
 });
 
+describe("c shortcut — contenteditable guard (BUG-035)", () => {
+  it("does not fire c shortcut when event.target is directly contenteditable", () => {
+    const editor = document.createElement("div");
+    editor.setAttribute("contenteditable", "true");
+    document.body.appendChild(editor);
+    renderHook(() => useKeyboardShortcuts());
+    editor.dispatchEvent(
+      new KeyboardEvent("keydown", { key: "c", bubbles: true, cancelable: true }),
+    );
+    expect(mockOpenCreateTicket).not.toHaveBeenCalled();
+    document.body.removeChild(editor);
+  });
+
+  it("does not fire c shortcut when event.target is an atomic node with contenteditable=false inside a contenteditable=true editor", () => {
+    const editor = document.createElement("div");
+    editor.setAttribute("contenteditable", "true");
+    const atomicNode = document.createElement("span");
+    atomicNode.setAttribute("contenteditable", "false");
+    editor.appendChild(atomicNode);
+    document.body.appendChild(editor);
+    renderHook(() => useKeyboardShortcuts());
+    atomicNode.dispatchEvent(
+      new KeyboardEvent("keydown", { key: "c", bubbles: true, cancelable: true }),
+    );
+    expect(mockOpenCreateTicket).not.toHaveBeenCalled();
+    document.body.removeChild(editor);
+  });
+
+  it("still fires c shortcut when event.target is outside any contenteditable tree", () => {
+    mockPathname.current = "/build/1/backlog";
+    renderHook(() => useKeyboardShortcuts());
+    press("c");
+    expect(mockOpenCreateTicket).toHaveBeenCalledWith(1);
+  });
+});
+
 describe("/ shortcut — global palette handler", () => {
   it("opens the palette when / is pressed", () => {
     renderHook(() => useKeyboardShortcuts());
@@ -97,6 +137,71 @@ describe("/ shortcut — global palette handler", () => {
     input.focus();
     renderHook(() => useKeyboardShortcuts());
     input.dispatchEvent(
+      new KeyboardEvent("keydown", { key: "/", bubbles: true, cancelable: true }),
+    );
+    expect(mockSetPaletteOpen).not.toHaveBeenCalled();
+    document.body.removeChild(input);
+  });
+
+  it("focuses the build-list search input and does not open the palette when a search target is claimed", () => {
+    const input = document.createElement("input");
+    document.body.appendChild(input);
+    const release = claimBuildListSearchTarget({ current: input });
+    renderHook(() => useKeyboardShortcuts());
+
+    press("/");
+
+    expect(mockSetPaletteOpen).not.toHaveBeenCalled();
+    expect(document.activeElement).toBe(input);
+    release();
+    input.remove();
+  });
+
+  it("opens the palette when / is pressed after the build-list search target is released", () => {
+    const input = document.createElement("input");
+    document.body.appendChild(input);
+    const release = claimBuildListSearchTarget({ current: input });
+    release();
+    renderHook(() => useKeyboardShortcuts());
+
+    press("/");
+
+    expect(mockSetPaletteOpen).toHaveBeenCalledWith(true);
+    input.remove();
+  });
+});
+
+describe("c shortcut — input/textarea guard", () => {
+  it("does not fire c shortcut when focus is in an input", () => {
+    const input = document.createElement("input");
+    document.body.appendChild(input);
+    input.focus();
+    renderHook(() => useKeyboardShortcuts());
+    input.dispatchEvent(
+      new KeyboardEvent("keydown", { key: "c", bubbles: true, cancelable: true }),
+    );
+    expect(mockOpenCreateTicket).not.toHaveBeenCalled();
+    document.body.removeChild(input);
+  });
+
+  it("does not fire c shortcut when focus is in a textarea", () => {
+    const textarea = document.createElement("textarea");
+    document.body.appendChild(textarea);
+    textarea.focus();
+    renderHook(() => useKeyboardShortcuts());
+    textarea.dispatchEvent(
+      new KeyboardEvent("keydown", { key: "c", bubbles: true, cancelable: true }),
+    );
+    expect(mockOpenCreateTicket).not.toHaveBeenCalled();
+    document.body.removeChild(textarea);
+  });
+
+  it("does not open the palette with / when document.activeElement is an input even if event target is document", () => {
+    const input = document.createElement("input");
+    document.body.appendChild(input);
+    input.focus();
+    renderHook(() => useKeyboardShortcuts());
+    document.dispatchEvent(
       new KeyboardEvent("keydown", { key: "/", bubbles: true, cancelable: true }),
     );
     expect(mockSetPaletteOpen).not.toHaveBeenCalled();

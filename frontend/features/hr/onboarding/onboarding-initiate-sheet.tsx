@@ -17,7 +17,7 @@ import { getErrorMessage } from "@/lib/get-error-message";
 import { useInitiateOnboarding, useOnboardingStatus } from "@/hooks/api/hr/onboarding";
 
 const schema = z.object({
-  userId: z.string().min(1, "Please select an employee"),
+  userId: z.string().trim().min(1, "Please select an employee"),
 });
 
 type FormValues = z.infer<typeof schema>;

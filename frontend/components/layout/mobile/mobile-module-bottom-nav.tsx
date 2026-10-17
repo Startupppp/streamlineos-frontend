@@ -3,6 +3,7 @@
 import { useCallback, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { motion, useReducedMotion } from "framer-motion";
 import { EllipsisIcon } from "@animateicons/react/lucide";
 import { useProductSidebarVisibility } from "../sidebar/use-product-sidebar-visibility";
 import {
@@ -21,9 +22,23 @@ import {
 } from "@/components/ui/drawer";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { cn } from "@/lib/utils";
-import { TruncatedText } from "@/components/ui/truncated-text";
 import { useNavIntentPrefetch } from "@/components/layout/nav-intent-prefetch";
 import { NavPendingIndicator } from "@/components/layout/nav-pending-indicator";
+
+const NAV_PILL_SPRING = { type: "spring", stiffness: 500, damping: 34 } as const;
+
+function NavSelectionPill({ active }: { active: boolean }) {
+  const reduceMotion = useReducedMotion() === true;
+  if (!active) return null;
+  return (
+    <motion.span
+      layoutId="mobile-module-nav-selection"
+      aria-hidden
+      className="absolute inset-0 rounded-md bg-card shadow-xs"
+      transition={reduceMotion ? { duration: 0 } : NAV_PILL_SPRING}
+    />
+  );
+}
 
 function ModuleNavLink({
   route,
@@ -38,20 +53,27 @@ function ModuleNavLink({
     <Link
       href={route.href}
       className={cn(
-        "relative flex min-w-0 flex-1 flex-col items-center justify-center gap-0.5 px-0.5 text-center transition-colors motion-reduce:transition-none",
+        "relative flex min-w-0 flex-1 flex-col items-center justify-center gap-0 rounded-md px-0.5 text-center active:scale-[0.97]",
+        "transition-colors duration-200 motion-reduce:transition-none",
+        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
         isActive
-          ? "text-primary"
+          ? "text-foreground"
           : "text-muted-foreground hover:text-foreground",
       )}
       aria-current={isActive ? "page" : undefined}
       aria-label={route.label}
     >
-      <Icon className="size-5 shrink-0" />
-      <TruncatedText
-        text={route.label}
-        className="max-w-full truncate text-center text-micro leading-none"
+      <NavSelectionPill active={isActive} />
+      <Icon
+        className={cn(
+          "relative z-10 size-4 shrink-0 transition-transform duration-200 motion-reduce:transition-none",
+          isActive && "scale-110",
+        )}
       />
-      <NavPendingIndicator />
+      <span className="relative z-10 max-w-full px-0.5 text-center text-micro leading-none">
+        {route.label}
+      </span>
+      <NavPendingIndicator className="z-10" />
     </Link>
   );
 }
@@ -73,19 +95,27 @@ function MoreTab({
       onClick={onOpen}
       {...hoverHandlers}
       className={cn(
-        "flex min-w-0 flex-1 flex-col items-center justify-center gap-0.5 px-0.5 text-center transition-colors motion-reduce:transition-none",
+        "relative flex min-w-0 flex-1 flex-col items-center justify-center gap-0 rounded-md px-0.5 text-center active:scale-[0.97]",
+        "transition-colors duration-200 motion-reduce:transition-none",
+        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
         isActive
-          ? "text-primary"
+          ? "text-foreground"
           : "text-muted-foreground hover:text-foreground",
       )}
       aria-label="More navigation options"
       aria-expanded={isOpen}
     >
-      <EllipsisIcon ref={iconRef} className="size-5 shrink-0" />
-      <TruncatedText
-        text="More"
-        className="max-w-full truncate text-center text-micro leading-none"
+      <NavSelectionPill active={isActive} />
+      <EllipsisIcon
+        ref={iconRef}
+        className={cn(
+          "relative z-10 size-4 shrink-0 transition-transform duration-200 motion-reduce:transition-none",
+          isActive && "scale-110",
+        )}
       />
+      <span className="relative z-10 max-w-full px-0.5 text-center text-micro leading-none">
+        More
+      </span>
     </button>
   );
 }
@@ -218,12 +248,12 @@ export function MobileModuleBottomNav({ className }: { className?: string }) {
     <>
       <nav
         className={cn(
-          "fixed inset-x-0 bottom-0 z-50 border-t border-border bg-background/95 pb-[env(safe-area-inset-bottom)] backdrop-blur-md md:hidden",
+          "fixed inset-x-0 bottom-0 z-50 border-t border-border bg-background/95 pb-[env(safe-area-inset-bottom)] backdrop-blur-md lg:hidden",
           className,
         )}
         aria-label="Module navigation"
       >
-        <div className="flex h-16 w-full items-stretch">
+        <div className="flex h-11 w-full items-stretch gap-0.5 bg-muted px-1">
           {tabs.map((route) => (
             <ModuleNavLink
               key={route.href}

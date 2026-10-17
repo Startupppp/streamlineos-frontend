@@ -24,6 +24,7 @@ import { Sliders } from "lucide-react";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 import type { ProjectCustomField } from "@/types/projects/tasks";
+import { FIELD_CONTROL_CLASS } from "@/components/ui/field-control";
 
 interface TicketCustomFieldsProps {
   projectId: number;
@@ -81,7 +82,7 @@ const FieldValueInput = memo(function FieldValueInput({ field, currentValue, onS
         value={currentValue ?? ""}
         onValueChange={(v) => onSave(field.id, v)}
       >
-        <SelectTrigger className="border-0 bg-muted hover:bg-accent w-auto min-w-[120px]">
+        <SelectTrigger className={cn(FIELD_CONTROL_CLASS, "w-auto min-w-[120px] bg-muted hover:bg-accent")}>
           <SelectValue placeholder="Select..." />
         </SelectTrigger>
         <SelectContent>
@@ -101,7 +102,7 @@ const FieldValueInput = memo(function FieldValueInput({ field, currentValue, onS
         value={localValue}
         onChange={handleDateChange}
         placeholder="Pick a date"
-        className="text-xs w-36"
+        className="h-9 w-36 text-xs"
       />
     );
   }
@@ -120,7 +121,7 @@ const FieldValueInput = memo(function FieldValueInput({ field, currentValue, onS
       onChange={handleInputChange}
       onBlur={handleBlurSave}
       placeholder={field.type === "currency" ? "0.00" : "Enter value..."}
-      className="border-0 bg-muted hover:bg-accent focus:bg-background max-w-[200px]"
+      className={cn(FIELD_CONTROL_CLASS, "max-w-[200px] bg-muted hover:bg-accent focus:bg-background")}
     />
   );
 });
@@ -135,7 +136,10 @@ export function TicketCustomFields({
     useTicketCustomFieldValues(projectId, ticketId);
   const upsert = useUpsertTicketCustomFieldValues(projectId, ticketId);
 
-  const valueMap = useMemo(() => new Map(values.map((v) => [v.fieldId, v.value])), [values]);
+  const valueMap = useMemo(
+    () => new Map(values.map((v) => [v.fieldId, typeof v.value === "string" ? v.value : null])),
+    [values],
+  );
 
   const handleSave = useCallback(
     (fieldId: number, value: string | null) => {
@@ -182,7 +186,7 @@ export function TicketCustomFields({
             className={cn(
               "text-xs text-muted-foreground w-28 shrink-0 truncate",
               field.required &&
-                "after:content-['*'] after:text-status-danger-ink after:ml-0.5",
+                "after:content-['*'] after:text-status-danger-ink-strong after:ml-0.5",
             )}
             title={field.name}
           >

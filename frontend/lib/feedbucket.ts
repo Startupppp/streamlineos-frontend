@@ -1,6 +1,6 @@
 import { BRAND_URL } from "@/lib/branding";
 
-export const FEEDBUCKET_WIDGET_SCRIPT_PATH = "/feedbucket-widget.js";
+export const FEEDBUCKET_WIDGET_SCRIPT_PATH = "/feedbucket-widget.js?v=2";
 
 export function getFeedbucketProjectId(): string | null {
   const fromEnv = process.env.NEXT_PUBLIC_FEEDBUCKET_PROJECT_ID?.trim();

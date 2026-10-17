@@ -20,10 +20,10 @@ import { RecordRowActions } from "@/features/crm/settings/shared/record-row-acti
 import { TerritorySheet } from "@/features/crm/settings/territory-sheet";
 import { TerritoryPreviewPanel } from "@/features/crm/settings/territory-preview-panel";
 import { useCan } from "@/hooks/api/access";
-import { useDeleteTerritory, useTerritories, useUpdateTerritory } from "@/hooks/api/crm-settings";
+import { useDeleteTerritory, useTerritories, useUpdateTerritory } from "@/hooks/api/crm/settings/territories";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { TERRITORY_LAYOUT } from "@/lib/renderer/crm/settings/territory-layout";
-import type { Territory } from "@/hooks/api/crm-settings";
+import type { Territory } from "@/hooks/api/crm/settings/territories";
 
 /**
  * Territories.

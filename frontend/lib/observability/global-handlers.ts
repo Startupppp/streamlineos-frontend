@@ -1,4 +1,5 @@
 import { reportError } from "./error-reporter";
+import { isApiError } from "@/lib/api-envelope";
 
 let installed = false;
 
@@ -10,6 +11,10 @@ const BENIGN_BROWSER_NOTICES: readonly string[] = [
 function isBenignBrowserNotice(event: ErrorEvent): boolean {
   const msg = typeof event.message === "string" ? event.message : "";
   return BENIGN_BROWSER_NOTICES.some((notice) => msg.includes(notice));
+}
+
+function isExpectedRejection(reason: unknown): boolean {
+  return isApiError(reason) && reason.status === 404;
 }
 
 /**
@@ -37,6 +42,7 @@ export function installGlobalErrorHandlers(): () => void {
 
   const onRejection = (event: PromiseRejectionEvent): void => {
     const reason: unknown = event.reason;
+    if (isExpectedRejection(reason)) return;
     reportError(reason, { source: "unhandledrejection" });
   };
 

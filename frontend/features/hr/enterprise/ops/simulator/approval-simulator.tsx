@@ -67,7 +67,7 @@ export function ApprovalSimulator() {
                 <FormMessage />
               </FormItem>
             )} />
-            <LoadingButton type="submit" isPending={simulate.isPending} loadingText="Resolving…" className="w-full bg-primary hover:bg-primary/90 text-primary-foreground">
+            <LoadingButton type="submit" isPending={simulate.isPending} loadingText="Resolving…" className="w-full">
               Resolve Approvers
             </LoadingButton>
           </form>

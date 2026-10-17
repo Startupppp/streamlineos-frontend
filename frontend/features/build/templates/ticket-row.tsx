@@ -16,6 +16,7 @@ import { Trash2Icon } from "@animateicons/react/lucide";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 
 export interface TicketDraft {
+  uid: string;
   title: string;
   type: string;
   priority: "LOW" | "MEDIUM" | "HIGH" | "URGENT";

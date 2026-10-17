@@ -1,18 +1,30 @@
 ﻿"use client";
 
-import { useCallback, memo } from "react";
+import { useCallback, memo, useState, type MouseEvent } from "react";
 import { cn } from "@/lib/utils";
+import {
+  SURFACE_CARD,
+  SURFACE_CARD_INTERACTIVE,
+  SURFACE_CARD_SELECTED,
+} from "@/lib/ui-surface-chrome";
 import { Checkbox } from "@/components/ui/checkbox";
 import type { KanbanTicket, DisplayOptions } from "../shared/types";
 import { TicketQuickActions } from "./ticket-quick-actions";
-import { InlinePriority, InlineAssignee, InlineEstimate } from "./card-inline-fields";
-import { InlineType, InlineLabels, InlineCycle } from "./card-inline-extra-fields";
+import { InlinePriority } from "./card-field-priority";
+import { InlineAssignee } from "./card-field-assignee";
+import { InlineEstimate } from "./card-field-estimate";
+import { InlineLabels, InlineModule } from "./card-inline-extra-fields";
+import { InlineType, InlineCycle } from "./card-inline-type-cycle";
 import { InlineDueDate, InlineStartDate } from "./card-inline-date-fields";
 import { TEXT_TWO_LINES } from "@/lib/text-overflow";
 import { getUserDisplayName } from "@/lib/person-display";
 import { Calendar } from "lucide-react";
 import { format, isValid, parseISO } from "date-fns";
 import { useCan } from "@/hooks/api/access";
+import { Badge } from "@/components/ui/badge";
+import { PriorityBadge } from "../shared/priority-badge";
+import { formatCalendarDate } from "@/lib/date-utils";
+import { useModuleName } from "./module-names-context";
 
 interface KanbanTicketCardProps {
   ticket: KanbanTicket;
@@ -23,6 +35,7 @@ interface KanbanTicketCardProps {
   isSelected?: boolean;
   onSelectedChange?: (id: number, next: boolean) => void;
   displayOptions?: DisplayOptions;
+  readOnly?: boolean;
 }
 
 export const KanbanTicketCard = memo(function KanbanTicketCard({
@@ -34,12 +47,32 @@ export const KanbanTicketCard = memo(function KanbanTicketCard({
   isSelected,
   onSelectedChange,
   displayOptions,
+  readOnly = false,
 }: KanbanTicketCardProps) {
-  const canUpdate = useCan("build:tickets:update");
-  const canAssign = useCan("build:tickets:assign");
-  const handleActivate = useCallback(() => {
-    onSelect(ticket.id);
-  }, [ticket.id, onSelect]);
+  const updateAllowed = useCan("build:tickets:update");
+  const assignAllowed = useCan("build:tickets:assign");
+  const canUpdate = !readOnly && updateAllowed;
+  const canAssign = !readOnly && assignAllowed;
+  const moduleName = useModuleName(ticket.moduleId);
+  const resolvedProjectId =
+    projectId && projectId > 0 ? projectId : ticket.project?.id;
+  const resolvedProjectKey = projectKey ?? ticket.project?.key;
+  const handleActivate = useCallback(
+    (event: MouseEvent<HTMLButtonElement>) => {
+      event.stopPropagation();
+      onSelect(ticket.id);
+    },
+    [ticket.id, onSelect],
+  );
+  const [menuOpen, setMenuOpen] = useState(false);
+  const handleContextMenu = useCallback(
+    (event: MouseEvent<HTMLDivElement>) => {
+      if (readOnly) return;
+      event.preventDefault();
+      setMenuOpen(true);
+    },
+    [readOnly],
+  );
   const handleSelectedChange = useCallback(
     (next: boolean | "indeterminate") => {
       onSelectedChange?.(ticket.id, next === true);
@@ -47,12 +80,14 @@ export const KanbanTicketCard = memo(function KanbanTicketCard({
     [ticket.id, onSelectedChange],
   );
 
-  const ticketKey = projectKey
-    ? `${projectKey}-${ticket.ticketNumber}`
-    : `#${ticket.ticketNumber ?? ""}`;
+  const ticketKey =
+    resolvedProjectKey && ticket.ticketNumber != null
+      ? `${resolvedProjectKey}-${ticket.ticketNumber}`
+      : `#${ticket.ticketNumber ?? ticket.id}`;
 
   const assigneeUsers =
-    ticket.assignees?.flatMap((entry) => (entry.user ? [entry.user] : [])) ?? [];
+    ticket.assignees?.flatMap((entry) => (entry.user ? [entry.user] : [])) ??
+    [];
   const primaryAssignee = assigneeUsers[0] ?? ticket.assignee ?? null;
   const extraCount = Math.max(
     0,
@@ -70,20 +105,39 @@ export const KanbanTicketCard = memo(function KanbanTicketCard({
 
   const points = ticket.points ?? ticket.storyPoints;
   const createdDate = parseDisplayDate(ticket.createdAt);
+  const version = ticket.version;
+  const labelIds =
+    ticket.labels?.flatMap((label) => (label.label ? [label.label.id] : [])) ??
+    [];
+  const showPlanningRow =
+    resolvedProjectId !== undefined &&
+    canUpdate &&
+    ((showEstimate && points != null) ||
+      (showCycle && ticket.cycleId != null) ||
+      Boolean(ticket.startDate));
 
   return (
     <div
+      data-testid="kanban-ticket-card"
+      data-selected={isSelected ? "true" : undefined}
       className={cn(
-        "group relative rounded-xl border border-border/70 bg-card px-3 py-2.5 shadow-sm",
-        "cursor-grab active:cursor-grabbing will-change-transform",
+        "group relative overflow-hidden bg-gradient-to-br from-card via-card to-muted/45 p-3",
+        SURFACE_CARD,
+        readOnly
+          ? "cursor-pointer"
+          : "cursor-grab active:cursor-grabbing will-change-transform",
+        SURFACE_CARD_INTERACTIVE,
+        "motion-safe:transition-[border-color,box-shadow,transform,background-color,color] motion-safe:duration-200 motion-reduce:transform-none",
+        isSelected && SURFACE_CARD_SELECTED,
         isDragging
-          ? "z-20 rotate-1 scale-[1.02] border-primary/30 bg-card opacity-95 shadow-xl ring-1 ring-primary/25"
-          : "hover:border-border hover:shadow-md",
+          ? "z-20 rotate-1 scale-[1.02] border-foreground/30 opacity-95 shadow-xl ring-1 ring-foreground/25 motion-reduce:rotate-0 motion-reduce:scale-100"
+          : "hover:-translate-y-0.5 focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2 focus-within:ring-offset-background motion-reduce:hover:translate-y-0",
       )}
+      onContextMenu={handleContextMenu}
     >
-      <div className="flex items-start gap-1.5">
+      <div className="flex items-start gap-2">
         {onSelectedChange !== undefined && (
-          <div className="flex-shrink-0 pt-0.5">
+          <div className="flex h-7 flex-shrink-0 items-center pt-0.5">
             <Checkbox
               checked={isSelected ?? false}
               onCheckedChange={handleSelectedChange}
@@ -96,92 +150,142 @@ export const KanbanTicketCard = memo(function KanbanTicketCard({
           onClick={handleActivate}
           className={cn(
             TEXT_TWO_LINES,
-            "min-w-0 flex-1 text-left text-sm font-semibold leading-snug text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1",
+            "min-w-0 flex-1 rounded-sm text-left text-sm font-semibold leading-snug text-foreground",
+            "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
           )}
         >
           {ticket.title}
         </button>
-        <TicketQuickActions
-          ticketId={ticket.id}
-          projectId={projectId}
-          className="-mr-1 -mt-0.5 opacity-0 transition-opacity duration-150 group-hover:opacity-100 focus-within:opacity-100"
-        />
+        {!readOnly ? (
+          <TicketQuickActions
+            ticketId={ticket.id}
+            projectId={resolvedProjectId}
+            projectKey={resolvedProjectKey}
+            ticketNumber={ticket.ticketNumber}
+            onOpen={onSelect}
+            open={menuOpen}
+            onOpenChange={setMenuOpen}
+            className="-mr-1 -mt-1 opacity-100 transition-opacity duration-150 sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100 [&_button]:h-8 [&_button]:w-8"
+          />
+        ) : null}
       </div>
 
       {showDescription && ticket.descriptionExcerpt ? (
-        <p className={cn(TEXT_TWO_LINES, "mt-1 text-dense leading-relaxed text-muted-foreground")}>
+        <p
+          className={cn(
+            TEXT_TWO_LINES,
+            "mt-1.5 text-dense leading-relaxed text-muted-foreground",
+          )}
+        >
           {ticket.descriptionExcerpt}
         </p>
       ) : null}
 
-      <div className="mt-2 flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1.5">
+      <div className="mt-2 flex min-w-0 flex-wrap items-center gap-1.5">
         {showId ? (
-          <span className="shrink-0 font-mono text-dense tabular-nums text-muted-foreground">
+          <span className="shrink-0 rounded-md bg-muted px-1.5 py-0.5 font-mono text-micro font-medium tabular-nums text-muted-foreground">
             {ticketKey}
           </span>
         ) : null}
 
-        {showPriority && projectId && canUpdate ? (
+        {showPriority && resolvedProjectId && canUpdate ? (
           <InlinePriority
             ticketId={ticket.id}
-            projectId={projectId}
+            projectId={resolvedProjectId}
+            version={version}
             currentPriority={ticket.priority}
             showLabel
           />
+        ) : showPriority && ticket.priority ? (
+          <PriorityBadge priority={ticket.priority} showLabel />
         ) : null}
 
-        {projectId && canUpdate ? (
+        {resolvedProjectId && canUpdate ? (
           <InlineType
             ticketId={ticket.id}
-            projectId={projectId}
+            projectId={resolvedProjectId}
+            version={version}
             currentType={ticket.type}
             showLabel
           />
         ) : null}
 
-        {showLabels && projectId && canUpdate ? (
+        {showLabels && resolvedProjectId && canUpdate ? (
           <InlineLabels
             ticketId={ticket.id}
-            projectId={projectId}
-            currentLabelIds={
-              ticket.labels?.flatMap((l) => (l.label ? [l.label.id] : [])) ?? []
-            }
+            projectId={resolvedProjectId}
+            currentLabelIds={labelIds}
           />
         ) : null}
 
-        {showEstimate && projectId && canUpdate ? (
-          <InlineEstimate
+        {resolvedProjectId !== undefined && canUpdate ? (
+          <InlineModule
             ticketId={ticket.id}
-            projectId={projectId}
-            currentPoints={points}
+            projectId={resolvedProjectId}
+            version={version}
+            currentModuleId={ticket.moduleId}
+            hideEmpty
           />
-        ) : null}
-
-        {showCycle && projectId && canUpdate ? (
-          <InlineCycle
-            ticketId={ticket.id}
-            projectId={projectId}
-            currentCycleId={ticket.cycleId}
-          />
-        ) : null}
-
-        {projectId && canUpdate ? (
-          <InlineStartDate
-            ticketId={ticket.id}
-            projectId={projectId}
-            currentStartDate={ticket.startDate}
-          />
+        ) : moduleName !== null ? (
+          <Badge
+            variant="secondary"
+            className="max-w-full shrink truncate text-micro font-medium"
+          >
+            {moduleName}
+          </Badge>
         ) : null}
       </div>
 
-      <div className="mt-2.5 flex min-w-0 items-center justify-between gap-2 border-t border-border/60 pt-2">
-        {showDueDate && projectId && canUpdate ? (
+      {showPlanningRow && resolvedProjectId !== undefined ? (
+        <div className="mt-2 flex min-w-0 flex-wrap items-center gap-x-1.5 gap-y-1 rounded-md bg-muted/45 px-1.5 py-1">
+          {showEstimate ? (
+            <InlineEstimate
+              ticketId={ticket.id}
+              projectId={resolvedProjectId}
+              version={version}
+              currentPoints={points}
+              hideEmpty
+            />
+          ) : null}
+
+          {showCycle ? (
+            <InlineCycle
+              ticketId={ticket.id}
+              projectId={resolvedProjectId}
+              version={version}
+              currentCycleId={ticket.cycleId}
+              hideEmpty
+            />
+          ) : null}
+
+          {ticket.startDate ? (
+            <InlineStartDate
+              ticketId={ticket.id}
+              projectId={resolvedProjectId}
+              version={version}
+              currentStartDate={ticket.startDate}
+            />
+          ) : null}
+        </div>
+      ) : null}
+
+      <div
+        data-testid="kanban-ticket-card-footer"
+        className="mt-2 flex min-w-0 items-center justify-between gap-2 border-t border-border/60 pt-2"
+      >
+        {showDueDate && resolvedProjectId && canUpdate ? (
           <InlineDueDate
             ticketId={ticket.id}
-            projectId={projectId}
+            projectId={resolvedProjectId}
+            version={version}
             currentDueDate={ticket.dueDate}
-            fallbackDate={ticket.createdAt}
+            hideEmpty
           />
+        ) : showDueDate && ticket.dueDate ? (
+          <span className="inline-flex items-center gap-1 text-dense tabular-nums text-muted-foreground">
+            <Calendar aria-hidden="true" className="h-3.5 w-3.5" />
+            Due {formatCalendarDate(ticket.dueDate)}
+          </span>
         ) : createdDate ? (
           <span className="inline-flex items-center gap-1 text-dense tabular-nums text-muted-foreground">
             <Calendar className="h-3.5 w-3.5" />
@@ -191,16 +295,19 @@ export const KanbanTicketCard = memo(function KanbanTicketCard({
           <span />
         )}
 
-        {showAssignee && projectId && canAssign ? (
+        {showAssignee && resolvedProjectId && canAssign ? (
           <div className="ml-1 flex min-w-0 shrink items-center gap-1.5">
             <InlineAssignee
               ticketId={ticket.id}
-              projectId={projectId}
-              currentAssigneeId={ticket.assigneeId ?? primaryAssignee?.id ?? null}
+              projectId={resolvedProjectId}
+              version={version}
+              currentAssigneeId={
+                ticket.assigneeId ?? primaryAssignee?.id ?? null
+              }
               assignee={primaryAssignee}
             />
             {primaryAssignee ? (
-              <span className="min-w-0 truncate text-dense font-medium text-muted-foreground">
+              <span className="min-w-0 truncate text-dense font-normal text-muted-foreground">
                 {getUserDisplayName(primaryAssignee)}
               </span>
             ) : null}
@@ -210,6 +317,19 @@ export const KanbanTicketCard = memo(function KanbanTicketCard({
               </span>
             ) : null}
           </div>
+        ) : showAssignee ? (
+          <span
+            className="min-w-0 truncate text-dense text-muted-foreground"
+            title={
+              primaryAssignee
+                ? getUserDisplayName(primaryAssignee)
+                : "Unassigned"
+            }
+          >
+            {primaryAssignee
+              ? getUserDisplayName(primaryAssignee)
+              : "Unassigned"}
+          </span>
         ) : null}
       </div>
     </div>
@@ -217,7 +337,6 @@ export const KanbanTicketCard = memo(function KanbanTicketCard({
 });
 
 function parseDisplayDate(value?: string | null): Date | undefined {
-  if (!value) return undefined;
-  const parsed = parseISO(value);
-  return isValid(parsed) ? parsed : undefined;
+  const parsed = value ? parseISO(value) : undefined;
+  return parsed && isValid(parsed) ? parsed : undefined;
 }

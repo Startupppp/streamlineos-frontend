@@ -19,7 +19,7 @@ import { formatMoney } from "@/lib/format-utils";
 import { useOrgDisplay } from "@/hooks/api/org-display";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { cn } from "@/lib/utils";
-import { useProjects } from "@/hooks/api/build";
+import { useProjects } from "@/hooks/api/build/projects";
 import { useRatePreview } from "@/hooks/api/timesheets-core/rate-preview";
 import type { ResolvedRatePreview } from "@/features/timesheets/types";
 

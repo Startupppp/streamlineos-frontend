@@ -6,7 +6,7 @@ import type { TicketPriority } from "@/types/projects";
 export type GroupByOption = "status" | "assignee" | "priority" | "label" | "cycle" | "project" | "none";
 export type ColumnByOption = "status" | "assignee" | "priority" | "label" | "cycle" | "project";
 export type SwimlaneBy = "none" | "status" | "assignee" | "priority" | "cycle";
-export type OrderByOption = "created" | "priority" | "dueDate" | "manual";
+export type OrderByOption = "created" | "priority" | "dueDate" | "manual" | "updated";
 export type CompletedIssuesFilter = "all" | "none" | "last-day" | "last-week" | "last-month";
 
 export interface DisplayOptions {
@@ -54,9 +54,11 @@ export interface KanbanTicket {
   cycleId?: number | null;
   moduleId?: number | null;
   rank?: string | null;
+  parentTicketId?: number | null;
   dueDate?: string | null;
   startDate?: string | null;
   timeSpent?: string | null;
+  version: number;
   createdAt?: string | null;
   updatedAt?: string | null;
   assignee?: {
@@ -107,10 +109,10 @@ export const priorityConfig: Record<
   string,
   { label: string; color: string; icon: string }
 > = {
-  URGENT: { label: "Urgent", color: "text-status-danger-ink", icon: "AlertTriangle" },
-  HIGH: { label: "High", color: "text-status-warning-ink", icon: "ArrowUp" },
-  MEDIUM: { label: "Medium", color: "text-status-warning-ink", icon: "Minus" },
-  LOW: { label: "Low", color: "text-status-info-ink", icon: "ArrowDown" },
+  URGENT: { label: "Urgent", color: "text-status-danger-ink-strong", icon: "AlertTriangle" },
+  HIGH: { label: "High", color: "text-status-warning-ink-strong", icon: "ArrowUp" },
+  MEDIUM: { label: "Medium", color: "text-status-warning-ink-strong", icon: "Minus" },
+  LOW: { label: "Low", color: "text-status-info-ink-strong", icon: "ArrowDown" },
 };
 
 export const statusConfig: Record<string, StatusConfigEntry> = {
@@ -153,9 +155,13 @@ export function buildStatusConfig(
 ): Record<string, StatusConfigEntry> {
   const merged: Record<string, StatusConfigEntry> = { ...statusConfig };
   for (const s of projectStatuses) {
+    const known = statusConfig[s.name];
     merged[s.name] = {
-      label: s.name.replace(/_/g, " "),
-      dotColor: TYPE_TO_DOT_COLOR[s.type ?? "unstarted"] ?? "bg-muted-foreground",
+      label: known?.label ?? s.name.replaceAll("_", " "),
+      dotColor:
+        known?.dotColor ??
+        TYPE_TO_DOT_COLOR[s.type ?? "unstarted"] ??
+        "bg-muted-foreground",
       color: s.color,
     };
   }
@@ -166,9 +172,9 @@ export const typeConfig: Record<
   string,
   { label: string; color: string }
 > = {
-  TASK: { label: "Task", color: "text-status-info-ink" },
-  BUG: { label: "Bug", color: "text-status-danger-ink" },
-  STORY: { label: "Story", color: "text-status-success-ink" },
-  EPIC: { label: "Epic", color: "text-status-info-ink" },
+  TASK: { label: "Task", color: "text-status-info-ink-strong" },
+  BUG: { label: "Bug", color: "text-status-danger-ink-strong" },
+  STORY: { label: "Story", color: "text-status-success-ink-strong" },
+  EPIC: { label: "Epic", color: "text-status-info-ink-strong" },
   SUBTASK: { label: "Subtask", color: "text-muted-foreground" },
 };

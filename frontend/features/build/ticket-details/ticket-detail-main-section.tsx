@@ -1,7 +1,12 @@
 ﻿"use client";
 
+import { useState, useCallback, useRef, useEffect } from "react";
 import dynamic from "next/dynamic";
+import { motion, useReducedMotion } from "framer-motion";
+import { Loader2 } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
+import { Button } from "@/components/ui/button";
+import { fadeIn } from "@/lib/motion-variants";
 import { viewFile, downloadFile } from "@/hooks/common/use-file-url";
 import { TicketSubtasks } from "./ticket-subtasks";
 import { TicketRelations } from "./ticket-relations";
@@ -25,9 +30,13 @@ import {
 } from "@/components/ui/dropdown-menu";
 import type { ProjectMember } from "./types";
 import type { Ticket } from "@/types/projects";
+import { TICKET_TITLE_MAX } from "@/lib/validation/projects";
 
 const TiptapEditorDynamic = dynamic(
-  () => import("@/components/editor/tiptap-editor").then((m) => ({ default: m.TiptapEditor })),
+  () =>
+    import("@/components/editor/tiptap-editor").then((m) => ({
+      default: m.TiptapEditor,
+    })),
   {
     ssr: false,
     loading: () => (
@@ -45,9 +54,12 @@ interface TicketDetailMainSectionProps {
   subtasks: Ticket[];
   members: ProjectMember[];
   highlightCommentId?: number | null;
+  resumeDraft?: boolean;
   variant?: "full" | "preview";
   onApplyDescription: (html: string) => void;
   onTitleChange: (e: React.ChangeEvent<HTMLTextAreaElement>) => void;
+  onCommitTitle: (nextTitle: string) => string | null;
+  onRevertTitle: () => void;
   onDescriptionChange: (html: string) => void;
   canUpdate: boolean;
 }
@@ -59,12 +71,52 @@ interface AttachmentItem {
   mimeType?: string | null;
 }
 
+interface NonImageAttachmentButtonProps {
+  attachment: AttachmentItem;
+}
+
+function NonImageAttachmentButton({ attachment }: NonImageAttachmentButtonProps) {
+  const [pending, setPending] = useState(false);
+  const [itemError, setItemError] = useState(false);
+
+  function handleClick() {
+    if (pending) return;
+    setPending(true);
+    setItemError(false);
+    void viewFile(attachment.fileUrl)
+      .then(() => { setPending(false); })
+      .catch(() => { setPending(false); setItemError(true); });
+  }
+
+  return (
+    <button
+      type="button"
+      onClick={handleClick}
+      disabled={pending}
+      className="group relative aspect-video rounded-md overflow-hidden bg-muted border hover:border-foreground/40 transition-all text-left disabled:opacity-60"
+    >
+      <div className="flex items-center justify-center h-full text-muted-foreground text-micro p-1 text-center">
+        {pending ? (
+          <Loader2 className="h-4 w-4 animate-spin" />
+        ) : itemError ? (
+          <span className="text-status-danger-ink">Couldn&apos;t open attachment</span>
+        ) : (
+          attachment.fileName
+        )}
+      </div>
+    </button>
+  );
+}
+
 interface AttachmentContextMenuProps {
   attachment: AttachmentItem;
   children: React.ReactNode;
 }
 
-function AttachmentContextMenu({ attachment, children }: AttachmentContextMenuProps) {
+function AttachmentContextMenu({
+  attachment,
+  children,
+}: AttachmentContextMenuProps) {
   function handleView() {
     void viewFile(attachment.fileUrl);
   }
@@ -79,20 +131,12 @@ function AttachmentContextMenu({ attachment, children }: AttachmentContextMenuPr
 
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        {children}
-      </DropdownMenuTrigger>
+      <DropdownMenuTrigger asChild>{children}</DropdownMenuTrigger>
       <DropdownMenuContent align="start">
-        <DropdownMenuItem onSelect={handleView}>
-          View image
-        </DropdownMenuItem>
-        <DropdownMenuItem onSelect={handleDownload}>
-          Download
-        </DropdownMenuItem>
+        <DropdownMenuItem onSelect={handleView}>View image</DropdownMenuItem>
+        <DropdownMenuItem onSelect={handleDownload}>Download</DropdownMenuItem>
         <DropdownMenuSeparator />
-        <DropdownMenuItem onSelect={handleCopyLink}>
-          Copy link
-        </DropdownMenuItem>
+        <DropdownMenuItem onSelect={handleCopyLink}>Copy link</DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
   );
@@ -107,13 +151,67 @@ export function TicketDetailMainSection({
   subtasks,
   members,
   highlightCommentId,
+  resumeDraft,
   variant = "full",
   onApplyDescription,
   onTitleChange,
+  onCommitTitle,
+  onRevertTitle,
   onDescriptionChange,
   canUpdate,
 }: TicketDetailMainSectionProps) {
   const isPreview = variant === "preview";
+  const reduceMotion = useReducedMotion();
+  const [editingTitle, setEditingTitle] = useState(false);
+  const [titleError, setTitleError] = useState<string | null>(null);
+  const skipTitleBlurRef = useRef(false);
+  const titleInputRef = useRef<HTMLTextAreaElement | null>(null);
+  const titleAtEditStartRef = useRef(localTitle);
+
+  useEffect(() => {
+    if (!editingTitle) return;
+    const id = requestAnimationFrame(() => {
+      const el = titleInputRef.current;
+      if (!el) return;
+      el.focus({ preventScroll: true });
+      const end = el.value.length;
+      el.setSelectionRange(end, end);
+    });
+    return () => cancelAnimationFrame(id);
+  }, [editingTitle]);
+
+  const finishTitleEdit = useCallback(
+    (commit: boolean) => {
+      if (commit) {
+        const error = onCommitTitle(localTitle);
+        if (error) {
+          setTitleError(error);
+          return;
+        }
+      } else {
+        skipTitleBlurRef.current = true;
+        onRevertTitle();
+      }
+      setTitleError(null);
+      setEditingTitle(false);
+    },
+    [localTitle, onCommitTitle, onRevertTitle],
+  );
+
+  const handleTitleKeyDown = useCallback(
+    (event: React.KeyboardEvent<HTMLTextAreaElement>) => {
+      if (event.key === "Escape") {
+        event.preventDefault();
+        finishTitleEdit(false);
+        return;
+      }
+      if (event.key === "Enter" && !event.shiftKey) {
+        event.preventDefault();
+        finishTitleEdit(true);
+      }
+    },
+    [finishTitleEdit],
+  );
   const ticketDetailAi = useTicketDetailAi({
     projectId,
     ticketId,
@@ -123,20 +221,117 @@ export function TicketDetailMainSection({
     onApplyDescription,
   });
 
-  return (
-    <div className="min-w-0 max-w-full space-y-4 sm:space-y-5">
-      <div className="min-w-0">
-        <Textarea
-          value={localTitle}
-          onChange={onTitleChange}
-          readOnly={!canUpdate}
-          rows={2}
-          className="h-auto w-full max-w-full min-h-0 resize-none break-words border-0 bg-transparent px-0 py-1 text-lg font-semibold leading-snug shadow-none [overflow-wrap:anywhere] [word-break:break-word] hover:border-0 focus-visible:border-0 focus-visible:ring-0 focus-visible:ring-offset-0 sm:text-xl"
-          placeholder="Ticket title"
-        />
-      </div>
+  useEffect(() => {
+    if (!editingTitle) return;
+    function handleBeforeUnload(e: BeforeUnloadEvent) {
+      if (localTitle !== titleAtEditStartRef.current) {
+        e.preventDefault();
+      }
+    }
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
+  }, [editingTitle, localTitle]);
 
-      <div className="min-w-0">
+  return (
+    <motion.div
+      className={`mx-auto flex min-h-full w-full min-w-0 flex-col gap-5 ${
+        isPreview ? "max-w-none pb-0" : "max-w-4xl pb-6"
+      }`}
+      initial={isPreview || reduceMotion ? false : "hidden"}
+      animate={isPreview || reduceMotion ? undefined : "visible"}
+      variants={reduceMotion ? undefined : fadeIn}
+    >
+      {canUpdate && editingTitle && !isPreview ? (
+        <div className="flex justify-start">
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            className="h-8 px-2 text-xs text-muted-foreground hover:bg-transparent hover:text-foreground"
+            aria-expanded={editingTitle}
+            aria-controls={`ticket-title-${ticketId}`}
+            onMouseDown={() => {
+              skipTitleBlurRef.current = true;
+            }}
+            onClick={() => finishTitleEdit(true)}
+          >
+            Done editing
+          </Button>
+        </div>
+      ) : null}
+      {editingTitle && canUpdate ? (
+        <div className="flex min-w-0 flex-col gap-2">
+          <label htmlFor={`ticket-title-${ticketId}`} className="sr-only">
+            Title
+          </label>
+          <Textarea
+            id={`ticket-title-${ticketId}`}
+            ref={titleInputRef}
+            value={localTitle}
+            onChange={(event) => {
+              setTitleError(null);
+              onTitleChange(event);
+            }}
+            rows={2}
+            maxLength={TICKET_TITLE_MAX}
+            aria-invalid={titleError ? true : undefined}
+            aria-describedby={
+              titleError ? `ticket-title-error-${ticketId}` : undefined
+            }
+            className="h-auto min-h-12 w-full max-w-full resize-none break-words rounded-md border-border bg-card px-3 py-2 text-base font-medium leading-snug shadow-none transition-colors duration-200 [overflow-wrap:anywhere] [word-break:break-word] hover:border-foreground/30 focus-visible:ring-1"
+            placeholder="Ticket title"
+            onKeyDown={handleTitleKeyDown}
+            onBlur={(event) => {
+              if (skipTitleBlurRef.current) {
+                skipTitleBlurRef.current = false;
+                return;
+              }
+              const next = event.relatedTarget;
+              if (
+                next instanceof Node &&
+                event.currentTarget.parentElement?.contains(next)
+              ) {
+                return;
+              }
+              if (localTitle === titleAtEditStartRef.current) {
+                setEditingTitle(false);
+                setTitleError(null);
+                return;
+              }
+              finishTitleEdit(true);
+            }}
+          />
+          {titleError ? (
+            <p
+              id={`ticket-title-error-${ticketId}`}
+              className="text-xs text-status-danger-ink"
+              role="alert"
+            >
+              {titleError}
+            </p>
+          ) : null}
+        </div>
+      ) : canUpdate ? (
+        <button
+          type="button"
+          className="group min-w-0 text-left"
+          aria-label="Edit title"
+          onClick={() => {
+            titleAtEditStartRef.current = localTitle;
+            setEditingTitle(true);
+          }}
+        >
+          <h2 className="break-words text-xl font-semibold leading-snug text-foreground [overflow-wrap:anywhere] group-hover:text-foreground/90">
+            {localTitle || "Untitled"}
+          </h2>
+        </button>
+      ) : (
+        <h2 className="break-words text-xl font-semibold leading-snug text-foreground [overflow-wrap:anywhere]">
+          {localTitle || "Untitled"}
+        </h2>
+      )}
+
+      <div className="min-w-0 border-b border-border pb-6">
         {isPreview || !canUpdate ? (
           <h3 className="mb-2 text-dense font-medium uppercase tracking-wide text-muted-foreground">
             Description
@@ -156,19 +351,22 @@ export function TicketDetailMainSection({
           onChangeHtml={onDescriptionChange}
           editable={canUpdate}
           output="html"
-          minHeightClassName="min-h-[120px] sm:min-h-[160px]"
+          minHeightClassName="min-h-24 sm:min-h-32"
           placeholder="Add a description..."
         />
       </div>
 
       {!isPreview && (
         <>
-          <TicketSubtasks
-            ticketId={ticketId}
-            projectId={projectId}
-            subtasks={subtasks}
-            canUseAI={ticketDetailAi.canUseAI}
-          />
+          <div className="border-b border-border pb-6">
+            <TicketSubtasks
+              ticketId={ticketId}
+              projectId={projectId}
+              subtasks={subtasks}
+              parentTicketId={ticket.parentTicketId ?? null}
+              canUseAI={ticketDetailAi.canUseAI}
+            />
+          </div>
           {ticket.attachments && ticket.attachments.length > 0 && (
             <div>
               <h4 className="text-dense font-medium uppercase tracking-wide text-muted-foreground mb-2">
@@ -181,36 +379,32 @@ export function TicketDetailMainSection({
                       <AttachmentContextMenu key={att.id} attachment={att}>
                         <button
                           type="button"
-                          className="group relative aspect-video rounded-md overflow-hidden bg-muted border hover:border-primary/50 transition-all text-left"
+                          className="group relative aspect-video rounded-md overflow-hidden bg-muted border hover:border-foreground/40 transition-all text-left"
                         >
-                          <AttachmentImage fileUrl={att.fileUrl} fileName={att.fileName} />
+                          <AttachmentImage
+                            fileUrl={att.fileUrl}
+                            fileName={att.fileName}
+                          />
                           <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center pointer-events-none" />
                         </button>
                       </AttachmentContextMenu>
                     );
                   }
-                  return (
-                    <button
-                      key={att.id}
-                      type="button"
-                      onClick={() => void viewFile(att.fileUrl)}
-                      className="group relative aspect-video rounded-md overflow-hidden bg-muted border hover:border-primary/50 transition-all text-left"
-                    >
-                      <div className="flex items-center justify-center h-full text-muted-foreground text-micro p-1 text-center">
-                        {att.fileName}
-                      </div>
-                    </button>
-                  );
+                  return <NonImageAttachmentButton key={att.id} attachment={att} />;
                 })}
               </div>
             </div>
           )}
-          <TicketChecklists
-            projectId={projectId}
-            ticketId={ticketId}
-            canUseAI={ticketDetailAi.canUseAI}
-            generateChecklistDisabledReason={ticketDetailAi.generateChecklistDisabledReason}
-          />
+          <div className="border-b border-border pb-6">
+            <TicketChecklists
+              projectId={projectId}
+              ticketId={ticketId}
+              canUseAI={ticketDetailAi.canUseAI}
+              generateChecklistDisabledReason={
+                ticketDetailAi.generateChecklistDisabledReason
+              }
+            />
+          </div>
           <TicketQaEvidence
             projectId={projectId}
             ticketId={ticketId}
@@ -227,13 +421,20 @@ export function TicketDetailMainSection({
         projectKey={projectKey}
         ticketNumber={ticket.ticketNumber}
         comments={ticket.comments || []}
-        members={members.map((m) => ({ id: m.id, name: m.name, email: m.email }))}
+        members={members.map((m) => ({
+          id: m.id,
+          name: m.name,
+          email: m.email,
+        }))}
         highlightCommentId={highlightCommentId}
+        resumeDraft={resumeDraft}
         activityAiActions={
           !isPreview ? (
             <TicketDetailAiActivityActions
               canUseAI={ticketDetailAi.canUseAI}
-              summarizeCommentsDisabledReason={ticketDetailAi.summarizeCommentsDisabledReason}
+              summarizeCommentsDisabledReason={
+                ticketDetailAi.summarizeCommentsDisabledReason
+              }
               runSummarizeComments={ticketDetailAi.runSummarizeComments}
               runHandoff={ticketDetailAi.runHandoff}
             />
@@ -241,6 +442,6 @@ export function TicketDetailMainSection({
         }
       />
       <TicketActivityLog ticketId={ticketId} projectId={projectId} />
-    </div>
+    </motion.div>
   );
 }

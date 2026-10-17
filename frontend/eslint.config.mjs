@@ -44,6 +44,21 @@ const eslintConfig = defineConfig([
     },
   },
   {
+    files: ["features/build/**/*.{ts,tsx}", "hooks/api/build/**/*.{ts,tsx}", "app/(authenticated)/build/**/*.{ts,tsx}"],
+    ignores: ["features/build/intake/**", "features/build/qa/**", "features/build/reports/**"],
+    rules: {
+      "react-hooks/set-state-in-effect": "error",
+      "react-hooks/refs": "error",
+      "react-hooks/purity": "error",
+      "react-hooks/immutability": "error",
+      "react-hooks/exhaustive-deps": "error",
+      "@typescript-eslint/no-unused-vars": [
+        "error",
+        { "argsIgnorePattern": "^_", "varsIgnorePattern": "^_", "caughtErrorsIgnorePattern": "^_" },
+      ],
+    },
+  },
+  {
     /**
      * Platform-wide, now that every module has been migrated.
      *

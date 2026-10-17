@@ -32,8 +32,8 @@ function AccessDeniedIllustration({ className }: { className?: string }) {
 
       <line x1="56" y1="120" x2="70" y2="110" stroke={SKIN} strokeWidth="3" strokeLinecap="round" />
 
-      <text x="145" y="80" fontSize="18" fill="var(--gold)" opacity="0.5" fontWeight="bold">?</text>
-      <text x="155" y="100" fontSize="12" fill="var(--gold)" opacity="0.3" fontWeight="bold">?</text>
+      <text x="145" y="80" fontSize="18" fill="var(--gold)" opacity="0.5" fontWeight="500">?</text>
+      <text x="155" y="100" fontSize="12" fill="var(--gold)" opacity="0.3" fontWeight="500">?</text>
 
       <line x1="30" y1="145" x2="170" y2="145" stroke="var(--blue)" strokeWidth="1" opacity="0.1" />
 
@@ -48,7 +48,7 @@ export function AccessDeniedView({ projectName, hint }: { projectName: string; h
     <div className="flex flex-1 min-h-full w-full items-center justify-center p-8">
       <div className="text-center max-w-md">
         <AccessDeniedIllustration className="w-48 h-48 mx-auto mb-6" />
-        <h2 className="text-xl font-bold text-foreground mb-2">
+        <h2 className="text-xl font-medium text-foreground mb-2">
           You&apos;re not invited to this project
         </h2>
         <p className="text-sm text-muted-foreground mb-1">
@@ -61,7 +61,7 @@ export function AccessDeniedView({ projectName, hint }: { projectName: string; h
           <p className="text-xs text-muted-foreground mb-5">{hint}</p>
         )}
         {!hint && <div className="mb-5" />}
-        <Link href="/build">
+        <Link href="/build/projects">
           <Button variant="outline" className="gap-2">
             <ArrowLeft className="h-4 w-4" />
             Back to Projects

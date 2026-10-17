@@ -10,6 +10,7 @@ const bareTeamRow = {
   icon: null,
   color: null,
   isPrivate: false,
+  capacity: 40,
   createdAt: "2026-09-15T00:00:00.000Z",
   updatedAt: "2026-09-15T00:00:00.000Z",
   deletedAt: null,
@@ -41,4 +42,14 @@ it("still accepts the full detail shape getTeam returns, including members", () 
   });
 
   expect(result.members).toHaveLength(1);
+});
+
+it("rejects a row with no capacity key at all, because the column is nullable rather than optional and a list projection that dropped it would otherwise decode as a team with no capacity", () => {
+  const { capacity: _capacity, ...withoutCapacity } = bareTeamRow;
+
+  expect(() => teamRowContract.parse(withoutCapacity)).toThrow(ZodError);
+});
+
+it("accepts a null capacity, which the nullable column allows", () => {
+  expect(teamRowContract.parse({ ...bareTeamRow, capacity: null }).capacity).toBeNull();
 });

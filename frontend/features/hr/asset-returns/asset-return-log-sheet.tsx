@@ -36,6 +36,7 @@ interface AssetReturnLogSheetProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   assetOptions: ComboboxOption[];
+  assetLoadError?: string;
   allAssignedAssets: Asset[];
   selectedAssetId: string;
   resolvedUserId: string;
@@ -58,6 +59,7 @@ export function AssetReturnLogSheet({
   open,
   onOpenChange,
   assetOptions,
+  assetLoadError,
   allAssignedAssets,
   selectedAssetId,
   resolvedUserId,
@@ -97,22 +99,23 @@ export function AssetReturnLogSheet({
       isPending={isPending}
     >
       <div className="space-y-1.5">
-        <label className="text-sm font-medium">
-          Asset <span className="text-destructive">*</span>
-        </label>
+        <p className="text-sm font-medium">
+          Asset <span className="text-destructive" aria-hidden="true">*</span>
+        </p>
         <Combobox
           options={assetOptions}
           value={selectedAssetId}
           onChange={onAssetChange}
           placeholder="Select assigned asset to return…"
           searchPlaceholder="Search assets…"
+          ariaLabel="Asset"
         />
-        {allAssignedAssets.length === 0 && (
+        {assetLoadError === undefined && allAssignedAssets.length === 0 && (
           <p className="text-xs text-muted-foreground">
             No currently assigned assets found.
           </p>
         )}
-        <FieldError id="asset-return-asset-error" message={fieldErrors.asset} />
+        <FieldError id="asset-return-asset-error" message={fieldErrors.asset ?? assetLoadError} />
       </div>
 
       {selectedAsset && (
@@ -136,14 +139,14 @@ export function AssetReturnLogSheet({
       )}
 
       <div className="space-y-1.5">
-        <label className="text-sm font-medium">
-          Employee <span className="text-destructive">*</span>
+        <p className="text-sm font-medium">
+          Employee <span className="text-destructive" aria-hidden="true">*</span>
           {employeeAutoFilled && resolvedEmployee && (
             <span className="ml-1.5 text-xs font-normal text-muted-foreground">
               (auto-filled from assignment)
             </span>
           )}
-        </label>
+        </p>
         {employeeAutoFilled && resolvedEmployee ? (
           <div className="flex items-center gap-2">
             <div className="flex-1 rounded-md border border-border bg-muted/40 px-3 py-2 text-sm text-foreground">
@@ -153,7 +156,7 @@ export function AssetReturnLogSheet({
               type="button"
               variant="ghost"
               size="sm"
-              className="h-9 text-xs text-muted-foreground"
+              className="text-muted-foreground"
               onClick={handleOverrideClick}
             >
               Change
@@ -164,17 +167,18 @@ export function AssetReturnLogSheet({
             value={resolvedUserId}
             onChange={onEmployeeOverrideChange}
             placeholder="Select employee…"
+            ariaLabel="Employee"
           />
         )}
         <FieldError id="asset-return-employee-error" message={fieldErrors.employee} />
       </div>
 
       <div className="space-y-1.5">
-        <label className="text-sm font-medium">
-          Condition <span className="text-destructive">*</span>
+        <label htmlFor="asset-return-condition" className="text-sm font-medium">
+          Condition <span className="text-destructive" aria-hidden="true">*</span>
         </label>
         <Select value={condition} onValueChange={onConditionChange}>
-          <SelectTrigger aria-invalid={fieldErrors.condition ? true : undefined} aria-describedby={fieldErrors.condition ? "asset-return-condition-error" : undefined}>
+          <SelectTrigger id="asset-return-condition" aria-label="Condition" aria-invalid={fieldErrors.condition ? true : undefined} aria-describedby={fieldErrors.condition ? "asset-return-condition-error" : undefined}>
             <SelectValue placeholder="Select condition…" />
           </SelectTrigger>
           <SelectContent>
@@ -189,22 +193,24 @@ export function AssetReturnLogSheet({
       </div>
 
       <div className="space-y-1.5">
-        <label className="text-sm font-medium">
+        <label htmlFor="asset-return-notes" className="text-sm font-medium">
           Notes
-          <span className="ml-1 text-xs font-normal text-muted-foreground">
-            ({notes.length}/1000)
-          </span>
         </label>
         <Textarea
+          id="asset-return-notes"
           placeholder="Any notes about the condition or return circumstances…"
           value={notes}
           onChange={onNotesChange}
           rows={3}
           className="resize-none w-full"
           maxLength={1000}
+          aria-describedby="asset-return-notes-hint"
         />
+        <p id="asset-return-notes-hint" className="text-xs text-muted-foreground">
+          {notes.length}/1000
+        </p>
         {notesError && (
-          <p className="text-xs text-destructive">{notesError}</p>
+          <p role="alert" className="text-xs text-destructive">{notesError}</p>
         )}
       </div>
     </HrSheet>

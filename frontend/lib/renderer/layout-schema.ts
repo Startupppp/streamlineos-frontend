@@ -141,6 +141,12 @@ function checkField(
       case "money":
       case "percent":
         if (!NUMERIC.test(value)) reject("Enter a number");
+        else if (field.range) {
+          const { min, max } = field.range;
+          if (!/^\d+$/.test(value)) reject("Enter a whole number");
+          else if (Number(value) < min || Number(value) > max)
+            reject(`Enter a number from ${min} to ${max}`);
+        }
         break;
       case "boolean":
         // A control that hands back anything but these two is a control that is
@@ -283,8 +289,7 @@ export function blankLine(field: FieldSpec): RecordLine {
 function linesFrom(field: FieldSpec, value: unknown): RecordLine[] {
   const rows = Array.isArray(value)
     ? value.map((entry) => {
-        const source =
-          entry !== null && typeof entry === "object" ? (entry as Record<string, unknown>) : {};
+        const source = isRecord(entry) ? entry : {};
         const row: RecordLine = {};
         for (const line of field.lineFields ?? []) {
           const held = source[line.name];
@@ -301,6 +306,10 @@ function linesFrom(field: FieldSpec, value: unknown): RecordLine[] {
   const minimum = field.minLines ?? (field.required ? 1 : 0);
   while (rows.length < minimum) rows.push(blankLine(field));
   return rows;
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return value !== null && typeof value === "object";
 }
 
 export function defaultValuesForLayout(

@@ -24,8 +24,8 @@ import {
   SettingsField,
   SettingsFieldGrid,
 } from "./org-settings-chrome";
+import { INDUSTRIES } from "@/lib/constants/industries";
 import {
-  INDUSTRIES,
   orgGeneralSchema,
   type OrgGeneralValues,
 } from "./org-profile-schema";
@@ -136,7 +136,7 @@ export function OrgProfileSection({ org, canEdit }: OrgProfileSectionProps) {
                   <FormItem className="gap-1.5">
                     <FormLabel className="text-xs">Legal name</FormLabel>
                     <FormControl>
-                      <Input {...field} placeholder="Acme Inc. Pvt. Ltd." />
+                      <Input {...field} placeholder="Acme Inc. Pvt. Ltd." maxLength={200} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -166,6 +166,9 @@ export function OrgProfileSection({ org, canEdit }: OrgProfileSectionProps) {
                         <SelectTrigger><SelectValue placeholder="Select industry" /></SelectTrigger>
                       </FormControl>
                       <SelectContent className="min-w-[var(--radix-select-trigger-width)]">
+                        {field.value && !INDUSTRIES.includes(field.value) ? (
+                          <SelectItem value={field.value}>{field.value}</SelectItem>
+                        ) : null}
                         {INDUSTRIES.map((i) => <SelectItem key={i} value={i}>{i}</SelectItem>)}
                       </SelectContent>
                     </Select>
@@ -193,7 +196,7 @@ export function OrgProfileSection({ org, canEdit }: OrgProfileSectionProps) {
                   <FormItem className="gap-1.5">
                     <FormLabel className="text-xs">Registration number</FormLabel>
                     <FormControl>
-                      <Input {...field} placeholder="CIN / Company reg. no." />
+                      <Input {...field} placeholder="CIN / Company reg. no." maxLength={100} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>

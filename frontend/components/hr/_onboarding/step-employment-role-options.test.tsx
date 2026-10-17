@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, within } from "@testing-library/react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import type { z } from "zod";
@@ -6,6 +6,9 @@ import { Form } from "@/components/ui/form";
 import { onboardEmployeeInputSchema } from "@/lib/validation/hr";
 import { DEFAULT_INVITE_ROLE } from "@/lib/constants/user-invite-roles";
 import { StepEmployment } from "./step-employment";
+
+// The reporting half has its own suite (step-employment-reports-to.test.tsx).
+jest.mock("./step-employment-reporting", () => ({ StepEmploymentReporting: () => null }));
 
 jest.mock("@/hooks/api/access", () => ({
   useCan: () => true,
@@ -62,13 +65,22 @@ function Harness() {
   });
   return (
     <Form {...form}>
-      <StepEmployment form={form} departments={[]} />
+      <StepEmployment form={form} departments={[]} locations={[]} />
     </Form>
   );
 }
 
+/**
+ * The step renders three selects since BUG-HRMS-006/007 (role, worker type,
+ * location), so the role's options are read from the role select itself rather
+ * than from every option on the step. Role is the first one in the step order.
+ */
+function roleSelect(): HTMLElement {
+  return screen.getAllByRole("combobox")[0];
+}
+
 function roleOptionValues(): string[] {
-  return screen
+  return within(roleSelect())
     .getAllByRole("option")
     .map((option) => option.getAttribute("value") ?? "");
 }
@@ -96,7 +108,7 @@ describe("the onboarding role picker offers only roles the onboard endpoint acce
     render(<Harness />);
 
     expect(roleOptionValues()).toContain(DEFAULT_INVITE_ROLE);
-    expect(screen.getByLabelText("Organization role")).toHaveValue(DEFAULT_INVITE_ROLE);
+    expect(roleSelect()).toHaveValue(DEFAULT_INVITE_ROLE);
   });
 });
 

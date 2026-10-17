@@ -18,13 +18,18 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { MonthPicker } from "@/features/payroll/shared";
+import { MonthPicker, monthFromToday } from "@/features/payroll/shared/month-picker";
+import { ordinal, PAY_DAY_OPTIONS } from "@/features/payroll/setup/steps/step-profile-schema";
 import { useUpdatePolicy } from "@/hooks/api/payroll";
 import { CURRENCIES, PAY_FREQUENCIES } from "@/features/payroll/setup/lib/constants";
 import type { PolicyRow } from "@/types/payroll/setup";
 
 const schema = z.object({
-  legalEntityName: z.string().optional(),
+  legalEntityName: z
+    .string()
+    .trim()
+    .max(200, "Legal entity name must be at most 200 characters")
+    .optional(),
   currency: z.string().min(1),
   payFrequency: z.enum(["MONTHLY", "SEMI_MONTHLY", "BI_WEEKLY", "WEEKLY"]),
   payDay: z.string().min(1),
@@ -32,11 +37,6 @@ const schema = z.object({
 });
 type ProfileForm = z.infer<typeof schema>;
 
-const ORDINAL_SUFFIX = ["st", "nd", "rd"];
-
-function ordinal(n: number): string {
-  return `${n}${ORDINAL_SUFFIX[n - 1] ?? "th"}`;
-}
 
 type PolicyProfileSectionProps = {
   policy: PolicyRow;
@@ -76,7 +76,7 @@ export function PolicyProfileSection({ policy }: PolicyProfileSectionProps) {
       {
         policyId: policy.id,
         data: {
-          legalEntityName: data.legalEntityName || undefined,
+          legalEntityName: data.legalEntityName?.trim() || null,
           currency: data.currency,
           payFrequency: data.payFrequency,
           payDay: parseInt(data.payDay, 10),
@@ -136,7 +136,7 @@ export function PolicyProfileSection({ policy }: PolicyProfileSectionProps) {
         <div className="grid grid-cols-2 gap-3">
           <div className="space-y-1">
             <Label className="text-xs">Legal Entity Name</Label>
-            <Input {...register("legalEntityName")} className="text-sm" />
+            <Input {...register("legalEntityName")} className="text-sm" maxLength={200} />
             {errors.legalEntityName && (
               <p className="text-xs text-destructive">{errors.legalEntityName.message}</p>
             )}
@@ -178,9 +178,9 @@ export function PolicyProfileSection({ policy }: PolicyProfileSectionProps) {
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                {Array.from({ length: 28 }, (_, i) => String(i + 1)).map((d) => (
-                  <SelectItem key={d} value={d}>
-                    {ordinal(Number(d))}
+                {PAY_DAY_OPTIONS.map((d) => (
+                  <SelectItem key={d.value} value={d.value}>
+                    {d.label}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -192,6 +192,7 @@ export function PolicyProfileSection({ policy }: PolicyProfileSectionProps) {
               value={watch("startMonth")}
               onChange={(val) => setValue("startMonth", val)}
               className=""
+              minMonth={monthFromToday(0)}
             />
           </div>
         </div>

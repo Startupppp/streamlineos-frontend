@@ -10,6 +10,7 @@ import {
   useRef,
   useState,
   type ComponentType,
+  type CSSProperties,
   type ReactNode,
 } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -68,10 +69,22 @@ const COLOR_TONE: Partial<Record<StatColor, StatTone>> = {
   purple: "accent",
 };
 
+interface GridTemplateStyle extends CSSProperties {
+  "--stat-card-grid-template": string;
+}
+
+function gridTemplateVar(template: string): GridTemplateStyle {
+  return { "--stat-card-grid-template": template };
+}
+
+function isStatTone(color: StatColor): color is StatTone {
+  return color in TONE_MAP;
+}
+
 function resolveTone(tone?: StatTone, color?: StatColor): StatTone {
   if (tone) return tone;
   if (!color) return "default";
-  if (color in TONE_MAP) return color as StatTone;
+  if (isStatTone(color)) return color;
   return COLOR_TONE[color] ?? "default";
 }
 
@@ -118,6 +131,8 @@ export interface StatCardProps {
   color?: StatColor;
   delta?: { value: string; direction: "up" | "down" };
   hint?: string;
+  /** Wrap the hint instead of truncating it (a hint that carries data, not decoration). */
+  wrapHint?: boolean;
   href?: string;
   isLoading?: boolean;
   featured?: boolean;
@@ -133,12 +148,26 @@ export interface StatCardGridProps {
   children: ReactNode;
   cols?: 2 | 3 | 4 | 5 | 6;
   className?: string;
+  /**
+   * Stack the cards in one column below `sm` instead of scrolling them.
+   *
+   * The row scrolls at every width by default (see below), which on a 390px
+   * screen puts the third card off screen behind a hidden scrollbar. Opt in
+   * where the cards are the page's headline numbers and none of them may be
+   * missed — a scroll a reader does not know to make is a card they never see.
+   *
+   * Pass `2` for a row of five, where one column is 370px of stat cards above
+   * the table the page is actually for. Two-up shows every label in half the
+   * height.
+   */
+  stackOnMobile?: boolean | 2;
 }
 
 export interface StatCardGridSkeletonProps {
   cols?: 2 | 3 | 4 | 5 | 6;
   count?: number;
   className?: string;
+  stackOnMobile?: boolean | 2;
 }
 
 /**
@@ -165,6 +194,7 @@ export function StatCardGrid({
   children,
   cols = 4,
   className,
+  stackOnMobile = false,
 }: StatCardGridProps) {
   const childCount = countGridChildren(children);
   const columnCount = childCount > 0 ? childCount : cols;
@@ -179,6 +209,7 @@ export function StatCardGrid({
   }, [children]);
 
   const scrollableWithoutFocus = overflow.scrolls && !hasFocusableChild;
+  const template = `repeat(${columnCount}, minmax(10rem, 1fr))`;
 
   return (
     <div
@@ -195,11 +226,19 @@ export function StatCardGrid({
         "[&>*]:min-w-0 [&>*]:h-full [&>*]:snap-start",
         "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
         OVERFLOW_EDGE_FADE_CLASS,
+        // The template has to reach the element as a class, not as an inline
+        // style, or the `sm:` breakpoint below could never win against it.
+        stackOnMobile === true &&
+          "grid-cols-1 sm:[grid-template-columns:var(--stat-card-grid-template)]",
+        stackOnMobile === 2 &&
+          "grid-cols-2 sm:[grid-template-columns:var(--stat-card-grid-template)]",
         className,
       )}
-      style={{
-        gridTemplateColumns: `repeat(${columnCount}, minmax(10rem, 1fr))`,
-      }}
+      style={
+        stackOnMobile
+          ? gridTemplateVar(template)
+          : { gridTemplateColumns: template }
+      }
     >
       {children}
     </div>
@@ -215,6 +254,7 @@ export function StatCardGrid({
 export function StatCardSkeleton({ className }: { className?: string }) {
   return (
     <div
+      data-slot="stat-card"
       className={cn(
         "flex h-full items-start gap-3 rounded-xl border border-border/80 bg-card px-3.5 py-3 shadow-sm",
         className,
@@ -233,10 +273,11 @@ export function StatCardGridSkeleton({
   cols = 4,
   count,
   className,
+  stackOnMobile,
 }: StatCardGridSkeletonProps) {
   const itemCount = count ?? cols;
   return (
-    <StatCardGrid cols={cols} className={className}>
+    <StatCardGrid cols={cols} className={className} stackOnMobile={stackOnMobile}>
       {Array.from({ length: itemCount }).map((_, i) => (
         <StatCardSkeleton key={i} />
       ))}
@@ -273,6 +314,7 @@ export const StatCard = memo(function StatCard({
   color,
   delta,
   hint,
+  wrapHint = false,
   href,
   isLoading,
   featured,
@@ -299,8 +341,10 @@ export const StatCard = memo(function StatCard({
 
   const body = (
     <div
+      data-slot="stat-card"
+      data-featured={featured ? "true" : undefined}
       className={cn(
-        "flex h-full items-start gap-3 rounded-xl border border-border/80 bg-card px-3.5 py-3 shadow-sm transition-colors",
+        "flex h-full items-start gap-3 rounded-xl border border-border/80 bg-card px-3.5 py-3 shadow-sm transition-[border-color,box-shadow,background-color] duration-200 motion-reduce:transition-none hover:border-foreground/20 hover:shadow-md",
         featured && "border-primary bg-primary text-primary-foreground",
         href && "hover:bg-muted/30 cursor-pointer",
         featured && href && "hover:bg-primary/90",
@@ -326,7 +370,7 @@ export const StatCard = memo(function StatCard({
         <TruncatedTooltipText
           text={label}
           className={cn(
-            "text-dense font-medium leading-tight truncate",
+            "text-dense font-medium leading-tight line-clamp-2 break-words",
             featured ? "text-primary-foreground/70" : "text-muted-foreground",
           )}
         />
@@ -359,7 +403,8 @@ export const StatCard = memo(function StatCard({
           <TruncatedTooltipText
             text={effectiveHint}
             className={cn(
-              "text-dense leading-snug truncate",
+              "text-dense leading-snug",
+              wrapHint ? "break-words" : "truncate",
               featured ? "text-primary-foreground/70" : "text-muted-foreground",
             )}
           />

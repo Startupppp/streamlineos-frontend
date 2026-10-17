@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, fireEvent } from "@testing-library/react";
 import type { ReactNode } from "react";
 
 const mockUseAccess = jest.fn();
@@ -21,7 +21,7 @@ jest.mock("@/hooks/api/entitlements", () => ({
   useEntitlements: () => ({ data: undefined }),
 }));
 
-jest.mock("@/hooks/api/build", () => ({
+jest.mock("@/hooks/api/build/governance", () => ({
   GOVERNANCE_PAGE_SIZE: 100,
   useProjectRisks: () => mockUseProjectRisks(),
   useProjectRiskStats: () => ({ data: undefined, isLoading: false }),
@@ -32,6 +32,8 @@ jest.mock("@/hooks/api/build", () => ({
   useCreateDecision: () => ({ mutate: jest.fn(), isPending: false }),
   useUpdateDecision: () => ({ mutate: jest.fn(), isPending: false }),
   useDeleteDecision: () => ({ mutate: jest.fn(), isPending: false }),
+}));
+jest.mock("@/hooks/api/build/project-members", () => ({
   useProjectMembers: () => ({ data: [] }),
 }));
 
@@ -99,7 +101,7 @@ jest.mock("@/components/pm-chrome", () => ({
   PmPageShell: ({ children }: { children: ReactNode }) => <div>{children}</div>,
   PmSection: ({ children }: { children: ReactNode }) => <div>{children}</div>,
   PmPanel: ({ children }: { children: ReactNode }) => <div>{children}</div>,
-  PM_FILL_PANEL: "",
+  CONTENT_FILL_PANEL: "",
 }));
 
 jest.mock("@/components/ui/content-fill-panel", () => ({
@@ -134,12 +136,18 @@ jest.mock("./risk-matrix", () => ({
   RiskMatrix: () => null,
 }));
 
+const mockRiskFormSheet = jest.fn((_props: { open: boolean }) => null);
 jest.mock("./risk-form-sheet", () => ({
-  RiskFormSheet: () => null,
+  RiskFormSheet: (props: { open: boolean }) => { mockRiskFormSheet(props); return null; },
 }));
 
+jest.mock("./risk-bulk-action-bar", () => ({
+  RiskBulkActionBar: () => null,
+}));
+
+const mockDecisionFormSheet = jest.fn((_props: { open: boolean }) => null);
 jest.mock("./decision-form-sheet", () => ({
-  DecisionFormSheet: () => null,
+  DecisionFormSheet: (props: { open: boolean }) => { mockDecisionFormSheet(props); return null; },
 }));
 
 jest.mock("@/components/ui/truncated-text", () => ({
@@ -221,6 +229,29 @@ describe("RisksPage — access is three-valued, not a boolean", () => {
     expect(screen.getByTestId("no-permission")).toBeInTheDocument();
     expect(screen.queryByTestId("empty-state")).toBeNull();
   });
+
+  it("pressing c opens the create risk sheet when build:risks:manage is granted", () => {
+    render(<RisksPage projectId={1} />);
+    fireEvent.keyDown(document, { key: "c" });
+    const calls = mockRiskFormSheet.mock.calls;
+    const lastCall = calls[calls.length - 1][0] as { open: boolean };
+    expect(lastCall.open).toBe(true);
+  });
+
+  it("selecting a risk via j then pressing e opens the edit sheet for that risk", () => {
+    const risk = { id: 42, riskNumber: 1, title: "Data breach risk", probability: "high", impact: "high", status: "open", ownerId: null, description: null, mitigation: null, linkedTicketId: null, createdBy: null, deletedAt: null, createdAt: "", updatedAt: "", orgId: "org1", projectId: 1 };
+    mockUseProjectRisks.mockReturnValue({
+      ...idleQuery(),
+      data: { data: [risk], hasMore: false, nextCursor: null },
+    });
+
+    render(<RisksPage projectId={1} />);
+    fireEvent.keyDown(document, { key: "j" });
+    fireEvent.keyDown(document, { key: "e" });
+    const calls = mockRiskFormSheet.mock.calls;
+    const lastCall = calls[calls.length - 1][0] as { open: boolean };
+    expect(lastCall.open).toBe(true);
+  });
 });
 
 describe("DecisionsPage — access is three-valued, not a boolean", () => {
@@ -251,5 +282,43 @@ describe("DecisionsPage — access is three-valued, not a boolean", () => {
 
     expect(screen.getByTestId("no-permission")).toBeInTheDocument();
     expect(screen.queryByTestId("empty-state")).toBeNull();
+  });
+
+  it("pressing j then Enter opens the first decision's edit sheet so keyboard users can edit without a mouse", () => {
+    const decision = { id: 77, decisionNumber: 1, title: "Use microservices" };
+    mockUseProjectDecisions.mockReturnValue({
+      ...idleQuery(),
+      data: { data: [decision], hasMore: false, nextCursor: null },
+    });
+
+    render(<DecisionsPage projectId={1} />);
+    fireEvent.keyDown(document, { key: "j" });
+    fireEvent.keyDown(document, { key: "Enter" });
+    const calls = mockDecisionFormSheet.mock.calls;
+    const lastCall = calls[calls.length - 1][0] as { open: boolean };
+    expect(lastCall.open).toBe(true);
+  });
+
+  it("pressing c opens the create decision sheet when build:decisions:manage is granted", () => {
+    render(<DecisionsPage projectId={1} />);
+    fireEvent.keyDown(document, { key: "c" });
+    const calls = mockDecisionFormSheet.mock.calls;
+    const lastCall = calls[calls.length - 1][0] as { open: boolean };
+    expect(lastCall.open).toBe(true);
+  });
+
+  it("selecting a decision via j then pressing e opens the edit sheet for that decision", () => {
+    const decision = { id: 88, decisionNumber: 2, title: "Adopt Postgres" };
+    mockUseProjectDecisions.mockReturnValue({
+      ...idleQuery(),
+      data: { data: [decision], hasMore: false, nextCursor: null },
+    });
+
+    render(<DecisionsPage projectId={1} />);
+    fireEvent.keyDown(document, { key: "j" });
+    fireEvent.keyDown(document, { key: "e" });
+    const calls = mockDecisionFormSheet.mock.calls;
+    const lastCall = calls[calls.length - 1][0] as { open: boolean };
+    expect(lastCall.open).toBe(true);
   });
 });

@@ -52,7 +52,7 @@ describe("KanbanColumnWip", () => {
     expect(badge).toHaveTextContent("5/5");
     expect(badge).toHaveAttribute("data-wip-state", "at");
     expect(badge).toHaveClass("bg-status-warning-surface");
-    expect(badge).toHaveClass("text-status-warning-ink");
+    expect(badge).toHaveClass("text-status-warning-ink-strong");
   });
 
   it("escalates to the danger tone over the limit, which today only surfaces as an error toast", () => {
@@ -64,7 +64,7 @@ describe("KanbanColumnWip", () => {
     expect(badge).toHaveTextContent("8/5");
     expect(badge).toHaveAttribute("data-wip-state", "over");
     expect(badge).toHaveClass("bg-status-danger-surface");
-    expect(badge).toHaveClass("text-status-danger-ink");
+    expect(badge).toHaveClass("text-status-danger-ink-strong");
   });
 
   it("carries the same wording in title as in the accessible name, so a hover explains the ratio too", () => {

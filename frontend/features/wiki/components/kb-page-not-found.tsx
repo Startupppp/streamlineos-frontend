@@ -4,6 +4,7 @@ import Link from "next/link";
 import { Home, RotateCcw, Search, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { StateIllustration } from "@/components/illustrations/state-illustration";
+import { ErrorReference } from "@/components/shared/error-reference";
 import { isApiError } from "@/lib/api-client";
 import {
   KB_SPACES,
@@ -54,6 +55,8 @@ export function KbPageNotFound({ error, onRetry }: KbPageNotFoundProps) {
       <p className="mt-2 max-w-sm text-sm text-muted-foreground leading-relaxed">
         {description}
       </p>
+
+      <ErrorReference error={error} className="mt-4" />
 
       <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
         {variant === "error" && (

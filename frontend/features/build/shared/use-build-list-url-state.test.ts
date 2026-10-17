@@ -37,9 +37,17 @@ describe("parsers reject values the backend enum would refuse", () => {
     expect(parsePriorityParam("CATASTROPHIC")).toBeUndefined();
   });
 
+  it("preserves valid multi-select priorities and drops invalid duplicates", () => {
+    expect(parsePriorityParam("high,urgent,high,unknown")).toBe("HIGH,URGENT");
+  });
+
   it("drops an unknown ticket type instead of forwarding it", () => {
     expect(parseTicketTypeParam("bug")).toBe("BUG");
     expect(parseTicketTypeParam("INCIDENT")).toBeUndefined();
+  });
+
+  it("preserves valid multi-select ticket types and drops invalid duplicates", () => {
+    expect(parseTicketTypeParam("bug,story,bug,incident")).toBe("BUG,STORY");
   });
 
   it("falls back when sort, direction or grouping is not in the enum", () => {
@@ -113,6 +121,13 @@ describe("useBuildListUrlState", () => {
     expect(result.current.hasActiveFilters).toBe(true);
   });
 
+  it("forwards multi-select priority and type filters without collapsing them", () => {
+    setUrl("priority=high,urgent&type=bug,story");
+    const { result } = renderHook(() => useBuildListUrlState());
+    expect(result.current.filters.priority).toBe("HIGH,URGENT");
+    expect(result.current.filters.type).toBe("BUG,STORY");
+  });
+
   it("forwards cycleId, which the previous My Work reader dropped", () => {
     setUrl("cycleId=c9");
     const { result } = renderHook(() => useBuildListUrlState());
@@ -131,6 +146,7 @@ describe("useBuildListUrlState", () => {
     const { result } = renderHook(() => useBuildListUrlState());
     expect(result.current.filters.projectIds).toBe("42");
   });
+
 
   it("sends the sort the URL asks for and the default otherwise", () => {
     setUrl("sort=dueDate&dir=asc");
@@ -179,6 +195,14 @@ describe("useBuildListUrlState", () => {
     const { result } = renderHook(() => useBuildListUrlState());
     expect(result.current.hasActiveFilters).toBe(false);
     expect(result.current.filters.priority).toBeUndefined();
+  });
+
+  it("reads and writes the My Work query while a ticket pane owns the address bar", () => {
+    const preserved = new URLSearchParams("q=QA-070");
+    const { result } = renderHook(() => useBuildListUrlState({ searchParams: preserved, writePath: "/build/my-work" }));
+    expect(result.current.filters.search).toBe("QA-070");
+    act(() => result.current.setListParams({ status: "TODO" }));
+    expect(replace).toHaveBeenCalledWith("/build/my-work?q=QA-070&status=TODO", { scroll: false });
   });
 
   it("replaces the URL without scrolling when a filter changes", () => {

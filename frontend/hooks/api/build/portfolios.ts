@@ -1,6 +1,6 @@
 ﻿"use client";
 
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useGatedQuery } from "@/hooks/api/gated-query";
 import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
@@ -15,18 +15,25 @@ import type {
 } from "@/types/projects";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
-
 const portfolioPageContract = lazyContract(() =>
-  import("@/hooks/api/build/portfolios-schema").then((m) => m.portfolioPageContract),
+  import("@/hooks/api/build/portfolios-schema").then(
+    (m) => m.portfolioPageContract,
+  ),
 );
 const portfolioRowContract = lazyContract(() =>
-  import("@/hooks/api/build/portfolios-schema").then((m) => m.portfolioRowContract),
+  import("@/hooks/api/build/portfolios-schema").then(
+    (m) => m.portfolioRowContract,
+  ),
 );
 const portfolioDetailContract = lazyContract(() =>
-  import("@/hooks/api/build/portfolios-schema").then((m) => m.portfolioDetailContract),
+  import("@/hooks/api/build/portfolios-schema").then(
+    (m) => m.portfolioDetailContract,
+  ),
 );
 const portfoliosSuccessContract = lazyContract(() =>
-  import("@/hooks/api/build/portfolios-schema").then((m) => m.portfoliosSuccessContract),
+  import("@/hooks/api/build/portfolios-schema").then(
+    (m) => m.portfoliosSuccessContract,
+  ),
 );
 const noContentLazy = lazyContract(() =>
   import("@/hooks/api/cursor-page-schema").then((m) => m.noContentContract),
@@ -35,7 +42,11 @@ const noContentLazy = lazyContract(() =>
 interface ListFilters {
   cursor?: string;
   limit?: number;
+  search?: string;
   status?: string;
+  ownerId?: string;
+  health?: string;
+  sort?: string;
 }
 
 export function usePortfolios(filters?: ListFilters) {
@@ -43,21 +54,52 @@ export function usePortfolios(filters?: ListFilters) {
   const params: Record<string, string> = {};
   if (filters?.cursor) params["cursor"] = filters.cursor;
   if (filters?.limit) params["limit"] = String(filters.limit);
+  if (filters?.search) params["q"] = filters.search;
   if (filters?.status) params["status"] = filters.status;
+  if (filters?.ownerId) params["ownerId"] = filters.ownerId;
+  if (filters?.health) params["health"] = filters.health;
+  if (filters?.sort) params["sort"] = filters.sort;
   return useQuery<PortfoliosPage>({
-    queryKey: buildWorkQueryKeys.projects.portfolios.list(Object.keys(params).length > 0 ? params : undefined),
-    queryFn: ({ signal }) => apiClient.get<PortfoliosPage>("/build/portfolios", params, signal, portfolioPageContract),
+    queryKey: buildWorkQueryKeys.projects.portfolios.list(
+      Object.keys(params).length > 0 ? params : undefined,
+    ),
+    queryFn: ({ signal }) =>
+      apiClient.get<PortfoliosPage>("/build/portfolios", params, signal, portfolioPageContract),
     enabled: canView,
-    staleTime: 60_000,
+    staleTime: 30_000,
   });
 }
 
-export function usePortfolio(portfolioId: number) {
+interface PortfolioDetailFilters {
+  projectsCursor?: string;
+  programsCursor?: string;
+}
+
+export function usePortfolio(
+  portfolioId: number,
+  filters?: PortfolioDetailFilters,
+) {
+  const params: Record<string, string> = {};
+  if (filters?.projectsCursor)
+    params["projectsCursor"] = filters.projectsCursor;
+  if (filters?.programsCursor)
+    params["programsCursor"] = filters.programsCursor;
+  const hasParams = Object.keys(params).length > 0;
   return useGatedQuery<PortfolioDetail>("build:portfolios:view", {
-    queryKey: buildWorkQueryKeys.projects.portfolios.detail(portfolioId),
-    queryFn: ({ signal }) => apiClient.get<PortfolioDetail>(`/build/portfolios/${portfolioId}`, undefined, signal, portfolioDetailContract),
+    queryKey: buildWorkQueryKeys.projects.portfolios.detail(
+      portfolioId,
+      hasParams ? params : undefined,
+    ),
+    queryFn: ({ signal }) =>
+      apiClient.get<PortfolioDetail>(
+        `/build/portfolios/${portfolioId}`,
+        hasParams ? params : undefined,
+        signal,
+        portfolioDetailContract,
+      ),
     enabled: !!portfolioId,
     staleTime: 60_000,
+    throwOnError: false,
   });
 }
 
@@ -66,9 +108,20 @@ export function useCreatePortfolio() {
   return useAuthorizedMutation("build:portfolios:manage", {
     mutationKey: ["projects", "portfolios", "create"],
     mutationFn: (data: CreatePortfolioInput) =>
-      apiClient.post<Portfolio>("/build/portfolios", data, undefined, portfolioRowContract),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.portfolios.list() });
+      apiClient.post<Portfolio>(
+        "/build/portfolios",
+        data,
+        undefined,
+        portfolioRowContract,
+      ),
+    onSuccess: (newPortfolio) => {
+      qc.setQueriesData<PortfoliosPage>(
+        { queryKey: buildWorkQueryKeys.projects.portfolios.list() },
+        (prev) => {
+          if (!prev) return prev;
+          return { ...prev, data: [newPortfolio, ...prev.data] };
+        },
+      );
     },
   });
 }
@@ -77,11 +130,33 @@ export function useUpdatePortfolio() {
   const qc = useQueryClient();
   return useAuthorizedMutation("build:portfolios:manage", {
     mutationKey: ["projects", "portfolios", "update"],
-    mutationFn: ({ portfolioId, ...data }: UpdatePortfolioInput & { portfolioId: number }) =>
-      apiClient.patch<Portfolio>(`/build/portfolios/${portfolioId}`, data, undefined, portfolioRowContract),
-    onSuccess: (_, vars) => {
-      qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.portfolios.list() });
-      qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.portfolios.detail(vars.portfolioId) });
+    mutationFn: ({
+      portfolioId,
+      ...data
+    }: UpdatePortfolioInput & { portfolioId: number }) =>
+      apiClient.patch<Portfolio>(
+        `/build/portfolios/${portfolioId}`,
+        data,
+        undefined,
+        portfolioRowContract,
+      ),
+    onSuccess: (updated, vars) => {
+      qc.setQueriesData<PortfoliosPage>(
+        { queryKey: buildWorkQueryKeys.projects.portfolios.list() },
+        (prev) =>
+          prev
+            ? {
+                ...prev,
+                data: prev.data.map((p) =>
+                  p.id === vars.portfolioId ? updated : p,
+                ),
+              }
+            : prev,
+      );
+      qc.setQueryData<PortfolioDetail>(
+        buildWorkQueryKeys.projects.portfolios.detail(vars.portfolioId),
+        (prev) => (prev ? { ...prev, ...updated } : prev),
+      );
     },
   });
 }
@@ -91,9 +166,21 @@ export function useDeletePortfolio() {
   return useAuthorizedMutation("build:portfolios:manage", {
     mutationKey: ["projects", "portfolios", "delete"],
     mutationFn: (portfolioId: number) =>
-      apiClient.delete<void>(`/build/portfolios/${portfolioId}`, undefined, undefined, noContentLazy),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.portfolios.list() });
+      apiClient.delete<void>(
+        `/build/portfolios/${portfolioId}`,
+        undefined,
+        undefined,
+        noContentLazy,
+      ),
+    onSuccess: (_, portfolioId) => {
+      qc.setQueriesData<PortfoliosPage>(
+        { queryKey: buildWorkQueryKeys.projects.portfolios.list() },
+        (old) => old ? { ...old, data: old.data.filter((p) => p.id !== portfolioId) } : old,
+      );
+      qc.invalidateQueries({
+        queryKey: buildWorkQueryKeys.projects.portfolios.detail(portfolioId),
+        refetchType: "none",
+      });
     },
   });
 }
@@ -103,9 +190,16 @@ export function useLinkPortfolioProject(portfolioId: number) {
   return useAuthorizedMutation("build:portfolios:manage", {
     mutationKey: ["projects", "portfolios", portfolioId, "link"],
     mutationFn: (projectId: number) =>
-      apiClient.post<{ success: boolean }>(`/build/portfolios/${portfolioId}/projects`, { projectId }, undefined, portfoliosSuccessContract),
+      apiClient.post<{ success: boolean }>(
+        `/build/portfolios/${portfolioId}/projects`,
+        { projectId },
+        undefined,
+        portfoliosSuccessContract,
+      ),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.portfolios.detail(portfolioId) });
+      qc.invalidateQueries({
+        queryKey: buildWorkQueryKeys.projects.portfolios.detail(portfolioId),
+      });
     },
   });
 }
@@ -115,9 +209,16 @@ export function useUnlinkPortfolioProject(portfolioId: number) {
   return useAuthorizedMutation("build:portfolios:manage", {
     mutationKey: ["projects", "portfolios", portfolioId, "unlink"],
     mutationFn: (projectId: number) =>
-      apiClient.delete<void>(`/build/portfolios/${portfolioId}/projects/${projectId}`, undefined, undefined, noContentLazy),
+      apiClient.delete<void>(
+        `/build/portfolios/${portfolioId}/projects/${projectId}`,
+        undefined,
+        undefined,
+        noContentLazy,
+      ),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.portfolios.detail(portfolioId) });
+      qc.invalidateQueries({
+        queryKey: buildWorkQueryKeys.projects.portfolios.detail(portfolioId),
+      });
     },
   });
 }

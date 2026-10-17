@@ -6,6 +6,7 @@ import { lazyContract } from "@/lib/api-envelope";
 import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { useGatedQuery } from "@/hooks/api/gated-query";
+import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
 
 const noContentContract = lazyContract(() =>
   import("@/hooks/api/cursor-page-schema").then((m) => m.noContentContract),
@@ -93,7 +94,9 @@ export interface VendorSubmission {
   paidAt: string | null;
   billRate: string | null;
   payRate: string | null;
-  margin: string | null;
+  marginAmount: string | null;
+  marginPercent: number | null;
+  negative: boolean;
   contractStartDate: string | null;
   contractEndDate: string | null;
   candidateFirstName: string | null;
@@ -236,6 +239,7 @@ export function useVendorSubmissions(vendorId: number) {
       ),
     enabled: vendorId > 0,
     staleTime: 60_000,
+    ...INLINE_READ_ERROR,
   });
 }
 

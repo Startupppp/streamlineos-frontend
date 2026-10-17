@@ -1,7 +1,7 @@
 "use client";
 
 import { cn } from "@/lib/utils";
-import type { Incident } from "@/types/projects";
+import type { IncidentsCreateIncidentResponse } from "@/contracts/build-contracts.generated";
 import { getSlaState } from "./sla";
 
 function TimerRow({
@@ -18,7 +18,7 @@ function TimerRow({
   if (!dueAt) {
     return (
       <div className="flex items-center justify-between py-2 border-b border-border/50 last:border-0">
-        <span className="text-dense font-medium text-muted-foreground">{label}</span>
+        <span className="text-dense font-normal text-muted-foreground">{label}</span>
         <span className="text-dense text-muted-foreground">No SLA set</span>
       </div>
     );
@@ -32,9 +32,9 @@ function TimerRow({
     const metLabel = metDate.toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" });
     return (
       <div className="flex items-center justify-between py-2 border-b border-border/50 last:border-0">
-        <span className="text-dense font-medium text-muted-foreground">{label}</span>
+        <span className="text-dense font-normal text-muted-foreground">{label}</span>
         <div className="text-right">
-          <p className="text-dense text-status-success-ink font-medium">Met — {metLabel}</p>
+          <p className="text-dense text-status-success-ink-strong font-medium">Met — {metLabel}</p>
           <p className="text-micro text-muted-foreground">Due {dueLabel}</p>
         </div>
       </div>
@@ -43,11 +43,11 @@ function TimerRow({
 
   return (
     <div className="flex items-center justify-between py-2 border-b border-border/50 last:border-0">
-      <span className={cn("text-dense font-medium", breached ? "text-status-danger-ink" : "text-muted-foreground")}>
+      <span className={cn("text-dense font-normal", breached ? "text-status-danger-ink-strong" : "text-muted-foreground")}>
         {label}
       </span>
       <div className="text-right">
-        <p className={cn("text-dense font-medium", breached ? "text-status-danger-ink" : "text-foreground")}>
+        <p className={cn("text-dense font-medium", breached ? "text-status-danger-ink-strong" : "text-foreground")}>
           {breached ? "Breached" : "Pending"} — due {dueLabel}
         </p>
       </div>
@@ -56,7 +56,7 @@ function TimerRow({
 }
 
 interface IncidentSlaPanelProps {
-  incident: Incident;
+  incident: IncidentsCreateIncidentResponse;
 }
 
 export function IncidentSlaPanel({ incident }: IncidentSlaPanelProps) {
@@ -70,8 +70,8 @@ export function IncidentSlaPanel({ incident }: IncidentSlaPanelProps) {
       isBreached ? "border-status-danger-rule bg-status-danger-surface" : "border-border",
     )}>
       <p className={cn(
-        "text-micro font-semibold uppercase tracking-wider mb-2",
-        isBreached ? "text-status-danger-ink" : "text-muted-foreground",
+        "text-micro font-medium uppercase tracking-wider mb-2",
+        isBreached ? "text-status-danger-ink-strong" : "text-muted-foreground",
       )}>
         SLA Status
       </p>

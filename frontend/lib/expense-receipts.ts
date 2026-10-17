@@ -1,3 +1,5 @@
+import { FileText, FileType, Image as ImageIcon, Paperclip, type LucideIcon } from "lucide-react";
+
 export type ExpenseReceipt = { url: string; fileName: string };
 
 export const MAX_EXPENSE_RECEIPTS = 5;
@@ -48,17 +50,15 @@ export function getReceiptFileKind(
   return "file";
 }
 
-export function receiptKindEmoji(kind: ReceiptFileKind): string {
-  switch (kind) {
-    case "pdf":
-      return "📄";
-    case "doc":
-      return "📝";
-    case "image":
-      return "🖼️";
-    default:
-      return "📎";
-  }
+const RECEIPT_KIND_ICONS: Record<ReceiptFileKind, LucideIcon> = {
+  pdf: FileText,
+  doc: FileType,
+  image: ImageIcon,
+  file: Paperclip,
+};
+
+export function receiptKindIcon(kind: ReceiptFileKind): LucideIcon {
+  return RECEIPT_KIND_ICONS[kind];
 }
 
 export function receiptKindLabel(kind: ReceiptFileKind): string {

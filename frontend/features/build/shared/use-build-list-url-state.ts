@@ -59,16 +59,29 @@ export const BUILD_LIST_SHAPE_PARAMS = [
 
 export const BUILD_LIST_CURSOR_PARAM = "cursor";
 
-export function parsePriorityParam(raw: string | null): string | undefined {
+export interface BuildListSearchParamOptions {
+  resetCursor?: boolean;
+}
+
+function parseEnumCsv(raw: string | null, allowed: ReadonlySet<string>): string | undefined {
   if (!raw) return undefined;
-  const upper = raw.toUpperCase();
-  return VALID_PRIORITIES.has(upper) ? upper : undefined;
+  const values = Array.from(
+    new Set(
+      raw
+        .split(",")
+        .map((value) => value.trim().toUpperCase())
+        .filter((value) => allowed.has(value)),
+    ),
+  );
+  return values.length > 0 ? values.join(",") : undefined;
+}
+
+export function parsePriorityParam(raw: string | null): string | undefined {
+  return parseEnumCsv(raw, VALID_PRIORITIES);
 }
 
 export function parseTicketTypeParam(raw: string | null): string | undefined {
-  if (!raw) return undefined;
-  const upper = raw.toUpperCase();
-  return VALID_TICKET_TYPES.has(upper) ? upper : undefined;
+  return parseEnumCsv(raw, VALID_TICKET_TYPES);
 }
 
 export function parseSortField(
@@ -79,20 +92,12 @@ export function parseSortField(
   return match ?? fallback;
 }
 
-export function parseSortDirection(
-  raw: string | null,
-  fallback: BuildListSortDirection,
-): BuildListSortDirection {
-  const match = BUILD_LIST_SORT_DIRECTIONS.find(
-    (direction) => direction === raw,
-  );
+export function parseSortDirection(raw: string | null, fallback: BuildListSortDirection): BuildListSortDirection {
+  const match = BUILD_LIST_SORT_DIRECTIONS.find((direction) => direction === raw);
   return match ?? fallback;
 }
 
-export function parseGrouping(
-  raw: string | null,
-  fallback: BuildListGrouping,
-): BuildListGrouping {
+export function parseGrouping(raw: string | null, fallback: BuildListGrouping): BuildListGrouping {
   const match = BUILD_LIST_GROUPINGS.find((grouping) => grouping === raw);
   return match ?? fallback;
 }
@@ -103,6 +108,8 @@ export interface BuildListUrlStateOptions {
   defaultSortDirection?: BuildListSortDirection;
   defaultGrouping?: BuildListGrouping;
   scope?: AllWorkFilters["scope"];
+  searchParams?: URLSearchParams;
+  writePath?: string;
 }
 
 export interface BuildListUrlState {
@@ -121,6 +128,7 @@ export interface BuildListUrlState {
 export function buildListSearchParams(
   current: URLSearchParams,
   updates: Record<string, string | null>,
+  options: BuildListSearchParamOptions = {},
 ): URLSearchParams {
   const next = new URLSearchParams(current.toString());
   for (const [key, value] of Object.entries(updates)) {
@@ -133,7 +141,7 @@ export function buildListSearchParams(
   const shapeChanged = Object.keys(updates).some((key) =>
     BUILD_LIST_SHAPE_PARAMS.some((shapeParam) => shapeParam === key),
   );
-  if (shapeChanged) next.delete(BUILD_LIST_CURSOR_PARAM);
+  if (shapeChanged || options.resetCursor) next.delete(BUILD_LIST_CURSOR_PARAM);
   return next;
 }
 
@@ -155,11 +163,15 @@ export function useBuildListUrlState(
     defaultSortDirection = "desc",
     defaultGrouping = "none",
     scope,
+    searchParams: providedSearchParams,
+    writePath,
   } = options;
 
   const router = useRouter();
   const pathname = usePathname();
-  const searchParams = useSearchParams();
+  const liveSearchParams = useSearchParams();
+  const searchParams = providedSearchParams ?? liveSearchParams;
+  const targetPath = writePath ?? pathname;
   const [isPending, startTransition] = useTransition();
 
   const grouping = parseGrouping(searchParams.get("group"), defaultGrouping);
@@ -174,12 +186,12 @@ export function useBuildListUrlState(
     (next: URLSearchParams) => {
       startTransition(() => {
         const query = next.toString();
-        router.replace(query ? `${pathname}?${query}` : pathname, {
+        router.replace(query ? `${targetPath}?${query}` : targetPath, {
           scroll: false,
         });
       });
     },
-    [pathname, router],
+    [targetPath, router],
   );
 
   const setListParams = useCallback(
@@ -231,6 +243,7 @@ export function useBuildListUrlState(
     const projectIds = searchParams.get("projectIds");
     const resolvedProjectIds = singleProjectId ?? projectIds;
     if (resolvedProjectIds) next.projectIds = resolvedProjectIds;
+
 
     const cycleId = searchParams.get("cycleId");
     if (cycleId) next.cycleId = cycleId;

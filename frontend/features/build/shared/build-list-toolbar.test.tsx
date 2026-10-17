@@ -2,6 +2,14 @@ import { fireEvent, render, screen, waitFor, within } from "@testing-library/rea
 import { BuildListToolbar } from "./build-list-toolbar";
 import { BuildFilterSelect } from "./build-filter-select";
 
+jest.mock("@/hooks/common/use-mobile", () => ({
+  useIsMobile: jest.fn(() => false),
+}));
+
+const { useIsMobile } = jest.requireMock("@/hooks/common/use-mobile") as {
+  useIsMobile: jest.Mock;
+};
+
 const STATUS_OPTIONS = [
   { value: "all", label: "All statuses" },
   { value: "open", label: "Open" },
@@ -56,6 +64,28 @@ const search = {
 };
 
 describe("BuildListToolbar", () => {
+  it("can distribute a labeled mobile action row across the available width", () => {
+    render(
+      <BuildListToolbar
+        filters={[statusFilter()]}
+        trailing={<button type="button">Display</button>}
+        fillMobileActions
+      />,
+    );
+
+    const toolbar = screen.getByText("Display").closest(
+      '[data-slot="build-toolbar-actions"]',
+    );
+    expect(toolbar).toHaveClass(
+      "max-md:w-full",
+      "max-md:justify-between",
+    );
+  });
+
+  beforeEach(() => {
+    useIsMobile.mockReturnValue(false);
+  });
+
   it("puts search before every filter in the DOM", () => {
     const { container } = render(
       <BuildListToolbar search={search} filters={[statusFilter()]} />,
@@ -67,31 +97,102 @@ describe("BuildListToolbar", () => {
     expect(slots[1]?.getAttribute("data-filter-id")).toBe("status");
   });
 
-  it("renders a lone filter inline with no drawer trigger", () => {
+  it("keeps a lone filter on the toolbar at every width", () => {
     render(<BuildListToolbar filters={[statusFilter()]} />);
     expect(screen.getByLabelText("Status")).toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: /^Filters/ })).toBeNull();
+    expect(screen.getByRole("button", { name: /^Filters/ })).toHaveClass("hidden");
   });
 
-  it("keeps search and one filter inline as two equal slots", () => {
+  it("keeps a lone mobile field filter inline instead of moving it into the drawer", () => {
+    useIsMobile.mockReturnValue(true);
+    const { container } = render(
+      <BuildListToolbar filters={[statusFilter()]} />,
+    );
+
+    expect(container.querySelector('[data-filter-id="status"]')).not.toHaveClass(
+      "max-md:hidden",
+    );
+    expect(screen.getByRole("button", { name: /^Filters/ })).toHaveClass("hidden");
+  });
+
+  it("opens desktop overflow filters in a popover instead of a drawer", async () => {
+    render(
+      <BuildListToolbar
+        search={search}
+        filters={[
+          statusFilter(),
+          severityFilter(),
+          {
+            id: "owner",
+            label: "Owner",
+            control: <button type="button">Owner</button>,
+          },
+          {
+            id: "segment",
+            label: "Segment",
+            control: <button type="button">Segment</button>,
+          },
+        ]}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: /^Filters/ }));
+
+    const overlay = await screen.findByRole("dialog");
+    expect(overlay).not.toHaveAttribute("data-slot", "drawer-content");
+    expect(overlay).toHaveAttribute("aria-label", "Filters");
+    expect(document.querySelector('[data-slot="drawer-content"]')).toBeNull();
+    expect(within(overlay).getByRole("button", { name: "Segment" })).toBeInTheDocument();
+    expect(within(overlay).queryByRole("combobox", { name: "Status" })).toBeNull();
+    expect(within(overlay).queryByText(/Changes apply immediately/)).toBeNull();
+  });
+
+  it("gives the mobile drawer and every filter field the full available width", async () => {
+    useIsMobile.mockReturnValue(true);
+    render(
+      <BuildListToolbar
+        search={search}
+        filters={[statusFilter(), severityFilter()]}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: /^Filters/ }));
+    const dialog = await screen.findByRole("dialog");
+    expect(dialog).toHaveAttribute("data-slot", "drawer-content");
+    expect(dialog).toHaveClass("w-full");
+    expect(
+      dialog.querySelector('[data-slot="build-toolbar-drawer-body"]'),
+    ).toHaveClass("w-full", "min-w-0");
+    for (const field of dialog.querySelectorAll(
+      '[data-slot="build-toolbar-drawer-field"]',
+    )) {
+      expect(field).toHaveClass("w-full", "min-w-0");
+    }
+  });
+
+  it("keeps search and one filter inline on desktop while mobile uses the drawer", () => {
     const { container } = render(
       <BuildListToolbar search={search} filters={[statusFilter()]} />,
     );
-    expect(screen.queryByRole("button", { name: /^Filters/ })).toBeNull();
+    expect(screen.getByRole("button", { name: /^Filters/ })).toHaveClass("hidden");
     const root = container.querySelector("[data-slot=build-list-toolbar]");
-    expect(root?.className).toContain("grid-cols-2");
+    expect(root?.className).toContain("flex");
+    expect(root?.className).not.toContain("grid-cols-");
     const slot = container.querySelector("[data-filter-id=status]");
-    expect(slot?.className).toContain("max-md:w-full");
     expect(slot?.className).not.toContain("max-md:hidden");
+    expect(slot?.className).not.toContain("max-md:w-full");
   });
 
-  it("gives a lone filter the whole mobile row", () => {
+  it("reserves the mobile row for the shared Filters trigger", () => {
     const { container } = render(<BuildListToolbar filters={[statusFilter()]} />);
     const root = container.querySelector("[data-slot=build-list-toolbar]");
-    expect(root?.className).toContain("grid-cols-1");
+    expect(root?.className).not.toContain(
+      "[&_[data-slot=build-toolbar-filter]]:max-md:flex-1",
+    );
+    expect(screen.getByRole("button", { name: /^Filters/ })).toBeInTheDocument();
   });
 
-  it("keeps the collapsed row at two columns", () => {
+  it("keeps the collapsed row as search-grow plus a compact Filters control", () => {
     const { container } = render(
       <BuildListToolbar
         search={search}
@@ -99,22 +200,32 @@ describe("BuildListToolbar", () => {
       />,
     );
     const root = container.querySelector("[data-slot=build-list-toolbar]");
-    expect(root?.className).toContain("grid-cols-2");
+    expect(root?.className).toContain("flex");
+    const filtersTriggerBtn = screen.getByRole("button", { name: /^Filters/ });
+    expect(filtersTriggerBtn.className).toContain("shrink-0");
+    expect(filtersTriggerBtn.className).not.toContain("w-full");
   });
 
-  it("collapses a third control into the mobile filters drawer", () => {
+  it("keeps the first two filters inline and parks the third in the mobile drawer", () => {
     const { container } = render(
       <BuildListToolbar
         search={search}
-        filters={[statusFilter(), severityFilter()]}
+        filters={[
+          statusFilter(),
+          severityFilter(),
+          { id: "owner", label: "Owner", control: <button type="button">Owner</button> },
+        ]}
       />,
     );
-    expect(screen.getByRole("button", { name: /^Filters/ })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /^Filters/ })).toHaveClass("lg:hidden");
     for (const id of ["status", "severity"]) {
-      expect(
-        container.querySelector(`[data-filter-id=${id}]`)?.className,
-      ).toContain("max-md:hidden");
+      expect(container.querySelector(`[data-filter-id=${id}]`)?.className).toContain(
+        "max-md:flex-1",
+      );
     }
+    expect(container.querySelector("[data-filter-id=owner]")?.className).toContain(
+      "max-lg:hidden",
+    );
   });
 
   it("counts the active filters the drawer hides", () => {
@@ -139,11 +250,17 @@ describe("BuildListToolbar", () => {
     expect(within(trigger).queryByText("0")).toBeNull();
   });
 
-  it("opens a titled, described drawer holding every collapsed filter", async () => {
+  it("opens a titled, described drawer holding the overflow filters", async () => {
+    useIsMobile.mockReturnValue(true);
     render(
       <BuildListToolbar
         search={search}
-        filters={[statusFilter(), severityFilter()]}
+        filters={[
+          statusFilter(),
+          severityFilter(),
+          { id: "owner", label: "Owner", control: <button type="button">Owner</button> },
+          { id: "segment", label: "Segment", control: <button type="button">Segment</button> },
+        ]}
         drawerTitle="Filter bugs"
       />,
     );
@@ -154,12 +271,15 @@ describe("BuildListToolbar", () => {
     expect(
       within(dialog).getByText(/Changes apply immediately/),
     ).toBeInTheDocument();
-    expect(within(dialog).getByText("Status")).toBeInTheDocument();
-    expect(within(dialog).getByText("Severity")).toBeInTheDocument();
-    expect(within(dialog).getByRole("button", { name: "Done" })).toBeInTheDocument();
+    expect(within(dialog).queryByText("Status")).toBeNull();
+    expect(within(dialog).queryByText("Severity")).toBeNull();
+    expect(within(dialog).getByRole("button", { name: "Owner" })).toBeInTheDocument();
+    expect(within(dialog).getByRole("button", { name: "Segment" })).toBeInTheDocument();
+    expect(within(dialog).queryByRole("button", { name: "Done" })).toBeNull();
   });
 
   it("offers Clear all in the drawer only while something is active", async () => {
+    useIsMobile.mockReturnValue(true);
     const onClearAll = jest.fn();
     const { rerender } = render(
       <BuildListToolbar
@@ -185,6 +305,7 @@ describe("BuildListToolbar", () => {
   });
 
   it("returns focus to the Filters trigger when the drawer closes", async () => {
+    useIsMobile.mockReturnValue(true);
     render(
       <BuildListToolbar
         search={search}
@@ -194,42 +315,53 @@ describe("BuildListToolbar", () => {
     const trigger = screen.getByRole("button", { name: /^Filters/ });
     fireEvent.click(trigger);
     const dialog = await screen.findByRole("dialog");
-    fireEvent.click(within(dialog).getByRole("button", { name: "Done" }));
+    fireEvent.keyDown(dialog, { key: "Escape" });
     await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
     await waitFor(() => expect(trigger).toHaveFocus());
   });
 
-  it("shows Clear all inline on desktop and never a chip row", () => {
+  it("moves the inline selects into Filters on a large screen and lets search grow", async () => {
+    const { container } = render(
+      <BuildListToolbar
+        search={search}
+        row={{ mobile: 2, tablet: 2, desktop: 0 }}
+        filters={[
+          statusFilter(),
+          severityFilter(),
+          { id: "team", label: "Team", control: <button type="button">All teams</button> },
+        ]}
+      />,
+    );
+
+    expect(container.querySelector("[data-filter-id=status]")?.className).toContain("lg:hidden");
+    expect(container.querySelector("[data-filter-id=severity]")?.className).toContain("lg:hidden");
+    expect(container.querySelector("[data-filter-id=team]")?.className).toContain("hidden");
+    expect(container.querySelector("[data-slot=search-input]")?.className).toContain("lg:max-w-none");
+    expect(screen.getByRole("button", { name: /^Filters/ }).className).not.toContain("lg:hidden");
+
+    fireEvent.click(screen.getByRole("button", { name: /^Filters/ }));
+    const overlay = await screen.findByRole("dialog");
+    expect(within(overlay).getByRole("combobox", { name: "Status" })).toBeInTheDocument();
+    expect(within(overlay).getByRole("combobox", { name: "Severity" })).toBeInTheDocument();
+    expect(within(overlay).getByRole("button", { name: "All teams" })).toBeInTheDocument();
+  });
+
+  it("does not put Clear all on the toolbar icon row", () => {
     const onClearAll = jest.fn();
     const { container } = render(
       <BuildListToolbar
         search={search}
         filters={[statusFilter(true)]}
         onClearAll={onClearAll}
-      />,
-    );
-    fireEvent.click(screen.getByRole("button", { name: "Clear all" }));
-    expect(onClearAll).toHaveBeenCalledTimes(1);
-    expect(container.querySelectorAll("[data-slot=build-list-toolbar]")).toHaveLength(1);
-  });
-
-  it("moves view and display controls into the drawer rather than a fourth row", async () => {
-    render(
-      <BuildListToolbar
-        search={search}
-        filters={[statusFilter()]}
-        trailingLabel="Display"
         trailing={<button type="button">Grid view</button>}
       />,
     );
-    fireEvent.click(screen.getByRole("button", { name: /^Filters/ }));
-    const dialog = await screen.findByRole("dialog");
-    expect(within(dialog).getByText("Display")).toBeInTheDocument();
-    expect(within(dialog).getByRole("button", { name: "Grid view" })).toBeInTheDocument();
+    const toolbar = container.querySelector("[data-slot=build-list-toolbar]");
+    expect(toolbar).toBeTruthy();
+    expect(
+      within(toolbar as HTMLElement).queryByRole("button", { name: "Clear all" }),
+    ).toBeNull();
+    expect(screen.getByRole("button", { name: "Grid view" })).toBeInTheDocument();
   });
 
-  it("names the search field for assistive technology", () => {
-    render(<BuildListToolbar search={search} filters={[statusFilter()]} />);
-    expect(screen.getByLabelText("Search bugs")).toBeInTheDocument();
-  });
 });

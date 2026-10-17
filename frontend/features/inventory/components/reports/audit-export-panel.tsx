@@ -1,5 +1,7 @@
 "use client";
 
+import { DatePicker } from "@/components/ui/date-picker";
+
 import { useState } from "react";
 import { toast } from "sonner";
 import { Download, ShieldCheck } from "lucide-react";
@@ -67,11 +69,11 @@ export function AuditExportPanel() {
           className={cn(
             "inline-flex items-center rounded-md border px-2 py-0.5 text-dense font-medium",
             statusToneClasses(
-              row.status === "READY" ? "success" : row.status === "FAILED" ? "danger" : "info",
+              row.status === "COMPLETED" ? "success" : row.status === "FAILED" ? "danger" : "info",
             ),
           )}
         >
-          {row.status === "READY"
+          {row.status === "COMPLETED"
             ? "Ready"
             : row.status === "FAILED"
               ? (row.failureReason ?? "Failed")
@@ -123,7 +125,7 @@ export function AuditExportPanel() {
       headerClassName: "w-44",
       className: "w-44",
       cell: (row) =>
-        row.status === "READY" ? (
+        row.status === "COMPLETED" ? (
           <div className="flex gap-1">
             <Button variant="outline" size="sm" className="h-7" onClick={() => handleDownload(row)}>
               <Download className="mr-1 h-3 w-3" aria-hidden="true" />
@@ -152,11 +154,11 @@ export function AuditExportPanel() {
         <div className="flex flex-wrap items-end gap-2">
           <label className="flex flex-col gap-1">
             <span className="text-dense text-muted-foreground">From</span>
-            <Input type="date" value={from} onChange={(event) => setFrom(event.target.value)} />
+            <DatePicker ariaLabel="From" value={from} onChange={setFrom} placeholder="From" dateFormat="dd MMM yyyy" clearable className="w-40" />
           </label>
           <label className="flex flex-col gap-1">
             <span className="text-dense text-muted-foreground">To</span>
-            <Input type="date" value={to} onChange={(event) => setTo(event.target.value)} />
+            <DatePicker ariaLabel="To" value={to} onChange={setTo} placeholder="To" dateFormat="dd MMM yyyy" clearable className="w-40" />
           </label>
           <LoadingButton
             isPending={create.isPending}

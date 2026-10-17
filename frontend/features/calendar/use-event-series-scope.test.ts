@@ -1,6 +1,7 @@
 import { act, renderHook } from "@testing-library/react";
 import { useUpdateCalendarEvent, useUpsertOccurrenceException } from "@/hooks/api/calendar";
 import type { CalendarListItem } from "@/hooks/api/calendar";
+import { calendarProjectionFields } from "./calendar-projection-fixtures";
 import { useEventSeriesScope } from "./use-event-series-scope";
 import type { CalendarEventPayload } from "./event-create-validators";
 
@@ -57,10 +58,16 @@ const MOVED_OCCURRENCE: CalendarListItem = {
   end: "2026-03-19T14:30:00.000Z",
   category: "meeting",
   source: "event",
+  ...calendarProjectionFields(
+    `event-42-${NOMINAL_START}`,
+    MOVED_START,
+    "2026-03-19T14:30:00.000Z",
+  ),
 };
 
 const PAYLOAD: CalendarEventPayload = {
   title: "Weekly standup — moved again",
+  description: "Occurrence-only agenda",
   startDate: "2026-03-19T15:00:00.000Z",
   endDate: "2026-03-19T15:30:00.000Z",
   category: "meeting",
@@ -83,7 +90,13 @@ function renderScope(event: CalendarListItem | null, onClose = jest.fn()) {
   return renderHook(() => {
     const updateEvent = useUpdateCalendarEvent();
     const upsertOccurrenceException = useUpsertOccurrenceException();
-    return useEventSeriesScope({ event, updateEvent, upsertOccurrenceException, onClose });
+    return useEventSeriesScope({
+      event,
+      updateEvent,
+      upsertOccurrenceException,
+      expectedVersion: 7,
+      onClose,
+    });
   });
 }
 
@@ -108,8 +121,10 @@ describe("useEventSeriesScope — instance edits", () => {
       eventId: 42,
       occurrenceStart: NOMINAL_START,
       modifiedTitle: PAYLOAD.title,
+      modifiedDescription: PAYLOAD.description,
       modifiedStart: PAYLOAD.startDate,
       modifiedEnd: PAYLOAD.endDate,
+      expectedVersion: 7,
     });
     expect(callsFor("series")).toHaveLength(0);
   });
@@ -124,6 +139,20 @@ describe("useEventSeriesScope — instance edits", () => {
 
     expect(callsFor("series")).toHaveLength(0);
     expect(toastSuccess).toHaveBeenCalledWith("Occurrence updated");
+  });
+
+  it("sends an empty note to clear only the selected occurrence", async () => {
+    const { result } = renderScope(MOVED_OCCURRENCE);
+
+    act(() => result.current.openWithPayload({ ...PAYLOAD, description: "" }));
+    await act(async () => {
+      await result.current.handleSeriesScopeConfirm("occurrence");
+    });
+
+    expect(callsFor("occurrence")[0]?.vars).toEqual(expect.objectContaining({
+      modifiedDescription: "",
+    }));
+    expect(callsFor("series")).toHaveLength(0);
   });
 });
 
@@ -141,13 +170,16 @@ describe("useEventSeriesScope — series edits", () => {
     expect(seriesCalls[0]?.vars).toEqual({
       calendarEventId: 42,
       title: PAYLOAD.title,
+      description: PAYLOAD.description,
       startDate: PAYLOAD.startDate,
       endDate: PAYLOAD.endDate,
       category: PAYLOAD.category,
+      expectedVersion: 7,
     });
     expect(callsFor("occurrence")).toHaveLength(0);
     expect(toastSuccess).toHaveBeenCalledWith("Event updated");
   });
+
 });
 
 describe("useEventSeriesScope — ids it must refuse", () => {

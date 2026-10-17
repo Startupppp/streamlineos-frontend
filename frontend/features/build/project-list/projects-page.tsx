@@ -1,36 +1,25 @@
 "use client";
 
-import { useCallback, useMemo, useState, useTransition } from "react";
-import { useSearchParams, useRouter, usePathname } from "next/navigation";
+import { useCallback, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import dynamic from "next/dynamic";
-import { Plus } from "lucide-react";
-import { useInfiniteProjects } from "@/hooks/api/build";
-import { useCan } from "@/hooks/api/access";
+import { Link2, Plus } from "lucide-react";
+import { useProjects } from "@/hooks/api/build/projects";
+import { useAccess, useCan } from "@/hooks/api/access";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { RequireModule } from "@/components/auth/require-module";
-import { ProjectCard } from "@/features/build/project-list/project-card";
-import { ProjectTable } from "@/features/build/project-list/project-table";
 import { ProjectFilterBar } from "@/features/build/project-list/project-filter-bar";
 import { ProjectsEmptyState } from "@/features/build/project-list/projects-empty-state";
 import { useDisplayPrefs } from "@/features/build/project-list/use-display-prefs";
-import {
-  HEALTH_OPTIONS,
-  STATUS_OPTIONS,
-  type ProjectActiveFilters,
-} from "@/features/build/project-list/add-filter-popover";
 import { EmptyState } from "@/components/ui/empty-state";
-import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import { PageState } from "@/components/shared/page-state";
 import { usePageState } from "@/hooks/api/use-page-state";
 import {
   PmPageShell,
-  PmStaggerList,
   PmSection,
-  PM_FILL_PANEL,
+  CONTENT_FILL_PANEL,
 } from "@/components/pm-chrome";
-import { fadeUp, fadeUpReduced } from "@/lib/motion-presets";
-import { motion, useReducedMotion } from "framer-motion";
-import { TablePagination } from "@/components/ui/table-pagination";
+import { useReducedMotion } from "framer-motion";
 import { BuildHeaderActions } from "@/features/build/shared/build-header-actions";
 import { useResumeLastProject } from "@/features/build/project-list/use-resume-last-project";
 import {
@@ -42,8 +31,16 @@ import {
   groupProjects,
   sortProjects,
 } from "@/features/build/project-list/project-list-shaping";
-
-export { filterVisibleProjects };
+import { useBuildListKeyboard } from "@/hooks/common/use-build-list-keyboard";
+import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
+import { useProjectsPage } from "./use-projects-page";
+import { ProjectsViewContent } from "./projects-view-content";
+import { useBuildCursorPager } from "@/features/build/shared/use-build-cursor-pager";
+import {
+  MANAGED_PRODUCT_DETAIL_CONTENT_CLASS,
+  ManagedProductDetailPrimarySection,
+  ManagedProductDetailShell,
+} from "@/features/build/managed-products/managed-product-detail-layout";
 
 const NewProjectDialog = dynamic(
   () =>
@@ -52,14 +49,10 @@ const NewProjectDialog = dynamic(
     })),
   { ssr: false },
 );
-const GroupingSidebar = dynamic(
-  () =>
-    import("./grouping-sidebar").then((m) => ({ default: m.GroupingSidebar })),
-  { ssr: false, loading: () => null },
+const LinkExistingProjectDialog = dynamic(
+  () => import("./link-existing-project-dialog").then((m) => ({ default: m.LinkExistingProjectDialog })),
+  { ssr: false },
 );
-
-type ViewMode = "grid" | "list";
-const VIEW_MODES: readonly ViewMode[] = ["grid", "list"];
 
 interface ProjectsPageProps {
   managedProductId?: number;
@@ -67,131 +60,93 @@ interface ProjectsPageProps {
 
 export function ProjectsPage({ managedProductId }: ProjectsPageProps) {
   const router = useRouter();
-  const pathname = usePathname();
-  const searchParams = useSearchParams();
-  const [, startTransition] = useTransition();
   const shouldReduceMotion = useReducedMotion();
   const { prefs, setPrefs, toggle } = useDisplayPrefs();
   const canCreate = useCan("build:create");
+  const canLinkProjects = useCan("build:managed-products:update");
+  const { data: access } = useAccess();
   const resumeAction = useResumeLastProject();
-
-  const createFromUrl = searchParams.get("create") === "1";
-  const [manualCreateOpen, setManualCreateOpen] = useState(false);
-  const createOpen = createFromUrl || manualCreateOpen;
 
   const [activeGroup, setActiveGroup] = useState<string | null>(null);
   const [showGroupingSidebar, setShowGroupingSidebar] = useState(false);
+  const [linkDialogOpen, setLinkDialogOpen] = useState(false);
 
   const handleToggleGroupingSidebar = useCallback(() => {
     setShowGroupingSidebar((prev) => !prev);
   }, []);
 
-  const handleCreateOpenChange = useCallback(
-    (open: boolean) => {
-      setManualCreateOpen(open);
-      if (!open && searchParams.get("create")) {
-        const params = new URLSearchParams(searchParams.toString());
-        params.delete("create");
-        const query = params.toString();
-        startTransition(() => {
-          router.replace(query ? `${pathname}?${query}` : pathname, {
-            scroll: false,
-          });
-        });
-      }
-    },
-    [searchParams, router, pathname],
-  );
-
-  const handleOpenCreate = useCallback(() => {
-    setManualCreateOpen(true);
-  }, []);
-
-  const updateParams = useCallback(
-    (updates: Record<string, string | null>) => {
-      const params = new URLSearchParams(searchParams.toString());
-      for (const [key, value] of Object.entries(updates)) {
-        if (value === null || value === "") params.delete(key);
-        else params.set(key, value);
-      }
-      startTransition(() => {
-        router.replace(`${pathname}?${params.toString()}`, { scroll: false });
-      });
-    },
-    [searchParams, router, pathname],
-  );
-
-  const search = searchParams.get("q") || "";
-  const viewMode =
-    VIEW_MODES.find((v) => v === searchParams.get("view")) ?? "list";
-  const filterStatus = STATUS_OPTIONS.find(
-    (s) => s === searchParams.get("filterStatus"),
-  );
-  const filterHealth = HEALTH_OPTIONS.find(
-    (h) => h === searchParams.get("filterHealth"),
-  );
-  const filterLead = searchParams.get("filterLead") ?? undefined;
-
-  const activeFilters: ProjectActiveFilters = useMemo(
-    () => ({
-      ...(filterStatus ? { status: filterStatus } : {}),
-      ...(filterHealth ? { health: filterHealth } : {}),
-      ...(filterLead ? { lead: filterLead } : {}),
-    }),
-    [filterStatus, filterHealth, filterLead],
-  );
-
-  const debouncedSearch = useDebouncedValue(search, 300);
-
-  const handleSearchChange = useCallback(
-    (value: string) => updateParams({ q: value || null }),
-    [updateParams],
-  );
-
-  const handleViewModeChange = useCallback(
-    (value: ViewMode) =>
-      updateParams({ view: value === "list" ? null : value }),
-    [updateParams],
-  );
-
-  const handleFiltersChange = useCallback(
-    (next: ProjectActiveFilters) => {
-      updateParams({
-        filterStatus: next.status ?? null,
-        filterHealth: next.health ?? null,
-        filterLead: next.lead ?? null,
-      });
-    },
-    [updateParams],
-  );
+  const {
+    createOpen,
+    handleCreateOpenChange,
+    handleOpenCreate,
+    localSearch,
+    debouncedSearch,
+    updateParams,
+    viewMode,
+    activeFilters,
+    filterManagerId,
+    filterProductId,
+    filterClientId,
+    filterHealth,
+    handleSearchChange,
+    handleViewModeChange,
+    handleFiltersChange,
+  } = useProjectsPage();
 
   const handleClearFilters = useCallback(() => {
     setActiveGroup(null);
     updateParams({
       q: null,
       filterLead: null,
+      managerId: null,
       filterStatus: null,
       filterHealth: null,
+      startAfter: null,
+      endBefore: null,
+      productId: null,
+      clientId: null,
     });
   }, [updateParams]);
 
-  const handleNoOp = useCallback(() => {}, []);
+  const pageSize = viewMode === "grid" ? 12 : 25;
+  const cursorResetKey = [
+    pageSize,
+    debouncedSearch,
+    activeFilters.status ?? "",
+    filterManagerId ?? "",
+    filterHealth ?? "",
+    activeFilters.startAfter ?? "",
+    activeFilters.endBefore ?? "",
+    managedProductId ?? filterProductId ?? "",
+  ].join(":");
+  const pager = useBuildCursorPager(cursorResetKey);
+  const parsedAfterId =
+    pager.cursor === undefined ? undefined : Number(pager.cursor);
+  const afterId =
+    parsedAfterId !== undefined &&
+    Number.isInteger(parsedAfterId) &&
+    parsedAfterId > 0
+      ? parsedAfterId
+      : undefined;
 
-  const {
-    data,
-    isLoading,
-    isError,
-    error,
-    refetch,
-    hasNextPage,
-    isFetchingNextPage,
-    fetchNextPage,
-  } = useInfiniteProjects({
-    limit: viewMode === "grid" ? 12 : 25,
-    search: debouncedSearch || undefined,
-    status: activeFilters.status,
-    ...(managedProductId !== undefined ? { managedProductId } : {}),
-  });
+  const { data, isLoading, isError, error, refetch } = useProjects(
+    {
+      limit: pageSize,
+      ...(afterId === undefined ? {} : { afterId }),
+      search: debouncedSearch || undefined,
+      status: activeFilters.status,
+      ...(filterManagerId ? { managerId: filterManagerId } : {}),
+      ...(filterHealth ? { health: filterHealth } : {}),
+      ...(activeFilters.startAfter ? { startAfter: activeFilters.startAfter } : {}),
+      ...(activeFilters.endBefore ? { endBefore: activeFilters.endBefore } : {}),
+      ...(managedProductId !== undefined
+        ? { managedProductId }
+        : filterProductId
+          ? { managedProductId: Number(filterProductId) }
+          : {}),
+    },
+    INLINE_READ_ERROR,
+  );
 
   const pageState = usePageState({
     permission: "build:view",
@@ -200,36 +155,79 @@ export function ProjectsPage({ managedProductId }: ProjectsPageProps) {
     error,
   });
 
-  const handleRetry = useCallback(() => {
-    void refetch();
-  }, [refetch]);
-  const handleLoadMore = useCallback(() => {
-    void fetchNextPage();
-  }, [fetchNextPage]);
+  const handleRetry = useCallback(() => { void refetch(); }, [refetch]);
+  const handleNextPage = useCallback(() => {
+    pager.goNext(data?.nextCursor == null ? null : String(data.nextCursor));
+  }, [data?.nextCursor, pager]);
 
   const allProjects = useMemo(
-    () => (data?.pages ?? []).flatMap((p) => p.data),
+    () => data?.data ?? [],
     [data],
   );
 
   const visibleProjects = useMemo(() => {
-    let result = filterVisibleProjects(
-      allProjects,
-      activeFilters,
-      prefs.showClosed,
-    );
+    let result = filterVisibleProjects(allProjects, activeFilters, prefs.showClosed);
     result = groupProjects(result, activeGroup);
     result = sortProjects(result, prefs.orderBy, prefs.orderDir);
     return result;
   }, [allProjects, activeFilters, prefs, activeGroup]);
 
   const hasFiltersOrSearch =
-    Boolean(debouncedSearch) || Object.values(activeFilters).some(Boolean);
+    Boolean(debouncedSearch) ||
+    Object.values(activeFilters).some(Boolean) ||
+    Boolean(filterProductId) ||
+    Boolean(filterClientId);
   const filtersActive = hasFiltersOrSearch || activeGroup !== null;
+
+  const canSeeAllProjects =
+    access?.isOrgOwner === true || access?.scopes["build:manage"] === "all";
+  const pageTitle =
+    managedProductId !== undefined
+      ? "Linked Projects"
+      : !access
+        ? "Projects"
+        : canSeeAllProjects
+          ? "All Projects"
+          : "My Projects";
+  const pageSubtitle =
+    managedProductId !== undefined
+      ? "Projects linked to this managed product"
+      : !access
+        ? "Browse projects you can access"
+        : canSeeAllProjects
+          ? "Browse and manage every project in your organization"
+          : "Projects you belong to, manage, or reach through your teams";
+
+  const handleKeyboardOpenProject = useCallback(
+    (index: number) => {
+      const project = visibleProjects[index];
+      if (project) router.push(`/build/${project.id}`);
+    },
+    [visibleProjects, router],
+  );
+
+  const handleKeyboardClearProject = useCallback(() => {
+    handleCreateOpenChange(false);
+  }, [handleCreateOpenChange]);
+
+  useBuildListKeyboard({
+    itemCount: visibleProjects.length,
+    onOpen: handleKeyboardOpenProject,
+    onClearSelection: handleKeyboardClearProject,
+    enabled: pageState.kind === "ready",
+  });
 
   const headerActions = useMemo(() => {
     const actions = [];
-    if (resumeAction) actions.push(resumeAction);
+    if (managedProductId === undefined && resumeAction) actions.push(resumeAction);
+    if (managedProductId !== undefined && canLinkProjects) {
+      actions.push({
+        id: "link-existing-project",
+        label: "Link existing project",
+        icon: Link2,
+        onSelect: () => setLinkDialogOpen(true),
+      });
+    }
     if (canCreate) {
       actions.push({
         id: "create",
@@ -240,24 +238,41 @@ export function ProjectsPage({ managedProductId }: ProjectsPageProps) {
       });
     }
     return actions;
-  }, [resumeAction, canCreate, handleOpenCreate]);
+  }, [resumeAction, managedProductId, canLinkProjects, canCreate, handleOpenCreate]);
+
+  const ContentShell = managedProductId === undefined ? PmPageShell : ManagedProductDetailShell;
+  const PrimarySection = managedProductId === undefined ? PmSection : ManagedProductDetailPrimarySection;
 
   return (
     <RequireModule module="build">
-      {(canCreate || createOpen) && (
+      {canCreate && (
         <NewProjectDialog
           open={createOpen}
           onOpenChange={handleCreateOpenChange}
           trigger={null}
         />
       )}
+      {managedProductId !== undefined && canLinkProjects && (
+        <LinkExistingProjectDialog
+          managedProductId={managedProductId}
+          open={linkDialogOpen}
+          onOpenChange={setLinkDialogOpen}
+        />
+      )}
       <PageWrapper
-        title="All Projects"
-        subtitle="Browse and manage every project in your organization"
+        title={pageTitle}
+        subtitle={pageSubtitle}
         actions={<BuildHeaderActions actions={headerActions} />}
+        contentClassName={
+          managedProductId === undefined
+            ? undefined
+            : MANAGED_PRODUCT_DETAIL_CONTENT_CLASS
+        }
+        noInternalScroll
+        filtersClassName="flex-col items-stretch gap-0 overflow-visible pb-2 [&>*]:w-full [&>*]:min-w-0 [&>*]:shrink"
         filters={
           <ProjectFilterBar
-            search={search}
+            search={localSearch}
             onSearchChange={handleSearchChange}
             viewMode={viewMode}
             onViewModeChange={handleViewModeChange}
@@ -272,85 +287,64 @@ export function ProjectsPage({ managedProductId }: ProjectsPageProps) {
           />
         }
       >
-        <PmPageShell>
-          <PmSection index={0} className="flex min-h-0 flex-1 flex-col">
+        <ContentShell>
+          <PrimarySection index={0} className="flex min-h-0 flex-1 flex-col">
             {pageState.kind !== "ready" ? (
               <PageState
                 resolution={pageState}
-                loading={
-                  viewMode === "grid" ? <GridSkeleton /> : <ListSkeleton />
-                }
+                loading={viewMode === "grid" ? <GridSkeleton /> : <ListSkeleton />}
                 onRetry={handleRetry}
-                className={PM_FILL_PANEL}
+                className={CONTENT_FILL_PANEL}
               >
                 {null}
               </PageState>
             ) : allProjects.length === 0 && !hasFiltersOrSearch ? (
-              <ProjectsEmptyState onCreate={handleOpenCreate} />
-            ) : visibleProjects.length === 0 ? (
+              managedProductId !== undefined ? (
+                <EmptyState
+                  className={CONTENT_FILL_PANEL}
+                  illustrationPreset="search"
+                  title="No linked projects yet"
+                  description="Link an existing project to include its work in this product."
+                  action={
+                    canLinkProjects
+                      ? { label: "Link existing project", onClick: () => setLinkDialogOpen(true) }
+                      : undefined
+                  }
+                />
+              ) : (
+                <ProjectsEmptyState onCreate={canCreate ? handleOpenCreate : undefined} />
+              )
+            ) : visibleProjects.length === 0 &&
+              !data?.hasMore &&
+              !pager.hasPrevious ? (
               <EmptyState
-                className={PM_FILL_PANEL}
+                className={CONTENT_FILL_PANEL}
                 illustrationPreset="search"
-                title={
-                  filtersActive
-                    ? "No projects match your filters"
-                    : "No projects found"
-                }
+                title={filtersActive ? "No projects match your filters" : "No projects found"}
                 description="Try adjusting the search or filters."
                 filtersActive={filtersActive}
                 onClearFilters={handleClearFilters}
               />
-            ) : viewMode === "grid" ? (
-              <>
-                <PmStaggerList
-                  className="grid gap-2.5 sm:grid-cols-2 lg:grid-cols-3"
-                  role="list"
-                  aria-label="Projects grid"
-                >
-                  {visibleProjects.map((project) => (
-                    <motion.div
-                      key={project.id}
-                      variants={shouldReduceMotion ? fadeUpReduced : fadeUp}
-                      className="h-full"
-                      role="listitem"
-                    >
-                      <ProjectCard project={project} />
-                    </motion.div>
-                  ))}
-                </PmStaggerList>
-                {hasNextPage ? (
-                  <TablePagination
-                    mode="cursor"
-                    rowCount={visibleProjects.length}
-                    hasMore={true}
-                    hasPrevious={false}
-                    onNext={handleLoadMore}
-                    onPrevious={handleNoOp}
-                    disabled={isFetchingNextPage}
-                  />
-                ) : null}
-              </>
             ) : (
-              <div className="flex min-h-0 flex-1 gap-3">
-                <div className="flex min-w-0 flex-1 flex-col">
-                  <ProjectTable
-                    projects={visibleProjects}
-                    prefs={prefs}
-                    hasMore={Boolean(hasNextPage)}
-                    onLoadMore={handleLoadMore}
-                  />
-                </div>
-                <GroupingSidebar
-                  open={showGroupingSidebar}
-                  onOpenChange={setShowGroupingSidebar}
-                  projects={allProjects}
-                  activeGroup={activeGroup}
-                  onGroupSelect={setActiveGroup}
-                />
-              </div>
+              <ProjectsViewContent
+                viewMode={viewMode}
+                visibleProjects={visibleProjects}
+                allProjects={allProjects}
+                prefs={prefs}
+                pageNumber={pager.pageNumber}
+                hasMore={Boolean(data?.hasMore)}
+                hasPrevious={pager.hasPrevious}
+                onNext={handleNextPage}
+                onPrevious={pager.goPrevious}
+                showGroupingSidebar={showGroupingSidebar}
+                onGroupingSidebarChange={setShowGroupingSidebar}
+                activeGroup={activeGroup}
+                onGroupSelect={setActiveGroup}
+                shouldReduceMotion={shouldReduceMotion}
+              />
             )}
-          </PmSection>
-        </PmPageShell>
+          </PrimarySection>
+        </ContentShell>
       </PageWrapper>
     </RequireModule>
   );

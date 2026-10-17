@@ -20,7 +20,8 @@ import type {
   CommissionEarning,
   CommissionEarningStatus,
 } from "@/types/crm/commission";
-import { formatBps, formatCommissionMoney, formatEarnedOn } from "./commission-format";
+import { formatMinor } from "@/lib/pricing-format";
+import { formatBps, formatEarnedOn } from "./commission-format";
 
 /**
  * The earnings ledger, and the one write a manager makes against it.
@@ -119,13 +120,13 @@ export function EarningsLedger({ earnings, locale }: EarningsLedgerProps) {
                 {`${earning.sourceType} ${earning.sourceId}`}
               </TableCell>
               <TableCell className="text-right tabular-nums">
-                {formatCommissionMoney(earning.basisMinor, earning.currency, locale)}
+                {formatMinor(earning.basisMinor, earning.currency, locale)}
               </TableCell>
               <TableCell className="text-right tabular-nums">
                 {formatBps(earning.effectiveRateBps)}
               </TableCell>
               <TableCell className="text-right font-medium tabular-nums">
-                {formatCommissionMoney(earning.amountMinor, earning.currency, locale)}
+                {formatMinor(earning.amountMinor, earning.currency, locale)}
               </TableCell>
               <TableCell>
                 <Badge variant="secondary" className={STATUS_TONE[earning.status]}>

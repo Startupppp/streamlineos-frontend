@@ -15,10 +15,12 @@ const ROWS: HarnessRow[] = [
 
 function Harness({
   onRowAction,
+  onRowContextMenu,
   withMobileCard = false,
   withFocusStop = false,
 }: {
   onRowAction?: () => void;
+  onRowContextMenu?: (row: HarnessRow, event: React.MouseEvent) => void;
   withMobileCard?: boolean;
   withFocusStop?: boolean;
 }) {
@@ -79,6 +81,7 @@ function Harness({
         columns={columns}
         getRowKey={(row) => row.id}
         onRowClick={handleRowClick}
+        onRowContextMenu={onRowContextMenu}
         selection={{ selected, onChange: handleSelectionChange }}
         toolbar={
           selected.size > 0 ? (
@@ -232,5 +235,100 @@ describe("DataTable — row activation still works", () => {
     fireEvent.keyDown(card, { key: "Enter" });
 
     expect(screen.getByTestId("detail-sheet")).toHaveTextContent("Ada Lovelace");
+  });
+});
+
+describe("DataTable — scroll region", () => {
+  const columns: DataTableColumn<HarnessRow>[] = [{ key: "name", header: "Name", cell: (row) => row.name }];
+
+  it("keeps the inner table container as the default labelled region", () => {
+    render(<DataTable data={ROWS} columns={columns} getRowKey={(row) => row.id} />);
+    expect(screen.getByRole("region", { name: "Table" })).toHaveAttribute("tabindex", "0");
+  });
+
+  it("makes the scrolling element the only labelled keyboard stop when scrollRegionLabel is set", () => {
+    render(<DataTable data={ROWS} columns={columns} getRowKey={(row) => row.id} scrollRegionLabel="People" />);
+    const regions = screen.getAllByRole("region");
+    expect(regions).toHaveLength(1);
+    expect(regions[0]).toHaveAccessibleName("People");
+    expect(regions[0]).toHaveAttribute("tabindex", "0");
+    expect(regions[0]).toHaveClass("overflow-auto");
+  });
+
+  it("keeps pagination after the flexible scroll region instead of overlaying its rows", () => {
+    const data = Array.from({ length: 60 }, (_, index) => ({
+      id: String(index),
+      name: `Person ${index}`,
+    }));
+    render(
+      <DataTable
+        data={data}
+        columns={columns}
+        getRowKey={(row) => row.id}
+        scrollRegionLabel="People"
+      />,
+    );
+
+    const scrollRegion = screen.getByRole("region", { name: "People" });
+    const pagination = screen.getByRole("navigation", { name: "Pagination" });
+    expect(scrollRegion).toHaveClass("min-h-0", "flex-1", "overflow-auto");
+    expect(pagination.parentElement).toBe(scrollRegion.parentElement);
+    expect(
+      scrollRegion.compareDocumentPosition(pagination) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+  });
+});
+
+describe("DataTable — onRowContextMenu covers the whole row, including its padding", () => {
+  it("calls the handler with the row the event landed in", () => {
+    const onRowContextMenu = jest.fn();
+    render(<Harness onRowContextMenu={onRowContextMenu} />);
+
+    fireEvent.contextMenu(firstDataRow());
+
+    expect(onRowContextMenu).toHaveBeenCalledTimes(1);
+    expect(onRowContextMenu.mock.calls[0][0]).toEqual({ id: "a", name: "Ada Lovelace" });
+  });
+
+  it("fires from a right click inside the row's cell padding, not only over the cell text", () => {
+    const onRowContextMenu = jest.fn();
+    render(<Harness onRowContextMenu={onRowContextMenu} />);
+    const cell = screen.getByText("Ada Lovelace").closest("td");
+    if (cell === null) throw new Error("no data cell rendered");
+
+    fireEvent.contextMenu(cell);
+
+    expect(onRowContextMenu).toHaveBeenCalledTimes(1);
+  });
+
+  it("hands the event through so the caller can suppress the browser menu", () => {
+    const onRowContextMenu = jest.fn((_row: HarnessRow, event: React.MouseEvent) => {
+      event.preventDefault();
+    });
+    render(<Harness onRowContextMenu={onRowContextMenu} />);
+
+    const notPrevented = fireEvent.contextMenu(firstDataRow());
+
+    expect(notPrevented).toBe(false);
+  });
+
+  it("leaves the row without a contextmenu handler when the caller passes none, so existing tables keep the browser menu", () => {
+    render(<Harness />);
+
+    const notPrevented = fireEvent.contextMenu(firstDataRow());
+
+    expect(notPrevented).toBe(true);
+  });
+
+  it("fires from the mobile card too, which is the same row rendered below the breakpoint", () => {
+    const onRowContextMenu = jest.fn();
+    render(<Harness withMobileCard onRowContextMenu={onRowContextMenu} />);
+    const card = screen.getByText("Card Ada Lovelace").closest("div");
+    if (card === null) throw new Error("no mobile card rendered");
+
+    fireEvent.contextMenu(card);
+
+    expect(onRowContextMenu).toHaveBeenCalled();
+    expect(onRowContextMenu.mock.calls[0][0]).toEqual({ id: "a", name: "Ada Lovelace" });
   });
 });

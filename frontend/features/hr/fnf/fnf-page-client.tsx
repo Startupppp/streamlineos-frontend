@@ -2,6 +2,7 @@
 
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useState, useCallback } from "react";
+import Link from "next/link";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { PageState } from "@/components/shared/page-state";
 import { usePageState } from "@/hooks/api/use-page-state";
@@ -18,7 +19,9 @@ import { ConfirmSheet } from "@/components/ui/confirm-sheet";
 import { EmptyState } from "@/components/ui/empty-state";
 import { toast } from "sonner";
 import { format } from "date-fns";
-import { Plus, FileSpreadsheet, IndianRupee, CheckCircle2 } from "lucide-react";
+import { Plus, FileSpreadsheet, CheckCircle2 } from "lucide-react";
+import { useOrgDisplay } from "@/hooks/api/org-display";
+import { formatMoney, type MoneyDisplay } from "@/lib/format-utils";
 import { EmptyExpensesIllustration } from "@/components/illustrations";
 import { cn } from "@/lib/utils";
 import { TruncatedText } from "@/components/ui/truncated-text";
@@ -28,35 +31,46 @@ import {
   useCompleteFnfSettlement,
   type FnfSettlement,
 } from "@/hooks/api/hr/fnf";
+import type { FnfSuggestion } from "@/hooks/api/payroll/fnf-schema";
+import { FnfSuggestionPanel } from "./fnf-suggestion-panel";
+
+function isInReview(status: string | null): boolean {
+  return status === "PENDING_APPROVAL" || status === "HR_REVIEW" || status === "FINANCE_REVIEW";
+}
 
 function fnfStatusBadgeClass(status: string | null): string {
   if (status === "PAID") return "bg-status-success-surface text-status-success-ink border-status-success-rule";
   if (status === "APPROVED") return "bg-status-info-surface text-status-info-ink border-status-info-rule";
-  if (status === "PENDING_APPROVAL") return "bg-status-warning-surface text-status-warning-ink border-status-warning-rule";
+  if (isInReview(status)) return "bg-status-warning-surface text-status-warning-ink border-status-warning-rule";
   return "bg-muted text-muted-foreground border-border";
 }
 
 function fnfStatusLabel(status: string | null): string {
   if (status === "PAID") return "Paid";
-  if (status === "APPROVED") return "Processing";
+  if (status === "APPROVED") return "Approved";
   if (status === "PENDING_APPROVAL") return "Pending";
+  if (status === "HR_REVIEW") return "HR review";
+  if (status === "FINANCE_REVIEW") return "Finance review";
   return "Draft";
 }
 
 function fnfBorderClass(status: string | null): string {
-  if (status === "PAID") return "border-l-emerald-500";
-  if (status === "APPROVED") return "border-l-blue-400";
-  if (status === "PENDING_APPROVAL") return "border-l-amber-400";
-  return "border-l-border dark:border-l-slate-600";
+  if (status === "PAID") return "border-l-status-success-rule";
+  if (status === "APPROVED") return "border-l-status-info-rule";
+  if (isInReview(status)) return "border-l-status-warning-rule";
+  return "border-l-border";
 }
 
 interface FnfCardProps {
   item: FnfSettlement;
   onMarkPaid: (id: number) => void;
+  /** PATCH /hr/fnf/:id needs hr:exit:manage. */
+  canMarkPaid: boolean;
   isPending: boolean;
+  money: MoneyDisplay;
 }
 
-function FnfCard({ item, onMarkPaid, isPending }: FnfCardProps) {
+function FnfCard({ item, onMarkPaid, canMarkPaid, isPending, money }: FnfCardProps) {
   const handleMarkPaid = useCallback(() => onMarkPaid(item.id), [item.id, onMarkPaid]);
 
   return (
@@ -75,7 +89,7 @@ function FnfCard({ item, onMarkPaid, isPending }: FnfCardProps) {
                 ? "bg-status-success-surface"
                 : item.status === "APPROVED"
                   ? "bg-status-info-surface"
-                  : item.status === "PENDING_APPROVAL"
+                  : isInReview(item.status)
                     ? "bg-status-warning-surface"
                     : "bg-muted"
             )}
@@ -87,7 +101,7 @@ function FnfCard({ item, onMarkPaid, isPending }: FnfCardProps) {
                   ? "text-status-success-ink"
                   : item.status === "APPROVED"
                     ? "text-status-info-ink"
-                    : item.status === "PENDING_APPROVAL"
+                    : isInReview(item.status)
                       ? "text-status-warning-ink"
                       : "text-muted-foreground"
               )}
@@ -111,19 +125,18 @@ function FnfCard({ item, onMarkPaid, isPending }: FnfCardProps) {
 
             <div className="flex gap-3 text-micro text-muted-foreground mt-1 flex-wrap">
               {item.netPayable && (
-                <span className="flex items-center gap-0.5 font-semibold text-foreground">
-                  <IndianRupee className="h-3 w-3" />
-                  {Number(item.netPayable).toLocaleString("en-IN")} net payable
+                <span className="font-semibold text-foreground tabular-nums">
+                  {formatMoney(item.netPayable, money)} net payable
                 </span>
               )}
               {item.deductions && Number(item.deductions) > 0 && (
-                <span className="text-status-danger-ink">
-                  −₹{Number(item.deductions).toLocaleString("en-IN")} deductions
+                <span className="text-status-danger-ink tabular-nums">
+                  −{formatMoney(item.deductions, money)} deductions
                 </span>
               )}
               {item.loanRecovery && Number(item.loanRecovery) > 0 && (
-                <span>
-                  Loan: ₹{Number(item.loanRecovery).toLocaleString("en-IN")}
+                <span className="tabular-nums">
+                  Loan: {formatMoney(item.loanRecovery, money)}
                 </span>
               )}
               {item.createdAt && (
@@ -136,16 +149,17 @@ function FnfCard({ item, onMarkPaid, isPending }: FnfCardProps) {
             )}
           </div>
 
-          {item.status !== "PAID" && (
+          {/* The backend allows only APPROVED → PAID; any other status answers 409. */}
+          {canMarkPaid && item.status === "APPROVED" && (
             <LoadingButton
               size="sm"
               variant="outline"
-              className="text-xs shrink-0 gap-1.5 duration-200"
+              className="text-xs shrink-0 gap-1.5"
               onClick={handleMarkPaid}
               isPending={isPending}
             >
-              <CheckCircle2 className="h-3 w-3" />
-              Mark Paid
+              {!isPending && <CheckCircle2 className="h-3 w-3" />}
+              Mark paid
             </LoadingButton>
           )}
         </div>
@@ -159,6 +173,7 @@ export function FnfPageClient() {
   const handleRetry = useCallback(() => { void refetch(); }, [refetch]);
   const pageState = usePageState({ permission: "hr:payroll:view", isLoading, isError, error });
   const canCreate = useCan("hr:exit:manage");
+  const money = useOrgDisplay();
 
   const create = useCreateFnfSettlement();
   const complete = useCompleteFnfSettlement();
@@ -167,8 +182,10 @@ export function FnfPageClient() {
 
   const [completeId, setCompleteId] = useState<number | null>(null);
   const [userId, setUserId] = useState("");
+  const [userIdError, setUserIdError] = useState("");
   const [basicDues, setBasicDues] = useState("");
   const [leaveEncashment, setLeaveEncashment] = useState("");
+  const [gratuity, setGratuity] = useState("");
   const [bonusDue, setBonusDue] = useState("");
   const [deductions, setDeductions] = useState("");
   const [loanRecovery, setLoanRecovery] = useState("");
@@ -176,8 +193,10 @@ export function FnfPageClient() {
 
   const resetForm = useCallback(() => {
     setUserId("");
+    setUserIdError("");
     setBasicDues("");
     setLeaveEncashment("");
+    setGratuity("");
     setBonusDue("");
     setDeductions("");
     setLoanRecovery("");
@@ -185,12 +204,17 @@ export function FnfPageClient() {
   }, []);
 
   const handleCreate = useCallback(() => {
-    if (!userId) { toast.error("Employee is required"); return; }
+    if (!userId) {
+      setUserIdError("Employee is required");
+      return;
+    }
+    setUserIdError("");
     create.mutate(
       {
         userId,
         basicDues: basicDues ? Number(basicDues) : undefined,
         leaveEncashment: leaveEncashment ? Number(leaveEncashment) : undefined,
+        gratuity: gratuity ? Number(gratuity) : undefined,
         bonusDue: bonusDue ? Number(bonusDue) : undefined,
         deductions: deductions ? Number(deductions) : undefined,
         loanRecovery: loanRecovery ? Number(loanRecovery) : undefined,
@@ -205,7 +229,7 @@ export function FnfPageClient() {
         onError: (e) => toast.error(getErrorMessage(e)),
       },
     );
-  }, [userId, basicDues, leaveEncashment, bonusDue, deductions, loanRecovery, notes, create, resetForm]);
+  }, [userId, basicDues, leaveEncashment, gratuity, bonusDue, deductions, loanRecovery, notes, create, resetForm]);
 
   const handleComplete = useCallback(() => {
     if (!completeId) return;
@@ -217,6 +241,11 @@ export function FnfPageClient() {
       onError: (e) => toast.error(getErrorMessage(e)),
     });
   }, [completeId, complete]);
+
+  const handleUserIdChange = useCallback((next: string) => {
+    setUserId(next);
+    setUserIdError("");
+  }, []);
 
   const handleOpenSheet = useCallback(() => setSheetOpen(true), []);
 
@@ -231,10 +260,15 @@ export function FnfPageClient() {
 
   const handleBasicDuesChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setBasicDues(e.target.value), []);
   const handleLeaveEncashmentChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setLeaveEncashment(e.target.value), []);
+  const handleGratuityChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setGratuity(e.target.value), []);
   const handleBonusDueChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setBonusDue(e.target.value), []);
   const handleDeductionsChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setDeductions(e.target.value), []);
   const handleLoanRecoveryChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setLoanRecovery(e.target.value), []);
   const handleNotesChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => setNotes(e.target.value), []);
+  const handleApplySuggestion = useCallback((suggestion: FnfSuggestion) => {
+    setLeaveEncashment(suggestion.leaveEncashment);
+    setGratuity(suggestion.gratuity);
+  }, []);
 
   const loadingSkeleton = (
     <div className="flex flex-1 min-h-0 flex-col gap-3">
@@ -246,29 +280,43 @@ export function FnfPageClient() {
 
   return (
     <PageWrapper
-      title="Final settlement"
-      subtitle="Manage final settlements for separated employees"
+      title="Full and final draft"
+      subtitle="Record what a separated employee is owed. Payroll runs the settlement itself — this page saves a draft and does not pay anything."
+      backHref="/hr/exit"
+      backLabel="Back to Exit"
       actions={
-        canCreate ? (
-          <Button size="sm" onClick={handleOpenSheet} className="gap-1.5">
-            <Plus className="h-3.5 w-3.5" />
-            Create settlement
+        <div className="flex items-center gap-2">
+          <Button size="sm" variant="outline" className="gap-1.5" asChild>
+            <Link href="/payroll/fnf">Open payroll settlement</Link>
           </Button>
-        ) : undefined
+          {canCreate ? (
+            <Button size="sm" onClick={handleOpenSheet} className="gap-1.5">
+              <Plus className="h-3.5 w-3.5" />
+              Create draft
+            </Button>
+          ) : null}
+        </div>
       }
     >
       <PageState resolution={pageState} loading={loadingSkeleton} onRetry={handleRetry} className="flex-1">
         {!items?.length ? (
           <EmptyState
             illustration={<EmptyExpensesIllustration className="h-24 w-24" />}
-            title="No final settlements on record"
-            description="Final settlements for separated employees will appear here."
+            title="No full and final drafts on record"
+            description="A draft for a separated employee appears here once you create one. Payroll settles it from the payroll side."
             compact
           />
         ) : (
           <div className="flex flex-1 min-h-0 flex-col gap-2">
             {items.map((item: FnfSettlement) => (
-              <FnfCard key={item.id} item={item} onMarkPaid={setCompleteId} isPending={complete.isPending} />
+              <FnfCard
+                key={item.id}
+                item={item}
+                onMarkPaid={setCompleteId}
+                canMarkPaid={canCreate}
+                isPending={complete.isPending && complete.variables === item.id}
+                money={money}
+              />
             ))}
           </div>
         )}
@@ -283,24 +331,41 @@ export function FnfPageClient() {
         isPending={create.isPending}
       >
         <div className="space-y-1.5">
-          <label className="text-sm font-semibold text-foreground">
-            Employee <span className="text-destructive">*</span>
-          </label>
+          <p className="text-sm font-semibold text-foreground">
+            Employee <span className="text-destructive" aria-hidden="true">*</span>
+          </p>
           <EmployeePicker
             value={userId}
-            onChange={setUserId}
+            onChange={handleUserIdChange}
             placeholder="Select employee…"
+            ariaLabel="Employee"
+            includeInactive
           />
+          <p className="text-xs text-muted-foreground">
+            Settle for an employee who has resigned or been terminated. No exit recorded yet?{" "}
+            <Link href="/hr/exit" className="font-medium text-primary underline underline-offset-2">
+              Record the exit first
+            </Link>
+            .
+          </p>
+          {userIdError ? (
+            <p id="fnf-employee-error" role="alert" className="text-xs text-destructive">
+              {userIdError}
+            </p>
+          ) : null}
         </div>
+
+        <FnfSuggestionPanel userId={userId} onApply={handleApplySuggestion} />
 
         <div className="space-y-2">
           <p className="text-dense font-semibold text-muted-foreground uppercase tracking-wider">
-            Settlement Components (₹)
+            Settlement components ({money.currency})
           </p>
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <label className="text-sm font-medium text-foreground">Basic Dues</label>
+              <label htmlFor="fnf-basic-dues" className="text-sm font-medium text-foreground">Basic Dues</label>
               <Input
+                id="fnf-basic-dues"
                 type="number"
                 min="0"
                 step="0.01"
@@ -310,8 +375,9 @@ export function FnfPageClient() {
               />
             </div>
             <div className="space-y-1.5">
-              <label className="text-sm font-medium text-foreground">Leave Encashment</label>
+              <label htmlFor="fnf-leave-encashment" className="text-sm font-medium text-foreground">Leave Encashment</label>
               <Input
+                id="fnf-leave-encashment"
                 type="number"
                 min="0"
                 step="0.01"
@@ -321,8 +387,21 @@ export function FnfPageClient() {
               />
             </div>
             <div className="space-y-1.5">
-              <label className="text-sm font-medium text-foreground">Bonus Due</label>
+              <label htmlFor="fnf-gratuity" className="text-sm font-medium text-foreground">Gratuity</label>
               <Input
+                id="fnf-gratuity"
+                type="number"
+                min="0"
+                step="0.01"
+                placeholder="0.00"
+                value={gratuity}
+                onChange={handleGratuityChange}
+              />
+            </div>
+            <div className="space-y-1.5">
+              <label htmlFor="fnf-bonus-due" className="text-sm font-medium text-foreground">Bonus Due</label>
+              <Input
+                id="fnf-bonus-due"
                 type="number"
                 min="0"
                 step="0.01"
@@ -332,8 +411,9 @@ export function FnfPageClient() {
               />
             </div>
             <div className="space-y-1.5">
-              <label className="text-sm font-medium text-foreground">Deductions</label>
+              <label htmlFor="fnf-deductions" className="text-sm font-medium text-foreground">Deductions</label>
               <Input
+                id="fnf-deductions"
                 type="number"
                 min="0"
                 step="0.01"
@@ -343,8 +423,9 @@ export function FnfPageClient() {
               />
             </div>
             <div className="space-y-1.5">
-              <label className="text-sm font-medium text-foreground">Loan Recovery</label>
+              <label htmlFor="fnf-loan-recovery" className="text-sm font-medium text-foreground">Loan Recovery</label>
               <Input
+                id="fnf-loan-recovery"
                 type="number"
                 min="0"
                 step="0.01"
@@ -357,8 +438,9 @@ export function FnfPageClient() {
         </div>
 
         <div className="space-y-1.5">
-          <label className="text-sm font-medium text-foreground">Notes</label>
+          <label htmlFor="fnf-notes" className="text-sm font-medium text-foreground">Notes</label>
           <Textarea
+            id="fnf-notes"
             placeholder="Additional settlement notes…"
             value={notes}
             onChange={handleNotesChange}

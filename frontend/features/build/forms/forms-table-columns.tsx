@@ -23,7 +23,7 @@ interface FormRowHandlers {
   projectId: number;
 }
 
-export function FormStatusBadge({ isActive }: { isActive: boolean }) {
+function FormStatusBadge({ isActive }: { isActive: boolean }) {
   return (
     <Badge variant={isActive ? "default" : "secondary"} className="text-micro px-1.5">
       {isActive ? "Active" : "Inactive"}
@@ -41,7 +41,7 @@ export function buildFormsColumns({
       cell: (row) => (
         <Link
           href={`/build/${projectId}/forms/${row.id}`}
-          className="font-mono tabular-nums text-dense font-semibold text-primary hover:underline"
+          className="font-mono tabular-nums text-dense font-normal text-primary hover:underline"
         >
           FORM-{row.formNumber}
         </Link>

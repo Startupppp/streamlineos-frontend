@@ -55,6 +55,18 @@ interface TimerPanelProps {
   weekEnd: string;
 }
 
+export function TimerElapsed({ base, running }: { base: number; running: boolean }) {
+  const [displaySeconds, setDisplaySeconds] = useState(base);
+
+  useEffect(() => {
+    if (!running) return;
+    const id = setInterval(() => setDisplaySeconds((seconds) => seconds + 1), 1000);
+    return () => clearInterval(id);
+  }, [running]);
+
+  return <>{formatDuration(displaySeconds)}</>;
+}
+
 export function TimerPanel({ weekStart, weekEnd }: TimerPanelProps) {
   const { data: timer } = useActiveTimer();
   const startTimer = useStartTimer();
@@ -64,19 +76,6 @@ export function TimerPanel({ weekStart, weekEnd }: TimerPanelProps) {
   const discardTimer = useDiscardTimer();
 
   const { data: weekEntries } = useTimesheetEntries({ startDate: weekStart, endDate: weekEnd });
-
-  const base = timer?.elapsedSeconds ?? 0;
-  const [displaySeconds, setDisplaySeconds] = useState(base);
-  const [prevBase, setPrevBase] = useState(base);
-  if (base !== prevBase) {
-    setPrevBase(base);
-    setDisplaySeconds(base);
-  }
-  useEffect(() => {
-    if (timer?.status !== "RUNNING") return;
-    const id = setInterval(() => setDisplaySeconds((s) => s + 1), 1000);
-    return () => clearInterval(id);
-  }, [timer?.status]);
 
   const [startProject, setStartProject] = useState<number | null>(null);
   const [startTicket, setStartTicket] = useState<number | null>(null);
@@ -197,7 +196,11 @@ export function TimerPanel({ weekStart, weekEnd }: TimerPanelProps) {
                 </div>
               </div>
               <div className="text-2xl font-mono font-semibold tabular-nums text-foreground shrink-0">
-                {formatDuration(displaySeconds)}
+                <TimerElapsed
+                  key={`${timer.id}:${timer.status}:${timer.elapsedSeconds}`}
+                  base={timer.elapsedSeconds}
+                  running={isRunning}
+                />
               </div>
             </div>
             <div className="flex items-center gap-2 pt-1">

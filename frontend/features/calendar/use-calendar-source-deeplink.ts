@@ -17,16 +17,16 @@ import {
  * not a filter — and the param is stripped either way so a reload or a
  * back-navigation cannot re-apply it after the user toggles the source off.
  */
-export function useCalendarSourceDeepLink(): void {
+export function useCalendarSourceDeepLink(enabled = true): void {
   const router = useRouter();
   const searchParams = useSearchParams();
   const requestedKey = searchParams.get("source");
-  const { data: sources } = useCalendarSources();
+  const { data: sources } = useCalendarSources(enabled);
   const { mutate: setPreference } = useSetCalendarSourcePreference();
   const consumedRef = useRef<string | null>(null);
 
   useEffect(() => {
-    if (requestedKey === null) return;
+    if (!enabled || requestedKey === null) return;
     if (consumedRef.current === requestedKey) return;
     if (sources === undefined) return;
 
@@ -40,5 +40,5 @@ export function useCalendarSourceDeepLink(): void {
     next.delete("source");
     const rest = next.toString();
     router.replace(rest.length > 0 ? `/calendar?${rest}` : "/calendar");
-  }, [requestedKey, searchParams, sources, setPreference, router]);
+  }, [enabled, requestedKey, searchParams, sources, setPreference, router]);
 }

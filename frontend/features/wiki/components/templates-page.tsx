@@ -1,12 +1,22 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { toast } from "sonner";
 import { PageWrapper } from "@/components/ui/page-wrapper";
+import { InfiniteScrollSentinel } from "@/components/ui/infinite-scroll-sentinel";
 import { EmptyState } from "@/components/ui/empty-state";
 import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
 import { Skeleton } from "@/components/ui/skeleton";
+import { SearchInput } from "@/components/ui/search-input";
+import { useSourceOverride } from "@/hooks/common/use-source-override";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   Tabs,
   TabsContent,
@@ -22,21 +32,24 @@ import {
 import { useCan } from "@/hooks/api/access";
 import { usePageState } from "@/hooks/api/use-page-state";
 import { PageState } from "@/components/shared/page-state";
+import { ErrorState } from "@/components/shared/error-state";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { KB_TEMPLATES, pageHref } from "@/lib/knowledge-routes";
+import { parseEnum } from "@/lib/url-state/use-url-filters";
 import {
   STARTER_TEMPLATES,
+  STARTER_TEMPLATE_CATEGORIES,
   deriveContentText,
 } from "@/features/wiki/lib/starter-templates";
 import { KbLayoutTemplateIcon } from "@/features/wiki/lib/kb-icons";
 import type { StarterTemplate } from "@/features/wiki/lib/starter-templates";
 import { StarterTemplateCard, TemplateCard } from "./template-cards";
+import { TemplatePreviewDialog } from "./template-preview-dialog";
 
 const VALID_TABS = ["starters", "saved"] as const;
-type TemplatesTab = (typeof VALID_TABS)[number];
 
-function resolveTab(tabParam: string | null): TemplatesTab {
-  return VALID_TABS.find((t) => t === tabParam) ?? "starters";
-}
+const ALL_CATEGORIES = "all";
+const CATEGORY_FILTER_VALUES = [ALL_CATEGORIES, ...STARTER_TEMPLATE_CATEGORIES] as const;
 
 function savedTemplateKey(templateId: number): string {
   return `saved:${templateId}`;
@@ -59,46 +72,106 @@ function TemplatesSkeleton() {
 export default function TemplatesPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const activeTab = resolveTab(searchParams.get("tab"));
+  const activeTab = parseEnum(searchParams.get("tab"), VALID_TABS, "starters");
+  const activeCategory = parseEnum(searchParams.get("category"), CATEGORY_FILTER_VALUES, ALL_CATEGORIES);
+  const q = searchParams.get("q") ?? "";
+  const queryString = searchParams.toString();
+
+  const [searchDraft, setSearchDraft] = useSourceOverride(q, q);
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(() => () => {
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+  }, [queryString]);
+
   const {
     error,
     isError,
     isLoading,
     data: templates = [],
     refetch: refetchTemplates,
-  } = useKbPageTemplates();
+    hasNextPage,
+    fetchNextPage,
+    isFetchingNextPage,
+    isFetchNextPageError,
+  } = useKbPageTemplates(q || undefined);
   const canDelete = useCan("kb:templates:manage");
+  const canCreate = useCan("kb:pages:create");
 
   const savedTemplatesState = usePageState({
+    permission: "kb:pages:view",
     isLoading,
-    isError,
+    isError: isError && templates.length === 0,
     error,
     isEmpty: templates.length === 0,
   });
+  const startersState = usePageState({
+    permission: "kb:pages:view",
+    isLoading: false,
+    isError: false,
+    error: undefined,
+  });
+
+  const [previewTemplate, setPreviewTemplate] = useState<StarterTemplate | null>(null);
 
   function handleRetryTemplates() {
     void refetchTemplates();
   }
 
-  function handleTabChange(value: string) {
-    const params = new URLSearchParams(searchParams.toString());
-    if (value === "starters") params.delete("tab");
-    else params.set("tab", value);
+  function handleLoadMore() { void fetchNextPage(); }
+
+  function updateParams(patch: Record<string, string | null>) {
+    const params = new URLSearchParams(queryString);
+    for (const [key, value] of Object.entries(patch)) {
+      if (value === null || value === "") params.delete(key);
+      else params.set(key, value);
+    }
     const qs = params.toString();
     router.replace(qs ? `${KB_TEMPLATES}?${qs}` : KB_TEMPLATES, { scroll: false });
   }
+
+  function handleTabChange(value: string) {
+    updateParams({ tab: value === "starters" ? null : value });
+  }
+
+  function handleCategoryChange(value: string) {
+    updateParams({ category: value === ALL_CATEGORIES ? null : value });
+  }
+
+  function handleSearchChange(value: string) {
+    setSearchDraft(value);
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => updateParams({ q: value || null }), 300);
+  }
+
+  function handlePreviewOpenChange(open: boolean) {
+    if (!open) setPreviewTemplate(null);
+  }
+
+  const searchTerm = q.trim().toLowerCase();
+  const filteredStarters = STARTER_TEMPLATES.filter((template) =>
+    (activeCategory === ALL_CATEGORIES || template.category === activeCategory) &&
+    (!searchTerm || `${template.name} ${template.description} ${template.expectedOutput}`.toLowerCase().includes(searchTerm)),
+  );
 
   const createPage = useCreateKbPage();
   const updatePage = useUpdateKbPage();
 
   const [pendingTemplateKey, setPendingTemplateKey] = useState<string | null>(null);
+  // KB-B-018: pendingTemplateKey only disables after a re-render, so a fast
+  // double-click created two pages. The ref closes synchronously.
+  const createInFlight = useRef(false);
 
   const handleUseTemplate = useCallback(
     (templateId: number) => {
+      if (createInFlight.current) return;
+      createInFlight.current = true;
       setPendingTemplateKey(savedTemplateKey(templateId));
       createPage.mutate(
         { templateId },
         {
+          onSettled: () => {
+            createInFlight.current = false;
+          },
           onSuccess: (page) => {
             router.push(pageHref(page.id));
           },
@@ -114,24 +187,38 @@ export default function TemplatesPage() {
 
   const handleUseStarter = useCallback(
     (template: StarterTemplate) => {
+      if (createInFlight.current) return;
+      createInFlight.current = true;
+      setPreviewTemplate(null);
       setPendingTemplateKey(starterTemplateKey(template));
       createPage.mutate(
         { title: template.name },
         {
+          onSettled: () => {
+            createInFlight.current = false;
+          },
           onSuccess: (page) => {
-            updatePage.mutate(
-              {
-                pageId: page.id,
-                content: template.content as Record<string, unknown>,
-                contentText: deriveContentText(template.content),
-                expectedContentRevision: page.contentRevision,
-              },
-              {
-                onSettled: () => {
-                  router.push(pageHref(page.id));
+            function saveContent() {
+              setPendingTemplateKey(starterTemplateKey(template));
+              updatePage.mutate(
+                {
+                  pageId: page.id,
+                  content: template.content.children,
+                  contentText: deriveContentText(template.content),
+                  expectedContentRevision: page.contentRevision,
                 },
-              },
-            );
+                {
+                  onSuccess: () => router.push(pageHref(page.id)),
+                  onError: () => {
+                    setPendingTemplateKey(null);
+                    toast.error("Page created, but template content was not saved", {
+                      action: { label: "Retry content", onClick: saveContent },
+                    });
+                  },
+                },
+              );
+            }
+            saveContent();
           },
           onError: () => {
             setPendingTemplateKey(null);
@@ -143,10 +230,11 @@ export default function TemplatesPage() {
     [createPage, updatePage, router],
   );
 
-  const subtitle =
-    activeTab === "saved"
-      ? "Templates created from your wiki pages"
-      : "Built-in skeletons ready to use";
+  const handlePreviewStarter = useCallback((template: StarterTemplate) => {
+    setPreviewTemplate(template);
+  }, []);
+
+  const subtitle = activeTab === "saved" ? "Templates created from your wiki pages" : "Built-in skeletons ready to use";
 
   return (
     <PageWrapper
@@ -163,22 +251,49 @@ export default function TemplatesPage() {
           <TabsTrigger value="starters">Starters</TabsTrigger>
           <TabsTrigger value="saved">Saved</TabsTrigger>
         </TabsList>
+        <SearchInput
+          placeholder="Search templates…"
+          value={searchDraft}
+          onValueChange={handleSearchChange}
+          aria-label="Search templates"
+        />
 
         <TabsContent value="starters" className={TABS_CONTENT_PAGE_BODY_CLASS}>
+          <PageState resolution={startersState} loading={<TemplatesSkeleton />}>
+          <div className="mb-3 flex items-center gap-2">
+            <Select value={activeCategory} onValueChange={handleCategoryChange}>
+              <SelectTrigger className="w-[220px]" aria-label="Filter templates by category">
+                <SelectValue placeholder="All categories" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value={ALL_CATEGORIES}>All categories</SelectItem>
+                {STARTER_TEMPLATE_CATEGORIES.map((category) => (
+                  <SelectItem key={category} value={category}>
+                    {category}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          {filteredStarters.length === 0 && (
+            <p className="text-sm text-muted-foreground">No starter templates match these filters.</p>
+          )}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-            {STARTER_TEMPLATES.map((template) => (
+            {filteredStarters.map((template) => (
               <StarterTemplateCard
                 key={template.key}
                 template={template}
                 onUse={handleUseStarter}
+                onPreview={handlePreviewStarter}
                 isPending={pendingTemplateKey === starterTemplateKey(template)}
                 isDisabled={
-                  pendingTemplateKey !== null &&
-                  pendingTemplateKey !== starterTemplateKey(template)
+                  !canCreate || (pendingTemplateKey !== null &&
+                  pendingTemplateKey !== starterTemplateKey(template))
                 }
               />
             ))}
           </div>
+          </PageState>
         </TabsContent>
 
         <TabsContent value="saved" className={TABS_CONTENT_PAGE_BODY_CLASS}>
@@ -187,14 +302,27 @@ export default function TemplatesPage() {
             onRetry={handleRetryTemplates}
             loading={<TemplatesSkeleton />}
             empty={
-              <EmptyState
-                illustration={
-                  <KbLayoutTemplateIcon className="w-8 text-muted-foreground" />
-                }
-                title="No saved templates yet"
-                description="Save a page as a template to reuse its structure across your wiki."
-                className={CONTENT_FILL_PANEL}
-              />
+              q ? (
+                <EmptyState
+                  illustration={
+                    <KbLayoutTemplateIcon className="w-8 text-muted-foreground" />
+                  }
+                  title="No saved templates match your search."
+                  filtersActive
+                  filteredTitle="No saved templates match your search."
+                  onClearFilters={() => updateParams({ q: null })}
+                  className={CONTENT_FILL_PANEL}
+                />
+              ) : (
+                <EmptyState
+                  illustration={
+                    <KbLayoutTemplateIcon className="w-8 text-muted-foreground" />
+                  }
+                  title="No saved templates yet"
+                  description="Save a page as a template to reuse its structure across your wiki."
+                  className={CONTENT_FILL_PANEL}
+                />
+              )
             }
           >
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
@@ -206,15 +334,41 @@ export default function TemplatesPage() {
                   onUse={handleUseTemplate}
                   isPending={pendingTemplateKey === savedTemplateKey(template.id)}
                   isDisabled={
-                    pendingTemplateKey !== null &&
-                    pendingTemplateKey !== savedTemplateKey(template.id)
+                    !canCreate || (pendingTemplateKey !== null &&
+                    pendingTemplateKey !== savedTemplateKey(template.id))
                   }
                 />
               ))}
             </div>
+            {isError && templates.length > 0 ? (
+              <ErrorState
+                compact
+                title={isFetchNextPageError ? "Couldn't load more templates" : "Couldn't refresh templates"}
+                description={getErrorMessage(error)}
+                error={error}
+                onRetry={isFetchNextPageError ? handleLoadMore : handleRetryTemplates}
+              />
+            ) : (
+              <InfiniteScrollSentinel
+                hasNextPage={hasNextPage ?? false}
+                isFetchingNextPage={isFetchingNextPage}
+                onLoadMore={handleLoadMore}
+                label="Load more templates"
+              />
+            )}
           </PageState>
         </TabsContent>
       </Tabs>
+
+      {previewTemplate && startersState.kind === "ready" && (
+        <TemplatePreviewDialog
+          template={previewTemplate}
+          onOpenChange={handlePreviewOpenChange}
+          onUse={handleUseStarter}
+          isPending={pendingTemplateKey === starterTemplateKey(previewTemplate)}
+          canUse={canCreate}
+        />
+      )}
     </PageWrapper>
   );
 }

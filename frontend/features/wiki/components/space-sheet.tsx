@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetFooter, SheetBody } from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription, SheetFooter, SheetBody } from "@/components/ui/sheet";
 import {
   Select,
   SelectContent,
@@ -26,11 +26,19 @@ import {
 } from "@/components/ui/form";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useCreateKbSpace, useUpdateKbSpace } from "@/hooks/api/kb/spaces";
-import type { KbSpace, KbAudience } from "@/types/kb";
+import type { KbAudience } from "@/types/kb";
+
+interface SpaceEditData {
+  id: number;
+  name: string;
+  description: string | null | undefined;
+  icon: string | null | undefined;
+  audience: string | null | undefined;
+}
 
 interface SpaceSheetProps {
   open: boolean;
-  editingSpace: KbSpace | null;
+  editingSpace: SpaceEditData | null;
   onOpenChange: (open: boolean) => void;
   onSuccess: () => void;
 }
@@ -48,8 +56,8 @@ export function SpaceSheet({
     resolver: zodResolver(spaceSchema),
     defaultValues: {
       name: editingSpace?.name ?? "",
-      description: editingSpace?.description ?? null,
-      icon: editingSpace?.icon ?? null,
+      description: editingSpace?.description ?? "",
+      icon: editingSpace?.icon ?? "",
       audience: (editingSpace?.audience ?? "internal") as KbAudience,
     },
   });
@@ -67,8 +75,9 @@ export function SpaceSheet({
         {
           spaceId: editingSpace.id,
           name: values.name,
-          description: values.description ?? null,
-          icon: values.icon ?? null,
+          // An emptied field is sent as null so the edit clears it.
+          description: values.description?.trim() || null,
+          icon: values.icon?.trim() || null,
           audience: values.audience,
         },
         {
@@ -84,8 +93,8 @@ export function SpaceSheet({
       createSpace.mutate(
         {
           name: values.name,
-          description: values.description ?? null,
-          icon: values.icon ?? null,
+          description: values.description?.trim() || undefined,
+          icon: values.icon?.trim() || undefined,
           audience: values.audience,
         },
         {
@@ -114,6 +123,9 @@ export function SpaceSheet({
           <SheetTitle>
             {editingSpace ? "Edit space" : "Create space"}
           </SheetTitle>
+          <SheetDescription className="text-xs mt-0.5">
+            Name, audience and appearance of this space.
+          </SheetDescription>
         </SheetHeader>
         <Form {...form}>
           <form

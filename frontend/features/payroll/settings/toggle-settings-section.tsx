@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useForm } from "react-hook-form";
+import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { toast } from "sonner";
@@ -18,12 +18,12 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { ToggleRow } from "@/features/payroll/shared";
+import { MonthPicker, monthFromToday } from "@/features/payroll/shared/month-picker";
 import { useCreatePolicyVersion, useToggleImpact, usePayrollPolicyCurrent } from "@/hooks/api/payroll";
 import {
   TOGGLE_GROUPS,
@@ -36,7 +36,10 @@ import type { PolicyVersionRow } from "@/hooks/api/payroll/policies-schema";
 type PendingChange = { key: string; newValue: boolean };
 
 const versionSchema = z.object({
-  effectiveFrom: z.string().min(1, "Required"),
+  effectiveFrom: z
+    .string()
+    .regex(/^\d{4}-\d{2}$/, "Pick the month this change starts")
+    .refine((v) => v >= monthFromToday(0), "Pick this month or a later one"),
   reason: z.string().min(1, "Reason is required").max(500),
 });
 type VersionForm = z.infer<typeof versionSchema>;
@@ -45,6 +48,14 @@ type ToggleSettingsSectionProps = {
   policy: PolicyRow;
   activeVersion: PolicyVersionRow | null | undefined;
 };
+
+/** "Asha Rao, Ben Das and 10 others" — the server sends up to 10 names plus the full count. */
+export function affectedNamesText(impact: { affectedEmployeeCount: number; affectedEmployeeNames: string[] }): string {
+  const names = impact.affectedEmployeeNames;
+  if (names.length === 0) return "";
+  const rest = impact.affectedEmployeeCount - names.length;
+  return rest > 0 ? `${names.join(", ")} and ${rest} other${rest === 1 ? "" : "s"}` : names.join(", ");
+}
 
 export function ToggleSettingsSection({ policy, activeVersion }: ToggleSettingsSectionProps) {
   const [pending, setPending] = useState<PendingChange | null>(null);
@@ -57,9 +68,9 @@ export function ToggleSettingsSection({ policy, activeVersion }: ToggleSettingsS
   const statutoryPack = currentData?.statutoryPack ?? null;
   const isNonIN = policy.country !== "IN";
 
-  const { register, handleSubmit, reset, formState: { errors } } = useForm<VersionForm>({
+  const { register, handleSubmit, reset, control, formState: { errors } } = useForm<VersionForm>({
     resolver: zodResolver(versionSchema),
-    defaultValues: { effectiveFrom: "", reason: "" },
+    defaultValues: { effectiveFrom: monthFromToday(1), reason: "" },
   });
 
   const toggles = activeVersion?.toggles;
@@ -97,7 +108,7 @@ export function ToggleSettingsSection({ policy, activeVersion }: ToggleSettingsS
       {
         policyId: policy.id,
         toggleOverrides: { [pending.key]: pending.newValue },
-        effectiveFrom: data.effectiveFrom,
+        effectiveFrom: `${data.effectiveFrom}-01`,
         reason: data.reason,
       },
       {
@@ -210,6 +221,9 @@ export function ToggleSettingsSection({ policy, activeVersion }: ToggleSettingsS
                 <span className="block mt-2 font-medium text-destructive">
                   {impactData.affectedEmployeeCount} employee{impactData.affectedEmployeeCount !== 1 ? "s" : ""} will be affected.
                   {impactData.affectedStatutoryCodes.length > 0 && ` Codes: ${impactData.affectedStatutoryCodes.join(", ")}.`}
+                  {affectedNamesText(impactData) && (
+                    <span className="block mt-1 font-normal text-muted-foreground">{affectedNamesText(impactData)}</span>
+                  )}
                 </span>
               )}
             </AlertDialogDescription>
@@ -242,6 +256,9 @@ export function ToggleSettingsSection({ policy, activeVersion }: ToggleSettingsS
                     <span className="font-medium">{impactData.affectedEmployeeCount}</span>
                     {" "}employee{impactData.affectedEmployeeCount !== 1 ? "s" : ""} affected
                   </p>
+                  {affectedNamesText(impactData) && (
+                    <p className="text-xs text-muted-foreground">{affectedNamesText(impactData)}</p>
+                  )}
                   {impactData.affectedStatutoryCodes.length > 0 && (
                     <p className="text-xs text-muted-foreground">
                       Statutory codes: {impactData.affectedStatutoryCodes.join(", ")}
@@ -253,12 +270,15 @@ export function ToggleSettingsSection({ policy, activeVersion }: ToggleSettingsS
                 </div>
               )}
               <div className="space-y-1">
-                <Label className="text-xs">Effective From (YYYY-MM)</Label>
-                <Input
-                  {...register("effectiveFrom")}
-                  placeholder="2026-08"
-                  className="text-sm font-mono"
+                <Label className="text-xs">Effective from</Label>
+                <Controller
+                  control={control}
+                  name="effectiveFrom"
+                  render={({ field }) => (
+                    <MonthPicker value={field.value} onChange={field.onChange} minMonth={monthFromToday(0)} />
+                  )}
                 />
+                <p className="text-micro text-muted-foreground">The change applies from the first day of this month.</p>
                 {errors.effectiveFrom && (
                   <p className="text-xs text-destructive">{errors.effectiveFrom.message}</p>
                 )}

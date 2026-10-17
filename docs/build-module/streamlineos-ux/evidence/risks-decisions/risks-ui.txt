@@ -1,0 +1,13 @@
+URL: https://www.streamlineos.in/build/47/risks
+Initial empty state: Risk Register; No risks logged; Log risks to track probability, impact, and mitigation plans.
+Header CTA: New Risk; empty-state CTA: New Risk.
+Search: Search risks.
+Filters and observed options:
+  Status: All statuses, Open, Mitigating, Monitoring, Accepted, Closed.
+  Probability: All probabilities, Low, Medium, High.
+  Impact: All impacts, Low, Medium, High.
+Created: PXC-Risk-1 (row ID RISK-1).
+Filled row: Medium probability, Medium impact, Medium severity, owner —, Open.
+Summary: Open 1; High / Critical 0; Closed 0.
+Matrix: one open risk at medium probability / medium impact.
+Dialog CTA: Add Risk; optional Description, Owner, Mitigation Plan, Linked Ticket.

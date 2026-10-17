@@ -8,6 +8,7 @@ import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { EyeIcon } from "@animateicons/react/lucide";
 import { Card, CardContent } from "@/components/ui/card";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
+import { TablePagination } from "@/components/ui/table-pagination";
 import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyExpensesIllustration } from "@/components/illustrations";
 import { PAGE_BODY_EMPTY_CLASS } from "@/components/ui/content-fill-panel";
@@ -41,6 +42,7 @@ interface AdminExpenseListProps {
   rejectingId: number | null;
   rejectionReason: string;
   isPending: boolean;
+  pendingId: number | null;
   onApprove: (id: number) => void;
   onRejectStart: (id: number) => void;
   onRejectConfirm: (id: number) => void;
@@ -61,6 +63,7 @@ export function AdminExpenseList({
   rejectingId,
   rejectionReason,
   isPending,
+  pendingId,
   onApprove,
   onRejectStart,
   onRejectConfirm,
@@ -69,13 +72,6 @@ export function AdminExpenseList({
   onPageChange,
   onShowAll,
 }: AdminExpenseListProps) {
-  function handlePrevious() {
-    onPageChange(pagination.page - 1);
-  }
-  function handleNext() {
-    onPageChange(pagination.page + 1);
-  }
-
   return (
     <Card className="rounded-lg border border-border overflow-hidden">
       <CardContent className="p-0 flex flex-col">
@@ -108,6 +104,7 @@ export function AdminExpenseList({
                 rejectingId={rejectingId}
                 rejectionReason={rejectionReason}
                 isPending={isPending}
+                pendingId={pendingId}
                 onApprove={onApprove}
                 onRejectStart={onRejectStart}
                 onRejectConfirm={onRejectConfirm}
@@ -118,43 +115,14 @@ export function AdminExpenseList({
           </div>
         )}
 
-        {pagination.total > 0 && totalPages > 1 && (
-          <div className="flex items-center justify-between px-6 py-3 border-t bg-muted/40">
-            <span className="text-xs text-muted-foreground">
-              Showing{" "}
-              <strong className="font-semibold text-foreground">{startItem}</strong>{" "}
-              to{" "}
-              <strong className="font-semibold text-foreground">{endItem}</strong>{" "}
-              of{" "}
-              <strong className="font-semibold text-foreground">
-                {pagination.total}
-              </strong>{" "}
-              results
-            </span>
-            <div className="flex items-center gap-1">
-              <Button
-                variant="outline"
-                size="sm"
-                className="text-xs gap-1.5"
-                disabled={pagination.page <= 1}
-                onClick={handlePrevious}
-              >
-                Previous
-              </Button>
-              <span className="text-xs text-muted-foreground px-1">
-                {pagination.page} / {totalPages}
-              </span>
-              <Button
-                variant="outline"
-                size="sm"
-                className="text-xs gap-1.5"
-                disabled={pagination.page >= totalPages}
-                onClick={handleNext}
-              >
-                Next
-              </Button>
-            </div>
-          </div>
+        {totalPages > 1 && (
+          <TablePagination
+            className="border-t px-6 py-3"
+            page={pagination.page}
+            pageSize={pagination.pageSize}
+            total={pagination.total}
+            onPageChange={onPageChange}
+          />
         )}
       </CardContent>
     </Card>
@@ -176,6 +144,8 @@ interface MemberExpenseListProps {
   activeFilterCount: number;
   onEdit: (expense: ExpenseToEdit) => void;
   onResubmit: (expense: ExpenseWithRelations) => void;
+  /** Offered on pending rows only where the surface owns the withdraw confirm (/me/expenses). */
+  onWithdraw?: (expense: ExpenseWithRelations) => void;
   onShowAll: () => void;
   onCreateNew: () => void;
   onPageChange: (page: number) => void;
@@ -188,6 +158,7 @@ export function MemberExpenseList({
   activeFilterCount,
   onEdit,
   onResubmit,
+  onWithdraw,
   onShowAll,
   onCreateNew,
   onPageChange,
@@ -200,11 +171,11 @@ export function MemberExpenseList({
         const status = expense.status || "PENDING";
         const statusBorderClass =
           status === "PENDING"
-            ? "border-l-amber-400"
+            ? "border-l-status-warning-rule"
             : status === "APPROVED"
-              ? "border-l-emerald-400"
+              ? "border-l-status-success-rule"
               : status === "REJECTED"
-                ? "border-l-rose-400"
+                ? "border-l-status-danger-rule"
                 : "border-l-border";
         return (
           <span
@@ -325,6 +296,9 @@ export function MemberExpenseList({
         function handleEdit() {
           onEdit(toEditPayload());
         }
+        function handleWithdraw() {
+          onWithdraw?.(expense);
+        }
         function handleView() {
           const receipts = parseExpenseReceipts(expense.receiptUrl, expense.receiptFileName);
           if (receipts[0]) {
@@ -348,15 +322,28 @@ export function MemberExpenseList({
         }
         if (canEdit) {
           return (
-            <Button
-              variant="ghost"
-              size="icon"
-              className="w-8 text-primary hover:text-primary/80 hover:bg-primary/10"
-              onClick={handleEdit}
-              aria-label="Edit"
-            >
-              <Pencil className="h-3.5 w-3.5" />
-            </Button>
+            <div className="flex items-center justify-end gap-1">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="w-8 text-primary hover:text-primary/80 hover:bg-primary/10"
+                onClick={handleEdit}
+                aria-label="Edit"
+              >
+                <Pencil className="h-3.5 w-3.5" />
+              </Button>
+              {onWithdraw ? (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="text-xs text-destructive hover:bg-destructive/10"
+                  onClick={handleWithdraw}
+                >
+                  Withdraw
+                </Button>
+              ) : null}
+            </div>
           );
         }
         return (
@@ -372,7 +359,7 @@ export function MemberExpenseList({
         );
       },
     },
-  ], [onEdit, onResubmit]);
+  ], [onEdit, onResubmit, onWithdraw]);
 
   return (
     <div className="flex min-h-0 flex-1 flex-col" aria-live="polite">

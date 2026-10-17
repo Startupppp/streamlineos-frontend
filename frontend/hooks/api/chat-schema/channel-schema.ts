@@ -28,7 +28,7 @@ const channelMemberListBase = {
 };
 
 const channelMemberDetailExtra = {
-  lastReadAt: z.string(),
+  lastReadAt: z.string().nullable(),
   joinedAt: z.string(),
   archivedAt: z.string().nullable(),
 };

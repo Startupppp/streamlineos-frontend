@@ -6,7 +6,7 @@ import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import React from "react";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { useRemoveChannelMember } from "@/hooks/api";
+import { useRemoveChannelMember, useUpdateChannelMemberRole } from "@/hooks/api/chat-core-mutations-b";
 import type { ChannelMember } from "@/types/chat";
 import { ChannelMemberRow } from "./channel-member-row";
 import {
@@ -53,6 +53,26 @@ export function ChannelMembersSection({
   const [showAddMembers, setShowAddMembers] = useState(false);
   const [removingUserId, setRemovingUserId] = useState<string | null>(null);
   const removeMember = useRemoveChannelMember();
+  const updateRole = useUpdateChannelMemberRole();
+  const changingRoleUserId = updateRole.isPending ? updateRole.variables?.userId ?? null : null;
+
+  const handleChangeRole = useCallback(
+    (userId: string, role: ChannelMember["role"], userName: string | null | undefined) => {
+      updateRole.mutate(
+        { channelId, userId, role },
+        {
+          onSuccess: () =>
+            toast.success(
+              role === "ADMIN"
+                ? `${userName ?? "Member"} is now a channel admin`
+                : `${userName ?? "Member"} is no longer a channel admin`,
+            ),
+          onError: (error) => toast.error(getErrorMessage(error)),
+        },
+      );
+    },
+    [channelId, updateRole],
+  );
 
   const { onlineMembers, offlineMembers } = useMemo(() => {
     const byName = (a: ChannelMember, b: ChannelMember) =>
@@ -137,6 +157,8 @@ export function ChannelMembersSection({
                   isMultiMemberChannel={isMultiMemberChannel}
                   isRemoving={removingUserId === m.user?.id}
                   onRemove={handleRemoveMember}
+                  isChangingRole={changingRoleUserId === m.user?.id}
+                  onChangeRole={handleChangeRole}
                 />
               </div>
             ))}
@@ -174,6 +196,8 @@ export function ChannelMembersSection({
                   isMultiMemberChannel={isMultiMemberChannel}
                   isRemoving={removingUserId === m.user?.id}
                   onRemove={handleRemoveMember}
+                  isChangingRole={changingRoleUserId === m.user?.id}
+                  onChangeRole={handleChangeRole}
                 />
               </div>
             ))}

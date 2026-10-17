@@ -1,81 +1,21 @@
 "use client";
 
-import { forwardRef, type MouseEvent, type ReactNode } from "react";
-import { formatDistanceToNow } from "date-fns";
-import { Trash2Icon } from "@animateicons/react/lucide";
-import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
+import { type ReactNode } from "react";
 import { Badge } from "@/components/ui/badge";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import type { DataTableColumn } from "@/components/ui/data-table";
 import { resolveImageUrl } from "@/lib/utils";
 import { BuildMobileCard } from "@/features/build/shared/build-mobile-card";
-import type {
-  PaginatedFeedbucketSubmissions,
-  FeedbucketSubmissionType,
-  FeedbucketSubmissionStatus,
-} from "@/types/feedbucket";
+import type { PaginatedFeedbucketSubmissions } from "@/types/feedbucket";
+import {
+  STATUS_LABELS,
+  STATUS_VARIANTS,
+  TYPE_LABELS,
+  TYPE_VARIANTS,
+  formatSubmissionAge,
+} from "./feedbucket-constants";
 
 export type SubmissionRow = PaginatedFeedbucketSubmissions["data"][number];
-
-export const TYPE_LABELS: Record<FeedbucketSubmissionType, string> = {
-  bug: "Bug",
-  idea: "Idea",
-  feature: "Feature",
-  question: "Question",
-  praise: "Praise",
-  other: "Other",
-};
-
-const TYPE_VARIANTS: Record<
-  FeedbucketSubmissionType,
-  "default" | "secondary" | "outline" | "destructive"
-> = {
-  bug: "destructive",
-  idea: "default",
-  feature: "secondary",
-  question: "secondary",
-  praise: "default",
-  other: "outline",
-};
-
-const STATUS_VARIANTS: Record<
-  FeedbucketSubmissionStatus,
-  "default" | "secondary" | "outline"
-> = {
-  open: "default",
-  in_progress: "secondary",
-  resolved: "outline",
-  archived: "outline",
-};
-
-export const STATUS_LABELS: Record<FeedbucketSubmissionStatus, string> = {
-  open: "Open",
-  in_progress: "In Progress",
-  resolved: "Resolved",
-  archived: "Archived",
-};
-
-export const ALL_STATUSES: FeedbucketSubmissionStatus[] = [
-  "open",
-  "in_progress",
-  "resolved",
-  "archived",
-];
-export const ALL_TYPES: FeedbucketSubmissionType[] = [
-  "bug",
-  "idea",
-  "feature",
-  "question",
-  "praise",
-  "other",
-];
-
-function formatSubmissionAge(value: string | null | undefined): string {
-  if (!value) return "—";
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return "—";
-  return formatDistanceToNow(date, { addSuffix: true });
-}
 
 function ScreenshotCell(row: SubmissionRow) {
   return row.screenshotUrl ? (
@@ -101,7 +41,11 @@ function TypeCell(row: SubmissionRow) {
 
 function MessageCell(row: SubmissionRow) {
   return (
-    <TruncatedText text={row.message} lines={2} className="max-w-xs text-sm text-foreground" />
+    <TruncatedText
+      text={row.message}
+      lines={2}
+      className="max-w-xs text-sm text-foreground"
+    />
   );
 }
 
@@ -121,8 +65,13 @@ function AgeCell(row: SubmissionRow) {
   );
 }
 
-export const SUBMISSION_COLUMNS: DataTableColumn<SubmissionRow>[] = [
-  { key: "screenshot", header: "", cell: ScreenshotCell, className: "w-[72px] pr-0" },
+const SUBMISSION_COLUMNS: DataTableColumn<SubmissionRow>[] = [
+  {
+    key: "screenshot",
+    header: "",
+    cell: ScreenshotCell,
+    className: "w-[72px] pr-0",
+  },
   { key: "type", header: "Type", cell: TypeCell, className: "w-[90px]" },
   { key: "message", header: "Message", cell: MessageCell },
   {
@@ -138,6 +87,36 @@ export const SUBMISSION_COLUMNS: DataTableColumn<SubmissionRow>[] = [
     className: "hidden sm:table-cell w-[120px] text-right",
   },
 ];
+
+function LinkedTicketCell(projectId: number) {
+  return function LinkedTicket(row: SubmissionRow) {
+    if (!row.linkedTicketKey) return null;
+    return (
+      <a
+        href={`/build/${projectId}/tickets/${encodeURIComponent(row.linkedTicketKey)}`}
+        onClick={(e) => e.stopPropagation()}
+        className="inline-flex items-center gap-1 rounded px-2 py-0.5 text-xs font-mono bg-muted text-foreground hover:bg-accent transition-colors"
+        aria-label={`Open ticket ${row.linkedTicketKey}`}
+      >
+        {row.linkedTicketKey}
+      </a>
+    );
+  };
+}
+
+export function buildSubmissionColumnsWithLinkedTicket(
+  projectId: number,
+): DataTableColumn<SubmissionRow>[] {
+  return [
+    ...SUBMISSION_COLUMNS,
+    {
+      key: "linkedTicket",
+      header: "Ticket",
+      cell: LinkedTicketCell(projectId),
+      className: "w-[130px] hidden sm:table-cell",
+    },
+  ];
+}
 
 export function SubmissionMobileCard({
   row,
@@ -157,32 +136,3 @@ export function SubmissionMobileCard({
   );
 }
 
-interface DeleteSubmissionButtonProps {
-  submissionId: number;
-  onRequestDelete: (submissionId: number) => void;
-}
-
-export const DeleteSubmissionButton = forwardRef<
-  HTMLButtonElement,
-  DeleteSubmissionButtonProps
->(function DeleteSubmissionButton({ submissionId, onRequestDelete }, ref) {
-  const { iconRef, hoverHandlers } = useAnimatedIcon();
-
-  function handleClick(event: MouseEvent<HTMLButtonElement>) {
-    event.stopPropagation();
-    onRequestDelete(submissionId);
-  }
-
-  return (
-    <button
-      ref={ref}
-      type="button"
-      onClick={handleClick}
-      aria-label="Delete submission"
-      className="inline-flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-status-danger-ink"
-      {...hoverHandlers}
-    >
-      <Trash2Icon ref={iconRef} size={14} />
-    </button>
-  );
-});

@@ -13,17 +13,9 @@ jest.mock("next/navigation", () => ({
   notFound: (...args: unknown[]) => (notFound as (...a: unknown[]) => never)(...args),
 }));
 
-/**
- * `project-board-page` and `project-backlog-page` read `const { data, isLoading }
- * = useProject(projectId)` and then `if (!data) return notFound()`, with nothing
- * between. Any failure of the project read — a transient 500, a timeout, a
- * revoked permission — therefore rendered Next's hard "This page could not be
- * found": the user's project looked deleted, there was no retry affordance, and
- * refreshing reproduced it. Six sibling pages in the same module already split
- * the two cases; the two that did not are the module's most-visited.
- */
 
-/** PageWrapper truncates its title through a Radix tooltip. */
+
+
 function renderFallback(element: ReactElement) {
   return render(<TooltipProvider>{element}</TooltipProvider>);
 }

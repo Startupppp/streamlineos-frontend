@@ -21,37 +21,13 @@ function resolvePmRole(roles: Role[]): Role | undefined {
   );
 }
 
-function PmAccessTrigger({
-  isPending,
-  onClick,
-}: {
-  isPending: boolean;
-  onClick: () => void;
-}) {
-  const { iconRef, hoverHandlers } = useAnimatedIcon();
-
-  return (
-    <LoadingButton
-      variant="outline"
-      size="sm"
-      className="h-9 min-h-9 gap-1.5 text-xs"
-      isPending={isPending}
-      loadingText="Setting up…"
-      onClick={onClick}
-      {...hoverHandlers}
-    >
-      <ShieldCheckIcon ref={iconRef} size={14} />
-      Project admins
-    </LoadingButton>
-  );
-}
-
 export function PmAccessButton() {
   const [sheetOpen, setSheetOpen] = useState(false);
   const [pendingRole, setPendingRole] = useState<Role | null>(null);
 
   const rolesQuery = useRoles();
   const materializeTemplate = useMaterializeRoleTemplate();
+  const { iconRef, hoverHandlers } = useAnimatedIcon();
 
   const existingRole =
     rolesQuery.data != null ? resolvePmRole(rolesQuery.data) : undefined;
@@ -86,7 +62,18 @@ export function PmAccessButton() {
 
   return (
     <>
-      <PmAccessTrigger isPending={isPending} onClick={handleClick} />
+      <LoadingButton
+        variant="outline"
+        size="sm"
+        className="h-9 min-h-9 gap-1.5 text-xs"
+        isPending={isPending}
+        loadingText="Setting up…"
+        onClick={handleClick}
+        {...hoverHandlers}
+      >
+        <ShieldCheckIcon ref={iconRef} size={14} />
+        Project admins
+      </LoadingButton>
 
       <RoleAssignmentsSheet
         role={pendingRole}

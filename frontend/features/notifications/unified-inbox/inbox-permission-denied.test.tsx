@@ -78,7 +78,7 @@ jest.mock("@/features/notifications/notification-list-skeleton", () => ({
 jest.mock("next/dynamic", () => () => () => null);
 
 jest.mock("./inbox-toolbar", () => {
-  const { createElement: ce } = require("react") as typeof import("react");
+  const { createElement: ce } = jest.requireActual("react") as typeof import("react");
   const views = [
     { value: "primary", label: "All" },
     { value: "updates", label: "Updates" },

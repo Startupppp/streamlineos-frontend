@@ -30,6 +30,7 @@ const PRIORITIES: { value: TicketPriority; label: string; Icon: typeof Minus }[]
 interface InlinePriorityProps {
   ticketId: number;
   projectId: number;
+  version: number;
   currentPriority?: string | null;
   showLabel?: boolean;
 }
@@ -37,17 +38,20 @@ interface InlinePriorityProps {
 export const InlinePriority = memo(function InlinePriority({
   ticketId,
   projectId,
+  version,
   currentPriority,
   showLabel = false,
 }: InlinePriorityProps) {
   const [open, setOpen] = useState(false);
+  const priorityKey = (currentPriority ?? "MEDIUM").toUpperCase();
+  const priorityLabel = PRIORITIES.find((p) => p.value === priorityKey)?.label ?? "Medium";
   const updateTicket = useUpdateTicket(projectId, {
     onError: (e) => toast.error(getErrorMessage(e)),
   });
 
   function makePriorityHandler(priority: TicketPriority) {
     return function selectPriority() {
-      updateTicket.mutate({ ticketId, priority });
+      updateTicket.mutate({ ticketId, version, priority });
       setOpen(false);
     };
   }
@@ -59,7 +63,7 @@ export const InlinePriority = memo(function InlinePriority({
           <button
             type="button"
             className="inline-flex rounded p-0.5 hover:bg-muted/60 transition-colors"
-            aria-label="Change priority"
+            aria-label={`Change priority: ${priorityLabel}`}
           >
             <PriorityBadge
               priority={currentPriority}

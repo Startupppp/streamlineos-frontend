@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { Skeleton } from "@/components/ui/skeleton";
 import { statusToneClasses } from "@/lib/design-tokens";
 import { getErrorMessage } from "@/lib/get-error-message";
@@ -39,6 +40,8 @@ interface ApprovalRoutePanelProps {
   isLoading: boolean;
   error: unknown;
   unownedHint?: string;
+  /** A link to the screen that fixes an unroutable request; replaces the hint when present. */
+  unownedAction?: { href: string; label: string } | null;
   className?: string;
 }
 
@@ -47,6 +50,7 @@ export function ApprovalRoutePanel({
   isLoading,
   error,
   unownedHint = "Ask an HR administrator to set a reporting manager before submitting.",
+  unownedAction,
   className,
 }: ApprovalRoutePanelProps) {
   const warning = statusToneClasses("warning");
@@ -66,7 +70,14 @@ export function ApprovalRoutePanel({
         </p>
       ) : !route ? null : route.rungLabel === null ? (
         <p className={cn("mt-1 text-xs leading-relaxed", warning.ink)}>
-          {route.explanation} {unownedHint}
+          {route.explanation}{" "}
+          {unownedAction ? (
+            <Link href={unownedAction.href} className="font-medium underline underline-offset-2">
+              {unownedAction.label}
+            </Link>
+          ) : (
+            unownedHint
+          )}
         </p>
       ) : (
         <div className="mt-1 space-y-1">

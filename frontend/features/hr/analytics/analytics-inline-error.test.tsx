@@ -130,12 +130,6 @@ const DEFAULTS: Record<string, unknown> = {
   "/hr/analytics-plus/performance-distribution": { distribution: [] },
   "/hr/analytics-plus/compliance-gaps": { openCases: [] },
   "/hr/analytics-plus/payroll-cost": { monthly: [] },
-  "/hr/recruitment/stats": {
-    openJobs: 2,
-    totalCandidates: 0,
-    interviewsScheduled: 0,
-    offersExtended: 0,
-  },
   "/me/org-display": { currency: "INR", locale: "en-IN" },
 };
 
@@ -167,8 +161,9 @@ describe("HR analytics degrades in place, because the provider's default throwOn
 
     renderUnderBoundary(<AnalyticsPageClient />);
 
-    expect(await screen.findByText("Analytics didn't load")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Retry" })).toBeInTheDocument();
+    // The page now resolves its error through the shared PageState/ErrorState.
+    expect(await screen.findByText("Something went wrong")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Try again" })).toBeInTheDocument();
     expect(screen.queryByText("route error boundary")).not.toBeInTheDocument();
   });
 
@@ -208,7 +203,38 @@ describe("a money-formatting read is decorative, so its failure must not take a 
 
     renderUnderBoundary(<AnalyticsPageClient />);
 
-    expect(await screen.findByText("Total Employees")).toBeInTheDocument();
+    // V-110. The page renders "Total employees"; this assertion was written
+    // against "Total Employees" and had been red ever since, which mattered
+    // because it is the only proof that one widget's failure cannot take the
+    // whole analytics page with it. Matched case-insensitively so a copy edit
+    // cannot silence the guard again.
+    expect(await screen.findByText(/^Total employees$/i)).toBeInTheDocument();
     expect(screen.queryByText("route error boundary")).not.toBeInTheDocument();
+  });
+});
+
+describe("HRMS-B2-027 / HRMS-B3-016 a KPI never reports a figure its read did not return", () => {
+  it("resolves a failed analytics read through PageState rather than an EmptyState that claims emptiness", async () => {
+    respondPerPath({ "/hr/analytics": new ApiError("Internal server error", 500) });
+
+    renderUnderBoundary(<AnalyticsPageClient />);
+
+    expect(await screen.findByRole("alert")).toBeInTheDocument();
+    expect(screen.queryByText("No people to report on yet")).not.toBeInTheDocument();
+  });
+
+  it("marks the attrition rate unmeasured instead of printing 0.0% when its own read 500s", async () => {
+    respondPerPath({
+      "/hr/analytics/attrition": new ApiError("Internal server error", 500),
+    });
+
+    renderUnderBoundary(<AnalyticsPageClient />);
+
+    const label = await screen.findByText("Attrition rate");
+    const card = label.closest("div[class]")?.parentElement ?? label.parentElement;
+
+    expect(card).not.toBeNull();
+    expect(card?.textContent).not.toMatch(/0\.0\s*%/);
+    expect(card?.textContent).toContain("—");
   });
 });

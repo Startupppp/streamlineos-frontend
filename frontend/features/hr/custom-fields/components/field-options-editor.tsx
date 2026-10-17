@@ -80,7 +80,6 @@ export function FieldOptionsEditor({
           <div className="flex-1 space-y-1">
             <Input
               {...form.register(`options.${idx}.label`)}
-              className="text-xs"
               placeholder="Label"
               onChange={handleLabelInputChange(idx)}
             />
@@ -93,7 +92,7 @@ export function FieldOptionsEditor({
           <div className="flex-1 space-y-1">
             <Input
               {...form.register(`options.${idx}.value`)}
-              className="text-xs font-mono"
+              className="font-mono"
               placeholder="value"
             />
             {form.formState.errors.options?.[idx]?.value && (

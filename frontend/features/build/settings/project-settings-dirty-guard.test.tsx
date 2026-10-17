@@ -31,7 +31,7 @@ const MOCK_PROJECT = {
   members: [],
 };
 
-jest.mock("@/hooks/api/build", () => ({
+jest.mock("@/hooks/api/build/projects", () => ({
   useProject: () => ({
     data: MOCK_PROJECT,
     isLoading: false,
@@ -45,6 +45,11 @@ jest.mock("@/hooks/api/build", () => ({
 jest.mock("@/hooks/api/access", () => ({
   useCan: () => false,
   useCanState: () => "denied" as const,
+  usePermissionGate: (permission: string) => ({ permission, allowed: false, denied: true, pending: false }),
+}));
+
+jest.mock("@/hooks/api/crm/clients", () => ({
+  useSimpleClientsList: () => ({ data: [], isLoading: false, isError: false, error: null }),
 }));
 
 jest.mock("@/hooks/api/use-page-state", () => ({
@@ -64,10 +69,16 @@ jest.mock("@/hooks/api/invoices/project-invoice-line-detail", () => ({
   }),
 }));
 
-jest.mock("@/features/build/settings/project-members-section", () => ({
+jest.mock("@/features/build/settings/project-member-selector", () => ({
   MembersSelector: () => <div data-testid="members-selector" />,
   ReassignDialog: () => null,
+}));
+
+jest.mock("@/features/build/settings/danger-zone-section", () => ({
   DangerZoneSection: () => null,
+}));
+
+jest.mock("@/features/build/settings/project-member-roles-section", () => ({
   ProjectMemberRolesSection: () => null,
 }));
 

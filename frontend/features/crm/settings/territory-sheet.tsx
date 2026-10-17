@@ -21,7 +21,7 @@ import {
   useUpdateTerritory,
   type Territory,
   type TerritoryCriteria,
-} from "@/hooks/api/crm-settings";
+} from "@/hooks/api/crm/settings/territories";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { TERRITORY_LAYOUT } from "@/lib/renderer/crm/settings/territory-layout";
 import { ChipControl } from "./shared/chip-control";

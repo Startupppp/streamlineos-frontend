@@ -8,9 +8,11 @@ import {
 } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
+import { toast } from "sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { isApiError } from "@/lib/api-client";
-import { isContractViolation } from "@/lib/api-envelope";
+import { getErrorMessage } from "@/lib/get-error-message";
+import { outageCircuitRemainingMs } from "@/lib/api-outage-circuit";
+import { isApiError, isContractViolation } from "@/lib/api-envelope";
 import { growthAndSignQueryKeys } from "@/lib/query-keys/growth-and-sign";
 import { registerQueryCacheClearer } from "@/lib/query-cache-control";
 import { queryRetryDelay, readErrorReachesBoundary } from "@/lib/query-error-policy";
@@ -40,6 +42,10 @@ function shouldRetryQuery(failureCount: number, error: unknown): boolean {
   return true;
 }
 
+export function retryDelayPastOutageCircuit(failureCount: number, error: unknown): number {
+  return Math.max(queryRetryDelay(failureCount, error), outageCircuitRemainingMs());
+}
+
 function carriesAiCharge(data: unknown): boolean {
   if (typeof data !== "object" || data === null || !("aiUsage" in data))
     return false;
@@ -50,8 +56,28 @@ function carriesAiCharge(data: unknown): boolean {
   return typeof credits === "number" && credits > 0;
 }
 
+const SCREEN_REPORT_GRACE_MS = 300;
+
+function reportUnhandledMutationError(
+  error: unknown,
+  meta: Record<string, unknown> | undefined,
+): void {
+  if (meta?.errorToast === false) return;
+  try {
+    if (isApiError(error) && error.code === "ABORTED") return;
+    const toastsBefore = toast.getHistory().length;
+    setTimeout(() => {
+      if (toast.getHistory().length === toastsBefore) toast.error(getErrorMessage(error));
+    }, SCREEN_REPORT_GRACE_MS);
+  } catch {
+    return;
+  }
+}
+
 export function createAppQueryClient(scope = "unscoped"): QueryClient {
   const mutationCache = new MutationCache({
+    onError: (error, _variables, _context, mutation) =>
+      reportUnhandledMutationError(error, mutation.options.meta),
     onSuccess: (...args) => {
       const [data, , , mutation] = args;
       publishBuildCacheChange(client, scope, mutation.options.meta);
@@ -70,7 +96,7 @@ export function createAppQueryClient(scope = "unscoped"): QueryClient {
         gcTime: 1000 * 60 * 10,
         refetchOnWindowFocus: false,
         retry: shouldRetryQuery,
-        retryDelay: queryRetryDelay,
+        retryDelay: retryDelayPastOutageCircuit,
         throwOnError: readErrorReachesBoundary,
         queryKeyHashFn: scopedQueryKeyHashFn(scope),
       },
@@ -95,8 +121,8 @@ export function resolveQueryProviderScope({
   orgId: string | undefined;
   userId: string | undefined;
 }): string {
-  if (status === "loading") return initialScope ?? LOADING_SCOPE;
   if (orgId && userId) return authenticatedScope(orgId, userId);
+  if (status === "loading") return initialScope ?? LOADING_SCOPE;
   return UNAUTHENTICATED_SCOPE;
 }
 

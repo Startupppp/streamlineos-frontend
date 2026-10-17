@@ -15,7 +15,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { toast } from "sonner";
-import { useUpdateFeedbackPost } from "@/hooks/api/build/roadmap";
+import { useUpdateFeedbackPost } from "@/hooks/api/build/feedback-posts";
 import { useCrmOrganizationsForPicker } from "@/hooks/api/crm";
 import { useCan } from "@/hooks/api/access";
 import type { FeedbackPost, RoadmapItem } from "@/types/projects";
@@ -110,7 +110,7 @@ export const FeedbackRow = memo(function FeedbackRow({
       <div className="flex min-w-0 items-start gap-3">
         <div className="flex shrink-0 flex-col items-center justify-center rounded-md border border-border/60 bg-muted/30 px-2 py-1">
           <ArrowBigUp className="h-4 w-4 text-muted-foreground" />
-          <span className="text-sm font-semibold tabular-nums">{post.votes}</span>
+          <span className="text-sm font-normal tabular-nums">{post.votes}</span>
         </div>
         <div className="min-w-0 flex-1 space-y-2">
           <div className="flex min-w-0 items-start justify-between gap-2">
@@ -208,7 +208,7 @@ export const FeedbackRow = memo(function FeedbackRow({
             {isMerged ? (
               <Badge
                 variant="outline"
-                className="border-status-warning-rule bg-status-warning-surface text-micro text-status-warning-ink"
+                className="border-status-warning-rule bg-status-warning-surface text-micro text-status-warning-ink-strong"
               >
                 Merged duplicate
               </Badge>

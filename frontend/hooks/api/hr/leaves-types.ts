@@ -27,6 +27,8 @@ export interface LeaveContextResult {
     name: string;
     daysPerYear: number;
     orgId: string;
+    /** V-049. Optional until the backend half lands. */
+    policyName?: string | null;
   }>;
   joiningDate: string | null;
   approvers: Array<{
@@ -38,15 +40,8 @@ export interface LeaveContextResult {
     image?: string | null;
   }>;
   approvalRoute: ApprovalRoute;
-}
-
-export interface LeaveRequestsPage {
-  data: unknown[];
-  pageInfo: {
-    limit: number;
-    hasMore: boolean;
-    nextCursor: number | null;
-  };
+  /** V-045. Optional until the backend half lands. */
+  noPolicyConfigured?: boolean;
 }
 
 export interface HrLeaveType {
@@ -54,6 +49,8 @@ export interface HrLeaveType {
   name: string;
   daysPerYear: number;
   carryForward: boolean;
+  /** V-049. Optional until the backend half lands. */
+  policyName?: string | null;
 }
 
 export interface LeavePolicyType {

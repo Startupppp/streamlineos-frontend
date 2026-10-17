@@ -1,119 +1,92 @@
-import { cycleListContract, cycleRowContract, epicListContract } from "./execution-schema";
+import { ZodError } from "zod";
 
-it("accepts the unprojected ticket row listEpics actually returns, since the service selects every tickets column with no projection", () => {
-  const row = {
-    id: 9,
-    orgId: "org-1",
-    title: "Epic title",
-    description: null,
-    type: "EPIC",
-    status: "TODO",
-    priority: "MEDIUM",
-    projectId: 5,
-    ticketNumber: 3,
-    epicId: null,
-    reporterId: "user-1",
-    points: null,
-    storyPoints: null,
-    link: null,
-    rank: "1000",
-    parentTicketId: null,
-    originalEstimate: null,
-    timeSpent: "0",
-    startDate: null,
-    dueDate: null,
-    moduleId: null,
-    cycleId: null,
-    sequenceId: null,
-    estimate: null,
-    createdAt: "2026-09-16T00:00:00.000Z",
-    updatedAt: "2026-09-16T00:00:00.000Z",
-  };
+import {
+  memberCapacityItemSchema,
+  workloadCapacityContract,
+} from "./execution-schema";
 
-  const result = epicListContract.parse([row]);
-
-  expect(result[0]).toEqual(row);
-});
-
-it("rejects an epic row whose reporterId is not a string, so an assignee/reporter id swap is caught", () => {
-  const row = {
-    id: 9,
-    orgId: "org-1",
-    title: "Epic title",
-    description: null,
-    type: "EPIC",
-    status: "TODO",
-    priority: "MEDIUM",
-    projectId: 5,
-    ticketNumber: 3,
-    epicId: null,
-    reporterId: 12345,
-    points: null,
-    storyPoints: null,
-    link: null,
-    rank: "1000",
-    parentTicketId: null,
-    originalEstimate: null,
-    timeSpent: "0",
-    startDate: null,
-    dueDate: null,
-    moduleId: null,
-    cycleId: null,
-    sequenceId: null,
-    estimate: null,
-    createdAt: "2026-09-16T00:00:00.000Z",
-    updatedAt: "2026-09-16T00:00:00.000Z",
-  };
-
-  expect(epicListContract.safeParse([row]).success).toBe(false);
-});
-
-const baseCycleRow = {
-  id: 3,
-  orgId: "org-1",
-  projectId: 7,
-  name: "Q4 Cycle",
-  description: "Focus on checkout",
-  status: "active" as const,
-  startDate: "2026-10-01",
-  endDate: "2026-10-31",
-  createdBy: "user-1",
-  createdAt: "2026-09-30T00:00:00.000Z",
-  updatedAt: "2026-09-30T00:00:00.000Z",
+const FULL_ROW = {
+  userId: "user-1",
+  membershipId: 11,
+  teams: [] as Array<{ id: number; name: string }>,
+  workingDaysInWindow: 5,
+  leaveDays: 0,
+  halfLeaveDays: 0,
+  netCapacityDays: 5,
+  capacityHours: 40,
+  loggedHours: 12,
+  estimateHours: 20,
+  allocationPercent: 50,
+  varianceHours: -8,
+  isOverAllocated: false,
+  isZeroCapacity: false,
+  utilizationPercent: 30,
 };
 
-it("cycleRowContract accepts a well-formed cycle — Cycle is the canonical iteration type and its schema must parse", () => {
-  const result = cycleRowContract.parse(baseCycleRow);
-  expect(result.id).toBe(3);
-  expect(result.status).toBe("active");
-  expect(result.name).toBe("Q4 Cycle");
+function rowWithout(key: keyof typeof FULL_ROW): Record<string, unknown> {
+  const clone: Record<string, unknown> = { ...FULL_ROW };
+  delete clone[key];
+  return clone;
+}
+
+describe("memberCapacityItemSchema — the three core figures the workload row renders", () => {
+  it("accepts a row carrying estimateHours, allocationPercent and varianceHours and keeps all three values", () => {
+    const parsed = memberCapacityItemSchema.parse(FULL_ROW);
+
+    expect(parsed.estimateHours).toBe(20);
+    expect(parsed.allocationPercent).toBe(50);
+    expect(parsed.varianceHours).toBe(-8);
+  });
+
+  it("accepts null for all three figures, because a member with no estimated open work has no allocation or variance to report", () => {
+    const parsed = memberCapacityItemSchema.parse({
+      ...FULL_ROW,
+      estimateHours: null,
+      allocationPercent: null,
+      varianceHours: null,
+    });
+
+    expect(parsed.estimateHours).toBeNull();
+    expect(parsed.allocationPercent).toBeNull();
+    expect(parsed.varianceHours).toBeNull();
+  });
 });
 
-it("cycleRowContract rejects a cycle with an invalid status — draft/active/completed are the only valid cycle statuses", () => {
-  const badRow = { ...baseCycleRow, status: "ACTIVE" };
-  expect(cycleRowContract.safeParse(badRow).success).toBe(false);
+describe("memberCapacityItemSchema — a dropped projection throws at the decode boundary instead of rendering blank forever", () => {
+  it("throws when estimateHours is absent, so a backend that stops projecting it fails loudly", () => {
+    expect(() => memberCapacityItemSchema.parse(rowWithout("estimateHours"))).toThrow(ZodError);
+  });
+
+  it("throws when allocationPercent is absent, so a backend that stops projecting it fails loudly", () => {
+    expect(() => memberCapacityItemSchema.parse(rowWithout("allocationPercent"))).toThrow(ZodError);
+  });
+
+  it("throws when varianceHours is absent, so a backend that stops projecting it fails loudly", () => {
+    expect(() => memberCapacityItemSchema.parse(rowWithout("varianceHours"))).toThrow(ZodError);
+  });
+
+  it("throws when loggedHours is absent, confirming the absence test above is not passing vacuously", () => {
+    expect(() => memberCapacityItemSchema.parse(rowWithout("loggedHours"))).toThrow(ZodError);
+  });
+
+  it("rejects a string where estimateHours should be a number, so a numeric column arriving unparsed is caught", () => {
+    expect(() =>
+      memberCapacityItemSchema.parse({ ...FULL_ROW, estimateHours: "20.00" }),
+    ).toThrow(ZodError);
+  });
 });
 
-it("cycleListContract preserves progress stats on list items — totalItems/completedItems/progress must survive the parse", () => {
-  const listRow = {
-    ...baseCycleRow,
-    totalItems: 12,
-    completedItems: 4,
-    progress: 33,
-  };
+describe("workloadCapacityContract — the whole capacity envelope", () => {
+  it("decodes a members array carrying the three figures", () => {
+    const parsed = workloadCapacityContract.parse({ members: [FULL_ROW] });
 
-  const result = cycleListContract.parse([listRow]);
-  expect(result[0]?.totalItems).toBe(12);
-  expect(result[0]?.completedItems).toBe(4);
-  expect(result[0]?.progress).toBe(33);
-});
+    expect(parsed.members).toHaveLength(1);
+    expect(parsed.members[0].allocationPercent).toBe(50);
+  });
 
-it("cycleListContract rejects a list item missing progress — the iteration dashboard summary would silently show 0 without this guard", () => {
-  const { progress: _p, ...withoutProgress } = {
-    ...baseCycleRow,
-    totalItems: 5,
-    completedItems: 2,
-    progress: 40,
-  };
-  expect(cycleListContract.safeParse([withoutProgress]).success).toBe(false);
+  it("throws when one member in the array is missing estimateHours, so a partially dropped projection cannot slip through", () => {
+    expect(() =>
+      workloadCapacityContract.parse({ members: [FULL_ROW, rowWithout("estimateHours")] }),
+    ).toThrow(ZodError);
+  });
 });

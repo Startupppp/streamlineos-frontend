@@ -1,5 +1,7 @@
 "use client";
 
+import { useAuthorizedIdempotentMutation } from "@/hooks/api/inventory/use-idempotent-mutation";
+import { IDEMPOTENCY_HEADER } from "@/lib/idempotency-key";
 import { useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
@@ -19,6 +21,7 @@ import {
   useLeaveQueryIdentity,
 } from "@/hooks/api/hr/leaves-query-identity";
 import type { RequestLeaveInput } from "@/types/hr";
+import { invalidateCalendarProjectionWindows } from "@/lib/calendar-projection-cache";
 
 export function useRequestLeave() {
   const qc = useQueryClient();
@@ -32,6 +35,7 @@ export function useRequestLeave() {
       qc.invalidateQueries({ queryKey: leaveContextKey(identity) });
       qc.invalidateQueries({ queryKey: leaveMyRequestsKey(identity) });
       invalidateLeaveDashboard();
+      invalidateCalendarProjectionWindows(qc);
     },
   });
 }
@@ -40,18 +44,25 @@ export function useApproveLeaveDedicated() {
   const qc = useQueryClient();
   const identity = useLeaveQueryIdentity();
   const invalidateLeaveDashboard = useInvalidateLeaveDashboard();
-  return useAuthorizedMutation("hr:leaves:approve", {
+  // @Idempotent("hr.leave.approve"): one key per decision, reused on retry.
+  return useAuthorizedIdempotentMutation<
+    { success: boolean },
+    Error,
+    { leaveId: number; comment?: string; confirmSelfApproval?: boolean }
+  >("hr:leaves:approve", {
     mutationKey: ["hr", "leaves", "approve"],
-    mutationFn: ({ leaveId, comment }: { leaveId: number; comment?: string }) =>
+    mutationFn: ({ leaveId, comment, confirmSelfApproval }, idempotencyKey) =>
       apiClient.put<{ success: boolean }>(`/hr/leaves/${leaveId}/approve`, {
         comment,
-      }, undefined, leaveApproveC),
+        ...(confirmSelfApproval ? { confirmSelfApproval } : {}),
+      }, { headers: { [IDEMPOTENCY_HEADER]: idempotencyKey } }, leaveApproveC),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: leaveContextKey(identity) });
       qc.invalidateQueries({ queryKey: leaveTeamKey(identity) });
       qc.invalidateQueries({ queryKey: leaveMyRequestsKey(identity) });
       qc.invalidateQueries({ queryKey: leaveThisWeekKey(identity) });
       invalidateLeaveDashboard();
+      invalidateCalendarProjectionWindows(qc);
     },
   });
 }
@@ -60,27 +71,25 @@ export function useRejectLeaveDedicated() {
   const qc = useQueryClient();
   const identity = useLeaveQueryIdentity();
   const invalidateLeaveDashboard = useInvalidateLeaveDashboard();
-  return useAuthorizedMutation("hr:leaves:approve", {
+  // @Idempotent("hr.leave.reject"): one key per decision, reused on retry.
+  return useAuthorizedIdempotentMutation<
+    { success: boolean },
+    Error,
+    { leaveId: number; reason: string; comment?: string }
+  >("hr:leaves:approve", {
     mutationKey: ["hr", "leaves", "reject"],
-    mutationFn: ({
-      leaveId,
-      reason,
-      comment,
-    }: {
-      leaveId: number;
-      reason: string;
-      comment?: string;
-    }) =>
+    mutationFn: ({ leaveId, reason, comment }, idempotencyKey) =>
       apiClient.put<{ success: boolean }>(`/hr/leaves/${leaveId}/reject`, {
         reason,
         comment,
-      }, undefined, leaveRejectC),
+      }, { headers: { [IDEMPOTENCY_HEADER]: idempotencyKey } }, leaveRejectC),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: leaveContextKey(identity) });
       qc.invalidateQueries({ queryKey: leaveTeamKey(identity) });
       qc.invalidateQueries({ queryKey: leaveMyRequestsKey(identity) });
       qc.invalidateQueries({ queryKey: leaveThisWeekKey(identity) });
       invalidateLeaveDashboard();
+      invalidateCalendarProjectionWindows(qc);
     },
   });
 }
@@ -99,6 +108,7 @@ export function useCancelLeave() {
       qc.invalidateQueries({ queryKey: leaveTeamKey(identity) });
       qc.invalidateQueries({ queryKey: leaveThisWeekKey(identity) });
       invalidateLeaveDashboard();
+      invalidateCalendarProjectionWindows(qc);
     },
   });
 }
@@ -118,6 +128,7 @@ export function useRevertLeave() {
       qc.invalidateQueries({ queryKey: leaveTeamKey(identity) });
       qc.invalidateQueries({ queryKey: leaveMyRequestsKey(identity) });
       invalidateLeaveDashboard();
+      invalidateCalendarProjectionWindows(qc);
     },
   });
 }

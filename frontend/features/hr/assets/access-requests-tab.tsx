@@ -5,6 +5,7 @@ import { Shield } from "lucide-react";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { PlusIcon } from "@animateicons/react/lucide";
 import { LoadingButton } from "@/components/ui/loading-button";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { HrSheet } from "@/components/shared/hr-sheet";
@@ -21,7 +22,8 @@ import { format } from "date-fns";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { cn } from "@/lib/utils";
 import { SecurityIllustration } from "@/components/illustrations";
-import { ErrorState } from "@/components/shared";
+import { ErrorState } from "@/components/shared/error-state";
+import { NoPermissionState } from "@/components/shared/no-permission-state";
 
 const STATUS_META: Record<string, { label: string; badge: string }> = {
   requested: {
@@ -45,7 +47,7 @@ interface AccessRequestsTabProps {
 
 function getEmployeeName(employees: EmployeeListItem[], id: string) {
   const emp = employees.find((e) => e.id === id);
-  if (!emp) return id;
+  if (!emp) return "Unknown employee";
   return `${emp.firstName ?? ""} ${emp.lastName ?? ""}`.trim() || emp.email;
 }
 
@@ -55,7 +57,8 @@ export function AccessRequestsTab({ employees, canManage }: AccessRequestsTabPro
   const [systemName, setSystemName] = useState("");
   const [accessLevel, setAccessLevel] = useState("");
 
-  const { data: requests = [], isLoading, isError, error, refetch } = useAccessRequests();
+  const { data, isLoading, isError, error, refetch, access } = useAccessRequests();
+  const requests = data ?? [];
   const createMutation = useCreateAccessRequest();
   const updateMutation = useUpdateAccessRequest();
 
@@ -106,10 +109,14 @@ export function AccessRequestsTab({ employees, canManage }: AccessRequestsTabPro
     );
   }, [updateMutation]);
 
+  const handleRetry = useCallback(() => {
+    void refetch();
+  }, [refetch]);
+
   const handleSystemNameChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setSystemName(e.target.value), []);
   const handleAccessLevelChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setAccessLevel(e.target.value), []);
 
-  if (isLoading) {
+  if (isLoading || access.pending) {
     return (
       <div className="space-y-2">
         {Array.from({ length: 10 }).map((_, i) => (
@@ -119,12 +126,17 @@ export function AccessRequestsTab({ employees, canManage }: AccessRequestsTabPro
     );
   }
 
-  if (isError) {
+  if (access.denied) {
+    return <NoPermissionState permission={access.permission} className="py-16" />;
+  }
+
+  if (isError || access.unavailable || data === undefined) {
     return (
       <ErrorState
         title="Couldn't load access requests"
         description={getErrorMessage(error)}
-        onRetry={refetch}
+        error={error}
+        onRetry={handleRetry}
         className="py-16"
       />
     );
@@ -135,7 +147,7 @@ export function AccessRequestsTab({ employees, canManage }: AccessRequestsTabPro
       <div className="flex items-center justify-between gap-2">
         <p className="text-sm font-semibold text-foreground whitespace-nowrap">Software &amp; System Access</p>
         {canManage && (
-          <AnimatedIconButton size="sm" className="gap-1.5 h-7 text-xs shrink-0" onClick={handleOpenCreate} icon={PlusIcon} iconSize={14} iconClassName="mr-1.5">
+          <AnimatedIconButton size="sm" className="gap-1.5 shrink-0" onClick={handleOpenCreate} icon={PlusIcon} iconSize={14} iconClassName="mr-1.5">
             Request Access
           </AnimatedIconButton>
         )}
@@ -153,7 +165,7 @@ export function AccessRequestsTab({ employees, canManage }: AccessRequestsTabPro
             </p>
           </div>
           {canManage && (
-            <AnimatedIconButton size="sm" variant="outline" className="text-xs gap-1.5" onClick={handleOpenCreate} icon={PlusIcon} iconSize={14} iconClassName="mr-1.5">
+            <AnimatedIconButton size="sm" variant="outline" className="gap-1.5" onClick={handleOpenCreate} icon={PlusIcon} iconSize={14} iconClassName="mr-1.5">
               Request Access
             </AnimatedIconButton>
           )}
@@ -186,7 +198,6 @@ export function AccessRequestsTab({ employees, canManage }: AccessRequestsTabPro
                     <LoadingButton
                       size="sm"
                       variant="outline"
-                      className="h-6 text-micro px-2"
                       onClick={() => handleGrant(req.id)}
                       isPending={updateMutation.isPending}
                     >
@@ -194,15 +205,24 @@ export function AccessRequestsTab({ employees, canManage }: AccessRequestsTabPro
                     </LoadingButton>
                   )}
                   {canManage && req.status === "granted" && (
-                    <LoadingButton
-                      size="sm"
-                      variant="outline"
-                      className="h-6 text-micro px-2 text-destructive border-destructive/30 hover:bg-destructive/10"
-                      onClick={() => handleRevoke(req.id)}
+                    <ConfirmDialog
+                      trigger={
+                        <LoadingButton
+                          size="sm"
+                          variant="outline"
+                          className="text-destructive border-destructive/30 hover:bg-destructive/10"
+                          isPending={updateMutation.isPending}
+                        >
+                          Revoke
+                        </LoadingButton>
+                      }
+                      title="Revoke access?"
+                      description={`${getEmployeeName(employees, req.employeeId)} loses ${req.accessLevel} access to ${req.systemName}.`}
+                      confirmLabel="Revoke"
+                      destructive
                       isPending={updateMutation.isPending}
-                    >
-                      Revoke
-                    </LoadingButton>
+                      onConfirm={() => handleRevoke(req.id)}
+                    />
                   )}
                 </div>
               </div>
@@ -220,16 +240,18 @@ export function AccessRequestsTab({ employees, canManage }: AccessRequestsTabPro
       >
         <div className="space-y-4">
           <div className="space-y-1.5">
-            <label className="text-sm font-medium">Employee <span className="text-destructive">*</span></label>
+            <p className="text-sm font-medium">Employee <span className="text-destructive" aria-hidden="true">*</span></p>
             <EmployeePicker
               value={employeeId}
               onChange={setEmployeeId}
               placeholder="Select employee..."
+              ariaLabel="Employee"
             />
           </div>
           <div className="space-y-1.5">
-            <label className="text-sm font-medium">System / Application <span className="text-destructive">*</span></label>
+            <label htmlFor="access-req-system" className="text-sm font-medium">System / Application <span className="text-destructive" aria-hidden="true">*</span></label>
             <Input
+              id="access-req-system"
               placeholder="e.g. GitHub, Jira, AWS Console"
               value={systemName}
               onChange={handleSystemNameChange}
@@ -237,8 +259,9 @@ export function AccessRequestsTab({ employees, canManage }: AccessRequestsTabPro
             />
           </div>
           <div className="space-y-1.5">
-            <label className="text-sm font-medium">Access Level <span className="text-destructive">*</span></label>
+            <label htmlFor="access-req-level" className="text-sm font-medium">Access Level <span className="text-destructive" aria-hidden="true">*</span></label>
             <Input
+              id="access-req-level"
               placeholder="e.g. Read, Write, Admin"
               value={accessLevel}
               onChange={handleAccessLevelChange}

@@ -20,6 +20,10 @@ import type {
   TrialBalanceParams,
   TrialBalanceStatement,
 } from "@/types/accounting/accounting-reports";
+import type {
+  StockGlReconciliation,
+  UnpostedMovementsReport,
+} from "@/hooks/api/accounting/reconciliation-schema";
 
 type QueryOpts<T> = Omit<UseQueryOptions<T, Error>, "queryKey" | "queryFn">;
 
@@ -28,6 +32,17 @@ const REPORT_STALE = 60 * 1000;
 const taxSummaryContract = lazyContract(() =>
   import("@/hooks/api/accounting/reports-schema").then(
     (m) => m.taxSummaryReportContract,
+  ),
+);
+
+const stockGlContract = lazyContract(() =>
+  import("@/hooks/api/accounting/reconciliation-schema").then(
+    (m) => m.stockGlReconciliationContract,
+  ),
+);
+const unpostedMovementsContract = lazyContract(() =>
+  import("@/hooks/api/accounting/reconciliation-schema").then(
+    (m) => m.unpostedMovementsContract,
   ),
 );
 
@@ -161,6 +176,50 @@ export function useTaxSummaryReport(
     ...options,
     enabled:
       canRead && !!params.from && !!params.to && (options?.enabled ?? true),
+  });
+}
+
+/** Does the general ledger agree with the stock ledger about inventory over a window? */
+export function useStockGlReconciliation(
+  params: { from: string; to: string },
+  options?: QueryOpts<StockGlReconciliation>,
+) {
+  const canRead = useCan("accounting:reports:read");
+  const search = { from: params.from, to: params.to };
+  return useQuery<StockGlReconciliation, Error>({
+    queryKey: accountingReportsQueryKeys.accountingReports.stockGl(search),
+    queryFn: ({ signal }) =>
+      apiClient.get<StockGlReconciliation>(
+        "/accounting/reconciliation/stock-gl",
+        search,
+        signal,
+        stockGlContract,
+      ),
+    staleTime: REPORT_STALE,
+    ...options,
+    enabled: canRead && !!params.from && !!params.to && (options?.enabled ?? true),
+  });
+}
+
+/** Stock that moved in the window and never reached the ledger. */
+export function useUnpostedMovements(
+  params: { from: string; to: string },
+  options?: QueryOpts<UnpostedMovementsReport>,
+) {
+  const canRead = useCan("accounting:reports:read");
+  const search = { from: params.from, to: params.to };
+  return useQuery<UnpostedMovementsReport, Error>({
+    queryKey: accountingReportsQueryKeys.accountingReports.unpostedMovements(search),
+    queryFn: ({ signal }) =>
+      apiClient.get<UnpostedMovementsReport>(
+        "/accounting/reconciliation/unposted-movements",
+        search,
+        signal,
+        unpostedMovementsContract,
+      ),
+    staleTime: REPORT_STALE,
+    ...options,
+    enabled: canRead && !!params.from && !!params.to && (options?.enabled ?? true),
   });
 }
 

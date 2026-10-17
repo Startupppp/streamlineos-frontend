@@ -122,13 +122,17 @@ describe("portal session recovery targets a route that exists", () => {
     },
   );
 
-  it("the invitation page still handles both reasons the producers send", () => {
-    const page = readFileSync(
-      join(APP_DIR, "(portal)", "accept-invitation", "page.tsx"),
-      "utf8",
-    );
+  it("the invitation route still handles both reasons the producers send, wherever its views now live", () => {
+    const routeDir = join(APP_DIR, "(portal)", "accept-invitation");
+    const sources = readdirSync(routeDir)
+      .filter((entry) => entry.endsWith(".tsx") || entry.endsWith(".ts"))
+      .map((entry) => readFileSync(join(routeDir, entry), "utf8"))
+      .join("\n");
+
+    expect(sources.length).toBeGreaterThan(0);
     for (const { reason } of PRODUCERS) {
-      expect(page).toContain(`"${reason}"`);
+      expect(sources).toContain(`"${reason}"`);
     }
+    expect(sources).not.toContain('"definitely-not-a-reason-xyz"');
   });
 });

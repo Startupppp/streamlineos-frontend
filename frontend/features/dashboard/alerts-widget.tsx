@@ -13,7 +13,7 @@ import { cn } from "@/lib/utils";
 import {
   useUnreadNotifications,
   useMarkNotificationRead,
-} from "@/hooks/api/notifications";
+} from "@/hooks/api/notifications-inbox";
 import {
   NOTIFICATION_PRIORITY_CONFIG,
   type NotificationPriority,

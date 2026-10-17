@@ -8,11 +8,12 @@ import {
   useToggleWebhook,
   useDeleteWebhook,
   useRotateWebhookSecret,
+  useWebhookImpact,
 } from "@/hooks/api/webhooks";
 import { InlineGroupCreate } from "@/features/build/views/list-view-group-create";
-import { BulkActionBar } from "@/features/build/backlog/bulk-action-bar";
+import { BulkActionBar } from "@/features/build/shared/bulk-action-bar";
 import { ProjectViewsToolbar } from "@/features/build/views/project-views-toolbar";
-import { DEFAULT_DISPLAY_OPTIONS } from "@/features/build/views/display-options-panel";
+import { DEFAULT_DISPLAY_OPTIONS } from "@/features/build/views/display-options-model";
 import { INITIAL_FILTERS } from "@/features/build/views/workload-types";
 
 jest.mock("@/hooks/api/access", () => ({
@@ -60,11 +61,16 @@ jest.mock("next/navigation", () => ({
   useSearchParams: () => new URLSearchParams(),
 }));
 
+jest.mock("@/hooks/api/org-display", () => ({
+  useOrgTimeZone: () => "UTC",
+}));
+
 jest.mock("@/hooks/api/webhooks", () => ({
   useWebhooks: jest.fn(),
   useToggleWebhook: jest.fn(),
   useDeleteWebhook: jest.fn(),
   useRotateWebhookSecret: jest.fn(),
+  useWebhookImpact: jest.fn(() => ({ data: undefined })),
 }));
 
 jest.mock("@/components/ui/page-wrapper", () => ({
@@ -115,6 +121,11 @@ jest.mock("@/features/build/views/view-switcher", () => ({
   ViewSwitcher: () => null,
 }));
 
+jest.mock("@/hooks/api/build/modules", () => ({
+  ...jest.requireActual("@/hooks/api/build/modules"),
+  useModules: () => ({ data: [] }),
+}));
+
 jest.mock("@/features/settings/webhooks/webhook-card", () => ({
   WebhookCard: () => null,
   WebhookCardSkeleton: () => null,
@@ -139,6 +150,7 @@ const EPIC = {
   description: null,
   priority: "HIGH",
   points: null,
+  version: 2,
 };
 
 function noop(): void {
@@ -165,7 +177,7 @@ describe("EpicCard permission gates — build:tickets:*", () => {
         stories={[]}
         projectId={42}
         projectKey="AUTH"
-        unlinkedStories={[]}
+        unlinkedItems={[]}
         onDeleteEpic={noop}
         onLinkStory={noop}
         onCreateStory={noop}

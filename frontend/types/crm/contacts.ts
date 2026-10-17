@@ -1,5 +1,4 @@
 import type { z } from "zod";
-import type { customerPageContract } from "@/hooks/api/build/reports-schema";
 import type {
   contactDetailContract,
   contactListContract,
@@ -125,10 +124,6 @@ export interface PaginatedCrmOrganizations {
   nextCursor: string | null;
   totalCount?: number;
 }
-
-export type BuildCustomersPage = z.infer<typeof customerPageContract>;
-
-
 
 export interface CrmOrganizationFilters {
   search?: string;

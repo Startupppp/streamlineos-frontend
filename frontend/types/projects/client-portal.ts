@@ -23,25 +23,22 @@ export interface ClientPortalTask {
   dueDate: string | null;
 }
 
-export interface ClientPortalFile {
-  id: number;
-  filename: string;
-  url: string;
-}
-
-export interface ClientPortalComment {
-  id: number;
-  body: string;
-  authorName: string | null;
-  createdAt: string;
+export interface ClientPortalCapabilities {
+  canViewMilestones: boolean;
+  canViewTasks: boolean;
+  canViewAttachments: boolean;
+  canViewComments: boolean;
+  canSubmitChangeRequests: boolean;
+  canViewApprovals: boolean;
+  canViewInvoices: boolean;
+  canViewRequests: boolean;
 }
 
 export interface ClientPortalOverview {
   project: ClientPortalProject;
+  capabilities?: ClientPortalCapabilities;
   milestones: ClientPortalMilestone[];
   tasks: ClientPortalTask[];
-  attachments: ClientPortalFile[];
-  comments: ClientPortalComment[];
 }
 
 export interface ClientVisibilityTicket {
@@ -50,6 +47,7 @@ export interface ClientVisibilityTicket {
   title: string;
   type: string;
   clientVisible: boolean;
+  version?: number;
 }
 
 export interface ClientVisibilityMilestone {
@@ -58,7 +56,12 @@ export interface ClientVisibilityMilestone {
   clientVisible: boolean;
 }
 
+export interface CursorPage<T> {
+  data: T[];
+  pagination: { limit: number; hasMore: boolean; nextCursor: string | null };
+}
+
 export interface ClientVisibilitySummary {
-  tickets: ClientVisibilityTicket[];
-  milestones: ClientVisibilityMilestone[];
+  tickets: CursorPage<ClientVisibilityTicket>;
+  milestones: CursorPage<ClientVisibilityMilestone>;
 }

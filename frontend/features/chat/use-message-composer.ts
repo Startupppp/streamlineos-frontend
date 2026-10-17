@@ -8,8 +8,13 @@ const storageUploadContract = lazyContract(() =>
   import("@/hooks/api/chat-extra-schema").then((m) => m.storageUploadContract),
 );
 import { getErrorMessage } from "@/lib/get-error-message";
+import {
+  CHAT_ATTACHMENT_MAX_BYTES,
+  CHAT_ATTACHMENT_SUMMARY,
+  isAllowedChatAttachment,
+} from "./chat-attachment-types";
 import type { Message, MessageMetadata, TicketEntityRef } from "./chat-types";
-import type { TicketSearchResult } from "@/hooks/api/build";
+import type { TicketSearchResult } from "@/types/projects";
 import type { AttachmentInput, EditMessageInput, SendMessageInput } from "@/types/chat";
 
 type Attachment = AttachmentInput;
@@ -77,7 +82,11 @@ export function useMessageComposer({
     setUploading(true);
     try {
       for (const file of files) {
-        if (file.size > 10 * 1024 * 1024) { toast.error(`${file.name} is too large (max 10MB)`); continue; }
+        if (file.size > CHAT_ATTACHMENT_MAX_BYTES) { toast.error(`${file.name} is too large (max 10MB)`); continue; }
+        // Paste and drag never pass through the picker's `accept`, so the allowlist is
+        // enforced here too — and names what is allowed, which the server's bare
+        // "File type not allowed" did not (CHAT-S06).
+        if (!isAllowedChatAttachment(file)) { toast.error(`${file.name} is not a supported file type. Attach ${CHAT_ATTACHMENT_SUMMARY}.`); continue; }
         const formData = new FormData(); formData.append("file", file); formData.append("folder", "chat");
         try {
           const result = await apiClient.upload<{ key: string; size?: number; mimeType?: string }>("/storage/upload", formData, storageUploadContract);
@@ -157,16 +166,18 @@ export function useMessageComposer({
   const handleInputChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const value = e.target.value; setMessageInput(value); e.target.style.height = "auto"; e.target.style.height = `${Math.min(e.target.scrollHeight, 160)}px`;
     if (value.trim() && Date.now() - lastTypingSent.current > 3000) { lastTypingSent.current = Date.now(); publishTyping(); }
-    const before = value.slice(0, e.target.selectionStart ?? value.length); const hash = before.match(/#([^\s]*)$/); const at = before.match(/@(\w*)$/);
+    const before = value.slice(0, e.target.selectionStart ?? value.length); const hash = before.match(/(?:^|\s)#([^\s]*)$/); const at = before.match(/(?:^|\s)@(\w*)$/);
     if (hash) { setShowTicketPicker(true); setTicketQuery(hash[1]); setTicketSelectedIndex(0); setShowMentions(false); setMentionQuery(""); }
     else { setShowTicketPicker(false); setTicketQuery(""); setShowMentions(!!at); setMentionQuery(at?.[1] ?? ""); setMentionIndex(0); }
   }, [publishTyping]);
   const handleKeyDown = useCallback((e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    // Enter that confirms an IME candidate belongs to the IME, not to send or insert.
+    if (e.nativeEvent.isComposing || e.keyCode === 229) return;
     if (showTicketPicker && (e.key === "ArrowDown" || e.key === "ArrowUp" || e.key === "Escape")) { e.preventDefault(); if (e.key === "Escape") setShowTicketPicker(false); else setTicketSelectedIndex((i) => Math.max(0, Math.min(i + (e.key === "ArrowDown" ? 1 : -1), 9))); return; }
     const mentions = filteredMentionsRef.current;
     if (showMentions && mentions.length) { if (e.key === "ArrowDown" || e.key === "ArrowUp") { e.preventDefault(); setMentionIndex((i) => (i + (e.key === "ArrowDown" ? 1 : -1) + mentions.length) % mentions.length); return; } if (e.key === "Enter" || e.key === "Tab") { e.preventDefault(); const user = mentions[mentionIndex]; insertMention(user.name ?? "", user.id); return; } if (e.key === "Escape") { setShowMentions(false); return; } }
     if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); void handleSend(); }
   }, [showTicketPicker, showMentions, mentionIndex, insertMention, handleSend]);
 
-  return { messageInput, setMessageInput, replyTo, setReplyTo, editingMessage, setEditingMessage, editInput, setEditInput, pendingAttachments, setPendingAttachments, uploading, showEmojiPicker, setShowEmojiPicker, showMentions, setShowMentions, mentionQuery, setMentionQuery, mentionIndex, setMentionIndex, showTicketPicker, setShowTicketPicker, ticketQuery, setTicketQuery, ticketSelectedIndex, setTicketSelectedIndex, inputRef, fileInputRef, emojiRef, messageQueue, pendingEntitiesRef, pendingMentionsRef, setFilteredMentions: (value: typeof filteredMentions) => { filteredMentionsRef.current = value; }, handleFileSelect, handlePastedFiles, insertEmoji, insertMention, insertTicket, handleSend, handleEdit, handleInputChange, handleKeyDown };
+  return { messageInput, setMessageInput, replyTo, setReplyTo, editingMessage, setEditingMessage, editInput, setEditInput, pendingAttachments, setPendingAttachments, uploading, showEmojiPicker, setShowEmojiPicker, showMentions, setShowMentions, mentionQuery, setMentionQuery, mentionIndex, setMentionIndex, showTicketPicker, setShowTicketPicker, ticketQuery, setTicketQuery, ticketSelectedIndex, setTicketSelectedIndex, inputRef, fileInputRef, emojiRef, messageQueue, pendingEntitiesRef, pendingMentionsRef, setFilteredMentions: (value: typeof filteredMentions) => { filteredMentionsRef.current = value; }, handleFileSelect, handlePastedFiles, insertEmoji, insertMention, insertTicket, handleSend, handleEdit, handleInputChange, handleKeyDown, flushMessageQueue };
 }

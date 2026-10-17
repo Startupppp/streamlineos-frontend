@@ -3,9 +3,11 @@
 import React, { useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { DataTable } from "@/components/ui/data-table";
+import { TablePagination } from "@/components/ui/table-pagination";
 import { Badge } from "@/components/ui/badge";
 import { PmPanel } from "@/components/pm-chrome";
 import { useCan } from "@/hooks/api/access";
+import { useNavigationLeave } from "@/components/shared/dirty-state-context";
 import { cn } from "@/lib/utils";
 import {
   getColorSafe,
@@ -59,30 +61,53 @@ function ProjectMobileCard({
 
   return (
     <BuildMobileCard
+      eyebrow={project.key}
       title={project.name}
       status={<ProjectStatusBadge status={status} />}
       person={{ user: project.manager, role: "Lead" }}
-      meta={[
-        {
-          label: "Progress",
-          value:
-            progressValue !== null ? (
-              <span className="font-mono tabular-nums">{progressValue}%</span>
-            ) : (
-              "—"
-            ),
-        },
-        {
-          label: "Target",
-          value: targetDate ? (
-            <span className={cn("font-mono tabular-nums", dateToneClasses[targetDate.tone])}>
-              {targetDate.label}
+      footer={
+        <div className="space-y-2">
+          <div className="flex min-w-0 items-center justify-between gap-3 text-label text-muted-foreground">
+            <span className="min-w-0 truncate">
+              Progress{" "}
+              <span className="font-normal font-mono tabular-nums text-foreground">
+                {progressValue !== null ? `${progressValue}%` : "—"}
+              </span>
             </span>
-          ) : (
-            "—"
-          ),
-        },
-      ]}
+            <span className="shrink-0">
+              Target{" "}
+              {targetDate ? (
+                <span
+                  className={cn(
+                    "font-normal font-mono tabular-nums",
+                    dateToneClasses[targetDate.tone],
+                  )}
+                >
+                  {targetDate.label}
+                </span>
+              ) : (
+                <span className="font-normal text-foreground">—</span>
+              )}
+            </span>
+          </div>
+          {progressValue !== null ? (
+            <div
+              className="h-1.5 overflow-hidden rounded-full bg-muted"
+              aria-hidden="true"
+            >
+              <div
+                className={cn(
+                  "h-full rounded-full",
+                  progressValue >= 100
+                    ? "bg-status-success-fill"
+                    : "bg-primary",
+                )}
+                style={{ width: `${progressValue}%` }}
+              />
+            </div>
+          ) : null}
+        </div>
+      }
       actions={
         <ActionsCell
           project={project}
@@ -99,7 +124,10 @@ interface ProjectTableProps {
   projects: ProjectListItem[];
   prefs?: DisplayPrefs;
   hasMore?: boolean;
-  onLoadMore?: () => void;
+  hasPrevious?: boolean;
+  pageNumber?: number;
+  onNext?: () => void;
+  onPrevious?: () => void;
 }
 
 type ActiveDialog = "edit" | "delete" | "archive" | null;
@@ -108,39 +136,47 @@ export const ProjectTable = React.memo(function ProjectTable({
   projects,
   prefs,
   hasMore,
-  onLoadMore,
+  hasPrevious,
+  pageNumber = 1,
+  onNext,
+  onPrevious,
 }: ProjectTableProps) {
   const router = useRouter();
+  const requestLeave = useNavigationLeave();
   const canUpdate = useCan("build:update");
-  const canManage = useCan("build:manage");
-  const canEdit = canUpdate || canManage;
-  const [activeProject, setActiveProject] = useState<ProjectListItem | null>(null);
+  const canDelete = useCan("build:delete");
+  const [activeProject, setActiveProject] = useState<ProjectListItem | null>(
+    null,
+  );
   const [activeDialog, setActiveDialog] = useState<ActiveDialog>(null);
+  const showEmptyPagePagination =
+    projects.length === 0 && Boolean(hasMore || hasPrevious);
 
   const handleEdit = useCallback((p: ProjectListItem) => {
+    if (!canUpdate) return;
     setActiveProject(p);
     setActiveDialog("edit");
-  }, []);
+  }, [canUpdate]);
 
   const handleArchive = useCallback((p: ProjectListItem) => {
+    if (!canUpdate) return;
     setActiveProject(p);
     setActiveDialog("archive");
-  }, []);
+  }, [canUpdate]);
 
   const handleDelete = useCallback((p: ProjectListItem) => {
+    if (!canDelete) return;
     setActiveProject(p);
     setActiveDialog("delete");
-  }, []);
+  }, [canDelete]);
 
   const handleDialogClose = useCallback((open: boolean) => {
     if (!open) setActiveDialog(null);
   }, []);
 
-  const handleNoPreviousPage = useCallback(() => {}, []);
-
   const columns = useProjectTableColumns({
     prefs,
-    canEdit,
+    canEdit: canUpdate,
     onEdit: handleEdit,
     onArchive: handleArchive,
     onDelete: handleDelete,
@@ -148,9 +184,9 @@ export const ProjectTable = React.memo(function ProjectTable({
 
   const handleRowClick = useCallback(
     (project: ProjectListItem) => {
-      router.push(`/build/${project.id}`);
+      requestLeave(() => router.push(`/build/${project.id}`));
     },
-    [router],
+    [requestLeave, router],
   );
 
   const renderMobileCard = useCallback(
@@ -174,27 +210,45 @@ export const ProjectTable = React.memo(function ProjectTable({
         onRowClick={handleRowClick}
         minWidth="content"
         mobileCard={renderMobileCard}
-        rowClassName={() => "group h-9 hover:bg-primary/[0.035]"}
+        rowClassName={() => "group hover:bg-foreground/[0.035] focus-visible:bg-foreground/[0.05]"}
         className="min-h-0 min-w-0 flex-1 overflow-hidden rounded-none border-0 bg-transparent shadow-none"
         emptyState={
-          <div className="py-4 text-center text-sm text-muted-foreground">
-            No projects found
+          <div className="py-8 text-center">
+            <p className="text-sm font-medium text-foreground">No projects found</p>
+            <p className="mt-1 text-xs text-muted-foreground">
+              Try clearing filters or search.
+            </p>
           </div>
         }
         pagination={
-          hasMore && onLoadMore
+          onNext && onPrevious && !showEmptyPagePagination
             ? {
                 mode: "cursor",
                 pageSize: 25,
-                hasMore: true,
-                hasPrevious: false,
-                onNext: onLoadMore,
-                onPrevious: handleNoPreviousPage,
+                pageNumber,
+                hasMore: Boolean(hasMore),
+                hasPrevious: Boolean(hasPrevious),
+                onNext,
+                onPrevious,
               }
             : undefined
         }
       />
-      {activeProject ? (
+      {showEmptyPagePagination && onNext && onPrevious ? (
+        <TablePagination
+          mode="cursor"
+          rowCount={1}
+          pageNumber={pageNumber}
+          hasMore={Boolean(hasMore)}
+          hasPrevious={Boolean(hasPrevious)}
+          onNext={onNext}
+          onPrevious={onPrevious}
+          showSummary={false}
+        />
+      ) : null}
+      {activeProject &&
+      ((canUpdate && (activeDialog === "edit" || activeDialog === "archive")) ||
+        (canDelete && activeDialog === "delete")) ? (
         <ProjectCardDialogs
           project={activeProject}
           isArchived={activeProject.status === "ARCHIVED"}

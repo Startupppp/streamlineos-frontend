@@ -1,0 +1,241 @@
+"use client";
+
+import { useState } from "react";
+import { QueryClientProvider } from "@tanstack/react-query";
+import { createAppQueryClient } from "@/components/providers/query-provider";
+import { accountingAndSupportQueryKeys } from "@/lib/query-keys/accounting-and-support";
+import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
+import { knowledgeAndSurveysQueryKeys } from "@/lib/query-keys/knowledge-and-surveys";
+import { PublicBoardView } from "@/features/build/whiteboard/public-board-view";
+import { PublicFormView } from "@/features/build/forms/public-form-view";
+import { PublicIntakeTokenView } from "@/features/build/intake/public-intake-token-view";
+import PublicRoadmapPage from "@/app/(public)/roadmap/[orgId]/page";
+import { FilesPage } from "@/features/build/files/files-page";
+import { FormsListPage } from "@/features/build/forms/forms-list-page";
+import { FormDetailPage } from "@/features/build/forms/form-detail-page";
+import { IntakePage } from "@/features/build/intake/intake-page";
+import { MeetingsListPage } from "@/features/build/meetings/meetings-list-page";
+import { MeetingDetailPage } from "@/features/build/meetings/meeting-detail-page";
+import { WhiteboardPage } from "@/features/build/whiteboard/whiteboard-page";
+import {
+  VIEW_TOKEN,
+  EDIT_TOKEN,
+  FORM_TOKEN,
+  INTAKE_TOKEN,
+  BOARD_LOADING_TOKEN,
+  GALLERY_PROJECT_ID,
+  GALLERY_FORM_ID,
+  GALLERY_MEETING_ID,
+  STUB_ROADMAP_BOARD,
+  STUB_VIEW_BOARD,
+  STUB_EDIT_BOARD,
+  STUB_FORM,
+} from "./content-intake-gallery-stubs";
+
+function useGalleryQueryClient() {
+  const [queryClient] = useState(() => {
+    const client = createAppQueryClient("content-intake-gallery");
+
+    client.setQueryData(
+      accountingAndSupportQueryKeys.whiteboards.publicLink(VIEW_TOKEN),
+      STUB_VIEW_BOARD,
+    );
+
+    client.setQueryData(
+      accountingAndSupportQueryKeys.whiteboards.publicLink(EDIT_TOKEN),
+      STUB_EDIT_BOARD,
+    );
+
+    client.setQueryData(
+      buildWorkQueryKeys.projects.publicForms.token(FORM_TOKEN),
+      STUB_FORM,
+    );
+
+    client.setQueryData(
+      buildWorkQueryKeys.projects.publicForms.intakeFormByToken(INTAKE_TOKEN),
+      null,
+    );
+
+    client.setQueryData(
+      knowledgeAndSurveysQueryKeys.roadmap.publicBoard(undefined),
+      STUB_ROADMAP_BOARD,
+    );
+
+    return client;
+  });
+  return queryClient;
+}
+
+function useBoardLoadingQueryClient() {
+  const [client] = useState(() => {
+    const c = createAppQueryClient("content-intake-gallery-board-loading");
+    void c.prefetchQuery({
+      queryKey:
+        accountingAndSupportQueryKeys.whiteboards.publicLink(
+          BOARD_LOADING_TOKEN,
+        ),
+      queryFn: (): Promise<unknown> => new Promise(() => {}),
+    });
+    return c;
+  });
+  return client;
+}
+
+function PublicBoardLoadingFrame() {
+  const loadingClient = useBoardLoadingQueryClient();
+  return (
+    <QueryClientProvider client={loadingClient}>
+      <PublicBoardView shareToken={BOARD_LOADING_TOKEN} />
+    </QueryClientProvider>
+  );
+}
+
+function CaseFrame({
+  id,
+  title,
+  height = "h-auto",
+  children,
+}: {
+  id: string;
+  title: string;
+  height?: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <section aria-label={title}>
+      <h2 className="mb-2 text-sm font-medium text-foreground">{title}</h2>
+      <div
+        data-case-frame={id}
+        className={`w-full min-w-0 overflow-hidden rounded-xl border border-border bg-background ${height}`}
+      >
+        {children}
+      </div>
+    </section>
+  );
+}
+
+export function ContentIntakeGallery() {
+  const queryClient = useGalleryQueryClient();
+
+  return (
+    <QueryClientProvider client={queryClient}>
+      <div className="flex flex-col gap-8 p-4">
+        <header>
+          <h1 className="text-lg font-semibold tracking-tight">
+            Content intake public surfaces
+          </h1>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Overflow, control-height and focus-order contracts for the public
+            whiteboard, form and intake surfaces. Each frame mounts the real
+            component with pre-seeded stub data.
+          </p>
+        </header>
+
+        <CaseFrame
+          id="public-whiteboard-view"
+          title="Public whiteboard — view mode"
+          height="h-[36rem]"
+        >
+          <PublicBoardView shareToken={VIEW_TOKEN} />
+        </CaseFrame>
+
+        <CaseFrame
+          id="public-whiteboard-edit"
+          title="Public whiteboard — edit mode"
+          height="h-[36rem]"
+        >
+          <PublicBoardView shareToken={EDIT_TOKEN} />
+        </CaseFrame>
+
+        <CaseFrame id="public-form" title="Public form">
+          <PublicFormView formToken={FORM_TOKEN} />
+        </CaseFrame>
+
+        <CaseFrame id="public-intake" title="Public intake">
+          <PublicIntakeTokenView intakeToken={INTAKE_TOKEN} />
+        </CaseFrame>
+
+        <CaseFrame
+          id="public-board-loading"
+          title="Public whiteboard — loading skeleton"
+          height="h-64"
+        >
+          <PublicBoardLoadingFrame />
+        </CaseFrame>
+
+        <CaseFrame
+          id="public-roadmap"
+          title="Public roadmap"
+          height="h-[48rem]"
+        >
+          <PublicRoadmapPage />
+        </CaseFrame>
+
+        <CaseFrame
+          id="project-files"
+          title="Authenticated files page (loading)"
+          height="h-64"
+        >
+          <FilesPage projectId={GALLERY_PROJECT_ID} />
+        </CaseFrame>
+
+        <CaseFrame
+          id="project-forms"
+          title="Authenticated forms list (loading)"
+          height="h-64"
+        >
+          <FormsListPage projectId={GALLERY_PROJECT_ID} />
+        </CaseFrame>
+
+        <CaseFrame
+          id="project-form-detail"
+          title="Authenticated form detail (loading)"
+          height="h-64"
+        >
+          <FormDetailPage
+            projectId={GALLERY_PROJECT_ID}
+            formId={GALLERY_FORM_ID}
+          />
+        </CaseFrame>
+
+        <CaseFrame
+          id="project-intake"
+          title="Authenticated intake page (loading)"
+          height="h-64"
+        >
+          <IntakePage projectId={GALLERY_PROJECT_ID} />
+        </CaseFrame>
+
+        <CaseFrame
+          id="project-meetings"
+          title="Authenticated meetings list (loading)"
+          height="h-64"
+        >
+          <MeetingsListPage projectId={GALLERY_PROJECT_ID} />
+        </CaseFrame>
+
+        <CaseFrame
+          id="project-meeting-detail"
+          title="Authenticated meeting detail (loading)"
+          height="h-64"
+        >
+          <MeetingDetailPage
+            projectId={GALLERY_PROJECT_ID}
+            meetingId={GALLERY_MEETING_ID}
+          />
+        </CaseFrame>
+
+        <CaseFrame
+          id="project-whiteboard"
+          title="Authenticated whiteboard page (loading)"
+          height="h-64"
+        >
+          <WhiteboardPage
+            projectId={GALLERY_PROJECT_ID}
+            initialBoardId={null}
+          />
+        </CaseFrame>
+      </div>
+    </QueryClientProvider>
+  );
+}

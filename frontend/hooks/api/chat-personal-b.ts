@@ -44,8 +44,11 @@ export function useArchiveChannel() {
     mutationKey: ["chat", "channels", "archive"],
     mutationFn: (channelId: number) =>
       apiClient.post<{ ok: boolean }>(`/chat/channels/${channelId}/archive`, undefined, undefined, chatOkContract),
-    onSuccess: () => {
+    onSuccess: (_data, channelId) => {
       queryClient.invalidateQueries({ queryKey: collaborationQueryKeys.chat.myChannels() });
+      queryClient.invalidateQueries({
+        queryKey: collaborationQueryKeys.chat.channel(channelId),
+      });
       queryClient.invalidateQueries({
         queryKey: collaborationQueryKeys.chat.archivedChannels(),
       });
@@ -98,6 +101,7 @@ export function useEntityChannel(
 ) {
   const canRead = useCan("chat:channels:read");
   return useQuery({
+    ...INLINE_READ_ERROR,
     queryKey: entityChannelQueryKey(entityType, entityId),
     queryFn: ({ signal }) =>
       apiClient.get<ChatChannelDetailWire | null>(`/chat/channels/entity/${entityType}/${entityId}`, undefined, signal, chatEntityChannelLookupContract),
@@ -151,8 +155,11 @@ export function useMuteChannel() {
         undefined,
         chatMuteResponseContract,
       ),
-    onSuccess: () => {
+    onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({ queryKey: collaborationQueryKeys.chat.myChannels() });
+      queryClient.invalidateQueries({
+        queryKey: collaborationQueryKeys.chat.channel(variables.channelId),
+      });
     },
   });
 }
@@ -163,8 +170,11 @@ export function useUnmuteChannel() {
     mutationKey: ["chat", "channels", "unmute"],
     mutationFn: (channelId: number) =>
       apiClient.post<{ ok: boolean }>(`/chat/channels/${channelId}/unmute`, undefined, undefined, chatOkContract),
-    onSuccess: () => {
+    onSuccess: (_data, channelId) => {
       queryClient.invalidateQueries({ queryKey: collaborationQueryKeys.chat.myChannels() });
+      queryClient.invalidateQueries({
+        queryKey: collaborationQueryKeys.chat.channel(channelId),
+      });
     },
   });
 }
@@ -274,8 +284,11 @@ export function useSetNotificationPreference() {
         undefined,
         chatNotifPrefResponseContract,
       ),
-    onSuccess: () => {
+    onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({ queryKey: collaborationQueryKeys.chat.myChannels() });
+      queryClient.invalidateQueries({
+        queryKey: collaborationQueryKeys.chat.channel(variables.channelId),
+      });
     },
   });
 }
@@ -284,24 +297,26 @@ export interface ChannelFile {
   id: number;
   messageId: number;
   fileName: string;
-  mimeType: string;
+  fileKey: string;
   fileSize: number;
-  fileUrl: string;
+  mimeType: string;
+  createdAt: string;
 }
 
 export function useChannelFiles(channelId: number) {
   const canRead = useCan("chat:messages:read");
   return useInfiniteQuery({
     ...INLINE_READ_ERROR,
-    queryKey: [...collaborationQueryKeys.chat.all, "channelFiles", channelId] as const,
+    queryKey: collaborationQueryKeys.chat.channelFiles(channelId),
     queryFn: ({ pageParam, signal }) =>
-      apiClient.get<{ files: ChannelFile[]; nextCursor?: number }>(
+      // The contract reports the end of the list as null, not an absent field.
+      apiClient.get<{ files: ChannelFile[]; nextCursor?: number | null }>(
         `/chat/channels/${channelId}/files`,
         pageParam !== undefined ? { cursor: String(pageParam) } : undefined,
         signal,
         chatChannelFilesContract,
       ),
-    getNextPageParam: (last) => last.nextCursor,
+    getNextPageParam: (last) => last.nextCursor ?? undefined,
     initialPageParam: NO_ID_CURSOR_YET,
     enabled: canRead && channelId > 0,
   });

@@ -3,6 +3,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
+import { platformHierarchyQueryKeys } from "@/lib/query-keys/platform-hierarchy";
 
 const calendarCreateEventContract = lazyContract(() =>
   import("@/hooks/api/calendar-schema").then((m) => m.calendarCreateEventContract),
@@ -16,8 +17,8 @@ const calendarDeleteEventContract = lazyContract(() =>
 const calendarOccurrenceExceptionContract = lazyContract(() =>
   import("@/hooks/api/calendar-schema").then((m) => m.calendarOccurrenceExceptionContract),
 );
-import { platformHierarchyQueryKeys } from "@/lib/query-keys/platform-hierarchy";
-import type { CalendarOooConflict, CalendarEventConflict } from "./calendar-types";
+import { invalidateCalendarProjectionWindows } from "@/lib/calendar-projection-cache";
+import type { CalendarOooConflict, CalendarEventConflict, CalendarEventsResponse } from "./calendar-types";
 
 /**
  * The row `POST /calendar/events` and `PUT /calendar/events/:id` return, mirroring
@@ -102,8 +103,10 @@ interface UpsertOccurrenceExceptionPayload {
   eventId: number;
   occurrenceStart: string;
   modifiedTitle?: string;
+  modifiedDescription?: string;
   modifiedStart?: string;
   modifiedEnd?: string;
+  expectedVersion?: number;
 }
 
 export function useCreateCalendarEvent() {
@@ -112,8 +115,10 @@ export function useCreateCalendarEvent() {
     mutationKey: ["calendar", "events", "create"],
     mutationFn: (payload: CreateCalendarEventPayload) =>
       apiClient.post<MutateCalendarEventResponse>("/calendar/events", payload, undefined, calendarCreateEventContract),
-    onSuccess: () =>
-      qc.invalidateQueries({ queryKey: platformHierarchyQueryKeys.calendar.all, exact: false }),
+    onSuccess: () => {
+      invalidateCalendarProjectionWindows(qc);
+      void qc.invalidateQueries({ queryKey: platformHierarchyQueryKeys.calendar.all });
+    },
   });
 }
 
@@ -123,8 +128,10 @@ export function useUpdateCalendarEvent() {
     mutationKey: ["calendar", "events", "update"],
     mutationFn: ({ calendarEventId, ...payload }: UpdateCalendarEventPayload) =>
       apiClient.put<CalendarEvent>(`/calendar/events/${calendarEventId}`, payload, undefined, calendarUpdateEventContract),
-    onSuccess: () =>
-      qc.invalidateQueries({ queryKey: platformHierarchyQueryKeys.calendar.all, exact: false }),
+    onSuccess: () => {
+      invalidateCalendarProjectionWindows(qc);
+      void qc.invalidateQueries({ queryKey: platformHierarchyQueryKeys.calendar.all });
+    },
   });
 }
 
@@ -133,8 +140,10 @@ export function useDeleteCalendarEvent() {
   return useMutation({
     mutationKey: ["calendar", "events", "delete"],
     mutationFn: (calendarEventId: number) => apiClient.delete<{ deleted: boolean }>(`/calendar/events/${calendarEventId}`, undefined, undefined, calendarDeleteEventContract),
-    onSuccess: () =>
-      qc.invalidateQueries({ queryKey: platformHierarchyQueryKeys.calendar.all, exact: false }),
+    onSuccess: () => {
+      invalidateCalendarProjectionWindows(qc);
+      void qc.invalidateQueries({ queryKey: platformHierarchyQueryKeys.calendar.all });
+    },
   });
 }
 
@@ -149,8 +158,10 @@ export function useUpsertOccurrenceException() {
         undefined,
         calendarOccurrenceExceptionContract,
       ),
-    onSuccess: () =>
-      qc.invalidateQueries({ queryKey: platformHierarchyQueryKeys.calendar.all, exact: false }),
+    onSuccess: () => {
+      invalidateCalendarProjectionWindows(qc);
+      void qc.invalidateQueries({ queryKey: platformHierarchyQueryKeys.calendar.all });
+    },
   });
 }
 
@@ -158,14 +169,24 @@ export function useCancelOccurrence() {
   const qc = useQueryClient();
   return useMutation({
     mutationKey: ["calendar", "events", "occurrence", "cancel"],
-    mutationFn: ({ eventId, occurrenceStart }: { eventId: number; occurrenceStart: string }) =>
+    mutationFn: ({ eventId, occurrenceStart, expectedVersion }: { eventId: number; occurrenceStart: string; expectedVersion?: number }) =>
       apiClient.delete<{ id: number }>(
-        `/calendar/events/${eventId}/occurrences/${encodeURIComponent(occurrenceStart)}`,
+        `/calendar/events/${eventId}/occurrences/${encodeURIComponent(occurrenceStart)}${expectedVersion === undefined ? "" : `?expectedVersion=${expectedVersion}`}`,
         undefined,
         undefined,
         calendarOccurrenceExceptionContract,
       ),
-    onSuccess: () =>
-      qc.invalidateQueries({ queryKey: platformHierarchyQueryKeys.calendar.all, exact: false }),
+    onSuccess: (_result, { eventId, occurrenceStart }) => {
+      const occurrenceId = `event-${eventId}-${occurrenceStart}`;
+      qc.setQueriesData<CalendarEventsResponse>(
+        { queryKey: platformHierarchyQueryKeys.calendar.eventsAll },
+        (window) => window && Array.isArray(window.events) ? {
+          ...window,
+          events: window.events.filter((event) => event.id !== occurrenceId),
+        } : window,
+      );
+      invalidateCalendarProjectionWindows(qc);
+      void qc.invalidateQueries({ queryKey: platformHierarchyQueryKeys.calendar.all });
+    },
   });
 }

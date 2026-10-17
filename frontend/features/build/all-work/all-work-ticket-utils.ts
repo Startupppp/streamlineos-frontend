@@ -22,6 +22,7 @@ export function toKanbanTicket(t: AllWorkTicket): KanbanTicket {
     rank: t.rank ?? undefined,
     epicId: t.epicId ?? undefined,
     assigneeId: t.assigneeId ?? undefined,
+    version: t.version,
     cycleId: t.cycleId,
     dueDate: t.dueDate,
     startDate: t.startDate,
@@ -50,6 +51,7 @@ export type TableRow = {
   priority: string | null | undefined;
   points: number | null | undefined;
   ticketNumber: number;
+  projectKey: string | null | undefined;
   sequenceId: string | null | undefined;
   startDate: string | null | undefined;
   dueDate: string | null | undefined;
@@ -75,6 +77,7 @@ export function toTableTicket(t: AllWorkTicket): TableRow {
     priority: t.priority,
     points: t.points,
     ticketNumber: t.ticketNumber,
+    projectKey: t.projectKey,
     sequenceId: undefined,
     startDate: t.startDate,
     dueDate: t.dueDate,
@@ -96,7 +99,7 @@ export function toTableTicket(t: AllWorkTicket): TableRow {
   };
 }
 
-export function groupByProject(tickets: AllWorkTicket[]): TicketGroup[] {
+function groupByProject(tickets: AllWorkTicket[]): TicketGroup[] {
   const map = new Map<number, TicketGroup>();
   for (const t of tickets) {
     if (t.projectId === null) continue;
@@ -116,7 +119,7 @@ export function groupByProject(tickets: AllWorkTicket[]): TicketGroup[] {
   return Array.from(map.values());
 }
 
-export function groupByStatus(tickets: AllWorkTicket[]): TicketGroup[] {
+function groupByStatus(tickets: AllWorkTicket[]): TicketGroup[] {
   const map = new Map<string, AllWorkTicket[]>();
   for (const t of tickets) {
     const key = t.status;
@@ -131,7 +134,7 @@ export function groupByStatus(tickets: AllWorkTicket[]): TicketGroup[] {
   }));
 }
 
-export function groupByPriority(tickets: AllWorkTicket[]): TicketGroup[] {
+function groupByPriority(tickets: AllWorkTicket[]): TicketGroup[] {
   const map = new Map<string, AllWorkTicket[]>();
   for (const t of tickets) {
     const key = t.priority ?? "NONE";
@@ -146,7 +149,7 @@ export function groupByPriority(tickets: AllWorkTicket[]): TicketGroup[] {
   }));
 }
 
-export function groupByAssignee(tickets: AllWorkTicket[]): TicketGroup[] {
+function groupByAssignee(tickets: AllWorkTicket[]): TicketGroup[] {
   const map = new Map<string, AllWorkTicket[]>();
   for (const t of tickets) {
     const key = t.assigneeId ?? "__unassigned__";

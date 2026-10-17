@@ -295,6 +295,12 @@ export const CRM_NAV_GROUPS: NavGroup[] = [
             requiredPermission: "crm:settings:manage",
           },
           {
+            label: "Web Forms",
+            icon: FileText,
+            href: "/crm/settings/web-forms",
+            requiredPermission: "crm:web-forms:manage",
+          },
+          {
             label: "Record Layouts",
             icon: Rows3,
             href: "/crm/settings/layouts",

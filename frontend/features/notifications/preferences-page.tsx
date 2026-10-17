@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback } from "react";
+import { useCallback, useState } from "react";
 import { Bell, Mail, Smartphone, MessageSquare, Volume2, Moon, BellOff } from "lucide-react";
 import { XIcon } from "@animateicons/react/lucide";
 import { toast } from "sonner";
@@ -22,7 +22,10 @@ import {
   useUpdateNotificationPreferences,
   useSuppressions,
   useRemoveSuppression,
-} from "@/hooks/api/notifications";
+  useResetNotificationPreferences,
+} from "@/hooks/api/notifications-preferences";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { Button } from "@/components/ui/button";
 import {
   NOTIFICATION_CATEGORIES,
   NOTIFICATION_CATEGORY_CONFIG,
@@ -31,6 +34,7 @@ import type { UpdatePreferencesInput, DigestMode } from "@/types/notifications";
 import { PushPermissionCard } from "@/features/notifications/components/push-permission-card";
 import { PreferenceEventsSection } from "@/features/notifications/components/preference-events-section";
 import { PreferenceScopeRulesSection } from "@/features/notifications/components/preference-scope-rules-section";
+import { PreferenceConsentsSection } from "@/features/notifications/components/preference-consents-section";
 
 const CHANNELS = [
   { key: "inAppEnabled" as const, label: "In-App", description: "Notifications inside the app", icon: Bell, backendChannel: null },
@@ -69,6 +73,20 @@ export function NotificationPreferencesPage() {
   const updatePreferences = useUpdateNotificationPreferences();
   const { data: suppressions, isLoading: suppressionsLoading } = useSuppressions();
   const removeSuppression = useRemoveSuppression();
+  const resetPreferences = useResetNotificationPreferences();
+  const [confirmReset, setConfirmReset] = useState(false);
+
+  const handleOpenReset = useCallback(() => setConfirmReset(true), []);
+
+  const handleReset = useCallback(() => {
+    resetPreferences.mutate(undefined, {
+      onSuccess: () => {
+        toast.success("Reset your notification preferences to the defaults");
+        setConfirmReset(false);
+      },
+      onError: (error) => toast.error(getErrorMessage(error)),
+    });
+  }, [resetPreferences]);
 
   const handleChannelToggle = useCallback(
     (key: keyof UpdatePreferencesInput, value: boolean) => {
@@ -165,7 +183,23 @@ export function NotificationPreferencesPage() {
     <PageWrapper
       title="Notification Preferences"
       subtitle="Control how and when you receive notifications"
+      actions={
+        <Button type="button" size="sm" variant="outline" onClick={handleOpenReset}>
+          Reset to defaults
+        </Button>
+      }
     >
+      <ConfirmDialog
+        open={confirmReset}
+        onOpenChange={setConfirmReset}
+        title="Reset notification preferences?"
+        description="Channels, quiet hours, digest, categories and per-event choices go back to the defaults. Scope rules, muted notifications and messaging consent are kept."
+        confirmLabel="Reset"
+        destructive
+        keepOpenOnConfirm
+        isPending={resetPreferences.isPending}
+        onConfirm={handleReset}
+      />
       <div className="flex flex-1 min-h-0 flex-col gap-6">
         <PushPermissionCard />
 
@@ -216,6 +250,7 @@ export function NotificationPreferencesPage() {
                 <div className="space-y-1">
                   <Label className="text-xs text-muted-foreground">Start time</Label>
                   <Input
+                    key={prefs?.quietHoursStart ?? "unset"}
                     type="time"
                     defaultValue={prefs?.quietHoursStart ?? ""}
                     onBlur={(e) => handleQuietHours("quietHoursStart", e.target.value)}
@@ -224,6 +259,7 @@ export function NotificationPreferencesPage() {
                 <div className="space-y-1">
                   <Label className="text-xs text-muted-foreground">End time</Label>
                   <Input
+                    key={prefs?.quietHoursEnd ?? "unset"}
                     type="time"
                     defaultValue={prefs?.quietHoursEnd ?? ""}
                     onBlur={(e) => handleQuietHours("quietHoursEnd", e.target.value)}
@@ -291,6 +327,8 @@ export function NotificationPreferencesPage() {
         <PreferenceEventsSection />
 
         <PreferenceScopeRulesSection />
+
+        <PreferenceConsentsSection />
 
         <section>
           <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">Muted Notifications</h2>

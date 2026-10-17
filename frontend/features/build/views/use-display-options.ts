@@ -1,8 +1,8 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useState } from "react";
 import { orgScopedStorageKey, useOrgStorageScope } from "@/lib/org-scoped-storage";
-import { DEFAULT_DISPLAY_OPTIONS } from "./display-options-panel";
+import { DEFAULT_DISPLAY_OPTIONS } from "./display-options-model";
 import type {
   ColumnByOption,
   CompletedIssuesFilter,
@@ -17,7 +17,7 @@ const STORAGE_PREFIX = "streamlineos:projects:display-options:v1:";
 const COLUMN_BY_VALUES: readonly ColumnByOption[] = ["status", "assignee", "priority", "label", "cycle", "project"];
 const GROUP_BY_VALUES: readonly GroupByOption[] = ["status", "assignee", "priority", "label", "cycle", "project", "none"];
 const ROW_BY_VALUES: readonly SwimlaneBy[] = ["none", "status", "assignee", "priority", "cycle"];
-const ORDER_BY_VALUES: readonly OrderByOption[] = ["created", "priority", "dueDate", "manual"];
+const ORDER_BY_VALUES: readonly OrderByOption[] = ["created", "updated", "priority", "dueDate", "manual"];
 const COMPLETED_VALUES: readonly CompletedIssuesFilter[] = ["all", "none", "last-day", "last-week", "last-month"];
 
 function pickBool(value: unknown, fallback: boolean): boolean {
@@ -94,6 +94,30 @@ interface ReadonlyParams {
   get(name: string): string | null;
 }
 
+const SERVER_ORDER_ALIASES: Readonly<Record<string, OrderByOption>> = { rank: "manual" };
+
+const ORDER_DIRECTIONS: Readonly<Record<OrderByOption, "asc" | "desc">> = {
+  manual: "asc",
+  dueDate: "asc",
+  created: "desc",
+  updated: "desc",
+  priority: "desc",
+};
+
+export function readOrderBy(
+  raw: string | null,
+  fallback: OrderByOption,
+): OrderByOption {
+  if (raw === null) return fallback;
+  const aliased = SERVER_ORDER_ALIASES[raw];
+  if (aliased !== undefined) return aliased;
+  return pickEnum(raw, ORDER_BY_VALUES, fallback);
+}
+
+export function orderDirectionFor(orderBy: OrderByOption): "asc" | "desc" {
+  return ORDER_DIRECTIONS[orderBy];
+}
+
 export function applyDisplayOptionParams(
   fallback: DisplayOptions,
   params: ReadonlyParams,
@@ -108,7 +132,7 @@ export function applyDisplayOptionParams(
   const next: DisplayOptions = {
     ...fallback,
     groupBy: groupBy === null ? fallback.groupBy : pickEnum(groupBy, GROUP_BY_VALUES, fallback.groupBy),
-    orderBy: orderBy === null ? fallback.orderBy : pickEnum(orderBy, ORDER_BY_VALUES, fallback.orderBy),
+    orderBy: readOrderBy(orderBy, fallback.orderBy),
     rowBy: rowBy === null ? fallback.rowBy : pickEnum(rowBy, ROW_BY_VALUES, fallback.rowBy),
     columnBy: columnBy === null ? fallback.columnBy : pickEnum(columnBy, COLUMN_BY_VALUES, fallback.columnBy),
     completedIssues:
@@ -132,6 +156,7 @@ export function writeDisplayOptionParams(
 ): URLSearchParams {
   params.set("groupBy", options.groupBy);
   params.set("orderBy", options.orderBy);
+  params.set("orderDir", orderDirectionFor(options.orderBy));
   params.set("rowBy", options.rowBy);
   params.set("columnBy", options.columnBy);
   params.set("completed", options.completedIssues);
@@ -167,15 +192,9 @@ export function useDisplayOptions(
   projectId: number,
 ): [DisplayOptions, (next: DisplayOptions) => void] {
   const scope = useOrgStorageScope();
-  const [options, setOptions] = useState<DisplayOptions>(DEFAULT_DISPLAY_OPTIONS);
-  const loadedRef = useRef(false);
-
-  useEffect(() => {
-    if (loadedRef.current) return;
-    loadedRef.current = true;
-    const stored = loadStored(projectId, scope);
-    if (stored) setOptions(stored);
-  }, [projectId, scope]);
+  const [options, setOptions] = useState<DisplayOptions>(
+    () => loadStored(projectId, scope) ?? DEFAULT_DISPLAY_OPTIONS,
+  );
 
   const update = useCallback(
     (next: DisplayOptions) => {

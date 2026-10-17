@@ -35,7 +35,10 @@ import {
   FrozenTaxLinesCard,
 } from "./ar-document-readonly";
 import { CreditNoteFromInvoiceDialog } from "./credit-note-from-invoice-dialog";
-import { documentRevision, toUpdateDocumentInput, type ArDocumentFormValues } from "./ar-document-schema";
+import { DocumentAttachmentsCard } from "../documents/document-attachments-card";
+import { DocumentComplianceCard } from "../documents/document-compliance-card";
+import { DocumentPdfButton } from "../documents/document-pdf-button";
+import { documentRevision, toCreateDocumentInput, type ArDocumentFormValues } from "./ar-document-schema";
 
 const PREVIEW_DEBOUNCE_MS = 400;
 
@@ -85,7 +88,7 @@ export function InvoiceDetailClient({ invoiceId }: { invoiceId: string }) {
   async function handleSave(values: ArDocumentFormValues): Promise<void> {
     setErrorLineIndex(undefined);
     try {
-      await updateDraft.mutateAsync({ invoiceId, input: toUpdateDocumentInput(values) });
+      await updateDraft.mutateAsync({ invoiceId, input: toCreateDocumentInput(values) });
       toast.success("Draft saved");
     } catch (error) {
       handleFailure(error);
@@ -151,11 +154,20 @@ export function InvoiceDetailClient({ invoiceId }: { invoiceId: string }) {
       backHref="/accounting/invoices"
       backLabel="Back to invoices"
       actions={
-        !isDraft && canCredit ? (
-          <Button size="sm" variant="outline" onClick={() => setCreditOpen(true)}>
-            Issue credit note
-          </Button>
-        ) : null
+        isDraft ? null : (
+          <div className="flex w-full items-center gap-2 sm:w-auto">
+            <DocumentPdfButton
+              kind="invoice"
+              documentId={invoice.id}
+              fallbackName={`${invoice.documentNumber ?? "invoice"}.pdf`}
+            />
+            {canCredit ? (
+              <Button size="sm" variant="outline" onClick={() => setCreditOpen(true)}>
+                Issue credit note
+              </Button>
+            ) : null}
+          </div>
+        )
       }
     >
       {isDraft ? (
@@ -217,6 +229,8 @@ export function InvoiceDetailClient({ invoiceId }: { invoiceId: string }) {
                 currency={invoice.currency}
               />
             ) : null}
+            <DocumentComplianceCard documentType="sales_invoice" documentId={invoice.id} />
+            <DocumentAttachmentsCard documentType="sales_invoice" documentId={invoice.id} />
           </div>
         </div>
       )}

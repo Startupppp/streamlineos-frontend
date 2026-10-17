@@ -2,18 +2,27 @@
 
 import { useQueryClient, type InfiniteData } from "@tanstack/react-query";
 import { useSession } from "next-auth/react";
+import { toast } from "sonner";
 import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { collaborationQueryKeys } from "@/lib/query-keys/collaboration";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import {
+  invalidateChatChannelRead,
+  invalidateChatMessageDeleted,
+  invalidateChatMessageEdited,
+  invalidateChatMessageSent,
+} from "@/lib/chat-read-state";
 import type { Message, MessagesPage, SendMessageInput, EditMessageInput } from "@/types/chat";
+import type { ChatSendResponse } from "@/hooks/api/chat-schema";
 
 const chatOkContract = lazyContract(() =>
   import("@/hooks/api/chat-schema").then((m) => m.chatOkContract),
 );
 
-const chatMessageContract = lazyContract(() =>
-  import("@/hooks/api/chat-schema").then((m) => m.chatMessageContract),
+const chatSendResponseContract = lazyContract(() =>
+  import("@/hooks/api/chat-schema").then((m) => m.chatSendResponseContract),
 );
 
 const chatReactionsContract = lazyContract(() =>
@@ -26,11 +35,11 @@ export function useSendMessage() {
   return useAuthorizedMutation("chat:messages:write", {
     mutationKey: ["chat", "messages", "send"],
     mutationFn: ({ channelId, ...body }: SendMessageInput) =>
-      apiClient.post<Message>(
+      apiClient.post<ChatSendResponse>(
         `/chat/channels/${channelId}/messages`,
         body,
         undefined,
-        chatMessageContract,
+        chatSendResponseContract,
       ),
     onMutate: async (variables) => {
       await queryClient.cancelQueries({
@@ -61,6 +70,7 @@ export function useSendMessage() {
         },
         attachments: [],
         replyTo: null,
+        clientKey: variables.clientKey ?? null,
       };
 
       if (previousData) {
@@ -86,10 +96,11 @@ export function useSendMessage() {
       }
     },
     onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({
-        queryKey: collaborationQueryKeys.chat.messages(variables.channelId),
-      });
-      queryClient.invalidateQueries({ queryKey: collaborationQueryKeys.chat.myChannels() });
+      invalidateChatMessageSent(
+        queryClient,
+        variables.channelId,
+        (variables.attachments?.length ?? 0) > 0,
+      );
     },
   });
 }
@@ -109,8 +120,8 @@ export function useEditMessage() {
         undefined,
         chatOkContract,
       ),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: collaborationQueryKeys.chat.all });
+    onSuccess: (_, { channelId }) => {
+      invalidateChatMessageEdited(queryClient, channelId);
     },
   });
 }
@@ -132,8 +143,11 @@ export function useDeleteMessage() {
         undefined,
         chatOkContract,
       ),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: collaborationQueryKeys.chat.all });
+    onSuccess: (_, { channelId }) => {
+      invalidateChatMessageDeleted(queryClient, channelId);
+    },
+    onError: (err) => {
+      toast.error(getErrorMessage(err));
     },
   });
 }
@@ -144,9 +158,8 @@ export function useMarkChannelRead() {
     mutationKey: ["chat", "channels", "mark-read"],
     mutationFn: ({ channelId }: { channelId: number }) =>
       apiClient.post<{ ok: boolean }>(`/chat/channels/${channelId}/read`, undefined, undefined, chatOkContract),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: collaborationQueryKeys.chat.myChannels() });
-      queryClient.invalidateQueries({ queryKey: collaborationQueryKeys.chat.unreadTotal() });
+    onSuccess: (_, { channelId }) => {
+      invalidateChatChannelRead(queryClient, channelId);
     },
   });
 }

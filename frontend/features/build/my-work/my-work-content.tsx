@@ -1,64 +1,35 @@
 "use client";
 
 import { memo, useCallback } from "react";
-import { useRouter } from "next/navigation";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { EmptyState } from "@/components/ui/empty-state";
 import { PageState } from "@/components/shared/page-state";
 import { DataTable } from "@/components/ui/data-table";
-import type { DataTableColumn } from "@/components/ui/data-table";
+import { MY_WORK_TABLE_COLUMNS } from "./my-work-table-columns";
 import type { DataTableSortState } from "@/components/ui/data-table.types";
-import { BulkActionBar } from "@/features/build/backlog/bulk-action-bar";
+import { BulkActionBar } from "@/features/build/shared/bulk-action-bar";
 import { useOnlineStatus } from "@/hooks/common/use-online-status";
-import { getTicketDetailHref } from "@/components/shared/format-ticket-key";
+import { buildMyWorkReturnHref, getMyWorkTicketHref } from "@/features/build/ticket-details/build-ticket-detail-url";
 import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
 import type { PageStateResolution } from "@/lib/page-state/resolve-page-state";
 import type { KanbanTicket, DisplayOptions } from "@/features/build/shared/types";
 import type { BuildListSortField, BuildListSortDirection, BuildListGrouping } from "@/features/build/shared/use-build-list-url-state";
-import type { AllWorkTicket, CursorPaginatedResponse } from "@/types/projects";
+import type { AllWorkTicket, AllWorkFilters, CursorPaginatedResponse } from "@/types/projects";
 import type { AllWorkTicketMeta } from "./map-all-work-ticket";
 import type { DueBucket } from "./my-work-rows";
 import type { MyWorkView } from "./my-work-view";
 import type { UseMyWorkBulkReturn } from "./use-my-work-bulk";
 import { AllWorkListSkeleton, BucketSection, BUCKET_ORDER } from "./my-work-rows";
 import { MyWorkViewBody } from "./my-work-view-body-lazy";
-import { MyWorkPaginationBar } from "./my-work-pagination-bar";
-
-const TABLE_COLUMNS: DataTableColumn<KanbanTicket>[] = [
-  {
-    key: "title",
-    header: "Title",
-    className: "min-w-[14rem] flex-1",
-    cell: (t) => (
-      <span className="text-sm font-medium leading-tight">{t.title}</span>
-    ),
-  },
-  {
-    key: "status",
-    header: "Status",
-    cell: (t) => (
-      <span className="text-xs text-muted-foreground">{t.status}</span>
-    ),
-  },
-  {
-    key: "priority",
-    header: "Priority",
-    cell: (t) => (
-      <span className="text-xs text-muted-foreground">
-        {t.priority ?? "—"}
-      </span>
-    ),
-  },
-  {
-    key: "dueDate",
-    header: "Due",
-    cell: (t) => (
-      <span className="text-xs tabular-nums text-muted-foreground">
-        {t.dueDate ?? "—"}
-      </span>
-    ),
-  },
-];
+import { TablePagination } from "@/components/ui/table-pagination";
+import { BuildPaginatedContent } from "@/features/build/shared/build-paginated-content";
+import { useGuardedSoftNavigation } from "@/hooks/common/use-guarded-document-navigation";
+import { useMyWorkSearchParams } from "./my-work-collection-params";
+import { StatusBadge } from "@/components/shared/ticket-status-badge";
+import { formatTicketKey } from "@/components/shared/format-ticket-key";
+import { PriorityBadge } from "@/features/build/shared/priority-badge";
+import { formatCalendarDate } from "@/lib/date-utils";
+import { MY_WORK_PAGE_SIZE } from "./my-work-data-model";
 
 interface MyWorkContentProps {
   pageState: PageStateResolution;
@@ -84,6 +55,7 @@ interface MyWorkContentProps {
   onPreviousPage: () => void;
   bulk: UseMyWorkBulkReturn;
   orgStatuses: readonly { name: string; color: string | null; type?: string | null }[] | undefined;
+  boardFilters: AllWorkFilters;
 }
 
 export const MyWorkContent = memo(function MyWorkContent({
@@ -110,19 +82,20 @@ export const MyWorkContent = memo(function MyWorkContent({
   onPreviousPage,
   bulk,
   orgStatuses,
+  boardFilters,
 }: MyWorkContentProps) {
-  const router = useRouter();
+  const navigate = useGuardedSoftNavigation();
   const isOnline = useOnlineStatus();
+  const searchParams = useMyWorkSearchParams();
+  const returnHref = buildMyWorkReturnHref(searchParams);
 
   const handleTicketSelect = useCallback(
     (id: number) => {
       const meta = ticketMeta.get(id);
       if (!meta) return;
-      router.push(
-        getTicketDetailHref(meta.projectId, meta.projectKey, meta.ticketNumber),
-      );
+      navigate(getMyWorkTicketHref(meta.projectId, meta.projectKey, meta.ticketNumber, returnHref));
     },
-    [ticketMeta, router],
+    [ticketMeta, navigate, returnHref],
   );
 
   const handleRowClick = useCallback(
@@ -175,6 +148,7 @@ export const MyWorkContent = memo(function MyWorkContent({
               cycles={[]}
               statuses={orgStatuses}
               hideCycle
+              hideAssignee
               onBulkStatus={bulk.handleBulkStatus}
               onBulkPriority={bulk.handleBulkPriority}
               onBulkAssignee={bulk.handleBulkAssignee}
@@ -184,7 +158,7 @@ export const MyWorkContent = memo(function MyWorkContent({
           ) : null}
           <DataTable
             data={kanbanTickets}
-            columns={TABLE_COLUMNS}
+            columns={MY_WORK_TABLE_COLUMNS}
             getRowKey={(row) => row.id}
             onRowClick={handleRowClick}
             sortState={sortState}
@@ -195,7 +169,7 @@ export const MyWorkContent = memo(function MyWorkContent({
             }}
             pagination={{
               mode: "cursor",
-              pageSize: 50,
+              pageSize: MY_WORK_PAGE_SIZE,
               pageNumber,
               hasMore,
               hasPrevious,
@@ -203,61 +177,100 @@ export const MyWorkContent = memo(function MyWorkContent({
               onPrevious: onPreviousPage,
             }}
             mobileCard={(row) => (
-              <div className="flex flex-col gap-0.5 py-2">
-                <span className="text-sm font-medium">{row.title}</span>
-                <span className="text-xs text-muted-foreground">
-                  {row.status} · {row.priority ?? "—"}
+              <div className="flex min-w-0 flex-col gap-2 py-2">
+                <span className="line-clamp-2 text-sm font-medium leading-5">
+                  {row.title}
                 </span>
+                <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5">
+                  <span className="font-mono text-xs text-muted-foreground">
+                    {formatTicketKey(row.project?.key, row.ticketNumber, row.id)}
+                  </span>
+                  <StatusBadge status={row.status} />
+                  {row.priority ? <PriorityBadge priority={row.priority} /> : null}
+                  {row.dueDate ? (
+                    <span className="text-xs text-muted-foreground">
+                      Due {formatCalendarDate(row.dueDate)}
+                    </span>
+                  ) : null}
+                </div>
               </div>
             )}
             emptyState={emptySlot}
           />
         </div>
       ) : showBucketList ? (
-        <ScrollArea className="min-h-0 flex-1" hideScrollbar>
-          <div className="flex flex-col gap-3">
-            {BUCKET_ORDER.map((bucket) => {
-              const items =
-                dueBuckets?.[bucket]?.map((t) => ({
-                  id: t.id,
-                  projectId: t.projectId ?? 0,
-                  projectName: t.projectName ?? "",
-                  projectKey: t.projectKey ?? "",
-                  ticketNumber: t.ticketNumber,
-                  title: t.title,
-                  status: t.status,
-                  priority: t.priority,
-                  type: t.type,
-                  dueDate: t.dueDate,
-                })) ?? [];
-              if (items.length === 0) return null;
-              return <BucketSection key={bucket} bucket={bucket} items={items} />;
-            })}
-            <MyWorkPaginationBar
+        <BuildPaginatedContent
+          ariaLabel="My Work due-date buckets"
+          contentClassName="overflow-hidden"
+          footer={(
+            <TablePagination
+              mode="cursor"
+              rowCount={kanbanTickets.length}
               pageNumber={pageNumber}
               hasPrevious={hasPrevious}
               hasMore={hasMore}
               onPrevious={onPreviousPage}
               onNext={onNextPage}
+              hideOnSinglePage
+              compact
+              showSummary={false}
             />
-          </div>
-        </ScrollArea>
+          )}
+        >
+          <ScrollArea className="min-h-0 flex-1" hideScrollbar>
+            <div className="flex flex-col gap-3">
+              {BUCKET_ORDER.map((bucket) => {
+                const items =
+                  dueBuckets?.[bucket]?.map((t) => ({
+                    id: t.id,
+                    projectId: t.projectId ?? 0,
+                    projectName: t.projectName ?? "",
+                    projectKey: t.projectKey ?? "",
+                    ticketNumber: t.ticketNumber,
+                    title: t.title,
+                    status: t.status,
+                    priority: t.priority,
+                    type: t.type,
+                    dueDate: t.dueDate,
+                    assignee: t.assignee,
+                    assigneeId: t.assigneeId,
+                    version: t.version,
+                    labels: t.labels,
+                  })) ?? [];
+                if (items.length === 0) return null;
+                return <BucketSection key={bucket} bucket={bucket} items={items} returnHref={returnHref} displayOptions={displayOptions} />;
+              })}
+            </div>
+          </ScrollArea>
+        </BuildPaginatedContent>
       ) : (
-        <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
+        <BuildPaginatedContent
+          ariaLabel="My Work tickets"
+          contentClassName="overflow-hidden"
+          footer={view !== "board" ? (
+            <TablePagination
+              mode="cursor"
+              rowCount={kanbanTickets.length}
+              pageNumber={pageNumber}
+              hasPrevious={hasPrevious}
+              hasMore={hasMore}
+              onPrevious={onPreviousPage}
+              onNext={onNextPage}
+              hideOnSinglePage
+              compact
+              showSummary={false}
+            />
+          ) : null}
+        >
           <MyWorkViewBody
             view={view}
             tickets={kanbanTickets}
             displayOptions={displayOptions}
             ticketMeta={ticketMeta}
+            boardFilters={boardFilters}
+            orgStatuses={orgStatuses}
           />
-          <MyWorkPaginationBar
-            pageNumber={pageNumber}
-            hasPrevious={hasPrevious}
-            hasMore={hasMore}
-            onPrevious={onPreviousPage}
-            onNext={onNextPage}
-          />
-        </div>
+        </BuildPaginatedContent>
       )}
     </PageState>
   );

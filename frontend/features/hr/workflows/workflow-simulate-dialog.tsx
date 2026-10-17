@@ -90,7 +90,7 @@ export function WorkflowSimulateDialog({
             <Input
               value={contextJson}
               onChange={(e) => setContextJson(e.target.value)}
-              className="font-mono text-xs"
+              className="font-mono"
               placeholder='{"amount": 5000}'
             />
           </div>

@@ -8,11 +8,23 @@ export type StarterTemplateContent = {
   children: SlateBlock[];
 };
 
+export const STARTER_TEMPLATE_CATEGORIES = [
+  "Meetings & Decisions",
+  "Process & Operations",
+  "Planning & Strategy",
+  "Support & Troubleshooting",
+  "Team & Updates",
+] as const;
+
+export type StarterTemplateCategory = (typeof STARTER_TEMPLATE_CATEGORIES)[number];
+
 export type StarterTemplate = {
   key: string;
   name: string;
   icon: string;
   description: string;
+  category: StarterTemplateCategory;
+  expectedOutput: string;
   content: StarterTemplateContent;
 };
 
@@ -53,6 +65,8 @@ export const STARTER_TEMPLATES: StarterTemplate[] = [
     name: "Meeting Notes",
     icon: "📝",
     description: "Capture attendees, agenda, decisions, and action items from a meeting.",
+    category: "Meetings & Decisions",
+    expectedOutput: "A page with Attendees, Agenda, Notes, Decisions, and Action Items sections.",
     content: doc(
       h1("Meeting Notes"),
       blockquote("Date · Facilitator · Location"),
@@ -73,6 +87,8 @@ export const STARTER_TEMPLATES: StarterTemplate[] = [
     name: "Standard Operating Procedure",
     icon: "📋",
     description: "Document repeatable processes with clear steps, scope, and ownership.",
+    category: "Process & Operations",
+    expectedOutput: "A page with Purpose, Scope, Prerequisites, Procedure, and Exceptions sections.",
     content: doc(
       h1("Standard Operating Procedure"),
       blockquote("Version · Effective date · Owner"),
@@ -97,6 +113,8 @@ export const STARTER_TEMPLATES: StarterTemplate[] = [
     name: "Policy",
     icon: "📌",
     description: "Define organisational rules, responsibilities, and enforcement.",
+    category: "Process & Operations",
+    expectedOutput: "A page with Overview, Scope, Policy Statement, Responsibilities, and Enforcement sections.",
     content: doc(
       h1("Policy Title"),
       blockquote("Version · Approved by · Review date"),
@@ -119,6 +137,8 @@ export const STARTER_TEMPLATES: StarterTemplate[] = [
     name: "Decision Record",
     icon: "🧭",
     description: "Record the context, options considered, and rationale behind a key decision.",
+    category: "Meetings & Decisions",
+    expectedOutput: "A page with Context, Options Considered, Decision, and Consequences sections.",
     content: doc(
       h1("Decision: "),
       blockquote("Date · Deciders · Status: Proposed | Accepted | Superseded"),
@@ -140,6 +160,8 @@ export const STARTER_TEMPLATES: StarterTemplate[] = [
     name: "Runbook",
     icon: "🔧",
     description: "Step-by-step operational guide for running or recovering a service or process.",
+    category: "Process & Operations",
+    expectedOutput: "A page with Overview, Prerequisites, Steps, Rollback, and Verification sections.",
     content: doc(
       h1("Runbook: "),
       blockquote("Service · Owner · Last verified"),
@@ -164,6 +186,8 @@ export const STARTER_TEMPLATES: StarterTemplate[] = [
     name: "Project Brief",
     icon: "🚀",
     description: "Define the goals, scope, timeline, and stakeholders for a project.",
+    category: "Planning & Strategy",
+    expectedOutput: "A page with Overview, Goals, Scope, Timeline, Stakeholders, and Risks sections.",
     content: doc(
       h1("Project Brief: "),
       blockquote("Status · Start date · Target date · Owner"),
@@ -189,6 +213,8 @@ export const STARTER_TEMPLATES: StarterTemplate[] = [
     name: "Playbook",
     icon: "📖",
     description: "Guide teams through a repeatable strategy or tactical situation.",
+    category: "Process & Operations",
+    expectedOutput: "A page with Purpose, Triggers, Roles, Steps, and Communication Template sections.",
     content: doc(
       h1("Playbook: "),
       blockquote("Team · Last updated · Owner"),
@@ -213,6 +239,8 @@ export const STARTER_TEMPLATES: StarterTemplate[] = [
     name: "Troubleshooting Guide",
     icon: "🔍",
     description: "Help users diagnose and resolve a known issue or class of errors.",
+    category: "Support & Troubleshooting",
+    expectedOutput: "A page with Symptoms, Common Causes, Diagnostic Steps, Solutions, and Escalation sections.",
     content: doc(
       h1("Troubleshooting: "),
       blockquote("Affected system · Severity · Owner"),
@@ -238,6 +266,8 @@ export const STARTER_TEMPLATES: StarterTemplate[] = [
     name: "Support Article",
     icon: "💬",
     description: "Answer a customer question or explain how to use a feature.",
+    category: "Support & Troubleshooting",
+    expectedOutput: "A page with Overview, Prerequisites, Steps, Troubleshooting, and Related Articles sections.",
     content: doc(
       h1("How to "),
       h2("Overview"),
@@ -259,6 +289,8 @@ export const STARTER_TEMPLATES: StarterTemplate[] = [
     name: "Onboarding Guide",
     icon: "🙌",
     description: "Help new team members get up to speed quickly.",
+    category: "Team & Updates",
+    expectedOutput: "A page with Getting Started, Tools & Access, Key Contacts, and 30/60/90 Day Goals sections.",
     content: doc(
       h1("Welcome to the Team!"),
       blockquote("Role · Team · Manager · Start date"),
@@ -283,6 +315,8 @@ export const STARTER_TEMPLATES: StarterTemplate[] = [
     name: "Weekly Update",
     icon: "📅",
     description: "Share progress, blockers, and plans with your team each week.",
+    category: "Team & Updates",
+    expectedOutput: "A page with Highlights, Completed, In Progress, Blockers, and Next Week sections.",
     content: doc(
       h1("Weekly Update — Week of "),
       h2("Highlights"),
@@ -304,6 +338,8 @@ export const STARTER_TEMPLATES: StarterTemplate[] = [
     name: "Retrospective",
     icon: "🔁",
     description: "Reflect on a sprint or project to improve team process.",
+    category: "Meetings & Decisions",
+    expectedOutput: "A page with What Went Well, What Didn't Go Well, Action Items, and Decisions sections.",
     content: doc(
       h1("Retrospective — "),
       blockquote("Date · Facilitator · Team"),
@@ -324,6 +360,8 @@ export const STARTER_TEMPLATES: StarterTemplate[] = [
     name: "Product Requirements Document",
     icon: "📊",
     description: "Define goals, user stories, and requirements for a product or feature.",
+    category: "Planning & Strategy",
+    expectedOutput: "A page with Problem Statement, Goals & Success Metrics, User Stories, and Requirements sections.",
     content: doc(
       h1("PRD: "),
       blockquote("Status: Draft | In Review | Approved · Owner · Target quarter"),
@@ -349,6 +387,8 @@ export const STARTER_TEMPLATES: StarterTemplate[] = [
     name: "How-to Guide",
     icon: "✅",
     description: "Walk readers through completing a specific task step by step.",
+    category: "Support & Troubleshooting",
+    expectedOutput: "A page with Overview, Prerequisites, Steps, Expected Result, and Tips sections.",
     content: doc(
       h1("How to "),
       h2("Overview"),
@@ -372,6 +412,8 @@ export const STARTER_TEMPLATES: StarterTemplate[] = [
     name: "FAQ",
     icon: "❓",
     description: "Answer the most common questions about a topic in one place.",
+    category: "Support & Troubleshooting",
+    expectedOutput: "A page with Introduction, General, Troubleshooting, and Contact & Support sections.",
     content: doc(
       h1("Frequently Asked Questions"),
       h2("Introduction"),

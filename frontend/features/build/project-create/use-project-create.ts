@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState } from "react";
+import { useSourceOverride } from "@/hooks/common/use-source-override";
 import { useSession } from "next-auth/react";
 
 export const TOTAL_STEPS = 7;
@@ -26,7 +27,6 @@ export type WizardDraft = {
   projectType: string;
   templateId: number | null;
   modules: {
-    sprints: boolean;
     epics: boolean;
     timeTracking: boolean;
     wiki: boolean;
@@ -43,7 +43,6 @@ export type StepSharedProps = {
 
 const DEFAULT_FEATURES: Record<string, boolean> = {
   backlog: true,
-  sprints: true,
   kanban: true,
   qa: true,
   bugs: true,
@@ -72,7 +71,7 @@ function buildInitialDraft(creatorId: string | undefined): WizardDraft {
     endDate: "",
     projectType: "",
     templateId: null,
-    modules: { sprints: true, epics: true, timeTracking: true, wiki: true },
+    modules: { epics: true, timeTracking: true, wiki: true },
     features: { ...DEFAULT_FEATURES },
     workflow: "simple",
     memberIds: creatorId ? [creatorId] : [],
@@ -82,16 +81,9 @@ function buildInitialDraft(creatorId: string | undefined): WizardDraft {
 export function useProjectCreate() {
   const { data: session } = useSession();
   const creatorId = session?.user?.id;
-  const seededRef = useRef(false);
   const [step, setStep] = useState(1);
   const [direction, setDirection] = useState(1);
-  const [draft, setDraft] = useState<WizardDraft>(() => buildInitialDraft(undefined));
-
-  useEffect(() => {
-    if (seededRef.current || !creatorId) return;
-    seededRef.current = true;
-    setDraft(buildInitialDraft(creatorId));
-  }, [creatorId]);
+  const [draft, setDraft] = useSourceOverride(creatorId, buildInitialDraft(creatorId), true);
 
   function updateDraft(partial: Partial<WizardDraft>) {
     setDraft((prev) => ({ ...prev, ...partial }));
@@ -107,13 +99,17 @@ export function useProjectCreate() {
     setStep((s) => Math.max(s - 1, 1));
   }
 
+  function goToStep(n: number) {
+    const target = Math.max(1, Math.min(n, TOTAL_STEPS));
+    setDirection(target < step ? -1 : 1);
+    setStep(target);
+  }
+
   function reset() {
     setStep(1);
     setDirection(1);
-    seededRef.current = false;
     setDraft(buildInitialDraft(creatorId));
-    if (creatorId) seededRef.current = true;
   }
 
-  return { step, direction, draft, updateDraft, goNext, goBack, reset };
+  return { step, direction, draft, updateDraft, goNext, goBack, goToStep, reset };
 }

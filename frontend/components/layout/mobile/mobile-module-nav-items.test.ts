@@ -19,14 +19,15 @@ import {
   MAX_MOBILE_MODULE_TABS,
   MOBILE_MODULE_CONTENT_PADDING_CLASS,
 } from "./mobile-module-nav-items";
+import { computeBottomChromeRects, scrollGutterCssPx } from "./mobile-bottom-chrome-geometry";
 
 describe("mobile module nav items", () => {
   describe("getAllMobileModuleTabs", () => {
     it("returns all routes across groups with no cap", () => {
       const all = getAllMobileModuleTabs(projectsNav);
-      expect(all).toHaveLength(7);
+      expect(all).toHaveLength(6);
       expect(all[0]!.label).toBe("Home");
-      expect(all[6]!.label).toBe("Delivery Teams");
+      expect(all[5]!.label).toBe("Delivery Teams");
     });
 
     it("deduplicates routes with the same href across groups", () => {
@@ -45,8 +46,8 @@ describe("mobile module nav items", () => {
       expect(tabs.map((t) => t.label)).toEqual([
         "Home",
         "Inbox",
-        "My issues",
-        "Drafts",
+        "My Work",
+        "All issues",
       ]);
     });
 
@@ -87,9 +88,8 @@ describe("mobile module nav items", () => {
   describe("getMobileModuleOverflowTabs", () => {
     it("returns routes from index 4 onward when total > 5", () => {
       const overflow = getMobileModuleOverflowTabs(projectsNav);
-      expect(overflow).toHaveLength(3);
+      expect(overflow).toHaveLength(2);
       expect(overflow.map((r) => r.label)).toEqual([
-        "All issues",
         "Projects",
         "Delivery Teams",
       ]);
@@ -107,7 +107,6 @@ describe("mobile module nav items", () => {
       expect(groups).toHaveLength(1);
       expect(groups[0]!.label).toBe("Projects");
       expect(groups[0]!.routes.map((r) => r.label)).toEqual([
-        "All issues",
         "Projects",
         "Delivery Teams",
       ]);
@@ -152,12 +151,12 @@ describe("mobile module nav items", () => {
           label: "Projects",
           product: "build",
           routes: [
-            { label: "Projects", icon: Briefcase, href: "/build", exact: true },
+            { label: "Projects", icon: Briefcase, href: "/build/projects", exact: true },
             { label: "Inbox", icon: Inbox, href: "/build/inbox" },
           ],
         },
       ]);
-      expect(isMobileNavRouteActive("/build", tabs[0]!, tabs)).toBe(true);
+      expect(isMobileNavRouteActive("/build/projects", tabs[0]!, tabs)).toBe(true);
       expect(isMobileNavRouteActive("/build/inbox", tabs[0]!, tabs)).toBe(false);
     });
 
@@ -223,12 +222,19 @@ describe("mobile module nav items", () => {
   });
 
   describe("getMobileModuleContentPaddingClassName", () => {
-    it("reserves the bottom nav height plus breathing room on mobile when the bar is shown", () => {
+    it("ORG-B-023: reserves the FAB lane above the bottom nav, so the quick-actions button never covers page actions", () => {
       expect(getMobileModuleContentPaddingClassName(true)).toBe(
         MOBILE_MODULE_CONTENT_PADDING_CLASS,
       );
-      expect(MOBILE_MODULE_CONTENT_PADDING_CLASS).toContain("4.5rem");
-      expect(MOBILE_MODULE_CONTENT_PADDING_CLASS).toContain("max-md:pb-[");
+      expect(MOBILE_MODULE_CONTENT_PADDING_CLASS).toContain("var(--mb-fab-lane");
+      const { fab } = computeBottomChromeRects({
+        viewportWidth: 320,
+        viewportHeight: 270,
+        safeAreaBottom: 0,
+        navShown: true,
+      });
+      expect(270 - fab.top).toBeLessThanOrEqual(scrollGutterCssPx(true));
+      expect(MOBILE_MODULE_CONTENT_PADDING_CLASS).toContain("max-lg:pb-[");
       expect(MOBILE_MODULE_CONTENT_PADDING_CLASS).not.toMatch(
         /(?:^|\s)pb-\[calc/,
       );

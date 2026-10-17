@@ -17,7 +17,7 @@ import {
   type CreateSlaPolicyInput,
   type SlaPolicy,
   type UpdateSlaPolicyInput,
-} from "@/hooks/api/crm-settings";
+} from "@/hooks/api/crm/settings/sla";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { SLA_POLICY_LAYOUT } from "@/lib/renderer/crm/settings/sla-policy-layout";
 import { numberOr, numberOrOmit, requiredText, textOrOmit } from "./shared/record-payload";

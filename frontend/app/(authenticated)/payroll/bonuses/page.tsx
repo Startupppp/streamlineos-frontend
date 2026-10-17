@@ -6,7 +6,7 @@ import { BonusesPageSkeleton } from "./loading";
 export const metadata = { title: "Bonuses & Incentives — Payroll" };
 
 export default async function PayrollBonusesPage() {
-  await requirePermission("hr:bonuses:manage");
+  await requirePermission("hr:payroll:view");
   return (
     <Suspense fallback={<BonusesPageSkeleton />}>
       <BonusesPageContent />

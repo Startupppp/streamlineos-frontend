@@ -1,5 +1,14 @@
 import { expect, test, type Locator, type Page } from "@playwright/test";
 
+async function shimmerAnimationName(page: Page): Promise<string> {
+  const shimmer = page
+    .locator('[data-case-frame="loading"]')
+    .locator(".skeleton-shimmer.animate-pulse:visible")
+    .first();
+  await expect(shimmer).toBeVisible();
+  return shimmer.evaluate((node: HTMLElement) => getComputedStyle(node).animationName);
+}
+
 const GALLERY = "/design-system/build-list";
 const EVIDENCE_DIR = "test-results/build-list-evidence";
 
@@ -145,13 +154,15 @@ test.describe("Build list responsive contract", () => {
 
       const status = await scope.locator("[data-filter-id=status]").boundingBox();
       const search = await scope.locator("[data-slot=search-input]").boundingBox();
-      expect(Math.round(search?.y ?? 0)).toBe(Math.round(status?.y ?? -1));
+      const toolbar = await scope.locator("[data-slot=build-list-toolbar]").boundingBox();
+      expect(Math.round(search?.y ?? 0)).toBeLessThan(Math.round(status?.y ?? 0));
+      expect((status?.width ?? 0) / (toolbar?.width ?? 1)).toBeGreaterThan(0.8);
     });
 
-    test("three filters collapse behind one labelled drawer trigger", async ({ page }) => {
+    test("two filters stay on the row and the third opens from Filters", async ({ page }) => {
       const scope = frame(page, "four-actions-three-filters");
-      await expect(scope.locator("[data-filter-id=status]")).toBeHidden();
-      await expect(scope.locator("[data-filter-id=health]")).toBeHidden();
+      await expect(scope.locator("[data-filter-id=status]")).toBeVisible();
+      await expect(scope.locator("[data-filter-id=health]")).toBeVisible();
       await expect(scope.locator("[data-filter-id=lead]")).toBeHidden();
       await expect(scope.getByRole("button", { name: /^Filters/ })).toBeVisible();
     });
@@ -163,10 +174,9 @@ test.describe("Build list responsive contract", () => {
 
       const dialog = page.getByRole("dialog");
       await expect(dialog).toBeVisible();
-      for (const label of ["Status", "Health", "Lead"]) {
-        await expect(dialog.getByLabel(label)).toBeVisible();
-      }
-      await expect(dialog.getByRole("button", { name: "Done" })).toBeVisible();
+      await expect(dialog.getByLabel("Lead")).toBeVisible();
+      await expect(dialog.getByLabel("Status")).toHaveCount(0);
+      await expect(dialog.getByLabel("Health")).toHaveCount(0);
 
       const focusInside = await dialog.evaluate(
         (node: HTMLElement) => node.contains(document.activeElement),
@@ -195,7 +205,7 @@ test.describe("Build list responsive contract", () => {
       await expect(scope.locator("table")).toBeHidden();
       const card = scope.locator("[role=button][tabindex='0']").first();
       const cards = scope.getByText("Priya Nair");
-      expect(await cards.count()).toBeGreaterThan(0);
+      await expect(cards.first()).toBeVisible();
       await expect(
         scope.getByRole("button", { name: /^Actions for / }).first(),
       ).toBeVisible();
@@ -212,7 +222,7 @@ test.describe("Build list responsive contract", () => {
 
     test("a mounted bottom nav reserves room under the content", async ({ page }) => {
       const padded = await frame(page, "mobile-nav-clearance")
-        .locator(".max-md\\:\\[\\.mobile-nav-active_\\&\\]\\:pb-\\[calc\\(4\\.5rem\\+env\\(safe-area-inset-bottom\\2c 0px\\)\\)\\]")
+        .locator(".max-md\\:\\[\\.mobile-nav-active_\\&\\]\\:pb-\\[calc\\(4rem\\+env\\(safe-area-inset-bottom\\2c 0px\\)\\)\\]")
         .first()
         .evaluate((node: HTMLElement) =>
           Number.parseFloat(getComputedStyle(node).paddingBottom),
@@ -252,7 +262,7 @@ test.describe("Build list responsive contract", () => {
       await expect(scope.locator("table")).toBeHidden();
       await expect(scope.getByText("Column 1")).toHaveCount(0);
       const cards = scope.locator("[class*='sm:hidden'] > div");
-      expect(await cards.count()).toBeGreaterThan(0);
+      await expect(cards.first()).toBeVisible();
     });
   });
 
@@ -262,12 +272,16 @@ test.describe("Build list responsive contract", () => {
       await page.goto(GALLERY);
     });
 
-    test("filters return inline and the drawer trigger retires", async ({ page }) => {
+    test("two filters stay beside search and the third opens from Filters", async ({ page }) => {
       const scope = frame(page, "four-actions-three-filters");
-      for (const id of ["status", "health", "lead"]) {
-        await expect(scope.locator(`[data-filter-id=${id}]`)).toBeVisible();
-      }
-      await expect(scope.getByRole("button", { name: /^Filters/ })).toBeHidden();
+      await expect(scope.locator("[data-slot=search-input]")).toBeVisible();
+      await expect(scope.locator("[data-filter-id=status]")).toBeVisible();
+      await expect(scope.locator("[data-filter-id=health]")).toBeVisible();
+      await expect(scope.locator("[data-filter-id=lead]")).toBeHidden();
+      await expect(scope.getByRole("button", { name: /^Filters/ })).toBeVisible();
+      const search = await scope.locator("[data-slot=search-input]").boundingBox();
+      const status = await scope.locator("[data-filter-id=status]").boundingBox();
+      expect(Math.abs((search?.y ?? 0) - (status?.y ?? 0))).toBeLessThan(8);
     });
 
     test("the desktop table replaces the mobile cards", async ({ page }) => {
@@ -278,7 +292,7 @@ test.describe("Build list responsive contract", () => {
     test("the loading skeleton announces the real column names", async ({ page }) => {
       const scope = frame(page, "loading");
       for (const header of ["Key", "Name", "Status", "Owner", "Progress", "Target"]) {
-        await expect(scope.getByRole("columnheader", { name: header })).toBeVisible();
+        await expect(scope.getByRole("columnheader", { name: header, exact: true })).toBeVisible();
       }
       await expect(scope.getByText("Column 1")).toHaveCount(0);
     });
@@ -288,6 +302,17 @@ test.describe("Build list responsive contract", () => {
     test.beforeEach(async ({ page }) => {
       await page.setViewportSize({ width: 1280, height: 800 });
       await page.goto(GALLERY);
+    });
+
+    test("search and three filters share one row", async ({ page }) => {
+      const scope = frame(page, "four-actions-three-filters");
+      const lead = scope.locator("[data-filter-id=lead]");
+      await expect(lead).toBeVisible();
+      await expect(scope.locator("[data-slot=search-input]")).toBeVisible();
+      const search = await scope.locator("[data-slot=search-input]").boundingBox();
+      const leadBox = await lead.boundingBox();
+      expect(Math.abs((search?.y ?? 0) - (leadBox?.y ?? 0))).toBeLessThan(8);
+      await expect(scope.getByRole("button", { name: /^Filters/ })).toBeHidden();
     });
 
     test("search grows but stays capped so selects keep readable widths", async ({ page }) => {
@@ -307,13 +332,191 @@ test.describe("Build list responsive contract", () => {
       expect(Math.abs((actions?.y ?? 0) - (title?.y ?? 0))).toBeLessThan(40);
     });
 
-    test("three visible actions at most, the rest behind one overflow", async ({ page }) => {
+    test("a lone overflow action is promoted inline", async ({ page }) => {
       const scope = frame(page, "four-actions-three-filters");
       const visible = scope.locator(
         "[data-slot=build-header-actions] > .sm\\:inline-flex:visible",
       );
-      expect(await visible.count()).toBeLessThanOrEqual(4);
-      await expect(scope.getByRole("button", { name: "More actions" })).toBeVisible();
+      await expect(visible).toHaveCount(4);
+      await expect(scope.getByRole("button", { name: "More actions" })).toBeHidden();
+    });
+  });
+
+  test.describe("reduced motion — loading skeleton shimmer stops", () => {
+    test.describe("with reduce requested", () => {
+      test.use({ contextOptions: { reducedMotion: "reduce" } });
+
+      test("DataTableSkeleton computes animation-name none on the visible shimmer", async ({
+        page,
+      }) => {
+        await page.setViewportSize({ width: 1280, height: 800 });
+        await page.goto(GALLERY);
+        await expect(page.getByRole("heading", { name: "Build list surfaces" })).toBeVisible();
+        expect(await shimmerAnimationName(page)).toBe("none");
+      });
+    });
+
+    test.describe("with no preference", () => {
+      test.use({ contextOptions: { reducedMotion: "no-preference" } });
+
+      test("the same skeleton does animate, proving the reduce assertion is not vacuous", async ({
+        page,
+      }) => {
+        await page.setViewportSize({ width: 1280, height: 800 });
+        await page.goto(GALLERY);
+        await expect(page.getByRole("heading", { name: "Build list surfaces" })).toBeVisible();
+        expect(await shimmerAnimationName(page)).not.toBe("none");
+      });
+    });
+  });
+
+  test.describe("high-density desktop — 1920 × 1080 at scale 2", () => {
+    test.use({ viewport: { width: 1920, height: 1080 }, deviceScaleFactor: 2 });
+
+    test.beforeEach(async ({ page }) => {
+      await page.goto(GALLERY);
+      await expect(page.getByRole("heading", { name: "Build list surfaces" })).toBeVisible();
+    });
+
+    test("the page itself never scrolls sideways", async ({ page }) => {
+      const overflow = await page.evaluate(
+        () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
+      );
+      expect(overflow).toBeLessThanOrEqual(1);
+    });
+
+    test("no list surface overflows its own width", async ({ page }) => {
+      for (const caseId of CASES) {
+        const scope = frame(page, caseId);
+        const overflow = await horizontalOverflowOf(scope);
+        expect(overflow).toBeLessThanOrEqual(1);
+      }
+    });
+
+    test("header actions do not clip past the right edge of the frame", async ({ page }) => {
+      const scope = frame(page, "four-actions-three-filters");
+      const frameBox = await scope.boundingBox();
+      const actionsBox = await scope
+        .locator("[data-slot=build-header-actions]")
+        .boundingBox();
+      expect((actionsBox?.x ?? 0) + (actionsBox?.width ?? 0)).toBeLessThanOrEqual(
+        (frameBox?.x ?? 0) + (frameBox?.width ?? 0) + 1,
+      );
+    });
+  });
+
+  test.describe("keyboard — tab order at 1280 px", () => {
+    test.beforeEach(async ({ page }) => {
+      await page.setViewportSize({ width: 1280, height: 800 });
+      await page.goto(GALLERY);
+      await expect(page.getByRole("heading", { name: "Build list surfaces" })).toBeVisible();
+    });
+
+    test("action buttons then toolbar controls are reached in visual DOM order", async ({ page }) => {
+      const scope = frame(page, "four-actions-three-filters");
+      const importBtn = scope.getByRole("button", { name: "Import", exact: true });
+      await importBtn.focus();
+      await expect(importBtn).toBeFocused();
+
+      await page.keyboard.press("Tab");
+      await expect(scope.getByRole("button", { name: "Export", exact: true })).toBeFocused();
+
+      await page.keyboard.press("Tab");
+      await expect(scope.getByRole("button", { name: "Archive", exact: true })).toBeFocused();
+
+      await page.keyboard.press("Tab");
+      await expect(scope.getByRole("button", { name: "New project", exact: true })).toBeFocused();
+
+      await page.keyboard.press("Tab");
+      await expect(scope.locator("[data-slot=search-input] input")).toBeFocused();
+    });
+
+    test("filter select triggers are reachable in order after search", async ({ page }) => {
+      const scope = frame(page, "four-actions-three-filters");
+      await scope.locator("[data-slot=search-input] input").focus();
+
+      await page.keyboard.press("Tab");
+      await expect(scope.locator("[data-filter-id=status] [data-slot=select-trigger]")).toBeFocused();
+
+      await page.keyboard.press("Tab");
+      await expect(scope.locator("[data-filter-id=health] [data-slot=select-trigger]")).toBeFocused();
+
+      await page.keyboard.press("Tab");
+      await expect(scope.locator("[data-filter-id=lead] [data-slot=select-trigger]")).toBeFocused();
+    });
+
+    test("opening the overflow dropdown and pressing Escape returns focus to its trigger", async ({ page }) => {
+      await page.setViewportSize({ width: 375, height: 812 });
+      await page.goto(GALLERY);
+      const scope = frame(page, "four-actions-three-filters");
+      const trigger = scope.getByRole("button", { name: "More actions", exact: true });
+      await trigger.click();
+      const menu = page.getByRole("menu");
+      await expect(menu).toBeVisible();
+      await page.keyboard.press("Escape");
+      await expect(menu).toBeHidden();
+      await expect(trigger).toBeFocused();
+    });
+  });
+
+  test.describe("screen reader — roles and accessible names", () => {
+    test.describe("768 x 1024", () => {
+      test.beforeEach(async ({ page }) => {
+        await page.setViewportSize({ width: 768, height: 1024 });
+        await page.goto(GALLERY);
+        await expect(page.getByRole("heading", { name: "Build list surfaces" })).toBeVisible();
+      });
+
+      test("the ready table exposes role table with all six column headers named", async ({ page }) => {
+        const scope = frame(page, "two-actions-two-filters");
+        await expect(scope.getByRole("table").first()).toBeVisible();
+        for (const header of ["Key", "Name", "Status", "Owner", "Progress", "Target"]) {
+          await expect(
+            scope.getByRole("columnheader", { name: header, exact: true }),
+          ).toBeVisible();
+        }
+      });
+
+      test("the table container is a labelled region that can receive keyboard focus", async ({ page }) => {
+        const scope = frame(page, "two-actions-two-filters");
+        const region = scope.getByRole("region", { name: "Table", exact: true });
+        await expect(region).toBeVisible();
+        await expect(region).toHaveAttribute("tabindex", "0");
+      });
+
+      test("the search input carries its accessible label", async ({ page }) => {
+        const scope = frame(page, "two-actions-two-filters");
+        await expect(
+          scope.getByRole("searchbox", { name: "Search projects", exact: true }),
+        ).toBeVisible();
+      });
+
+      test("each filter select trigger is named by its visual label", async ({ page }) => {
+        const scope = frame(page, "four-actions-three-filters");
+        for (const label of ["Status", "Health"]) {
+          await expect(
+            scope.getByRole("combobox", { name: label, exact: true }),
+          ).toBeVisible();
+        }
+        await expect(scope.locator("[data-filter-id=lead]")).toBeHidden();
+      });
+    });
+
+    test.describe("375 x 812", () => {
+      test.beforeEach(async ({ page }) => {
+        await page.setViewportSize({ width: 375, height: 812 });
+        await page.goto(GALLERY);
+        await expect(page.getByRole("heading", { name: "Build list surfaces" })).toBeVisible();
+      });
+
+      test("the true-empty status landmark contains its heading", async ({ page }) => {
+        const scope = frame(page, "empty-true");
+        const status = scope.getByRole("status");
+        await expect(status).toBeVisible();
+        await expect(
+          status.getByRole("heading", { name: "No projects yet", exact: true }),
+        ).toBeVisible();
+      });
     });
   });
 });

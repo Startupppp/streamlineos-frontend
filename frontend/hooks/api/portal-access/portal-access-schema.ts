@@ -1,12 +1,20 @@
 import { z } from "zod";
 import { cursorPageContract } from "@/hooks/api/cursor-page-schema";
 
-/**
- * Contracts for `PortalAccessController` handlers.
- *
- * Derived from `portal-access-response.schemas.ts` in the backend.
- * NOT `.strict()`. Timestamps are ISO strings.
- */
+export const membershipRowContract = z.object({
+  portalMembershipId: z.string(),
+  organizationId: z.string(),
+  audience: z.string().nullable(),
+  partyContactId: z.string(),
+  userMembershipId: z.number().nullable(),
+  status: z.enum(["PENDING", "ACTIVE", "SUSPENDED", "REVOKED"]),
+  sessionEpoch: z.number(),
+  deletedAt: z.string().nullable(),
+  createdAt: z.string(),
+  updatedAt: z.string(),
+});
+
+export type PortalMembershipRow = z.infer<typeof membershipRowContract>;
 
 const membershipListItemContract = z.object({
   portalMembershipId: z.string(),
@@ -37,6 +45,9 @@ const grantListItemContract = z.object({
   canViewAttachments: z.boolean(),
   canViewComments: z.boolean(),
   canSubmitChangeRequests: z.boolean(),
+  canViewApprovals: z.boolean(),
+  canViewInvoices: z.boolean(),
+  canViewRequests: z.boolean(),
   status: z.enum(["ACTIVE", "SUSPENDED", "REVOKED", "EXPIRED"]),
   expiresAt: z.string().nullable(),
   createdAt: z.string(),
@@ -58,6 +69,9 @@ const grantRowContract = z.object({
   canViewAttachments: z.boolean(),
   canViewComments: z.boolean(),
   canSubmitChangeRequests: z.boolean(),
+  canViewApprovals: z.boolean(),
+  canViewInvoices: z.boolean(),
+  canViewRequests: z.boolean(),
   status: z.enum(["ACTIVE", "SUSPENDED", "REVOKED", "EXPIRED"]),
   expiresAt: z.string().nullable(),
   createdAt: z.string(),
@@ -69,3 +83,18 @@ const grantRowContract = z.object({
 export const grantContract = grantRowContract;
 
 export type GrantItem = z.infer<typeof grantRowContract>;
+
+export const activationResultContract = z.object({
+  portalMembershipId: z.string(),
+  projectClientGrantId: z.string(),
+  maskedRecipient: z.string(),
+  deliveryOutcome: z.enum(["QUEUED", "SUPPRESSED"]),
+});
+
+export type ActivationResult = z.infer<typeof activationResultContract>;
+
+export const resendInvitationContract = z.object({
+  maskedRecipient: z.string(),
+});
+
+export type ResendInvitationResult = z.infer<typeof resendInvitationContract>;

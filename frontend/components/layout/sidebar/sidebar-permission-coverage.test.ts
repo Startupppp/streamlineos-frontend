@@ -5,8 +5,8 @@ import { isUniversalRoute } from "@/lib/rbac/route-access/universal-routes";
 
 /**
  * Access administration and module-level settings are never universal, even
- * under a universal prefix: /chat is everyone's, /chat/access and
- * /chat/settings govern admin administration of it. /directory is the people
+ * under a universal prefix: /chat is everyone's while /chat/access governs
+ * admin administration of it. /directory is the people
  * directory (universal), /directory/settings is the directory config (admin).
  */
 function isUniversal(href: string): boolean {

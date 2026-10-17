@@ -1,6 +1,6 @@
 "use client";
 
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient, type UseQueryOptions } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { directoryAndOwnershipQueryKeys } from "@/lib/query-keys/directory-and-ownership";
 import { useCan } from "@/hooks/api/access";
@@ -11,11 +11,15 @@ import type {
   CreateGrantInput,
   UpdateGrantInput,
 } from "@/types/portal-access/grants";
+import type { PortalMembershipRow } from "@/hooks/api/portal-access/portal-access-schema";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { lazyContract } from "@/lib/api-envelope";
 
 const membershipListContract = lazyContract(() =>
   import("@/hooks/api/portal-access/portal-access-schema").then((m) => m.membershipListContract),
+);
+const membershipRowContract_ = lazyContract(() =>
+  import("@/hooks/api/portal-access/portal-access-schema").then((m) => m.membershipRowContract),
 );
 const grantListContract = lazyContract(() =>
   import("@/hooks/api/portal-access/portal-access-schema").then((m) => m.grantListContract),
@@ -23,14 +27,70 @@ const grantListContract = lazyContract(() =>
 const grantContract = lazyContract(() =>
   import("@/hooks/api/portal-access/portal-access-schema").then((m) => m.grantContract),
 );
+const activationResultContract_ = lazyContract(() =>
+  import("@/hooks/api/portal-access/portal-access-schema").then((m) => m.activationResultContract),
+);
+const resendInvitationContract_ = lazyContract(() =>
+  import("@/hooks/api/portal-access/portal-access-schema").then((m) => m.resendInvitationContract),
+);
 
-export function usePortalMemberships(params?: { cursor?: string; limit?: number; status?: string }) {
+export function usePortalMemberships(
+  params?: { cursor?: string; limit?: number; status?: string },
+  options?: Omit<UseQueryOptions<PortalMembershipsPage>, "queryKey" | "queryFn">,
+) {
   const canView = useCan("build:portal:view");
   return useQuery<PortalMembershipsPage>({
     queryKey: directoryAndOwnershipQueryKeys.portalAccess.memberships(params),
     queryFn: ({ signal }) => apiClient.get<PortalMembershipsPage>("/portal-access/memberships", params, signal, membershipListContract),
-    enabled: canView,
     staleTime: 30_000,
+    ...options,
+    enabled: canView && (options?.enabled ?? true),
+  });
+}
+
+export interface InviteClientInput {
+  firstName: string;
+  lastName?: string;
+  email?: string;
+}
+
+export function useInviteClient() {
+  const qc = useQueryClient();
+  return useAuthorizedMutation("build:clientvisibility:manage", {
+    mutationKey: ["portalAccess", "memberships", "invite"],
+    mutationFn: (data: InviteClientInput) =>
+      apiClient.post<PortalMembershipRow>("/portal-access/invite-client", data, undefined, membershipRowContract_),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: directoryAndOwnershipQueryKeys.portalAccess.memberships() });
+    },
+  });
+}
+
+export interface ActivateClientInput {
+  firstName: string;
+  lastName?: string;
+  email: string;
+  projectId: number;
+  canViewMilestones?: boolean;
+  canViewTasks?: boolean;
+  canViewAttachments?: boolean;
+  canViewComments?: boolean;
+  canSubmitChangeRequests?: boolean;
+  canViewApprovals?: boolean;
+  canViewInvoices?: boolean;
+  canViewRequests?: boolean;
+}
+
+export function useActivateClient() {
+  const qc = useQueryClient();
+  return useAuthorizedMutation("build:clientvisibility:manage", {
+    mutationKey: ["portalAccess", "activations"],
+    mutationFn: (data: ActivateClientInput) =>
+      apiClient.post("/portal-access/activations", data, undefined, activationResultContract_),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: directoryAndOwnershipQueryKeys.portalAccess.grants() });
+      qc.invalidateQueries({ queryKey: directoryAndOwnershipQueryKeys.portalAccess.memberships() });
+    },
   });
 }
 
@@ -38,6 +98,9 @@ export function useProjectClientGrants(params?: {
   cursor?: string;
   limit?: number;
   projectId?: number;
+  grantId?: string;
+  from?: string;
+  to?: string;
   q?: string;
   state?: string;
   permission?: string;
@@ -96,6 +159,41 @@ export function useRevokeGrant(projectClientGrantId: string) {
       qc.setQueryData(directoryAndOwnershipQueryKeys.portalAccess.grant(projectClientGrantId), updated);
       qc.invalidateQueries({ queryKey: directoryAndOwnershipQueryKeys.portalAccess.grants() });
       qc.invalidateQueries({ queryKey: directoryAndOwnershipQueryKeys.portal.all });
+    },
+  });
+}
+
+export function useBulkRevokeGrant() {
+  const qc = useQueryClient();
+  return useAuthorizedMutation("build:clientvisibility:manage", {
+    mutationKey: ["portalAccess", "grants", "bulk-revoke"],
+    mutationFn: (grantId: string) =>
+      apiClient.post<ProjectClientGrant>(
+        `/portal-access/grants/${grantId}/revoke`,
+        {},
+        undefined,
+        grantContract,
+      ),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: directoryAndOwnershipQueryKeys.portalAccess.grants() });
+      qc.invalidateQueries({ queryKey: directoryAndOwnershipQueryKeys.portal.all });
+    },
+  });
+}
+
+export function useResendPortalInvitation(portalMembershipId: string) {
+  const qc = useQueryClient();
+  return useAuthorizedMutation("build:clientvisibility:manage", {
+    mutationKey: ["portalAccess", "memberships", portalMembershipId, "resend-invitation"],
+    mutationFn: () =>
+      apiClient.post(
+        `/portal-access/memberships/${portalMembershipId}/resend-invitation`,
+        {},
+        undefined,
+        resendInvitationContract_,
+      ),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: directoryAndOwnershipQueryKeys.portalAccess.memberships() });
     },
   });
 }

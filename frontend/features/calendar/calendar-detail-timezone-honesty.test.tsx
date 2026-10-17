@@ -4,6 +4,7 @@ import { HrEventDetailSheet } from "./hr-event-detail-sheet";
 import { CalendarAgendaPreview } from "./calendar-lazy-fallbacks";
 import type { BigCalEvent } from "./big-calendar-wrapper";
 import type { CalendarListItem } from "@/hooks/api/calendar";
+import { calendarProjectionFields } from "./calendar-projection-fixtures";
 
 const READER_ZONE = "America/New_York";
 const CLOCK = /\d{1,2}:\d{2}/;
@@ -65,6 +66,7 @@ function agendaTimed(): CalendarListItem {
     category: "meeting",
     source: "event",
     timezone: "Asia/Kolkata",
+    ...calendarProjectionFields("event-9", "2027-09-14T14:00:00.000Z", "2027-09-14T14:30:00.000Z", false, "Asia/Kolkata"),
   };
 }
 
@@ -78,6 +80,7 @@ function agendaAuthoredAllDay(): CalendarListItem {
     category: "meeting",
     source: "event",
     timezone: "Asia/Kolkata",
+    ...calendarProjectionFields("event-10", "2027-01-25T18:30:00.000Z", "2027-01-26T18:30:00.000Z", true, "Asia/Kolkata"),
   };
 }
 
@@ -91,19 +94,33 @@ function agendaZonelessAllDay(): CalendarListItem {
     category: "holiday",
     source: "holiday",
     timezone: null,
+    ...calendarProjectionFields("holiday-3", "2027-01-26T12:00:00.000Z", "2027-01-26T12:00:00.000Z", true),
   };
 }
 
-function sheetText(): string {
+function detailText(): string {
   const content = document.querySelector("[data-slot='sheet-content']");
   return content?.textContent ?? "";
 }
+
+it("keeps connected and HR event details on a single responsive sheet without skeletons", () => {
+  const external = render(<ExternalEventDetailSheet event={externalTimed()} onClose={jest.fn()} />);
+  expect(screen.getByRole("dialog", { name: "Partner sync" })).toHaveAttribute("data-slot", "sheet-content");
+  expect(document.querySelector("[data-slot='dialog-content']")).toBeNull();
+  expect(document.querySelector("[data-slot='skeleton']")).toBeNull();
+  external.unmount();
+
+  render(<HrEventDetailSheet event={hrAllDay()} onClose={jest.fn()} />);
+  expect(screen.getByRole("dialog", { name: "Founders Day" })).toHaveAttribute("data-slot", "sheet-content");
+  expect(document.querySelector("[data-slot='dialog-content']")).toBeNull();
+  expect(document.querySelector("[data-slot='skeleton']")).toBeNull();
+});
 
 describe("ExternalEventDetailSheet — provider events carry no authored zone", () => {
   it("keeps an all-day provider event on its own calendar day for a reader west of UTC", () => {
     render(<ExternalEventDetailSheet event={externalAllDay()} onClose={jest.fn()} />);
 
-    const text = sheetText();
+    const text = detailText();
     expect(text).toContain("26 Jan 2026");
     expect(text).not.toContain("25 Jan 2026");
   });
@@ -111,7 +128,7 @@ describe("ExternalEventDetailSheet — provider events carry no authored zone", 
   it("renders no wall-clock time at all for an all-day provider event", () => {
     render(<ExternalEventDetailSheet event={externalAllDay()} onClose={jest.fn()} />);
 
-    const text = sheetText();
+    const text = detailText();
     expect(text).toContain("All day");
     expect(CLOCK.test(text)).toBe(false);
   });
@@ -119,7 +136,7 @@ describe("ExternalEventDetailSheet — provider events carry no authored zone", 
   it("names the zone the clock of a timed provider event is being read in", () => {
     render(<ExternalEventDetailSheet event={externalTimed()} onClose={jest.fn()} />);
 
-    const text = sheetText();
+    const text = detailText();
     expect(text).toContain("9:00");
     expect(text).toContain(READER_ZONE);
   });
@@ -159,7 +176,7 @@ describe("ExternalEventDetailSheet — the provider's authored zone leads, the r
   it("renders the authored wall clock and names the authored zone", () => {
     render(<ExternalEventDetailSheet event={externalAuthoredTimed()} onClose={jest.fn()} />);
 
-    const text = sheetText();
+    const text = detailText();
     expect(text).toContain("Asia/Kolkata");
     expect(text).toContain("6:30");
   });
@@ -167,7 +184,7 @@ describe("ExternalEventDetailSheet — the provider's authored zone leads, the r
   it("still shows the reader their own reading of a foreign-zone provider event", () => {
     render(<ExternalEventDetailSheet event={externalAuthoredTimed()} onClose={jest.fn()} />);
 
-    const text = sheetText();
+    const text = detailText();
     expect(text).toContain("9:00");
     expect(text).toContain(READER_ZONE);
   });
@@ -175,7 +192,7 @@ describe("ExternalEventDetailSheet — the provider's authored zone leads, the r
   it("keeps an all-day provider event a date with no wall clock even when a zone is present", () => {
     render(<ExternalEventDetailSheet event={externalAuthoredAllDay()} onClose={jest.fn()} />);
 
-    const text = sheetText();
+    const text = detailText();
     expect(text).toContain("26 Jan 2026");
     expect(text).toContain("All day");
     expect(CLOCK.test(text)).toBe(false);
@@ -186,7 +203,7 @@ describe("HrEventDetailSheet — HR aggregate items are zone-less calendar dates
   it("keeps the HR calendar date on its own day for a reader west of UTC", () => {
     render(<HrEventDetailSheet event={hrAllDay()} onClose={jest.fn()} />);
 
-    const text = sheetText();
+    const text = detailText();
     expect(text).toContain("26 Jan 2026");
     expect(text).not.toContain("25 Jan 2026");
   });
@@ -194,7 +211,7 @@ describe("HrEventDetailSheet — HR aggregate items are zone-less calendar dates
   it("renders no wall-clock time for an HR calendar date", () => {
     render(<HrEventDetailSheet event={hrAllDay()} onClose={jest.fn()} />);
 
-    const text = sheetText();
+    const text = detailText();
     expect(text).toContain("All day");
     expect(CLOCK.test(text)).toBe(false);
   });

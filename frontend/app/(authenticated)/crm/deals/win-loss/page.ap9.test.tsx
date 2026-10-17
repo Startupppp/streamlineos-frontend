@@ -62,7 +62,7 @@ jest.mock("@/components/charts/chart-empty-state", () => ({
 }));
 
 jest.mock("@/lib/format-utils", () => ({
-  formatCurrency: (v: number) => String(v),
+  formatINRCompact: (v: number) => String(v),
 }));
 
 jest.mock("@/lib/motion-variants", () => ({

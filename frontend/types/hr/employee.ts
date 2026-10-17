@@ -70,6 +70,16 @@ export type EmployeeListItem = Pick<
 > & {
   email: string;
   department: { id: string; name: string } | null;
+  /**
+   * PROVISIONAL (product default E-4): derived at read time by the server
+   * (`users.is_active AND users.email_verified IS NOT NULL`), never stored.
+   * `isActive` alone is set the moment an administrator creates the account,
+   * so without this an invitee who never opened the invitation badges "Active"
+   * beside a summary that counts them under "Pending invite".
+   * Optional so an older payload degrades to the previous behaviour.
+   */
+  hasAccepted?: boolean;
+  reportingToName?: string | null;
 };
 
 export interface EmployeeCursorPage {
@@ -114,9 +124,12 @@ export interface Asset {
   purchaseCost: string | null;
   location: string | null;
   notes: string | null;
+  version: number;
   createdAt: Date | string | null;
   updatedAt: Date | string | null;
 }
+
+export type DocumentClassification = "PERSONAL" | "CONFIDENTIAL" | "RESTRICTED" | "INTERNAL";
 
 export interface Document {
   id: number;
@@ -135,6 +148,8 @@ export interface Document {
   parentDocumentId: number | null;
   isPublic: boolean | null;
   isActive: boolean | null;
+  classification: DocumentClassification;
+  effectiveDate: string | null;
   expiryDate: string | null;
   expiryReminderSent: boolean | null;
   tags: string[] | null;
@@ -210,7 +225,7 @@ export interface UpdateProfileInput {
   role?: string;
   gender?: "MALE" | "FEMALE" | "OTHER";
   joiningDate?: string;
-  reportingTo?: string | null;
+  /* Managers change only through PUT /hr/reporting-lines/:id (HRM-15). */
 }
 
 export interface CreateAssetInput {
@@ -238,6 +253,7 @@ export interface UpdateAssetInput {
   purchaseCost?: number;
   location?: string;
   notes?: string;
+  expectedVersion?: number;
 }
 
 export interface AssignAssetInput {
@@ -261,6 +277,8 @@ export interface CreateDocumentInput {
 }
 
 export interface UpsertWorkLogInput {
+  /** Target employee; only a holder of hr:attendance:manage may widen past self. */
+  userId?: string;
   date: Date | string;
   hours?: number;
   description?: string;
@@ -286,7 +304,13 @@ export interface OnboardEmployeeInput {
   gender?: string;
   designation: string;
   departmentId?: string;
+  /** BUG-HRMS-006: an org unit of kind LOCATION; the server checks the kind. */
+  locationId?: string;
+  /** BUG-HRMS-007: omitted means FULL_TIME, the column default. */
+  workerType?: string;
+  /** Optional since HRM-15: omitted means the backend resolves it by policy. */
   reportingManagerUserId?: string;
+  secondaryManagers?: Array<{ managerUserId: string; label?: string }>;
   topLevelRole?: boolean;
   topLevelRoleReason?: string;
   role: string;
@@ -319,8 +343,22 @@ export interface BulkOnboardEmployeeRow {
   designation: string;
   departmentId?: string;
   department?: string;
+  /** BUG-HRMS-006: an office name, code or id; the server refuses an unknown one. */
+  location?: string;
+  /** BUG-HRMS-007: omitted means FULL_TIME, the column default. */
+  workerType?: string;
   reportingManagerUserId?: string;
+  primaryManagerEmail?: string;
+  /**
+   * Read-only legacy alias of `primaryManagerEmail` (CONTRACT §4.20). Sent only
+   * when the uploaded file used a legacy manager header, so the backend records
+   * `legacyManagerHeader`; never alongside `primaryManagerEmail`.
+   */
   reportingManagerEmail?: string;
+  secondaryManagerEmail1?: string;
+  secondaryManagerEmail2?: string;
+  secondaryManagerEmail3?: string;
+  effectiveFrom?: string;
   topLevelRole?: boolean;
   topLevelRoleReason?: string;
   role?: string;
@@ -340,17 +378,61 @@ export interface BulkOnboardEmployeeRow {
   };
 }
 
+export type BulkOnboardRowStatus = "READY" | "WARNING" | "ERROR" | "SKIPPED";
+export type BulkOnboardCommitStatus = BulkOnboardRowStatus | "CREATED" | "FAILED";
+export type ManagerResolutionKind = "SELECTED" | "IN_FILE" | "FALLBACK_CONFIGURED" | "FALLBACK_UPLOADER";
+
+export interface OnboardingPrimaryManager {
+  userId: string | null;
+  name: string;
+  email: string;
+  resolution: ManagerResolutionKind;
+}
+
 export interface BulkOnboardResultRow {
   row: number;
   email: string;
   success: boolean;
   userId?: string;
   error?: string;
+  status: BulkOnboardCommitStatus;
+  codes: string[];
+  primaryManager: OnboardingPrimaryManager | null;
 }
 
 export interface BulkOnboardResult {
   total: number;
   created: number;
   failed: number;
+  skipped: number;
   results: BulkOnboardResultRow[];
+}
+
+export interface BulkOnboardPreviewRow {
+  row: number;
+  email: string;
+  status: BulkOnboardRowStatus;
+  codes: string[];
+  messages: string[];
+  primaryManager: OnboardingPrimaryManager | null;
+  secondaryManagers: Array<{ name: string; email: string }>;
+  dependsOnRow: number | null;
+}
+
+/**
+ * BUG-HRMS-002. Seat arithmetic for the upload, so the preview can refuse a row
+ * before the confirm does. `limit` and `available` are null on an unlimited plan.
+ */
+export interface BulkOnboardSeats {
+  limit: number | null;
+  used: number;
+  available: number | null;
+  required: number;
+  blocked: number;
+}
+
+export interface BulkOnboardPreview {
+  rows: BulkOnboardPreviewRow[];
+  counts: { ready: number; warning: number; error: number; skipped: number };
+  seats: BulkOnboardSeats;
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import { ChevronDownIcon, ChevronRightIcon } from "@animateicons/react/lucide";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import React from "react";
@@ -11,7 +11,7 @@ const SectionToggleButton = React.forwardRef<
 >(function SectionToggleButton({ collapsed, className, children, ...props }, ref) {
   const { iconRef, hoverHandlers } = useAnimatedIcon();
   return (
-    <button ref={ref} {...hoverHandlers} className={className} {...props}>
+    <button ref={ref} type="button" {...hoverHandlers} className={className} {...props}>
       {collapsed ? (
         <ChevronRightIcon ref={iconRef} size={12} />
       ) : (
@@ -37,17 +37,19 @@ export function ChannelSidebarSection({
   children: React.ReactNode;
   icon?: React.ReactNode;
 }) {
+  const reduceMotion = useReducedMotion();
   return (
     <div className="mb-1">
       <SectionToggleButton
         collapsed={collapsed}
         onClick={onToggle}
-        className="w-full flex items-center gap-1 px-2 py-1.5 text-dense font-semibold text-muted-foreground uppercase tracking-wider hover:text-foreground transition-colors"
+        aria-expanded={!collapsed}
+        className="flex min-h-11 w-full items-center gap-1 rounded-lg px-2 text-left text-dense font-medium text-muted-foreground hover:bg-muted/40 hover:text-foreground"
       >
         {icon}
         <span className="flex-1 text-left">{title}</span>
         {count > 0 && (
-          <span className="text-micro font-bold bg-primary text-primary-foreground rounded-full h-4 min-w-[16px] flex items-center justify-center px-1">
+          <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1 font-mono text-micro font-bold tabular-nums text-primary-foreground">
             {count > 99 ? "99+" : count}
           </span>
         )}
@@ -55,10 +57,10 @@ export function ChannelSidebarSection({
       <AnimatePresence initial={false}>
         {!collapsed && (
           <motion.div
-            initial={{ height: 0, opacity: 0 }}
+            initial={reduceMotion ? false : { height: 0, opacity: 0 }}
             animate={{ height: "auto", opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.15 }}
+            exit={reduceMotion ? undefined : { height: 0, opacity: 0 }}
+            transition={{ duration: reduceMotion ? 0 : 0.15 }}
             className="overflow-hidden"
           >
             {children}

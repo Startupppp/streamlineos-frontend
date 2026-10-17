@@ -29,7 +29,7 @@ export function AssetFilterToolbar({
   return (
     <div className={FILTER_TOOLBAR_ROW}>
       <Select value={statusFilter ?? "all"} onValueChange={onStatusChange}>
-        <SelectTrigger className={cn("w-[148px]", FILTER_SELECT_TRIGGER)}>
+        <SelectTrigger className={cn("w-[148px]", FILTER_SELECT_TRIGGER)} aria-label="Filter by status">
           <SelectValue />
         </SelectTrigger>
         <SelectContent>
@@ -41,7 +41,7 @@ export function AssetFilterToolbar({
         </SelectContent>
       </Select>
       <Select value={categoryFilter ?? "all"} onValueChange={onCategoryChange}>
-        <SelectTrigger className={cn("w-[140px]", FILTER_SELECT_TRIGGER)}>
+        <SelectTrigger className={cn("w-[140px]", FILTER_SELECT_TRIGGER)} aria-label="Filter by type">
           <SelectValue placeholder="All types" />
         </SelectTrigger>
         <SelectContent>
@@ -54,7 +54,7 @@ export function AssetFilterToolbar({
         </SelectContent>
       </Select>
       <Select value={assignmentFilter ?? "all"} onValueChange={onAssignmentChange}>
-        <SelectTrigger className={cn("w-[148px]", FILTER_SELECT_TRIGGER)}>
+        <SelectTrigger className={cn("w-[148px]", FILTER_SELECT_TRIGGER)} aria-label="Filter by assignment">
           <SelectValue placeholder="All assignments" />
         </SelectTrigger>
         <SelectContent>

@@ -1,7 +1,8 @@
 ﻿"use client";
 
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { useRegisterDirtyState } from "@/components/shared/dirty-state-context";
+import { isFormFieldPath } from "@/lib/form-field-path";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { riskFormSchema, type RiskFormValues } from "./governance-schema";
@@ -28,6 +29,7 @@ import { ProjectMemberSelect } from "@/components/members/project-member-select"
 import { TicketCombobox } from "@/features/build/shared/ticket-combobox";
 import { useProject } from "@/hooks/api/build/projects";
 import type { Risk, CreateRiskInput, UpdateRiskInput } from "@/types/projects";
+import type { ValidationFieldError } from "@/lib/api-envelope";
 
 const CREATE_DEFAULTS: RiskFormValues = {
   title: "", description: "", probability: "medium", impact: "medium",
@@ -60,11 +62,12 @@ interface RiskFormSheetProps {
   onSubmitEdit: (input: UpdateRiskInput & { riskId: number }) => void;
   isPending?: boolean;
   projectId: number;
+  serverErrors?: readonly ValidationFieldError[];
 }
 
 export function RiskFormSheet({
   open, onOpenChange, mode, defaultValues,
-  onSubmitCreate, onSubmitEdit, isPending, projectId,
+  onSubmitCreate, onSubmitEdit, isPending, projectId, serverErrors,
 }: RiskFormSheetProps) {
   const { data: project } = useProject(projectId);
   const projectKey = project?.key ?? "";
@@ -79,6 +82,16 @@ export function RiskFormSheet({
       form.reset(mode === "edit" && defaultValues ? riskToFormValues(defaultValues) : CREATE_DEFAULTS);
     }
   }, [open, mode, defaultValues, form]);
+
+  const appliedServerErrorsRef = useRef<readonly ValidationFieldError[] | undefined>(undefined);
+  useEffect(() => {
+    if (serverErrors && serverErrors !== appliedServerErrorsRef.current && serverErrors.length > 0) {
+      appliedServerErrorsRef.current = serverErrors;
+      for (const fe of serverErrors) {
+        if (isFormFieldPath(form.getValues(), fe.path)) form.setError(fe.path, { message: fe.message });
+      }
+    }
+  }, [serverErrors, form]);
 
   function handleSubmit(values: RiskFormValues) {
     if (mode === "edit" && defaultValues) {

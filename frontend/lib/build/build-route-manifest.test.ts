@@ -1,6 +1,7 @@
-import { readdirSync } from "node:fs";
+import { readFileSync, readdirSync } from "node:fs";
 import { join, relative, resolve, sep } from "node:path";
 import { BUILD_ROUTE_MANIFEST, BuildRouteManifestEntrySchema } from "./build-route-manifest";
+import { BUILD_COMPAT_REDIRECTS } from "./build-compat-redirects";
 
 const APP_AUTH_DIR = resolve(__dirname, "../../app/(authenticated)");
 const APP_BUILD_DIR = join(APP_AUTH_DIR, "build");
@@ -8,6 +9,7 @@ const APP_BUILD_DIR = join(APP_AUTH_DIR, "build");
 function collectPageFilePaths(dir: string): string[] {
   const results: string[] = [];
   for (const entry of readdirSync(dir, { withFileTypes: true })) {
+    if (entry.isDirectory() && entry.name.startsWith("@")) continue;
     const full = join(dir, entry.name);
     if (entry.isDirectory()) {
       results.push(...collectPageFilePaths(full));
@@ -29,14 +31,15 @@ const diskRoutes = new Set(
   collectPageFilePaths(APP_BUILD_DIR).map(absolutePathToRoute),
 );
 
-describe("BLD-001 — build route manifest covers all 65 authenticated build pages bidirectionally", () => {
-  it("manifest has 65 entries so the coverage check cannot pass vacuously with an empty or truncated list", () => {
-    expect(BUILD_ROUTE_MANIFEST).toHaveLength(65);
+describe("BLD-001 — build route manifest covers all 81 authenticated build pages bidirectionally", () => {
+  it("manifest has 81 entries so the coverage check cannot pass vacuously with an empty or truncated list", () => {
+    expect(BUILD_ROUTE_MANIFEST).toHaveLength(81);
   });
 
-  it("no longer tracks the twenty-six routes whose next.config.ts redirect now serves the URL, because a manifest entry without a page is a phantom disposition", () => {
+  it("no longer tracks the twenty-seven routes whose next.config.ts redirect now serves the URL, because a manifest entry without a page is a phantom disposition", () => {
     const routes = BUILD_ROUTE_MANIFEST.map((entry) => entry.route);
     for (const removed of [
+      "/build/[projectId]/agile-reports",
       "/build/access",
       "/build/members",
       "/build/client-access",
@@ -74,9 +77,11 @@ describe("BLD-001 — build route manifest covers all 65 authenticated build pag
       "/build/goals",
       "/build/goals/[goalId]",
       "/build/command-center",
+      "/build/projects",
       "/build/all-work",
       "/build/managed-products",
       "/build/roadmap",
+      "/build/search",
       "/build/teams",
       "/build/[projectId]/settings/workflow",
       "/build/[projectId]/settings/automations",
@@ -88,13 +93,44 @@ describe("BLD-001 — build route manifest covers all 65 authenticated build pag
     }
   });
 
-  it("still tracks intake, whose Forms-versus-Triage destination is an unresolved open question", () => {
-    const routes = BUILD_ROUTE_MANIFEST.map((entry) => entry.route);
-    expect(routes).toContain("/build/[projectId]/intake");
+  it("still tracks intake, and keeps it, because the generated contract proves neither Forms nor Triage can absorb its job", () => {
+    const entry = BUILD_ROUTE_MANIFEST.find(
+      (e) => e.route === "/build/[projectId]/intake",
+    );
+    expect(entry).toEqual({
+      route: "/build/[projectId]/intake",
+      decision: "KEEP",
+      target: null,
+    });
   });
 
   it("disk route count matches manifest count so neither direction can silently absorb extra entries", () => {
     expect(diskRoutes.size).toBe(BUILD_ROUTE_MANIFEST.length);
+  });
+
+  it("BT-375a85cfc39c — /build/budget and /build/reports consolidate to all work through config redirects, not pages", () => {
+    expect(BUILD_COMPAT_REDIRECTS).toEqual(
+      expect.arrayContaining([
+        { source: "/build/budget", destination: "/build/all-work?view=budgets", permanent: false },
+        { source: "/build/reports", destination: "/build/all-work?view=reports", permanent: false },
+      ]),
+    );
+    expect(diskRoutes.has("/build/budget")).toBe(false);
+    expect(diskRoutes.has("/build/reports")).toBe(false);
+  });
+
+  it("B-042 — the legacy per-project agile-reports deep link is served by a config redirect, not by a redirect-only page", () => {
+    expect(BUILD_COMPAT_REDIRECTS).toEqual(
+      expect.arrayContaining([
+        {
+          source: "/build/:projectId(\\d+)/agile-reports",
+          destination: "/build/:projectId/reports",
+          permanent: false,
+        },
+      ]),
+    );
+    expect(diskRoutes.has("/build/[projectId]/agile-reports")).toBe(false);
+    expect(diskRoutes.has("/build/[projectId]/reports")).toBe(true);
   });
 
   it("every manifest route has a page.tsx on disk so no phantom disposition can exist in the manifest", () => {
@@ -105,6 +141,81 @@ describe("BLD-001 — build route manifest covers all 65 authenticated build pag
   it("every page.tsx on disk appears in the manifest so no unreviewed route can land undetected", () => {
     const untracked = [...diskRoutes].filter((route) => !manifestRoutes.has(route));
     expect(untracked).toEqual([]);
+  });
+});
+
+describe("BLD-001 — intake is retained because the generated contract gives it a job Forms and Triage do not have", () => {
+  const contract = JSON.parse(
+    readFileSync(resolve(__dirname, "../../contracts/openapi.json"), "utf8"),
+  ) as {
+    paths: Record<string, Record<string, { "x-permission"?: string }>>;
+  };
+  const paths = contract.paths;
+
+  const intakeRow = () => {
+    const response = paths["/build/{projectId}/intake"].get as unknown as {
+      responses: {
+        "200": {
+          content: {
+            "application/json": {
+              schema: {
+                properties: {
+                  data: {
+                    properties: {
+                      data: {
+                        items: { properties: Record<string, unknown> };
+                      };
+                    };
+                  };
+                };
+              };
+            };
+          };
+        };
+      };
+    };
+    return response.responses["200"].content["application/json"].schema
+      .properties.data.properties.data.items.properties;
+  };
+
+  it("intake owns three endpoints of its own, so retiring the page would strand a live resource", () => {
+    expect(Object.keys(paths["/build/{projectId}/intake"]).sort()).toEqual([
+      "get",
+      "post",
+    ]);
+    expect(Object.keys(paths["/build/{projectId}/intake/{requestId}"])).toEqual([
+      "patch",
+    ]);
+  });
+
+  it("triage owns no endpoint at all, so it cannot be the destination for intake submissions", () => {
+    const triagePaths = Object.keys(paths).filter((p) => p.includes("triage"));
+    expect(triagePaths).toEqual([]);
+  });
+
+  it("forms owns definitions and its own submissions, a resource whose rows carry none of intake's fields", () => {
+    expect(paths["/build/{projectId}/forms"]).toBeDefined();
+    expect(
+      paths["/build/{projectId}/forms/{formId}/submissions"],
+    ).toBeDefined();
+    const formsList = JSON.stringify(paths["/build/{projectId}/forms"].get);
+    expect(formsList).not.toContain("linkedWorkItemId");
+    expect(formsList).not.toContain("declineReason");
+  });
+
+  it("only intake rows carry the accepted-to-work-item link and the decline reason that its accept and decline flows write", () => {
+    expect(Object.keys(intakeRow())).toEqual(
+      expect.arrayContaining(["linkedWorkItemId", "declineReason", "source"]),
+    );
+  });
+
+  it("intake is gated by a different permission family than forms, so consolidating it would silently move the access boundary", () => {
+    expect(paths["/build/{projectId}/intake"].post["x-permission"]).toBe(
+      "build:workspace:manage",
+    );
+    expect(paths["/build/{projectId}/forms"].post["x-permission"]).toBe(
+      "build:forms:manage",
+    );
   });
 });
 
@@ -150,5 +261,25 @@ describe("BLD-001 — target field invariant enforced by schema", () => {
       (e) => e.decision !== "KEEP" && e.target === "",
     );
     expect(violations).toEqual([]);
+  });
+});
+
+describe("ARCH-16 — legacy deep links: every CONSOLIDATE target is itself a KEEP route", () => {
+  const keptRoutes = new Set(
+    BUILD_ROUTE_MANIFEST.filter((e) => e.decision === "KEEP").map((e) => e.route),
+  );
+
+  it("has at least one CONSOLIDATE entry so the invariant cannot pass vacuously on an empty list", () => {
+    const consolidations = BUILD_ROUTE_MANIFEST.filter(
+      (e) => e.decision === "CONSOLIDATE",
+    );
+    expect(consolidations.length).toBeGreaterThan(0);
+  });
+
+  it("every CONSOLIDATE entry's target route is a KEEP entry so the legacy deep link resolves to a live page", () => {
+    const danglingConsolidations = BUILD_ROUTE_MANIFEST.filter(
+      (e) => e.decision === "CONSOLIDATE",
+    ).filter((e) => !keptRoutes.has(e.target!));
+    expect(danglingConsolidations).toEqual([]);
   });
 });

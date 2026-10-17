@@ -2,7 +2,9 @@
 
 import { useRef, useState, useCallback, useEffect, useLayoutEffect } from "react";
 import type { ExcalidrawProps } from "@excalidraw/excalidraw/types";
-import type { WhiteboardAccess, ExcalidrawSceneData } from "@/hooks/api/build";
+import type { ExcalidrawSceneData } from "@/hooks/api/build/whiteboards";
+
+export type WhiteboardAccess = "view" | "edit" | "manage";
 
 type ExcalidrawModule = typeof import("@excalidraw/excalidraw");
 
@@ -29,7 +31,7 @@ interface PendingScene {
   files: Files;
 }
 
-export interface AutosaveOptions {
+interface AutosaveOptions {
   boardId: number | null;
   access: WhiteboardAccess;
   initialVersion: number;
@@ -81,11 +83,15 @@ export function useWhiteboardAutosave({
     setStatus("saving");
     try {
       await saveAsyncRef.current(pending.boardId, sceneData);
-      if (pendingRef.current === pending) {
+      if (pending.boardId === boardIdRef.current) {
+        lastSavedVersionRef.current = currentVersion;
+      }
+      const latestPending = pendingRef.current;
+      const latestVersion = latestPending
+        ? getSceneVersion(latestPending.elements)
+        : currentVersion;
+      if (latestVersion === currentVersion) {
         pendingRef.current = null;
-        if (pending.boardId === boardIdRef.current) {
-          lastSavedVersionRef.current = currentVersion;
-        }
         setStatus("saved");
       }
     } catch {

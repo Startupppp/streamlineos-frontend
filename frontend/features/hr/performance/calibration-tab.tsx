@@ -11,6 +11,9 @@ import { useCalibrationEntries, useUpsertCalibrationEntry, type CalibrationEntry
 import { LoadingButton } from "@/components/ui/loading-button";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { ErrorState } from "@/components/shared/error-state";
+import { PageState } from "@/components/shared/page-state";
+import { usePageState } from "@/hooks/api/use-page-state";
+import { useCan } from "@/hooks/api/access";
 import { useOrgMembers } from "@/hooks/api/organization";
 import {
   getUserDisplayName,
@@ -29,8 +32,15 @@ export function CalibrationTab() {
 
   const { data: cycles = [] } = useReviewCycles();
   const { data: entries = [], isLoading, isError, error, refetch } = useCalibrationEntries(selectedCycleId);
+
+  function handleRetryEntries(): void {
+    void refetch();
+  }
   const { data: membersData } = useOrgMembers(1, 200);
   const upsert = useUpsertCalibrationEntry(selectedCycleId);
+  const canManage = useCan("hr:performance:manage");
+  // Surface gate only: the entries read is resolved by the DataTable below.
+  const pageState = usePageState({ permission: "hr:performance:manage", isLoading: false, isError: false, error: null });
 
   const memberById = useMemo(() => {
     const map = new Map<string, NamedUser>();
@@ -172,23 +182,27 @@ export function CalibrationTab() {
         );
       },
     },
-    {
-      key: "save",
-      header: "",
-      cell: (row) => (
-        <LoadingButton
-          size="sm"
-          variant="outline"
-          isPending={upsert.isPending}
-          onClick={() => handleSave(row.employeeId)}
-        >
-          Save
-        </LoadingButton>
-      ),
-    },
-  ], [editingEntry, rowErrors, resolveMemberName, upsert.isPending, handleSave, handleChange]);
+    ...(canManage
+      ? [{
+          key: "save",
+          header: "",
+          cell: (row: CalibrationEntry) => (
+            <LoadingButton
+              size="sm"
+              variant="outline"
+              isPending={upsert.isPending && upsert.variables?.employeeId === row.employeeId}
+              disabled={upsert.isPending}
+              onClick={() => handleSave(row.employeeId)}
+            >
+              Save
+            </LoadingButton>
+          ),
+        }]
+      : []),
+  ], [editingEntry, rowErrors, resolveMemberName, upsert.isPending, upsert.variables, handleSave, handleChange, canManage]);
 
   return (
+    <PageState resolution={pageState} loading={null} className="flex-1">
     <div className="space-y-4">
       <div className="flex items-center gap-3">
         <Select value={String(selectedCycleId)} onValueChange={numericSelectChange(setSelectedCycleId)}>
@@ -210,7 +224,8 @@ export function CalibrationTab() {
               className="flex-1"
               title="Couldn't load calibration entries"
               description={getErrorMessage(error)}
-              onRetry={refetch}
+              error={error}
+              onRetry={handleRetryEntries}
             />
           ) : (
             <Card>
@@ -246,5 +261,6 @@ export function CalibrationTab() {
         />
       )}
     </div>
+    </PageState>
   );
 }

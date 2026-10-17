@@ -6,7 +6,7 @@ import {
   type DraggableProvidedDragHandleProps,
   type DraggableProvidedDraggableProps,
 } from "@hello-pangea/dnd";
-import { FileText, CircleCheck, CirclePlay } from "lucide-react";
+import { FileText, CircleCheck, CirclePlay, SearchX } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { statusToneClasses } from "@/lib/design-tokens";
 import { QuickAddInput } from "./kanban-quick-add";
@@ -19,7 +19,7 @@ import {
 } from "./kanban-virtual-ticket-list";
 import type { KanbanTicket, KanbanColumn, DisplayOptions } from "../shared/types";
 
-export interface KanbanBoardColumnProps {
+interface KanbanBoardColumnProps {
   column: KanbanColumn;
   tickets: KanbanTicket[];
   projectId: number;
@@ -34,6 +34,8 @@ export interface KanbanBoardColumnProps {
   isColumnDragging?: boolean;
   showHeaderQuickAdd?: boolean;
   stretch?: boolean;
+  hasActiveFilters?: boolean;
+  completedTicketsHidden?: boolean;
   minHeightClass?: string;
   onRename: (oldName: string, newName: string) => void;
   onColorChange: (statusId: number, color: string) => void;
@@ -56,6 +58,8 @@ export const KanbanBoardColumn = memo(function KanbanBoardColumn({
   wipLimit,
   serverCount,
   displayOptions,
+  hasActiveFilters = false,
+  completedTicketsHidden = false,
   dragHandleProps,
   isColumnDragging = false,
   showHeaderQuickAdd = false,
@@ -79,7 +83,7 @@ export const KanbanBoardColumn = memo(function KanbanBoardColumn({
       {...columnDraggableProps}
       data-wip-state={wipState}
       className={cn(
-        "flex min-h-0 w-72 min-w-[280px] shrink-0 flex-col self-stretch rounded-xl border border-border bg-muted",
+        "flex min-h-0 w-72 min-w-[240px] shrink-0 flex-col self-stretch rounded-xl border border-border bg-muted sm:min-w-[280px]",
         wipState === "at" && statusToneClasses("warning").rule,
         wipState === "over" && statusToneClasses("danger").rule,
         isColumnDragging && "opacity-95 shadow-lg ring-2 ring-primary/20",
@@ -118,7 +122,12 @@ export const KanbanBoardColumn = memo(function KanbanBoardColumn({
               )}
             >
               {!snapshot.isDraggingOver ? (
-                <ColumnEmptyState column={column} compact={minHeightClass === "min-h-[60px]"} />
+                <ColumnEmptyState
+                  column={column}
+                  compact={minHeightClass === "min-h-[60px]"}
+                  hasActiveFilters={hasActiveFilters}
+                  completedTicketsHidden={completedTicketsHidden}
+                />
               ) : null}
               {provided.placeholder}
             </div>
@@ -148,11 +157,19 @@ export const KanbanBoardColumn = memo(function KanbanBoardColumn({
 export function ColumnEmptyState({
   column,
   compact,
+  hasActiveFilters = false,
+  completedTicketsHidden = false,
 }: {
   column: KanbanColumn;
   compact: boolean;
+  hasActiveFilters?: boolean;
+  completedTicketsHidden?: boolean;
 }) {
-  const kind = emptyColumnKind(column);
+  const kind = completedTicketsHidden
+    ? "hiddenCompleted"
+    : hasActiveFilters
+      ? "filtered"
+      : emptyColumnKind(column);
   const { Icon, title, hint } = EMPTY_COLUMN_COPY[kind];
 
   return (
@@ -168,9 +185,9 @@ export function ColumnEmptyState({
         className="h-8 w-8 text-muted-foreground opacity-40"
       />
       <div className="space-y-0.5">
-        <p className="text-xs font-medium text-foreground">{title}</p>
+        <p className="text-sm font-medium text-foreground">{title}</p>
         {compact ? null : (
-          <p className="max-w-[12rem] text-dense text-muted-foreground">{hint}</p>
+          <p className="text-sm font-normal text-muted-foreground">{hint}</p>
         )}
       </div>
     </div>
@@ -192,6 +209,16 @@ const EMPTY_COLUMN_COPY = {
     Icon: FileText,
     title: "No tickets",
     hint: "Drop a ticket here to get started.",
+  },
+  filtered: {
+    Icon: SearchX,
+    title: "No matches here",
+    hint: "This column has tickets, but none match the current filters.",
+  },
+  hiddenCompleted: {
+    Icon: CircleCheck,
+    title: "Completed tickets are hidden",
+    hint: "Turn off Hide done to view completed tickets.",
   },
 } as const;
 

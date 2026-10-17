@@ -1,6 +1,7 @@
 ﻿"use client";
 
-import { useEffect, useMemo, useState, type KeyboardEvent } from "react";
+import { useMemo, type KeyboardEvent } from "react";
+import { useSourceOverride } from "@/hooks/common/use-source-override";
 import { Check, Loader2, Plus } from "lucide-react";
 import {
   Command,
@@ -33,7 +34,7 @@ export function LabelsSearchCommand({
   onCreated,
   open = true,
 }: LabelsSearchCommandProps) {
-  const [query, setQuery] = useState("");
+  const [query, setQuery] = useSourceOverride(open, "");
   const canCreate = useCan("build:manage");
   const queryClient = useQueryClient();
   const trimmed = query.trim();
@@ -42,7 +43,9 @@ export function LabelsSearchCommand({
     () =>
       trimmed.length === 0
         ? undefined
-        : labels.find((label) => label.name.toLowerCase() === trimmed.toLowerCase()),
+        : labels.find(
+            (label) => label.name.toLowerCase() === trimmed.toLowerCase(),
+          ),
     [labels, trimmed],
   );
 
@@ -52,7 +55,8 @@ export function LabelsSearchCommand({
     return labels.filter((label) => label.name.toLowerCase().includes(q));
   }, [labels, trimmed]);
 
-  const showCreate = canCreate && trimmed.length > 0 && exactMatch === undefined;
+  const showCreate =
+    canCreate && trimmed.length > 0 && exactMatch === undefined;
 
   const createLabel = useCreateOrgLabel({
     onSuccess: (newLabel) => {
@@ -61,7 +65,9 @@ export function LabelsSearchCommand({
         (old) => {
           if (!old) return [newLabel];
           if (old.some((label) => label.id === newLabel.id)) return old;
-          return [...old, newLabel].sort((a, b) => a.name.localeCompare(b.name));
+          return [...old, newLabel].sort((a, b) =>
+            a.name.localeCompare(b.name),
+          );
         },
       );
       setQuery("");
@@ -69,10 +75,6 @@ export function LabelsSearchCommand({
     },
     onError: (error) => toast.error(getErrorMessage(error)),
   });
-
-  useEffect(() => {
-    if (!open) setQuery("");
-  }, [open]);
 
   function handleCreate() {
     if (!showCreate || createLabel.isPending) return;
@@ -131,9 +133,11 @@ export function LabelsSearchCommand({
               >
                 <span
                   className="mr-2 h-2.5 w-2.5 shrink-0 rounded-full border border-border"
-                  style={{ backgroundColor: label.color ?? undefined }}
+                  style={{ backgroundColor: label.color }}
                 />
-                <span className="min-w-0 flex-1 truncate text-left text-xs">{label.name}</span>
+                <span className="min-w-0 flex-1 truncate text-left text-xs">
+                  {label.name}
+                </span>
                 {active ? <Check className="ml-auto h-3 w-3 shrink-0" /> : null}
               </CommandItem>
             );

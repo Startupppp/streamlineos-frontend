@@ -7,10 +7,11 @@ import {
 } from "@/lib/org-scoped-storage";
 import {
   useBuildNavPins,
+  useBuildNavCollapsed,
   useBuildScopeStars,
   useBuildScopeRecents,
 } from "./use-build-nav-preferences";
-import type { BuildScopeRef } from "./use-build-nav-preferences";
+import type { BuildScopeRef } from "./build-nav-storage";
 
 const SCOPE_ORG_A_USER_1 = "authenticated:org-a:user-1";
 const SCOPE_ORG_A_USER_2 = "authenticated:org-a:user-2";
@@ -18,7 +19,7 @@ const SCOPE_ORG_B_USER_1 = "authenticated:org-b:user-1";
 
 function wrapWith(scope: string) {
   return function Wrapper({ children }: { children: ReactNode }) {
-    return createElement(OrgStorageScopeProvider, { scope, children });
+    return createElement(OrgStorageScopeProvider, { scope }, children);
   };
 }
 
@@ -325,6 +326,40 @@ describe("BSN-02-024 — scope isolation by org AND actor", () => {
     expect(result.current.recents).toEqual([valid]);
   });
 
+  test("keeps legacy project recents while normalizing missing parent metadata", () => {
+    const scope = "authenticated:org-legacy-project:user-1";
+    const storageKey = `${scope}::build-scope-recents`;
+    window.localStorage.setItem(
+      storageKey,
+      JSON.stringify([
+        {
+          key: "project:7",
+          type: "project",
+          id: "7",
+          name: "Legacy Project",
+          href: "/build/7",
+        },
+      ]),
+    );
+
+    const { result } = renderHook(() => useBuildScopeRecents(), {
+      wrapper: wrapWith(scope),
+    });
+
+    expect(result.current.recents).toEqual([
+      {
+        key: "project:7",
+        type: "project",
+        id: "7",
+        name: "Legacy Project",
+        parentPath: null,
+        parentKey: null,
+        projectKey: null,
+        href: "/build/7",
+      },
+    ]);
+  });
+
   test("the fixed organization scope cannot be saved as a recent or star", () => {
     const organization = makeScopeRef({
       key: "organization",
@@ -420,5 +455,88 @@ describe("BSN-03-032 — pin ceiling counts only authorized pins", () => {
     });
 
     expect(result.current.canPinMore).toBe(true);
+  });
+});
+
+describe("BT-5aa3fca3005f — useBuildNavPins reorder", () => {
+  const SCOPE = "authenticated:org-reorder:user-1";
+
+  beforeEach(() => {
+    localStorage.clear();
+  });
+
+  test("reorderPins updates the pin order for authorized ids", () => {
+    const { result } = renderHook(
+      () => useBuildNavPins(["t1", "t2", "t3"], true),
+      { wrapper: wrapWith(SCOPE) },
+    );
+
+    act(() => { result.current.togglePin("t1"); });
+    act(() => { result.current.togglePin("t2"); });
+    act(() => { result.current.reorderPins(["t2", "t1"]); });
+
+    expect(result.current.pinnedIds[0]).toBe("t2");
+    expect(result.current.pinnedIds[1]).toBe("t1");
+  });
+
+  test("reorderPins silently drops unauthorized ids", () => {
+    const { result } = renderHook(
+      () => useBuildNavPins(["t1", "t2"], true),
+      { wrapper: wrapWith(SCOPE) },
+    );
+
+    act(() => { result.current.togglePin("t1"); });
+    act(() => { result.current.reorderPins(["t1", "unauthorized-id"]); });
+
+    expect(result.current.pinnedIds).not.toContain("unauthorized-id");
+  });
+});
+
+describe("BT-5aa3fca3005f — useBuildNavCollapsed collapse persistence", () => {
+  const SCOPE = "authenticated:org-collapse:user-1";
+
+  beforeEach(() => {
+    localStorage.clear();
+  });
+
+  test("initial state is not collapsed", () => {
+    const { result } = renderHook(() => useBuildNavCollapsed(), {
+      wrapper: wrapWith(SCOPE),
+    });
+    expect(result.current.isCollapsed).toBe(false);
+  });
+
+  test("setCollapsed persists the collapsed state", () => {
+    const { result } = renderHook(() => useBuildNavCollapsed(), {
+      wrapper: wrapWith(SCOPE),
+    });
+
+    act(() => { result.current.setCollapsed(true); });
+    expect(result.current.isCollapsed).toBe(true);
+  });
+
+  test("setCollapsed can toggle back to expanded", () => {
+    const { result } = renderHook(() => useBuildNavCollapsed(), {
+      wrapper: wrapWith(SCOPE),
+    });
+
+    act(() => { result.current.setCollapsed(true); });
+    act(() => { result.current.setCollapsed(false); });
+    expect(result.current.isCollapsed).toBe(false);
+  });
+
+  test("collapse state is per-org: org-A collapse does not affect org-B", () => {
+    const SCOPE_B = "authenticated:org-b-collapse:user-1";
+
+    const { result: rA } = renderHook(() => useBuildNavCollapsed(), {
+      wrapper: wrapWith(SCOPE),
+    });
+    const { result: rB } = renderHook(() => useBuildNavCollapsed(), {
+      wrapper: wrapWith(SCOPE_B),
+    });
+
+    act(() => { rA.current.setCollapsed(true); });
+    expect(rA.current.isCollapsed).toBe(true);
+    expect(rB.current.isCollapsed).toBe(false);
   });
 });

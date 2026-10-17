@@ -1,30 +1,45 @@
 ﻿"use client";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
 import { buildWorkQueryKeys as queryKeys } from "@/lib/query-keys/build-work";
 import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
 import { useCan } from "@/hooks/api/access";
-import type { ProjectAutomation } from "@/types/projects";
+import type { ProjectAutomation, AutomationActionType } from "@/types/projects";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import type {
+  ProjectsAutomationsDryRunResponse,
+  ProjectsAutomationsReplayRunResponse,
+} from "@/contracts/build-contracts.generated";
+import { NO_CURSOR_YET } from "@/hooks/api/cursor-page-param";
+import type {
+  DryRunTicketInput,
+  AutomationRunRow,
+} from "@/hooks/api/build/automation-analysis-schema";
 
 const projectAutomationListContract = lazyContract(() =>
-  import("@/hooks/api/build/build-project-schema").then((m) => m.projectAutomationListContract),
+  import("@/hooks/api/build/build-project-schema").then(
+    (m) => m.projectAutomationListContract,
+  ),
 );
 const projectAutomationRowContract = lazyContract(() =>
-  import("@/hooks/api/build/build-project-schema").then((m) => m.projectAutomationRowContract),
+  import("@/hooks/api/build/build-project-schema").then(
+    (m) => m.projectAutomationRowContract,
+  ),
 );
 const noContentContract = lazyContract(() =>
   import("@/hooks/api/cursor-page-schema").then((m) => m.noContentContract),
 );
-export type { ProjectAutomation } from "@/types/projects";
+
+type AutomationWriteInput = Pick<
+  ProjectAutomation,
+  "name" | "isActive" | "triggerEvent" | "conditions" | "actions"
+>;
 
 export const TRIGGER_EVENTS = [
   { value: "ticket.created", label: "Ticket Created" },
   { value: "ticket.updated", label: "Ticket Updated" },
   { value: "ticket.status_changed", label: "Status Changed" },
   { value: "ticket.assigned", label: "Ticket Assigned" },
-  { value: "sprint.started", label: "Sprint Started" },
-  { value: "sprint.completed", label: "Sprint Completed" },
 ] as const;
 
 export const ACTION_TYPES = [
@@ -33,13 +48,46 @@ export const ACTION_TYPES = [
   { value: "set_priority", label: "Set Priority" },
   { value: "add_label", label: "Add Label" },
   { value: "add_comment", label: "Add Comment" },
+  { value: "request_approval", label: "Request Approval" },
 ] as const;
 
-export function useAutomations(projectId: number) {
+export interface AutomationsFilters {
+  action?: AutomationActionType;
+  ownerId?: string;
+  search?: string;
+}
+
+export function useAutomations(
+  projectId: number,
+  filters?: AutomationsFilters,
+) {
   const canView = useCan("build:view");
-  return useQuery<ProjectAutomation[]>({
-    queryKey: queryKeys.projects.automations(projectId),
-    queryFn: ({ signal }) => apiClient.get<ProjectAutomation[]>(`/build/${projectId}/automations`, undefined, signal, projectAutomationListContract),
+  const baseParams: Record<string, string> = {};
+  if (filters?.action) baseParams["action"] = filters.action;
+  if (filters?.ownerId) baseParams["ownerId"] = filters.ownerId;
+  if (filters?.search) baseParams["search"] = filters.search;
+  return useInfiniteQuery({
+    queryKey: [...queryKeys.projects.automations(projectId), filters ?? {}],
+    queryFn: ({ signal, pageParam }) => {
+      const params = pageParam !== undefined
+        ? { ...baseParams, cursor: pageParam }
+        : baseParams;
+      return apiClient.get<{
+        data: ProjectAutomation[];
+        pagination: {
+          limit: number;
+          hasMore: boolean;
+          nextCursor: string | null;
+        };
+      }>(
+        `/build/${projectId}/automations`,
+        params,
+        signal,
+        projectAutomationListContract,
+      );
+    },
+    initialPageParam: NO_CURSOR_YET,
+    getNextPageParam: (lastPage) => lastPage.pagination.nextCursor ?? undefined,
     enabled: canView && !!projectId,
     staleTime: 60_000,
   });
@@ -49,9 +97,17 @@ export function useCreateAutomation(projectId: number) {
   const qc = useQueryClient();
   return useAuthorizedMutation("build:manage", {
     mutationKey: ["projects", projectId, "automations", "create"],
-    mutationFn: (data: Omit<ProjectAutomation, "id" | "projectId" | "createdAt">) =>
-      apiClient.post<ProjectAutomation>(`/build/${projectId}/automations`, data, undefined, projectAutomationRowContract),
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.projects.automations(projectId) }),
+    mutationFn: (data: AutomationWriteInput) =>
+      apiClient.post(
+        `/build/${projectId}/automations`,
+        data,
+        undefined,
+        projectAutomationRowContract,
+      ),
+    onSuccess: () =>
+      qc.invalidateQueries({
+        queryKey: queryKeys.projects.automations(projectId),
+      }),
   });
 }
 
@@ -59,9 +115,92 @@ export function useUpdateAutomation(projectId: number) {
   const qc = useQueryClient();
   return useAuthorizedMutation("build:manage", {
     mutationKey: ["projects", projectId, "automations", "update"],
-    mutationFn: ({ automationId, ...data }: Partial<ProjectAutomation> & { automationId: number }) =>
-      apiClient.patch<ProjectAutomation>(`/build/${projectId}/automations/${automationId}`, data, undefined, projectAutomationRowContract),
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.projects.automations(projectId) }),
+    mutationFn: ({
+      automationId,
+      ...data
+    }: Partial<AutomationWriteInput> & { automationId: number }) =>
+      apiClient.patch(
+        `/build/${projectId}/automations/${automationId}`,
+        data,
+        undefined,
+        projectAutomationRowContract,
+      ),
+    onSuccess: () =>
+      qc.invalidateQueries({
+        queryKey: queryKeys.projects.automations(projectId),
+      }),
+  });
+}
+
+const automationDryRunContract = lazyContract(() =>
+  import("@/contracts/build-contracts.generated").then(
+    (m) => m.projectsAutomationsDryRunResponseSchema,
+  ),
+);
+
+const automationReplayContract = lazyContract(() =>
+  import("@/contracts/build-contracts.generated").then(
+    (m) => m.projectsAutomationsReplayRunResponseSchema,
+  ),
+);
+
+const automationRunListContract = lazyContract(() =>
+  import("@/contracts/build-contracts.generated").then(
+    (m) => m.projectsAutomationsListRunsResponseSchema,
+  ),
+);
+
+
+export function useAutomationRuns(projectId: number, automationId?: number) {
+  const canView = useCan("build:view");
+  const baseParams: Record<string, string> = {};
+  if (automationId !== undefined) baseParams["automationId"] = String(automationId);
+  return useInfiniteQuery({
+    queryKey: [...queryKeys.projects.automations(projectId), "runs", automationId ?? null],
+    queryFn: ({ signal, pageParam }) => {
+      const params = pageParam !== undefined ? { ...baseParams, cursor: pageParam } : baseParams;
+      return apiClient.get<{ items: AutomationRunRow[]; pagination: { limit: number; hasMore: boolean; nextCursor: string | null } }>(
+        `/build/${projectId}/automations/runs`,
+        params,
+        signal,
+        automationRunListContract,
+      );
+    },
+    initialPageParam: NO_CURSOR_YET,
+    getNextPageParam: (lastPage) => lastPage.pagination.nextCursor ?? undefined,
+    enabled: canView && !!projectId,
+    staleTime: 30_000,
+  });
+}
+
+export function useAutomationDryRun(projectId: number) {
+  return useAuthorizedMutation("build:view", {
+    mutationKey: ["projects", projectId, "automations", "dry-run"],
+    mutationFn: (data: { triggerEvent: string; ticket: DryRunTicketInput }) =>
+      apiClient.post<ProjectsAutomationsDryRunResponse>(
+        `/build/${projectId}/automations/dry-run`,
+        data,
+        undefined,
+        automationDryRunContract,
+      ),
+  });
+}
+
+export function useReplayAutomationRun(projectId: number) {
+  const qc = useQueryClient();
+  return useAuthorizedMutation("build:manage", {
+    mutationKey: ["projects", projectId, "automations", "replay"],
+    mutationFn: (runId: number) =>
+      apiClient.post<ProjectsAutomationsReplayRunResponse>(
+        `/build/${projectId}/automations/runs/${runId}/replay`,
+        undefined,
+        undefined,
+        automationReplayContract,
+      ),
+    onSuccess: () =>
+      qc.invalidateQueries({
+        queryKey: queryKeys.projects.automations(projectId),
+      }),
   });
 }
 
@@ -70,7 +209,16 @@ export function useDeleteAutomation(projectId: number) {
   return useAuthorizedMutation("build:manage", {
     mutationKey: ["projects", projectId, "automations", "delete"],
     mutationFn: (automationId: number) =>
-      apiClient.delete<void>(`/build/${projectId}/automations/${automationId}`, undefined, undefined, noContentContract),
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.projects.automations(projectId) }),
+      apiClient.delete<void>(
+        `/build/${projectId}/automations/${automationId}`,
+        undefined,
+        undefined,
+        noContentContract,
+      ),
+    onSuccess: () =>
+      qc.invalidateQueries({
+        queryKey: queryKeys.projects.automations(projectId),
+      }),
   });
 }
+

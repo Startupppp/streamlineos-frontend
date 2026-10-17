@@ -1,6 +1,6 @@
-﻿"use client";
+"use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { useRegisterDirtyState } from "@/components/shared/dirty-state-context";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -14,24 +14,10 @@ import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/shared/error-state";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Badge } from "@/components/ui/badge";
-import {
-  Sheet, SheetContent, SheetHeader, SheetTitle, SheetFooter, SheetClose,
-} from "@/components/ui/sheet";
-import {
-  Form,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormControl,
-  FormMessage,
-} from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { CircleCheckIcon } from "@animateicons/react/lucide";
+import { NotesSheet, CreateBugSheet } from "./run-execution-sheets";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { cn } from "@/lib/utils";
@@ -39,19 +25,29 @@ import {
   PmPageShell,
   PmPanel,
   PmSection,
-  PmStaggerList,
-  PM_FILL_PANEL,
+  CONTENT_FILL_PANEL,
   PM_PANEL,
 } from "@/components/pm-chrome";
 import { TEXT_ONE_LINE } from "@/lib/text-overflow";
+import { BuildListToolbar } from "@/features/build/shared/build-list-toolbar";
+import { BuildFilterSelect } from "@/features/build/shared/build-filter-select";
+import { BuildListSurface } from "@/features/build/shared/build-list-surface";
+import {
+  BUILD_FILTER_ALL,
+  useBuildListFilters,
+} from "@/features/build/shared/use-build-list-filters";
+import { buildResultColumns } from "./result-columns";
 import { ResultRow } from "./result-row";
-import type { TestRunStatus, TestRunCounts } from "@/types/projects";
+import { RunResultBulkActionBar } from "./run-result-bulk-action-bar";
+import { useUpdateTestResult } from "@/hooks/api/build/qa";
+import type { TestRunCounts, TestRunResult } from "@/types/projects";
+import { deriveRunDisplayStatus } from "./run-effective-status";
 
 const STATUS_STYLES: Record<string, string> = {
   not_started: "text-muted-foreground border-border",
-  in_progress: "text-status-info-ink border-status-info-rule",
-  completed: "text-status-success-ink border-status-success-rule",
-  aborted: "text-status-danger-ink border-status-danger-rule",
+  in_progress: "text-status-info-ink-strong border-status-info-rule",
+  completed: "text-status-success-ink-strong border-status-success-rule",
+  aborted: "text-status-danger-ink-strong border-status-danger-rule",
 };
 
 const STATUS_LABELS: Record<string, string> = {
@@ -60,6 +56,19 @@ const STATUS_LABELS: Record<string, string> = {
   completed: "Completed",
   aborted: "Aborted",
 };
+
+const RESULT_STATUS_OPTIONS = [
+  { value: BUILD_FILTER_ALL, label: "All statuses" },
+  { value: "not_run", label: "Not Run" },
+  { value: "passed", label: "Passed" },
+  { value: "failed", label: "Failed" },
+  { value: "blocked", label: "Blocked" },
+  { value: "skipped", label: "Skipped" },
+];
+
+const RESULT_FILTER_DEFINITIONS = [
+  { param: "status", options: ["not_run", "passed", "failed", "blocked", "skipped"] as const },
+] as const;
 
 function ProgressBar({ counts }: { counts: TestRunCounts }) {
   if (counts.total === 0) return null;
@@ -80,29 +89,14 @@ function ProgressBar({ counts }: { counts: TestRunCounts }) {
   );
 }
 
-function CompleteRunButton({ onClick, isPending }: { onClick: () => void; isPending: boolean }) {
-  const { iconRef, hoverHandlers } = useAnimatedIcon();
-  return (
-    <LoadingButton
-      size="sm"
-      className="gap-1 text-dense"
-      onClick={onClick}
-      isPending={isPending}
-      loadingText="Completing…"
-      {...hoverHandlers}
-    >
-      <CircleCheckIcon ref={iconRef} size={14} />
-      Complete Run
-    </LoadingButton>
-  );
-}
-
 interface RunExecutionPageProps {
   projectId: number;
   runId: number;
 }
 
 export function RunExecutionPage({ projectId, runId }: RunExecutionPageProps) {
+  const qaHref = `/build/${projectId}/qa?tab=runs`;
+  const { iconRef: completeRunIconRef, hoverHandlers: completeRunHoverHandlers } = useAnimatedIcon();
   const canManage = useCan("build:qa:manage");
   const canExecute = useCan("build:qa:execute");
   const canCreateBug = useCan("build:bugs:create");
@@ -110,9 +104,17 @@ export function RunExecutionPage({ projectId, runId }: RunExecutionPageProps) {
   const { data: run, isLoading, isError, error, refetch } = useTestRunDetail(projectId, runId);
   const updateRun = useUpdateTestRun();
   const createBugFromResult = useCreateBugFromResult();
+  const updateResult = useUpdateTestResult();
+
+  const listFilters = useBuildListFilters({ filters: RESULT_FILTER_DEFINITIONS });
+  const [selectedIds, setSelectedIds] = useState(new Set<string | number>());
 
   const [bugSheetOpen, setBugSheetOpen] = useState(false);
   const [bugResultId, setBugResultId] = useState<number | null>(null);
+
+  const [notesSheetOpen, setNotesSheetOpen] = useState(false);
+  const [notesResult, setNotesResult] = useState<TestRunResult | null>(null);
+  const [notesValue, setNotesValue] = useState("");
 
   const bugForm = useForm<CreateBugFromResultFormValues>({
     resolver: zodResolver(createBugFromResultSchema),
@@ -142,6 +144,32 @@ export function RunExecutionPage({ projectId, runId }: RunExecutionPageProps) {
     setBugSheetOpen(true);
   }, [run, bugForm]);
 
+  const handleOpenNotes = useCallback((result: TestRunResult) => {
+    setNotesResult(result);
+    setNotesValue(result.notes ?? "");
+    setNotesSheetOpen(true);
+  }, []);
+
+  const handleSaveNotes = useCallback(() => {
+    if (!notesResult) return;
+    updateResult.mutate(
+      {
+        projectId,
+        runId,
+        resultId: notesResult.id,
+        status: notesResult.status,
+        notes: notesValue || undefined,
+      },
+      {
+        onSuccess: () => {
+          toast.success("Notes saved");
+          setNotesSheetOpen(false);
+        },
+        onError: (error) => toast.error(getErrorMessage(error)),
+      },
+    );
+  }, [notesResult, notesValue, projectId, runId, updateResult]);
+
   const handleSubmitBug = useCallback((values: CreateBugFromResultFormValues) => {
     if (!bugResultId) return;
     createBugFromResult.mutate(
@@ -161,11 +189,76 @@ export function RunExecutionPage({ projectId, runId }: RunExecutionPageProps) {
     void refetch();
   }, [refetch]);
 
-  const pageState = usePageState({ permission: "build:qa:view", isLoading, isError, error });
+  const handleClearSelection = useCallback(() => {
+    setSelectedIds(new Set());
+  }, []);
+
+  const handleStatusFilterChange = useCallback(
+    (value: string) => listFilters.setValue("status", value),
+    [listFilters],
+  );
+
+  const filteredResults = useMemo(() => {
+    const allResults = run?.results ?? [];
+    const statusFilter = listFilters.value("status");
+    const q = listFilters.debouncedSearch.toLowerCase();
+    return allResults.filter((r) => {
+      if (statusFilter !== BUILD_FILTER_ALL && r.status !== statusFilter) return false;
+      if (q && !r.testCase?.title.toLowerCase().includes(q)) return false;
+      return true;
+    });
+  }, [run?.results, listFilters]);
+
+  const columns = useMemo(
+    () =>
+      buildResultColumns({
+        projectId,
+        canExecute,
+        canCreateBug,
+        onCreateBug: handleOpenCreateBug,
+        onOpenNotes: handleOpenNotes,
+      }),
+    [projectId, canExecute, canCreateBug, handleOpenCreateBug, handleOpenNotes],
+  );
+
+  const handleRenderResultMobileCard = useCallback(
+    (result: TestRunResult) => (
+      <ResultRow
+        result={result}
+        projectId={projectId}
+        canExecute={canExecute}
+        canCreateBug={canCreateBug}
+        onCreateBug={handleOpenCreateBug}
+      />
+    ),
+    [projectId, canExecute, canCreateBug, handleOpenCreateBug],
+  );
+
+  const runCounts = useMemo<TestRunCounts>(() => {
+    const results = run?.results ?? [];
+    const countOf = (status: TestRunResult["status"]) =>
+      results.filter((result) => result.status === status).length;
+    return {
+      total: results.length,
+      passed: countOf("passed"),
+      failed: countOf("failed"),
+      blocked: countOf("blocked"),
+      skipped: countOf("skipped"),
+      notRun: countOf("not_run"),
+    };
+  }, [run?.results]);
+
+  const pageState = usePageState({
+    permission: "build:qa:view",
+    isLoading,
+    isError,
+    error,
+    isEmpty: run === null,
+  });
 
   if (pageState.kind !== "ready" && pageState.kind !== "empty" && pageState.kind !== "loading") {
     return (
-      <PageWrapper title="Run" backHref={`/build/${projectId}/qa`}>
+      <PageWrapper title="Run" backHref={qaHref}>
         <PmPageShell>
           <PageState resolution={pageState} loading={null} onRetry={handleRetry} className="flex-1">
             {null}
@@ -177,7 +270,7 @@ export function RunExecutionPage({ projectId, runId }: RunExecutionPageProps) {
 
   if (pageState.kind === "loading") {
     return (
-      <PageWrapper title="Loading…" backHref={`/build/${projectId}/qa`}>
+      <PageWrapper title="Loading…" backHref={qaHref}>
         <PmPageShell>
           <div className="space-y-2">
             {Array.from({ length: 10 }).map((_, i) => (
@@ -189,9 +282,25 @@ export function RunExecutionPage({ projectId, runId }: RunExecutionPageProps) {
     );
   }
 
+  if (pageState.kind === "empty") {
+    return (
+      <PageWrapper title="Run not found" backHref={qaHref}>
+        <PmPageShell>
+          <EmptyState
+            className="flex-1"
+            illustrationPreset="ticket"
+            title="Test run not found"
+            description="This test run no longer exists, or you no longer have access to it."
+            action={{ label: "Back to QA", href: qaHref }}
+          />
+        </PmPageShell>
+      </PageWrapper>
+    );
+  }
+
   if (!run) {
     return (
-      <PageWrapper title="Run" backHref={`/build/${projectId}/qa`}>
+      <PageWrapper title="Run" backHref={qaHref}>
         <PmPageShell>
           <ErrorState onRetry={handleRetry} />
         </PmPageShell>
@@ -199,35 +308,43 @@ export function RunExecutionPage({ projectId, runId }: RunExecutionPageProps) {
     );
   }
 
-  const results = run.results ?? [];
-  const runCounts: TestRunCounts = {
-    total: results.length,
-    passed: results.filter((result) => result.status === "passed").length,
-    failed: results.filter((result) => result.status === "failed").length,
-    blocked: results.filter((result) => result.status === "blocked").length,
-    skipped: results.filter((result) => result.status === "skipped").length,
-    notRun: results.filter((result) => result.status === "not_run").length,
-  };
+  const displayStatus = deriveRunDisplayStatus(run.status, runCounts);
+  const isRunClosed = run.status === "completed" || run.status === "aborted";
 
   return (
     <PageWrapper
       title={run.name}
-      backHref={`/build/${projectId}/qa`}
+      backHref={qaHref}
       actions={
-        canManage && run.status !== "completed" ? (
-          <CompleteRunButton onClick={handleCompleteRun} isPending={updateRun.isPending} />
+        canManage && !isRunClosed ? (
+          <LoadingButton
+            size="sm"
+            className="gap-1 text-dense"
+            onClick={handleCompleteRun}
+            isPending={updateRun.isPending}
+            loadingText="Completing…"
+            {...completeRunHoverHandlers}
+          >
+            <CircleCheckIcon ref={completeRunIconRef} size={14} />
+            Complete Run
+          </LoadingButton>
         ) : undefined
       }
     >
       <PmPageShell>
         <PmSection index={0}>
           <PmPanel className="flex flex-wrap items-center gap-3 px-3 py-2.5">
-            <Badge variant="outline" className={cn("text-micro", STATUS_STYLES[run.status])}>
-              {STATUS_LABELS[run.status]}
+            <Badge variant="outline" className={cn("text-micro", STATUS_STYLES[displayStatus])}>
+              {STATUS_LABELS[displayStatus]}
             </Badge>
             {run.environment ? (
               <span className={cn(TEXT_ONE_LINE, "max-w-[12rem] text-dense text-muted-foreground")}>
                 {run.environment}
+              </span>
+            ) : null}
+            {run.browserDevice ? (
+              <span className={cn(TEXT_ONE_LINE, "max-w-[12rem] text-dense text-muted-foreground")}>
+                {run.browserDevice}
               </span>
             ) : null}
             <ProgressBar counts={runCounts} />
@@ -235,94 +352,91 @@ export function RunExecutionPage({ projectId, runId }: RunExecutionPageProps) {
         </PmSection>
 
         <PmSection index={1} className="flex min-h-0 flex-1 flex-col">
-          {results.length === 0 ? (
-            <EmptyState
-                className={PM_FILL_PANEL}
+          <BuildListToolbar
+            search={{
+              value: listFilters.search,
+              onValueChange: listFilters.setSearch,
+              placeholder: "Search test cases…",
+            }}
+            filters={[
+              {
+                id: "status",
+                label: "Status",
+                active: listFilters.isActive("status"),
+                control: (
+                  <BuildFilterSelect
+                    label="Status"
+                    value={listFilters.value("status")}
+                    options={RESULT_STATUS_OPTIONS}
+                    onValueChange={handleStatusFilterChange}
+                  />
+                ),
+              },
+            ]}
+          />
+
+          {selectedIds.size > 0 ? (
+            <RunResultBulkActionBar
+              projectId={projectId}
+              runId={runId}
+              selectedIds={selectedIds}
+              onClear={handleClearSelection}
+            />
+          ) : null}
+
+          <BuildListSurface<TestRunResult>
+            permission="build:qa:view"
+            rows={filteredResults}
+            columns={columns}
+            isLoading={false}
+            isError={false}
+            isFiltered={listFilters.isFiltered}
+            getRowKey={(row) => row.id}
+            mobileCard={handleRenderResultMobileCard}
+            selection={{
+              selected: selectedIds,
+              onChange: setSelectedIds,
+              getRowLabel: (row) => row.testCase?.title ?? `Result ${row.id}`,
+            }}
+            empty={
+              <EmptyState
+                className={CONTENT_FILL_PANEL}
                 illustrationPreset="ticket"
                 title="No test results"
                 description="No test cases were added to this run."
               />
-          ) : (
-            <PmStaggerList className="space-y-2">
-              {results.map((result) => (
-                <ResultRow
-                  key={result.id}
-                  result={result}
-                  projectId={projectId}
-                  canExecute={canExecute}
-                  canCreateBug={canCreateBug}
-                  onCreateBug={handleOpenCreateBug}
-                />
-              ))}
-            </PmStaggerList>
-          )}
+            }
+            filteredEmpty={
+              <EmptyState
+                className={CONTENT_FILL_PANEL}
+                illustrationPreset="ticket"
+                title="No results match the current filters"
+                description="Try clearing the filters."
+                onClearFilters={listFilters.clearAll}
+              />
+            }
+          />
         </PmSection>
       </PmPageShell>
 
-      <Sheet open={bugSheetOpen} onOpenChange={setBugSheetOpen}>
-        <SheetContent className="flex w-full flex-col p-0 sm:max-w-md">
-          <SheetHeader className="shrink-0 border-b px-5 py-4">
-            <SheetTitle>Create Bug from Result</SheetTitle>
-          </SheetHeader>
-          <Form {...bugForm}>
-            <form onSubmit={bugForm.handleSubmit(handleSubmitBug)} className="flex min-h-0 flex-1 flex-col">
-              <ScrollArea className="flex-1">
-                <div className="space-y-4 px-5 py-4">
-                  <FormField
-                    control={bugForm.control}
-                    name="bugTitle"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-dense">Title <span className="text-destructive">*</span></FormLabel>
-                        <FormControl>
-                          <Input {...field} className="text-dense" placeholder="Bug title" />
-                        </FormControl>
-                        <FormMessage className="text-micro" />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={bugForm.control}
-                    name="bugSeverity"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-dense">Severity</FormLabel>
-                        <Select value={field.value} onValueChange={field.onChange}>
-                          <FormControl>
-                            <SelectTrigger><SelectValue /></SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            <SelectItem value="blocker">Blocker</SelectItem>
-                            <SelectItem value="critical">Critical</SelectItem>
-                            <SelectItem value="major">Major</SelectItem>
-                            <SelectItem value="minor">Minor</SelectItem>
-                            <SelectItem value="trivial">Trivial</SelectItem>
-                          </SelectContent>
-                        </Select>
-                        <FormMessage className="text-micro" />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-              </ScrollArea>
-              <SheetFooter className="flex shrink-0 gap-2 border-t px-5 py-3">
-                <SheetClose asChild>
-                  <Button type="button" variant="outline" size="sm" className="text-dense">Cancel</Button>
-                </SheetClose>
-                <LoadingButton
-                  type="submit"
-                  size="sm"
-                  className="text-dense"
-                  isPending={createBugFromResult.isPending}
-                  loadingText="Creating…"
-                >
-                  Create Bug
-                </LoadingButton>
-              </SheetFooter>
-            </form>
-          </Form>
-        </SheetContent>
-      </Sheet>
+      <NotesSheet
+        open={notesSheetOpen}
+        onOpenChange={setNotesSheetOpen}
+        notesResult={notesResult}
+        notesValue={notesValue}
+        onNotesChange={setNotesValue}
+        canExecute={canExecute}
+        isSaving={updateResult.isPending}
+        onSave={handleSaveNotes}
+      />
+
+      <CreateBugSheet
+        open={bugSheetOpen}
+        onOpenChange={setBugSheetOpen}
+        form={bugForm}
+        onSubmit={handleSubmitBug}
+        isPending={createBugFromResult.isPending}
+      />
     </PageWrapper>
   );
 }

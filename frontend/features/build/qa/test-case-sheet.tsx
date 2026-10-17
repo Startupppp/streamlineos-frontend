@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import { useRegisterDirtyState } from "@/components/shared/dirty-state-context";
+import { isFormFieldPath } from "@/lib/form-field-path";
 import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { testCaseSchema, type TestCaseFormValues } from "./qa-schema";
@@ -10,6 +11,7 @@ import {
   SheetContent,
   SheetHeader,
   SheetTitle,
+  SheetDescription,
   SheetFooter,
   SheetClose,
   SheetBody,
@@ -36,11 +38,13 @@ import { PlusIcon, Trash2Icon } from "@animateicons/react/lucide";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { getValidationFieldErrors } from "@/lib/api-envelope";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { useCreateTestCase, useUpdateTestCase } from "@/hooks/api/build/qa";
 import { useProject } from "@/hooks/api/build/projects";
 import { TicketCombobox } from "@/features/build/shared/ticket-combobox";
 import type { TestCase, TestSuite } from "@/types/projects";
+import { useCanState } from "@/hooks/api/access";
 
 interface TestCaseSheetProps {
   projectId: number;
@@ -57,6 +61,7 @@ export function TestCaseSheet({
   editCase,
   suites,
 }: TestCaseSheetProps) {
+  const accessState = useCanState("build:qa:view");
   const create = useCreateTestCase();
   const update = useUpdateTestCase();
   const { data: project } = useProject(projectId);
@@ -111,6 +116,8 @@ export function TestCaseSheet({
     }
   }, [open, editCase, form]);
 
+  if (accessState === "denied" || accessState === "loading") return null;
+
   function addStep() {
     append({ action: "", expected: "" });
   }
@@ -133,6 +140,17 @@ export function TestCaseSheet({
       linkedTicketId,
     };
 
+    function handleError(e: unknown) {
+      const fieldErrors = getValidationFieldErrors(e);
+      if (fieldErrors.length > 0) {
+        for (const fe of fieldErrors) {
+          if (isFormFieldPath(form.getValues(), fe.path)) form.setError(fe.path, { message: fe.message });
+        }
+      } else {
+        toast.error(getErrorMessage(e));
+      }
+    }
+
     if (editCase) {
       update.mutate(
         { ...input, id: editCase.id },
@@ -141,7 +159,7 @@ export function TestCaseSheet({
             toast.success("Test case updated");
             onOpenChange(false);
           },
-          onError: (e) => toast.error(getErrorMessage(e)),
+          onError: handleError,
         },
       );
     } else {
@@ -150,7 +168,7 @@ export function TestCaseSheet({
           toast.success("Test case created");
           onOpenChange(false);
         },
-        onError: (e) => toast.error(getErrorMessage(e)),
+        onError: handleError,
       });
     }
   }
@@ -162,6 +180,7 @@ export function TestCaseSheet({
       <SheetContent className="p-0 flex flex-col w-full sm:max-w-lg">
         <SheetHeader className="px-5 py-4 border-b shrink-0">
           <SheetTitle>{editCase ? "Edit Test Case" : "New Test Case"}</SheetTitle>
+          <SheetDescription className="sr-only">Define the test steps and expected results for this project.</SheetDescription>
         </SheetHeader>
 
         <Form {...form}>

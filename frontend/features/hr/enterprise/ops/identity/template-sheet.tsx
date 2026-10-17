@@ -7,6 +7,7 @@ import { z } from "zod";
 import {
   Sheet,
   SheetContent,
+  SheetDescription,
   SheetHeader,
   SheetTitle,
   SheetBody,
@@ -31,9 +32,7 @@ import { Input } from "@/components/ui/input";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { PlusIcon, Trash2Icon } from "@animateicons/react/lucide";
-import { toast } from "sonner";
 import { useCreateProvisioningTemplate } from "@/hooks/api/hr/enterprise-ops-identity";
-import { getErrorMessage } from "@/lib/get-error-message";
 
 const SYSTEM_ACTIONS = ["grant", "revoke", "review"] as const;
 
@@ -110,7 +109,6 @@ export function TemplateSheet({ open, onOpenChange }: Props) {
           setSystems([]);
           onOpenChange(false);
         },
-        onError: (e) => toast.error(getErrorMessage(e)),
       },
     );
   }
@@ -120,6 +118,7 @@ export function TemplateSheet({ open, onOpenChange }: Props) {
       <SheetContent className="flex w-full flex-col gap-0 overflow-hidden p-0 sm:max-w-lg">
         <SheetHeader className="shrink-0 border-b border-border px-6 py-4 text-left">
           <SheetTitle>New Provisioning Template</SheetTitle>
+          <SheetDescription className="sr-only">Define a reusable set of system access actions for a lifecycle event.</SheetDescription>
         </SheetHeader>
 
         <Form {...form}>

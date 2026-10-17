@@ -1,34 +1,33 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+  useRef,
+  useState,
+  useEffect,
+  useCallback,
+  useEffectEvent,
+} from "react";
+import { useSourceOverride } from "@/hooks/common/use-source-override";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import {
   useTicket,
+  useSubtasks,
   useUpdateTicket,
   useDeleteTicket,
-  useProject,
-  useSubtasks,
-} from "@/hooks/api";
-import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
-import { isApiError, getApiErrorCode } from "@/lib/api-client";
-import { getErrorMessage } from "@/lib/get-error-message";
-import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
-import type { ProjectMember } from "./types";
+} from "@/hooks/api/build/tickets";
 import { useCan } from "@/hooks/api/access";
-
-interface ProjectManager {
-  id: string;
-  name?: string | null;
-  firstName?: string | null;
-  lastName?: string | null;
-  image?: string | null;
-  email?: string | null;
-}
-
-function isProjectWithManager(data: unknown): data is { manager?: ProjectManager } {
-  return typeof data === "object" && data !== null && "manager" in data;
-}
+import { getErrorMessage } from "@/lib/get-error-message";
+import { TICKET_TITLE_MAX } from "@/lib/validation/projects";
+import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
+import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
+import { isApiError, getApiErrorCode } from "@/lib/api-envelope";
+import { useOnlineStatus } from "@/hooks/common/use-online-status";
+import {
+  diffTicketConflictFields,
+  type TicketConflictFieldDiff,
+} from "./ticket-conflict-diff";
+import { useTicketDetailProjectData } from "./use-ticket-detail-project-data";
 
 interface UseTicketDetailOptions {
   projectId: number;
@@ -36,74 +35,140 @@ interface UseTicketDetailOptions {
   onDeleted?: () => void;
 }
 
-export function useTicketDetail({ projectId, ticketId, onDeleted }: UseTicketDetailOptions) {
-  const canUpdate = useCan("build:tickets:update");
+interface TicketConflictState {
+  fields: TicketConflictFieldDiff[];
+  patch: Record<string, unknown>;
+  serverUpdatedAt: string;
+  serverVersion: number | undefined;
+}
+
+export function useTicketDetail({
+  projectId,
+  ticketId,
+  onDeleted,
+}: UseTicketDetailOptions) {
+  const isOnline = useOnlineStatus();
   const queryClient = useQueryClient();
+  const canUpdate = useCan("build:tickets:update");
+
   const [saving, setSaving] = useState(false);
-  const [localTitle, setLocalTitle] = useState("");
-  const [syncedTitleId, setSyncedTitleId] = useState<number | null>(null);
-  const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [conflict, setConflict] = useState<TicketConflictState | null>(null);
+  const [offlineDraftFields, setOfflineDraftFields] = useState<string[]>([]);
+
+  const saveSequenceRef = useRef(0);
+  const offlineDraftRef = useRef<Record<string, unknown>>({});
+  const enqueueSaveRef = useRef<
+    ((field: Record<string, unknown>) => void) | null
+  >(null);
   const lastSavedAtRef = useRef<string | undefined>(undefined);
   const saveQueueRef = useRef<Promise<void>>(Promise.resolve());
-  const saveSequenceRef = useRef(0);
+  const lastSavedVersionRef = useRef<number | undefined>(undefined);
+  const pendingSaveRef = useRef<Record<string, unknown> | null>(null);
+  const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const {
     data: ticket,
     isLoading,
     error: ticketError,
     refetch: refetchTicket,
+    dataUpdatedAt: ticketUpdatedAt,
   } = useTicket(projectId, ticketId ?? 0, INLINE_READ_ERROR);
-  const { data: projectData } = useProject(projectId);
+  const { projectData, members, statuses } =
+    useTicketDetailProjectData(projectId);
   const { data: subtasks } = useSubtasks(ticketId ?? 0, projectId);
 
-  const members = useMemo<ProjectMember[]>(() => {
-    if (!projectData?.members) return [];
-    const list = projectData.members.flatMap((m) => {
-      const user = m.user;
-      if (!user) return [];
-      return [
-        {
-          id: user.id,
-          name: user.name || `${user.firstName || ""} ${user.lastName || ""}`.trim(),
-          firstName: user.firstName || undefined,
-          lastName: user.lastName || undefined,
-          image: user.image || null,
-          email: user.email || "",
-        },
-      ];
-    });
-    const mgr = isProjectWithManager(projectData) ? projectData.manager : undefined;
-    if (mgr && !list.some((m) => m.id === mgr.id)) {
-      list.unshift({
-        id: mgr.id,
-        name: mgr.name || `${mgr.firstName || ""} ${mgr.lastName || ""}`.trim(),
-        firstName: mgr.firstName || undefined,
-        lastName: mgr.lastName || undefined,
-        image: mgr.image || null,
-        email: mgr.email || "",
-      });
-    }
-    return list;
-  }, [projectData]);
+  const titleVersion = ticket ? `${ticket.id}:${ticket.title}` : null;
 
-  const statuses = useMemo(() => {
-    if (!projectData || !("statuses" in projectData)) return undefined;
-    return (projectData.statuses as { id: number; name: string }[]).map((s) => ({
-      id: s.id,
-      name: s.name,
-    }));
-  }, [projectData]);
+  const [localTitle, setLocalTitle] = useSourceOverride(
+    titleVersion,
+    ticket?.title ?? "",
+  );
 
   const updateTicketMutation = useUpdateTicket(projectId, {
     onSuccess: (data) => {
       lastSavedAtRef.current = data.updatedAt;
+      lastSavedVersionRef.current = data.version;
     },
-    onError: (error) => {
-      if (isApiError(error) && getApiErrorCode(error) === "PROJECTS_TICKET_CONFLICT") {
-        toast.warning("This ticket was changed elsewhere — refreshed with the latest version.");
+    onError: (error, variables) => {
+      if (
+        isApiError(error) &&
+        getApiErrorCode(error) === "PROJECTS_TICKET_CONFLICT"
+      ) {
         if (ticketId !== null) {
-          queryClient.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.ticket(ticketId) });
+          void queryClient.invalidateQueries({
+            queryKey: buildWorkQueryKeys.projects.ticket(projectId, ticketId),
+          });
         }
+        const patch: Record<string, unknown> = {};
+        for (const [key, value] of Object.entries(variables)) {
+          if (
+            key !== "ticketId" &&
+            key !== "expectedUpdatedAt" &&
+            key !== "version"
+          ) {
+            patch[key] = value;
+          }
+        }
+        async function showFieldComparison() {
+          const latest = await refetchTicket();
+          const current = latest.data;
+          if (!current?.updatedAt) return;
+          const fields = diffTicketConflictFields(patch, current, {
+            members,
+            epics: queryClient.getQueryData(
+              buildWorkQueryKeys.projects.epics(projectId),
+            ),
+            modules: queryClient.getQueryData(
+              buildWorkQueryKeys.projects.modules(projectId),
+            ),
+            cycles: queryClient.getQueryData(
+              buildWorkQueryKeys.projects.cycles(projectId),
+            ),
+          });
+          if (fields.length === 0) return;
+          setConflict({
+            fields,
+            patch,
+            serverUpdatedAt: new Date(current.updatedAt).toISOString(),
+            serverVersion: current.version,
+          });
+        }
+        void showFieldComparison();
+        async function handleReapply() {
+          const latest = await refetchTicket();
+          if (!latest.data?.updatedAt) {
+            toast.error(
+              latest.error
+                ? getErrorMessage(latest.error)
+                : "The latest ticket could not be loaded. Try again.",
+            );
+            return;
+          }
+          lastSavedAtRef.current = new Date(
+            latest.data.updatedAt,
+          ).toISOString();
+          lastSavedVersionRef.current = latest.data.version;
+          enqueueSaveRef.current?.(patch);
+        }
+        toast.warning(
+          "This ticket changed elsewhere. Your edit was not saved — the latest version is shown.",
+          {
+            action: {
+              label: "Reapply",
+              onClick: handleReapply,
+            },
+          },
+        );
+        return;
+      }
+      if (
+        !isApiError(error) ||
+        error.status === 0 ||
+        (error.status !== undefined && error.status >= 500)
+      ) {
+        toast.warning(
+          "This save may have succeeded. Check the ticket before retrying.",
+        );
         return;
       }
       toast.error(getErrorMessage(error));
@@ -124,18 +189,38 @@ export function useTicketDetail({ projectId, ticketId, onDeleted }: UseTicketDet
     }
   }, [ticket?.updatedAt]);
 
+  useEffect(() => {
+    if (typeof ticket?.version === "number") {
+      lastSavedVersionRef.current = ticket.version;
+    }
+  }, [ticket?.version]);
+
   const enqueueSave = useCallback(
     (field: Record<string, unknown>) => {
       if (!ticketId || !canUpdate) return;
+      if (!isOnline) {
+        offlineDraftRef.current = { ...offlineDraftRef.current, ...field };
+        setOfflineDraftFields(Object.keys(offlineDraftRef.current));
+        return;
+      }
       const sequence = ++saveSequenceRef.current;
       setSaving(true);
-      const task = saveQueueRef.current.then(() =>
-        updateTicketMutation.mutateAsync({
+      const task = saveQueueRef.current.then(() => {
+        const cached = queryClient.getQueryData<{ version?: number }>(
+          buildWorkQueryKeys.projects.ticket(projectId, ticketId),
+        );
+        const version = lastSavedVersionRef.current ?? cached?.version;
+        if (version === undefined) {
+          toast.error("Could not save — reload the ticket and try again.");
+          return undefined;
+        }
+        return updateTicketMutation.mutateAsync({
           ticketId,
           expectedUpdatedAt: lastSavedAtRef.current,
+          version,
           ...field,
-        }),
-      );
+        });
+      });
       saveQueueRef.current = task.then(
         () => undefined,
         () => undefined,
@@ -146,8 +231,31 @@ export function useTicketDetail({ projectId, ticketId, onDeleted }: UseTicketDet
         })
         .catch(() => undefined);
     },
-    [ticketId, canUpdate, updateTicketMutation],
+    [
+      ticketId,
+      isOnline,
+      canUpdate,
+      projectId,
+      queryClient,
+      updateTicketMutation,
+    ],
   );
+
+  useEffect(() => {
+    enqueueSaveRef.current = enqueueSave;
+  }, [enqueueSave]);
+
+  const flushOfflineDrafts = useEffectEvent(() => {
+    const pending = offlineDraftRef.current;
+    if (Object.keys(pending).length === 0) return;
+    offlineDraftRef.current = {};
+    setOfflineDraftFields([]);
+    enqueueSave(pending);
+  });
+
+  useEffect(() => {
+    if (isOnline) flushOfflineDrafts();
+  }, [isOnline]);
 
   const autoSave = useCallback(
     (field: Record<string, unknown>) => {
@@ -159,24 +267,64 @@ export function useTicketDetail({ projectId, ticketId, onDeleted }: UseTicketDet
   const debouncedSave = useCallback(
     (field: Record<string, unknown>) => {
       if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
+      pendingSaveRef.current = field;
       setSaving(true);
       debounceTimerRef.current = setTimeout(() => {
+        pendingSaveRef.current = null;
         enqueueSave(field);
       }, 500);
     },
     [enqueueSave],
   );
 
-  if (ticket && ticket.id !== syncedTitleId) {
-    setSyncedTitleId(ticket.id);
-    setLocalTitle(ticket.title);
-  }
-
   useEffect(() => {
     return () => {
-      if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
+      const pending = pendingSaveRef.current;
+      if (debounceTimerRef.current !== null) {
+        clearTimeout(debounceTimerRef.current);
+        debounceTimerRef.current = null;
+      }
+      pendingSaveRef.current = null;
+      if (pending) enqueueSaveRef.current?.(pending);
     };
   }, []);
+
+  useEffect(() => {
+    function handleBeforeUnload(e: BeforeUnloadEvent) {
+      if (pendingSaveRef.current !== null) {
+        e.preventDefault();
+      }
+    }
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
+  }, []);
+
+  useEffect(() => {
+    function handlePageHide() {
+      const pending = pendingSaveRef.current;
+      if (pending !== null && debounceTimerRef.current !== null) {
+        clearTimeout(debounceTimerRef.current);
+        debounceTimerRef.current = null;
+        pendingSaveRef.current = null;
+        enqueueSaveRef.current?.(pending);
+      }
+    }
+    window.addEventListener("pagehide", handlePageHide);
+    return () => window.removeEventListener("pagehide", handlePageHide);
+  }, []);
+
+  const discardConflictingEdit = useCallback(() => {
+    setConflict(null);
+  }, []);
+
+  const keepConflictingEdit = useCallback(() => {
+    if (!conflict) return;
+    const { patch, serverUpdatedAt, serverVersion } = conflict;
+    lastSavedAtRef.current = serverUpdatedAt;
+    lastSavedVersionRef.current = serverVersion;
+    setConflict(null);
+    enqueueSave(patch);
+  }, [conflict, enqueueSave]);
 
   const handleDelete = useCallback(() => {
     if (!ticketId) return;
@@ -186,10 +334,37 @@ export function useTicketDetail({ projectId, ticketId, onDeleted }: UseTicketDet
   const handleTitleChange = useCallback(
     (e: React.ChangeEvent<HTMLTextAreaElement>) => {
       setLocalTitle(e.target.value);
-      debouncedSave({ title: e.target.value });
     },
-    [debouncedSave],
+    [setLocalTitle],
   );
+
+  const commitTitle = useCallback(
+    (nextTitle: string): string | null => {
+      const trimmed = nextTitle.trim();
+      if (!trimmed) {
+        return "Title is required";
+      }
+      if (trimmed.length > TICKET_TITLE_MAX) {
+        return `Title must be at most ${TICKET_TITLE_MAX} characters`;
+      }
+      setLocalTitle(trimmed);
+      if (trimmed !== (ticket?.title ?? "")) {
+        autoSave({ title: trimmed });
+      }
+      return null;
+    },
+    [autoSave, setLocalTitle, ticket?.title],
+  );
+
+  const revertTitle = useCallback(() => {
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current);
+      debounceTimerRef.current = null;
+      pendingSaveRef.current = null;
+      setSaving(false);
+    }
+    setLocalTitle(ticket?.title ?? "");
+  }, [setLocalTitle, ticket?.title]);
 
   const handleDescriptionEditorChange = useCallback(
     (html: string) => {
@@ -204,13 +379,20 @@ export function useTicketDetail({ projectId, ticketId, onDeleted }: UseTicketDet
     isLoading,
     ticketError,
     refetchTicket,
+    ticketUpdatedAt,
+    offlineDraftFields,
     projectData,
     subtasks: subtasks ?? [],
     members,
     statuses,
     saving,
+    conflict,
+    keepConflictingEdit,
+    discardConflictingEdit,
     localTitle,
     handleTitleChange,
+    commitTitle,
+    revertTitle,
     handleDescriptionEditorChange,
     autoSave,
     handleDelete,

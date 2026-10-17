@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>StreamlineOS Sourcer — Settings</title>
+    <link rel="stylesheet" href="popup.css" />
+  </head>
+  <body>
+    <main class="panel">
+      <h1 class="title">StreamlineOS Sourcer</h1>
+
+      <p class="status">
+        In StreamlineOS, open <strong>HR → Recruitment → Settings → Connections</strong> and issue a
+        sourcing token. It is shown once. Paste it here.
+      </p>
+
+      <form id="form" class="form">
+        <label class="field">
+          <span class="label">API address</span>
+          <input
+            id="apiBaseUrl"
+            type="text"
+            placeholder="https://api.your-company.com"
+            autocomplete="off"
+            required
+          />
+        </label>
+
+        <label class="field">
+          <span class="label">Sourcing token</span>
+          <input id="token" type="password" autocomplete="off" required />
+        </label>
+
+        <label class="field">
+          <span class="label">Expires (optional)</span>
+          <input id="tokenExpiresAt" type="text" placeholder="2026-10-01T09:00:00.000Z" autocomplete="off" />
+        </label>
+
+        <button id="save" class="save" type="submit">Save</button>
+      </form>
+
+      <p id="result" class="result" hidden></p>
+
+      <p class="profile-url">
+        The token is stored in this browser profile only. It carries one permission — adding and
+        updating candidates — and it expires on its own. Signing out of StreamlineOS does not revoke
+        it; revoke it from your account's API tokens screen.
+      </p>
+
+      <button id="forget" class="save" type="button">Forget this token</button>
+    </main>
+    <script type="module" src="options.js"></script>
+  </body>
+</html>

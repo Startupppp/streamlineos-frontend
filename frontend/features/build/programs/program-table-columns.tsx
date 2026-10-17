@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback } from "react";
+import Link from "next/link";
 import { EllipsisIcon } from "@animateicons/react/lucide";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { Button } from "@/components/ui/button";
@@ -31,8 +32,8 @@ export const PROGRAM_TABLE_HEADERS = [
   "Actions",
 ] as const;
 
-export type ProgramOwnerLookup = (ownerId: string | null) => NamedUser | null;
-export type ProgramPortfolioLookup = (portfolioId: number | null) => string;
+type ProgramOwnerLookup = (ownerId: string | null) => NamedUser | null;
+type ProgramPortfolioLookup = (portfolioId: number | null) => string;
 
 interface ProgramRowHandlers {
   canManage: boolean;
@@ -46,7 +47,7 @@ function ownerLabel(user: NamedUser | null): string {
   return user?.name ?? user?.email ?? "Unassigned";
 }
 
-export function ProgramRowActions({
+function ProgramRowActions({
   program,
   onEdit,
   onDelete,
@@ -94,12 +95,16 @@ export function buildProgramColumns({
       header: "Name",
       className: TABLE_TITLE_CELL,
       cell: (row) => (
-        <span
-          className={cn("font-medium text-foreground", TEXT_ONE_LINE)}
+        <Link
+          href={`/build/programs/${row.id}`}
+          className={cn(
+            "font-medium text-foreground hover:text-primary",
+            TEXT_ONE_LINE,
+          )}
           title={row.name}
         >
           {row.name}
-        </span>
+        </Link>
       ),
     },
     {

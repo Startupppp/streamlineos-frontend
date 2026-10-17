@@ -9,10 +9,10 @@ import { useCan } from "@/hooks/api/access";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 
 interface NewProjectDialogProps {
-  trigger?: ReactNode | null;
   open?: boolean;
-  onOpenChange?: (open: boolean) => void;
+  trigger?: ReactNode | null;
   scope?: ProjectCreateScope;
+  onOpenChange?: (open: boolean) => void;
 }
 
 export function NewProjectDialog({
@@ -21,31 +21,32 @@ export function NewProjectDialog({
   onOpenChange,
   scope,
 }: NewProjectDialogProps = {}) {
-  const [internalOpen, setInternalOpen] = useState(false);
   const canCreate = useCan("build:create");
+
+  const [internalOpen, setInternalOpen] = useState(false);
   const { iconRef, hoverHandlers } = useAnimatedIcon();
   const isControlled = controlledOpen !== undefined;
   const open = isControlled ? controlledOpen : internalOpen;
 
   function handleOpenChange(value: boolean) {
-    if (isControlled) {
-      onOpenChange?.(value);
-    } else {
-      setInternalOpen(value);
-    }
+    if (isControlled) onOpenChange?.(value);
+    else setInternalOpen(value);
   }
 
   function handleTriggerClick() {
     handleOpenChange(true);
   }
 
-  if (!canCreate && !open) {
-    return null;
-  }
+  if (!canCreate) return null;
 
   const resolvedTrigger =
     trigger === undefined ? (
-      <Button size="sm" className="gap-1.5" onClick={handleTriggerClick} {...hoverHandlers}>
+      <Button
+        size="sm"
+        className="gap-1.5"
+        onClick={handleTriggerClick}
+        {...hoverHandlers}
+      >
         <PlusIcon ref={iconRef} size={14} />
         New Project
       </Button>

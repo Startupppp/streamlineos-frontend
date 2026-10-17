@@ -1,13 +1,14 @@
 "use client";
 
-import { useEffect } from "react";
+import { useContext, useEffect } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import type { UseQueryOptions, UseQueryResult } from "@tanstack/react-query";
 import { useSession } from "next-auth/react";
 import { apiClient } from "@/lib/api-client";
+import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
 import { accessAndCrmQueryKeys } from "@/lib/query-keys/access-and-crm";
 import { platformCoreQueryKeys } from "@/lib/query-keys/platform-core";
-import { lazyContract } from "@/lib/api-envelope";
+import { ApiError, lazyContract } from "@/lib/api-envelope";
 import type {
   AccessResponse,
   DataScope,
@@ -17,6 +18,7 @@ import type {
 import type { Permission, PermissionKey } from "@/lib/rbac/permissions";
 import { normalizeOrgModuleKey } from "@/lib/org-module-keys";
 import { accessState, type AccessState } from "@/lib/rbac/gate";
+import { blockedForProjectViewer, ProjectReadOnlyContext } from "@/lib/rbac/project-read-only";
 import {
   gated,
   grantsPermission,
@@ -26,6 +28,9 @@ import {
 } from "@/lib/rbac/permission-gate";
 
 export type { PermissionGate };
+
+const NO_ORGANIZATION_MESSAGE =
+  "Your session has no active organization. Switch to an organization or sign in again.";
 
 export const ACCESS_INVALIDATION_KEY_PREFIX = "access:invalidated";
 
@@ -66,9 +71,10 @@ export const useAccess = (
     "queryKey" | "queryFn"
   >,
 ) => {
-  const { data: session } = useSession();
+  const { data: session, status } = useSession();
   const orgId = session?.orgId;
   const userId = session?.user?.id;
+  const missingOrgContext = status === "authenticated" && !(orgId && userId);
   const { enabled: enabledOption, ...restOptions } = options ?? {};
   const queryClient = useQueryClient();
 
@@ -84,18 +90,33 @@ export const useAccess = (
   }, [queryClient, orgId]);
 
   return useQuery<AccessResponse, Error>({
+    // The shell draws its own retryable "Couldn't load your organization" and
+    // the permission gate reports `unavailable`; throwing instead replaced the
+    // whole app with the root boundary on one transient 503 (BUG-HRMS-014).
+    ...INLINE_READ_ERROR,
     staleTime: 5 * 60_000,
+    refetchOnWindowFocus: "always",
+    refetchOnReconnect: true,
     queryKey: platformCoreQueryKeys.access.me(),
     queryFn: ({ signal }) =>
-      apiClient.get("/me/access", undefined, signal, accessContract),
+      missingOrgContext
+        ? Promise.reject(new ApiError(NO_ORGANIZATION_MESSAGE, undefined, "NO_ORGANIZATION_CONTEXT"))
+        : apiClient.get("/me/access", undefined, signal, accessContract),
     ...restOptions,
-    enabled: !!orgId && !!userId && (enabledOption ?? true),
+    enabled: (missingOrgContext || (!!orgId && !!userId)) && (enabledOption ?? true),
   });
 };
 
 export function usePermissionGate(permission: PermissionKey): PermissionGate {
-  const { data } = useAccess();
-  return permissionGate(permission, grantsPermission(data, permission), data !== undefined);
+  const { data, isError } = useAccess();
+  const projectReadOnly = useContext(ProjectReadOnlyContext);
+  return permissionGate(
+    permission,
+    grantsPermission(data, permission) &&
+      !(projectReadOnly && blockedForProjectViewer(permission)),
+    data !== undefined,
+    isError,
+  );
 }
 
 export function useCan(permissionKey: PermissionKey): boolean {

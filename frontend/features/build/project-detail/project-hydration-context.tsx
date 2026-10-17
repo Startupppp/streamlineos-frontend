@@ -2,6 +2,7 @@
 
 import { createContext, useContext } from "react";
 import type { ProjectWithDetails } from "@/types/projects";
+import { ProjectReadOnlyContext } from "@/lib/rbac/project-read-only";
 
 const ProjectHydrationContext = createContext<ProjectWithDetails | undefined>(
   undefined,
@@ -16,7 +17,9 @@ export function ProjectHydrationProvider({
 }) {
   return (
     <ProjectHydrationContext.Provider value={project}>
-      {children}
+      <ProjectReadOnlyContext.Provider value={project.readOnly === true}>
+        {children}
+      </ProjectReadOnlyContext.Provider>
     </ProjectHydrationContext.Provider>
   );
 }

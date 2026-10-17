@@ -18,7 +18,10 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { HrSheet } from "@/components/shared/hr-sheet";
 import { ConfirmSheet } from "@/components/ui/confirm-sheet";
 import { toast } from "sonner";
-import { Plus, AlertTriangle, RefreshCw } from "lucide-react";
+import { Plus } from "lucide-react";
+import { PageState } from "@/components/shared/page-state";
+import { usePageState } from "@/hooks/api/use-page-state";
+import { useCan } from "@/hooks/api/access";
 import { EmptyDocumentsIllustration } from "@/components/illustrations";
 import { EmptyState } from "@/components/ui/empty-state";
 import { HandbookVersionCard } from "@/features/hr/handbook/handbook-version-card";
@@ -44,7 +47,11 @@ const STATUS_FILTERS: { value: StatusFilter; label: string }[] = [
 ];
 
 export function HandbookPageClient() {
-  const { data: versions, isLoading, isError, refetch } = useHandbookVersions();
+  const { data: versions, isLoading, isError, error, refetch } = useHandbookVersions();
+  // GET /hr/handbook is hr:employees:view; every write is hr:handbook:manage
+  // (the route itself is gated on hr:documents:manage, a different key).
+  const pageState = usePageState({ permission: "hr:employees:view", isLoading, isError, error });
+  const canManage = useCan("hr:handbook:manage");
   const create = useCreateHandbookVersion();
   const update = useUpdateHandbookVersion();
   const remove = useDeleteHandbookVersion();
@@ -325,7 +332,7 @@ export function HandbookPageClient() {
   const isSubmitting = create.isPending || update.isPending || uploadFile.isPending;
   const isFiltered = !!searchQuery || statusFilter !== "ALL";
 
-  if (isLoading) {
+  if (pageState.kind === "loading") {
     return (
       <PageWrapper title="Employee Handbook" subtitle="Manage and publish handbook versions">
         <div className="flex flex-1 min-h-0 flex-col gap-4">
@@ -337,7 +344,7 @@ export function HandbookPageClient() {
           </div>
           <div className="space-y-2">
             {Array.from({ length: 10 }).map((_, i) => (
-              <Skeleton key={i} className="h-[72px] rounded-2xl" />
+              <Skeleton key={i} className="h-18 rounded-2xl" />
             ))}
           </div>
         </div>
@@ -345,20 +352,13 @@ export function HandbookPageClient() {
     );
   }
 
-  if (isError) {
+  if (pageState.kind !== "ready" && pageState.kind !== "empty") {
+    // Was a hand-rolled "Something went wrong" that dropped the error (FE-41).
     return (
       <PageWrapper title="Employee Handbook" subtitle="Manage and publish handbook versions">
-        <div className="flex-1 flex flex-col items-center justify-center gap-4 py-20">
-          <AlertTriangle className="h-10 w-10 text-muted-foreground" />
-          <div className="text-center space-y-1">
-            <p className="text-sm font-medium text-foreground">Failed to load handbook versions</p>
-            <p className="text-xs text-muted-foreground">Something went wrong. Please try again.</p>
-          </div>
-          <Button size="sm" variant="outline" onClick={handleRetry}>
-            <RefreshCw className="h-3.5 w-3.5 mr-1.5" />
-            Retry
-          </Button>
-        </div>
+        <PageState resolution={pageState} loading={null} onRetry={handleRetry} className="flex-1">
+          {null}
+        </PageState>
       </PageWrapper>
     );
   }
@@ -368,10 +368,12 @@ export function HandbookPageClient() {
       title="Employee Handbook"
       subtitle="Manage and publish handbook versions"
       actions={
-        <Button size="sm" className="gap-1.5" onClick={handleNewVersionClick}>
-          <Plus className="h-3.5 w-3.5" />
-          New Version
-        </Button>
+        canManage ? (
+          <Button size="sm" className="gap-1.5" onClick={handleNewVersionClick}>
+            <Plus className="h-3.5 w-3.5" />
+            New Version
+          </Button>
+        ) : undefined
       }
     >
       <div className="flex flex-1 min-h-0 flex-col gap-4">
@@ -396,7 +398,7 @@ export function HandbookPageClient() {
             illustration={<EmptyDocumentsIllustration className="h-36 w-36 opacity-95" />}
             title={isFiltered ? "No versions match your filters" : "No handbook versions yet"}
             description={!isFiltered ? "Create your first handbook version to get started." : undefined}
-            action={!isFiltered ? { label: "New Version", onClick: handleNewVersionClick } : undefined}
+            action={!isFiltered && canManage ? { label: "New Version", onClick: handleNewVersionClick } : undefined}
           />
         ) : (
           <div className="space-y-2">
@@ -409,6 +411,7 @@ export function HandbookPageClient() {
                 onEdit={handleOpenEdit}
                 onDelete={handleOpenDeleteDialog}
                 isUpdating={update.isPending}
+                canManage={canManage}
               />
             ))}
           </div>

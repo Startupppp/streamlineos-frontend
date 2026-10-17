@@ -1,4 +1,5 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, fireEvent, within } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import type { ReactNode } from "react";
 import { ApiError } from "@/lib/api-envelope";
 import type { TestRun } from "@/types/projects";
@@ -7,10 +8,20 @@ const mockUseTestRuns = jest.fn();
 const mockUseDeleteTestRun = jest.fn();
 const mockUseCan = jest.fn();
 const mockUseAccess = jest.fn();
+const mockCreateRun = jest.fn();
+const mockDirtyRegistered = jest.fn();
+jest.mock("@/components/shared/dirty-state-context", () => {
+  const actual = jest.requireActual<typeof import("@/components/shared/dirty-state-context")>("@/components/shared/dirty-state-context");
+  return { ...actual, useRegisterDirtyState: (value: boolean) => { mockDirtyRegistered(value); actual.useRegisterDirtyState(value); } };
+});
+jest.mock("@/components/members/project-member-select", () => ({ ProjectMemberSelect: () => null }));
 
 jest.mock("@/hooks/api/build/qa", () => ({
   useTestRuns: (...args: unknown[]) => mockUseTestRuns(...args),
   useDeleteTestRun: () => mockUseDeleteTestRun(),
+  useCreateTestRun: () => ({ mutate: mockCreateRun, isPending: false }),
+  useTestCases: () => ({ data: { data: [{ id: 42, caseNumber: 1, title: "Login flow" }] } }),
+  useTestSuites: () => ({ data: [] }),
 }));
 
 jest.mock("@/hooks/api/access", () => ({
@@ -26,8 +37,8 @@ jest.mock("@/hooks/common/use-animated-icon", () => ({
   useAnimatedIcon: () => ({ iconRef: { current: null }, hoverHandlers: {} }),
 }));
 
-jest.mock("@/components/ui/table-pagination", () => ({
-  useCursorPager: () => ({
+jest.mock("@/features/build/shared/use-build-cursor-pager", () => ({
+  useBuildCursorPager: () => ({
     cursor: undefined,
     hasPrevious: false,
     goNext: jest.fn(),
@@ -58,22 +69,33 @@ jest.mock("@/components/ui/data-table", () => ({
     data,
     columns,
     getRowKey,
+    mobileCard,
   }: {
     data: T[];
     columns: MockDataTableColumn<T>[];
     getRowKey: (row: T, index: number) => string | number;
+    mobileCard?: (row: T, index: number) => ReactNode;
   }) => (
-    <table data-testid="data-table">
-      <tbody>
-        {data.map((row, index) => (
-          <tr key={getRowKey(row, index)}>
-            {columns.map((col) => (
-              <td key={col.key}>{col.cell(row)}</td>
-            ))}
-          </tr>
-        ))}
-      </tbody>
-    </table>
+    <>
+      <table data-testid="data-table">
+        <tbody>
+          {data.map((row, index) => (
+            <tr key={getRowKey(row, index)}>
+              {columns.map((col) => (
+                <td key={col.key}>{col.cell(row)}</td>
+              ))}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+      {mobileCard
+        ? data.map((row, index) => (
+            <div key={`mobile-${getRowKey(row, index)}`} data-testid="mobile-card">
+              {mobileCard(row, index)}
+            </div>
+          ))
+        : null}
+    </>
   ),
   DataTableSkeleton: () => <div data-testid="data-table-skeleton" />,
 }));
@@ -90,27 +112,55 @@ jest.mock("@/components/ui/confirm-dialog", () => ({
   ConfirmDialog: () => null,
 }));
 
+const mockTestRunSheet = jest.fn((_props: { open: boolean }) => null);
 jest.mock("./test-run-sheet", () => ({
-  TestRunSheet: () => null,
+  TestRunSheet: (props: { open: boolean }) => { mockTestRunSheet(props); return null; },
 }));
 
 import { TestRunsTab } from "./test-runs-tab";
 import { testRunListPageContract } from "@/hooks/api/build/qa-schema";
 
 const mockReplace = jest.fn();
+const mockRouterPush = jest.fn();
 let mockSearchParams = new URLSearchParams();
 
 jest.mock("next/navigation", () => ({
-  useRouter: () => ({ replace: mockReplace, push: jest.fn(), refresh: jest.fn() }),
+  useRouter: () => ({ replace: mockReplace, push: mockRouterPush, refresh: jest.fn() }),
   usePathname: () => "/build",
   useSearchParams: () => mockSearchParams,
 }));
 
-beforeEach(() => {
-  mockReplace.mockClear();
-  mockSearchParams = new URLSearchParams();
+it("gives the actual run sheet an accessible description and cancels without creating", async () => {
+  const { TestRunSheet } = jest.requireActual<typeof import("./test-run-sheet")>("./test-run-sheet");
+  const warning = jest.spyOn(console, "warn");
+  const close = jest.fn();
+  const view = render(<TestRunSheet projectId={1} open onOpenChange={close} />);
+  const dialog = screen.getByRole("dialog", { name: "New Test Run" });
+  try {
+    expect(dialog).toHaveAccessibleDescription("Choose tests and execution details for this project’s test run.");
+    expect(warning).not.toHaveBeenCalledWith(expect.stringContaining("Missing `Description`"));
+    const user = userEvent.setup();
+    await user.click(screen.getByRole("tab", { name: "By Cases" }));
+    expect(mockDirtyRegistered).toHaveBeenLastCalledWith(true);
+    await user.type(screen.getByPlaceholderText("e.g. Cycle 12 Regression"), "Regression");
+    await user.click(screen.getByRole("button", { name: "Create Run" }));
+    expect(await screen.findByText("Select at least one test case.")).toBeVisible();
+    expect(mockCreateRun).not.toHaveBeenCalled();
+    await user.click(screen.getByRole("checkbox", { name: /Login flow/ }));
+    await user.click(screen.getByRole("button", { name: "Create Run" }));
+    expect(mockCreateRun).toHaveBeenCalledWith(expect.objectContaining({ caseIds: [42], suiteId: undefined }), expect.anything());
+    mockCreateRun.mockClear();
+    view.rerender(<TestRunSheet projectId={1} open={false} onOpenChange={close} />);
+    view.rerender(<TestRunSheet projectId={1} open onOpenChange={close} />);
+    expect(screen.getByRole("tab", { name: "By Suite" })).toHaveAttribute("data-state", "active");
+    expect(screen.getByPlaceholderText("e.g. Cycle 12 Regression")).toHaveValue("");
+    expect(mockDirtyRegistered).toHaveBeenLastCalledWith(false);
+    await user.type(screen.getByPlaceholderText("e.g. Cycle 12 Regression"), "Canceled run");
+    await userEvent.setup().click(screen.getByRole("button", { name: "Cancel" }));
+    expect(close).toHaveBeenCalledWith(false);
+    expect(mockCreateRun).not.toHaveBeenCalled();
+  } finally { warning.mockRestore(); }
 });
-
 
 const ACCESS_GRANTED = {
   data: { isOrgOwner: false, scopes: { "build:qa:view": "all" }, modules: {} },
@@ -137,6 +187,7 @@ const EMPTY_PAGE = { data: [], hasMore: false, nextCursor: null };
 
 beforeEach(() => {
   jest.clearAllMocks();
+  mockSearchParams = new URLSearchParams();
   mockUseCan.mockReturnValue(true);
   mockUseAccess.mockReturnValue(ACCESS_GRANTED);
   mockUseTestRuns.mockReturnValue(baseQuery({ data: EMPTY_PAGE }));
@@ -195,6 +246,126 @@ it("falls back to a readable label instead of rendering blank text for a run sta
   } as unknown as TestRun;
   mockUseTestRuns.mockReturnValue(baseQuery({ data: { data: [runWithUnknownStatus], hasMore: false, nextCursor: null } }));
   render(<TestRunsTab projectId={1} />);
-  expect(screen.getByText("in review")).toBeInTheDocument();
+  expect(screen.getAllByText("in review").length).toBeGreaterThan(0);
   expect(screen.queryByText("undefined")).not.toBeInTheDocument();
+});
+
+it("shows In Progress when stored status is not_started but results have already been executed", () => {
+  const run = {
+    id: 4,
+    runNumber: 1,
+    name: "QA verify regression run",
+    status: "not_started" as const,
+    environment: "Staging",
+    passCount: 1,
+    failCount: 0,
+    blockedCount: 0,
+    notRunCount: 2,
+    skippedCount: 0,
+  };
+  mockUseTestRuns.mockReturnValue(baseQuery({ data: { data: [run], hasMore: false, nextCursor: null } }));
+  render(<TestRunsTab projectId={6} />);
+  expect(screen.getAllByText("In Progress").length).toBeGreaterThan(0);
+  expect(screen.queryByText("Not Started")).not.toBeInTheDocument();
+});
+
+it("opens the run from the mobile card so a populated execution is reachable without the desktop table links", () => {
+  const run = {
+    id: 4,
+    runNumber: 1,
+    name: "QA verify regression run",
+    status: "not_started" as const,
+    environment: "Staging",
+    passCount: 1,
+    failCount: 0,
+    blockedCount: 0,
+    notRunCount: 2,
+    skippedCount: 0,
+  };
+  mockUseTestRuns.mockReturnValue(baseQuery({ data: { data: [run], hasMore: false, nextCursor: null } }));
+  render(<TestRunsTab projectId={6} />);
+  fireEvent.click(screen.getByTestId("mobile-card").querySelector("[role='button']")!);
+  expect(mockRouterPush).toHaveBeenCalledWith("/build/6/qa/runs/4");
+});
+
+it("does not open the run when the mobile delete control is pressed", () => {
+  const run = {
+    id: 4,
+    runNumber: 1,
+    name: "QA verify regression run",
+    status: "in_progress" as const,
+    environment: "Staging",
+    passCount: 1,
+    failCount: 0,
+    blockedCount: 0,
+    notRunCount: 2,
+    skippedCount: 0,
+  };
+  mockUseTestRuns.mockReturnValue(baseQuery({ data: { data: [run], hasMore: false, nextCursor: null } }));
+  render(<TestRunsTab projectId={6} />);
+  fireEvent.click(
+    within(screen.getByTestId("mobile-card")).getByRole("button", {
+      name: "Delete QA verify regression run",
+    }),
+  );
+  expect(mockRouterPush).not.toHaveBeenCalled();
+});
+
+it("pressing j then Enter navigates to the first run's detail page so keyboard users can drill in without a mouse", () => {
+  const run = {
+    id: 99,
+    runNumber: 3,
+    name: "Smoke suite",
+    status: "not_started" as const,
+    environment: "Staging",
+    passCount: 0,
+    failCount: 0,
+    blockedCount: 0,
+    notRunCount: 5,
+    skippedCount: 0,
+  };
+  mockUseTestRuns.mockReturnValue(baseQuery({ data: { data: [run], hasMore: false, nextCursor: null } }));
+  render(<TestRunsTab projectId={7} />);
+  fireEvent.keyDown(document, { key: "j" });
+  fireEvent.keyDown(document, { key: "Enter" });
+  expect(mockRouterPush).toHaveBeenCalledWith("/build/7/qa/runs/99");
+});
+
+it("pressing c opens the new run sheet when build:qa:manage is granted", () => {
+  mockUseCan.mockReturnValue(true);
+  render(<TestRunsTab projectId={1} />);
+  fireEvent.keyDown(document, { key: "c" });
+  const calls = mockTestRunSheet.mock.calls;
+  const lastCall = calls[calls.length - 1][0] as { open: boolean };
+  expect(lastCall.open).toBe(true);
+});
+
+describe("regression filter — server-side (BT-9ea775d73705)", () => {
+  it("renders the Failures only filter toggle in the toolbar", () => {
+    render(<TestRunsTab projectId={1} />);
+    expect(screen.getByRole("switch", { name: /failures only/i })).toBeInTheDocument();
+  });
+
+  it("calls useTestRuns without failuresOnly when toggle is off", () => {
+    render(<TestRunsTab projectId={1} />);
+    const lastCall = mockUseTestRuns.mock.calls[mockUseTestRuns.mock.calls.length - 1] as [number, Record<string, unknown>];
+    expect(lastCall[1]).not.toHaveProperty("failuresOnly", true);
+  });
+
+  it("calls router.replace with failuresOnly=true in URL when toggle is clicked", () => {
+    render(<TestRunsTab projectId={1} />);
+    const toggle = screen.getByRole("switch");
+    fireEvent.click(toggle);
+    expect(mockReplace).toHaveBeenCalledWith(
+      expect.stringContaining("failuresOnly=true"),
+      expect.objectContaining({ scroll: false }),
+    );
+  });
+
+  it("calls useTestRuns with failuresOnly=true when URL param is set — server filters the page", () => {
+    mockSearchParams = new URLSearchParams("failuresOnly=true");
+    render(<TestRunsTab projectId={1} />);
+    const lastCall = mockUseTestRuns.mock.calls[mockUseTestRuns.mock.calls.length - 1] as [number, Record<string, unknown>];
+    expect(lastCall[1]).toMatchObject({ failuresOnly: true });
+  });
 });

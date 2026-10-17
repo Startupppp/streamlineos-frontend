@@ -27,28 +27,6 @@ export const MODULE_LABELS: Record<string, string> = {
   timesheets: "Timesheets",
 };
 
-export const SCOPABLE_MODULES = new Set([
-  "hr",
-  "crm",
-  "build",
-  "inventory",
-  "support",
-  "kb",
-  "accounting",
-]);
-
-export const SCOPABLE_ACTIONS = new Set([
-  "view",
-  "read",
-  "list",
-  "update",
-  "delete",
-  "manage",
-  "approve",
-  "export",
-  "assign",
-]);
-
 export const SCOPE_OPTIONS: { value: EditableScope; label: string }[] = [
   { value: "all", label: "All records" },
   { value: "team", label: "Team only" },
@@ -88,13 +66,6 @@ export function resourceLabel(resource: string, moduleKey: string): string {
     ? resource.slice(moduleKey.length + 1)
     : resource;
   return prettify(rest);
-}
-
-export function isScopable(perm: Permission): boolean {
-  return (
-    SCOPABLE_MODULES.has(administeringModuleOf(perm.name)) &&
-    SCOPABLE_ACTIONS.has(perm.action)
-  );
 }
 
 export function isEditableScope(value: string): value is EditableScope {

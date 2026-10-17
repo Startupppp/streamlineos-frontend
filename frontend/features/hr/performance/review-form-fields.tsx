@@ -72,13 +72,15 @@ export function ReviewFormFields({
     <>
       {!editReview && (
         <div className="space-y-1.5">
-          <label className="text-sm font-medium">Employee</label>
+          <label htmlFor="review-employee-picker" className="text-sm font-medium">Employee</label>
           <Popover open={employeePickerOpen} onOpenChange={onEmployeePickerOpenChange}>
             <PopoverTrigger asChild>
               <Button
+                id="review-employee-picker"
                 variant="outline"
                 role="combobox"
                 aria-expanded={employeePickerOpen}
+                aria-label="Employee"
                 className={cn(
                   "w-full justify-between font-normal",
                   fieldErrors.employeeId && "border-destructive",
@@ -117,15 +119,15 @@ export function ReviewFormFields({
             </PopoverContent>
           </Popover>
           {fieldErrors.employeeId && (
-            <p className="text-xs text-destructive">{fieldErrors.employeeId}</p>
+            <p id="review-employee-error" role="alert" className="text-xs text-destructive">{fieldErrors.employeeId}</p>
           )}
         </div>
       )}
 
       <div className="space-y-1.5">
-        <label className="text-sm font-medium">Review Cycle (optional)</label>
+        <label htmlFor="review-cycle" className="text-sm font-medium">Review Cycle (optional)</label>
         <Select value={cycleId} onValueChange={onCycleChange}>
-          <SelectTrigger>
+          <SelectTrigger id="review-cycle" aria-label="Review Cycle">
             <SelectValue placeholder="Ad-hoc review" />
           </SelectTrigger>
           <SelectContent className="min-w-[var(--radix-select-trigger-width)]">
@@ -150,8 +152,9 @@ export function ReviewFormFields({
 
       <div className="grid grid-cols-2 gap-3">
         <div className="space-y-1.5">
-          <label className="text-sm font-medium">Period Start</label>
+          <label htmlFor="review-period-start" className="text-sm font-medium">Period Start</label>
           <DatePicker
+            id="review-period-start"
             value={periodStart ?? ""}
             onChange={onPeriodStartChange}
             placeholder="Pick a date"
@@ -161,12 +164,13 @@ export function ReviewFormFields({
             toYear={periodStartBounds.toYear}
           />
           {fieldErrors.periodStart && (
-            <p className="text-xs text-destructive">{fieldErrors.periodStart}</p>
+            <p id="review-period-start-error" role="alert" className="text-xs text-destructive">{fieldErrors.periodStart}</p>
           )}
         </div>
         <div className="space-y-1.5">
-          <label className="text-sm font-medium">Period End</label>
+          <label htmlFor="review-period-end" className="text-sm font-medium">Period End</label>
           <DatePicker
+            id="review-period-end"
             value={periodEnd ?? ""}
             onChange={onPeriodEndChange}
             placeholder="Pick a date"
@@ -176,7 +180,7 @@ export function ReviewFormFields({
             toYear={periodEndBounds.toYear}
           />
           {fieldErrors.periodEnd && (
-            <p className="text-xs text-destructive">{fieldErrors.periodEnd}</p>
+            <p id="review-period-end-error" role="alert" className="text-xs text-destructive">{fieldErrors.periodEnd}</p>
           )}
         </div>
       </div>

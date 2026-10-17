@@ -177,6 +177,8 @@ function makeApprovalItem(projectId: number | null): BuildApprovalInboxItem {
     projectId,
     ticketId: null,
     dueAt: null,
+    objectType: "ticket",
+    objectId: "tkt-9",
     sourceModule: "build",
     actor: null,
     subject: "Approval needed",
@@ -246,11 +248,11 @@ describe("inbox deep-link encoding — mail ids are provider-supplied strings, n
     },
   );
 
-  it("pushes the approval route with the numeric projectId", async () => {
+  it("pushes the approval route with its exact record and project identity", async () => {
     const props = await mountInbox();
     act(() => props.onApprovalClick(makeApprovalItem(4200)));
 
-    expect(pushMock).toHaveBeenCalledWith("/build/approvals?projectId=4200");
+    expect(pushMock).toHaveBeenCalledWith("/build/approvals?projectId=4200&approvalId=9");
   });
 
   it("pushes a server-supplied notification deepLink unmodified when it is already canonical", async () => {
@@ -318,6 +320,8 @@ describe("approval deep-link routing — D1 correctness per sourceModule and dee
       projectId: null,
       ticketId: null,
       dueAt: null,
+      objectType: "leave",
+      objectId: "leave-20",
       sourceModule: "hr",
       actor: null,
       subject: "Leave approval",
@@ -338,6 +342,8 @@ describe("approval deep-link routing — D1 correctness per sourceModule and dee
       projectId: 5,
       ticketId: null,
       dueAt: null,
+      objectType: "ticket",
+      objectId: "tkt-30",
       sourceModule: "build",
       actor: null,
       subject: "Build approval",
@@ -348,11 +354,16 @@ describe("approval deep-link routing — D1 correctness per sourceModule and dee
     };
   }
 
-  it("build approval with a deepLink navigates to that deepLink, not /build/approvals", async () => {
+  it("opens the exact Build approval instead of a nonexistent supplied record route", async () => {
     const props = await mountInbox();
     act(() => props.onApprovalClick(makeBuildApprovalWithDeepLink("/build/5/approvals/30")));
-    expect(pushMock).toHaveBeenCalledWith("/build/5/approvals/30");
-    expect(pushMock).not.toHaveBeenCalledWith(expect.stringContaining("/build/approvals?"));
+    expect(pushMock).toHaveBeenCalledWith("/build/approvals?projectId=5&approvalId=30");
+  });
+
+  it("uses approval identity rather than the related ticket or an old ticket deep link", async () => {
+    const props = await mountInbox();
+    act(() => props.onApprovalClick({ ...makeBuildApprovalWithDeepLink("/build/5/issues?ticket=900"), ticketId: 900 }));
+    expect(pushMock).toHaveBeenCalledWith("/build/approvals?projectId=5&approvalId=30");
   });
 
   it("positive: build approval without deepLink still falls back to /build/approvals", async () => {

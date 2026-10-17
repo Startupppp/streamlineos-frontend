@@ -1,5 +1,5 @@
-import { HrApprovalsPage } from "@/features/hr/workflows/approvals-page";
+import { HrActionCenterPage } from "@/features/hr/action-center/action-center-page";
 
 export default function Page() {
-  return <HrApprovalsPage />;
+  return <HrActionCenterPage />;
 }

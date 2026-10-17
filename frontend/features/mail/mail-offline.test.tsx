@@ -1,4 +1,4 @@
-import { render, screen, fireEvent } from "@testing-library/react";
+import { render, screen, fireEvent, act } from "@testing-library/react";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { MailListPane } from "./mail-list-pane";
 import type { MailAccount } from "@/types/mail";
@@ -24,6 +24,10 @@ let listState = {
 };
 
 jest.mock("@/hooks/api/access", () => ({ useCan: () => true }));
+
+jest.mock("@/hooks/api/inbox", () => ({
+  useUnifiedInboxCount: () => ({ data: undefined }),
+}));
 
 jest.mock("@/hooks/api/mail", () => ({
   useMailMessages: () => ({
@@ -55,7 +59,9 @@ function setOnline(online: boolean) {
     configurable: true,
     get: () => online,
   });
-  fireEvent(window, new Event(online ? "online" : "offline"));
+  act(() => {
+    fireEvent(window, new Event(online ? "online" : "offline"));
+  });
 }
 
 function renderPane() {
@@ -126,7 +132,7 @@ describe("MailListPane — offline and reconnect", () => {
     expect(screen.getByText(NETWORK_ERROR_TEXT)).toBeInTheDocument();
   });
 
-  it("does not spend the infinite list's load-more on a page that cannot arrive", () => {
+  it("does not request the next page while offline", async () => {
     listState.pages = [
       {
         messages: [
@@ -151,13 +157,15 @@ describe("MailListPane — offline and reconnect", () => {
     ];
     listState.hasNextPage = true;
     renderPane();
+    fetchNextPage.mockClear();
 
     setOnline(false);
-    fireEvent.click(screen.getByRole("button", { name: /load more/i }));
+    fireEvent.click(screen.getByRole("button", { name: "Load more mail" }));
     expect(fetchNextPage).not.toHaveBeenCalled();
 
     setOnline(true);
-    fireEvent.click(screen.getByRole("button", { name: /load more/i }));
+    fetchNextPage.mockResolvedValueOnce({ data: { pages: listState.pages } });
+    fireEvent.click(screen.getByRole("button", { name: "Load more mail" }));
     expect(fetchNextPage).toHaveBeenCalledTimes(1);
   });
 

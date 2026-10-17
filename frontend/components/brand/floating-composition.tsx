@@ -41,7 +41,7 @@ export const FloatingComposition = memo(function FloatingComposition({
       >
         <FloatLayer reduce={reduce} amplitude={3} duration={7}>
           <div className="flex items-center justify-between mb-3">
-            <span className="text-micro font-medium text-brand-core">Sprint 24</span>
+            <span className="text-micro font-medium text-brand-core">Cycle 24</span>
             <span className="text-micro font-mono text-muted-foreground">12/24</span>
           </div>
           <p className="text-xs font-semibold text-foreground mb-1.5 leading-tight">

@@ -1,7 +1,9 @@
 "use client";
 
 import { useCallback, useSyncExternalStore } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { orgScopedStorageKey, useOrgStorageScope } from "@/lib/org-scoped-storage";
+import { calendarUrl } from "./calendar-url-state";
 
 const STORAGE_NAME = "streamlineos.calendar.hiddenConnectionIds";
 
@@ -53,6 +55,8 @@ function subscribe(
 }
 
 export function useCalendarAccountFilters() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const scope = useOrgStorageScope();
   const key = orgScopedStorageKey(STORAGE_NAME, scope);
   const store = getStore(key);
@@ -63,23 +67,38 @@ export function useCalendarAccountFilters() {
     [key, store],
   );
 
-  const hiddenIds = useSyncExternalStore(sub, snapshot, () => store.cache);
+  const storedIds = useSyncExternalStore(sub, snapshot, () => store.cache);
+  const hiddenParam = searchParams.get("hiddenAccounts");
+  const hiddenIds = hiddenParam === null
+    ? storedIds
+    : [...new Set(hiddenParam
+        .split(",")
+        .filter((value) => /^[1-9]\d{0,9}$/.test(value))
+        .map(Number)
+        .filter((value) => Number.isSafeInteger(value) && value <= 2_147_483_647))]
+        .slice(0, 100);
 
   const toggleConnection = useCallback(
     (connectionId: number) => {
-      const current = readSnapshot(key, store);
-      write(
-        key,
-        store,
-        current.includes(connectionId)
-          ? current.filter((id) => id !== connectionId)
-          : [...current, connectionId],
-      );
+      const next = hiddenIds.includes(connectionId)
+        ? hiddenIds.filter((id) => id !== connectionId)
+        : [...hiddenIds, connectionId];
+      write(key, store, next);
+      router.push(calendarUrl(
+        new URLSearchParams(searchParams.toString()),
+        { hiddenAccounts: next.length > 0 ? next.join(",") : null },
+      ));
     },
-    [key, store],
+    [hiddenIds, key, router, searchParams, store],
   );
 
-  const showAll = useCallback(() => write(key, store, []), [key, store]);
+  const showAll = useCallback(() => {
+    write(key, store, []);
+    router.push(calendarUrl(
+      new URLSearchParams(searchParams.toString()),
+      { hiddenAccounts: null },
+    ));
+  }, [key, router, searchParams, store]);
 
   return { hiddenIds, toggleConnection, showAll };
 }

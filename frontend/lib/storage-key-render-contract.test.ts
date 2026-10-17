@@ -31,6 +31,8 @@ function filesUnder(
  * new bare `src` cannot be waved through by adding a line without a reason.
  */
 const NOT_A_STORAGE_KEY: Readonly<Record<string, string>> = {
+  "components/editor/plate/plate-elements.tsx":
+    "external link-preview image from GET /chat/link-preview, never a /storage/upload result",
   "components/layout/header/user-avatar-menu.tsx":
     "prop, resolved by the caller in this same file",
   "components/settings/mfa-settings.tsx": "data: URL generated for the TOTP QR",
@@ -39,9 +41,9 @@ const NOT_A_STORAGE_KEY: Readonly<Record<string, string>> = {
   "features/chat/link-preview-card.tsx": "external link-preview image",
   "features/build/tickets/ticket-attachment-preview.tsx":
     "object URL of a File that has not been uploaded yet",
-  "features/hr/recruitment/candidate-detail/resume-tab.tsx":
+  "features/recruitment/candidate-detail/resume-tab.tsx":
     "recruiter-supplied external resume URL, never a /storage/upload result",
-  "features/hr/recruitment/kanban/candidate-sheet.tsx":
+  "features/recruitment/kanban/candidate-sheet.tsx":
     "recruiter-supplied external resume URL, never a /storage/upload result",
   "features/wiki/components/public-page-content.tsx":
     "public KB renderer; /storage/image is Bearer-only so it needs a public read path (ticket 29)",

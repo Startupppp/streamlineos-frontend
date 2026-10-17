@@ -1,6 +1,6 @@
 "use client";
 
-import { format, isWeekend, isToday } from "date-fns";
+import { differenceInCalendarDays, format, isWeekend } from "date-fns";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ChevronDownIcon, ChevronRightIcon } from "@animateicons/react/lucide";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
@@ -34,8 +34,13 @@ interface WorkLogMonthGroupProps {
   searchTerm: string;
   logs: WorkLog[] | undefined;
   readOnly: boolean;
-  /** Managers/HR can edit already-saved entries for today */
+  /** Managers/HR can edit already-saved entries */
   canEditSaved: boolean;
+  /**
+   * Holder of hr:attendance:manage: may write another employee's row and may
+   * correct a date older than the self-service backdating window.
+   */
+  canManageAll: boolean;
   approvedLeaveDates?: Set<string>;
   currentUserId?: string;
   onSave: (date: string, content: string, workLink: string) => void;
@@ -45,6 +50,9 @@ interface WorkLogMonthGroupProps {
 function hasSavedContent(log: WorkLog | undefined): boolean {
   return Boolean(log?.description?.trim() || log?.workLink?.trim());
 }
+
+/** Mirrors WORK_LOG_BACKDATE_DAYS in the backend's work-logs.service.ts. */
+export const WORK_LOG_BACKDATE_DAYS = 7;
 
 export function WorkLogMonthGroup({
   monthKey,
@@ -58,6 +66,7 @@ export function WorkLogMonthGroup({
   logs,
   readOnly,
   canEditSaved,
+  canManageAll,
   approvedLeaveDates,
   currentUserId,
   onSave,
@@ -152,7 +161,12 @@ export function WorkLogMonthGroup({
               const isOwnLog = !log?.userId || !currentUserId || log.userId === currentUserId;
               const isLeaveDay = approvedLeaveDates?.has(dateStr) ?? false;
               const saved = hasSavedContent(log);
-              const baseBlocked = readOnly || !isOwnLog || !isToday(date) || isLeaveDay;
+              const daysBack = differenceInCalendarDays(new Date(), date);
+              // Never the future; the self-service window back, or any past date for a manage holder.
+              const dateWritable =
+                daysBack >= 0 && (canManageAll || daysBack <= WORK_LOG_BACKDATE_DAYS);
+              const baseBlocked =
+                readOnly || (!isOwnLog && !canManageAll) || !dateWritable || isLeaveDay;
               // Empty today → editable. Saved → only managers/HR can edit.
               const rowReadOnly = baseBlocked || (saved && !canEditSaved);
 

@@ -28,9 +28,9 @@ describe("BSN-04-010 the project Updates composer registers with the shared dirt
     expect(screen.getByTestId("dirty")).toHaveTextContent("clean");
   });
 
-  it("reports unsaved work once the author types, so a scope change prompts instead of discarding the draft", () => {
+  it("reports unsaved work once the author types in the body field, so a scope change prompts instead of discarding the draft", () => {
     render(<Harness isOpen />);
-    fireEvent.change(screen.getByRole("textbox"), {
+    fireEvent.change(screen.getByRole("textbox", { name: /^update$/i }), {
       target: { value: "Sprint 3 slipped a week." },
     });
     expect(screen.getByTestId("dirty")).toHaveTextContent("dirty");
@@ -38,7 +38,7 @@ describe("BSN-04-010 the project Updates composer registers with the shared dirt
 
   it("reports no unsaved work while the dialog is closed even with a dirty field, so a stale draft cannot block navigation forever", () => {
     render(<Harness isOpen={false} />);
-    fireEvent.change(screen.getByRole("textbox"), {
+    fireEvent.change(screen.getByRole("textbox", { name: /^update$/i }), {
       target: { value: "Typed then dismissed." },
     });
     expect(screen.getByTestId("dirty")).toHaveTextContent("clean");

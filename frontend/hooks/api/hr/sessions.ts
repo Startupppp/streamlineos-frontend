@@ -4,6 +4,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
 import { accessAndCrmQueryKeys } from "@/lib/query-keys/access-and-crm";
+import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
 
 const sessionListContract = lazyContract(() =>
   import("@/hooks/api/hr/sessions-schema").then((m) => m.sessionListContract),
@@ -32,6 +33,14 @@ export const useSessions = () =>
     queryKey: accessAndCrmQueryKeys.sessions.list(),
     queryFn: ({ signal }) => apiClient.get("/sessions", undefined, signal, sessionListContract),
     staleTime: 30 * 1000,
+    /*
+     * SETTINGS-001. This is one panel on Account Settings, and the page's other
+     * three sections do not depend on it — but it threw to the route boundary,
+     * so a 503 on /sessions replaced the whole page with "Server temporarily
+     * unavailable". Its own section already draws an ErrorState with a Retry; it
+     * had simply never been reachable.
+     */
+    ...INLINE_READ_ERROR,
   });
 
 export const useRevokeSession = () => {

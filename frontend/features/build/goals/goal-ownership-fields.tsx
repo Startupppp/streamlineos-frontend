@@ -2,13 +2,7 @@
 
 import { useFormContext } from "react-hook-form";
 import { User } from "lucide-react";
-import {
-  FormField,
-  FormItem,
-  FormLabel,
-  FormControl,
-  FormMessage,
-} from "@/components/ui/form";
+import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 import { DatePicker } from "@/components/ui/date-picker";
 import {
   Select,
@@ -22,14 +16,17 @@ import {
   planningEndPickerProps,
   planningStartPickerProps,
 } from "@/lib/date-constraints";
+import type { GoalLevel } from "@/hooks/api/goals";
 import type { ProjectGoalFormValues } from "./goal-form-schema";
+import { LEVEL_LABEL } from "./constants";
 
 interface GoalOwnershipFieldsProps {
   isEdit: boolean;
   orgUsers: Array<{ id: string; name?: string | null; email?: string | null }> | undefined;
+  parentOptions: ReadonlyArray<{ id: number; title: string; level: GoalLevel }>;
 }
 
-export function GoalOwnershipFields({ isEdit, orgUsers }: GoalOwnershipFieldsProps) {
+export function GoalOwnershipFields({ isEdit, orgUsers, parentOptions }: GoalOwnershipFieldsProps) {
   const { control, watch, setValue, getValues } = useFormContext<ProjectGoalFormValues>();
 
   const watchedStartDate = watch("startDate");
@@ -53,7 +50,7 @@ export function GoalOwnershipFields({ isEdit, orgUsers }: GoalOwnershipFieldsPro
 
   return (
     <div className="space-y-3">
-      <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+      <div className="flex items-center gap-2 text-sm font-normal text-muted-foreground">
         <User className="h-4 w-4" />
         <span>Ownership &amp; Timeline</span>
       </div>
@@ -63,7 +60,7 @@ export function GoalOwnershipFields({ isEdit, orgUsers }: GoalOwnershipFieldsPro
         render={({ field }) => (
           <FormItem>
             <FormLabel className="text-xs font-medium">Owner</FormLabel>
-            <Select value={field.value} onValueChange={field.onChange}>
+            <Select value={field.value} onValueChange={(v) => v && field.onChange(v)}>
               <FormControl>
                 <SelectTrigger className="w-full">
                   <SelectValue placeholder="Unassigned" />
@@ -74,6 +71,31 @@ export function GoalOwnershipFields({ isEdit, orgUsers }: GoalOwnershipFieldsPro
                 {orgUsers?.map((user) => (
                   <SelectItem key={user.id} value={user.id}>
                     {user.name ?? user.email ?? user.id}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <FormMessage className="text-xs" />
+          </FormItem>
+        )}
+      />
+      <FormField
+        control={control}
+        name="parentGoalId"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel className="text-xs font-medium">Parent goal</FormLabel>
+            <Select value={field.value} onValueChange={(v) => v && field.onChange(v)}>
+              <FormControl>
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="No parent" />
+                </SelectTrigger>
+              </FormControl>
+              <SelectContent>
+                <SelectItem value="none">No parent</SelectItem>
+                {parentOptions.map((option) => (
+                  <SelectItem key={option.id} value={String(option.id)}>
+                    {option.title} · {LEVEL_LABEL[option.level]}
                   </SelectItem>
                 ))}
               </SelectContent>

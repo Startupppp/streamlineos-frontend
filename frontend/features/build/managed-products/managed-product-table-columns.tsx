@@ -3,6 +3,15 @@
 import { useCallback } from "react";
 import Link from "next/link";
 import { EllipsisIcon } from "@animateicons/react/lucide";
+import {
+  Archive,
+  ArrowRight,
+  ArrowUpFromLine,
+  Copy,
+  Link2,
+  Pencil,
+  Trash2,
+} from "lucide-react";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { Button } from "@/components/ui/button";
 import type { DataTableColumn } from "@/components/ui/data-table";
@@ -10,49 +19,114 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { BuildMobileCard } from "@/features/build/shared/build-mobile-card";
+import { toast } from "sonner";
 import type { NamedUser } from "@/lib/person-display";
-import { TABLE_TITLE_CELL, TEXT_ONE_LINE } from "@/lib/text-overflow";
-import { cn } from "@/lib/utils";
+import { TABLE_TITLE_CELL } from "@/lib/text-overflow";
 import type { ManagedProduct } from "@/types/projects";
 import { ManagedProductStatusBadge } from "./managed-product-status-badge";
+import {
+  ProductFeedbackCell,
+  ProductGoalHealthCell,
+  ProductLifecycleCell,
+  ProductNameCell,
+  ProductOwnerCell,
+  ProductProjectsCell,
+  ProductReleaseCell,
+  ProductUpdatedCell,
+} from "./managed-product-list-cells";
 
 export const MANAGED_PRODUCT_TABLE_HEADERS = [
   "Name",
-  "Key",
-  "Status",
+  "Lifecycle",
+  "Health",
+  "Goals",
   "Owner",
-  "Description",
+  "Projects",
+  "Next release",
+  "Feedback",
+  "Updated",
   "Actions",
 ] as const;
 
-export type ManagedProductOwnerLookup = (ownerId: string | null) => NamedUser | null;
+type ManagedProductOwnerLookup = (ownerId: string | null) => NamedUser | null;
 
-interface ManagedProductRowHandlers {
-  canManage: boolean;
+export interface ManagedProductRowHandlers {
+  canUpdate: boolean;
+  canDelete: boolean;
   ownerOf: ManagedProductOwnerLookup;
   onEdit: (row: ManagedProduct) => void;
   onDelete: (row: ManagedProduct) => void;
-}
-
-function ownerLabel(user: NamedUser | null): string {
-  return user?.name ?? user?.email ?? "Unassigned";
+  onArchive?: (row: ManagedProduct) => void;
+  onRestore?: (row: ManagedProduct) => void;
+  makeProductHref?: (id: number) => string;
 }
 
 export function ProductRowActions({
   product,
+  canUpdate,
+  canDelete,
   onEdit,
   onDelete,
+  onArchive,
+  onRestore,
+  makeProductHref,
 }: {
   product: ManagedProduct;
+  canUpdate: boolean;
+  canDelete: boolean;
   onEdit: (row: ManagedProduct) => void;
   onDelete: (row: ManagedProduct) => void;
+  onArchive?: (row: ManagedProduct) => void;
+  onRestore?: (row: ManagedProduct) => void;
+  makeProductHref?: (id: number) => string;
 }) {
   const { iconRef, hoverHandlers } = useAnimatedIcon();
+
   const handleEdit = useCallback(() => onEdit(product), [product, onEdit]);
-  const handleDelete = useCallback(() => onDelete(product), [product, onDelete]);
+
+  const handleDelete = useCallback(
+    () => onDelete(product),
+    [product, onDelete],
+  );
+
+  const handleArchive = useCallback(
+    () => onArchive?.(product),
+    [product, onArchive],
+  );
+
+  const handleRestore = useCallback(
+    () => onRestore?.(product),
+    [product, onRestore],
+  );
+
+  const handleCopyKey = useCallback(() => {
+    void navigator.clipboard.writeText(product.key).then(() => {
+      toast.success(`Copied key ${product.key}`);
+    });
+  }, [product.key]);
+
+  const handleCopyLink = useCallback(() => {
+    const href = `${window.location.origin}/build/managed-products/${product.id}`;
+    void navigator.clipboard.writeText(href).then(() => {
+      toast.success("Link copied");
+    });
+  }, [product.id]);
+
+  const isArchived = product.status === "archived";
+
+  const serverAllows = (action: string) =>
+    Array.isArray(product.allowedActions) && product.allowedActions.includes(action);
+
+  const canEditRecord = canUpdate && serverAllows("update");
+  const canArchiveRecord =
+    canUpdate && !isArchived && serverAllows("archive") && !!onArchive;
+  const canRestoreRecord =
+    canUpdate && isArchived && serverAllows("restore") && !!onRestore;
+  const canDeleteRecord = canDelete && serverAllows("delete");
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -67,113 +141,169 @@ export function ProductRowActions({
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
-        <DropdownMenuItem onClick={handleEdit}>Edit</DropdownMenuItem>
-        <DropdownMenuItem variant="destructive" onClick={handleDelete}>
-          Delete
+        <DropdownMenuItem asChild>
+          <Link href={makeProductHref ? makeProductHref(product.id) : `/build/managed-products/${product.id}`}>
+            <ArrowRight aria-hidden="true" />
+            Open
+          </Link>
         </DropdownMenuItem>
+        <DropdownMenuItem onClick={handleCopyLink}>
+          <Link2 aria-hidden="true" />
+          Copy link
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={handleCopyKey}>
+          <Copy aria-hidden="true" />
+          Copy key
+        </DropdownMenuItem>
+        {canEditRecord ||
+        canArchiveRecord ||
+        canRestoreRecord ||
+        canDeleteRecord ? (
+          <DropdownMenuSeparator />
+        ) : null}
+        {canEditRecord ? (
+          <DropdownMenuItem onClick={handleEdit}>
+            <Pencil aria-hidden="true" />
+            Edit
+          </DropdownMenuItem>
+        ) : null}
+        {canArchiveRecord ? (
+          <DropdownMenuItem onClick={handleArchive}>
+            <Archive aria-hidden="true" />
+            Archive
+          </DropdownMenuItem>
+        ) : null}
+        {canRestoreRecord ? (
+          <DropdownMenuItem onClick={handleRestore}>
+            <ArrowUpFromLine aria-hidden="true" />
+            Restore
+          </DropdownMenuItem>
+        ) : null}
+        {canDeleteRecord ? (
+          <>
+            {canEditRecord || canArchiveRecord || canRestoreRecord ? (
+              <DropdownMenuSeparator />
+            ) : null}
+            <DropdownMenuItem variant="destructive" onClick={handleDelete}>
+              <Trash2 aria-hidden="true" />
+              Delete
+            </DropdownMenuItem>
+          </>
+        ) : null}
       </DropdownMenuContent>
     </DropdownMenu>
   );
 }
 
 export function buildManagedProductColumns({
-  canManage,
+  canUpdate,
+  canDelete,
   ownerOf,
   onEdit,
   onDelete,
+  onArchive,
+  onRestore,
+  makeProductHref,
 }: ManagedProductRowHandlers): DataTableColumn<ManagedProduct>[] {
+  function renderName(row: ManagedProduct) {
+    return <ProductNameCell product={row} />;
+  }
+  function renderLifecycle(row: ManagedProduct) {
+    return <ProductLifecycleCell product={row} />;
+  }
+  function renderHealth(row: ManagedProduct) {
+    return <ManagedProductStatusBadge status={row.health ?? row.status} />;
+  }
+  function renderGoalHealth(row: ManagedProduct) {
+    return <ProductGoalHealthCell product={row} />;
+  }
+  function renderOwner(row: ManagedProduct) {
+    return <ProductOwnerCell product={row} ownerOf={ownerOf} />;
+  }
+  function renderProjects(row: ManagedProduct) {
+    return <ProductProjectsCell product={row} />;
+  }
+  function renderRelease(row: ManagedProduct) {
+    return <ProductReleaseCell product={row} />;
+  }
+  function renderFeedback(row: ManagedProduct) {
+    return <ProductFeedbackCell product={row} />;
+  }
+  function renderUpdated(row: ManagedProduct) {
+    return <ProductUpdatedCell product={row} />;
+  }
+  function renderActions(row: ManagedProduct) {
+    return canUpdate || canDelete ? (
+      <ProductRowActions
+        product={row}
+        canUpdate={canUpdate}
+        canDelete={canDelete}
+        onEdit={onEdit}
+        onDelete={onDelete}
+        onArchive={onArchive}
+        onRestore={onRestore}
+        makeProductHref={makeProductHref}
+      />
+    ) : null;
+  }
+
   return [
     {
       key: "name",
       header: "Name",
       className: TABLE_TITLE_CELL,
-      cell: (row) => (
-        <Link
-          href={`/build/managed-products/${row.id}`}
-          className={cn(
-            "font-medium text-foreground hover:text-primary hover:underline",
-            TEXT_ONE_LINE,
-          )}
-          title={row.name}
-        >
-          {row.name}
-        </Link>
-      ),
+      cell: renderName,
     },
     {
-      key: "key",
-      header: "Key",
-      className: "w-28",
-      cell: (row) => (
-        <span className="font-mono text-xs text-muted-foreground">{row.key}</span>
-      ),
+      key: "lifecycle",
+      header: "Lifecycle",
+      cell: renderLifecycle,
     },
     {
-      key: "status",
-      header: "Status",
-      cell: (row) => <ManagedProductStatusBadge status={row.status} />,
+      key: "health",
+      header: "Health",
+      cell: renderHealth,
+    },
+    {
+      key: "goalHealth",
+      header: "Goals",
+      className: "w-16",
+      cell: renderGoalHealth,
     },
     {
       key: "ownerId",
       header: "Owner",
-      cell: (row) => (
-        <span
-          className={cn("max-w-[140px] text-sm text-muted-foreground", TEXT_ONE_LINE)}
-        >
-          {ownerLabel(ownerOf(row.ownerId))}
-        </span>
-      ),
+      cell: renderOwner,
     },
     {
-      key: "description",
-      header: "Description",
-      cell: (row) => (
-        <span
-          className={cn("max-w-[240px] text-sm text-muted-foreground", TEXT_ONE_LINE)}
-          title={row.description ?? undefined}
-        >
-          {row.description ?? "—"}
-        </span>
-      ),
+      key: "linkedProjectCount",
+      header: "Projects",
+      className: "w-20",
+      cell: renderProjects,
+    },
+    {
+      key: "nextRelease",
+      header: "Next release",
+      cell: renderRelease,
+    },
+    {
+      key: "feedbackTrend",
+      header: "Feedback",
+      className: "w-24",
+      cell: renderFeedback,
+    },
+    {
+      key: "updatedAt",
+      header: "Updated",
+      className: "w-28",
+      cell: renderUpdated,
     },
     {
       key: "actions",
       header: "Actions",
       headerClassName: "sr-only",
       className: "w-10",
-      cell: (row) =>
-        canManage ? (
-          <ProductRowActions product={row} onEdit={onEdit} onDelete={onDelete} />
-        ) : null,
+      cell: renderActions,
     },
   ];
-}
-
-export function ManagedProductMobileCard({
-  product,
-  canManage,
-  ownerOf,
-  onEdit,
-  onDelete,
-}: { product: ManagedProduct } & ManagedProductRowHandlers) {
-  return (
-    <BuildMobileCard
-      title={product.name}
-      status={<ManagedProductStatusBadge status={product.status} />}
-      person={{ user: ownerOf(product.ownerId), role: "Owner" }}
-      meta={[
-        { label: "Key", value: product.key },
-        { label: "Description", value: product.description ?? "—" },
-      ]}
-      actions={
-        canManage ? (
-          <ProductRowActions
-            product={product}
-            onEdit={onEdit}
-            onDelete={onDelete}
-          />
-        ) : null
-      }
-    />
-  );
 }

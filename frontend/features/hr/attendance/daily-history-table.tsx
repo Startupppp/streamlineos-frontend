@@ -1,11 +1,14 @@
 "use client";
 
-import { memo, useCallback, useState } from "react";
+import { memo, useCallback, useMemo, useState } from "react";
 import { format } from "date-fns";
+import { useOrgTimeZone } from "@/hooks/api/org-display";
+import { formatTimeInOrgTz, todayInOrgTz } from "@/lib/date-utils";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/ui/empty-state";
-import { ErrorState } from "@/components/shared/error-state";
+import { PageState } from "@/components/shared/page-state";
+import { usePageState } from "@/hooks/api/use-page-state";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { useCursorPager } from "@/components/ui/table-pagination";
 import { PAGE_BODY_EMPTY_CLASS } from "@/components/ui/content-fill-panel";
@@ -17,8 +20,9 @@ import { DownloadIcon } from "@animateicons/react/lucide";
 import { AttendanceEmailDialog } from "./attendance-email-dialog";
 import { formatDuration } from "./attendance-utils";
 import { cn } from "@/lib/utils";
-import { getErrorMessage } from "@/lib/get-error-message";
 import type { AttendanceLog } from "@/types/hr";
+import { useT } from "@/lib/i18n/i18n";
+import type { MessageKey } from "@/lib/i18n/messages/en";
 
 const statusBadgeClasses: Record<string, string> = {
   PRESENT: "bg-status-success-surface text-status-success-ink border-status-success-rule",
@@ -31,18 +35,29 @@ const statusBadgeClasses: Record<string, string> = {
   MISSING_CHECKOUT: "bg-status-warning-surface text-status-warning-ink border-status-warning-rule",
 };
 
-function getStatusLabel(statusKey: string): string {
-  if (statusKey === "CHECKED_OUT") return "Checked Out";
-  if (statusKey === "ON_BREAK") return "On Break";
-  if (statusKey === "HALF_DAY") return "Half Day";
-  if (statusKey === "MISSING_CHECKOUT") return "Missing Checkout";
+const STATUS_LABEL_KEYS: Readonly<Record<string, MessageKey>> = {
+  PRESENT: "attendance.statusPresent",
+  ABSENT: "attendance.statusAbsent",
+  LATE: "attendance.statusLate",
+  HALF_DAY: "attendance.statusHalfDay",
+  WFH: "attendance.statusWfh",
+  ON_BREAK: "attendance.statusOnBreak",
+  CHECKED_OUT: "attendance.statusCheckedOut",
+  MISSING_CHECKOUT: "attendance.statusMissingCheckout",
+};
+
+type Translate = ReturnType<typeof useT>;
+
+function getStatusLabel(statusKey: string, t: Translate): string {
+  const key = STATUS_LABEL_KEYS[statusKey];
+  if (key) return t(key);
   return statusKey.charAt(0) + statusKey.slice(1).toLowerCase();
 }
 
-const columns: DataTableColumn<AttendanceLog>[] = [
+const buildColumns = (t: Translate, orgTz: string | null): DataTableColumn<AttendanceLog>[] => [
   {
     key: "date",
-    header: "Date",
+    header: t("attendance.colDate"),
     cell: (log) => (
       <span className="text-sm font-medium">
         {format(new Date(log.date), "EEE, MMM dd")}
@@ -51,29 +66,29 @@ const columns: DataTableColumn<AttendanceLog>[] = [
   },
   {
     key: "checkIn",
-    header: "Check In",
+    header: t("attendance.colCheckIn"),
     headerClassName: "hidden md:table-cell",
     className: "hidden md:table-cell font-mono text-sm tabular-nums text-muted-foreground",
     cell: (log) => (
       <span className="hidden font-mono text-sm tabular-nums text-muted-foreground md:inline">
-        {log.checkIn ? format(new Date(log.checkIn), "hh:mm a") : "--"}
+        {log.checkIn ? formatTimeInOrgTz(log.checkIn, orgTz) : "--"}
       </span>
     ),
   },
   {
     key: "checkOut",
-    header: "Check Out",
+    header: t("attendance.colCheckOut"),
     headerClassName: "hidden md:table-cell",
     className: "hidden md:table-cell font-mono text-sm tabular-nums text-muted-foreground",
     cell: (log) => (
       <span className="hidden font-mono text-sm tabular-nums text-muted-foreground md:inline">
-        {log.checkOut ? format(new Date(log.checkOut), "hh:mm a") : "--"}
+        {log.checkOut ? formatTimeInOrgTz(log.checkOut, orgTz) : "--"}
       </span>
     ),
   },
   {
     key: "totalHours",
-    header: "Total Hours",
+    header: t("attendance.colTotalHours"),
     headerClassName: "hidden md:table-cell",
     className: "hidden md:table-cell font-mono text-sm tabular-nums",
     cell: (log) => (
@@ -84,7 +99,7 @@ const columns: DataTableColumn<AttendanceLog>[] = [
   },
   {
     key: "status",
-    header: "Status",
+    header: t("attendance.colStatus"),
     cell: (log) => {
       const recordedStatus = log.status?.toUpperCase();
       const isClassifiedStatus =
@@ -96,7 +111,7 @@ const columns: DataTableColumn<AttendanceLog>[] = [
         isClassifiedStatus && recordedStatus
           ? recordedStatus
           : !log.checkOut &&
-              log.date < format(new Date(), "yyyy-MM-dd") &&
+              log.date < todayInOrgTz(orgTz) &&
               (log.status === "PRESENT" || !log.status)
             ? "MISSING_CHECKOUT"
             : log.checkOut && log.status !== "ON_BREAK"
@@ -110,20 +125,20 @@ const columns: DataTableColumn<AttendanceLog>[] = [
             badgeClass,
           )}
         >
-          {getStatusLabel(statusKey)}
+          {getStatusLabel(statusKey, t)}
         </Badge>
       );
     },
   },
 ];
 
-async function handleDownloadReport(logs: AttendanceLog[]) {
+async function handleDownloadReport(logs: AttendanceLog[], orgTz: string | null) {
   try {
     const { downloadXlsx } = await import("@/lib/export/xlsx-utils");
     const rows = logs.map((log) => ({
       date: log.date ? format(new Date(log.date), "yyyy-MM-dd") : "",
-      checkIn: log.checkIn ? format(new Date(log.checkIn), "hh:mm a") : "",
-      checkOut: log.checkOut ? format(new Date(log.checkOut), "hh:mm a") : "",
+      checkIn: log.checkIn ? formatTimeInOrgTz(log.checkIn, orgTz) : "",
+      checkOut: log.checkOut ? formatTimeInOrgTz(log.checkOut, orgTz) : "",
       totalHours: log.workHours || "",
       status: log.status || "PRESENT",
     }));
@@ -167,6 +182,9 @@ export const DailyHistoryTable = memo(function DailyHistoryTable({
   fill?: boolean;
   chrome?: boolean;
 }) {
+  const t = useT();
+  const orgTz = useOrgTimeZone();
+  const columns = useMemo(() => buildColumns(t, orgTz), [t, orgTz]);
   const [pageSize, setPageSize] = useState(20);
   /**
    * The page-overshoot correction this component used to run — snapping
@@ -205,27 +223,40 @@ export const DailyHistoryTable = memo(function DailyHistoryTable({
     pageSizeOptions: [10, 20, 50] as const,
   } as const;
 
+  // Reads /me/attendance/history (self:attendance): a caller without it must
+  // be told so, not "No attendance records" (FE-47).
+  const pageState = usePageState({
+    permission: "self:attendance",
+    isLoading,
+    isError: Boolean(error),
+    error,
+  });
+  const isInterrupted =
+    pageState.kind !== "ready" && pageState.kind !== "empty" && pageState.kind !== "loading";
+
+  function handleRetry() {
+    void refetch();
+  }
+
   function handleDownloadClick() {
-    void handleDownloadReport(logs);
+    void handleDownloadReport(logs, orgTz);
   }
 
   const emptyState = (
     <EmptyState
       illustrationPreset="calendar"
-      title="No attendance records"
-      description="Your attendance history will appear here."
+      title={t("attendance.historyEmptyTitle")}
+      description={t("attendance.historyEmptyDescription")}
       className={cn(PAGE_BODY_EMPTY_CLASS, !fill && "py-10")}
     />
   );
 
   if (!chrome) {
-    if (error) {
+    if (isInterrupted) {
       return (
-        <ErrorState
-          title="Unable to load attendance history"
-          description={getErrorMessage(error)}
-          onRetry={() => void refetch()}
-        />
+        <PageState resolution={pageState} loading={null} onRetry={handleRetry}>
+          {null}
+        </PageState>
       );
     }
 
@@ -265,7 +296,7 @@ export const DailyHistoryTable = memo(function DailyHistoryTable({
         <div className="flex flex-wrap items-center justify-between gap-2">
           <CardTitle className="flex items-center gap-2 text-sm font-semibold text-foreground">
             <ClipboardList className="h-4 w-4 text-muted-foreground" />
-            Daily History
+            {t("attendance.dailyHistory")}
           </CardTitle>
           <div className="flex items-center gap-2">
             <AttendanceEmailDialog />
@@ -279,7 +310,7 @@ export const DailyHistoryTable = memo(function DailyHistoryTable({
               iconSize={14}
               iconClassName="mr-1.5"
             >
-              Download page
+              {t("attendance.downloadPage")}
             </AnimatedIconButton>
           </div>
         </div>
@@ -288,13 +319,10 @@ export const DailyHistoryTable = memo(function DailyHistoryTable({
         className={cn("p-0", fill && "min-h-0 flex-1 overflow-auto")}
         aria-live="polite"
       >
-        {error ? (
-          <ErrorState
-            title="Unable to load attendance history"
-            description={getErrorMessage(error)}
-            onRetry={() => void refetch()}
-            compact
-          />
+        {isInterrupted ? (
+          <PageState resolution={pageState} loading={null} onRetry={handleRetry} compact>
+            {null}
+          </PageState>
         ) : (
           <DataTable
             data={logs}

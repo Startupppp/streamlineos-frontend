@@ -5,11 +5,12 @@ import { Eye } from "lucide-react";
 import { extractToc, type TocItem } from "@/lib/blog-utils";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
-import type { PublicKbArticle } from "@/lib/public-fetch";
+import type { PublicKbArticle, PublicOrgInfo } from "@/lib/public-fetch";
 import { PublicArticleFeedback } from "./public-article-feedback";
+import { PublicOrgHeader } from "./public-org-header";
 
 const PROSE_CLASS =
-  "prose prose-slate dark:prose-invert max-w-none prose-headings:font-semibold prose-headings:tracking-tight prose-a:text-primary prose-a:no-underline hover:prose-a:underline prose-code:bg-muted prose-code:px-1 prose-code:py-0.5 prose-code:rounded prose-code:text-sm prose-code:font-mono prose-code:before:content-none prose-code:after:content-none prose-pre:bg-muted prose-pre:border prose-pre:border-border prose-img:rounded-lg prose-img:border prose-img:border-border";
+  "prose prose-slate dark:prose-invert prose-headings:font-semibold prose-headings:tracking-tight prose-a:text-primary prose-a:no-underline hover:prose-a:underline prose-code:bg-muted prose-code:px-1 prose-code:py-0.5 prose-code:rounded prose-code:text-sm prose-code:font-mono prose-code:before:content-none prose-code:after:content-none prose-pre:bg-muted prose-pre:border prose-pre:border-border prose-img:rounded-lg prose-img:border prose-img:border-border";
 
 const SANITIZE_OPTIONS: sanitizeHtml.IOptions = {
   allowedTags: [
@@ -80,9 +81,10 @@ function ArticleToc({ items }: ArticleTocProps) {
 interface PublicArticleContentProps {
   article: PublicKbArticle;
   orgId: string;
+  org: PublicOrgInfo | null;
 }
 
-export function PublicArticleContent({ article, orgId }: PublicArticleContentProps) {
+export function PublicArticleContent({ article, orgId, org }: PublicArticleContentProps) {
   const { html: withIds, toc } = extractToc(article.content ?? "");
   const tocItems: TocItem[] = toc
     .filter((h) => h.level === 2 || h.level === 3)
@@ -91,10 +93,17 @@ export function PublicArticleContent({ article, orgId }: PublicArticleContentPro
 
   return (
     <main className="min-h-dvh bg-background">
+      {org && (
+        <PublicOrgHeader
+          orgName={org.name}
+          orgLogo={org.logo}
+          orgId={orgId}
+        />
+      )}
       <div
         className={cn(
           "mx-auto px-4 py-8 sm:py-12",
-          hasToc ? "max-w-5xl" : "max-w-3xl",
+          hasToc ? "max-w-5xl" : "max-w-prose",
         )}
       >
         <Link
@@ -109,7 +118,7 @@ export function PublicArticleContent({ article, orgId }: PublicArticleContentPro
             hasToc && "lg:grid lg:grid-cols-[minmax(0,1fr)_220px] lg:gap-10",
           )}
         >
-          <div className="min-w-0 max-w-3xl">
+          <div className="min-w-0 max-w-prose">
             <article>
               {article.categoryName && (
                 <Badge variant="secondary" className="mb-3">
@@ -120,10 +129,15 @@ export function PublicArticleContent({ article, orgId }: PublicArticleContentPro
                 {article.title}
               </h1>
               <div className="flex flex-wrap items-center gap-3 mt-3 text-xs text-muted-foreground">
-                {article.publishedAt && (
-                  <span>
-                    Updated {format(new Date(article.publishedAt), "MMM d, yyyy")}
-                  </span>
+                {article.updatedAt && (
+                  <time dateTime={article.updatedAt}>
+                    Last updated {format(new Date(article.updatedAt), "MMM d, yyyy")}
+                  </time>
+                )}
+                {!article.updatedAt && article.publishedAt && (
+                  <time dateTime={article.publishedAt}>
+                    Published {format(new Date(article.publishedAt), "MMM d, yyyy")}
+                  </time>
                 )}
                 <span className="flex items-center gap-1">
                   <Eye className="h-3.5 w-3.5" />

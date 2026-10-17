@@ -1,13 +1,7 @@
 "use client";
 
 import { memo, useCallback, useState } from "react";
-import { Sheet, SheetBody, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
-import {
-  Drawer,
-  DrawerContent,
-  DrawerHeader,
-  DrawerTitle,
-} from "@/components/ui/drawer";
+import { AppSheet } from "@/components/shared/app-sheet";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
@@ -30,7 +24,6 @@ import {
   type IntegrationToolkit,
 } from "@/hooks/api/integrations";
 import { useCan } from "@/hooks/api/access";
-import { useIsMobile } from "@/hooks/common/use-mobile";
 import { accountColor } from "./calendar-account-colors";
 import { useCalendarAccountFilters } from "./use-calendar-account-filters";
 import { useCalendarConnections } from "./use-calendar-connections";
@@ -153,7 +146,6 @@ export function CalendarAccountsSheet({ open, onClose }: CalendarAccountsSheetPr
   const [pendingToolkit, setPendingToolkit] = useState<IntegrationToolkit | null>(null);
   const [disconnectTarget, setDisconnectTarget] = useState<IntegrationConnection | null>(null);
   const canManage = useCan("integrations:connections:manage");
-  const isMobile = useIsMobile();
 
   const handleConnect = useCallback(
     async (toolkit: IntegrationToolkit) => {
@@ -253,7 +245,7 @@ export function CalendarAccountsSheet({ open, onClose }: CalendarAccountsSheetPr
   );
 
   const connectActions = canManage ? (
-    <div className="order-3 sm:order-2 px-4 py-2 border-t sm:border-t-0 sm:border-b shrink-0 flex flex-row flex-wrap gap-2">
+    <div className="flex flex-row flex-wrap gap-2">
       <LoadingButton
         variant="outline"
         size="sm"
@@ -307,38 +299,17 @@ export function CalendarAccountsSheet({ open, onClose }: CalendarAccountsSheetPr
 
   return (
     <>
-      {isMobile ? (
-        <Drawer open={open} onOpenChange={onClose} direction="bottom">
-          <DrawerContent
-            aria-describedby={undefined}
-            className="w-full max-h-[92dvh] gap-0 p-0 pb-[env(safe-area-inset-bottom)] overflow-hidden bg-card"
-          >
-            <DrawerHeader className="px-4 py-3 border-b shrink-0">
-              <DrawerTitle className="text-base">Calendar accounts</DrawerTitle>
-            </DrawerHeader>
-            <div className="min-h-0 flex-1 overflow-y-auto px-4 py-2">
-              {accountsContent}
-            </div>
-            {connectActions}
-          </DrawerContent>
-        </Drawer>
-      ) : (
-        <Sheet open={open} onOpenChange={onClose}>
-          <SheetContent
-            side="right"
-            aria-describedby={undefined}
-            className="w-full sm:max-w-lg gap-0 p-0 flex flex-col overflow-hidden"
-          >
-            <SheetHeader className="px-4 py-3 border-b shrink-0">
-              <SheetTitle className="text-base">Calendar accounts</SheetTitle>
-            </SheetHeader>
-            <SheetBody className="order-2 sm:order-3 flex flex-col px-4 py-2">
-              {accountsContent}
-            </SheetBody>
-            {connectActions}
-          </SheetContent>
-        </Sheet>
-      )}
+      <AppSheet
+        open={open}
+        onOpenChange={(next) => {
+          if (!next) onClose();
+        }}
+        title="Calendar accounts"
+        className="w-full overflow-hidden sm:max-w-lg"
+        footer={connectActions}
+      >
+        {accountsContent}
+      </AppSheet>
 
       <ConfirmDialog
         open={disconnectTarget !== null}

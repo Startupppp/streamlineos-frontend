@@ -29,6 +29,7 @@ export interface ListFilterParams {
   page: number;
   activeFilterCount: number;
   setSearch: (value: string) => void;
+  flushSearch: () => void;
   setPage: (page: number) => void;
   toggle: (categoryKey: string, value: string) => void;
   setAt: (categoryKey: string, index: number, value: string) => void;
@@ -79,17 +80,20 @@ export function useListFilterParams(spec: ListFilterSpec): ListFilterParams {
     [spec, values],
   );
 
+  const cursorParamName = spec.cursorParam;
+
   const navigate = useCallback(
     (apply: (params: URLSearchParams) => void, keepPage = false) => {
       startTransition(() => {
         const params = currentSearchParams(searchParams);
         apply(params);
         if (!keepPage) params.delete(pageParamName);
+        if (!keepPage && cursorParamName) params.delete(cursorParamName);
         const qs = params.toString();
         router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
       });
     },
-    [router, pathname, searchParams, pageParamName],
+    [router, pathname, searchParams, pageParamName, cursorParamName],
   );
 
   const page = Math.max(1, Number(searchParams.get(pageParamName) ?? "1") || 1);
@@ -201,13 +205,20 @@ export function useListFilterParams(spec: ListFilterSpec): ListFilterParams {
     });
   }, [navigate, spec]);
 
-  const [searchDraft, setSearchDraft] = useState(() => ({
-    urlValue: search,
-    value: search,
-  }));
-  const localSearch =
-    searchDraft.urlValue === search ? searchDraft.value : search;
+  const [localSearch, setLocalSearch] = useState(search);
+  const appliedUrlSearch = useRef(search);
   const debouncedSearch = useDebouncedValue(localSearch, debounceMs);
+
+  useEffect(() => {
+    if (appliedUrlSearch.current === search) return;
+    appliedUrlSearch.current = search;
+    if (search === debouncedSearch) return;
+    function applyExternalSearch() {
+      setLocalSearch(search);
+    }
+    startTransition(applyExternalSearch);
+  }, [debouncedSearch, search, startTransition]);
+
   const previousDebounced = useRef(debouncedSearch);
   const immediateSearchRef = useRef<string | null>(null);
 
@@ -220,13 +231,19 @@ export function useListFilterParams(spec: ListFilterSpec): ListFilterParams {
 
   const setSearch = useCallback(
     (value: string) => {
-      setSearchDraft({ urlValue: search, value });
+      setLocalSearch(value);
       if (value || !search) return;
       immediateSearchRef.current = "";
       commitSearch("");
     },
     [commitSearch, search],
   );
+
+  const flushSearch = useCallback(() => {
+    if (localSearch === search) return;
+    immediateSearchRef.current = localSearch;
+    commitSearch(localSearch);
+  }, [localSearch, search, commitSearch]);
 
   useEffect(() => {
     if (immediateSearchRef.current === debouncedSearch) {
@@ -236,7 +253,9 @@ export function useListFilterParams(spec: ListFilterSpec): ListFilterParams {
     }
     if (debouncedSearch === previousDebounced.current) return;
     previousDebounced.current = debouncedSearch;
-    if (debouncedSearch !== search) commitSearch(debouncedSearch);
+    if (debouncedSearch !== search) {
+      commitSearch(debouncedSearch);
+    }
   }, [debouncedSearch, search, commitSearch]);
 
   return useMemo(
@@ -247,6 +266,7 @@ export function useListFilterParams(spec: ListFilterSpec): ListFilterParams {
       page,
       activeFilterCount,
       setSearch,
+      flushSearch,
       setPage,
       toggle,
       setAt,
@@ -261,6 +281,7 @@ export function useListFilterParams(spec: ListFilterSpec): ListFilterParams {
       page,
       activeFilterCount,
       setSearch,
+      flushSearch,
       setPage,
       toggle,
       setAt,

@@ -1,61 +1,96 @@
 ﻿"use client";
 
-import {
-  useQuery,
-  useInfiniteQuery,
-  useQueryClient,
+import { useQuery, useInfiniteQuery } from "@tanstack/react-query";
+import type {
+  UseInfiniteQueryOptions,
+  InfiniteData,
 } from "@tanstack/react-query";
-import type { UseInfiniteQueryOptions, InfiniteData } from "@tanstack/react-query";
-import { apiClient } from "@/lib/api-client";
+import type { UseQueryOptions } from "@tanstack/react-query";
+import { apiClient, isApiError } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
 import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
 import { useCan } from "@/hooks/api/access";
-import type {
-  ManagedProduct,
-  ManagedProductsPage,
-  CreateManagedProductInput,
-  UpdateManagedProductInput,
-} from "@/types/projects";
+import type { ManagedProduct, ManagedProductsPage } from "@/types/projects";
 import type { ManagedProductInsights } from "@/hooks/api/build/managed-products-schema";
-import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { NO_CURSOR_YET } from "@/hooks/api/cursor-page-param";
 
-
 const managedProductPageContract = lazyContract(() =>
-  import("@/hooks/api/build/managed-products-schema").then((m) => m.managedProductPageContract),
+  import("@/contracts/build-contracts.generated").then(
+    (m) => m.managedProductsListManagedProductsResponseSchema,
+  ),
 );
 const managedProductRowContract = lazyContract(() =>
-  import("@/hooks/api/build/managed-products-schema").then((m) => m.managedProductRowContract),
+  import("@/contracts/build-contracts.generated").then(
+    (m) => m.managedProductsGetManagedProductResponseSchema,
+  ),
 );
 const managedProductInsightsContractLazy = lazyContract(() =>
-  import("@/hooks/api/build/managed-products-schema").then((m) => m.managedProductInsightsContract),
-);
-const noContentContract = lazyContract(() =>
-  import("@/hooks/api/cursor-page-schema").then((m) => m.noContentContract),
+  import("@/hooks/api/build/managed-products-schema").then(
+    (m) => m.managedProductInsightsContract,
+  ),
 );
 
-interface ListManagedProductsParams {
+export interface ListManagedProductsParams {
   limit?: number;
   cursor?: string;
   status?: string;
   search?: string;
+  ownerId?: string;
+  sort?: "name" | "updated" | "status";
+  lifecycle?: string;
+  health?: string;
+  teamId?: string;
+  segment?: string;
+  tag?: string;
+  linkedProjectId?: string;
+  archived?: boolean;
 }
 
 export function useManagedProducts(params?: ListManagedProductsParams) {
   const canView = useCan("build:managed-products:view");
   const queryParams: Record<string, string> = {};
-  
+
   if (params?.cursor) queryParams["cursor"] = params.cursor;
   if (params?.status) queryParams["status"] = params.status;
   if (params?.search) queryParams["search"] = params.search;
   if (params?.limit) queryParams["limit"] = String(params.limit);
+  if (params?.ownerId) queryParams["ownerId"] = params.ownerId;
+  if (params?.sort) queryParams["sort"] = params.sort;
+  if (params?.lifecycle) queryParams["lifecycle"] = params.lifecycle;
+  if (params?.health) queryParams["health"] = params.health;
+  if (params?.teamId) queryParams["teamId"] = params.teamId;
+  if (params?.segment) queryParams["segment"] = params.segment;
+  if (params?.tag) queryParams["tag"] = params.tag;
+  if (params?.linkedProjectId) queryParams["linkedProjectId"] = params.linkedProjectId;
+  if (params?.archived !== undefined) queryParams["archived"] = String(params.archived);
 
   return useQuery<ManagedProductsPage>({
     queryKey: buildWorkQueryKeys.projects.managedProducts.list(
       Object.keys(queryParams).length > 0 ? queryParams : undefined,
     ),
-    queryFn: ({ signal }) =>
-      apiClient.get<ManagedProductsPage>("/build/managed-products", queryParams, signal, managedProductPageContract),
+    queryFn: async ({ signal }) => {
+      try {
+        return await apiClient.get<ManagedProductsPage>(
+          "/build/managed-products",
+          queryParams,
+          signal,
+          managedProductPageContract,
+        );
+      } catch (error) {
+        if (!isApiError(error) || error.status !== 400) throw error;
+        const {
+          ownerId: _ownerId,
+          sort: _sort,
+          ...compatibleParams
+        } = queryParams;
+        return apiClient.get<ManagedProductsPage>(
+          "/build/managed-products",
+          compatibleParams,
+          signal,
+          managedProductPageContract,
+        );
+      }
+    },
     enabled: canView,
     staleTime: 60_000,
   });
@@ -82,9 +117,19 @@ export function useInfiniteManagedProducts(
   if (params.status) queryParams["status"] = params.status;
   if (params.search) queryParams["search"] = params.search;
   if (params.limit) queryParams["limit"] = String(params.limit);
+  if (params.ownerId) queryParams["ownerId"] = params.ownerId;
+  if (params.sort) queryParams["sort"] = params.sort;
+  if (params.lifecycle) queryParams["lifecycle"] = params.lifecycle;
+  if (params.health) queryParams["health"] = params.health;
+  if (params.teamId) queryParams["teamId"] = params.teamId;
+  if (params.segment) queryParams["segment"] = params.segment;
+  if (params.tag) queryParams["tag"] = params.tag;
+  if (params.linkedProjectId) queryParams["linkedProjectId"] = params.linkedProjectId;
+  if (params.archived !== undefined) queryParams["archived"] = String(params.archived);
 
   return useInfiniteQuery({
-    queryKey: buildWorkQueryKeys.projects.managedProducts.listInfinite(queryParams),
+    queryKey:
+      buildWorkQueryKeys.projects.managedProducts.listInfinite(queryParams),
     queryFn: ({ pageParam, signal }) =>
       apiClient.get<ManagedProductsPage>(
         "/build/managed-products",
@@ -104,89 +149,100 @@ export function useInfiniteManagedProducts(
   });
 }
 
-export function useManagedProduct(managedProductId: number) {
+export function useManagedProduct(
+  managedProductId: number,
+  options?: Pick<UseQueryOptions<ManagedProduct | null>, "throwOnError">,
+) {
   const canView = useCan("build:managed-products:view");
-  return useQuery<ManagedProduct>({
-    queryKey: buildWorkQueryKeys.projects.managedProducts.detail(managedProductId),
-    queryFn: ({ signal }) =>
-      apiClient.get<ManagedProduct>(`/build/managed-products/${managedProductId}`, undefined, signal, managedProductRowContract),
+  return useQuery<ManagedProduct | null>({
+    queryKey:
+      buildWorkQueryKeys.projects.managedProducts.detail(managedProductId),
+    queryFn: async ({ signal }) => {
+      try {
+        return await apiClient.get<ManagedProduct>(
+          `/build/managed-products/${managedProductId}`,
+          undefined,
+          signal,
+          managedProductRowContract,
+        );
+      } catch (error) {
+        if (!isApiError(error) || error.status !== 404) throw error;
+        return null;
+      }
+    },
     enabled: canView && !!managedProductId,
     staleTime: 60_000,
+    ...options,
   });
 }
 
-export function useManagedProductInsights(managedProductId: number) {
+interface ManagedProductInsightsParams {
+  range?: "7d" | "30d" | "90d";
+}
+
+export function useManagedProductInsights(
+  managedProductId: number,
+  params?: ManagedProductInsightsParams,
+) {
   const canView = useCan("build:managed-products:view");
-  return useQuery<ManagedProductInsights>({
-    queryKey: buildWorkQueryKeys.projects.managedProducts.insights(managedProductId),
-    queryFn: ({ signal }) =>
-      apiClient.get<ManagedProductInsights>(
-        `/build/managed-products/${managedProductId}/insights`,
-        undefined,
-        signal,
-        managedProductInsightsContractLazy,
-      ),
+  const queryParams: Record<string, string> = {};
+  if (params?.range) queryParams["range"] = params.range;
+  const hasFilters = Object.keys(queryParams).length > 0;
+  return useQuery<ManagedProductInsights | null>({
+    queryKey: buildWorkQueryKeys.projects.managedProducts.insights(
+      managedProductId,
+      hasFilters ? queryParams : undefined,
+    ),
+    queryFn: async ({ signal }) => {
+      try {
+        return await apiClient.get<ManagedProductInsights>(
+          `/build/managed-products/${managedProductId}/insights`,
+          hasFilters ? queryParams : undefined,
+          signal,
+          managedProductInsightsContractLazy,
+        );
+      } catch (error) {
+        if (!isApiError(error) || error.status !== 404) throw error;
+        return null;
+      }
+    },
     enabled: canView && managedProductId > 0,
     staleTime: 2 * 60_000,
   });
 }
 
-export function useCreateManagedProduct() {
-  const qc = useQueryClient();
-  return useAuthorizedMutation("build:managed-products:create", {
-    mutationKey: ["projects", "managed-products", "create"],
-    mutationFn: (data: CreateManagedProductInput) =>
-      apiClient.post<ManagedProduct>("/build/managed-products", data, undefined, managedProductRowContract),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.managedProducts.list() });
-    },
-  });
+export {
+  useCreateManagedProduct,
+  useUpdateManagedProduct,
+  useDeleteManagedProduct,
+  useArchiveManagedProduct,
+  useRestoreManagedProduct,
+} from "./managed-product-mutations";
+
+const managedProductFacetsContract = lazyContract(() =>
+  import("@/contracts/build-contracts.generated").then(
+    (m) => m.managedProductsGetManagedProductFacetsResponseSchema,
+  ),
+);
+
+export interface ManagedProductFacets {
+  segments: string[];
+  tags: string[];
 }
 
-export function useUpdateManagedProduct() {
-  const qc = useQueryClient();
-  return useAuthorizedMutation("build:managed-products:update", {
-    mutationKey: ["projects", "managed-products", "update"],
-    mutationFn: ({
-      managedProductId,
-      ...data
-    }: UpdateManagedProductInput & { managedProductId: number }) =>
-      apiClient.patch<ManagedProduct>(
-        `/build/managed-products/${managedProductId}`,
-        data,
+export function useManagedProductFacets() {
+  const canView = useCan("build:managed-products:view");
+  return useQuery<ManagedProductFacets>({
+    queryKey: buildWorkQueryKeys.projects.managedProducts.facets,
+    queryFn: async ({ signal }) =>
+      apiClient.get<ManagedProductFacets>(
+        "/build/managed-products/facets",
         undefined,
-        managedProductRowContract,
+        signal,
+        managedProductFacetsContract,
       ),
-    onSuccess: (updated, vars) => {
-      qc.setQueryData(
-        buildWorkQueryKeys.projects.managedProducts.detail(vars.managedProductId),
-        updated,
-      );
-      const loadedPages = qc.getQueriesData<ManagedProductsPage>({
-        queryKey: buildWorkQueryKeys.projects.managedProducts.list(),
-      });
-      for (const [key, page] of loadedPages) {
-        if (page === undefined) continue;
-        if (!page.data.some((row) => row.id === vars.managedProductId)) continue;
-        qc.setQueryData<ManagedProductsPage>(key, {
-          ...page,
-          data: page.data.map((row) =>
-            row.id === vars.managedProductId ? updated : row,
-          ),
-        });
-      }
-    },
+    staleTime: 5 * 60_000,
+    enabled: canView,
   });
 }
 
-export function useDeleteManagedProduct() {
-  const qc = useQueryClient();
-  return useAuthorizedMutation("build:managed-products:delete", {
-    mutationKey: ["projects", "managed-products", "delete"],
-    mutationFn: (managedProductId: number) =>
-      apiClient.delete<void>(`/build/managed-products/${managedProductId}`, undefined, undefined, noContentContract),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.managedProducts.list() });
-    },
-  });
-}

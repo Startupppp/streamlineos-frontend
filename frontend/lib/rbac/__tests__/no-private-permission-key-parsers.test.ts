@@ -10,8 +10,8 @@ const NOT_A_PERMISSION_KEY: Readonly<Record<string, string>> = {
     "entity refs `deal:123` / `company:456`, not a permission key",
   "features/build/navigation/use-build-scope-recovery.ts":
     "Build scope refs `product:7` / `workspace:ws-1`, not a permission key",
-  "features/build/project-list/projects-page.tsx":
-    "`status:ACTIVE` client-side filter-group token, not a permission key",
+  "features/build/project-list/project-list-shaping.ts":
+    "`status:ACTIVE` / `lead:user_1` client-side filter-group token, not a permission key",
   "features/hr/attendance/attendance-regularization-dialog.tsx": "HH:MM regularization time",
   "features/hr/performance/meetings-tab.tsx": "HH:MM meeting time",
   "features/hr/performance/meeting-schema.ts": "HH:MM meeting time in a Zod refine",

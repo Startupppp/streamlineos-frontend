@@ -9,7 +9,9 @@ const noContentC = lazyContract(() =>
 );
 import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
 import { useCan, useModuleEnabled } from "@/hooks/api/access";
+import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import { invalidateCalendarProjectionWindows } from "@/lib/calendar-projection-cache";
 
 const listCyclesC = lazyContract(() =>
   import("@/hooks/api/hr/performance-schema").then((m) => m.listCyclesContract),
@@ -20,23 +22,14 @@ const createCycleC = lazyContract(() =>
 const updateCycleC = lazyContract(() =>
   import("@/hooks/api/hr/performance-schema").then((m) => m.updateCycleContract),
 );
-const deleteCycleC = lazyContract(() =>
-  import("@/hooks/api/hr/performance-schema").then((m) => m.deleteCycleContract),
-);
 const createReviewC = lazyContract(() =>
   import("@/hooks/api/hr/performance-schema").then((m) => m.createReviewContract),
 );
 const updateReviewC = lazyContract(() =>
   import("@/hooks/api/hr/performance-schema").then((m) => m.updateReviewContract),
 );
-const deleteReviewC = lazyContract(() =>
-  import("@/hooks/api/hr/performance-schema").then((m) => m.deleteReviewContract),
-);
 const updateGoalC = lazyContract(() =>
   import("@/hooks/api/hr/performance-schema").then((m) => m.updateGoalContract),
-);
-const deleteGoalC = lazyContract(() =>
-  import("@/hooks/api/hr/performance-schema").then((m) => m.deleteGoalContract),
 );
 const listOneOnOnesC = lazyContract(() =>
   import("@/hooks/api/hr/performance-schema").then((m) => m.listOneOnOnesContract),
@@ -46,9 +39,6 @@ const createOneOnOneC = lazyContract(() =>
 );
 const updateOneOnOneC = lazyContract(() =>
   import("@/hooks/api/hr/performance-schema").then((m) => m.updateOneOnOneContract),
-);
-const deleteOneOnOneC = lazyContract(() =>
-  import("@/hooks/api/hr/performance-schema").then((m) => m.deleteOneOnOneContract),
 );
 import type {
   ReviewCycle,
@@ -70,6 +60,7 @@ export function useReviewCycles() {
     queryFn: ({ signal }) => apiClient.get<ReviewCycle[]>("/hr/performance/cycles", undefined, signal, listCyclesC),
     staleTime: 2 * 60_000,
     enabled: canView && hrEnabled,
+    ...INLINE_READ_ERROR,
   });
 }
 
@@ -79,7 +70,10 @@ export function useCreateReviewCycle() {
     mutationKey: ["hr", "performance", "review-cycles", "create"],
     mutationFn: (data: CreateReviewCycleInput) =>
       apiClient.post<ReviewCycle>("/hr/performance/cycles", data, undefined, createCycleC),
-    onSuccess: () => qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.reviewCycles() }),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.reviewCycles() });
+      invalidateCalendarProjectionWindows(qc);
+    },
   });
 }
 
@@ -89,7 +83,10 @@ export function useUpdateReviewCycle() {
     mutationKey: ["hr", "performance", "review-cycles", "update"],
     mutationFn: ({ cycleId, ...data }: UpdateReviewCycleInput & { cycleId: number }) =>
       apiClient.patch<{ success: boolean }>(`/hr/performance/cycles/${cycleId}`, data, undefined, updateCycleC),
-    onSuccess: () => qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.reviewCycles() }),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.reviewCycles() });
+      invalidateCalendarProjectionWindows(qc);
+    },
   });
 }
 
@@ -99,7 +96,10 @@ export function useDeleteReviewCycle() {
     mutationKey: ["hr", "performance", "review-cycles", "delete"],
     mutationFn: (cycleId: number) =>
       apiClient.delete<void>(`/hr/performance/cycles/${cycleId}`, undefined, undefined, noContentC),
-    onSuccess: () => qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.reviewCycles() }),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.reviewCycles() });
+      invalidateCalendarProjectionWindows(qc);
+    },
   });
 }
 

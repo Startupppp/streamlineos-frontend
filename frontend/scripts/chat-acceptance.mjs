@@ -679,10 +679,10 @@ export function ownershipVerdict({ chatSurface, settingsSurface }) {
   if (chatSurface?.hasComposer !== true) problems.push("/chat mounted no conversation composer");
   if ((chatSurface?.buttonTexts ?? []).includes(SETTINGS_SAVE_LABEL))
     problems.push(`/chat renders the settings control "${SETTINGS_SAVE_LABEL}" — settings leaked into the conversation surface`);
-  if (settingsSurface?.hasComposer === true)
-    problems.push("/chat/settings mounted a conversation composer — the conversation surface leaked into settings");
-  if (settingsSurface?.pathname !== "/chat/settings")
-    problems.push(`/chat/settings landed on ${settingsSurface?.pathname ?? "nowhere"}`);
+  if (settingsSurface?.pathname !== "/chat")
+    problems.push(`/chat/settings did not redirect to /chat (landed on ${settingsSurface?.pathname ?? "nowhere"})`);
+  if ((settingsSurface?.buttonTexts ?? []).includes(SETTINGS_SAVE_LABEL))
+    problems.push(`/chat/settings still exposes the retired settings form`);
   if (problems.length > 0) return { ok: false, reason: problems.join("; ") };
   return { ok: true, reason: null };
 }
@@ -1027,28 +1027,28 @@ function runSelfTest() {
     "a surface owning nav, composer and no settings control passes ownership",
     ownershipVerdict({
       chatSurface: { chatNavCount: 1, hasComposer: true, buttonTexts: ["Send"] },
-      settingsSurface: { hasComposer: false, pathname: "/chat/settings" },
+      settingsSurface: { hasComposer: true, pathname: "/chat", buttonTexts: ["Send"] },
     }).ok === true,
   );
   assert(
     "a settings control on /chat fails ownership",
     ownershipVerdict({
       chatSurface: { chatNavCount: 1, hasComposer: true, buttonTexts: [SETTINGS_SAVE_LABEL] },
-      settingsSurface: { hasComposer: false, pathname: "/chat/settings" },
+      settingsSurface: { hasComposer: true, pathname: "/chat", buttonTexts: [] },
     }).reason.includes("settings leaked"),
   );
   assert(
-    "a composer on /chat/settings fails ownership",
+    "a surviving settings form fails ownership",
     ownershipVerdict({
       chatSurface: { chatNavCount: 1, hasComposer: true, buttonTexts: [] },
-      settingsSurface: { hasComposer: true, pathname: "/chat/settings" },
-    }).reason.includes("leaked into settings"),
+      settingsSurface: { hasComposer: false, pathname: "/chat", buttonTexts: [SETTINGS_SAVE_LABEL] },
+    }).reason.includes("retired settings form"),
   );
   assert(
-    "a redirected /chat/settings fails ownership",
+    "a non-redirecting /chat/settings fails ownership",
     ownershipVerdict({
       chatSurface: { chatNavCount: 1, hasComposer: true, buttonTexts: [] },
-      settingsSurface: { hasComposer: false, pathname: "/chat" },
+      settingsSurface: { hasComposer: false, pathname: "/chat/settings", buttonTexts: [] },
     }).ok === false,
   );
 
@@ -1577,26 +1577,17 @@ async function runOwnershipSplit(ctx) {
     await navigate(cdp, "/chat/settings", settleMs);
     await sleep(1000);
     const settingsSurface = await evaluate(cdp, chatSurfaceExpression());
-    shots.push(await screenshot(cdp, state, viewport.key, "settings"));
+    shots.push(await screenshot(cdp, state, viewport.key, "legacy-settings-redirect"));
 
     const verdict = ownershipVerdict({ chatSurface, settingsSurface });
-    if (verdict.ok) checks.push(passed("sidebar, conversation and settings own disjoint surfaces"));
+    if (verdict.ok) checks.push(passed("the retired settings route returns users to chat"));
     else checks.push(failed("ownership", verdict.reason));
-
-    const settingsDenied = (settingsSurface?.statusTexts ?? []).some((t) => t.includes(DENIED_TITLE));
-    if (settingsDenied)
-      checks.push(
-        unreached("settings ownership", "this session does not hold chat:org-settings:manage, so the settings form was not inspected"),
-      );
-    else if ((settingsSurface?.buttonTexts ?? []).includes(SETTINGS_SAVE_LABEL))
-      checks.push(passed("/chat/settings owns the organisation chat settings form"));
-    else checks.push(failed("settings ownership", `/chat/settings rendered no "${SETTINGS_SAVE_LABEL}" control`));
 
     const overflow = overflowVerdict((await evaluate(cdp, overflowExpression())) ?? {});
     if (!overflow.measured) checks.push(unreached("overflow", "layout could not be measured"));
     else if (overflow.overflows)
-      checks.push(failed("overflow", `/chat/settings scrolls ${overflow.by}px horizontally`));
-    else checks.push(passed("no horizontal overflow on the settings surface"));
+      checks.push(failed("overflow", `/chat scrolls ${overflow.by}px horizontally after the redirect`));
+    else checks.push(passed("no horizontal overflow after the settings redirect"));
 
     const measured = await evaluate(cdp, viewportExpression());
     const zoom = zoomVerdict(measured, viewport);

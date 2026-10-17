@@ -5,6 +5,7 @@ import {
   useQuery,
   useQueryClient,
 } from "@tanstack/react-query";
+import { useCallback } from "react";
 import type {
   InfiniteData,
   UseInfiniteQueryOptions,
@@ -16,7 +17,7 @@ import { apiClient } from "@/lib/api-client";
 import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
 import { useCan } from "@/hooks/api/access";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
-import { invalidateBuildViews } from "./ticket-cache";
+import { invalidateBuildViews } from "./ticket-cache-invalidation";
 import {
   applyProjectDetailPatch,
   getWorkspaceUsersFromCache,
@@ -28,6 +29,7 @@ import type {
 } from "@/hooks/api/build/project-cache-patch";
 import type {
   Project,
+  ProjectListItem,
   ProjectWithDetails,
   TicketLabel,
   ProjectFilters,
@@ -37,27 +39,40 @@ import type {
 } from "@/types/projects";
 import { NO_ID_CURSOR_YET } from "@/hooks/api/cursor-page-param";
 import { useHydratedProject } from "@/features/build/project-detail/project-hydration-context";
+import { projectReadErrorReachesBoundary } from "@/lib/query-error-policy";
 
 export {
   useAddProjectMember,
   useProjectMembers,
-  useUpdateProjectMemberRole,
 } from "@/hooks/api/build/project-members";
 
 const projectListPageLazy = lazyContract(() =>
-  import("@/hooks/api/build/build-project-schema").then((m) => m.projectListPageContract),
+  import("@/hooks/api/build/build-project-schema").then(
+    (m) => m.projectListPageContract,
+  ),
 );
 const projectRowLazy = lazyContract(() =>
-  import("@/hooks/api/build/build-project-schema").then((m) => m.projectRowContract),
+  import("@/hooks/api/build/build-project-schema").then(
+    (m) => m.projectRowContract,
+  ),
 );
 const projectDetailLazy = lazyContract(() =>
-  import("@/hooks/api/build/build-project-schema").then((m) => m.projectDetailContract),
+  import("@/hooks/api/build/build-project-schema").then(
+    (m) => m.projectDetailContract,
+  ),
 );
 const projectDeleteNoContentLazy = lazyContract(() =>
   import("@/hooks/api/cursor-page-schema").then((m) => m.noContentContract),
 );
 const labelListLazy = lazyContract(() =>
-  import("@/hooks/api/build/build-project-schema").then((m) => m.ticketLabelListContract),
+  import("@/hooks/api/build/build-project-schema").then(
+    (m) => m.ticketLabelListContract,
+  ),
+);
+const projectKeyAvailableLazy = lazyContract(() =>
+  import("@/hooks/api/build/build-project-schema").then(
+    (m) => m.projectKeyAvailableContract,
+  ),
 );
 
 export function useProjects(
@@ -66,7 +81,9 @@ export function useProjects(
 ) {
   const canView = useCan("build:view");
   return useQuery<ProjectListResponse>({
-    queryKey: buildWorkQueryKeys.projects.list(filters ? { ...filters } : undefined),
+    queryKey: buildWorkQueryKeys.projects.list(
+      filters ? { ...filters } : undefined,
+    ),
     queryFn: ({ signal }) =>
       apiClient.get<ProjectListResponse>(
         "/build",
@@ -80,14 +97,6 @@ export function useProjects(
   });
 }
 
-/**
- * The keyset walk over `GET /build`.
- *
- * The endpoint orders by descending id and takes `afterId`, and answers
- * `{ data, hasMore, nextCursor }` — no total and no page count, so a numbered
- * pager cannot be built over it and must not be faked. `limit` is fixed by the
- * caller and the cursor is the only thing that moves between pages.
- */
 export function useInfiniteProjects(
   filters: ProjectFilters,
   options?: Omit<
@@ -108,7 +117,10 @@ export function useInfiniteProjects(
     queryFn: ({ pageParam, signal }) =>
       apiClient.get<ProjectListResponse>(
         "/build",
-        { ...filters, ...(pageParam === undefined ? {} : { afterId: pageParam }) },
+        {
+          ...filters,
+          ...(pageParam === undefined ? {} : { afterId: pageParam }),
+        },
         signal,
         projectListPageLazy,
       ),
@@ -132,10 +144,17 @@ export function useProject(
   const hydratedProject = useHydratedProject(projectId);
   return useQuery<ProjectWithDetails | null>({
     queryKey: buildWorkQueryKeys.projects.detail(projectId),
-    queryFn: ({ signal }) => apiClient.get<ProjectWithDetails | null>(`/build/${projectId}`, undefined, signal, projectDetailLazy),
+    queryFn: ({ signal }) =>
+      apiClient.get<ProjectWithDetails | null>(
+        `/build/${projectId}`,
+        undefined,
+        signal,
+        projectDetailLazy,
+      ),
     enabled: canView && !!projectId,
     staleTime: 30_000,
     initialData: hydratedProject,
+    throwOnError: projectReadErrorReachesBoundary,
     ...options,
   });
 }
@@ -147,15 +166,63 @@ export function useCreateProject(
   >,
 ) {
   const queryClient = useQueryClient();
-  return useAuthorizedMutation<Project, Error, CreateProjectInput>("build:create", {
-    ...options,
-    mutationKey: ["projects", "create"],
-    mutationFn: (data: CreateProjectInput) =>
-      apiClient.post<Project>("/build", data, undefined, projectRowLazy),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.all });
+  return useAuthorizedMutation<Project, Error, CreateProjectInput>(
+    "build:create",
+    {
+      ...options,
+      mutationKey: ["projects", "create"],
+      mutationFn: (data: CreateProjectInput) =>
+        apiClient.post<Project>("/build", data, undefined, projectRowLazy),
+      onSuccess: (data, variables, context, mutationContext) => {
+        const workspaceUsers = getWorkspaceUsersFromCache(queryClient);
+        const managerRaw = data.managerId
+          ? (workspaceUsers.find((u) => u.id === data.managerId) ?? null)
+          : null;
+        const newItem: ProjectListItem = {
+          id: data.id,
+          name: data.name,
+          description: data.description,
+          key: data.key,
+          status: data.status,
+          priority: null,
+          health: "on_track",
+          managedProductId: data.managedProductId,
+          startDate: data.startDate,
+          endDate: data.endDate,
+          manager: managerRaw
+            ? {
+                id: managerRaw.id,
+                firstName: managerRaw.firstName ?? null,
+                lastName: managerRaw.lastName ?? null,
+                image: managerRaw.image,
+              }
+            : null,
+          progress: { total: 0, done: 0, percentage: 0 },
+          members: [],
+          teams: [],
+        };
+        queryClient.setQueriesData<ProjectListCache>(
+          { queryKey: buildWorkQueryKeys.projects.list() },
+          (old) => {
+            if (!old) return old;
+            if ("pages" in old) {
+              const [firstPage, ...rest] = old.pages;
+              if (!firstPage) return old;
+              return {
+                ...old,
+                pages: [
+                  { ...firstPage, data: [newItem, ...firstPage.data] },
+                  ...rest,
+                ],
+              };
+            }
+            return { ...old, data: [newItem, ...old.data] };
+          },
+        );
+        options?.onSuccess?.(data, variables, context, mutationContext);
+      },
     },
-  });
+  );
 }
 
 export function useUpdateProject(
@@ -179,10 +246,20 @@ export function useUpdateProject(
     ...options,
     mutationKey: ["projects", "update"],
     mutationFn: ({ projectId, ...data }: UpdateProjectInput) =>
-      apiClient.patch<ProjectWithDetails>(`/build/${projectId}`, data, undefined, projectDetailLazy),
+      apiClient.patch<ProjectWithDetails>(
+        `/build/${projectId}`,
+        data,
+        undefined,
+        projectDetailLazy,
+      ),
     onMutate: async (variables) => {
       const { projectId, ...patch } = variables;
-      await queryClient.cancelQueries({ queryKey: buildWorkQueryKeys.projects.all });
+      await queryClient.cancelQueries({
+        queryKey: buildWorkQueryKeys.projects.list(),
+      });
+      await queryClient.cancelQueries({
+        queryKey: buildWorkQueryKeys.projects.detail(projectId),
+      });
       const workspaceUsers = getWorkspaceUsersFromCache(queryClient);
       const listSnapshots = queryClient.getQueriesData<ProjectListCache>({
         queryKey: buildWorkQueryKeys.projects.list(),
@@ -211,14 +288,15 @@ export function useUpdateProject(
       options?.onError?.(error, variables, context, mutFnCtx);
     },
     onSettled: (data, error, variables, context, mutFnCtx) => {
-      invalidateBuildViews(queryClient, variables.projectId);
       queryClient.invalidateQueries({
         queryKey: buildWorkQueryKeys.projects.detail(variables.projectId),
       });
       queryClient.invalidateQueries({
         queryKey: buildWorkQueryKeys.projects.members(variables.projectId),
       });
-      queryClient.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.all });
+      queryClient.invalidateQueries({
+        queryKey: buildWorkQueryKeys.projects.list(),
+      });
       options?.onSettled?.(data, error, variables, context, mutFnCtx);
     },
   });
@@ -231,17 +309,27 @@ export function useDeleteProject(
   >,
 ) {
   const queryClient = useQueryClient();
-  return useAuthorizedMutation<void, Error, { projectId: number }>("build:delete", {
-    ...options,
-    mutationKey: ["projects", "delete"],
-    mutationFn: ({ projectId }) =>
-      apiClient.delete<void>(`/build/${projectId}`, undefined, undefined, projectDeleteNoContentLazy),
-    onSuccess: (data, variables, context, mutationContext) => {
-      invalidateBuildViews(queryClient, variables.projectId);
-      queryClient.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.all });
-      options?.onSuccess?.(data, variables, context, mutationContext);
+  return useAuthorizedMutation<void, Error, { projectId: number }>(
+    "build:delete",
+    {
+      ...options,
+      mutationKey: ["projects", "delete"],
+      mutationFn: ({ projectId }) =>
+        apiClient.delete<void>(
+          `/build/${projectId}`,
+          undefined,
+          undefined,
+          projectDeleteNoContentLazy,
+        ),
+      onSuccess: (data, variables, context, mutationContext) => {
+        invalidateBuildViews(queryClient, variables.projectId);
+        queryClient.invalidateQueries({
+          queryKey: buildWorkQueryKeys.projects.all,
+        });
+        options?.onSuccess?.(data, variables, context, mutationContext);
+      },
     },
-  });
+  );
 }
 
 export function useArchiveProject(
@@ -263,15 +351,22 @@ export function useArchiveProject(
     ...options,
     mutationKey: ["projects", "archive"],
     mutationFn: ({ projectId, restore }) =>
-      apiClient.patch<ProjectWithDetails>(`/build/${projectId}`, {
-        status: restore ? "ACTIVE" : "ARCHIVED",
-      }, undefined, projectDetailLazy),
+      apiClient.patch<ProjectWithDetails>(
+        `/build/${projectId}`,
+        {
+          status: restore ? "ACTIVE" : "ARCHIVED",
+        },
+        undefined,
+        projectDetailLazy,
+      ),
     onSuccess: (data, variables, context, mutationContext) => {
       invalidateBuildViews(queryClient, variables.projectId);
       queryClient.invalidateQueries({
         queryKey: buildWorkQueryKeys.projects.detail(variables.projectId),
       });
-      queryClient.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.all });
+      queryClient.invalidateQueries({
+        queryKey: buildWorkQueryKeys.projects.all,
+      });
       options?.onSuccess?.(data, variables, context, mutationContext);
     },
   });
@@ -286,10 +381,33 @@ export function useProjectLabels(
     queryKey: buildWorkQueryKeys.projects.labels(projectId),
     queryFn: ({ signal }) =>
       projectId
-        ? apiClient.get<TicketLabel[]>(`/build/${projectId}/labels`, undefined, signal, labelListLazy)
-        : apiClient.get<TicketLabel[]>("/build/labels", undefined, signal, labelListLazy),
+        ? apiClient.get<TicketLabel[]>(
+            `/build/${projectId}/labels`,
+            undefined,
+            signal,
+            labelListLazy,
+          )
+        : apiClient.get<TicketLabel[]>(
+            "/build/labels",
+            undefined,
+            signal,
+            labelListLazy,
+          ),
     staleTime: 60_000,
     ...options,
     enabled: canView && (options?.enabled ?? true),
   });
+}
+
+export function useCheckProjectKeyAvailable() {
+  return useCallback(
+    (key: string, signal?: AbortSignal) =>
+      apiClient.get<{ available: boolean }>(
+        "/build/project-key-available",
+        { key },
+        signal,
+        projectKeyAvailableLazy,
+      ),
+    [],
+  );
 }

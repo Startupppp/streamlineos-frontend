@@ -57,6 +57,7 @@ export function useBuildScopeRecovery({
     candidate?.type === "product" ? Number(candidate.id) : Number.NaN;
   const productQuery = useManagedProduct(
     Number.isFinite(productId) ? productId : 0,
+    { throwOnError: false },
   );
 
   const accessibleParent = useMemo<BuildScopeParent | null>(() => {

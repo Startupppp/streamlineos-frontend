@@ -29,6 +29,7 @@ Cite rules by ID in review (`FE-22`). `(gate: x)` names the `pnpm` check that fa
 **FE-16.** Put ordinary reads in Query hooks, never a fetch effect.
 **FE-17.** Zustand is not installed and must not be added. Query owns server state; shared client state uses React Context co-located with its feature.
 **FE-18.** Import the query-key **domain module** (`@/lib/query-keys/build-work`), never the `@/lib/query-keys` aggregate. *Why:* the aggregate pulls all 43 domains into every consumer. (gate: `lib/query-keys/aggregate-import-boundary.test.ts`)
+**FE-127.** Import the hooks **domain module** (`@/hooks/api/build/projects`), never the `@/hooks/api` cross-module aggregate or the `@/hooks/api/build` Build barrel. *Why:* the aggregate re-exports 22 cross-module domains; the barrel re-exports 40+ Build sub-modules — both pull code the consumer will never call. Test files are explicitly permitted to use the barrel. `features/build/**` is a hard zero; everywhere else, `hooks/api/build/aggregate-import-known.json` (45 entries) may only shrink. (gate: `hooks/api/build/aggregate-import-boundary.test.ts`)
 **FE-19.** Never hand-type a key array. One factory per entity; co-locate `queryKey`, `queryFn` and `staleTime`.
 **FE-20.** Keep the key array tenant-free. The scope segment lives in the hash via `scopedQueryKeyHashFn` (`lib/query-scope.ts:45`). *Why:* `invalidateQueries` matches the array, not the hash. (gate: check:query-scope)
 **FE-21.** Never hand-thread `orgId` into a factory for an authenticated surface. An `orgId` argument is legitimate only for a **public** tenant the viewer does not belong to.
@@ -39,7 +40,7 @@ Cite rules by ID in review (`FE-22`). `(gate: x)` names the `pnpm` check that fa
 **FE-26.** Forward the abort `signal` from every `queryFn`. (gate: check:query-signal)
 **FE-27.** Parse every response through its contract. (gate: check:response-contracts, check:contract-drift)
 **FE-28.** Match the contract to the backend field for field. *Why:* an omitted field is silently stripped and renders empty; a mis-typed one throws. (gate: check:contract-parity)
-**FE-29.** Name hooks `hooks/api/<module>/<entity>.ts` as `useThings` / `useThing` / `useCreateThing` / `useUpdateThing` / `useDeleteThing`.
+**FE-29.** Name hooks `hooks/api/<module>/<entity>.ts` as `useThings` / `useThing` / `useCreateThing` / `useUpdateThing` / `useDeleteThing`. A React Query hook module never lives under `lib/api/` — that path is for non-hook data-layer helpers only (FE-15 permits both, FE-29 decides which). (gate: check:hook-locality)
 **FE-30.** Spread `options` **before** the gate and never re-declare `enabled` after it — combine `enabled: !!orgId && (options?.enabled ?? true)`.
 **FE-31.** Never hardcode pagination params in a hook. Accept the endpoint's cursor/page/filter contract (BE-24, BE-25) and retain its envelope.
 **FE-32.** Never hydrate a collection through a parent-detail endpoint. Read the dedicated paginated endpoint.
@@ -47,13 +48,14 @@ Cite rules by ID in review (`FE-22`). `(gate: x)` names the `pnpm` check that fa
 **FE-34.** Invalidate by true key prefix — no trailing `undefined`, `exact: true` only when meant — and always re-call `options?.onSuccess`.
 **FE-35.** Patch the cache with `setQueryData` when the response already carries the new state. *Why:* invalidating a paginated query refetches every loaded page.
 **FE-36.** Make inline edits on board, list and card surfaces optimistic. Quotes and revenue figures never are.
-**FE-37.** Optimistic recipe (`useUpdateTicket`, `hooks/api/build/ticket-update-mutation.ts:93`): cancel and snapshot every key you patch → patch every cache the view renders → resolve related display objects from cached data → restore every snapshot `onError` → invalidate `onSettled`, gating expensive aggregates behind the fields that move them.
+**FE-37.** Optimistic recipe (`useUpdateTicket`, `hooks/api/build/ticket-update-mutation.ts`): cancel and snapshot every key you patch → patch every cache the view renders → resolve related display objects from cached data → reconcile `onSuccess` by writing the server response (new `version`/`updatedAt`, the created row in place of its negative temp id) into every patched cache → restore every snapshot `onError`. Never invalidate in `onSettled` what you just patched.
+**FE-133.** **Update the cache; never refetch after a mutation you can patch.** The mutation still calls the API; the UI updates from `setQueryData`, not from a refetch. Only data the client cannot compute (server-generated activity, report and dashboard aggregates) may be marked stale, and only with `invalidateQueries({ queryKey, exact: true, refetchType: "none" })`. Never invalidate a broad prefix (`projects.tickets()`, `projects.list()`, `allWorkAll`, the project detail) after a ticket-level edit, and never hand-roll cache work in a component — it belongs in the mutation hook. *Why:* every ticket edit refetched the whole board, project and all-work lists, and users waited seconds for their own change.
 **FE-38.** Never show `AppLoadingScreen` on a background refetch or ordinary mutation. Preserve stale data; show pending state only on the affected control.
 **FE-39.** Never refresh the NextAuth session to reconcile state Query already owns.
 
 ## 3. Access & Page State
 
-**FE-40.** Decide what a gated surface renders with `<PageState resolution={usePageState(...)}>`, never a boolean. It owns the branch order: access-loading → module unavailable → denied → loading → error → empty → ready. (gate: check:page-state-usage)
+**FE-40.** Decide what a gated surface renders with `<PageState resolution={usePageState(...)}>`, never a boolean. It owns the branch order: access-loading → module unavailable → denied → loading → error → empty → ready. A 404 read resolves to `not-found` ("doesn't exist, or you don't have access"), never to `empty`. (gate: check:page-state-usage)
 **FE-41.** **Always pass `error` to `usePageState`.** *Why:* omit it and every 402 becomes "Something went wrong" while tests still pass.
 
 ```tsx
@@ -67,7 +69,7 @@ const pageState = usePageState({ permission: "build:view", isLoading, isError, e
 **FE-45.** Use the endpoint's exact `@RequirePermission` key (BE-26). A key absent from the backend catalog makes `useCan` false forever. (gate: check:permission-catalog, check:permission-binding)
 **FE-46.** Gate every permissioned read. (gate: check:gated-reads)
 **FE-47.** Never render an empty state for a denial. A disabled Query v5 read is `isPending: true, isFetching: false`, so `isLoading` is **false** — identical to an empty list.
-**FE-48.** `lib/rbac/denial-is-not-emptiness.known.json` (278 entries) may only shrink. A surface not on it that reads a gated hook and renders empty fails the build.
+**FE-48.** `lib/rbac/denial-is-not-emptiness.known.json` (150 entries) may only shrink. A surface not on it that reads a gated hook and renders empty fails the build.
 **FE-49.** Render denial as `NoPermissionState`, never an empty-success state. (gate: check:empty-states)
 **FE-50.** `useModuleEnabled` returning true while access loads is not proof of authorization.
 **FE-51.** Never fire a request the role cannot access. Prevent predictable 403 fetch loops.
@@ -79,10 +81,19 @@ const pageState = usePageState({ permission: "build:view", isLoading, isError, e
 ## 4. Components & Structure
 
 **FE-56.** Pages compose; they don't implement. A route `page.tsx` fetches and composes — UI lives in `features/<feature>/components/`. (gate: check:route-thinness)
-**FE-57.** Keep files under 500 lines; 300+ is ratcheted. 428 files exceed 300 and 7 exceed 500 today; both counts may only shrink. (gate: check:file-sizes, check:over-300)
+**FE-57.** Keep files under 500 lines; 300+ is ratcheted. The baseline lives in `scripts/check-over-300.mjs` and may only shrink; `features/build/**` outside intake, QA and reports has no file over 300. (gate: check:file-sizes, check:over-300)
 **FE-58.** Check the inventory before writing anything: [UI-KIT.md](./UI-KIT.md#import-index) → the feature barrel → `components/shared` → `components/ui`.
 **FE-59.** Extend the existing primitive. A component duplicating one is a defect — there is exactly one `DataTable`, one `TablePagination`, one `LoadingButton`, one `AiActionsMenu`, one editor per class of surface.
 **FE-60.** Promote a component to `components/shared` (or `components/ui` for a primitive) on its second consumer, and update every importer.
+**FE-126.** **Delete pass-through wrappers; never write one.** If a function's entire body is a call to one other **exported** function forwarding the same arguments, it has no reason to exist — delete it and have every caller import the callee directly. The same holds for a file whose only export is such a wrapper: delete the file, not just the function. *Why:* it adds an import hop, a second name for one behaviour, and a place for the two to drift, while providing no seam — a wrapper earns its keep only by narrowing a type, binding a literal argument, adapting a shape, or hiding a module-private value. The ban covers every construct, not just functions. Each of these is a pass-through and is deleted:
+- a hook that only returns another hook called with its own arguments;
+- a component that only renders one other component and spreads its props through;
+- a file that only re-exports another module;
+- a type alias that only renames another type;
+- a constant that only aliases another constant.
+
+Feature `index.ts` barrels sanctioned by FE-65 are the only exception. **The exemption that matters:** a function wrapping a *module-private* `Set`/`Map`/regex/array (`isPlanGatedModule` → `PLAN_GATED_MODULES.has`) is encapsulation, not indirection — it keeps the data structure unexported. Keep those.
+**FE-140.** **Never create a component for a single button.** A component whose body is a `Button`, `LoadingButton`, `<button>`, `Link` or menu item with an icon and a label — optionally plus `useAnimatedIcon()` — is written inline at its call site. An animated-icon button is `<AnimatedIconButton icon={PlusIcon} …>Label</AnimatedIconButton>`; it calls the hook itself, so it works inside `.map` too. A component earns its keep only with real behaviour (a mutation, confirm state, clipboard or download logic), as a memoised list item or DataTable cell that binds its own handler, or as styling shared by 3+ files. *Why:* on 2026-10-11 the Build module carried dozens of `NewXButton`/`RemoveButton` components, several in files of their own, that existed only to call `useAnimatedIcon` for one button.
 **FE-61.** Never import feature → feature. (gate: check:import-direction, check:feature-cycles)
 **FE-62.** Add a row to [UI-KIT.md](./UI-KIT.md#import-index) in the same change that adds or extends a shared component.
 **FE-63.** Deep-import `ErrorState`/`LoadingState`/`NoPermissionState` from the leaf in `app/**` route files, not the barrel. *Why:* the barrel drags `react-hook-form` across the client boundary — ~10–11 KB gzipped for nothing.
@@ -95,6 +106,14 @@ const pageState = usePageState({ permission: "build:view", isLoading, isError, e
 **FE-70.** Accept and merge `className` with `cn()`; `forwardRef` whenever wrapping a focusable or measurable element, and always for DataTable-cell sub-components.
 **FE-71.** Spread `{...field}` for react-hook-form controls; never fork a field's state into local `useState`.
 **FE-72.** Keep the import graph acyclic. (gate: check:cycles, check:feature-cycles)
+**FE-137.** **Never update state or refs during render.** Forbidden in a component or hook body: `if (prev !== next) setX(...)`, the `const [prev, setPrev] = useState(x); if (prev !== x) setPrev(x)` form (even though the React docs show it), and any `ref.current` read or write. Instead: derive with `useMemo`; reset by identity with a `key` at the call site; or hold user overrides with `useSourceOverride(source, fallback, hold?)` (`hooks/common/use-source-override.ts`), whose value falls back automatically when `source` changes. To keep the first loaded value until the user acts, remount a keyed child (`features/build/approvals/decide-dialog.tsx`). Refs are written only in effects and handlers. (gate: eslint `react-hooks/refs` is an error in Build)
+**FE-138.** **Never mirror props, query data or URL values into state in an effect** — derive them (FE-137), or move the update into the event handler that causes it. Do not disguise it: calling the setter through `useEffectEvent` or a ref (`setterRef.current(v)`) to silence `react-hooks/set-state-in-effect` is the same defect. `useEffectEvent` is only for non-reactive logic inside an effect that synchronises with an external system (connectivity, a socket, an object URL). Browser stores (localStorage, `matchMedia`, online status) are read with `useSyncExternalStore`; a client-only flag is `useHydrated()`. (gate: eslint `react-hooks/set-state-in-effect` is an error in Build)
+**FE-139.** **Every effect cleans up what it starts.** Listeners are removed, `setTimeout`/`setInterval`/debounce timers cleared, observers disconnected, `requestAnimationFrame` cancelled, object URLs revoked, subscriptions closed — in the effect's return. Async work in an effect is cancelled with an `AbortController` or guarded so it never sets state after unmount, and a pending debounced save or navigation never fires after unmount. Prefer TanStack Query to hand-rolled async effects.
+**FE-128.** A type re-exported through a hook module (`export type { X } from "@/types/projects"`) is an FE-126 pass-through. Point the importers at the source and delete the re-export. It is never "uncertain: retain". *Why:* on 2026-10-05 an agent left five of these in place because fixing them needed import-line edits in other files, and that is exactly the work FE-126 requires.
+**FE-129.** When you consolidate label, option or status constants, compare the visible text first. If the casing or wording differs, you are changing what the user sees: choose one deliberately, update the tests that assert it, and report it as a behaviour change. *Why:* reusing a shared status list changed a roadmap filter from "In progress" to "In Progress" and broke a keyboard test.
+**FE-134.** **Export only what another file imports.** A symbol used only inside its own file is not exported; a symbol used nowhere is deleted, with the imports only it needed. Before adding `export`, name the importer. Unused exports, functions, variables, parameters, types and files are deleted in the same change that orphans them — never left for later. (gate: eslint `no-unused-vars` is an error in Build)
+**FE-135.** **A file split is finished only when the original imports the extracted file and the moved code is gone from the original.** Never commit an extracted file nothing imports, and never leave two definitions of one thing (hooks, helpers, constants, fixtures) — after a split, grep each moved name and confirm it is defined once. No plan or notes files, no redirect-only pages, no re-export files (FE-126). *Why:* a split created 50 extracted files nothing imported while every original kept its full code, and two incident-hook files carried six identical mutations.
+**FE-136.** **Never weaken a gate to make it pass.** Do not raise a ratchet count, add an allowlist, `CRAFTED_BY_DESIGN`, ledger or `*.known.json` entry, add `eslint-disable`, or rewrite a test's intent to get green. Fix the code; if a gate is genuinely wrong, stop and say so. A file moved in a split keeps its original's exemption; a new surface never inherits one. *Why:* agents raised the record-surface ratchet 88→93 and exempted a live webhook surface instead of fixing it.
 
 ## 5. Forms, Errors & Toasts
 
@@ -114,7 +133,7 @@ const pageState = usePageState({ permission: "build:view", isLoading, isError, e
 ## 6. Content & URL State
 
 **FE-85.** Show names, never raw IDs. Resolve display names at the display boundary via `getUserDisplayName`/`getUserInitials`. A visible UUID is a bug.
-**FE-86.** Keep tab, filter, sort and pagination state in the URL via `router.replace(…, { scroll: false })`, and always reset pagination on filter change.
+**FE-86.** Keep tab, filter, sort and pagination state in the URL via `router.replace(…, { scroll: false })`, and reset pagination **in the same URL write** that changes a filter or sort — the handler deletes `cursor`/`page` (`buildListSearchParams(…, { resetCursor: true })`). Never detect a stale cursor during render.
 **FE-87.** Debounce search ≥300ms and reset to page 1. `SearchInput` does not debounce for you.
 **FE-88.** Edit fields in place on cards and rows via a compact popover, with the optimistic mutation.
 **FE-89.** Offer inline AI only where it reduces effort — `AiActionsMenu`, draft-first (the user applies), credit-metered, `useCan`-gated, rendering `AiUsageChip`.
@@ -128,6 +147,8 @@ const pageState = usePageState({ permission: "build:view", isLoading, isError, e
 **FE-94.** Use `statusToneClasses(tone)` for new semantic status. Add no new legacy `bg-X-50` literals.
 **FE-95.** Use `rounded-xl` for cards and panels, `rounded-md` for inputs and tables. `2xl`/`3xl` only for marketing and the HR/Administration rich surface.
 **FE-96.** Space on a 4px base. Never `p-[7px]`, `mt-[13px]`, `gap-[5px]`.
+**FE-141.** For page layout and color roles, follow [UI-KIT.md#page-color-and-surface-contract](./UI-KIT.md#page-color-and-surface-contract). A card-like surface nested inside another card or panel must use the next surface rung (`bg-muted` inside `bg-card`) and a full-opacity structural boundary. Never place `bg-card` on both parent and child or weaken a nested boundary with `border-border/<alpha>`. In dark mode, use the darker canvas token for the boundary (`dark:border-background`) so it separates from both `card` and `muted`; do not use a translucent light border. The shared `<Card>` distinguishes a nested `<Card>` through intervening wrappers; deeper nesting must set an explicit alternating surface rung. Plain panels follow the same hierarchy. *Why:* identical fills collapse the hierarchy, while light translucent borders make nested dark surfaces look stacked and muddy.
+**FE-142.** A page loading state must flow through `usePageState` / `<PageState>` and its skeleton must mirror the ready layout's geometry: the same toolbar rows, panels, card or table shape, responsive overflow and fill chain. Use the existing `Skeleton`, `DataTableSkeleton`, `StatCardGridSkeleton` and `KanbanBoardSkeleton` primitives; do not replace structured content with generic full-width bars. Route `loading.tsx` and the query-loading branch reuse the same feature skeleton so navigation and client refetches do not show different pages. *Why:* structurally unrelated placeholders cause layout shift and make loading feel like a different product.
 **FE-97.** Never re-declare page padding at a call site — it belongs to `content-fill-panel.tsx`.
 **FE-98.** Never hardcode a height. States fill via a flex chain (`flex flex-col` ancestors + `flex-1 min-h-0`).
 **FE-99.** Let a container own its padding once. Never mix `space-y-*` with child `mt-*`; gaps come from one `gap-*` on the parent.
@@ -141,15 +162,16 @@ const pageState = usePageState({ permission: "build:view", isLoading, isError, e
 **FE-107.** Animate interactive surfaces with `AnimatedIconButton` and `useAnimatedIcon`; static `lucide-react` is for non-interactive icons only. Banned: `@phosphor-icons/react`, `react-icons`.
 **FE-108.** Animate only `opacity` and `transform`, 150–250ms micro / 250–350ms panels, nothing over 400ms. Respect `prefers-reduced-motion` via `useReducedMotion()`.
 **FE-109.** Import shared variants from `lib/motion-variants.ts`; never redefine them.
-**FE-110.** Take the lowest overlay rung that suffices ([ladder](./UI-KIT.md#overlay-ladder)). Escalating past the first rung that fits is a violation.
+**FE-110.** Take the lowest overlay rung that suffices ([ladder](./UI-KIT.md#overlay-ladder)). Escalating past the first rung that fits is a violation. **One clause escalates on content rather than count:** a form is rung-4 `Sheet` at any field count if one of its fields is a *toolbar-bearing composite editor* — a `TiptapEditor` (or equivalent) rendering its own persistent menu bar, i.e. `menuMode="static"` — because the rung-3 `sm:max-w-md` dialog cannot hold an editor and its toolbar. Mechanically: the overlay's own subtree contains such an editor, or it does not. **A merely tall plain control does not qualify** — `Textarea rows={6}`, an option-card grid, a checkbox grid: FE-110 counts fields, not pixels.
 **FE-111.** Below `md`, every rung-2 popover and rung-3/4 filter or menu panel becomes a **Drawer** via `ResponsivePopover`. Date pickers and 1–3 item menus are exempt.
 
 ## 8. Performance & Accessibility
 
 **FE-112.** Never render an unbounded collection. Use server pagination or `react-window` v2. An `items.map(...)` with no pagination, `slice` or windowing is a hang-risk bug.
+**FE-125.** **Never ship a "Load more" / "Show more" button.** A paginated surface takes exactly one of two forms: **numbered pagination** via `TablePagination` / `DataTable`'s `pagination` prop when the read has a total, or **infinite scroll** (an `IntersectionObserver` sentinel calling `fetchNextPage`) when it does not. *Why:* a manual reveal button hides how much is left, makes position unrecoverable on reload, gives no route to page 7, and grows the mounted DOM without bound — it is the failure mode FE-112 exists to prevent, wearing a button. A keyset list has no total, so it gets infinite scroll or `TablePagination mode="cursor"` (prev/next) — never a faked page count (FE-105, BE-25). 45 surfaces still carry a reveal button; that count may only shrink.
 **FE-113.** Lazy-load heavy client components with `next/dynamic` — editors, charts, maps, kanban, anything inside a dialog or sheet.
-**FE-114.** Memoize only what you measured. `React.memo` for components rendered many times per screen with stable props; `useMemo` only for genuinely expensive derivations; `useCallback` only for a memoized child or a dependency.
-**FE-115.** Never `useMemo` an object or array literal, or anything Query already caches. Reach for `staleTime`/`select`.
+**FE-114.** Memoize every derived array, object or function that is passed as a prop, returned from a hook, or used in a dependency array: `useMemo` for derived values (`data?.items ?? []`, `.filter(...)`, lookup maps), `useCallback` for handlers. Never recompute a derived collection inline in JSX or a hook return. `React.memo` for components rendered many times per screen with stable props.
+**FE-115.** Don't memoize primitives or values used once in the same render, and never copy Query data into state — read it, or shape it with `select`.
 **FE-116.** Keep route bundles within budget. (gate: check:route-bundle-budget, check:web-vitals-budget)
 **FE-117.** Give every icon-only control an `aria-label`. (gate: `streamline/no-unlabelled-icon-button` — eslint error; check:icon-labels)
 **FE-118.** Disable a confirmed icon-label false positive with `// eslint-disable-next-line streamline/no-unlabelled-icon-button -- <reason>`, never a bare disable.
@@ -162,6 +184,9 @@ const pageState = usePageState({ permission: "build:view", isLoading, isError, e
 **FE-122.** Pair a control-gate negative test with a positive one. *Why:* the negative passes when the control simply cannot render.
 **FE-123.** jsdom cannot see layout overflow, real focus order or paint — inspect those in a browser.
 **FE-124.** There is no Prettier and no coverage threshold in this repo. Do not assume formatting or coverage is enforced.
+**FE-130.** Shared test helpers (`*-test-fixtures.ts`, `*-test-harness.tsx`) are not test files for FE-127. Import hooks from their domain module, never `@/hooks/api/build`. *Why:* a fixture file extracted during a test split imported the barrel and failed `aggregate-import-boundary.test.ts`.
+**FE-131.** Splitting a test file must keep its case count exactly. Before deleting the original, count `it(`/`test(` in it and in the new files, then run the boundary and spec typecheck gates. *Why:* only a count proves the split dropped no case, and moved fixtures are where boundary violations appear.
+**FE-132.** Never run a formatter over a whole file you are editing, and call a size overrun "pre-existing" only after measuring the file at the baseline commit (`git show <base>:<path> | wc -l`). Fix a file your change pushed past 500 lines; never register it in `scripts/file-size-exceptions.md`. *Why:* a whole-file Prettier pass pushed `hooks/api/build/roadmap.ts` from 478 to 630 lines, and an agent then registered it as pre-existing debt.
 
 ---
 
@@ -177,6 +202,13 @@ const pageState = usePageState({ permission: "build:view", isLoading, isError, e
 8. **FE-06** — no new business `route.ts`.
 9. **FE-92** — no raw hex or arbitrary visual value.
 10. No `any`, no `as X`, no `@ts-ignore`. (gate: check:type-assertions — hard zero)
+11. **FE-125** — no "Load more" button. Numbered pagination when there is a total, infinite scroll when there is not.
+12. **FE-126 / FE-140** — no pass-through wrapper, and no component that only renders one button. A function that only forwards to another exported function is deleted, not reviewed; a single button is written inline.
+13. **FE-137 / FE-138** — no state or ref update during render, no props/query/URL mirrored into state in an effect, and no `useEffectEvent` or ref trick to hide one.
+14. **FE-133** — mutations patch the cache from the response; no broad invalidation or refetch of data the mutation already knows.
+15. **FE-134 / FE-135** — no export without an importer, no unused code, no orphaned or duplicated file after a split.
+16. **FE-136** — no gate weakened to pass.
+17. **FE-139** — every effect cleans up its listeners, timers, observers and async work.
 
 ## Definition of Done — frontend task
 
@@ -184,6 +216,9 @@ const pageState = usePageState({ permission: "build:view", isLoading, isError, e
 - [ ] Page state resolves through `usePageState` + `<PageState>` **with `error` passed**; controls gate on `useCan`; destructive prompts are `ConfirmDialog destructive`.
 - [ ] `pnpm type-check` **and** `pnpm type-check:specs` pass (FE-121).
 - [ ] `pnpm lint` passes with no new `^_` escapes and no bare eslint disables.
+- [ ] No state/ref update during render, no prop mirrored into state in an effect, every effect cleans up (FE-137–FE-139).
+- [ ] Mutations patch the cache from the response; nothing refetches what the mutation already knows (FE-133).
+- [ ] Every new or changed export has an importer outside its file; every extracted file is imported and the original no longer holds its code; no duplicate definitions remain (FE-134, FE-135).
 - [ ] Every gate named by a rule you touched passes, `:self-test` first.
 - [ ] Filters update the URL; pagination resets on filter change; pagination is server-side.
 - [ ] Field controls left at `h-9`; numeric cells `font-mono tabular-nums`; colored tints carry `dark:` pairings.

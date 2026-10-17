@@ -63,7 +63,7 @@ jest.mock("@/lib/billing/use-feature", () => ({
   useFeature: () => ({ enabled: true, requiredPlan: null }),
 }));
 
-jest.mock("@/lib/api/hooks/executive-brief", () => ({
+jest.mock("@/hooks/api/executive-brief", () => ({
   useExecutiveBrief: () => ({
     data: { snapshot: null, isStale: false },
     isLoading: false,
@@ -71,23 +71,17 @@ jest.mock("@/lib/api/hooks/executive-brief", () => ({
     error: null,
     refetch: jest.fn(),
   }),
-  useGenerateBrief: () => briefMutation,
+  useGenerateBrief: () =>
+    useMutation({
+      mutationKey: ["executive-brief", "generate"],
+      mutationFn: () => post(),
+    }),
 }));
 
 import { useMutation } from "@tanstack/react-query";
-import { AIScoreCandidateButton } from "@/features/hr/recruitment/ai-score-candidate-button";
+import { AIScoreCandidateButton } from "@/features/recruitment/ai-score-candidate-button";
 import { AIGenerateReviewButton } from "@/features/hr/performance/ai-generate-review-button";
 import ExecutiveBriefPage from "@/app/(authenticated)/ai/executive-brief/page";
-
-let briefMutation: ReturnType<typeof useMutation>;
-
-function BriefHarness() {
-  briefMutation = useMutation({
-    mutationKey: ["executive-brief", "generate"],
-    mutationFn: () => post(),
-  });
-  return <ExecutiveBriefPage />;
-}
 
 function renderWithClient(ui: React.ReactElement) {
   const client = new QueryClient({
@@ -126,7 +120,7 @@ const SURFACES: Surface[] = [
   {
     name: "executive brief",
     trigger: /generate brief/i,
-    ui: () => <BriefHarness />,
+    ui: () => <ExecutiveBriefPage />,
   },
 ];
 

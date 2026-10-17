@@ -86,6 +86,8 @@ function makeStatus(
       queuedAt: null,
       processedAt: null,
       retryable: false,
+      failureKind: null,
+      repairAction: "none",
       ...overrides,
     },
   };
@@ -164,6 +166,47 @@ describe("EventSyncStatus — failed state", () => {
       makeStatus({ status: "failed", attemptCount: 5, retryable: false }),
     );
     render(<EventSyncStatus eventId={1} />);
+    expect(screen.queryByRole("button", { name: /retry sync/i })).toBeNull();
+  });
+
+  it("directs authorization failures to reconnect instead of retrying", () => {
+    getCalendarMock().useEventSyncStatus.mockReturnValue(
+      makeStatus({
+        status: "failed",
+        failureKind: "auth",
+        repairAction: "reconnect",
+        retryable: false,
+      }),
+    );
+    render(<EventSyncStatus eventId={1} />);
+    expect(screen.getByText(/reconnect this account/i)).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /retry sync/i })).toBeNull();
+  });
+
+  it("directs capability failures to change the event or account", () => {
+    getCalendarMock().useEventSyncStatus.mockReturnValue(
+      makeStatus({
+        status: "failed",
+        failureKind: "capability",
+        repairAction: "change_event",
+        retryable: false,
+      }),
+    );
+    render(<EventSyncStatus eventId={1} />);
+    expect(screen.getByText(/cannot represent the requested change/i)).toBeInTheDocument();
+  });
+
+  it("directs provider version conflicts to reload before choosing a version", () => {
+    getCalendarMock().useEventSyncStatus.mockReturnValue(
+      makeStatus({
+        status: "failed",
+        failureKind: "conflict",
+        repairAction: "review_conflict",
+        retryable: false,
+      }),
+    );
+    render(<EventSyncStatus eventId={1} />);
+    expect(screen.getByText(/provider copy changed/i)).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /retry sync/i })).toBeNull();
   });
 });

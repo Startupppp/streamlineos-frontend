@@ -35,17 +35,11 @@ export function usePresenceSelection(): PresenceSelection {
   const serverStatus = userId ? presenceMap.get(userId) : undefined;
   const serverMessage = statusMessage ?? "";
 
-  if (
-    pending !== null &&
-    serverStatus === pending.status &&
-    serverMessage === pending.statusMessage
-  )
-    setPending(null);
-
   const selectStatus = useCallback(
     (next: SetPresenceStatusInput) => {
       setPending({ status: next.status, statusMessage: next.statusMessage ?? "" });
       setPresenceStatus.mutate(next, {
+        onSuccess: () => setPending(null),
         onError: (error) => {
           setPending(null);
           toast.error(getErrorMessage(error));

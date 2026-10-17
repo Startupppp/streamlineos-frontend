@@ -9,6 +9,7 @@ import { getUserDisplayName } from "@/lib/person-display";
 import { TABLE_TITLE_CELL } from "@/lib/text-overflow";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { BuildMobileCard } from "@/features/build/shared/build-mobile-card";
+import { formatEventDate } from "@/lib/date-utils";
 import type { Meeting, ProjectMemberRecord } from "@/types/projects";
 
 interface Cycle {
@@ -90,12 +91,7 @@ export function buildMeetingsColumns(
         <div className="flex flex-col gap-0.5">
           {row.scheduledAt ? (
             <span className="font-mono tabular-nums text-sm text-foreground">
-              {new Date(row.scheduledAt).toLocaleString(undefined, {
-                month: "short",
-                day: "numeric",
-                hour: "2-digit",
-                minute: "2-digit",
-              })}
+              {formatEventDate(row.scheduledAt, row.timezone)}
             </span>
           ) : (
             <span className="text-sm text-muted-foreground">—</span>
@@ -156,7 +152,7 @@ export function buildMeetingsColumns(
               {(row.unresolvedActionItemCount ?? 0) > 0 ? (
                 <Badge
                   variant="outline"
-                  className="ml-0.5 px-1 py-0 text-micro text-status-warning-ink border-status-warning-rule"
+                  className="ml-0.5 px-1 py-0 text-micro text-status-warning-ink-strong border-status-warning-rule"
                 >
                   {row.unresolvedActionItemCount} open
                 </Badge>
@@ -192,12 +188,7 @@ export function MeetingMobileCard({
   const host = meeting.createdBy ? memberMap.get(meeting.createdBy) : undefined;
   const personUser = host ? { name: host.name ?? null, email: host.email } : null;
   const scheduledDate = meeting.scheduledAt
-    ? new Date(meeting.scheduledAt).toLocaleString(undefined, {
-        month: "short",
-        day: "numeric",
-        hour: "2-digit",
-        minute: "2-digit",
-      })
+    ? formatEventDate(meeting.scheduledAt, meeting.timezone)
     : "—";
   return (
     <BuildMobileCard

@@ -4,7 +4,6 @@ import { useState, useCallback, useEffect } from "react";
 import Link from "next/link";
 import {
   ClipboardList,
-  ShieldCheck,
   Users,
   KeyRound,
   Layers,
@@ -202,14 +201,22 @@ export function RolesPage() {
           <GroupsPanel />
         </TabsContent>
 
-        <TabsContent value="roles" className="gap-3 overflow-hidden">
+        {/*
+          Below `lg` the stat block, the role list and the permission panel do
+          not fit one viewport, and the tab was height-locked — so the list's
+          pager sat under the fold with nothing to scroll. It scrolls there and
+          stays locked from `lg` up, where the two-column layout does fit.
+        */}
+        <TabsContent
+          value="roles"
+          className="gap-3 max-lg:overflow-y-auto lg:overflow-hidden"
+        >
         <div className="shrink-0">
           {analyticsLoading ? (
-            <StatCardGridSkeleton cols={5} count={5} />
+            <StatCardGridSkeleton cols={4} count={4} stackOnMobile={2} />
           ) : (
-            <StatCardGrid cols={5}>
+            <StatCardGrid cols={4} stackOnMobile={2}>
               <StatCard label="Total Roles" value={analytics?.totalRoles ?? 0} icon={Layers} />
-              <StatCard label="Custom Roles" value={analytics?.customRoles ?? 0} icon={ShieldCheck} tone="blue" />
               <StatCard label="Users Assigned" value={analytics?.usersAssigned ?? 0} icon={Users} tone="emerald" />
               <StatCard label="Total Permissions" value={analytics?.totalPermissions ?? 0} icon={KeyRound} tone="amber" />
               <StatCard label="Recent Changes" value={analytics?.recentChanges ?? 0} icon={TrendingUp} />
@@ -217,7 +224,7 @@ export function RolesPage() {
           )}
         </div>
 
-        <div className="grid min-h-0 flex-1 grid-cols-1 gap-3 overflow-hidden lg:grid-cols-[320px_minmax(0,1fr)] lg:items-stretch">
+        <div className="grid min-h-0 flex-1 grid-cols-1 gap-3 max-lg:shrink-0 lg:grid-cols-[320px_minmax(0,1fr)] lg:items-stretch lg:overflow-hidden">
           <div className="min-h-0 max-lg:h-[min(420px,50dvh)] lg:h-full">
             <RolesListPanel
               isLoading={isLoading}

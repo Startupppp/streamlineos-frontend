@@ -1,6 +1,6 @@
 "use client";
 
-import { useQueryClient, keepPreviousData } from "@tanstack/react-query";
+import { useQueryClient, keepPreviousData, type QueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
 
@@ -9,6 +9,9 @@ const goalStatsContract = lazyContract(() =>
 );
 const goalSuccessContract = lazyContract(() =>
   import("@/hooks/api/goals-schema").then((m) => m.goalSuccessContract),
+);
+const goalProductLinkContract = lazyContract(() =>
+  import("@/hooks/api/goals-schema").then((m) => m.goalProductLinkContract),
 );
 const goalsListContract = lazyContract(() =>
   import("@/hooks/api/goals-schema").then((m) => m.goalsListContract),
@@ -28,6 +31,7 @@ const noContentContract = lazyContract(() =>
 import { accountingAndSupportQueryKeys } from "@/lib/query-keys/accounting-and-support";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { useGatedQuery } from "@/hooks/api/gated-query";
+import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
 import type { z } from "zod";
 import type {
   goalRowContract as goalRowContractDef,
@@ -35,6 +39,7 @@ import type {
   goalsListContract as goalsListContractDef,
   goalLinkCreatedContract as goalLinkCreatedContractDef,
   goalDetailContract as goalDetailContractDef,
+  goalProductLinkContract as goalProductLinkContractDef,
 } from "@/hooks/api/goals-schema";
 
 export type GoalLevel = "company" | "team" | "individual";
@@ -42,6 +47,7 @@ export type GoalStatus = "not_started" | "on_track" | "at_risk" | "off_track" | 
 export type KeyResultMetric = "number" | "percentage" | "currency" | "boolean";
 
 type GoalRow = z.infer<typeof goalRowContractDef>;
+type GoalProductLink = z.infer<typeof goalProductLinkContractDef>;
 export type GoalListItem = z.infer<typeof goalListItemContractDef>;
 type GoalsListPage = z.infer<typeof goalsListContractDef>;
 type GoalLinkCreated = z.infer<typeof goalLinkCreatedContractDef>;
@@ -51,22 +57,28 @@ export type { GoalDetail };
 
 export type KeyResult = GoalDetail["keyResults"][number];
 
-
-interface GoalStats {
+export interface GoalStats {
   total: number;
   byStatus: Record<GoalStatus, number>;
   avgProgress: number;
   atRisk: number;
   completed: number;
+  staleCheckIns: number;
 }
 
 interface GoalsParams {
-  status?: GoalStatus;
+  status?: GoalStatus | GoalStatus[];
   level?: GoalLevel;
-  ownerId?: string;
+  ownerId?: string | string[];
   projectId?: number;
   managedProductId?: number;
   search?: string;
+  page?: number;
+  limit?: number;
+  health?: string | string[];
+  due?: string;
+  scope?: string;
+  metricType?: KeyResultMetric;
 }
 
 export interface KeyResultInput {
@@ -88,10 +100,12 @@ export interface CreateGoalInput {
   dueDate?: string;
   parentGoalId?: number;
   projectId?: number;
+  managedProductId?: number;
   keyResults?: KeyResultInput[];
 }
 
 interface UpdateGoalInput {
+  version: number;
   title?: string;
   description?: string | null;
   ownerId?: string | null;
@@ -114,23 +128,71 @@ interface AddGoalLinkInput {
   projectId?: number;
 }
 
-function goalLinksKey(goalId: number) {
-  return [...accountingAndSupportQueryKeys.goals.detail(goalId), "links"] as const;
-}
-
 function toQueryParams(params?: GoalsParams): Record<string, unknown> | undefined {
   if (!params) return undefined;
-  return { ...params };
+  const { status, health, ownerId, ...rest } = params;
+  const result: Record<string, unknown> = { ...rest };
+  if (Array.isArray(status)) {
+    if (status.length > 0) result["status"] = status.join(",");
+  } else if (status) {
+    result["status"] = status;
+  }
+  if (Array.isArray(health)) {
+    if (health.length > 0) result["health"] = health.join(",");
+  } else if (health) {
+    result["health"] = health;
+  }
+  if (Array.isArray(ownerId)) {
+    if (ownerId.length > 0) result["ownerId"] = ownerId.join(",");
+  } else if (ownerId) {
+    result["ownerId"] = ownerId;
+  }
+  return result;
 }
 
-export function useGoals(params?: GoalsParams) {
+type GoalsListCache = GoalListItem[] | GoalsListPage;
+
+function patchGoalInListItem(ex: GoalListItem, up: GoalDetail): GoalListItem {
+  const { keyResults: _1, updates: _2, links: _3, project: _4, measurementSources: _5, linkedRoadmapItems: _6, ...shared } = up;
+  return { ...ex, ...shared };
+}
+
+function patchGoalsListCache(cache: GoalsListCache | undefined, up: GoalDetail): GoalsListCache | undefined {
+  if (!cache) return cache;
+  const patch = (i: GoalListItem) => i.id === up.id ? patchGoalInListItem(i, up) : i;
+  return Array.isArray(cache) ? cache.map(patch) : { ...cache, items: cache.items.map(patch) };
+}
+
+function removeGoalFromListCache(cache: GoalsListCache | undefined, id: number): GoalsListCache | undefined {
+  if (!cache) return cache;
+  const keep = (i: GoalListItem) => i.id !== id;
+  return Array.isArray(cache)
+    ? cache.filter(keep)
+    : { ...cache, items: cache.items.filter(keep), total: Math.max(0, cache.total - 1) };
+}
+
+function forEachGoalList(
+  qc: QueryClient,
+  fn: (cache: GoalsListCache) => GoalsListCache | undefined,
+): void {
+  for (const [key, cache] of qc.getQueriesData({
+    queryKey: accountingAndSupportQueryKeys.goals.list(),
+  })) {
+    if (!isGoalsListCache(cache)) continue;
+    qc.setQueryData<GoalsListCache>(key, fn(cache));
+  }
+}
+
+export function useGoals(params?: GoalsParams, options?: { enabled?: boolean }) {
   const queryParams = toQueryParams(params);
   return useGatedQuery("build:goals:view", {
     queryKey: accountingAndSupportQueryKeys.goals.list(queryParams),
     queryFn: async ({ signal }) =>
       (await apiClient.get<GoalsListPage>("/goals", queryParams, signal, goalsListContract)).items,
+    enabled: options?.enabled ?? true,
     staleTime: 30_000,
     placeholderData: keepPreviousData,
+    ...INLINE_READ_ERROR,
   });
 }
 
@@ -142,6 +204,7 @@ export function useGoalsPage(params?: GoalsParams) {
       apiClient.get<GoalsListPage>("/goals", queryParams, signal, goalsListContract),
     staleTime: 30_000,
     placeholderData: keepPreviousData,
+    ...INLINE_READ_ERROR,
   });
 }
 
@@ -152,14 +215,17 @@ export function useGoal(id: number) {
       apiClient.get<GoalDetail>(`/goals/${id}`, undefined, signal, goalDetailC),
     enabled: id > 0,
     staleTime: 30_000,
+    throwOnError: false,
   });
 }
 
-export function useGoalStats() {
+export function useGoalStats(managedProductId?: number) {
+  const queryParams = managedProductId === undefined ? undefined : { managedProductId };
   return useGatedQuery("build:goals:view", {
-    queryKey: accountingAndSupportQueryKeys.goals.stats(),
-    queryFn: ({ signal }) => apiClient.get<GoalStats>("/goals/stats", undefined, signal, goalStatsContract),
+    queryKey: accountingAndSupportQueryKeys.goals.stats(managedProductId),
+    queryFn: ({ signal }) => apiClient.get<GoalStats>("/goals/stats", queryParams, signal, goalStatsContract),
     staleTime: 60_000,
+    ...INLINE_READ_ERROR,
   });
 }
 
@@ -169,8 +235,25 @@ export function useCreateGoal() {
     mutationKey: ["create", "goal"],
     mutationFn: (input: CreateGoalInput) =>
       apiClient.post<GoalRow>("/goals", input, undefined, goalRowContract),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: accountingAndSupportQueryKeys.goals.all });
+    onSuccess: (created, input) => {
+      const newDetail: GoalDetail = {
+        ...created, owner: null, project: null,
+        keyResults: [], updates: [], links: [], measurementSources: [], linkedRoadmapItems: [],
+      };
+      const newItem: GoalListItem = {
+        ...created, target: null, current: null, owner: null,
+        keyResultCount: input.keyResults?.length ?? 0,
+        linkCount: 0, linkedTicketCount: 0, linkedProjectCount: 0,
+        productLinkage: null, linkedRoadmapItemCount: 0, linkedOpportunityCount: 0,
+        outcomeReviews: null, lastCheckInAt: null, checkInFreshness: "none", allowedActions: [],
+      };
+      qc.setQueryData(accountingAndSupportQueryKeys.goals.detail(created.id), newDetail);
+      forEachGoalList(qc, (cache) =>
+        Array.isArray(cache)
+          ? [newItem, ...cache]
+          : { ...cache, items: [newItem, ...cache.items], total: cache.total + 1 },
+      );
+      qc.invalidateQueries({ queryKey: accountingAndSupportQueryKeys.goals.stats(), refetchType: "active" });
     },
   });
 }
@@ -180,10 +263,11 @@ export function useUpdateGoal() {
   return useAuthorizedMutation("build:goals:manage", {
     mutationKey: ["update", "goal"],
     mutationFn: ({ id, ...input }: UpdateGoalInput & { id: number }) =>
-      apiClient.patch<GoalRow>(`/goals/${id}`, input, undefined, goalRowContract),
-    onSuccess: (_, variables) => {
-      qc.invalidateQueries({ queryKey: accountingAndSupportQueryKeys.goals.all });
-      qc.invalidateQueries({ queryKey: accountingAndSupportQueryKeys.goals.detail(variables.id) });
+      apiClient.patch<GoalDetail>(`/goals/${id}`, input, undefined, goalDetailC),
+    onSuccess: (updated, variables) => {
+      qc.setQueryData(accountingAndSupportQueryKeys.goals.detail(variables.id), updated);
+      forEachGoalList(qc, (cache) => patchGoalsListCache(cache, updated));
+      qc.invalidateQueries({ queryKey: accountingAndSupportQueryKeys.goals.stats(), refetchType: "active" });
     },
   });
 }
@@ -194,8 +278,10 @@ export function useDeleteGoal() {
     mutationKey: ["delete", "goal"],
     mutationFn: (id: number) =>
       apiClient.delete<void>(`/goals/${id}`, undefined, undefined, noContentContract),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: accountingAndSupportQueryKeys.goals.all });
+    onSuccess: (_, goalId) => {
+      forEachGoalList(qc, (cache) => removeGoalFromListCache(cache, goalId));
+      qc.removeQueries({ queryKey: accountingAndSupportQueryKeys.goals.detail(goalId), exact: true });
+      qc.invalidateQueries({ queryKey: accountingAndSupportQueryKeys.goals.stats(), refetchType: "active" });
     },
   });
 }
@@ -205,11 +291,11 @@ export function useCheckIn(goalId: number) {
   return useAuthorizedMutation("build:goals:manage", {
     mutationKey: ["check", "in"],
     mutationFn: (input: CheckInInput) =>
-      apiClient.post<GoalRow>(`/goals/${goalId}/check-in`, input, undefined, goalRowContract),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: accountingAndSupportQueryKeys.goals.detail(goalId) });
-      qc.invalidateQueries({ queryKey: accountingAndSupportQueryKeys.goals.all });
-      qc.invalidateQueries({ queryKey: accountingAndSupportQueryKeys.goals.stats() });
+      apiClient.post<GoalDetail>(`/goals/${goalId}/check-in`, input, undefined, goalDetailC),
+    onSuccess: (updated) => {
+      qc.setQueryData(accountingAndSupportQueryKeys.goals.detail(goalId), updated);
+      forEachGoalList(qc, (cache) => patchGoalsListCache(cache, updated));
+      qc.invalidateQueries({ queryKey: accountingAndSupportQueryKeys.goals.stats(), refetchType: "active" });
     },
   });
 }
@@ -220,9 +306,25 @@ export function useAddGoalLink(goalId: number) {
     mutationKey: ["add", "goal", "link"],
     mutationFn: (input: AddGoalLinkInput) =>
       apiClient.post<GoalLinkCreated>(`/goals/${goalId}/links`, input, undefined, goalLinkCreatedContract),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: goalLinksKey(goalId) });
-      qc.invalidateQueries({ queryKey: accountingAndSupportQueryKeys.goals.detail(goalId) });
+    onSuccess: (created) => {
+      qc.setQueryData<GoalDetail>(accountingAndSupportQueryKeys.goals.detail(goalId), (prev) => {
+        if (!prev) return prev;
+        const newLink = { id: created.id, ticketId: created.ticketId, projectId: created.projectId,
+          createdAt: created.createdAt, ticketTitle: null, ticketProjectId: null, projectName: null, projectKey: null };
+        return { ...prev, links: [...prev.links, newLink] };
+      });
+      const patchItem = (item: GoalListItem): GoalListItem => {
+        if (item.id !== goalId) return item;
+        return {
+          ...item,
+          linkCount: item.linkCount + 1,
+          linkedTicketCount: created.ticketId !== null ? item.linkedTicketCount + 1 : item.linkedTicketCount,
+          linkedProjectCount: created.projectId !== null ? item.linkedProjectCount + 1 : item.linkedProjectCount,
+        };
+      };
+      forEachGoalList(qc, (cache) =>
+        Array.isArray(cache) ? cache.map(patchItem) : { ...cache, items: cache.items.map(patchItem) },
+      );
     },
   });
 }
@@ -233,9 +335,144 @@ export function useRemoveGoalLink(goalId: number) {
     mutationKey: ["remove", "goal", "link"],
     mutationFn: (linkId: number) =>
       apiClient.delete<{ success: boolean }>(`/goals/${goalId}/links?linkId=${linkId}`, undefined, undefined, goalSuccessContract),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: goalLinksKey(goalId) });
-      qc.invalidateQueries({ queryKey: accountingAndSupportQueryKeys.goals.detail(goalId) });
+    onSuccess: (_, linkId) => {
+      const prev = qc.getQueryData<GoalDetail>(accountingAndSupportQueryKeys.goals.detail(goalId));
+      const removed = prev?.links.find((l) => l.id === linkId);
+      qc.setQueryData<GoalDetail>(accountingAndSupportQueryKeys.goals.detail(goalId), (d) => {
+        if (!d) return d;
+        return { ...d, links: d.links.filter((l) => l.id !== linkId) };
+      });
+      const patchItem = (item: GoalListItem): GoalListItem => {
+        if (item.id !== goalId) return item;
+        return {
+          ...item,
+          linkCount: Math.max(0, item.linkCount - 1),
+          linkedTicketCount: removed?.ticketId != null ? Math.max(0, item.linkedTicketCount - 1) : item.linkedTicketCount,
+          linkedProjectCount: removed?.projectId != null ? Math.max(0, item.linkedProjectCount - 1) : item.linkedProjectCount,
+        };
+      };
+      forEachGoalList(qc, (cache) =>
+        Array.isArray(cache) ? cache.map(patchItem) : { ...cache, items: cache.items.map(patchItem) },
+      );
     },
   });
+}
+
+function isGoalsParams(v: unknown): v is GoalsParams {
+  return typeof v === "object" && v !== null && !Array.isArray(v);
+}
+
+function isGoalsListCache(v: unknown): v is GoalsListCache {
+  return Array.isArray(v) || isGoalsListPage(v);
+}
+
+function isGoalsListPage(v: unknown): v is GoalsListPage {
+  if (typeof v !== "object" || v === null) return false;
+  if (!("items" in v) || !("total" in v)) return false;
+  return Array.isArray(v.items);
+}
+
+function patchGoalListCacheForProduct(
+  qc: QueryClient,
+  goalId: number,
+  managedProductId: number,
+  action: "link" | "unlink",
+): void {
+  const listPrefix = accountingAndSupportQueryKeys.goals.list();
+  const cachedLists = qc.getQueriesData({ queryKey: listPrefix });
+  const linkedItem = cachedLists
+    .flatMap(([, cached]) => (isGoalsListPage(cached) ? cached.items : []))
+    .find((item) => item.id === goalId);
+  for (const [key, cached] of cachedLists) {
+    if (!isGoalsListPage(cached)) continue;
+    const raw = key[listPrefix.length] ?? {};
+    const params: GoalsParams = isGoalsParams(raw) ? raw : {};
+    const isProductScoped =
+      typeof params === "object" && "managedProductId" in params &&
+      params.managedProductId === managedProductId;
+
+    if (action === "unlink" && isProductScoped) {
+      qc.setQueryData(key, (prev: GoalsListPage | undefined) => {
+        if (!prev) return prev;
+        return { ...prev, items: prev.items.filter((item) => item.id !== goalId), total: Math.max(0, prev.total - 1) };
+      });
+    } else if (action === "link" && isProductScoped) {
+      if (cached.items.some((item) => item.id === goalId)) continue;
+      if (linkedItem) {
+        const productLinkage = { managedProductId, linkedAt: new Date().toISOString() };
+        qc.setQueryData<GoalsListPage>(key, {
+          ...cached,
+          items: [{ ...linkedItem, productLinkage }, ...cached.items],
+          total: cached.total + 1,
+        });
+      } else {
+        void qc.invalidateQueries({ queryKey: key, exact: true });
+      }
+    } else if (!isProductScoped) {
+      qc.setQueryData(key, (prev: GoalsListPage | undefined) => {
+        if (!prev) return prev;
+        return {
+          ...prev,
+          items: prev.items.map((item) =>
+            item.id === goalId
+              ? { ...item, productLinkage: action === "link" ? { managedProductId, linkedAt: new Date().toISOString() } : null }
+              : item,
+          ),
+        };
+      });
+    }
+  }
+}
+
+interface LinkGoalProductInput {
+  goalId: number;
+  managedProductId: number;
+}
+
+export function useLinkGoalProduct() {
+  const qc = useQueryClient();
+  return useAuthorizedMutation<GoalProductLink, Error, LinkGoalProductInput>(
+    "build:goals:manage",
+    {
+      mutationKey: ["link", "goal", "product"],
+      mutationFn: ({ goalId, managedProductId }) =>
+        apiClient.post<GoalProductLink>(
+          `/goals/${goalId}/products/${managedProductId}`,
+          undefined,
+          undefined,
+          goalProductLinkContract,
+        ),
+      onSuccess: (_, variables) => {
+        patchGoalListCacheForProduct(qc, variables.goalId, variables.managedProductId, "link");
+        void qc.invalidateQueries({
+          queryKey: accountingAndSupportQueryKeys.goals.stats(variables.managedProductId),
+          exact: true,
+        });
+      },
+    },
+  );
+}
+
+export function useUnlinkGoalProduct() {
+  const qc = useQueryClient();
+  return useAuthorizedMutation<void, Error, LinkGoalProductInput>(
+    "build:goals:manage",
+    {
+      mutationKey: ["unlink", "goal", "product"],
+      mutationFn: ({ goalId, managedProductId }) =>
+        apiClient.delete<void>(
+          `/goals/${goalId}/products/${managedProductId}`,
+          undefined,
+          undefined,
+          noContentContract,
+        ),
+      onSuccess: (_, variables) => {
+        patchGoalListCacheForProduct(qc, variables.goalId, variables.managedProductId, "unlink");
+        void qc.invalidateQueries({
+          queryKey: accountingAndSupportQueryKeys.goals.stats(variables.managedProductId),
+          exact: true,
+        });
+      },
+    },
+  );
 }

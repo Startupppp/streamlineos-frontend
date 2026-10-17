@@ -2,7 +2,7 @@
 
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetFooter, SheetBody } from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetFooter, SheetBody } from "@/components/ui/sheet";
 import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { DatePicker } from "@/components/ui/date-picker";
@@ -41,9 +41,10 @@ function HolidayFormInner({
       <SheetContent className="w-full sm:max-w-md p-0 flex flex-col gap-0">
         <SheetHeader className="shrink-0 px-6 py-4 border-b text-left gap-1">
           <SheetTitle>{editingHoliday ? "Edit holiday" : "Add holiday"}</SheetTitle>
+          <SheetDescription className="sr-only">Add or edit a public holiday entry in the leave calendar.</SheetDescription>
         </SheetHeader>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="flex-1 flex flex-col overflow-hidden">
+          <form noValidate onSubmit={form.handleSubmit(onSubmit)} className="flex-1 flex flex-col overflow-hidden">
             <SheetBody className="px-6 py-5 space-y-4">
               <FormField
                 control={form.control}

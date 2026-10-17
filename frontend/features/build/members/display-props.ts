@@ -6,7 +6,7 @@ export interface DisplayProps {
 
 const DISPLAY_PROPS_KEY = "projects_members_display_props";
 
-export const DEFAULT_DISPLAY: DisplayProps = {
+const DEFAULT_DISPLAY: DisplayProps = {
   showRole: true,
   showAdded: true,
   showTeams: true,

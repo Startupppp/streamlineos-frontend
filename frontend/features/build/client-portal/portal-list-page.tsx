@@ -12,7 +12,7 @@ import {
   PmPageShell,
   PmSection,
   PmStaggerList,
-  PM_FILL_PANEL,
+  CONTENT_FILL_PANEL,
   PM_PANEL,
 } from "@/components/pm-chrome";
 import { listItem, listItemReduced, pmSnappy } from "@/lib/motion-presets";
@@ -107,10 +107,10 @@ export function PortalListPage() {
         <PmSection index={0} className="flex min-h-0 flex-1 flex-col">
           {pageState.kind === "empty" ? (
             <EmptyState
-              className={PM_FILL_PANEL}
+              className={CONTENT_FILL_PANEL}
               illustrationPreset="projects"
               title="No projects"
-              description="You don't have access to any projects yet. Contact your project manager."
+              description="Nothing here yet. Contact your project manager if you expect to see a project."
             />
           ) : (
             <PmStaggerList className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -129,7 +129,7 @@ export function PortalListPage() {
                   >
                     <div className="flex min-w-0 items-start gap-3">
                       <div
-                        className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-xs font-bold text-white"
+                        className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-xs font-medium text-white"
                         style={{ backgroundColor: project.color ?? "var(--primary)" }}
                       >
                         {project.key.substring(0, 2)}
@@ -137,7 +137,7 @@ export function PortalListPage() {
                       <div className="min-w-0 flex-1">
                         <TruncatedText
                           text={project.name}
-                          className="text-sm font-semibold text-foreground transition-colors group-hover:text-primary"
+                          className="text-sm font-medium text-foreground transition-colors group-hover:text-primary"
                         />
                         <p className="font-mono text-micro text-muted-foreground">{project.key}</p>
                       </div>

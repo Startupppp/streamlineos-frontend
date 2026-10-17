@@ -1,11 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useProject } from "@/hooks/api/build/projects";
-import { useCycles, useProjectAnalytics } from "@/hooks/api/build/advanced";
-import { useTicketColumnCounts } from "@/hooks/api/build/ticket-queries";
-import { useProjectMilestones } from "@/hooks/api/build/milestones";
-import { usePageState } from "@/hooks/api/use-page-state";
+import { usePathname } from "next/navigation";
 import { PageState } from "@/components/shared/page-state";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import {
@@ -18,7 +14,19 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { formatShortDate } from "@/lib/date-utils";
 import { EmptyState } from "@/components/ui/empty-state";
-import { LayoutGrid, Target, Zap } from "lucide-react";
+import { AlertTriangle, Activity, LayoutGrid, Target, TrendingUp, Zap } from "lucide-react";
+import { useProjectOverviewPage } from "./use-project-overview-page";
+import { projectHealthLabel } from "@/lib/project-health";
+
+function formatOverviewLabel(value: string): string {
+  const words = value.toLowerCase().split(/[_\s]+/).filter(Boolean);
+  if (words.length === 0) return value;
+  return words
+    .map((word, index) =>
+      index === 0 ? word.charAt(0).toUpperCase() + word.slice(1) : word,
+    )
+    .join(" ");
+}
 
 interface ProjectOverviewPageProps {
   projectId: number;
@@ -26,73 +34,45 @@ interface ProjectOverviewPageProps {
 
 function ProjectOverviewSkeleton() {
   return (
-    <div className="flex flex-1 min-h-0 flex-col gap-6">
-      <StatCardGridSkeleton cols={3} count={3} />
-      <div className="grid gap-4 md:grid-cols-2">
-        <Skeleton className="h-32 rounded-xl" />
-        <Skeleton className="h-32 rounded-xl" />
+    <div className="flex min-h-0 flex-1 flex-col gap-6">
+      <StatCardGridSkeleton cols={5} count={5} />
+      <Skeleton className="h-28 w-full max-w-md rounded-xl" />
+      <div className="space-y-2">
+        <Skeleton className="h-4 w-32" />
+        <Skeleton className="h-10 w-full rounded-md" />
+        <Skeleton className="h-10 w-full rounded-md" />
+        <Skeleton className="h-10 w-4/5 rounded-md" />
+      </div>
+      <div className="inline-flex h-9 w-fit items-center gap-1 rounded-lg border border-input p-1">
+        <Skeleton className="h-7 w-16 rounded-md" />
+        <Skeleton className="h-7 w-16 rounded-md" />
+        <Skeleton className="h-7 w-20 rounded-md" />
       </div>
     </div>
   );
 }
 
 export function ProjectOverviewPage({ projectId }: ProjectOverviewPageProps) {
-  const projectQuery = useProject(projectId);
-  const analyticsQuery = useProjectAnalytics(projectId);
-  const cyclesQuery = useCycles(projectId);
-  const columnCountsQuery = useTicketColumnCounts(projectId);
-  const milestonesQuery = useProjectMilestones(projectId);
+  const pathname = usePathname();
+  const {
+    resolution,
+    project,
+    analytics,
+    columnCounts,
+    activeCycle,
+    nextMilestone,
+    nextRelease,
+    totalOpen,
+    completionPct,
+    overdueCount,
+    activityData,
+    isAnalyticsLoading,
+    isCyclesLoading,
+    isOnline,
+    handleRetry,
+  } = useProjectOverviewPage(projectId);
 
-  const isLoading =
-    projectQuery.isLoading ||
-    analyticsQuery.isLoading ||
-    cyclesQuery.isLoading ||
-    columnCountsQuery.isLoading ||
-    milestonesQuery.isLoading;
-
-  const isError =
-    projectQuery.isError ||
-    analyticsQuery.isError ||
-    cyclesQuery.isError ||
-    columnCountsQuery.isError ||
-    milestonesQuery.isError;
-
-  const error =
-    projectQuery.error ??
-    analyticsQuery.error ??
-    cyclesQuery.error ??
-    columnCountsQuery.error ??
-    milestonesQuery.error;
-
-  const resolution = usePageState({
-    permission: "build:view",
-    isLoading,
-    isError,
-    error,
-    isEmpty: !projectQuery.data,
-  });
-
-  const project = projectQuery.data;
-  const analytics = analyticsQuery.data;
-  const cycles = cyclesQuery.data ?? [];
-  const columnCounts = columnCountsQuery.data ?? {};
-  const milestones = milestonesQuery.data ?? [];
-
-  const activeCycle = cycles.find((c) => c.status === "active");
-  const nextMilestone = milestones
-    .filter((m) => m.status === "PENDING")
-    .sort((a, b) => a.targetDate.localeCompare(b.targetDate))[0];
-
-  const totalOpen = Object.values(columnCounts).reduce((sum, n) => sum + n, 0);
   const basePath = `/build/${projectId}`;
-
-  function handleRetry() {
-    void projectQuery.refetch();
-    void analyticsQuery.refetch();
-    void cyclesQuery.refetch();
-    void columnCountsQuery.refetch();
-    void milestonesQuery.refetch();
-  }
 
   return (
     <PageWrapper
@@ -107,50 +87,84 @@ export function ProjectOverviewPage({ projectId }: ProjectOverviewPageProps) {
         loading={<ProjectOverviewSkeleton />}
         empty={
           <EmptyState
+            illustrationPreset="projects"
             title="Project not found"
             description="This project may have been deleted or moved."
-            className="flex-1"
+            className="min-h-full w-full flex-1"
           />
         }
       >
         <div className="flex flex-1 min-h-0 flex-col gap-6">
-          <StatCardGrid cols={3}>
+          {!isOnline && (
+            <p className="text-sm text-muted-foreground px-4 py-2 bg-muted/50 rounded-md">
+              You&apos;re offline — results may not be up to date
+            </p>
+          )}
+
+          <StatCardGrid cols={5} stackOnMobile={2} className="max-md:pr-2">
             <StatCard
               label="Open issues"
-              value={totalOpen}
+              value={totalOpen !== null ? totalOpen : "—"}
               icon={LayoutGrid}
               tone="blue"
-              isLoading={columnCountsQuery.isLoading}
+              isLoading={isAnalyticsLoading}
               href={`${basePath}/issues`}
+            />
+            <StatCard
+              label="Progress"
+              value={completionPct !== null ? `${completionPct}%` : "No data"}
+              icon={TrendingUp}
+              tone={
+                completionPct !== null && completionPct >= 70
+                  ? "emerald"
+                  : completionPct !== null && completionPct >= 40
+                    ? "amber"
+                    : "default"
+              }
+              isLoading={isAnalyticsLoading}
+            />
+            <StatCard
+              label="Overdue"
+              value={overdueCount !== null ? overdueCount : "—"}
+              icon={AlertTriangle}
+              tone={overdueCount !== null && overdueCount > 0 ? "amber" : "default"}
+              isLoading={isAnalyticsLoading}
+              href={overdueCount !== null && overdueCount > 0 ? `${basePath}/issues` : undefined}
             />
             <StatCard
               label="Active cycle"
               value={activeCycle ? activeCycle.name : "None"}
               icon={Zap}
               tone="violet"
-              isLoading={cyclesQuery.isLoading}
+              isLoading={isCyclesLoading}
               href={activeCycle ? `${basePath}/cycles` : undefined}
             />
             <StatCard
               label="Health"
-              value={analytics?.healthStatus ?? "No data"}
+              value={
+                analytics?.healthStatus
+                  ? projectHealthLabel(analytics.healthStatus)
+                  : "No data"
+              }
               icon={Target}
               tone={
-                analytics?.healthStatus === "healthy"
+                analytics?.healthStatus === "EXCELLENT"
                   ? "emerald"
-                  : analytics?.healthStatus === "at_risk"
+                  : analytics?.healthStatus === "GOOD"
                     ? "amber"
-                    : "default"
+                    : analytics?.healthStatus === "AT_RISK" || analytics?.healthStatus === "CRITICAL"
+                      ? "red"
+                      : "default"
               }
-              isLoading={analyticsQuery.isLoading}
+              isLoading={isAnalyticsLoading}
             />
           </StatCardGrid>
 
-          <div className="grid gap-4 md:grid-cols-2">
+          <div className="grid gap-4 md:grid-cols-3">
             {Object.keys(columnCounts).length > 0 && (
               <Card>
                 <CardHeader className="pb-2">
-                  <h2 className="text-sm font-semibold">Issues by status</h2>
+                  <h2 className="text-sm font-medium">Issues by status</h2>
                 </CardHeader>
                 <CardContent className="space-y-2">
                   {Object.entries(columnCounts).map(([status, count]) => (
@@ -159,9 +173,9 @@ export function ProjectOverviewPage({ projectId }: ProjectOverviewPageProps) {
                       className="flex items-center justify-between text-sm"
                     >
                       <span className="text-muted-foreground truncate">
-                        {status}
+                        {formatOverviewLabel(status)}
                       </span>
-                      <span className="font-mono tabular-nums font-medium">
+                      <span className="font-mono tabular-nums font-normal">
                         {count}
                       </span>
                     </div>
@@ -173,7 +187,7 @@ export function ProjectOverviewPage({ projectId }: ProjectOverviewPageProps) {
             {nextMilestone && (
               <Card>
                 <CardHeader className="pb-2">
-                  <h2 className="text-sm font-semibold">Next milestone</h2>
+                  <h2 className="text-sm font-medium">Next milestone</h2>
                 </CardHeader>
                 <CardContent className="space-y-2">
                   <p className="text-sm font-medium truncate">
@@ -188,32 +202,98 @@ export function ProjectOverviewPage({ projectId }: ProjectOverviewPageProps) {
                     variant="outline"
                     className="h-5 px-2 py-0.5 text-micro"
                   >
-                    {nextMilestone.status}
+                    {formatOverviewLabel(nextMilestone.status ?? "Unknown")}
+                  </Badge>
+                </CardContent>
+              </Card>
+            )}
+
+            {nextRelease && (
+              <Card>
+                <CardHeader className="pb-2">
+                  <h2 className="text-sm font-medium">Next release</h2>
+                </CardHeader>
+                <CardContent className="space-y-2">
+                  <p className="text-sm font-medium truncate">
+                    {nextRelease.name}
+                  </p>
+                  {nextRelease.releaseDate && (
+                    <p className="text-label text-muted-foreground">
+                      Planned {formatShortDate(nextRelease.releaseDate)}
+                    </p>
+                  )}
+                  <Badge
+                    variant="outline"
+                    className="h-5 px-2 py-0.5 text-micro"
+                  >
+                    {nextRelease.version}
                   </Badge>
                 </CardContent>
               </Card>
             )}
           </div>
 
-          <div className="flex items-center gap-3 text-sm">
-            <Link
-              href={`${basePath}/issues`}
-              className="text-primary hover:underline"
-            >
-              Issues
-            </Link>
-            <Link
-              href={`${basePath}/cycles`}
-              className="text-primary hover:underline"
-            >
-              Cycles
-            </Link>
-            <Link
-              href={`${basePath}/milestones`}
-              className="text-primary hover:underline"
-            >
-              Milestones
-            </Link>
+          {activityData && activityData.data.length > 0 && (
+            <Card className="max-md:mb-28">
+              <CardHeader className="pb-2">
+                <h2 className="text-sm font-medium flex items-center gap-2">
+                  <Activity className="h-4 w-4" aria-hidden="true" />
+                  Recent activity
+                </h2>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                {activityData.data.map((item) => (
+                  <div key={item.id} className="flex flex-col gap-0.5 text-sm">
+                    <div className="flex items-baseline gap-1 flex-wrap">
+                      <span className="font-medium">
+                        {item.user?.name ?? "System"}
+                      </span>
+                      <span className="text-muted-foreground">{item.label}</span>
+                      <span className="text-muted-foreground">on</span>
+                      <span className="font-medium truncate max-w-[200px]">
+                        {item.projectKey}-{item.ticketNumber}
+                      </span>
+                      <span className="truncate max-w-[200px] text-muted-foreground">
+                        {item.ticketTitle}
+                      </span>
+                    </div>
+                    <span className="text-micro text-muted-foreground">
+                      {formatShortDate(item.createdAt)}
+                    </span>
+                  </div>
+                ))}
+              </CardContent>
+            </Card>
+          )}
+
+          <div
+            role="tablist"
+            aria-label="Project areas"
+            className="mb-[max(0.5rem,env(safe-area-inset-bottom))] inline-flex h-9 max-w-full flex-wrap items-center gap-1 rounded-lg border border-input bg-card p-1 max-md:mb-28 max-md:pr-16"
+          >
+            {[
+              { href: `${basePath}/issues`, label: "Issues" },
+              { href: `${basePath}/cycles`, label: "Cycles" },
+              { href: `${basePath}/milestones`, label: "Milestones" },
+            ].map((tab) => {
+              const selected =
+                pathname === tab.href || pathname.startsWith(`${tab.href}/`);
+              return (
+                <Link
+                  key={tab.href}
+                  href={tab.href}
+                  role="tab"
+                  aria-selected={selected}
+                  className={
+                    selected
+                      ? "inline-flex items-center rounded-md bg-foreground px-3 py-1.5 text-sm font-medium text-background shadow-sm"
+                      : "inline-flex items-center rounded-md px-3 py-1.5 text-sm font-medium text-muted-foreground hover:text-foreground"
+                  }
+                >
+                  {tab.label}
+                </Link>
+              );
+            })}
           </div>
         </div>
       </PageState>

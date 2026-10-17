@@ -1,7 +1,9 @@
 "use client";
 
 import { useState, useEffect, useMemo, useCallback, useRef } from "react";
-import { format, getDay } from "date-fns";
+import { getDay } from "date-fns";
+import { useOrgTimeZone } from "@/hooks/api/org-display";
+import { formatTimeInOrgTz, todayInOrgTz } from "@/lib/date-utils";
 import { toast } from "sonner";
 import {
   useHrAttendanceStatus,
@@ -11,15 +13,22 @@ import {
   useHrHolidaysForCalendar,
 } from "@/hooks/api/hr";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { classifyPunchFailure, type PunchFailureKind } from "./punch-failure";
+
+export interface PunchFailure {
+  kind: PunchFailureKind;
+  message: string;
+}
 
 export function useAttendanceTimer() {
   const [now, setNow] = useState(new Date());
   const [localCooldown, setLocalCooldown] = useState(0);
+  const orgTz = useOrgTimeZone();
 
   const today = useMemo(() => new Date(), []);
   const todayYear = today.getFullYear();
   const todayMonth = today.getMonth();
-  const todayStr = format(today, "yyyy-MM-dd");
+  const todayStr = todayInOrgTz(orgTz);
   const isSundayToday = getDay(today) === 0;
 
   const {
@@ -47,20 +56,32 @@ export function useAttendanceTimer() {
       ? `Today is a holiday (${todayHolidayName}) — check-in is not available`
       : null;
 
+  const [punchFailure, setPunchFailure] = useState<PunchFailure | null>(null);
+  const [punchAcknowledgement, setPunchAcknowledgement] = useState(0);
+
   const checkInMutation = useHrCheckIn({
     onSuccess: () => {
       toast.success("Clocked in successfully");
       setLocalCooldown(0);
+      setPunchFailure(null);
+      setPunchAcknowledgement((count) => count + 1);
     },
-    onError: (err) => toast.error(getErrorMessage(err)),
+    onError: (err) => {
+      const message = getErrorMessage(err);
+      setPunchFailure({ kind: classifyPunchFailure(message), message });
+    },
   });
 
   const checkOutMutation = useHrCheckOut({
     onSuccess: () => {
       toast.success("Clocked out successfully");
       setLocalCooldown(120);
+      setPunchAcknowledgement((count) => count + 1);
     },
-    onError: (err) => toast.error(getErrorMessage(err)),
+    onError: (err) => {
+      const message = getErrorMessage(err);
+      setPunchFailure({ kind: classifyPunchFailure(message), message });
+    },
   });
 
   const [localBreakOverride, setLocalBreakOverride] = useState<boolean | null>(
@@ -154,9 +175,7 @@ export function useAttendanceTimer() {
   }, [now, statusData?.todayLog, localExtraBreakMs, isOnBreak, breakStart]);
 
   const handleCheckIn = useCallback(() => {
-    checkInMutation.mutate({
-      location: undefined,
-    });
+    checkInMutation.mutate({});
   }, [checkInMutation]);
 
   const handleCheckOut = useCallback(() => {
@@ -176,8 +195,16 @@ export function useAttendanceTimer() {
     void refetchStatus();
   }, [refetchStatus]);
 
+  const dismissPunchFailure = useCallback(() => setPunchFailure(null), []);
+
   const dailyStats = statusData?.dailyStats;
   const checkInTime = statusData?.todayLog?.checkIn;
+  const checkOutTime = statusData?.todayLog?.checkOut;
+  const lastPunchLabel = checkOutTime
+    ? `Checked out · ${formatTimeInOrgTz(checkOutTime, orgTz)}`
+    : checkInTime
+      ? `Checked in · ${formatTimeInOrgTz(checkInTime, orgTz)}`
+      : null;
   const cooldownLabel = `${Math.floor(localCooldown / 60)}:${String(localCooldown % 60).padStart(2, "0")}`;
 
   const statusLabel = isBlockedDay
@@ -187,7 +214,7 @@ export function useAttendanceTimer() {
     : isOnBreak
       ? "On break"
       : isCheckedIn && checkInTime
-        ? `Checked in · ${format(new Date(checkInTime), "h:mm a")}`
+        ? `Checked in · ${formatTimeInOrgTz(checkInTime, orgTz)}`
         : isInCooldown
           ? `Cooldown · ${cooldownLabel}`
           : "Not clocked in";
@@ -210,6 +237,10 @@ export function useAttendanceTimer() {
     handleCheckIn,
     handleCheckOut,
     handleBreakToggle,
+    punchFailure,
+    dismissPunchFailure,
+    punchAcknowledgement,
+    lastPunchLabel,
     isCheckingIn: checkInMutation.isPending,
     isCheckingOut: checkOutMutation.isPending,
     isTogglingBreak: breakMutation.isPending,

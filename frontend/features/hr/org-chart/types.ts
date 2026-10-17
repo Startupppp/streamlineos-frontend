@@ -7,6 +7,13 @@ export interface OrgChartNode {
   departmentId: string | null;
   departmentName: string | null;
   hasDirectReports: boolean;
+  /**
+   * V-026. Placement at the top of the chart, as the server knows it.
+   * Optional because a server that predates the fields omits it — see
+   * `splitOrgChartRoots` for the fallback that keeps such a payload working.
+   */
+  isOwner?: boolean;
+  isTopLevel?: boolean;
 }
 
 export interface OrgChartCursorPage {

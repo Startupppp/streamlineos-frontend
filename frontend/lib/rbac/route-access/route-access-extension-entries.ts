@@ -1,6 +1,24 @@
 import type { RouteAccessExtension } from "./route-access-extension-types";
+import { BUILD_PROJECT_VIEW_EXTENSIONS } from "./build-project-view-extension-entries";
 
 export const ROUTE_ACCESS_EXTENSIONS: readonly RouteAccessExtension[] = [
+  ...BUILD_PROJECT_VIEW_EXTENSIONS,
+  {
+    prefix: "/build",
+    exact: true,
+    product: "build",
+    permission: "build:view",
+    reason: "Build entry requires enabled-module access before choosing its landing page.",
+    backendRoute: { method: "get", path: "/build" },
+  },
+  {
+    prefix: "/build/search",
+    exact: true,
+    product: "build",
+    permission: "build:view",
+    reason: "Build search reads the caller's accessible project list and applies narrower product and ticket gates inside the page.",
+    backendRoute: { method: "get", path: "/build" },
+  },
   {
     prefix: "/billing/invoices",
     product: "finance",
@@ -33,13 +51,6 @@ export const ROUTE_ACCESS_EXTENSIONS: readonly RouteAccessExtension[] = [
     backendRoute: { method: "get", path: "/ai/executive-brief" },
   },
   {
-    prefix: "/ask",
-    permission: "kb:pages:view",
-    reason:
-      "Matches the backend gate on the KB ask endpoints. Knowledge Base reading is a member default, so this denies nobody who keeps platform core.",
-    backendRoute: { method: "post", path: "/kb/ask" },
-  },
-  {
     prefix: "/blog/access",
     permission: "blog:access:view",
     reason:
@@ -49,8 +60,7 @@ export const ROUTE_ACCESS_EXTENSIONS: readonly RouteAccessExtension[] = [
     prefix: "/blog/admin",
     permission: "blog:posts:manage",
     reason:
-      "Matches the backend gate on the /blog/admin/* endpoints. Authoring is administration, so it is gated on manage rather than on the public read key.",
-    backendRoute: { method: "get", path: "/blog/admin/posts" },
+      "Redirect stub to the standalone blog admin, which owns editorial writes now that the backend /blog/admin/* operations are retired. It forwards only holders of the authoring key and has no navigation entry.",
   },
   {
     prefix: "/subjects",
@@ -71,6 +81,13 @@ export const ROUTE_ACCESS_EXTENSIONS: readonly RouteAccessExtension[] = [
     reason: "Canonical settings route for notification template administration. Mirrors /notifications/templates which remains as a compatibility redirect.",
   },
   {
+    prefix: "/settings/notifications/email-templates",
+    product: "administration",
+    permission: "settings:email-templates:manage",
+    reason: "Built-in transactional email preview and test send. Matches the backend gate on GET /settings/email-templates/preview and POST /settings/email-templates/test.",
+    backendRoute: { method: "get", path: "/settings/email-templates/preview" },
+  },
+  {
     prefix: "/settings/notifications/events",
     product: "administration",
     permission: "notifications:events:view",
@@ -87,6 +104,20 @@ export const ROUTE_ACCESS_EXTENSIONS: readonly RouteAccessExtension[] = [
     product: "administration",
     permission: "notifications:broadcasts:view",
     reason: "Canonical settings route for broadcast administration. Mirrors /notifications/broadcasts which remains as a compatibility redirect.",
+  },
+  {
+    prefix: "/knowledge/wiki/search",
+    permission: "kb:pages:view",
+    reason:
+      "Full-text page search. Matches the backend gate on GET /kb/pages/full-search (kb:pages:view). Navigation has an entry for it. The key is the one the page's own read declares.",
+    backendRoute: { method: "get", path: "/kb/pages/full-search" },
+  },
+  {
+    prefix: "/knowledge/wiki/company-documents",
+    permission: "kb:pages:view",
+    reason:
+      "HR documents shared into the Knowledge Base. Matches the backend gate on GET /kb/linked-documents (kb:pages:view); which entries a reader sees is decided by the server from their audience, not by this key.",
+    backendRoute: { method: "get", path: "/kb/linked-documents" },
   },
   {
     prefix: "/knowledge/wiki/import",
@@ -126,6 +157,12 @@ export const ROUTE_ACCESS_EXTENSIONS: readonly RouteAccessExtension[] = [
     reason: "Knowledge purge is an administrative destructive surface.",
   },
   {
+    prefix: "/knowledge/wiki/manage",
+    product: "administration",
+    permission: "kb:pages:manage",
+    reason: "Content Health reports unowned, stale and overexposed pages across the whole org, so it is an administrative surface. Key matches kb-content-health.controller.ts.",
+  },
+  {
     prefix: "/directory",
     descendantsOnly: true,
     permission: "directory:people:view",
@@ -145,13 +182,6 @@ export const ROUTE_ACCESS_EXTENSIONS: readonly RouteAccessExtension[] = [
       "Workforce administration records are not the people directory. Root §8 places workers under organization governance and excludes them from the universal directory surface.",
   },
   {
-    prefix: "/chat/settings",
-    product: "administration",
-    permission: "chat:org-settings:manage",
-    reason:
-      "Organisation-wide chat configuration is administrative. Only org owners and admins hold chat:org-settings:manage; it is org-only and cannot be delegated.",
-  },
-  {
     prefix: "/build/managed-products/[managedProductId]/projects",
     product: "build",
     permission: "build:view",
@@ -161,16 +191,16 @@ export const ROUTE_ACCESS_EXTENSIONS: readonly RouteAccessExtension[] = [
   },
   {
     prefix: "/support/kb",
-    permission: "kb:articles:view",
+    permission: "support:kb:view",
     reason:
-      "Helpdesk knowledge articles. Without this entry the prefix resolved to the /support nav gate (dashboard:support:view), an unrelated key from another module, while every read the page issues declares kb:articles:view.",
-    backendRoute: { method: "get", path: "/kb/articles" },
+      "Helpdesk knowledge articles. Without this entry the prefix resolved to the /support nav gate (dashboard:support:view), an unrelated key from another module. The page reads /support/kb/articles and /support/kb/categories and nothing else, and both declare support:kb:view — the key the support-agent role template actually grants. It was kb:articles:view until 2026-09-28, which locked every support agent out of their own surface.",
+    backendRoute: { method: "get", path: "/support/kb/articles" },
   },
   {
-    prefix: "/support/kb/research-briefs",
+    prefix: "/knowledge/research-briefs",
     permission: "kb:pages:view",
     reason:
-      "Research briefs are Knowledge pages, not helpdesk articles. The list page already self-gated on kb:pages:view while its own [briefId] detail resolved to the Helpdesk gate by prefix, so a holder of kb:pages:view saw the list and was denied every row.",
+      "Research briefs live under the Knowledge product. Without this entry the prefix resolves to the generic /knowledge gate, which carries no explicit permission and lets the layout guard alone; a holder of kb:pages:view who lacks an unrelated product-level key was denied.",
     backendRoute: { method: "get", path: "/kb/research-briefs" },
   },
   {
@@ -233,7 +263,7 @@ export const ROUTE_ACCESS_EXTENSIONS: readonly RouteAccessExtension[] = [
   {
     prefix: "/build/[projectId]/cycles",
     product: "build",
-    permission: "build:sprints:view",
+    permission: "build:cycles:view",
     reason: "Cycles supersede sprints and share their iteration-planning read key; the generic build:view let a role without sprint access open cycle planning.",
     backendRoute: { method: "get", path: "/build/{projectId}/cycles" },
   },
@@ -244,6 +274,30 @@ export const ROUTE_ACCESS_EXTENSIONS: readonly RouteAccessExtension[] = [
     reason:
       "Project configuration is a mutation surface, so it takes the update key its own PATCH declares. It resolved to generic build:view, letting anyone who can read a project open its settings, while navigation implied the global settings:manage — the wrong scope, since §8 keeps module configuration under the module.",
     backendRoute: { method: "patch", path: "/build/{projectId}" },
+  },
+  {
+    prefix: "/build/[projectId]/settings/access",
+    product: "build",
+    permission: "build:members:view",
+    reason:
+      "Membership administration takes the members key the page itself declares at project-settings-access-page.tsx:38, and GET /build/members is the route that gates on it. The parent /build/[projectId]/settings entry resolves to build:update, which strands a role that may administer membership without holding the project-update key.",
+    backendRoute: { method: "get", path: "/build/members" },
+  },
+  {
+    prefix: "/build/[projectId]/settings/agents/credentials",
+    product: "build",
+    permission: "settings:api-tokens:read",
+    reason:
+      "Agent credentials are API tokens, and the route that lists them declares settings:api-tokens:read. Inheriting build:update from the parent settings entry would let anyone who can edit a project read its agent tokens, which is a secret-bearing surface and a different scope from project configuration.",
+    backendRoute: { method: "get", path: "/agent-tokens" },
+  },
+  {
+    prefix: "/build/[projectId]/settings/portal",
+    product: "build",
+    permission: "build:clientvisibility:manage",
+    reason:
+      "Portal settings decide what an external client can see, which is the client-visibility key the backend gates on, not generic project update. Inheriting build:update would let any project editor change the external disclosure boundary.",
+    backendRoute: { method: "get", path: "/build/{projectId}/client-visibility" },
   },
   {
     prefix: "/build/[projectId]/budget",
@@ -267,6 +321,14 @@ export const ROUTE_ACCESS_EXTENSIONS: readonly RouteAccessExtension[] = [
     reason:
       "Feedbucket widget administration inside a project. The key is the one its own first read declares; the Feedbucket module toggle is enforced separately by the backend module guard.",
     backendRoute: { method: "get", path: "/feedbucket/widgets" },
+  },
+  {
+    prefix: "/build/[projectId]/chat",
+    product: "build",
+    permission: "chat:channels:read",
+    reason:
+      "A project's chat channel. Its first read is GET /chat/channels/entity/{entityType}/{entityId}, which requires chat:channels:read, and navigation already declares that key; without this entry the route inherits build:view and a member without chat access lands on a failed read.",
+    backendRoute: { method: "get", path: "/chat/channels/entity/{entityType}/{entityId}" },
   },
   {
     prefix: "/calendar/settings",
@@ -346,6 +408,22 @@ export const ROUTE_ACCESS_EXTENSIONS: readonly RouteAccessExtension[] = [
     reason:
       "Product insights aggregates. First read is GET /build/managed-products/{managedProductId}/insights, which requires build:managed-products:view. The parent product route already carries this key; this entry keeps the nav key and route-access resolution in agreement for the parity gate.",
     backendRoute: { method: "get", path: "/build/managed-products/{managedProductId}/insights" },
+  },
+  {
+    prefix: "/build/managed-products/[managedProductId]/releases",
+    product: "build",
+    permission: "build:managed-products:view",
+    reason:
+      "Product releases page. First read is GET /build/managed-products/{managedProductId}/releases, which requires build:managed-products:view. Create, edit, mark-released, archive and restore gate separately on build:managed-products:update; this entry keeps the nav key and route-access resolution in agreement.",
+    backendRoute: { method: "get", path: "/build/managed-products/{managedProductId}/releases" },
+  },
+  {
+    prefix: "/build/managed-products/[managedProductId]/settings",
+    product: "build",
+    permission: "build:managed-products:view",
+    reason:
+      "Product settings page. First read is GET /build/managed-products/{managedProductId}, which requires build:managed-products:view. Edit controls gate separately on build:managed-products:update; this entry keeps the nav key and route-access resolution in agreement.",
+    backendRoute: { method: "get", path: "/build/managed-products/{managedProductId}" },
   },
   {
     prefix: "/build/[projectId]/updates",

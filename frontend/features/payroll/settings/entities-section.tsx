@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Info, CheckCircle, Circle } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Button } from "@/components/ui/button";
 import {
   Select,
   SelectContent,
@@ -17,6 +18,8 @@ import {
 } from "@/hooks/api/payroll/entities";
 import { cn } from "@/lib/utils";
 import { numericSelectChange } from "@/lib/numeric-field";
+import { useCan } from "@/hooks/api/access";
+import { EntityFilingSheet } from "./entity-filing-sheet";
 
 const MATURITY_STYLE: Record<string, string> = {
   production_baseline:
@@ -33,6 +36,17 @@ export function EntitiesSection() {
   const [selectedId, setSelectedId] = useState<number | null>(null);
   const entityId = selectedId ?? entities?.[0]?.id ?? null;
   const { data: context, isLoading: ctxLoading } = useEntityContext(entityId);
+  const canManage = useCan("payroll:policies:manage");
+  const [editing, setEditing] = useState(false);
+  const selectedEntity = entities?.find((e) => e.id === entityId) ?? null;
+
+  function handleEditOpen() {
+    setEditing(true);
+  }
+
+  function handleEditClose() {
+    setEditing(false);
+  }
 
   return (
     <div className="space-y-4">
@@ -86,8 +100,7 @@ export function EntitiesSection() {
         <Skeleton className="h-16 w-full" />
       ) : (entities?.length ?? 0) === 0 ? (
         <p className="text-xs text-muted-foreground">
-          No legal entities yet. Create one via API{" "}
-          <code className="text-dense">POST /payroll/entities</code> (policies manage).
+          No legal entities yet, so there are no filing details to edit.
         </p>
       ) : (
         <div className="space-y-3">
@@ -116,10 +129,17 @@ export function EntitiesSection() {
             <div className="rounded-lg border border-border bg-card p-3 space-y-2">
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <p className="text-xs font-semibold">{context.entity.legalName}</p>
-                <span className="text-dense tabular-nums text-muted-foreground">
-                  Readiness {context.readinessScore.percent}% (
-                  {context.readinessScore.done}/{context.readinessScore.total})
-                </span>
+                <div className="flex items-center gap-2">
+                  <span className="text-dense tabular-nums text-muted-foreground">
+                    Readiness {context.readinessScore.percent}% (
+                    {context.readinessScore.done}/{context.readinessScore.total})
+                  </span>
+                  {canManage && selectedEntity && (
+                    <Button size="sm" variant="outline" onClick={handleEditOpen}>
+                      Edit filing details
+                    </Button>
+                  )}
+                </div>
               </div>
               <div className="flex gap-2 text-dense text-muted-foreground">
                 <Info className="h-3.5 w-3.5 shrink-0 mt-0.5" />
@@ -149,6 +169,10 @@ export function EntitiesSection() {
             </div>
           ) : null}
         </div>
+      )}
+
+      {selectedEntity && editing && (
+        <EntityFilingSheet entity={selectedEntity} onClose={handleEditClose} />
       )}
     </div>
   );

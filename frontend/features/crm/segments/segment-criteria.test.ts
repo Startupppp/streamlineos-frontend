@@ -1,4 +1,4 @@
-import type { SegmentFieldType, SegmentFilterNode } from "@/types/crm/segments";
+import type { ReportingFieldType, ReportingFilterNode } from "@/types/crm/reporting";
 import {
   EMPTY_CRITERION_ROW,
   SEGMENT_OPERATORS_FOR_TYPE,
@@ -18,14 +18,14 @@ import {
  * something different from what the author saved.
  */
 
-const TYPES: Record<string, SegmentFieldType> = {
+const TYPES: Record<string, ReportingFieldType> = {
   industry: "text",
   party_type: "enum",
   health_score: "number",
   created_at: "timestamp",
 };
 
-const typeOf = (field: string): SegmentFieldType | undefined => TYPES[field];
+const typeOf = (field: string): ReportingFieldType | undefined => TYPES[field];
 const labelOf = (field: string): string => field;
 
 const row = (over: Partial<SegmentCriterionDraft>): SegmentCriterionDraft => ({
@@ -149,7 +149,7 @@ describe("criteria back to rows", () => {
      * segment, and rewriting somebody's saved criteria while showing them a
      * form that looks fine is worse than declining to edit them.
      */
-    const disjunction: SegmentFilterNode = {
+    const disjunction: ReportingFilterNode = {
       kind: "or",
       nodes: [
         { kind: "compare", field: "industry", operator: "eq", value: "Textiles" },
@@ -158,7 +158,7 @@ describe("criteria back to rows", () => {
     };
     expect(toCriterionRows(disjunction, typeOf)).toBeNull();
 
-    const nested: SegmentFilterNode = {
+    const nested: ReportingFilterNode = {
       kind: "and",
       nodes: [
         { kind: "compare", field: "industry", operator: "eq", value: "Textiles" },
@@ -174,7 +174,7 @@ describe("criteria back to rows", () => {
      * holds a narrower grant than the author. Rendering it as a blank control
      * would silently drop the criterion on the next save.
      */
-    const withdrawn: SegmentFilterNode = {
+    const withdrawn: ReportingFilterNode = {
       kind: "compare",
       field: "tax_number",
       operator: "eq",
@@ -188,7 +188,7 @@ describe("criteria back to rows", () => {
      * `between` is in the server's vocabulary and absent from this builder. A
      * segment carrying one opens read-only rather than losing its range.
      */
-    const ranged: SegmentFilterNode = {
+    const ranged: ReportingFilterNode = {
       kind: "compare",
       field: "health_score",
       operator: "between",
@@ -201,7 +201,7 @@ describe("criteria back to rows", () => {
 
 describe("criteria as a sentence", () => {
   it("reads as a description of customers, not as a query", () => {
-    const criteria: SegmentFilterNode = {
+    const criteria: ReportingFilterNode = {
       kind: "and",
       nodes: [
         { kind: "compare", field: "industry", operator: "eq", value: "Textiles" },

@@ -1,0 +1,235 @@
+{
+  "backendRevision": "8d5e583ee",
+  "projectId": 54,
+  "ticketId": 359,
+  "requestId": 4,
+  "title": "Synthetic Intake duplicate target verification 46254238",
+  "before": {
+    "observedAt": "2026-10-03T11:34:47.897Z",
+    "readOnly": true,
+    "role": "streamline_app",
+    "counts": {
+      "target_exists": 1,
+      "missing_target_count": 0,
+      "new_title_ticket_count": 0
+    },
+    "rows": []
+  },
+  "checks": [
+    {
+      "case": "missing identifier",
+      "status": 400,
+      "expected": 400,
+      "code": "VALIDATION_FAILED"
+    },
+    {
+      "case": "zero",
+      "status": 400,
+      "expected": 400,
+      "code": "VALIDATION_FAILED"
+    },
+    {
+      "case": "fraction",
+      "status": 400,
+      "expected": 400,
+      "code": "VALIDATION_FAILED"
+    },
+    {
+      "case": "int32 overflow",
+      "status": 400,
+      "expected": 400,
+      "code": "VALIDATION_FAILED"
+    },
+    {
+      "case": "absent ticket",
+      "status": 404,
+      "expected": 404,
+      "code": "NOT_FOUND"
+    },
+    {
+      "case": "same-project accessible target",
+      "status": 200,
+      "expected": 200,
+      "result": {
+        "id": 4,
+        "status": "duplicate",
+        "linkedWorkItemId": 359
+      }
+    },
+    {
+      "case": "already processed repeat",
+      "status": 409,
+      "expected": 409,
+      "code": "CONFLICT"
+    },
+    {
+      "case": "fresh list",
+      "status": 200,
+      "expected": 200,
+      "request": [
+        {
+          "id": 4,
+          "status": "duplicate",
+          "linkedWorkItemId": 359
+        }
+      ]
+    }
+  ],
+  "afterDenied": {
+    "observedAt": "2026-10-03T11:35:38.194Z",
+    "readOnly": true,
+    "role": "streamline_app",
+    "counts": {
+      "target_exists": 1,
+      "missing_target_count": 0,
+      "new_title_ticket_count": 0
+    },
+    "rows": [
+      {
+        "id": 4,
+        "status": "pending",
+        "linked_work_item_id": null
+      }
+    ]
+  },
+  "afterSuccess": {
+    "observedAt": "2026-10-03T11:36:36.331Z",
+    "readOnly": true,
+    "role": "streamline_app",
+    "counts": {
+      "target_exists": 1,
+      "missing_target_count": 0,
+      "new_title_ticket_count": 0
+    },
+    "rows": [
+      {
+        "id": 4,
+        "status": "duplicate",
+        "linked_work_item_id": 359
+      }
+    ]
+  },
+  "independentRead": {
+    "readCompleted": true,
+    "roleVerified": true,
+    "tenantVerified": true,
+    "readOnly": true,
+    "isolation": "repeatable read",
+    "observedAt": "2026-10-03 11:39:38.741513+00",
+    "comparedBackendRevision": "8d5e583ee",
+    "scope": {
+      "orgId": "114fe418-2d7d-4f86-bd85-6a0d1a0040e2",
+      "actorId": "c22bd52b-ecd5-49cb-be9a-38bb09aebe6b",
+      "membershipId": 139,
+      "projectId": 54
+    },
+    "request": {
+      "id": 4,
+      "org_id": "114fe418-2d7d-4f86-bd85-6a0d1a0040e2",
+      "project_id": 54,
+      "title": "Synthetic Intake duplicate target verification 46254238",
+      "status": "duplicate",
+      "linked_work_item_id": 359
+    },
+    "ticket": {
+      "id": 359,
+      "org_id": "114fe418-2d7d-4f86-bd85-6a0d1a0040e2",
+      "project_id": 54,
+      "ticket_number": 3,
+      "live": true
+    },
+    "counts": {
+      "new_title_tickets": 0,
+      "missing_ticket_matches": 0
+    },
+    "checks": {
+      "exactRequestDuplicateLinked": true,
+      "linkedTicketLiveInSameProject": true,
+      "noTicketCreatedWithNewIntakeTitle": true,
+      "requestedMissingTicketAbsentInTenant": true
+    },
+    "limits": [
+      "Exact synthetic persistence observation only",
+      "Missing ticket absence is tenant-scoped",
+      "No database writes",
+      "No browser, authorization or complete role matrix proof"
+    ]
+  },
+  "generatedContractChecks": [
+    {
+      "name": "real create response",
+      "expected": true,
+      "actual": true,
+      "pass": true,
+      "issues": []
+    },
+    {
+      "name": "real update response",
+      "expected": true,
+      "actual": true,
+      "pass": true,
+      "issues": []
+    },
+    {
+      "name": "real list response",
+      "expected": true,
+      "actual": true,
+      "pass": true,
+      "issues": []
+    },
+    {
+      "name": "accessible positive identifier",
+      "expected": true,
+      "actual": true,
+      "pass": true,
+      "issues": []
+    },
+    {
+      "name": "zero identifier",
+      "expected": false,
+      "actual": false,
+      "pass": true,
+      "issues": [
+        {
+          "code": "too_small",
+          "path": [
+            "linkedWorkItemId"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "fractional identifier",
+      "expected": false,
+      "actual": false,
+      "pass": true,
+      "issues": [
+        {
+          "code": "invalid_type",
+          "path": [
+            "linkedWorkItemId"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "overflow identifier",
+      "expected": false,
+      "actual": false,
+      "pass": true,
+      "issues": [
+        {
+          "code": "too_big",
+          "path": [
+            "linkedWorkItemId"
+          ]
+        }
+      ]
+    }
+  ],
+  "limits": [
+    "One synthetic owner/project and same-project target",
+    "Foreign/hidden/deleted target and interleaving runtime matrices remain open",
+    "No browser or deployment proof"
+  ]
+}

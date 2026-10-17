@@ -131,7 +131,7 @@ const WRAPPERS = new Map([
   ["useAuthorizedMutation", "write"],
   ["useAuthorizedIdempotentMutation", "write"],
 ]);
-const SCOPE_MARKERS = new Set(["usePermissionGate", "useCan"]);
+const SCOPE_MARKERS = new Set(["usePermissionGate", "useCan", "useCanState"]);
 
 /** `apiClient` verbs, from lib/api-client. `download`/`upload` are GET/POST. */
 const CLIENT_METHOD = {
@@ -217,7 +217,16 @@ const MIN_REASON_LENGTH = 60;
  * `useModuleEnabled` — a module toggle, which is org configuration and not a
  * permission. Both gaps are why it reported 0 while 48 of these existed.
  */
-const UNGATED_HELD_BACK = new Map();
+const UNGATED_HELD_BACK = new Map([
+  [
+    "hooks/api/timesheets-core/periods.ts",
+    {
+      count: 1,
+      reason:
+        "usePeriod DOES consult permissions, through useCanViewPeriodDetail() — a module-local hook returning useCan(\"timesheets:entries:view\") || useCan(\"timesheets:team:view\") || useCan(\"timesheets:approvals:view\"). This check only follows variable initialisers inside the enclosing function, so a gate expressed as a helper call reads as no gate. It is held back rather than traced because a three-key `enabled` resolves to keys.size > 1, which this check drops from BOTH the bound and the ungated list (self-test case (h)) — teaching it to inline the helper would make the read silently unchecked instead of listed. The divergence is deliberate and documented at the helper: GET /timesheets/periods/:id declares timesheets:entries:view, but the detail sheet is reached from My Time, Team and Approvals, so a manager holding only team or approvals view would otherwise get a disabled query that renders \"no entries\" for a timesheet they can see. The read carries INLINE_READ_ERROR, so a backend 403 shows as an inline failure in the sheet, never as a false empty.",
+    },
+  ],
+]);
 
 const DELIBERATE = new Map([
   [
@@ -1140,6 +1149,21 @@ function runSelfTest() {
     assert(
       "(g) a useCan local referenced by enabled binds that read",
       mismatches.length === 1 && mismatches[0].declared === "hr:expenses:view",
+    );
+  }
+
+  {
+    const { scope, ungated } = scan(`export function useOrgRisks() {
+      const canState = useCanState("support:tickets:view");
+      return useQuery({ enabled: canState !== "denied", queryKey: ["e"], queryFn: () => apiClient.get("/hr/expenses/page-data") });
+    }`);
+    const { mismatches } = classify(scope, bySegments);
+    assert(
+      "(g2) the FE-43 surface shape `useCanState(key) !== \"denied\"` binds the read and is not reported ungated",
+      ungated.length === 0 &&
+        mismatches.length === 1 &&
+        mismatches[0].permission === "support:tickets:view" &&
+        mismatches[0].declared === "hr:expenses:view",
     );
   }
 

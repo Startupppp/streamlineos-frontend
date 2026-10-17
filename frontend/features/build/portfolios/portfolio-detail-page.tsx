@@ -1,36 +1,22 @@
-﻿"use client";
+"use client";
 
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { PlusIcon, XIcon, EllipsisIcon } from "@animateicons/react/lucide";
-import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
-import Link from "next/link";
 import {
-  usePortfolio,
-  useUpdatePortfolio,
   useDeletePortfolio,
   useLinkPortfolioProject,
+  usePortfolio,
   useUnlinkPortfolioProject,
-  useProjects,
-} from "@/hooks/api/build";
+  useUpdatePortfolio,
+} from "@/hooks/api/build/portfolios";
+import { useProjects } from "@/hooks/api/build/projects";
 import { useCan } from "@/hooks/api/access";
-import { useOrgMembers } from "@/hooks/api/organization";
+import { useBuildMembers } from "@/hooks/api/build/build-members";
 import { PageWrapper } from "@/components/ui/page-wrapper";
-import { EmptyState } from "@/components/ui/empty-state";
 import { PageState } from "@/components/shared/page-state";
 import { usePageState } from "@/hooks/api/use-page-state";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { LoadingButton } from "@/components/ui/loading-button";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { useBuildCursorPager } from "@/features/build/shared/use-build-cursor-pager";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import {
   DropdownMenu,
@@ -38,7 +24,10 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { PortfolioStatusBadge, PortfolioHealthBadge } from "./portfolio-status-badge";
+import {
+  PortfolioStatusBadge,
+  PortfolioHealthBadge,
+} from "./portfolio-status-badge";
 import { PortfolioFormSheet } from "./portfolio-form-sheet";
 import type { UpdatePortfolioInput } from "@/types/projects";
 import { getErrorMessage } from "@/lib/get-error-message";
@@ -46,102 +35,18 @@ import {
   PmPageShell,
   PmPanel,
   PmSection,
-  PM_PANEL,
-  PM_ROW,
 } from "@/components/pm-chrome";
-import { TEXT_ONE_LINE, TEXT_BODY } from "@/lib/text-overflow";
+import { TEXT_BODY } from "@/lib/text-overflow";
 import { cn } from "@/lib/utils";
+import { DetailSkeleton } from "./portfolio-detail-helpers";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
+import { EllipsisIcon } from "@animateicons/react/lucide";
+import { PortfolioLinkedProjectsSection } from "./portfolio-linked-projects-section";
+import { PortfolioLinkedProgramsSection } from "./portfolio-linked-programs-section";
 
-function UnlinkProjectButton({
-  projectName,
-  projectId,
-  isPending,
-  onUnlink,
-}: {
-  projectName: string;
-  projectId: number;
-  isPending: boolean;
-  onUnlink: (id: number) => void;
-}) {
-  const { iconRef, hoverHandlers } = useAnimatedIcon();
-  function handleClick() {
-    onUnlink(projectId);
-  }
-  return (
-    <Button
-      variant="ghost"
-      size="icon"
-      className="w-7 shrink-0"
-      onClick={handleClick}
-      disabled={isPending}
-      aria-label={`Unlink ${projectName}`}
-      {...hoverHandlers}
-    >
-      <XIcon ref={iconRef} size={14} />
-    </Button>
-  );
-}
+type Props = { portfolioId: number };
 
-function LinkProjectButton({
-  disabled,
-  isPending,
-  onClick,
-}: {
-  disabled: boolean;
-  isPending: boolean;
-  onClick: () => void;
-}) {
-  const { iconRef, hoverHandlers } = useAnimatedIcon();
-  return (
-    <LoadingButton
-      size="sm"
-      className="gap-1 text-xs"
-      onClick={onClick}
-      disabled={disabled}
-      isPending={isPending}
-      loadingText="Linking…"
-      {...hoverHandlers}
-    >
-      <PlusIcon ref={iconRef} size={12} /> Link
-    </LoadingButton>
-  );
-}
-
-function PortfolioActionsButton() {
-  const { iconRef, hoverHandlers } = useAnimatedIcon();
-  return (
-    <Button variant="outline" {...hoverHandlers}>
-      <EllipsisIcon ref={iconRef} size={14} /> Actions
-    </Button>
-  );
-}
-
-interface Props {
-  portfolioId: number;
-}
-
-function DetailSkeleton() {
-  return (
-    <PmPageShell>
-      <div className={cn(PM_PANEL, "space-y-3 p-4")}>
-        <div className="flex gap-2">
-          <Skeleton className="h-5 w-16 rounded-full" />
-          <Skeleton className="h-5 w-16 rounded-full" />
-          <Skeleton className="h-4 w-32" />
-        </div>
-        <Skeleton className="h-4 w-full" />
-        <Skeleton className="h-4 w-2/3" />
-      </div>
-      <div className={cn(PM_PANEL, "space-y-2 p-2")}>
-        {Array.from({ length: 8 }).map((_, i) => (
-          <Skeleton key={i} className="h-10 w-full rounded-md" />
-        ))}
-      </div>
-    </PmPageShell>
-  );
-}
-
-export function PortfolioDetailPage({ portfolioId }: Props) {
+function PortfolioDetailContent({ portfolioId }: Props) {
   const canManage = useCan("build:portfolios:manage");
   const router = useRouter();
 
@@ -149,7 +54,24 @@ export function PortfolioDetailPage({ portfolioId }: Props) {
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [linkProjectId, setLinkProjectId] = useState("");
 
-  const { data, isLoading, isError, error, refetch } = usePortfolio(portfolioId);
+  const projectsPager = useBuildCursorPager();
+  const programsPager = useBuildCursorPager();
+  const { data, isLoading, isError, error, refetch } = usePortfolio(
+    portfolioId,
+    {
+      projectsCursor: projectsPager.cursor,
+      programsCursor: programsPager.cursor,
+    },
+  );
+
+  const linkedProjects = useMemo(
+    () => data?.projects.data ?? [],
+    [data?.projects.data],
+  );
+  const linkedPrograms = useMemo(
+    () => data?.programs.data ?? [],
+    [data?.programs.data],
+  );
 
   const resolution = usePageState({
     permission: "build:portfolios:view",
@@ -159,7 +81,7 @@ export function PortfolioDetailPage({ portfolioId }: Props) {
     isEmpty: data === undefined,
   });
   const { data: allProjectsRes } = useProjects({ limit: 200 });
-  const { data: membersRes } = useOrgMembers(1, 100);
+  const { data: membersRes } = useBuildMembers({ limit: 100 });
   const members = useMemo(() => membersRes?.data ?? [], [membersRes]);
 
   const updatePortfolio = useUpdatePortfolio();
@@ -169,13 +91,13 @@ export function PortfolioDetailPage({ portfolioId }: Props) {
 
   function memberName(userId: string | null): string {
     if (!userId) return "—";
-    const m = members.find((x) => x.userId === userId);
+    const m = members.find((x) => x.id === userId);
     return m?.name ?? m?.email ?? "Unknown";
   }
 
   const linkedIds = useMemo(
-    () => new Set((data?.projects ?? []).map((p) => p.id)),
-    [data?.projects],
+    () => new Set(linkedProjects.map((p) => p.id)),
+    [linkedProjects],
   );
   const availableProjects = useMemo(
     () => (allProjectsRes?.data ?? []).filter((p) => !linkedIds.has(p.id)),
@@ -208,6 +130,7 @@ export function PortfolioDetailPage({ portfolioId }: Props) {
       onSuccess: () => {
         toast.success("Project linked");
         setLinkProjectId("");
+        projectsPager.reset();
       },
       onError: (e) => toast.error(getErrorMessage(e)),
     });
@@ -215,23 +138,23 @@ export function PortfolioDetailPage({ portfolioId }: Props) {
 
   function handleUnlink(projectId: number) {
     unlinkProject.mutate(projectId, {
-      onSuccess: () => toast.success("Project unlinked"),
+      onSuccess: () => {
+        toast.success("Project unlinked");
+        projectsPager.reset();
+      },
       onError: (e) => toast.error(getErrorMessage(e)),
     });
-  }
-
-  function handleOpenEdit() {
-    setEditOpen(true);
-  }
-
-  function handleOpenDelete() {
-    setDeleteOpen(true);
   }
 
   function handleRetry() {
     void refetch();
   }
-
+  function handleProjectsNext() {
+    projectsPager.goNext(data?.projects.pagination.nextCursor);
+  }
+  function handleProgramsNext() {
+    programsPager.goNext(data?.programs.pagination.nextCursor);
+  }
   function handleNoopCreate() {
     return undefined;
   }
@@ -249,7 +172,11 @@ export function PortfolioDetailPage({ portfolioId }: Props) {
       <PageWrapper title="Portfolio" backHref="/build/portfolios">
         <PmPageShell>
           <PmSection index={0} className="flex min-h-0 flex-1 flex-col">
-            <PageState resolution={resolution} loading={<DetailSkeleton />} onRetry={handleRetry}>
+            <PageState
+              resolution={resolution}
+              loading={<DetailSkeleton />}
+              onRetry={handleRetry}
+            >
               {null}
             </PageState>
           </PmSection>
@@ -266,11 +193,16 @@ export function PortfolioDetailPage({ portfolioId }: Props) {
         canManage ? (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <PortfolioActionsButton />
+              <AnimatedIconButton icon={EllipsisIcon} iconSize={14} variant="outline">Actions</AnimatedIconButton>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={handleOpenEdit}>Edit Portfolio</DropdownMenuItem>
-              <DropdownMenuItem variant="destructive" onClick={handleOpenDelete}>
+              <DropdownMenuItem onClick={() => setEditOpen(true)}>
+                Edit Portfolio
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                variant="destructive"
+                onClick={() => setDeleteOpen(true)}
+              >
                 Delete Portfolio
               </DropdownMenuItem>
             </DropdownMenuContent>
@@ -286,101 +218,55 @@ export function PortfolioDetailPage({ portfolioId }: Props) {
               <PortfolioHealthBadge health={data.health} />
               <span className="text-sm text-muted-foreground">
                 Owner:{" "}
-                <span className="text-foreground">{memberName(data.ownerId)}</span>
+                <span className="text-foreground">
+                  {memberName(data.ownerId)}
+                </span>
               </span>
             </div>
-
             {data.strategicGoal ? (
               <div>
-                <p className="mb-1 text-dense font-semibold uppercase tracking-wider text-muted-foreground">
+                <p className="mb-1 text-dense font-medium uppercase tracking-wider text-muted-foreground">
                   Strategic Goal
                 </p>
-                <p className={cn(TEXT_BODY, "text-sm text-foreground")}>{data.strategicGoal}</p>
+                <p className={cn(TEXT_BODY, "text-sm text-foreground")}>
+                  {data.strategicGoal}
+                </p>
               </div>
             ) : null}
-
             {data.description ? (
               <div>
-                <p className="mb-1 text-dense font-semibold uppercase tracking-wider text-muted-foreground">
+                <p className="mb-1 text-dense font-medium uppercase tracking-wider text-muted-foreground">
                   Description
                 </p>
-                <p className={cn(TEXT_BODY, "text-sm text-muted-foreground")}>{data.description}</p>
+                <p className={cn(TEXT_BODY, "text-sm text-muted-foreground")}>
+                  {data.description}
+                </p>
               </div>
             ) : null}
           </PmPanel>
         </PmSection>
 
-        <PmSection index={1} className="space-y-3">
-          <div className="flex min-w-0 flex-wrap items-center justify-between gap-2">
-            <p className="text-dense font-semibold uppercase tracking-wider text-muted-foreground">
-              Linked Projects
-              {data.projects.length > 0 ? ` (${data.projects.length})` : ""}
-            </p>
-            {canManage && availableProjects.length > 0 ? (
-              <div className="flex min-w-0 flex-wrap items-center gap-2">
-                <Select value={linkProjectId} onValueChange={setLinkProjectId}>
-                  <SelectTrigger className="w-48">
-                    <SelectValue placeholder="Link a project…" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {availableProjects.map((p) => (
-                      <SelectItem key={p.id} value={String(p.id)}>
-                        {p.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <LinkProjectButton
-                  disabled={!linkProjectId}
-                  isPending={linkProject.isPending}
-                  onClick={handleLink}
-                />
-              </div>
-            ) : null}
-          </div>
+        <PortfolioLinkedProjectsSection
+          linkedProjects={linkedProjects}
+          canManage={canManage}
+          availableProjects={availableProjects}
+          linkProjectId={linkProjectId}
+          onLinkProjectIdChange={setLinkProjectId}
+          isLinkPending={linkProject.isPending}
+          isUnlinkPending={unlinkProject.isPending}
+          onLink={handleLink}
+          onUnlink={handleUnlink}
+          hasMore={data.projects.pagination.hasMore}
+          pager={projectsPager}
+          onNext={handleProjectsNext}
+        />
 
-          {data.projects.length === 0 ? (
-            <PmPanel className="flex items-center justify-center p-4">
-              <EmptyState
-                illustrationPreset="projects"
-                title="No linked projects"
-                description="Link projects to this portfolio to track them here."
-                compact
-              />
-            </PmPanel>
-          ) : (
-            <PmPanel>
-              {data.projects.map((proj) => (
-                <div key={proj.id} className={PM_ROW}>
-                  <span className="shrink-0 font-mono text-xs text-muted-foreground">
-                    {proj.key}
-                  </span>
-                  <Link
-                    href={`/build/${proj.id}`}
-                    className={cn(
-                      TEXT_ONE_LINE,
-                      "flex-1 text-sm font-medium text-foreground hover:text-primary",
-                    )}
-                    title={proj.name}
-                  >
-                    {proj.name}
-                  </Link>
-                  <Badge variant="outline" className="shrink-0 px-1.5 py-0.5 text-micro">
-                    {proj.status}
-                  </Badge>
-                  {canManage ? (
-                    <UnlinkProjectButton
-                      projectName={proj.name}
-                      projectId={proj.id}
-                      isPending={unlinkProject.isPending}
-                      onUnlink={handleUnlink}
-                    />
-                  ) : null}
-                </div>
-              ))}
-            </PmPanel>
-          )}
-        </PmSection>
+        <PortfolioLinkedProgramsSection
+          linkedPrograms={linkedPrograms}
+          hasMore={data.programs.pagination.hasMore}
+          pager={programsPager}
+          onNext={handleProgramsNext}
+        />
       </PmPageShell>
 
       <PortfolioFormSheet
@@ -405,4 +291,8 @@ export function PortfolioDetailPage({ portfolioId }: Props) {
       />
     </PageWrapper>
   );
+}
+
+export function PortfolioDetailPage({ portfolioId }: Props) {
+  return <PortfolioDetailContent key={portfolioId} portfolioId={portfolioId} />;
 }

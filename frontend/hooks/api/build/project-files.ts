@@ -8,6 +8,7 @@ import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
 import { useCan } from "@/hooks/api/access";
 import { NO_CURSOR_YET } from "@/hooks/api/cursor-page-param";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import { readFileAsBase64 } from "@/lib/read-file-as-base64";
 
 const filePageContract = lazyContract(() =>
   import("@/hooks/api/build/project-files-schema").then((m) => m.filePageContract),
@@ -34,33 +35,55 @@ export interface ProjectFileRow {
   deletedAt: string | null;
 }
 
-export interface ProjectFilePage {
+interface ProjectFilePage {
   data: ProjectFileRow[];
   pagination: { limit: number; hasMore: boolean; nextCursor: string | null };
 }
 
-export interface UploadProjectFileInput {
-  fileName: string;
-  mimeType: string;
-  contentBase64: string;
+export const MAX_PROJECT_FILE_BYTES = 2 * 1024 * 1024;
+
+export const PROJECT_FILE_MIME_TYPES = [
+  "application/pdf",
+  "image/jpeg",
+  "image/png",
+  "image/webp",
+  "image/gif",
+  "text/plain",
+  "text/csv",
+  "application/msword",
+  "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+  "application/vnd.ms-excel",
+  "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+];
+
+export const PROJECT_FILE_TYPES_LABEL =
+  "PDF, JPG, PNG, GIF, WEBP, TXT, CSV, DOC, DOCX, XLS, XLSX";
+
+export function isAllowedProjectFileType(mimeType: string): boolean {
+  return PROJECT_FILE_MIME_TYPES.includes(mimeType);
 }
 
-export interface ProjectFileSignedUrl {
+interface ProjectFileSignedUrl {
   url: string;
   expiresIn: number;
 }
 
-export function useProjectFiles(projectId: number) {
+export function useProjectFiles(projectId: number, filters?: { q?: string }) {
   const canView = useCan("build:files:view");
+  const keyFilters = filters?.q ? { q: filters.q } : undefined;
   const query = useInfiniteQuery({
-    queryKey: buildWorkQueryKeys.projects.files.list(projectId),
-    queryFn: ({ signal, pageParam }) =>
-      apiClient.get<ProjectFilePage>(
+    queryKey: buildWorkQueryKeys.projects.files.list(projectId, keyFilters),
+    queryFn: ({ signal, pageParam }) => {
+      const params: Record<string, string> = {};
+      if (pageParam !== undefined) params["cursor"] = pageParam;
+      if (filters?.q) params["q"] = filters.q;
+      return apiClient.get<ProjectFilePage>(
         `/build/${projectId}/files`,
-        pageParam !== undefined ? { cursor: pageParam } : {},
+        params,
         signal,
         filePageContract,
-      ),
+      );
+    },
     initialPageParam: NO_CURSOR_YET,
     getNextPageParam: (page) => page.pagination.nextCursor ?? undefined,
     enabled: canView && !!projectId,
@@ -77,10 +100,14 @@ export function useUploadProjectFile(projectId: number) {
   const qc = useQueryClient();
   return useAuthorizedMutation("build:files:manage", {
     mutationKey: ["projects", projectId, "files", "upload"],
-    mutationFn: (input: UploadProjectFileInput) =>
+    mutationFn: async (file: File) =>
       apiClient.post<ProjectFileRow>(
         `/build/${projectId}/files`,
-        input,
+        {
+          fileName: file.name,
+          mimeType: file.type || "application/octet-stream",
+          contentBase64: await readFileAsBase64(file),
+        },
         undefined,
         fileRowContract,
       ),
@@ -105,6 +132,7 @@ export function useProjectFileSignedUrl(projectId: number, fileId: number | null
       ),
     enabled: canView && !!projectId && fileId !== null,
     staleTime: 55_000,
+    throwOnError: false,
   });
 }
 

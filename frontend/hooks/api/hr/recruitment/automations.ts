@@ -64,11 +64,16 @@ interface ToggleAutomationInput {
 }
 
 export function useRecruitmentAutomations() {
-  const can = useCan("hr:employees:view");
+  const can = useCan("hr:requisitions:view");
   return useQuery({
     queryKey: humanResourcesQueryKeys.hr.pipelineAutomations(),
     queryFn: ({ signal }) =>
-      apiClient.get<PipelineAutomation[]>("/hr/recruitment/automations", undefined, signal, automationListContract),
+      apiClient.get<PipelineAutomation[]>(
+        "/hr/recruitment/automations",
+        undefined,
+        signal,
+        automationListContract,
+      ),
     staleTime: 60_000,
     enabled: can,
   });
@@ -76,42 +81,68 @@ export function useRecruitmentAutomations() {
 
 export function useCreateRecruitmentAutomation() {
   const qc = useQueryClient();
-  return useAuthorizedMutation<PipelineAutomation, Error, CreateAutomationInput>(
-    "hr:employees:manage",
-    {
-      mutationKey: ["hr", "recruitment", "automations", "create"],
-      mutationFn: (data) =>
-        apiClient.post<PipelineAutomation>("/hr/recruitment/automations", data, undefined, automationContract),
-      onSuccess: () => {
-        void qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.pipelineAutomations() });
-      },
+  return useAuthorizedMutation<
+    PipelineAutomation,
+    Error,
+    CreateAutomationInput
+  >("hr:requisitions:manage", {
+    mutationKey: ["hr", "recruitment", "automations", "create"],
+    mutationFn: (data) =>
+      apiClient.post<PipelineAutomation>(
+        "/hr/recruitment/automations",
+        data,
+        undefined,
+        automationContract,
+      ),
+    onSuccess: () => {
+      void qc.invalidateQueries({
+        queryKey: humanResourcesQueryKeys.hr.pipelineAutomations(),
+      });
     },
-  );
+  });
 }
 
 export function useToggleRecruitmentAutomation() {
   const qc = useQueryClient();
-  return useAuthorizedMutation<PipelineAutomation, Error, ToggleAutomationInput>(
-    "hr:employees:manage",
-    {
-      mutationKey: ["hr", "recruitment", "automations", "toggle"],
-      mutationFn: ({ automationId, isActive }) =>
-        apiClient.patch<PipelineAutomation>(`/hr/recruitment/automations/${automationId}`, { isActive }, undefined, automationContract),
-      onSuccess: () => {
-        void qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.pipelineAutomations() });
-      },
+  return useAuthorizedMutation<
+    PipelineAutomation,
+    Error,
+    ToggleAutomationInput
+  >("hr:requisitions:manage", {
+    mutationKey: ["hr", "recruitment", "automations", "toggle"],
+    mutationFn: ({ automationId, isActive }) =>
+      apiClient.patch<PipelineAutomation>(
+        `/hr/recruitment/automations/${automationId}`,
+        { isActive },
+        undefined,
+        automationContract,
+      ),
+    onSuccess: () => {
+      void qc.invalidateQueries({
+        queryKey: humanResourcesQueryKeys.hr.pipelineAutomations(),
+      });
     },
-  );
+  });
 }
 
 export function useDeleteRecruitmentAutomation() {
   const qc = useQueryClient();
-  return useAuthorizedMutation<{ success: boolean }, Error, number>("hr:employees:manage", {
-    mutationKey: ["hr", "recruitment", "automations", "delete"],
-    mutationFn: (automationId) =>
-      apiClient.delete<{ success: boolean }>(`/hr/recruitment/automations/${automationId}`, undefined, undefined, automationSuccessContract),
-    onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.pipelineAutomations() });
+  return useAuthorizedMutation<{ success: boolean }, Error, number>(
+    "hr:requisitions:manage",
+    {
+      mutationKey: ["hr", "recruitment", "automations", "delete"],
+      mutationFn: (automationId) =>
+        apiClient.delete<{ success: boolean }>(
+          `/hr/recruitment/automations/${automationId}`,
+          undefined,
+          undefined,
+          automationSuccessContract,
+        ),
+      onSuccess: () => {
+        void qc.invalidateQueries({
+          queryKey: humanResourcesQueryKeys.hr.pipelineAutomations(),
+        });
+      },
     },
-  });
+  );
 }

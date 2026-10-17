@@ -2,9 +2,11 @@
 
 import { ShieldAlert } from "lucide-react";
 import { cn } from "@/lib/utils";
+import type { PermissionKey } from "@/lib/rbac/permissions";
+import { permissionKeyLabel } from "@/lib/rbac/administering-module";
 
 interface NoPermissionStateProps {
-  permission?: string;
+  permission?: PermissionKey | readonly PermissionKey[];
   title?: string;
   description?: string;
   className?: string;
@@ -18,6 +20,7 @@ export function NoPermissionState({
   className,
   compact = false,
 }: NoPermissionStateProps) {
+  const permissions = permission === undefined ? [] : typeof permission === "string" ? [permission] : permission;
   return (
     <div
       className={cn(
@@ -42,12 +45,24 @@ export function NoPermissionState({
           compact ? "text-xs" : "text-sm",
         )}
       >
-        {description ?? "You don’t have the required permission for this section."}
+        {description ?? (permissions.length === 1 && permissions[0] ? `You need the ${permissionKeyLabel(permissions[0])} permission.` : "You don’t have the required permission for this section.")}
       </p>
-      {permission ? (
-        <p className="text-xs text-foreground/80 font-mono bg-muted px-2 py-1 rounded">
-          {permission}
-        </p>
+      {permissions.length > 0 ? (
+        <details className="mt-1">
+          <summary className="text-xs text-muted-foreground cursor-pointer select-none">
+            Permission details
+          </summary>
+          {permissions.length > 1 ? (
+            <p className="text-xs text-muted-foreground mt-1">Any one of these permissions grants access:</p>
+          ) : null}
+          <div className="mt-1 flex max-w-md flex-wrap justify-center gap-1.5">
+            {permissions.map((key) => (
+              <p key={key} className="text-xs text-foreground/80 font-mono bg-muted px-2 py-1 rounded">
+                {key}
+              </p>
+            ))}
+          </div>
+        </details>
       ) : null}
       {compact ? null : (
         <p className="text-xs text-muted-foreground mt-3">

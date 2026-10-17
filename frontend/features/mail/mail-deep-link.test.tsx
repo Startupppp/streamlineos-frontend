@@ -9,11 +9,8 @@ const replaceMock = jest.fn<void, [string, (Record<string, unknown> | undefined)
 const mailActionMutate = jest.fn();
 let canManageMail = true;
 
-let capturedReadingPaneProps: { selectedMessage: MailMessageSummary } | null = null;
-
 jest.mock("./mail-reading-pane", () => ({
   MailReadingPane: (props: { selectedMessage: MailMessageSummary }) => {
-    capturedReadingPaneProps = props;
     return (
       <div
         data-testid="reading-pane"
@@ -43,7 +40,7 @@ jest.mock("./mail-shell-skeletons", () => ({
 }));
 
 jest.mock("next/dynamic", () => {
-  const React: typeof import("react") = require("react");
+  const React: typeof import("react") = jest.requireActual("react");
   return function mockDynamic(
     loader: () => Promise<{ default: React.ComponentType<Record<string, unknown>> }>,
   ) {
@@ -103,6 +100,10 @@ const ACCOUNT_NEEDS_REAUTH: MailAccount = {
 
 let mockAccounts: MailAccount[] = [ACCOUNT_ACTIVE];
 
+jest.mock("@/hooks/api/inbox", () => ({
+  useUnifiedInboxCount: () => ({ data: undefined }),
+}));
+
 jest.mock("@/hooks/api/mail", () => ({
   useMailAccounts: () => ({ data: mockAccounts, isLoading: false }),
   useMailAction: () => ({ mutate: mailActionMutate, isPending: false }),
@@ -157,7 +158,6 @@ function renderShell() {
 beforeEach(() => {
   mockSearchParams = new URLSearchParams();
   mockAccounts = [ACCOUNT_ACTIVE];
-  capturedReadingPaneProps = null;
   canManageMail = true;
   replaceMock.mockReset();
   mailActionMutate.mockReset();

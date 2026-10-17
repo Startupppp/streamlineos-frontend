@@ -1,40 +1,25 @@
 "use client";
 
 import { useCallback, useState } from "react";
-import { FileClock, FileWarning } from "lucide-react";
 import { UploadIcon } from "@animateicons/react/lucide";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
-import { ErrorState } from "@/components/shared";
+import { PageState } from "@/components/shared/page-state";
+import { usePageState } from "@/hooks/api/use-page-state";
+import { useCan } from "@/hooks/api/access";
+import { CursorPageControls } from "@/components/ui/cursor-page-controls";
 import { EmptyState } from "@/components/ui/empty-state";
-import { Badge } from "@/components/ui/badge";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 import { PAGE_BODY_EMPTY_CLASS, PAGE_BODY_SKELETON_CLASS } from "@/components/ui/content-fill-panel";
-import { useMyOnboardingDocs } from "@/hooks/api/hr/documents";
-import { getErrorMessage } from "@/lib/get-error-message";
-import type { MyOnboardingDocStatus } from "@/hooks/api/hr/documents";
+import {
+  MY_DOCS_PAGE_SIZE,
+  useMyOnboardingDocs,
+  type MyOnboardingDoc,
+} from "@/hooks/api/hr/documents";
 import { UploadDocSheet } from "@/features/hr/document-review/upload-doc-sheet";
-
-const STATUS_LABELS: Record<MyOnboardingDocStatus, string> = {
-  PENDING: "Pending",
-  SUBMITTED: "Under review",
-  APPROVED: "Approved",
-  REJECTED: "Rejected",
-  RE_UPLOAD_REQUESTED: "Re-upload requested",
-};
-
-const STATUS_CLASSES: Record<MyOnboardingDocStatus, string> = {
-  PENDING:
-    "border-status-warning-rule bg-status-warning-surface text-status-warning-ink",
-  SUBMITTED:
-    "border-status-info-rule bg-status-info-surface text-status-info-ink",
-  APPROVED:
-    "border-status-success-rule bg-status-success-surface text-status-success-ink",
-  REJECTED:
-    "border-status-danger-rule bg-status-danger-surface text-status-danger-ink",
-  RE_UPLOAD_REQUESTED:
-    "border-status-warning-rule bg-status-warning-surface text-status-warning-ink",
-};
+import { MyDocumentRow } from "@/features/hr/document-review/my-document-row";
 
 function DocumentsSkeleton() {
   return (
@@ -48,9 +33,41 @@ function DocumentsSkeleton() {
 
 export function MyDocumentsPage() {
   const [uploadOpen, setUploadOpen] = useState(false);
-  const documents = useMyOnboardingDocs();
-
+  const [pendingOnly, setPendingOnly] = useState(false);
+  const [cursors, setCursors] = useState<Array<string | undefined>>([undefined]);
+  const canUpload = useCan("self:onboarding-docs");
+  const documents = useMyOnboardingDocs({
+    cursor: cursors.at(-1),
+    limit: MY_DOCS_PAGE_SIZE,
+    ...(pendingOnly ? { status: "PENDING" as const } : {}),
+  });
+  const pageState = usePageState({
+    permission: "self:onboarding-docs",
+    isLoading: documents.isLoading,
+    isError: documents.isError,
+    error: documents.error,
+    isEmpty: (documents.data?.data.length ?? 0) === 0,
+  });
+  const { refetch } = documents;
+  const handleRetry = useCallback(() => void refetch(), [refetch]);
   const handleOpenUpload = useCallback(() => setUploadOpen(true), []);
+  const handleRowUpload = useCallback((_doc: MyOnboardingDoc) => setUploadOpen(true), []);
+
+  const handleTogglePendingOnly = useCallback((next: boolean) => {
+    setPendingOnly(next);
+    setCursors([undefined]);
+  }, []);
+  const handlePrevious = useCallback(
+    () => setCursors((current) => current.slice(0, -1)),
+    [],
+  );
+  const handleNext = useCallback(() => {
+    const nextCursor = documents.data?.pagination?.nextCursor;
+    if (nextCursor) setCursors((current) => [...current, nextCursor]);
+  }, [documents.data?.pagination?.nextCursor]);
+
+  const rows = documents.data?.data ?? [];
+  const hasMore = documents.data?.pagination?.hasMore ?? false;
 
   return (
     <PageWrapper
@@ -58,69 +75,70 @@ export function MyDocumentsPage() {
       subtitle="Track the documents requested for your employment record."
       noInternalScroll
       contentClassName="flex min-h-0 flex-1 flex-col"
+      filters={
+        <div className="flex items-center gap-2">
+          <Switch
+            id="my-documents-pending-only"
+            checked={pendingOnly}
+            onCheckedChange={handleTogglePendingOnly}
+          />
+          <Label
+            htmlFor="my-documents-pending-only"
+            className="text-dense text-muted-foreground"
+          >
+            Pending only
+          </Label>
+        </div>
+      }
       actions={
-        <AnimatedIconButton icon={UploadIcon} onClick={handleOpenUpload}>
-          Upload Document
-        </AnimatedIconButton>
+        canUpload ? (
+          <AnimatedIconButton icon={UploadIcon} onClick={handleOpenUpload}>
+            Upload Document
+          </AnimatedIconButton>
+        ) : undefined
       }
     >
-      {documents.isLoading ? <DocumentsSkeleton /> : null}
-
-      {documents.isError ? (
-        <ErrorState
-          className={PAGE_BODY_EMPTY_CLASS}
-          title="Documents unavailable"
-          description={getErrorMessage(documents.error)}
-          onRetry={documents.refetch}
-        />
-      ) : null}
-
-      {!documents.isLoading && !documents.isError && documents.data?.data.length === 0 ? (
-        <EmptyState
-          illustrationPreset="documents"
-          title="No documents requested"
-          description="Your organization has not requested any employment documents."
-          className={PAGE_BODY_EMPTY_CLASS}
-        />
-      ) : null}
-
-      {!documents.isLoading && !documents.isError && documents.data?.data.length ? (
-        <div className="min-h-0 flex-1 divide-y overflow-y-auto rounded-xl border border-border bg-card">
-          {documents.data.data.map((document) => {
-            const needsAttention =
-              document.status === "PENDING" ||
-              document.status === "REJECTED" ||
-              document.status === "RE_UPLOAD_REQUESTED";
-            const StatusIcon = needsAttention ? FileWarning : FileClock;
-
-            return (
-              <div
+      <PageState
+        resolution={pageState}
+        onRetry={handleRetry}
+        className={PAGE_BODY_EMPTY_CLASS}
+        loading={<DocumentsSkeleton />}
+        empty={
+          <EmptyState
+            illustrationPreset="documents"
+            title={pendingOnly ? "Nothing pending" : "No documents requested"}
+            description={
+              pendingOnly
+                ? "You have no documents waiting on an upload. Switch off the filter to see the rest of your vault."
+                : "Your organization has not requested any employment documents."
+            }
+            className={PAGE_BODY_EMPTY_CLASS}
+          />
+        }
+      >
+        <div className="flex min-h-0 flex-1 flex-col gap-2">
+          <div className="min-h-0 flex-1 divide-y overflow-y-auto rounded-xl border border-border bg-card">
+            {rows.map((document) => (
+              <MyDocumentRow
                 key={document.id}
-                className="flex min-w-0 items-center gap-3 px-4 py-3"
-              >
-                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-muted">
-                  <StatusIcon className="h-4 w-4 text-muted-foreground" />
-                </div>
-                <div className="min-w-0 flex-1">
-                  <p className="truncate text-label font-medium text-foreground">
-                    {document.documentTypeName}
-                  </p>
-                  <p className="truncate text-dense text-muted-foreground">
-                    {document.remarks ??
-                      (document.isMandatory ? "Required document" : "Optional document")}
-                  </p>
-                </div>
-                <Badge
-                  variant="outline"
-                  className={`h-5 shrink-0 px-2 py-0.5 text-micro ${STATUS_CLASSES[document.status]}`}
-                >
-                  {STATUS_LABELS[document.status]}
-                </Badge>
-              </div>
-            );
-          })}
+                doc={document}
+                canUploadSelf={canUpload}
+                onUpload={handleRowUpload}
+              />
+            ))}
+          </div>
+          {cursors.length > 1 || hasMore ? (
+            <CursorPageControls
+              page={cursors.length}
+              hasNext={hasMore}
+              disabled={documents.isFetching}
+              onPrevious={handlePrevious}
+              onNext={handleNext}
+              className="shrink-0"
+            />
+          ) : null}
         </div>
-      ) : null}
+      </PageState>
 
       <UploadDocSheet
         open={uploadOpen}

@@ -40,17 +40,28 @@
     ".next-build-check/types/**/*.ts",
     ".next-build-check/dev/types/**/*.ts",
     ".next-e2e/types/**/*.ts",
-    ".next-e2e/dev/types/**/*.ts"
+    ".next-e2e/dev/types/**/*.ts",
+    ".next-intercepted/types/**/*.ts",
+    ".next-intercepted/dev/types/**/*.ts",
+    ".next-build-verification-window12h/types/**/*.ts",
+    ".next-build-verification-window12h/dev/types/**/*.ts"
   ],
   "exclude": [
     "node_modules",
     "drizzle",
     "scripts",
+    ".next-e2e",
+    ".next-attr",
+    ".next-build-check",
+    ".next-intercepted",
+    ".next-build-verification-window12h",
     ".next/dev/types",
     "**/__tests__/**",
     "**/*.test.ts",
     "**/*.test.tsx",
     "**/*.spec.ts",
-    "**/*.spec.tsx"
+    "**/*.spec.tsx",
+    "**/*-test-harness.ts",
+    "**/*-test-harness.tsx"
   ]
 }

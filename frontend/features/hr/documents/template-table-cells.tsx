@@ -191,7 +191,7 @@ export function DefaultStarButton({
         }
         title={isCurrentDefault ? "Remove default status" : "Set as default"}
       >
-        <Star className={cn("h-4 w-4", isCurrentDefault && "fill-amber-500")} />
+        <Star className={cn("h-4 w-4", isCurrentDefault && "fill-status-warning-fill")} />
       </Button>
 
       <ConfirmSheet

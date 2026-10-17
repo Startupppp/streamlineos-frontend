@@ -21,7 +21,7 @@ jest.mock("@/lib/get-error-message", () => ({
   }),
 }));
 jest.mock("@/components/ui/input-otp", () => {
-  const { createElement } = require("react");
+  const { createElement } = jest.requireActual("react");
   return {
     InputOTP: ({ onChange, children: _children, ...rest }: {
       onChange: (val: string) => void;

@@ -2,6 +2,13 @@ import { renderHook, act, waitFor } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import type { ReactNode } from "react";
 import { IDEMPOTENCY_HEADER } from "@/lib/idempotency-key";
+import { apiClient, clearBackendTokenCache, resetOutageCircuit, seedBackendToken } from "@/lib/api-client";
+import { ApiContractError } from "@/lib/api-envelope";
+import { installAbortSignalPolyfill } from "@/test-utils/abort-signal-polyfill";
+
+const mockUseCan = jest.fn(() => true);
+
+jest.mock("@/hooks/api/access", () => ({ useCan: () => mockUseCan() }));
 
 interface StreamRequest { headers?: Record<string, string>; signal?: AbortSignal }
 const post = jest.fn<Promise<unknown>, [StreamRequest]>();
@@ -20,7 +27,9 @@ jest.mock("@/hooks/api/authorized-mutation", () => ({
   },
 }));
 
-import { useKbAsk } from "./ask";
+import { useCreateKbKnowledgeGap, useKbAiAnswerFeedback, useKbAsk, useKbAskPageOwners } from "./ask";
+
+installAbortSignalPolyfill();
 
 function wrapper({ children }: { children: ReactNode }) {
   const qc = new QueryClient({ defaultOptions: { mutations: { retry: false } } });
@@ -35,13 +44,6 @@ function keySentOnCall(index: number): string {
   return key;
 }
 
-/**
- * `POST /kb/ask` is `@Idempotent("kb.ask")` and spends credits twice over — an embedding
- * for the query and a full completion for the answer. The fence on the backend is only
- * half the protection: it can only replay a retry that carries the SAME key, and
- * `authedFetch` mints a fallback key per HTTP call, so a hook that sends no key of its
- * own makes every retry a new operation and the fence inert.
- */
 describe("useKbAsk idempotency key", () => {
   beforeEach(() => {
     post.mockReset();
@@ -116,7 +118,6 @@ describe("useKbAsk idempotency key", () => {
     expect(keySentOnCall(1)).not.toBe(firstKey);
   });
 
-  /** An AbortSignal is not part of the question's identity and does not survive JSON.stringify. */
   it("keeps the signal out of the key's signature but still passes it through", async () => {
     post.mockRejectedValue(new Error("network timeout"));
     const { result } = renderHook(() => useKbAsk(), { wrapper });
@@ -137,5 +138,133 @@ describe("useKbAsk idempotency key", () => {
     expect(post.mock.calls[0]?.[0].signal).toBeInstanceOf(
       AbortSignal,
     );
+  });
+});
+
+describe("useKbAiAnswerFeedback idempotency key", () => {
+  it("reuses one key after a failed submission and mints another after success", async () => {
+    const feedbackPost = jest.spyOn(apiClient, "post")
+      .mockRejectedValueOnce(new Error("network timeout"))
+      .mockResolvedValue({ success: true });
+    try {
+      const { result } = renderHook(() => useKbAiAnswerFeedback(), { wrapper });
+      const input = { rating: "helpful" as const, question: "leave policy?" };
+      await act(async () => {
+        await expect(result.current.mutateAsync(input)).rejects.toThrow("network timeout");
+      });
+      await act(async () => {
+        await result.current.mutateAsync(input);
+      });
+      const firstKey = (feedbackPost.mock.calls[0]?.[2] as { headers?: Record<string, string> } | undefined)?.headers?.[IDEMPOTENCY_HEADER];
+      const retryKey = (feedbackPost.mock.calls[1]?.[2] as { headers?: Record<string, string> } | undefined)?.headers?.[IDEMPOTENCY_HEADER];
+      expect(firstKey).toEqual(expect.any(String));
+      expect(retryKey).toBe(firstKey);
+      await act(async () => {
+        await result.current.mutateAsync(input);
+      });
+      const nextKey = (feedbackPost.mock.calls[2]?.[2] as { headers?: Record<string, string> } | undefined)?.headers?.[IDEMPOTENCY_HEADER];
+      expect(nextKey).toEqual(expect.any(String));
+      expect(nextKey).not.toBe(firstKey);
+    } finally {
+      feedbackPost.mockRestore();
+    }
+  });
+});
+
+describe("useCreateKbKnowledgeGap idempotency key", () => {
+  it("reuses one key after a failed create and mints another after success", async () => {
+    const gapPost = jest.spyOn(apiClient, "post")
+      .mockRejectedValueOnce(new Error("network timeout"))
+      .mockResolvedValue({ success: true });
+    try {
+      const { result } = renderHook(() => useCreateKbKnowledgeGap(), { wrapper });
+      const input = { question: "leave policy?", spaceId: 3 };
+      await act(async () => {
+        await expect(result.current.mutateAsync(input)).rejects.toThrow("network timeout");
+      });
+      await act(async () => {
+        await result.current.mutateAsync(input);
+      });
+      const firstKey = (gapPost.mock.calls[0]?.[2] as { headers?: Record<string, string> } | undefined)?.headers?.[IDEMPOTENCY_HEADER];
+      const retryKey = (gapPost.mock.calls[1]?.[2] as { headers?: Record<string, string> } | undefined)?.headers?.[IDEMPOTENCY_HEADER];
+      expect(firstKey).toEqual(expect.any(String));
+      expect(retryKey).toBe(firstKey);
+      await act(async () => {
+        await result.current.mutateAsync(input);
+      });
+      const nextKey = (gapPost.mock.calls[2]?.[2] as { headers?: Record<string, string> } | undefined)?.headers?.[IDEMPOTENCY_HEADER];
+      expect(nextKey).toEqual(expect.any(String));
+      expect(nextKey).not.toBe(firstKey);
+    } finally {
+      gapPost.mockRestore();
+    }
+  });
+});
+
+describe("KB Ask page owners through the HTTP parser", () => {
+  const originalFetch = globalThis.fetch;
+  const fetchMock = jest.fn();
+  const first = { membershipId: 77, name: "Ada Lovelace" };
+  const selected = { membershipId: 88, name: "Grace Hopper" };
+  const pagination = { limit: 50, hasMore: false, nextCursor: null };
+  let ownerClient: QueryClient;
+
+  function ownerWrapper({ children }: { children: ReactNode }) {
+    return <QueryClientProvider client={ownerClient}>{children}</QueryClientProvider>;
+  }
+
+  function response(data: unknown) {
+    return {
+      ok: true,
+      status: 200,
+      statusText: "OK",
+      headers: new Headers({ "content-type": "application/json" }),
+      json: async () => ({ success: true, data }),
+    };
+  }
+
+  beforeEach(() => {
+    resetOutageCircuit();
+    clearBackendTokenCache();
+    seedBackendToken("header." + Buffer.from(JSON.stringify({ exp: Math.floor(Date.now() / 1000) + 600 })).toString("base64url") + ".signature");
+    mockUseCan.mockReturnValue(true);
+    fetchMock.mockReset();
+    globalThis.fetch = fetchMock;
+    ownerClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+  });
+
+  afterEach(() => {
+    globalThis.fetch = originalFetch;
+    clearBackendTokenCache();
+    ownerClient.clear();
+  });
+
+  it("requests KB owner choices with selected label and follows the opaque cursor", async () => {
+    fetchMock.mockResolvedValueOnce(response({ data: [first], pagination: { limit: 50, hasMore: true, nextCursor: "opaque-next" }, selected }))
+      .mockResolvedValueOnce(response({ data: [], pagination, selected }));
+    const { result } = renderHook(() => useKbAskPageOwners("Ada", 88), { wrapper: ownerWrapper });
+
+    await waitFor(() => expect(result.current.hasNextPage).toBe(true));
+    expect(result.current.data?.pages[0]?.selected).toEqual(selected);
+    expect(fetchMock.mock.calls[0]?.[0]).toContain("/kb/pages/owners?");
+    expect(fetchMock.mock.calls[0]?.[0]).toContain("search=Ada");
+    expect(fetchMock.mock.calls[0]?.[0]).toContain("selectedMembershipId=88");
+    await act(async () => { await result.current.fetchNextPage(); });
+    expect(fetchMock.mock.calls[1]?.[0]).toContain("cursor=opaque-next");
+    await waitFor(() => expect(result.current.hasNextPage).toBe(false));
+  });
+
+  it("rejects legacy arrays instead of treating the first 100 owners as complete", async () => {
+    fetchMock.mockResolvedValue(response([first]));
+    const { result } = renderHook(() => useKbAskPageOwners(""), { wrapper: ownerWrapper });
+    await waitFor(() => expect(result.current.isError).toBe(true));
+    expect(result.current.error).toBeInstanceOf(ApiContractError);
+  });
+
+  it("does not fetch owners without KB page view permission", async () => {
+    mockUseCan.mockReturnValue(false);
+    const { result } = renderHook(() => useKbAskPageOwners(""), { wrapper: ownerWrapper });
+    expect(result.current.fetchStatus).toBe("idle");
+    expect(fetchMock).not.toHaveBeenCalled();
   });
 });

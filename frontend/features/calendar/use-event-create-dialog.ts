@@ -2,7 +2,6 @@
 
 import { useState, useCallback, useEffect, useMemo, type ChangeEvent } from "react";
 import { addHours, endOfDay, format, parseISO, startOfDay } from "date-fns";
-import { useIsMobile } from "@/hooks/common/use-mobile";
 import {
   useCreateCalendarEvent,
   useUpdateCalendarEvent,
@@ -10,12 +9,14 @@ import {
   useCalendarMemberLookup,
   useCalendarEvent,
   useEventAttendees,
+  parseCalendarEventId,
   extractEventNumericId,
 } from "@/hooks/api/calendar";
 import type { CalendarListItem } from "@/hooks/api/calendar";
 import { useCalendarConnections } from "./use-calendar-connections";
+import type { IntegrationConnection } from "@/hooks/api/integrations";
 import { toast } from "sonner";
-import type { TicketSearchResult } from "@/hooks/api/build";
+import type { TicketSearchResult } from "@/types/projects";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { describeEventConflicts } from "./event-conflict-notice";
 import {
@@ -33,6 +34,8 @@ import {
   validateEventLocation,
   buildEventPayload,
 } from "./event-create-validators";
+
+const NO_CONNECTIONS: IntegrationConnection[] = [];
 
 interface UseEventCreateDialogProps {
   open: boolean;
@@ -55,13 +58,14 @@ export function useEventCreateDialog({
     [isEdit, event],
   );
   const [form, setForm] = useState<FormState>(() =>
-    isEdit && event ? toEditForm(event, rrule) : toDefaultForm(defaultSlot),
+    isEdit && event ? toEditForm(event, rrule) : { ...toDefaultForm(defaultSlot), syncConnectionId: "" },
   );
   const [showEndDate, setShowEndDate] = useState(() =>
     needsEndDateField(isEdit && event ? toEditForm(event, rrule) : toDefaultForm(defaultSlot)),
   );
   const [dateTimeError, setDateTimeError] = useState("");
   const [titleError, setTitleError] = useState("");
+  const [descriptionTouched, setDescriptionTouched] = useState(false);
   const [linkedTicket, setLinkedTicket] = useState<TicketSearchResult | null>(null);
   const [existingEntityId, setExistingEntityId] = useState<string | null>(null);
   const [ticketPickerOpen, setTicketPickerOpen] = useState(false);
@@ -69,34 +73,37 @@ export function useEventCreateDialog({
   const updateEvent = useUpdateCalendarEvent();
   const upsertOccurrenceException = useUpsertOccurrenceException();
   const { data: members = [] } = useCalendarMemberLookup();
-  const { data: connections = [] } = useCalendarConnections();
+  const { data: connections = NO_CONNECTIONS } = useCalendarConnections();
   const { data: existingAttendees } = useEventAttendees(isEdit && open ? editNumericId : null);
   const { data: editingDetail } = useCalendarEvent(isEdit && open ? editNumericId : null);
+  const formWithDetail = useMemo(
+    () => isEdit && !descriptionTouched && editingDetail && !parseCalendarEventId(event?.id ?? "")?.occurrenceStart
+      ? { ...form, description: editingDetail.description ?? "" }
+      : form,
+    [isEdit, descriptionTouched, editingDetail, event?.id, form],
+  );
 
   useEffect(() => {
     if (!open) return;
     const base = isEdit && event ? toEditForm(event, rrule) : toDefaultForm(defaultSlot);
-    setForm(isEdit ? base : { ...base, syncConnectionId: "none" });
+    setForm(isEdit ? base : { ...base, syncConnectionId: "" });
     setShowEndDate(needsEndDateField(base));
     setDateTimeError("");
     setTitleError("");
+    setDescriptionTouched(false);
     setLinkedTicket(null);
     setExistingEntityId(
       isEdit && event?.entityType === "ticket" && event.entityId ? event.entityId : null,
     );
   }, [open, defaultSlot, event, isEdit]);
 
-  useEffect(() => {
-    if (!open || isEdit) return;
+  const effectiveForm = useMemo(() => {
+    if (isEdit) return formWithDetail;
+    const chosen = formWithDetail.syncConnectionId;
+    if (chosen === "none" || connections.some((c) => String(c.id) === chosen)) return formWithDetail;
     const primary = connections.find((c) => c.isPrimary && c.status === "active");
-    const primaryId = primary ? String(primary.id) : "none";
-    setForm((f) => {
-      const currentIsValid =
-        f.syncConnectionId !== "none" && connections.some((c) => String(c.id) === f.syncConnectionId);
-      if (currentIsValid) return f;
-      return { ...f, syncConnectionId: primaryId };
-    });
-  }, [open, isEdit, connections]);
+    return { ...formWithDetail, syncConnectionId: primary ? String(primary.id) : "none" };
+  }, [formWithDetail, isEdit, connections]);
 
   useEffect(() => {
     if (!open || !isEdit || !existingAttendees || existingAttendees.length === 0) return;
@@ -119,7 +126,13 @@ export function useEventCreateDialog({
     }));
   }, []);
 
-  const seriesScope = useEventSeriesScope({ event, updateEvent, upsertOccurrenceException, onClose: handleClose });
+  const seriesScope = useEventSeriesScope({
+    event,
+    updateEvent,
+    upsertOccurrenceException,
+    expectedVersion: editingDetail?.localVersion,
+    onClose: handleClose,
+  });
 
   const handleTitleChange = useCallback(
     (e: ChangeEvent<HTMLInputElement>) => {
@@ -130,7 +143,10 @@ export function useEventCreateDialog({
   );
 
   const handleDescriptionChange = useCallback(
-    (e: ChangeEvent<HTMLInputElement>) => set("description", e.target.value),
+    (e: ChangeEvent<HTMLTextAreaElement>) => {
+      setDescriptionTouched(true);
+      set("description", e.target.value);
+    },
     [set],
   );
 
@@ -162,8 +178,9 @@ export function useEventCreateDialog({
   }, [showEndDate]);
 
   const handleStartTimeChange = useCallback((e: ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
     setForm((prev) => {
-      const next = { ...prev, startTime: e.target.value };
+      const next = { ...prev, startTime: value };
       setDateTimeError(getDateTimeError(next, showEndDate));
       return next;
     });
@@ -178,8 +195,9 @@ export function useEventCreateDialog({
   }, [showEndDate]);
 
   const handleEndTimeChange = useCallback((e: ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
     setForm((prev) => {
-      const next = { ...prev, endTime: e.target.value };
+      const next = { ...prev, endTime: value };
       setDateTimeError(getDateTimeError(next, showEndDate));
       return next;
     });
@@ -215,7 +233,8 @@ export function useEventCreateDialog({
     [],
   );
 
-  const handleSave = useCallback(async () => {
+  const handleSave = useCallback(async (times: { startTime?: string; endTime?: string } = {}) => {
+    const submittedForm = { ...effectiveForm, ...times };
     const titleErr = validateEventTitle(form.title);
     if (titleErr) { setTitleError(titleErr); return; }
     setTitleError("");
@@ -224,7 +243,7 @@ export function useEventCreateDialog({
     const locErr = validateEventLocation(form.location);
     if (locErr) { toast.error(locErr); return; }
 
-    const result = buildEventPayload({ form, showEndDate, linkedTicket, existingEntityId, isEdit });
+    const result = buildEventPayload({ form: submittedForm, showEndDate, linkedTicket, existingEntityId, isEdit });
     if (result.error !== null) { toast.error(result.error); return; }
 
     if (isEdit && rrule) {
@@ -237,6 +256,7 @@ export function useEventCreateDialog({
         const numericId = extractEventNumericId(event.id);
         if (numericId === null) { toast.error("Cannot edit this event type"); return; }
         const { syncConnectionId: _sc, addConference: _ac, ...editPayload } = result.payload;
+        if (!descriptionTouched && !editingDetail && !event.description) delete editPayload.description;
         await updateEvent.mutateAsync({
           calendarEventId: numericId,
           ...editPayload,
@@ -257,7 +277,7 @@ export function useEventCreateDialog({
     } catch (error) {
       toast.error(getErrorMessage(error));
     }
-  }, [form, showEndDate, isEdit, event, rrule, createEvent, updateEvent, handleClose, existingEntityId, linkedTicket, seriesScope, editingDetail]);
+  }, [form, effectiveForm, showEndDate, isEdit, event, rrule, createEvent, updateEvent, handleClose, existingEntityId, linkedTicket, seriesScope, editingDetail, descriptionTouched]);
 
   const handleOpenTicketPicker = useCallback(() => setTicketPickerOpen(true), []);
 
@@ -278,12 +298,11 @@ export function useEventCreateDialog({
   );
 
   const isPending = isEdit ? updateEvent.isPending : createEvent.isPending;
-  const isMobile = useIsMobile();
 
   return {
-    form, titleError, dateTimeError, showEndDate, members, connections,
+    form: effectiveForm, titleError, dateTimeError, showEndDate, members, connections,
     linkedTicket, existingEntityId, ticketPickerOpen, setTicketPickerOpen,
-    isPending, isMobile, isEdit,
+    isPending, isEdit,
     handleClose, handleTitleChange, handleDescriptionChange, handleLocationChange,
     handleAllDayChange, handleStartDateChange, handleStartTimeChange,
     handleEndDateChange, handleEndTimeChange, handleShowEndDate,

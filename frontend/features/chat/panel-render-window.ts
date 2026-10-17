@@ -55,22 +55,20 @@ export function usePanelRenderWindow(
   fetchNextPage: () => void,
   resetKey = 0,
 ): PanelRenderWindow {
-  const [pagesShown, setPagesShown] = useState(1);
-  const [openedFor, setOpenedFor] = useState(resetKey);
-
-  if (openedFor !== resetKey) {
-    setOpenedFor(resetKey);
-    setPagesShown(1);
-  }
-
-  const effectivePages = openedFor === resetKey ? pagesShown : 1;
+  const [windowState, setWindowState] = useState({ resetKey, pagesShown: 1 });
+  const effectivePages =
+    windowState.resetKey === resetKey ? windowState.pagesShown : 1;
   const visibleCount = resolvePanelVisibleCount(total, effectivePages);
   const heldCount = Math.max(0, total) - visibleCount;
 
   const onLoadMore = useCallback(() => {
-    setPagesShown((p) => p + 1);
+    setWindowState((current) => ({
+      resetKey,
+      pagesShown:
+        (current.resetKey === resetKey ? current.pagesShown : 1) + 1,
+    }));
     if (heldCount === 0) fetchNextPage();
-  }, [heldCount, fetchNextPage]);
+  }, [heldCount, fetchNextPage, resetKey]);
 
   return {
     visibleCount,

@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useEmployeeEmployment, useEmployeeSensitive, useUpdateSensitive } from "@/hooks/api/hr/employees";
-import { useCan } from "@/hooks/api/access";
+import { useCan, useCanState } from "@/hooks/api/access";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -21,7 +21,9 @@ import {
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { Shield, Lock } from "lucide-react";
+import Link from "next/link";
 import { EmptyState } from "@/components/ui/empty-state";
+import { NoPermissionState } from "@/components/shared/no-permission-state";
 import { PageState } from "@/components/shared/page-state";
 import { usePageState } from "@/hooks/api/use-page-state";
 import { EyeIcon, EyeOffIcon } from "@animateicons/react/lucide";
@@ -40,9 +42,10 @@ interface MaskedFieldProps {
   editMode: boolean;
   fieldName: keyof SensitiveFormValues;
   control: Control<SensitiveFormValues>;
+  hint?: string;
 }
 
-function MaskedField({ label, value, editMode, fieldName, control }: MaskedFieldProps) {
+function MaskedField({ label, value, editMode, fieldName, control, hint }: MaskedFieldProps) {
   const [revealed, setRevealed] = useState(false);
   const handleToggle = () => setRevealed((prev) => !prev);
 
@@ -66,7 +69,7 @@ function MaskedField({ label, value, editMode, fieldName, control }: MaskedField
               />
             ) : (
               <div className="flex items-center gap-2">
-                <span className="flex-1 h-8 flex items-center px-3 rounded-md border border-border bg-muted/40 text-sm font-mono min-w-0 truncate">
+                <span className="flex-1 h-9 flex items-center px-3 rounded-md border border-border bg-muted/40 text-sm font-mono min-w-0 truncate">
                   {!value ? (
                     <span className="text-muted-foreground text-xs italic">Not set</span>
                   ) : revealed ? (
@@ -79,7 +82,7 @@ function MaskedField({ label, value, editMode, fieldName, control }: MaskedField
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="w-8 shrink-0"
+                    className="shrink-0"
                     onClick={handleToggle}
                     type="button"
                     aria-label={revealed ? `Hide ${label}` : `Reveal ${label}`}
@@ -90,6 +93,9 @@ function MaskedField({ label, value, editMode, fieldName, control }: MaskedField
               </div>
             )}
           </FormControl>
+          {hint ? (
+            <p className="text-xs leading-relaxed text-muted-foreground">{hint}</p>
+          ) : null}
           <FormMessage />
         </FormItem>
       )}
@@ -103,6 +109,7 @@ interface Props {
 
 export function EmployeeSensitiveTab({ userId }: Props) {
   const canManage = useCan("hr:sensitive:manage");
+  const employmentAccess = useCanState("hr:employees:view");
   const [editMode, setEditMode] = useState(false);
 
   const { data: employment, isLoading: empLoading, isError: empError, error: empErrorValue, refetch: refetchEmp } = useEmployeeEmployment(userId);
@@ -148,6 +155,14 @@ export function EmployeeSensitiveTab({ userId }: Props) {
     );
   }
 
+  if (employmentAccess === "loading") {
+    return <Skeleton className="h-14 w-full rounded-xl" />;
+  }
+
+  if (employmentAccess === "denied") {
+    return <NoPermissionState permission="hr:employees:view" className="py-16" />;
+  }
+
   if (empLoading || sensitiveLoading) {
     return (
       <div className="space-y-3">
@@ -163,17 +178,33 @@ export function EmployeeSensitiveTab({ userId }: Props) {
 
   const displayValues = sensitiveToForm(sensitive);
 
-  const fields: Array<{ label: string; key: keyof SensitiveFormValues }> = [
+  const fields: Array<{ label: string; key: keyof SensitiveFormValues; hint?: string }> = [
     { label: "Salary Amount", key: "salaryAmount" },
     { label: "Salary Currency", key: "salaryCurrency" },
     { label: "Salary Frequency", key: "salaryFrequency" },
     { label: "Bank Account Number", key: "bankAccountNumber" },
     { label: "Bank Name", key: "bankName" },
-    { label: "IFSC / Routing Code", key: "ifscCode" },
-    { label: "PF / UAN (12 digits)", key: "pfUanNumber" },
-    { label: "ESI IP Number", key: "esiIpNumber" },
+    {
+      label: "IFSC / Routing Code",
+      key: "ifscCode",
+      hint: "11 characters, printed on the employee's cheque book and bank passbook.",
+    },
+    {
+      label: "PF / UAN (12 digits)",
+      key: "pfUanNumber",
+      hint: "The Universal Account Number from EPFO, on the employee's payslip or EPFO passbook. It follows them between employers — issue a new one only if they have never been enrolled.",
+    },
+    {
+      label: "ESI IP Number",
+      key: "esiIpNumber",
+      hint: "The 10-digit Insured Person number from ESIC. Required only where ESI applies — broadly, employees earning up to ₹21,000 a month at a covered establishment.",
+    },
     { label: "Tax ID", key: "taxId" },
-    { label: "PAN Number", key: "panNumber" },
+    {
+      label: "PAN Number",
+      key: "panNumber",
+      hint: "10 characters, needed for TDS and Form 16.",
+    },
     { label: "Passport Number", key: "passportNumber" },
     { label: "National ID (Aadhaar / SSN)", key: "nationalId" },
   ];
@@ -190,24 +221,27 @@ export function EmployeeSensitiveTab({ userId }: Props) {
                 </div>
                 <div>
                   <p className="text-sm font-semibold">Sensitive Information</p>
-                  <p className="text-dense text-muted-foreground">Encrypted at rest — access is audited</p>
+                  <p className="text-dense text-muted-foreground">
+                    Encrypted at rest. Opening this tab has already been recorded
+                    against your account, with your IP address and the time.
+                  </p>
                 </div>
               </div>
               {canManage && (
                 <div className="flex items-center gap-2">
                   {editMode ? (
                     <>
-                      <Button type="button" variant="ghost" size="sm" className="text-xs" onClick={handleCancel}>Cancel</Button>
-                      <LoadingButton type="submit" size="sm" className="text-xs" isPending={updateMutation.isPending}>Save</LoadingButton>
+                      <Button type="button" variant="ghost" size="sm" onClick={handleCancel} disabled={updateMutation.isPending}>Cancel</Button>
+                      <LoadingButton type="submit" size="sm" isPending={updateMutation.isPending}>Save</LoadingButton>
                     </>
                   ) : (
-                    <Button type="button" variant="outline" size="sm" className="text-xs" onClick={handleEnableEdit}>Edit</Button>
+                    <Button type="button" variant="outline" size="sm" onClick={handleEnableEdit}>Edit</Button>
                   )}
                 </div>
               )}
             </div>
             <div className="grid gap-4 sm:grid-cols-2">
-              {fields.map(({ label, key }) => (
+              {fields.map(({ label, key, hint }) => (
                 <MaskedField
                   key={key}
                   label={label}
@@ -215,9 +249,20 @@ export function EmployeeSensitiveTab({ userId }: Props) {
                   editMode={editMode}
                   fieldName={key}
                   control={form.control}
+                  hint={hint}
                 />
               ))}
             </div>
+            <p className="text-xs leading-relaxed text-muted-foreground">
+              PF, ESI and TDS obligations depend on where this employee works.{" "}
+              <Link
+                href="/hr/compliance"
+                className="font-medium text-primary underline underline-offset-2"
+              >
+                Review statutory requirements
+              </Link>{" "}
+              to see what applies before you rely on these fields.
+            </p>
           </CardContent>
         </Card>
       </form>

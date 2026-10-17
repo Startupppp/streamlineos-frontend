@@ -1,14 +1,16 @@
 "use client";
 
+import { DatePicker } from "@/components/ui/date-picker";
+
 import { useState, useCallback } from "react";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogBody,
 } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { LoadingButton } from "@/components/ui/loading-button";
@@ -16,6 +18,8 @@ import { UserCombobox } from "@/components/ui/user-combobox";
 import { usePolicyPreview } from "@/hooks/api/hr/policies";
 import { SCOPE_TYPE_LABELS } from "@/types/hr/policies";
 import { TruncatedText } from "@/components/ui/truncated-text";
+import { getErrorMessage } from "@/lib/get-error-message";
+import { getTodayString } from "@/lib/date-utils";
 
 interface Props {
   policyId: number;
@@ -25,24 +29,29 @@ interface Props {
 
 export function PolicyPreviewDialog({ policyId, open, onOpenChange }: Props) {
   const [employeeId, setEmployeeId] = useState("");
-  const [date, setDate] = useState(new Date().toISOString().slice(0, 10));
+  const [date, setDate] = useState(getTodayString);
   const [queryParams, setQueryParams] = useState<{
     employeeId: string;
     date: string;
   } | null>(null);
 
-  const { data, isFetching } = usePolicyPreview(policyId, queryParams);
+  const { data, isFetching, isError, error } = usePolicyPreview(policyId, queryParams);
 
   const handleRun = useCallback(() => {
     if (!employeeId.trim() || !date) return;
     setQueryParams({ employeeId: employeeId.trim(), date });
   }, [employeeId, date]);
 
+  function handleDateChange(value: string) {
+    setDate(value);
+  }
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="flex max-h-[90dvh] max-w-lg flex-col gap-0 p-0">
         <DialogHeader className="shrink-0 border-b border-border px-6 py-4">
           <DialogTitle className="text-base font-semibold">Preview Policy</DialogTitle>
+          <DialogDescription className="sr-only">Select an employee and date to evaluate which policy rules apply.</DialogDescription>
         </DialogHeader>
 
         <DialogBody className="space-y-4 px-6 py-4">
@@ -61,17 +70,18 @@ export function PolicyPreviewDialog({ policyId, open, onOpenChange }: Props) {
               <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                 Date
               </Label>
-              <Input
-                type="date"
-                className="text-xs"
+              <DatePicker
                 value={date}
-                onChange={(e) => setDate(e.target.value)}
+                onChange={handleDateChange}
+                ariaLabel="Date"
+                placeholder="Pick a date"
+                dateFormat="dd MMM yyyy"
               />
             </div>
           </div>
 
           <LoadingButton
-            className="w-full h-8 text-sm"
+            className="w-full"
             isPending={isFetching}
             loadingText="Evaluating..."
             onClick={handleRun}
@@ -82,7 +92,10 @@ export function PolicyPreviewDialog({ policyId, open, onOpenChange }: Props) {
 
           {queryParams && !isFetching && (
             <div className="rounded-lg border border-border p-3 space-y-3 bg-muted/30">
-              {data ? (
+              {isError ? (
+                // An error is not "no policy matched".
+                <p className="text-xs text-destructive text-center py-2">{getErrorMessage(error)}</p>
+              ) : data ? (
                 <>
                   <div className="flex items-center justify-between gap-2 min-w-0">
                     <TruncatedText text={data.policy.name ?? ""} className="text-sm font-medium min-w-0 flex-1" />

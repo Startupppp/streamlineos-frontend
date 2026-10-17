@@ -8,6 +8,7 @@ import { getErrorMessage } from "@/lib/get-error-message";
 import { toast } from "sonner";
 import { useCan, useModuleEnabled } from "@/hooks/api/access";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
 
 export interface WorkAuthorization {
   id: number;
@@ -404,5 +405,6 @@ export function useInternshipCertificate(contractId: number, enabled = false) {
     queryFn: ({ signal }) => apiClient.get(`/hr/global/contracts/${contractId}/internship-certificate`, undefined, signal, _internshipCertificateContract),
     enabled: canView && hrEnabled && enabled,
     staleTime: 300_000,
+    ...INLINE_READ_ERROR,
   });
 }

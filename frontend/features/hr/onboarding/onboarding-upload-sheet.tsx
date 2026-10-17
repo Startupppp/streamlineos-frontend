@@ -3,7 +3,6 @@
 import { useCallback, useState } from "react";
 import { Upload } from "lucide-react";
 import { toast } from "sonner";
-import { Label } from "@/components/ui/label";
 import { HrSheet } from "@/components/shared/hr-sheet";
 import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
@@ -12,7 +11,8 @@ import { cn } from "@/lib/utils";
 const storageUploadContract = lazyContract(() =>
   import("@/features/hr/onboarding/onboarding-schema").then((m) => m.storageUploadContract),
 );
-import type { DocumentType, OnboardingDoc } from "./onboarding-document-checklist-row";
+import type { HrDocumentType } from "@/hooks/api/hr/document-types";
+import type { OnboardingDoc } from "./onboarding-document-checklist-row";
 
 const ACCEPTED_MIME_TYPES = new Set([
   "application/pdf",
@@ -38,7 +38,7 @@ export function validateDocumentFile(file: File): string | null {
 interface UploadSheetProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  documentType: DocumentType | null;
+  documentType: HrDocumentType | null;
   existingDoc: OnboardingDoc | null;
   onSubmit: (fileUrl: string, fileName: string) => void;
   isPending: boolean;
@@ -129,9 +129,9 @@ export function UploadSheet({
       )}
 
       <div className="space-y-1.5">
-        <Label className="text-sm font-medium">
-          Document File <span className="text-destructive">*</span>
-        </Label>
+        <p className="text-sm font-medium">
+          Document File <span className="text-destructive" aria-hidden="true">*</span>
+        </p>
         <div
           className={cn(
             "rounded-lg border border-dashed p-6 transition-colors duration-200",
@@ -163,7 +163,7 @@ export function UploadSheet({
           {selectedFile && (
             <button
               type="button"
-              className="text-dense text-muted-foreground hover:text-status-danger-ink underline block mx-auto mt-2 transition-colors duration-200"
+              className="text-dense text-muted-foreground hover:text-status-danger-ink underline block mx-auto mt-2 rounded-sm transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
               onClick={handleRemoveFile}
             >
               Remove file

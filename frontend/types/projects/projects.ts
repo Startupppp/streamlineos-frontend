@@ -10,7 +10,6 @@ import type { Ticket } from "./tasks";
 
 export interface ProjectSettings {
   modules: {
-    sprints: boolean;
     epics: boolean;
     timeTracking: boolean;
     wiki: boolean;
@@ -80,6 +79,9 @@ export interface ProjectWithDetails extends Project {
   statuses?: ProjectStatusRecord[];
   members?: ProjectMember[];
   tickets?: Ticket[];
+  crmClient?: { id: number; name: string | null } | null;
+  /** The caller is a VIEWER of this project: every write is refused. */
+  readOnly?: boolean;
 }
 
 export type ProjectPriority = "LOW" | "MEDIUM" | "HIGH" | "URGENT";
@@ -91,7 +93,7 @@ export interface ProjectListItem {
   description: string | null;
   key: string;
   status: ProjectStatusValue | null;
-  priority: ProjectPriority | null;
+  priority: string | null;
   health: ProjectHealth;
   managedProductId: number | null;
   startDate: string | Date | null;
@@ -118,7 +120,10 @@ export interface Cycle {
   orgId: string;
   name: string;
   description: string | null;
+  goal: string | null;
+  capacity: number | null;
   status: CycleStatus;
+  version: number;
   startDate: string;
   endDate: string;
   createdBy: string;
@@ -142,6 +147,7 @@ export interface Module {
   createdBy: string;
   createdAt: string | Date | null;
   updatedAt: string | Date | null;
+  version: number;
   totalItems?: number;
   completedItems?: number;
   progress?: number;
@@ -153,35 +159,40 @@ export interface ProjectView {
   orgId: string;
   createdBy: string;
   name: string;
-  filters: Record<string, unknown>;
+  filters: unknown;
   groupBy: string | null;
   orderBy: string | null;
   layoutType: ViewLayoutType;
   isPinned: boolean;
   visibility: "private" | "shared";
   scope: "project" | "workspace";
-  displayOptions: Record<string, unknown> | null;
-  createdAt: string | Date | null;
-  updatedAt: string | Date | null;
+  displayOptions: unknown;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface IntakeRequest {
   id: number;
-  projectId: number;
+  projectId: number | null;
   orgId: string;
   title: string;
-  description: unknown | null;
+  description: unknown;
   source: IntakeSource;
   status: IntakeStatus;
   submitterEmail: string | null;
   submitterName: string | null;
-  priority: "low" | "medium" | "high" | "urgent" | null;
-  requestType: "bug" | "feature" | "task" | "question" | "other" | null;
+  priority: string | null;
+  requestType: string | null;
   linkedWorkItemId: number | null;
+  linkedTicket?: Pick<Ticket, "id" | "projectId" | "ticketNumber">;
+  formSubmissionId: number | null;
+  feedbucketSubmissionId: number | null;
   declineReason: string | null;
-  createdAt: string | Date | null;
-  updatedAt: string | Date | null;
+  createdAt: string;
+  updatedAt: string;
 }
+
+export type IntakeStatusCounts = Record<IntakeStatus, number>;
 
 export interface ProjectAnalytics {
   stateDistribution: { status: string; count: number }[];
@@ -212,6 +223,7 @@ export interface ProjectAnalytics {
     velocityScore: number;
     overdueTickets: number;
     totalTickets: number;
+    openTickets: number;
   };
 }
 
@@ -226,7 +238,6 @@ export interface CreateProjectInput {
   startDate?: Date | string;
   priority?: ProjectPriority;
   modules?: {
-    sprints: boolean;
     epics: boolean;
     timeTracking: boolean;
     wiki: boolean;
@@ -264,6 +275,7 @@ export interface CreateCycleInput {
   projectId: number;
   name: string;
   description?: string;
+  capacity?: number;
   startDate: string;
   endDate: string;
 }
@@ -343,21 +355,17 @@ export interface UpdateIntakeRequestInput {
   linkedWorkItemId?: number;
 }
 
-/**
- * Mirrors `listProjectsSchema` in the backend's `build/core/dto`, which is
- * `.strict()` — a field this type carries and that schema does not is not
- * ignored, it is a 400 on every request. `page` used to sit here and
- * `projects-page.tsx` sent it, which is what made `/build` render
- * "Failed to load projects" at every width. `GET /build` is keyset:
- * it orders by descending id and takes `afterId`, so there is no page number
- * to send and no total to receive.
- */
 export interface ProjectFilters {
   afterId?: number;
   limit?: number;
   search?: string;
   status?: "ALL" | ProjectStatusValue;
   managedProductId?: number;
+  managerId?: string;
+  health?: ProjectHealth;
+  startAfter?: string;
+  endBefore?: string;
+  sort?: "name_asc" | "priority_desc" | "due_asc" | "due_desc";
 }
 
 /** What `GET /build` actually answers. */

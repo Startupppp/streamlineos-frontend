@@ -3,7 +3,10 @@ import { queryKeyBase as base, type QueryKeyParams } from "./base";
 export const growthAndSignQueryKeys = {
   feedbucket: {
     all: [...base, "feedbucket"] as const,
-    widgets: () => [...base, "feedbucket", "widgets"] as const,
+    widgets: (params?: QueryKeyParams) =>
+      params === undefined
+        ? ([...base, "feedbucket", "widgets"] as const)
+        : ([...base, "feedbucket", "widgets", params] as const),
     widget: (widgetId: number) =>
       [...base, "feedbucket", "widgets", widgetId] as const,
     submissions: (params?: QueryKeyParams) =>
@@ -12,6 +15,10 @@ export const growthAndSignQueryKeys = {
         : ([...base, "feedbucket", "submissions", params] as const),
     submission: (submissionId: number) =>
       [...base, "feedbucket", "submissions", submissionId] as const,
+    submissionFacets: (params?: QueryKeyParams) =>
+      params === undefined
+        ? ([...base, "feedbucket", "submissions", "facets"] as const)
+        : ([...base, "feedbucket", "submissions", "facets", params] as const),
   },
 
   crmMetadata: {
@@ -195,12 +202,10 @@ export const growthAndSignQueryKeys = {
   crmDataQuality: {
     all: [...base, "crm", "data-quality"] as const,
     report: () => [...base, "crm", "data-quality", "report"] as const,
-  },
-
-  aiSummaries: {
-    all: [...base, "aiSummaries"] as const,
-    latest: (entityType: string, entityId: string) =>
-      [...base, "aiSummaries", entityType, entityId] as const,
+    findings: (params?: QueryKeyParams) =>
+      params === undefined
+        ? ([...base, "crm", "data-quality", "findings"] as const)
+        : ([...base, "crm", "data-quality", "findings", params] as const),
   },
 
   meetingsAi: {

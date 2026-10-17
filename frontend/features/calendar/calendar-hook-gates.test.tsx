@@ -13,7 +13,15 @@ import { platformHierarchyQueryKeys } from "@/lib/query-keys/platform-hierarchy"
 
 jest.mock("@/hooks/api/access", () => ({
   useCan: jest.fn(),
+  usePermissionGate: jest.fn(),
   useModuleEnabled: jest.fn(),
+}));
+
+jest.mock("next-auth/react", () => ({
+  useSession: () => ({
+    data: { orgId: "org-1", user: { id: "user-1" } },
+    status: "authenticated",
+  }),
 }));
 
 const mockInvalidateQueries = jest.fn();
@@ -39,7 +47,23 @@ jest.mock("@tanstack/react-query", () => {
       lastQueryEnabled = opts.enabled;
       lastQueryKey = opts.queryKey;
       lastQueryFn = opts.queryFn;
-      return { data: undefined, isError: false, error: null };
+      return {
+        data: undefined,
+        isLoading: false,
+        isError: false,
+        error: null,
+        refetch: jest.fn(),
+      };
+    }),
+    useQueries: jest.fn((opts: {
+      queries: { enabled?: boolean; queryKey?: readonly unknown[]; queryFn?: (ctx: { signal: AbortSignal }) => unknown }[];
+      combine: (results: unknown[]) => unknown;
+    }) => {
+      const first = opts.queries[0];
+      lastQueryEnabled = first?.enabled;
+      lastQueryKey = first?.queryKey;
+      lastQueryFn = first?.queryFn;
+      return opts.combine(opts.queries.map(() => ({ data: undefined, isLoading: false, isError: false, error: null, refetch: jest.fn() })));
     }),
     useMutation: jest.fn((opts: { onSuccess?: () => void }) => {
       lastMutationOnSuccess = opts.onSuccess;
@@ -49,8 +73,9 @@ jest.mock("@tanstack/react-query", () => {
   };
 });
 
-const { useCan, useModuleEnabled } = jest.requireMock<{
+const { useCan, usePermissionGate, useModuleEnabled } = jest.requireMock<{
   useCan: jest.Mock;
+  usePermissionGate: jest.Mock;
   useModuleEnabled: jest.Mock;
 }>("@/hooks/api/access");
 
@@ -68,6 +93,13 @@ beforeEach(() => {
   mockApiGet.mockResolvedValue([]);
   mockInvalidateQueries.mockReset();
   useCan.mockReturnValue(false);
+  usePermissionGate.mockReturnValue({
+    permission: "hr:helpdesk:view",
+    allowed: false,
+    denied: true,
+    pending: false,
+    unavailable: false,
+  });
   useModuleEnabled.mockReturnValue(false);
 });
 
@@ -106,22 +138,33 @@ function HrHook() {
 }
 
 describe("useHrCalendarEventsMapped — hr:helpdesk:view + module gate", () => {
-  it("does not fire when useCan('hr:helpdesk:view') returns false", () => {
-    useCan.mockReturnValue(false);
+  it("does not fire when the permission gate denies hr:helpdesk:view", () => {
     useModuleEnabled.mockReturnValue(true);
     render(<HrHook />);
     expect(lastQueryEnabled).toBe(false);
   });
 
   it("does not fire when the hr module is disabled", () => {
-    useCan.mockReturnValue(true);
+    usePermissionGate.mockReturnValue({
+      permission: "hr:helpdesk:view",
+      allowed: true,
+      denied: false,
+      pending: false,
+      unavailable: false,
+    });
     useModuleEnabled.mockReturnValue(false);
     render(<HrHook />);
     expect(lastQueryEnabled).toBe(false);
   });
 
   it("fires when both permission and module are enabled and hrVisible is true", () => {
-    useCan.mockReturnValue(true);
+    usePermissionGate.mockReturnValue({
+      permission: "hr:helpdesk:view",
+      allowed: true,
+      denied: false,
+      pending: false,
+      unavailable: false,
+    });
     useModuleEnabled.mockReturnValue(true);
     render(<HrHook />);
     expect(lastQueryEnabled).toBe(true);
@@ -244,19 +287,27 @@ function SourcePreferenceHook() {
   return null;
 }
 
-describe("useSetCalendarSourcePreference — targeted sources invalidation", () => {
-  it("invalidates only the sources key, not calendar.all", () => {
+describe("useSetCalendarSourcePreference — projection invalidation", () => {
+  it("invalidates source metadata and every projected event window", () => {
     useCan.mockReturnValue(true);
     render(<SourcePreferenceHook />);
     act(() => {
       lastMutationOnSuccess?.();
     });
-    expect(mockInvalidateQueries).toHaveBeenCalledTimes(1);
     expect(mockInvalidateQueries).toHaveBeenCalledWith(
       expect.objectContaining({
-        queryKey: platformHierarchyQueryKeys.calendar.sources(),
+        queryKey: platformHierarchyQueryKeys.calendar.sourcesAll,
       }),
     );
+    expect(mockInvalidateQueries).toHaveBeenCalledWith({
+      queryKey: platformHierarchyQueryKeys.calendar.eventsAll,
+    });
+    expect(mockInvalidateQueries).toHaveBeenCalledWith({
+      queryKey: platformHierarchyQueryKeys.calendar.hrSupplementalAll,
+    });
+    expect(mockInvalidateQueries).toHaveBeenCalledWith({
+      queryKey: platformHierarchyQueryKeys.calendar.externalEventsAll,
+    });
     expect(mockInvalidateQueries).not.toHaveBeenCalledWith(
       expect.objectContaining({
         queryKey: platformHierarchyQueryKeys.calendar.all,

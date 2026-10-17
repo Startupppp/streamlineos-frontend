@@ -1,10 +1,14 @@
 import type { InfiniteData, QueryClient } from "@tanstack/react-query";
-import type { CursorPageResponse, Ticket } from "@/types/projects";
+import type {
+  CursorPageResponse,
+  ProjectWithDetails,
+  Ticket,
+} from "@/types/projects";
 import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
-import { accountingAndSupportQueryKeys } from "@/lib/query-keys/accounting-and-support";
-import { collaborationQueryKeys } from "@/lib/query-keys/collaboration";
+import { allWorkTickets, isAllWorkCollection } from "./all-work-cache";
+import { rollbackOptimisticFields } from "./optimistic-cache-rollback";
 
-export type TicketCollection =
+type TicketCollection =
   | CursorPageResponse<Ticket>
   | InfiniteData<CursorPageResponse<Ticket>>;
 export type TicketSnapshots = {
@@ -12,6 +16,10 @@ export type TicketSnapshots = {
   previous: Ticket[];
   optimistic: Ticket[];
 }[];
+export type RawCollectionSnapshot = {
+  key: readonly unknown[];
+  data: TicketCollection;
+};
 
 function collectionTickets(collection: TicketCollection): Ticket[] {
   return "pages" in collection
@@ -34,21 +42,6 @@ function mapCollection(
     : { ...collection, data: collection.data.map(patch) };
 }
 
-export function rollbackTicketFields<T extends object>(
-  current: T,
-  previous: T,
-  optimistic: T,
-): T {
-  const restored = { ...current };
-  for (const field in optimistic)
-    if (
-      !Object.is(previous[field], optimistic[field]) &&
-      Object.is(current[field], optimistic[field])
-    )
-      restored[field] = previous[field];
-  return restored;
-}
-
 export function ticketRollback<T extends { id: number }>(
   previous: T[],
   optimistic: T[],
@@ -61,7 +54,7 @@ export function ticketRollback<T extends { id: number }>(
     const before = previousById.get(current.id);
     const after = optimisticById.get(current.id);
     return before && after
-      ? rollbackTicketFields(current, before, after)
+      ? rollbackOptimisticFields(current, before, after)
       : current;
   };
 }
@@ -90,6 +83,84 @@ export function patchTicketCollections(
   return snapshots;
 }
 
+export function resolveTicketVersions(
+  client: QueryClient,
+  projectId: number,
+  ticketIds: number[],
+): { versions: Record<string, number>; missingTicketIds: number[] } {
+  const foundVersions = new Map<number, number>();
+  for (const [, collection] of client.getQueriesData<TicketCollection>({
+    queryKey: buildWorkQueryKeys.projects.tickets({ projectId }),
+  })) {
+    if (!collection) continue;
+    for (const ticket of collectionTickets(collection)) {
+      if (!foundVersions.has(ticket.id))
+        foundVersions.set(ticket.id, ticket.version);
+    }
+  }
+  for (const [, value] of client.getQueriesData<unknown>({
+    queryKey: buildWorkQueryKeys.projects.allWorkAll,
+  })) {
+    if (!isAllWorkCollection(value)) continue;
+    for (const ticket of allWorkTickets(value)) {
+      if (ticket.projectId === projectId && !foundVersions.has(ticket.id)) {
+        foundVersions.set(ticket.id, ticket.version);
+      }
+    }
+  }
+  const detail = client.getQueryData<ProjectWithDetails | null>(
+    buildWorkQueryKeys.projects.detail(projectId),
+  );
+  for (const ticket of detail?.tickets ?? []) {
+    if (!foundVersions.has(ticket.id))
+      foundVersions.set(ticket.id, ticket.version);
+  }
+  for (const ticketId of ticketIds) {
+    if (foundVersions.has(ticketId)) continue;
+    const cachedTicket = client.getQueryData<Ticket | null>(
+      buildWorkQueryKeys.projects.ticket(projectId, ticketId),
+    );
+    if (cachedTicket) foundVersions.set(ticketId, cachedTicket.version);
+  }
+  const versions: Record<string, number> = {};
+  const missingTicketIds: number[] = [];
+  for (const ticketId of ticketIds) {
+    const version = foundVersions.get(ticketId);
+    if (version === undefined) missingTicketIds.push(ticketId);
+    else versions[ticketId] = version;
+  }
+  return { versions, missingTicketIds };
+}
+
+export function resolveTicketStatus(
+  client: QueryClient,
+  projectId: number,
+  ticketId: number,
+): string | undefined {
+  const single = client.getQueryData<Ticket | null>(
+    buildWorkQueryKeys.projects.ticket(projectId, ticketId),
+  );
+  if (single) return single.status;
+  for (const [, collection] of client.getQueriesData<TicketCollection>({
+    queryKey: buildWorkQueryKeys.projects.tickets({ projectId }),
+  })) {
+    const found =
+      collection &&
+      collectionTickets(collection).find((ticket) => ticket.id === ticketId);
+    if (found) return found.status;
+  }
+  for (const [, value] of client.getQueriesData<unknown>({
+    queryKey: buildWorkQueryKeys.projects.allWorkAll,
+  })) {
+    if (!isAllWorkCollection(value)) continue;
+    const found = allWorkTickets(value).find(
+      (ticket) => ticket.projectId === projectId && ticket.id === ticketId,
+    );
+    if (found) return found.status;
+  }
+  return undefined;
+}
+
 export function restoreTicketCollections(
   client: QueryClient,
   snapshots: TicketSnapshots,
@@ -99,6 +170,26 @@ export function restoreTicketCollections(
     client.setQueryData<TicketCollection>(key, (current) =>
       current ? mapCollection(current, restore) : current,
     );
+  }
+}
+
+export function snapshotTicketCollections(
+  client: QueryClient,
+  projectId: number,
+): RawCollectionSnapshot[] {
+  return client
+    .getQueriesData<TicketCollection>({
+      queryKey: buildWorkQueryKeys.projects.tickets({ projectId }),
+    })
+    .flatMap(([key, data]) => (data ? [{ key, data }] : []));
+}
+
+export function restoreRawCollections(
+  client: QueryClient,
+  snapshots: RawCollectionSnapshot[],
+): void {
+  for (const { key, data } of snapshots) {
+    client.setQueryData(key, data);
   }
 }
 
@@ -167,138 +258,4 @@ function filterTicketFromCollection(
       pages: collection.pages.map((p) => ({ ...p, data: p.data.filter(keep) })),
     };
   return { ...collection, data: collection.data.filter(keep) };
-}
-
-export function invalidateBuildViews(
-  client: QueryClient,
-  projectId: number,
-  ticketIds: number[] = [],
-  aggregates = true,
-) {
-  void client.invalidateQueries({
-    queryKey: buildWorkQueryKeys.projects.tickets({ projectId }),
-  });
-  void client.invalidateQueries({
-    queryKey: buildWorkQueryKeys.projects.detail(projectId),
-  });
-  void client.invalidateQueries({
-    queryKey: buildWorkQueryKeys.projects.analytics(projectId),
-  });
-  void client.invalidateQueries({
-    queryKey: buildWorkQueryKeys.projects.list(),
-  });
-  void client.invalidateQueries({
-    queryKey: buildWorkQueryKeys.projects.allWorkAll,
-  });
-  void client.invalidateQueries({
-    queryKey:
-      buildWorkQueryKeys.projectReports.criticalPath(projectId),
-  });
-  void client.invalidateQueries({
-    queryKey: collaborationQueryKeys.dashboard.myIssues(),
-  });
-  void client.invalidateQueries({
-    queryKey: collaborationQueryKeys.dashboard.recentProjects(),
-  });
-  for (const ticketId of ticketIds) {
-    void client.invalidateQueries({
-      queryKey: buildWorkQueryKeys.projects.ticket(ticketId),
-    });
-    void client.invalidateQueries({
-      queryKey: accountingAndSupportQueryKeys.ticketActivity.list(ticketId),
-    });
-  }
-  void client.invalidateQueries({
-    queryKey: buildWorkQueryKeys.projects.tickets(),
-    predicate: (query) =>
-      query.queryKey.includes("by-key") && query.queryKey.includes(projectId),
-  });
-  if (!aggregates) return;
-  void client.invalidateQueries({
-    queryKey: buildWorkQueryKeys.projects.cycles(projectId),
-  });
-  void client.invalidateQueries({
-    queryKey: buildWorkQueryKeys.projects.columnCounts(projectId),
-  });
-  void client.invalidateQueries({
-    queryKey: buildWorkQueryKeys.projectReports.all,
-    predicate: (query) =>
-      query.queryKey[
-        buildWorkQueryKeys.projectReports.all.length + 1
-      ] === projectId,
-  });
-  void client.invalidateQueries({
-    queryKey: collaborationQueryKeys.dashboard.activeSprintSummary(),
-  });
-}
-
-export function invalidateTicketUpdateViews(
-  client: QueryClient,
-  projectId: number,
-  ticketId: number,
-  changes: {
-    status?: unknown;
-    cycleId?: unknown;
-    points?: unknown;
-    startDate?: unknown;
-    dueDate?: unknown;
-    assigneeId?: unknown;
-    assigneeIds?: unknown;
-  },
-) {
-  void client.invalidateQueries({
-    queryKey: accountingAndSupportQueryKeys.ticketActivity.list(ticketId),
-    exact: true,
-  });
-  void client.invalidateQueries({
-    queryKey: buildWorkQueryKeys.projects.allWorkAll,
-    refetchType: "none",
-  });
-  void client.invalidateQueries({
-    queryKey: buildWorkQueryKeys.projects.analytics(projectId),
-    refetchType: "none",
-  });
-  void client.invalidateQueries({
-    queryKey: buildWorkQueryKeys.projects.list(),
-    refetchType: "none",
-  });
-  void client.invalidateQueries({
-    queryKey: collaborationQueryKeys.dashboard.myIssues(),
-    refetchType: "none",
-  });
-
-  const affectsPlanning =
-    changes.status !== undefined ||
-    changes.cycleId !== undefined ||
-    changes.points !== undefined ||
-    changes.startDate !== undefined ||
-    changes.dueDate !== undefined;
-
-  if (!affectsPlanning) return;
-
-  void client.invalidateQueries({
-    queryKey: buildWorkQueryKeys.projects.cycles(projectId),
-    refetchType: "none",
-  });
-  void client.invalidateQueries({
-    queryKey: buildWorkQueryKeys.projects.columnCounts(projectId),
-    refetchType: "none",
-  });
-  void client.invalidateQueries({
-    queryKey:
-      buildWorkQueryKeys.projectReports.criticalPath(projectId),
-    refetchType: "none",
-  });
-  void client.invalidateQueries({
-    queryKey: buildWorkQueryKeys.projectReports.all,
-    refetchType: "none",
-    predicate: (query) =>
-      query.queryKey[
-        buildWorkQueryKeys.projectReports.all.length + 1
-      ] === projectId,
-  });
-  void client.invalidateQueries({
-    queryKey: collaborationQueryKeys.dashboard.activeSprintSummary(),
-    refetchType: "none",
-  });
 }

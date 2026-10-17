@@ -2,17 +2,17 @@
 
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import type { UseQueryOptions } from "@tanstack/react-query";
+import { useSession } from "next-auth/react";
 import { apiClient } from "@/lib/api-client";
 import { accessAndCrmQueryKeys } from "@/lib/query-keys/access-and-crm";
 import { platformCoreQueryKeys } from "@/lib/query-keys/platform-core";
-import { useCan } from "@/hooks/api/access";
+import { signalAccessInvalidation, useCan } from "@/hooks/api/access";
 import type { Role } from "@/types/organization";
 import type {
   AssignRoleMemberInput,
   RoleMember,
   RolePermissionGrant,
   SetRolePermissionsInput,
-  UnassignRoleMemberInput,
 } from "@/types/access";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { lazyContract } from "@/lib/api-envelope";
@@ -52,7 +52,7 @@ const assignableDepartmentsContract = lazyContract(() =>
   import("@/hooks/api/roles-schema").then((m) => m.assignableDepartmentsContract),
 );
 
-type RolesPage = {
+export type PaginatedRolesResponse = {
   data: RoleListItem[];
   pagination: { limit: number; hasMore: boolean; nextCursor: string | null };
 };
@@ -67,8 +67,6 @@ export type {
   RoleListItem as RoleListRow,
   Role as RoleRecord,
 } from "@/hooks/api/roles-schema";
-export type PaginatedRolesResponse = RolesPage;
-
 const ROLE_SELECTOR_PARAMS = { limit: 100 } as const;
 
 export const useRoles = (
@@ -132,18 +130,21 @@ export const useRole = (
 
 export const useDeleteRole = () => {
   const queryClient = useQueryClient();
+  const { data: session } = useSession();
   return useAuthorizedMutation<{ success: boolean }, Error, number>("settings:rbac:manage", {
     mutationKey: ["roles", "delete"],
     mutationFn: (id) =>
       apiClient.delete<{ success: boolean }>(`/roles/${id}`, undefined, undefined, roleSuccessContract),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: accessAndCrmQueryKeys.roles.all });
+      if (session?.orgId) signalAccessInvalidation(session.orgId);
     },
   });
 };
 
 export const useUpdateRole = (roleId: number) => {
   const queryClient = useQueryClient();
+  const { data: session } = useSession();
   return useAuthorizedMutation<{ success: boolean }, Error, { name: string }>("settings:rbac:manage", {
     mutationKey: ["roles", "update", roleId],
     mutationFn: ({ name }) =>
@@ -153,16 +154,21 @@ export const useUpdateRole = (roleId: number) => {
       queryClient.invalidateQueries({
         queryKey: accessAndCrmQueryKeys.roles.detail(roleId),
       });
+      if (session?.orgId) signalAccessInvalidation(session.orgId);
     },
   });
 };
 
 export function useMaterializeRoleTemplate() {
   const queryClient = useQueryClient();
+  const { data: session } = useSession();
   return useAuthorizedMutation<Role, Error, { templateId: string }>("settings:rbac:manage", {
     mutationKey: ["roles", "materialize-template"],
     mutationFn: (data) => apiClient.post<Role>("/roles/templates", data, undefined, roleContract),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: accessAndCrmQueryKeys.roles.all }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: accessAndCrmQueryKeys.roles.all });
+      if (session?.orgId) signalAccessInvalidation(session.orgId);
+    },
   });
 }
 
@@ -194,6 +200,8 @@ export const useRolePermissionGrants = (
 
 export const useSetRolePermissions = () => {
   const queryClient = useQueryClient();
+  const { data: session } = useSession();
+  const orgId = session?.orgId;
   return useAuthorizedMutation<{ success: true; version: number }, Error, SetRolePermissionsInput>("settings:rbac:manage", {
     mutationKey: ["roles", "set-permissions"],
     mutationFn: ({ roleId, version, items }) =>
@@ -208,6 +216,7 @@ export const useSetRolePermissions = () => {
       });
       void queryClient.invalidateQueries({ queryKey: accessAndCrmQueryKeys.roles.list() });
       void queryClient.invalidateQueries({ queryKey: platformCoreQueryKeys.access.me() });
+      if (orgId) signalAccessInvalidation(orgId);
     },
   });
 };
@@ -231,6 +240,8 @@ export const useRoleMembers = (
 
 export const useAssignRoleMember = () => {
   const queryClient = useQueryClient();
+  const { data: session } = useSession();
+  const orgId = session?.orgId;
   return useAuthorizedMutation<{ success: boolean }, Error, AssignRoleMemberInput>("settings:rbac:manage", {
     mutationKey: ["roles", "assign-member"],
     mutationFn: ({ roleId, ...body }) =>
@@ -241,13 +252,16 @@ export const useAssignRoleMember = () => {
       });
       queryClient.invalidateQueries({ queryKey: accessAndCrmQueryKeys.roles.list() });
       queryClient.invalidateQueries({ queryKey: platformCoreQueryKeys.access.me() });
+      if (orgId) signalAccessInvalidation(orgId);
     },
   });
 };
 
 export const useUnassignRoleMember = () => {
   const queryClient = useQueryClient();
-  return useAuthorizedMutation<{ success: boolean }, Error, UnassignRoleMemberInput>("settings:rbac:manage", {
+  const { data: session } = useSession();
+  const orgId = session?.orgId;
+  return useAuthorizedMutation<{ success: boolean }, Error, AssignRoleMemberInput>("settings:rbac:manage", {
     mutationKey: ["roles", "unassign-member"],
     mutationFn: ({ roleId, ...body }) =>
       apiClient.delete<{ success: boolean }>(`/roles/${roleId}/members`, body, undefined, roleSuccessContract),
@@ -257,6 +271,7 @@ export const useUnassignRoleMember = () => {
       });
       queryClient.invalidateQueries({ queryKey: accessAndCrmQueryKeys.roles.list() });
       queryClient.invalidateQueries({ queryKey: platformCoreQueryKeys.access.me() });
+      if (orgId) signalAccessInvalidation(orgId);
     },
   });
 };

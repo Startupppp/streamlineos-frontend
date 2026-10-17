@@ -111,6 +111,7 @@ const A11Y_COVERED_SHARED: ReadonlyArray<{ file: string; reason: string }> = [
 // ---------------------------------------------------------------------------
 
 const useCan = jest.fn((_key: string) => true);
+const useCanState = jest.fn((_key: string) => "granted");
 const rfQueue = jest.fn();
 const pickWave = jest.fn();
 const putawayTask = jest.fn();
@@ -126,6 +127,7 @@ const IDLE_MUTATION = { mutate: jest.fn(), mutateAsync: jest.fn(), isPending: fa
 
 jest.mock("@/hooks/api/access", () => ({
   useCan: (key: string) => useCan(key),
+  useCanState: (key: string) => useCanState(key),
 }));
 jest.mock("@/hooks/api/inventory/rf-queue", () => ({
   useRfQueue: () => rfQueue(),
@@ -255,6 +257,7 @@ const EMPTY_DASHBOARD = {
 beforeEach(() => {
   jest.clearAllMocks();
   useCan.mockReturnValue(true);
+  useCanState.mockReturnValue("granted");
   rfQueue.mockReturnValue(LOADED_QUEUE);
   inventoryDashboard.mockReturnValue(POPULATED_DASHBOARD);
   reorderReport.mockReturnValue({ ...IDLE_QUERY, data: { items: [] } });
@@ -371,6 +374,7 @@ describe("T18 a11y — the inventory route surfaces", () => {
 
   it("inventory — the denied state, which is not the empty one", async () => {
     useCan.mockReturnValue(false);
+    useCanState.mockReturnValue("denied");
     await expectAccessibleAtBothEnds(<InventoryDashboardPage />);
   });
 

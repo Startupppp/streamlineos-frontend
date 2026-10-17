@@ -5,23 +5,26 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { TablePagination, useCursorPager } from "@/components/ui/table-pagination";
+import { BuildPaginatedContent } from "@/features/build/shared/build-paginated-content";
 import { toast } from "sonner";
 import {
   useChangelog,
   useUpdateChangelogEntry,
   useDeleteChangelogEntry,
-} from "@/hooks/api/build/roadmap";
+} from "@/hooks/api/build/changelog";
 import { useCan } from "@/hooks/api/access";
 import type { ChangelogEntry } from "@/types/projects";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { cn } from "@/lib/utils";
-import { PmStaggerList, PM_FILL_PANEL, PM_PANEL } from "@/components/pm-chrome";
+import { PmStaggerList, CONTENT_FILL_PANEL, PM_PANEL } from "@/components/pm-chrome";
 import { usePageState } from "@/hooks/api/use-page-state";
 import { PageState } from "@/components/shared/page-state";
 import { ChangelogEntryCard } from "./changelog-entry-card";
 import { ChangelogSheet } from "./changelog-sheet";
 
 interface ChangelogTabProps {
+  cursor?: string | null;
+  onCursorChange?: (cursor: string | null) => void;
   createOpen?: boolean;
   onCreateOpenChange?: (open: boolean) => void;
 }
@@ -40,10 +43,20 @@ function ChangelogListSkeleton() {
   );
 }
 
-export function ChangelogTab({ createOpen, onCreateOpenChange }: ChangelogTabProps) {
-  const pager = useCursorPager();
+export function ChangelogTab({
+  cursor = null,
+  onCursorChange = () => {},
+  createOpen,
+  onCreateOpenChange,
+}: ChangelogTabProps) {
+  const pager = useCursorPager(undefined, {
+    initialCursor: cursor ?? undefined,
+    onCursorChange: (nextCursor) => onCursorChange(nextCursor ?? null),
+  });
 
-  const { data, isLoading, isError, error, refetch } = useChangelog({ cursor: pager.cursor });
+  const { data, isLoading, isError, error, refetch } = useChangelog({
+    cursor: pager.cursor,
+  });
   const update = useUpdateChangelogEntry();
   const deleteEntry = useDeleteChangelogEntry();
   const canManage = useCan("build:roadmap:manage");
@@ -121,7 +134,7 @@ export function ChangelogTab({ createOpen, onCreateOpenChange }: ChangelogTabPro
 
   const handleNext = useCallback(() => {
     pager.goNext(data?.pagination.nextCursor);
-  }, [pager, data?.pagination.nextCursor]);
+  }, [data?.pagination.nextCursor, pager]);
 
   const handlePrev = useCallback(() => {
     pager.goPrevious();
@@ -131,13 +144,26 @@ export function ChangelogTab({ createOpen, onCreateOpenChange }: ChangelogTabPro
 
   return (
     <>
-      <div className="flex min-h-0 flex-1 flex-col gap-4">
+      <BuildPaginatedContent
+        ariaLabel="Changelog"
+        footer={(data?.data ?? []).length > 0 || pager.hasPrevious ? (
+          <TablePagination
+            mode="cursor"
+            rowCount={(data?.data ?? []).length}
+            pageNumber={pager.pageNumber}
+            hasMore={hasNext}
+            hasPrevious={pager.hasPrevious}
+            onNext={handleNext}
+            onPrevious={handlePrev}
+          />
+        ) : null}
+      >
         <PageState
           resolution={resolution}
           loading={<ChangelogListSkeleton />}
           empty={
             <EmptyState
-              className={PM_FILL_PANEL}
+              className={CONTENT_FILL_PANEL}
               illustrationPreset="ticket"
               title="No changelog entries yet"
               description="Announce shipped features, improvements and fixes to your users."
@@ -145,9 +171,9 @@ export function ChangelogTab({ createOpen, onCreateOpenChange }: ChangelogTabPro
             />
           }
           onRetry={handleRetry}
-          className={PM_FILL_PANEL}
+          className={CONTENT_FILL_PANEL}
         >
-          <>
+          <div>
             <PmStaggerList className="space-y-2">
               {(data?.data ?? []).map((entry) => (
                 <ChangelogEntryCard
@@ -161,17 +187,9 @@ export function ChangelogTab({ createOpen, onCreateOpenChange }: ChangelogTabPro
                 />
               ))}
             </PmStaggerList>
-            <TablePagination
-              mode="cursor"
-              rowCount={(data?.data ?? []).length}
-              hasMore={hasNext}
-              hasPrevious={pager.hasPrevious}
-              onNext={handleNext}
-              onPrevious={handlePrev}
-            />
-          </>
+          </div>
         </PageState>
-      </div>
+      </BuildPaginatedContent>
 
       {sheetOpen ? <ChangelogSheet onClose={handleCloseSheet} /> : null}
       {editTarget ? <ChangelogSheet entry={editTarget} onClose={handleCloseEdit} /> : null}

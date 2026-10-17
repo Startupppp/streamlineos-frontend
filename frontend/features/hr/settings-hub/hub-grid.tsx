@@ -3,6 +3,10 @@
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { useAccess } from "@/hooks/api/access";
+import { usePageState } from "@/hooks/api/use-page-state";
+import { PageState } from "@/components/shared/page-state";
+import { EmptyState } from "@/components/ui/empty-state";
+import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import type { PermissionKey } from "@/lib/rbac/permissions";
 
@@ -40,6 +44,7 @@ export const CARD_GROUPS: CardGroup[] = [
         description: "Job roles and levels used by HR records",
         href: "/hr/org",
         permission: "hr:employees:view",
+        advanced: true,
       },
       {
         title: "Permissions & Roles",
@@ -52,6 +57,7 @@ export const CARD_GROUPS: CardGroup[] = [
         description: "Delivery providers, templates, and events",
         href: "/settings/notifications/providers",
         permission: "notifications:providers:view",
+        advanced: true,
       },
     ],
   },
@@ -63,6 +69,12 @@ export const CARD_GROUPS: CardGroup[] = [
         description: "Leave, attendance, overtime, and compliance rules",
         href: "/hr/settings/policies",
         permission: "hr:policies:view",
+      },
+      {
+        title: "Reporting Managers",
+        description: "Default manager, fallback order, additional managers and change limits",
+        href: "/hr/settings/reporting-managers",
+        permission: "hr:reporting-lines:manage",
       },
       {
         title: "Effective Rule Preview",
@@ -88,7 +100,6 @@ export const CARD_GROUPS: CardGroup[] = [
         description: "Approval chains and HR process flows",
         href: "/hr/settings/workflows",
         permission: "hr:workflows:view",
-        advanced: true,
       },
       {
         title: "Automations",
@@ -120,14 +131,12 @@ export const CARD_GROUPS: CardGroup[] = [
         description: "Dynamic HR forms and intake",
         href: "/hr/settings/forms",
         permission: "hr:forms:view",
-        advanced: true,
       },
       {
         title: "Custom Fields",
         description: "Employee attribute extensions",
         href: "/hr/settings/custom-fields",
         permission: "hr:custom-fields:manage",
-        advanced: true,
       },
     ],
   },
@@ -142,16 +151,9 @@ export const CARD_GROUPS: CardGroup[] = [
       },
       {
         title: "Integrations",
-        description: "Job boards and connected recruiting apps",
+        description: "Webhooks, connected apps and devices",
         href: "/hr/settings/integrations",
         permission: "hr:integrations:manage",
-        advanced: true,
-      },
-      {
-        title: "Policy & Workflow Simulator",
-        description: "Dry-run policies and approval flows on sample employees",
-        href: "/hr/simulator",
-        permission: "hr:policies:manage",
         advanced: true,
       },
     ],
@@ -187,14 +189,14 @@ function CardItem({ card }: { card: CardDef }) {
       href={card.href}
       className={cn(
         "group relative flex flex-col gap-2 h-full rounded-2xl border border-border/70 bg-card/90 p-4",
-        "shadow-panel transition-all duration-300",
+        "shadow-panel transition-transform duration-200 motion-reduce:transition-none",
         "hover:-translate-y-0.5 hover:border-status-info-rule hover:shadow-accent",
         "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
       )}
     >
       <div className="flex items-start justify-between gap-2">
         <p className="text-sm font-semibold text-foreground">{card.title}</p>
-        <ArrowRight className="h-3.5 w-3.5 shrink-0 text-muted-foreground opacity-0 -translate-x-1 transition-all duration-300 group-hover:opacity-100 group-hover:translate-x-0" />
+        <ArrowRight className="h-3.5 w-3.5 shrink-0 text-muted-foreground opacity-0 -translate-x-1 transition-[opacity,transform] duration-200 motion-reduce:transition-none group-hover:opacity-100 group-focus-visible:opacity-100 group-hover:translate-x-0" />
       </div>
       <p className="text-xs text-muted-foreground leading-relaxed">{card.description}</p>
     </Link>
@@ -203,11 +205,27 @@ function CardItem({ card }: { card: CardDef }) {
 
 interface Props {
   isAdvanced: boolean;
-  onSwitchToAdvanced?: () => void;
 }
 
-export function HubGrid({ isAdvanced, onSwitchToAdvanced }: Props) {
-  const { data: access } = useAccess();
+function HubGridSkeleton() {
+  return (
+    <div className="space-y-8 pb-6">
+      {[0, 1].map((group) => (
+        <section key={group} className="space-y-3">
+          <Skeleton className="h-3 w-32" />
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+            {[0, 1, 2, 3].map((card) => (
+              <Skeleton key={card} className="h-24 rounded-xl" />
+            ))}
+          </div>
+        </section>
+      ))}
+    </div>
+  );
+}
+
+export function HubGrid({ isAdvanced }: Props) {
+  const { data: access, isLoading, isError, error, refetch } = useAccess();
   const canOpen = (card: CardDef) => {
     if (access?.isOrgOwner) return true;
     const required = Array.isArray(card.permission)
@@ -228,21 +246,35 @@ export function HubGrid({ isAdvanced, onSwitchToAdvanced }: Props) {
         0,
       );
 
+  const pageState = usePageState({
+    isLoading,
+    isError,
+    error,
+    isEmpty: accessibleGroups.length === 0,
+  });
+
+  function handleRetry() {
+    void refetch();
+  }
+
   return (
+    <PageState
+      resolution={pageState}
+      loading={<HubGridSkeleton />}
+      onRetry={handleRetry}
+      empty={
+        <EmptyState
+          illustrationPreset="settings"
+          title="No settings available to you"
+          description="Your role does not include any HR configuration yet. Ask an administrator for the settings permissions you need."
+        />
+      }
+    >
     <div className="space-y-8 pb-6">
       {!isAdvanced && hiddenCount > 0 && (
         <p className="text-xs text-muted-foreground">
           {hiddenCount} advanced {hiddenCount === 1 ? "tool is" : "tools are"} hidden in Simple view.
-          {onSwitchToAdvanced && (
-            <button
-              type="button"
-              onClick={onSwitchToAdvanced}
-              className="ml-1 inline-flex items-center gap-1 font-medium text-status-info-ink hover:underline"
-            >
-              Show advanced tools
-              <ArrowRight className="h-3 w-3" />
-            </button>
-          )}
+          Switch to Advanced above to show {hiddenCount === 1 ? "it" : "them"}.
         </p>
       )}
       {accessibleGroups.map((group) => {
@@ -263,5 +295,6 @@ export function HubGrid({ isAdvanced, onSwitchToAdvanced }: Props) {
         );
       })}
     </div>
+    </PageState>
   );
 }

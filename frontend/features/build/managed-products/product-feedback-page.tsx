@@ -1,197 +1,266 @@
 "use client";
 
-import { useState, useCallback, useMemo } from "react";
-import { useRouter } from "next/navigation";
-import { DataTable, DataTableSkeleton } from "@/components/ui/data-table";
+import { useCallback, useMemo, useState } from "react";
+import { DataTableSkeleton } from "@/components/ui/data-table";
+import { BuildListSurface } from "@/features/build/shared/build-list-surface";
 import { EmptyState } from "@/components/ui/empty-state";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyInboxIllustration } from "@/components/illustrations";
-import { PmPageShell, PmSection, PM_FILL_PANEL } from "@/components/pm-chrome";
-import { useFeedbucketSubmissions } from "@/hooks/api/feedbucket";
+import { CONTENT_FILL_PANEL } from "@/components/pm-chrome";
+import {
+  useFeedbucketSubmissions,
+  useFeedbucketSubmissionFacets,
+} from "@/hooks/api/feedbucket";
+import { useCrmOrganizationsForPicker } from "@/hooks/api/crm/organizations";
+import { useCan, useModuleEnabled } from "@/hooks/api/access";
 import { usePageState } from "@/hooks/api/use-page-state";
 import { PageState } from "@/components/shared/page-state";
-import { BuildListToolbar } from "@/features/build/shared/build-list-toolbar";
-import { BuildFilterSelect } from "@/features/build/shared/build-filter-select";
-import { useBuildListFilters } from "@/features/build/shared/use-build-list-filters";
+import { SubmissionBulkToolbar } from "@/components/shared/submission-bulk-toolbar";
+import { useBuildListKeyboard } from "@/hooks/common/use-build-list-keyboard";
+import { Button } from "@/components/ui/button";
 import {
   type SubmissionRow,
-  FILTER_DEFINITIONS,
   FEEDBACK_SKELETON_HEADERS,
-  FEEDBACK_COLUMNS,
-  TYPE_OPTIONS,
-  STATUS_OPTIONS_VALUES,
-  TYPE_FILTER_OPTIONS,
-  STATUS_FILTER_OPTIONS,
-  ProductFeedbackMobileCard,
 } from "./product-feedback-columns";
+import { ProductFeedbackMobileCard } from "./feedback/product-feedback-mobile-card";
+import { useManagedProduct } from "@/hooks/api/build/managed-products";
+import {
+  useProductFeedbackFilters,
+  PAGE_SIZE,
+} from "./use-product-feedback-filters";
+import {
+  MANAGED_PRODUCT_DETAIL_CONTENT_CLASS,
+  ManagedProductDetailPrimarySection,
+  ManagedProductDetailShell,
+  ManagedProductNotFound,
+} from "./managed-product-detail-layout";
+import { buildCraftedFeedbackColumns } from "./feedback/feedback-inbox-columns";
+import { useRouteToIntake } from "./feedback/route-to-intake-dialog";
+import { ProductFeedbackFilters } from "./product-feedback-filters";
+import { ProductFeedbackDialogs } from "./product-feedback-dialogs";
+import { CustomerImpactPanel } from "./customer-impact-panel";
+import { useProductReturn } from "@/features/build/shared/use-product-return";
 
-const PAGE_SIZE = 25;
+function resolveRowClassName(): string {
+  return "cursor-pointer";
+}
 
 interface ProductFeedbackPageProps {
   managedProductId: number;
 }
 
-export function ProductFeedbackPage({ managedProductId }: ProductFeedbackPageProps) {
-  const router = useRouter();
-  const listFilters = useBuildListFilters({ filters: FILTER_DEFINITIONS });
+export function ProductFeedbackPage({
+  managedProductId,
+}: ProductFeedbackPageProps) {
+  const productQuery = useManagedProduct(managedProductId);
+  const { handleBack } = useProductReturn(`/build/managed-products/${managedProductId}`);
+  const canOpenSubmissionDetail = useCan("feedbucket:widgets:view");
+  const canUpdateSubmission = useCan("feedbucket:submissions:update");
+  const canDeleteSubmission = useCan("feedbucket:submissions:delete");
+  const canRouteToIntake = useCan("feedbucket:submissions:manage");
+  const feedbucketEnabled = useModuleEnabled("feedbucket");
+  const feedbucketGate = usePageState({ module: "feedbucket", isLoading: false, isError: false });
+  const canCapture = useCan("feedbucket:submissions:manage") && feedbucketEnabled;
+  const intakeRouting = useRouteToIntake();
 
-  const typeValue = listFilters.value("type");
-  const statusValue = listFilters.value("status");
+  const [captureOpen, setCaptureOpen] = useState(false);
+  const [feedbucketOpen, setFeedbucketOpen] = useState(false);
 
-  const typedType = useMemo(
-    () => TYPE_OPTIONS.find((v) => v === typeValue),
-    [typeValue],
+  const filterState = useProductFeedbackFilters(managedProductId);
+  const {
+    listFilters,
+    searchInputRef,
+    page,
+    selected,
+    setSelected,
+    queryParams,
+    bulkFilters,
+    dateRangeReversed,
+    isFiltered,
+    handlePageChange,
+    handleClearSelection,
+  } = filterState;
+
+  const { data, isLoading, isError, error, refetch } =
+    useFeedbucketSubmissions(queryParams, { enabled: feedbucketEnabled });
+  const { data: facetsData } = useFeedbucketSubmissionFacets(
+    { managedProductId },
+    { enabled: feedbucketEnabled },
   );
-
-  const typedStatus = useMemo(
-    () => STATUS_OPTIONS_VALUES.find((v) => v === statusValue),
-    [statusValue],
-  );
-
-  const [appliedFilterKey, setAppliedFilterKey] = useState(listFilters.resetKey);
-  const [page, setPage] = useState(1);
-  if (appliedFilterKey !== listFilters.resetKey) {
-    setAppliedFilterKey(listFilters.resetKey);
-    setPage(1);
-  }
-
-  const queryParams = useMemo(
-    () => ({
-      managedProductId,
-      page,
-      limit: PAGE_SIZE,
-      ...(listFilters.debouncedSearch.trim() ? { search: listFilters.debouncedSearch.trim() } : {}),
-      ...(typedType ? { type: typedType } : {}),
-      ...(typedStatus ? { status: typedStatus } : {}),
-    }),
-    [managedProductId, page, listFilters.debouncedSearch, typedType, typedStatus],
-  );
-
-  const { data, isLoading, isError, error, refetch } = useFeedbucketSubmissions(queryParams);
-
-  const resolution = usePageState({
-    permission: "feedbucket:submissions:view",
-    isLoading,
-    isError,
-    error,
-  });
-
-  const handleTypeChange = useCallback(
-    (value: string) => listFilters.setValue("type", value),
-    [listFilters],
-  );
-
-  const handleStatusChange = useCallback(
-    (value: string) => listFilters.setValue("status", value),
-    [listFilters],
-  );
-
-  const handlePageChange = useCallback((next: number) => {
-    setPage(next);
-  }, []);
+  const { data: crmOrgsData } = useCrmOrganizationsForPicker();
 
   const handleRetry = useCallback(() => { void refetch(); }, [refetch]);
+  const rows = useMemo(() => data?.data ?? [], [data]);
+  const visibleRows = useMemo(
+    () => (dateRangeReversed ? [] : rows),
+    [dateRangeReversed, rows],
+  );
+  const selectedIds = useMemo(
+    () => [...selected].map(Number).filter((id) => Number.isFinite(id)),
+    [selected],
+  );
+  const selectionEnabled = canUpdateSubmission || canDeleteSubmission;
 
-  const resolveSubmissionHref = useCallback((row: SubmissionRow): string | null => {
-    const projectId = row.widget?.projectId;
-    if (projectId === null || projectId === undefined) return null;
-    return `/build/${projectId}/feedbucket/${row.id}`;
-  }, []);
+  const openSubmissionPane = useCallback(
+    (row: SubmissionRow) => filterState.handleOpenSubmission(row.id),
+    [filterState],
+  );
+  const handleOpenFocused = useCallback(
+    (index: number) => {
+      const row = visibleRows[index];
+      if (row) openSubmissionPane(row);
+    },
+    [visibleRows, openSubmissionPane],
+  );
+  const feedbackColumns = useMemo(
+    () =>
+      buildCraftedFeedbackColumns({
+        canRouteToIntake,
+        onRouteToIntake: intakeRouting.handleRouteToIntake,
+      }),
+    [canRouteToIntake, intakeRouting.handleRouteToIntake],
+  );
 
-  const handleRowClick = useCallback((row: SubmissionRow) => {
-    const href = resolveSubmissionHref(row);
-    if (href === null) return;
-    router.push(href);
-  }, [resolveSubmissionHref, router]);
-
-  const resolveRowClassName = useCallback((row: SubmissionRow): string => {
-    return resolveSubmissionHref(row) === null ? "" : "cursor-pointer";
-  }, [resolveSubmissionHref]);
+  useBuildListKeyboard({
+    itemCount: visibleRows.length,
+    onOpen: handleOpenFocused,
+    onEdit: handleOpenFocused,
+    onClearSelection: handleClearSelection,
+    searchInputRef,
+    enabled: true,
+  });
 
   const renderMobileCard = useCallback(
     (row: SubmissionRow) => <ProductFeedbackMobileCard row={row} />,
     [],
   );
+  const getSubmissionRowLabel = useCallback(
+    (row: SubmissionRow): string => row.message.slice(0, 80),
+    [],
+  );
+  const getSubmissionRowKey = useCallback((row: SubmissionRow) => row.id, []);
+  const handleOpenCapture = useCallback(() => setCaptureOpen(true), []);
+  const handleOpenFeedbucket = useCallback(() => setFeedbucketOpen(true), []);
+
+  const feedbackEmptyState = useMemo(
+    () =>
+      isFiltered ? (
+        <EmptyState
+          illustration={<EmptyInboxIllustration className="h-24 w-24" />}
+          title={dateRangeReversed ? "End date is before the start date" : "No feedback matches your filters"}
+          description={dateRangeReversed ? "Choose a start date on or before the end date." : "Try adjusting or clearing your filters."}
+          action={{ label: "Clear filters", onClick: listFilters.clearAll }}
+          className={CONTENT_FILL_PANEL}
+        />
+      ) : (
+        <EmptyState
+          illustration={<EmptyInboxIllustration className="h-24 w-24" />}
+          title="No feedback submissions"
+          description="Submissions from widgets linked to this product will appear here."
+          className={CONTENT_FILL_PANEL}
+        />
+      ),
+    [isFiltered, dateRangeReversed, listFilters.clearAll],
+  );
+
+  if (productQuery.isSuccess && productQuery.data === null) return <ManagedProductNotFound />;
 
   return (
-    <PageWrapper
-      title="Feedback"
-      subtitle="Submissions collected from widgets linked to this product"
-      filters={
-        <BuildListToolbar
-          search={{
-            value: listFilters.search,
-            onValueChange: listFilters.setSearch,
-            placeholder: "Search feedback…",
-            label: "Search feedback",
-          }}
-          filters={[
-            {
-              id: "type",
-              label: "Type",
-              active: listFilters.isActive("type"),
-              control: (
-                <BuildFilterSelect
-                  label="Type"
-                  value={typeValue}
-                  onValueChange={handleTypeChange}
-                  options={TYPE_FILTER_OPTIONS}
-                />
-              ),
-            },
-            {
-              id: "status",
-              label: "Status",
-              active: listFilters.isActive("status"),
-              control: (
-                <BuildFilterSelect
-                  label="Status"
-                  value={statusValue}
-                  onValueChange={handleStatusChange}
-                  options={STATUS_FILTER_OPTIONS}
-                />
-              ),
-            },
-          ]}
-          onClearAll={listFilters.clearAll}
-        />
-      }
-    >
-      <PmPageShell>
-        <PmSection index={0} className="flex flex-1 min-h-0 flex-col">
-          <PageState
-            resolution={resolution}
-            loading={<DataTableSkeleton rows={10} headers={FEEDBACK_SKELETON_HEADERS} />}
-            onRetry={handleRetry}
-            className={PM_FILL_PANEL}
-          >
-            <DataTable
-              data={data?.data ?? []}
-              columns={FEEDBACK_COLUMNS}
-              getRowKey={(row) => row.id}
-              onRowClick={handleRowClick}
-              mobileCard={renderMobileCard}
-              pagination={{
-                mode: "server",
-                page,
-                pageSize: PAGE_SIZE,
-                total: data?.total ?? 0,
-                onPageChange: handlePageChange,
-              }}
-              className="flex flex-1 min-h-0 h-full border-0 rounded-none"
-              emptyState={
-                <EmptyState
-                  illustration={<EmptyInboxIllustration className="h-24 w-24" />}
-                  title="No feedback submissions"
-                  description="Submissions from widgets linked to this product will appear here."
-                  className={PM_FILL_PANEL}
-                />
-              }
-              rowClassName={resolveRowClassName}
-            />
-          </PageState>
-        </PmSection>
-      </PmPageShell>
-    </PageWrapper>
+    <>
+      <PageWrapper
+        title="Feedback"
+        subtitle="Inbox for widgets and captures linked to this product"
+        onBack={handleBack}
+        contentClassName={MANAGED_PRODUCT_DETAIL_CONTENT_CLASS}
+        actions={
+          canCapture ? (
+            <div className="flex w-full min-w-0 flex-wrap gap-2">
+              <Button type="button" variant="outline" onClick={handleOpenFeedbucket}>
+                Collect via Feedbucket
+              </Button>
+              <Button type="button" onClick={handleOpenCapture}>
+                Capture feedback
+              </Button>
+            </div>
+          ) : undefined
+        }
+        filters={
+          <ProductFeedbackFilters
+            filterState={filterState}
+            facetsData={facetsData}
+            crmOrgsData={crmOrgsData}
+          />
+        }
+      >
+        {selectedIds.length > 0 ? (
+          <SubmissionBulkToolbar
+            selectedIds={selectedIds}
+            filters={bulkFilters}
+            onClearSelection={handleClearSelection}
+          />
+        ) : null}
+        <ManagedProductDetailShell>
+          <CustomerImpactPanel managedProductId={managedProductId} />
+          <ManagedProductDetailPrimarySection>
+            {feedbucketEnabled ? (
+              <BuildListSurface<SubmissionRow>
+                permission="feedbucket:submissions:view"
+                rows={visibleRows}
+                columns={feedbackColumns}
+                isLoading={isLoading}
+                isError={isError}
+                error={error}
+                getRowKey={getSubmissionRowKey}
+                onRowClick={openSubmissionPane}
+                mobileCard={renderMobileCard}
+                pagination={{
+                  mode: "server",
+                  page,
+                  pageSize: PAGE_SIZE,
+                  total: data?.total ?? 0,
+                  onPageChange: handlePageChange,
+                }}
+                tableClassName="flex flex-1 min-h-0 h-full border-0 rounded-none"
+                loading={
+                  <DataTableSkeleton
+                    rows={10}
+                    headers={FEEDBACK_SKELETON_HEADERS}
+                    mobileCards
+                  />
+                }
+                empty={feedbackEmptyState}
+                rowClassName={resolveRowClassName}
+                selection={
+                  selectionEnabled
+                    ? {
+                        selected,
+                        onChange: setSelected,
+                        getRowLabel: getSubmissionRowLabel,
+                      }
+                    : undefined
+                }
+                onRetry={handleRetry}
+              />
+            ) : (
+              <PageState resolution={feedbucketGate} loading={null}>
+                {null}
+              </PageState>
+            )}
+          </ManagedProductDetailPrimarySection>
+        </ManagedProductDetailShell>
+      </PageWrapper>
+      <ProductFeedbackDialogs
+        managedProductId={managedProductId}
+        filterState={filterState}
+        rows={rows}
+        canCapture={canCapture}
+        canOpenSubmissionDetail={canOpenSubmissionDetail}
+        captureOpen={captureOpen}
+        feedbucketOpen={feedbucketOpen}
+        onCaptureOpenChange={setCaptureOpen}
+        onFeedbucketOpenChange={setFeedbucketOpen}
+        intakeRouting={intakeRouting}
+      />
+    </>
   );
 }

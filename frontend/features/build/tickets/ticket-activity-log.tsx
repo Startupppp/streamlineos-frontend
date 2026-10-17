@@ -1,14 +1,17 @@
 "use client";
 
 import { memo, useCallback, useState } from "react";
-import { formatDistanceToNow } from "date-fns";
+import { formatRelativeTime } from "@/lib/date-utils";
 import {
   Activity,
   ArrowRight,
   CircleDot,
   Flag,
   Gauge,
+  GitBranch,
   History,
+  Link2,
+  Link2Off,
   MessageSquare,
   Pencil,
   RefreshCw,
@@ -23,16 +26,16 @@ import { LoadingButton } from "@/components/ui/loading-button";
 import { EmptyActivityIllustration } from "@/components/illustrations";
 import {
   useTicketActivity,
-  type TicketActivityAction,
   type TicketActivityEntry,
 } from "@/hooks/api/build/ticket-activity";
+import type { KnownTicketActivityAction } from "@/hooks/api/build/build-tickets-core-schema";
 
 interface TicketActivityLogProps {
   projectId: number;
   ticketId: number;
 }
 
-const ACTION_ICONS: Record<TicketActivityAction, LucideIcon> = {
+const ACTION_ICONS: Record<KnownTicketActivityAction, LucideIcon> = {
   created: CircleDot,
   status_changed: Activity,
   priority_changed: Flag,
@@ -47,18 +50,24 @@ const ACTION_ICONS: Record<TicketActivityAction, LucideIcon> = {
   estimate_changed: Gauge,
   cycle_changed: RefreshCw,
   type_changed: RefreshCw,
+  parent_set: GitBranch,
+  parent_removed: GitBranch,
+  relation_added: Link2,
+  relation_removed: Link2Off,
 };
+
+function isKnownAction(action: string): action is KnownTicketActivityAction {
+  return Object.hasOwn(ACTION_ICONS, action);
+}
 
 interface ActivityItemProps {
   entry: TicketActivityEntry;
 }
 
 const ActivityItem = memo(function ActivityItem({ entry }: ActivityItemProps) {
-  const Icon = ACTION_ICONS[entry.action] ?? History;
+  const Icon = isKnownAction(entry.action) ? ACTION_ICONS[entry.action] : History;
   const actorName = entry.user?.name ?? "Someone";
-  const timeAgo = entry.createdAt
-    ? formatDistanceToNow(new Date(entry.createdAt), { addSuffix: true })
-    : "";
+  const timeAgo = formatRelativeTime(entry.createdAt);
   const showTransition = !!(entry.fromValue || entry.toValue);
 
   return (
@@ -68,7 +77,7 @@ const ActivityItem = memo(function ActivityItem({ entry }: ActivityItemProps) {
       </div>
       <div className="min-w-0 flex-1 text-xs leading-relaxed">
         <span className="font-medium text-foreground">{actorName}</span>{" "}
-        <span className="text-muted-foreground">{entry.label}</span>
+        <span className="text-muted-foreground">{entry.label || entry.action}</span>
         {showTransition && (
           <span className="mt-0.5 flex flex-wrap items-center gap-1 text-muted-foreground">
             {entry.fromValue && (
@@ -145,7 +154,7 @@ export function TicketActivityLog({ projectId, ticketId }: TicketActivityLogProp
               type="button"
               onClick={handleShowOlder}
               isPending={isFetchingNextPage}
-              className="mx-auto block rounded-md border border-border bg-card px-3 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:bg-muted/60 hover:text-foreground"
+              className="mx-auto block rounded-md border border-border bg-card px-3 py-1.5 text-xs font-normal text-muted-foreground transition-colors hover:bg-muted/60 hover:text-foreground"
             >
               Show older activity
               <span className="ml-1 tabular-nums opacity-70">

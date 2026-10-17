@@ -111,6 +111,7 @@ function CommentPreviewCard({
 }) {
   const router = useRouter();
   const { data, isLoading, error } = useCommentPermalink(projectId, ticketId, commentId);
+  const { data: ticketData } = useTicketPermalink(projectId, ticketId);
 
   const handleOpen = useCallback(() => router.push(href), [router, href]);
 
@@ -145,7 +146,7 @@ function CommentPreviewCard({
     ? formatDistanceToNow(new Date(data.createdAt), { addSuffix: true })
     : "";
   const excerpt =
-    data.content.length > 140 ? `${data.content.slice(0, 140)}…` : data.content;
+    data.body.length > 140 ? `${data.body.slice(0, 140)}…` : data.body;
 
   return (
     <CardShell isOwn={isOwn} onClick={handleOpen}>
@@ -157,10 +158,10 @@ function CommentPreviewCard({
             isOwn ? "text-white/80" : "text-primary",
           )}
         >
-          {formatTicketKey(data.ticket.projectKey, data.ticket.ticketNumber)}
+          {formatTicketKey(ticketData?.projectKey, ticketData?.ticketNumber)}
         </span>
         <TruncatedText
-          text={data.ticket.title}
+          text={ticketData?.title ?? ""}
           className={cn(
             "text-dense max-w-[180px]",
             isOwn ? "text-white/70" : "text-foreground",
@@ -189,7 +190,7 @@ function CommentPreviewCard({
               isOwn ? "text-white/40" : "text-muted-foreground",
             )}
           >
-            {data.author.name ?? "Unknown"} &middot; {relativeTime}
+            {data.author?.name ?? "Unknown"} &middot; {relativeTime}
           </p>
         </div>
       </div>

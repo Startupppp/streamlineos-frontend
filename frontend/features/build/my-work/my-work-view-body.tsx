@@ -1,23 +1,33 @@
 ﻿"use client";
 
 import { memo, useCallback } from "react";
-import { useRouter } from "next/navigation";
+import { useMyWorkSearchParams } from "./my-work-collection-params";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { KanbanBoard } from "@/features/build/views/kanban-board";
+import { MyWorkBoard } from "./my-work-board";
 import { ListView } from "@/features/build/views/list-view";
 import { TableView } from "@/features/build/views/table-view";
 import { pmSnappy, viewSwap, viewSwapReduced } from "@/lib/motion-presets";
-import type { KanbanTicket, DisplayOptions } from "@/features/build/shared/types";
+import type {
+  KanbanTicket,
+  DisplayOptions,
+} from "@/features/build/shared/types";
 import type { AllWorkTicketMeta } from "./map-all-work-ticket";
 import type { MyWorkView } from "./my-work-view";
-import { getTicketDetailHref } from "@/components/shared/format-ticket-key";
+import {
+  buildMyWorkReturnHref,
+  getMyWorkTicketHref,
+} from "@/features/build/ticket-details/build-ticket-detail-url";
+import { useGuardedSoftNavigation } from "@/hooks/common/use-guarded-document-navigation";
+import type { AllWorkFilters } from "@/types/projects";
 
 interface MyWorkViewBodyProps {
   view: MyWorkView;
   tickets: KanbanTicket[];
   displayOptions: DisplayOptions;
   ticketMeta: Map<number, AllWorkTicketMeta>;
+  boardFilters: AllWorkFilters;
+  orgStatuses?: readonly { name: string }[];
 }
 
 export const MyWorkViewBody = memo(function MyWorkViewBody({
@@ -25,8 +35,12 @@ export const MyWorkViewBody = memo(function MyWorkViewBody({
   tickets,
   displayOptions,
   ticketMeta,
+  boardFilters,
+  orgStatuses,
 }: MyWorkViewBodyProps) {
-  const router = useRouter();
+  const navigate = useGuardedSoftNavigation();
+  const searchParams = useMyWorkSearchParams();
+  const returnHref = buildMyWorkReturnHref(searchParams);
   const shouldReduceMotion = useReducedMotion();
   const swapVariants = shouldReduceMotion ? viewSwapReduced : viewSwap;
 
@@ -34,11 +48,29 @@ export const MyWorkViewBody = memo(function MyWorkViewBody({
     (id: number) => {
       const meta = ticketMeta.get(id);
       if (!meta) return;
-      router.push(
-        getTicketDetailHref(meta.projectId, meta.projectKey, meta.ticketNumber),
+      navigate(
+        getMyWorkTicketHref(
+          meta.projectId,
+          meta.projectKey,
+          meta.ticketNumber,
+          returnHref,
+        ),
       );
     },
-    [ticketMeta, router],
+    [ticketMeta, navigate, returnHref],
+  );
+  const handleBoardTicketSelect = useCallback(
+    (meta: AllWorkTicketMeta) => {
+      navigate(
+        getMyWorkTicketHref(
+          meta.projectId,
+          meta.projectKey,
+          meta.ticketNumber,
+          returnHref,
+        ),
+      );
+    },
+    [navigate, returnHref],
   );
 
   return (
@@ -53,10 +85,11 @@ export const MyWorkViewBody = memo(function MyWorkViewBody({
           exit="exit"
           transition={pmSnappy}
         >
-          <KanbanBoard
+          <MyWorkBoard
             tickets={tickets}
-            projectId={0}
-            onTicketSelect={handleTicketSelect}
+            filters={boardFilters}
+            statuses={orgStatuses}
+            onTicketSelect={handleBoardTicketSelect}
             displayOptions={displayOptions}
           />
         </motion.div>
@@ -77,6 +110,7 @@ export const MyWorkViewBody = memo(function MyWorkViewBody({
                 tickets={tickets}
                 onTicketClick={handleTicketSelect}
                 displayOptions={displayOptions}
+                itemLayout="work-index"
               />
             </div>
           </ScrollArea>

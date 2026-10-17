@@ -49,6 +49,7 @@ jest.mock("@/hooks/api/mail", () => ({
     isError: false,
     error: null,
     refetch: jest.fn(),
+    isFetchedAfterMount: true,
   }),
   useMailMessage: () => ({
     data: undefined,
@@ -57,6 +58,7 @@ jest.mock("@/hooks/api/mail", () => ({
     isError: false,
     error: null,
     refetch: jest.fn(),
+    isFetchedAfterMount: false,
   }),
   useMailAction: () => ({ mutate: jest.fn(), isPending: false }),
   useMailThreadSummary: () => ({ mutateAsync: jest.fn(), isPending: false }),
@@ -91,6 +93,17 @@ describe("mail body sanitization runs on the real thread render path", () => {
     expect(body.innerHTML).toContain("Invoice attached, please pay.");
   });
 
+  it("contains wide provider HTML inside the reading pane instead of expanding the app shell", async () => {
+    const body = await renderPane();
+
+    expect(body.closest("[data-testid='mail-reading-pane']")).toHaveClass(
+      "w-full",
+      "min-w-0",
+      "max-w-full",
+      "overflow-hidden",
+    );
+  });
+
   it("no script from the thread body ever executes or survives into the DOM", async () => {
     const body = await renderPane();
 
@@ -115,15 +128,14 @@ describe("mail body sanitization runs on the real thread render path", () => {
     expect(legit?.getAttribute("rel")).toContain("noopener");
   });
 
-  it("remote tracking pixels are held back until the reader asks for them", async () => {
+  it("remote images load automatically with referrer privacy enabled", async () => {
     const body = await renderPane();
     const img = body.querySelector("img");
 
-    expect(img?.getAttribute("src")).toBeFalsy();
-    expect(img?.getAttribute("data-blocked-src")).toBe(
-      "https://tracker.evil.com/pixel.gif",
-    );
-    expect(await screen.findByText(/1 remote image blocked/i)).toBeInTheDocument();
+    expect(img).toHaveAttribute("src", "https://tracker.evil.com/pixel.gif");
+    expect(img).toHaveAttribute("referrerpolicy", "no-referrer");
+    expect(img).toHaveAttribute("loading", "lazy");
+    expect(screen.queryByText(/remote image blocked/i)).toBeNull();
   });
 
   it("BITE PROOF — the payload really is hostile, so a green result means the sanitizer worked", () => {

@@ -362,12 +362,16 @@ export function EssBankSection({
   const handleOpen = () => setSheetOpen(true);
   const handleClose = () => setSheetOpen(false);
 
+  function handleRetry() {
+    void refetch();
+  }
+
   return (
     <section id="bank" className="flex min-h-0 w-full flex-1 flex-col gap-3">
-      {!hideToolbar ? (
+      {!hideToolbar && !isError ? (
         <div className="flex shrink-0 items-center justify-end gap-3">
           <Button size="sm" variant="outline" className="h-8 text-xs" onClick={handleOpen}>
-            Update
+            {data?.hasBank ? "Update" : "Add Bank Details"}
           </Button>
         </div>
       ) : null}
@@ -385,7 +389,8 @@ export function EssBankSection({
         <ErrorState
           title="Couldn't load bank details"
           description={getErrorMessage(error)}
-          onRetry={() => void refetch()}
+          error={error}
+          onRetry={handleRetry}
         />
       ) : data?.hasBank && data.masked ? (
         <motion.div
@@ -408,7 +413,6 @@ export function EssBankSection({
           illustrationPreset="payroll"
           title="No bank details on file"
           description="Add your bank account so payroll can deposit your salary."
-          action={{ label: "Add Bank Details", onClick: handleOpen }}
           className={PAGE_BODY_EMPTY_CLASS}
         />
       )}

@@ -7,21 +7,26 @@ import { useCustomStates } from "@/hooks/api/build/custom-states";
 import { useProjectMembers, useProjectLabels } from "@/hooks/api/build/projects";
 import { cn } from "@/lib/utils";
 import { getUserDisplayName } from "@/lib/person-display";
+import { DB_ENUMS } from "@/contracts/db-enums.generated";
 
-const PRIORITY_OPTIONS = [
+export const PRIORITY_OPTIONS = [
   { value: "LOW", label: "Low" },
   { value: "MEDIUM", label: "Medium" },
   { value: "HIGH", label: "High" },
   { value: "URGENT", label: "Urgent" },
 ] as const;
 
-const TICKET_TYPE_OPTIONS = [
-  { value: "TASK", label: "Task" },
-  { value: "BUG", label: "Bug" },
-  { value: "STORY", label: "Story" },
-  { value: "EPIC", label: "Epic" },
-  { value: "SUBTASK", label: "Subtask" },
-] as const;
+const TICKET_TYPE_LABELS: Record<string, string> = {
+  TASK: "Task",
+  BUG: "Bug",
+  STORY: "Story",
+  EPIC: "Epic",
+};
+
+export const TICKET_TYPE_OPTIONS = DB_ENUMS.ticket_type.map((value) => ({
+  value,
+  label: TICKET_TYPE_LABELS[value] ?? value.charAt(0) + value.slice(1).toLowerCase(),
+}));
 
 interface AutomationValueInputProps {
   kind: "action" | "condition";
@@ -71,8 +76,8 @@ function AssigneeCombobox({
   onChange: (v: string) => void;
   className?: string;
 }) {
-  const { data: members = [] } = useProjectMembers(projectId);
-  const options = members.map((m) => ({
+  const { data: members } = useProjectMembers(projectId);
+  const options = (members?.data ?? []).map((m) => ({
     value: m.id,
     label: getUserDisplayName(m),
     sublabel: m.email,
@@ -176,6 +181,15 @@ export function AutomationValueInput({
             value={value}
             onChange={(e) => onChange(e.target.value)}
             placeholder="Comment text…"
+            className={cn("text-sm min-h-[60px] resize-none", className)}
+          />
+        );
+      case "request_approval":
+        return (
+          <Textarea
+            value={value}
+            onChange={(e) => onChange(e.target.value)}
+            placeholder="Note for the approver (optional)…"
             className={cn("text-sm min-h-[60px] resize-none", className)}
           />
         );

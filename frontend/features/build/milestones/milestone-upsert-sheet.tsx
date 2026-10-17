@@ -1,6 +1,7 @@
 ﻿"use client";
 
-import { useCallback } from "react";
+import { useCallback, useMemo, useState } from "react";
+import { useSubmitGuard } from "@/hooks/common/use-submit-guard";
 import { useRegisterDirtyState } from "@/components/shared/dirty-state-context";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -8,41 +9,29 @@ import {
   milestoneFormSchema,
   type MilestoneFormValues,
 } from "@/features/build/milestones/milestone-schema";
+import { toMilestoneStatus } from "@/features/build/milestones/milestone-status";
 import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetFooter,
-  SheetBody,
-} from "@/components/ui/sheet";
-import {
-  Form,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormControl,
-  FormMessage,
-} from "@/components/ui/form";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { DatePicker } from "@/components/ui/date-picker";
+  CONFLICT_EMPTY,
+  buildMilestoneConflictDiffs,
+} from "@/features/build/milestones/milestone-conflict-model";
+import { AppDialog } from "@/components/shared/app-dialog";
+import { Form } from "@/components/ui/form";
+import { MilestoneFormFields } from "./milestone-form-fields";
 import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { getApiErrorCode, isApiError } from "@/lib/api-envelope";
+import { TicketConflictDialog } from "@/features/build/ticket-details/ticket-conflict-dialog";
+import type { TicketConflictFieldDiff } from "@/features/build/ticket-details/ticket-conflict-diff";
 import {
   useCreateMilestone,
   useUpdateMilestone,
   type ProjectMilestone,
-} from "@/hooks/api/build";
+} from "@/hooks/api/build/milestones";
+import { useOrgMembersByIds } from "@/hooks/api/organization";
+import { useBuildMembers } from "@/hooks/api/build/build-members";
+import { getUserDisplayName } from "@/lib/person-display";
 
 interface MilestoneUpsertSheetProps {
   projectId: number;
@@ -50,29 +39,83 @@ interface MilestoneUpsertSheetProps {
   onClose: () => void;
 }
 
-export function MilestoneUpsertSheet({ projectId, milestone, onClose }: MilestoneUpsertSheetProps) {
+export function MilestoneUpsertSheet({
+  projectId,
+  milestone,
+  onClose,
+}: MilestoneUpsertSheetProps) {
   const isEdit = !!milestone;
   const create = useCreateMilestone(projectId);
   const update = useUpdateMilestone(projectId);
-  const isPending = create.isPending || update.isPending;
+  const [conflictFields, setConflictFields] = useState<
+    TicketConflictFieldDiff[] | null
+  >(null);
+  const { data: buildMembersPage } = useBuildMembers({ limit: 100 });
+  const buildMembers = useMemo(
+    () => buildMembersPage?.data ?? [],
+    [buildMembersPage],
+  );
+  const { data: membersPage } = useOrgMembersByIds(
+    buildMembers.map((member) => member.id),
+  );
+  const membershipByUserId = useMemo(
+    () =>
+      new Map(
+        (membersPage?.data ?? []).map((member) => [member.userId, member]),
+      ),
+    [membersPage],
+  );
+  const members = useMemo(
+    () =>
+      buildMembers.flatMap((member) => {
+        const membership = membershipByUserId.get(member.id);
+        return membership ? [membership] : [];
+      }),
+    [buildMembers, membershipByUserId],
+  );
 
+  const candidates = useMemo(
+    () =>
+      buildMembers
+        .filter((member) => membershipByUserId.has(member.id))
+        .map((member) => ({
+          id: member.id,
+          name: member.name,
+          email: member.email,
+          image: member.image,
+        })),
+    [buildMembers, membershipByUserId],
+  );
+  const userIdByMembershipId = useMemo(
+    () => new Map(members.map((m) => [m.membershipId, m.userId])),
+    [members],
+  );
+  const membershipIdByUserId = useMemo(
+    () => new Map(members.map((m) => [m.userId, m.membershipId])),
+    [members],
+  );
   const form = useForm<MilestoneFormValues>({
     resolver: zodResolver(milestoneFormSchema),
     defaultValues: {
       name: milestone?.name ?? "",
       description: milestone?.description ?? "",
       targetDate: milestone?.targetDate ?? "",
-      status: milestone?.status ?? "PENDING",
+      status: toMilestoneStatus(milestone?.status),
+      ownerMembershipId: milestone?.ownerMembershipId ?? null,
     },
   });
   useRegisterDirtyState(form.formState.isDirty);
 
-  const targetDateValue = form.watch("targetDate");
-
-  const handleTargetDateChange = useCallback(
-    (val: string) => form.setValue("targetDate", val, { shouldValidate: true }),
-    [form],
+  const ownerLabel = useCallback(
+    (membershipId: number | null) => {
+      if (membershipId === null) return CONFLICT_EMPTY;
+      const member = members.find((m) => m.membershipId === membershipId);
+      return member ? getUserDisplayName(member) : String(membershipId);
+    },
+    [members],
   );
+
+  const handleConflictDismiss = useCallback(() => setConflictFields(null), []);
 
   const handleOpenChange = useCallback(
     (open: boolean) => {
@@ -82,132 +125,95 @@ export function MilestoneUpsertSheet({ projectId, milestone, onClose }: Mileston
   );
 
   const onSubmit = useCallback(
-    (values: MilestoneFormValues) => {
+    async (values: MilestoneFormValues) => {
       const payload = {
         name: values.name,
         description: values.description?.trim() || undefined,
         targetDate: values.targetDate,
         status: values.status,
+        ownerMembershipId: values.ownerMembershipId,
       };
 
       if (isEdit) {
-        update.mutate(
-          { milestoneId: milestone.id, ...payload },
-          {
-            onSuccess: () => { toast.success("Milestone updated"); onClose(); },
-            onError: (err) => toast.error(getErrorMessage(err)),
-          },
-        );
+        try {
+          await update.mutateAsync({ milestoneId: milestone.id, version: milestone.version, ...payload });
+          toast.success("Milestone updated");
+          onClose();
+        } catch (err) {
+          if (isApiError(err) && getApiErrorCode(err) === "PROJECTS_TICKET_CONFLICT") {
+            const diffs = buildMilestoneConflictDiffs(values, milestone, ownerLabel);
+            if (diffs.length > 0) {
+              setConflictFields(diffs);
+            } else {
+              toast.warning("This milestone was modified by another user. Your changes were not saved.");
+            }
+            return;
+          }
+          toast.error(getErrorMessage(err));
+        }
       } else {
-        create.mutate(
-          payload,
-          {
-            onSuccess: () => { toast.success("Milestone created"); onClose(); },
-            onError: (err) => toast.error(getErrorMessage(err)),
-          },
-        );
+        try {
+          await create.mutateAsync(payload);
+          toast.success("Milestone created");
+          onClose();
+        } catch (err) {
+          toast.error(getErrorMessage(err));
+        }
       }
     },
-    [isEdit, milestone, create, update, onClose],
+    [isEdit, milestone, create, update, onClose, ownerLabel],
   );
+  const guard = useSubmitGuard(onSubmit);
 
   return (
-    <Sheet open onOpenChange={handleOpenChange}>
-      <SheetContent className="w-full sm:max-w-md flex flex-col gap-0 p-0">
-        <SheetHeader className="px-6 py-4 border-b">
-          <SheetTitle>{isEdit ? "Edit Milestone" : "New Milestone"}</SheetTitle>
-        </SheetHeader>
-
+    <>
+      <AppDialog
+        open
+        onOpenChange={handleOpenChange}
+        title={isEdit ? "Edit Milestone" : "New Milestone"}
+        description={
+          isEdit
+            ? "Update the milestone details and keep its delivery status current."
+            : "Create a checkpoint with an owner, target date, and delivery status."
+        }
+        footer={
+          <div className="grid w-full grid-cols-2 gap-2">
+            <Button type="button" variant="outline" onClick={onClose}>
+              Cancel
+            </Button>
+            <LoadingButton
+              type="submit"
+              form="milestone-form"
+              isPending={guard.isSubmitting}
+              loadingText="Saving…"
+            >
+              {isEdit ? "Save Changes" : "Create Milestone"}
+            </LoadingButton>
+          </div>
+        }
+      >
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col flex-1 min-h-0">
-            <SheetBody className="px-6 py-5 space-y-4">
-              <FormField
-                control={form.control}
-                name="name"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Name *</FormLabel>
-                    <FormControl>
-                      <Input placeholder="e.g. MVP Launch" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="description"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Description</FormLabel>
-                    <FormControl>
-                      <Textarea rows={3} placeholder="Optional description…" className="resize-none" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <div className="grid grid-cols-2 gap-3">
-                <FormField
-                  control={form.control}
-                  name="targetDate"
-                  render={() => (
-                    <FormItem>
-                      <FormLabel>Target Date *</FormLabel>
-                      <FormControl>
-                        <DatePicker
-                          value={targetDateValue}
-                          onChange={handleTargetDateChange}
-                          placeholder="Pick a date"
-                          className="text-sm"
-                          disablePast
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="status"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Status</FormLabel>
-                      <Select value={field.value} onValueChange={field.onChange}>
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="PENDING">Pending</SelectItem>
-                          <SelectItem value="ACHIEVED">Achieved</SelectItem>
-                          <SelectItem value="MISSED">Missed</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-            </SheetBody>
-
-            <SheetFooter className="px-6 py-4 border-t shrink-0">
-              <div className="grid w-full grid-cols-2 gap-2">
-                <Button type="button" variant="outline" onClick={onClose}>
-                  Cancel
-                </Button>
-                <LoadingButton type="submit" isPending={isPending} loadingText="Saving…">
-                  {isEdit ? "Save Changes" : "Create Milestone"}
-                </LoadingButton>
-              </div>
-            </SheetFooter>
+          <form
+            id="milestone-form"
+            onSubmit={form.handleSubmit(guard.submit)}
+            className="space-y-4"
+            noValidate
+          >
+            <MilestoneFormFields
+              form={form}
+              candidates={candidates}
+              userIdByMembershipId={userIdByMembershipId}
+              membershipIdByUserId={membershipIdByUserId}
+            />
           </form>
         </Form>
-      </SheetContent>
-    </Sheet>
+      </AppDialog>
+      <TicketConflictDialog
+        open={conflictFields !== null}
+        fields={conflictFields ?? []}
+        onKeepMine={handleConflictDismiss}
+        onDiscard={handleConflictDismiss}
+      />
+    </>
   );
 }

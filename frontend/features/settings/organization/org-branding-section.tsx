@@ -41,7 +41,7 @@ function toBrandingValues(org: OrgSettings): BrandingValues {
   return {
     logo: org.logo ?? "",
     favicon: org.favicon ?? "",
-    primaryColor: org.primaryColor ?? "#0b1220",
+    primaryColor: org.primaryColor ?? "",
     secondaryColor: org.secondaryColor ?? "",
     loginBgUrl: org.loginBgUrl ?? "",
   };
@@ -83,7 +83,7 @@ export function OrgBrandingSection({ org, canEdit }: OrgBrandingSectionProps) {
 
   const logoVal = form.watch("logo") ?? "";
   const faviconVal = form.watch("favicon") ?? "";
-  const primaryVal = form.watch("primaryColor") ?? "#0b1220";
+  const primaryVal = form.watch("primaryColor") ?? "";
   const secondaryVal = form.watch("secondaryColor") ?? "";
 
   return (
@@ -181,7 +181,7 @@ export function OrgBrandingSection({ org, canEdit }: OrgBrandingSectionProps) {
                     <FormItem className="gap-1.5">
                       <ColorField
                         label="Primary color"
-                        value={field.value ?? "#0b1220"}
+                        value={field.value ?? ""}
                         onChange={handlePrimaryColorChange}
                         error={form.formState.errors.primaryColor?.message}
                       />
@@ -203,6 +203,7 @@ export function OrgBrandingSection({ org, canEdit }: OrgBrandingSectionProps) {
                         label="Secondary color"
                         value={field.value ?? ""}
                         onChange={handleSecondaryColorChange}
+                        pickerFallback="#ffffff"
                         error={form.formState.errors.secondaryColor?.message}
                       />
                       <FormMessage className="hidden" />

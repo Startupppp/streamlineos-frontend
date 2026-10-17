@@ -5,7 +5,7 @@ import { useAbly } from "ably/react";
 import type { InboundMessage } from "ably";
 import { useSession } from "next-auth/react";
 import { toast } from "sonner";
-import { safeSubscribe, safeUnsubscribe } from "@/lib/ably-safe-subscribe";
+import { isForgedServerFrame, safeSubscribe, safeUnsubscribe } from "@/lib/ably-safe-subscribe";
 import { huddleChannelName, notificationsChannelName } from "@/lib/ably-channels";
 import type { HuddleParticipant } from "@/types/chat";
 import { useAblyConnection } from "./use-ably-connection";
@@ -43,18 +43,21 @@ export function useHuddleEvents({
     };
 
     const handleJoined = (msg: InboundMessage) => {
+      if (isForgedServerFrame("huddle:user_joined", msg.clientId)) return;
       const data = msg.data as { userId: string };
       if (data.userId === currentUserId) return;
       toast(`${nameFor(data.userId)} joined the huddle`);
     };
 
     const handleLeft = (msg: InboundMessage) => {
+      if (isForgedServerFrame("huddle:user_left", msg.clientId)) return;
       const data = msg.data as { userId: string };
       if (data.userId === currentUserId) return;
       toast(`${nameFor(data.userId)} left the huddle`);
     };
 
-    const handleKicked = () => {
+    const handleKicked = (msg: InboundMessage) => {
+      if (isForgedServerFrame("huddle:kicked", msg.clientId)) return;
       toast.error("You were removed from the huddle");
       onKicked();
     };

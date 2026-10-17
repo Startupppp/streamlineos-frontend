@@ -44,8 +44,6 @@ const MATRIX: readonly MatrixRow[] = [
   { path: "/chat/channels", universalMatch: true, decisionKind: "universal", label: "channel list" },
   { path: "/chat/channels/general", universalMatch: true, decisionKind: "universal", label: "channel conversation" },
   { path: "/chat/invite/token123", universalMatch: true, decisionKind: "universal", label: "invite acceptance" },
-  // administrative descendant DENIED
-  { path: "/chat/settings", universalMatch: false, decisionKind: "permission", label: "org chat settings admin — gated on chat:org-settings:manage" },
 
   // ── /calendar ───────────────────────────────────────────────────────────────
   // root read allowed (single unified calendar page)
@@ -82,10 +80,11 @@ const MATRIX: readonly MatrixRow[] = [
   // ── /dashboard and /home ────────────────────────────────────────────────────
   // root read allowed — only the root itself is universal; exact-by-default so any new sub-route fails closed
   { path: "/dashboard", universalMatch: true, decisionKind: "universal", label: "dashboard root" },
+  { path: "/post-invite", universalMatch: true, decisionKind: "universal", label: "authenticated invitation landing" },
+  { path: "/post-invite/unknown", universalMatch: false, decisionKind: "unknown", label: "invitation landing descendants stay closed" },
 
   // ── /announcements and /hr/announcements ────────────────────────────────────
   // root read allowed — only the root itself is universal; exact-by-default so any new sub-route fails closed
-  { path: "/announcements", universalMatch: true, decisionKind: "universal", label: "announcements root" },
   { path: "/hr/announcements", universalMatch: true, decisionKind: "universal", label: "announcements under HR prefix — universal reading" },
 
   // ── /settings ───────────────────────────────────────────────────────────────
@@ -113,7 +112,7 @@ const MATRIX: readonly MatrixRow[] = [
 
 describe("universal route matrix — exact-by-default with explicit allowlist", () => {
   it("covers every declared universal root so a missing row cannot pass silently", () => {
-    expect(MATRIX.length).toBeGreaterThanOrEqual(50);
+    expect(MATRIX.length).toBeGreaterThanOrEqual(49);
   });
 
   it("isUniversalRoute matches every row's expectation", () => {
@@ -161,7 +160,6 @@ describe("universal route matrix — exact-by-default with explicit allowlist", 
       "/knowledge/wiki/spaces",
       "/knowledge/wiki/templates",
       "/knowledge/wiki/trash",
-      "/chat/settings",
       "/calendar/settings",
     ];
     for (const p of adminPaths) {

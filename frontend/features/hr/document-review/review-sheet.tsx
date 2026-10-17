@@ -2,7 +2,6 @@
 
 import { useState, useCallback } from "react";
 import { toast } from "sonner";
-import { RefreshCw } from "lucide-react";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { UploadIcon } from "@animateicons/react/lucide";
 
@@ -12,7 +11,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { EmptyState } from "@/components/ui/empty-state";
-import { ErrorState } from "@/components/shared/error-state";
+import { PageState } from "@/components/shared/page-state";
+import { usePageState } from "@/hooks/api/use-page-state";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { EmptyDocumentsIllustration } from "@/components/illustrations";
 import {
   Sheet,
@@ -26,7 +27,8 @@ import { CursorPageControls } from "@/components/ui/cursor-page-controls";
 
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useEmployeeOnboardingDocs, useReviewDocument } from "@/hooks/api/hr/document-review";
-import { DocCard, type OnboardingDoc } from "./doc-card";
+import type { OnboardingChecklistDoc } from "@/hooks/api/hr/onboarding";
+import { DocCard } from "./doc-card";
 import { UploadDocSheet } from "./upload-doc-sheet";
 
 interface ReviewSheetProps {
@@ -48,8 +50,16 @@ export function ReviewSheet({ userId, userName, canReview, onClose }: ReviewShee
     isLoading: docsLoading,
     isFetching: docsFetching,
     isError: docsFailed,
+    error: docsError,
     refetch: refetchDocs,
   } = useEmployeeOnboardingDocs(userId, docsCursor);
+  const docsState = usePageState({
+    permission: "hr:onboarding:manage",
+    isLoading: docsLoading,
+    isError: docsFailed,
+    error: docsError,
+    isEmpty: (docsData?.data ?? []).length === 0,
+  });
 
   const handleRetryDocs = useCallback(() => {
     void refetchDocs();
@@ -57,9 +67,9 @@ export function ReviewSheet({ userId, userName, canReview, onClose }: ReviewShee
 
   const employeeDocs = docsData?.data;
 
-  const [reuploadDoc, setReuploadDoc] = useState<OnboardingDoc | null>(null);
+  const [reuploadDoc, setReuploadDoc] = useState<OnboardingChecklistDoc | null>(null);
   const [reuploadRemarks, setReuploadRemarks] = useState("");
-  const [approveDoc, setApproveDoc] = useState<OnboardingDoc | null>(null);
+  const [approveDoc, setApproveDoc] = useState<OnboardingChecklistDoc | null>(null);
   const [uploadSheetOpen, setUploadSheetOpen] = useState(false);
 
   const handleSheetOpenChange = useCallback(
@@ -85,7 +95,7 @@ export function ReviewSheet({ userId, userName, canReview, onClose }: ReviewShee
     }
   }, [docsData?.pagination.nextCursor]);
 
-  const handleSetApproveDoc = useCallback((doc: OnboardingDoc) => setApproveDoc(doc), []);
+  const handleSetApproveDoc = useCallback((doc: OnboardingChecklistDoc) => setApproveDoc(doc), []);
 
   const handleApprove = useCallback(() => {
     if (!approveDoc) return;
@@ -107,7 +117,7 @@ export function ReviewSheet({ userId, userName, canReview, onClose }: ReviewShee
 
   const handleOpenUploadSheet = useCallback(() => setUploadSheetOpen(true), []);
 
-  const handleOpenReupload = useCallback((doc: OnboardingDoc) => {
+  const handleOpenReupload = useCallback((doc: OnboardingChecklistDoc) => {
     setReuploadDoc(doc);
     setReuploadRemarks("");
   }, []);
@@ -188,29 +198,28 @@ export function ReviewSheet({ userId, userName, canReview, onClose }: ReviewShee
 
           <ScrollArea className="flex-1 min-h-0">
             <div className="px-5 py-4 space-y-3">
-              {docsLoading ? (
-                <div className="space-y-2">
-                  {Array.from({ length: 4 }).map((_, i) => (
-                    <Skeleton key={i} className="h-20 rounded-xl" />
-                  ))}
-                </div>
-              ) : docsFailed ? (
-                <ErrorState
-                  title="Couldn’t load this employee’s documents"
-                  description="The submission list did not load, so an empty review queue would be misleading. Try again."
-                  onRetry={handleRetryDocs}
-                  compact
-                />
-              ) : !employeeDocs || employeeDocs.length === 0 ? (
-                <EmptyState
-                  illustration={<EmptyDocumentsIllustration className="h-24 w-24" />}
-                  title="No documents submitted"
-                  description="This employee has not submitted any documents yet."
-                  compact
-                />
-              ) : (
+              <PageState
+                resolution={docsState}
+                onRetry={handleRetryDocs}
+                compact
+                loading={
+                  <div className="space-y-2">
+                    {Array.from({ length: 4 }).map((_, i) => (
+                      <Skeleton key={i} className="h-20 rounded-xl" />
+                    ))}
+                  </div>
+                }
+                empty={
+                  <EmptyState
+                    illustration={<EmptyDocumentsIllustration className="h-24 w-24" />}
+                    title="No documents submitted"
+                    description="This employee has not submitted any documents yet."
+                    compact
+                  />
+                }
+              >
                 <>
-                  {employeeDocs.map((doc) => (
+                  {(employeeDocs ?? []).map((doc) => (
                     <DocCard
                       key={doc.id}
                       doc={doc}
@@ -231,7 +240,7 @@ export function ReviewSheet({ userId, userName, canReview, onClose }: ReviewShee
                     />
                   ) : null}
                 </>
-              )}
+              </PageState>
             </div>
           </ScrollArea>
         </SheetContent>
@@ -282,16 +291,14 @@ export function ReviewSheet({ userId, userName, canReview, onClose }: ReviewShee
             >
               Cancel
             </Button>
-            <Button
+            <LoadingButton
               className="flex-1"
               onClick={handleReupload}
-              disabled={reviewMutation.isPending || !reuploadRemarks.trim()}
+              isPending={reviewMutation.isPending}
+              disabled={!reuploadRemarks.trim()}
             >
-              {reviewMutation.isPending && (
-                <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
-              )}
               Send Request
-            </Button>
+            </LoadingButton>
           </div>
         </SheetContent>
       </Sheet>

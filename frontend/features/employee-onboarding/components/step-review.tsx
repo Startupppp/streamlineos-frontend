@@ -7,7 +7,7 @@ import { writeGateCookie } from "@/lib/onboarding-gate";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useSession } from "next-auth/react";
 import { toast } from "sonner";
-import { useSubmitOnboardingMutation } from "@/lib/api/hooks/onboarding";
+import { useSubmitOnboardingMutation } from "@/hooks/api/onboarding/employee-onboarding";
 import { personalInfoSchema } from "@/lib/location/personal-info-validation";
 import { CompletionCelebration } from "@/components/celebration/completion-celebration";
 import { Button } from "@/components/ui/button";
@@ -176,8 +176,20 @@ export function StepReview({
       return;
     }
 
+    const resolvedCountryCode = (
+      draft.bank.countryCode.trim() || countryCode
+    ).trim();
+    if (resolvedCountryCode.length < 2) {
+      toast.error(
+        "Add your country on the bank details step before submitting.",
+      );
+      return;
+    }
+    const bank = { ...draft.bank, countryCode: resolvedCountryCode };
+
     if (requirements) {
       const bankFormValues = {
+        countryCode: resolvedCountryCode,
         accountHolder: draft.bank.accountHolder,
         bankName: draft.bank.bankName,
         accountNumber: draft.bank.accountNumber,
@@ -200,7 +212,7 @@ export function StepReview({
     try {
       await submitOnboarding({
         personal: personalParsed.data,
-        bank: draft.bank,
+        bank,
       });
       onClearDraft();
       writeGateCookie(

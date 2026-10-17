@@ -57,7 +57,7 @@ function CircularProgress({ value }: { value: number }) {
         strokeDasharray={circ}
         strokeDashoffset={offset}
         strokeLinecap="round"
-        style={{ transition: "stroke-dashoffset 0.6s ease" }}
+        style={{ transition: "stroke-dashoffset 0.3s ease" }}
       />
       <text
         x="36"
@@ -68,7 +68,6 @@ function CircularProgress({ value }: { value: number }) {
         style={{
           transform: "rotate(90deg)",
           transformOrigin: "36px 36px",
-          fontSize: "11px",
         }}
       >
         {value}%
@@ -80,19 +79,20 @@ function CircularProgress({ value }: { value: number }) {
 interface GoalCardProps {
   goal: HrGoal;
   index: number;
-  onEditProgress: (goal: HrGoal) => void;
+  /** Omitted when the viewer lacks `hr:performance:view` (PATCH /hr/performance/goals/:id). */
+  onEditProgress?: (goal: HrGoal) => void;
 }
 
 export function GoalCard({ goal, index, onEditProgress }: GoalCardProps) {
   function handleEditProgress() {
-    onEditProgress(goal);
+    onEditProgress?.(goal);
   }
 
   return (
     <motion.div
       initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.22, ease: "easeOut", delay: index * 0.06 }}
+      transition={{ duration: 0.22, ease: "easeOut", delay: Math.min(index, 8) * 0.04 }}
       className="bg-card rounded-lg border border-border p-5 flex flex-col gap-4"
     >
       <div className="flex items-start gap-4">
@@ -135,27 +135,29 @@ export function GoalCard({ goal, index, onEditProgress }: GoalCardProps) {
         </div>
         <div className="h-1.5 bg-muted rounded-full overflow-hidden">
           <div
-            className="h-full bg-status-info-fill rounded-full transition-all duration-500"
+            className="h-full bg-status-info-fill rounded-full transition-[width] duration-300"
             style={{ width: `${Math.min(goal.progress, 100)}%` }}
           />
         </div>
       </div>
-      <Button
-        size="sm"
-        variant="outline"
-        className="w-full"
-        onClick={handleEditProgress}
-      >
-        <TrendingUp className="w-3.5 h-3.5 mr-1.5" />
-        Update Progress
-      </Button>
+      {onEditProgress && (
+        <Button
+          size="sm"
+          variant="outline"
+          className="w-full"
+          onClick={handleEditProgress}
+        >
+          <TrendingUp className="w-3.5 h-3.5 mr-1.5" />
+          Update Progress
+        </Button>
+      )}
     </motion.div>
   );
 }
 
 interface GoalGridProps {
   goals: HrGoal[];
-  onEditProgress: (g: HrGoal) => void;
+  onEditProgress?: (g: HrGoal) => void;
 }
 
 export function GoalGrid({ goals, onEditProgress }: GoalGridProps) {

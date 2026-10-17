@@ -13,3 +13,5 @@ export const teamSummaryResponseContract = z.object({
     }),
   ),
 });
+
+export const remindMemberResponseContract = z.object({ sent: z.literal(true) });

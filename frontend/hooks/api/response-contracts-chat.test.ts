@@ -5,9 +5,11 @@ import {
   chatChannelMemberPreviewContract,
   chatChannelPageContract,
   chatHuddleContract,
+  chatMessageContract,
   chatMessagesPageContract,
   chatPollPageContract,
   chatPublicChannelContract,
+  chatSendResponseContract,
 } from "@/hooks/api/chat-schema";
 import { chatChannelDetailContract } from "@/hooks/api/chat-extra-schema";
 
@@ -234,6 +236,25 @@ describe("the channel-detail contract mirrors channelDetailSchema, not types/cha
 
   it("rejects the list row, so the two projections cannot be swapped for one another", () => {
     expect(chatChannelDetailContract.safeParse(CHANNEL).success).toBe(false);
+  });
+
+  /**
+   * A member who has just joined a channel and not yet opened it has
+   * `lastReadAt = null` — the column is nullable in the DB and `nullableWireDate()`
+   * in the backend schema. The frontend contract required `z.string()` (non-null),
+   * which caused the full channel-detail parse to fail for any channel where at
+   * least one member had never read a message. The fix is `z.string().nullable()`.
+   */
+  it("accepts a channel-detail member whose lastReadAt is null (never read the channel)", () => {
+    const memberWithNoReads = {
+      ...MEMBER,
+      lastReadAt: null,
+      joinedAt: "2026-08-01T09:00:00.000Z",
+      archivedAt: null,
+      user: { ...MEMBER.user, email: "bob@example.com" },
+    };
+    const detail = { ...CHANNEL_DETAIL, members: [memberWithNoReads] };
+    expect(chatChannelDetailContract.safeParse(detail).success).toBe(true);
   });
 });
 
@@ -501,5 +522,45 @@ describe("BITE — the message payload that actually shipped is rejected", () =>
 
   it("rejects a page whose cursor was dropped rather than nulled", () => {
     expect(chatMessagesPageContract.safeParse({ messages: [MESSAGE] }).success).toBe(false);
+  });
+});
+
+const SEND_RESPONSE = {
+  id: 901,
+  orgId: "org_1",
+  channelId: 7,
+  senderMembershipId: 41,
+  content: "hello",
+  replyToId: null,
+  isEdited: false,
+  isDeleted: false,
+  messageType: "text",
+  metadata: null,
+  actionStatus: null,
+  clientKey: "ck_abc123",
+  channelPosition: 13,
+  createdAt: "2026-09-02T12:00:00.000Z",
+  updatedAt: "2026-09-02T12:00:00.000Z",
+};
+
+describe("chatSendResponseContract — BUG-058: POST send endpoint returns a raw message without sender/attachments/replyTo", () => {
+  it("accepts the raw send response which has no sender, attachments or replyTo fields", () => {
+    expect(chatSendResponseContract.safeParse(SEND_RESPONSE).success).toBe(true);
+  });
+
+  it("accepts a send response with a null senderMembershipId when the sender account is gone", () => {
+    expect(chatSendResponseContract.safeParse({ ...SEND_RESPONSE, senderMembershipId: null }).success).toBe(true);
+  });
+
+  it("accepts a send response with a null clientKey when the client did not supply one", () => {
+    expect(chatSendResponseContract.safeParse({ ...SEND_RESPONSE, clientKey: null }).success).toBe(true);
+  });
+
+  it("rejects the send response through chatMessageContract — sender is required there so parsing always fails (BUG-058 root cause)", () => {
+    const result = chatMessageContract.safeParse(SEND_RESPONSE);
+    expect(result.success).toBe(false);
+    if (result.success) return;
+    const paths = result.error.issues.map((i) => i.path.join("."));
+    expect(paths).toEqual(expect.arrayContaining(["sender"]));
   });
 });

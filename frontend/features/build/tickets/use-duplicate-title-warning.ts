@@ -1,11 +1,15 @@
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import { useTicketSearch } from "@/hooks/api/build/ticket-search";
 
+export const TICKET_SEARCH_QUERY_MAX = 200;
+
 export function useDuplicateTitleWarning(title: string, projectId: number | null) {
   const debouncedTitle = useDebouncedValue(title, 500);
 
   const trimmed = debouncedTitle.trim().toLowerCase();
-  const enabled = trimmed.length >= 3 && projectId != null;
+  const withinSearchLimit = trimmed.length <= TICKET_SEARCH_QUERY_MAX;
+  const enabled =
+    trimmed.length >= 3 && withinSearchLimit && projectId != null;
 
   const { data } = useTicketSearch(trimmed, { enabled });
 

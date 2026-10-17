@@ -1,26 +1,21 @@
-/**
- * The Build inbox read `/notifications` once with `limit: 100`, so it mounted
- * 100 rows at a time AND made notification 101 unreachable — there was no
- * cursor and no pager. The Mentions tab filtered that same fixed page
- * client-side, so a mention older than the newest 100 notifications could not be
- * reached at all. These assert the cursor read, the render bound, and that
- * nothing sits behind the bound unreachably.
- */
+
 import React from "react";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { InboxList } from "./inbox-list";
 import { INBOX_FETCH_PAGE_SIZE, INBOX_RENDER_PAGE_SIZE } from "./inbox-render-window";
-import type { Notification, NotificationSection } from "@/types/notifications";
 
 const useInfiniteNotifications = jest.fn();
 const fetchNextPage = jest.fn();
 
-jest.mock("@/hooks/api/notifications", () => ({
+jest.mock("@/hooks/api/notifications-inbox", () => ({
   useInfiniteNotifications: (params: unknown) => useInfiniteNotifications(params),
   useMarkNotificationRead: () => ({ mutate: jest.fn() }),
   useMarkAllNotificationsRead: () => ({ mutate: jest.fn(), isPending: false }),
   useBulkMarkRead: () => ({ mutateAsync: jest.fn() }),
+}));
+
+jest.mock("@/hooks/api/notifications-inbox-actions", () => ({
   useBulkArchive: () => ({ mutateAsync: jest.fn() }),
   useBulkDelete: () => ({ mutateAsync: jest.fn() }),
 }));
@@ -100,7 +95,7 @@ describe("InboxList — the mounted row count is bounded", () => {
     mockPages([8], false);
     renderInbox();
     expect(screen.getAllByRole("listitem")).toHaveLength(8);
-    expect(screen.queryByRole("button", { name: /show .* more/i })).toBeNull();
+    expect(screen.queryByRole("button", { name: /load older notifications/i })).toBeNull();
   });
 
   it("keeps row 51 reachable behind the bound", async () => {
@@ -108,7 +103,7 @@ describe("InboxList — the mounted row count is bounded", () => {
     mockPages([100, 100, 100], false);
     renderInbox();
     expect(screen.queryByText("notification-51")).toBeNull();
-    await user.click(screen.getByRole("button", { name: /show 30 more \(30 of 300\)/i }));
+    await user.click(screen.getByRole("button", { name: /load older notifications/i }));
     expect(screen.getByText("notification-51")).toBeInTheDocument();
     expect(screen.getAllByRole("listitem")).toHaveLength(INBOX_RENDER_PAGE_SIZE * 2);
   });
@@ -117,7 +112,7 @@ describe("InboxList — the mounted row count is bounded", () => {
     const user = userEvent.setup();
     mockPages([100, 100, 100], true);
     renderInbox();
-    await user.click(screen.getByRole("button", { name: /show 30 more/i }));
+    await user.click(screen.getByRole("button", { name: /load older notifications/i }));
     expect(fetchNextPage).not.toHaveBeenCalled();
   });
 });
@@ -144,7 +139,7 @@ describe("InboxList — changing the section prop resets the window", () => {
     const user = userEvent.setup();
     mockPages([100, 100, 100], false);
     const { rerender } = renderInbox({ section: "UNREAD" });
-    await user.click(screen.getByRole("button", { name: /show 30 more/i }));
+    await user.click(screen.getByRole("button", { name: /load older notifications/i }));
     expect(screen.getAllByRole("listitem")).toHaveLength(INBOX_RENDER_PAGE_SIZE * 2);
     rerender(
       <InboxList
@@ -160,7 +155,7 @@ describe("InboxList — changing the section prop resets the window", () => {
 
   it("does not claim there are no mentions while more pages are still unread", () => {
     useInfiniteNotifications.mockReturnValue({
-      data: { pages: [[]], pageParams: [] },
+      data: { pages: [{ data: [], hasMore: false, nextCursor: null }], pageParams: [] },
       isPending: false,
       isLoading: false,
       isError: false,
@@ -175,6 +170,36 @@ describe("InboxList — changing the section prop resets the window", () => {
     expect(
       screen.getByRole("button", { name: /load older notifications/i }),
     ).toBeInTheDocument();
+  });
+});
+
+describe("InboxList — changing the cursor prop resets the window", () => {
+  it("goes back to the first page of rows when the cursor changes via prop", async () => {
+    const user = userEvent.setup();
+    mockPages([100, 100, 100], false);
+    const { rerender } = render(
+      <InboxList
+        selectedId={null}
+        onSelect={noop}
+        section="UNREAD"
+        q={null}
+        cursor={null}
+        searchInputRef={searchRef}
+      />,
+    );
+    await user.click(screen.getByRole("button", { name: /load older notifications/i }));
+    expect(screen.getAllByRole("listitem")).toHaveLength(INBOX_RENDER_PAGE_SIZE * 2);
+    rerender(
+      <InboxList
+        selectedId={null}
+        onSelect={noop}
+        section="UNREAD"
+        q={null}
+        cursor={100}
+        searchInputRef={searchRef}
+      />,
+    );
+    expect(screen.getAllByRole("listitem")).toHaveLength(INBOX_RENDER_PAGE_SIZE);
   });
 });
 

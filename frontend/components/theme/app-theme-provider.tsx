@@ -9,10 +9,12 @@ import {
   useState,
   useSyncExternalStore,
 } from "react";
+import { APP_FONT_CLASS } from "@/lib/theme/app-fonts";
 import {
   APP_THEMES,
   APP_THEME_MODE_STORAGE_KEY,
   APP_THEME_STORAGE_KEY,
+  AUTHENTICATED_PALETTE_CLASS,
   DEFAULT_APP_THEME,
   DEFAULT_APP_THEME_MODE,
   getAppThemeClass,
@@ -81,7 +83,16 @@ function applyThemeClass(theme: AppThemeId): void {
 function applyDarkClass(isDark: boolean): void {
   const root = document.documentElement;
   root.classList.toggle("dark", isDark);
+  root.classList.toggle("light", !isDark);
   root.style.colorScheme = isDark ? "dark" : "light";
+}
+
+function applyAuthenticatedPalette(active: boolean): void {
+  const root = document.documentElement;
+  root.classList.toggle(AUTHENTICATED_PALETTE_CLASS, active);
+  for (const name of APP_FONT_CLASS.split(" ")) {
+    if (name.length > 0) root.classList.toggle(name, active);
+  }
 }
 
 export function AppThemeProvider({ children }: { children: React.ReactNode }) {
@@ -107,9 +118,11 @@ export function AppThemeProvider({ children }: { children: React.ReactNode }) {
   }, [isDark]);
 
   useEffect(() => {
+    applyAuthenticatedPalette(true);
     return () => {
       applyThemeClass(DEFAULT_APP_THEME);
       applyDarkClass(false);
+      applyAuthenticatedPalette(false);
     };
   }, []);
 
@@ -123,11 +136,24 @@ export function AppThemeProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const setMode = useCallback((next: AppThemeMode) => {
-    setModeState(next);
     try {
       window.localStorage.setItem(APP_THEME_MODE_STORAGE_KEY, next);
     } catch {
-      return;
+      /* still apply DOM + state */
+    }
+    setModeState(next);
+    if (typeof window !== "undefined") {
+      const systemDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+      const dark = resolveIsDark(next, systemDark);
+      const root = document.documentElement;
+      root.classList.remove(dark ? "light" : "dark");
+      root.classList.add(dark ? "dark" : "light");
+      root.style.colorScheme = dark ? "dark" : "light";
+      requestAnimationFrame(() => {
+        root.classList.toggle("dark", dark);
+        root.classList.toggle("light", !dark);
+        root.style.colorScheme = dark ? "dark" : "light";
+      });
     }
   }, []);
 

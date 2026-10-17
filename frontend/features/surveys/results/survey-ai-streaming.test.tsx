@@ -129,7 +129,6 @@ function summarizeAction(
 async function openAndRun() {
   const user = userEvent.setup();
   await user.click(screen.getByRole("button", { name: /AI/i }));
-  await user.click(await screen.findByText("Summarize responses"));
 }
 
 describe("survey response summary streams instead of buffering", () => {

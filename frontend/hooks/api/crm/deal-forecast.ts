@@ -6,6 +6,7 @@ import { lazyContract } from "@/lib/api-envelope";
 import { useGatedQuery } from "@/hooks/api/gated-query";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { queryKeys } from "@/lib/query-keys";
+import { customerWorkQueryKeys } from "@/lib/query-keys/customer-work";
 import type {
   DealForecastScore,
   DealForecastSummaryResponse,
@@ -19,6 +20,7 @@ import type {
 } from "@/types/crm";
 
 const dealForecastSnapshotsLazy = lazyContract(() => import("@/hooks/api/crm/deals-schema").then((m) => m.dealForecastSnapshotsContract));
+const dealForecastCompareLazy = lazyContract(() => import("@/hooks/api/crm/deals-schema").then((m) => m.dealForecastCompareContract));
 const dealForecastSnapshotLazy = lazyContract(() => import("@/hooks/api/crm/deals-schema").then((m) => m.dealForecastSnapshotContract));
 
 export function useForecastSnapshots(params?: { period?: string; limit?: number }) {
@@ -26,6 +28,24 @@ export function useForecastSnapshots(params?: { period?: string; limit?: number 
     queryKey: queryKeys.deals.forecastSnapshots(params),
     queryFn: ({ signal }) => apiClient.get<ForecastSnapshot[]>("/deals/forecast/snapshots", params, signal, dealForecastSnapshotsLazy),
     staleTime: 2 * 60_000,
+  });
+}
+
+export interface ForecastCompare {
+  period: string;
+  baseline: Record<string, unknown>;
+  current: Record<string, unknown>;
+  delta: { totalWeighted: number; totalBestCase: number; totalDeals: number };
+}
+
+/** The live forecast against the latest snapshot captured for `period`. */
+export function useForecastCompare(period: string | null) {
+  return useGatedQuery("crm:deals:forecast", {
+    queryKey: customerWorkQueryKeys.deals.forecastCompare(period ?? ""),
+    queryFn: ({ signal }) =>
+      apiClient.get<ForecastCompare>("/deals/forecast/compare", { period }, signal, dealForecastCompareLazy),
+    staleTime: 60_000,
+    enabled: !!period,
   });
 }
 

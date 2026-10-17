@@ -3,6 +3,7 @@
 import { useState, useCallback, useTransition } from "react";
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import { useSession } from "next-auth/react";
+import { useCanState } from "@/hooks/api/access";
 import { toast } from "sonner";
 import { ChevronDown } from "lucide-react";
 import {
@@ -26,37 +27,17 @@ import {
   useCreateWorkspaceView,
   useUpdateWorkspaceView,
   useDeleteWorkspaceView,
-} from "@/hooks/api/build/advanced";
+} from "@/hooks/api/build/views";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { cn } from "@/lib/utils";
 import type { ProjectView } from "@/types/projects";
 import type { AllWorkView } from "./all-work-view-switcher";
 import { AllWorkViewRow } from "./all-work-view-row";
-
-const FILTER_KEYS = [
-  "q",
-  "status",
-  "priority",
-  "type",
-  "assigneeId",
-  "labels",
-  "projectIds",
-  "dueDateFrom",
-  "dueDateTo",
-] as const;
-
-function buildCurrentFilters(
-  searchParams: ReturnType<typeof useSearchParams>,
-): Record<string, string> {
-  const result: Record<string, string> = {};
-  for (const key of FILTER_KEYS) {
-    const val = searchParams.get(key);
-    if (val) result[key] = val;
-  }
-  const scope = searchParams.get("scope");
-  if (scope) result["scope"] = scope;
-  return result;
-}
+import {
+  VIEW_TO_LAYOUT,
+  buildCurrentFilters,
+  viewToSearchParams,
+} from "./all-work-view-params";
 
 function applyViewToParams(
   view: ProjectView,
@@ -66,25 +47,7 @@ function applyViewToParams(
   startTransition: (fn: () => void) => void,
 ) {
   startTransition(() => {
-    const next = new URLSearchParams(searchParams.toString());
-
-    for (const key of FILTER_KEYS) {
-      next.delete(key);
-    }
-    next.delete("scope");
-    next.delete("page");
-
-    if (view.filters && typeof view.filters === "object") {
-      for (const [k, val] of Object.entries(view.filters)) {
-        if (typeof val === "string" && val) next.set(k, val);
-      }
-    }
-
-    const lt = view.layoutType;
-    if (lt === "list" || lt === "table" || lt === "board") {
-      next.set("view", lt);
-    }
-
+    const next = viewToSearchParams(view, new URLSearchParams(searchParams.toString()));
     router.replace(`${pathname}?${next.toString()}`, { scroll: false });
   });
 }
@@ -102,6 +65,7 @@ export function AllWorkViewsMenu({
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const { data: session } = useSession();
+  const accessState = useCanState("build:view");
   const [, startTransition] = useTransition();
 
   const [open, setOpen] = useState(false);
@@ -171,7 +135,7 @@ export function AllWorkViewsMenu({
         {
           name,
           filters,
-          layoutType: activeView,
+          layoutType: VIEW_TO_LAYOUT[activeView],
           ...(meta ? { visibility: meta.visibility } : {}),
         },
         {
@@ -190,6 +154,8 @@ export function AllWorkViewsMenu({
   const viewList = views ?? [];
   const hasViews = viewList.length > 0;
 
+  if (accessState === "denied" || accessState === "loading") return null;
+
   return (
     <>
       <div className="flex items-center gap-1">
@@ -201,11 +167,11 @@ export function AllWorkViewsMenu({
               icon={BookmarkCheckIcon}
               iconSize={14}
             >
-              <span>Views</span>
+              <span>Saved views</span>
               <ChevronDown className="h-3 w-3 shrink-0 text-muted-foreground" />
             </AnimatedIconButton>
           </ResponsivePopoverTrigger>
-          <ResponsivePopoverContent title="Views" align="start" className="w-72 p-1">
+          <ResponsivePopoverContent title="Saved views" align="start" className="w-72 p-1">
             {isLoading && (
               <div className="space-y-1 p-1">
                 {Array.from({ length: 3 }).map((_, i) => (

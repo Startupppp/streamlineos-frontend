@@ -5,7 +5,7 @@ import { LoadingButton } from "@/components/ui/loading-button";
 import { Switch } from "@/components/ui/switch";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { PaperclipIcon, LinkIcon } from "@animateicons/react/lucide";
-import { MAX_FILES, formatBytes } from "./ticket-attachment-preview";
+import { ATTACHMENT_TYPES_LABEL, MAX_FILES, MAX_FILE_BYTES, formatBytes } from "./ticket-attachment-preview";
 
 interface TicketDialogFooterProps {
   files: File[];
@@ -16,6 +16,7 @@ interface TicketDialogFooterProps {
   isPending: boolean;
   isUploading: boolean;
   canSubmit: boolean;
+  onExplicitSubmit: () => void;
 }
 
 export function TicketDialogFooter({
@@ -27,6 +28,7 @@ export function TicketDialogFooter({
   isPending,
   isUploading,
   canSubmit,
+  onExplicitSubmit,
 }: TicketDialogFooterProps) {
   const { iconRef: attachIconRef, hoverHandlers: attachHoverHandlers } = useAnimatedIcon();
   const { iconRef: linksIconRef, hoverHandlers: linksHoverHandlers } = useAnimatedIcon();
@@ -65,12 +67,12 @@ export function TicketDialogFooter({
           ref={fileInputRef}
           type="file"
           className="hidden"
-          accept="image/*,.pdf,.doc,.docx,.xls,.xlsx"
+          accept=".jpg,.jpeg,.png,.gif,.webp,.pdf,.doc,.docx,.xls,.xlsx"
           multiple
           onChange={onFileChange}
         />
         <span className="sr-only text-micro text-muted-foreground md:not-sr-only md:inline md:truncate">
-          Up to {MAX_FILES} files, 25MB each, 100MB total
+          Up to {MAX_FILES} files, {formatBytes(MAX_FILE_BYTES)} each · {ATTACHMENT_TYPES_LABEL}
           {files.length > 0 &&
             ` · ${files.length}/${MAX_FILES} · ${formatBytes(totalSize)}`}
         </span>
@@ -90,12 +92,13 @@ export function TicketDialogFooter({
         </label>
 
         <LoadingButton
-          type="submit"
+          type="button"
           isPending={isPending || isUploading}
           loadingText="Creating…"
           className="w-full px-4 text-xs [grid-area:submit] md:w-auto"
           size="sm"
           disabled={!canSubmit}
+          onClick={onExplicitSubmit}
         >
           Create issue
         </LoadingButton>

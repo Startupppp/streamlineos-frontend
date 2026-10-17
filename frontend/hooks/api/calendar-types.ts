@@ -46,13 +46,7 @@ export interface CalendarListItem {
   allDay?: boolean;
   color?: string | null;
   category: string;
-  source:
-    | "event"
-    | "leave"
-    | "interview"
-    | "task"
-    | "holiday"
-    | "attendance";
+  source: string;
   timezone?: string | null;
   location?: string | null;
   description?: string | null;
@@ -61,6 +55,28 @@ export interface CalendarListItem {
   entityType?: string | null;
   projectId?: number | null;
   myRsvpStatus?: string | null;
+  sourceKey: string;
+  sourceRecordId: string;
+  occurrenceId: string;
+  status: string | null;
+  timeKind: "timed" | "date";
+  time:
+    | { kind: "timed"; start: string; end: string; timezone: string | null }
+    | { kind: "date"; startDate: string; endDate: string };
+  availability: "busy" | "free" | "out-of-office" | "working-elsewhere";
+  sourceVersion: string | null;
+  actions: {
+    view: boolean;
+    edit: boolean;
+    delete: boolean;
+    rsvp: boolean;
+    complete: boolean;
+  };
+  freshness: { state: "fresh" | "stale" | "unknown"; asOf: string | null };
+  connectionId?: number;
+  accountEmail?: string | null;
+  meetingUrl?: string | null;
+  webLink?: string | null;
 }
 
 export interface CalendarEventDetail {
@@ -128,6 +144,22 @@ export interface CalendarEventsResponse {
   events: CalendarListItem[];
   failures: Array<{ key: string; label: string }>;
   truncated: boolean;
+  coverageState: "complete" | "partial" | "failed" | "continued";
+  coverage: Array<{
+    sourceKey: string;
+    state: "complete" | "partial" | "failed" | "continued";
+    nextCursor: string | null;
+  }>;
+}
+
+export interface CalendarHistoryResponse extends CalendarEventsResponse {
+  windowStart: string;
+  windowEnd: string;
+  nextCursor: string | null;
+}
+
+export interface CalendarSearchResponse extends CalendarEventsResponse {
+  nextCursor: string | null;
 }
 
 export interface ExternalCalendarEvent {
@@ -144,11 +176,28 @@ export interface ExternalCalendarEvent {
   location: string | null;
   meetingUrl: string | null;
   webLink: string | null;
+  sourceKey: string;
+  sourceRecordId: string;
+  occurrenceId: string;
+  status: string | null;
+  timeKind: "timed" | "date";
+  availability: "busy" | "free";
+  sourceVersion: string | null;
+  actions: { view: boolean; edit: boolean; delete: boolean; rsvp: boolean; complete: boolean };
+  freshness: { state: "fresh" | "stale" | "unknown"; asOf: string | null };
 }
 
 export interface ExternalCalendarEventsResponse {
   events: ExternalCalendarEvent[];
   errors: Array<{ connectionId: number; accountEmail: string | null; message: string }>;
+  complete: boolean;
+  accounts: Array<{
+    connectionId: number;
+    accountEmail: string | null;
+    toolkit: "googlecalendar" | "outlook";
+    state: "complete" | "partial" | "failed" | "reauth_required";
+    hasMore: boolean;
+  }>;
 }
 
 export interface CalendarSource {
@@ -162,8 +211,21 @@ export interface EventSyncStatusResponse {
   status: "synced" | "pending" | "in_flight" | "failed" | "not_synced";
   attemptCount: number;
   lastError: string | null;
-  operation: "create" | "update" | "delete" | null;
+  operation: "create" | "update" | "delete" | "restore" | null;
   queuedAt: string | null;
   processedAt: string | null;
   retryable: boolean;
+  failureKind:
+    | "auth"
+    | "capability"
+    | "conference"
+    | "conflict"
+    | "transient"
+    | null;
+  repairAction:
+    | "none"
+    | "retry"
+    | "reconnect"
+    | "change_event"
+    | "review_conflict";
 }

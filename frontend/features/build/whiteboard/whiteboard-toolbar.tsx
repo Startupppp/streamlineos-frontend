@@ -2,6 +2,7 @@
 
 import { useCallback } from "react";
 import {
+  Download,
   Save,
   Maximize2,
   Minimize2,
@@ -27,6 +28,7 @@ interface WhiteboardToolbarProps {
   onManualSave: () => void;
   onToggleFullscreen: () => void;
   onOpenShare: () => void;
+  onExport?: () => void;
 }
 
 export function WhiteboardToolbar({
@@ -38,6 +40,7 @@ export function WhiteboardToolbar({
   onManualSave,
   onToggleFullscreen,
   onOpenShare,
+  onExport,
 }: WhiteboardToolbarProps) {
   const isSaveDisabled =
     saveStatus === "clean" || saveStatus === "saved" || saveStatus === "saving";
@@ -51,7 +54,7 @@ export function WhiteboardToolbar({
     <TooltipProvider delayDuration={400}>
       <div className="flex h-8 items-center gap-1 shrink-0">
         {saveStatus === "dirty" && (
-          <span className="text-xs text-status-warning-ink font-medium whitespace-nowrap">Unsaved</span>
+          <span className="text-xs text-status-warning-ink-strong font-medium whitespace-nowrap">Unsaved</span>
         )}
         {saveStatus === "saving" && (
           <span className="text-xs text-muted-foreground whitespace-nowrap">Saving…</span>
@@ -111,6 +114,23 @@ export function WhiteboardToolbar({
               </Button>
             </TooltipTrigger>
             <TooltipContent>Share</TooltipContent>
+          </Tooltip>
+        )}
+
+        {onExport !== undefined && (
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                size="icon"
+                variant="ghost"
+                className="h-8 w-8 active:scale-[0.98]"
+                onClick={onExport}
+                aria-label="Export board as PNG"
+              >
+                <Download className="h-4 w-4" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>Export PNG</TooltipContent>
           </Tooltip>
         )}
 

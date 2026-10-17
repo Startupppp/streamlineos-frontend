@@ -43,7 +43,7 @@ export default async function CareersPage({ params }: Props) {
   const { org, jobs } = data;
 
   return (
-    <main className="min-h-dvh bg-background">
+    <main className="candidate-surface min-h-dvh bg-background">
       <div className="border-b bg-white dark:bg-card">
         <div className="max-w-3xl mx-auto px-4 py-10">
           <div className="flex items-center gap-4 mb-4">
@@ -72,7 +72,13 @@ export default async function CareersPage({ params }: Props) {
           >
             <div className="flex items-start justify-between gap-4">
               <div className="flex-1 min-w-0">
-                <h2 className="font-semibold text-base truncate">{job.title}</h2>
+                {/*
+                  Wraps rather than truncates. At 390px a real job title
+                  ("Senior Backend Engineer, Payments Platform") lost its
+                  second half to an ellipsis, on the one line a candidate
+                  uses to decide whether to open the posting.
+                */}
+                <h2 className="font-semibold text-base">{job.title}</h2>
                 <div className="flex flex-wrap gap-2 mt-2 text-xs text-muted-foreground">
                   {job.location && (
                     <span className="flex items-center gap-1">

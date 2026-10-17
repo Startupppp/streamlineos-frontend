@@ -1,11 +1,12 @@
 "use client";
 
-import { useState, useMemo, useCallback, useRef } from "react";
+import { useState, useCallback, useRef, useMemo, useEffect, type KeyboardEvent } from "react";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useForm, type FieldPath, type DefaultValues } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { onboardEmployeeInputSchema } from "@/lib/validation/hr";
+import { useSession } from "next-auth/react";
 import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Form } from "@/components/ui/form";
@@ -16,78 +17,89 @@ import { Check, ChevronRight, ChevronLeft, Loader2 } from "lucide-react";
 import { useOnboardEmployee } from "@/hooks/api/hr";
 import { useOnboardingTemplateDepartments } from "@/hooks/api/hr/onboarding";
 import { DEFAULT_INVITE_ROLE } from "@/lib/constants/user-invite-roles";
+import { DEFAULT_HR_WORKER_TYPE } from "@/lib/constants/hr-worker-types";
+import { useOrgLocations } from "@/hooks/api/org-hierarchy";
 import { useRouter } from "next/navigation";
 import {
   employeeAdmissionGuidance,
   fetchEmployeeAdmissionCheck,
 } from "@/components/hr/check-employee-email";
 import { describeUnsentInvite } from "@/components/hr/invite-delivery";
+import { buildOnboardEmployeePayload } from "@/components/hr/onboarding-payload";
+import { describeOnboardingSuccess } from "@/components/hr/onboarding-result";
+import { preventImplicitSubmit } from "@/components/hr/onboarding-enter-guard";
 import { StepPersonalInfo } from "./_onboarding/step-personal-info";
 import { StepEmployment } from "./_onboarding/step-employment";
 import { StepSkillsPay } from "./_onboarding/step-skills-pay";
 import { StepBanking } from "./_onboarding/step-banking";
 import { StepReview } from "./_onboarding/step-review";
+import {
+  loadAdminWizardDraft,
+  saveAdminWizardDraft,
+  clearAdminWizardDraft,
+  toAdminWizardDraft,
+} from "./_onboarding/wizard-draft";
 
 type FormValues = z.infer<typeof onboardEmployeeInputSchema>;
 
 const STEPS = [
   { id: 1, label: "Personal" },
   { id: 2, label: "Job Details" },
-  { id: 3, label: "Skills & Pay" },
-  { id: 4, label: "Banking" },
-  { id: 5, label: "Review" },
+  { id: 3, label: "Pay setup (optional)" },
+  { id: 4, label: "Review" },
 ];
 
-const STEP_FIELDS: Record<number, FieldPath<FormValues>[]> = {
-  1: ["firstName", "lastName", "email", "phone", "gender", "dateOfBirth"],
-  2: ["designation", "departmentId", "reportingManagerUserId", "topLevelRole", "topLevelRoleReason", "role", "joiningDate"],
-  3: ["taxId"],
-  4: [],
+export const STEP_FIELDS: Record<number, FieldPath<FormValues>[]> = {
+  1: ["firstName", "lastName", "email"],
+  2: ["designation", "departmentId", "locationId", "workerType", "reportingManagerUserId", "secondaryManagers", "topLevelRole", "topLevelRoleReason", "role", "joiningDate"],
+  3: ["taxId", "monthlySalary", "bankDetails"],
 };
 
-const COMMON_DEPARTMENTS = ["HR", "Sales", "Customer Support", "Engineering", "Design", "Video Editing"];
-
-const KNOWN_ACRONYMS = new Set(["FINAL", "CTO", "CFO", "COO", "CMO", "CIO", "CHRO", "VP", "SVP", "EVP", "AVP", "HR", "IT", "QA", "UI", "UX"]);
-
-function toTitleCase(str: string) {
-  return str.trim().replace(/\s+/g, " ").split(" ").map((w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(" ");
-}
-
-function formatDesignation(str: string) {
-  return str.trim().replace(/\s+/g, " ").split(" ").map((word) => {
-    const upper = word.toUpperCase();
-    return KNOWN_ACRONYMS.has(upper) ? upper : word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
-  }).join(" ");
-}
-
 export function OnboardingWizard() {
-  const [currentStep, setCurrentStep] = useState(1);
+  const { data: authSession } = useSession();
+  const userId = authSession?.user?.id ?? undefined;
+  const orgId = authSession?.orgId ?? undefined;
+
+  const savedDraft = useMemo(
+    () => loadAdminWizardDraft(userId, orgId),
+    [userId, orgId],
+  );
+
+  const [currentStep, setCurrentStep] = useState(savedDraft?.step ?? 1);
   const [isCheckingEmail, setIsCheckingEmail] = useState(false);
   const checkedEmail = useRef<string>("");
   const submittingRef = useRef(false);
   const router = useRouter();
   const { data: departments } = useOnboardingTemplateDepartments();
+  const { data: locations } = useOrgLocations({ status: "ACTIVE" });
   const onboardEmployee = useOnboardEmployee();
-
-  const allDepartmentOptions = useMemo(() => {
-    const dbNames = new Set(departments?.map((d) => d.name.toLowerCase()) ?? []);
-    const real = (departments ?? []).map((d) => ({ ...d, isCommon: false }));
-    const extras = COMMON_DEPARTMENTS
-      .filter((name) => !dbNames.has(name.toLowerCase()))
-      .map((name, i) => ({ id: `common-${i + 1}`, name, isCommon: true }));
-    return [...real, ...extras];
-  }, [departments]);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(onboardEmployeeInputSchema),
     defaultValues: {
-      firstName: "", lastName: "", email: "", phone: "",
-      whatsappSameAsPhone: true, whatsappNumber: "", gender: "MALE",
-      designation: "", departmentId: undefined,
-      reportingManagerUserId: undefined, topLevelRole: false, topLevelRoleReason: undefined,
-      role: DEFAULT_INVITE_ROLE, employeeId: "", attachToExistingMember: false, joiningDate: new Date(),
-      dateOfBirth: undefined,
-      taxId: "", monthlySalary: undefined,
+      firstName: savedDraft?.firstName ?? "",
+      lastName: savedDraft?.lastName ?? "",
+      email: savedDraft?.email ?? "",
+      phone: savedDraft?.phone ?? "",
+      whatsappSameAsPhone: true,
+      whatsappNumber: "",
+      gender: (savedDraft?.gender as FormValues["gender"]) ?? undefined,
+      designation: savedDraft?.designation ?? "",
+      departmentId: savedDraft?.departmentId ?? undefined,
+      locationId: savedDraft?.locationId ?? undefined,
+      workerType: (savedDraft?.workerType as FormValues["workerType"]) ?? DEFAULT_HR_WORKER_TYPE,
+      reportingManagerUserId: undefined,
+      reportingManagerRef: null,
+      secondaryManagers: [],
+      topLevelRole: false,
+      topLevelRoleReason: undefined,
+      role: (savedDraft?.role as FormValues["role"]) ?? DEFAULT_INVITE_ROLE,
+      employeeId: savedDraft?.employeeId ?? "",
+      attachToExistingMember: false,
+      joiningDate: savedDraft?.joiningDate ? new Date(savedDraft.joiningDate) : new Date(),
+      dateOfBirth: savedDraft?.dateOfBirth ? new Date(savedDraft.dateOfBirth) : undefined,
+      taxId: savedDraft?.taxId ?? "",
+      monthlySalary: savedDraft?.monthlySalary ?? undefined,
       bankDetails: {
         accountNumber: "",
         bankName: "",
@@ -101,11 +113,23 @@ export function OnboardingWizard() {
     mode: "onChange",
   });
 
+  useEffect(() => {
+    if (!userId || !orgId) return;
+    const subscription = form.watch((values) => {
+      saveAdminWizardDraft(toAdminWizardDraft(values, currentStep), userId, orgId);
+    });
+    return () => subscription.unsubscribe();
+  }, [form, userId, orgId, currentStep]);
+
   const handleNext = useCallback(async () => {
     const fields = STEP_FIELDS[currentStep];
     if (fields) {
       const valid = await form.trigger(fields);
-      if (!valid) return;
+      if (!valid) {
+        const firstInvalid = fields.find((field) => form.getFieldState(field).error);
+        if (firstInvalid) form.setFocus(firstInvalid);
+        return;
+      }
     }
     if (currentStep === 1) {
       const email = form.getValues("email")?.toLowerCase().trim();
@@ -134,6 +158,10 @@ export function OnboardingWizard() {
     setCurrentStep((prev) => Math.min(STEPS.length, prev + 1));
   }, [currentStep, form]);
 
+  function handleFormKeyDown(event: KeyboardEvent<HTMLFormElement>) {
+    preventImplicitSubmit(event, currentStep === STEPS.length);
+  }
+
   const handlePrev = useCallback(() => {
     setCurrentStep((prev) => Math.max(1, prev - 1));
   }, []);
@@ -143,15 +171,11 @@ export function OnboardingWizard() {
       if (currentStep !== STEPS.length || submittingRef.current) return;
       submittingRef.current = true;
       onboardEmployee.mutate(
-        {
-          ...data,
-          firstName: toTitleCase(data.firstName),
-          lastName: toTitleCase(data.lastName),
-          designation: formatDesignation(data.designation),
-        },
+        buildOnboardEmployeePayload(data),
         {
           onSuccess: (result) => {
-            toast.success("Employee created successfully");
+            clearAdminWizardDraft(userId, orgId);
+            toast.success(describeOnboardingSuccess(result.primaryManager));
             const unsentInvite = describeUnsentInvite(result.invite);
             if (unsentInvite)
               toast.warning(unsentInvite, {
@@ -167,7 +191,7 @@ export function OnboardingWizard() {
         }
       );
     },
-    [onboardEmployee, router, currentStep]
+    [onboardEmployee, router, currentStep, userId, orgId]
   );
 
   return (
@@ -182,6 +206,7 @@ export function OnboardingWizard() {
                 type="button"
                 onClick={() => step.id < currentStep && setCurrentStep(step.id)}
                 disabled={step.id > currentStep}
+                aria-label={step.label}
                 className={cn(
                   "flex items-center gap-2 px-3 py-1.5 rounded-md text-xs font-medium transition-colors w-full",
                   isCompleted && "bg-primary/10 text-primary cursor-pointer hover:bg-primary/15",
@@ -208,21 +233,36 @@ export function OnboardingWizard() {
       <Form {...form}>
         <form
           onSubmit={form.handleSubmit(handleSubmit)}
-          onKeyDown={(e) => {
-            if (e.key === "Enter" && currentStep < STEPS.length) {
-              e.preventDefault();
-            }
-          }}
+          onKeyDown={handleFormKeyDown}
           className="flex flex-col flex-1 min-h-0"
         >
           <div className="min-h-0 flex-1">
             {currentStep === 1 && <StepPersonalInfo form={form} />}
             {currentStep === 2 && (
-              <StepEmployment form={form} departments={departments ?? []} />
+              <StepEmployment
+                form={form}
+                departments={departments ?? []}
+                locations={locations?.data ?? []}
+              />
             )}
-            {currentStep === 3 && <StepSkillsPay form={form} />}
-            {currentStep === 4 && <StepBanking form={form} />}
-            {currentStep === 5 && <StepReview form={form} allDepartmentOptions={allDepartmentOptions} />}
+            {currentStep === 3 && (
+              <div className="space-y-6">
+                <p className="text-sm text-muted-foreground">
+                  Needed before this person&apos;s first payroll run. Not required to add them.
+                </p>
+                <StepSkillsPay form={form} />
+                <div className="pt-4 border-t border-border">
+                  <h3 className="text-base font-semibold mb-4">Bank details</h3>
+                  <StepBanking form={form} />
+                </div>
+              </div>
+            )}
+            {currentStep === 4 && <StepReview form={form} departments={departments ?? []} locations={locations?.data ?? []} />}
+            {onboardEmployee.isError && (
+              <p role="alert" className="mt-4 text-sm text-destructive">
+                {getErrorMessage(onboardEmployee.error)} Your entries are kept; submit again to retry.
+              </p>
+            )}
           </div>
 
           <div
@@ -237,18 +277,18 @@ export function OnboardingWizard() {
               size="sm"
               onClick={handlePrev}
               disabled={currentStep === 1 || onboardEmployee.isPending}
-              className="gap-1"
+              className="min-h-11 gap-1 sm:min-h-0"
             >
               <ChevronLeft className="h-3.5 w-3.5" />
               Back
             </Button>
 
             {currentStep < STEPS.length ? (
-              <Button type="button" size="sm" onClick={handleNext} className="gap-1" disabled={isCheckingEmail}>
+              <Button type="button" size="sm" onClick={handleNext} className="min-h-11 gap-1 sm:min-h-0" disabled={isCheckingEmail}>
                 {isCheckingEmail ? <><Loader2 className="h-3.5 w-3.5 animate-spin" />Checking...</> : <>Next<ChevronRight className="h-3.5 w-3.5" /></>}
               </Button>
             ) : (
-              <LoadingButton type="submit" size="sm" isPending={onboardEmployee.isPending} loadingText="Saving..." className="gap-1 min-w-[100px]">
+              <LoadingButton type="submit" size="sm" isPending={onboardEmployee.isPending} loadingText="Saving..." className="min-h-11 gap-1 min-w-[100px] sm:min-h-0">
                 <Check className="h-3.5 w-3.5" />Submit
               </LoadingButton>
             )}

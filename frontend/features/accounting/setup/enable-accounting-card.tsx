@@ -1,5 +1,7 @@
 "use client";
 
+import { DatePicker } from "@/components/ui/date-picker";
+
 import { useMemo, useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
@@ -176,7 +178,7 @@ export function EnableAccountingCard({ onEnabled }: EnableAccountingCardProps) {
                 <FormItem>
                   <FormLabel>Books start from</FormLabel>
                   <FormControl>
-                    <Input {...field} type="date" value={field.value ?? ""} />
+                    <DatePicker value={field.value ?? ""} onChange={field.onChange} placeholder="Pick a date" dateFormat="dd MMM yyyy" clearable />
                   </FormControl>
                   <FormDescription>
                     We open the financial year containing this date. Leave blank for today.

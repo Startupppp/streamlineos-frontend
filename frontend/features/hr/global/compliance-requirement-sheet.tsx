@@ -7,6 +7,7 @@ import { z } from "zod";
 import {
   Sheet,
   SheetContent,
+  SheetDescription,
   SheetHeader,
   SheetTitle,
   SheetBody,
@@ -30,8 +31,6 @@ import {
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { LoadingButton } from "@/components/ui/loading-button";
-import { toast } from "sonner";
-import { getErrorMessage } from "@/lib/get-error-message";
 import {
   useCreateComplianceRequirement,
   useUpdateComplianceRequirement,
@@ -116,11 +115,7 @@ export function ComplianceRequirementSheet({ open, onOpenChange, existing }: Pro
 
     const mutation = existing ? update : create;
     mutation.mutate(body, {
-      onSuccess: () => {
-        toast.success(existing ? "Requirement updated" : "Requirement created");
-        onOpenChange(false);
-      },
-      onError: (err) => toast.error(getErrorMessage(err)),
+      onSuccess: () => onOpenChange(false),
     });
   }, [existing, create, update, onOpenChange]);
 
@@ -131,6 +126,7 @@ export function ComplianceRequirementSheet({ open, onOpenChange, existing }: Pro
       <SheetContent className="flex w-full flex-col gap-0 overflow-hidden p-0 sm:max-w-lg">
         <SheetHeader className="shrink-0 border-b border-border px-6 py-4 text-left">
           <SheetTitle>{existing ? "Edit Requirement" : "New Compliance Requirement"}</SheetTitle>
+          <SheetDescription className="sr-only">Configure the schedule, jurisdiction, and reminder for this compliance requirement.</SheetDescription>
         </SheetHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="flex min-h-0 flex-1 flex-col">

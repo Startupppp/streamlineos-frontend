@@ -131,8 +131,6 @@ export const runEmployeeContract = z.object({
   userEmail: z.string(),
 });
 
-export const runEmployeesPageContract = cursorPageContract(runEmployeeContract);
-
 export const payrollReportSummaryContract = z.object({
   provisional: z.boolean(),
   run: z
@@ -160,5 +158,4 @@ export type PayrollRun = z.infer<typeof payrollRunContract>;
 export type PayrollChecklistItem = z.infer<typeof payrollChecklistItemContract>;
 export type PayrollRunDetail = z.infer<typeof payrollRunDetailContract>;
 export type RunEmployee = z.infer<typeof runEmployeeContract>;
-export type RunEmployeesPage = z.infer<typeof runEmployeesPageContract>;
 export type PayrollReportSummary = z.infer<typeof payrollReportSummaryContract>;

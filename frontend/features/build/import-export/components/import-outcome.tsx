@@ -23,7 +23,10 @@ import {
   reportHeadline,
   rowsNeedingAttention,
 } from "../import-preview-model";
-import type { TicketImportPreview, TicketImportReport } from "../import-export-contract";
+import type {
+  TicketImportExportPreviewImportResponse,
+  TicketImportExportCommitImportResponse,
+} from "@/contracts/build-contracts.generated";
 
 interface OutcomeRow {
   rowNumber: number;
@@ -68,7 +71,7 @@ function OutcomeList({ caption, rows }: OutcomeListProps) {
 }
 
 interface ImportPreviewOutcomeProps {
-  preview: TicketImportPreview;
+  preview: TicketImportExportPreviewImportResponse;
 }
 
 export function ImportPreviewOutcome({ preview }: ImportPreviewOutcomeProps) {
@@ -93,7 +96,7 @@ export function ImportPreviewOutcome({ preview }: ImportPreviewOutcomeProps) {
         ) : null}
       </div>
       <OutcomeList
-        caption="Why it is skipped"
+        caption="Issue"
         rows={attention.map((row) => ({
           rowNumber: row.rowNumber,
           tag: row.state,
@@ -105,7 +108,7 @@ export function ImportPreviewOutcome({ preview }: ImportPreviewOutcomeProps) {
 }
 
 interface ImportReportOutcomeProps {
-  report: TicketImportReport;
+  report: TicketImportExportCommitImportResponse;
 }
 
 export function ImportReportOutcome({ report }: ImportReportOutcomeProps) {

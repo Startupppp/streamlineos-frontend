@@ -25,5 +25,11 @@ export const accountingReportsQueryKeys = {
       params === undefined
         ? ([...root, "taxSummary"] as const)
         : ([...root, "taxSummary", params] as const),
+    stockGl: (params?: Record<string, unknown>) =>
+      params === undefined ? ([...root, "stockGl"] as const) : ([...root, "stockGl", params] as const),
+    unpostedMovements: (params?: Record<string, unknown>) =>
+      params === undefined
+        ? ([...root, "unpostedMovements"] as const)
+        : ([...root, "unpostedMovements", params] as const),
   },
 } as const;

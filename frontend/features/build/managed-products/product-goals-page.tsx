@@ -1,222 +1,280 @@
 "use client";
 
-import { useCallback, useMemo } from "react";
-import { Plus, Target, TrendingUp, AlertTriangle } from "lucide-react";
-import { useQueryParamOpen } from "@/hooks/common/use-query-param-open";
+import { ChartColumnIcon, LayoutGridIcon, LayoutListIcon } from "@animateicons/react/lucide";
+import dynamic from "next/dynamic";
+import { useCallback, useTransition } from "react";
+import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import { PageWrapper } from "@/components/ui/page-wrapper";
-import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
-import { Badge } from "@/components/ui/badge";
-import { Skeleton } from "@/components/ui/skeleton";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { ProductGoalsStats } from "./product-goals-stats";
+import { TablePagination } from "@/components/ui/table-pagination";
+import { BuildPaginatedContent } from "@/features/build/shared/build-paginated-content";
 import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyTargetIllustration } from "@/components/illustrations";
-import {
-  useGoals,
-  useGoalStats,
-  type GoalListItem,
-  type GoalLevel,
-} from "@/hooks/api/goals";
 import { GoalFormSheet } from "@/features/build/goals/goal-form-sheet";
-import {
-  LEVEL_LABEL,
-  STATUS_OPTIONS,
-  LEVEL_OPTIONS,
-} from "@/features/build/goals/constants";
-import { usePageState } from "@/hooks/api/use-page-state";
 import { PageState } from "@/components/shared/page-state";
-import { cn } from "@/lib/utils";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
-  PmPageShell,
   PmSection,
-  PmStaggerList,
-  PM_FILL_PANEL,
-  PM_PANEL,
+  CONTENT_FILL_PANEL,
 } from "@/components/pm-chrome";
 import { BuildHeaderActions } from "@/features/build/shared/build-header-actions";
-import { useBuildListFilters } from "@/features/build/shared/use-build-list-filters";
+import { ShortcutHelpDialog } from "@/components/shared/shortcut-help-dialog";
+import { BuildOfflineNotice } from "@/features/build/shared/build-offline-notice";
 import {
-  GoalCard,
   GoalsListToolbar,
-  GOAL_FILTER_DEFINITIONS,
-  GOAL_LEVEL_ORDER,
-} from "@/features/build/goals/goals-list-shared";
+} from "@/features/build/goals/goals-list-toolbar";
+import { useProductGoalsPage, PAGE_SIZE } from "./use-product-goals-page";
+import {
+  MANAGED_PRODUCT_DETAIL_CONTENT_CLASS,
+  ManagedProductDetailPrimarySection,
+  ManagedProductDetailShell,
+  ManagedProductNotFound,
+} from "./managed-product-detail-layout";
+import { ProductGoalsGridSkeleton } from "./managed-product-page-skeletons";
+import { LinkExistingGoalDialog } from "./link-existing-goal-dialog";
+import { ProductGoalsViewBody } from "./product-goals-view-body";
+import { buildProductReturnParam } from "@/features/build/shared/product-return-href";
+import { useProductReturn } from "@/features/build/shared/use-product-return";
+import type { GoalListItem } from "@/hooks/api/goals";
+import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
+
+const VIEW_PARAM = "pg_view";
+type GoalsViewMode = "list" | "tree" | "table";
+
+function isGoalsViewMode(value: string): value is GoalsViewMode {
+  return value === "tree" || value === "list" || value === "table";
+}
+
+const CheckInDialog = dynamic(
+  () => import("@/features/build/goals/check-in-dialog").then((m) => ({ default: m.CheckInDialog })),
+  { ssr: false },
+);
 
 interface ProductGoalsPageProps {
   managedProductId: number;
 }
 
-const CREATE_ACTION = { id: "create", label: "New Goal", icon: Plus, primary: true as const };
-
-function GoalsSkeleton() {
-  return (
-    <div className="space-y-6">
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-        {Array.from({ length: 6 }).map((_, i) => (
-          <div key={i} className={cn(PM_PANEL, "space-y-3 p-4")}>
-            <Skeleton className="h-4 w-3/4" />
-            <Skeleton className="h-1.5 w-full rounded-full" />
-            <Skeleton className="h-3 w-1/2" />
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
-
 export function ProductGoalsPage({ managedProductId }: ProductGoalsPageProps) {
-  const listFilters = useBuildListFilters({ filters: GOAL_FILTER_DEFINITIONS });
-  const { open: createOpen, onOpenChange: setCreateOpen, setOpen: openCreate } =
-    useQueryParamOpen("create");
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const { handleBack } = useProductReturn(`/build/managed-products/${managedProductId}`);
+  const [, startTransition] = useTransition();
+  const rawView = searchParams.get(VIEW_PARAM);
+  const viewMode: GoalsViewMode =
+    rawView === "table" ? "table" : rawView === "list" ? "list" : "tree";
 
-  const levelValue = listFilters.value("level");
-  const statusValue = listFilters.value("status");
-
-  const typedLevel = useMemo(
-    () => LEVEL_OPTIONS.find((o) => o.value === levelValue)?.value,
-    [levelValue],
+  const handleViewModeChange = useCallback(
+    (mode: GoalsViewMode) => {
+      const next = new URLSearchParams(searchParams.toString());
+      if (mode === "tree") next.delete(VIEW_PARAM);
+      else next.set(VIEW_PARAM, mode);
+      const query = next.toString();
+      startTransition(() => {
+        router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false });
+      });
+    },
+    [searchParams, pathname, router],
   );
 
-  const typedStatus = useMemo(
-    () => STATUS_OPTIONS.find((o) => o.value === statusValue)?.value,
-    [statusValue],
-  );
-
-  const params = useMemo(
-    () => ({
-      managedProductId,
-      ...(typedStatus ? { status: typedStatus } : {}),
-      ...(typedLevel ? { level: typedLevel } : {}),
-      ...(listFilters.debouncedSearch.trim()
-        ? { search: listFilters.debouncedSearch.trim() }
-        : {}),
-    }),
-    [managedProductId, typedStatus, typedLevel, listFilters.debouncedSearch],
-  );
-
-  const { data: goals, isLoading, isError, error, refetch } = useGoals(params);
-  const { data: stats } = useGoalStats();
-
-  const grouped = useMemo(() => {
-    const map = new Map<GoalLevel, GoalListItem[]>();
-    for (const level of GOAL_LEVEL_ORDER) map.set(level, []);
-    for (const goal of goals ?? []) map.get(goal.level)?.push(goal);
-    return map;
-  }, [goals]);
-
-  const resolution = usePageState({
-    permission: "build:goals:view",
+  const {
+    listFilters,
+    searchInputRef,
+    createOpen,
+    setCreateOpen,
+    linkGoalOpen,
+    setLinkGoalOpen,
+    editGoalId,
+    deleteGoalId,
+    unlinkGoalId,
+    checkInGoalId,
+    shortcutHelpOpen,
+    setShortcutHelpOpen,
+    editGoalDetail,
+    checkInGoalDetail,
+    deleteGoalMutation,
+    unlinkGoalMutation,
     isLoading,
-    isError,
-    error,
-    isEmpty: (goals?.length ?? 0) === 0,
-  });
+    dataUpdatedAt,
+    totalGoals,
+    stats,
+    flatGoals,
+    resolution,
+    page,
+    canManage,
+    handlePageChange,
+    handleOpenCreate,
+    handleRetry,
+    handleEditGoalCard,
+    handleDeleteGoalCard,
+    handleUnlinkGoalCard,
+    handleCheckInGoalCard,
+    handleDeleteConfirm,
+    handleUnlinkConfirm,
+    handleEditSheetOpenChange,
+    handleDeleteDialogOpenChange,
+    handleUnlinkDialogOpenChange,
+    handleCheckInClose,
+    createActions,
+  } = useProductGoalsPage({ managedProductId });
 
-  const handleOpenCreate = useCallback(() => { openCreate(); }, [openCreate]);
+  const checkInKeyResults = checkInGoalDetail?.keyResults ?? [];
 
-  const handleRetry = useCallback(() => { void refetch(); }, [refetch]);
+  const handleGoalRowClick = useCallback(
+    (goal: GoalListItem) => {
+      const ret = buildProductReturnParam(pathname, searchParams.toString());
+      router.push(`/build/goals/${goal.id}?ret=${ret}`);
+    },
+    [router, pathname, searchParams],
+  );
 
-  const createActions = useMemo(
-    () =>
-      resolution.kind !== "denied"
-        ? [{ ...CREATE_ACTION, onSelect: handleOpenCreate }]
-        : [],
-    [resolution.kind, handleOpenCreate],
+  const handleViewTabChange = useCallback(
+    (value: string) => {
+      if (isGoalsViewMode(value)) handleViewModeChange(value);
+    },
+    [handleViewModeChange],
+  );
+  const { iconRef: groupedIconRef, hoverHandlers: groupedHoverHandlers } = useAnimatedIcon();
+  const { iconRef: listIconRef, hoverHandlers: listHoverHandlers } = useAnimatedIcon();
+  const { iconRef: tableIconRef, hoverHandlers: tableHoverHandlers } = useAnimatedIcon();
+
+  if (resolution.kind === "not-found") return <ManagedProductNotFound />;
+
+  const viewToggle = (
+    <Tabs value={viewMode} onValueChange={handleViewTabChange} aria-label="View mode">
+      <TabsList className="h-10 min-h-10 w-auto gap-0.5 border border-input bg-card p-1 [&_[data-slot=tabs-trigger]]:h-8 [&_[data-slot=tabs-trigger]]:min-h-8 [&_[data-slot=tabs-trigger]]:min-w-8 [&_[data-slot=tabs-trigger]]:px-2">
+        <TabsTrigger value="tree" aria-label="Grouped" title="Grouped" {...groupedHoverHandlers}>
+          <LayoutGridIcon ref={groupedIconRef} size={16} aria-hidden />
+        </TabsTrigger>
+        <TabsTrigger value="list" aria-label="List" title="List" {...listHoverHandlers}>
+          <LayoutListIcon ref={listIconRef} size={16} aria-hidden />
+        </TabsTrigger>
+        <TabsTrigger value="table" aria-label="Table" title="Table" {...tableHoverHandlers}>
+          <ChartColumnIcon ref={tableIconRef} size={16} aria-hidden />
+        </TabsTrigger>
+      </TabsList>
+    </Tabs>
   );
 
   return (
     <PageWrapper
       title="Goals & OKRs"
-      subtitle="Product objectives and key results"
-      filters={<GoalsListToolbar listFilters={listFilters} />}
+      subtitle="Objectives linked to this product"
+      onBack={handleBack}
+      contentClassName={MANAGED_PRODUCT_DETAIL_CONTENT_CLASS}
+      filters={<GoalsListToolbar listFilters={listFilters} searchInputRef={searchInputRef} trailing={viewToggle} />}
       actions={<BuildHeaderActions actions={createActions} />}
     >
-      <PmPageShell>
-        <PmSection index={0} className="shrink-0">
-          <StatCardGrid cols={4}>
-            <StatCard
-              label="Total Goals"
-              value={stats?.total ?? 0}
-              icon={Target}
-              tone="default"
-              isLoading={isLoading}
-            />
-            <StatCard
-              label="On Track"
-              value={stats?.byStatus.on_track ?? 0}
-              icon={TrendingUp}
-              tone="emerald"
-              isLoading={isLoading}
-            />
-            <StatCard
-              label="At Risk"
-              value={stats?.atRisk ?? 0}
-              icon={AlertTriangle}
-              tone="amber"
-              isLoading={isLoading}
-            />
-            <StatCard
-              label="Avg Progress"
-              value={`${stats?.avgProgress ?? 0}%`}
-              icon={TrendingUp}
-              tone="default"
-              isLoading={isLoading}
-            />
-          </StatCardGrid>
-        </PmSection>
+      <ManagedProductDetailShell>
+        {resolution.kind === "denied" ? null : (
+          <PmSection index={0} className="shrink-0">
+            <ProductGoalsStats stats={stats} isLoading={isLoading} />
+          </PmSection>
+        )}
 
-        <PmSection index={1} className="flex min-h-0 flex-1 flex-col">
+        <BuildOfflineNotice dataUpdatedAt={dataUpdatedAt} />
+
+        <ManagedProductDetailPrimarySection index={1}>
           <PageState
             resolution={resolution}
-            loading={<GoalsSkeleton />}
+            loading={<ProductGoalsGridSkeleton />}
             empty={
               <EmptyState
-                className={PM_FILL_PANEL}
+                className={CONTENT_FILL_PANEL}
                 illustration={<EmptyTargetIllustration />}
                 title="No goals yet"
                 description={
                   listFilters.isFiltered
                     ? undefined
-                    : "Create goals linked to this product."
+                    : "Create a goal or link an existing org goal to this product."
                 }
                 filtersActive={listFilters.isFiltered}
                 onClearFilters={listFilters.clearAll}
                 action={
-                  listFilters.isFiltered
+                  listFilters.isFiltered || !canManage
                     ? undefined
                     : { label: "New Goal", onClick: handleOpenCreate }
                 }
               />
             }
             onRetry={handleRetry}
-            className={PM_FILL_PANEL}
+            className={CONTENT_FILL_PANEL}
           >
-            <div className="space-y-8">
-              {GOAL_LEVEL_ORDER.map((level) => {
-                const levelGoals = grouped.get(level) ?? [];
-                if (levelGoals.length === 0) return null;
-                return (
-                  <div key={level} className="space-y-3">
-                    <div className="flex items-center gap-2">
-                      <h2 className="text-sm font-semibold text-foreground">
-                        {LEVEL_LABEL[level]}
-                      </h2>
-                      <Badge variant="secondary" className="text-micro">
-                        {levelGoals.length}
-                      </Badge>
-                    </div>
-                    <PmStaggerList className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                      {levelGoals.map((goal) => (
-                        <GoalCard key={goal.id} goal={goal} />
-                      ))}
-                    </PmStaggerList>
-                  </div>
-                );
-              })}
-            </div>
+            <BuildPaginatedContent
+              ariaLabel="Product goals"
+              contentClassName=""
+              footer={totalGoals > 0 ? (
+                <TablePagination
+                  page={page}
+                  pageSize={PAGE_SIZE}
+                  total={totalGoals}
+                  onPageChange={handlePageChange}
+                />
+              ) : null}
+            >
+                <ProductGoalsViewBody
+                  viewMode={viewMode}
+                  flatGoals={flatGoals}
+                  totalGoals={totalGoals}
+                  canManage={canManage}
+                  onEdit={handleEditGoalCard}
+                  onDelete={handleDeleteGoalCard}
+                  onUnlink={handleUnlinkGoalCard}
+                  onCheckIn={handleCheckInGoalCard}
+                  onRowClick={handleGoalRowClick}
+                />
+            </BuildPaginatedContent>
           </PageState>
-        </PmSection>
-      </PmPageShell>
+        </ManagedProductDetailPrimarySection>
+      </ManagedProductDetailShell>
 
-      <GoalFormSheet open={createOpen} onOpenChange={setCreateOpen} />
+      <ShortcutHelpDialog open={shortcutHelpOpen} onOpenChange={setShortcutHelpOpen} />
+
+      <GoalFormSheet open={createOpen} onOpenChange={setCreateOpen} managedProductId={managedProductId} />
+      {editGoalId !== null && editGoalDetail !== undefined ? (
+        <GoalFormSheet
+          open
+          onOpenChange={handleEditSheetOpenChange}
+          goal={editGoalDetail}
+        />
+      ) : null}
+
+      <ConfirmDialog
+        open={deleteGoalId !== null}
+        onOpenChange={handleDeleteDialogOpenChange}
+        title="Delete goal?"
+        description="This action cannot be undone. All key results and updates will be removed."
+        confirmLabel="Delete"
+        destructive
+        isPending={deleteGoalMutation.isPending}
+        onConfirm={handleDeleteConfirm}
+      />
+
+      <ConfirmDialog
+        open={unlinkGoalId !== null}
+        onOpenChange={handleUnlinkDialogOpenChange}
+        title="Unlink goal from product?"
+        description="The goal will be removed from this product's Goals tab. The goal itself is not deleted and remains available in the org goals list."
+        confirmLabel="Unlink"
+        destructive
+        isPending={unlinkGoalMutation.isPending}
+        onConfirm={handleUnlinkConfirm}
+      />
+
+      {checkInGoalId !== null && checkInKeyResults.length > 0 ? (
+        <CheckInDialog
+          goalId={checkInGoalId}
+          keyResults={checkInKeyResults}
+          onClose={handleCheckInClose}
+        />
+      ) : null}
+
+      <LinkExistingGoalDialog
+        managedProductId={managedProductId}
+        open={linkGoalOpen}
+        onOpenChange={setLinkGoalOpen}
+      />
     </PageWrapper>
   );
 }

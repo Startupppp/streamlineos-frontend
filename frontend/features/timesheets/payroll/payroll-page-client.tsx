@@ -174,8 +174,9 @@ export function TimesheetPayrollPageClient() {
     <PayrollFilters payPeriod={settings.payPeriod} rows={rows} />
   ) : null;
 
-  if (settingsLoading || summaryLoading) return <PayrollPageSkeleton />;
-
+  // The refusal is decided before the skeleton: checked after it, a denied
+  // reader first watches the payroll chrome assemble and only then learns they
+  // were never allowed to see it.
   if (!canView) {
     return (
       <PageWrapper title="Payroll">
@@ -183,6 +184,8 @@ export function TimesheetPayrollPageClient() {
       </PageWrapper>
     );
   }
+
+  if (settingsLoading || summaryLoading) return <PayrollPageSkeleton />;
 
   const rangeError =
     rangeState === "incomplete"

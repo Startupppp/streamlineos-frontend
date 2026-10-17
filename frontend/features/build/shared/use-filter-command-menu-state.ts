@@ -19,12 +19,13 @@ import {
   type Cycle,
   type ProjectOption,
   type FilterState,
-  type CategoryDefinition,
 } from "@/components/list-view";
 import type { StatusConfigEntry } from "@/lib/status-config";
+import { buildFilterCategories } from "./filter-command-menu-categories";
 
 interface UseFilterCommandMenuStateParams {
   defaultOpen?: boolean;
+  simplifySingleOptionCategories?: boolean;
   assigneeLeading?: ReactNode;
   statusItems: StatusFilterOption[];
   statusConfig: Record<string, StatusConfigEntry>;
@@ -48,6 +49,7 @@ interface UseFilterCommandMenuStateParams {
 
 export function useFilterCommandMenuState({
   defaultOpen,
+  simplifySingleOptionCategories = true,
   assigneeLeading,
   statusItems,
   statusConfig,
@@ -71,7 +73,9 @@ export function useFilterCommandMenuState({
   const isMobile = useIsMobile();
   const [open, setOpen] = useState(defaultOpen ?? false);
   const [search, setSearch] = useState("");
-  const [activeCategory, setActiveCategory] = useState<FilterCategory | null>(null);
+  const [activeCategory, setActiveCategory] = useState<FilterCategory | null>(
+    null,
+  );
   const [navDirection, setNavDirection] = useState(1);
   const submenuRef = useRef<HTMLDivElement>(null);
   const categoryListRef = useRef<HTMLDivElement>(null);
@@ -91,32 +95,21 @@ export function useFilterCommandMenuState({
 
   const isSearching = search.trim().length > 0;
 
-  const categories: CategoryDefinition[] = [
-    { key: "status", label: "Status", visible: true, activeCount: selectedStatuses.length },
-    { key: "priority", label: "Priority", visible: true, activeCount: selectedPriorities.length },
-    { key: "type", label: "Type", visible: showTypeFilter, activeCount: selectedTypes.length },
-    {
-      key: "assignee",
-      label: "Assignee",
-      leading: assigneeLeading,
-      visible: showAssigneeFilter,
-      activeCount: selectedAssignees.length,
-    },
-    { key: "label", label: "Label", visible: labels.length > 0, activeCount: selectedLabels.length },
-    { key: "cycle", label: "Cycle", visible: cycles.length > 0, activeCount: selectedCycles.length },
-    {
-      key: "dates",
-      label: "Due Dates",
-      visible: true,
-      activeCount: dueDateFrom || dueDateTo ? 1 : 0,
-    },
-    {
-      key: "project",
-      label: "Project",
-      visible: (projectOptions?.length ?? 0) > 0,
-      activeCount: selectedProjectIds.length,
-    },
-  ];
+  const categories = buildFilterCategories({
+    simplifySingleOptionCategories,
+    assigneeLeading,
+    statusItems,
+    showTypeFilter,
+    showAssigneeFilter,
+    labels,
+    cycles,
+    projectOptions,
+    filterState,
+    onToggleStatus,
+    onToggleLabel,
+    onToggleCycle,
+    onToggleProject,
+  });
 
   const visibleCategories = categories.filter((c) => c.visible);
 
@@ -128,7 +121,8 @@ export function useFilterCommandMenuState({
     }
   }, []);
 
-  const firstCategoryKey = visibleCategories[0]?.key ?? null;
+  const firstCategoryKey =
+    visibleCategories.find((category) => !category.directAction)?.key ?? null;
   const resolvedCategory =
     activeCategory ??
     (!isMobile && open && !isSearching ? firstCategoryKey : null);
@@ -205,9 +199,8 @@ export function useFilterCommandMenuState({
     onSwipeRight: handleSwipeRight,
   });
 
-  const mobilePanelKey = search.trim().length > 0
-    ? "search"
-    : activeCategory ?? "categories";
+  const mobilePanelKey =
+    search.trim().length > 0 ? "search" : (activeCategory ?? "categories");
 
   const drillTitle = activeCategory ? categoryTitle(activeCategory) : "Filters";
 

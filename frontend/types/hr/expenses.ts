@@ -51,7 +51,7 @@ export type ExpenseWithRelations = z.infer<typeof expensePageDataRowContract>;
 
 export type ExpensePageData = z.infer<typeof expensePageDataContract>;
 
-export type ExpenseStatus = "PENDING" | "APPROVED" | "REJECTED" | "PAID";
+export type ExpenseStatus = "PENDING" | "APPROVED" | "REJECTED" | "PAID" | "WITHDRAWN";
 
 export interface Expense {
   id: number;

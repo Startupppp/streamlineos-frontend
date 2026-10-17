@@ -4,8 +4,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 export default function FnfLoading() {
   return (
     <PageWrapper
-      title="Final settlement"
-      subtitle="Manage final settlements for separated employees"
+      title="Full and final draft"
+      subtitle="Record what a separated employee is owed. Payroll runs the settlement itself — this page saves a draft and does not pay anything."
       actions={<Skeleton className="h-9 w-36 rounded-md" />}
     >
       <div className="space-y-2">

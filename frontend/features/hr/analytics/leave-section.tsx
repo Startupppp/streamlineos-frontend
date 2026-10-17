@@ -5,6 +5,8 @@ import dynamic from "next/dynamic";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ErrorState } from "@/components/shared/error-state";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { PageState } from "@/components/shared/page-state";
+import { usePageState } from "@/hooks/api/use-page-state";
 import {
   AnalyticsChartCard,
   AnalyticsSectionHeader,
@@ -32,6 +34,20 @@ interface LeaveSectionProps {
 
 export function LeaveSection({ year }: LeaveSectionProps) {
   const { data, isLoading, isError, error, refetch } = useHrLeaveAnalytics(year);
+  const leaveAccess = usePageState({
+    permission: "hr:leaves:view",
+    isLoading: false,
+    isError: false,
+    error: null,
+  });
+
+  function handleRetry(): void {
+    void refetch();
+  }
+
+  if (leaveAccess.kind !== "ready") {
+    return <PageState resolution={leaveAccess} loading={null}>{null}</PageState>;
+  }
 
   if (isLoading) {
     return (
@@ -47,17 +63,16 @@ export function LeaveSection({ year }: LeaveSectionProps) {
     );
   }
 
-  if (isError) {
+  if (isError || !data) {
     return (
       <ErrorState
         title="Couldn't load leave analytics"
         description={getErrorMessage(error)}
-        onRetry={() => void refetch()}
+        error={error}
+        onRetry={handleRetry}
       />
     );
   }
-
-  if (!data) return null;
 
   const monthlyData = data.monthlyTrend.map((m) => ({
     month: m.month,

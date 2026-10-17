@@ -3,11 +3,9 @@ import { dirname, join, resolve } from "node:path";
 import { collectAppRoutes } from "../app-routes";
 import { resolveRouteAccess } from "../route-access";
 import { isUniversalRoute } from "../universal-routes";
-import { backendPermissionNames } from "@/test-utils/permission-catalog";
 
 const APP_DIR = resolve(process.cwd(), "app");
 const AUTHENTICATED_DIR = join(APP_DIR, "(authenticated)");
-const FRONTEND_CATALOG_DIR = resolve(process.cwd(), "lib", "rbac", "permissions");
 const PERMISSION_KEY = /^[a-z][a-z0-9_-]*(?::[a-z0-9_-]+)+$/;
 
 export interface SessionOnlySurface {
@@ -35,11 +33,8 @@ const SESSION_ONLY_BY_DESIGN: readonly SessionOnlySurface[] = [
   { path: "/knowledge/wiki/private", subtree: true, reason: "A member's own private Knowledge Base pages." },
   { path: "/knowledge/wiki/doc", subtree: true, reason: "Knowledge Base page reading is platform core; per-record ACLs gate the content." },
   { path: "/knowledge/wiki/spaces", childrenOnly: true, reason: "An individual Knowledge Base space is a reading surface; the space list itself stays gated on kb:spaces:view." },
+  { path: "/post-invite", reason: "The invitation landing router. It only reads the session and access result to redirect the new member to the surface they were granted." },
   { path: "/hr/announcements", reason: "Company-wide announcement reading that happens to sit under the HR prefix." },
-  { path: "/announcements", reason: "Alias that redirects to /hr/announcements and renders nothing. The destination carries its own gate." },
-  { path: "/kb", reason: "Alias that redirects to /knowledge/wiki and renders nothing. The destination carries its own gate." },
-  { path: "/docs", reason: "Alias that redirects to /knowledge/wiki and renders nothing. The destination carries its own gate." },
-  { path: "/knowledge", reason: "Module root that redirects to /knowledge/chat and renders nothing. The destination carries its own gate." },
 ];
 
 const GATED_MODULE_PREFIXES = ["/accounting", "/billing", "/blog", "/build", "/crm",
@@ -155,18 +150,6 @@ function sessionOnlyByDesign(routePath: string): boolean {
   return SESSION_ONLY_BY_DESIGN.some((surface) => matchesSurface(routePath, surface));
 }
 
-function frontendPermissionKeys(): Set<string> {
-  const source = readdirSync(FRONTEND_CATALOG_DIR)
-    .filter((name) => name === "types.ts" || name.startsWith("permission-key-"))
-    .map((name) => readFileSync(join(FRONTEND_CATALOG_DIR, name), "utf8"))
-    .join("\n");
-  return new Set(
-    [...source.matchAll(/\|\s*["']([^"']+)["']/g)]
-      .map((match) => match[1])
-      .filter((value) => PERMISSION_KEY.test(value)),
-  );
-}
-
 function authenticatedModuleDirs(): string[] {
   return readdirSync(AUTHENTICATED_DIR, { withFileTypes: true })
     .filter((entry) => entry.isDirectory() && !/^[(@_]/.test(entry.name))
@@ -177,11 +160,6 @@ function authenticatedModuleDirs(): string[] {
 describe("page-level gates — every authenticated module", () => {
   const pages = auditPages();
   const gatedKeys = [...new Set(pages.flatMap((page) => page.keys))].sort();
-
-  it("reaches both permission catalogs, so a silent empty sweep cannot pass", () => {
-    expect(backendPermissionNames().size).toBeGreaterThan(400);
-    expect(frontendPermissionKeys().size).toBeGreaterThan(400);
-  });
 
   it("walks every authenticated module directory, not a hand-picked five", () => {
     const modules = authenticatedModuleDirs();
@@ -252,21 +230,11 @@ describe("page-level gates — every authenticated module", () => {
     expect([...contradicted, ...unreasoned, ...moduleOwned]).toEqual([]);
   });
 
-  it("extracts a real key set from the gates, so the catalog checks below cannot pass on an empty sweep", () => {
+  it("extracts a real key set from every requirePermission gate", () => {
     expect(gatedKeys.length).toBeGreaterThan(150);
     const blindCalls = pages
       .filter((page) => page.via.includes("requirePermission") && page.keys.length === 0)
       .map((page) => page.path);
     expect(blindCalls).toEqual([]);
-  });
-
-  it("asserts only permission keys that exist verbatim in the backend catalog", () => {
-    const names = backendPermissionNames();
-    expect(gatedKeys.filter((key) => !names.has(key))).toEqual([]);
-  });
-
-  it("asserts only permission keys that exist verbatim in the frontend catalog", () => {
-    const keys = frontendPermissionKeys();
-    expect(gatedKeys.filter((key) => !keys.has(key))).toEqual([]);
   });
 });

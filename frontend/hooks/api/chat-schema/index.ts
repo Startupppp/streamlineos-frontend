@@ -68,7 +68,9 @@ export {
   chatMessageContract,
   chatMessagesPageContract,
   chatPollPageContract,
+  chatSendResponseContract,
 } from "./message-schema";
+export type { ChatSendResponse } from "./message-schema";
 export {
   chatCreateTaskContract,
   chatEntityActionOptionsContract,
@@ -93,9 +95,7 @@ export {
   chatJoinViaInviteContract,
   chatMuteResponseContract,
   chatNotifPrefResponseContract,
-  chatOrgSettingsContract,
 } from "./channel-settings-schema";
-export type { ChatOrgSettingsWire } from "./channel-settings-schema";
 export {
   chatPinItemContract,
   chatPinsContract,

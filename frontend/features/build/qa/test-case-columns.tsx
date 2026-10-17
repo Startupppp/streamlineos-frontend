@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback } from "react";
+import { useCallback, type KeyboardEvent, type MouseEvent } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -20,14 +20,14 @@ import type { TestCase } from "@/types/projects";
 
 const PRIORITY_STYLES: Record<string, string> = {
   low: "text-muted-foreground border-border",
-  medium: "text-status-warning-ink border-status-warning-rule",
-  high: "text-status-danger-ink border-status-danger-rule",
+  medium: "text-status-warning-ink-strong border-status-warning-rule",
+  high: "text-status-danger-ink-strong border-status-danger-rule",
 };
 
 const AUTOMATION_STYLES: Record<string, string> = {
   manual: "text-muted-foreground border-border",
-  automated: "text-status-success-ink border-status-success-rule",
-  planned: "text-status-info-ink border-status-info-rule",
+  automated: "text-status-success-ink-strong border-status-success-rule",
+  planned: "text-status-info-ink-strong border-status-info-rule",
 };
 
 function priorityLabel(p: string) {
@@ -49,14 +49,8 @@ function PriorityBadge({ priority }: { priority: string }) {
   );
 }
 
-export const TEST_CASE_TABLE_HEADERS = [
-  "ID",
-  "Title",
-  "Priority",
-  "Automation",
-  "Component",
-  "Actions",
-] as const;
+import { TEST_CASE_TABLE_HEADERS } from "./test-case-headers";
+export { TEST_CASE_TABLE_HEADERS };
 
 interface TestCaseActionsProps {
   testCase: TestCase;
@@ -186,10 +180,18 @@ export function TestCaseMobileCard({
   onEdit: (tc: TestCase) => void;
   onDelete: (tc: TestCase) => void;
 }) {
+  const handleOpen = useCallback(() => onEdit(testCase), [onEdit, testCase]);
+  const handleActionsClick = useCallback((event: MouseEvent) => {
+    event.stopPropagation();
+  }, []);
+  const handleActionsKeyDown = useCallback((event: KeyboardEvent) => {
+    event.stopPropagation();
+  }, []);
   return (
     <BuildMobileCard
       title={testCase.title}
       status={<PriorityBadge priority={testCase.priority} />}
+      onClick={handleOpen}
       meta={[
         {
           label: "Automation",
@@ -212,11 +214,13 @@ export function TestCaseMobileCard({
       ]}
       actions={
         canManage ? (
-          <TestCaseRowActions
-            testCase={testCase}
-            onEdit={onEdit}
-            onDelete={onDelete}
-          />
+          <div onClick={handleActionsClick} onKeyDown={handleActionsKeyDown}>
+            <TestCaseRowActions
+              testCase={testCase}
+              onEdit={onEdit}
+              onDelete={onDelete}
+            />
+          </div>
         ) : null
       }
     />

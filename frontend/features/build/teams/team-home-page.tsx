@@ -1,165 +1,49 @@
-﻿"use client";
+"use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { PlusIcon, XIcon, EllipsisIcon } from "@animateicons/react/lucide";
-import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import {
   useProjectTeam,
+  useTeamMembers,
   useUpdateProjectTeam,
   useDeleteProjectTeam,
-  useAddProjectTeamMember,
   useRemoveProjectTeamMember,
   useUpdateProjectTeamMemberRole,
 } from "@/hooks/api/build/teams";
+import { useBuildCursorPager } from "@/features/build/shared/use-build-cursor-pager";
+import { useBuildListKeyboard } from "@/hooks/common/use-build-list-keyboard";
+import {
+  useBuildListFilters,
+  BUILD_FILTER_ALL,
+} from "@/features/build/shared/use-build-list-filters";
+import { useOnlineStatus } from "@/hooks/common/use-online-status";
 import { useCan } from "@/hooks/api/access";
+import { usePageState } from "@/hooks/api/use-page-state";
+import { PageState } from "@/components/shared/page-state";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
-import { ErrorState } from "@/components/shared/error-state";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { LoadingButton } from "@/components/ui/loading-button";
+import { ShortcutHelpDialog } from "@/components/shared/shortcut-help-dialog";
 import { TeamFormSheet } from "./team-form-sheet";
 import { TeamProjectsSection } from "./team-projects-section";
-import { MemberPicker } from "@/components/members/member-picker";
-import type { ProjectTeamMember, UpdateTeamInput } from "@/types/projects";
+import type { UpdateTeamInput } from "@/types/projects";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { PmPageShell, PmSection } from "@/components/pm-chrome";
+import { TeamDetailSkeleton } from "./team-member-controls";
+import { TeamMembersSection } from "./team-members-section";
 import {
-  PmPageShell,
-  PmPanel,
-  PmSection,
-  PM_PANEL,
-  PM_ROW,
-} from "@/components/pm-chrome";
-import { getUserDisplayName, getUserInitials } from "@/lib/person-display";
-import { TEXT_ONE_LINE } from "@/lib/text-overflow";
-import { cn } from "@/lib/utils";
-import { resolveImageUrl } from "@/lib/utils";
+  TeamActionsMenu,
+  TeamHeaderMeta,
+  TeamHeaderTitle,
+} from "./team-header";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { FolderKanban, Users } from "lucide-react";
 
-const TEAM_MEMBER_ROLES = ["member", "lead"] as const;
-
-function TeamActionsButton() {
-  const { iconRef, hoverHandlers } = useAnimatedIcon();
-  return (
-    <Button variant="outline" {...hoverHandlers}>
-      <EllipsisIcon ref={iconRef} size={14} /> Actions
-    </Button>
-  );
-}
-
-function AddMemberButton({
-  isPending,
-  onClick,
-  disabled,
-}: {
-  isPending: boolean;
-  onClick: () => void;
-  disabled: boolean;
-}) {
-  const { iconRef, hoverHandlers } = useAnimatedIcon();
-  return (
-    <LoadingButton
-      size="sm"
-      className="gap-1 text-xs"
-      onClick={onClick}
-      disabled={disabled}
-      isPending={isPending}
-      loadingText="Adding…"
-      {...hoverHandlers}
-    >
-      <PlusIcon ref={iconRef} size={12} /> Add
-    </LoadingButton>
-  );
-}
-
-function RemoveMemberButton({
-  member,
-  isPending,
-  onRemove,
-}: {
-  member: ProjectTeamMember;
-  isPending: boolean;
-  onRemove: (userId: string) => void;
-}) {
-  const { iconRef, hoverHandlers } = useAnimatedIcon();
-  const handleClick = useCallback(() => onRemove(member.userId), [member.userId, onRemove]);
-  return (
-    <Button
-      variant="ghost"
-      size="icon"
-      className="w-7 shrink-0"
-      onClick={handleClick}
-      disabled={isPending}
-      aria-label="Remove member"
-      {...hoverHandlers}
-    >
-      <XIcon ref={iconRef} size={14} />
-    </Button>
-  );
-}
-
-function MemberRoleSelect({
-  member,
-  isPending,
-  onRoleChange,
-}: {
-  member: ProjectTeamMember;
-  isPending: boolean;
-  onRoleChange: (memberUserId: string, role: "member" | "lead") => void;
-}) {
-  const role = (member.role === "lead" ? "lead" : "member") as "member" | "lead";
-
-  function handleValueChange(value: string) {
-    onRoleChange(member.userId, value as "member" | "lead");
-  }
-
-  return (
-    <Select value={role} onValueChange={handleValueChange} disabled={isPending}>
-      <SelectTrigger className="w-24 shrink-0 border-input bg-card">
-        <SelectValue />
-      </SelectTrigger>
-      <SelectContent className="min-w-[var(--radix-select-trigger-width)]">
-        <SelectItem value="member">Member</SelectItem>
-        <SelectItem value="lead">Lead</SelectItem>
-      </SelectContent>
-    </Select>
-  );
-}
-
-function DetailSkeleton() {
-  return (
-    <PmPageShell>
-      <div className={cn(PM_PANEL, "space-y-3 p-4")}>
-        <div className="flex gap-2">
-          <Skeleton className="h-5 w-16 rounded-full" />
-          <Skeleton className="h-4 w-24" />
-        </div>
-      </div>
-      <div className={cn(PM_PANEL, "space-y-2 p-2")}>
-        {Array.from({ length: 6 }).map((_, i) => (
-          <Skeleton key={i} className="h-10 w-full rounded-md" />
-        ))}
-      </div>
-    </PmPageShell>
-  );
-}
+const FILTER_DEFINITIONS = [
+  { param: "leadId" },
+  { param: "memberId" },
+] as const;
 
 interface Props {
   teamId: number;
@@ -168,23 +52,54 @@ interface Props {
 export function TeamHomePage({ teamId }: Props) {
   const canManage = useCan("build:teams:manage");
   const router = useRouter();
+  const searchRef = useRef<HTMLInputElement>(null);
+  const isOnline = useOnlineStatus();
 
   const [editOpen, setEditOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
-  const [addMemberId, setAddMemberId] = useState<string | undefined>(undefined);
-  const [addMemberRole, setAddMemberRole] = useState<"member" | "lead">("member");
+  const [shortcutHelpOpen, setShortcutHelpOpen] = useState(false);
 
-  function handleAddMemberRoleChange(value: string): void {
-    const role = TEAM_MEMBER_ROLES.find((candidate) => candidate === value);
-    if (role) setAddMemberRole(role);
-  }
+  const listFilters = useBuildListFilters({
+    filters: FILTER_DEFINITIONS,
+    withSearch: true,
+  });
+  const memberPager = useBuildCursorPager(listFilters.resetKey);
 
-  const { data, isLoading, isError, refetch } = useProjectTeam(teamId);
+  const debouncedSearch = listFilters.debouncedSearch;
+  const leadIdFilter = listFilters.value("leadId");
+  const memberIdFilter = listFilters.value("memberId");
+
+  const { data, isLoading, isError, error, refetch } = useProjectTeam(teamId);
+  const membersResult = useTeamMembers(teamId, memberPager.cursor, 50, {
+    q: debouncedSearch || undefined,
+    leadId: leadIdFilter !== BUILD_FILTER_ALL ? leadIdFilter : undefined,
+    memberId: memberIdFilter !== BUILD_FILTER_ALL ? memberIdFilter : undefined,
+  });
+  const pageMembers = useMemo(
+    () => membersResult.data?.data ?? [],
+    [membersResult.data],
+  );
+
   const updateTeam = useUpdateProjectTeam();
   const deleteTeam = useDeleteProjectTeam();
-  const addMember = useAddProjectTeamMember(teamId);
   const removeMember = useRemoveProjectTeamMember(teamId);
   const updateMemberRole = useUpdateProjectTeamMemberRole(teamId);
+
+  const handleMembersNext = useCallback(() => {
+    memberPager.goNext(membersResult.data?.pagination.nextCursor);
+  }, [memberPager, membersResult.data?.pagination.nextCursor]);
+
+  const handleKeyboardOpen = useCallback(() => undefined, []);
+  const handleShortcutHelp = useCallback(() => setShortcutHelpOpen(true), []);
+
+  useBuildListKeyboard({
+    itemCount: pageMembers.length,
+    onOpen: handleKeyboardOpen,
+    onClearSelection: memberPager.reset,
+    onShortcutHelp: handleShortcutHelp,
+    searchInputRef: searchRef,
+    enabled: !isLoading,
+  });
 
   function handleEdit(input: UpdateTeamInput & { teamId: number }) {
     updateTeam.mutate(input, {
@@ -206,21 +121,6 @@ export function TeamHomePage({ teamId }: Props) {
     });
   }
 
-  function handleAddMember() {
-    if (!addMemberId) return;
-    addMember.mutate(
-      { userId: addMemberId, role: addMemberRole },
-      {
-        onSuccess: () => {
-          toast.success("Member added");
-          setAddMemberId(undefined);
-          setAddMemberRole("member");
-        },
-        onError: (e) => toast.error(getErrorMessage(e)),
-      },
-    );
-  }
-
   function handleRemoveMember(userId: string) {
     removeMember.mutate(userId, {
       onSuccess: () => toast.success("Member removed"),
@@ -238,32 +138,52 @@ export function TeamHomePage({ teamId }: Props) {
     );
   }
 
+  const handleOpenEdit = useCallback(() => setEditOpen(true), []);
+
+  const handleOpenDelete = useCallback(() => setDeleteOpen(true), []);
+
   function handleRetry() {
     void refetch();
   }
 
-  function handleOpenEdit() {
-    setEditOpen(true);
-  }
+  const pageState = usePageState({
+    permission: "build:teams:view",
+    isLoading,
+    isError,
+    error,
+    isEmpty: !data,
+  });
 
-  function handleOpenDelete() {
-    setDeleteOpen(true);
-  }
-
-  if (isLoading) {
-    return (
-      <PageWrapper title="Team" backHref="/build/teams">
-        <DetailSkeleton />
-      </PageWrapper>
-    );
-  }
-
-  if (isError || !data) {
+  if (pageState.kind !== "ready" && pageState.kind !== "empty") {
     return (
       <PageWrapper title="Team" backHref="/build/teams">
         <PmPageShell>
           <PmSection index={0} className="flex min-h-0 flex-1 flex-col">
-            <ErrorState className="flex-1" onRetry={handleRetry} />
+            <PageState
+              resolution={pageState}
+              loading={<TeamDetailSkeleton />}
+              onRetry={handleRetry}
+              className="flex-1"
+            >
+              {null}
+            </PageState>
+          </PmSection>
+        </PmPageShell>
+      </PageWrapper>
+    );
+  }
+
+  if (!data) {
+    return (
+      <PageWrapper title="Team" backHref="/build/teams">
+        <PmPageShell>
+          <PmSection index={0} className="flex min-h-0 flex-1 flex-col">
+            <EmptyState
+              className="flex-1"
+              illustrationPreset="projects"
+              title="Team not found"
+              description="This team may have been deleted."
+            />
           </PmSection>
         </PmPageShell>
       </PageWrapper>
@@ -272,151 +192,83 @@ export function TeamHomePage({ teamId }: Props) {
 
   return (
     <PageWrapper
-      title={data.name}
-      subtitle={`Team · ${data.key}`}
+      title={<TeamHeaderTitle team={data} />}
+      subtitle={
+        <TeamHeaderMeta
+          team={data}
+          memberCount={pageMembers.length}
+          hasMoreMembers={Boolean(membersResult.data?.pagination.hasMore)}
+        />
+      }
       backHref="/build/teams"
+      actionsInline
       actions={
         canManage ? (
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <TeamActionsButton />
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={handleOpenEdit}>Edit Team</DropdownMenuItem>
-              <DropdownMenuItem variant="destructive" onClick={handleOpenDelete}>
-                Delete Team
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          <TeamActionsMenu
+            className="hidden sm:inline-flex"
+            onEdit={handleOpenEdit}
+            onDelete={handleOpenDelete}
+          />
         ) : undefined
       }
     >
-      <PmPageShell>
-        <PmSection index={0}>
-          <PmPanel className="flex flex-wrap items-center gap-3 p-4">
-            <span
-              className="flex h-6 w-6 shrink-0 items-center justify-center rounded text-xs font-bold text-white"
-              style={{ backgroundColor: data.color ?? "#64748b" }}
+      <PmPageShell className="gap-3 pb-6">
+        <Tabs
+          defaultValue="members"
+          className="min-h-0 min-w-0 w-full flex-1 gap-3"
+        >
+          <div className="flex min-w-0 shrink-0 items-center gap-2">
+            <TabsList
+              aria-label="Team workspace"
+              className="flex-1 sm:flex-none"
             >
-              {data.icon ?? data.key.slice(0, 2)}
-            </span>
-            <span className="font-mono text-xs text-muted-foreground">{data.key}</span>
-            {data.isPrivate ? (
-              <Badge variant="outline" className="text-micro">
-                Private
-              </Badge>
-            ) : (
-              <Badge variant="secondary" className="text-micro">
-                Public
-              </Badge>
-            )}
-            <span className="text-sm text-muted-foreground">
-              {data.members.length} member{data.members.length !== 1 ? "s" : ""}
-            </span>
-          </PmPanel>
-        </PmSection>
-
-        <PmSection index={1} className="space-y-3">
-          <div className="flex min-w-0 flex-wrap items-center justify-between gap-2">
-            <p className="text-dense font-semibold uppercase tracking-wider text-muted-foreground">
-              Members{data.members.length > 0 ? ` (${data.members.length})` : ""}
-            </p>
+              <TabsTrigger value="members">
+                <Users aria-hidden="true" />
+                Members
+              </TabsTrigger>
+              <TabsTrigger value="projects">
+                <FolderKanban aria-hidden="true" />
+                Projects
+              </TabsTrigger>
+            </TabsList>
             {canManage ? (
-              <div className="flex min-w-0 flex-wrap items-center gap-2">
-                <MemberPicker
-                  value={addMemberId}
-                  onChange={(id) => setAddMemberId(id ?? undefined)}
-                  excludeUserIds={data.members.map((m) => m.userId)}
-                  placeholder="Add a member…"
-                  className="h-8 min-w-[180px]"
-                />
-                <Select value={addMemberRole} onValueChange={handleAddMemberRoleChange}>
-                  <SelectTrigger className="w-24 border-input bg-card">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent className="min-w-[var(--radix-select-trigger-width)]">
-                    <SelectItem value="member">Member</SelectItem>
-                    <SelectItem value="lead">Lead</SelectItem>
-                  </SelectContent>
-                </Select>
-                <AddMemberButton
-                  disabled={!addMemberId}
-                  isPending={addMember.isPending}
-                  onClick={handleAddMember}
-                />
-              </div>
+              <TeamActionsMenu
+                className="size-9 px-0 sm:hidden"
+                onEdit={handleOpenEdit}
+                onDelete={handleOpenDelete}
+              />
             ) : null}
           </div>
 
-          {data.members.length === 0 ? (
-            <PmPanel className="flex items-center justify-center p-4">
-              <EmptyState
-                illustrationPreset="projects"
-                title="No members yet"
-                description="Add members to this team."
-                compact
-              />
-            </PmPanel>
-          ) : (
-            <PmPanel>
-              {data.members.map((member) => {
-                const displayName = getUserDisplayName({
-                  firstName: member.firstName,
-                  lastName: member.lastName,
-                  email: member.email,
-                });
-                const initials = getUserInitials({
-                  firstName: member.firstName,
-                  lastName: member.lastName,
-                  email: member.email,
-                });
-                return (
-                  <div key={member.id} className={PM_ROW}>
-                    <Avatar className="h-7 w-7 shrink-0">
-                      <AvatarImage src={resolveImageUrl(member.image)} />
-                      <AvatarFallback className="text-micro">{initials}</AvatarFallback>
-                    </Avatar>
-                    <div className="flex min-w-0 flex-1 flex-col">
-                      <span
-                        className={cn(
-                          TEXT_ONE_LINE,
-                          "text-sm font-medium text-foreground",
-                        )}
-                      >
-                        {displayName}
-                      </span>
-                      <span className="text-dense text-muted-foreground">
-                        {member.email}
-                      </span>
-                    </div>
-                    {canManage ? (
-                      <MemberRoleSelect
-                        member={member}
-                        isPending={updateMemberRole.isPending}
-                        onRoleChange={handleRoleChange}
-                      />
-                    ) : (
-                      <Badge
-                        variant="outline"
-                        className="shrink-0 px-1.5 py-0.5 text-micro capitalize"
-                      >
-                        {member.role}
-                      </Badge>
-                    )}
-                    {canManage ? (
-                      <RemoveMemberButton
-                        member={member}
-                        isPending={removeMember.isPending}
-                        onRemove={handleRemoveMember}
-                      />
-                    ) : null}
-                  </div>
-                );
-              })}
-            </PmPanel>
-          )}
-        </PmSection>
-        <TeamProjectsSection teamId={teamId} />
+          <TabsContent
+            value="members"
+            className="mt-0 min-h-0 min-w-0 w-full flex-1"
+          >
+            <TeamMembersSection
+              teamId={teamId}
+              members={data.members}
+              isOnline={isOnline}
+              searchRef={searchRef}
+              listFilters={listFilters}
+              pageMembers={pageMembers}
+              membersResult={membersResult}
+              memberPager={memberPager}
+              onMembersNext={handleMembersNext}
+              isRoleUpdatePending={updateMemberRole.isPending}
+              onRoleChange={handleRoleChange}
+              isRemovePending={removeMember.isPending}
+              onRemove={handleRemoveMember}
+              canManage={canManage}
+            />
+          </TabsContent>
+
+          <TabsContent
+            value="projects"
+            className="mt-0 min-h-0 min-w-0 w-full flex-1"
+          >
+            <TeamProjectsSection teamId={teamId} />
+          </TabsContent>
+        </Tabs>
       </PmPageShell>
 
       <TeamFormSheet
@@ -438,6 +290,10 @@ export function TeamHomePage({ teamId }: Props) {
         destructive
         isPending={deleteTeam.isPending}
         onConfirm={handleDeleteConfirm}
+      />
+      <ShortcutHelpDialog
+        open={shortcutHelpOpen}
+        onOpenChange={setShortcutHelpOpen}
       />
     </PageWrapper>
   );

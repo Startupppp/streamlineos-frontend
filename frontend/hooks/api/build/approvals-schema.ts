@@ -1,43 +1,35 @@
 import { z } from "zod";
+import {
+  buildApprovalsCreateApprovalResponseSchema,
+  buildApprovalsListApprovalsResponseSchema,
+  buildApprovalsGetApprovalResponseSchema,
+  buildApprovalsUpdateApprovalResponseSchema,
+  buildApprovalsDecideApprovalResponseSchema,
+  buildApprovalsCreateApprovalBodySchema,
+  buildApprovalsDecideApprovalBodySchema,
+  buildApprovalsUpdateApprovalBodySchema,
+  buildApprovalsSoftDeleteApprovalBodySchema,
+  approvalsInboxGetInboxResponseSchema,
+} from "@/contracts/build-contracts.generated";
 
-export const approvalInboxItemContract = z.object({
-  id: z.number().int(),
-  projectId: z.number().int().nullable(),
-  projectName: z.string().nullable(),
-  projectKey: z.string().nullable(),
-  entityType: z.string(),
-  entityId: z.number().int(),
-  title: z.string(),
-  status: z.string(),
-  level: z.number().int(),
-  dueAt: z.string().nullable(),
-  requestedById: z.string().nullable(),
-  decidedAt: z.string().nullable(),
-});
+export const approvalStatusSchema = buildApprovalsCreateApprovalResponseSchema.shape.status;
+export const approvalEntityTypeSchema = buildApprovalsCreateApprovalResponseSchema.shape.entityType;
 
-export const approvalInboxListContract = z.array(approvalInboxItemContract);
+export const approvalInboxItemContract = approvalsInboxGetInboxResponseSchema.shape.data.element;
 
-export const approvalRowContract = z.object({
-  id: z.number().int(),
-  orgId: z.string(),
-  projectId: z.number().int().nullable(),
-  entityType: z.string(),
-  entityId: z.number().int(),
-  title: z.string(),
-  reason: z.string().nullable(),
-  requestedById: z.string().nullable(),
-  approverMembershipId: z.number().int().nullable(),
-  status: z.string(),
-  level: z.number().int(),
-  dueAt: z.string().nullable(),
-  decisionComment: z.string().nullable(),
-  decidedAt: z.string().nullable(),
-  createdBy: z.string().nullable(),
-  createdAt: z.string(),
-  updatedAt: z.string(),
-  deletedAt: z.string().nullable(),
-});
+export const approvalInboxPageContract = approvalsInboxGetInboxResponseSchema;
 
-export const approvalListContract = z.array(approvalRowContract);
 
-export const approvalInboxCountContract = z.object({ count: z.number().int().nonnegative() });
+export const approvalDetailContract = buildApprovalsGetApprovalResponseSchema;
+export const approvalCreateContract = buildApprovalsCreateApprovalResponseSchema;
+export const approvalUpdateContract = buildApprovalsUpdateApprovalResponseSchema;
+export const approvalDecideContract = buildApprovalsDecideApprovalResponseSchema;
+export const createApprovalInputSchema = buildApprovalsCreateApprovalBodySchema;
+export const decideApprovalInputSchema = buildApprovalsDecideApprovalBodySchema;
+export const updateApprovalInputSchema = buildApprovalsUpdateApprovalBodySchema;
+export const deleteApprovalInputSchema = buildApprovalsSoftDeleteApprovalBodySchema;
+
+export const approvalPageContract = buildApprovalsListApprovalsResponseSchema;
+
+export type ApprovalStatus = z.infer<typeof approvalStatusSchema>;
+export type ApprovalEntityType = z.infer<typeof approvalEntityTypeSchema>;

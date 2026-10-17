@@ -1,0 +1,212 @@
+{
+  "at": "2026-10-03T10:20:03.036Z",
+  "backendRevision": "53a369619",
+  "runnerPid": 15616,
+  "scope": {
+    "orgId": "114fe418-2d7d-4f86-bd85-6a0d1a0040e2",
+    "projectId": 54,
+    "actorId": "c22bd52b-ecd5-49cb-be9a-38bb09aebe6b"
+  },
+  "before": {
+    "intakes": [
+      {
+        "id": 2,
+        "project_id": 54,
+        "org_id": "114fe418-2d7d-4f86-bd85-6a0d1a0040e2",
+        "title": "Synthetic intake accept race b71454fa",
+        "status": "pending",
+        "linked_work_item_id": null,
+        "decline_reason": null,
+        "updated_at": "2026-10-03 10:10:49.773634"
+      },
+      {
+        "id": 3,
+        "project_id": 54,
+        "org_id": "114fe418-2d7d-4f86-bd85-6a0d1a0040e2",
+        "title": "Synthetic intake decision race b71454fa",
+        "status": "pending",
+        "linked_work_item_id": null,
+        "decline_reason": null,
+        "updated_at": "2026-10-03 10:10:53.462744"
+      }
+    ],
+    "tickets": []
+  },
+  "outcomes": {
+    "acceptAccept": [
+      {
+        "status": 409,
+        "correlationId": "85ee474c-b9d5-4002-900c-b9e3b692c4c2"
+      },
+      {
+        "status": 200,
+        "correlationId": null
+      }
+    ],
+    "declineAccept": [
+      {
+        "status": 200,
+        "correlationId": null
+      },
+      {
+        "status": 409,
+        "correlationId": "60085706-982c-4953-aa16-9e40117b33ea"
+      }
+    ],
+    "retryAcceptance": 409,
+    "acceptedCollectionStatus": 200,
+    "acceptedCollection": {
+      "data": [
+        {
+          "id": 2,
+          "projectId": 54,
+          "orgId": "114fe418-2d7d-4f86-bd85-6a0d1a0040e2",
+          "title": "Synthetic intake accept race b71454fa",
+          "description": "Reserved acceptance concurrency fixture",
+          "source": "manual",
+          "status": "accepted",
+          "submitterEmail": null,
+          "submitterName": null,
+          "priority": null,
+          "requestType": "task",
+          "linkedWorkItemId": 359,
+          "declineReason": null,
+          "createdAt": "2026-10-03T10:10:49.773Z",
+          "updatedAt": "2026-10-03T10:18:11.966Z"
+        }
+      ],
+      "pagination": {
+        "limit": 10,
+        "hasMore": false,
+        "nextCursor": null
+      }
+    }
+  },
+  "after": {
+    "intakes": [
+      {
+        "id": 2,
+        "project_id": 54,
+        "org_id": "114fe418-2d7d-4f86-bd85-6a0d1a0040e2",
+        "title": "Synthetic intake accept race b71454fa",
+        "status": "accepted",
+        "linked_work_item_id": 359,
+        "decline_reason": null,
+        "updated_at": "2026-10-03 10:18:11.966"
+      },
+      {
+        "id": 3,
+        "project_id": 54,
+        "org_id": "114fe418-2d7d-4f86-bd85-6a0d1a0040e2",
+        "title": "Synthetic intake decision race b71454fa",
+        "status": "declined",
+        "linked_work_item_id": null,
+        "decline_reason": "Reserved concurrency verification",
+        "updated_at": "2026-10-03 10:18:15.855"
+      }
+    ],
+    "tickets": [
+      {
+        "id": 359,
+        "org_id": "114fe418-2d7d-4f86-bd85-6a0d1a0040e2",
+        "project_id": 54,
+        "title": "Synthetic intake accept race b71454fa",
+        "ticket_number": 3,
+        "deleted_at": null
+      }
+    ]
+  },
+  "creationActivity": [
+    {
+      "ticket_id": 359,
+      "action": "created",
+      "count": 1
+    }
+  ],
+  "limitations": [
+    "Synthetic real API and application-role database proof only",
+    "No browser, full role/tenant, deployed worker, cache or failure-injection proof",
+    "Duplicate-target authorization is still a separate open requirement"
+  ],
+  "independentRead": {
+    "identity": {
+      "role_name": "streamline_app",
+      "is_superuser": false,
+      "bypasses_rls": false,
+      "default_read_only": "on",
+      "transaction_read_only": "on",
+      "transaction_isolation": "repeatable read",
+      "tenant_scope": "114fe418-2d7d-4f86-bd85-6a0d1a0040e2",
+      "observed_at": "2026-10-03 10:22:10.109503+00"
+    },
+    "scope": {
+      "organization_id": "114fe418-2d7d-4f86-bd85-6a0d1a0040e2",
+      "synthetic_name": true,
+      "synthetic_slug": true,
+      "exact_actor": true,
+      "owner": true,
+      "owner_status": "ACTIVE",
+      "owner_active": true,
+      "owner_live": true,
+      "synthetic_owner": true
+    },
+    "project": {
+      "id": 54,
+      "org_id": "114fe418-2d7d-4f86-bd85-6a0d1a0040e2",
+      "status": "ACTIVE",
+      "live": true
+    },
+    "intakes": [
+      {
+        "id": 2,
+        "org_id": "114fe418-2d7d-4f86-bd85-6a0d1a0040e2",
+        "project_id": 54,
+        "title": "Synthetic intake accept race b71454fa",
+        "status": "accepted",
+        "linked_work_item_id": 359,
+        "decline_reason": null
+      },
+      {
+        "id": 3,
+        "org_id": "114fe418-2d7d-4f86-bd85-6a0d1a0040e2",
+        "project_id": 54,
+        "title": "Synthetic intake decision race b71454fa",
+        "status": "declined",
+        "linked_work_item_id": null,
+        "decline_reason": "Reserved concurrency verification"
+      }
+    ],
+    "tickets": [
+      {
+        "id": 359,
+        "org_id": "114fe418-2d7d-4f86-bd85-6a0d1a0040e2",
+        "project_id": 54,
+        "title": "Synthetic intake accept race b71454fa",
+        "ticket_number": 3,
+        "deleted_at": null
+      }
+    ],
+    "counts": {
+      "exact_intakes": 2,
+      "accepted_title_tickets": 1,
+      "declined_title_tickets": 0,
+      "created_activity": 1
+    },
+    "checks": {
+      "exactTwoIntakes": true,
+      "acceptedOnceLinked": true,
+      "declinedWithoutTicket": true,
+      "oneMatchingAcceptedTicket": true,
+      "noMatchingDeclinedTicket": true,
+      "oneCreationActivity": true
+    },
+    "comparedBackendRevision": "53a369619",
+    "comparedEvidenceAt": "2026-10-03T10:20:03.036Z",
+    "limitations": [
+      "Exact synthetic persistence only",
+      "No database writes",
+      "No browser or broader role matrix claim"
+    ]
+  },
+  "completedAt": "2026-10-03T10:23:55.014Z"
+}

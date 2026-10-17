@@ -34,7 +34,7 @@ export interface InternalJob {
 }
 
 export function useInternalJobs() {
-  const can = useCan("hr:employees:view");
+  const can = useCan("hr:requisitions:view");
   return useQuery({
     queryKey: humanResourcesQueryKeys.hr.hrInternalJobs,
     queryFn: ({ signal }) =>
@@ -47,7 +47,7 @@ export function useInternalJobs() {
 export function useApplyToInternalJob(jobId: number) {
   const qc = useQueryClient();
   return useAuthorizedMutation<unknown, Error, { coverLetter?: string }>(
-    "hr:employees:view",
+    "hr:requisitions:view",
     {
       mutationKey: ["hr", "recruitment", "internal-jobs", "apply", jobId],
       mutationFn: (data) =>

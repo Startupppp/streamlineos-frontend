@@ -1,11 +1,14 @@
 "use client";
 
+import { useAuthorizedIdempotentMutation } from "@/hooks/api/inventory/use-idempotent-mutation";
+import { IDEMPOTENCY_HEADER } from "@/lib/idempotency-key";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
 import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
 import { useCan, useModuleEnabled } from "@/hooks/api/access";
+import { invalidateCalendarProjectionWindows } from "@/lib/calendar-projection-cache";
 
 const rostersListC = lazyContract(() =>
   import("@/hooks/api/hr/rosters-schema").then((m) => m.rostersListContract),
@@ -60,7 +63,10 @@ export function useCreateRoster() {
     mutationKey: ["hr", "rosters", "create"],
     mutationFn: (data: { name: string; weekStart: string; weekEnd: string }) =>
       apiClient.post<Roster>("/hr/rosters", data, undefined, createRosterC),
-    onSuccess: () => qc.invalidateQueries({ queryKey: [...humanResourcesQueryKeys.hr.all, "rosters"] }),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: [...humanResourcesQueryKeys.hr.all, "rosters"] });
+      invalidateCalendarProjectionWindows(qc);
+    },
   });
 }
 
@@ -102,16 +108,22 @@ export function useUpsertRosterEntry() {
       void qc.invalidateQueries({
         queryKey: [...humanResourcesQueryKeys.hr.all, "rosters"],
       });
+      invalidateCalendarProjectionWindows(qc);
     },
   });
 }
 
 export function usePublishRoster() {
   const qc = useQueryClient();
-  return useAuthorizedMutation("hr:attendance:manage", {
+  // PATCH .../publish is @Idempotent("hr.roster.publish"): the key must belong
+  // to the intent, not the attempt, or a retried publish is a new command.
+  return useAuthorizedIdempotentMutation<Roster, Error, number>("hr:attendance:manage", {
     mutationKey: ["hr", "rosters", "publish"],
-    mutationFn: (rosterId: number) =>
-      apiClient.patch<Roster>(`/hr/rosters/${rosterId}/publish`, {}, undefined, publishRosterC),
-    onSuccess: () => qc.invalidateQueries({ queryKey: [...humanResourcesQueryKeys.hr.all, "rosters"] }),
+    mutationFn: (rosterId, idempotencyKey) =>
+      apiClient.patch<Roster>(`/hr/rosters/${rosterId}/publish`, {}, { headers: { [IDEMPOTENCY_HEADER]: idempotencyKey } }, publishRosterC),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: [...humanResourcesQueryKeys.hr.all, "rosters"] });
+      invalidateCalendarProjectionWindows(qc);
+    },
   });
 }

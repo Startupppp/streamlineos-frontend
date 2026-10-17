@@ -1,13 +1,50 @@
+import Link from "next/link";
 import { cn } from "@/lib/utils";
+import { useTicketSearch } from "@/hooks/api/build/ticket-search";
+import { getTicketDetailHref } from "@/components/shared/format-ticket-key";
 
-const INLINE_TOKEN_PATTERN = /(\*\*[^*]+\*\*|\*[^*]+\*|`[^`]+`|@[^\s@]+(?:\s[^\s@]+)*)/g;
+const INLINE_TOKEN_PATTERN = /(\*\*\*[\s\S]+?\*\*\*|\*\*[\s\S]+?\*\*|\*[\s\S]+?\*|`[^`]+`|https?:\/\/[^\s<>"']+|@[^\s@]+(?:\s[^\s@]+)*|\b[A-Z][A-Z0-9]+-\d+\b)/g;
 
-function renderInlinePart(part: string, key: number, isOwn: boolean): React.ReactNode {
-  if (part.startsWith("**") && part.endsWith("**")) {
-    return <strong key={key}>{part.slice(2, -2)}</strong>;
+const MAX_INLINE_DEPTH = 4;
+const TICKET_KEY_PATTERN = /^[A-Z][A-Z0-9]+-\d+$/;
+
+function TicketKeyLink({ ticketKey, isOwn }: { ticketKey: string; isOwn: boolean }) {
+  const { data } = useTicketSearch(ticketKey, { staleTime: 5 * 60_000 });
+  const match = data?.find(
+    (t) => `${t.projectKey}-${t.ticketNumber}`.toUpperCase() === ticketKey,
+  );
+  if (!match) return <span className="break-words break-all">{ticketKey}</span>;
+  return (
+    <Link
+      href={getTicketDetailHref(match.projectId, match.projectKey, match.ticketNumber)}
+      className={cn(
+        "font-mono underline underline-offset-2",
+        isOwn ? "text-primary-foreground" : "text-primary",
+      )}
+    >
+      {ticketKey}
+    </Link>
+  );
+}
+
+function renderInlinePart(
+  part: string,
+  key: number,
+  isOwn: boolean,
+  depth: number,
+): React.ReactNode {
+  if (part.startsWith("***") && part.endsWith("***") && part.length > 6) {
+    return (
+      <strong key={key}>
+        <em>{renderInline(part.slice(3, -3), isOwn, depth + 1)}</em>
+      </strong>
+    );
   }
-  if (part.startsWith("*") && part.endsWith("*")) {
-    return <em key={key}>{part.slice(1, -1)}</em>;
+  if (part.startsWith("**") && part.endsWith("**") && part.length > 4) {
+    return <strong key={key}>{renderInline(part.slice(2, -2), isOwn, depth + 1)}</strong>;
+  }
+  if (part.startsWith("*") && part.endsWith("*") && part.length > 2) {
+    return <em key={key}>{renderInline(part.slice(1, -1), isOwn, depth + 1)}</em>;
   }
   if (part.startsWith("`") && part.endsWith("`")) {
     return (
@@ -21,6 +58,9 @@ function renderInlinePart(part: string, key: number, isOwn: boolean): React.Reac
         {part.slice(1, -1)}
       </code>
     );
+  }
+  if (TICKET_KEY_PATTERN.test(part)) {
+    return <TicketKeyLink key={key} ticketKey={part} isOwn={isOwn} />;
   }
   if (part.startsWith("@")) {
     return (
@@ -40,6 +80,13 @@ function renderInlinePart(part: string, key: number, isOwn: boolean): React.Reac
       {part}
     </span>
   );
+}
+
+function renderInline(text: string, isOwn: boolean, depth: number): React.ReactNode {
+  if (depth >= MAX_INLINE_DEPTH) return text;
+  return text
+    .split(INLINE_TOKEN_PATTERN)
+    .map((part, index) => renderInlinePart(part, index, isOwn, depth));
 }
 
 export function renderFormattedContent(content: string, isOwn: boolean): React.ReactNode {
@@ -67,10 +114,9 @@ export function renderFormattedContent(content: string, isOwn: boolean): React.R
         </pre>,
       );
     } else {
-      const parts = line.split(INLINE_TOKEN_PATTERN);
       result.push(
         <span key={i} className="block break-words break-all">
-          {parts.map((part, j) => renderInlinePart(part, j, isOwn))}
+          {renderInline(line, isOwn, 0)}
         </span>,
       );
     }

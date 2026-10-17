@@ -1,20 +1,17 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { PlusIcon, Trash2Icon } from "@animateicons/react/lucide";
+import { useRouter } from "next/navigation";
+import { Trash2Icon } from "@animateicons/react/lucide";
 import { useTestRuns, useDeleteTestRun } from "@/hooks/api/build/qa";
 import { useCan } from "@/hooks/api/access";
-import { usePageState } from "@/hooks/api/use-page-state";
-import { PageState } from "@/components/shared/page-state";
-import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
-import { useCursorPager } from "@/components/ui/table-pagination";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
+import { useBuildCursorPager } from "@/features/build/shared/use-build-cursor-pager";
 import type { TestRunListItem } from "@/types/projects";
-import { DataTable, DataTableSkeleton } from "@/components/ui/data-table";
 import type { DataTableColumn } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
@@ -23,20 +20,25 @@ import { TABLE_TITLE_CELL } from "@/lib/text-overflow";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { BuildListToolbar } from "@/features/build/shared/build-list-toolbar";
 import { BuildFilterSelect } from "@/features/build/shared/build-filter-select";
+import { Switch } from "@/components/ui/switch";
 import { BuildMobileCard } from "@/features/build/shared/build-mobile-card";
+import { BuildListSurface } from "@/features/build/shared/build-list-surface";
+import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
 import {
   BUILD_FILTER_ALL,
   useBuildListFilters,
 } from "@/features/build/shared/use-build-list-filters";
+import { useBuildListKeyboard } from "@/hooks/common/use-build-list-keyboard";
+import { deriveRunDisplayStatus } from "./runs/run-effective-status";
 import { TestRunSheet } from "./test-run-sheet";
 
 const RUN_PAGE_SIZE = 50;
 
 const RUN_STATUS_STYLES: Record<string, string> = {
   not_started: "text-muted-foreground border-border",
-  in_progress: "text-status-info-ink border-status-info-rule",
-  completed: "text-status-success-ink border-status-success-rule",
-  aborted: "text-status-danger-ink border-status-danger-rule",
+  in_progress: "text-status-info-ink-strong border-status-info-rule",
+  completed: "text-status-success-ink-strong border-status-success-rule",
+  aborted: "text-status-danger-ink-strong border-status-danger-rule",
 };
 
 const RUN_STATUS_LABELS: Record<string, string> = {
@@ -59,6 +61,7 @@ const FILTER_DEFINITIONS = [
     param: "status",
     options: STATUS_OPTIONS.map((o) => o.value),
   },
+  { param: "failuresOnly", options: ["true"] },
 ] as const;
 
 const TEST_RUN_TABLE_HEADERS = [
@@ -76,6 +79,16 @@ function runStatusLabel(status: string): string {
 
 function runStatusStyle(status: string): string {
   return RUN_STATUS_STYLES[status] ?? "text-muted-foreground border-border";
+}
+
+function runListDisplayStatus(run: TestRunListItem): TestRunListItem["status"] {
+  const total =
+    (run.passCount ?? 0) +
+    (run.failCount ?? 0) +
+    (run.blockedCount ?? 0) +
+    (run.notRunCount ?? 0) +
+    (run.skippedCount ?? 0);
+  return deriveRunDisplayStatus(run.status, { total, notRun: run.notRunCount ?? 0 });
 }
 
 function RunStatusBadge({ status }: { status: string }) {
@@ -110,54 +123,68 @@ function RunProgress({ run }: { run: TestRunListItem }) {
         />
       </div>
       <span className="shrink-0 text-micro tabular-nums text-muted-foreground">
-        {pct}%
+        {run.passCount}/{total} passed
       </span>
     </div>
   );
 }
 
-function NewRunButton({ onClick }: { onClick: () => void }) {
-  const { iconRef, hoverHandlers } = useAnimatedIcon();
-  return (
-    <Button onClick={onClick} {...hoverHandlers}>
-      <PlusIcon ref={iconRef} size={14} />
-      New Test Run
-    </Button>
-  );
-}
-
-function RunDeleteButton({
+function RunMobileCard({
   run,
+  canManage,
+  onOpen,
   onDelete,
 }: {
   run: TestRunListItem;
-  onDelete: (r: TestRunListItem) => void;
+  canManage: boolean;
+  onOpen: (run: TestRunListItem) => void;
+  onDelete: (run: TestRunListItem) => void;
 }) {
-  const { iconRef, hoverHandlers } = useAnimatedIcon();
-  const handleDelete = useCallback(() => onDelete(run), [run, onDelete]);
+  const handleOpen = useCallback(() => onOpen(run), [onOpen, run]);
+
+  function handleDeleteClick(event: React.MouseEvent<HTMLButtonElement>) {
+    event.stopPropagation();
+    onDelete(run);
+  }
+
   return (
-    <Button
-      variant="ghost"
-      size="icon"
-      className="h-6 w-6 text-muted-foreground hover:text-destructive"
-      aria-label={`Delete ${run.name}`}
-      onClick={handleDelete}
-      {...hoverHandlers}
-    >
-      <Trash2Icon ref={iconRef} size={14} />
-    </Button>
+    <BuildMobileCard
+      eyebrow={`Run #${run.runNumber}`}
+      title={run.name}
+      status={<RunStatusBadge status={runListDisplayStatus(run)} />}
+      meta={[
+        { label: "Environment", value: run.environment ?? "—" },
+        { label: "Progress", value: <RunProgress run={run} /> },
+      ]}
+      actions={
+        canManage ? (
+          <AnimatedIconButton
+            icon={Trash2Icon}
+            iconSize={14}
+            variant="ghost"
+            size="icon"
+            className="h-6 w-6 text-muted-foreground hover:text-destructive"
+            aria-label={`Delete ${run.name}`}
+            onClick={handleDeleteClick}
+          />
+        ) : null
+      }
+      onClick={handleOpen}
+    />
   );
 }
 
 interface TestRunsTabProps {
   projectId: number;
+  createNonce?: number;
 }
 
-export function TestRunsTab({ projectId }: TestRunsTabProps) {
+export function TestRunsTab({ projectId, createNonce = 0 }: TestRunsTabProps) {
+  const router = useRouter();
   const canManage = useCan("build:qa:manage");
   const listFilters = useBuildListFilters({
     filters: FILTER_DEFINITIONS,
-    withSearch: false,
+    withSearch: true,
   });
 
   const [sheetOpen, setSheetOpen] = useState(false);
@@ -165,14 +192,18 @@ export function TestRunsTab({ projectId }: TestRunsTabProps) {
     null,
   );
 
-  const { cursor, hasPrevious, goNext, goPrevious } = useCursorPager(
+  const showFailuresOnly = listFilters.value("failuresOnly") === "true";
+
+  const { cursor, pageNumber, hasPrevious, goNext, goPrevious } = useBuildCursorPager(
     listFilters.resetKey,
   );
 
   const statusValue = listFilters.value("status");
   const queryFilters = {
+    q: listFilters.debouncedSearch || undefined,
     status: statusValue !== BUILD_FILTER_ALL ? statusValue : undefined,
     cursor: cursor !== undefined ? Number(cursor) : undefined,
+    failuresOnly: showFailuresOnly || undefined,
   };
   const {
     data: runsPage,
@@ -181,7 +212,8 @@ export function TestRunsTab({ projectId }: TestRunsTabProps) {
     error,
     refetch,
   } = useTestRuns(projectId, queryFilters);
-  const runs = runsPage?.data ?? [];
+  const runs = useMemo(() => runsPage?.data ?? [], [runsPage]);
+  const displayedRuns = runs;
   const deleteRun = useDeleteTestRun();
 
   const handleDeleteRow = useCallback(
@@ -211,6 +243,11 @@ export function TestRunsTab({ projectId }: TestRunsTabProps) {
     setSheetOpen(true);
   }, []);
 
+  useEffect(() => {
+    if (createNonce <= 0) return;
+    handleNewRun();
+  }, [createNonce, handleNewRun]);
+
   const handleRetry = useCallback(() => {
     void refetch();
   }, [refetch]);
@@ -226,11 +263,23 @@ export function TestRunsTab({ projectId }: TestRunsTabProps) {
     [listFilters],
   );
 
-  const pageState = usePageState({
-    permission: "build:qa:view",
-    isLoading,
-    isError,
-    error,
+  const handleToggleRegressionFilter = useCallback(
+    (checked: boolean) =>
+      listFilters.setValue("failuresOnly", checked ? "true" : BUILD_FILTER_ALL),
+    [listFilters],
+  );
+
+  const handleOpenFocused = useCallback(
+    (index: number) => { router.push(`/build/${projectId}/qa/runs/${runs[index].id}`); },
+    [runs, projectId, router],
+  );
+  const handleClearKeyboardSelection = useCallback(() => {}, []);
+  useBuildListKeyboard({
+    itemCount: runs.length,
+    onOpen: handleOpenFocused,
+    onCreate: canManage ? handleNewRun : undefined,
+    onClearSelection: handleClearKeyboardSelection,
+    enabled: !sheetOpen && !deleteTarget,
   });
 
   const columns = useMemo<DataTableColumn<TestRunListItem>[]>(
@@ -264,7 +313,7 @@ export function TestRunsTab({ projectId }: TestRunsTabProps) {
       {
         key: "status",
         header: "Status",
-        cell: (row) => <RunStatusBadge status={row.status} />,
+        cell: (row) => <RunStatusBadge status={runListDisplayStatus(row)} />,
         className: "w-[110px]",
       },
       {
@@ -288,103 +337,131 @@ export function TestRunsTab({ projectId }: TestRunsTabProps) {
         key: "actions",
         header: "Actions",
         headerClassName: "sr-only",
-        cell: (row) =>
-          canManage ? (
-            <RunDeleteButton run={row} onDelete={handleDeleteRow} />
-          ) : null,
+        cell: (row) => {
+          function handleDeleteClick(event: React.MouseEvent<HTMLButtonElement>) {
+            event.stopPropagation();
+            handleDeleteRow(row);
+          }
+          return canManage ? (
+            <AnimatedIconButton
+              icon={Trash2Icon}
+              iconSize={14}
+              variant="ghost"
+              size="icon"
+              className="h-6 w-6 text-muted-foreground hover:text-destructive"
+              aria-label={`Delete ${row.name}`}
+              onClick={handleDeleteClick}
+            />
+          ) : null;
+        },
         className: "w-[40px]",
       },
     ],
     [canManage, projectId, handleDeleteRow],
   );
 
+  const handleOpenRun = useCallback(
+    (run: TestRunListItem) => {
+      router.push(`/build/${projectId}/qa/runs/${run.id}`);
+    },
+    [projectId, router],
+  );
+
   const renderMobileCard = useCallback(
     (row: TestRunListItem) => (
-      <BuildMobileCard
-        title={row.name}
-        status={<RunStatusBadge status={row.status} />}
-        meta={[
-          { label: "Environment", value: row.environment ?? "—" },
-          { label: "Progress", value: <RunProgress run={row} /> },
-        ]}
-        actions={
-          canManage ? (
-            <RunDeleteButton run={row} onDelete={handleDeleteRow} />
-          ) : null
-        }
+      <RunMobileCard
+        run={row}
+        canManage={canManage}
+        onOpen={handleOpenRun}
+        onDelete={handleDeleteRow}
       />
     ),
-    [canManage, handleDeleteRow],
+    [canManage, handleDeleteRow, handleOpenRun],
   );
 
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-3">
-      <div className="flex shrink-0 items-start gap-2">
-        <BuildListToolbar
-          filters={[
-            {
-              id: "status",
-              label: "Status",
-              active: listFilters.isActive("status"),
-              control: (
-                <BuildFilterSelect
-                  label="Status"
-                  value={statusValue}
-                  onValueChange={handleStatusChange}
-                  options={STATUS_OPTIONS}
-                />
-              ),
-            },
-          ]}
-          onClearAll={listFilters.clearAll}
-          className="flex-1 min-w-0"
-        />
-        {canManage ? <NewRunButton onClick={handleNewRun} /> : null}
-      </div>
+      <BuildListToolbar
+        search={{
+          value: listFilters.search,
+          onValueChange: listFilters.setSearch,
+          placeholder: "Search test runs…",
+        }}
+        filters={[
+          {
+            id: "status",
+            label: "Status",
+            active: listFilters.isActive("status"),
+            control: (
+              <BuildFilterSelect
+                label="Status"
+                value={statusValue}
+                onValueChange={handleStatusChange}
+                options={STATUS_OPTIONS}
+              />
+            ),
+          },
+          {
+            id: "regression",
+            label: "Failures only",
+            active: showFailuresOnly,
+            control: (
+              <Switch
+                aria-label="Failures only"
+                checked={showFailuresOnly}
+                onCheckedChange={handleToggleRegressionFilter}
+              />
+            ),
+          },
+        ]}
+        onClearAll={listFilters.clearAll}
+      />
 
-      <PageState
-        resolution={pageState}
-        loading={
-          <DataTableSkeleton mobileCards
-            rows={12}
-            headers={TEST_RUN_TABLE_HEADERS}
-            className="flex-1"
-          />
-        }
+      <BuildListSurface<TestRunListItem>
+        permission="build:qa:view"
+        rows={displayedRuns}
+        columns={columns}
+        isLoading={isLoading}
+        isError={isError}
+        error={error}
+        isFiltered={listFilters.isFiltered}
+        getRowKey={(row) => row.id}
+        mobileCard={renderMobileCard}
+        pagination={{
+          mode: "cursor",
+          pageSize: RUN_PAGE_SIZE,
+          pageNumber,
+          hasMore: runsPage?.hasMore ?? false,
+          hasPrevious,
+          onNext: handleNextPage,
+          onPrevious: goPrevious,
+        }}
         empty={
           <EmptyState
             illustrationPreset="ticket"
             title="No test runs"
             description="Create a test run to start executing tests."
-            filtersActive={listFilters.isFiltered}
-            onClearFilters={listFilters.clearAll}
             action={
               canManage
                 ? { label: "New Test Run", onClick: handleNewRun }
                 : undefined
             }
-            className="flex-1"
+            className={CONTENT_FILL_PANEL}
           />
         }
+        filteredEmpty={
+          <EmptyState
+            illustrationPreset="ticket"
+            title="No test runs match your filters"
+            description="Try clearing the filters to see more."
+            onClearFilters={listFilters.clearAll}
+            className={CONTENT_FILL_PANEL}
+          />
+        }
+        loadingHeaders={TEST_RUN_TABLE_HEADERS}
+        loadingRows={12}
         onRetry={handleRetry}
-        className="flex-1 min-h-0"
-      >
-        <DataTable<TestRunListItem>
-          data={runs}
-          columns={columns}
-          getRowKey={(row) => row.id}
-          mobileCard={renderMobileCard}
-          className="flex-1 min-h-0"
-          pagination={{
-            mode: "cursor",
-            pageSize: RUN_PAGE_SIZE,
-            hasMore: runsPage?.hasMore ?? false,
-            hasPrevious,
-            onNext: handleNextPage,
-            onPrevious: goPrevious,
-          }}
-        />
-      </PageState>
+      />
 
       <TestRunSheet
         projectId={projectId}

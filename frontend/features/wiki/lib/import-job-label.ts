@@ -17,13 +17,14 @@ export function importJobDisplayName(
   },
 ): string {
   const titles = importJobItemTitles(job.errorReport);
-  if (job.totalItems === 1) return "1 page";
-  if (job.totalItems > 1) return `${job.totalItems} pages`;
   if (titles.length === 1) return titles[0] ?? "Untitled";
   if (titles.length === 2) return `${titles[0]}, ${titles[1]}`;
   if (titles.length > 2)
     return `${titles[0]}, ${titles[1]} +${titles.length - 2} more`;
-  
+  if (job.totalItems === 1) return "1 page";
+  if (job.totalItems > 1) return `${job.totalItems} pages`;
+
+
   const sourceLabel =
     job.sourceType === "markdown"
       ? "Markdown"

@@ -1,7 +1,5 @@
 import { z } from "zod";
-
-const wireDate = () => z.string();
-const nullableWireDate = () => z.string().nullable();
+import { askOsActionReceiptSchema } from "@/components/assistant/ask-os-directive-schema";
 
 const leadScoreSchema = z.object({
   score: z.number(),
@@ -215,51 +213,36 @@ export const acceptCandidateScoreContract = z.object({
   accepted: z.literal(true),
 });
 
-const fieldDiffSchema = z.object({
-  added: z.array(z.string()),
-  removed: z.array(z.string()),
-  changed: z.array(z.string()),
-});
-
-const citationSchema = z.object({
-  id: z.union([z.string(), z.number()]),
-  title: z.string(),
-  href: z.string().optional(),
-  snippet: z.string().optional(),
-  freshness: z.string().optional(),
-});
-
-const aiSummarySnapshotSchema = z.object({
-  id: z.number().int(),
-  orgId: z.string(),
-  entityType: z.string(),
-  entityId: z.string(),
-  summary: z.string(),
-  structured: z.object({
-    highlights: z.array(z.string()),
-    blockers: z.array(z.string()),
-    nextActions: z.array(z.string()),
-  }),
-  citations: z.array(citationSchema).nullable(),
-  correlationId: z.string().nullable(),
-  generatedBy: z.string().nullable(),
-  createdAt: wireDate(),
-});
-
-export const aiSummarySnapshotContract = aiSummarySnapshotSchema;
-
-export const snapshotWithDiffNullableContract = z.object({
-  snapshot: aiSummarySnapshotSchema,
-  diff: z.object({
-    highlights: fieldDiffSchema,
-    blockers: fieldDiffSchema,
-    nextActions: fieldDiffSchema,
-    isSameSnapshot: z.boolean(),
-  }).nullable(),
-}).nullable();
-
 export const confirmActionContract = z.object({
   ok: z.literal(true),
   result: z.record(z.string(), z.unknown()),
   summary: z.string(),
+  receipt: askOsActionReceiptSchema.optional(),
 });
+
+export const declineProposalContract = z.object({
+  declined: z.literal(true),
+});
+
+export const recoverProposalContract = z.discriminatedUnion("state", [
+  z.object({
+    state: z.literal("ready"),
+    proposalId: z.number().int(),
+    action: z.string(),
+    token: z.string(),
+    expiresAt: z.string().datetime(),
+  }),
+  z.object({
+    state: z.enum(["expired", "cancelled", "unavailable"]),
+    proposalId: z.number().int(),
+    action: z.string(),
+    reason: z.string().optional(),
+  }),
+  z.object({
+    state: z.literal("resolved"),
+    proposalId: z.number().int(),
+    action: z.string(),
+    status: z.enum(["CONFIRMED", "EXECUTED"]),
+    receipt: askOsActionReceiptSchema.optional(),
+  }),
+]);

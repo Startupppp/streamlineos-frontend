@@ -1,5 +1,5 @@
 import { buildUrl } from "@/lib/api-client";
-import { parseApiResponse } from "@/lib/api-envelope";
+import { ApiError, parseApiResponse } from "@/lib/api-envelope";
 import {
   intakeSubmitResponseContract,
   type IntakeFormOutput,
@@ -7,17 +7,10 @@ import {
 } from "./public-intake-schema";
 import { withCorrelation } from "@/lib/observability/with-correlation";
 
-/**
- * Unauthenticated intake submit. The response goes through `parseApiResponse`
- * so the backend's `{ success, data }` envelope is unwrapped; reading
- * `res.json()` directly resolved to the envelope, leaving both declared fields
- * undefined while the type said otherwise.
- */
-export async function submitIntake(
-  projectId: string,
+async function postIntake(
+  path: string,
   body: IntakeFormOutput,
 ): Promise<IntakeSubmitResponse> {
-  const path = `/public/intake/${projectId}`;
   const res = await fetch(buildUrl(path), {
     method: "POST",
     headers: withCorrelation(new Headers({ "Content-Type": "application/json" })),
@@ -25,6 +18,8 @@ export async function submitIntake(
   });
   if (!res.ok) {
     let message = "Failed to submit. Please try again.";
+    let code: string | undefined;
+    let details: unknown;
     try {
       const data = (await res.json()) as Record<string, unknown>;
       if (
@@ -39,8 +34,17 @@ export async function submitIntake(
         );
         if (messages.length > 0) message = messages.join(", ");
       }
+      if (typeof data?.code === "string") code = data.code;
+      if ("details" in data) details = data.details;
     } catch {}
-    throw new Error(message);
+    throw new ApiError(message, res.status, code, details, path);
   }
   return parseApiResponse(res, intakeSubmitResponseContract, path);
+}
+
+export function submitIntakeByToken(
+  intakeToken: string,
+  body: IntakeFormOutput,
+): Promise<IntakeSubmitResponse> {
+  return postIntake(`/public/intake/t/${intakeToken}`, body);
 }

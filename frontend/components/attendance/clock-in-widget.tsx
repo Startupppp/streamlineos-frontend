@@ -1,13 +1,14 @@
 "use client";
 
 import { Button } from "../ui/button";
-import { format } from "date-fns";
 import { useState, useEffect, useMemo, useCallback } from "react";
 import {
   useHrAttendanceStatus,
   useHrCheckIn,
   useHrCheckOut,
 } from "@/hooks/api";
+import { useOrgTimeZone } from "@/hooks/api/org-display";
+import { formatClockInOrgTz } from "@/lib/date-utils";
 import { toast } from "sonner";
 import { Clock, Loader2, Timer } from "lucide-react";
 
@@ -16,6 +17,7 @@ export function ClockInWidget() {
   const [localCooldown, setLocalCooldown] = useState(0);
 
   const { data: statusData, isLoading } = useHrAttendanceStatus();
+  const orgTz = useOrgTimeZone();
 
   const checkInMutation = useHrCheckIn({
     onSuccess: () => {
@@ -66,7 +68,7 @@ export function ClockInWidget() {
     if (isCheckedIn || isOnBreak) {
       checkOutMutation.mutate();
     } else if (!isInCooldown) {
-      checkInMutation.mutate({ location: undefined });
+      checkInMutation.mutate({});
     }
   }, [isCheckedIn, isOnBreak, isInCooldown, checkOutMutation, checkInMutation]);
 
@@ -96,7 +98,7 @@ export function ClockInWidget() {
     <div className="flex items-center gap-6">
       <div className="flex flex-col items-end">
         <div className="text-muted-foreground font-bold text-sm tracking-wide">
-          {format(now, "hh:mm a - EEE dd, MMM yyyy").toUpperCase()}
+          {orgTz !== null ? formatClockInOrgTz(now, orgTz) : "—"}
         </div>
 
         <div className="flex items-center gap-4 mt-1">
@@ -119,6 +121,11 @@ export function ClockInWidget() {
             </div>
           )}
         </div>
+        {!isCheckedIn && !isOnBreak && (
+          <div className="mt-1 text-xs text-muted-foreground">
+            Your location is recorded when you clock in.
+          </div>
+        )}
       </div>
 
       <Button

@@ -7,12 +7,7 @@ export const categoryAccentBar: Record<string, string> = {
   HR: "bg-category-amber-fill",
 };
 
-/**
- * The same six categories as `categoryAccentBar` above, so they read the same
- * six hues. The bar and the dot were repaired onto the categorical scale and
- * the badge and the avatar tint were not, which is why SOFTWARE and ONBOARDING
- * carried distinct bars over identical badges on the same card.
- */
+
 export const categoryBadgeColors: Record<string, string> = {
   GENERAL: "bg-muted text-foreground",
   SOFTWARE: "bg-category-blue-surface text-category-blue-ink",
@@ -40,11 +35,7 @@ export const categoryAvatarTints: Record<string, string> = {
   HR: "bg-category-amber-surface text-category-amber-ink ring-category-amber-rule",
 };
 
-/**
- * Issue type is a taxonomy, not a severity — a bug is not more urgent than an
- * epic, it is a different shape of work. EPIC takes violet rather than the blue
- * it shared with TASK before the migration.
- */
+
 export const ticketTypeColors: Record<string, string> = {
   TASK: "bg-category-blue-surface text-category-blue-ink",
   STORY: "bg-category-emerald-surface text-category-emerald-ink",

@@ -7,38 +7,58 @@ import { lazyContract } from "@/lib/api-envelope";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 
 const exitLetterContract = lazyContract(() =>
-  import("@/features/hr/exit/exit-management-schema").then((m) => m.exitLetterContract),
+  import("@/features/hr/exit/exit-management-schema").then(
+    (m) => m.exitLetterContract,
+  ),
 );
 import { Skeleton } from "@/components/ui/skeleton";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { PageState } from "@/components/shared/page-state";
 import { usePageState } from "@/hooks/api/use-page-state";
-import { TablePagination, useCursorPager } from "@/components/ui/table-pagination";
+import {
+  TablePagination,
+  useCursorPager,
+} from "@/components/ui/table-pagination";
 import { toast } from "sonner";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { useRouter } from "next/navigation";
 import { PlusIcon, UserXIcon } from "@animateicons/react/lucide";
 import { EmptyPersonIllustration } from "@/components/illustrations";
 import { useSession } from "next-auth/react";
 import { useCan } from "@/hooks/api/access";
 import { ResignationCard } from "@/features/hr/exit/resignation-card";
-import { ResignationFormSheet } from "@/features/hr/exit/resignation-form-sheet";
+import { ResignationFormSheet } from "@/components/hr/resignation-form-sheet";
+import { AdminResignationFormSheet } from "@/features/hr/exit/admin-resignation-form-sheet";
 import { ResignationReviewSheets } from "@/features/hr/exit/resignation-review-sheets";
 import { useResignationReview } from "@/features/hr/exit/use-resignation-review";
+import { ExitPathStrip } from "@/features/hr/exit/exit-path-strip";
+import { OffboardingChecklistSummaryPanel } from "@/features/hr/exit/offboarding-checklist-summary-panel";
 
 const ACTIVE_RESIGNATION_STATUSES = ["SUBMITTED", "PENDING_HR", "HR_APPROVED"];
 
 export function ExitManagementPage() {
-  const { data: session } = useSession();
   const router = useRouter();
+  const { data: session } = useSession();
   const pager = useCursorPager();
-  const { data: resignationData, isLoading, isError, error, refetch } = useResignations({ cursor: pager.cursor, limit: 20 });
+  const {
+    data: resignationData,
+    isLoading,
+    isError,
+    error,
+    refetch,
+  } = useResignations({ cursor: pager.cursor, limit: 20 });
   const resignations = resignationData?.data;
   const pagination = resignationData?.pagination;
   const handleRetry = useCallback(() => {
     void refetch();
   }, [refetch]);
-  const pageState = usePageState({ permission: "hr:exit:view", isLoading, isError, error });
+  const pageState = usePageState({
+    permission: "hr:exit:view",
+    isLoading,
+    isError,
+    error,
+  });
 
   const review = useResignationReview();
 
@@ -46,15 +66,17 @@ export function ExitManagementPage() {
   const isAdmin = useCan("hr:exit:manage");
   const isHR = isAdmin;
   const canApproveExit = useCan("hr:exit:approve");
-  const canSubmit = useCan("hr:exit:create");
+  const canSelfResign = useCan("self:resignation");
 
   const [sheetOpen, setSheetOpen] = useState(false);
+  const [adminSheetOpen, setAdminSheetOpen] = useState(false);
   const [expandedIds, setExpandedIds] = useState<Set<number>>(new Set());
 
   const hasActiveResignation =
     resignations?.some(
       (r: Resignation) =>
-        r.userId === userId && ACTIVE_RESIGNATION_STATUSES.includes(r.status ?? ""),
+        r.userId === userId &&
+        ACTIVE_RESIGNATION_STATUSES.includes(r.status ?? ""),
     ) ?? false;
 
   const toggleExpand = useCallback((id: number) => {
@@ -70,7 +92,12 @@ export function ExitManagementPage() {
     try {
       const [{ sanitizeHtml }, data] = await Promise.all([
         import("@/lib/sanitize-html"),
-        apiClient.get(`/hr/exit/${id}/letter`, undefined, undefined, exitLetterContract),
+        apiClient.get(
+          `/hr/exit/${id}/letter`,
+          undefined,
+          undefined,
+          exitLetterContract,
+        ),
       ]);
       const win = window.open("", "_blank");
       if (!win) {
@@ -81,12 +108,13 @@ export function ExitManagementPage() {
         `<!DOCTYPE html><html><head><title>Resignation Letter</title><style>body{margin:0;padding:20px 40px;}</style></head><body>${sanitizeHtml(data.html)}</body></html>`,
       );
       win.document.close();
-    } catch {
-      toast.error("Failed to load resignation letter");
+    } catch (err) {
+      toast.error(getErrorMessage(err));
     }
   }, []);
 
   const handleOpenSheet = useCallback(() => setSheetOpen(true), []);
+  const handleOpenAdminSheet = useCallback(() => setAdminSheetOpen(true), []);
 
   function handleNextPage() {
     pager.goNext(pagination?.nextCursor);
@@ -96,19 +124,55 @@ export function ExitManagementPage() {
     router.push("/hr/termination");
   }
 
-  const primaryAction = hasActiveResignation ? (
-    <span className="inline-flex items-center gap-1 text-micro font-semibold px-2 py-0.5 rounded-full border bg-status-warning-surface text-status-warning-ink border-status-warning-rule">
-      Resignation pending
-    </span>
-  ) : canSubmit ? (
-    <AnimatedIconButton icon={PlusIcon} iconSize={14} size="sm" className="gap-1.5" onClick={handleOpenSheet}>
-      Submit resignation
-    </AnimatedIconButton>
-  ) : isAdmin ? (
-    <AnimatedIconButton icon={UserXIcon} iconSize={14} size="sm" className="gap-1.5" onClick={handleInitiateTermination}>
-      Initiate termination
-    </AnimatedIconButton>
-  ) : null;
+  const canSubmit = canSelfResign && !hasActiveResignation;
+  const canStartResignation = isAdmin || canSubmit;
+  const handleStartResignation = isAdmin ? handleOpenAdminSheet : handleOpenSheet;
+
+  const primaryAction =
+    hasActiveResignation || canSubmit || isAdmin ? (
+      <div className="flex items-center gap-2">
+        {hasActiveResignation ? (
+          <span className="inline-flex items-center gap-1 text-micro font-semibold px-2 py-0.5 rounded-full border bg-status-warning-surface text-status-warning-ink border-status-warning-rule">
+            Resignation pending
+          </span>
+        ) : null}
+        {canSubmit ? (
+          <AnimatedIconButton
+            icon={PlusIcon}
+            iconSize={14}
+            size="sm"
+            variant={isAdmin ? "outline" : undefined}
+            className="gap-1.5"
+            onClick={handleOpenSheet}
+          >
+            {isAdmin ? "Submit my resignation" : "Submit resignation"}
+          </AnimatedIconButton>
+        ) : null}
+        {isAdmin ? (
+          <>
+            <AnimatedIconButton
+              icon={PlusIcon}
+              iconSize={14}
+              size="sm"
+              variant="outline"
+              className="gap-1.5"
+              onClick={handleOpenAdminSheet}
+            >
+              Record resignation
+            </AnimatedIconButton>
+            <AnimatedIconButton
+              icon={UserXIcon}
+              iconSize={14}
+              size="sm"
+              className="gap-1.5"
+              onClick={handleInitiateTermination}
+            >
+              Initiate termination
+            </AnimatedIconButton>
+          </>
+        ) : null}
+      </div>
+    ) : null;
 
   if (pageState.kind === "loading") {
     return (
@@ -131,7 +195,12 @@ export function ExitManagementPage() {
         title="Exit Management"
         subtitle="Resignations, exit interviews, and offboarding"
       >
-        <PageState resolution={pageState} loading={null} onRetry={handleRetry} className="flex-1">
+        <PageState
+          resolution={pageState}
+          loading={null}
+          onRetry={handleRetry}
+          className="flex-1"
+        >
           {null}
         </PageState>
       </PageWrapper>
@@ -144,6 +213,15 @@ export function ExitManagementPage() {
       subtitle="Resignations, exit interviews, and offboarding"
       actions={primaryAction ?? undefined}
     >
+      <div className="mb-3 shrink-0">
+        <ExitPathStrip
+          showReassignPrompt={hasActiveResignation || (resignations?.length ?? 0) > 0}
+          onStartResignation={canStartResignation ? handleStartResignation : undefined}
+        />
+      </div>
+
+      <OffboardingChecklistSummaryPanel />
+
       {!resignations?.length ? (
         <EmptyState
           illustration={<EmptyPersonIllustration className="h-24 w-24" />}
@@ -156,8 +234,8 @@ export function ExitManagementPage() {
                 : "You have no exit in progress."
           }
           action={
-            !hasActiveResignation && canSubmit
-              ? { label: "Submit resignation", onClick: handleOpenSheet }
+            canStartResignation
+              ? { label: isAdmin ? "Record resignation" : "Submit resignation", onClick: handleStartResignation }
               : undefined
           }
           compact
@@ -196,6 +274,10 @@ export function ExitManagementPage() {
       )}
 
       <ResignationFormSheet open={sheetOpen} onOpenChange={setSheetOpen} />
+      <AdminResignationFormSheet
+        open={adminSheetOpen}
+        onOpenChange={setAdminSheetOpen}
+      />
       <ResignationReviewSheets review={review} />
     </PageWrapper>
   );

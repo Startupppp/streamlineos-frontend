@@ -2,11 +2,24 @@ import { render, screen } from "@testing-library/react";
 import { FilesPage } from "./files-page";
 import { ApiError } from "@/lib/api-envelope";
 
-jest.mock("@/hooks/api/build/project-files", () => ({
-  useProjectFiles: jest.fn(),
-  useUploadProjectFile: jest.fn(),
-  useDeleteProjectFile: jest.fn(),
-  useProjectFileSignedUrl: jest.fn(),
+jest.mock("@/hooks/api/build/project-files", () => {
+  const mimes = ["application/pdf", "image/jpeg", "image/png"];
+  return {
+    useProjectFiles: jest.fn(),
+    useUploadProjectFile: jest.fn(),
+    useDeleteProjectFile: jest.fn(),
+    useProjectFileSignedUrl: jest.fn(),
+    MAX_PROJECT_FILE_BYTES: 2 * 1024 * 1024,
+    PROJECT_FILE_MIME_TYPES: mimes,
+    PROJECT_FILE_TYPES_LABEL: "PDF, JPG, PNG",
+    isAllowedProjectFileType: (mimeType: string) => mimes.includes(mimeType),
+  };
+});
+
+jest.mock("next/navigation", () => ({
+  useRouter: () => ({ replace: jest.fn(), push: jest.fn() }),
+  usePathname: () => "/build/1/files",
+  useSearchParams: () => new URLSearchParams(),
 }));
 
 jest.mock("@/hooks/api/access", () => ({
@@ -95,6 +108,11 @@ const ACCESS_GRANTED = {
   isLoading: false,
 };
 
+const ACCESS_OWNER = {
+  data: { isOrgOwner: true, scopes: {}, modules: {} },
+  isLoading: false,
+};
+
 const ACCESS_DENIED = {
   data: { isOrgOwner: false, scopes: {}, modules: {} },
   isLoading: false,
@@ -120,7 +138,7 @@ beforeEach(() => {
   mockUseProjectFiles.mockReturnValue(baseQueryResult());
   mockUseUploadProjectFile.mockReturnValue({ mutate: jest.fn(), isPending: false });
   mockUseDeleteProjectFile.mockReturnValue({ mutate: jest.fn(), isPending: false });
-  mockUseProjectFileSignedUrl.mockReturnValue({ data: undefined, isFetching: false });
+  mockUseProjectFileSignedUrl.mockReturnValue({ data: undefined, isFetching: false, isError: false });
 });
 
 it("renders denied state when build:files:view is not in the access snapshot", () => {
@@ -210,4 +228,37 @@ it("renders the plan upgrade link the backend sent with a 402 MODULE_NOT_ENABLED
   render(<FilesPage projectId={1} />);
   expect(screen.queryByText("Retry")).not.toBeInTheDocument();
   expect(screen.getByRole("link", { name: /view plans/i })).toHaveAttribute("href", "/settings/billing");
+});
+
+it("renders empty state with upload action for org owner with no files (FE-122)", () => {
+  mockUseAccess.mockReturnValue(ACCESS_OWNER);
+  mockUseCan.mockReturnValue(true);
+  mockUseProjectFiles.mockReturnValue(baseQueryResult({ data: [] }));
+  render(<FilesPage projectId={7} />);
+  expect(screen.getByTestId("empty-state")).toBeInTheDocument();
+});
+
+it("renders file list with manage actions for org owner when files exist (FE-122)", () => {
+  mockUseAccess.mockReturnValue(ACCESS_OWNER);
+  mockUseCan.mockReturnValue(true);
+  mockUseProjectFiles.mockReturnValue(
+    baseQueryResult({
+      data: [
+        {
+          id: 1,
+          orgId: "org-1",
+          projectId: 7,
+          uploadedByMembershipId: 3,
+          fileName: "owner-brief.pdf",
+          mimeType: "application/pdf",
+          sizeBytes: 102400,
+          createdAt: new Date(0).toISOString(),
+          deletedAt: null,
+        },
+      ],
+    }),
+  );
+  render(<FilesPage projectId={7} />);
+  expect(screen.getByText("owner-brief.pdf")).toBeInTheDocument();
+  expect(screen.getByText("Confirm Delete")).toBeInTheDocument();
 });

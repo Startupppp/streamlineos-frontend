@@ -12,32 +12,18 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { AiCitationChips, type Citation } from "@/components/ai/ai-citation-chips";
+import { KbAskEvidence } from "./kb-ask-evidence";
 import { AiUsageChip } from "@/components/ai/ai-usage-chip";
 import { useKbAsk, useKbAiAnswerFeedback } from "@/hooks/api/kb/ask";
 import { isAiStreamAbort } from "@/hooks/api/ai-text-stream";
 import { usePublicAskSupportKb, type KbAnswer } from "@/hooks/api/support/kb-rag";
-import type { KbAskResponse, KbAskCitation } from "@/types/kb";
+import type { KbAskResult } from "@/hooks/api/kb/ask-result-schema";
 
 type KbAskPanelProps =
   | { mode: "authed"; articleId?: number; className?: string }
   | { mode: "public"; orgId: string; className?: string };
 
 const MIN_QUESTION_LENGTH = 3;
-
-function buildCitations(citations: KbAskCitation[]): Citation[] {
-  return citations.map((c) => {
-    const freshness = c.updatedAt;
-    if (c.kind === "article") {
-      return { id: `a-${c.articleId}`, title: c.title, href: `/support/kb/${c.articleId}`, freshness };
-    }
-    if (c.kind === "page") {
-      return { id: `p-${c.pageId}`, title: c.title, freshness };
-    }
-    return { id: `s-${c.sourceId}`, title: c.title, freshness };
-  });
-}
-
 function PublicSourceLink({ source, orgId }: { source: { articleId: number; title: string; slug: string; attachmentName: string | null }; orgId: string }) {
   return (
     <Link
@@ -106,9 +92,9 @@ function AnswerFeedback({ question, onGiven }: { question: string; onGiven: () =
   );
 }
 
-function AuthedAskPanel({ className, articleId }: { className?: string; articleId?: number }) {
+function AuthedAskPanel({ className }: { className?: string; articleId?: number }) {
   const [question, setQuestion] = useState("");
-  const [answer, setAnswer] = useState<KbAskResponse | null>(null);
+  const [answer, setAnswer] = useState<KbAskResult | null>(null);
   const [feedbackGiven, setFeedbackGiven] = useState(false);
   const [draft, setDraft] = useState("");
   const askMutation = useKbAsk();
@@ -160,8 +146,6 @@ function AuthedAskPanel({ className, articleId }: { className?: string; articleI
   function handleStop() { askMutation.stop(); }
   function handleRegenerate() { askMutation.resetAttempt(); submitQuestion(); }
 
-  const citations = answer ? buildCitations(answer.citations) : [];
-
   return (
     <Card className={cn("border-primary/20", className)}>
       <CardContent className="p-3 space-y-2">
@@ -207,14 +191,7 @@ function AuthedAskPanel({ className, articleId }: { className?: string; articleI
               <p className="text-label whitespace-pre-wrap leading-relaxed flex-1">{answer.answer}</p>
               <AiUsageChip usage={answer.aiUsage} className="shrink-0 mt-0.5" />
             </div>
-            {citations.length > 0 && (
-              <div className="space-y-1 pt-1 border-t">
-                <p className="text-micro font-medium uppercase tracking-wide text-muted-foreground">
-                  Sources
-                </p>
-                <AiCitationChips citations={citations} />
-              </div>
-            )}
+            <KbAskEvidence citations={answer.citations} disagreement={answer.disagreement} />
             {answer.hasContext ? (
               feedbackGiven ? (
                 <p className="text-micro text-muted-foreground pt-1 border-t">Thanks for the feedback</p>

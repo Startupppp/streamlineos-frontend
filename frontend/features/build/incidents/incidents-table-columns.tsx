@@ -16,38 +16,40 @@ import {
 import { BuildMobileCard } from "@/features/build/shared/build-mobile-card";
 import { TABLE_TITLE_CELL } from "@/lib/text-overflow";
 import { TruncatedText } from "@/components/ui/truncated-text";
-import type { Incident } from "@/types/projects";
-import type { OrgMember } from "@/hooks/api/organization";
+import type { IncidentsCreateIncidentResponse } from "@/contracts/build-contracts.generated";
 import { getSlaState } from "./sla";
 
-export const INCIDENTS_TABLE_HEADERS = [
-  "ID",
-  "Title",
-  "Severity",
-  "Status",
-  "SLA",
-  "Owner",
-  "Detected",
-  "Actions",
-] as const;
+import { INCIDENTS_TABLE_HEADERS } from "./incidents-table-headers";
+export { INCIDENTS_TABLE_HEADERS };
+
+interface IncidentActor {
+  id?: string;
+  userId?: string;
+  name?: string | null;
+  email: string;
+}
+
+function actorId(actor: IncidentActor): string | undefined {
+  return actor.id ?? actor.userId;
+}
 
 const SEVERITY_STYLES: Record<string, string> = {
-  critical: "text-status-danger-ink border-status-danger-rule bg-status-danger-surface",
+  critical: "text-status-danger-ink-strong border-status-danger-rule bg-status-danger-surface",
   high: "text-category-orange-ink border-category-orange-rule",
-  medium: "text-status-warning-ink border-status-warning-rule",
+  medium: "text-status-warning-ink-strong border-status-warning-rule",
   low: "text-muted-foreground border-border",
 };
 
 const STATUS_STYLES: Record<string, string> = {
-  detected: "text-status-danger-ink border-status-danger-rule",
+  detected: "text-status-danger-ink-strong border-status-danger-rule",
   investigating: "text-category-orange-ink border-category-orange-rule",
-  mitigating: "text-status-warning-ink border-status-warning-rule",
-  resolved: "text-status-success-ink border-status-success-rule",
-  postmortem: "text-status-info-ink border-status-info-rule",
+  mitigating: "text-status-warning-ink-strong border-status-warning-rule",
+  resolved: "text-status-success-ink-strong border-status-success-rule",
+  postmortem: "text-status-info-ink-strong border-status-info-rule",
   closed: "text-muted-foreground border-border",
 };
 
-export const INCIDENT_STATUS_LABELS: Record<string, string> = {
+const INCIDENT_STATUS_LABELS: Record<string, string> = {
   detected: "Detected",
   investigating: "Investigating",
   mitigating: "Mitigating",
@@ -78,7 +80,10 @@ export function IncidentSeverityBadge({ severity }: { severity: string }) {
   );
 }
 
-export function IncidentSlaBadge({ incident }: { incident: Incident }) {
+export function IncidentSlaBadge({ incident }: { incident: IncidentsCreateIncidentResponse }) {
+  if (!incident.responseDueAt && !incident.resolutionDueAt) {
+    return <span className="text-dense text-muted-foreground">—</span>;
+  }
   const state = getSlaState(incident);
   if (state.label === "Met")
     return (
@@ -90,7 +95,7 @@ export function IncidentSlaBadge({ incident }: { incident: Incident }) {
     return (
       <Badge
         variant="outline"
-        className="text-micro text-status-danger-ink border-status-danger-rule bg-status-danger-surface"
+        className="text-micro text-status-danger-ink-strong border-status-danger-rule bg-status-danger-surface"
       >
         Breached
       </Badge>
@@ -98,7 +103,7 @@ export function IncidentSlaBadge({ incident }: { incident: Incident }) {
   return (
     <Badge
       variant="outline"
-      className="text-micro text-status-success-ink border-status-success-rule"
+      className="text-micro text-status-success-ink-strong border-status-success-rule"
     >
       On track
     </Badge>
@@ -107,20 +112,20 @@ export function IncidentSlaBadge({ incident }: { incident: Incident }) {
 
 interface IncidentRowHandlers {
   canManage: boolean;
-  members: OrgMember[];
+  members: IncidentActor[];
   projectId: number;
-  onEdit: (i: Incident) => void;
-  onDelete: (i: Incident) => void;
+  onEdit: (i: IncidentsCreateIncidentResponse) => void;
+  onDelete: (i: IncidentsCreateIncidentResponse) => void;
 }
 
-export function IncidentRowActions({
+function IncidentRowActions({
   incident,
   onEdit,
   onDelete,
 }: {
-  incident: Incident;
-  onEdit: (i: Incident) => void;
-  onDelete: (i: Incident) => void;
+  incident: IncidentsCreateIncidentResponse;
+  onEdit: (i: IncidentsCreateIncidentResponse) => void;
+  onDelete: (i: IncidentsCreateIncidentResponse) => void;
 }) {
   const { iconRef, hoverHandlers } = useAnimatedIcon();
   const handleEdit = useCallback(() => onEdit(incident), [incident, onEdit]);
@@ -154,7 +159,7 @@ export function buildIncidentsColumns({
   projectId,
   onEdit,
   onDelete,
-}: IncidentRowHandlers): DataTableColumn<Incident>[] {
+}: IncidentRowHandlers): DataTableColumn<IncidentsCreateIncidentResponse>[] {
   return [
     {
       key: "incidentNumber",
@@ -197,7 +202,7 @@ export function buildIncidentsColumns({
       key: "owner",
       header: "Owner",
       cell: (row) => {
-        const member = members.find((m) => m.userId === row.ownerId);
+        const member = members.find((m) => actorId(m) === row.ownerId);
         return (
           <span className="text-dense text-muted-foreground">
             {member ? (member.name ?? member.email) : "—"}
@@ -236,14 +241,14 @@ export function IncidentMobileCard({
   onEdit,
   onDelete,
 }: {
-  incident: Incident;
-  members: OrgMember[];
+  incident: IncidentsCreateIncidentResponse;
+  members: IncidentActor[];
   canManage: boolean;
-  onEdit: (i: Incident) => void;
-  onDelete: (i: Incident) => void;
+  onEdit: (i: IncidentsCreateIncidentResponse) => void;
+  onDelete: (i: IncidentsCreateIncidentResponse) => void;
 }) {
   const owner = incident.ownerId
-    ? members.find((m) => m.userId === incident.ownerId)
+    ? members.find((m) => actorId(m) === incident.ownerId)
     : undefined;
   const personUser = owner ? { name: owner.name ?? null, email: owner.email } : null;
   return (

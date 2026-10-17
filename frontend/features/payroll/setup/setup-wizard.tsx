@@ -33,63 +33,64 @@ const STEP_TITLES = [
 ];
 
 export function SetupWizard() {
+  const hydrated = useHydrated();
+  const { data: session } = useSession();
+  const orgId = session?.orgId ?? null;
+
+  if (!hydrated || !orgId) return null;
+
+  return <SetupWizardForOrg key={orgId} orgId={orgId} />;
+}
+
+function SetupWizardForOrg({ orgId }: { orgId: string }) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const preselectedTemplate = searchParams.get("template") ?? undefined;
   const preselectedTemplateIdStr = searchParams.get("templateId");
   const preselectedTemplateId = preselectedTemplateIdStr ? Number(preselectedTemplateIdStr) : undefined;
 
-  const [step, setStep] = useState(1);
+  const [step, setStep] = useState(() => {
+    const saved = loadStep(orgId);
+    return saved >= 1 && saved <= TOTAL_STEPS ? saved : 1;
+  });
   const [direction, setDirection] = useState(1);
-  const [draft, setDraft] = useState<SetupDraft>({});
-  const [initialized, setInitialized] = useState(false);
-  const hydrated = useHydrated();
-  const { data: session } = useSession();
-  const orgId = session?.orgId ?? null;
+  const [draft, setDraft] = useState<SetupDraft>(() => loadDraft(orgId));
+
+  const [activatedHere, setActivatedHere] = useState(false);
 
   const { data: current, isLoading: policyLoading } = usePayrollPolicyCurrent();
 
-  if (hydrated && orgId && !initialized) {
-    setInitialized(true);
-    setDraft(loadDraft(orgId));
-    const saved = loadStep(orgId);
-    if (saved >= 1 && saved <= TOTAL_STEPS) setStep(saved);
-  }
-
   useEffect(() => {
-    if (!policyLoading && current?.policy?.status === "ACTIVE") {
+    if (!activatedHere && !policyLoading && current?.policy?.status === "ACTIVE") {
       toast.info("Payroll is already active. Redirecting to settings…");
       router.replace("/payroll/settings");
     }
-  }, [current, policyLoading, router]);
+  }, [activatedHere, current, policyLoading, router]);
 
   function updateDraft(partial: Partial<SetupDraft>) {
     const next = { ...draft, ...partial };
     setDraft(next);
-    if (orgId) saveDraft(orgId, next);
+    saveDraft(orgId, next);
   }
 
-  function handleClearAll() {
-    if (orgId) clearAll(orgId);
-    setDraft({});
-    setStep(1);
+  function handleActivated() {
+    clearAll(orgId);
+    setActivatedHere(true);
   }
 
   function goNext() {
     const next = Math.min(step + 1, TOTAL_STEPS);
     setDirection(1);
     setStep(next);
-    if (orgId) saveStep(orgId, next);
+    saveStep(orgId, next);
   }
 
   function goBack() {
     const prev = Math.max(step - 1, 1);
     setDirection(-1);
     setStep(prev);
-    if (orgId) saveStep(orgId, prev);
+    saveStep(orgId, prev);
   }
-
-  if (!initialized) return null;
 
   return (
     <PageWrapper
@@ -133,7 +134,7 @@ export function SetupWizard() {
             />
           )}
           {step === 5 && (
-            <StepActivate draft={draft} clearAll={handleClearAll} />
+            <StepActivate draft={draft} onActivated={handleActivated} />
           )}
         </WizardShell>
       </div>

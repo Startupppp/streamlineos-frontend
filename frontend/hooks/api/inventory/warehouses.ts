@@ -7,6 +7,7 @@ import { useCan } from "@/hooks/api/access";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import type { WarehouseStockResult } from "@/types/inventory";
 import { useAuthorizedIdempotentMutation } from "@/hooks/api/inventory/use-idempotent-mutation";
+import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
 
 export type LocationType =
   | "ZONE"
@@ -126,7 +127,7 @@ interface UpdateLocationInput {
   isActive?: boolean;
 }
 
-export function useWarehouses(filters?: WarehouseListFilters) {
+export function useWarehouses(filters?: WarehouseListFilters, options?: { inlineError?: boolean }) {
   const canView = useCan("inventory:warehouses:read");
   const params: Record<string, unknown> = {};
   if (filters?.q) params.q = filters.q;
@@ -152,6 +153,7 @@ export function useWarehouses(filters?: WarehouseListFilters) {
     staleTime: 5 * 60_000,
     placeholderData: keepPreviousData,
     enabled: canView,
+    ...(options?.inlineError ? INLINE_READ_ERROR : {}),
   });
 }
 

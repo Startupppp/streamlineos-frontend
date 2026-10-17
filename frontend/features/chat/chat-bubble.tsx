@@ -28,7 +28,7 @@ import type { Message, TicketEntityRef, CommentEntityRef, MessageMetadata } from
 import { useCan } from "@/hooks/api/access";
 import { apiClient, isApiError } from "@/lib/api-client";
 import { useEntityAction } from "./entity-actions-context";
-import { useSubmitEntityAction } from "@/hooks/api/chat";
+import { useSubmitEntityAction } from "@/hooks/api/chat-entities";
 import { ticketPermalinkQueryOptions } from "@/hooks/api/build/comment-permalink";
 import {
   ChatInlineFallback,
@@ -208,6 +208,7 @@ export function ChatBubble({
 
   return (
     <div
+      id={`message-${message.id}`}
       data-pending={isPendingSend ? "true" : undefined}
       aria-busy={isPendingSend || undefined}
       className={cn(
@@ -281,7 +282,7 @@ export function ChatBubble({
               "relative min-w-0 max-w-full px-3.5 py-2 shadow-sm",
               isOwn
                 ? "bg-primary text-primary-foreground rounded-2xl rounded-br-sm"
-                : "bg-background border border-border text-foreground rounded-2xl rounded-bl-sm",
+                : "bg-card border border-border text-card-foreground rounded-2xl rounded-bl-sm",
             )}
           >
             {forwardLabel && (
@@ -357,6 +358,13 @@ export function ChatBubble({
                 </span>
               )}
               {isOwn && <CheckCheck className="h-3.5 w-3.5 text-primary-foreground/70" />}
+              {isPinned && (
+                <Pin
+                  className={cn("h-3 w-3", isOwn ? "text-primary-foreground/70" : "text-muted-foreground")}
+                  aria-label="Pinned message"
+                  role="img"
+                />
+              )}
             </div>
           </div>
         )}

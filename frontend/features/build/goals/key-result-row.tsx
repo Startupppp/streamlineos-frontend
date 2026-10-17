@@ -11,9 +11,10 @@ import { cn } from "@/lib/utils";
 interface KeyResultRowProps {
   keyResult: KeyResult;
   onCheckIn: (keyResult: KeyResult) => void;
+  canManage: boolean;
 }
 
-export function KeyResultRow({ keyResult, onCheckIn }: KeyResultRowProps) {
+export function KeyResultRow({ keyResult, onCheckIn, canManage }: KeyResultRowProps) {
   const percent = keyResultPercent(keyResult);
 
   function handleCheckIn() {
@@ -24,9 +25,11 @@ export function KeyResultRow({ keyResult, onCheckIn }: KeyResultRowProps) {
     <div className={cn(PM_PANEL, "space-y-2 p-3")}>
       <div className="flex min-w-0 items-start justify-between gap-2">
         <TruncatedText text={keyResult.title} className="text-sm font-medium" />
-        <Button size="sm" variant="outline" className="h-7 shrink-0" onClick={handleCheckIn}>
-          Check in
-        </Button>
+        {canManage ? (
+          <Button size="sm" variant="outline" className="h-7 shrink-0" onClick={handleCheckIn}>
+            Check in
+          </Button>
+        ) : null}
       </div>
       <div className="space-y-1">
         <div className="flex items-center justify-between text-xs text-muted-foreground">

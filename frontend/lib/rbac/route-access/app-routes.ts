@@ -30,6 +30,7 @@ function walkPageFiles(dir: string, base: string): string[] {
   for (const entry of readdirSync(dir)) {
     const full = join(dir, entry);
     if (statSync(full).isDirectory()) {
+      if (entry.startsWith("(.")) continue;
       out.push(...walkPageFiles(full, base));
       continue;
     }

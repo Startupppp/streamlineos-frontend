@@ -17,7 +17,7 @@ import {
 import { EmptyState } from "@/components/ui/empty-state";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { ErrorState } from "@/components/shared/error-state";
-import { LoadingButton } from "@/components/ui/loading-button";
+import { InfiniteScrollSentinel } from "@/components/ui/infinite-scroll-sentinel";
 import { FILTER_SELECT_TRIGGER, FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
 import { AuditDetailSheet } from "./audit-detail-sheet";
 import { AuditChainCheck } from "./audit-chain-check";
@@ -139,7 +139,6 @@ export function AuditTab() {
   const handleRowClick = useCallback((row: AuditEvent) => setSelectedEvent(row), []);
   const handleDetailClose = useCallback(() => setSelectedEvent(null), []);
   const handleRetry = useCallback(() => { void refetch(); }, [refetch]);
-  const handleLoadMore = useCallback(() => { void fetchNextPage(); }, [fetchNextPage]);
 
   const handleEntityTypeChange = useCallback((val: string) => {
     setEntityType(val);
@@ -226,18 +225,12 @@ export function AuditTab() {
           />
         }
       />
-      {hasNextPage && (
-        <div className="flex justify-center pt-2 pb-1">
-          <LoadingButton
-            variant="outline"
-            size="sm"
-            isPending={isFetchingNextPage}
-            onClick={handleLoadMore}
-          >
-            Load more
-          </LoadingButton>
-        </div>
-      )}
+      <InfiniteScrollSentinel
+        hasNextPage={hasNextPage}
+        isFetchingNextPage={isFetchingNextPage}
+        onLoadMore={fetchNextPage}
+        label="Load more audit entries"
+      />
 
       <AuditDetailSheet
         event={selectedEvent}

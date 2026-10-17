@@ -30,8 +30,15 @@ describe("NoPermissionState — semantic structure", () => {
     expect(screen.getByText("build:tickets:view")).toBeInTheDocument();
   });
 
-  it("renders the default description when none is supplied", () => {
+  it("names the permission in the default description, so the reader knows which one is missing", () => {
     render(<NoPermissionState permission="crm:contacts:view" />);
+    expect(
+      screen.getByText("You need the Crm › Contacts › View permission."),
+    ).toBeInTheDocument();
+  });
+
+  it("falls back to the generic sentence when no permission is named", () => {
+    render(<NoPermissionState />);
     expect(
       screen.getByText(/you don.t have the required permission for this section/i),
     ).toBeInTheDocument();

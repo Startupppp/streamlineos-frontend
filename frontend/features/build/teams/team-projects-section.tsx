@@ -2,42 +2,28 @@
 
 import { useCallback, useMemo, useState } from "react";
 import { toast } from "sonner";
-import { PlusIcon, XIcon } from "@animateicons/react/lucide";
+import { XIcon } from "@animateicons/react/lucide";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import {
   useTeamProjects,
   useAddTeamProject,
   useRemoveTeamProject,
 } from "@/hooks/api/build/teams";
-import { useProjects } from "@/hooks/api/build/projects";
 import { useCan, useCanState } from "@/hooks/api/access";
 import { Badge } from "@/components/ui/badge";
+import Link from "next/link";
+import { ArrowUpRight, FolderKanban } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { LoadingButton } from "@/components/ui/loading-button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
-import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-  CommandList,
-} from "@/components/ui/command";
-import {
-  ResponsivePopover,
-  ResponsivePopoverContent,
-  ResponsivePopoverTrigger,
-} from "@/components/ui/responsive-popover";
 import { EmptyState } from "@/components/ui/empty-state";
 import { getErrorMessage } from "@/lib/get-error-message";
 import {
   PmPanel,
   PmSection,
-  PM_ROW,
 } from "@/components/pm-chrome";
-import { cn } from "@/lib/utils";
 import type { TeamProject } from "@/hooks/api/build/teams";
+import { AddProjectPicker } from "./add-project-picker";
 
 function ProjectStatusBadge({ status }: { status: string }) {
   const label = status.replace(/_/g, " ");
@@ -45,131 +31,6 @@ function ProjectStatusBadge({ status }: { status: string }) {
     <Badge variant="secondary" className="shrink-0 px-1.5 py-0.5 text-micro capitalize">
       {label}
     </Badge>
-  );
-}
-
-interface AddProjectPickerProps {
-  teamId: number;
-  assignedProjectIds: number[];
-  isPending: boolean;
-  onAdd: (projectId: number) => void;
-}
-
-function AddProjectPicker({
-  assignedProjectIds,
-  isPending,
-  onAdd,
-}: AddProjectPickerProps) {
-  const [open, setOpen] = useState(false);
-  const [search, setSearch] = useState("");
-  const [selectedId, setSelectedId] = useState<number | null>(null);
-  const { iconRef, hoverHandlers } = useAnimatedIcon();
-
-  const { data } = useProjects({ limit: 100 });
-  const allProjects = useMemo(() => data?.data ?? [], [data]);
-
-  const options = useMemo(() => {
-    const q = search.trim().toLowerCase();
-    return allProjects.filter((p) => {
-      if (assignedProjectIds.includes(p.id)) return false;
-      if (!q) return true;
-      return (
-        p.name.toLowerCase().includes(q) || p.key.toLowerCase().includes(q)
-      );
-    });
-  }, [allProjects, assignedProjectIds, search]);
-
-  const selectedProject = useMemo(
-    () => (selectedId !== null ? allProjects.find((p) => p.id === selectedId) : undefined),
-    [allProjects, selectedId],
-  );
-
-  function handleSelect(idStr: string) {
-    setSelectedId(Number(idStr));
-    setOpen(false);
-    setSearch("");
-  }
-
-  function handleAdd() {
-    if (selectedId === null) return;
-    onAdd(selectedId);
-    setSelectedId(null);
-  }
-
-  function handleSearchChange(v: string) {
-    setSearch(v);
-  }
-
-  return (
-    <div className="flex flex-wrap items-center gap-2">
-      <ResponsivePopover open={open} onOpenChange={setOpen}>
-        <ResponsivePopoverTrigger asChild>
-          <Button
-            type="button"
-            variant="outline"
-            role="combobox"
-            aria-label="Add project to team"
-            size="sm"
-            className={cn(
-              "h-8 min-w-[180px] justify-start gap-1.5 text-xs font-normal",
-              !selectedProject && "text-muted-foreground",
-            )}
-          >
-            {selectedProject ? (
-              <>
-                <span className="font-mono text-micro text-muted-foreground">
-                  {selectedProject.key}
-                </span>
-                <span className="truncate">{selectedProject.name}</span>
-              </>
-            ) : (
-              "Pick a project…"
-            )}
-          </Button>
-        </ResponsivePopoverTrigger>
-        <ResponsivePopoverContent title="Select project" className="w-72 p-0" align="start">
-          <Command shouldFilter={false}>
-            <CommandInput
-              placeholder="Search by name or key…"
-              className="text-xs"
-              value={search}
-              onValueChange={handleSearchChange}
-            />
-            <CommandList className="max-h-52 overflow-y-auto scrollbar-hide">
-              <CommandEmpty className="py-2 text-center text-xs text-muted-foreground">
-                No projects available.
-              </CommandEmpty>
-              <CommandGroup>
-                {options.map((p) => (
-                  <CommandItem
-                    key={p.id}
-                    value={String(p.id)}
-                    onSelect={handleSelect}
-                    className="gap-2"
-                  >
-                    <span className="font-mono text-micro text-muted-foreground shrink-0">
-                      {p.key}
-                    </span>
-                    <span className="truncate text-xs">{p.name}</span>
-                  </CommandItem>
-                ))}
-              </CommandGroup>
-            </CommandList>
-          </Command>
-        </ResponsivePopoverContent>
-      </ResponsivePopover>
-      <LoadingButton
-        size="sm"
-        className="gap-1 text-xs"
-        disabled={selectedId === null}
-        isPending={isPending}
-        loadingText="Adding…"
-        onClick={handleAdd}
-        {...hoverHandlers}
-      >
-        <PlusIcon ref={iconRef} size={12} /> Add
-      </LoadingButton>
-    </div>
   );
 }
 
@@ -256,29 +117,34 @@ export function TeamProjectsSection({ teamId }: TeamProjectsSectionProps) {
 
   return (
     <>
-      <PmSection index={2} className="space-y-3">
-        <div className="flex min-w-0 flex-wrap items-center justify-between gap-2">
-          <p className="text-dense font-semibold uppercase tracking-wider text-muted-foreground">
+      <PmSection index={2} className="flex min-h-0 min-w-0 w-full flex-1 flex-col gap-3">
+        <div className="space-y-0.5">
+          <h2 className="text-sm font-semibold text-foreground">
             Projects{teamProjects.length > 0 ? ` (${teamProjects.length})` : ""}
+          </h2>
+          <p className="text-xs text-muted-foreground">
+            Members inherit access to every project linked here.
           </p>
-          {canManage ? (
+        </div>
+        {canManage ? (
+          <PmPanel className="p-2.5 sm:p-3">
             <AddProjectPicker
               teamId={teamId}
               assignedProjectIds={assignedIds}
               isPending={addProject.isPending}
               onAdd={handleAdd}
             />
-          ) : null}
-        </div>
+          </PmPanel>
+        ) : null}
 
         {effectiveLoading ? (
-          <PmPanel className="space-y-2 p-2">
+          <PmPanel className="flex-1 space-y-2 p-3">
             {Array.from({ length: 3 }).map((_, i) => (
               <Skeleton key={i} className="h-10 w-full rounded-md" />
             ))}
           </PmPanel>
         ) : teamProjects.length === 0 ? (
-          <PmPanel className="flex items-center justify-center p-4">
+          <PmPanel className="flex min-h-0 min-w-0 w-full flex-1 items-center justify-center p-4">
             <EmptyState
               illustrationPreset="projects"
               title="No projects yet"
@@ -287,15 +153,21 @@ export function TeamProjectsSection({ teamId }: TeamProjectsSectionProps) {
             />
           </PmPanel>
         ) : (
-          <PmPanel>
+          <PmPanel className="divide-y divide-border">
             {teamProjects.map((project) => (
-              <div key={project.id} className={PM_ROW}>
-                <span className="font-mono text-micro text-muted-foreground shrink-0">
-                  {project.key}
+              <div key={project.id} className="flex min-w-0 items-center gap-2.5 px-3 py-3">
+                <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground">
+                  <FolderKanban className="size-4" aria-hidden="true" />
                 </span>
-                <span className="min-w-0 flex-1 truncate text-sm font-medium text-foreground">
-                  {project.name}
-                </span>
+                <div className="min-w-0 flex-1">
+                  <div className="flex min-w-0 items-center gap-2">
+                    <Link href={`/build/${project.id}`} className="min-w-0 truncate text-sm font-medium text-foreground hover:underline">
+                      {project.name}
+                    </Link>
+                    <ArrowUpRight className="size-3.5 shrink-0 text-muted-foreground" aria-hidden="true" />
+                  </div>
+                  <span className="font-mono text-micro text-muted-foreground">{project.key}</span>
+                </div>
                 <ProjectStatusBadge status={project.status} />
                 {canManage ? (
                   <RemoveProjectButton

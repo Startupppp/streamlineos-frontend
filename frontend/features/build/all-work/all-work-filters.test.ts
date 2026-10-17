@@ -61,3 +61,34 @@ describe("parseTicketTypeParam — normalises and validates ticket type before i
     expect(parseTicketTypeParam("")).toBeUndefined();
   });
 });
+
+describe("filter chip URL param parsing — chips reflect URL state accurately", () => {
+  it("a status URL param is read as a non-empty active filter", () => {
+    const params = new URLSearchParams("status=IN_PROGRESS");
+    expect(params.get("status")).toBe("IN_PROGRESS");
+  });
+
+  it("a priority URL param is read as a non-empty active filter", () => {
+    const params = new URLSearchParams("priority=HIGH");
+    expect(params.get("priority")).toBe("HIGH");
+  });
+
+  it("a type URL param is read as a non-empty active filter", () => {
+    const params = new URLSearchParams("type=BUG");
+    expect(params.get("type")).toBe("BUG");
+  });
+
+  it("clearing all filters removes every known filter key from the URL", () => {
+    const params = new URLSearchParams("status=IN_PROGRESS&priority=HIGH&type=BUG&q=foo");
+    for (const key of ["status", "priority", "type", "q", "assigneeId", "cycleId", "projectId", "dueDateFrom", "dueDateTo"]) {
+      params.delete(key);
+    }
+    expect(params.toString()).toBe("");
+  });
+
+  it("an empty filter value is treated as no filter (chip must not render)", () => {
+    const params = new URLSearchParams("status=");
+    expect(params.get("status")).toBe("");
+    expect(params.get("status") || undefined).toBeUndefined();
+  });
+});

@@ -7,7 +7,10 @@ import { LoadingState } from "@/components/shared/loading-state";
 import { EmptyState } from "@/components/ui/empty-state";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { ErrorState } from "@/components/shared/error-state";
+import { ErrorReference } from "@/components/shared/error-reference";
+import { Button } from "@/components/ui/button";
 import { useKbContentGaps } from "@/hooks/api/kb/analytics";
+import { isApiError } from "@/lib/api-envelope";
 import type { KbAnalyticsRange, KbContentGapRow } from "@/types/kb";
 
 interface KbContentGapsProps {
@@ -52,29 +55,39 @@ function GapRow({ row }: { row: KbContentGapRow }) {
 }
 
 export function KbContentGaps({ range, filter = "all" }: KbContentGapsProps) {
-  const { data, isLoading, error, refetch } = useKbContentGaps(range);
-
-  const filtered = useMemo(() => {
-    if (!data) return [];
-    if (filter === "all") return data;
-    return data.filter((r) => r.gapKind === filter);
-  }, [data, filter]);
+  const {
+    data,
+    isLoading,
+    isFetchNextPageError,
+    error,
+    refetch,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  } = useKbContentGaps(range, filter === "all" ? undefined : filter);
+  const rows = data ?? [];
+  const accessLost = isApiError(error) && (error.status === 401 || error.status === 403 || error.status === 404);
 
   function handleRetry() {
     void refetch();
   }
 
+  function handleLoadMore() {
+    void fetchNextPage();
+  }
+
   if (isLoading) return <LoadingState variant="list" rows={6} />;
-  if (error) {
+  if (error && (rows.length === 0 || accessLost)) {
     return (
       <ErrorState
         description={getErrorMessage(error)}
+        error={error}
         onRetry={handleRetry}
         compact
       />
     );
   }
-  if (filtered.length === 0) {
+  if (rows.length === 0) {
     return (
       <EmptyState
         compact
@@ -92,9 +105,28 @@ export function KbContentGaps({ range, filter = "all" }: KbContentGapsProps) {
         <span className="shrink-0">Count</span>
         <span className="shrink-0 w-[90px] text-right">Last seen</span>
       </div>
-      {filtered.map((row, idx) => (
+      {rows.map((row, idx) => (
         <GapRow key={`${row.gapKind}-${row.query ?? "null"}-${idx}`} row={row} />
       ))}
+      {error && (
+        <div role="alert" className="space-y-2 text-sm text-destructive">
+          <p>{isFetchNextPageError ? "Could not load more content gaps." : "Could not refresh content gaps."} {getErrorMessage(error)}</p>
+          <ErrorReference error={error} />
+          <Button type="button" variant="outline" onClick={isFetchNextPageError ? handleLoadMore : handleRetry} disabled={isFetchingNextPage}>
+            {isFetchNextPageError ? "Retry loading content gaps" : "Retry refreshing content gaps"}
+          </Button>
+        </div>
+      )}
+      {hasNextPage && !error ? (
+        <Button
+          type="button"
+          variant="outline"
+          onClick={handleLoadMore}
+          disabled={isFetchingNextPage}
+        >
+          {isFetchingNextPage ? "Loading content gaps..." : "Load more content gaps"}
+        </Button>
+      ) : null}
     </div>
   );
 }

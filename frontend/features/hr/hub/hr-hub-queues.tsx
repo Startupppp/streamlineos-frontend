@@ -8,6 +8,7 @@ import {
   Clock as ClockIcon,
   ClipboardList as ClipboardListIcon,
 } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
 import { HrSectionHeader } from "@/features/hr/shared/hr-ui";
 import { hubSectionData, hubSectionError } from "@/hooks/api/hr/hub";
 import type { HrHubViewProps } from "@/hooks/api/hr/hub-types";
@@ -35,6 +36,23 @@ export function HrHubQueues({
     access.canCases ||
     access.canDocuments ||
     (access.canAnalytics && access.canOnboarding);
+
+  if (isLoading) {
+    return (
+      <div className="space-y-2.5">
+        <div className="flex flex-col gap-1">
+          <Skeleton className="h-5 w-24 rounded-md" />
+          <Skeleton className="h-3.5 w-52 rounded-md" />
+        </div>
+        <Skeleton className="h-16 w-full rounded-xl" />
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5">
+          {Array.from({ length: 3 }, (_, i) => (
+            <Skeleton key={i} className="h-16 w-full rounded-xl" />
+          ))}
+        </div>
+      </div>
+    );
+  }
 
   if (!hasAnyQueue) return null;
 

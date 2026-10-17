@@ -1,9 +1,7 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Skeleton } from "@/components/ui/skeleton";
-import { AlertCircle } from "lucide-react";
 
 const PAGE_TITLE = "Document Library";
 const PAGE_SUBTITLE = "Centralized repository for all company-wide HR documents, contracts, and policy files.";
@@ -14,26 +12,20 @@ export function DocumentLibrarySkeleton() {
       <div className="space-y-4">
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
           {Array.from({ length: 10 }).map((_, i) => (
-            <Skeleton key={i} className="h-[72px] rounded-xl" />
+            <Skeleton key={i} className="h-18 rounded-xl" />
           ))}
         </div>
-        <Skeleton className="h-[400px] rounded-2xl" />
+        <Skeleton className="h-100 rounded-2xl" />
       </div>
     </PageWrapper>
   );
 }
 
-export function DocumentLibraryError({ onRetry }: { onRetry: () => void }) {
+/** Non-loading, non-ready states (denied / 402 / error) inside the page shell (FE-40/41). */
+export function DocumentLibraryState({ children }: { children: React.ReactNode }) {
   return (
     <PageWrapper title={PAGE_TITLE} subtitle={PAGE_SUBTITLE}>
-      <div className="flex flex-col items-center justify-center py-14 text-center gap-3">
-        <AlertCircle className="w-8 text-destructive" />
-        <div>
-          <p className="text-sm font-medium text-foreground">Failed to load documents</p>
-          <p className="text-xs text-muted-foreground mt-0.5">Something went wrong. Please try again.</p>
-        </div>
-        <Button size="sm" variant="outline" onClick={onRetry}>Try again</Button>
-      </div>
+      {children}
     </PageWrapper>
   );
 }

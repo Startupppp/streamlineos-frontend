@@ -17,21 +17,6 @@ import type { Checklist } from "@/types/projects";
 import { ChecklistItemRow } from "./checklist-item-row";
 
 
-function DeleteChecklistButton({ onClick }: { onClick: () => void }) {
-  const { iconRef, hoverHandlers } = useAnimatedIcon();
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className="opacity-0 group-hover:opacity-100 h-5 w-5 flex items-center justify-center rounded text-status-danger-ink hover:text-status-danger-ink hover:bg-status-danger-surface transition-all"
-      aria-label="Delete checklist"
-      {...hoverHandlers}
-    >
-      <Trash2Icon ref={iconRef} size={12} />
-    </button>
-  );
-}
-
 export function ChecklistSection({
   checklist,
   projectId,
@@ -51,6 +36,7 @@ export function ChecklistSection({
   const updateChecklist = useUpdateChecklist(projectId, ticketId);
   const deleteChecklist = useDeleteChecklist(projectId, ticketId);
   const createItem = useCreateChecklistItem(projectId, ticketId);
+  const { iconRef: deleteIconRef, hoverHandlers: deleteHoverHandlers } = useAnimatedIcon();
 
   const completed = (checklist.items ?? []).filter((i) => i.isCompleted).length;
   const total = (checklist.items ?? []).length;
@@ -136,12 +122,12 @@ export function ChecklistSection({
             onChange={(e) => setTitle(e.target.value)}
             onBlur={handleTitleSave}
             onKeyDown={handleTitleKeyDown}
-            className="flex-1 text-sm font-semibold bg-transparent border-b border-input outline-none"
+            className="flex-1 text-sm font-medium bg-transparent border-b border-input outline-none"
             autoFocus
           />
         ) : (
           <span
-            className={cn("flex-1 text-sm font-semibold text-foreground", canUpdate && "cursor-pointer hover:text-foreground/80")}
+            className={cn("flex-1 text-sm font-medium text-foreground", canUpdate && "cursor-pointer hover:text-foreground/80")}
             onClick={canUpdate ? () => setEditingTitle(true) : undefined}
             onKeyDown={canUpdate ? handleTitleSpanKeyDown : undefined}
             role={canUpdate ? "button" : undefined}
@@ -153,7 +139,17 @@ export function ChecklistSection({
         <span className="text-micro text-muted-foreground font-mono">
           {completed}/{total}
         </span>
-        {canUpdate ? <DeleteChecklistButton onClick={handleDeleteChecklist} /> : null}
+        {canUpdate ? (
+          <button
+            type="button"
+            onClick={handleDeleteChecklist}
+            className="opacity-0 group-hover:opacity-100 h-5 w-5 flex items-center justify-center rounded text-status-danger-ink hover:text-status-danger-ink hover:bg-status-danger-surface transition-all"
+            aria-label="Delete checklist"
+            {...deleteHoverHandlers}
+          >
+            <Trash2Icon ref={deleteIconRef} size={12} />
+          </button>
+        ) : null}
       </div>
 
       {total > 0 && (

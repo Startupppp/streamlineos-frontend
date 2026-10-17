@@ -127,4 +127,8 @@ export const regularizationRowContract = z.object({
   rejectionReason: z.string().nullable(),
   createdAt: z.string(),
   updatedAt: z.string(),
+  requesterName: z.string().optional(),
+  requesterImage: z.string().nullable().optional(),
+  originalCheckIn: z.string().nullable().optional(),
+  originalCheckOut: z.string().nullable().optional(),
 });

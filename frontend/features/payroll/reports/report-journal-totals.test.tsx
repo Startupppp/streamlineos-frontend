@@ -135,4 +135,14 @@ describe("the payroll journal footer reports the server's totals", () => {
 
     expect(screen.queryByText(/provisional/i)).toBeNull();
   });
+
+  it("withholds the balanced verdict while component codes are still unmapped, and asks for the mapping", () => {
+    reports.usePayrollJournal.mockReturnValue(journal({ unmappedCodes: ["UNMAPPED:PF_EMP", "UNMAPPED:PT"] }));
+    render(<ReportJournal month="2026-01" />);
+
+    expect(screen.queryByText(/✓ balanced/i)).toBeNull();
+    expect(screen.getByText(/not ready to post — map 2 codes/i)).toBeInTheDocument();
+    expect(screen.getByText(/placeholder account/i)).toBeInTheDocument();
+    expect(screen.queryByText(/excluded from the journal/i)).toBeNull();
+  });
 });

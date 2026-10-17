@@ -8,10 +8,10 @@ export function CalendarWeekDayHeader({ date, localizer }: HeaderProps) {
 
   return (
     <span className="calendar-week-day-header flex flex-col items-center justify-center gap-0.5 leading-none">
-      <span className="calendar-week-day-header-date text-label font-semibold">
+      <span className="calendar-week-day-header-date text-sm font-semibold">
         {dayNumber}
       </span>
-      <span className="calendar-week-day-header-weekday text-micro font-medium">
+      <span className="calendar-week-day-header-weekday text-xs font-medium">
         {weekday}
       </span>
     </span>

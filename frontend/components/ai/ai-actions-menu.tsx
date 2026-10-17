@@ -50,11 +50,15 @@ interface AiActionsMenuProps {
   asSubmenu?: boolean;
   defaultSurface?: AiResultSurface;
   iconOnly?: boolean;
+  triggerVariant?: "outline" | "ghost";
+  pickerOpen?: boolean;
+  onPickerOpenChange?: (open: boolean) => void;
+  hideTrigger?: boolean;
 }
 
 const MENU_CONTENT_CLASS = "min-w-72 p-1.5";
 const RESULT_CONTENT_CLASS =
-  "flex w-[min(28rem,calc(100vw-1.5rem))] max-h-[min(32rem,80vh)] flex-col overflow-hidden p-0";
+  "flex h-[min(32rem,calc(100dvh-2rem))] min-h-0 w-[min(28rem,calc(100vw-1.5rem))] max-h-[min(32rem,80dvh)] flex-col overflow-hidden p-0";
 
 export function AiActionsMenu({
   actions,
@@ -66,10 +70,15 @@ export function AiActionsMenu({
   asSubmenu = false,
   defaultSurface,
   iconOnly = false,
+  triggerVariant = "outline",
+  pickerOpen: controlledPickerOpen,
+  onPickerOpenChange,
+  hideTrigger = false,
 }: AiActionsMenuProps) {
   const isMobile = useIsMobile();
   const { iconRef, hoverHandlers } = useAnimatedIcon();
-  const [pickerOpen, setPickerOpen] = React.useState(false);
+  const [internalPickerOpen, setInternalPickerOpen] = React.useState(false);
+  const pickerOpen = controlledPickerOpen ?? internalPickerOpen;
   const {
     active,
     state,
@@ -88,12 +97,19 @@ export function AiActionsMenu({
   const activeSurface = active ? resolveSurface(active, defaultSurface) : null;
 
   function handleActionSelect(action: AiAction) {
-    setPickerOpen(false);
+    handlePickerOpenChange(false);
     void runAction(action);
   }
 
   function handlePickerOpenChange(open: boolean) {
-    setPickerOpen(open);
+    if (controlledPickerOpen === undefined) setInternalPickerOpen(open);
+    onPickerOpenChange?.(open);
+  }
+
+  function handleDirectRun() {
+    const onlyAction = actions[0];
+    if (!onlyAction || onlyAction.disabledReason) return;
+    void runAction(onlyAction);
   }
 
   const overlayBody = (
@@ -179,7 +195,7 @@ export function AiActionsMenu({
   const triggerButton = (
     <Button
       type="button"
-      variant="outline"
+      variant={triggerVariant}
       size="sm"
       disabled={disabled}
       aria-label={iconOnly ? triggerLabel : undefined}
@@ -190,6 +206,35 @@ export function AiActionsMenu({
       {iconOnly ? null : triggerLabel}
     </Button>
   );
+
+  if (actions.length === 1 && !asSubmenu && !hideTrigger) {
+    const onlyAction = actions[0];
+    return (
+      <>
+        <ResponsivePopover open={popoverOpen} onOpenChange={handlePopoverOpenChange}>
+          <ResponsivePopoverTrigger asChild>
+            <Button
+              type="button"
+              variant={triggerVariant}
+              size="sm"
+              disabled={disabled || Boolean(onlyAction?.disabledReason)}
+              aria-label={
+                iconOnly || !onlyAction ? triggerLabel : `${triggerLabel}, ${onlyAction.label}`
+              }
+              onClick={handleDirectRun}
+              className={cn("h-8 gap-1.5 text-xs", iconOnly && "h-9 w-9 px-0", className)}
+              {...hoverHandlers}
+            >
+              <SparklesIcon ref={iconRef} className="h-3.5 w-3.5 text-primary" />
+              {iconOnly ? null : triggerLabel}
+            </Button>
+          </ResponsivePopoverTrigger>
+          {popoverResult}
+        </ResponsivePopover>
+        {overlays}
+      </>
+    );
+  }
 
   if (asSubmenu) {
     return (
@@ -221,7 +266,7 @@ export function AiActionsMenu({
     return (
       <>
         <Drawer open={pickerOpen} onOpenChange={handlePickerOpenChange}>
-          <DrawerTrigger asChild>{triggerButton}</DrawerTrigger>
+          {hideTrigger ? null : <DrawerTrigger asChild>{triggerButton}</DrawerTrigger>}
           <DrawerContent className="z-[110] gap-0 p-0 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
             <DrawerHeader className="border-b border-border px-4 py-3 text-left">
               <DrawerTitle className="text-sm font-semibold">{menuLabel}</DrawerTitle>

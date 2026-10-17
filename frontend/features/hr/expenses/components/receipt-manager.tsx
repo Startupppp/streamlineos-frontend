@@ -10,9 +10,10 @@ import {
   MAX_EXPENSE_RECEIPTS,
   MAX_EXPENSE_RECEIPT_BYTES,
   getReceiptFileKind,
-  receiptKindEmoji,
+  receiptKindIcon,
   receiptKindLabel,
   type ExpenseReceipt,
+  type ReceiptFileKind,
 } from "@/lib/expense-constants";
 import { toast } from "sonner";
 import { resolveImageUrl } from "@/lib/utils";
@@ -112,9 +113,7 @@ export function ReceiptManager({
                 />
               ) : (
                 <div className="flex flex-col items-center gap-0.5">
-                  <span className="text-lg leading-none" aria-hidden>
-                    {receiptKindEmoji(kind)}
-                  </span>
+                  <ReceiptKindIcon kind={kind} className="h-5 w-5 text-primary" />
                   <span className="text-micro font-semibold uppercase text-primary">
                     {receiptKindLabel(kind)}
                   </span>
@@ -193,4 +192,9 @@ export function ReceiptManager({
       )}
     </div>
   );
+}
+
+function ReceiptKindIcon({ kind, className }: { kind: ReceiptFileKind; className?: string }) {
+  const Icon = receiptKindIcon(kind);
+  return <Icon className={className} aria-hidden />;
 }

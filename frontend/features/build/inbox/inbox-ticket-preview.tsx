@@ -1,98 +1,45 @@
 ﻿"use client";
 
-import { useCallback, useMemo, useState } from "react";
-import Link from "next/link";
-import { AlertCircle, ArrowLeft, ExternalLink, PanelRightOpen } from "lucide-react";
-import { Skeleton } from "@/components/ui/skeleton";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { ArrowLeft, PanelRightOpen } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { TruncatedText } from "@/components/ui/truncated-text";
+import { PreviewSkeleton, PreviewError } from "./inbox-ticket-preview-states";
 import { isApiError, getApiErrorCode } from "@/lib/api-client";
-import { useProject } from "@/hooks/api";
-import { useTicketByKey } from "@/hooks/api/build";
+import { useProject } from "@/hooks/api/build/projects";
+import { useTicketByKey } from "@/hooks/api/build/tickets";
 import {
   formatTicketKey,
   parseTicketKey,
 } from "@/components/shared/format-ticket-key";
 import { TicketDetailMainSection } from "@/features/build/ticket-details/ticket-detail-main-section";
 import { TicketDetailRightPanel } from "@/features/build/ticket-details/ticket-detail-right-panel";
-import { TicketParentLink } from "@/features/build/ticket-details/ticket-parent-link";
 import { useTicketDetail } from "@/features/build/ticket-details/use-ticket-detail";
 import type { InboxTicketLinkTarget } from "./parse-inbox-ticket-link";
 import { useCan } from "@/hooks/api/access";
+import { PageState } from "@/components/shared/page-state";
+import { usePageState } from "@/hooks/api/use-page-state";
 
 const RIGHT_PANEL_COLLAPSED_KEY =
-  "streamlineos:ticket-detail:right-panel:collapsed";
+  "streamlineos:inbox-ticket-preview:right-panel:collapsed";
 
 interface InboxTicketPreviewProps {
   target: InboxTicketLinkTarget;
   onClose?: () => void;
 }
 
-function PreviewSkeleton() {
-  return (
-    <div className="flex min-h-0 flex-1 flex-col overflow-hidden lg:flex-row">
-      <div className="min-h-0 min-w-0 flex-1 space-y-4 overflow-y-auto px-4 pb-4 pt-3 scrollbar-hide lg:px-5">
-        <Skeleton className="h-6 w-2/3" />
-        <Skeleton className="h-4 w-1/3" />
-        <Skeleton className="h-32 w-full rounded-lg" />
-        <Skeleton className="h-24 w-full rounded-lg" />
-        <Skeleton className="h-40 w-full rounded-lg" />
-      </div>
-      <div className="hidden shrink-0 border-t border-border px-4 py-3 lg:block lg:w-72 lg:min-w-72 lg:overflow-y-auto lg:border-t-0 lg:border-l lg:scrollbar-hide xl:w-80 xl:min-w-80">
-        <div className="mb-3 flex gap-2">
-          <Skeleton className="h-5 w-16 rounded-md" />
-          <Skeleton className="h-5 w-20 rounded-md" />
-        </div>
-        {Array.from({ length: 6 }).map((_, i) => (
-          <Skeleton key={i} className="mb-3 h-9 w-full rounded-md" />
-        ))}
-      </div>
-    </div>
-  );
-}
-
-function PreviewError({
-  title,
-  description,
-  onClose,
-}: {
-  title: string;
-  description: string;
-  onClose?: () => void;
-}) {
-  return (
-    <div className="flex h-full min-h-0 flex-1 flex-col items-center justify-center px-6 py-16 text-center">
-      <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-muted">
-        <AlertCircle className="h-6 w-6 text-muted-foreground" />
-      </div>
-      <p className="mb-1 font-medium text-foreground">{title}</p>
-      <p className="text-sm text-muted-foreground">{description}</p>
-      {onClose ? (
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          className="mt-6 h-8 gap-1.5 text-xs lg:hidden"
-          onClick={onClose}
-        >
-          <ArrowLeft className="h-3.5 w-3.5" />
-          Back to inbox
-        </Button>
-      ) : null}
-    </div>
-  );
-}
-
 export function InboxTicketPreview({
   target,
   onClose,
 }: InboxTicketPreviewProps) {
+  const mainScrollRef = useRef<HTMLDivElement | null>(null);
   const canUpdate = useCan("build:tickets:update");
   const canAssign = useCan("build:tickets:assign");
-  const [rightPanelCollapsed, setRightPanelCollapsed] = useState<boolean>(() => {
-    if (typeof window === "undefined") return false;
-    return localStorage.getItem(RIGHT_PANEL_COLLAPSED_KEY) === "true";
-  });
+  const [rightPanelCollapsed, setRightPanelCollapsed] = useState<boolean>(
+    () => {
+      if (typeof window === "undefined") return false;
+      return localStorage.getItem(RIGHT_PANEL_COLLAPSED_KEY) === "true";
+    },
+  );
 
   const handleRightPanelOpenChange = useCallback((open: boolean) => {
     const collapsed = !open;
@@ -122,6 +69,10 @@ export function InboxTicketPreview({
     return byKeyTicket?.id ?? null;
   }, [target.ticketId, byKeyTicket?.id]);
 
+  useEffect(() => {
+    mainScrollRef.current?.scrollTo({ top: 0, behavior: "auto" });
+  }, [resolvedTicketId]);
+
   const {
     ticket,
     saving,
@@ -131,7 +82,10 @@ export function InboxTicketPreview({
     autoSave,
     localTitle,
     ticketError,
+    refetchTicket,
     handleTitleChange,
+    commitTitle,
+    revertTitle,
     isLoading: ticketLoading,
     projectData: detailProject,
     handleDescriptionEditorChange,
@@ -139,6 +93,14 @@ export function InboxTicketPreview({
     projectId: target.projectId,
     ticketId: resolvedTicketId,
   });
+
+  const versionedTicket = useMemo(
+    () =>
+      ticket && typeof ticket.version === "number"
+        ? { ...ticket, version: ticket.version }
+        : null,
+    [ticket],
+  );
 
   const handleApplyAiDescription = useCallback(
     (html: string) => {
@@ -149,13 +111,27 @@ export function InboxTicketPreview({
 
   const resolving = target.ticketId == null && byKeyLoading;
   const isLoading = resolving || (resolvedTicketId != null && ticketLoading);
+  const loadingState = usePageState({
+    permission: "build:view",
+    isLoading,
+    isError: false,
+  });
   const displayKey = formatTicketKey(
     detailProject?.key ?? projectData?.key,
     ticket?.ticketNumber,
   );
-  const openHref = target.href;
 
-  if (isLoading) return <PreviewSkeleton />;
+  if (isLoading) {
+    return (
+      <PageState
+        resolution={loadingState}
+        loading={<PreviewSkeleton />}
+        className="h-full min-h-0"
+      >
+        <div />
+      </PageState>
+    );
+  }
 
   if (resolvedTicketId == null)
     return (
@@ -190,7 +166,19 @@ export function InboxTicketPreview({
       />
     );
 
-  if (!ticket)
+  if (ticketError)
+    return (
+      <PreviewError
+        title="Unable to load ticket"
+        description="Something went wrong while loading this ticket preview."
+        onClose={onClose}
+        onRetry={() => {
+          void refetchTicket();
+        }}
+      />
+    );
+
+  if (!ticket || !versionedTicket)
     return (
       <PreviewError
         title="Ticket not found"
@@ -200,79 +188,37 @@ export function InboxTicketPreview({
     );
 
   return (
-    <div className="flex h-full min-h-0 min-w-0 w-full flex-col overflow-hidden">
-      <div className="flex shrink-0 items-center gap-2 border-b border-border bg-card px-3 py-2 md:px-4">
-        <div className="flex min-w-0 flex-1 items-center gap-1.5">
-          {onClose ? (
-            <Button
-              type="button"
-              size="icon"
-              variant="ghost"
-              className="h-7 w-7 shrink-0 text-muted-foreground hover:text-foreground lg:hidden"
-              onClick={onClose}
-              aria-label="Back to inbox"
-            >
-              <ArrowLeft className="h-3.5 w-3.5" />
-            </Button>
-          ) : null}
-          <div className="min-w-0 flex-1 overflow-hidden">
-            <div className="flex min-w-0 items-center gap-1.5">
-              <span className="shrink-0 font-mono text-dense font-medium tabular-nums text-muted-foreground">
-                {displayKey}
-              </span>
-              <span
-                className="shrink-0 text-micro text-muted-foreground"
-                aria-hidden
-              >
-                ·
-              </span>
-              <TruncatedText
-                text={ticket.title}
-                className="min-w-0 flex-1 text-label font-medium leading-snug text-foreground"
-              />
-            </div>
-            {ticket.parentTicketId != null ? (
-              <div className="mt-0.5 min-w-0 overflow-hidden">
-                <TicketParentLink
-                  parentTicketId={ticket.parentTicketId}
-                  projectId={target.projectId}
-                  projectKey={detailProject?.key ?? projectData?.key}
-                  density="compact"
-                  className="max-w-full px-0 py-0 hover:bg-transparent"
-                />
-              </div>
-            ) : null}
-          </div>
-        </div>
-        <div className="flex shrink-0 items-center gap-1">
-          {rightPanelCollapsed ? (
-            <Button
-              type="button"
-              size="icon"
-              variant="outline"
-              className="h-7 w-7"
-              onClick={handleExpandRightPanel}
-              aria-label="Expand details panel"
-            >
-              <PanelRightOpen className="h-3.5 w-3.5" />
-            </Button>
-          ) : null}
+    <div className="relative flex h-full min-h-0 min-w-0 w-full flex-col overflow-hidden">
+      {onClose ? (
+        <div className="flex shrink-0 items-center border-b border-border px-2 py-1 lg:hidden">
           <Button
-            asChild
-            variant="outline"
-            size="sm"
-            className="h-7 w-7 gap-0 px-0 text-xs lg:h-8 lg:w-auto lg:gap-1.5 lg:px-2.5"
+            type="button"
+            size="icon"
+            variant="ghost"
+            className="h-8 w-8 text-muted-foreground hover:text-foreground"
+            onClick={onClose}
+            aria-label="Back to inbox"
           >
-            <Link href={openHref} aria-label="Open ticket">
-              <ExternalLink className="h-3.5 w-3.5" />
-              <span className="hidden lg:inline">Open ticket</span>
-            </Link>
+            <ArrowLeft className="h-3.5 w-3.5" />
           </Button>
         </div>
-      </div>
+      ) : null}
+      {rightPanelCollapsed ? (
+        <Button
+          type="button"
+          size="icon"
+          variant="ghost"
+          className="absolute right-2 top-2 z-20 h-8 w-8 bg-card/90 text-muted-foreground shadow-sm"
+          onClick={handleExpandRightPanel}
+          aria-label="Expand details panel"
+        >
+          <PanelRightOpen className="h-3.5 w-3.5" />
+        </Button>
+      ) : null}
 
-      <div className="relative flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden lg:flex-row">
-        <div className="min-h-0 min-w-0 flex-1 basis-0 overflow-y-auto bg-gradient-to-b from-card/80 to-background/40 px-4 pb-4 pt-2 scrollbar-hide lg:px-5 lg:pb-5">
+      <div className="relative flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden md:flex-row">
+        {rightPanelCollapsed ? (
+        <div ref={mainScrollRef} className="flex min-h-0 min-w-0 flex-1 basis-0 overflow-y-auto bg-gradient-to-b from-card/80 to-background/40 px-4 pb-0 pt-2 scrollbar-hide md:px-6 md:pr-6">
           <TicketDetailMainSection
             ticket={ticket}
             ticketId={resolvedTicketId}
@@ -285,23 +231,26 @@ export function InboxTicketPreview({
             variant="preview"
             onApplyDescription={handleApplyAiDescription}
             onTitleChange={handleTitleChange}
+            onCommitTitle={commitTitle}
+            onRevertTitle={revertTitle}
             onDescriptionChange={handleDescriptionEditorChange}
             canUpdate={canUpdate}
           />
         </div>
+        ) : null}
 
         <TicketDetailRightPanel
           open={!rightPanelCollapsed}
           onOpenChange={handleRightPanelOpenChange}
           displayKey={displayKey}
           saving={saving}
-          ticket={ticket}
+          ticket={versionedTicket}
           ticketId={resolvedTicketId}
           projectId={target.projectId}
           projectKey={detailProject?.key ?? projectData?.key}
           statuses={statuses}
           onAutoSave={autoSave}
-          asideClassName="lg:w-72 lg:min-w-72 xl:w-80 xl:min-w-80"
+          asideClassName={rightPanelCollapsed ? "lg:w-72 lg:min-w-72 xl:w-80 xl:min-w-80" : "flex-1 min-w-0"}
           canUpdate={canUpdate}
           canAssign={canAssign}
         />

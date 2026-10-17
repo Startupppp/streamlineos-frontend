@@ -27,6 +27,12 @@ jest.mock("lucide-react", () => ({
   ),
 }));
 
+jest.mock("@animateicons/react/lucide", () => ({
+  SearchIcon: ({ className }: { className?: string }) => (
+    <svg aria-hidden="true" className={className} />
+  ),
+}));
+
 jest.mock("@/hooks/common/use-online-status", () => ({
   useOnlineStatus: () => false,
 }));
@@ -85,6 +91,10 @@ jest.mock("@/components/layout/header/org-switcher", () => ({
   WorkspaceSwitcher: () => null,
 }));
 
+jest.mock("@/components/layout/header/header-payroll-cutoff", () => ({
+  HeaderPayrollCutoff: () => null,
+}));
+
 jest.mock("@/components/layout/header/quick-create-button", () => ({
   QuickCreateButton: () => null,
 }));
@@ -108,6 +118,12 @@ jest.mock("@/components/layout/header/sidebar-collapse-toggle", () => ({
       onClick={onToggle}
     />
   ),
+}));
+
+const mockUseIsBelowLg = jest.fn(() => false);
+jest.mock("@/hooks/common/use-mobile", () => ({
+  useIsMobile: () => false,
+  useIsBelowLg: () => mockUseIsBelowLg(),
 }));
 
 void MockIcon;
@@ -183,6 +199,10 @@ describe("a11y — RouteErrorBoundary (error state)", () => {
 // ─── GlobalHeader ─────────────────────────────────────────────────────────────
 
 describe("a11y — GlobalHeader", () => {
+  beforeEach(() => {
+    mockUseIsBelowLg.mockReturnValue(false);
+  });
+
   it("renders a banner landmark", () => {
     render(<GlobalHeader showSidebarToggle={false} />);
     expect(screen.getByRole("banner")).toBeInTheDocument();
@@ -201,19 +221,7 @@ describe("a11y — GlobalHeader", () => {
 
   it("Search button exposes an accessible name", () => {
     render(<GlobalHeader showSidebarToggle={false} />);
-    expect(
-      screen.getByRole("button", { name: /Search/i }),
-    ).toBeInTheDocument();
-  });
-
-  it("Calendar icon link has an accessible label", () => {
-    render(<GlobalHeader showSidebarToggle={false} />);
-    expect(screen.getByRole("link", { name: "Calendar" })).toBeInTheDocument();
-  });
-
-  it("Chat icon link has an accessible label", () => {
-    render(<GlobalHeader showSidebarToggle={false} />);
-    expect(screen.getByRole("link", { name: "Chat" })).toBeInTheDocument();
+    expect(screen.getAllByRole("button", { name: /Search/i })).toHaveLength(2);
   });
 
   it("sidebar collapse toggle renders with accessible name when shown", () => {
@@ -255,10 +263,53 @@ describe("a11y — GlobalHeader", () => {
     ).toHaveAttribute("aria-expanded", "false");
   });
 
+  it("below lg opens the mobile nav drawer instead of collapsing the desktop sidebar", () => {
+    mockUseIsBelowLg.mockReturnValue(true);
+    const onToggleSidebar = jest.fn();
+    const onOpenMobileMenu = jest.fn();
+    render(
+      <GlobalHeader
+        isSidebarCollapsed={false}
+        onToggleSidebar={onToggleSidebar}
+        onOpenMobileMenu={onOpenMobileMenu}
+        showSidebarToggle={true}
+      />,
+    );
+
+    const toggle = screen.getByRole("button", { name: "Expand sidebar" });
+    expect(toggle).toHaveAttribute("aria-expanded", "false");
+    toggle.click();
+
+    expect(onOpenMobileMenu).toHaveBeenCalledTimes(1);
+    expect(onToggleSidebar).not.toHaveBeenCalled();
+  });
+
+  it("below lg collapse control closes an open mobile nav drawer", () => {
+    mockUseIsBelowLg.mockReturnValue(true);
+    const onOpenMobileMenu = jest.fn();
+    render(
+      <GlobalHeader
+        isSidebarCollapsed={false}
+        onToggleSidebar={jest.fn()}
+        onOpenMobileMenu={onOpenMobileMenu}
+        mobileNavOpen={true}
+        showSidebarToggle={true}
+      />,
+    );
+
+    const toggle = screen.getByRole("button", { name: "Collapse sidebar" });
+    expect(toggle).toHaveAttribute("aria-expanded", "true");
+    toggle.click();
+
+    expect(onOpenMobileMenu).toHaveBeenCalledTimes(1);
+  });
+
   it("Search button carries the exact aria-label", () => {
     render(<GlobalHeader showSidebarToggle={false} />);
-    const btn = screen.getByRole("button", { name: /Search/i });
-    expect(btn).toHaveAttribute("aria-label", "Search (⌘K)");
+    const buttons = screen.getAllByRole("button", { name: /Search/i });
+    for (const button of buttons) {
+      expect(button).toHaveAttribute("aria-label", "Search (⌘K)");
+    }
   });
 });
 

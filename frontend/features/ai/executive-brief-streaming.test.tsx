@@ -23,8 +23,8 @@ const success = jest.fn();
 
 jest.mock("sonner", () => ({ toast: { success: (...args: unknown[]) => success(...args) } }));
 jest.mock("@/hooks/api/access", () => ({ useCan: () => canGenerate }));
-jest.mock("@/lib/api/hooks/executive-brief", () => ({
-  ...jest.requireActual("@/lib/api/hooks/executive-brief"),
+jest.mock("@/hooks/api/executive-brief", () => ({
+  ...jest.requireActual("@/hooks/api/executive-brief"),
   useExecutiveBrief: () => ({ data: { snapshot: null, isStale: false }, isLoading: false, isError: false }),
   useGenerateBrief: () => useMutation({ mutationFn: generate, retry: false }),
 }));

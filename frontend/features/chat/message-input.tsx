@@ -14,7 +14,10 @@ import {
   Smile,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import type { TicketSearchResult } from "@/hooks/api/build";
+import {
+  CHAT_ATTACHMENT_ACCEPT,
+  CHAT_ATTACHMENT_SUMMARY,
+} from "./chat-attachment-types";
 import { ChatPopoverFallback } from "./chat-lazy-fallbacks";
 import { getChatMobileComposerInsetClassName } from "@/components/layout/mobile/chat-mobile-chrome-layout";
 import type { MessageInputProps } from "./message-input-types";
@@ -38,6 +41,34 @@ const EmojiGrid = dynamic(
 );
 
 export type { MessageInputProps } from "./message-input-types";
+
+function markerRunBefore(value: string, index: number, character: string): number {
+  let run = 0;
+  while (index - run > 0 && value[index - run - 1] === character) run += 1;
+  return run;
+}
+
+function markerRunAfter(value: string, index: number, character: string): number {
+  let run = 0;
+  while (index + run < value.length && value[index + run] === character) run += 1;
+  return run;
+}
+
+function isSameMarker(before: number, after: number, length: number): boolean {
+  if (before !== after) return false;
+  return before === length || (before === 3 && length <= 2);
+}
+
+function selectAfterFormat(
+  el: HTMLTextAreaElement,
+  from: number,
+  length: number,
+): void {
+  setTimeout(() => {
+    el.setSelectionRange(from, from + length);
+    el.focus();
+  }, 0);
+}
 
 export function MessageInput({
   displayName,
@@ -78,20 +109,39 @@ export function MessageInput({
     const start = el.selectionStart;
     const end = el.selectionEnd;
     const selected = el.value.slice(start, end);
-    const formatted = block
-      ? `\`\`\`\n${selected || "code"}\n\`\`\``
-      : `${marker}${selected || "text"}${marker}`;
-    const newValue = el.value.slice(0, start) + formatted + el.value.slice(end);
-    setMessageInput(newValue);
-    setTimeout(() => {
-      el.setSelectionRange(start + marker.length, start + marker.length + (selected || "text").length);
-      el.focus();
-    }, 0);
+
+    if (block) {
+      const fenced = `\`\`\`\n${selected || "code"}\n\`\`\``;
+      setMessageInput(el.value.slice(0, start) + fenced + el.value.slice(end));
+      selectAfterFormat(el, start + 4, (selected || "code").length);
+      return;
+    }
+
+    const character = marker[0] ?? "";
+    const before = markerRunBefore(el.value, start, character);
+    const after = markerRunAfter(el.value, end, character);
+
+    if (isSameMarker(before, after, marker.length)) {
+      const unwrapped =
+        el.value.slice(0, start - marker.length) +
+        selected +
+        el.value.slice(end + marker.length);
+      setMessageInput(unwrapped);
+      selectAfterFormat(el, start - marker.length, selected.length);
+      return;
+    }
+
+    const body = selected || "text";
+    setMessageInput(el.value.slice(0, start) + marker + body + marker + el.value.slice(end));
+    selectAfterFormat(el, start + marker.length, body.length);
   }, [inputRef, setMessageInput]);
 
   const handleFormatBold = useCallback(() => formatSelection("**"), [formatSelection]);
   const handleFormatItalic = useCallback(() => formatSelection("*"), [formatSelection]);
   const handleFormatCode = useCallback(() => formatSelection("`"), [formatSelection]);
+  const handlePreventBlur = useCallback((e: React.MouseEvent<HTMLButtonElement>) => {
+    e.preventDefault();
+  }, []);
 
   const handleCancelReply = useCallback(() => setReplyTo(null), [setReplyTo]);
   const handleOpenFileInput = useCallback(() => { fileInputRef.current?.click(); }, [fileInputRef]);
@@ -186,7 +236,7 @@ export function MessageInput({
               ref={fileInputRef}
               type="file"
               multiple
-              accept="image/jpeg,image/png,image/gif,image/webp,application/pdf,.doc,.docx,.xls,.xlsx"
+              accept={CHAT_ATTACHMENT_ACCEPT}
               onChange={onFileSelect}
               className="hidden"
               aria-label="Upload file"
@@ -204,6 +254,7 @@ export function MessageInput({
             <div className="flex items-center justify-between px-3 py-1.5">
               <div className="flex items-center gap-0.5">
                 <button
+                  type="button"
                   onClick={handleOpenFileInput}
                   disabled={uploading}
                   className={cn(
@@ -212,12 +263,13 @@ export function MessageInput({
                       ? "text-status-info-ink animate-pulse"
                       : "text-muted-foreground hover:text-foreground",
                   )}
-                  title="Attach file (max 10MB)"
+                  title={`Attach a file — ${CHAT_ATTACHMENT_SUMMARY}, up to 10MB`}
                   aria-label="Attach file"
                 >
                   <Paperclip className="h-[18px] w-[18px]" />
                 </button>
                 <button
+                  type="button"
                   onClick={handleToggleEmoji}
                   className={cn(
                     "p-2 rounded-lg hover:bg-muted/60 transition-colors",
@@ -231,6 +283,7 @@ export function MessageInput({
                   <Smile className="h-[18px] w-[18px]" />
                 </button>
                 <button
+                  type="button"
                   onClick={handleInsertMentionAt}
                   className="p-2 rounded-lg hover:bg-muted/60 text-muted-foreground hover:text-foreground transition-colors"
                   title="Mention someone"
@@ -240,7 +293,9 @@ export function MessageInput({
                 </button>
                 <div className="w-px h-4 bg-border/40 mx-0.5" />
                 <button
+                  type="button"
                   onClick={handleFormatBold}
+                  onMouseDown={handlePreventBlur}
                   className="p-2 rounded-lg hover:bg-muted/60 text-muted-foreground hover:text-foreground transition-colors font-bold"
                   title="Bold (**text**)"
                   aria-label="Bold"
@@ -248,7 +303,9 @@ export function MessageInput({
                   <Bold className="h-[16px] w-[16px]" />
                 </button>
                 <button
+                  type="button"
                   onClick={handleFormatItalic}
+                  onMouseDown={handlePreventBlur}
                   className="p-2 rounded-lg hover:bg-muted/60 text-muted-foreground hover:text-foreground transition-colors"
                   title="Italic (*text*)"
                   aria-label="Italic"
@@ -256,7 +313,9 @@ export function MessageInput({
                   <Italic className="h-[16px] w-[16px]" />
                 </button>
                 <button
+                  type="button"
                   onClick={handleFormatCode}
+                  onMouseDown={handlePreventBlur}
                   className="p-2 rounded-lg hover:bg-muted/60 text-muted-foreground hover:text-foreground transition-colors font-mono"
                   title="Inline code (`code`)"
                   aria-label="Code"
@@ -269,6 +328,7 @@ export function MessageInput({
                   Shift+Enter for new line
                 </span>
                 <button
+                  type="button"
                   onClick={onSend}
                   disabled={
                     (!messageInput.trim() && pendingAttachments.length === 0) ||

@@ -9,7 +9,8 @@ import React from "react";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { cn } from "@/lib/utils";
-import { useThreadReplies, useSendThreadReply, useChatOrgUsers } from "@/hooks/api";
+import { useThreadReplies, useSendThreadReply } from "@/hooks/api/chat-search";
+import { useChatOrgUsers } from "@/hooks/api/chat-core-read";
 import { buildChatUserMap, resolveChatUserName } from "./chat-helpers";
 import { ThreadMessage } from "./thread-message";
 import { panelRevealLabel, usePanelRenderWindow } from "./panel-render-window";
@@ -98,7 +99,7 @@ export function ThreadPanel({
       inputRef.current.style.height = "auto";
     }
     try {
-      await sendReply.mutateAsync({ content });
+      await sendReply.mutateAsync({ content, clientKey: crypto.randomUUID() });
       bottomRef.current?.scrollIntoView({ behavior: "smooth" });
     } catch (error) {
       setInput(content);
@@ -108,7 +109,7 @@ export function ThreadPanel({
 
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-      if (e.key === "Enter" && !e.shiftKey) {
+      if (e.key === "Enter" && !e.shiftKey && !e.nativeEvent.isComposing) {
         e.preventDefault();
         handleSend();
       }

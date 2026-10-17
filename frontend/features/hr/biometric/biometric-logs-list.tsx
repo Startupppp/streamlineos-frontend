@@ -2,10 +2,10 @@
 
 import { useCallback } from "react";
 import { Badge } from "@/components/ui/badge";
-import { ErrorState } from "@/components/shared/error-state";
+import { PageState } from "@/components/shared/page-state";
+import { usePageState } from "@/hooks/api/use-page-state";
 import { EmptyState } from "@/components/ui/empty-state";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
-import { getErrorMessage } from "@/lib/get-error-message";
 import { useBiometricLogs, type BiometricLog } from "@/hooks/api/hr/biometric";
 import { format } from "date-fns";
 
@@ -67,14 +67,15 @@ export function BiometricLogsList() {
     void refetch();
   }, [refetch]);
 
-  if (isError) {
+  // Gated on hr:attendance:view; the route has no guard, so a denied caller
+  // read "No punch logs" (FE-47).
+  const pageState = usePageState({ permission: "hr:attendance:view", isLoading, isError, error });
+
+  if (pageState.kind !== "ready" && pageState.kind !== "empty" && pageState.kind !== "loading") {
     return (
-      <ErrorState
-        className="flex-1"
-        title="Couldn't load punch logs"
-        description={getErrorMessage(error)}
-        onRetry={handleRetry}
-      />
+      <PageState resolution={pageState} loading={null} onRetry={handleRetry} className="flex-1">
+        {null}
+      </PageState>
     );
   }
 
@@ -85,6 +86,7 @@ export function BiometricLogsList() {
       columns={columns}
       getRowKey={getRowKey}
       isLoading={isLoading}
+      pagination={{ pageSize: 25 }}
       emptyState={
         <EmptyState
           illustrationPreset="activity"

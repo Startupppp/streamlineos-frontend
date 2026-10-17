@@ -19,8 +19,9 @@ import {
   NOTIFICATION_PRIORITIES,
 } from "@/lib/notification-types";
 import { formatRelativeTime } from "./format-relative-time";
-import { useCreateSuppression } from "@/hooks/api/notifications";
+import { useCreateSuppression } from "@/hooks/api/notifications-preferences";
 import type { Notification } from "@/types/notifications";
+import { SNOOZE_PRESETS, type SnoozePreset } from "@/components/shared/notification-card-actions";
 
 interface NotificationDetailDrawerProps {
   notification: Notification | null;
@@ -52,25 +53,6 @@ function formatFullDate(value: Date | string): string {
   return date.toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" });
 }
 
-interface SnoozePreset {
-  label: string;
-  getIso: () => string;
-}
-
-const SNOOZE_PRESETS: SnoozePreset[] = [
-  { label: "1 hour", getIso: () => new Date(Date.now() + 60 * 60 * 1000).toISOString() },
-  { label: "3 hours", getIso: () => new Date(Date.now() + 3 * 60 * 60 * 1000).toISOString() },
-  {
-    label: "Tomorrow, 9:00 AM",
-    getIso: () => {
-      const d = new Date();
-      d.setDate(d.getDate() + 1);
-      d.setHours(9, 0, 0, 0);
-      return d.toISOString();
-    },
-  },
-];
-
 export function NotificationDetailDrawer({
   notification,
   open,
@@ -83,7 +65,7 @@ export function NotificationDetailDrawer({
   onSnooze,
   onDelete,
 }: NotificationDetailDrawerProps) {
-  const trashAnimated = useAnimatedIcon();
+  const { iconRef: trashIconRef, hoverHandlers: trashHoverHandlers } = useAnimatedIcon();
   const createSuppression = useCreateSuppression();
 
   const handleDelete = useCallback(() => {
@@ -265,9 +247,9 @@ export function NotificationDetailDrawer({
               size="sm"
               className="col-span-2 text-destructive hover:text-destructive"
               onClick={handleDelete}
-              {...trashAnimated.hoverHandlers}
+              {...trashHoverHandlers}
             >
-              <Trash2Icon ref={trashAnimated.iconRef} size={14} />
+              <Trash2Icon ref={trashIconRef} size={14} />
               Delete
             </Button>
           </div>

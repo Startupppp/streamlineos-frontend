@@ -66,6 +66,7 @@ function makeTicket(id: number, overrides?: Partial<Ticket>): Ticket {
     cycleId: null,
     sequenceId: null,
     estimate: null,
+    version: 1,
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
     ...overrides,
@@ -190,7 +191,7 @@ describe("useAddComment — optimistic cache updates", () => {
   let client: QueryClient;
   const TICKET_ID = 77;
   const PROJECT_ID = 42;
-  const ticketKey = buildWorkQueryKeys.projects.ticket(TICKET_ID);
+  const ticketKey = buildWorkQueryKeys.projects.ticket(PROJECT_ID, TICKET_ID);
 
   const existingTicket: Ticket = makeTicket(TICKET_ID, {
     id: TICKET_ID,
