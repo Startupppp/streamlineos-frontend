@@ -1,11 +1,11 @@
 "use client";
 
-import { useMemo } from "react";
+import { useEffect, useMemo } from "react";
+import { useRouter } from "next/navigation";
 import { AlertCircle, Banknote, RefreshCcw } from "lucide-react";
 import Link from "next/link";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
-import { EmptyState } from "@/components/ui/empty-state";
 import {
   HrHero,
   HrPageContent,
@@ -70,6 +70,16 @@ export function HrHubPage() {
   const hasAnyPanel = Object.entries(access).some(
     ([capability, granted]) => granted && !RECRUITMENT_CAPABILITIES.has(capability),
   );
+  // A member whose access holds no hub section has nothing here: send them to
+  // their self-service home instead of an empty hub. Only a loaded snapshot
+  // decides this; while loading or on error the hub stays.
+  const router = useRouter();
+  const sendHome = hub.data !== undefined && !hub.isError && !hasAnyPanel;
+  useEffect(() => {
+    if (sendHome) router.replace("/me");
+  }, [sendHome, router]);
+  // Skeletons, not an empty body, until the redirect lands.
+  const panelsLoading = hub.isLoading || sendHome;
 
   return (
     <PageWrapper
@@ -125,7 +135,7 @@ export function HrHubPage() {
             </HrHero>
           ) : null}
 
-          <HrStartHereChecklist signals={setupSignals} />
+          {sendHome ? null : <HrStartHereChecklist signals={setupSignals} />}
 
           {hub.isError ? (
             <div
@@ -151,39 +161,30 @@ export function HrHubPage() {
             <StalledReadNotice subject="the HR overview" onRetry={handleRetry} />
           ) : null}
 
-          {!setupEmpty && !hub.isLoading && !hub.isError && !hasAnyPanel ? (
-            <EmptyState
-              className="flex-1"
-              illustrationPreset="team"
-              title="No HR panels available to you"
-              description="Your access doesn't include any of this hub's sections yet. Ask an administrator to grant the HR permissions you need."
-            />
-          ) : null}
-
           {!setupEmpty ? (
             <>
           <HrHubQueues
             access={access}
             snapshot={hub.data}
-            isLoading={hub.isLoading}
+            isLoading={panelsLoading}
             onRetry={handleRetry}
           />
           <HrHubToday
             access={access}
             snapshot={hub.data}
-            isLoading={hub.isLoading}
+            isLoading={panelsLoading}
             onRetry={handleRetry}
           />
           <HrHubActivity
             access={access}
             snapshot={hub.data}
-            isLoading={hub.isLoading}
+            isLoading={panelsLoading}
             onRetry={handleRetry}
           />
           <HrHubMetrics
             access={access}
             snapshot={hub.data}
-            isLoading={hub.isLoading}
+            isLoading={panelsLoading}
             onRetry={handleRetry}
           />
             </>
