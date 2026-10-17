@@ -13,11 +13,12 @@ import type { Ticket, ProjectStatusRecord } from "@/types/projects";
 
 const ACCEPT_STATUS = "IN_PROGRESS";
 
-function findDeclineStatus(statuses: ProjectStatusRecord[]): string {
+function findDeclineStatus(statuses: ProjectStatusRecord[]): string | null {
   return (
     statuses.find((s) => s.type === "cancelled")?.name ??
     statuses.find((s) => s.type === "completed")?.name ??
-    "CANCELLED"
+    [...statuses].sort((a, b) => b.order - a.order)[0]?.name ??
+    null
   );
 }
 
@@ -71,6 +72,10 @@ export function useTriageTicketActions({ projectId, tickets, project }: UseTriag
     (ticketId: number) => {
       const target = tickets.find((t) => t.id === ticketId);
       if (!target) return;
+      if (!declineStatus) {
+        toast.error("Project settings still loading — please try again");
+        return;
+      }
       setPendingDecline((prev) => new Set(prev).add(ticketId));
       updateTicket.mutate(
         { ticketId, version: target.version, status: declineStatus },
