@@ -15,6 +15,7 @@ import {
 import {
   leaveContextKey,
   leaveMyRequestsKey,
+  leaveMyRequestsPagesKey,
   leaveTeamKey,
   leaveThisWeekKey,
   useInvalidateLeaveDashboard,
@@ -31,9 +32,34 @@ export function useRequestLeave() {
     mutationKey: ["hr", "leaves", "request"],
     mutationFn: (data: RequestLeaveInput) =>
       apiClient.post<{ success: boolean }>("/me/time-off", data, undefined, requestLeaveC),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: leaveContextKey(identity) });
-      qc.invalidateQueries({ queryKey: leaveMyRequestsKey(identity) });
+    onSuccess: (_created, input) => {
+      const provisional = {
+        id: -Math.abs(Date.now() % 1_000_000_000),
+        startDate: input.startDate,
+        endDate: input.endDate,
+        status: "PENDING" as const,
+        priority: input.priority ?? "MEDIUM",
+        reason: input.reason ?? null,
+        leaveType: null,
+        approver: null,
+        isHalfDay: input.isHalfDay ?? false,
+        halfDayPeriod: input.halfDayPeriod ?? null,
+      };
+      qc.setQueriesData(
+        { queryKey: leaveMyRequestsPagesKey(identity) },
+        (current: { pages?: Array<{ data: unknown[] }> } | undefined) => {
+          if (!current?.pages?.length) return current;
+          const [first, ...rest] = current.pages;
+          if (!first) return current;
+          return {
+            ...current,
+            pages: [{ ...first, data: [provisional, ...first.data] }, ...rest],
+          };
+        },
+      );
+      void qc.invalidateQueries({ queryKey: leaveContextKey(identity) });
+      void qc.invalidateQueries({ queryKey: leaveMyRequestsKey(identity) });
+      void qc.invalidateQueries({ queryKey: leaveMyRequestsPagesKey(identity) });
       invalidateLeaveDashboard();
       invalidateCalendarProjectionWindows(qc);
     },

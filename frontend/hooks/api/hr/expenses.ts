@@ -88,7 +88,36 @@ export function useCreateExpense() {
     mutationKey: ["hr", "expenses", "create"],
     mutationFn: ({ body, config }: { body: CreateExpenseInput; config?: RequestConfig }) =>
       apiClient.post("/me/expenses", body, config, _expenseRowContract),
-    onSuccess: () => {
+    onSuccess: (created) => {
+      qc.setQueriesData(
+        { queryKey: humanResourcesQueryKeys.hr.expenses() },
+        (current: unknown) => {
+          if (!current || typeof current !== "object" || !("expenses" in current)) return current;
+          const page = current as {
+            expenses: Array<{ id: number }>;
+            pendingExpenses?: Array<{ id: number }>;
+            pagination?: { total: number };
+          };
+          if (page.expenses.some((row) => row.id === created.id)) return current;
+          const row = {
+            ...created,
+            user: null,
+            approver: null,
+            expenseCategory: null,
+          };
+          return {
+            ...page,
+            expenses: [row, ...page.expenses],
+            pendingExpenses:
+              created.status === "PENDING" || created.status === "DRAFT"
+                ? [row, ...(page.pendingExpenses ?? [])]
+                : page.pendingExpenses,
+            pagination: page.pagination
+              ? { ...page.pagination, total: page.pagination.total + 1 }
+              : page.pagination,
+          };
+        },
+      );
       void qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.expenses() });
     },
   });

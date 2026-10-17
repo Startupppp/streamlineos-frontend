@@ -2,7 +2,6 @@
 
 import { WidgetCard } from "@/components/ui/widget-card";
 import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
-import { NoPermissionState } from "@/components/shared/no-permission-state";
 import { useCrmPulse } from "@/hooks/api/dashboard";
 import { useCanState, useModuleEnabled } from "@/hooks/api/access";
 import { FolderKanban, Target, IndianRupee, TrendingUp, Zap } from "lucide-react";
@@ -13,8 +12,9 @@ export function BusinessPulseWidget() {
 
   if (crmState === "loading")
     return <WidgetCard icon={FolderKanban} title="Business Pulse" isLoading loadingRows={2} />;
-  if (crmState === "denied" || !crmEnabled)
-    return <NoPermissionState permission="crm:leads:view" compact />;
+  // An HR workspace owner without CRM should not see an Access Restricted card
+  // demanding Crm › Leads › View. Hide the widget instead.
+  if (crmState === "denied" || !crmEnabled) return null;
 
   return <BusinessPulseCard />;
 }

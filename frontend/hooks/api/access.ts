@@ -133,9 +133,11 @@ export function useCan(permissionKey: PermissionKey): boolean {
  * Ticket 26 is the other half of the same conflation, one layer down.
  */
 export function useCanState(permissionKey: PermissionKey): AccessState {
-  const { data, isLoading } = useAccess();
+  const { data, isPending, isError } = useAccess();
+  // A failed access read used to stay `loading` forever (`isLoading || !data`),
+  // so every dropdown that waited on this state kept saying "Loading…".
   return accessState({
-    isLoading: isLoading || !data,
+    isLoading: isPending && !isError && !data,
     granted: !!data && (data.isOrgOwner || permissionKey in data.scopes),
   });
 }

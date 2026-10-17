@@ -55,7 +55,7 @@ export function useFocusStrip(access: DashboardAccess): {
             ? "1 pending approval"
             : `${approvalTotal} pending approvals`,
         count: approvalTotal,
-        href: "/hr/leaves?tab=pending",
+        href: "/hr/leaves?tab=approvals",
         priority: "critical",
       });
     }

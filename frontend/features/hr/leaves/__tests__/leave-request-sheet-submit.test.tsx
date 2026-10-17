@@ -187,9 +187,9 @@ describe("LeaveRequestSheet", () => {
     mockUseCan.mockImplementation(() => true);
   });
 
-  it("does not show the past-date rule to someone who can record leave for others", () => {
+  it("blocks past dates on a new request even for someone who can record leave for others", () => {
     renderSheet();
-    expect(screen.queryByText(/past dates can.t be requested/i)).toBeNull();
+    expect(screen.getByText(/past dates can.t be requested/i)).toBeInTheDocument();
   });
 
   it("shows the configured policy beside the leave type in the dropdown", () => {

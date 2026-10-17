@@ -270,11 +270,51 @@ export const useMyLeaveBalance = () => {
   const hrEnabled = useModuleEnabled("hr");
   return useQuery<LeaveBalance[]>({
     queryKey: collaborationQueryKeys.dashboard.myLeaveBalance(),
-    queryFn: ({ signal }) => apiClient.get<LeaveBalance[]>("/dashboard/my-leave-balance", undefined, signal, leaveBalanceContract),
+    queryFn: ({ signal }) => loadLeaveBalances(signal),
     staleTime: 5 * 60_000,
     enabled: !!orgId && hrEnabled,
   });
 };
+
+async function loadLeaveBalances(signal: AbortSignal): Promise<LeaveBalance[]> {
+  const listed = await apiClient.get<LeaveBalance[]>(
+    "/dashboard/my-leave-balance",
+    undefined,
+    signal,
+    leaveBalanceContract,
+  );
+  if (listed.length > 0) return listed;
+  try {
+    const { leaveContextContract } = await import("@/hooks/api/hr/leaves-schema");
+    const context = await apiClient.get(
+      "/me/time-off",
+      undefined,
+      signal,
+      leaveContextContract,
+    );
+    const year = new Date().getFullYear();
+    const source =
+      context.balances.length > 0
+        ? context.balances
+        : context.types
+            .filter((type) => type.daysPerYear > 0)
+            .map((type) => ({
+              id: type.id,
+              balance: String(type.daysPerYear),
+              typeName: type.name,
+              daysPerYear: type.daysPerYear,
+            }));
+    return source.map((row) => ({
+      id: row.id,
+      balance: String(row.balance),
+      year,
+      leaveTypeName: row.typeName,
+      daysPerYear: row.daysPerYear,
+    }));
+  } catch {
+    return listed;
+  }
+}
 
 export const useBirthdays = (
   options?: Omit<UseQueryOptions<BirthdayEntry[], Error>, "queryKey" | "queryFn">

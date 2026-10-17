@@ -5,6 +5,7 @@ import { apiClient } from "@/lib/api-client";
 import { directoryAndOwnershipQueryKeys } from "@/lib/query-keys/directory-and-ownership";
 import { payrollQueryKeys } from "@/lib/query-keys/payroll";
 import { workersListParams } from "@/lib/query-keys/directory-workers-list";
+import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
 import { useGatedQuery } from "@/hooks/api/gated-query";
 import type { GatedQueryResult } from "@/hooks/api/gated-query";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
@@ -52,6 +53,7 @@ export function useWorkers(
       return apiClient.get(`/directory/workers?${searchParams.toString()}`, undefined, signal, workersPageContract);
     },
     staleTime: 60_000,
+    ...INLINE_READ_ERROR,
   });
 }
 
@@ -102,6 +104,7 @@ export function useWorkerEngagements(
       ),
     staleTime: 60_000,
     enabled: !!workerId,
+    ...INLINE_READ_ERROR,
   });
 }
 

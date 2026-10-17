@@ -8,18 +8,9 @@ import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useRunConflictHandler } from "@/features/payroll/shared/run-conflict";
 import { LoadingButton } from "@/components/ui/loading-button";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
 import { useCan } from "@/hooks/api/access";
 import { useDiscardRun, useGenerateRun, useRecalculateRun } from "@/hooks/api/payroll/runs";
+import { RunReopenAction } from "@/features/payroll/runs/run-reopen-action";
 import {
   SubmitApprovalAction,
   LockActions,
@@ -83,9 +74,10 @@ export function RunActionsSlot({ run }: RunActionsSlotProps) {
     setShowRecalcConfirm(true);
   }
 
-  function handleRecalcCancel() {
-    setShowRecalcConfirm(false);
-  }
+  const recalcDescription =
+    run.status === "PENDING_APPROVAL"
+      ? "This rebuilds the run from current salary profiles and inputs, including people added after it was submitted."
+      : "Recalculation replaces the current preview. All prior calculations will be recomputed from current inputs.";
 
   const recalcButton = canManage ? (
     <>
@@ -97,29 +89,16 @@ export function RunActionsSlot({ run }: RunActionsSlotProps) {
       >
         Recalculate
       </LoadingButton>
-      <AlertDialog open={showRecalcConfirm} onOpenChange={setShowRecalcConfirm}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Recalculate payroll?</AlertDialogTitle>
-            <AlertDialogDescription>
-              Recalculation replaces the current preview. All prior calculations
-              will be recomputed from current inputs.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel onClick={handleRecalcCancel}>Cancel</AlertDialogCancel>
-            <AlertDialogAction asChild>
-              <LoadingButton
-                onClick={handleRecalcConfirm}
-                isPending={recalcMutation.isPending}
-                loadingText="Recalculating…"
-              >
-                Recalculate
-              </LoadingButton>
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <ConfirmDialog
+        open={showRecalcConfirm}
+        onOpenChange={setShowRecalcConfirm}
+        keepOpenOnConfirm
+        isPending={recalcMutation.isPending}
+        title="Recalculate payroll?"
+        description={recalcDescription}
+        confirmLabel="Recalculate"
+        onConfirm={handleRecalcConfirm}
+      />
     </>
   ) : null;
 
@@ -177,7 +156,12 @@ export function RunActionsSlot({ run }: RunActionsSlotProps) {
       );
 
     case "PENDING_APPROVAL":
-      return null;
+      return (
+        <>
+          {recalcButton}
+          <RunReopenAction runId={run.id} />
+        </>
+      );
 
     case "APPROVED":
     case "LOCKED":

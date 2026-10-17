@@ -23,8 +23,8 @@ export const workerContract = z.object({
   deletedAt: z.string().nullable(),
   createdAt: z.string(),
   updatedAt: z.string(),
-  firstName: z.string(),
-  lastName: z.string(),
+  firstName: z.string().nullable().transform((value) => value ?? ""),
+  lastName: z.string().nullable().transform((value) => value ?? ""),
   displayName: z.string().nullable(),
   workEmail: z.string().nullable(),
   avatarUrl: z.string().nullable(),
@@ -86,7 +86,10 @@ export const workerEngagementContract = z.object({
   updatedAt: z.string(),
 });
 
-export const workerEngagementListContract = z.array(workerEngagementContract);
+export const workerEngagementListContract = z.union([
+  z.array(workerEngagementContract),
+  z.object({ data: z.array(workerEngagementContract) }).transform((value) => value.data),
+]);
 
 export type WorkerRecord = z.infer<typeof workerContract>;
 export type WorkersPageResponse = z.infer<typeof workersPageContract>;

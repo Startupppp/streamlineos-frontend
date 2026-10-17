@@ -55,9 +55,12 @@ export function UploadDocSheet({
   const {
     data: documentTypes,
     isLoading: typesLoading,
+    isFetching: typesFetching,
     isError: typesError,
     refetch: refetchTypes,
   } = useHrDocumentTypes({ enabled: open });
+  const typesStillLoading =
+    (typesLoading || typesFetching) && documentTypes === undefined && !typesError;
   const { data: myDocs } = useMyOnboardingDocs({
     enabled: open && selfUpload,
     limit: 100,
@@ -198,7 +201,7 @@ export function UploadDocSheet({
               <SelectTrigger>
                 <SelectValue
                   placeholder={
-                    typesLoading
+                    typesStillLoading
                       ? "Loading document types…"
                       : typesError && typeOptions.length === 0
                         ? "Document types unavailable"
@@ -232,7 +235,7 @@ export function UploadDocSheet({
                 </Button>
               </div>
             ) : null}
-            {!typesLoading && !typesError && typeOptions.length === 0 ? (
+            {!typesStillLoading && !typesError && typeOptions.length === 0 ? (
               <p className="text-dense text-muted-foreground">
                 No document types configured. Ask HR to add them under Document
                 Types.

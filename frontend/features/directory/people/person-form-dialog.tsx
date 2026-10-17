@@ -18,8 +18,10 @@ import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { AppDialog } from "@/components/shared/app-dialog";
 import { useCreatePerson, useUpdatePerson } from "@/hooks/api/directory/people";
+import { useCreateEngagement, useCreateWorker } from "@/hooks/api/directory/workers";
 import type { OrganizationPerson } from "@/types/directory/people";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { PersonRoleFields } from "./person-role-fields";
 
 const personSchema = z.object({
   firstName: z.string().min(1, "First name is required").max(100),
@@ -27,7 +29,16 @@ const personSchema = z.object({
   workEmail: z.string().email("Must be a valid email address").optional().or(z.literal("")),
   personalEmail: z.string().email("Must be a valid email address").optional().or(z.literal("")),
   phone: z.string().max(30).optional(),
+  designation: z.string().max(120).optional(),
+  joiningDate: z.string().optional(),
 });
+
+function todayIsoDate(): string {
+  const now = new Date();
+  const month = String(now.getMonth() + 1).padStart(2, "0");
+  const day = String(now.getDate()).padStart(2, "0");
+  return `${now.getFullYear()}-${month}-${day}`;
+}
 
 type PersonFormValues = z.infer<typeof personSchema>;
 
@@ -37,6 +48,8 @@ const EMPTY_DEFAULTS: PersonFormValues = {
   workEmail: "",
   personalEmail: "",
   phone: "",
+  designation: "",
+  joiningDate: "",
 };
 
 function toFormValues(person: OrganizationPerson): PersonFormValues {
@@ -46,6 +59,8 @@ function toFormValues(person: OrganizationPerson): PersonFormValues {
     workEmail: person.workEmail ?? "",
     personalEmail: person.personalEmail ?? "",
     phone: person.phone ?? "",
+    designation: "",
+    joiningDate: "",
   };
 }
 
@@ -68,6 +83,8 @@ type Props = CreateProps | EditProps;
 export function PersonFormDialog({ open, onOpenChange, mode, defaultValues }: Props) {
   const createPerson = useCreatePerson();
   const updatePerson = useUpdatePerson();
+  const createWorker = useCreateWorker();
+  const createEngagement = useCreateEngagement();
 
   const form = useForm<PersonFormValues>({
     resolver: zodResolver(personSchema),
@@ -84,30 +101,53 @@ export function PersonFormDialog({ open, onOpenChange, mode, defaultValues }: Pr
   }, [open, mode, defaultValues, form]);
 
   const isPending =
-    mode === "create" ? createPerson.isPending : updatePerson.isPending;
+    createPerson.isPending ||
+    updatePerson.isPending ||
+    createWorker.isPending ||
+    createEngagement.isPending;
 
-  function handleSubmit(values: PersonFormValues) {
+  async function handleSubmit(values: PersonFormValues) {
     const workEmail = values.workEmail || undefined;
     const personalEmail = values.personalEmail || undefined;
     const phone = values.phone || undefined;
 
     if (mode === "create") {
-      createPerson.mutate(
-        {
+      const designation = values.designation?.trim() ?? "";
+      const joiningDate = values.joiningDate?.trim() ?? "";
+      try {
+        const created = await createPerson.mutateAsync({
           firstName: values.firstName,
           lastName: values.lastName,
           ...(workEmail ? { workEmail } : {}),
           ...(personalEmail ? { personalEmail } : {}),
           ...(phone ? { phone } : {}),
-        },
-        {
-          onSuccess: () => {
+        });
+        if (designation || joiningDate) {
+          try {
+            const worker = await createWorker.mutateAsync({
+              organizationPersonId: created.organizationPersonId,
+            });
+            await createEngagement.mutateAsync({
+              workerId: worker.workerId,
+              startsOn: joiningDate || todayIsoDate(),
+              workerType: "FULL_TIME",
+              isPrimary: true,
+              ...(designation ? { designation } : {}),
+            });
             toast.success("Person record added");
-            onOpenChange(false);
-          },
-          onError: (e) => toast.error(getErrorMessage(e)),
-        },
-      );
+          } catch (error) {
+            toast.success("Person record added");
+            toast.error(
+              `${getErrorMessage(error)} Their role and join date were not saved. Open the profile to add a worker record.`,
+            );
+          }
+        } else {
+          toast.success("Person record added");
+        }
+        onOpenChange(false);
+      } catch (error) {
+        toast.error(getErrorMessage(error));
+      }
     } else {
       if (!defaultValues) return;
       updatePerson.mutate(
@@ -252,6 +292,7 @@ export function PersonFormDialog({ open, onOpenChange, mode, defaultValues }: Pr
               </FormItem>
             )}
           />
+          {mode === "create" ? <PersonRoleFields control={form.control} /> : null}
         </form>
       </Form>
     </AppDialog>

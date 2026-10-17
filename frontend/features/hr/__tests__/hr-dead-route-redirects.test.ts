@@ -60,6 +60,7 @@ describe("QA 2026-10-13 guessed addresses hand off instead of answering Page Not
     ["/hr/policies", "/hr/settings/policies"],
     ["/hr/leave", "/hr/leaves"],
     ["/pay", "/me/pay"],
+    ["/me/payroll", "/me/pay"],
     ["/expenses", "/me/expenses"],
     ["/hr/people", "/hr/employees"],
     ["/hr/time-clocks", "/hr/devices"],

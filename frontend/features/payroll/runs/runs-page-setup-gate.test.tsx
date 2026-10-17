@@ -91,6 +91,23 @@ describe("BUG-001 the Runs page agrees with Settings about whether payroll is se
     expect(screen.queryAllByRole("link", { name: /set up payroll/i })).toEqual([]);
   });
 
+  it("still offers New run when a run already exists, even if the policy read has not confirmed setup", () => {
+    mockUsePayrollRuns.mockReturnValue({
+      data: {
+        data: [{ id: 4, month: "2026-10", status: "PENDING_APPROVAL", employeeCount: 0 }],
+        pagination: { limit: 20, nextCursor: null, hasMore: false },
+      },
+      isLoading: false,
+      isError: false,
+      error: null,
+      refetch: jest.fn(),
+    });
+    withPolicy(null, true);
+    render(<RunsPageContent />);
+
+    expect(screen.getAllByRole("button", { name: /new run/i }).length).toBeGreaterThan(0);
+  });
+
   it("starts no create mutation from a render, so the gate cannot be mistaken for a submitted run", () => {
     withPolicy(null);
     render(<RunsPageContent />);

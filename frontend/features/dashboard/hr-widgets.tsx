@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
+import Link from "next/link";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { WidgetCard } from "@/components/ui/widget-card";
 import { Badge } from "@/components/ui/badge";
@@ -320,12 +321,15 @@ export function PendingApprovalsWidget() {
       empty={<EmptyWidget message="No data." />}
     >
       <div className="space-y-2">
-        <div className="flex items-center justify-between p-2.5 rounded-lg border border-border/60">
+        <Link
+          href="/hr/leaves?tab=approvals"
+          className="flex items-center justify-between rounded-lg border border-border/60 p-2.5 transition-colors hover:bg-muted/50"
+        >
           <span className="text-xs text-muted-foreground">Leave Requests</span>
           <span className="text-sm font-bold tabular-nums">
             {data?.pendingLeaves}
           </span>
-        </div>
+        </Link>
         <div className="flex items-center justify-between p-2.5 rounded-lg border border-border/60">
           <span className="text-xs text-muted-foreground">Resignations</span>
           <span className="text-sm font-bold tabular-nums">

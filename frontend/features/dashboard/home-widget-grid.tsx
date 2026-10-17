@@ -122,7 +122,7 @@ export function HomeWidgetGrid({
       {
         id: "Business pulse",
         label: "Business pulse",
-        visible: canViewExecutive,
+        visible: canViewExecutive && crmEnabled && canViewCrmLeads,
       },
       {
         id: "Today's activities",

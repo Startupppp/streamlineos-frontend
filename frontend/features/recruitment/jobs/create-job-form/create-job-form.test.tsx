@@ -5,6 +5,8 @@ import { missingForPublish } from "./schema";
 
 const createMutate = jest.fn();
 let departmentsData: Department[] | undefined = [];
+let departmentsLoading = false;
+let departmentsError = false;
 let departmentAccess: "loading" | "granted" | "denied" = "granted";
 
 jest.mock("next/navigation", () => ({
@@ -20,7 +22,13 @@ jest.mock("@/hooks/api/hr/recruitment", () => ({
 }));
 
 jest.mock("@/hooks/api/hr", () => ({
-  useHrDepartments: () => ({ data: departmentsData }),
+  useHrDepartments: () => ({
+    data: departmentsData,
+    isLoading: departmentsLoading,
+    isFetching: departmentsLoading,
+    isError: departmentsError,
+    refetch: jest.fn(),
+  }),
 }));
 
 jest.mock("@/hooks/api", () => ({
@@ -34,6 +42,8 @@ jest.mock("@/hooks/api/access", () => ({
 beforeEach(() => {
   createMutate.mockReset();
   departmentsData = [];
+  departmentsLoading = false;
+  departmentsError = false;
   departmentAccess = "granted";
 });
 
@@ -104,6 +114,15 @@ describe("CreateJobForm", () => {
     expect(screen.getByText("Departments not visible to you")).toBeInTheDocument();
     expect(screen.queryByText("Loading departments…")).not.toBeInTheDocument();
     expect(screen.queryByText("No departments yet")).not.toBeInTheDocument();
+  });
+
+  it("shows a retry instead of loading forever when the department list fails", () => {
+    departmentsData = undefined;
+    departmentsError = true;
+    departmentAccess = "granted";
+    render(<CreateJobForm />);
+    expect(screen.getByText("Departments could not be loaded")).toBeInTheDocument();
+    expect(screen.queryByText("Loading departments…")).not.toBeInTheDocument();
   });
 });
 

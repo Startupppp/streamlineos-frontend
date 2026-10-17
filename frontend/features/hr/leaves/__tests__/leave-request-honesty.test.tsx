@@ -154,13 +154,24 @@ describe("LeaveRequestSheet honesty", () => {
     await waitFor(() => expect(requestLeaveMutate).toHaveBeenCalledTimes(1));
   });
 
-  it("says the balance is unavailable rather than guessing one or spinning", () => {
+  it("uses the configured entitlement when no balance row has been stored yet", () => {
     renderSheet();
+    fillRequest("2026-10-08", "2026-10-09");
+
+    expect(screen.getByText(/This will consume/i)).toBeInTheDocument();
+    expect(
+      screen.queryByText(/Casual Leave balance could not be loaded/i),
+    ).not.toBeInTheDocument();
+  });
+
+  it("says the balance is unavailable when the type has no entitlement either", () => {
+    renderSheet({
+      leaveTypes: [{ id: 1, name: "Casual Leave", daysPerYear: 0 }],
+    });
     fillRequest("2026-10-08", "2026-10-09");
 
     expect(screen.getByText(/Casual Leave balance could not be loaded/i)).toBeInTheDocument();
     expect(screen.queryByText(/This will consume/i)).not.toBeInTheDocument();
-    expect(screen.queryByRole("status")).not.toBeInTheDocument();
   });
 
   it("previews the balance when the API returned one", () => {

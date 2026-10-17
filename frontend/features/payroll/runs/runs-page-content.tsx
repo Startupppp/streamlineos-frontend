@@ -64,6 +64,8 @@ export function RunsPageContent() {
   const [newEntityId, setNewEntityId] = useState<string>("");
 
   const canManage = useCan("payroll:runs:manage");
+  const canCreate = useCan("payroll:runs:create");
+  const canStartRun = canManage || canCreate;
   const canViewPolicies = useCan("payroll:policies:view");
   const policy = usePayrollPolicyCurrent();
   const { data: entities } = usePayrollEntities();
@@ -146,13 +148,16 @@ export function RunsPageContent() {
     router.push(`/payroll/runs/${row.id}`);
   }
 
-  const setupKnown = !canViewPolicies || !policy.isLoading;
+  const hasRuns = (data?.data.length ?? 0) > 0;
+  const setupKnown = !canViewPolicies || policy.isError || !policy.isLoading;
   const startGate = !setupKnown
     ? null
     : payrollRunStartGate({
         policyReady: canViewPolicies ? Boolean(policy.data?.policy) : true,
       });
-  const setupPending = startGate?.action === "setup" ? startGate : null;
+  const offerNewRun = canStartRun && (hasRuns || startGate?.action === "start");
+  const setupPending =
+    canStartRun && !offerNewRun && startGate?.action === "setup" ? startGate : null;
 
   const needsSource = RUN_TYPES_NEEDING_SOURCE.includes(newRunType);
   const sourceRunOptions = (data?.data ?? []).filter((r) => r.month === newRunMonth);
@@ -227,15 +232,15 @@ export function RunsPageContent() {
       title="Payroll Runs"
       subtitle="View and manage payroll runs by month"
       actions={
-        !canManage || startGate === null ? undefined : setupPending ? (
-          <Button size="sm" asChild>
-            <Link href={setupPending.href}>{setupPending.label}</Link>
-          </Button>
-        ) : (
+        offerNewRun ? (
           <Button size="sm" onClick={handleNewRunOpen}>
             New run
           </Button>
-        )
+        ) : setupPending ? (
+          <Button size="sm" asChild>
+            <Link href={setupPending.href}>{setupPending.label}</Link>
+          </Button>
+        ) : undefined
       }
     >
       {(entities?.length ?? 0) > 0 ? (
@@ -313,11 +318,11 @@ export function RunsPageContent() {
                   : "Start your first payroll run to see it here"
               }
               action={
-                !canManage || startGate === null
-                  ? undefined
+                offerNewRun
+                  ? { label: "New run", onClick: handleNewRunOpen }
                   : setupPending
                     ? { label: setupPending.label, href: setupPending.href }
-                    : { label: "New run", onClick: handleNewRunOpen }
+                    : undefined
               }
             />
           }

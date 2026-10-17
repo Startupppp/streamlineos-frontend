@@ -37,10 +37,13 @@ function currentYearMonth(): string {
   return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
 }
 
+function periodMatchesMonth(periodKey: string, month: string): boolean {
+  return periodKey === month || periodKey.startsWith(`${month}-`);
+}
+
 
 export function InputsPageContent() {
   const [month, setMonth] = useState(currentYearMonth);
-  const [showCreateConfirm, setShowCreateConfirm] = useState(false);
   const [showLockConfirm, setShowLockConfirm] = useState(false);
   const [showUnlockConfirm, setShowUnlockConfirm] = useState(false);
   const [adjDialogOpen, setAdjDialogOpen] = useState(false);
@@ -57,7 +60,7 @@ export function InputsPageContent() {
   const unlockPeriod = useUnlockPayrollInputPeriod();
 
   const periods = periodsData?.data ?? [];
-  const currentPeriod = periods.find((p) => p.periodKey === month);
+  const currentPeriod = periods.find((p) => periodMatchesMonth(p.periodKey, month));
 
   const isLocked = currentPeriod?.status === "locked";
   const isBuilt = currentPeriod?.status === "built" || isLocked;
@@ -78,7 +81,6 @@ export function InputsPageContent() {
 
   function handleCreatePeriod() {
     createPeriod.mutate({ periodKey: month });
-    setShowCreateConfirm(false);
   }
 
   function handleBuild() {
@@ -105,7 +107,7 @@ export function InputsPageContent() {
           variant="outline"
           size="sm"
           className="text-xs gap-1"
-          onClick={() => setShowCreateConfirm(true)}
+          onClick={handleCreatePeriod}
           isPending={createPeriod.isPending}
           loadingText="Opening…"
         >
@@ -232,7 +234,7 @@ export function InputsPageContent() {
               <LoadingButton
                 variant="outline"
                 size="sm"
-                onClick={() => setShowCreateConfirm(true)}
+                onClick={handleCreatePeriod}
                 isPending={createPeriod.isPending}
                 loadingText="Opening…"
               >
@@ -242,27 +244,6 @@ export function InputsPageContent() {
           )}
         </div>
       )}
-
-      <AlertDialog open={showCreateConfirm} onOpenChange={setShowCreateConfirm}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Open payroll input period?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This will create an input period for{" "}
-              <strong>{formatMonth(month)}</strong>. You can then build
-              and lock HR data for payroll.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel disabled={createPeriod.isPending}>Cancel</AlertDialogCancel>
-            <AlertDialogAction asChild>
-              <LoadingButton onClick={handleCreatePeriod} isPending={createPeriod.isPending} loadingText="Opening…">
-                Open Period
-              </LoadingButton>
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
 
       <AlertDialog open={showLockConfirm} onOpenChange={setShowLockConfirm}>
         <AlertDialogContent>

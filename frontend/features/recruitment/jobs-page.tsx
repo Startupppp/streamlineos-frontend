@@ -53,7 +53,7 @@ export function JobsPage() {
   const [cursorHistory, setCursorHistory] = useState<Array<string | undefined>>([undefined]);
   const page = cursorHistory.length;
   const cursor = cursorHistory.at(-1);
-  const { data: jobsPage, isLoading, isError, refetch } = useJobPostingsPage({
+  const { data: jobsPage, isLoading, isFetching, isError, refetch } = useJobPostingsPage({
     ...(statusFilter ? { status: statusFilter } : {}),
     cursor,
     pageSize: pageSizeFromUrl,
@@ -184,12 +184,7 @@ export function JobsPage() {
   function handleConfirmDialogOpenChange(open: boolean) { if (!open) setDeleteJobId(null); }
 
   const total = jobsPage?.total ?? 0;
-  const subtitle =
-    isLoading
-      ? "Loading positions…"
-      : total > 0
-        ? `${total.toLocaleString()} position${total === 1 ? "" : "s"}`
-        : "Manage open positions";
+  const subtitle = isLoading ? "Loading positions…" : isFetching ? "Refreshing positions…" : total > 0 ? `${total.toLocaleString()} position${total === 1 ? "" : "s"}` : "Manage open positions";
 
   return (
     <>

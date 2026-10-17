@@ -107,6 +107,16 @@ export function usePayrollInputPeriods(params?: {
   });
 }
 
+function prependCreatedPeriod(current: unknown, created: SchemaPeriod): unknown {
+  if (!current || typeof current !== "object" || !("data" in current)) return current;
+  const page = current as { data?: SchemaPeriod[] };
+  if (!Array.isArray(page.data)) return current;
+  if (page.data.some((row) => row.id === created.id || row.periodKey === created.periodKey)) {
+    return current;
+  }
+  return { ...page, data: [created, ...page.data] };
+}
+
 export function useCreatePayrollInputPeriod() {
   const qc = useQueryClient();
   return useAuthorizedMutation("hr:payroll:generate", {
@@ -118,7 +128,11 @@ export function useCreatePayrollInputPeriod() {
         undefined,
         payrollPeriodC,
       ),
-    onSuccess: () => {
+    onSuccess: (created) => {
+      qc.setQueriesData(
+        { queryKey: payrollQueryKeys.hrPayrollInputs.periods() },
+        (current) => prependCreatedPeriod(current, created),
+      );
       void qc.invalidateQueries({
         queryKey: payrollQueryKeys.hrPayrollInputs.periods(),
       });
