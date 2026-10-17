@@ -331,6 +331,7 @@ export function CompanionLauncher({
   const name = companionDisplayName(preferences);
   const status = pet.label;
   const left = preferences.anchor === "bottom-left";
+  const dockedInFabLane = compact && minimized && !position;
   const bubbleLeft = position ? position.x < window.innerWidth / 2 : left;
   const bubbleBelow = position !== null && position.y < 230;
   const showIntro = !introSeen && !open && !voiceOverlayOpen && !minimized;
@@ -369,9 +370,12 @@ export function CompanionLauncher({
           : undefined
       }
       className={cn(
-        "fixed bottom-[calc(var(--mb-launcher-bottom,6.25rem)+env(safe-area-inset-bottom,0px))] z-40 flex w-auto md:bottom-2",
+        "fixed z-40 flex w-auto md:bottom-2",
+        dockedInFabLane
+          ? "bottom-[calc(var(--mb-fab-bottom,3.25rem)+env(safe-area-inset-bottom,0px))]"
+          : "bottom-[calc(var(--mb-launcher-bottom,6.25rem)+env(safe-area-inset-bottom,0px))]",
         overlayOpen ? "pointer-events-none" : "pointer-events-auto",
-        left ? "left-2" : "right-2",
+        left ? "left-2" : dockedInFabLane ? "right-[4.5rem]" : "right-2",
       )}
     >
       <span id={dragHintId} className="sr-only">

@@ -78,7 +78,9 @@ export function useCreateBusinessUnit() {
     mutationKey: ["create", "business", "unit"],
     mutationFn: (data: { name: string; code: string; description?: string }) =>
       apiClient.post<OrgBusinessUnit>("/org-hierarchy/business-units", data, undefined, businessUnitContract),
-    onSuccess: () => { void qc.invalidateQueries({ queryKey: platformHierarchyQueryKeys.hierarchy.all }); },
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: platformHierarchyQueryKeys.hierarchy.all });
+    },
   });
 }
 
@@ -88,7 +90,9 @@ export function useUpdateBusinessUnit() {
     mutationKey: ["update", "business", "unit"],
     mutationFn: ({ id, ...data }: { id: string; name?: string; code?: string; description?: string; status?: string }) =>
       apiClient.patch<OrgBusinessUnit>(`/org-hierarchy/business-units/${id}`, data, undefined, businessUnitContract),
-    onSuccess: () => { void qc.invalidateQueries({ queryKey: platformHierarchyQueryKeys.hierarchy.all }); },
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: platformHierarchyQueryKeys.hierarchy.all });
+    },
   });
 }
 
@@ -120,7 +124,9 @@ export function useCreateOrgBranch() {
     mutationKey: ["create", "org", "branch"],
     mutationFn: (data: Record<string, unknown>) =>
       apiClient.post<OrgBranch>("/org-hierarchy/branches", data, undefined, orgBranchContract),
-    onSuccess: () => { void qc.invalidateQueries({ queryKey: platformHierarchyQueryKeys.hierarchy.all }); },
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: platformHierarchyQueryKeys.hierarchy.all });
+    },
   });
 }
 
@@ -130,7 +136,9 @@ export function useUpdateOrgBranch() {
     mutationKey: ["update", "org", "branch"],
     mutationFn: ({ branchId, ...data }: { branchId: string } & Record<string, unknown>) =>
       apiClient.patch<OrgBranch>(`/org-hierarchy/branches/${branchId}`, data, undefined, orgBranchContract),
-    onSuccess: () => { void qc.invalidateQueries({ queryKey: platformHierarchyQueryKeys.hierarchy.all }); },
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: platformHierarchyQueryKeys.hierarchy.all });
+    },
   });
 }
 
@@ -156,16 +164,15 @@ export function useOrgDepartments(
   });
 }
 
-// The hierarchy hooks fire-and-forget their refetch: returning the invalidation
-// from onSuccess made mutateAsync wait for every hierarchy list, tree and option
-// read to come back, so a department save sat on "Saving…" for seconds.
 export function useCreateOrgDepartment() {
   const qc = useQueryClient();
   return useAuthorizedMutation("settings:organization:manage", {
     mutationKey: ["create", "org", "department"],
     mutationFn: (data: { name: string; code: string; branchId?: string; headUserId?: string; description?: string }) =>
       apiClient.post<OrgDepartment>("/org-hierarchy/departments", data, undefined, departmentContract),
-    onSuccess: () => { void qc.invalidateQueries({ queryKey: platformHierarchyQueryKeys.hierarchy.all }); },
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: platformHierarchyQueryKeys.hierarchy.all });
+    },
   });
 }
 
@@ -175,7 +182,9 @@ export function useUpdateOrgDepartment() {
     mutationKey: ["update", "org", "department"],
     mutationFn: ({ departmentId, ...data }: { departmentId: string } & Record<string, unknown>) =>
       apiClient.patch<OrgDepartment>(`/org-hierarchy/departments/${departmentId}`, data, undefined, departmentContract),
-    onSuccess: () => { void qc.invalidateQueries({ queryKey: platformHierarchyQueryKeys.hierarchy.all }); },
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: platformHierarchyQueryKeys.hierarchy.all });
+    },
   });
 }
 
