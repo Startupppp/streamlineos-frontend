@@ -62,15 +62,6 @@ Status legend from QA (the Retest 2 column of `retest_2026-10-14.md` is authorit
 
 **Tests:** unit tests for permission resolution (role → permissions → scopes). API integration tests: a table-driven role × route matrix (200/403/404), `GET /me/permissions` per role, downgrade-mid-session, cross-org IDOR, and a 403 body snapshot with no raw keys.
 
-#### BE-02: Sensitive profile data stays server-protected (HRMS-001, FIXED in Retest 2: regression only)
-**Evidence:** earlier, a Member/Manager could open the Sensitive tab (salary, bank, IFSC, PF/UAN, ESI, PAN, tax ID, passport, national ID) on others' profiles while Pay was denied (`payroll:salaries:view`). Retest 2 shows the tab gone, including via direct URL. QA never confirmed whether the **API** returns values, because every value was "Not set".
-**Hypotheses:** H1: the fix may be UI-only. H2: sensitive fields may leak through other endpoints (employee detail, directory list, export, search, audit payloads).
-**Required behaviour:** every endpoint that returns sensitive fields returns `403` (dedicated endpoint) or omits/redacts the fields (composite endpoints) unless the caller holds the sensitive-data permission or is the subject reading their own record (per existing spec). Reads by permitted users are audited, but the audit entry must not contain the values.
-**Edge cases:** own profile, a terminated subject, a manager of the subject, export/import endpoints, search by PAN, cross-org.
-**Acceptance / tests:** API integration tests with **populated dummy values** for Member, Manager, HR Admin, Owner, self, and cross-org. Assert that no sensitive value appears in any response body (grep the serialized JSON).
-
----
-
 ### P1: Broken core workflows
 
 #### BE-03: `/hr/leaves?tab=approvals` fails with "Failed to load leaves data" (NEW, Retest 2)
@@ -86,13 +77,6 @@ Status legend from QA (the Retest 2 column of `retest_2026-10-14.md` is authorit
 **Required behaviour:** the approval queue excludes items where the caller is the requester. Approve/reject on own request returns `403 {code:"SELF_APPROVAL_NOT_ALLOWED", message:"You cannot approve your own leave request."}`. Routing for a requester who is the only approver (e.g. the owner) must be defined. **DECIDE**: options are (a) route to another HR admin, (b) auto-approve owner leave with an audit entry, or (c) leave pending with an explicit "no eligible approver" state. Recommend (a) with fallback to (c), and expose `approver` (name/role) on the leave so the UI can show the real approver (UX-14).
 **Edge cases:** the owner is the only admin, the requester becomes an approver mid-flow, delegation, the same applies to expenses and attendance corrections (check those queues too), two approvers acting concurrently.
 **Tests:** queue excludes own items (leave, expense, attendance correction); self-approve returns 403; routing when the requester is the sole approver.
-
-#### BE-05: Leave approval 500 and approver races (HRMS-002, FIXED in Retest 2: regression tests plus race hardening)
-**Evidence:** earlier, `POST /hr/leaves/{id}/approve` on QA Employee's leave (no reporting manager, routed to the HR queue with 2 approvers) returned 500 with toast "Something went wrong on our end. Please try again shortly." Retest 2 approved fine.
-**Hypotheses (for the regression):** null reporting manager, multiple-approver handling, balance deduction failing on missing balance records.
-**Required behaviour:** approve/reject by an eligible approver returns 2xx and moves state Pending→Approved or Rejected (reject requires a reason if the codebase does). A non-pending leave returns `409 {code:"INVALID_STATE", message:"This leave request is already approved/rejected/cancelled."}`. An ineligible caller gets 403. Two approvers acting at once: exactly one wins, the other gets 409, and the balance is deducted exactly once (transaction plus row lock or conditional update `WHERE status='PENDING'`).
-**Edge cases:** the requester was terminated after submitting, the leave type was deleted, the balance changed between submit and approve (re-check at approval; see BE-06), cancel racing with approve, a cross-org ID returns 404.
-**Tests:** integration tests for approve/reject paths, a no-manager requester, a parallel double-approve (Promise.all or threads) asserting one 2xx and one 409 with a single balance deduction, and approve-after-cancel.
 
 #### BE-06: Leave can be submitted with zero balance (NEW)
 **Evidence:** QA observed leave submission accepted with zero available balance.
@@ -190,14 +174,6 @@ Status legend from QA (the Retest 2 column of `retest_2026-10-14.md` is authorit
 **Edge cases:** `limit=0`, negative, huge, or non-numeric; invalid cursor (400); a page past the end (empty); an org with zero records; ordering ties.
 **Tests:** integration tests for pagination contracts and a query-count assertion (no N+1) where the stack supports it. Optionally a perf smoke test on seeded data (report numbers; don't make CI flaky).
 
-#### BE-19: Asset/record optimistic concurrency (HRMS-003, FIXED in Retest 2: regression and audit of other edits)
-**Evidence:** earlier, two tabs edited the "QA Laptop" asset and the stale save silently overwrote the other. Retest 2: the stale save was rejected with "record changed since you opened it".
-**Required behaviour:** stale update returns `409 {code:"VERSION_CONFLICT", message:"This record changed since you opened it."}` via a version/updatedAt/ETag check (If-Match or body `version`). Audit and apply the same pattern to other full-form edits: employee profile, departments, holidays, settings, leave policies. If adding it broadly is large, **list the endpoints and propose** before doing it.
-**Edge cases:** a missing version (reject with 428/400 or accept per convention; **DECIDE**), parallel saves with the same version (exactly one wins), cross-org.
-**Tests:** a two-client stale-save integration test per covered resource.
-
----
-
 ## 3. NOT REPRODUCED / unproven: regression tests only (no code change unless the code shows a defect)
 - **HRMS-005** invite expiry: covered by BE-09 tests.
 - **HRMS-022** CORS: covered by BE-17 tests.
@@ -205,7 +181,7 @@ Status legend from QA (the Retest 2 column of `retest_2026-10-14.md` is authorit
 - **HRMS-019** settings sub-pages wrong content and **HRMS-018** React #441 error boundary are client-side. If a backend endpoint behind those pages returns inconsistent data, add a contract test. Otherwise leave them out of scope.
 
 ## 4. Out of scope (frontend), do not change
-HRMS-010 (no nav at 768px), HRMS-015 (phone field focus jump), HRMS-018 (React #441 error boundary), HRMS-019 (settings sub-page routing), HRMS-021 UI part (drawer stays open after double-click), HRMS-027 (keyboard to /settings/billing), HRMS-016 UI part (skeleton/blank rendering), UX-03 (sign-in email messages), UX-05 (date picker keyboard), UX-06 (skip link/tab order), UX-07 (Dialog descriptions), UX-08 (asset form sequential validation display), UX-09 (375px layout), UX-10 (contrast), UX-14 copy (backend only exposes the approver; see BE-04), UX-15 display copy (backend only stops leaking keys; see BE-01), UX-16 (skeleton progress copy). Already FIXED and not regressed: HRMS-004, 006, 009, UX-01, 02, 04, 11, 12, 13 (no work needed beyond BE-11 for names).
+HRMS-010 (no nav at 768px), HRMS-015 (phone field focus jump), HRMS-018 (React #441 error boundary), HRMS-019 (settings sub-page routing), HRMS-021 UI part (drawer stays open after double-click), HRMS-027 (keyboard to /settings/billing), HRMS-016 UI part (skeleton/blank rendering), UX-03 (sign-in email messages), UX-05 (date picker keyboard), UX-06 (skip link/tab order), UX-07 (Dialog descriptions), UX-08 (asset form sequential validation display), UX-09 (375px layout), UX-10 (contrast), UX-14 copy (backend only exposes the approver; see BE-04), UX-15 display copy (backend only stops leaking keys; see BE-01), UX-16 (skeleton progress copy). Already FIXED and not regressed: HRMS-001, 002, 003, 004, 006, 009, UX-01, 02, 04, 11, 12, 13 (no work needed beyond BE-11 for names).
 
 ---
 

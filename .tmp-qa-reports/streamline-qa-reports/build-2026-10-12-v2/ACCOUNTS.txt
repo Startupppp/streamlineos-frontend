@@ -1,0 +1,5 @@
+Owner (new Guerrilla): qaown1012b@sharklasers.com  (set 2026-10-12 07:57 UTC)
+Member (second Guerrilla, TBD)
+Member (second Guerrilla): qamem1012c@sharklasers.com  (set 07:58 UTC; invited as Build Member preset from owner 08:0x UTC -> "Invitation sent!" HTTP per console; invite email to be accepted later)
+Owner sign-in address: qaown1012b@sharklasers.com; org "QA Build Org 1012b" created via /org-setup (Build enabled, HR/others not selected, People step skipped)
+Tabs: 2 (Guerrilla mail tab + StreamlineOS tab). Browser contexts: single profile (no separate incognito context available to this tool set; member test done sequentially with sign-out/sign-in).
