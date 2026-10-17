@@ -93,26 +93,31 @@ export function useCreateManagedProduct() {
         managedProductRowContract,
       ),
     onSuccess: (created) => {
-      const defaultKey = buildWorkQueryKeys.projects.managedProducts.list();
-      qc.setQueryData<ManagedProductsListCache>(defaultKey, (prev) => {
-        if (!prev) return prev;
-        if ("pages" in prev) {
-          const first = prev.pages[0];
-          if (!first) return prev;
-          return {
-            ...prev,
-            pages: [{ ...first, data: [created, ...first.data] }, ...prev.pages.slice(1)],
-          };
-        }
-        return { ...prev, data: [created, ...prev.data] };
+      const allListCaches = qc.getQueriesData<ManagedProductsListCache>({
+        queryKey: buildWorkQueryKeys.projects.managedProducts.list(),
       });
-      const otherKeys = qc
-        .getQueriesData<ManagedProductsListCache>({
-          queryKey: buildWorkQueryKeys.projects.managedProducts.list(),
-        })
-        .filter(([k]) => JSON.stringify(k) !== JSON.stringify(defaultKey));
-      for (const [key] of otherKeys) {
-        qc.invalidateQueries({ queryKey: key, exact: true, refetchType: "active" });
+      for (const [key, page] of allListCaches) {
+        if (!page) {
+          qc.invalidateQueries({ queryKey: key, exact: true, refetchType: "active" });
+          continue;
+        }
+        const keyStr = JSON.stringify(key);
+        if (keyStr.includes('"archived"') || keyStr.includes('"status":"archived"')) {
+          qc.invalidateQueries({ queryKey: key, exact: true, refetchType: "active" });
+          continue;
+        }
+        qc.setQueryData<ManagedProductsListCache>(key, (prev) => {
+          if (!prev) return prev;
+          if ("pages" in prev) {
+            const first = prev.pages[0];
+            if (!first) return prev;
+            return {
+              ...prev,
+              pages: [{ ...first, data: [created, ...first.data] }, ...prev.pages.slice(1)],
+            };
+          }
+          return { ...prev, data: [created, ...prev.data] };
+        });
       }
       qc.invalidateQueries({
         queryKey: buildWorkQueryKeys.projects.scopeDirectory.all,
