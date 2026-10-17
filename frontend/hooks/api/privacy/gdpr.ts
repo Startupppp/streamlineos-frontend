@@ -78,8 +78,8 @@ export function useDownloadGdprExport() {
   });
 }
 
-/** The string-valued fields of `gdprRectificationBodySchema`; address and emergency contact are objects. */
-export type RectifiableField =
+/** The string-valued fields of `gdprRectificationBodySchema`. */
+export type StringRectifiableField =
   | "profile.name"
   | "hr_profile.personal_email"
   | "hr_profile.phone"
@@ -87,10 +87,30 @@ export type RectifiableField =
   | "hr_profile.gender"
   | "hr_profile.preferred_name";
 
-interface RectificationInput {
-  field: RectifiableField;
-  value: string;
+export type RectifiableField = StringRectifiableField | "hr_profile.address" | "hr_profile.emergency_contact";
+
+/** `addressValueSchema`: the whole address, replacing the one on file. */
+export interface RectificationAddress {
+  line1?: string;
+  line2?: string;
+  city?: string;
+  state?: string;
+  country?: string;
+  postalCode?: string;
 }
+
+/** `emergencyContactValueSchema`: the whole contact, replacing the one on file. */
+export interface RectificationEmergencyContact {
+  name?: string;
+  relationship?: string;
+  phone?: string;
+  email?: string;
+}
+
+export type RectificationInput =
+  | { field: StringRectifiableField; value: string }
+  | { field: "hr_profile.address"; value: RectificationAddress }
+  | { field: "hr_profile.emergency_contact"; value: RectificationEmergencyContact };
 
 export function useRectifyMyProfile() {
   return useMutation<GdprRectificationResult, Error, RectificationInput>({

@@ -2,7 +2,7 @@ import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import type { GdprExportJob } from "@/hooks/api/privacy/gdpr-schema";
 import { MyDataSection } from "./my-data-section";
-import { rectificationSchema } from "./rectification-schema";
+import { EMPTY_ADDRESS, EMPTY_EMERGENCY_CONTACT, rectificationSchema, toRectificationBody } from "./rectification-schema";
 
 const exportNow = jest.fn();
 const createJob = jest.fn();
@@ -65,5 +65,41 @@ describe("rectificationSchema", () => {
     expect(rectificationSchema.safeParse({ field: "hr_profile.date_of_birth", value: "15-05-1990" }).success).toBe(false);
     expect(rectificationSchema.safeParse({ field: "hr_profile.phone", value: "1".repeat(31) }).success).toBe(false);
     expect(rectificationSchema.safeParse({ field: "profile.name", value: "   " }).success).toBe(false);
+  });
+});
+
+describe("rectification of address and emergency contact", () => {
+  it("sends the whole address object, without the empty parts", () => {
+    const parsed = rectificationSchema.parse({
+      field: "hr_profile.address",
+      value: "",
+      address: { ...EMPTY_ADDRESS, line1: " 1 High St ", city: "Leeds", country: "UK" },
+      emergencyContact: EMPTY_EMERGENCY_CONTACT,
+    });
+    expect(toRectificationBody(parsed)).toEqual({
+      field: "hr_profile.address",
+      value: { line1: "1 High St", city: "Leeds", country: "UK" },
+    });
+  });
+
+  it("sends the emergency contact and checks its email", () => {
+    const base = { field: "hr_profile.emergency_contact", value: "", address: EMPTY_ADDRESS } as const;
+    expect(
+      rectificationSchema.safeParse({ ...base, emergencyContact: { ...EMPTY_EMERGENCY_CONTACT, email: "nope" } }).success,
+    ).toBe(false);
+    const parsed = rectificationSchema.parse({
+      ...base,
+      emergencyContact: { ...EMPTY_EMERGENCY_CONTACT, name: "Sam", phone: "+44 1" },
+    });
+    expect(toRectificationBody(parsed)).toEqual({
+      field: "hr_profile.emergency_contact",
+      value: { name: "Sam", phone: "+44 1" },
+    });
+  });
+
+  it("refuses an entirely empty address", () => {
+    expect(
+      rectificationSchema.safeParse({ field: "hr_profile.address", value: "", address: EMPTY_ADDRESS }).success,
+    ).toBe(false);
   });
 });

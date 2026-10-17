@@ -3,15 +3,48 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
 import { EntityFormDialog } from "@/components/shared/entity-form-dialog";
-import { FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { FIELD_SELECT_CONTENT_CLASS } from "@/components/ui/field-control";
 import { useRectifyMyProfile } from "@/hooks/api/privacy/gdpr";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { RECTIFIABLE_FIELDS, rectificationSchema, type RectificationValues } from "./rectification-schema";
+import {
+  EMPTY_ADDRESS,
+  EMPTY_EMERGENCY_CONTACT,
+  RECTIFIABLE_FIELDS,
+  rectificationSchema,
+  toRectificationBody,
+  type RectificationFormInput,
+  type RectificationValues,
+} from "./rectification-schema";
 
-const DEFAULT_VALUES: RectificationValues = { field: "profile.name", value: "" };
+const DEFAULT_VALUES: RectificationFormInput = {
+  field: "profile.name",
+  value: "",
+  address: EMPTY_ADDRESS,
+  emergencyContact: EMPTY_EMERGENCY_CONTACT,
+};
+
+type PartName =
+  | `address.${keyof typeof EMPTY_ADDRESS}`
+  | `emergencyContact.${keyof typeof EMPTY_EMERGENCY_CONTACT}`;
+
+const ADDRESS_PARTS: ReadonlyArray<{ name: PartName; label: string; autoComplete: string }> = [
+  { name: "address.line1", label: "Address line 1", autoComplete: "address-line1" },
+  { name: "address.line2", label: "Address line 2", autoComplete: "address-line2" },
+  { name: "address.city", label: "City", autoComplete: "address-level2" },
+  { name: "address.state", label: "State or region", autoComplete: "address-level1" },
+  { name: "address.postalCode", label: "Postal code", autoComplete: "postal-code" },
+  { name: "address.country", label: "Country", autoComplete: "country-name" },
+];
+
+const CONTACT_PARTS: ReadonlyArray<{ name: PartName; label: string; autoComplete: string }> = [
+  { name: "emergencyContact.name", label: "Contact name", autoComplete: "off" },
+  { name: "emergencyContact.relationship", label: "Relationship", autoComplete: "off" },
+  { name: "emergencyContact.phone", label: "Contact phone", autoComplete: "off" },
+  { name: "emergencyContact.email", label: "Contact email", autoComplete: "off" },
+];
 
 interface RectificationDialogProps {
   open: boolean;
@@ -23,7 +56,7 @@ export function RectificationDialog({ open, onOpenChange }: RectificationDialogP
   const rectify = useRectifyMyProfile();
 
   function handleSubmit(values: RectificationValues) {
-    rectify.mutate(values, {
+    rectify.mutate(toRectificationBody(values), {
       onSuccess: (result) => {
         toast.success(result.changed ? "Corrected your record" : "Your record already held that value");
         onOpenChange(false);
@@ -33,7 +66,7 @@ export function RectificationDialog({ open, onOpenChange }: RectificationDialogP
   }
 
   return (
-    <EntityFormDialog<RectificationValues>
+    <EntityFormDialog<RectificationFormInput, RectificationValues>
       open={open}
       onOpenChange={onOpenChange}
       title="Correct your personal data"
@@ -45,7 +78,10 @@ export function RectificationDialog({ open, onOpenChange }: RectificationDialogP
       submitLabel="Save correction"
       resetOnOpen
     >
-      {(form) => (
+      {(form) => {
+        const selected = form.watch("field");
+        const parts = selected === "hr_profile.address" ? ADDRESS_PARTS : selected === "hr_profile.emergency_contact" ? CONTACT_PARTS : null;
+        return (
         <>
           <FormField
             control={form.control}
@@ -71,24 +107,46 @@ export function RectificationDialog({ open, onOpenChange }: RectificationDialogP
               </FormItem>
             )}
           />
-          <FormField
-            control={form.control}
-            name="value"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Correct value</FormLabel>
-                <FormControl>
-                  <Input autoComplete="off" {...field} />
-                </FormControl>
-                <FormDescription className="text-xs">
-                  For your address or emergency contact, ask HR to update your employee profile.
-                </FormDescription>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+          {parts ? (
+            <>
+              {parts.map((part) => (
+                <FormField
+                  key={part.name}
+                  control={form.control}
+                  name={part.name}
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>{part.label}</FormLabel>
+                      <FormControl>
+                        <Input autoComplete={part.autoComplete} {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              ))}
+              <p className="text-xs text-muted-foreground">
+                What you enter replaces the whole {selected === "hr_profile.address" ? "address" : "emergency contact"} on file; leave a line empty to clear it.
+              </p>
+            </>
+          ) : (
+            <FormField
+              control={form.control}
+              name="value"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Correct value</FormLabel>
+                  <FormControl>
+                    <Input autoComplete="off" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          )}
         </>
-      )}
+        );
+      }}
     </EntityFormDialog>
   );
 }
