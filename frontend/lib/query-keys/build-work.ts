@@ -312,7 +312,7 @@ export const buildWorkQueryKeys = {
       opportunity: (managedProductId: number, opportunityId: number) =>
         [...base, "projects", "managed-products", managedProductId, "opportunities", opportunityId] as const,
       opportunitiesCompare: (managedProductId: number, ids: readonly number[]) =>
-        [...base, "projects", "managed-products", managedProductId, "opportunities", "compare", [...ids].sort()] as const,
+        [...base, "projects", "managed-products", managedProductId, "opportunities", "compare", [...ids].sort((a, b) => a - b)] as const,
       opportunityTrace: (managedProductId: number, opportunityId: number) =>
         [...base, "projects", "managed-products", managedProductId, "opportunities", opportunityId, "trace"] as const,
       evidenceThemes: (managedProductId: number, filters?: QueryKeyParams) =>

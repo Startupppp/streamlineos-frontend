@@ -59,10 +59,23 @@ describe("query key registry facade", () => {
   });
 });
 
+describe("set-valued keys", () => {
+  it("canonicalises compared opportunity ids numerically, whatever order they were picked in", () => {
+    const compare = queryKeys.projects.managedProducts.opportunitiesCompare;
+    expect(compare(1, [10, 9, 100])).toEqual(compare(1, [100, 9, 10]));
+    expect(compare(1, [10, 9, 100]).at(-1)).toEqual([9, 10, 100]);
+  });
+});
+
 describe("query key registry — exhaustive walk", () => {
   function isCallable(v: unknown): v is (...args: unknown[]) => unknown {
     return typeof v === "function";
   }
+
+  // Factories whose parameters a positional placeholder cannot satisfy.
+  const ARGS_BY_PATH: Record<string, unknown[]> = {
+    "queryKeys.projects.managedProducts.opportunitiesCompare": [1, [10, 9]],
+  };
 
   const collectedKeys: Array<readonly unknown[]> = [];
   const failures: string[] = [];
@@ -74,7 +87,7 @@ describe("query key registry — exhaustive walk", () => {
     }
     if (isCallable(node)) {
       try {
-        const args = Array.from({ length: node.length }, (_, i): unknown => {
+        const args = ARGS_BY_PATH[path] ?? Array.from({ length: node.length }, (_, i): unknown => {
           if (i === 0) return "x";
           if (i === 1) return 1;
           return {};
