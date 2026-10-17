@@ -6,6 +6,7 @@ import type { z } from "zod";
 import { useCan } from "@/hooks/api/access";
 import { apiClient } from "@/lib/api-client";
 import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
+import { accountingAndSupportQueryKeys } from "@/lib/query-keys/accounting-and-support";
 import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
 import { lazyContract } from "@/lib/api-envelope";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
@@ -110,6 +111,8 @@ export function useAddTicketRelation(ticketId: number, projectId: number) {
       ),
     onSuccess: async (created, variables) => {
       markRelationAggregatesStale(queryClient, projectId, variables.relatedTicketId);
+      void queryClient.invalidateQueries({ queryKey: accountingAndSupportQueryKeys.ticketActivity.list(ticketId), exact: true });
+      void queryClient.invalidateQueries({ queryKey: accountingAndSupportQueryKeys.ticketActivity.list(variables.relatedTicketId), exact: true });
       const parsed = variables.relatedTicket
         ? await relatedTicketFrom(variables.relatedTicket, variables.projectKey ?? null)
         : null;
@@ -155,6 +158,8 @@ export function useRemoveTicketRelation(ticketId: number, projectId: number) {
     },
     onSuccess: (_data, relatedId) => {
       markRelationAggregatesStale(queryClient, projectId, relatedId);
+      void queryClient.invalidateQueries({ queryKey: accountingAndSupportQueryKeys.ticketActivity.list(ticketId), exact: true });
+      void queryClient.invalidateQueries({ queryKey: accountingAndSupportQueryKeys.ticketActivity.list(relatedId), exact: true });
     },
   });
 }
