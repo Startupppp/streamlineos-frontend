@@ -1,6 +1,7 @@
 import React from "react";
-import { render } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import { PageCommentThread } from "./page-comment-thread";
+import { useDeleteKbPageComment } from "@/hooks/api/kb";
 import type { KbPageComment } from "@/hooks/api/kb/page-comments";
 
 jest.mock("@/hooks/api/kb", () => ({
@@ -50,5 +51,30 @@ describe("PageCommentThread — WCAG 1.3.1 list semantics for replies", () => {
     expect(lists).toHaveLength(1);
     const items = getAllByRole("listitem");
     expect(items).toHaveLength(replies.length);
+  });
+});
+
+describe("PageCommentThread — delete asks for confirmation", () => {
+  it("does not delete on the first click and deletes only after the dialog is confirmed", () => {
+    const mutate = jest.fn();
+    jest.mocked(useDeleteKbPageComment).mockReturnValue({ mutate, isPending: false } as never);
+
+    render(
+      <PageCommentThread
+        comment={comment()}
+        replies={[]}
+        pageId={1}
+        onReply={jest.fn()}
+        currentUserId="user-1"
+        canUpdate
+      />,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: /delete/i }));
+    expect(mutate).not.toHaveBeenCalled();
+    expect(screen.getByText("Delete comment?")).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "Delete" }));
+    expect(mutate).toHaveBeenCalledWith({ commentId: 1, pageId: 1 }, expect.anything());
   });
 });
