@@ -149,7 +149,7 @@ export default function TermsPage() {
       <LegalSection id="free-trial" title="Free tier & trials">
         <p>
           The Free plan is free for the first {PRICING.freeSeatLimit} seats — forever, no
-          credit card. Paid plans include a 14-day free trial of all features. If you
+          credit card. Paid plans include a 6-month free trial of all features. If you
           haven&apos;t entered payment details by trial end, the workspace automatically
           downgrades to the Free plan. Nothing is auto-charged.
         </p>

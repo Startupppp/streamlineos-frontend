@@ -3,6 +3,7 @@ import userEvent from "@testing-library/user-event";
 import { ChatOrgSettingsPage } from "./chat-org-settings-page";
 
 const mutate = jest.fn();
+jest.mock("@/components/renderer/use-tenant-layout", () => ({ useTenantLayout: <T,>(l: T): T => l }));
 jest.mock("@/hooks/api/chat-org-settings", () => ({
   useChatOrgSettings: () => ({
     data: {
@@ -31,8 +32,8 @@ beforeEach(() => mutate.mockReset());
 describe("ChatOrgSettingsPage", () => {
   it("starts from the saved values and sends numbers, not strings", async () => {
     render(<ChatOrgSettingsPage />);
-    const size = screen.getByLabelText("Maximum attachment size (MB)");
-    expect(size).toHaveValue("25");
+    const size = screen.getByLabelText(/Maximum attachment size \(MB\)/);
+    expect(size).toHaveValue(25);
 
     await userEvent.clear(size);
     await userEvent.type(size, "100");
@@ -49,7 +50,7 @@ describe("ChatOrgSettingsPage", () => {
 
   it("refuses a value outside the backend's bounds without sending", async () => {
     render(<ChatOrgSettingsPage />);
-    const huddle = screen.getByLabelText("Maximum huddle participants");
+    const huddle = screen.getByLabelText(/Maximum huddle participants/);
 
     await userEvent.clear(huddle);
     await userEvent.type(huddle, "1");

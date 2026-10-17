@@ -47,6 +47,7 @@ interface SidebarSectionProps {
   isGroupCollapsed?: boolean;
   onToggleGroup?: () => void;
   pendingLeaves: number;
+  inboxCount: number;
   onNavigate?: () => void;
   accent: ModuleAccent;
 }
@@ -68,6 +69,7 @@ export function SidebarSection({
   isGroupCollapsed,
   onToggleGroup,
   pendingLeaves,
+  inboxCount,
   onNavigate,
   accent,
 }: SidebarSectionProps) {
@@ -115,6 +117,7 @@ export function SidebarSection({
                   route={route}
                   pathname={pathname}
                   pendingLeaves={pendingLeaves}
+                  inboxCount={inboxCount}
                   onNavigate={onNavigate}
                   accent={accent}
                 />
@@ -126,6 +129,7 @@ export function SidebarSection({
                   depth={0}
                   pathname={pathname}
                   pendingLeaves={pendingLeaves}
+                  inboxCount={inboxCount}
                   onNavigate={onNavigate}
                   accent={accent}
                 />
@@ -140,19 +144,30 @@ interface ItemProps {
   route: NavRoute;
   pathname: string;
   pendingLeaves: number;
+  inboxCount: number;
   onNavigate?: () => void;
   accent: ModuleAccent;
 }
 
-function computeBadge(route: NavRoute, pendingLeaves: number) {
-  if (route.badge === "leaves" && pendingLeaves > 0) return pendingLeaves;
-  return 0;
+type ComputedBadge = { count: number; variant: "leaves" | "inbox" };
+
+function computeBadge(
+  route: NavRoute,
+  pendingLeaves: number,
+  inboxCount: number,
+): ComputedBadge {
+  if (route.badge === "leaves" && pendingLeaves > 0)
+    return { count: pendingLeaves, variant: "leaves" };
+  if (route.badge === "inbox" && inboxCount > 0)
+    return { count: inboxCount, variant: "inbox" };
+  return { count: 0, variant: "leaves" };
 }
 
-function CollapsedItem({ route, pathname, pendingLeaves, onNavigate, accent }: ItemProps) {
+function CollapsedItem({ route, pathname, pendingLeaves, inboxCount, onNavigate, accent }: ItemProps) {
   const isActive = isNavRouteActive(route, pathname) && !route.locked;
-  const count = computeBadge(route, pendingLeaves);
-  const hasBadge = count > 0 && !route.locked;
+  const badge = computeBadge(route, pendingLeaves, inboxCount);
+  const hasBadge = badge.count > 0 && !route.locked;
+  const displayBadge = badge.count > 99 ? "99+" : badge.count;
   const href = route.locked ? BILLING_UPGRADE_HREF : route.href;
   const prefetchOnIntent = useNavIntentPrefetch();
   const handleIntent = useCallback(
@@ -186,7 +201,15 @@ function CollapsedItem({ route, pathname, pendingLeaves, onNavigate, accent }: I
               route.locked && "opacity-50",
             )}
           />
-          {hasBadge && (
+          {hasBadge && badge.variant === "inbox" && (
+            <span
+              aria-hidden="true"
+              className="absolute -top-0.5 -right-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-0.5 text-micro font-bold tabular-nums leading-none text-primary-foreground ring-1 ring-sidebar z-[2]"
+            >
+              {displayBadge}
+            </span>
+          )}
+          {hasBadge && badge.variant === "leaves" && (
             <span className="absolute -top-0.5 -right-0.5 h-2 w-2 rounded-full bg-status-danger-fill ring-1 ring-sidebar z-[2]" />
           )}
           <NavPendingIndicator className="z-[2]" />
@@ -194,7 +217,7 @@ function CollapsedItem({ route, pathname, pendingLeaves, onNavigate, accent }: I
       </TooltipTrigger>
       <TooltipContent side="right" sideOffset={10} className="z-[9999] text-xs font-medium" style={{ zIndex: 9999 }}>
         {route.label}
-        {hasBadge && <span className="ml-1.5 opacity-70">({count})</span>}
+        {hasBadge && <span className="ml-1.5 opacity-70">({badge.count})</span>}
         {route.locked && <span className="ml-1.5 opacity-70">(Upgrade)</span>}
       </TooltipContent>
     </Tooltip>
@@ -205,7 +228,7 @@ interface ExpandedItemProps extends ItemProps {
   depth: number;
 }
 
-function ExpandedItem({ route, depth, pathname, pendingLeaves, onNavigate, accent }: ExpandedItemProps) {
+function ExpandedItem({ route, depth, pathname, pendingLeaves, inboxCount, onNavigate, accent }: ExpandedItemProps) {
   const hasChildren = !!route.children && route.children.length > 1;
   const singleChild = !!route.children && route.children.length === 1;
   const containsActive = (hasChildren || singleChild) && routeContainsActive(route, pathname);
@@ -222,8 +245,9 @@ function ExpandedItem({ route, depth, pathname, pendingLeaves, onNavigate, accen
     setExpanded((v) => !v);
   }, []);
 
-  const count = computeBadge(route, pendingLeaves);
-  const hasBadge = count > 0 && !route.locked;
+  const badge = computeBadge(route, pendingLeaves, inboxCount);
+  const hasBadge = badge.count > 0 && !route.locked;
+  const displayBadge = badge.count > 99 ? "99+" : badge.count;
   const paddingLeft = depth === 0 ? "0.625rem" : `${0.625 + depth * 0.75}rem`;
   const href = route.locked ? BILLING_UPGRADE_HREF : route.href;
   const prefetchOnIntent = useNavIntentPrefetch();
@@ -271,8 +295,17 @@ function ExpandedItem({ route, depth, pathname, pendingLeaves, onNavigate, accen
         />
         {route.locked && <NavLockBadge label="Upgrade" />}
         {hasBadge && (
-          <span className="inline-flex items-center justify-center h-[18px] min-w-[18px] px-1 rounded-full text-micro font-bold tabular-nums leading-none bg-status-warning-fill text-white">
-            {count > 99 ? "99+" : count}
+          <span
+            role="img"
+            aria-label={`${displayBadge} unread`}
+            className={cn(
+              "inline-flex items-center justify-center h-[18px] min-w-[18px] px-1 rounded-full text-micro font-bold tabular-nums leading-none",
+              badge.variant === "inbox"
+                ? "bg-primary text-primary-foreground"
+                : "bg-status-warning-fill text-white",
+            )}
+          >
+            <span aria-hidden="true">{displayBadge}</span>
           </span>
         )}
         {hasChildren && (
@@ -303,6 +336,7 @@ function ExpandedItem({ route, depth, pathname, pendingLeaves, onNavigate, accen
               depth={depth + 1}
               pathname={pathname}
               pendingLeaves={pendingLeaves}
+              inboxCount={inboxCount}
               onNavigate={onNavigate}
               accent={accent}
             />

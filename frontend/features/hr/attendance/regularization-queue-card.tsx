@@ -36,6 +36,7 @@ import {
 } from "./attendance-date-presets";
 import { RegularizationRow } from "./regularization-row";
 import { RejectReasonSheet } from "./reject-reason-sheet";
+import { SelfApprovalConfirmDialog, useIsSoleSelfApprover } from "@/features/hr/shared/self-approval";
 
 const PAGE_SIZE = 50;
 const QUEUE_STATUSES = ["PENDING", "APPROVED", "REJECTED"] as const;
@@ -76,6 +77,8 @@ export function RegularizationQueueCard() {
     { enabled: Boolean(range.from && range.to) },
   );
   const applyMutation = useApplyRegularization();
+  const mayApproveOwn = useIsSoleSelfApprover("attendance_correction", session?.user?.id);
+  const [confirmingSelfId, setConfirmingSelfId] = useState<number | null>(null);
   const rejectMutation = useRejectRegularization();
   const isPending = applyMutation.isPending || rejectMutation.isPending;
 
@@ -115,18 +118,38 @@ export function RegularizationQueueCard() {
     if (nextCursor) setCursorHistory((history) => [...history, nextCursor]);
   }, [nextCursor]);
 
-  const handleApply = useCallback(
-    (regularizationId: number) => {
-      applyMutation.mutate(regularizationId, {
-        onSuccess: () => {
-          invalidateAttendanceDay();
-          toast.success("Correction approved and applied");
+  const applyCorrection = useCallback(
+    (regularizationId: number, confirmSelfApproval: boolean) => {
+      applyMutation.mutate(
+        { regularizationId, ...(confirmSelfApproval ? { confirmSelfApproval } : {}) },
+        {
+          onSuccess: () => {
+            invalidateAttendanceDay();
+            setConfirmingSelfId(null);
+            toast.success("Correction approved and applied");
+          },
+          onError: (err) => toast.error(getErrorMessage(err)),
         },
-        onError: (err) => toast.error(getErrorMessage(err)),
-      });
+      );
     },
     [applyMutation, invalidateAttendanceDay],
   );
+
+  const handleApply = useCallback(
+    (regularizationId: number, selfApproval: boolean) => {
+      if (selfApproval) setConfirmingSelfId(regularizationId);
+      else applyCorrection(regularizationId, false);
+    },
+    [applyCorrection],
+  );
+
+  const handleSelfApprovalOpenChange = useCallback((open: boolean) => {
+    if (!open) setConfirmingSelfId(null);
+  }, []);
+
+  const handleSelfApprovalConfirm = useCallback(() => {
+    if (confirmingSelfId !== null) applyCorrection(confirmingSelfId, true);
+  }, [applyCorrection, confirmingSelfId]);
 
   const handleRejectOpen = useCallback((regularizationId: number) => {
     setRejectingId(regularizationId);
@@ -246,6 +269,7 @@ export function RegularizationQueueCard() {
                     canDecide={canDecide}
                     isPending={isPending}
                     currentUserId={session?.user?.id}
+                    mayApproveOwn={mayApproveOwn}
                     orgTz={orgTz}
                     onApply={handleApply}
                     onReject={handleRejectOpen}
@@ -265,6 +289,14 @@ export function RegularizationQueueCard() {
           )}
         </CardContent>
       </Card>
+
+      <SelfApprovalConfirmDialog
+        open={confirmingSelfId !== null}
+        onOpenChange={handleSelfApprovalOpenChange}
+        subject="attendance correction"
+        isPending={applyMutation.isPending}
+        onConfirm={handleSelfApprovalConfirm}
+      />
 
       <RejectReasonSheet
         open={rejectingId !== null}

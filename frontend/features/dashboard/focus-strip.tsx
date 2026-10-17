@@ -6,12 +6,14 @@ import {
   Bell,
   Mail,
   ClipboardList,
+  ListChecks,
   CalendarClock,
   ChevronRight,
   AlertTriangle,
   RefreshCw,
 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useOnlineStatus } from "@/hooks/common/use-online-status";
 import {
   useFocusStrip,
   type AttentionItem,
@@ -38,6 +40,7 @@ const ITEM_ICONS: Record<string, IconComponent> = {
   meetings: CalendarClock,
   notifications: Bell,
   mail: Mail,
+  tasks: ListChecks,
 };
 
 interface FocusStripItemProps {
@@ -65,7 +68,12 @@ interface FocusStripProps {
 }
 
 export function FocusStrip({ access }: FocusStripProps) {
-  const { items, isLoading } = useFocusStrip(access);
+  const { items, isLoading, isError, refetch } = useFocusStrip(access);
+  const isOnline = useOnlineStatus();
+
+  function handleRetry() {
+    refetch();
+  }
 
   if (isLoading) {
     return (
@@ -77,6 +85,28 @@ export function FocusStrip({ access }: FocusStripProps) {
         <Skeleton className="h-7 w-36 rounded-full" />
         <Skeleton className="h-7 w-28 rounded-full" />
         <Skeleton className="h-7 w-32 rounded-full" />
+      </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <div
+        role="alert"
+        className="flex items-center gap-2 text-xs text-destructive"
+      >
+        <span>
+          {isOnline
+            ? "Could not load your focus items."
+            : "You're offline — your focus items may be out of date."}
+        </span>
+        <button
+          type="button"
+          onClick={handleRetry}
+          className="underline hover:no-underline"
+        >
+          Retry
+        </button>
       </div>
     );
   }

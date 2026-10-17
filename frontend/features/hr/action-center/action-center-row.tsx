@@ -16,6 +16,11 @@ import {
   hrmsVariants,
 } from "@/lib/hrms/motion";
 import { RejectReasonDialog } from "@/features/hr/action-center/reject-reason-dialog";
+import {
+  NeedsAnotherApprover,
+  SelfApprovalBadge,
+  SelfApprovalConfirmDialog,
+} from "@/features/hr/shared/self-approval";
 import type { ActionCenterItem } from "@/features/hr/action-center/queue-item";
 import type { QueueDecision } from "@/features/hr/action-center/use-action-center-decisions";
 
@@ -26,6 +31,7 @@ interface ActionCenterRowProps {
   selectable: boolean;
   decidable: boolean;
   ownRequest?: boolean;
+  selfApproval?: boolean;
   isDeciding: boolean;
   onToggleSelected: (itemId: string) => void;
   onOpenRequester: (item: ActionCenterItem) => void;
@@ -33,6 +39,7 @@ interface ActionCenterRowProps {
     item: ActionCenterItem,
     decision: QueueDecision,
     reason: string,
+    options?: { confirmSelfApproval?: boolean },
   ) => void;
 }
 
@@ -43,6 +50,7 @@ export function ActionCenterRow({
   selectable,
   decidable,
   ownRequest = false,
+  selfApproval = false,
   isDeciding,
   onToggleSelected,
   onOpenRequester,
@@ -50,6 +58,7 @@ export function ActionCenterRow({
 }: ActionCenterRowProps) {
   const reduced = useReducedMotion();
   const [rejecting, setRejecting] = useState(false);
+  const [confirmingSelf, setConfirmingSelf] = useState(false);
   const cutoffTone = statusToneClasses("warning");
 
   function handleToggleSelected(): void {
@@ -61,7 +70,13 @@ export function ActionCenterRow({
   }
 
   function handleApprove(): void {
-    onDecide(item, "approve", "");
+    if (selfApproval) setConfirmingSelf(true);
+    else onDecide(item, "approve", "");
+  }
+
+  function handleConfirmSelfApproval(): void {
+    setConfirmingSelf(false);
+    onDecide(item, "approve", "", { confirmSelfApproval: true });
   }
 
   function handleRequestReject(): void {
@@ -115,6 +130,7 @@ export function ActionCenterRow({
             <span className="text-dense tabular-nums text-muted-foreground">
               {item.dateRange}
             </span>
+            {selfApproval ? <SelfApprovalBadge /> : null}
             {item.deadlineAffected ? (
               <Badge
                 variant="outline"
@@ -158,11 +174,17 @@ export function ActionCenterRow({
             </Button>
           </div>
         ) : ownRequest ? (
-          <span className="shrink-0 text-xs italic text-muted-foreground">
-            Needs another approver
-          </span>
+          <NeedsAnotherApprover className="shrink-0" />
         ) : null}
       </div>
+
+      <SelfApprovalConfirmDialog
+        open={confirmingSelf}
+        onOpenChange={setConfirmingSelf}
+        subject={item.type}
+        isPending={isDeciding}
+        onConfirm={handleConfirmSelfApproval}
+      />
 
       <RejectReasonDialog
         open={rejecting}

@@ -2,7 +2,8 @@
 
 import { useCallback, useMemo } from "react";
 import { Card, CardContent } from "@/components/ui/card";
-import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
+import { RecordList } from "@/components/renderer";
+import { useTenantLayout } from "@/components/renderer/use-tenant-layout";
 import { EmptyState } from "@/components/ui/empty-state";
 import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
 import { useAccountingBook } from "@/hooks/api/accounting/ledger";
@@ -10,22 +11,16 @@ import { useStockGlReconciliation, useUnpostedMovements } from "@/hooks/api/acco
 import type {
   StockGlReconciliation,
   UnpostedMovementsReport,
-  UnpostedReason,
 } from "@/hooks/api/accounting/reconciliation-schema";
 import { formatDateOnly } from "@/lib/date-utils";
 import { formatMinorMoney } from "@/lib/accounting/money";
+import { UNPOSTED_MOVEMENT_LAYOUT } from "@/lib/renderer/accounting/unposted-movement-layout";
 import { RangeControls } from "./report-date-controls";
 import { ReportNotes } from "./report-notes";
 import { ReportShell } from "./report-shell";
 import { useReportControls } from "./use-report-controls";
 
 type UnpostedMovement = UnpostedMovementsReport["sample"][number];
-
-const REASON_LABEL: Readonly<Record<UnpostedReason, string>> = {
-  no_posting_path: "No posting rule for this kind of movement",
-  post_missing: "Should have posted and did not",
-  not_applicable: "Never posts (by design)",
-};
 
 const VERDICT: Readonly<
   Record<StockGlReconciliation["verdict"], { label: string; tone: "emerald" | "amber" | "red" }>
@@ -35,35 +30,12 @@ const VERDICT: Readonly<
   unexplained: { label: "Gap nobody can explain yet", tone: "red" },
 };
 
-const COLUMNS_BASE: DataTableColumn<UnpostedMovement>[] = [
-  {
-    key: "date",
-    header: "Date",
-    className: "whitespace-nowrap tabular-nums",
-    cell: (row) => (row.postingDate ? formatDateOnly(row.postingDate) : "No date"),
-  },
-  {
-    key: "type",
-    header: "Movement",
-    cell: (row) => <span className="truncate font-medium">{row.transactionType}</span>,
-  },
-  {
-    key: "reference",
-    header: "Source",
-    cell: (row) => (
-      <span className="truncate text-muted-foreground">
-        {row.referenceType ?? "No source document"}
-      </span>
-    ),
-  },
-  {
-    key: "reason",
-    header: "Why it is not in the ledger",
-    cell: (row) => <span className="truncate">{REASON_LABEL[row.reason]}</span>,
-  },
-];
+function movementKey(row: UnpostedMovement): string {
+  return String(row.transactionId);
+}
 
 export function StockReconciliationReport() {
+  const layout = useTenantLayout(UNPOSTED_MOVEMENT_LAYOUT);
   const controls = useReportControls();
   const range = { from: controls.from, to: controls.to };
   const accountant = controls.labelMode === "accountant";
@@ -78,17 +50,18 @@ export function StockReconciliationReport() {
     void unposted.refetch();
   }, [stockGl, unposted]);
 
-  const columns = useMemo<DataTableColumn<UnpostedMovement>[]>(
-    () => [
-      ...COLUMNS_BASE,
-      {
-        key: "value",
-        header: "Value",
-        className: "text-right font-mono tabular-nums whitespace-nowrap",
-        headerClassName: "text-right",
-        cell: (row) => (currency ? formatMinorMoney(row.valueMinor, currency) : row.valueMinor),
-      },
-    ],
+  const cells = useMemo(
+    () => ({
+      postingDate: (row: UnpostedMovement) =>
+        row.postingDate ? formatDateOnly(row.postingDate) : "No date",
+      referenceType: (row: UnpostedMovement) => (
+        <span className="truncate text-muted-foreground">
+          {row.referenceType ?? "No source document"}
+        </span>
+      ),
+      valueMinor: (row: UnpostedMovement) =>
+        currency ? formatMinorMoney(row.valueMinor, currency) : row.valueMinor,
+    }),
     [currency],
   );
 
@@ -156,10 +129,11 @@ export function StockReconciliationReport() {
 
           <Card className="flex min-h-0 min-w-0 flex-1 flex-col gap-0 overflow-hidden py-0">
             <CardContent className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden p-0">
-              <DataTable
-                data={gap.sample}
-                columns={columns}
-                getRowKey={(row) => String(row.transactionId)}
+              <RecordList
+                layout={layout}
+                rows={gap.sample}
+                getRowKey={movementKey}
+                cells={cells}
                 className="min-h-0 flex-1"
                 minWidth="900px"
                 pagination={{ pageSize: 50 }}

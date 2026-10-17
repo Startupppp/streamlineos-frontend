@@ -30,18 +30,37 @@ export function useFocusStrip(access: DashboardAccess): {
   isError: boolean;
   refetch: () => void;
 } {
-  const { data: inboxData, isLoading: inboxLoading, isError: inboxError, refetch: refetchInbox } = useUnifiedInboxCount();
+  const {
+    data: inboxData,
+    isLoading: inboxLoading,
+    isError: inboxError,
+    refetch: refetchInbox,
+  } = useUnifiedInboxCount();
 
-  const { data: approvalsData, isLoading: approvalsLoading, isError: approvalsError, refetch: refetchApprovals } =
-    usePendingApprovals({
-      enabled: access.hrEnabled && access.canApproveLeaves,
-    });
+  const {
+    data: approvalsData,
+    isLoading: approvalsLoading,
+    isError: approvalsError,
+    refetch: refetchApprovals,
+  } = usePendingApprovals({
+    enabled: access.hrEnabled && access.canApproveLeaves,
+  });
 
-  const { data: personalData, isLoading: personalLoading, isError: personalError, refetch: refetchPersonal } =
-    usePersonalDashboard();
+  const {
+    data: personalData,
+    isLoading: personalLoading,
+    isError: personalError,
+    refetch: refetchPersonal,
+  } = usePersonalDashboard();
 
   const isLoading = inboxLoading || approvalsLoading || personalLoading;
   const isError = inboxError || approvalsError || personalError;
+
+  function refetch() {
+    void refetchInbox();
+    void refetchApprovals();
+    void refetchPersonal();
+  }
 
   const items = useMemo((): AttentionItem[] => {
     const result: AttentionItem[] = [];
@@ -89,6 +108,20 @@ export function useFocusStrip(access: DashboardAccess): {
       });
     }
 
+    const taskCount = inboxData?.task ?? 0;
+    if (taskCount > 0) {
+      result.push({
+        id: "tasks",
+        label:
+          taskCount === 1
+            ? "1 task assigned to you"
+            : `${taskCount} tasks assigned to you`,
+        count: taskCount,
+        href: "/inbox?kinds=module_task",
+        priority: "warning",
+      });
+    }
+
     const notifCount = inboxData?.notification ?? 0;
     if (notifCount > 0) {
       result.push({
@@ -120,12 +153,6 @@ export function useFocusStrip(access: DashboardAccess): {
       (a, b) => PRIORITY_ORDER[a.priority] - PRIORITY_ORDER[b.priority],
     );
   }, [inboxData, approvalsData, personalData, access]);
-
-  function refetch() {
-    void refetchInbox();
-    void refetchApprovals();
-    void refetchPersonal();
-  }
 
   return { items, isLoading, isError, refetch };
 }

@@ -45,11 +45,16 @@ export function useApproveLeaveDedicated() {
   const identity = useLeaveQueryIdentity();
   const invalidateLeaveDashboard = useInvalidateLeaveDashboard();
   // @Idempotent("hr.leave.approve"): one key per decision, reused on retry.
-  return useAuthorizedIdempotentMutation<{ success: boolean }, Error, { leaveId: number; comment?: string }>("hr:leaves:approve", {
+  return useAuthorizedIdempotentMutation<
+    { success: boolean },
+    Error,
+    { leaveId: number; comment?: string; confirmSelfApproval?: boolean }
+  >("hr:leaves:approve", {
     mutationKey: ["hr", "leaves", "approve"],
-    mutationFn: ({ leaveId, comment }, idempotencyKey) =>
+    mutationFn: ({ leaveId, comment, confirmSelfApproval }, idempotencyKey) =>
       apiClient.put<{ success: boolean }>(`/hr/leaves/${leaveId}/approve`, {
         comment,
+        ...(confirmSelfApproval ? { confirmSelfApproval } : {}),
       }, { headers: { [IDEMPOTENCY_HEADER]: idempotencyKey } }, leaveApproveC),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: leaveContextKey(identity) });

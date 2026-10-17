@@ -56,7 +56,7 @@ export function WidgetCard({
               aria-hidden="true"
             />
           )}
-          <CardTitle className="text-sm font-semibold truncate">{title}</CardTitle>
+          <CardTitle as="h3" className="text-sm font-semibold truncate">{title}</CardTitle>
           {badge && (
             <Badge variant="secondary" className="text-micro h-5 px-1.5 shrink-0">
               {badge}
@@ -77,6 +77,7 @@ export function WidgetCard({
         )}
       </CardHeader>
       <CardContent className={cn("flex-1 min-h-0", contentClassName)}>
+        <div aria-live="polite" aria-atomic="false">
         {isLoading ? (
           <div className="space-y-2">
             {Array.from({ length: loadingRows }).map((_, i) => (
@@ -104,6 +105,7 @@ export function WidgetCard({
         ) : (
           children
         )}
+        </div>
       </CardContent>
     </Card>
   );

@@ -149,4 +149,20 @@ describe("Flow 12 — a visible employee must be findable, and an empty search i
 
     expect(screen.getByText("Tarun Chintakunta")).toBeInTheDocument();
   });
+
+  it("marks the search box busy while the typed query is still pending (round-2 UX #3)", async () => {
+    serverRows.mockReturnValue(ROSTER);
+    render(<EmployeesListPage />);
+    const box = screen.getByRole("searchbox");
+    expect(box).not.toHaveAttribute("aria-busy");
+
+    const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime });
+    await user.type(box, "Ad");
+    expect(box).toHaveAttribute("aria-busy", "true");
+
+    act(() => {
+      jest.advanceTimersByTime(400);
+    });
+    expect(box).not.toHaveAttribute("aria-busy");
+  });
 });

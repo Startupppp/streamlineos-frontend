@@ -79,14 +79,18 @@ export interface RegularizationApplyResult {
 
 export function useApplyRegularization() {
   const queryClient = useQueryClient();
-  return useAuthorizedMutation<RegularizationApplyResult, Error, number>(
+  return useAuthorizedMutation<
+    RegularizationApplyResult,
+    Error,
+    { regularizationId: number; confirmSelfApproval?: boolean }
+  >(
     "hr:attendance:manage",
     {
       mutationKey: ["hr", "regularization", "apply"],
-      mutationFn: (regularizationId) =>
+      mutationFn: ({ regularizationId, confirmSelfApproval }) =>
         apiClient.post<RegularizationApplyResult>(
           `/hr/attendance/regularizations/${regularizationId}/apply`,
-          undefined,
+          confirmSelfApproval ? { confirmSelfApproval } : {},
           undefined,
           regularizationApplyC,
         ),

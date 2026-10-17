@@ -1,20 +1,26 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { useSession } from "next-auth/react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
-import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { DataTableSkeleton } from "@/components/ui/data-table-skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
 import { AppSheet } from "@/components/shared/app-sheet";
 import { PageState } from "@/components/shared/page-state";
+import { RecordList } from "@/components/renderer";
+import { useTenantLayout } from "@/components/renderer/use-tenant-layout";
 import { usePageState } from "@/hooks/api/use-page-state";
 import { useEmailTemplatePreviews } from "@/hooks/api/notifications-templates";
 import type { EmailTemplatePreview } from "@/hooks/api/notifications-schema";
+import { EMAIL_TEMPLATE_PREVIEW_LAYOUT } from "@/lib/renderer/notifications/email-template-preview-layout";
 import { EmailTemplateTestDialog } from "./email-template-test-dialog";
 
 const HEADERS = ["Email", "Category", "Subject", "Version", ""];
+
+const CELLS = {
+  version: (row: EmailTemplatePreview) => <span className="font-mono tabular-nums">v{row.version}</span>,
+};
 
 function rowKey(row: EmailTemplatePreview): string {
   return row.id;
@@ -47,6 +53,7 @@ function RowActions({ row, onPreview, onTest }: RowActionsProps) {
 
 /** The platform's built-in transactional emails: preview each and send yourself a test. */
 export function EmailTemplatesPage() {
+  const layout = useTenantLayout(EMAIL_TEMPLATE_PREVIEW_LAYOUT);
   const { data: session } = useSession();
   const query = useEmailTemplatePreviews();
   const rows = useMemo(() => query.data ?? [], [query.data]);
@@ -61,14 +68,8 @@ export function EmailTemplatesPage() {
     isEmpty: query.isSuccess && rows.length === 0,
   });
 
-  const columns = useMemo<DataTableColumn<EmailTemplatePreview>[]>(
-    () => [
-      { key: "name", header: "Email", cell: (row) => <span className="font-medium">{row.name}</span> },
-      { key: "category", header: "Category", cell: (row) => row.category },
-      { key: "subject", header: "Subject", cell: (row) => <span className="truncate">{row.subject}</span> },
-      { key: "version", header: "Version", cell: (row) => <span className="font-mono tabular-nums">v{row.version}</span> },
-      { key: "actions", header: "", cell: (row) => <RowActions row={row} onPreview={setPreviewing} onTest={setTesting} /> },
-    ],
+  const renderActions = useCallback(
+    (row: EmailTemplatePreview) => <RowActions row={row} onPreview={setPreviewing} onTest={setTesting} />,
     [],
   );
 
@@ -89,7 +90,7 @@ export function EmailTemplatesPage() {
   return (
     <PageWrapper title="Email templates" subtitle="Preview the emails this workspace sends and send yourself a test." contentClassName="flex min-h-0 flex-1 flex-col">
       <PageState resolution={pageState} loading={<DataTableSkeleton headers={HEADERS} rows={8} />} empty={emptyState} onRetry={handleRetry} className="flex-1">
-        <DataTable data={rows} columns={columns} getRowKey={rowKey} emptyState={emptyState} minWidth="720px" className="flex-1 min-h-0" pagination={{ pageSize: 20 }} />
+        <RecordList layout={layout} rows={rows} getRowKey={rowKey} cells={CELLS} actions={renderActions} emptyState={emptyState} minWidth="720px" className="flex-1 min-h-0" pagination={{ pageSize: 20 }} />
       </PageState>
 
       <AppSheet

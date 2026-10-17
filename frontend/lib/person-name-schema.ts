@@ -24,12 +24,15 @@ export const personNameSchema = z
 const HR_NAME_HAS_DIGIT = /\p{N}/u;
 const HR_NAME_SHAPE = /^[\p{L}\p{M}][\p{L}\p{M} .'’-]*$/u;
 
+/** The HR name cap; every input bound to `hrPersonNameField` carries it as `maxLength`. */
+export const HR_PERSON_NAME_MAX = 100;
+
 export function hrPersonNameField(label: string) {
   return z
     .string()
     .trim()
     .min(1, `${label} is required`)
-    .max(100, `${label} must be at most 100 characters`)
+    .max(HR_PERSON_NAME_MAX, `${label} must be at most ${HR_PERSON_NAME_MAX} characters`)
     .refine(
       (v) => v.length === 0 || !HR_NAME_HAS_DIGIT.test(v),
       "Numbers are not allowed in names",

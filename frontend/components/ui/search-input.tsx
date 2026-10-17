@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { Search, X } from "lucide-react";
+import { Loader2, Search, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Input } from "@/components/ui/input";
 
@@ -29,6 +29,8 @@ export interface SearchInputProps
   fill?: boolean;
   /** Render a square icon-only control until the caller expands it. */
   compact?: boolean;
+  /** A search for the typed value is still pending: the icon becomes a spinner. */
+  searching?: boolean;
 }
 
 export const SearchInput = React.forwardRef<HTMLInputElement, SearchInputProps>(
@@ -44,6 +46,7 @@ export const SearchInput = React.forwardRef<HTMLInputElement, SearchInputProps>(
       disabled,
       fill = false,
       compact = false,
+      searching = false,
       id,
       ...props
     },
@@ -78,13 +81,14 @@ export const SearchInput = React.forwardRef<HTMLInputElement, SearchInputProps>(
             "!size-9 !min-w-9 !max-w-9 !flex-none !basis-9 overflow-hidden",
         )}
       >
-        <Search
-          className={cn(
+        {React.createElement(searching ? Loader2 : Search, {
+          className: cn(
             "pointer-events-none absolute top-1/2 z-10 h-4 w-4 -translate-y-1/2 text-muted-foreground",
             compact ? "left-1/2 -translate-x-1/2" : "left-3",
-          )}
-          aria-hidden="true"
-        />
+            searching && "animate-spin motion-reduce:animate-none",
+          ),
+          "aria-hidden": true,
+        })}
         <Input
           ref={ref}
           id={id}
@@ -94,6 +98,7 @@ export const SearchInput = React.forwardRef<HTMLInputElement, SearchInputProps>(
           onChange={handleChange}
           placeholder={placeholder}
           disabled={disabled}
+          aria-busy={searching || undefined}
           className={cn(
             "min-w-0 pl-9 pr-9 [&::-webkit-search-cancel-button]:hidden [&::-webkit-search-decoration]:hidden",
             inputClassName,

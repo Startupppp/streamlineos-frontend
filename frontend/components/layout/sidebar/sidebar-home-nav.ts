@@ -35,6 +35,7 @@ export const HOME_NAV_GROUPS: NavGroup[] = [
         label: "Inbox",
         href: "/inbox",
         icon: BellDot,
+        badge: "inbox" as const,
       },
       {
         label: "Mail",

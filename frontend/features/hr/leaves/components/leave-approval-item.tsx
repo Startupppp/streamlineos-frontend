@@ -9,14 +9,14 @@ import { TruncatedText } from "@/components/ui/truncated-text";
 
 import type { LeaveRequest } from "./leaves-shared";
 import { priorityConfig } from "./leaves-shared";
-import { LeaveDecisionButtons } from "./leave-decision-controls";
+import { LeaveDecisionButtons, type LeaveDecisionControls } from "./leave-decision-controls";
 import { getUserDisplayName, getUserInitials } from "@/lib/person-display";
 
 interface LeaveApprovalItemProps {
   req: LeaveRequest;
   processingId: number | null;
   currentUserId: string | undefined;
-  onProcess: (requestId: number, status: "APPROVED" | "REJECTED") => void;
+  onProcess: LeaveDecisionControls["onProcess"];
 }
 
 export function LeaveApprovalItem({

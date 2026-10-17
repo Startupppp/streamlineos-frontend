@@ -25,6 +25,7 @@ interface GroupedRowData {
   onBroadcastClick: InboxItemCardProps["onBroadcastClick"];
   onMailClick: InboxItemCardProps["onMailClick"];
   onApprovalClick: InboxItemCardProps["onApprovalClick"];
+  onModuleTaskClick: InboxItemCardProps["onModuleTaskClick"];
   onArchive: InboxItemCardProps["onArchive"];
   onDelete: InboxItemCardProps["onDelete"];
   onApprove: InboxItemCardProps["onApprove"];
@@ -53,6 +54,7 @@ function GroupedInboxVirtualRow({
   onBroadcastClick,
   onMailClick,
   onApprovalClick,
+  onModuleTaskClick,
   onArchive,
   onDelete,
   onApprove,
@@ -108,6 +110,7 @@ function GroupedInboxVirtualRow({
           onBroadcastClick={onBroadcastClick}
           onMailClick={onMailClick}
           onApprovalClick={onApprovalClick}
+          onModuleTaskClick={onModuleTaskClick}
           onArchive={onArchive}
           onDelete={onDelete}
           onApprove={onApprove}
@@ -133,6 +136,7 @@ export interface InboxGroupedVirtualListProps {
   onBroadcastClick: InboxItemCardProps["onBroadcastClick"];
   onMailClick: InboxItemCardProps["onMailClick"];
   onApprovalClick: InboxItemCardProps["onApprovalClick"];
+  onModuleTaskClick: InboxItemCardProps["onModuleTaskClick"];
   onArchive: InboxItemCardProps["onArchive"];
   onDelete: InboxItemCardProps["onDelete"];
   onApprove: InboxItemCardProps["onApprove"];
@@ -155,6 +159,7 @@ export const InboxGroupedVirtualList = memo(function InboxGroupedVirtualList({
   onBroadcastClick,
   onMailClick,
   onApprovalClick,
+  onModuleTaskClick,
   onArchive,
   onDelete,
   onApprove,
@@ -194,6 +199,7 @@ export const InboxGroupedVirtualList = memo(function InboxGroupedVirtualList({
       onBroadcastClick,
       onMailClick,
       onApprovalClick,
+      onModuleTaskClick,
       onArchive,
       onDelete,
       onApprove,
@@ -206,7 +212,7 @@ export const InboxGroupedVirtualList = memo(function InboxGroupedVirtualList({
     [
       rows, selectedKeys, onToggleSelect,
       onNotificationClick, onBroadcastClick, onMailClick, onApprovalClick,
-      onArchive, onDelete, onApprove, onReject,
+      onModuleTaskClick, onArchive, onDelete, onApprove, onReject,
       approvingId, rejectingId, archivingId, deletingId,
     ],
   );

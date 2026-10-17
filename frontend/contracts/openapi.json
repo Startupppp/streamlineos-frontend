@@ -65552,6 +65552,9 @@
                               "type": "null"
                             }
                           ]
+                        },
+                        "readOnly": {
+                          "type": "boolean"
                         }
                       },
                       "required": [
@@ -65577,7 +65580,8 @@
                         "updatedAt",
                         "statuses",
                         "members",
-                        "crmClient"
+                        "crmClient",
+                        "readOnly"
                       ]
                     }
                   },
@@ -66098,6 +66102,9 @@
                               "type": "null"
                             }
                           ]
+                        },
+                        "readOnly": {
+                          "type": "boolean"
                         }
                       },
                       "required": [
@@ -66123,7 +66130,8 @@
                         "updatedAt",
                         "statuses",
                         "members",
-                        "crmClient"
+                        "crmClient",
+                        "readOnly"
                       ]
                     }
                   },
@@ -93565,7 +93573,13 @@
                   },
                   "role": {
                     "default": "CONTRIBUTOR",
-                    "type": "string"
+                    "type": "string",
+                    "enum": [
+                      "ADMIN",
+                      "MEMBER",
+                      "VIEWER",
+                      "CONTRIBUTOR"
+                    ]
                   }
                 },
                 "required": [
@@ -857688,7 +857702,23 @@
         "x-exposure": "permissioned",
         "x-permission": "hr:attendance:manage",
         "description": "Exposure: permission — hr:attendance:manage",
-        "x-bodyless": true
+        "requestBody": {
+          "required": false,
+          "content": {
+            "application/json": {
+              "schema": {
+                "default": {},
+                "type": "object",
+                "properties": {
+                  "confirmSelfApproval": {
+                    "type": "boolean"
+                  }
+                },
+                "additionalProperties": false
+              }
+            }
+          }
+        }
       }
     },
     "/hr/attendance/regularizations/{regularizationId}/reject": {
@@ -948238,6 +948268,9 @@
                   },
                   "justification": {
                     "type": "string"
+                  },
+                  "confirmSelfApproval": {
+                    "type": "boolean"
                   }
                 },
                 "additionalProperties": false
@@ -1197340,6 +1197373,9 @@
                                   "status": {
                                     "type": "string"
                                   },
+                                  "priority": {
+                                    "type": "string"
+                                  },
                                   "projectId": {
                                     "anyOf": [
                                       {
@@ -1197453,12 +1197489,128 @@
                                   "kind",
                                   "id",
                                   "status",
+                                  "priority",
                                   "projectId",
                                   "approvalKind",
                                   "ticketId",
                                   "dueAt",
                                   "objectType",
                                   "objectId",
+                                  "sourceModule",
+                                  "actor",
+                                  "subject",
+                                  "timestamp",
+                                  "isRead",
+                                  "deepLink",
+                                  "dedupKey"
+                                ]
+                              },
+                              {
+                                "type": "object",
+                                "properties": {
+                                  "kind": {
+                                    "type": "string",
+                                    "const": "module_task"
+                                  },
+                                  "id": {
+                                    "type": "string"
+                                  },
+                                  "taskKind": {
+                                    "type": "string"
+                                  },
+                                  "status": {
+                                    "type": "string"
+                                  },
+                                  "priority": {
+                                    "type": "string"
+                                  },
+                                  "dueAt": {
+                                    "anyOf": [
+                                      {
+                                        "type": "string"
+                                      },
+                                      {
+                                        "type": "null"
+                                      }
+                                    ]
+                                  },
+                                  "body": {
+                                    "type": "string"
+                                  },
+                                  "sourceModule": {
+                                    "type": "string"
+                                  },
+                                  "actor": {
+                                    "anyOf": [
+                                      {
+                                        "type": "object",
+                                        "properties": {
+                                          "id": {
+                                            "type": "string"
+                                          },
+                                          "name": {
+                                            "anyOf": [
+                                              {
+                                                "type": "string"
+                                              },
+                                              {
+                                                "type": "null"
+                                              }
+                                            ]
+                                          },
+                                          "image": {
+                                            "anyOf": [
+                                              {
+                                                "type": "string"
+                                              },
+                                              {
+                                                "type": "null"
+                                              }
+                                            ]
+                                          }
+                                        },
+                                        "required": [
+                                          "id",
+                                          "name",
+                                          "image"
+                                        ]
+                                      },
+                                      {
+                                        "type": "null"
+                                      }
+                                    ]
+                                  },
+                                  "subject": {
+                                    "type": "string"
+                                  },
+                                  "timestamp": {
+                                    "type": "string"
+                                  },
+                                  "isRead": {
+                                    "type": "boolean"
+                                  },
+                                  "deepLink": {
+                                    "anyOf": [
+                                      {
+                                        "type": "string"
+                                      },
+                                      {
+                                        "type": "null"
+                                      }
+                                    ]
+                                  },
+                                  "dedupKey": {
+                                    "type": "string"
+                                  }
+                                },
+                                "required": [
+                                  "kind",
+                                  "id",
+                                  "taskKind",
+                                  "status",
+                                  "priority",
+                                  "dueAt",
+                                  "body",
                                   "sourceModule",
                                   "actor",
                                   "subject",
@@ -1197495,7 +1197647,8 @@
                                   "notification",
                                   "broadcast",
                                   "mail",
-                                  "build_approval"
+                                  "build_approval",
+                                  "module_task"
                                 ]
                               },
                               "included": {
@@ -1197612,6 +1197765,11 @@
                           "minimum": -9007199254740991,
                           "maximum": 9007199254740991
                         },
+                        "task": {
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        },
                         "total": {
                           "type": "integer",
                           "minimum": -9007199254740991,
@@ -1197628,6 +1197786,7 @@
                         "notification",
                         "mail",
                         "approval",
+                        "task",
                         "total",
                         "mailExact",
                         "approvalExact"
@@ -1288081,6 +1288240,212 @@
             }
           }
         }
+      }
+    },
+    "/public/calendar/booking/{token}/receipt": {
+      "get": {
+        "operationId": "PublicCalendarBookingController_receipt",
+        "parameters": [
+          {
+            "name": "token",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string",
+              "minLength": 20,
+              "maxLength": 512
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "format": "uuid",
+                          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                        },
+                        "bookingId": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "format": "uuid",
+                              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "outcome": {
+                          "type": "string",
+                          "enum": [
+                            "confirmed",
+                            "rejected",
+                            "expired",
+                            "cancelled",
+                            "pending",
+                            "uncertain"
+                          ]
+                        },
+                        "reasonCode": {
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "startAt": {
+                          "type": "string",
+                          "format": "date-time"
+                        },
+                        "endAt": {
+                          "type": "string",
+                          "format": "date-time"
+                        },
+                        "providerSyncStatus": {
+                          "type": "string",
+                          "enum": [
+                            "not_requested",
+                            "pending",
+                            "synced",
+                            "failed",
+                            "uncertain"
+                          ]
+                        },
+                        "externalEffectsStatus": {
+                          "type": "string",
+                          "enum": [
+                            "not_requested",
+                            "pending",
+                            "succeeded",
+                            "failed",
+                            "uncertain"
+                          ]
+                        },
+                        "availability": {
+                          "type": "object",
+                          "properties": {
+                            "evaluatedAt": {
+                              "anyOf": [
+                                {
+                                  "type": "string",
+                                  "format": "date-time"
+                                },
+                                {
+                                  "type": "null"
+                                }
+                              ]
+                            },
+                            "asOf": {
+                              "anyOf": [
+                                {
+                                  "type": "string",
+                                  "format": "date-time"
+                                },
+                                {
+                                  "type": "null"
+                                }
+                              ]
+                            },
+                            "coverage": {
+                              "anyOf": [
+                                {
+                                  "type": "string"
+                                },
+                                {
+                                  "type": "null"
+                                }
+                              ]
+                            }
+                          },
+                          "required": [
+                            "evaluatedAt",
+                            "asOf",
+                            "coverage"
+                          ]
+                        },
+                        "alternatives": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "start": {
+                                "type": "string",
+                                "format": "date-time",
+                                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$"
+                              },
+                              "end": {
+                                "type": "string",
+                                "format": "date-time",
+                                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$"
+                              }
+                            },
+                            "required": [
+                              "start",
+                              "end"
+                            ]
+                          }
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "bookingId",
+                        "outcome",
+                        "reasonCode",
+                        "startAt",
+                        "endAt",
+                        "providerSyncStatus",
+                        "externalEffectsStatus",
+                        "availability",
+                        "alternatives"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "success",
+                    "data"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          },
+          "503": {
+            "$ref": "#/components/responses/ServiceUnavailable"
+          }
+        },
+        "tags": [
+          "PublicCalendarBooking"
+        ],
+        "x-exposure": "public",
+        "description": "Exposure: public — unauthenticated"
       }
     },
     "/public/calendar/booking/{token}/sessions": {

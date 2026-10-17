@@ -25,10 +25,17 @@ describe("findLeaveOverlap", () => {
     expect(findLeaveOverlap([APPROVED], "2026-10-01", "2026-10-04")).toBeNull();
   });
 
-  it("only approved leave blocks", () => {
+  it("pending leave blocks too, as the server refuses it (HRM-B-009)", () => {
     const pending: LeaveSpan = { ...APPROVED, status: "PENDING" };
+    const overlap = findLeaveOverlap([pending], "2026-10-06", "2026-10-06");
+    expect(overlap?.id).toBe(7);
+    expect(leaveOverlapMessage(overlap!)).toContain("pending Casual Leave");
+  });
+
+  it("rejected and cancelled leave never block", () => {
     const rejected: LeaveSpan = { ...APPROVED, status: "REJECTED" };
-    expect(findLeaveOverlap([pending, rejected], "2026-10-06", "2026-10-06")).toBeNull();
+    const cancelled: LeaveSpan = { ...APPROVED, status: "CANCELLED" };
+    expect(findLeaveOverlap([rejected, cancelled], "2026-10-06", "2026-10-06")).toBeNull();
   });
 
   it("names the conflict in the message without inventing a type", () => {
@@ -40,6 +47,7 @@ describe("findLeaveOverlap", () => {
       startDate: "2026-10-06",
       endDate: "2026-10-06",
       typeName: null,
+      status: "APPROVED",
     });
     expect(untyped).toContain("approved leave");
   });

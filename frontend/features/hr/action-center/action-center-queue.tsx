@@ -12,7 +12,7 @@ import {
   ContentFillPanel,
 } from "@/components/ui/content-fill-panel";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { useMyApprover } from "@/hooks/api/hr/approvers";
+import { useIsSoleSelfApprover } from "@/features/hr/shared/self-approval";
 import { formatIstDate } from "@/lib/hrms/payroll-cutoff";
 import { ActionCenterFilters } from "@/features/hr/action-center/action-center-filters";
 import { ActionCenterBulkBar } from "@/features/hr/action-center/action-center-bulk-bar";
@@ -54,9 +54,8 @@ export function ActionCenterQueueView({
   const [selectedIds, setSelectedIds] = useState<readonly string[]>([]);
   const [decidedIds, setDecidedIds] = useState<readonly string[]>([]);
   const decisions = useActionCenterDecisions();
-  const { data: myLeaveRoute } = useMyApprover("leave");
-  const mayDecideOwnLeave =
-    myLeaveRoute?.ownerSelfApproval === true && myLeaveRoute.approver?.userId === currentUserId;
+  const mayDecideOwnLeave = useIsSoleSelfApprover("leave", currentUserId);
+  const mayDecideOwnAttendance = useIsSoleSelfApprover("attendance_correction", currentUserId);
 
   const live = useMemo(
     () => queue.items.filter((item) => !decidedIds.includes(item.id)),
@@ -104,9 +103,14 @@ export function ActionCenterQueueView({
   }, []);
 
   const handleDecide = useCallback(
-    (item: ActionCenterItem, decision: "approve" | "reject", reason: string) => {
+    (
+      item: ActionCenterItem,
+      decision: "approve" | "reject",
+      reason: string,
+      options?: { confirmSelfApproval?: boolean },
+    ) => {
       void decisions
-        .decide(item, decision, reason)
+        .decide(item, decision, reason, options)
         .then(() => {
           setDecidedIds((current) => [...current, item.id]);
           setSelectedIds((current) => current.filter((id) => id !== item.id));
@@ -203,7 +207,11 @@ export function ActionCenterQueueView({
             <AnimatePresence initial={false}>
               {visible.map((item, index) => {
                 const isOwnItem = !!currentUserId && item.requester?.userId === currentUserId;
-                const ownItemBlocked = isOwnItem && !(item.source === "leave" && mayDecideOwnLeave);
+                const selfApproval =
+                  isOwnItem &&
+                  ((item.source === "leave" && mayDecideOwnLeave) ||
+                    (item.source === "attendance" && mayDecideOwnAttendance));
+                const ownItemBlocked = isOwnItem && !selfApproval;
                 const canDecideItem = decisions.canDecide(item.source) && !ownItemBlocked;
                 return (
                   <ActionCenterRow
@@ -211,9 +219,10 @@ export function ActionCenterQueueView({
                     item={item}
                     index={index}
                     selected={selectedIds.includes(item.id)}
-                    selectable={canDecideItem}
+                    selectable={canDecideItem && !selfApproval}
                     decidable={canDecideItem}
                     ownRequest={ownItemBlocked}
+                    selfApproval={selfApproval}
                     isDeciding={decisions.isDeciding(item.id)}
                     onToggleSelected={handleToggleSelected}
                     onOpenRequester={onOpenRequester}

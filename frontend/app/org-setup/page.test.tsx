@@ -351,6 +351,25 @@ describe("OrgSetupPage — pending invitation banner", () => {
     expect(screen.getByRole("button", { name: "Joining…" })).toBeDisabled();
   });
 
+  it("B-022: clicking Join claims the invite, signs in with the returned token and lands on /post-invite", async () => {
+    let capturedOnSuccess: ((data: unknown) => Promise<void>) | undefined;
+    const mutate = jest.fn((_id: string, opts: { onSuccess: (data: unknown) => Promise<void> }) => {
+      capturedOnSuccess = opts.onSuccess;
+    });
+    withInvitations(mutate);
+    render(<OrgSetupPage />);
+
+    await userEvent.click(await screen.findByRole("button", { name: "Join" }));
+    expect(mutate).toHaveBeenCalledWith("inv-1", expect.anything());
+    await act(async () => {
+      await capturedOnSuccess?.({ ok: true, autoLoginToken: "claim-token", skippedGrants: [] });
+    });
+
+    expect(mockSignIn).toHaveBeenCalledWith("claim-token");
+    expect(window.location.href).toBe("/post-invite");
+    expect(mockToastError).not.toHaveBeenCalled();
+  });
+
   it("shows an error toast and re-enables the button when the claim fails", async () => {
     let capturedOnError: ((error: unknown) => void) | undefined;
     const mutate = jest.fn((_id: string, opts: { onError: (e: unknown) => void }) => {

@@ -20,8 +20,9 @@ let mockCanDecide = true;
  * owner can close a request the router already assigned them (BUG-HRMS-017).
  * These cases are not about that, so the route says nobody else is needed.
  */
+let mockOwnRoute: unknown = undefined;
 jest.mock("@/hooks/api/hr/approvers", () => ({
-  useMyApprover: () => ({ data: undefined }),
+  useMyApprover: () => ({ data: mockOwnRoute }),
 }));
 jest.mock("@/hooks/api/access", () => ({
   useCan: () => mockCanDecide,
@@ -125,6 +126,22 @@ describe("LeaveApprovalsList — optional manager comment on Approve (decision #
     expect(mockApproveMutate).toHaveBeenCalledTimes(1);
     expect(mockApproveMutate.mock.calls[0][0]).toEqual({ leaveId: 7 });
     expect(mockToastError).not.toHaveBeenCalled();
+  });
+
+  it("asks the sole approver to confirm a self-approval and sends confirmSelfApproval (HRMS-025)", () => {
+    mockOwnRoute = { ownerSelfApproval: true, approver: { userId: "user_7" } };
+    render(
+      <TooltipProvider>
+        <LeaveApprovalsList requests={[PENDING_REQUEST]} currentUserId="user_7" />
+      </TooltipProvider>,
+    );
+    openApproveOverlay();
+
+    expect(screen.getByText("Approve your own request?")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Yes, approve my own request" }));
+
+    expect(mockApproveMutate.mock.calls[0][0]).toEqual({ leaveId: 7, confirmSelfApproval: true });
+    mockOwnRoute = undefined;
   });
 
   it("still toasts on a successful approval", () => {

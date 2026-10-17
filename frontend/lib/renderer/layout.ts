@@ -148,6 +148,15 @@ export interface FieldSpec {
    */
   readonly sign?: SignMeaning;
   /**
+   * The whole numbers the API accepts, inclusive.
+   *
+   * A setting such as "maximum huddle participants" is a count with bounds the
+   * backend enforces, and without this a form over it either accepted 1.5 and
+   * -3 and failed on submit, or was written by hand to say so. Only on
+   * `number`; `validateLayout` reports it anywhere else.
+   */
+  readonly range?: { readonly min: number; readonly max: number };
+  /**
    * What this field points at, when it points at another record.
    *
    * An assignee, a linked deal, an owning team: the value stored is an

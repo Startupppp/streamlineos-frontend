@@ -19,6 +19,7 @@ import {
   MAX_MOBILE_MODULE_TABS,
   MOBILE_MODULE_CONTENT_PADDING_CLASS,
 } from "./mobile-module-nav-items";
+import { computeBottomChromeRects, scrollGutterCssPx } from "./mobile-bottom-chrome-geometry";
 
 describe("mobile module nav items", () => {
   describe("getAllMobileModuleTabs", () => {
@@ -221,11 +222,18 @@ describe("mobile module nav items", () => {
   });
 
   describe("getMobileModuleContentPaddingClassName", () => {
-    it("reserves the bottom nav height plus breathing room on mobile when the bar is shown", () => {
+    it("ORG-B-023: reserves the FAB lane above the bottom nav, so the quick-actions button never covers page actions", () => {
       expect(getMobileModuleContentPaddingClassName(true)).toBe(
         MOBILE_MODULE_CONTENT_PADDING_CLASS,
       );
-      expect(MOBILE_MODULE_CONTENT_PADDING_CLASS).toContain("2.75rem");
+      expect(MOBILE_MODULE_CONTENT_PADDING_CLASS).toContain("var(--mb-fab-lane");
+      const { fab } = computeBottomChromeRects({
+        viewportWidth: 320,
+        viewportHeight: 270,
+        safeAreaBottom: 0,
+        navShown: true,
+      });
+      expect(270 - fab.top).toBeLessThanOrEqual(scrollGutterCssPx(true));
       expect(MOBILE_MODULE_CONTENT_PADDING_CLASS).toContain("max-lg:pb-[");
       expect(MOBILE_MODULE_CONTENT_PADDING_CLASS).not.toMatch(
         /(?:^|\s)pb-\[calc/,

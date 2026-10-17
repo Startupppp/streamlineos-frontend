@@ -74,13 +74,17 @@ export function useActionCenterDecisions() {
       item: ActionCenterItem,
       decision: QueueDecision,
       reason: string,
+      confirmSelfApproval = false,
     ): Promise<void> => {
       if (decision === "reject" && reason.trim().length === 0)
         throw new Error("A rejection reason is required.");
 
       if (item.source === "leave") {
         if (decision === "approve")
-          await approveLeave.mutateAsync({ leaveId: item.sourceId });
+          await approveLeave.mutateAsync({
+            leaveId: item.sourceId,
+            ...(confirmSelfApproval ? { confirmSelfApproval } : {}),
+          });
         else
           await rejectLeave.mutateAsync({ leaveId: item.sourceId, reason });
         return;
@@ -95,7 +99,10 @@ export function useActionCenterDecisions() {
       }
       if (item.source === "attendance") {
         if (decision === "approve")
-          await applyRegularization.mutateAsync(item.sourceId);
+          await applyRegularization.mutateAsync({
+            regularizationId: item.sourceId,
+            ...(confirmSelfApproval ? { confirmSelfApproval } : {}),
+          });
         else
           await rejectRegularization.mutateAsync({
             regularizationId: item.sourceId,
@@ -145,10 +152,11 @@ export function useActionCenterDecisions() {
       item: ActionCenterItem,
       decision: QueueDecision,
       reason = "",
+      options?: { confirmSelfApproval?: boolean },
     ): Promise<boolean> => {
       setPendingIds((current) => [...current, item.id]);
       try {
-        await run(item, decision, reason);
+        await run(item, decision, reason, options?.confirmSelfApproval === true);
         invalidateBadges();
         return true;
       } finally {

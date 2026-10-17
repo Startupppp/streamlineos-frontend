@@ -31,7 +31,7 @@ export interface NavRoute {
   icon: ComponentType<{ className?: string }>;
   href: string;
   searchTerms?: readonly string[];
-  badge?: "leaves";
+  badge?: "leaves" | "inbox";
   requiredPermission?: PermissionRequirement;
   children?: NavRoute[];
   module?: ProductKey;

@@ -1,0 +1,6 @@
+firstName,lastName,email,designation,department,joiningDate,phone
+QA Bulk,One,qabulk1013a@sharklasers.com,QA Analyst,QA Test Dept,2026-10-20,+919000010101
+QA Bulk,Two,not-an-email,QA Analyst,QA Test Dept,2026/10/20,+91abc
+"QA Bulk,Three,qabulk1013c@sharklasers.com,QA Analyst,QA Test Dept,2026-10-20,+919000010103
+QA Bulk,Four,qahr1014a@sharklasers.com,QA Analyst,QA Test Dept,2026-13-45,+919000010104,EXTRA,COLUMNS
+,,,,,,

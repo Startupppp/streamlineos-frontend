@@ -283,6 +283,9 @@ async function renderGrid() {
         canSelfAttendance
         crmEnabled
         canViewCrmLeads
+        payrollEnabled
+        canViewPayrollSelf
+        expensesEnabled
         expensesSlot={<ExpensesWidget />}
       />
     </TooltipProvider>,
