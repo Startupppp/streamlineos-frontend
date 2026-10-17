@@ -68,7 +68,15 @@ export function useLeaveRequestValidation(
     if (!selectedType) return { ...EMPTY, requestedDays, overlapMessage };
 
     const matchedBalance = balances.find((b) => b.leaveTypeId === selectedType.id);
-    const available = matchedBalance ? Number(matchedBalance.balance ?? 0) : null;
+    // A configured type with no stored balance row has not been used yet. The
+    // entitlement is the policy's days per year, not a failed read.
+    const entitlement =
+      selectedType.daysPerYear != null && selectedType.daysPerYear > 0
+        ? selectedType.daysPerYear
+        : null;
+    const available = matchedBalance
+      ? Number(matchedBalance.balance ?? 0)
+      : entitlement;
     const balanceKnown = available !== null && Number.isFinite(available);
 
     const maxDays = leaveMaxDays[selectedType.name];

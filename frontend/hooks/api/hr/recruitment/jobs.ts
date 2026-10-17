@@ -12,6 +12,7 @@ import { useCan } from "@/hooks/api/access";
 import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
 import { useAuthorizedIdempotentMutation } from "@/hooks/api/inventory/use-idempotent-mutation";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import { prependCreatedJob } from "@/hooks/api/hr/recruitment/job-list-cache";
 import type {
   JobPosting,
   RecruitmentStats,
@@ -201,7 +202,8 @@ export function useCreateJobPosting() {
     mutationKey: ["hr", "recruitment", "jobs", "create"],
     mutationFn: (data: CreateJobPostingInput) =>
       apiClient.post<JobPosting>("/hr/recruitment/jobs", data, undefined, createJobPostingC),
-    onSuccess: () => {
+    onSuccess: (created) => {
+      prependCreatedJob(qc, JOB_POSTINGS_ROOT, created);
       void qc.invalidateQueries({ queryKey: JOB_POSTINGS_ROOT });
       void qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.recruitmentStats() });
     },

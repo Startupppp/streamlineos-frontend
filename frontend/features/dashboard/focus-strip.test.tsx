@@ -97,7 +97,7 @@ describe("FocusStrip — actionable items", () => {
     mockPersonal.data = emptyData.personal;
     render(<FocusStrip access={baseAccess} />);
     const link = screen.getByRole("link", { name: /3 pending approvals/i });
-    expect(link).toHaveAttribute("href", expect.stringContaining("/hr/leaves"));
+    expect(link).toHaveAttribute("href", "/hr/leaves?tab=approvals");
   });
 
   it("shows unread notifications with a link to the inbox", () => {

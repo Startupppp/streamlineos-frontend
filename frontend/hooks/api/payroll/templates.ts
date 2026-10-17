@@ -48,11 +48,15 @@ export function usePayrollTemplates(params?: TemplateListParams) {
   const canView = useCan("payroll:templates:view");
   return useQuery({
     queryKey: payrollQueryKeys.payroll.templates(params),
-    queryFn: ({ signal }) =>
-      apiClient.get(
+    queryFn: ({ signal }) => {
+      const { page: _page, pageSize, ...filters } = params ?? {};
+      return apiClient.get(
         "/payroll/templates",
-        params, signal, templateListC,
-      ),
+        { ...filters, limit: pageSize ?? 100 },
+        signal,
+        templateListC,
+      );
+    },
     staleTime: 5 * 60_000,
     placeholderData: keepPreviousData,
     enabled: canView,

@@ -22,6 +22,7 @@ import {
 import { Combobox } from "@/components/ui/combobox";
 import { FilterPill, FilterPillGroup } from "@/components/ui/filter-pill";
 import { MonthPicker, monthFromToday } from "@/features/payroll/shared/month-picker";
+import { defaultPayrollStartMonth } from "@/features/payroll/setup/lib/setup-defaults";
 import { NavButtons } from "@/features/payroll/setup/nav-buttons";
 import { useCreatePolicy, useUpdatePolicy } from "@/hooks/api/payroll";
 import { CURRENCIES, PAY_FREQUENCIES } from "@/features/payroll/setup/lib/constants";
@@ -55,7 +56,7 @@ export function StepProfile({ draft, updateDraft, goNext }: StepProfileProps) {
       currency: draft.profile?.currency ?? "INR",
       payFrequency: draft.profile?.payFrequency ?? "MONTHLY",
       payDay: draft.profile?.payDay ? String(draft.profile.payDay) : "1",
-      startMonth: draft.profile?.startMonth ?? "",
+      startMonth: draft.profile?.startMonth || defaultPayrollStartMonth(),
       employeeCount: draft.profile?.employeeCount != null ? String(draft.profile.employeeCount) : "",
     },
   });

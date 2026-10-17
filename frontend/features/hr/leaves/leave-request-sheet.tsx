@@ -16,7 +16,6 @@ import {
   startOfLocalDay,
 } from "@/lib/date-constraints";
 import { useRequestLeave, useLeavePolicy } from "@/hooks/api/hr";
-import { useCan } from "@/hooks/api/access";
 import { leaveStartFloor } from "./leave-date-helpers";
 import { effectiveLeaveEnd, leaveFormSchema, type LeaveFormValues } from "./leave-request-schema";
 import { LeaveRequestFormFields } from "./leave-request-form-fields";
@@ -64,10 +63,6 @@ export function LeaveRequestSheet({
   );
   const [attachmentUrl, setAttachmentUrl] = useState<string | null>(null);
 
-  const canApprove = useCan("hr:leaves:approve");
-  const canManage = useCan("hr:leaves:manage");
-  const canBackdate = canApprove || canManage;
-
   const form = useForm<LeaveFormValues>({
     resolver: zodResolver(leaveFormSchema),
     mode: "onTouched",
@@ -94,10 +89,13 @@ export function LeaveRequestSheet({
   const watchedEndDate = form.watch("endDate");
   const watchedHalfDay = form.watch("halfDay");
 
+  const today = startOfLocalDay();
+  // New requests start today. Approvers used to inherit the HR backdate floor
+  // (1 January), so the calendar opened on January and accepted past dates.
   const startFloor = leaveStartFloor(
     parseDateOnly(joiningDate?.slice(0, 10)),
-    canBackdate,
-    startOfLocalDay(),
+    false,
+    today,
   );
   const leaveStartBounds = {
     fromDate: startFloor,
@@ -108,7 +106,7 @@ export function LeaveRequestSheet({
     startDate: watchedStartDate,
     mode: "onOrAfter",
     floorDate: startFloor,
-    enforceTodayFloor: false,
+    enforceTodayFloor: true,
   });
 
   function handleLeaveStartDateChange(value: string) {
@@ -216,7 +214,7 @@ export function LeaveRequestSheet({
           onStartDateChange={handleLeaveStartDateChange}
           onAttachmentUpload={handleAttachmentUpload}
           validation={validation}
-          pastDatesBlocked={!canBackdate}
+          pastDatesBlocked
         />
       </Form>
     </HrSheet>

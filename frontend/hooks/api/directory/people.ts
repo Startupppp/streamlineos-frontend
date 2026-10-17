@@ -95,7 +95,23 @@ export function useCreatePerson() {
         directoryAndOwnershipQueryKeys.directory.person(created.organizationPersonId),
         created,
       );
-      qc.invalidateQueries({ queryKey: directoryAndOwnershipQueryKeys.directory.peopleAll });
+      qc.setQueriesData(
+        { queryKey: directoryAndOwnershipQueryKeys.directory.peopleAll },
+        (current: unknown) => {
+          if (!isPeoplePage(current)) return current;
+          if (
+            current.data.some(
+              (person) => person.organizationPersonId === created.organizationPersonId,
+            )
+          ) {
+            return current;
+          }
+          return { ...current, data: [created, ...current.data] };
+        },
+      );
+      void qc.invalidateQueries({
+        queryKey: directoryAndOwnershipQueryKeys.directory.peopleAll,
+      });
     },
   });
 }

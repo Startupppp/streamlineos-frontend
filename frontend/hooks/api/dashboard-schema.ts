@@ -112,13 +112,21 @@ export const leavesTodayContract = z.object({
  * is `decimal("balance", { precision: 6, scale: 2 })`, which Drizzle reads as a
  * string, so the declared schema would reject every real response.
  */
+const decimalString = z
+  .union([z.string(), z.number()])
+  .transform((value) => String(value));
+
 export const leaveBalanceContract = z.array(
   z.object({
     id: z.number().int(),
-    balance: z.string(),
+    balance: decimalString,
     year: z.number().int(),
     leaveTypeName: z.string().nullable(),
-    daysPerYear: z.number().nullable(),
+    daysPerYear: z.union([z.number(), z.string()]).nullable().transform((value) => {
+      if (value === null) return null;
+      const parsed = typeof value === "number" ? value : Number(value);
+      return Number.isFinite(parsed) ? parsed : null;
+    }),
   }),
 );
 

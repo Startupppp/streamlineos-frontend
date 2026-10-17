@@ -12,6 +12,7 @@ import type { SetupDraft } from "@/features/payroll/setup/lib/draft";
 import { TOGGLE_KEYS } from "@/types/payroll/setup";
 import type { ToggleKey } from "@/types/payroll/setup";
 import type { PayrollTemplate } from "@/hooks/api/payroll/templates-schema";
+import { orderTemplatesForCountry } from "@/features/payroll/setup/lib/template-order";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 
@@ -35,7 +36,7 @@ export function StepTemplate({
   const { data, isLoading, isError, refetch } = usePayrollTemplates(
     draft.profile?.country ? { country: draft.profile.country } : undefined,
   );
-  const templates = data?.items ?? [];
+  const templates = orderTemplatesForCountry(data?.items ?? [], draft.profile?.country);
 
   const [manuallySelectedId, setManuallySelectedId] = useState<number | null>(null);
   const [previewTemplate, setPreviewTemplate] = useState<PayrollTemplate | null>(null);

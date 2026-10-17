@@ -9,7 +9,9 @@ import { DataTable } from "@/components/ui/data-table";
 import type { DataTableColumn } from "@/components/ui/data-table";
 import { Separator } from "@/components/ui/separator";
 import { SemanticBadge } from "@/components/ui/semantic-badge";
+import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { ErrorState } from "@/components/shared/error-state";
 import { useCan } from "@/hooks/api/access";
 import {
   useUpdateWorker,
@@ -123,10 +125,17 @@ export function PersonWorkerTab({
   const canManageWorkers = useCan("directory:workers:manage");
   const [createWorkerOpen, setCreateWorkerOpen] = useState(false);
 
-  const { data: workersPage, isLoading: workersLoading } = useWorkers({
+  const workersQuery = useWorkers({
     limit: 1,
     organizationPersonId: person.organizationPersonId,
   });
+  const {
+    data: workersPage,
+    isLoading: workersLoading,
+    isFetching: workersFetching,
+    isError: workersError,
+    refetch: refetchWorkers,
+  } = workersQuery;
 
   const worker = useMemo(
     () =>
@@ -137,8 +146,9 @@ export function PersonWorkerTab({
     [person.organizationPersonId, workersPage?.data],
   );
 
-  const { data: engagements, isLoading: engagementsLoading } =
-    useWorkerEngagements(worker?.workerId ?? "");
+  const engagementsQuery = useWorkerEngagements(worker?.workerId ?? "");
+  const { data: engagements, isLoading: engagementsLoading, isError: engagementsError } =
+    engagementsQuery;
 
   const handleOpenCreateWorker = useCallback(() => {
     setCreateWorkerOpen(true);
@@ -158,7 +168,21 @@ export function PersonWorkerTab({
     );
   }
 
-  if (workersLoading) return <PersonTabContentSkeleton />;
+  if (workersQuery.access.pending || ((workersLoading || workersFetching) && !workersPage)) {
+    return <PersonTabContentSkeleton />;
+  }
+
+  if (workersError || workersQuery.access.unavailable) {
+    return (
+      <ErrorState
+        title="Worker record could not be loaded"
+        description="The workforce record for this person did not finish loading."
+        onRetry={() => {
+          void refetchWorkers();
+        }}
+      />
+    );
+  }
 
   if (!worker) {
     return (
@@ -194,6 +218,13 @@ export function PersonWorkerTab({
         </p>
         {engagementsLoading ? (
           <Skeleton className="h-32 w-full" />
+        ) : engagementsError || engagementsQuery.access.unavailable ? (
+          <div className="flex items-center justify-between gap-2">
+            <p className="text-sm text-muted-foreground">Engagements could not be loaded.</p>
+            <Button type="button" variant="outline" size="sm" onClick={() => void engagementsQuery.refetch()}>
+              Retry
+            </Button>
+          </div>
         ) : (engagements ?? []).length === 0 ? (
           <p className="text-sm text-muted-foreground">
             No engagements recorded yet.

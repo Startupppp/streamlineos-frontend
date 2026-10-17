@@ -18,6 +18,23 @@ import type {
   LeaveType,
 } from "./leaves-shared";
 
+/** Stored balance rows win. A configured type with none yet shows its entitlement. */
+export function balancesOrEntitlements(
+  balances: readonly LeaveBalance[],
+  types: readonly LeaveType[],
+): LeaveBalance[] {
+  if (balances.length > 0) return [...balances];
+  return types
+    .filter((type) => (type.daysPerYear ?? 0) > 0)
+    .map((type) => ({
+      id: type.id,
+      leaveTypeId: type.id,
+      balance: String(type.daysPerYear),
+      typeName: type.name,
+      daysPerYear: type.daysPerYear ?? null,
+    }));
+}
+
 export function useLeavesWfhData(selfService: boolean) {
   const hrModuleEnabled = useModuleEnabled("hr");
   const canApproveLeaves = useCan("hr:leaves:approve");
@@ -32,8 +49,11 @@ export function useLeavesWfhData(selfService: boolean) {
   const { data: thisWeekData } = useHrLeavesThisWeek({ enabled: !selfService });
   const { data: pendingWfhRequests } = useHrPendingWfhRequests({ enabled: isAdmin });
 
-  const balances: LeaveBalance[] = context.data?.balances ?? [];
   const leaveTypes: LeaveType[] = context.data?.types ?? [];
+  const balances: LeaveBalance[] = balancesOrEntitlements(
+    context.data?.balances ?? [],
+    leaveTypes,
+  );
   const joiningDate = context.data?.joiningDate ?? null;
 
   const myLeaveRequests = useMemo(
@@ -93,6 +113,9 @@ export function useLeavesWfhData(selfService: boolean) {
     totalPendingApprovals:
       incomingLeaveRequests.length + (pendingWfhRequests?.length ?? 0),
     isLoading: context.isLoading || myRequests.isLoading,
+    isRefreshing:
+      (context.isFetching || myRequests.isFetching) &&
+      !(context.isLoading || myRequests.isLoading),
     isError: context.isError || myRequests.isError,
     errorValue: context.error ?? myRequests.error,
     onRetryPage,

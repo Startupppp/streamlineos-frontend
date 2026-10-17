@@ -92,9 +92,11 @@ export function LeavesWfhContent({ selfService = false }: LeavesWfhContentProps)
   }, [exportView]);
 
   const title = selfService ? t("timeOff.title") : "Leaves & Time Off";
-  const subtitle = selfService
-    ? t("timeOff.subtitle")
-    : "Manage leave requests, work from home, and approvals.";
+  const subtitle = data.isRefreshing
+    ? "Refreshing leave requests…"
+    : selfService
+      ? t("timeOff.subtitle")
+      : "Manage leave requests, work from home, and approvals.";
 
   const requestSheets = (
     <>

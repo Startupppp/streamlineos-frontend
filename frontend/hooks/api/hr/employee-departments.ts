@@ -5,6 +5,9 @@ import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
 import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
+import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
+import { useCan, useModuleEnabled } from "@/hooks/api/access";
+import type { Department, CreateDepartmentInput } from "@/types/hr";
 
 const departmentListLazy = lazyContract(() =>
   import("@/hooks/api/hr/employee-departments-schema").then((m) => m.departmentListContract),
@@ -12,9 +15,6 @@ const departmentListLazy = lazyContract(() =>
 const departmentItemLazy = lazyContract(() =>
   import("@/hooks/api/hr/employee-departments-schema").then((m) => m.departmentItemContract),
 );
-import { useCan, useModuleEnabled } from "@/hooks/api/access";
-import type { Department, CreateDepartmentInput } from "@/types/hr";
-
 export function useHrDepartments(options?: { enabled?: boolean }) {
   const canView = useCan("hr:employees:view");
   const hrEnabled = useModuleEnabled("hr");
@@ -24,6 +24,7 @@ export function useHrDepartments(options?: { enabled?: boolean }) {
       apiClient.get<Department[]>("/hr/departments", undefined, signal, departmentListLazy),
     staleTime: 2 * 60_000,
     enabled: hrEnabled && canView && (options?.enabled ?? true),
+    ...INLINE_READ_ERROR,
   });
 }
 

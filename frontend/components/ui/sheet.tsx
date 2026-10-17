@@ -6,6 +6,7 @@ import { XIcon } from "lucide-react"
 
 import { cn } from "@/lib/utils"
 import { useRestoreFocusOnClose } from "@/lib/restore-focus-on-close"
+import { useReleaseDialogPointerLock } from "@/lib/release-dialog-pointer-lock"
 import {
   SURFACE_CLOSE_BUTTON,
   SURFACE_OVERLAY,
@@ -65,6 +66,7 @@ function SheetContent({
   overlayClassName?: string
 }) {
   const restore = useRestoreFocusOnClose()
+  useReleaseDialogPointerLock()
 
   function handleOpenAutoFocus(event: Event): void {
     restore.onOpenAutoFocus(event)

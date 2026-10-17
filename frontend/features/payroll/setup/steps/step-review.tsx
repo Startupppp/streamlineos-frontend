@@ -9,6 +9,7 @@ import { usePreviewPolicy } from "@/hooks/api/payroll";
 import { describeComponentBasis } from "@/features/payroll/shared";
 import { TOGGLE_META } from "@/features/payroll/setup/lib/constants";
 import type { SetupDraft } from "@/features/payroll/setup/lib/draft";
+import { shiftPastCalendarDate } from "@/features/payroll/setup/lib/setup-defaults";
 import type { ComponentType, PolicyPreviewComponent } from "@/types/payroll/setup";
 
 function toOverridesRecord(
@@ -187,7 +188,7 @@ export function StepReview({ draft, goNext, goBack }: StepReviewProps) {
               {calendarPlan.map((event) => (
                 <div key={event.type} className="flex items-center justify-between text-sm">
                   <span className="text-muted-foreground">{event.title}</span>
-                  <span className="font-mono text-foreground">{event.date}</span>
+                  <span className="font-mono text-foreground">{shiftPastCalendarDate(event.date)}</span>
                 </div>
               ))}
             </div>

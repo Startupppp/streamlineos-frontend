@@ -8,6 +8,7 @@ import type { VariantProps } from "class-variance-authority"
 import { cn } from "@/lib/utils"
 import { buttonVariants } from "@/components/ui/button"
 import { useRestoreFocusOnClose } from "@/lib/restore-focus-on-close"
+import { useReleaseDialogPointerLock } from "@/lib/release-dialog-pointer-lock"
 import { SURFACE_OVERLAY } from "@/lib/ui-surface-chrome"
 
 function AlertDialog({
@@ -67,6 +68,7 @@ function AlertDialogContent({
   ...props
 }: React.ComponentProps<typeof AlertDialogPrimitive.Content>) {
   const restore = useRestoreFocusOnClose()
+  useReleaseDialogPointerLock()
 
   function handleOpenAutoFocus(event: Event): void {
     restore.onOpenAutoFocus(event)

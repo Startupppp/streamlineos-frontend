@@ -88,6 +88,7 @@ export function ExpensesPage() {
   const {
     data: pageData,
     isLoading,
+    isFetching,
     isError,
     error,
     refetch,
@@ -273,7 +274,11 @@ export function ExpensesPage() {
     return (
       <PageWrapper
         title="Expense approvals"
-        subtitle="Review and manage pending employee expense claims."
+        subtitle={
+          isFetching
+            ? "Refreshing expense claims…"
+            : "Review and manage pending employee expense claims."
+        }
         actions={
           <div className="flex items-center gap-2 flex-wrap">
             {pendingCount > 0 && (
@@ -381,7 +386,11 @@ export function ExpensesPage() {
   return (
     <PageWrapper
       title="My expenses"
-      subtitle="Track, manage, and submit your expense claims for reimbursement."
+      subtitle={
+        isFetching
+          ? "Refreshing expense claims…"
+          : "Track, manage, and submit your expense claims for reimbursement."
+      }
       noInternalScroll
       contentClassName="flex min-h-0 flex-1 flex-col"
       actions={

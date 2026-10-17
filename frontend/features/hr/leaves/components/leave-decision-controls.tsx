@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useCallback, useState } from "react";
+import React, { useCallback, useRef, useState } from "react";
 import { useForm, useController } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -50,6 +50,8 @@ export function useLeaveDecisions(): LeaveDecisionControls {
   const [approvingId, setApprovingId] = useState<number | null>(null);
   const [approvalComment, setApprovalComment] = useState("");
   const [approvingSelf, setApprovingSelf] = useState(false);
+  // Holds the pending decision so a sibling dialog's close cannot clear it before confirm.
+  const pendingApprovalRef = useRef<{ leaveId: number; self: boolean } | null>(null);
 
   const rejectForm = useForm<{ reason: string }>({
     resolver: zodResolver(z.object({ reason: z.string().min(1, "Rejection reason is required.") })),
@@ -66,6 +68,7 @@ export function useLeaveDecisions(): LeaveDecisionControls {
 
   const onProcess = useCallback((requestId: number, decision: LeaveDecision, selfApproval = false) => {
     if (decision === "APPROVED") {
+      pendingApprovalRef.current = { leaveId: requestId, self: selfApproval };
       setApprovingId(requestId);
       setApprovalComment("");
       setApprovingSelf(selfApproval);
@@ -78,19 +81,24 @@ export function useLeaveDecisions(): LeaveDecisionControls {
   }, [rejectForm]);
 
   const handleApproveConfirm = useCallback(() => {
-    if (approvingId === null) return;
+    const pending = pendingApprovalRef.current;
+    const leaveId = pending?.leaveId ?? approvingId;
+    if (leaveId === null) return;
     const comment = approvalComment.trim();
+    const selfApproval = pending?.self ?? approvingSelf;
     approveMutation.mutate(
       {
-        leaveId: approvingId,
+        leaveId,
         ...(comment ? { comment } : {}),
-        ...(approvingSelf ? { confirmSelfApproval: true } : {}),
+        ...(selfApproval ? { confirmSelfApproval: true } : {}),
       },
       {
         onSuccess: () => {
           toast.success("Leave request approved");
+          pendingApprovalRef.current = null;
           setApproveDialogOpen(false);
           setApprovingId(null);
+          setApprovingSelf(false);
           setApprovalComment("");
         },
         onError: (err) => toast.error(getErrorMessage(err)),
@@ -106,12 +114,15 @@ export function useLeaveDecisions(): LeaveDecisionControls {
   );
 
   const handleApproveOpenChange = useCallback((open: boolean) => {
+    if (!open && approveMutation.isPending) return;
     setApproveDialogOpen(open);
     if (!open) {
+      pendingApprovalRef.current = null;
       setApprovingId(null);
+      setApprovingSelf(false);
       setApprovalComment("");
     }
-  }, []);
+  }, [approveMutation.isPending]);
 
   const handleRejectConfirm = useCallback(() => {
     if (rejectingId === null) return;
@@ -141,15 +152,18 @@ export function useLeaveDecisions(): LeaveDecisionControls {
 
   const decisionDialogs = (
     <>
-      <SelfApprovalConfirmDialog
-        open={approveDialogOpen && approvingSelf}
-        onOpenChange={handleApproveOpenChange}
-        subject="leave request"
-        isPending={approveMutation.isPending}
-        onConfirm={handleApproveConfirm}
-      />
+      {approveDialogOpen && approvingSelf ? (
+        <SelfApprovalConfirmDialog
+          open
+          onOpenChange={handleApproveOpenChange}
+          subject="leave request"
+          isPending={approveMutation.isPending}
+          onConfirm={handleApproveConfirm}
+        />
+      ) : null}
+      {approveDialogOpen && !approvingSelf ? (
       <ConfirmDialog
-        open={approveDialogOpen && !approvingSelf}
+        open
         onOpenChange={handleApproveOpenChange}
         title="Approve Leave Request"
         description="Add a note for the requester if you want to. It is not required."
@@ -159,12 +173,8 @@ export function useLeaveDecisions(): LeaveDecisionControls {
         onConfirm={handleApproveConfirm}
         content={
           <div className="space-y-1.5">
-            <Label
-              htmlFor="leave-approval-comment"
-              className="text-xs font-medium text-foreground"
-            >
-              Comment{" "}
-              <span className="text-muted-foreground font-normal">(Optional)</span>
+            <Label htmlFor="leave-approval-comment" className="text-xs font-medium text-foreground">
+              Comment <span className="text-muted-foreground font-normal">(Optional)</span>
             </Label>
             <Textarea
               id="leave-approval-comment"
@@ -178,6 +188,7 @@ export function useLeaveDecisions(): LeaveDecisionControls {
           </div>
         }
       />
+      ) : null}
       <ConfirmDialog
         open={rejectDialogOpen}
         onOpenChange={handleRejectOpenChange}
@@ -190,10 +201,7 @@ export function useLeaveDecisions(): LeaveDecisionControls {
         onConfirm={handleRejectConfirm}
         content={
           <div className="space-y-1.5">
-            <Label
-              htmlFor="leave-rejection-reason"
-              className="text-xs font-medium text-foreground"
-            >
+            <Label htmlFor="leave-rejection-reason" className="text-xs font-medium text-foreground">
               Rejection Reason <span className="text-destructive" aria-hidden="true">*</span>
             </Label>
             <Textarea

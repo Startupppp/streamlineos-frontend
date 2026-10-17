@@ -12,6 +12,32 @@ import type {
   SubmitApprovalResult,
   ApproveStageResult,
 } from "@/hooks/api/payroll/approvals-schema";
+import {
+  payrollRunStatusContract,
+  type PayrollRunStatus,
+} from "@/hooks/api/payroll/runs-schema";
+
+function withSubmittedRunStatus(current: unknown, runId: number, status: PayrollRunStatus): unknown {
+  if (!current || typeof current !== "object") return current;
+  const record = current as {
+    run?: { id?: number };
+    data?: Array<Record<string, unknown>>;
+  };
+  if (record.run && record.run.id === runId) {
+    return { ...record, run: { ...record.run, status } };
+  }
+  if (!Array.isArray(record.data) || record.data.length === 0) return current;
+  if (record.data.some((row) => row && typeof row === "object" && "stageName" in row)) return current;
+  let changed = false;
+  const data = record.data.map((row) => {
+    if (row && row.id === runId && "month" in row) {
+      changed = true;
+      return { ...row, status };
+    }
+    return row;
+  });
+  return changed ? { ...record, data } : current;
+}
 
 const approvalListC = lazyContract(() =>
   import("@/hooks/api/payroll/approvals-schema").then((m) => m.approvalListContract),
@@ -49,7 +75,18 @@ export function useSubmitApproval() {
     mutationKey: ["payroll", "submit-approval"],
     mutationFn: ({ runId }) =>
       apiClient.post<SubmitApprovalResult>(`/payroll/runs/${runId}/submit-approval`, undefined, undefined, submitApprovalResponseC),
-    onSuccess: (_, { runId }) => {
+    onSuccess: (result, { runId }) => {
+      const parsedStatus = payrollRunStatusContract.safeParse(result.runStatus);
+      if (parsedStatus.success) {
+        const status = parsedStatus.data;
+        void qc.cancelQueries({ queryKey: payrollQueryKeys.payroll.run(runId) });
+        qc.setQueryData(payrollQueryKeys.payroll.run(runId), (current) =>
+          withSubmittedRunStatus(current, runId, status),
+        );
+        qc.setQueriesData({ queryKey: payrollQueryKeys.payroll.runs() }, (current) =>
+          withSubmittedRunStatus(current, runId, status),
+        );
+      }
       void qc.invalidateQueries({ queryKey: payrollQueryKeys.payroll.runApprovals(runId) });
       void qc.invalidateQueries({ queryKey: payrollQueryKeys.payroll.run(runId) });
       void qc.invalidateQueries({ queryKey: [...payrollQueryKeys.payroll.all, "runs"] });

@@ -9,6 +9,8 @@ import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
 import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
+import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
+import { useCan } from "@/hooks/api/access";
 
 const documentTypeLazy = lazyContract(() =>
   import("@/hooks/api/hr/document-types-schema").then((m) => m.documentTypeContract),
@@ -16,8 +18,6 @@ const documentTypeLazy = lazyContract(() =>
 const documentTypeListPageLazy = lazyContract(() =>
   import("@/hooks/api/hr/document-types-schema").then((m) => m.documentTypeListPageContract),
 );
-import { useCan } from "@/hooks/api/access";
-
 export interface HrDocumentType {
   id: number;
   name: string;
@@ -61,6 +61,7 @@ export function useHrDocumentTypes(options?: { enabled?: boolean }) {
       return unwrapDocumentTypes(res);
     },
     staleTime: 5 * 60_000,
+    ...INLINE_READ_ERROR,
   });
 }
 

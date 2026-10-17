@@ -20,6 +20,8 @@ import { Field } from "./job-form-field";
 export interface SectionProps {
   form: UseFormReturn<CreateJobFormValues>;
   departments?: Department[];
+  departmentsStatus?: "loading" | "ready" | "error";
+  onRetryDepartments?: () => void;
 }
 
 export function SectionTitle({
@@ -71,10 +73,11 @@ export function ToggleRow({
   );
 }
 
-export function Section1({ form, departments }: SectionProps) {
+export function Section1({ form, departments, departmentsStatus, onRetryDepartments }: SectionProps) {
   const { register, control, formState: { errors } } = form;
   const departmentAccess = useCanState("hr:employees:view");
-  const departmentsLoaded = departments !== undefined;
+  const status = departmentsStatus ?? (departments !== undefined ? "ready" : "loading");
+  const departmentsLoaded = status === "ready";
   const hasDepartments = (departments?.length ?? 0) > 0;
   return (
     <FieldGroup>
@@ -92,6 +95,23 @@ export function Section1({ form, departments }: SectionProps) {
               </Select>
               <p className="text-micro text-muted-foreground">
                 Optional. Viewing departments needs access to employee records.
+              </p>
+            </div>
+          ) : status === "error" ? (
+            <div className="space-y-1">
+              <Select disabled>
+                <SelectTrigger><SelectValue placeholder="Departments could not be loaded" /></SelectTrigger>
+                <SelectContent />
+              </Select>
+              <p className="text-micro text-muted-foreground">
+                The department list did not load.{" "}
+                <button
+                  type="button"
+                  className="text-primary underline-offset-2 hover:underline"
+                  onClick={onRetryDepartments}
+                >
+                  Retry
+                </button>
               </p>
             </div>
           ) : departmentsLoaded && !hasDepartments ? (

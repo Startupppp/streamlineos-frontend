@@ -11,6 +11,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { useCreateJobPosting, useUpdateJobPosting } from "@/hooks/api/hr/recruitment";
 import { useHrDepartments } from "@/hooks/api/hr";
+import { useCanState } from "@/hooks/api/access";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { Section1, Section2 } from "./job-basics-sections";
 import { Section3, Section4, Section5 } from "./compensation-qualifications-sections";
@@ -90,7 +91,17 @@ export function CreateJobForm({ job }: CreateJobFormProps) {
   const router = useRouter();
   const createJob = useCreateJobPosting();
   const updateJob = useUpdateJobPosting();
-  const { data: departments } = useHrDepartments();
+  const {
+    data: departments,
+    isLoading: departmentsLoading,
+    isFetching: departmentsFetching,
+    isError: departmentsError,
+    refetch: refetchDepartments,
+  } = useHrDepartments();
+  const departmentAccess = useCanState("hr:employees:view");
+  const departmentsStatus = departmentAccess === "loading" || ((departmentsLoading || departmentsFetching) && departments === undefined)
+    ? "loading"
+    : departmentsError ? "error" : "ready";
   const isEdit = !!job;
   const [openBlocks, setOpenBlocks] = useState<string[]>([]);
   const [missing, setMissing] = useState<PublishRequirement[]>([]);
@@ -202,7 +213,7 @@ export function CreateJobForm({ job }: CreateJobFormProps) {
           <div className="px-4 sm:px-6 py-6 space-y-6 max-w-3xl">
             <section aria-labelledby="job-essentials-heading" className="space-y-4">
               <h2 id="job-essentials-heading" className="text-sm font-semibold text-foreground">Essentials</h2>
-              <Section1 form={form} departments={departments} />
+              <Section1 form={form} departments={departments} departmentsStatus={departmentsStatus} onRetryDepartments={() => { void refetchDepartments(); }} />
             </section>
 
             <Accordion type="multiple" value={openBlocks} onValueChange={setOpenBlocks} className="rounded-xl border border-border px-4">

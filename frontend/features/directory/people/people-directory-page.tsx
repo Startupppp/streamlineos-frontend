@@ -71,7 +71,7 @@ export function PeopleDirectoryPage({
     limit: PAGE_SIZE,
     search: debouncedSearch || undefined,
   });
-  const { data, isLoading, isError, refetch } = peopleQuery;
+  const { data, isLoading, isFetching, isError, refetch } = peopleQuery;
 
   const deletePerson = useDeletePerson();
 
@@ -165,7 +165,11 @@ export function PeopleDirectoryPage({
   return (
     <PageWrapper
       title="Directory"
-      subtitle="People in your organization—with or without application access."
+      subtitle={
+        isFetching && data
+          ? "Refreshing the directory…"
+          : "People in your organization—with or without application access."
+      }
       filters={filtersBar}
       noInternalScroll
       contentClassName="flex min-h-0 flex-1 flex-col"
@@ -224,13 +228,11 @@ export function PeopleDirectoryPage({
         onOpenChange={handlePeekOpenChange}
       />
 
-      {createOpen && (
-        <PersonFormDialog
-          open={createOpen}
-          onOpenChange={handleCreateDialogChange}
-          mode="create"
-        />
-      )}
+      <PersonFormDialog
+        open={createOpen}
+        onOpenChange={handleCreateDialogChange}
+        mode="create"
+      />
 
       {editTarget && (
         <PersonFormDialog
