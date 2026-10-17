@@ -2,11 +2,8 @@
 
 import { useCallback } from "react";
 import { AiFieldTrigger } from "./ai-field-trigger";
-import {
-  AiActionResultBody,
-  AiActionResultFooter,
-  type AiActionResult,
-} from "./ai-action-result-body";
+import { AiActionResultBody, type AiActionResult } from "./ai-action-result-body";
+import { AiActionResultFooter } from "./ai-action-result-footer";
 import { useAiPopoverAction } from "./use-ai-popover-action";
 import {
   AI_FIELD_POPOVER_CONTENT_CLASS,

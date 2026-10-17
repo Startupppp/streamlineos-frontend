@@ -173,6 +173,9 @@ export const knowledgeAndSurveysQueryKeys = {
   nps: {
     publicSurvey: (token: string) =>
       [...base, "nps", "publicSurvey", token] as const,
+    list: () => [...base, "nps", "list"] as const,
+    stats: () => [...base, "nps", "stats"] as const,
+    detail: (surveyId: number) => [...base, "nps", "detail", surveyId] as const,
   },
 
   surveys: {

@@ -9,10 +9,8 @@ import {
   AI_FIELD_POPOVER_CONTENT_CLASS,
   type AiActionResult,
 } from "@/components/ai";
-import {
-  AiActionResultBody,
-  AiActionResultFooter,
-} from "@/components/ai/ai-action-result-body";
+import { AiActionResultBody } from "@/components/ai/ai-action-result-body";
+import { AiActionResultFooter } from "@/components/ai/ai-action-result-footer";
 import {
   AiFieldPopoverFooter,
   AiFieldPopoverLayout,

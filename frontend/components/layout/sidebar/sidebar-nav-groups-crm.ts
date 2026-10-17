@@ -1,4 +1,4 @@
-import { LayoutDashboard, Users, Briefcase, Clock, FileText, Handshake, Contact2, BarChart3, UserCheck, ShieldCheck, Star, TrendingUp, Package, Share2, MailOpen, Zap, History, BarChart2, Inbox, Building2, SlidersHorizontal, Brain, Copy, Search, Sliders, CheckSquare, Key, Activity, Megaphone, Bot, ArrowLeftRight, AlertTriangle, Rows3, PhoneCall, Coins, HeartPulse, RefreshCw, GitMerge, Layers } from "lucide-react";
+import { LayoutDashboard, Users, Briefcase, Clock, FileText, Handshake, Contact2, BarChart3, UserCheck, ShieldCheck, Star, TrendingUp, Package, Share2, MailOpen, Zap, History, BarChart2, Inbox, Building2, SlidersHorizontal, Brain, Copy, Search, Sliders, CheckSquare, Key, Activity, Megaphone, Bot, ArrowLeftRight, AlertTriangle, Rows3, PhoneCall, Coins, HeartPulse, RefreshCw, GitMerge, Layers, Gauge } from "lucide-react";
 import type { NavGroup } from "./sidebar-nav-types";
 
 export const CRM_NAV_GROUPS: NavGroup[] = [
@@ -243,6 +243,12 @@ export const CRM_NAV_GROUPS: NavGroup[] = [
         icon: HeartPulse,
         href: "/crm/health",
         requiredPermission: "crm:customer-health:view",
+      },
+      {
+        label: "NPS surveys",
+        icon: Gauge,
+        href: "/crm/nps",
+        requiredPermission: "crm:clients:read",
       },
       {
         // The team digest, so `view-team` and not `:view`. A rep reads their own

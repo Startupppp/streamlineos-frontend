@@ -13,6 +13,7 @@ import {
 } from "./ai-citation-chips";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { AiUsageChip, type AiUsageMeta } from "./ai-usage-chip";
+import { AiFeedbackButtons } from "./ai-feedback-buttons";
 
 interface AiDraftCardProps {
   children: React.ReactNode;
@@ -28,6 +29,8 @@ interface AiDraftCardProps {
   acceptLabel?: string;
   isAcceptPending?: boolean;
   hideFooter?: boolean;
+  /** Feature key for thumbs feedback; omit to hide the buttons. */
+  feedbackFeature?: string;
   className?: string;
 }
 
@@ -45,6 +48,7 @@ export function AiDraftCard({
   acceptLabel = "Accept",
   isAcceptPending = false,
   hideFooter = false,
+  feedbackFeature,
   className,
 }: AiDraftCardProps) {
   const hasFooter = !hideFooter && (onAccept || onEdit || onDiscard);
@@ -65,7 +69,10 @@ export function AiDraftCard({
         {confidence !== undefined && (
           <AiConfidenceBadge confidence={confidence} />
         )}
-        <AiUsageChip usage={usage} className="ml-auto" />
+        <div className="ml-auto flex items-center gap-2">
+          <AiUsageChip usage={usage} />
+          {feedbackFeature ? <AiFeedbackButtons feature={feedbackFeature} /> : null}
+        </div>
       </div>
 
       <div className="px-3 py-3">{children}</div>

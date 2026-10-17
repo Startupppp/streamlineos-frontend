@@ -52,6 +52,14 @@ export const usersAndCommerceQueryKeys = {
       [...base, "crmProducts", "detail", productId] as const,
   },
 
+  crmOfferFulfillment: {
+    all: [...base, "crmOfferFulfillment"] as const,
+    list: (params?: QueryKeyParams) =>
+      params === undefined
+        ? ([...base, "crmOfferFulfillment", "list"] as const)
+        : ([...base, "crmOfferFulfillment", "list", params] as const),
+  },
+
   crmQuotes: {
     all: [...base, "crmQuotes"] as const,
     list: (params?: QueryKeyParams) =>

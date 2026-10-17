@@ -1,7 +1,6 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { LoadingButton } from "@/components/ui/loading-button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { AiDraftCard } from "./ai-draft-card";
 import { AiAdvisoryNotice } from "./ai-advisory-notice";
@@ -16,7 +15,7 @@ import {
   AiUnavailableNotice,
 } from "./ai-state-notices";
 import { AiCancelledOutput, AiStreamingOutput } from "./ai-partial-output";
-import { AiFieldPopoverFooter } from "./ai-field-popover-layout";
+import { AiFeedbackButtons } from "./ai-feedback-buttons";
 import type { AiFailureState } from "./ai-error-state";
 import { AiCitationChips, type Citation } from "./ai-citation-chips";
 import type { AiUsageMeta } from "./ai-usage-chip";
@@ -53,6 +52,8 @@ interface AiActionResultBodyProps {
   contentOnly?: boolean;
   /** Declared by the action; gates the streaming citation placeholder. */
   expectsCitations?: boolean;
+  /** Feature key for thumbs feedback on a ready result; omit to hide it. */
+  feedbackFeature?: string;
 }
 
 export function AiActionResultBody({
@@ -64,6 +65,7 @@ export function AiActionResultBody({
   compact = false,
   contentOnly = false,
   expectsCitations = false,
+  feedbackFeature,
 }: AiActionResultBodyProps) {
   const noticeVariant = compact ? "compact" : "fill";
 
@@ -190,13 +192,14 @@ export function AiActionResultBody({
   if (contentOnly) {
     const citations = state.result.citations;
     const advisory = state.result.advisory;
-    if (!citations?.length && !advisory)
+    if (!citations?.length && !advisory && !feedbackFeature)
       return <AiDraftText text={state.result.text} />;
     return (
       <div className="space-y-3">
         <AiDraftText text={state.result.text} />
         {advisory ? <AiAdvisoryNotice advisory={advisory} /> : null}
         {citations?.length ? <AiCitationChips citations={citations} /> : null}
+        {feedbackFeature ? <AiFeedbackButtons feature={feedbackFeature} /> : null}
       </div>
     );
   }
@@ -209,6 +212,7 @@ export function AiActionResultBody({
       onAccept={onApply}
       acceptLabel={applyLabel}
       hideFooter={false}
+      feedbackFeature={feedbackFeature}
       className={compact ? "shadow-none" : undefined}
     >
       <AiDraftText text={state.result.text} />
@@ -219,82 +223,10 @@ export function AiActionResultBody({
   );
 }
 
-interface AiActionResultFooterProps {
-  state: AiActionResultState;
-  onApply?: () => void;
-  applyLabel?: string;
-  onRetry?: () => void;
-  onCancel?: () => void;
-}
-
 function isRetryAttempt(attempt: number | undefined): boolean {
   return attempt !== undefined && attempt > 1;
 }
 
 function retryingLabel(attempt: number | undefined): string {
   return attempt === undefined ? "Retrying…" : `Retrying — attempt ${attempt}`;
-}
-
-const FOOTER_RETRY_STATUSES = new Set<AiActionResultStatus>([
-  "error",
-  "queued",
-  "unavailable",
-  "offline",
-  "cancelled",
-]);
-
-export function AiActionResultFooter({
-  state,
-  onApply,
-  applyLabel = "Apply",
-  onRetry,
-  onCancel,
-}: AiActionResultFooterProps) {
-  if ((state.status === "loading" || state.status === "streaming") && onCancel) {
-    return (
-      <AiFieldPopoverFooter>
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          onClick={onCancel}
-          className="h-9 w-full whitespace-nowrap text-sm"
-        >
-          Stop
-        </Button>
-      </AiFieldPopoverFooter>
-    );
-  }
-
-  if (FOOTER_RETRY_STATUSES.has(state.status) && onRetry) {
-    return (
-      <AiFieldPopoverFooter>
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          onClick={onRetry}
-          className="h-9 w-full whitespace-nowrap text-sm"
-        >
-          Retry
-        </Button>
-      </AiFieldPopoverFooter>
-    );
-  }
-
-  if (state.status === "ready" && onApply) {
-    return (
-      <AiFieldPopoverFooter>
-        <LoadingButton
-          size="sm"
-          onClick={onApply}
-          className="h-9 w-full whitespace-nowrap text-sm"
-        >
-          {applyLabel}
-        </LoadingButton>
-      </AiFieldPopoverFooter>
-    );
-  }
-
-  return null;
 }

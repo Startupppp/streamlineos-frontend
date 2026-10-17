@@ -317,7 +317,7 @@ export function useAiUsage(options?: { enabled?: boolean }) {
   const canView = useCan("ai:usage:view");
   return useQuery({
     queryKey: platformHierarchyQueryKeys.settings.aiUsage(),
-    queryFn: ({ signal }) => apiClient.get<AiUsageData>("/settings/ai-usage", undefined, signal, aiUsageContract),
+    queryFn: ({ signal }) => apiClient.get<AiUsageData>("/ai/usage", undefined, signal, aiUsageContract),
     enabled: canView && (options?.enabled ?? true),
     staleTime: 5 * 60_000,
   });

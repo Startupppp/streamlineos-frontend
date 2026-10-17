@@ -26,7 +26,8 @@ import {
   ResponsivePopoverContent,
   ResponsivePopoverTrigger,
 } from "@/components/ui/responsive-popover";
-import { AiActionResultBody, AiActionResultFooter } from "./ai-action-result-body";
+import { AiActionResultBody } from "./ai-action-result-body";
+import { AiActionResultFooter } from "./ai-action-result-footer";
 import {
   AiDrawerActionButton,
   AiMenuActionItem,
@@ -120,6 +121,7 @@ export function AiActionsMenu({
       onRetry={handleRetry}
       onCancel={cancelRun}
       expectsCitations={active?.expectsCitations ?? false}
+      feedbackFeature={active?.key}
     />
   );
 
@@ -141,6 +143,7 @@ export function AiActionsMenu({
           onRetry={handleRetry}
           onCancel={cancelRun}
           expectsCitations={active?.expectsCitations ?? false}
+          feedbackFeature={active?.key}
           contentOnly
         />
       </div>

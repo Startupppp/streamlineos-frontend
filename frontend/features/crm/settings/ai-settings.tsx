@@ -18,6 +18,7 @@ import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
 import { ErrorState } from "@/components/shared/error-state";
 import { EmptyState } from "@/components/ui/empty-state";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { formatShortDate } from "@/lib/date-utils";
 
 const FLAG_META: {
   key: keyof OrgFeatureFlags;
@@ -246,6 +247,24 @@ export function CrmAiSettings() {
                             <span className="font-medium text-foreground">
                               {formatCost(row.estimatedCostUsd)}
                             </span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {(usage?.daily.length ?? 0) > 0 && (
+                  <div>
+                    <p className="mb-3 text-sm font-medium">Daily (last 30 active days)</p>
+                    <div className="divide-y divide-border rounded border">
+                      {usage?.daily.map((row) => (
+                        <div key={row.date} className="flex items-center justify-between px-3 py-2 text-xs">
+                          <span className="font-medium text-foreground">{formatShortDate(row.date)}</span>
+                          <div className="flex items-center gap-4 font-mono tabular-nums text-muted-foreground">
+                            <span>{row.requestCount} req</span>
+                            <span>{formatTokens(row.totalTokens)} tokens</span>
+                            <span className="text-foreground">{formatCost(row.estimatedCostUsd)}</span>
                           </div>
                         </div>
                       ))}

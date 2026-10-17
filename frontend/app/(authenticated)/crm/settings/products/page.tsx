@@ -3,6 +3,8 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { PlusIcon } from "@animateicons/react/lucide";
+import { Boxes } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { DataTableSkeleton } from "@/components/ui/data-table-skeleton";
@@ -18,7 +20,8 @@ import { DensityToggle, useDensity } from "@/components/renderer/density-toggle"
 import { useTenantLayout } from "@/components/renderer/use-tenant-layout";
 import { RecordRowActions } from "@/features/crm/settings/shared/record-row-actions";
 import { ProductSheet } from "@/features/crm/settings/products/product-sheet";
-import { useCan } from "@/hooks/api/access";
+import { ProductFulfillmentSheet } from "@/features/crm/settings/products/product-fulfillment-sheet";
+import { useCan, useModuleEnabled } from "@/hooks/api/access";
 import { useOrgDisplay } from "@/hooks/api/org-display";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import { useDeleteProduct, useProducts } from "@/hooks/api/crm/products";
@@ -47,12 +50,17 @@ export default function ProductCatalogPage() {
   const money = useOrgDisplay();
   const [density, setDensity] = useDensity();
   const canManage = useCan("crm:products:manage");
+  // Mappings live behind @RequireModule(["crm", "inventory"]); this page is already CRM.
+  const canReadFulfillment = useCan("crm:offer-fulfillment:view");
+  const inventoryEnabled = useModuleEnabled("inventory");
+  const canViewFulfillment = canReadFulfillment && inventoryEnabled;
 
   const [search, setSearch] = useState(searchParams.get("q") ?? "");
   const debouncedSearch = useDebouncedValue(search, 300);
   const [sheetOpen, setSheetOpen] = useState(false);
   const [editTarget, setEditTarget] = useState<Product | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Product | null>(null);
+  const [fulfillmentTarget, setFulfillmentTarget] = useState<Product | null>(null);
 
   useEffect(() => {
     const current = searchParams.get("q") ?? "";
@@ -85,6 +93,10 @@ export default function ProductCatalogPage() {
     if (!open) setDeleteTarget(null);
   }, []);
 
+  const handleFulfillmentOpenChange = useCallback((open: boolean) => {
+    if (!open) setFulfillmentTarget(null);
+  }, []);
+
   const handleClearSearch = useCallback(() => setSearch(""), []);
   const handleRetry = useCallback(() => {
     void refetch();
@@ -110,6 +122,19 @@ export default function ProductCatalogPage() {
       if (!product || !canManage) return null;
       return (
         <RecordRowActions
+          leading={
+            canViewFulfillment ? (
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-7 w-7"
+                onClick={() => setFulfillmentTarget(product)}
+                aria-label={`Fulfillment for ${product.name}`}
+              >
+                <Boxes className="h-3.5 w-3.5" />
+              </Button>
+            ) : null
+          }
           editLabel={`Edit ${product.name}`}
           deleteLabel={`Delete ${product.name}`}
           onEdit={() => {
@@ -120,7 +145,7 @@ export default function ProductCatalogPage() {
         />
       );
     },
-    [products, canManage],
+    [products, canManage, canViewFulfillment],
   );
 
   return (
@@ -201,6 +226,8 @@ export default function ProductCatalogPage() {
         onOpenChange={handleSheetOpenChange}
         product={editTarget}
       />
+
+      <ProductFulfillmentSheet product={fulfillmentTarget} onOpenChange={handleFulfillmentOpenChange} />
 
       <ConfirmDialog
         open={deleteTarget !== null}
