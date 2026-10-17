@@ -8,6 +8,8 @@ import {
   SESSION_EXPIRED_VALUE,
   withExpiredSessionCookies,
 } from "@/lib/auth-session-cookies";
+import { isWaitlistMode } from "@/lib/waitlist-mode";
+import { STAFF_ENTRY_COOKIE, staffCookieIsValid } from "@/lib/waitlist-staff";
 
 export function buildCsp(nonce: string, apiUrl?: string): string {
   const isDev = process.env.NODE_ENV === "development";
@@ -134,6 +136,35 @@ const PROTECTED_ROUTES = [
 
 const AUTH_ROUTES = ["/signin", "/verify-email"];
 
+const AUTH_ENTRY_PATHS = new Set([
+  "/signin",
+  "/sign-in",
+  "/signup",
+  "/sign-up",
+  "/login",
+  "/log-in",
+  "/register",
+  "/join",
+  "/get-started",
+  "/start",
+  "/trial",
+]);
+
+function normalizePathname(pathname: string): string {
+  const lower = pathname.toLowerCase();
+  if (lower.length > 1 && lower.endsWith("/")) return lower.slice(0, -1);
+  return lower;
+}
+
+function utmSearch(req: NextRequest): string {
+  const params = new URLSearchParams();
+  for (const [key, value] of req.nextUrl.searchParams) {
+    if (key.toLowerCase().startsWith("utm_")) params.append(key, value);
+  }
+  const search = params.toString();
+  return search ? `?${search}` : "";
+}
+
 function matchesRoute(pathname: string, route: string): boolean {
   return pathname === route || pathname.startsWith(route + "/");
 }
@@ -151,7 +182,7 @@ function redirectTo(
   pathname: string,
   search = "",
 ): NextResponse {
-  const url = req.nextUrl.clone();
+  const url = new URL(req.url);
   url.pathname = pathname;
   url.search = search;
   return NextResponse.redirect(url);
@@ -181,6 +212,17 @@ export async function proxy(req: NextRequest) {
     const httpsUrl = req.nextUrl.clone();
     httpsUrl.protocol = "https";
     return NextResponse.redirect(httpsUrl, 301);
+  }
+
+  if (isWaitlistMode()) {
+    const normalized = normalizePathname(pathname);
+    if (AUTH_ENTRY_PATHS.has(normalized)) {
+      const staff =
+        normalized === "/signin" &&
+        (await staffCookieIsValid(req.cookies.get(STAFF_ENTRY_COOKIE)?.value));
+      if (!staff) return redirectTo(req, "/waitlist", utmSearch(req));
+      if (pathname !== "/signin") return redirectTo(req, "/signin", req.nextUrl.search);
+    }
   }
 
   if (matchesRoute(pathname, "/signup"))
@@ -216,10 +258,12 @@ export async function proxy(req: NextRequest) {
     if (token) break;
   }
 
+  const pathForGuard = isWaitlistMode() ? normalizePathname(pathname) : pathname;
   const isProtected =
-    matchesAny(pathname, PROTECTED_ROUTES) || isBlogAdminPath(pathname);
+    matchesAny(pathForGuard, PROTECTED_ROUTES) || isBlogAdminPath(pathname);
 
   if (!token && isProtected) {
+    if (isWaitlistMode()) return redirectTo(req, "/waitlist", utmSearch(req));
     const hasSessionCookie = req.cookies
       .getAll()
       .some((c) => isSessionCookieName(c.name));
