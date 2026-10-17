@@ -226,6 +226,26 @@ describe("LeaveRequestSheet", () => {
     expect(toastError).not.toHaveBeenCalled();
   });
 
+  it("keeps a refused submit's reason visible in the open sheet (HRM-B-009)", async () => {
+    requestLeaveMutateAsync.mockRejectedValue(
+      new Error("You already have a leave request for overlapping dates."),
+    );
+    const { onOpenChange } = renderSheet();
+
+    pickOption(/Casual Leave/);
+    const dates = document.querySelectorAll<HTMLInputElement>('input[type="date"]');
+    fireEvent.change(dates[0], { target: { value: "2026-10-29" } });
+    fireEvent.change(dates[1], { target: { value: "2026-10-29" } });
+    fireEvent.change(screen.getByRole("textbox"), {
+      target: { value: "Overlap probe for the sheet." },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Submit leave request" }));
+
+    expect(await screen.findByRole("alert")).toHaveTextContent(/overlapping dates/);
+    expect(toastError).toHaveBeenCalled();
+    expect(onOpenChange).not.toHaveBeenCalledWith(false);
+  });
+
   /**
    * V-041. A submit button that is disabled and says nothing is a dead end.
    * Every configuration that disables it must also render the explanation.

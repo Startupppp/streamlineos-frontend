@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, memo } from "react";
+import { useState, useCallback, useRef, memo } from "react";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import { toast } from "sonner";
 import { Pencil, ArrowRight } from "lucide-react";
@@ -189,7 +189,16 @@ export function SalaryStructuresPageContent() {
     toast.error(getErrorMessage(err));
   }
 
+  // PAY-B-020: a double click fires two submits before isPending re-renders the
+  // button disabled, so the in-flight state is held synchronously here.
+  const submitInFlight = useRef(false);
+
   function handleFormSubmit(data: CreateSalaryTemplateInput) {
+    if (submitInFlight.current) return;
+    submitInFlight.current = true;
+    const release = () => {
+      submitInFlight.current = false;
+    };
     if (editingTemplate) {
       updateMutation.mutate(
         { salaryStructureId: editingTemplate.id, ...data },
@@ -200,6 +209,7 @@ export function SalaryStructuresPageContent() {
             setEditingTemplate(undefined);
           },
           onError: handleSubmitError,
+          onSettled: release,
         },
       );
     } else {
@@ -209,6 +219,7 @@ export function SalaryStructuresPageContent() {
           setSheetOpen(false);
         },
         onError: handleSubmitError,
+        onSettled: release,
       });
     }
   }

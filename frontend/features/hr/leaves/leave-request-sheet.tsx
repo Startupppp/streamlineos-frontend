@@ -22,6 +22,7 @@ import { effectiveLeaveEnd, leaveFormSchema, type LeaveFormValues } from "./leav
 import { LeaveRequestFormFields } from "./leave-request-form-fields";
 import { useLeaveRequestValidation } from "./use-leave-request-validation";
 import type { LeaveSpan } from "./leave-overlap";
+import { LeaveOverlapBlocked } from "./leave-balance-preview";
 import type {
   LeaveType,
   LeaveBalance,
@@ -63,6 +64,9 @@ export function LeaveRequestSheet({
     [policy?.leaveTypes],
   );
   const [attachmentUrl, setAttachmentUrl] = useState<string | null>(null);
+  // HRM-B-009: a refused submit keeps the sheet open, so the reason has to live
+  // in the sheet too; a toast alone is gone before the user looks for it.
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
   const canApprove = useCan("hr:leaves:approve");
   const canManage = useCan("hr:leaves:manage");
@@ -86,6 +90,7 @@ export function LeaveRequestSheet({
     if (!open) {
       form.reset();
       setAttachmentUrl(null);
+      setSubmitError(null);
     }
   }, [open, form]);
 
@@ -93,6 +98,10 @@ export function LeaveRequestSheet({
   const watchedStartDate = form.watch("startDate");
   const watchedEndDate = form.watch("endDate");
   const watchedHalfDay = form.watch("halfDay");
+
+  useEffect(() => {
+    setSubmitError(null);
+  }, [watchedLeaveTypeId, watchedStartDate, watchedEndDate, watchedHalfDay]);
 
   const startFloor = leaveStartFloor(
     parseDateOnly(joiningDate?.slice(0, 10)),
@@ -166,7 +175,9 @@ export function LeaveRequestSheet({
         setAttachmentUrl(null);
         onOpenChange(false);
       } catch (err: unknown) {
-        toast.error(getErrorMessage(err));
+        const message = getErrorMessage(err);
+        setSubmitError(message);
+        toast.error(message);
       }
     },
     [validation, attachmentUrl, form, onOpenChange, requestLeaveMutation],
@@ -182,7 +193,7 @@ export function LeaveRequestSheet({
       : !approverAvailable
         ? "No approver available"
         : validation.overlapMessage
-          ? "Dates overlap approved leave"
+          ? "Dates overlap existing leave"
           : validation.balanceError
             ? "Not enough leave balance"
             : "Submit leave request";
@@ -218,6 +229,7 @@ export function LeaveRequestSheet({
           validation={validation}
           pastDatesBlocked={!canBackdate}
         />
+        {submitError ? <LeaveOverlapBlocked message={submitError} /> : null}
       </Form>
     </HrSheet>
   );

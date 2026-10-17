@@ -195,3 +195,19 @@ describe("UX-R2 template cards are told apart by id and created date", () => {
     expect(screen.getByText(/#7 · Created 15 Oct 2026/)).toBeInTheDocument();
   });
 });
+
+describe("PAY-B-020 a double-click on Create Template sends one POST", () => {
+  it("ignores a second submit while the first create is still in flight, and accepts one after it settles", () => {
+    render(<SalaryStructuresPageContent />);
+    const { onSubmit } = sheetProps.mock.lastCall[0] as { onSubmit: (data: unknown) => void };
+
+    onSubmit({ name: "Dbl" });
+    onSubmit({ name: "Dbl" });
+    expect(idleMutation.mutate).toHaveBeenCalledTimes(1);
+
+    const options = idleMutation.mutate.mock.calls[0][1] as { onSettled: () => void };
+    options.onSettled();
+    onSubmit({ name: "Again" });
+    expect(idleMutation.mutate).toHaveBeenCalledTimes(2);
+  });
+});
