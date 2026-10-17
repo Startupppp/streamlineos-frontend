@@ -39,6 +39,7 @@ import {
   clearAdminWizardDraft,
   toAdminWizardDraft,
 } from "./_onboarding/wizard-draft";
+import { startOfLocalDay } from "@/lib/date-constraints";
 
 type FormValues = z.infer<typeof onboardEmployeeInputSchema>;
 
@@ -96,7 +97,7 @@ export function OnboardingWizard() {
       role: (savedDraft?.role as FormValues["role"]) ?? DEFAULT_INVITE_ROLE,
       employeeId: savedDraft?.employeeId ?? "",
       attachToExistingMember: false,
-      joiningDate: savedDraft?.joiningDate ? new Date(savedDraft.joiningDate) : new Date(),
+      joiningDate: savedDraft?.joiningDate ? new Date(savedDraft.joiningDate) : startOfLocalDay(),
       dateOfBirth: savedDraft?.dateOfBirth ? new Date(savedDraft.dateOfBirth) : undefined,
       taxId: savedDraft?.taxId ?? "",
       monthlySalary: savedDraft?.monthlySalary ?? undefined,
@@ -142,6 +143,7 @@ export function OnboardingWizard() {
           const guidance = employeeAdmissionGuidance(res.status);
           form.setValue("attachToExistingMember", guidance.attachToExistingMember);
           if (guidance.blocking && guidance.message) {
+            checkedEmail.current = "";
             form.setError("email", { message: guidance.message });
             toast.error(guidance.message);
           } else {

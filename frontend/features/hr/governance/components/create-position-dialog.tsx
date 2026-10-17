@@ -45,7 +45,7 @@ interface CreatePositionDialogProps {
 
 export function CreatePositionDialog({ open, onOpenChange }: CreatePositionDialogProps) {
   const createPosition = useCreatePosition();
-  const { data: statuses } = usePositionStatuses({ enabled: open });
+  const { data: statuses, isLoading: statusesLoading } = usePositionStatuses({ enabled: open });
   const { data: departments } = useHrDepartments({ enabled: open });
   const seedStatuses = useSeedPositionStatuses();
   const activeStatuses = (statuses ?? []).filter((status) => status.isActive);
@@ -128,10 +128,10 @@ export function CreatePositionDialog({ open, onOpenChange }: CreatePositionDialo
                     </LoadingButton>
                   </div>
                 ) : (
-                  <Select value={field.value} onValueChange={field.onChange}>
+                  <Select value={field.value} onValueChange={field.onChange} disabled={statusesLoading}>
                     <FormControl>
                       <SelectTrigger>
-                        <SelectValue placeholder="Select a status" />
+                        <SelectValue placeholder={statusesLoading ? "Loading statuses…" : "Select a status"} />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent className={FIELD_SELECT_CONTENT_CLASS}>
