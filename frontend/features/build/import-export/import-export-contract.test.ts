@@ -4,6 +4,8 @@ import {
   ticketImportExportCommitImportResponseSchema,
   ticketImportExportExportTicketsResponseSchema,
 } from "@/contracts/build-contracts.generated";
+import { ticketImportPreviewContract } from "./import-export-contract";
+import { mapSourceColumns } from "./import-column-mapping";
 
 
 const preview = {
@@ -137,5 +139,28 @@ describe("ticketImportExportExportTicketsResponseSchema", () => {
         content: "",
       }),
     ).toThrow(ZodError);
+  });
+});
+
+describe("ticketImportPreviewContract — the labels column", () => {
+  it("keeps each row's labels and the will-be-created list", () => {
+    const parsed = ticketImportPreviewContract.parse({
+      ...preview,
+      rows: [{ rowNumber: 2, values: { title: "Ship it", status: "TODO", labels: ["Bug", "Perf"] } }],
+      labelsToCreate: ["Perf"],
+    });
+    expect(parsed.rows[0]?.values.labels).toEqual(["Bug", "Perf"]);
+    expect(parsed.labelsToCreate).toEqual(["Perf"]);
+  });
+
+  it("reads a backend that predates labels as creating none", () => {
+    expect(ticketImportPreviewContract.parse(preview).labelsToCreate).toEqual([]);
+  });
+
+  it("maps a labels column to the labels field instead of 'Not importable'", () => {
+    expect(mapSourceColumns("csv", "title,Labels\nShip it,bug")).toEqual([
+      { column: "title", field: "title", state: "MAPPED" },
+      { column: "Labels", field: "labels", state: "MAPPED" },
+    ]);
   });
 });

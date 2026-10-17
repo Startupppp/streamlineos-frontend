@@ -8,11 +8,8 @@ import {
   usePreviewTicketImport,
 } from "@/hooks/api/build/ticket-import-export";
 import { canCommit } from "./import-preview-model";
-import type {
-  TicketImportExportPreviewImportResponse,
-  TicketImportExportCommitImportResponse,
-} from "@/contracts/build-contracts.generated";
-import type { ImportFormat, ImportMode } from "./import-export-contract";
+import type { TicketImportExportCommitImportResponse } from "@/contracts/build-contracts.generated";
+import type { ImportFormat, ImportMode, TicketImportPreview } from "./import-export-contract";
 
 const IMPORT_MAX_CONTENT_BYTES = 2_000_000;
 
@@ -21,7 +18,7 @@ interface TicketImportFlow {
   format: ImportFormat;
   content: string;
   mode: ImportMode;
-  preview: TicketImportExportPreviewImportResponse | null;
+  preview: TicketImportPreview | null;
   report: TicketImportExportCommitImportResponse | null;
   isPreviewing: boolean;
   isCommitting: boolean;
@@ -46,7 +43,7 @@ export function useTicketImportFlow(projectId: number): TicketImportFlow {
   const [format, setFormat] = useState<ImportFormat>("csv");
   const [content, setRawContent] = useState("");
   const [mode, setMode] = useState<ImportMode>("atomic");
-  const [preview, setPreview] = useState<TicketImportExportPreviewImportResponse | null>(null);
+  const [preview, setPreview] = useState<TicketImportPreview | null>(null);
   const [report, setReport] = useState<TicketImportExportCommitImportResponse | null>(null);
   const abort = useRef<AbortController | null>(null);
 

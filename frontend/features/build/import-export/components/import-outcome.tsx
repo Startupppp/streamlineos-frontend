@@ -23,10 +23,8 @@ import {
   reportHeadline,
   rowsNeedingAttention,
 } from "../import-preview-model";
-import type {
-  TicketImportExportPreviewImportResponse,
-  TicketImportExportCommitImportResponse,
-} from "@/contracts/build-contracts.generated";
+import type { TicketImportExportCommitImportResponse } from "@/contracts/build-contracts.generated";
+import type { TicketImportPreview } from "../import-export-contract";
 
 interface OutcomeRow {
   rowNumber: number;
@@ -71,7 +69,7 @@ function OutcomeList({ caption, rows }: OutcomeListProps) {
 }
 
 interface ImportPreviewOutcomeProps {
-  preview: TicketImportExportPreviewImportResponse;
+  preview: TicketImportPreview;
 }
 
 export function ImportPreviewOutcome({ preview }: ImportPreviewOutcomeProps) {
@@ -95,6 +93,22 @@ export function ImportPreviewOutcome({ preview }: ImportPreviewOutcomeProps) {
           </Button>
         ) : null}
       </div>
+      {preview.labelsToCreate.length > 0 ? (
+        <div className="flex flex-col gap-1.5">
+          <p className="text-sm text-muted-foreground">
+            {preview.labelsToCreate.length === 1
+              ? "1 label will be created:"
+              : `${preview.labelsToCreate.length} labels will be created:`}
+          </p>
+          <ul className="flex flex-wrap gap-1.5" aria-label="Labels that will be created">
+            {preview.labelsToCreate.map((name) => (
+              <li key={name}>
+                <Badge variant="outline">{name}</Badge>
+              </li>
+            ))}
+          </ul>
+        </div>
+      ) : null}
       <OutcomeList
         caption="Issue"
         rows={attention.map((row) => ({

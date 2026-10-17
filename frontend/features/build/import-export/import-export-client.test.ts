@@ -1,6 +1,5 @@
 import { IDEMPOTENCY_HEADER } from "@/lib/idempotency-key";
 import {
-  ticketImportExportPreviewImportResponseSchema,
   ticketImportExportCommitImportResponseSchema,
   ticketImportExportExportTicketsResponseSchema,
 } from "@/contracts/build-contracts.generated";
@@ -9,6 +8,7 @@ import {
   exportTickets,
   previewTicketImport,
 } from "./import-export-client";
+import { ticketImportPreviewContract } from "./import-export-contract";
 
 jest.mock("@/lib/api-client", () => ({
   apiClient: { get: jest.fn(), post: jest.fn() },
@@ -56,7 +56,7 @@ describe("previewTicketImport", () => {
       expect.any(Function),
     );
     const [, , , contract] = mocked().post.mock.calls[0] as [unknown, unknown, unknown, () => Promise<unknown>];
-    expect(await contract()).toBe(ticketImportExportPreviewImportResponseSchema);
+    expect(await contract()).toBe(ticketImportPreviewContract);
   });
 
   it("forwards an abort signal", async () => {

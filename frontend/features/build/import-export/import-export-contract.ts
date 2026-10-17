@@ -16,8 +16,20 @@ export const importIssueKindSchema = z.enum([
 
 export const importModeSchema = z.enum(["atomic", "partial"]);
 
-export const importPreviewValuesSchema =
-  ticketImportExportPreviewImportResponseSchema.shape.rows.element.shape.values;
+const generatedRow = ticketImportExportPreviewImportResponseSchema.shape.rows.element;
+
+// `labels` and `labelsToCreate` are declared here as well as in the generated
+// contract, so the dry run keeps them before and after a contract regeneration.
+export const importPreviewValuesSchema = generatedRow.shape.values.extend({
+  labels: z.array(z.string()).optional(),
+});
+
+export const ticketImportPreviewContract = ticketImportExportPreviewImportResponseSchema.extend({
+  rows: z.array(generatedRow.extend({ values: importPreviewValuesSchema })),
+  labelsToCreate: z.array(z.string()).default([]),
+});
+
+export type TicketImportPreview = z.infer<typeof ticketImportPreviewContract>;
 
 export type ImportFormat = z.infer<typeof importFormatSchema>;
 export type ImportMode = z.infer<typeof importModeSchema>;

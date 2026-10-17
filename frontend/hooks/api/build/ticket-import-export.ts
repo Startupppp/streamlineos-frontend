@@ -14,12 +14,15 @@ import {
   previewTicketImport,
 } from "@/features/build/import-export/import-export-client";
 import type {
-  TicketImportExportPreviewImportResponse,
   TicketImportExportCommitImportResponse,
   TicketImportExportExportTicketsResponse,
   TicketImportExportPreviewExportResponse,
 } from "@/contracts/build-contracts.generated";
-import type { ImportFormat, ImportMode } from "@/features/build/import-export/import-export-contract";
+import type {
+  ImportFormat,
+  ImportMode,
+  TicketImportPreview,
+} from "@/features/build/import-export/import-export-contract";
 
 interface PreviewTicketImportVariables {
   format: ImportFormat;
@@ -50,7 +53,7 @@ function useCommitKey(): (confirmationToken: string) => string {
 }
 
 export function usePreviewTicketImport(projectId: number) {
-  return useAuthorizedMutation<TicketImportExportPreviewImportResponse, Error, PreviewTicketImportVariables>(
+  return useAuthorizedMutation<TicketImportPreview, Error, PreviewTicketImportVariables>(
     "build:tickets:create",
     {
       mutationKey: buildWorkQueryKeys.projects.importExport.preview(projectId),

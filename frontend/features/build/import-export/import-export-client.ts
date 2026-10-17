@@ -2,16 +2,13 @@ import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
 import { IDEMPOTENCY_HEADER } from "@/lib/idempotency-key";
 import type {
-  TicketImportExportPreviewImportResponse,
   TicketImportExportCommitImportResponse,
   TicketImportExportExportTicketsResponse,
 } from "@/contracts/build-contracts.generated";
-import type { ImportFormat, ImportMode } from "./import-export-contract";
+import type { ImportFormat, ImportMode, TicketImportPreview } from "./import-export-contract";
 
 const previewContract = lazyContract(() =>
-  import("@/contracts/build-contracts.generated").then(
-    (m) => m.ticketImportExportPreviewImportResponseSchema,
-  ),
+  import("./import-export-contract").then((m) => m.ticketImportPreviewContract),
 );
 
 const commitContract = lazyContract(() =>
@@ -53,8 +50,8 @@ interface ExportTicketsInput {
 
 export function previewTicketImport(
   input: PreviewTicketImportInput,
-): Promise<TicketImportExportPreviewImportResponse> {
-  return apiClient.post<TicketImportExportPreviewImportResponse>(
+): Promise<TicketImportPreview> {
+  return apiClient.post<TicketImportPreview>(
     `/build/${input.projectId}/import-export/tickets/preview`,
     { format: input.format, content: input.content },
     input.signal ? { signal: input.signal } : undefined,
