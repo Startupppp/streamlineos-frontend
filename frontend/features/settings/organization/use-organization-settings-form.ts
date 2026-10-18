@@ -54,6 +54,7 @@ export function useOrganizationSettingsForm<
   // `keepDirtyValues` is what stops a background refetch overwriting an active edit.
   const form = useForm<TValues, unknown, TValues>({
     resolver,
+    mode: "onTouched",
     values: serverValues,
     resetOptions: { keepDirtyValues: true, keepErrors: true },
   });
