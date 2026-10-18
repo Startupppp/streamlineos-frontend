@@ -41,7 +41,11 @@ export function PeopleSectionTabs() {
   );
 
   return (
-    <Tabs value={active} onValueChange={handleValueChange}>
+    <Tabs
+      value={active}
+      onValueChange={handleValueChange}
+      className="w-full md:w-auto"
+    >
       <TabsList>
         <TabsTrigger value="members">
           Members

@@ -59,11 +59,19 @@ function ProfileSkeleton() {
   );
 }
 
-export function UserDetailSheet({ userId, open, onOpenChange }: UserDetailSheetProps) {
+export function UserDetailSheet({
+  userId,
+  open,
+  onOpenChange,
+}: UserDetailSheetProps) {
   const [isEditing, setIsEditing] = useState(false);
   const canManage = useCan("settings:organization:manage");
-  const { data: user, isLoading } = useUser(userId ?? "", { enabled: !!userId && open });
-  const { byUserId: employmentByUserId } = useEmploymentFacts(userId ? [userId] : []);
+  const { data: user, isLoading } = useUser(userId ?? "", {
+    enabled: !!userId && open,
+  });
+  const { byUserId: employmentByUserId } = useEmploymentFacts(
+    userId ? [userId] : [],
+  );
   const employment = userId ? employmentByUserId.get(userId) : undefined;
   const visibleTabs = canManage
     ? TAB_ITEMS
@@ -107,14 +115,17 @@ export function UserDetailSheet({ userId, open, onOpenChange }: UserDetailSheetP
 
         {!isLoading && user && !(isEditing && canManage) && (
           <div className="flex min-h-0 flex-1 flex-col">
-            <Tabs defaultValue="profile" className="flex min-h-0 flex-1 flex-col gap-0">
+            <Tabs
+              defaultValue="profile"
+              className="flex min-h-0 flex-1 flex-col gap-0"
+            >
               <div className="shrink-0 px-6 pt-2 pb-3">
-                <TabsList className="w-full md:w-full shrink-0 gap-0.5 overflow-hidden rounded-md bg-muted/50 p-0.5">
+                <TabsList className="w-full md:w-full shrink-0">
                   {visibleTabs.map(({ value, label }) => (
                     <TabsTrigger
                       key={value}
                       value={value}
-                      className="min-w-0 flex-1 basis-0 px-1.5 text-xs font-medium truncate"
+                      className="min-w-0 flex-1 basis-0 truncate"
                     >
                       {label}
                     </TabsTrigger>
@@ -138,7 +149,10 @@ export function UserDetailSheet({ userId, open, onOpenChange }: UserDetailSheetP
                       <UserSessionsTab userId={user.id} />
                     </TabsContent>
 
-                    <TabsContent value="login-history" className={TAB_PANEL_CLASS}>
+                    <TabsContent
+                      value="login-history"
+                      className={TAB_PANEL_CLASS}
+                    >
                       <UserLoginHistoryTab userId={user.id} />
                     </TabsContent>
 

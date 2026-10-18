@@ -1,7 +1,13 @@
 "use client";
 
 import { getErrorMessage } from "@/lib/get-error-message";
-import { useState, useCallback, useTransition, useEffect, useMemo } from "react";
+import {
+  useState,
+  useCallback,
+  useTransition,
+  useEffect,
+  useMemo,
+} from "react";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import { useQueryParamOpen } from "@/hooks/common/use-query-param-open";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
@@ -10,7 +16,11 @@ import { toast } from "sonner";
 import { describeInviteFailure } from "@/features/directory/users/invite-error-message";
 
 import { PageWrapper } from "@/components/ui/page-wrapper";
-import { useAccess, usePermissionGate, useCanManageOrganizationMembership } from "@/hooks/api/access";
+import {
+  useAccess,
+  usePermissionGate,
+  useCanManageOrganizationMembership,
+} from "@/hooks/api/access";
 import { NoPermissionState } from "@/components/shared/no-permission-state";
 import { SearchInput } from "@/components/ui/search-input";
 import {
@@ -69,14 +79,18 @@ export function UserInvitationsPanel() {
     onOpenChange: setInviteOpen,
     setOpen: openInvite,
   } = useQueryParamOpen("create");
-  const [cancellationInvitationId, setCancellationInvitationId] = useState<string | null>(null);
+  const [cancellationInvitationId, setCancellationInvitationId] = useState<
+    string | null
+  >(null);
   /**
    * BUG-HRMS-004. Copying a join link REISSUES it, which kills the link already in
    * the recipient's inbox. That was a tooltip on an icon button: one click, no
    * confirmation, and the invitee's emailed link stopped working with nobody told.
    * Asked before the reissue, not reported after it.
    */
-  const [joinLinkInvitationId, setJoinLinkInvitationId] = useState<string | null>(null);
+  const [joinLinkInvitationId, setJoinLinkInvitationId] = useState<
+    string | null
+  >(null);
   const canManageMembership = useCanManageOrganizationMembership();
   const invitationsGate = usePermissionGate("settings:organization:manage");
   const { refetch: refetchAccess } = useAccess();
@@ -85,7 +99,9 @@ export function UserInvitationsPanel() {
   const canCancelInvitation = canManageMembership;
 
   const searchQuery = searchParams.get("q") ?? "";
-  const status: InvitationStatusFilter = resolveInvitationStatusFilter(searchParams.get("status"));
+  const status: InvitationStatusFilter = resolveInvitationStatusFilter(
+    searchParams.get("status"),
+  );
   const pageSize = parsePageSize(searchParams.get("size"));
 
   const [localSearch, setLocalSearch] = useState(searchQuery);
@@ -168,10 +184,9 @@ export function UserInvitationsPanel() {
       }
       const queryString = params.toString();
       startTransition(() => {
-        router.replace(
-          queryString ? `${pathname}?${queryString}` : pathname,
-          { scroll: false },
-        );
+        router.replace(queryString ? `${pathname}?${queryString}` : pathname, {
+          scroll: false,
+        });
       });
     },
     [searchParams, router, pathname],
@@ -188,8 +203,7 @@ export function UserInvitationsPanel() {
   );
 
   const handleStatusChange = useCallback(
-    (value: string) =>
-      updateParams({ status: value === "all" ? null : value }),
+    (value: string) => updateParams({ status: value === "all" ? null : value }),
     [updateParams],
   );
 
@@ -202,7 +216,10 @@ export function UserInvitationsPanel() {
               kind === "reinvite"
                 ? "Re-invitation link issued; email queued"
                 : "Invitation link renewed; email queued",
-              { description: "Delivery is not yet confirmed. Check status before assuming it arrived." },
+              {
+                description:
+                  "Delivery is not yet confirmed. Check status before assuming it arrived.",
+              },
             );
             return;
           }
@@ -237,7 +254,8 @@ export function UserInvitationsPanel() {
         { invitationId, role },
         {
           onSuccess: () => toast.success("Invitation role updated"),
-          onError: (err) => toast.error(describeInviteFailure("invite", getErrorMessage(err))),
+          onError: (err) =>
+            toast.error(describeInviteFailure("invite", getErrorMessage(err))),
         },
       );
     },
@@ -347,7 +365,11 @@ export function UserInvitationsPanel() {
           ? "No invitations match your filters."
           : "Invite your first team member to get started."
       }
-      action={canInvite ? { label: "Invite User", onClick: handleOpenInvite } : undefined}
+      action={
+        canInvite
+          ? { label: "Invite User", onClick: handleOpenInvite }
+          : undefined
+      }
       className="border-0 bg-transparent"
     />
   );
@@ -373,8 +395,7 @@ export function UserInvitationsPanel() {
         }
         filters={
           <PageTabsToolbar
-            collapseBelow="lg"
-            filtersAlwaysVisible
+            collapseBelow="xl"
             tabs={<PeopleSectionTabs />}
             search={
               <SearchInput
@@ -385,40 +406,32 @@ export function UserInvitationsPanel() {
             }
             filters={
               <Select value={status} onValueChange={handleStatusChange}>
-              <SelectTrigger
-                className={`w-full lg:w-[140px] ${FILTER_SELECT_TRIGGER}`}
-              >
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent className="min-w-[var(--radix-select-trigger-width)]">
-                <SelectItem value="all">All statuses</SelectItem>
-                <SelectItem value="pending">Pending</SelectItem>
-                <SelectItem value="accepted">Accepted</SelectItem>
-                <SelectItem value="expired">Expired</SelectItem>
-                <SelectItem value="revoked">Revoked</SelectItem>
-                <SelectItem value="declined">Declined</SelectItem>
-              </SelectContent>
+                <SelectTrigger
+                  className={`w-full xl:w-[140px] ${FILTER_SELECT_TRIGGER}`}
+                >
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent className="min-w-[var(--radix-select-trigger-width)]">
+                  <SelectItem value="all">All statuses</SelectItem>
+                  <SelectItem value="pending">Pending</SelectItem>
+                  <SelectItem value="accepted">Accepted</SelectItem>
+                  <SelectItem value="expired">Expired</SelectItem>
+                  <SelectItem value="revoked">Revoked</SelectItem>
+                  <SelectItem value="declined">Declined</SelectItem>
+                </SelectContent>
               </Select>
             }
           />
         }
       >
-        <div className="flex flex-1 min-h-0 flex-col gap-3">
+        <div className="flex flex-col gap-3">
           {invitationsGate.denied ? (
             <NoPermissionState
               permission="settings:organization:manage"
               title="Invitations are restricted"
               description="You do not have permission to view this organization's invitations."
-              className="flex-1"
             />
           ) : invitationsGate.unavailable ? (
-            /*
-             * SETTINGS-004. The list is gated on /me/access, so a failed access
-             * read left the table in `isLoading` with nothing to retry — a tab
-             * that says "Loading results…" forever while the header above it
-             * counts pending invites. An access read that failed is a failure,
-             * not a wait, and says so.
-             */
             <ErrorState
               title="Failed to load invitations"
               description="Your access could not be checked, so invitations cannot be listed."
@@ -433,36 +446,29 @@ export function UserInvitationsPanel() {
           ) : (
             <>
               {invitationsStalled && (
-                /*
-                 * CHAT-F-002. The two error branches above are right and were out
-                 * of reach: a read against an unreachable API holds `isLoading` for
-                 * up to ~61s, so the table showed its loading rows under a header
-                 * counting pending invites and nothing said why.
-                 */
                 <StalledReadNotice
                   className="mb-3"
                   subject="invitations"
                   onRetry={handleRetry}
                 />
               )}
-            <DataTable
-              className="flex-1 min-h-0"
-              data={rows}
-              columns={columns}
-              getRowKey={getInvitationRowKey}
-              isLoading={isLoading || invitationsGate.pending}
-              emptyState={emptyState}
-              pagination={{
-                mode: "cursor",
-                pageSize,
-                hasMore: pagination?.hasMore ?? false,
-                hasPrevious: pager.hasPrevious,
-                onNext: handleNext,
-                onPrevious: handlePrevious,
-                onPageSizeChange: handlePageSizeChange,
-                pageSizeOptions: STANDARD_PAGE_SIZE_OPTIONS,
-              }}
-            />
+              <DataTable
+                data={rows}
+                columns={columns}
+                getRowKey={getInvitationRowKey}
+                isLoading={isLoading || invitationsGate.pending}
+                emptyState={emptyState}
+                pagination={{
+                  mode: "cursor",
+                  pageSize,
+                  hasMore: pagination?.hasMore ?? false,
+                  hasPrevious: pager.hasPrevious,
+                  onNext: handleNext,
+                  onPrevious: handlePrevious,
+                  onPageSizeChange: handlePageSizeChange,
+                  pageSizeOptions: STANDARD_PAGE_SIZE_OPTIONS,
+                }}
+              />
             </>
           )}
         </div>

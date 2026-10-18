@@ -1,6 +1,12 @@
 "use client";
 
-import { useState, useCallback, useMemo, useTransition, useEffect } from "react";
+import {
+  useState,
+  useCallback,
+  useMemo,
+  useTransition,
+  useEffect,
+} from "react";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { keepPreviousData } from "@tanstack/react-query";
@@ -11,10 +17,7 @@ import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { ErrorState } from "@/components/shared/error-state";
 import { DataTable } from "@/components/ui/data-table";
 import { CursorPageControls } from "@/components/ui/cursor-page-controls";
-import {
-  useUsers,
-  useExportUsers,
-} from "@/hooks/api/users";
+import { useUsers, useExportUsers } from "@/hooks/api/users";
 import type { User } from "@/hooks/api/users";
 import { useOrgBranches, useOrgDepartments } from "@/hooks/api/org-hierarchy";
 import { getErrorMessage } from "@/lib/get-error-message";
@@ -25,10 +28,7 @@ import { UserBulkInviteDialog } from "./user-bulk-invite-dialog";
 import { UserImportDialog } from "./user-import-dialog";
 import { UserBulkAssignDialog } from "./user-bulk-assign-dialog";
 import { UserStatsCards } from "./user-stats-cards";
-import {
-  useCan,
-  useCanManageOrganizationMembership,
-} from "@/hooks/api/access";
+import { useCan, useCanManageOrganizationMembership } from "@/hooks/api/access";
 import { PeopleSectionTabs } from "./people-section-tabs";
 import { PageTabsToolbar } from "@/components/ui/page-tabs-toolbar";
 import {
@@ -37,9 +37,7 @@ import {
 } from "@/lib/list-pagination";
 import { readUsersListState, USER_SORT_FIELDS } from "./users-list-state";
 import { UserBulkActionsBar } from "./user-bulk-actions-bar";
-import {
-  getUserBulkActionCopy,
-} from "./user-bulk-action-copy";
+import { getUserBulkActionCopy } from "./user-bulk-action-copy";
 import { UserDirectoryFilters } from "./user-directory-filters";
 import { getUserTableColumns } from "./user-table-columns";
 import { UserDirectoryActions } from "./user-directory-actions";
@@ -83,7 +81,9 @@ export function UsersPage() {
   const [bulkInviteOpen, setBulkInviteOpen] = useState(false);
   const [importOpen, setImportOpen] = useState(false);
   const [assignOpen, setAssignOpen] = useState(false);
-  const [selectedUserIds, setSelectedUserIds] = useState<Set<string>>(new Set());
+  const [selectedUserIds, setSelectedUserIds] = useState<Set<string>>(
+    new Set(),
+  );
   const [cursorState, setCursorState] = useState<{
     key: string;
     history: Array<string | undefined>;
@@ -107,10 +107,9 @@ export function UsersPage() {
       }
       const queryString = params.toString();
       startTransition(() => {
-        router.replace(
-          queryString ? `${pathname}?${queryString}` : pathname,
-          { scroll: false },
-        );
+        router.replace(queryString ? `${pathname}?${queryString}` : pathname, {
+          scroll: false,
+        });
       });
     },
     [searchParams, router, pathname],
@@ -179,17 +178,14 @@ export function UsersPage() {
     [pushParams, resetCursorHistory],
   );
 
-  const {
-    data,
-    isLoading,
-    isError,
-    isPlaceholderData,
-    error,
-    refetch,
-  } = useUsers({ ...listParams, cursor }, { placeholderData: keepPreviousData });
+  const { data, isLoading, isError, isPlaceholderData, error, refetch } =
+    useUsers({ ...listParams, cursor }, { placeholderData: keepPreviousData });
 
   const { data: branchesData } = useOrgBranches(undefined, INLINE_READ_ERROR);
-  const { data: departmentsData } = useOrgDepartments(undefined, INLINE_READ_ERROR);
+  const { data: departmentsData } = useOrgDepartments(
+    undefined,
+    INLINE_READ_ERROR,
+  );
   const { mutate: exportUsers, isPending: isExporting } = useExportUsers();
   const canCreate = useCanManageOrganizationMembership();
   const canManage = useCan("settings:organization:manage");
@@ -226,7 +222,10 @@ export function UsersPage() {
 
   const handleOpenInvite = useCallback(() => setInviteOpen(true), []);
   const handleInviteChange = useCallback((v: boolean) => setInviteOpen(v), []);
-  const handleBulkInviteChange = useCallback((v: boolean) => setBulkInviteOpen(v), []);
+  const handleBulkInviteChange = useCallback(
+    (v: boolean) => setBulkInviteOpen(v),
+    [],
+  );
   const handleImportChange = useCallback((v: boolean) => setImportOpen(v), []);
   const handleSheetChange = useCallback((v: boolean) => setSheetOpen(v), []);
   const handleAssignChange = useCallback((v: boolean) => setAssignOpen(v), []);
@@ -248,11 +247,17 @@ export function UsersPage() {
     handleBulkDialogOpenChange,
     handleConfirmBulkAction,
   } = useUserBulkLifecycle(selectedUserIds, handleClearSelection);
-  const handleRetry = useCallback(() => { void refetch(); }, [refetch]);
-  const handleAssignSuccess = useCallback(() => setSelectedUserIds(new Set()), []);
+  const handleRetry = useCallback(() => {
+    void refetch();
+  }, [refetch]);
+  const handleAssignSuccess = useCallback(
+    () => setSelectedUserIds(new Set()),
+    [],
+  );
   const handlePreviousPage = useCallback(() => {
     setCursorState((current) => {
-      const history = current.key === cursorResetKey ? current.history : [undefined];
+      const history =
+        current.key === cursorResetKey ? current.history : [undefined];
       return { key: cursorResetKey, history: history.slice(0, -1) };
     });
   }, [cursorResetKey]);
@@ -261,7 +266,8 @@ export function UsersPage() {
     const nextCursor = pagination?.nextCursor;
     if (!nextCursor) return;
     setCursorState((current) => {
-      const history = current.key === cursorResetKey ? current.history : [undefined];
+      const history =
+        current.key === cursorResetKey ? current.history : [undefined];
       return history.at(-1) === nextCursor
         ? { key: cursorResetKey, history }
         : { key: cursorResetKey, history: [...history, nextCursor] };
@@ -280,11 +286,22 @@ export function UsersPage() {
   );
 
   const isFiltered =
-    !!searchQuery || status !== "all" || role !== "all" || departmentId !== "all" || branchId !== "all";
+    !!searchQuery ||
+    status !== "all" ||
+    role !== "all" ||
+    departmentId !== "all" ||
+    branchId !== "all";
 
   const handleClearFilters = useCallback(() => {
     setSearch("");
-    pushParams({ search: null, status: null, role: null, departmentId: null, branchId: null, page: null });
+    pushParams({
+      search: null,
+      status: null,
+      role: null,
+      departmentId: null,
+      branchId: null,
+      page: null,
+    });
   }, [pushParams]);
 
   const handleViewUser = useCallback((userId: string) => {
@@ -306,7 +323,13 @@ export function UsersPage() {
         handleViewUser,
         presenceMap,
       ),
-    [branchNames, departmentNames, employmentByUserId, handleViewUser, presenceMap],
+    [
+      branchNames,
+      departmentNames,
+      employmentByUserId,
+      handleViewUser,
+      presenceMap,
+    ],
   );
 
   const renderMobileCard = useCallback(
@@ -327,34 +350,46 @@ export function UsersPage() {
           ? "Try adjusting your search or filters."
           : "Invite your first team member to get started."
       }
-      action={canCreate ? { label: "Invite User", onClick: handleOpenInvite } : undefined}
+      action={
+        canCreate
+          ? { label: "Invite User", onClick: handleOpenInvite }
+          : undefined
+      }
     />
   );
 
-  const directoryFilterProps = useMemo(() => ({
-    status,
-    role,
-    departmentId,
-    branchId,
-    departments: departmentsData?.data ?? [],
-    branches: branchesData?.data ?? [],
-    onStatusChange: handleStatusChange,
-    onRoleChange: handleRoleChange,
-    onDepartmentChange: handleDeptChange,
-    onBranchChange: handleBranchChange,
-  }), [
-    status, role, departmentId, branchId,
-    departmentsData, branchesData,
-    handleStatusChange, handleRoleChange, handleDeptChange, handleBranchChange,
-  ]);
+  const directoryFilterProps = useMemo(
+    () => ({
+      status,
+      role,
+      departmentId,
+      branchId,
+      departments: departmentsData?.data ?? [],
+      branches: branchesData?.data ?? [],
+      onStatusChange: handleStatusChange,
+      onRoleChange: handleRoleChange,
+      onDepartmentChange: handleDeptChange,
+      onBranchChange: handleBranchChange,
+    }),
+    [
+      status,
+      role,
+      departmentId,
+      branchId,
+      departmentsData,
+      branchesData,
+      handleStatusChange,
+      handleRoleChange,
+      handleDeptChange,
+      handleBranchChange,
+    ],
+  );
 
   return (
     <>
       <PageWrapper
         title="Members & access"
         subtitle="Manage people who can sign in, their roles, and organization access."
-        noInternalScroll
-        contentClassName="flex min-h-0 flex-1 flex-col"
         actions={
           <UserDirectoryActions
             canCreate={canCreate}
@@ -368,7 +403,7 @@ export function UsersPage() {
         }
         filters={
           <PageTabsToolbar
-            collapseBelow="lg"
+            collapseBelow="xl"
             tabs={<PeopleSectionTabs />}
             search={
               <SearchInput
@@ -377,16 +412,11 @@ export function UsersPage() {
                 onValueChange={handleSearchChange}
               />
             }
-            primaryFilters={
-              <UserDirectoryFilters slot="primary" {...directoryFilterProps} />
-            }
-            filters={
-              <UserDirectoryFilters slot="more" {...directoryFilterProps} />
-            }
+            filters={<UserDirectoryFilters {...directoryFilterProps} />}
           />
         }
       >
-        <div className="flex flex-1 min-h-0 flex-col gap-3">
+        <div className="flex flex-col gap-3">
           <UserStatsCards />
 
           {someSelected && (
@@ -413,7 +443,6 @@ export function UsersPage() {
           ) : (
             <>
               <DataTable
-                className="flex-1 min-h-0"
                 data={users}
                 columns={columns}
                 getRowKey={(user) => user.id}
@@ -428,11 +457,6 @@ export function UsersPage() {
                   getRowLabel: (user) => user.name || user.email,
                 }}
                 sortState={{
-                  /*
-                    The orders `GET /organization/users` will actually apply,
-                    and so the only headers that get a control: a column can
-                    never offer an order the endpoint would drop on the floor.
-                  */
                   fields: USER_SORT_FIELDS,
                   field: sortBy,
                   direction: sortOrder,
@@ -464,12 +488,18 @@ export function UsersPage() {
       />
       {canCreate ? (
         <>
-          <UserInviteDialog open={inviteOpen} onOpenChange={handleInviteChange} />
+          <UserInviteDialog
+            open={inviteOpen}
+            onOpenChange={handleInviteChange}
+          />
           <UserBulkInviteDialog
             open={bulkInviteOpen}
             onOpenChange={handleBulkInviteChange}
           />
-          <UserImportDialog open={importOpen} onOpenChange={handleImportChange} />
+          <UserImportDialog
+            open={importOpen}
+            onOpenChange={handleImportChange}
+          />
         </>
       ) : null}
       <UserBulkAssignDialog
@@ -482,12 +512,16 @@ export function UsersPage() {
         <ConfirmDialog
           open
           onOpenChange={handleBulkDialogOpenChange}
-          title={getUserBulkActionCopy(pendingBulkAction, selectedUserIds.size).title}
+          title={
+            getUserBulkActionCopy(pendingBulkAction, selectedUserIds.size).title
+          }
           description={
-            getUserBulkActionCopy(pendingBulkAction, selectedUserIds.size).description
+            getUserBulkActionCopy(pendingBulkAction, selectedUserIds.size)
+              .description
           }
           confirmLabel={
-            getUserBulkActionCopy(pendingBulkAction, selectedUserIds.size).confirmLabel
+            getUserBulkActionCopy(pendingBulkAction, selectedUserIds.size)
+              .confirmLabel
           }
           isPending={
             pendingBulkAction === "suspend"

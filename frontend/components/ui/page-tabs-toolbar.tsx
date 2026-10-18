@@ -4,9 +4,7 @@ import type { ReactNode } from "react";
 import { ListFilter } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import {
-  MobileOnlyLabelTooltip,
-} from "@/components/ui/responsive-icon-label";
+import { MobileOnlyLabelTooltip } from "@/components/ui/responsive-icon-label";
 import {
   ResponsivePopover,
   ResponsivePopoverContent,
@@ -41,7 +39,10 @@ function resolveSlot(slot: FiltersSlot | undefined): ReactNode {
   return typeof slot === "function" ? slot() : slot;
 }
 
-function inlineFilterClass(collapseBelow: PageTabsCollapseBelow, always: boolean): string {
+function inlineFilterClass(
+  collapseBelow: PageTabsCollapseBelow,
+  always: boolean,
+): string {
   if (always) return "contents";
   if (collapseBelow === "xl") return "hidden xl:contents";
   if (collapseBelow === "lg") return "hidden lg:contents";
@@ -86,7 +87,13 @@ function FiltersMenu({
         align="end"
         className="w-[min(18rem,calc(100vw-2rem))] space-y-2 p-3"
       >
-        <div className="flex flex-col gap-2 [&_.contents]:flex [&_.contents]:flex-col [&_.contents]:gap-2">
+        <div
+          className={cn(
+            "flex w-full flex-col gap-2",
+            "[&_.contents]:flex [&_.contents]:w-full [&_.contents]:flex-col [&_.contents]:gap-2",
+            "[&_[data-slot=select-trigger]]:!w-full [&_[data-slot=select-trigger]]:!max-w-none",
+          )}
+        >
           {resolveSlot(filters)}
         </div>
       </ResponsivePopoverContent>
@@ -115,7 +122,7 @@ export function PageTabsToolbar({
     <div
       data-slot="page-tabs-toolbar-search"
       className={cn(
-        "min-w-0 w-[min(100%,16rem)] flex-1 basis-[10rem] sm:max-w-[16rem]",
+        "min-w-0 w-full flex-1 max-w-none sm:max-w-[16rem]",
         searchClassName,
       )}
     >
@@ -138,7 +145,9 @@ export function PageTabsToolbar({
         ) : null}
         {hasMore && !moreAlwaysInMenu ? (
           <>
-            <div className={inlineFilterClass(collapseBelow, filtersAlwaysVisible)}>
+            <div
+              className={inlineFilterClass(collapseBelow, filtersAlwaysVisible)}
+            >
               {resolveSlot(filters)}
             </div>
             {!filtersAlwaysVisible ? (
@@ -159,20 +168,21 @@ export function PageTabsToolbar({
     </div>
   ) : null;
 
-  const tabsWithSearch = (
-    <div
-      data-slot="page-tabs-toolbar-tabs"
-      className="flex min-w-0 flex-1 items-center gap-2 md:flex-none"
-    >
-      <div className="shrink-0">{tabs}</div>
-      {searchField}
-    </div>
-  );
-
   if (!isLabeled) {
     return (
-      <div className={cn("flex w-full min-w-0 flex-wrap items-center gap-2", className)}>
-        {tabsWithSearch}
+      <div
+        className={cn(
+          "flex w-full min-w-0 flex-wrap items-center gap-2",
+          className,
+        )}
+      >
+        <div
+          data-slot="page-tabs-toolbar-tabs"
+          className="flex min-w-0 flex-1 items-center gap-2 md:flex-none"
+        >
+          <div className="shrink-0">{tabs}</div>
+          {searchField}
+        </div>
         {filterControls}
         {actionCluster}
       </div>
@@ -187,11 +197,17 @@ export function PageTabsToolbar({
         className,
       )}
     >
-      {tabsWithSearch}
+      <div
+        data-slot="page-tabs-toolbar-tabs"
+        className="flex w-full min-w-0 items-center md:w-auto md:shrink-0"
+      >
+        <div className="w-full min-w-0 md:w-auto md:shrink-0">{tabs}</div>
+      </div>
       <div
         data-slot="page-tabs-toolbar-controls"
-        className="flex w-full min-w-0 flex-wrap items-center gap-2 md:ml-auto md:w-auto md:justify-end"
+        className="flex w-full min-w-0 flex-nowrap items-center gap-2 md:ml-auto md:w-auto md:justify-end"
       >
+        {searchField}
         {filterControls}
         {actionCluster}
       </div>

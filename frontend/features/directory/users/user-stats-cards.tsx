@@ -26,7 +26,7 @@ export const UserStatsCards = memo(function UserStatsCards() {
   );
 
   return (
-    <StatCardGrid cols={5} stackOnMobile={2}>
+    <StatCardGrid cols={5}>
       <StatCard
         label="Total Users"
         value={data?.total ?? 0}

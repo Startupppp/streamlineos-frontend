@@ -222,7 +222,10 @@ export function DashboardShell({
 
   useEffect(() => {
     const root = document.documentElement;
-    root.style.setProperty("--mb-fab-bottom", `${fabBottomCssPx(showAboveBottomNav)}px`);
+    root.style.setProperty(
+      "--mb-fab-bottom",
+      `${fabBottomCssPx(showAboveBottomNav)}px`,
+    );
     root.style.setProperty(
       "--mb-launcher-bottom",
       `${launcherBottomCssPx(showAboveBottomNav)}px`,
@@ -271,11 +274,13 @@ export function DashboardShell({
 
   return (
     <div
-      className="flex h-dvh flex-col overflow-hidden overscroll-none lg:pb-6"
-      style={{
-        "--mb-fab-bottom": `${fabBottomCssPx(showAboveBottomNav)}px`,
-        "--mb-launcher-bottom": `${launcherBottomCssPx(showAboveBottomNav)}px`,
-      } as React.CSSProperties}
+      className="flex h-dvh flex-col overflow-hidden overscroll-none"
+      style={
+        {
+          "--mb-fab-bottom": `${fabBottomCssPx(showAboveBottomNav)}px`,
+          "--mb-launcher-bottom": `${launcherBottomCssPx(showAboveBottomNav)}px`,
+        } as React.CSSProperties
+      }
     >
       <Link
         href="#dashboard-content"
@@ -326,10 +331,12 @@ export function DashboardShell({
                   <main
                     id="dashboard-content"
                     aria-label="Main content"
-                    style={{
-                      "--mb-scroll-gutter": `${scrollGutterCssPx(showAboveBottomNav)}px`,
-                      "--mb-fab-lane": `${scrollGutterCssPx(showAboveBottomNav)}px`,
-                    } as React.CSSProperties}
+                    style={
+                      {
+                        "--mb-scroll-gutter": `${scrollGutterCssPx(showAboveBottomNav)}px`,
+                        "--mb-fab-lane": `${scrollGutterCssPx(showAboveBottomNav)}px`,
+                      } as React.CSSProperties
+                    }
                     tabIndex={-1}
                     className={cn(
                       "flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden outline-none",
@@ -345,7 +352,7 @@ export function DashboardShell({
                             )
                           : showModuleBottomNav
                             ? MOBILE_MODULE_CONTENT_PADDING_CLASS
-                            : "max-lg:pb-[var(--mb-fab-lane)]",
+                            : undefined,
                       )}
                     >
                       <div className="flex h-full min-h-0 flex-1 flex-col overflow-hidden [&>:first-child]:h-full [&>:first-child]:min-h-0 [&>:first-child]:flex-1">

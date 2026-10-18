@@ -2,7 +2,7 @@ import { render, screen } from "@testing-library/react";
 import { PageTabsToolbar } from "@/components/ui/page-tabs-toolbar";
 
 describe("PageTabsToolbar responsive layout", () => {
-  it("keeps labeled tabs and search together, with filters in the trailing controls", () => {
+  it("keeps labeled tabs on their own row, with search and filters in the trailing controls", () => {
     const { container } = render(
       <PageTabsToolbar
         tabs={<button type="button">List</button>}
@@ -25,12 +25,10 @@ describe("PageTabsToolbar responsive layout", () => {
       "md:flex-nowrap",
       "md:items-center",
     );
-    expect(tabs).toContainElement(search as HTMLElement);
-    expect(tabs).toHaveClass("flex", "items-center", "gap-2");
-    expect(controls).toHaveClass("flex", "flex-wrap", "md:ml-auto");
-    expect(controls).not.toHaveClass("md:flex-nowrap");
-    expect(controls).not.toHaveClass("md:overflow-x-auto");
-    expect(controls).not.toContainElement(search as HTMLElement);
+    expect(tabs).not.toContainElement(search as HTMLElement);
+    expect(tabs).toHaveClass("flex", "w-full", "items-center", "md:w-auto");
+    expect(controls).toHaveClass("flex", "flex-nowrap", "md:ml-auto");
+    expect(controls).toContainElement(search as HTMLElement);
   });
 
   it("keeps the compact Filters trigger named and available below its collapse point", () => {
