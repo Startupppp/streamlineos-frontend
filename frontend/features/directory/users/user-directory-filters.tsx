@@ -13,7 +13,7 @@ interface OrgUnitOption {
   name: string;
 }
 
-export type UserDirectoryFilterSlot = "all" | "primary" | "more";
+type UserDirectoryFilterSlot = "all" | "primary" | "more";
 
 interface UserDirectoryFiltersProps {
   status: string;

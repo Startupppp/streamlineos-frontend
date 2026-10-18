@@ -331,7 +331,7 @@ export function UsersPage() {
     />
   );
 
-  const directoryFilterProps = {
+  const directoryFilterProps = useMemo(() => ({
     status,
     role,
     departmentId,
@@ -342,7 +342,11 @@ export function UsersPage() {
     onRoleChange: handleRoleChange,
     onDepartmentChange: handleDeptChange,
     onBranchChange: handleBranchChange,
-  };
+  }), [
+    status, role, departmentId, branchId,
+    departmentsData, branchesData,
+    handleStatusChange, handleRoleChange, handleDeptChange, handleBranchChange,
+  ]);
 
   return (
     <>

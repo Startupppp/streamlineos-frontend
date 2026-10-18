@@ -111,7 +111,7 @@ function ModuleAccessRow({
       <span className="min-w-0 truncate text-sm">{displayName}</span>
       <Select value={currentStanding} onValueChange={handleChange}>
         <SelectTrigger
-          className="h-8 w-[7.25rem] shrink-0 text-xs"
+          className="h-9 w-[7.25rem] shrink-0"
           aria-label={`Module access for ${displayName}`}
         >
           <SelectValue />
