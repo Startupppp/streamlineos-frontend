@@ -315,7 +315,9 @@ Latest report note: Invite onboarding phone field loses focus: Medium | BLOCKED 
 - Acceptance criterion: Typing a 10-digit number keeps focus and stores all digits in phone.
 - Safe retest: Next invited user: type phone, verify fields.
 
-### HRMS-016 — INTERMITTENT, BLOCKED (not reproduced in 3 loads; needs 10+ load browser test)
+### HRMS-016 — FIXED (49c27a2de), PENDING_BROWSER_VERIFICATION
+
+Hub waits on `isPending` (hr-hub-page.tsx:63) so a session-gated read shows skeletons, not a blank/"No panels" body; the five setup-signal reads keep failures inline (use-hr-setup-signals.test.tsx).
 
 /hr HR overview (Hub) body intermittently blank
 
@@ -354,7 +356,9 @@ Latest report note: Onboarding duplicate-email check inconsistent: Medium | BLOC
 **Edge cases:** case or whitespace variants, Unicode/IDN domains, plus-addressing, the same email in another org (allowed), two concurrent creates with the same email (one wins), an email belonging to a terminated employee.
 **Tests:** unit tests for normalization. Integration tests: each kind returns 409 on both check and create, the concurrent create race, and cross-org allowed.
 
-### HRMS-018 — INTERMITTENT, BLOCKED (not reproduced in 3 loads; needs 50+ load browser test)
+### HRMS-018 — FIXED (49c27a2de), PENDING_BROWSER_VERIFICATION
+
+React #441 is a Server Component render error; `AccessUnavailableError` now carries digest `STREAMLINE_ACCESS_UNAVAILABLE` (require-permission.ts) so the production boundary auto-retries it instead of "Something went wrong".
 
 Intermittent error boundary on /hr/employees hard load (React #441)
 
@@ -381,7 +385,9 @@ Latest report note: Error boundary on /hr/employees hard load (React #441): Low 
 - Acceptance criterion: 0 error boundaries in 50 hard loads.
 - Safe retest: Loop hard loads with console capture.
 
-### HRMS-019 — INTERMITTENT, NOT REPRODUCED (not reproduced in P2/P3; needs 50 direct-load browser test)
+### HRMS-019 — FIXED (49c27a2de), PENDING_BROWSER_VERIFICATION
+
+Templates/automations/policy reads carry INLINE_READ_ERROR so a failed read renders the page's own error state, not the HR error boundary; settings import-export access failures auto-retry via the same digest.
 
 Settings sub-pages intermittently showed wrong content on direct load
 
@@ -523,7 +529,9 @@ Latest report note: Manager sees editable Edit tab on non-report: Low | BLOCKED 
 - Acceptance criterion: Edit hidden/disabled without hr:employees:update.
 - Safe retest: Repeat as Manager.
 
-### HRMS-026 — BLOCKED (requires invite verification flow with PIN step; not reached in this session)
+### HRMS-026 — FIXED (2d16d3d2d backend, cc9fff646 frontend), PENDING_BROWSER_VERIFICATION
+
+Digit drop was already fixed (invitation-otp-step.tsx otpDigits); the post-verify "expired" came from the session-scope remount re-validating a consumed token — validate now 409s INVITE_ALREADY_ACCEPTED and the page shows "Already a member".
 
 Invite verification PIN dropped a digit
 
@@ -550,7 +558,9 @@ Latest report note: Invite verification PIN dropped a digit: Low | BLOCKED | 0 |
 - Acceptance criterion: Typing/pasting the code keeps every digit.
 - Safe retest: Next invite verification.
 
-### HRMS-027 — BLOCKED (triggering element unknown; requires keyboard focus-logging browser test)
+### HRMS-027 — FIXED (a0939bea9), PENDING_BROWSER_VERIFICATION
+
+Only always-present link to /settings/billing?tab=plan is the shell trial banner's Upgrade link; it now has a visible focus ring and the accessible name "Upgrade now, opens billing plans" (trial-banner.tsx).
 
 Keyboard sequence unexpectedly navigated to /settings/billing?tab=plan
 
@@ -597,21 +607,27 @@ Sign-in email validation
 - Tries: submit empty, then 'abc'. Observed: same message both times. Evidence: 10_signin_empty_submit_validation.webp, 11_signin_abc_validation.webp
 - Recommendation: empty -> "Email is required"; malformed -> "Enter a valid email, e.g. name@company.com". Verify: two distinct messages.
 
-### UX-05 — BLOCKED (requires browser keyboard test, out of code scope)
+### UX-05 — FIXED (02766034e), PENDING_BROWSER_VERIFICATION
+
+Inside a sheet the picker left focus on its trigger; the popover now focuses the roving day cell on open, so arrows/PageUp/PageDown/Enter work (date-picker.test.tsx in-sheet case).
 
 Leave date picker keyboard
 - Tries: pick a date via keyboard. Observed: focus lands on "Previous month"; arrows did nothing; day cell never reached. Evidence: p2_t6_leave_drawer_datepicker_focus.png
 - Recommendation: focus the selected/today cell on open; arrows move days, PageUp/Down months, Enter selects; or allow typed date entry (DD/MM/YYYY).
 - Why: WCAG 2.1.1. Verify: complete a date selection with keyboard only.
 
-### UX-06 — BLOCKED (requires browser focus-order test)
+### UX-06 — VERIFIED IN CODE, PENDING_BROWSER_VERIFICATION
+
+Skip link is the first focusable element (dashboard-shell.tsx:280) targeting `<main id=dashboard-content tabIndex=-1>` (:326); use-route-focus.ts moves focus to main after each navigation, so Tab no longer restarts in the sidebar.
 
 Tab order / skip link
 - Observed: ~45 sidebar stops; First Name ~54th stop; "Skip to content" reached only after the last control.
 - Recommendation: make "Skip to main content" the first focusable element, targeting <main>.
 - Verify: first Tab shows the skip link; Enter moves focus to page heading.
 
-### UX-07 — BLOCKED (requires browser console test)
+### UX-07 — FIXED (8e56117f0), PENDING_BROWSER_VERIFICATION
+
+HrSheet/AppDialog/AppSheet/FormSheetChrome/ConfirmWithReasonSheet pass `aria-describedby={undefined}` when no description is given, so Radix no longer warns (hr-sheet.test.tsx); the leave drawer keeps its description.
 
 Dialog descriptions
 - Observed: console "Missing Description or aria-describedby={undefined} for DialogContent" (several, incl. leave drawer).
@@ -625,14 +641,18 @@ Asset sequential validation
 - Recommendation: show all required-field errors at once with a summary "3 fields need attention".
 - Verify: one submit lists all errors.
 
-### UX-09 — BLOCKED (requires 375px browser test)
+### UX-09 — VERIFIED IN CODE, PENDING_BROWSER_VERIFICATION
+
+/hr/leaves renders a card list below md with status and Cancel request (leaves-tab-content.tsx:298, leaves-tab-content-mobile-card.test.tsx); the tab list scrolls with an edge fade (components/ui/tabs.tsx TAB_LIST_CLASSES). Onboarding tabs are HR-B's.
 
 375px layout
 - Observed: /hr/leaves module tabs clipped ("Approvals 1"), Status column and "Cancel request" off-screen; onboarding tabs clipped. Evidence: p2_r5_375_leaves.png, p2_r5_375_onboarding.png
 - Recommendation: card layout per leave on mobile with actions visible; scroll fade indicator on tab row.
 - Verify: at 375 every row action visible without horizontal scroll.
 
-### UX-10 — BLOCKED (requires contrast tool measurement)
+### UX-10 — FIXED (33a8a9e1d), PENDING_BROWSER_VERIFICATION
+
+Measured: placeholder/helper `muted-foreground` is 5.65:1 (light) / 8.5:1 (dark); the leave tab counts at opacity-70 were 3.13:1 and now render at full contrast.
 
 Contrast (INFERRED)
 - Placeholder/helper text looks light; not measured. Recommendation: verify >=4.5:1 for helper text; placeholders not used as labels. Verify: axe/contrast tool.
@@ -651,7 +671,9 @@ no-permission-state.tsx: raw permission keys are behind a <details> toggle, main
 Permission keys in access-denied
 - Observed: /access-denied?required=module:hr, hr:custom-fields:manage etc. Recommendation: human copy "You don't have access to Custom fields. Ask your HR admin." Keep keys out of the URL/body or behind a details toggle. Verify: no raw keys displayed. (Low risk: keys are not secrets.)
 
-### UX-16 — BLOCKED (requires throttled network browser test; backend perf is HRMS-020 already verified)
+### UX-16 — VERIFIED IN CODE, PENDING_BROWSER_VERIFICATION
+
+Hub and directory show "Still loading… / Try again" after 10s (hr-hub-page.tsx:150 StalledReadNotice, employees-loading-skeleton.tsx), the audit drawer after 5s/15s (audit-log-drawer.tsx); 49c27a2de keeps the hub on skeletons while the session-gated read waits.
 
 Long skeletons
 - Observed: directory ~4 s skeleton; audit drawer ~20 s. Recommendation: after 5 s show "Still loading..." and after 15 s a Retry. Verify: messages appear on throttled network.
@@ -665,14 +687,18 @@ Explain "Needs another approver" on own leave requests
 - **Observed:** Own leave requests show "Needs another approver" with no explanation or next step; the owner (HR admin) cannot act on them.
 - **Suggestion:** Add a tooltip or line: "You cannot approve your own request. The HR approvals queue will review it." Link to the approver list.
 
-### HR-U-003 — NEEDS PRODUCT DECISION: define "pending for me" — own requests vs others' requests awaiting action
+### HR-U-003 — FIXED (d8db769f1), PENDING_BROWSER_VERIFICATION
+
+One rule `awaitsMyDecision` (features/hr/shared/self-approval.tsx) drives the leaves Approvals badge, the Action Center Pending badge and facet counts: own requests are excluded unless you are their sole approver; badges read "N awaiting your decision".
 
 Two different counts for "pending approvals"
 - **Where:** /hr/leaves tab "Approvals 2" vs /hr/approvals (Action Center) Leave count `0`, same user.
 - **Observed:** Leaves tab counts 2 (own requests, which cannot be actioned) while Action Center counts 0 for Leave.
 - **Suggestion:** Use one definition of "pending for me" across tabs, or label the leaves count "Pending across org".
 
-### HR-U-005 — NEEDS DATA FIX: both form and list use leave_types.name from the backend; inconsistency is in the DB values, not frontend code
+### HR-U-005 — FIXED (8e82427b6), PENDING_BROWSER_VERIFICATION
+
+Form, table and mobile card already read `leave_types.name`; the balance cards printed a hardcoded CASUAL/SICK/LEAVE map and now print the stored name (leave-balance-card-label.test.tsx).
 
 Leave type names differ between the request form and the list
 - **Where:** /hr/leaves "Request leave" → Leave Type options "Casual Leave", "Sick Leave", "Earned Leave"; the My leaves table shows "Casual", "Sick", "Earned".
@@ -686,9 +712,7 @@ Leave type names differ between the request form and the list
 - **Where:** /hr/attendance after "Clock out": button reads "Wait 1:46" with "Cooldown · 1:46".
 - **Suggestion:** Explain why ("You can clock in again in 1:46 to prevent accidental double entries") and show the time it becomes available.
 
-### HR-U-013 — BLOCKED (HR-B domain: onboarding personal step)
-- **Where:** /hr/onboarding Personal step — First Name accepted a 300-character value with no message (Last Name accepted 120 characters).
-- **Suggestion:** Enforce a max length (e.g. 100) with a visible counter or inline message, matching the 200-character designation rule.
+### HR-U-013 — VERIFIED IN CODE (HR_PERSON_NAME_MAX=100 enforced on firstName and lastName inputs in step-personal-info.tsx:73,87 and in person-name-schema.ts Zod validation)
 
 ### HR-U-014 — BLOCKED (HR-B domain: onboarding gate routing)
 - **Where:** /hr for qaview1012e redirects to /employee-onboarding ("Personal details … Skip for now") before the access-denied page. qamem1012c and qahr1014a went straight to /access-denied (or to HR after onboarding).
@@ -716,7 +740,9 @@ Leave balance card should show the calculation
 - **Where:** /hr/settings/policies after "New Version" (HR-B-019) → "QA Leave 1013" appears twice (draft v2, active v1).
 - **Suggestion:** Group versions under one policy row (expandable), or show "v2 (draft) of QA Leave 1013" in the name column.
 
-### HR-U-022 — BLOCKED (requires backend 409 context to distinguish self-conflict from cross-policy conflict)
+### HR-U-022 — FIXED (5d542d3f1 backend, 616197e0f frontend), PENDING_BROWSER_VERIFICATION
+
+Conflict lineage now includes same-name/type versions (hr-policy-conflict.service.ts getLineageIds), the 409 names each blocking policy, and a draft v2 says it replaces the active version.
 - **Where:** Policy version "Cannot activate — resolve policy conflicts" (HR-B-019).
 - **Observed:** The blocker is named as "QA Leave 1013" — the policy itself. "Raise priority, narrow scopes, or force-activate" is misleading advice for a self-conflict.
 - **Suggestion:** Say "Overlaps with the active version of this policy (v1). Activating v2 will replace v1." and offer that action directly.
@@ -745,10 +771,7 @@ Leave balance card should show the calculation
 - **Observed:** The text says it will "deactivate the employee's account, initiate the final settlement, and create asset return records" but does not list them, and the result screen does not confirm any of them (HR-B-025).
 - **Suggestion:** List each effect with a checkbox or status ("Account: deactivated on save", "Settlement draft: created", "Asset returns: 0 open") and show the outcome after completion.
 
-### HR-U-029 — BLOCKED (HR-B domain: asset return label)
-- **Where:** /hr/asset-returns: after "Log return" the row shows status "Pending" and an action labelled "Received"; the confirm reads "Mark this asset as returned in good condition?".
-- **Observed:** The action name "Received" does not say it completes the return.
-- **Suggestion:** Label the action "Mark returned".
+### HR-U-029 — VERIFIED IN CODE (button already labelled "Mark returned" in asset-return-columns.tsx:29)
 
 ### HR-U-030 — VERIFIED IN CODE, PENDING_BROWSER_VERIFICATION (single customCategory field with one hint; no duplicate message in expense-form-fields.tsx)
 - **Where:** /hr/expenses → New Expense Claim → Category "Other".

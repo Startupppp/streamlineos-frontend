@@ -172,7 +172,9 @@ Confirmation modal should show warnings, not just times
 - **Observed:** On a typed no-match search the list shows everyone with an error banner (HR-B-006); the URL keeps `?q=`.
 - **Suggestion:** Show "No employees match 'zzzznomatch'. Clear search" as the empty state; debounce and cancel stale responses.
 
-## HR-U-010 — OPEN (the post-action empty state copy is good; the missing toast is an enhancement)
+## HR-U-010 — FIXED (3c3b22932), PENDING_BROWSER_VERIFICATION
+
+Approve/reject toasts name the person and day and offer "View approved/rejected", which switches the status filter to where the item now lives (regularization-queue-card.tsx).
 
 Attendance corrections list needs a clear empty/filter state
 - **Where:** /hr/attendance "Attendance corrections" with filter "Needs a decision" after an action.
@@ -188,7 +190,9 @@ Attendance corrections list needs a clear empty/filter state
 - **Observed:** "Loading results…" with placeholder headers "Column 1…6" shown for 5–10 s before the list appears.
 - **Suggestion:** Render the real column headers immediately and a skeleton for the rows.
 
-## HR-U-019 — OPEN (attendance correction card is an HR-A domain enhancement; requires attendance card component changes)
+## HR-U-019 — FIXED (3c3b22932), PENDING_BROWSER_VERIFICATION
+
+Approver row shows the requester, the original punch (or "No punch recorded"), the requested punch and the change (regularization-row.tsx, regularization-row.test.tsx).
 
 Approver card needs requester and original vs requested times
 - **Where:** /hr/attendance → "Attendance corrections" → "Needs a decision".
