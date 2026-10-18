@@ -15,7 +15,7 @@ function isNullable(node, root) {
     });
   }
   if (Array.isArray(resolved.type)) return resolved.type.includes("null");
-  return false;
+  return resolved.type === "null";
 }
 
 function scalarNodes(node, root) {
@@ -190,8 +190,12 @@ export function diffSchemas(frontend, backend, frontendRoot, backendRoot) {
                   typeMismatches.push({ path: fp, field: name, kind: "enum", unexpectedValues });
               }
             }
-            const frontendNullable = isNullable(frontendChild, frontendRoot);
-            const backendNullable = isNullable(backendChild, backendRoot);
+            const frontendNullable = frontendObjects.some(
+              (node) => node.properties[name] !== undefined && isNullable(node.properties[name], frontendRoot),
+            );
+            const backendNullable = backendObjects.some(
+              (node) => node.properties[name] !== undefined && isNullable(node.properties[name], backendRoot),
+            );
             if (backendNullable && !frontendNullable)
               typeMismatches.push({ path: fp, field: name, kind: "nullable" });
             walk(frontendChild, backendChild, fp, depth + 1);

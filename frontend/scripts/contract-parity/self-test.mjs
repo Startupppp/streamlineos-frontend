@@ -313,6 +313,46 @@ export function runSelfTest(evaluate, floorFailures, partitionFindings, staleFai
   );
 
   assert(
+    "a z.null() branch of a frontend union accepts the null a nullable backend field sends",
+    evaluate(
+      [record(z.union([z.object({ tag: z.string().nullable() }), z.object({ tag: z.null() })]), "/x")],
+      document("/x", "get", {
+        type: "object",
+        properties: { tag: { anyOf: [{ type: "string" }, { type: "null" }] } },
+        required: ["tag"],
+      }),
+    ).typeMismatches.length,
+    0,
+  );
+
+  assert(
+    "a discriminated union whose null branch matches the backend's null branch is not a nullability mismatch",
+    evaluate(
+      [record(z.union([z.object({ has: z.literal(false), masked: z.null() }), z.object({ has: z.literal(true), masked: z.object({ id: z.string() }) })]), "/x")],
+      document("/x", "get", {
+        anyOf: [
+          { type: "object", properties: { has: { type: "boolean", const: false }, masked: { type: "null" } }, required: ["has", "masked"] },
+          { type: "object", properties: { has: { type: "boolean", const: true }, masked: { type: "object", properties: { id: { type: "string" } }, required: ["id"] } }, required: ["has", "masked"] },
+        ],
+      }),
+    ).typeMismatches.length,
+    0,
+  );
+
+  assert(
+    "a backend branch that sends only null is still a mismatch for a frontend field that never accepts null",
+    evaluate(
+      [record(z.object({ masked: z.object({ id: z.string() }) }), "/x")],
+      document("/x", "get", {
+        type: "object",
+        properties: { masked: { type: "null" } },
+        required: ["masked"],
+      }),
+    ).typeMismatches.map((f) => `${f.fieldPath}:${f.kind}`),
+    ["masked:nullable"],
+  );
+
+  assert(
     "an unconstrained z.unknown() field is not counted as a validated field",
     evaluate(
       [record(z.object({ id: z.number().int(), payload: z.unknown() }).strict(), "/x")],
