@@ -2,6 +2,7 @@
 
 import { useEffect, useId, useState, type ChangeEvent, type KeyboardEvent, type PointerEvent } from "react";
 import { Input } from "@/components/ui/input";
+import { DropdownMenuRadioGroup, DropdownMenuRadioItem } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 import { formatDateTime } from "@/lib/date-utils";
 import { usePresenceSelection } from "@/hooks/common/use-presence-selection";
@@ -23,6 +24,8 @@ const DEFAULT_CLEAR_AFTER: PresenceClearAfter = "never";
 const MANUAL_STATUSES = PRESENCE_STATUSES.filter(
   (status) => !AUTO_PRESENCE_STATUSES.includes(status),
 );
+
+const PICKER_STATUSES: PresenceStatus[] = [AUTO_STATUS, ...MANUAL_STATUSES];
 
 interface PresenceStatusPickerProps {
   layout: "menu" | "list";
@@ -72,6 +75,20 @@ export function PresenceStatusPicker({ layout, className }: PresenceStatusPicker
     commit({ status, statusMessage: messageDraft, clearAfter: next });
   }
 
+  function handleStatusValueChange(next: string) {
+    const match = PICKER_STATUSES.find((option) => option === next);
+    if (match) handleStatusSelect(match);
+  }
+
+  function handleClearAfterValueChange(next: string) {
+    const match = PRESENCE_CLEAR_AFTER_OPTIONS.find((option) => option === next);
+    if (match) handleClearAfterSelect(match);
+  }
+
+  function keepMenuOpen(event: Event) {
+    event.preventDefault();
+  }
+
   function handleFieldPointerDown(event: PointerEvent<HTMLDivElement>) {
     event.stopPropagation();
   }
@@ -81,7 +98,6 @@ export function PresenceStatusPicker({ layout, className }: PresenceStatusPicker
   }
 
   const expiryLabel = formatDateTime(statusExpiresAt);
-  const pickerStatuses: PresenceStatus[] = [AUTO_STATUS, ...MANUAL_STATUSES];
 
   return (
     <div
@@ -92,19 +108,41 @@ export function PresenceStatusPicker({ layout, className }: PresenceStatusPicker
       )}
       data-vaul-no-drag=""
       onPointerDown={handleFieldPointerDown}
-      onKeyDown={handleFieldKeyDown}
+      onKeyDown={layout === "menu" ? undefined : handleFieldKeyDown}
     >
-      <div className="grid grid-cols-2 gap-1">
-        {pickerStatuses.map((option) => (
-          <PresenceStatusChip
-            key={option}
-            status={option}
-            current={status}
-            disabled={isPending}
-            onSelect={handleStatusSelect}
-          />
-        ))}
-      </div>
+      {layout === "menu" ? (
+        <DropdownMenuRadioGroup
+          value={status}
+          onValueChange={handleStatusValueChange}
+          aria-label="Availability"
+          className="grid grid-cols-2 gap-1"
+        >
+          {PICKER_STATUSES.map((option) => (
+            <DropdownMenuRadioItem
+              key={option}
+              value={option}
+              disabled={isPending}
+              onSelect={keepMenuOpen}
+              className="h-7 min-w-0 gap-1.5 rounded-md pl-7 text-dense font-medium"
+            >
+              <span className={cn("size-1.5 shrink-0 rounded-full", presenceDotClass(option))} />
+              <span className="truncate">{PRESENCE_LABELS[option]}</span>
+            </DropdownMenuRadioItem>
+          ))}
+        </DropdownMenuRadioGroup>
+      ) : (
+        <div className="grid grid-cols-2 gap-1">
+          {PICKER_STATUSES.map((option) => (
+            <PresenceStatusChip
+              key={option}
+              status={option}
+              current={status}
+              disabled={isPending}
+              onSelect={handleStatusSelect}
+            />
+          ))}
+        </div>
+      )}
       <div className="mt-2 flex flex-col gap-1.5">
         <label htmlFor={messageInputId} className="sr-only">
           Status message
@@ -119,17 +157,38 @@ export function PresenceStatusPicker({ layout, className }: PresenceStatusPicker
           placeholder="What's your status?"
           disabled={isPending}
         />
-        <div className="flex flex-wrap gap-1" role="group" aria-label="Clear after">
-          {PRESENCE_CLEAR_AFTER_OPTIONS.map((option) => (
-            <PresenceDurationChip
-              key={option}
-              value={option}
-              current={clearAfter}
-              disabled={isPending}
-              onSelect={handleClearAfterSelect}
-            />
-          ))}
-        </div>
+        {layout === "menu" ? (
+          <DropdownMenuRadioGroup
+            value={clearAfter}
+            onValueChange={handleClearAfterValueChange}
+            aria-label="Clear after"
+            className="flex flex-wrap gap-1"
+          >
+            {PRESENCE_CLEAR_AFTER_OPTIONS.map((option) => (
+              <DropdownMenuRadioItem
+                key={option}
+                value={option}
+                disabled={isPending}
+                onSelect={keepMenuOpen}
+                className="h-6 rounded-md py-0 pr-1.5 pl-6 text-micro font-medium"
+              >
+                {PRESENCE_CLEAR_AFTER_LABELS[option]}
+              </DropdownMenuRadioItem>
+            ))}
+          </DropdownMenuRadioGroup>
+        ) : (
+          <div className="flex flex-wrap gap-1" role="group" aria-label="Clear after">
+            {PRESENCE_CLEAR_AFTER_OPTIONS.map((option) => (
+              <PresenceDurationChip
+                key={option}
+                value={option}
+                current={clearAfter}
+                disabled={isPending}
+                onSelect={handleClearAfterSelect}
+              />
+            ))}
+          </div>
+        )}
         {statusMessage ? (
           <p className="text-micro text-muted-foreground">
             {expiryLabel ? `Clears ${expiryLabel}` : "Stays until you clear it"}

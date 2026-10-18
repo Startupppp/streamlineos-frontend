@@ -1,4 +1,6 @@
 import { act, render, screen, fireEvent } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { PresenceStatusPicker } from "./presence-status-picker";
 
 const mutate = jest.fn();
@@ -100,10 +102,17 @@ describe("PresenceStatusPicker", () => {
   });
 
   it("renders the same options in menu layout, so the account menu and chat agree", () => {
-    render(<PresenceStatusPicker layout="menu" />);
+    render(
+      <DropdownMenu open>
+        <DropdownMenuTrigger>Account menu</DropdownMenuTrigger>
+        <DropdownMenuContent>
+          <PresenceStatusPicker layout="menu" />
+        </DropdownMenuContent>
+      </DropdownMenu>,
+    );
 
-    expect(screen.getByRole("button", { name: "Working remotely" })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Available" })).toBeInTheDocument();
+    expect(screen.getByRole("menuitemradio", { name: "Working remotely" })).toBeInTheDocument();
+    expect(screen.getByRole("menuitemradio", { name: "Available" })).toBeInTheDocument();
   });
 });
 
@@ -228,5 +237,47 @@ describe("PresenceStatusPicker — auto-clear duration", () => {
     render(<PresenceStatusPicker layout="list" />);
 
     expect(screen.getByText("Stays until you clear it")).toBeInTheDocument();
+  });
+});
+
+describe("PresenceStatusPicker inside the account menu (ORG UX keyboard)", () => {
+  function renderInMenu() {
+    render(
+      <DropdownMenu open>
+        <DropdownMenuTrigger>Account menu</DropdownMenuTrigger>
+        <DropdownMenuContent>
+          <PresenceStatusPicker layout="menu" />
+        </DropdownMenuContent>
+      </DropdownMenu>,
+    );
+  }
+
+  it("exposes each availability and clear-after choice as a menu radio item with its checked state", () => {
+    presenceMap = new Map([["me", "BUSY"]]);
+    renderInMenu();
+    expect(screen.getByRole("menuitemradio", { name: "Busy" })).toHaveAttribute("aria-checked", "true");
+    expect(screen.getByRole("menuitemradio", { name: "Available" })).toHaveAttribute("aria-checked", "false");
+    expect(screen.getByRole("group", { name: "Clear after" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Busy" })).not.toBeInTheDocument();
+  });
+
+  it("selects a status from the keyboard and keeps the menu open", async () => {
+    renderInMenu();
+    const onLeave = screen.getByRole("menuitemradio", { name: "On leave" });
+    onLeave.focus();
+    await userEvent.keyboard("{Enter}");
+    expect(mutate).toHaveBeenCalledWith(
+      { status: "ON_LEAVE", statusMessage: "", clearAfter: "never" },
+      expect.anything(),
+    );
+    expect(screen.getByRole("menu")).toBeInTheDocument();
+  });
+
+  it("moves between choices with the arrow keys", async () => {
+    renderInMenu();
+    const items = screen.getAllByRole("menuitemradio");
+    items[0]?.focus();
+    await userEvent.keyboard("{ArrowDown}");
+    expect(items[1]).toHaveFocus();
   });
 });
