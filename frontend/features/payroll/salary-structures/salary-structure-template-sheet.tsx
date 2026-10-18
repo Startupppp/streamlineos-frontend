@@ -216,6 +216,10 @@ export function SalaryStructureTemplateSheet({
     setValue("isActive", checked);
   }
 
+  function blockExp(e: React.KeyboardEvent<HTMLInputElement>) {
+    if (["e", "E", "+", "-"].includes(e.key)) e.preventDefault();
+  }
+
   return (
     <HrSheet
       open={open}
@@ -242,6 +246,7 @@ export function SalaryStructureTemplateSheet({
             type="number"
             min="0"
             placeholder="e.g. 50000"
+            onKeyDown={blockExp}
             className=""
           />
         </FieldGroup>
@@ -252,6 +257,7 @@ export function SalaryStructureTemplateSheet({
             min="0"
             max="100"
             placeholder="e.g. 40"
+            onKeyDown={blockExp}
             className=""
           />
         </FieldGroup>
@@ -276,6 +282,7 @@ export function SalaryStructureTemplateSheet({
             type="number"
             min="0"
             placeholder="e.g. 0"
+            onKeyDown={blockExp}
             className=""
           />
         </FieldGroup>
@@ -285,6 +292,7 @@ export function SalaryStructureTemplateSheet({
             type="number"
             min="0"
             placeholder="e.g. 0"
+            onKeyDown={blockExp}
             className=""
           />
         </FieldGroup>
@@ -294,6 +302,7 @@ export function SalaryStructureTemplateSheet({
             type="number"
             min="0"
             placeholder="e.g. 0"
+            onKeyDown={blockExp}
             className=""
           />
         </FieldGroup>
@@ -303,6 +312,7 @@ export function SalaryStructureTemplateSheet({
             type="number"
             min="0"
             placeholder="e.g. 0"
+            onKeyDown={blockExp}
             className=""
           />
         </FieldGroup>
@@ -322,6 +332,7 @@ export function SalaryStructureTemplateSheet({
             min="0"
             max="100"
             placeholder="e.g. 12"
+            onKeyDown={blockExp}
             className=""
           />
         </FieldGroup>
@@ -331,6 +342,7 @@ export function SalaryStructureTemplateSheet({
             type="number"
             min="0"
             placeholder="e.g. 200"
+            onKeyDown={blockExp}
             className=""
           />
         </FieldGroup>
