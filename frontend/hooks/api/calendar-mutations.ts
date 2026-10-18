@@ -18,7 +18,7 @@ const calendarOccurrenceExceptionContract = lazyContract(() =>
   import("@/hooks/api/calendar-schema").then((m) => m.calendarOccurrenceExceptionContract),
 );
 import { invalidateCalendarProjectionWindows } from "@/lib/calendar-projection-cache";
-import type { CalendarOooConflict, CalendarEventConflict, CalendarEventsResponse } from "./calendar-types";
+import type { CalendarOooConflict, CalendarEventConflict, CalendarEventsResponse, ExternalCalendarEventsResponse } from "./calendar-types";
 
 /**
  * The row `POST /calendar/events` and `PUT /calendar/events/:id` return, mirroring
@@ -139,8 +139,14 @@ export function useDeleteCalendarEvent() {
   const qc = useQueryClient();
   return useMutation({
     mutationKey: ["calendar", "events", "delete"],
-    mutationFn: (calendarEventId: number) => apiClient.delete<{ deleted: boolean }>(`/calendar/events/${calendarEventId}`, undefined, undefined, calendarDeleteEventContract),
-    onSuccess: (_result, calendarEventId) => {
+    mutationFn: (calendarEventId: number) =>
+      apiClient.delete<{ deleted: boolean; externalEventId?: string | null; integrationConnectionId?: number | null }>(
+        `/calendar/events/${calendarEventId}`,
+        undefined,
+        undefined,
+        calendarDeleteEventContract,
+      ),
+    onSuccess: (result, calendarEventId) => {
       const prefix = `event-${calendarEventId}`;
       qc.setQueriesData<CalendarEventsResponse>(
         { queryKey: platformHierarchyQueryKeys.calendar.eventsAll },
@@ -154,6 +160,17 @@ export function useDeleteCalendarEvent() {
               }
             : window,
       );
+      if (result.externalEventId && result.integrationConnectionId != null) {
+        const pid = result.externalEventId;
+        const cid = result.integrationConnectionId;
+        qc.setQueriesData<ExternalCalendarEventsResponse>(
+          { queryKey: platformHierarchyQueryKeys.calendar.externalEventsAll },
+          (data) =>
+            data
+              ? { ...data, events: data.events.filter((e) => !(e.connectionId === cid && e.providerEventId === pid)) }
+              : data,
+        );
+      }
       invalidateCalendarProjectionWindows(qc);
       void qc.invalidateQueries({ queryKey: platformHierarchyQueryKeys.calendar.all });
     },

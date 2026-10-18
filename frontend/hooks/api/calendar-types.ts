@@ -74,6 +74,7 @@ export interface CalendarListItem {
   };
   freshness: { state: "fresh" | "stale" | "unknown"; asOf: string | null };
   connectionId?: number;
+  syncedProviderEventId?: string | null;
   accountEmail?: string | null;
   meetingUrl?: string | null;
   webLink?: string | null;

@@ -177,6 +177,7 @@ export function useCalendarEvents(start: Date, end: Date, enabled = true) {
       return result;
     },
     staleTime: 2 * 60 * 1000,
+    placeholderData: keepPreviousData,
     enabled: Boolean(orgId && userId) && canView && enabled,
     refetchOnWindowFocus: "always",
     refetchOnReconnect: "always",
@@ -345,6 +346,7 @@ export function useExternalCalendarEvents(start: Date, end: Date, enabled: boole
       }, signal, calendarExternalEventsContract),
     enabled: Boolean(orgId && userId) && canView && enabled,
     staleTime: 60_000,
+    placeholderData: keepPreviousData,
     refetchOnWindowFocus: "always",
     refetchOnReconnect: "always",
   });

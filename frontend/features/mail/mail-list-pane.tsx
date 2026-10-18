@@ -46,6 +46,13 @@ import type {
   MailListResponse,
 } from "@/types/mail";
 
+function friendlyMailAccountError(raw: string): string {
+  if (/unable to retrieve tool with slug/i.test(raw)) return "This account needs reconnecting to fetch messages.";
+  if (/authentication|auth|unauthorized|unauthenticated/i.test(raw)) return "Authentication expired — please reconnect this account.";
+  if (/rate.?limit|too many requests/i.test(raw)) return "Too many requests — will retry shortly.";
+  return "Could not load messages for this account.";
+}
+
 const FOLDER_NAV: {
   key: MailFolder;
   label: string;
@@ -344,7 +351,7 @@ export function MailListPane({
                 <p className="text-dense font-medium text-destructive">
                   {ae.accountEmail ?? `Account ${ae.accountId}`}
                 </p>
-                <p className="text-micro text-destructive/80">{ae.message}</p>
+                <p className="text-micro text-destructive/80">{friendlyMailAccountError(ae.message)}</p>
                 <button
                   type="button"
                   className="text-micro underline text-destructive mt-0.5 hover:no-underline focus-visible:outline-none"

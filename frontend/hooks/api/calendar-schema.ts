@@ -31,6 +31,7 @@ export const calendarEventsResponseContract = z.object({
       myRsvpStatus: z.string().nullable().optional(),
       projectId: z.number().int().nullable().optional(),
       connectionId: z.number().int().optional(),
+      syncedProviderEventId: z.string().nullable().optional(),
       ownerMembershipId: z.number().int().nullable().optional(),
       accountEmail: z.string().nullable().optional(),
       meetingUrl: z.string().nullable().optional(),
@@ -227,7 +228,11 @@ export const calendarRsvpContract = z.object({
 });
 
 /** `calendarDeleteEventResponseSchema` */
-export const calendarDeleteEventContract = z.object({ deleted: z.boolean() });
+export const calendarDeleteEventContract = z.object({
+  deleted: z.boolean(),
+  externalEventId: z.string().nullable().optional(),
+  integrationConnectionId: z.number().int().nullable().optional(),
+});
 
 const calendarMutatedEventContract = z.object({
   id: z.number().int(),

@@ -245,10 +245,17 @@ export function useCalendarComputed({
   attendanceVisible = true,
 }: UseCalendarComputedParams) {
   const [historyCutoff] = useState(() => Date.now());
-  const unifiedEvents = useMemo(
-    () => [...events, ...normalizeExternalEvents(externalData, hiddenIds)],
-    [events, externalData, hiddenIds],
-  );
+  const unifiedEvents = useMemo(() => {
+    const mirroredKeys = new Set(
+      events
+        .filter((e) => e.syncedProviderEventId && e.connectionId !== undefined)
+        .map((e) => `${e.connectionId}:${e.syncedProviderEventId}`),
+    );
+    const dedupedExternal: typeof externalData = externalData
+      ? { ...externalData, events: externalData.events.filter((e) => !mirroredKeys.has(`${e.connectionId}:${e.providerEventId}`)) }
+      : undefined;
+    return [...events, ...normalizeExternalEvents(dedupedExternal, hiddenIds)];
+  }, [events, externalData, hiddenIds]);
 
   const visibleEvents = useMemo(
     () =>
