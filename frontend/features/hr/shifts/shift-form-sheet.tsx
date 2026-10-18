@@ -384,7 +384,7 @@ export function ShiftFormSheet({ open, onOpenChange, shift }: Props) {
         title={isEdit ? "Save shift changes?" : "Create this shift?"}
         description={
           isEdit
-            ? `Update "${shift?.name ?? "this shift"}"?${pendingValues && shift ? describeChanges(shift, pendingValues) : pendingValues ? describeShift(pendingValues) : ""} Existing assignments keep using this template.`
+            ? `Update "${shift?.name ?? "this shift"}"?${pendingValues && shift ? describeChanges(shift, pendingValues) : ""}${pendingValues ? describeShift(pendingValues) : ""} Existing assignments keep using this template.`
             : `Create shift template "${pendingValues?.name ?? "this shift"}" (${formatTime(pendingValues?.startTime) || "—"} – ${formatTime(pendingValues?.endTime) || "—"}).${pendingValues ? describeShift(pendingValues) : ""} Create it?`
         }
         confirmLabel={isEdit ? "Save Changes" : "Create Shift"}

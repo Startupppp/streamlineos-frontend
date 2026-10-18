@@ -143,6 +143,18 @@ describe("shift form end-before-start rule", () => {
     await user.click(screen.getByRole("button", { name: "Save Changes" }));
     await waitFor(() => expect(screen.getByText("Save shift changes?")).toBeInTheDocument());
     expect(screen.getByText(/Duration 9h\./)).toBeInTheDocument();
+    expect(screen.queryByText(/Changes:/)).not.toBeInTheDocument();
     expect(screen.queryByText(MESSAGE)).not.toBeInTheDocument();
+  });
+
+  it("lists the edited fields in the confirm alongside the duration (HR-U-025)", async () => {
+    const user = userEvent.setup();
+    render(<ShiftFormSheet open onOpenChange={jest.fn()} shift={{ ...existing, isNightShift: true }} />);
+    setTime(/start time/i, "22:00");
+    setTime(/end time/i, "06:00");
+    await user.click(screen.getByRole("button", { name: "Save Changes" }));
+    expect(await screen.findByText("Save shift changes?")).toBeInTheDocument();
+    expect(screen.getByText(/Changes: Start: .+ → .+; End: .+ → .+\./)).toBeInTheDocument();
+    expect(screen.getByText(/Duration 8h, ends the next day/)).toBeInTheDocument();
   });
 });
