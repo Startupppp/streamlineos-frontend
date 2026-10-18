@@ -168,17 +168,20 @@ export function useRestoreKbSpace() {
 
 export function useDeleteKbSpace() {
   const qc = useQueryClient();
+  const operation = useIdempotentOperation();
   return useAuthorizedMutation("kb:spaces:manage", {
     mutationKey: ["kb", "spaces", "delete"],
     mutationFn: (spaceId: number) =>
       apiClient.delete<{ success: boolean }>(
         `/kb/spaces/${spaceId}`,
         undefined,
-        undefined,
+        operation.configFor({ command: "kb.space.delete", spaceId }),
         kbSpaceSuccessContract,
       ),
     onSuccess: () => {
+      operation.settle();
       qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.kb.spaces() });
+      qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.kb.kbPages() });
     },
   });
 }

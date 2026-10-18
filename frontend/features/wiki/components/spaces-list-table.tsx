@@ -11,6 +11,7 @@ import {
   KbArchiveIcon,
   KbPencilIcon,
   KbRotateCcwIcon,
+  KbTrash2Icon,
   KbUsersIcon,
 } from "@/features/wiki/lib/kb-icons";
 import type { KbAudience } from "@/types/kb";
@@ -27,6 +28,7 @@ interface SpaceRowActionsProps {
   space: KbSpaceListItem;
   onEdit: (space: KbSpaceListItem) => void;
   onArchiveToggle: (space: KbSpaceListItem) => void;
+  onDelete: (space: KbSpaceListItem) => void;
   onViewMembers: (space: KbSpaceListItem) => void;
 }
 
@@ -34,6 +36,7 @@ function SpaceRowActions({
   space,
   onEdit,
   onArchiveToggle,
+  onDelete,
   onViewMembers,
 }: SpaceRowActionsProps) {
   const isArchived = space.archivedAt !== null;
@@ -44,6 +47,10 @@ function SpaceRowActions({
 
   function handleArchiveToggle() {
     onArchiveToggle(space);
+  }
+
+  function handleDelete() {
+    onDelete(space);
   }
 
   function handleViewMembers() {
@@ -88,6 +95,18 @@ function SpaceRowActions({
           <KbArchiveIcon className="h-4 w-4" />
         )}
       </Button>
+      {isArchived && (
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
+          className="h-8 w-8 text-destructive"
+          aria-label={`Delete ${space.name} permanently`}
+          onClick={handleDelete}
+        >
+          <KbTrash2Icon className="h-4 w-4" />
+        </Button>
+      )}
     </div>
   );
 }
@@ -96,6 +115,7 @@ function buildColumns(
   canManage: boolean,
   onEdit: (space: KbSpaceListItem) => void,
   onArchiveToggle: (space: KbSpaceListItem) => void,
+  onDelete: (space: KbSpaceListItem) => void,
   onViewMembers: (space: KbSpaceListItem) => void,
 ): DataTableColumn<KbSpaceListItem>[] {
   const columns: DataTableColumn<KbSpaceListItem>[] = [
@@ -184,6 +204,7 @@ function buildColumns(
           space={row}
           onEdit={onEdit}
           onArchiveToggle={onArchiveToggle}
+          onDelete={onDelete}
           onViewMembers={onViewMembers}
         />
       ),
@@ -201,6 +222,7 @@ export interface SpacesListTableProps {
   onPrevious: () => void;
   onEdit: (space: KbSpaceListItem) => void;
   onArchiveToggle: (space: KbSpaceListItem) => void;
+  onDelete: (space: KbSpaceListItem) => void;
   onViewMembers: (space: KbSpaceListItem) => void;
   emptyState: React.ReactNode;
 }
@@ -215,6 +237,7 @@ export function SpacesListTable({
   onPrevious,
   onEdit,
   onArchiveToggle,
+  onDelete,
   onViewMembers,
   emptyState,
 }: SpacesListTableProps) {
@@ -222,6 +245,7 @@ export function SpacesListTable({
     canManage,
     onEdit,
     onArchiveToggle,
+    onDelete,
     onViewMembers,
   );
 
@@ -233,6 +257,7 @@ export function SpacesListTable({
         pageCount={row.pageCount}
         onEdit={onEdit}
         onArchiveToggle={onArchiveToggle}
+        onDelete={onDelete}
         onViewMembers={onViewMembers}
       />
     );

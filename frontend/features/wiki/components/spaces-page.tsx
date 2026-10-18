@@ -37,6 +37,7 @@ import {
 import { SpaceCard, SpaceCardSkeleton } from "./space-card";
 import { SpacesListTable } from "./spaces-list-table";
 import { SpaceArchiveImpact } from "./space-archive-impact";
+import { SpaceDeleteDialog } from "./space-delete-dialog";
 import { SpaceSheet } from "./space-sheet";
 import { SpaceMembersSheet } from "./space-members-sheet";
 
@@ -142,6 +143,8 @@ export default function SpacesPage() {
     useState<KbSpaceListItem | null>(null);
   const [membersTarget, setMembersTarget] =
     useState<KbSpaceListItem | null>(null);
+  const [deleteTarget, setDeleteTarget] =
+    useState<KbSpaceListItem | null>(null);
 
   const handleCreate = useCallback(() => {
     setEditingSpace(null);
@@ -168,6 +171,14 @@ export default function SpacesPage() {
     },
     [handleArchive, handleRestore],
   );
+
+  const handleDelete = useCallback((space: KbSpaceListItem) => {
+    setDeleteTarget(space);
+  }, []);
+
+  const handleDeleteOpenChange = useCallback((open: boolean) => {
+    if (!open) setDeleteTarget(null);
+  }, []);
 
   const handleViewMembers = useCallback((space: KbSpaceListItem) => {
     setMembersTarget(space);
@@ -371,6 +382,7 @@ export default function SpacesPage() {
               onPrevious={handleGoPrevious}
               onEdit={handleEdit}
               onArchiveToggle={handleArchiveToggle}
+              onDelete={handleDelete}
               onViewMembers={handleViewMembers}
               emptyState={emptyNode}
             />
@@ -385,6 +397,7 @@ export default function SpacesPage() {
                     pageCount={space.pageCount}
                     onEdit={handleEdit}
                     onArchiveToggle={handleArchiveToggle}
+                    onDelete={handleDelete}
                     onViewMembers={handleViewMembers}
                   />
                 ))}
@@ -450,6 +463,8 @@ export default function SpacesPage() {
         isPending={restoreSpace.isPending}
         onConfirm={handleConfirmRestore}
       />
+
+      <SpaceDeleteDialog space={deleteTarget} onOpenChange={handleDeleteOpenChange} />
 
       <SpaceMembersSheet
         spaceId={membersTarget?.id ?? 0}

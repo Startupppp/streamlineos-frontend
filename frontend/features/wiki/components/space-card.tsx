@@ -11,6 +11,7 @@ import {
   KbArchiveIcon,
   KbPencilIcon,
   KbRotateCcwIcon,
+  KbTrash2Icon,
   KbTriangleAlertIcon,
   KbUsersIcon,
 } from "@/features/wiki/lib/kb-icons";
@@ -47,6 +48,7 @@ interface SpaceCardProps {
   pageCount: number;
   onEdit: (space: KbSpaceListItem) => void;
   onArchiveToggle: (space: KbSpaceListItem) => void;
+  onDelete: (space: KbSpaceListItem) => void;
   onViewMembers: (space: KbSpaceListItem) => void;
 }
 
@@ -56,6 +58,7 @@ export function SpaceCard({
   pageCount,
   onEdit,
   onArchiveToggle,
+  onDelete,
   onViewMembers,
 }: SpaceCardProps) {
   function handleEdit() {
@@ -64,6 +67,10 @@ export function SpaceCard({
 
   function handleArchiveToggle() {
     onArchiveToggle(space);
+  }
+
+  function handleDelete() {
+    onDelete(space);
   }
 
   function handleViewMembers() {
@@ -147,6 +154,17 @@ export function SpaceCard({
             )}
             {isArchived ? "Restore" : "Archive"}
           </Button>
+          {isArchived && (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="px-2 text-xs text-destructive"
+              onClick={handleDelete}
+            >
+              <KbTrash2Icon className="h-3 w-3 mr-1" />
+              Delete permanently
+            </Button>
+          )}
         </div>
       )}
     </div>

@@ -1175543,6 +1175543,9 @@
               "exclusiveMinimum": 0,
               "maximum": 9007199254740991
             }
+          },
+          {
+            "$ref": "#/components/parameters/IdempotencyKeyHeader"
           }
         ],
         "responses": {
@@ -1175594,7 +1175597,9 @@
         ],
         "x-exposure": "permissioned",
         "x-permission": "kb:spaces:manage",
-        "description": "Exposure: permission — kb:spaces:manage"
+        "description": "Exposure: permission — kb:spaces:manage",
+        "x-idempotency-command": "kb.space.delete",
+        "x-idempotent": true
       }
     },
     "/kb/spaces/{spaceId}/archive": {

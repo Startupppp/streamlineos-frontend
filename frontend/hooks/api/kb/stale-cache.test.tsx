@@ -180,6 +180,19 @@ describe("a space lifecycle mutation reaches the space detail header", () => {
     expect(invalidated(SPACE_ARCHIVE_IMPACT_KEY)).toBe(true);
   });
 
+  it("useDeleteKbSpace refreshes Trash and the page tree, because the space's pages just moved to Trash", async () => {
+    seed();
+    const trashKey = qk.kb.pagesTrash();
+    const treeKey = qk.kb.pagesTree();
+    client.setQueryData(trashKey, { data: [], pagination: {} });
+    client.setQueryData(treeKey, []);
+    await run(useDeleteKbSpace, SPACE_ID);
+    expect(invalidated(trashKey)).toBe(true);
+    expect(invalidated(treeKey)).toBe(true);
+    expect(invalidated(COLLECTION_KEY)).toBe(true);
+    expect(invalidated(UNRELATED_KEY)).toBe(false);
+  });
+
   it("useUpdateKbSpace still invalidates the space detail after the key was nested", async () => {
     seed();
     await run(useUpdateKbSpace, { spaceId: SPACE_ID, name: "renamed" });

@@ -4,4 +4,3 @@ Items here are not done in code. Finished items were removed, including ones tha
 
 | File | What is left |
 | --- | --- |
-| knowledge-base.md | Permanent space delete needs a product decision |

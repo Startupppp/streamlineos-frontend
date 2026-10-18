@@ -24,6 +24,7 @@ jest.mock("@/hooks/api/entitlements", () => ({ useEntitlements: () => ({ data: u
 const mockSpaces = jest.fn();
 const mockArchive = jest.fn();
 const mockRestore = jest.fn();
+const mockDelete = jest.fn();
 const mockCreate = jest.fn();
 const mockUpdate = jest.fn();
 const mockArchiveImpact = jest.fn();
@@ -35,6 +36,7 @@ jest.mock("@/hooks/api/kb/spaces", () => ({
   useKbSpaces: (...args: unknown[]) => mockSpaces(...args),
   useArchiveKbSpace: () => mockArchive(),
   useRestoreKbSpace: () => mockRestore(),
+  useDeleteKbSpace: () => mockDelete(),
   useCreateKbSpace: () => mockCreate(),
   useUpdateKbSpace: () => mockUpdate(),
   useKbSpaceArchiveImpact: () => mockArchiveImpact(),
@@ -105,6 +107,7 @@ beforeEach(() => {
   mockSpaces.mockReturnValue(listing([space()]));
   mockArchive.mockReturnValue(mutation());
   mockRestore.mockReturnValue(mutation());
+  mockDelete.mockReturnValue(mutation());
   mockCreate.mockReturnValue(mutation());
   mockUpdate.mockReturnValue(mutation());
   mockArchiveImpact.mockReturnValue({ data: undefined, isLoading: false, isError: false });
@@ -197,6 +200,71 @@ describe("SpacesPage", () => {
     expect(screen.getByRole("button", { name: /Edit/i })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /Archive/i })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /Members/i })).toBeInTheDocument();
+  });
+
+  it("offers Delete permanently only on an archived space", () => {
+    mockCan.mockImplementation((key) => key === "kb:spaces:manage");
+    mockSpaces.mockReturnValue(
+      listing([space(), space({ id: 2, name: "Old handbook", archivedAt: "2026-10-01T00:00:00.000Z" })]),
+    );
+
+    renderPage();
+
+    expect(screen.getAllByRole("button", { name: "Delete permanently" })).toHaveLength(1);
+    expect(screen.getAllByRole("button", { name: /^Archive$/ })).toHaveLength(1);
+  });
+
+  it("hides Delete permanently from a user who cannot manage spaces", () => {
+    mockSpaces.mockReturnValue(listing([space({ archivedAt: "2026-10-01T00:00:00.000Z" })]));
+
+    renderPage();
+
+    expect(screen.queryByRole("button", { name: "Delete permanently" })).not.toBeInTheDocument();
+  });
+
+  it("confirms how many pages move to Trash, then deletes the clicked archived space and closes", async () => {
+    mockCan.mockImplementation((key) => key === "kb:spaces:manage");
+    mockSpaces.mockReturnValue(
+      listing([space({ id: 2, name: "Old handbook", archivedAt: "2026-10-01T00:00:00.000Z" })]),
+    );
+    mockArchiveImpact.mockReturnValue({
+      data: { pageCount: 4, publicLinkCount: 0, recordLinkCount: 0, askIndexed: false },
+      isLoading: false,
+      isError: false,
+    });
+    const mutate = jest.fn((_id: number, options: { onSuccess: () => void }) => options.onSuccess());
+    mockDelete.mockReturnValue(mutation({ mutate }));
+    const user = userEvent.setup();
+    renderPage();
+
+    await user.click(screen.getByRole("button", { name: "Delete permanently" }));
+    const dialog = screen.getByRole("alertdialog");
+    expect(within(dialog).getByText(/4 pages will move to Trash/)).toBeInTheDocument();
+    expect(within(dialog).getByText(/restored from Trash to the Wiki root/)).toBeInTheDocument();
+
+    await user.click(within(dialog).getByRole("button", { name: "Delete permanently" }));
+
+    expect(mutate).toHaveBeenCalledWith(2, expect.any(Object));
+    expect(screen.queryByRole("alertdialog")).not.toBeInTheDocument();
+  });
+
+  it("keeps the delete dialog open and reports the error when the server refuses", async () => {
+    mockCan.mockImplementation((key) => key === "kb:spaces:manage");
+    mockSpaces.mockReturnValue(
+      listing([space({ id: 2, name: "Old handbook", archivedAt: "2026-10-01T00:00:00.000Z" })]),
+    );
+    const mutate = jest.fn((_id: number, options: { onError: (e: unknown) => void }) =>
+      options.onError(new ApiError("Archive this space before deleting it permanently.", 409, "KB_SPACE_NOT_ARCHIVED", {}, "/kb/spaces/2")),
+    );
+    mockDelete.mockReturnValue(mutation({ mutate }));
+    const user = userEvent.setup();
+    renderPage();
+
+    await user.click(screen.getByRole("button", { name: "Delete permanently" }));
+    await user.click(within(screen.getByRole("alertdialog")).getByRole("button", { name: "Delete permanently" }));
+
+    expect(mutate).toHaveBeenCalledTimes(1);
+    expect(screen.getByRole("alertdialog")).toBeInTheDocument();
   });
 
   it("keeps card actions outside the space link and reachable in keyboard order", async () => {
