@@ -138,7 +138,6 @@ export function BillingProfileTab() {
   return (
     <div className="max-w-2xl space-y-6">
       <div className="rounded-xl border border-border bg-card shadow-sm p-5">
-        <h3 className="text-sm font-semibold text-foreground mb-4">Billing Profile</h3>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
