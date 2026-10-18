@@ -36,7 +36,7 @@ interface KanbanColumnHeaderProps {
   column: KanbanColumn;
   projectId: number;
   ticketCount: number;
-  serverCount?: number;
+  serverCount?: number | null;
   wipLimit?: number | null;
   canManage: boolean;
   existingNames?: string[];
@@ -59,7 +59,7 @@ export function KanbanColumnHeader({
   quickAdd,
   dragHandleProps,
 }: KanbanColumnHeaderProps) {
-  const displayCount = serverCount ?? ticketCount;
+  const displayCount = serverCount === null ? null : (serverCount ?? ticketCount);
   const [isRenaming, setIsRenaming] = useState(false);
   const [renameValue, setRenameValue] = useState(column.name);
   const [renameError, setRenameError] = useState<string | null>(null);
@@ -246,7 +246,7 @@ export function KanbanColumnHeader({
           onKeyDown={handleRenameKeyDown}
           onBlur={handleRenameBlur}
         />
-        <KanbanColumnWip count={displayCount} wipLimit={wipLimit} />
+        {displayCount === null ? null : <KanbanColumnWip count={displayCount} wipLimit={wipLimit} />}
       </div>
 
       <div className="flex items-center gap-0.5 shrink-0">

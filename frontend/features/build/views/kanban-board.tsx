@@ -131,7 +131,7 @@ export function KanbanBoard({
                         canManage={boardCanManage}
                         existingNames={existingNames}
                         wipLimit={columnBy === "status" ? wipLimits?.[col.id] : undefined}
-                        serverCount={columnBy === "status" && columnCountsData ? (columnCountsData[col.id] ?? 0) : undefined}
+                        serverCount={columnBy === "status" ? (columnCountsData ? (columnCountsData[col.id] ?? 0) : null) : undefined}
                         displayOptions={displayOptions}
                         minHeightClass="min-h-[60px]"
                         stretch
@@ -194,7 +194,7 @@ export function KanbanBoard({
                       canManage={boardCanManage}
                       existingNames={existingNames}
                       wipLimit={columnBy === "status" ? wipLimits?.[col.id] : undefined}
-                      serverCount={columnBy === "status" && columnCountsData ? (columnCountsData[col.id] ?? 0) : undefined}
+                      serverCount={columnBy === "status" ? (columnCountsData ? (columnCountsData[col.id] ?? 0) : null) : undefined}
                       displayOptions={displayOptions}
                       showHeaderQuickAdd={!readOnly && columnBy === "status"}
                       dragHandleProps={

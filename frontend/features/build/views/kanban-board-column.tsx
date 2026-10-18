@@ -28,7 +28,7 @@ interface KanbanBoardColumnProps {
   canManage: boolean;
   existingNames: string[];
   wipLimit?: number;
-  serverCount?: number;
+  serverCount?: number | null;
   displayOptions?: DisplayOptions;
   dragHandleProps?: DraggableProvidedDragHandleProps | null;
   isColumnDragging?: boolean;

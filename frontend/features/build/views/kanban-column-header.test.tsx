@@ -19,7 +19,7 @@ const column: KanbanColumn = {
 
 const noop = () => undefined;
 
-function renderHeader(props: { ticketCount: number; serverCount?: number; wipLimit?: number | null }) {
+function renderHeader(props: { ticketCount: number; serverCount?: number | null; wipLimit?: number | null }) {
   return render(
     <KanbanColumnHeader
       column={column}
@@ -59,5 +59,18 @@ describe("KanbanColumnHeader", () => {
     renderHeader({ ticketCount: 15, serverCount: 0, wipLimit: null });
 
     expect(screen.getByLabelText("0 tickets")).toHaveTextContent("0");
+  });
+
+  it("shows no count while the server aggregate is still loading, so a reload never shows how many rows the infinite board happened to page in", () => {
+    renderHeader({ ticketCount: 67, serverCount: null, wipLimit: null });
+
+    expect(screen.queryByLabelText("67 tickets")).not.toBeInTheDocument();
+    expect(screen.queryByText("67")).not.toBeInTheDocument();
+  });
+
+  it("shows the server aggregate once it arrives, whatever the loaded row count", () => {
+    renderHeader({ ticketCount: 67, serverCount: 76, wipLimit: null });
+
+    expect(screen.getByLabelText("76 tickets")).toHaveTextContent("76");
   });
 });
