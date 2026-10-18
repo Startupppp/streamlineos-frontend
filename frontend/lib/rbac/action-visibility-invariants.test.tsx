@@ -71,6 +71,7 @@ jest.mock("@/hooks/api/webhooks", () => ({
   useDeleteWebhook: jest.fn(),
   useRotateWebhookSecret: jest.fn(),
   useWebhookImpact: jest.fn(() => ({ data: undefined })),
+  useSendTestWebhook: jest.fn(() => ({ mutate: jest.fn(), isPending: false })),
 }));
 
 jest.mock("@/components/ui/page-wrapper", () => ({

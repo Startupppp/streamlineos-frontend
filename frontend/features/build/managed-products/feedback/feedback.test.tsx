@@ -7,6 +7,7 @@ jest.mock("next/navigation", () => ({
 
 jest.mock("@/hooks/api/access", () => ({
   useCan: jest.fn(() => true),
+  useModuleEnabled: jest.fn(() => true),
 }));
 
 jest.mock("@/hooks/api/feedbucket/use-feedbucket-submissions", () => ({

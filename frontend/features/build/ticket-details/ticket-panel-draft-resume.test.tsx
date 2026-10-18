@@ -4,6 +4,7 @@ import type { ReactNode } from "react";
 let mockSearchParams = new URLSearchParams();
 jest.mock("next/navigation", () => ({
   usePathname: () => "/build/1/tickets/123", useSearchParams: () => mockSearchParams,
+  useRouter: () => ({ push: jest.fn() }),
   notFound: () => { throw new Error("NEXT_NOT_FOUND"); },
 }));
 jest.mock("@/hooks/api/build/ticket-queries", () => ({
