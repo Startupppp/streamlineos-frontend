@@ -13,8 +13,12 @@ jest.mock("./calendar-capacity-window", () => ({
   CapacityWindowFields: () => <div>Capacity window</div>,
 }));
 
+const mockAccess = { can: false, inventory: true };
+const mockUseWarehouses = jest.fn((..._args: unknown[]) => ({ data: { items: [], total: 0 } }));
+
 jest.mock("@/hooks/api/access", () => ({
-  useCan: () => false,
+  useCan: () => mockAccess.can,
+  useModuleEnabled: () => mockAccess.inventory,
   useScope: () => "none",
 }));
 
@@ -23,7 +27,7 @@ jest.mock("@/hooks/api/directory/people", () => ({
 }));
 
 jest.mock("@/hooks/api/inventory/warehouses", () => ({
-  useWarehouses: () => ({ data: { items: [], total: 0 } }),
+  useWarehouses: (...args: unknown[]) => mockUseWarehouses(...args),
 }));
 
 jest.mock("@/hooks/api/calendar-capacity", () => ({
@@ -64,4 +68,30 @@ it("identifies source-owner coverage for source-owned equipment", async () => {
   fireEvent.click(await screen.findByRole("option", { name: /QA equipment/ }));
 
   expect(screen.getByText(/Complete source-owner resource coverage/)).toBeInTheDocument();
+});
+
+describe("UX: inventory off the plan never reaches the warehouse read", () => {
+  afterEach(() => {
+    mockAccess.can = false;
+    mockAccess.inventory = true;
+    mockUseWarehouses.mockClear();
+  });
+
+  it("hides Warehouse work and keeps the read disabled when inventory is not enabled", () => {
+    mockAccess.can = true;
+    mockAccess.inventory = false;
+    renderWithProviders(<CalendarCapacitySheet onClose={jest.fn()} />);
+
+    expect(screen.queryByRole("button", { name: "Warehouse work" })).toBeNull();
+    expect(mockUseWarehouses.mock.calls.every((call) => (call[1] as { enabled: boolean }).enabled === false)).toBe(true);
+  });
+
+  it("offers Warehouse work and loads warehouses only once it is chosen", () => {
+    mockAccess.can = true;
+    renderWithProviders(<CalendarCapacitySheet onClose={jest.fn()} />);
+
+    expect((mockUseWarehouses.mock.calls.at(-1)?.[1] as { enabled: boolean }).enabled).toBe(false);
+    fireEvent.click(screen.getByRole("button", { name: "Warehouse work" }));
+    expect((mockUseWarehouses.mock.calls.at(-1)?.[1] as { enabled: boolean }).enabled).toBe(true);
+  });
 });

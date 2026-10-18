@@ -21,7 +21,7 @@ import {
   useCalendarTeamCapacity,
   useCalendarWarehouseCapacity,
 } from "@/hooks/api/calendar-capacity";
-import { useCan, useScope } from "@/hooks/api/access";
+import { useCan, useModuleEnabled, useScope } from "@/hooks/api/access";
 import { usePeople } from "@/hooks/api/directory/people";
 import { useWarehouses } from "@/hooks/api/inventory/warehouses";
 import { CapacityWindowFields } from "./calendar-capacity-window";
@@ -42,8 +42,9 @@ export function CalendarCapacitySheet({ onClose }: { onClose: () => void }) {
   );
   const [units, setUnits] = useState(1);
   const resources = useCalendarResources();
-  const canReadWarehouses = useCan("inventory:warehouses:read");
-  const warehouses = useWarehouses({ limit: 100 });
+  const inventoryEnabled = useModuleEnabled("inventory");
+  const canReadWarehouses = useCan("inventory:warehouses:read") && inventoryEnabled;
+  const warehouses = useWarehouses({ limit: 100 }, { inlineError: true, enabled: canReadWarehouses && mode === "warehouse" });
   const selectedWarehouseId = warehouseId || warehouses.data?.items[0]?.id || 0;
   const peopleScope = useScope("directory:people:view");
   const people = usePeople({ limit: 50, search: memberSearch });

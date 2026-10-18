@@ -127,7 +127,7 @@ interface UpdateLocationInput {
   isActive?: boolean;
 }
 
-export function useWarehouses(filters?: WarehouseListFilters, options?: { inlineError?: boolean }) {
+export function useWarehouses(filters?: WarehouseListFilters, options?: { inlineError?: boolean; enabled?: boolean }) {
   const canView = useCan("inventory:warehouses:read");
   const params: Record<string, unknown> = {};
   if (filters?.q) params.q = filters.q;
@@ -152,7 +152,7 @@ export function useWarehouses(filters?: WarehouseListFilters, options?: { inline
       ),
     staleTime: 5 * 60_000,
     placeholderData: keepPreviousData,
-    enabled: canView,
+    enabled: canView && (options?.enabled ?? true),
     ...(options?.inlineError ? INLINE_READ_ERROR : {}),
   });
 }
