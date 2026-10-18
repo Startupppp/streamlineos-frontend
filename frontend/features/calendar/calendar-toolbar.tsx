@@ -217,7 +217,11 @@ export const CalendarToolbar = memo(function CalendarToolbar({
               {VIEW_MODE_OPTIONS.map((option) => {
                 const Icon = option.icon;
                 return (
-                  <TabsTrigger key={option.value} value={option.value}>
+                  <TabsTrigger
+                    key={option.value}
+                    value={option.value}
+                    aria-controls={undefined}
+                  >
                     <Icon className="h-4 w-4" aria-hidden />
                     <span className="sr-only">{option.label}</span>
                   </TabsTrigger>

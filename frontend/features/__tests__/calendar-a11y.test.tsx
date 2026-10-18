@@ -1,5 +1,5 @@
 import React from "react";
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, within } from "@testing-library/react";
 import { expectNoAxeViolations } from "@/test-utils/axe";
 import { atViewport } from "@/test-utils/viewport";
 
@@ -119,34 +119,6 @@ jest.mock("@/components/ui/content-fill-panel", () => ({
   FILTER_SELECT_TRIGGER: "filter-trigger-class",
 }));
 
-jest.mock("@/components/ui/view-toggle", () => ({
-  ViewToggle: ({
-    value,
-    options,
-    onChange,
-    size: _s,
-  }: {
-    value: string;
-    options: Array<{ value: string; label: string; icon: unknown }>;
-    onChange: (v: string) => void;
-    size?: string;
-  }) => (
-    <div role="group" aria-label="View mode">
-      {options.map((opt) => (
-        <button
-          key={opt.value}
-          type="button"
-          aria-label={opt.label}
-          aria-pressed={opt.value === value}
-          onClick={() => onChange(opt.value)}
-        >
-          {opt.label}
-        </button>
-      ))}
-    </div>
-  ),
-}));
-
 jest.mock("@/features/calendar/calendar-source-panel", () => ({
   CalendarSourcePanel: ({ failures: _f }: { failures?: Array<{ key: string; label: string }> }) => (
     <button type="button" aria-label="Calendar sources">Sources</button>
@@ -242,9 +214,35 @@ describe("a11y — Calendar surface (CalendarToolbar)", () => {
     expect(onToday).toHaveBeenCalled();
   });
 
-  it("view mode toggle group is labelled", () => {
+  it("view mode tablist is labelled and names a tab per mode", () => {
     render(<CalendarToolbar {...makeProps()} />);
-    expect(screen.getByRole("group", { name: "View mode" })).toBeInTheDocument();
+    const tablist = screen.getByRole("tablist", { name: "Calendar modes" });
+    const tabs = within(tablist).getAllByRole("tab");
+    expect(tabs.map((tab) => tab.textContent)).toEqual([
+      "Calendar View",
+      "List View",
+      "History",
+      "My Day",
+    ]);
+    expect(within(tablist).getByRole("tab", { name: "Calendar View" })).toHaveAttribute(
+      "aria-selected",
+      "true",
+    );
+  });
+
+  it("BITE PROOF — no mode tab claims a tab panel it never renders", () => {
+    render(<CalendarToolbar {...makeProps()} />);
+    expect(screen.queryAllByRole("tabpanel")).toHaveLength(0);
+    for (const tab of screen.getAllByRole("tab")) {
+      expect(tab).not.toHaveAttribute("aria-controls");
+    }
+  });
+
+  it("selecting a mode tab reports the new view mode", () => {
+    const onViewModeChange = jest.fn();
+    render(<CalendarToolbar {...makeProps({ onViewModeChange })} />);
+    fireEvent.mouseDown(screen.getByRole("tab", { name: "History" }), { button: 0 });
+    expect(onViewModeChange).toHaveBeenCalledWith("history");
   });
 
   it("attendance toggle button has aria-label describing current state", () => {
