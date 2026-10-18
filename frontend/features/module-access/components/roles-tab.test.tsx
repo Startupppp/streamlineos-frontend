@@ -51,10 +51,6 @@ jest.mock("@/hooks/api/module-access", () => ({
   useDeleteModuleRoleGroup: () => mockDelete,
 }));
 
-jest.mock("@/features/module-access/components/create-group-dialog", () => ({
-  CreateGroupDialog: () => <div data-testid="create-group-dialog" />,
-}));
-
 jest.mock("@/features/module-access/components/group-detail-panel", () => ({
   GroupDetailPanel: () => null,
   GroupDetailSkeleton: () => null,
@@ -98,7 +94,6 @@ describe("RolesTab mutation controls", () => {
     expect(screen.getByText("Hiring managers")).toBeInTheDocument();
     expect(screen.queryByLabelText("Rename group")).not.toBeInTheDocument();
     expect(screen.queryByLabelText("Delete group")).not.toBeInTheDocument();
-    expect(screen.queryByTestId("create-group-dialog")).not.toBeInTheDocument();
   });
 
   it("renders role mutation controls for authorized managers", () => {
@@ -106,6 +101,12 @@ describe("RolesTab mutation controls", () => {
 
     expect(screen.getByLabelText("Rename group")).toBeInTheDocument();
     expect(screen.getByLabelText("Delete group")).toBeInTheDocument();
-    expect(screen.getByTestId("create-group-dialog")).toBeInTheDocument();
+  });
+
+  it("BE-102: offers managers no way to create a role group", () => {
+    render(<RolesTab moduleKey="hr" canManage />);
+
+    expect(screen.queryByRole("button", { name: /New group|Create group/ })).not.toBeInTheDocument();
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
   });
 });

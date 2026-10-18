@@ -5,7 +5,6 @@ import {
   useQuery,
   useMutation,
   useQueryClient,
-  type InfiniteData,
 } from "@tanstack/react-query";
 import { useSession } from "next-auth/react";
 import { apiClient } from "@/lib/api-client";
@@ -13,7 +12,7 @@ import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
 import { directoryAndOwnershipQueryKeys } from "@/lib/query-keys/directory-and-ownership";
 import { platformCoreQueryKeys } from "@/lib/query-keys/platform-core";
 import { signalAccessInvalidation, useCan } from "@/hooks/api/access";
-import type { AuditCursorPage, DataScope, ModuleGroupMember, ModuleRoleGroup } from "./types";
+import type { AuditCursorPage, ModuleGroupMember, ModuleRoleGroup } from "./types";
 import { viewKey } from "./types";
 import { lazyContract } from "@/lib/api-envelope";
 import { NO_CURSOR_YET } from "@/hooks/api/cursor-page-param";
@@ -30,9 +29,6 @@ const groupMembersContract = lazyContract(() =>
 );
 const moduleSuccessContract = lazyContract(() =>
   import("./module-access-schema").then((m) => m.moduleSuccessContract),
-);
-const moduleGroupPermissionsSetContract = lazyContract(() =>
-  import("./module-access-schema").then((m) => m.moduleGroupPermissionsSetContract),
 );
 
 export function useModuleRoleGroups(moduleKey: string) {
@@ -54,23 +50,6 @@ export function useModuleRoleGroups(moduleKey: string) {
     getNextPageParam: (lastPage) => lastPage.pagination.nextCursor ?? undefined,
     enabled: canView,
     staleTime: 2 * 60_000,
-  });
-}
-
-export function useCreateModuleRoleGroup(moduleKey: string) {
-  const queryClient = useQueryClient();
-  const { data: session } = useSession();
-  return useMutation<ModuleRoleGroup, Error, { name: string }>({
-    mutationKey: ["moduleAccess", moduleKey, "create-group"],
-    mutationFn: (body) =>
-      apiClient.post<ModuleRoleGroup>(`/module-access/${moduleKey}/groups`, body, undefined, roleGroupContract),
-    onSuccess: () => {
-      void queryClient.invalidateQueries({
-        queryKey: directoryAndOwnershipQueryKeys.moduleAccess.roleGroups(moduleKey),
-        exact: true,
-      });
-      if (session?.orgId) signalAccessInvalidation(session.orgId);
-    },
   });
 }
 
@@ -101,51 +80,6 @@ export function useDeleteModuleRoleGroup(moduleKey: string) {
     onSuccess: () => {
       void queryClient.invalidateQueries({
         queryKey: directoryAndOwnershipQueryKeys.moduleAccess.roleGroups(moduleKey),
-        exact: true,
-      });
-      if (session?.orgId) signalAccessInvalidation(session.orgId);
-    },
-  });
-}
-
-export function useSetModuleGroupPermissions(moduleKey: string) {
-  const queryClient = useQueryClient();
-  const { data: session } = useSession();
-  return useMutation<
-    { success: true; version: number },
-    Error,
-    { groupId: number; version: number; items: { permissionKey: string; scope: DataScope }[] }
-  >({
-    mutationKey: ["moduleAccess", moduleKey, "set-group-permissions"],
-    mutationFn: ({ groupId, version, items }) =>
-      apiClient.put<{ success: true; version: number }>(
-        `/module-access/${moduleKey}/groups/${groupId}/permissions`,
-        { version, items },
-        undefined,
-        moduleGroupPermissionsSetContract,
-      ),
-    onSuccess: (data, variables) => {
-      queryClient.setQueryData<InfiniteData<AuditCursorPage<ModuleRoleGroup>>>(
-        directoryAndOwnershipQueryKeys.moduleAccess.roleGroups(moduleKey),
-        (old) =>
-          old
-            ? {
-                ...old,
-                pages: old.pages.map((page) => ({
-                  ...page,
-                  data: page.data.map((g) =>
-                    g.id === variables.groupId ? { ...g, version: data.version } : g,
-                  ),
-                })),
-              }
-            : old,
-      );
-      void queryClient.invalidateQueries({
-        queryKey: directoryAndOwnershipQueryKeys.moduleAccess.roleGroups(moduleKey),
-        exact: true,
-      });
-      void queryClient.invalidateQueries({
-        queryKey: platformCoreQueryKeys.access.me(),
         exact: true,
       });
       if (session?.orgId) signalAccessInvalidation(session.orgId);

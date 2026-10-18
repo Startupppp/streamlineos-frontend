@@ -3,9 +3,7 @@
 import { useState, useCallback } from "react";
 import { useSearchParams } from "next/navigation";
 import { ClipboardList, UserPlus } from "lucide-react";
-import { PlusIcon } from "@animateicons/react/lucide";
 import { Button } from "@/components/ui/button";
-import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import {
   Tabs,
   TabsContent,
@@ -50,7 +48,6 @@ export function ModuleAccessPage({ moduleKey, title }: ModuleAccessPageProps) {
     myPerms?.isModuleAdmin === true;
 
   const [tab, setTab] = useState(focusUserId ? "members" : "roles");
-  const [createGroupOpen, setCreateGroupOpen] = useState(false);
   const [addMemberOpen, setAddMemberOpen] = useState(false);
   const [auditLogOpen, setAuditLogOpen] = useState(false);
 
@@ -60,7 +57,6 @@ export function ModuleAccessPage({ moduleKey, title }: ModuleAccessPageProps) {
     (open: boolean) => setAuditLogOpen(open),
     [],
   );
-  const handleOpenCreateGroup = useCallback(() => setCreateGroupOpen(true), []);
   const handleOpenAddMember = useCallback(() => setAddMemberOpen(true), []);
   const { refetch: refetchMyPermissions } = myPermissionsQuery;
   const handleRetryPermissions = useCallback(() => {
@@ -109,19 +105,6 @@ export function ModuleAccessPage({ moduleKey, title }: ModuleAccessPageProps) {
             </TabsList>
 
             <div className="ml-auto flex shrink-0 items-center gap-2">
-              {visibleTab === "roles" && canManage ? (
-                <AnimatedIconButton
-                  icon={PlusIcon}
-                  iconSize={14}
-                  iconClassName="mr-1.5"
-                  size="sm"
-                  className="h-8"
-                  onClick={handleOpenCreateGroup}
-                >
-                  New group
-                </AnimatedIconButton>
-              ) : null}
-
               {visibleTab === "members" && canManage ? (
                 <Button size="sm" className="h-8 gap-1.5" onClick={handleOpenAddMember}>
                   <UserPlus className="h-3.5 w-3.5" />
@@ -146,13 +129,7 @@ export function ModuleAccessPage({ moduleKey, title }: ModuleAccessPageProps) {
           ) : (
             <>
               <TabsContent value="roles" className={TAB_PANEL_CLASS}>
-                <RolesTab
-                  moduleKey={moduleKey}
-                  canManage={canManage}
-                  createOpen={createGroupOpen}
-                  onCreateOpenChange={setCreateGroupOpen}
-                  hideToolbar
-                />
+                <RolesTab moduleKey={moduleKey} canManage={canManage} />
               </TabsContent>
 
               <TabsContent value="members" className={TAB_PANEL_CLASS}>

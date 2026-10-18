@@ -45,10 +45,8 @@ const CHAT_ENTITY_REASON =
 const IN_SERVICE_HOOKS = new Map([
   ["useSubmitEntityAction", CHAT_ENTITY_REASON],
   ["useCreateTaskFromMessage", CHAT_ENTITY_REASON],
-  ["useCreateModuleRoleGroup", MODULE_ACCESS_REASON],
   ["useRenameModuleRoleGroup", MODULE_ACCESS_REASON],
   ["useDeleteModuleRoleGroup", MODULE_ACCESS_REASON],
-  ["useSetModuleGroupPermissions", MODULE_ACCESS_REASON],
   ["useAddModuleGroupMember", MODULE_ACCESS_REASON],
   ["useRemoveModuleGroupMember", MODULE_ACCESS_REASON],
   ["useAddModuleMember", MODULE_ACCESS_REASON],

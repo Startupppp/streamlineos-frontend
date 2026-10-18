@@ -47,10 +47,7 @@ jest.mock("@/components/ui/sheet", () => ({
   SheetTitle: ({ children }: { children: ReactNode }) => <h2>{children}</h2>,
 }));
 
-const setPermissions = { mutate: jest.fn(), mutateAsync: jest.fn(), isPending: false };
-
 jest.mock("@/hooks/api/module-access", () => ({
-  useSetModuleGroupPermissions: () => setPermissions,
   useModuleGroupMembers: () => ({ data: [], isLoading: false }),
   useAddModuleGroupMember: () => ({ mutate: jest.fn(), isPending: false }),
   useRemoveModuleGroupMember: () => ({ mutate: jest.fn(), isPending: false }),
@@ -127,9 +124,10 @@ describe("a system role group's membership is still assignable", () => {
     expect(screen.getByTestId("permission-picker")).toHaveAttribute("data-read-only", "true");
   });
 
-  it("leaves a custom group's permission set editable", () => {
+  it("BE-102: shows a custom group's permission set read-only too, with no Save control", () => {
     renderPanel(makeGroup({ isSystem: false, name: "Hiring managers" }));
 
-    expect(screen.getByTestId("permission-picker")).toHaveAttribute("data-read-only", "false");
+    expect(screen.getByTestId("permission-picker")).toHaveAttribute("data-read-only", "true");
+    expect(screen.queryByRole("button", { name: /Save/ })).not.toBeInTheDocument();
   });
 });

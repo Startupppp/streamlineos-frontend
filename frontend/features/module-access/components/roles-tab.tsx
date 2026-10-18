@@ -2,7 +2,7 @@
 
 import { useState, useCallback } from "react";
 import { Shield, Pencil } from "lucide-react";
-import { PlusIcon, Trash2Icon } from "@animateicons/react/lucide";
+import { Trash2Icon } from "@animateicons/react/lucide";
 import { toast } from "sonner";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -19,7 +19,6 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { LoadingButton } from "@/components/ui/loading-button";
-import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { getErrorMessage } from "@/lib/get-error-message";
 import {
@@ -32,7 +31,6 @@ import {
 import { viewKey } from "@/hooks/api/module-access/types";
 import { useAccess, usePermissionGate } from "@/hooks/api/access";
 import { NoPermissionState } from "@/components/shared/no-permission-state";
-import { CreateGroupDialog } from "@/features/module-access/components/create-group-dialog";
 import {
   GroupDetailPanel,
   GroupDetailSkeleton,
@@ -141,41 +139,24 @@ function GroupListItem({
 interface RolesTabProps {
   moduleKey: string;
   canManage: boolean;
-  createOpen?: boolean;
-  onCreateOpenChange?: (open: boolean) => void;
-  hideToolbar?: boolean;
 }
 
-export function RolesTab({
-  moduleKey,
-  canManage,
-  createOpen: createOpenProp,
-  onCreateOpenChange,
-  hideToolbar = false,
-}: RolesTabProps) {
+export function RolesTab({ moduleKey, canManage }: RolesTabProps) {
   const catalogQuery = useModuleAccessCatalog(moduleKey);
   const groupsQuery = useModuleRoleGroups(moduleKey);
   const renameGroup = useRenameModuleRoleGroup(moduleKey);
   const deleteGroup = useDeleteModuleRoleGroup(moduleKey);
 
   const [selectedGroupId, setSelectedGroupId] = useState<number | null>(null);
-  const [internalCreateOpen, setInternalCreateOpen] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<ModuleRoleGroup | null>(null);
   const [renameTarget, setRenameTarget] = useState<ModuleRoleGroup | null>(null);
   const [renameName, setRenameName] = useState("");
-
-  const createOpen = onCreateOpenChange ? (createOpenProp ?? false) : internalCreateOpen;
-  const setCreateOpen = onCreateOpenChange ?? setInternalCreateOpen;
 
   const groups = groupsQuery.data?.pages.flatMap((p) => p.data) ?? [];
   const catalog = catalogQuery.data ?? [];
   const selectedGroup = groups.find((g) => g.id === selectedGroupId) ?? null;
 
   const handleSelectGroup = useCallback((id: number) => setSelectedGroupId(id), []);
-  const handleOpenCreate = useCallback(() => {
-    if (canManage) setCreateOpen(true);
-  }, [canManage, setCreateOpen]);
-  const handleGroupCreated = useCallback((id: number) => setSelectedGroupId(id), []);
   const handleDeleteDialogOpenChange = useCallback(
     (open: boolean) => {
       if (!open) setDeleteTarget(null);
@@ -249,20 +230,6 @@ export function RolesTab({
 
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-4">
-      {canManage && !hideToolbar ? (
-        <div className="flex justify-end">
-          <AnimatedIconButton
-            icon={PlusIcon}
-            iconSize={14}
-            iconClassName="mr-1.5"
-            size="sm"
-            onClick={handleOpenCreate}
-          >
-            New group
-          </AnimatedIconButton>
-        </div>
-      ) : null}
-
       {isLoading ? (
         <GroupDetailSkeleton />
       ) : viewGate.denied ? (
@@ -288,12 +255,7 @@ export function RolesTab({
                 <EmptyState
                   illustrationPreset="permissions"
                   title="No role groups"
-                  description="Create a group to start assigning permissions."
-                  action={
-                    canManage
-                      ? { label: "Create group", onClick: handleOpenCreate }
-                      : undefined
-                  }
+                  description="Module access is set with the owner, admin and member standings."
                   compact
                   className="border-0 bg-transparent py-8"
                 />
@@ -331,7 +293,7 @@ export function RolesTab({
                 <Shield className="mx-auto mb-3 h-10 w-10 text-muted-foreground" />
                 <p className="text-sm font-medium text-foreground">Select a group</p>
                 <p className="text-xs text-muted-foreground mt-1">
-                  Choose a role group to view and edit its permissions
+                  Choose a role group to view its permissions and members
                 </p>
               </div>
             </Card>
@@ -341,13 +303,6 @@ export function RolesTab({
 
       {canManage ? (
         <>
-          <CreateGroupDialog
-            open={createOpen}
-            onOpenChange={setCreateOpen}
-            moduleKey={moduleKey}
-            onCreated={handleGroupCreated}
-          />
-
           <ConfirmDialog
             open={!!deleteTarget}
             onOpenChange={handleDeleteDialogOpenChange}

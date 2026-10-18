@@ -103,7 +103,7 @@ describe("ModuleAccessPage authorization UX", () => {
   ])("allows access mutations for %s", (_, flags) => {
     renderPage(flags);
 
-    expect(screen.getByRole("button", { name: "New group" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "New group" })).not.toBeInTheDocument();
     expect(screen.getByTestId("roles-policy")).toHaveTextContent("true");
 
     selectTab("Members");

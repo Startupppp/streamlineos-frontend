@@ -81,11 +81,6 @@ export const moduleRoleGroupContract: ResponseContract<ModuleRoleGroup> =
     id: z.number(),
     name: z.string(),
     isSystem: z.boolean(),
-    /**
-     * The optimistic-concurrency token. `useSetModuleGroupPermissions` sends it
-     * back in the PUT body, so a `version` that silently stopped arriving would
-     * turn every permission write into an unguarded last-write-wins.
-     */
     version: z.number(),
     memberCount: z.number(),
     permissions: z.array(
@@ -181,11 +176,6 @@ export const moduleOwnershipContract: ResponseContract<ModuleOwnership> =
   });
 
 export const moduleSuccessContract = z.object({ success: z.literal(true) });
-
-export const moduleGroupPermissionsSetContract = z.object({
-  success: z.literal(true),
-  version: z.number(),
-});
 
 export const moduleMemberGrantsSetContract = z.object({
   success: z.literal(true),

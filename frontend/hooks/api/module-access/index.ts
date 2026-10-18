@@ -27,10 +27,8 @@ export {
 
 export {
   useModuleRoleGroups,
-  useCreateModuleRoleGroup,
   useRenameModuleRoleGroup,
   useDeleteModuleRoleGroup,
-  useSetModuleGroupPermissions,
   useModuleGroupMembers,
   useAddModuleGroupMember,
   useRemoveModuleGroupMember,
