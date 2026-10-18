@@ -263,3 +263,30 @@ describe("buildEventPayload", () => {
     expect(Object.keys(body as Record<string, unknown>)).not.toContain("timezone");
   });
 });
+
+describe("CAL-B-004 / CAL-B-027 guest and reminder payload", () => {
+  const base = { ...toDefaultForm({ start: new Date("2026-11-02T10:00:00"), end: new Date("2026-11-02T11:00:00") }), title: "Partner sync" };
+
+  it("sends external guests and the chosen reminder", () => {
+    const result = buildEventPayload({
+      form: { ...base, guestEmails: ["qa1015cal@sharklasers.com"], reminder: "10" },
+      showEndDate: false,
+      linkedTicket: null,
+      existingEntityId: null,
+      isEdit: false,
+    });
+    expect(result.payload).toMatchObject({ guestEmails: ["qa1015cal@sharklasers.com"], reminderOffsetsMinutes: [10] });
+  });
+
+  it("sends an empty reminder list for No reminder and the default set when chosen", () => {
+    const none = buildEventPayload({ form: { ...base, reminder: "none" }, showEndDate: false, linkedTicket: null, existingEntityId: null, isEdit: true });
+    const defaults = buildEventPayload({ form: { ...base, reminder: "1440,60,15" }, showEndDate: false, linkedTicket: null, existingEntityId: null, isEdit: true });
+    expect(none.payload).toMatchObject({ reminderOffsetsMinutes: [] });
+    expect(defaults.payload).toMatchObject({ reminderOffsetsMinutes: [1440, 60, 15] });
+  });
+
+  it("leaves guests and reminders to the server when the user never touched them", () => {
+    const result = buildEventPayload({ form: base, showEndDate: false, linkedTicket: null, existingEntityId: null, isEdit: false });
+    expect(result.payload).toMatchObject({ guestEmails: undefined, reminderOffsetsMinutes: undefined });
+  });
+});

@@ -74,6 +74,8 @@ export interface CreateCalendarEventPayload {
   entityType?: string;
   entityId?: string;
   attendeeIds?: string[];
+  guestEmails?: string[];
+  reminderOffsetsMinutes?: number[];
   rrule?: string;
   recurrenceEnd?: string;
   syncConnectionId?: number;
@@ -94,6 +96,8 @@ interface UpdateCalendarEventPayload {
   entityType?: string | null;
   entityId?: string | null;
   attendeeIds?: string[];
+  guestEmails?: string[];
+  reminderOffsetsMinutes?: number[];
   rrule?: string | null;
   recurrenceEnd?: string | null;
   expectedVersion?: number;

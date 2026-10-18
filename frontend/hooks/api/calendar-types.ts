@@ -107,6 +107,8 @@ export interface CalendarEventDetail {
   isRecurring: boolean;
   canManage: boolean;
   localVersion: number;
+  guestEmails: string[];
+  reminderOffsetsMinutes: number[] | null;
 }
 
 export interface ParsedCalendarEventId {

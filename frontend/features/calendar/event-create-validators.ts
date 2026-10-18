@@ -1,5 +1,5 @@
 import { differenceInMinutes } from "date-fns";
-import { isValidUrl, resolveEventDateTimes, type FormState } from "./event-form-state";
+import { isValidUrl, reminderOffsets, resolveEventDateTimes, type FormState } from "./event-form-state";
 import { buildRrule } from "./event-recurrence-schema";
 import type { TicketSearchResult } from "@/types/projects";
 
@@ -41,6 +41,8 @@ export interface CalendarEventPayload {
   entityType?: string;
   entityId?: string;
   attendeeIds?: string[];
+  guestEmails?: string[];
+  reminderOffsetsMinutes?: number[];
   rrule?: string;
   recurrenceEnd?: string;
   syncConnectionId?: number;
@@ -113,6 +115,8 @@ export function buildEventPayload({
       color: form.color,
       category: form.category,
       attendeeIds: form.attendeeIds,
+      guestEmails: form.guestEmails ?? undefined,
+      reminderOffsetsMinutes: form.reminder === null ? undefined : reminderOffsets(form.reminder),
       entityType: resolvedEntityId ? "ticket" : undefined,
       entityId: resolvedEntityId,
       rrule,

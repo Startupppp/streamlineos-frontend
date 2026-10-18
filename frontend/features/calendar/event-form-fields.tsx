@@ -64,6 +64,9 @@ interface EventFormFieldsProps {
   >[];
   attendeeIds: string[];
   onToggleAttendee: (id: string) => void;
+  guestEmails: string[];
+  onAddGuest: (email: string) => void;
+  onRemoveGuest: (email: string) => void;
 }
 
 export function EventFormFields({
@@ -100,6 +103,9 @@ export function EventFormFields({
   members,
   attendeeIds,
   onToggleAttendee,
+  guestEmails,
+  onAddGuest,
+  onRemoveGuest,
 }: EventFormFieldsProps) {
   const activeConnections = connections.filter((c) => c.status === "active");
   const selectedToolkit = activeConnections.find((c) => String(c.id) === syncConnectionId)?.toolkit;
@@ -229,6 +235,9 @@ export function EventFormFields({
             members={members}
             selectedIds={attendeeIds}
             onToggle={onToggleAttendee}
+            guestEmails={guestEmails}
+            onAddGuest={onAddGuest}
+            onRemoveGuest={onRemoveGuest}
           />
         </div>
       </div>

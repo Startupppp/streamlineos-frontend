@@ -22,6 +22,7 @@ import { describeEventConflicts } from "./event-conflict-notice";
 import {
   getDateTimeError,
   isValidUrl,
+  reminderValue,
   needsEndDateField,
   toDefaultForm,
   toEditForm,
@@ -76,12 +77,17 @@ export function useEventCreateDialog({
   const { data: connections = NO_CONNECTIONS } = useCalendarConnections();
   const { data: existingAttendees } = useEventAttendees(isEdit && open ? editNumericId : null);
   const { data: editingDetail } = useCalendarEvent(isEdit && open ? editNumericId : null);
-  const formWithDetail = useMemo(
-    () => isEdit && !descriptionTouched && editingDetail && !parseCalendarEventId(event?.id ?? "")?.occurrenceStart
+  const formWithDetail = useMemo(() => {
+    if (!isEdit || !editingDetail) return form;
+    const described = !descriptionTouched && !parseCalendarEventId(event?.id ?? "")?.occurrenceStart
       ? { ...form, description: editingDetail.description ?? "" }
-      : form,
-    [isEdit, descriptionTouched, editingDetail, event?.id, form],
-  );
+      : form;
+    return {
+      ...described,
+      guestEmails: form.guestEmails ?? editingDetail.guestEmails,
+      reminder: form.reminder ?? reminderValue(editingDetail.reminderOffsetsMinutes),
+    };
+  }, [isEdit, descriptionTouched, editingDetail, event?.id, form]);
 
   useEffect(() => {
     if (!open) return;
@@ -125,6 +131,23 @@ export function useEventCreateDialog({
         : [...prev.attendeeIds, memberId],
     }));
   }, []);
+
+  const detailGuestEmails = editingDetail?.guestEmails;
+  const addGuest = useCallback((email: string) => {
+    setForm((prev) => {
+      const current = prev.guestEmails ?? detailGuestEmails ?? [];
+      return current.includes(email) ? prev : { ...prev, guestEmails: [...current, email] };
+    });
+  }, [detailGuestEmails]);
+
+  const removeGuest = useCallback((email: string) => {
+    setForm((prev) => ({
+      ...prev,
+      guestEmails: (prev.guestEmails ?? detailGuestEmails ?? []).filter((guest) => guest !== email),
+    }));
+  }, [detailGuestEmails]);
+
+  const handleReminderChange = useCallback((value: string) => set("reminder", value), [set]);
 
   const seriesScope = useEventSeriesScope({
     event,
@@ -312,7 +335,7 @@ export function useEventCreateDialog({
     handleAllDayChange, handleStartDateChange, handleStartTimeChange,
     handleEndDateChange, handleEndTimeChange, handleShowEndDate,
     handleCategoryChange, handleColorChange, handleSyncConnectionChange,
-    handleAddConferenceChange, toggleAttendee, handleOpenTicketPicker,
+    handleAddConferenceChange, toggleAttendee, addGuest, removeGuest, handleReminderChange, handleOpenTicketPicker,
     handleTicketSelect, handleRemoveLinkedTicket, handleSave, handleRecurrenceChange,
     ...seriesScope,
   };

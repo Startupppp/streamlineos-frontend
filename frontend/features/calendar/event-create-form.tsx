@@ -1,12 +1,13 @@
 "use client";
 
-import React, { useCallback, useState } from "react";
+import React, { useCallback, useMemo, useState } from "react";
 import { AppSheet } from "@/components/shared/app-sheet";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
-import { Ticket, Link as LinkIcon, MapPin } from "lucide-react";
+import { Bell, Ticket, Link as LinkIcon, MapPin } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { XIcon } from "@animateicons/react/lucide";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { TruncatedText } from "@/components/ui/truncated-text";
@@ -16,7 +17,7 @@ import type { TicketSearchResult } from "@/types/projects";
 import { EventFormFields } from "./event-form-fields";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { TicketPickerDialog } from "./ticket-picker-dialog";
-import type { FormState, RecurrenceState } from "./event-form-state";
+import { DEFAULT_EVENT_REMINDER, EVENT_REMINDER_OPTIONS, type FormState, type RecurrenceState } from "./event-form-state";
 
 type EventCreateFormProps = {
   open: boolean;
@@ -47,6 +48,9 @@ type EventCreateFormProps = {
   onAddConferenceChange: (value: boolean) => void;
   onShowEndDate: () => void;
   onToggleAttendee: (memberId: string) => void;
+  onAddGuest: (email: string) => void;
+  onRemoveGuest: (email: string) => void;
+  onReminderChange: (value: string) => void;
   onOpenTicketPicker: () => void;
   onTicketSelect: (ticket: TicketSearchResult) => void;
   onRemoveLinkedTicket: () => void;
@@ -85,6 +89,9 @@ export function EventCreateForm({
   onAddConferenceChange,
   onShowEndDate,
   onToggleAttendee,
+  onAddGuest,
+  onRemoveGuest,
+  onReminderChange,
   onOpenTicketPicker,
   onTicketSelect,
   onRemoveLinkedTicket,
@@ -97,6 +104,13 @@ export function EventCreateForm({
   const [discardOpen, setDiscardOpen] = useState(false);
   const displayLinkedKey = linkedTicket ? `${linkedTicket.projectKey}-${linkedTicket.ticketNumber}` : existingEntityId ? `#${existingEntityId}` : null;
   const displayLinkedTitle = linkedTicket?.title ?? null;
+  const reminderSelection = form.reminder ?? DEFAULT_EVENT_REMINDER;
+  const reminderOptions = useMemo(
+    () => EVENT_REMINDER_OPTIONS.some((option) => option.value === reminderSelection)
+      ? EVENT_REMINDER_OPTIONS
+      : [...EVENT_REMINDER_OPTIONS, { value: reminderSelection, label: `Custom (${reminderSelection.split(",").join(", ")} minutes before)` }],
+    [reminderSelection],
+  );
 
   const handleOpenChange = useCallback((nextOpen: boolean) => {
     if (!nextOpen && !isPending && form.title.trim()) {
@@ -145,8 +159,24 @@ export function EventCreateForm({
                 onEndTimeChange={onEndTimeChange} onCategoryChange={onCategoryChange} onColorChange={onColorChange}
                 onSyncConnectionChange={onSyncConnectionChange} onAddConferenceChange={onAddConferenceChange}
                 onShowEndDate={onShowEndDate} members={members} attendeeIds={form.attendeeIds} onToggleAttendee={onToggleAttendee}
+                guestEmails={form.guestEmails ?? []} onAddGuest={onAddGuest} onRemoveGuest={onRemoveGuest}
                 recurrence={recurrence} onRecurrenceChange={onRecurrenceChange}
         />
+        <div className="flex items-center gap-2.5">
+          <Bell className="h-4 w-4 text-muted-foreground shrink-0" aria-hidden />
+          <div className="flex-1 min-w-0">
+            <Select value={reminderSelection} onValueChange={onReminderChange}>
+              <SelectTrigger aria-label="Reminder" className="h-9 w-full text-sm">
+                <SelectValue placeholder="Reminder" />
+              </SelectTrigger>
+              <SelectContent>
+                {reminderOptions.map((option) => (
+                  <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
         <div className="flex items-start gap-2.5">
           <MapPin className="h-4 w-4 text-muted-foreground shrink-0 mt-2" />
           <div className="flex-1 min-w-0 space-y-1">

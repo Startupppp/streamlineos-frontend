@@ -46,6 +46,8 @@ export interface FormState {
   endDate: string;
   endTime: string;
   attendeeIds: string[];
+  guestEmails: string[] | null;
+  reminder: string | null;
   locationError: string;
   syncConnectionId: string;
   addConference: boolean;
@@ -72,6 +74,8 @@ export function toDefaultForm(
     endDate: format(end, "yyyy-MM-dd"),
     endTime: format(end, "HH:mm"),
     attendeeIds: [],
+    guestEmails: null,
+    reminder: null,
     locationError: "",
     syncConnectionId: "none",
     addConference: false,
@@ -98,11 +102,36 @@ export function toEditForm(event: CalendarListItem, rrule?: string | null): Form
     endDate: format(end, "yyyy-MM-dd"),
     endTime: format(end, "HH:mm"),
     attendeeIds: [],
+    guestEmails: null,
+    reminder: null,
     locationError: "",
     syncConnectionId: "none",
     addConference: false,
     recurrence,
   };
+}
+
+export const DEFAULT_EVENT_REMINDER = "1440,60,15";
+
+export const EVENT_REMINDER_OPTIONS = [
+  { value: DEFAULT_EVENT_REMINDER, label: "1 day, 1 hour and 15 minutes before" },
+  { value: "none", label: "No reminder" },
+  { value: "0", label: "At start time" },
+  { value: "5", label: "5 minutes before" },
+  { value: "10", label: "10 minutes before" },
+  { value: "15", label: "15 minutes before" },
+  { value: "30", label: "30 minutes before" },
+  { value: "60", label: "1 hour before" },
+  { value: "1440", label: "1 day before" },
+] as const;
+
+export function reminderValue(offsets: number[] | null | undefined): string | null {
+  if (!offsets) return null;
+  return offsets.length > 0 ? offsets.join(",") : "none";
+}
+
+export function reminderOffsets(value: string): number[] {
+  return value === "none" ? [] : value.split(",").map(Number);
 }
 
 export function isValidUrl(value: string): boolean {

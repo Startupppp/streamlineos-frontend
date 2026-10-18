@@ -50,6 +50,9 @@ export function EventCreateDialog({
     handleAddConferenceChange,
     handleShowEndDate,
     toggleAttendee,
+    addGuest,
+    removeGuest,
+    handleReminderChange,
     handleOpenTicketPicker,
     handleTicketSelect,
     handleRemoveLinkedTicket,
@@ -90,6 +93,9 @@ export function EventCreateDialog({
         onAddConferenceChange={handleAddConferenceChange}
         onShowEndDate={handleShowEndDate}
         onToggleAttendee={toggleAttendee}
+        onAddGuest={addGuest}
+        onRemoveGuest={removeGuest}
+        onReminderChange={handleReminderChange}
         onOpenTicketPicker={handleOpenTicketPicker}
         onTicketSelect={handleTicketSelect}
         onRemoveLinkedTicket={handleRemoveLinkedTicket}

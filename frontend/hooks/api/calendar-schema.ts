@@ -200,6 +200,8 @@ export const calendarEventDetailContract = z.object({
   isRecurring: z.boolean(),
   canManage: z.boolean(),
   localVersion: z.number().int(),
+  guestEmails: z.array(z.string()).default([]),
+  reminderOffsetsMinutes: z.array(z.number().int()).nullable().default(null),
 });
 
 /** `calendarAttendeeListResponseSchema` */
