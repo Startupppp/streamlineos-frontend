@@ -82,3 +82,20 @@ it("owns the complete icon-only box model in compact mode", () => {
     "text-transparent",
   );
 });
+
+describe("SearchInput length limit hint (U-004)", () => {
+  it("says the search is capped once the typed text reaches maxLength", () => {
+    renderSearch({ value: "x".repeat(200), maxLength: 200 });
+    expect(screen.getByRole("status")).toHaveTextContent("Search is limited to 200 characters");
+  });
+
+  it("shows no hint below the limit", () => {
+    renderSearch({ value: "x".repeat(199), maxLength: 200 });
+    expect(screen.queryByRole("status")).not.toBeInTheDocument();
+  });
+
+  it("shows no hint without a maxLength", () => {
+    renderSearch({ value: "x".repeat(500) });
+    expect(screen.queryByRole("status")).not.toBeInTheDocument();
+  });
+});

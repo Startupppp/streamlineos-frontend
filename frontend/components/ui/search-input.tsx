@@ -69,6 +69,9 @@ export const SearchInput = React.forwardRef<HTMLInputElement, SearchInputProps>(
       onClear?.();
     }
 
+    const limit = props.maxLength;
+    const atLimit = !compact && typeof limit === "number" && limit > 0 && value.length >= limit;
+
     return (
       <div
         data-slot="search-input"
@@ -120,6 +123,14 @@ export const SearchInput = React.forwardRef<HTMLInputElement, SearchInputProps>(
           >
             <X className="h-3.5 w-3.5" aria-hidden="true" />
           </button>
+        ) : null}
+        {atLimit ? (
+          <p
+            role="status"
+            className="absolute left-0 top-full z-20 mt-1 whitespace-nowrap rounded-md border border-border bg-popover px-2 py-1 text-xs text-muted-foreground shadow-sm"
+          >
+            Search is limited to {limit} characters
+          </p>
         ) : null}
       </div>
     );
