@@ -14,7 +14,7 @@ import { resolveImageUrl } from "@/lib/utils";
 import { getInitials } from "@/lib/format-utils";
 import { formatDateTimeInOrgTz } from "@/lib/date-utils";
 import { useOrgTimeZone } from "@/hooks/api/org-display";
-import { actionBadgeClass } from "./audit-log-constants";
+import { actionBadgeClass, formatActionLabel } from "./audit-log-constants";
 import type { AuditLogRow } from "@/hooks/api/audit-log";
 
 function DetailField({ label, children }: { label: string; children: React.ReactNode }) {
@@ -65,7 +65,7 @@ export function LogDetailSheet({ log, onClose }: { log: AuditLogRow; onClose: ()
         <SheetBody className="px-6 py-5 space-y-4">
           <DetailField label="Action">
             <Badge variant="outline" className={`text-xs ${actionBadgeClass(log.action)}`}>
-              {log.action}
+              {formatActionLabel(log.action)}
             </Badge>
           </DetailField>
           <DetailField label="User">

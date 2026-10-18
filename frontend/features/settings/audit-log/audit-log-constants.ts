@@ -14,9 +14,7 @@ export const ACTION_COLORS: Record<string, string> = {
   "org.businessUnit": "bg-status-info-surface text-status-info-ink border-status-info-rule",
   "org.branch": "bg-status-info-surface text-status-info-ink border-status-info-rule",
   "org.department": "bg-status-info-surface text-status-info-ink border-status-info-rule",
-  // Sits beside org.branch and org.department, which are both info. The
-  // fuchsia was an inconsistency rather than a category of its own.
-  "org.team": "bg-status-info-surface text-status-info-ink border-status-info-rule",
+ "org.team": "bg-status-info-surface text-status-info-ink border-status-info-rule",
   "org.holiday": "bg-status-warning-surface text-status-warning-ink border-status-warning-rule",
   "org.domain": "bg-status-info-surface text-status-info-ink border-status-info-rule",
   "org.setup": "bg-status-success-surface text-status-success-ink border-status-success-rule",
@@ -30,37 +28,23 @@ export const ACTION_COLORS: Record<string, string> = {
   "file.upload": "bg-status-info-surface text-status-info-ink border-status-info-rule",
 };
 
-export const ACTION_LABELS: Record<string, string> = {
-  "org.archived": "Org Archived",
-  "org.restored": "Org Restored",
-  "org.ownership_transferred": "Ownership Transferred",
-  "org.setup.completed": "Setup Completed",
-  "org.businessUnit.created": "Business Unit Created",
-  "org.businessUnit.updated": "Business Unit Updated",
-  "org.businessUnit.deleted": "Business Unit Deleted",
-  "org.branch.created": "Branch Created",
-  "org.branch.updated": "Branch Updated",
-  "org.branch.deleted": "Branch Deleted",
-  "org.department.created": "Department Created",
-  "org.department.updated": "Department Updated",
-  "org.department.deleted": "Department Deleted",
-  "org.team.created": "Team Created",
-  "org.team.updated": "Team Updated",
-  "org.team.deleted": "Team Deleted",
-  "org.holiday.created": "Holiday Added",
-  "org.holiday.deleted": "Holiday Removed",
-  "org.domain.added": "Custom Domain Added",
-  "org.domain.verified": "Custom Domain Verified",
-  "org.domain.removed": "Custom Domain Removed",
-  "role.changed": "Role Updated",
-  "user.registered": "User Registered",
-  "user.login": "Login",
-  "user.logout": "Logout",
-  "user.deactivated": "User Deactivated",
-  "org.member_invited": "Member Invited",
-  "org.member_removed": "Member Removed",
-  "org.member_role_changed": "Member Role Changed",
+const ACTION_LABELS: Record<string, string> = {
+  "org.archived": "Organization archived",
+  "org.restored": "Organization restored",
+  "org.created": "Organization created",
+  "org.deleted": "Organization deleted",
+  "org.switched": "Organization switched",
+  "org.holiday.created": "Holiday added",
+  "org.holiday.deleted": "Holiday removed",
+  "org.domain.added": "Custom domain added",
+  "org.domain.verified": "Custom domain verified",
+  "org.domain.removed": "Custom domain removed",
+  "role.changed": "Role updated",
+  "user.login": "Signed in",
+  "user.logout": "Signed out",
 };
+
+const UPPERCASE_WORDS = new Set(["api", "crm", "hr", "ip", "mfa", "sso", "pat", "kb"]);
 
 export const PAGE_SIZE_OPTIONS = [15, 25, 50, 100] as const;
 export type PageSize = (typeof PAGE_SIZE_OPTIONS)[number];
@@ -92,12 +76,17 @@ export function readAuditLogFilters(params: SearchParamsReader): AuditLogFilters
 }
 
 export function formatActionLabel(action: string): string {
-  if (ACTION_LABELS[action]) return ACTION_LABELS[action];
-  return action
-    .split(".")
-    .map((part) => part.replace(/_/g, " "))
-    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
-    .join(" — ");
+  const known = ACTION_LABELS[action];
+  if (known) return known;
+  const segments = action.split(".").filter(Boolean);
+  const meaningful = segments[0] === "org" && segments.length > 1 ? segments.slice(1) : segments;
+  const words = meaningful
+    .flatMap((segment) => segment.replace(/([a-z0-9])([A-Z])/g, "$1 $2").split(/[\s_-]+/))
+    .filter(Boolean)
+    .map((word) => (UPPERCASE_WORDS.has(word.toLowerCase()) ? word.toUpperCase() : word.toLowerCase()));
+  if (words.length === 0) return action;
+  const [first, ...rest] = words;
+  return [first.charAt(0).toUpperCase() + first.slice(1), ...rest].join(" ");
 }
 
 export function actionBadgeClass(action: string): string {

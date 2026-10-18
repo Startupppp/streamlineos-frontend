@@ -38,6 +38,7 @@ import { downloadBlob } from "@/lib/download-blob";
 import { getErrorMessage } from "@/lib/get-error-message";
 import {
   DEFAULT_AUDIT_LOG_PAGE_SIZE,
+  formatActionLabel,
   PAGE_SIZE_OPTIONS,
   readAuditLogFilters,
   readAuditLogPageSize,
@@ -181,7 +182,7 @@ export function AuditLogPage() {
           <SelectContent className="min-w-[var(--radix-select-trigger-width)]">
             <SelectItem value="all">All Actions</SelectItem>
             {actions?.map((a) => (
-              <SelectItem key={a} value={a}>{a}</SelectItem>
+              <SelectItem key={a} value={a}>{formatActionLabel(a)}</SelectItem>
             ))}
           </SelectContent>
         </Select>

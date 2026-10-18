@@ -5,24 +5,8 @@ import { AlertCircle } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { humanizeLimitKey } from "@/components/shared/page-state-shared";
 import { useEntitlements, type EntitlementLimit } from "@/hooks/api/entitlements";
-
-const LIMIT_LABELS: Record<string, string> = {
-  members: "Members",
-  projects: "Projects",
-  kbPages: "KB Pages",
-  chatChannels: "Chat Channels",
-  crmLeads: "CRM Leads",
-  crmContacts: "CRM Contacts",
-  crmDeals: "CRM Deals",
-  supportTickets: "Support Tickets",
-  automations: "Automations",
-  signEnvelopes: "Sign Envelopes",
-  surveys: "Surveys",
-  acctInvoices: "Accounting Invoices",
-  hrCandidates: "HR Candidates",
-  hrJobPostings: "HR Job Postings",
-};
 
 function UsageMeter({ label, entry }: { label: string; entry: EntitlementLimit }) {
   const isUnlimited = entry.limit === null;
@@ -132,7 +116,7 @@ export function PlanUsageMeters({ onUpgradeClick }: PlanUsageMetersProps) {
           <AlertCircle className="h-4 w-4 text-destructive mt-0.5 shrink-0" />
           <p className="text-xs text-destructive leading-snug">
             <span className="font-semibold">Limit reached:</span>{" "}
-            {atLimitEntries.map(([k]) => LIMIT_LABELS[k] ?? k).join(", ")}.{" "}
+            {atLimitEntries.map(([k]) => humanizeLimitKey(k)).join(", ")}.{" "}
             Actions that create new records will be blocked until you upgrade.
           </p>
         </div>
@@ -141,7 +125,7 @@ export function PlanUsageMeters({ onUpgradeClick }: PlanUsageMetersProps) {
         {entries.map(([key, entry]) => (
           <UsageMeter
             key={key}
-            label={LIMIT_LABELS[key] ?? key}
+            label={humanizeLimitKey(key)}
             entry={entry}
           />
         ))}

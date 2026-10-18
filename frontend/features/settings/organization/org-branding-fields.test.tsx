@@ -1,5 +1,5 @@
 import { fireEvent, render, screen } from "@testing-library/react";
-import { ColorField } from "./org-branding-fields";
+import { ColorField, EmailBrandingPreview } from "./org-branding-fields";
 
 function renderInForm(value: string) {
   const onSubmit = jest.fn((e: React.FormEvent) => e.preventDefault());
@@ -38,5 +38,20 @@ describe("ColorField", () => {
     const picker = screen.getByLabelText("Primary color colour picker");
     expect(picker).not.toHaveAttribute("data-unset");
     expect(picker).toHaveValue("#112233");
+  });
+});
+
+describe("EmailBrandingPreview", () => {
+  it("renders the set logo as it is, not a filtered silhouette that reads as a placeholder", () => {
+    render(<EmailBrandingPreview logo="https://cdn.example.com/logo.png" primaryColor="#112233" />);
+    const logo = screen.getByAltText("Logo");
+    expect(logo.className).not.toContain("invert");
+    expect(logo.className).not.toContain("brightness-0");
+  });
+
+  it("shows the placeholder block only when no logo is set", () => {
+    const { container } = render(<EmailBrandingPreview logo="" primaryColor="#112233" />);
+    expect(screen.queryByAltText("Logo")).not.toBeInTheDocument();
+    expect(container.querySelector("[class*='bg-white/30']")).not.toBeNull();
   });
 });

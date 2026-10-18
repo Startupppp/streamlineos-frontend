@@ -183,7 +183,7 @@ export function EmailBrandingPreview({
                 alt="Logo"
                 width={160}
                 height={28}
-                className="h-7 w-auto object-contain brightness-0 invert"
+                className="h-7 w-auto object-contain"
               />
             ) : (
               <div className="h-7 w-20 rounded bg-white/30" />
