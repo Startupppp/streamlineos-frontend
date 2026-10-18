@@ -145,6 +145,15 @@ const LIFECYCLE_TOAST: Record<PeriodLifecycleAction, string> = {
   reopen: "Timesheet reopened for editing",
 };
 
+const LIFECYCLE_REQUEST: Record<PeriodLifecycleAction, (periodId: number) => Promise<TimesheetPeriod>> = {
+  lock: (periodId) =>
+    apiClient.post<TimesheetPeriod>(`/timesheets/periods/${periodId}/lock`, undefined, undefined, timesheetPeriodC),
+  unlock: (periodId) =>
+    apiClient.post<TimesheetPeriod>(`/timesheets/periods/${periodId}/unlock`, undefined, undefined, timesheetPeriodC),
+  reopen: (periodId) =>
+    apiClient.post<TimesheetPeriod>(`/timesheets/periods/${periodId}/reopen`, undefined, undefined, timesheetPeriodC),
+};
+
 /**
  * Admin lifecycle on an approved or locked period: lock (APPROVED -> LOCKED),
  * unlock (LOCKED -> APPROVED) and reopen (APPROVED|LOCKED -> DRAFT). Like an
@@ -155,13 +164,7 @@ export function usePeriodLifecycle(action: PeriodLifecycleAction) {
   const qc = useQueryClient();
   return useAuthorizedMutation<TimesheetPeriod, Error, number>("timesheets:approvals:manage", {
     mutationKey: ["timesheets", "periods", action],
-    mutationFn: (periodId) =>
-      apiClient.post<TimesheetPeriod>(
-        `/timesheets/periods/${periodId}/${action}`,
-        undefined,
-        undefined,
-        timesheetPeriodC,
-      ),
+    mutationFn: (periodId) => LIFECYCLE_REQUEST[action](periodId),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: usersAndCommerceQueryKeys.timesheets.all });
       toast.success(LIFECYCLE_TOAST[action]);
