@@ -75,3 +75,17 @@ describe("PolicyVersionHistory activation (QA 2026-10-14: editor stayed open on 
     expect(screen.getByText(/save your changes before activating/i)).toBeInTheDocument();
   });
 });
+
+describe("PolicyVersionHistory on a new version (HR-U-022)", () => {
+  it("says activating the draft replaces this policy's active version instead of treating it as a conflict", () => {
+    render(<PolicyVersionHistory policy={{ ...draft, version: 2, parentPolicyId: 6 }} canManage />);
+
+    expect(screen.getByText(/Activating v2 replaces the active version of this policy/)).toBeInTheDocument();
+  });
+
+  it("says nothing about replacing for a first draft", () => {
+    renderDraft();
+
+    expect(screen.queryByText(/replaces the active version/)).not.toBeInTheDocument();
+  });
+});

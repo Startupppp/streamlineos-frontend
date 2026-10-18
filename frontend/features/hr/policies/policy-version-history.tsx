@@ -84,6 +84,11 @@ export function PolicyVersionHistory({ policy, canManage, onActivated, unsavedCh
   return (
     <div className="space-y-2">
       {policy.status === "draft" && <PolicyConflictBanner policyId={policy.id} />}
+      {policy.status === "draft" && policy.version > 1 ? (
+        <p className="text-xs text-muted-foreground">
+          Activating v{policy.version} replaces the active version of this policy. Earlier versions are archived, not counted as conflicts.
+        </p>
+      ) : null}
 
       <div className="flex items-center gap-2">
         <Badge
