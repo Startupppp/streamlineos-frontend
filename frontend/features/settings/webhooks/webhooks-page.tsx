@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useEffect, useTransition } from "react";
+import { useState, useCallback, useTransition } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { motion } from "framer-motion";
 import { PlusIcon } from "@animateicons/react/lucide";
@@ -37,6 +37,7 @@ import {
   useDeleteWebhook,
   useRotateWebhookSecret,
   useWebhookImpact,
+  useSendTestWebhook,
   type WebhookEndpoint,
 } from "@/hooks/api/webhooks";
 import { WebhookCard, WebhookCardSkeleton } from "./webhook-card";
@@ -72,6 +73,7 @@ export function WebhooksPage() {
   const toggleWebhook = useToggleWebhook();
   const deleteWebhook = useDeleteWebhook();
   const rotateSecret = useRotateWebhookSecret();
+  const sendTest = useSendTestWebhook();
   const { data: deleteImpact } = useWebhookImpact(deleteId);
   const orgTz = useOrgTimeZone();
   const [logsWebhook, setLogsWebhook] = useState<WebhookEndpoint | null>(null);
@@ -79,14 +81,6 @@ export function WebhooksPage() {
 
   const webhooks = data?.data ?? [];
   const pagination = data?.pagination;
-
-  useEffect(() => {
-    setCursorState((current) =>
-      current.key === cursorResetKey
-        ? current
-        : { key: cursorResetKey, history: [undefined] },
-    );
-  }, [cursorResetKey]);
 
   const updateParams = useCallback(
     (updates: Record<string, string | null>) => {
@@ -214,6 +208,19 @@ export function WebhooksPage() {
     void refetch();
   }, [refetch]);
 
+  const handleSendTest = useCallback(
+    (id: number) => {
+      sendTest.mutate(id, {
+        onSuccess: (result) =>
+          result.success
+            ? toast.success("Test delivery succeeded")
+            : toast.error(`Test delivery failed${result.statusCode !== null ? ` (HTTP ${result.statusCode})` : ""}`),
+        onError: (err) => toast.error(getErrorMessage(err)),
+      });
+    },
+    [sendTest],
+  );
+
   return (
     <PageWrapper
       title="Webhooks"
@@ -275,6 +282,7 @@ export function WebhooksPage() {
                 onDelete={setDeleteId}
                 onRotateSecret={setRotateId}
                 onViewLogs={handleViewLogs}
+                onSendTest={handleSendTest}
                 canManage={canManage}
               />
             ))}

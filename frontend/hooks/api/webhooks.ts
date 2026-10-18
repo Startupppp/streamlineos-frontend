@@ -1,6 +1,6 @@
 "use client";
 
-import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { keepPreviousData, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
 import { supportAndWorkflowsQueryKeys } from "@/lib/query-keys/support-and-workflows";
@@ -30,6 +30,9 @@ const webhookRetryContract = lazyContract(() =>
 );
 const webhookImpactContract = lazyContract(() =>
   import("@/hooks/api/webhooks-schema").then((m) => m.webhookImpactContract),
+);
+const webhookTestContract = lazyContract(() =>
+  import("@/hooks/api/webhooks-schema").then((m) => m.webhookTestContract),
 );
 
 export interface WebhookEndpoint {
@@ -194,6 +197,19 @@ export function useRetryDelivery(endpointId: number) {
       ),
     onSuccess: () =>
       qc.invalidateQueries({ queryKey: supportAndWorkflowsQueryKeys.webhooks.logs(endpointId) }),
+  });
+}
+
+export function useSendTestWebhook() {
+  return useAuthorizedMutation("settings:webhooks:manage", {
+    mutationKey: ["webhooks", "send-test"] as const,
+    mutationFn: (id: number) =>
+      apiClient.post<{ success: boolean; statusCode: number | null }>(
+        `/webhooks/${id}/test`,
+        {},
+        undefined,
+        webhookTestContract,
+      ),
   });
 }
 

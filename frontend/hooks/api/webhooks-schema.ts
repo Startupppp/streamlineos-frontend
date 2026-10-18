@@ -67,6 +67,8 @@ export const webhookListLogsContract = z.object({
 
 export const webhookRetryContract = z.object({ success: z.boolean() });
 
+export const webhookTestContract = z.object({ success: z.boolean(), statusCode: z.number().int().nullable() });
+
 export const webhookImpactContract = z.object({
   endpointId: z.number().int(),
   subscribedEvents: z.array(z.string()),

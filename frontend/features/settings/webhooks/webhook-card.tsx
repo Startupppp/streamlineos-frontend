@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback } from "react";
-import { ToggleLeft, ToggleRight, Activity } from "lucide-react";
+import { ToggleLeft, ToggleRight, Activity, FlaskConical } from "lucide-react";
 import { CopyIcon, KeyRoundIcon, Trash2Icon } from "@animateicons/react/lucide";
 import { motion } from "framer-motion";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -22,6 +22,7 @@ export interface WebhookCardProps {
   onDelete: (id: number) => void;
   onRotateSecret: (id: number) => void;
   onViewLogs: (webhook: WebhookEndpoint) => void;
+  onSendTest: (id: number) => void;
   canManage: boolean;
 }
 
@@ -45,6 +46,7 @@ export function WebhookCard({
   onDelete,
   onRotateSecret,
   onViewLogs,
+  onSendTest,
   canManage,
 }: WebhookCardProps) {
   const { fadeUp } = useMotionVariants();
@@ -61,6 +63,10 @@ export function WebhookCard({
   const handleDeleteClick = useCallback(
     () => onDelete(wh.id),
     [wh.id, onDelete],
+  );
+  const handleSendTestClick = useCallback(
+    () => onSendTest(wh.id),
+    [wh.id, onSendTest],
   );
   const handleViewLogs = useCallback(
     () => onViewLogs(wh),
@@ -104,6 +110,17 @@ export function WebhookCard({
               >
                 <Activity className="h-4 w-4 text-muted-foreground" />
               </Button>
+              {canManage && (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="w-7"
+                  onClick={handleSendTestClick}
+                  aria-label="Send test delivery"
+                >
+                  <FlaskConical className="h-4 w-4 text-muted-foreground" />
+                </Button>
+              )}
               {canManage && (
                 <>
                   <Button
