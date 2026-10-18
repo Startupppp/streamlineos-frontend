@@ -91,7 +91,7 @@ export function describeEventConflicts(result: EventConflictResult): string | nu
 
 export function eventConflictViewUrl(result: EventConflictResult, search: string): string | null {
   const first = result.eventConflicts?.[0];
-  if (!first) return null;
+  if (!first?.startDate) return null;
   const start = parseISO(first.startDate);
   if (Number.isNaN(start.getTime())) return null;
   return calendarUrl(new URLSearchParams(search), {

@@ -24,9 +24,9 @@ interface GanttTicketRowsProps {
   rowHeight: number;
   titleMax: number;
   labelFontSize: number;
-  dayWidth: number;
+  dayWidth?: number;
   onTicketClick: (ticketId: number) => void;
-  onReschedule: (ticketId: number, startDate: string | null, dueDate: string | null) => void;
+  onReschedule?: (ticketId: number, startDate: string | null, dueDate: string | null) => void;
 }
 
 interface ActiveDrag {
@@ -105,7 +105,7 @@ export function GanttTicketRows({
 
   function handleBarPointerMove(event: React.PointerEvent<SVGGElement>) {
     const drag = activeDragRef.current;
-    if (!drag) return;
+    if (!drag || !onReschedule) return;
     setDragPreview({ ticketId: drag.ticketId, pixelDx: event.clientX - drag.startX });
   }
 
@@ -114,11 +114,13 @@ export function GanttTicketRows({
     if (!drag) return;
     activeDragRef.current = null;
     const dx = event.clientX - drag.startX;
-    const dayOffset = Math.round(dx / dayWidth);
     setDragPreview(null);
-    if (Math.abs(dx) <= 4) {
+    if (!onReschedule || !dayWidth || Math.abs(dx) <= 4) {
       onTicketClick(drag.ticketId);
-    } else if (dayOffset !== 0) {
+      return;
+    }
+    const dayOffset = Math.round(dx / dayWidth);
+    if (dayOffset !== 0) {
       const newStart = drag.startDate ? shiftDate(drag.startDate, dayOffset) : null;
       const newDue = drag.dueDate ? shiftDate(drag.dueDate, dayOffset) : null;
       onReschedule(drag.ticketId, newStart, newDue);
@@ -182,9 +184,9 @@ export function GanttTicketRows({
                 onPointerMove={handleBarPointerMove}
                 onPointerUp={handleBarPointerUp}
                 onClick={handleBarClick}
-                className="cursor-grab active:cursor-grabbing"
+                className={onReschedule ? "cursor-grab active:cursor-grabbing" : "cursor-pointer"}
               >
-                <title>{`Open ${label} ${ticket.title}. Drag to reschedule.`}</title>
+                <title>{onReschedule ? `Open ${label} ${ticket.title}. Drag to reschedule.` : `Open ${label} ${ticket.title}`}</title>
                 <rect
                   x={geo.x + previewDx}
                   y={y + 6}

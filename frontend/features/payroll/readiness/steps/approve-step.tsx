@@ -20,6 +20,7 @@ function resolveApproveCta(
   canSubmit: boolean,
   canLock: boolean,
   runId: number,
+  openBlockers: number,
 ): ReactNode {
   if (isCurrent && SUBMITTABLE.has(status)) {
     return canSubmit ? (
@@ -42,7 +43,7 @@ export function ApproveStep({ runId, status, isCurrent, openBlockers = 0 }: Appr
   const canSubmit = useCan("payroll:runs:update");
   const canLock = useCan("payroll:runs:manage");
 
-  const cta = resolveApproveCta(isCurrent, status, canSubmit, canLock, runId);
+  const cta = resolveApproveCta(isCurrent, status, canSubmit, canLock, runId, openBlockers);
 
   return (
     <StepPanel title="Approve & lock" cta={cta}>

@@ -15,6 +15,7 @@ import { ErrorState } from "@/components/shared/error-state";
 import { RoadmapPublicationActive } from "./roadmap-publication-active";
 import {
   LINK_EXPIRY_OPTIONS,
+  isLinkExpiry,
   type LinkExpiry,
   useRoadmapPublicationControls,
 } from "./use-roadmap-publication-controls";
@@ -25,10 +26,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-
-function isLinkExpiry(value: string): value is LinkExpiry {
-  return LINK_EXPIRY_OPTIONS.some((o) => o.value === value);
-}
 
 interface LinkExpirySelectProps {
   value: LinkExpiry;

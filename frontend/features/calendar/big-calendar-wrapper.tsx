@@ -1,5 +1,5 @@
 "use client";
-import { useCallback, useEffect, useMemo, useRef } from "react";
+import { useCallback, useEffect, useMemo, useRef, type KeyboardEvent } from "react";
 import {
   Calendar,
   dateFnsLocalizer,
@@ -171,7 +171,8 @@ export function BigCalendarWrapper({
         onSelectSlot={onSelectSlot}
         onSelectEvent={onSelectEvent as ((event: object) => void) | undefined}
         onKeyPressEvent={(evt, e) => {
-          if ((e.key === "Enter" || e.key === " ") && onSelectEvent) {
+          const key = (e as KeyboardEvent<HTMLElement>).key;
+          if ((key === "Enter" || key === " ") && onSelectEvent) {
             e.preventDefault();
             onSelectEvent(evt as BigCalEvent);
           }

@@ -21,6 +21,10 @@ export const LINK_EXPIRY_OPTIONS = [
 
 export type LinkExpiry = (typeof LINK_EXPIRY_OPTIONS)[number]["value"];
 
+export function isLinkExpiry(value: string): value is LinkExpiry {
+  return LINK_EXPIRY_OPTIONS.some((o) => o.value === value);
+}
+
 function expiryInput(expiry: LinkExpiry): { expiresAt?: string } | undefined {
   const days = LINK_EXPIRY_OPTIONS.find((o) => o.value === expiry)?.days ?? null;
   if (days === null) return undefined;
@@ -36,7 +40,7 @@ export function useRoadmapPublicationControls(managedProductId: number) {
   const [unpublishDialogOpen, setUnpublishDialogOpen] = useState(false);
   const [rotateDialogOpen, setRotateDialogOpen] = useState(false);
   const [shareUrl, setShareUrl] = useState<string | null>(null);
-  const [linkExpiry, setLinkExpiry] = useState<LinkExpiry>("never");
+  const [linkExpiry, setLinkExpiryState] = useState<LinkExpiry>("never");
   const { copied, copy } = useCopyFeedback();
 
   const previewBoard = preview.data?.roadmap;
@@ -147,7 +151,9 @@ export function useRoadmapPublicationControls(managedProductId: number) {
       shareUrl,
       copied,
       linkExpiry,
-      setLinkExpiry,
+      setLinkExpiry: (value: string) => {
+        if (isLinkExpiry(value)) setLinkExpiryState(value);
+      },
       unpublishDialogOpen,
       rotateDialogOpen,
       handleCopy,
