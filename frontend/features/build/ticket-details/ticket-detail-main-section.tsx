@@ -350,6 +350,7 @@ export function TicketDetailMainSection({
           contentKey={ticketId}
           onChangeHtml={onDescriptionChange}
           editable={canUpdate}
+          imageFolder="build-ticket-images"
           output="html"
           minHeightClassName="min-h-24 sm:min-h-32"
           placeholder="Add a description..."

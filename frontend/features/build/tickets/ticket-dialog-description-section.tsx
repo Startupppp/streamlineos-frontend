@@ -100,6 +100,7 @@ export function TicketDialogDescriptionSection({
                   content={field.value ?? ""}
                   contentKey={descriptionEditorKey}
                   onChangeHtml={handleDescriptionHtmlChange}
+                  imageFolder="build-ticket-images"
                   output="html"
                   minHeightClassName="min-h-[120px]"
                   placeholder="Add description…"

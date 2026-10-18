@@ -35,6 +35,7 @@ export interface TiptapEditorProps {
   contentKey?: string | number;
   menuMode?: "bubble" | "static";
   embedded?: boolean;
+  imageFolder?: "editor-images" | "build-ticket-images";
 }
 
 interface UploadResult {
@@ -90,10 +91,10 @@ function normalizeToHtml(
     .join("");
 }
 
-async function uploadImageFile(file: File): Promise<string> {
+async function uploadImageFile(file: File, folder: string): Promise<string> {
   const formData = new FormData();
   formData.append("file", file);
-  formData.append("folder", "editor-images");
+  formData.append("folder", folder);
   const data = await apiClient.upload<UploadResult>(
     "/storage/upload",
     formData,
@@ -122,6 +123,7 @@ export function TiptapEditor({
   contentKey,
   menuMode = "bubble",
   embedded = false,
+  imageFolder = "editor-images",
 }: TiptapEditorProps) {
   const lastInitKey = useRef<string | number | boolean>(false);
   const imageInputRef = useRef<HTMLInputElement>(null);
@@ -167,7 +169,7 @@ export function TiptapEditor({
             const file = item.getAsFile();
             if (file) {
               event.preventDefault();
-              void uploadImageFile(file)
+              void uploadImageFile(file, imageFolder)
                 .then((url) => {
                   view.dispatch(
                     view.state.tr.replaceSelectionWith(
@@ -197,7 +199,7 @@ export function TiptapEditor({
           top: event.clientY,
         });
         imageFiles.forEach((file) => {
-          void uploadImageFile(file)
+          void uploadImageFile(file, imageFolder)
             .then((url) => {
               const insertPos = pos?.pos ?? view.state.doc.content.size;
               view.dispatch(
@@ -240,7 +242,7 @@ export function TiptapEditor({
       toast.error(error);
       return;
     }
-    void uploadImageFile(file)
+    void uploadImageFile(file, imageFolder)
       .then((url) => {
         editor.chain().focus().setImage({ src: url }).run();
       })
