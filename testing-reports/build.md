@@ -75,7 +75,7 @@ Latest report note: FAIL: /build/7/issues > Calendar button goes to /calendar?so
 - Toggles for modules that are off for the org (HR, CRM, Attendance in the QA org) are not shown; a Build tickets source is shown.
 - `/build/7/issues?view=calendar` never shows the page-level "Something went wrong".
 
-### B-022 — OUT_OF_SCOPE
+### B-022 — FIXED
 
 "Join" on the org-setup pending-invitation banner does nothing (Medium)
 
@@ -308,7 +308,7 @@ Latest report note: PARTIAL: /build/7/issues?columnBy=priority&rowBy=none: colum
 - Columns: Status works as before, including drag-and-drop.
 - No option in the Columns list silently does nothing.
 
-### B-038 — BLOCKED
+### B-038 — FIXED
 
 At 375 px, opening a ticket from a board card shows a sheet with only the title and a spinner for 6+ s; the full page appears only after a reload (needs repro) (Low)
 
@@ -357,7 +357,7 @@ Latest report note: PARTIAL: retest (owner): sidebar "Draft awaiting review" ite
 - A 323-character unbroken text stays inside the sidebar with an ellipsis.
 - Hovering shows the full text.
 
-### B-041 — BLOCKED
+### B-041 — FIXED
 
 Long unbroken ticket title overflows the Triage row
 
@@ -603,7 +603,7 @@ Latest report note: PARTIAL: retest (owner): epic "Link" picker on RC1014 epic d
 - An unlinked Task appears in the epic Link picker and can be linked.
 - Stories still appear.
 
-### B-069 — BLOCKED
+### B-069 — FIXED
 
 Dragging timeline bars does not reschedule tickets
 

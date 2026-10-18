@@ -66,7 +66,7 @@ export const TriageRow = memo(function TriageRow({
             <TruncatedText
               text={ticket.title ?? "—"}
               lines={2}
-              className="text-sm font-medium"
+              className="text-sm font-medium [overflow-wrap:anywhere]"
             />
             {ticket.description ? (
               <p className={cn(TEXT_ONE_LINE, "mt-0.5 text-xs text-muted-foreground")}>

@@ -45,6 +45,7 @@ import { ArchivedOrgsRestore } from "@/components/organization/archived-orgs-res
 import {
   useMyPendingInvitations,
   useClaimInvitation,
+  useSignOut,
   signInWithMagicToken,
 } from "@/hooks/common/auth-hooks";
 import { persistPartialGrants } from "@/features/auth/components/post-invite-transition";
@@ -341,6 +342,10 @@ export default function OrgSetupPage() {
   }, [saveState]);
 
   const handleCreateOwnOrg = useCallback(() => setCreateOwnOrg(true), []);
+  const signOutMutation = useSignOut();
+  const handleSignOut = useCallback(() => {
+    signOutMutation.mutate();
+  }, [signOutMutation]);
 
   if (mounted && !createOwnOrg && !isInvitationsPending && (pendingInvitations?.length ?? 0) > 0) {
     return (
@@ -352,9 +357,19 @@ export default function OrgSetupPage() {
           </p>
         </div>
         <PendingInvitationsNotice items={pendingInvitations ?? []} />
-        <Button variant="ghost" className="self-start" onClick={handleCreateOwnOrg}>
-          Create my own organization instead
-        </Button>
+        <div className="flex flex-wrap items-center gap-2">
+          <Button variant="ghost" className="self-start" onClick={handleCreateOwnOrg}>
+            Create my own organization instead
+          </Button>
+          <Button
+            variant="ghost"
+            className="self-start text-muted-foreground"
+            onClick={handleSignOut}
+            disabled={signOutMutation.isPending}
+          >
+            Sign out
+          </Button>
+        </div>
       </div>
     );
   }

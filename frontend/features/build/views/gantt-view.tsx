@@ -18,6 +18,7 @@ import { usePageState } from "@/hooks/api/use-page-state";
 import { PageState } from "@/components/shared/page-state";
 import { useCriticalPath } from "@/hooks/api/build/reports";
 import { useProjectMilestones } from "@/hooks/api/build/milestones";
+import { useUpdateTicket } from "@/hooks/api/build/ticket-update-mutation";
 
 const GANTT_MAX_DAYS = 28;
 
@@ -77,6 +78,14 @@ export function GanttView({ tickets, projectId, onTicketClick, onCreateTicket }:
 
   const router = useRouter();
   const requestLeave = useNavigationLeave();
+  const updateTicket = useUpdateTicket(projectId);
+
+  const handleReschedule = useCallback(
+    (ticketId: number, startDate: string | null, dueDate: string | null) => {
+      updateTicket.mutate({ ticketId, startDate, dueDate, version: 0 });
+    },
+    [updateTicket],
+  );
 
   const {
     numDays, dayWidth, rowHeight, headerHeight, labelWidth,
@@ -208,7 +217,9 @@ export function GanttView({ tickets, projectId, onTicketClick, onCreateTicket }:
                 rowHeight={rowHeight}
                 titleMax={titleMax}
                 labelFontSize={11}
+                dayWidth={dayWidth}
                 onTicketClick={onTicketClick}
+                onReschedule={handleReschedule}
               />
               <GanttMilestoneMarkers
                 milestones={milestones ?? []}
