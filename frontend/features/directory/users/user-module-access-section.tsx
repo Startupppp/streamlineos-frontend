@@ -85,7 +85,7 @@ function ModuleToggleRow({
         checked={module.enabled}
         disabled={disabled}
         onCheckedChange={handleChange}
-        aria-label={`${label} access`}
+        aria-label={`${label} enabled for this person`}
       />
     </div>
   );
@@ -129,7 +129,7 @@ export function UserModuleAccessSection({
   return (
     <div className="space-y-2">
       <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-        Module access
+        Module availability
       </p>
       <p className="text-dense text-muted-foreground">
         {isMemberActive

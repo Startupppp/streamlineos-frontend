@@ -89,7 +89,7 @@ NEEDS PRODUCT DECISION: `roles.controller.ts` has no `POST /roles` endpoint for 
 4. **Lists do not refresh after a save** [RBAC-B-004, RBAC-B-006]. Role change and Build add-member both show stale rows until reload. The owner will save twice or think the save failed.
 6. **Knowledge Base shows content to users with "No access"** [RBAC-B-001]. The Viewer sees the wiki list. The invite dialog says "No access" for Knowledge, which is not what the user gets.
 7. **Member HR links land on onboarding with no explanation** [RBAC-B-003]. Show "HR is not available for your account" instead of redirecting to the onboarding form.
-8. **Person drawer "Module access" toggles look like grants.** For qa1015view (no grants) HR, Build, Accounting, Payroll and Support show ON. The toggles mean "module enabled for this person" but users read them as access. Label them "Enabled for this person" and show the granted roles next to each one (none for the Viewer).
+8. **Person drawer "Module access" toggles look like grants — FIXED, PENDING_BROWSER_VERIFICATION.** Renamed heading from "Module access" to "Module availability"; switch aria-label changed to "enabled for this person". For qa1015view (no grants) HR, Build, Accounting, Payroll and Support show ON. The toggles mean "module enabled for this person" but users read them as access.
 
 ### Good to have
 1. Rename the Viewer preset to "No module access" in the invite dialog. It is a preset, not an org role, and the word "Viewer" suggests a role.
