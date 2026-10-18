@@ -26,6 +26,11 @@ interface CreateHolidayInput {
   recurring?: boolean;
 }
 
+interface UpdateHolidayInput extends Partial<CreateHolidayInput> {
+  holidayId: string;
+  expected?: Pick<Holiday, "name" | "date" | "recurring">;
+}
+
 export function useHolidays() {
   const canView = useCan("self:attendance");
   return useQuery<Holiday[]>({
@@ -53,7 +58,7 @@ export function useUpdateHoliday() {
   const qc = useQueryClient();
   return useAuthorizedMutation("hr:attendance:manage", {
     mutationKey: ["hr", "holidays", "update"],
-    mutationFn: ({ holidayId, ...data }: Partial<CreateHolidayInput> & { holidayId: string }) =>
+    mutationFn: ({ holidayId, ...data }: UpdateHolidayInput) =>
       apiClient.patch<Holiday>(`/hr/attendance/holidays/${holidayId}`, data, undefined, lazyContract(() => import("@/hooks/api/hr/holidays-schema").then(m => m.holidayRowContract))),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.holidays() });

@@ -102,7 +102,11 @@ export function HolidaysPage() {
     const trimmedName = values.name.trim().toLowerCase();
     if (editingHoliday) {
       updateMutation.mutate(
-        { holidayId: editingHoliday.id, ...values },
+        {
+          holidayId: editingHoliday.id,
+          ...values,
+          expected: { name: editingHoliday.name, date: editingHoliday.date, recurring: editingHoliday.recurring },
+        },
         {
           onSuccess: () => {
             toast.success("Holiday updated");
