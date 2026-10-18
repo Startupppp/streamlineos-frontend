@@ -39,7 +39,9 @@ import {
   clearAdminWizardDraft,
   toAdminWizardDraft,
 } from "./_onboarding/wizard-draft";
-import { startOfLocalDay } from "@/lib/date-constraints";
+import { parseDateOnly, startOfLocalDay } from "@/lib/date-constraints";
+import { todayInOrgTz } from "@/lib/date-utils";
+import { useOrgTimeZone } from "@/hooks/api/org-display";
 
 type FormValues = z.infer<typeof onboardEmployeeInputSchema>;
 
@@ -74,6 +76,7 @@ export function OnboardingWizard() {
   const { data: departments } = useOnboardingTemplateDepartments();
   const { data: locations } = useOrgLocations({ status: "ACTIVE" });
   const onboardEmployee = useOnboardEmployee();
+  const orgTz = useOrgTimeZone();
 
   const form = useForm<FormValues>({
     resolver: zodResolver(onboardEmployeeInputSchema),
@@ -98,7 +101,7 @@ export function OnboardingWizard() {
       employeeId: savedDraft?.employeeId ?? "",
       attachToExistingMember: false,
       joiningDate: (() => {
-        const today = startOfLocalDay();
+        const today = parseDateOnly(todayInOrgTz(orgTz)) ?? startOfLocalDay();
         if (!savedDraft?.joiningDate) return today;
         const saved = new Date(savedDraft.joiningDate);
         return saved >= today ? saved : today;

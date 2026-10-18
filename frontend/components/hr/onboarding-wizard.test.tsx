@@ -43,6 +43,7 @@ jest.mock("@/hooks/api/org-hierarchy", () => ({
   useOrgLocations: () => ({ data: { data: [] } }),
 }));
 
+jest.mock("@/hooks/api/org-display", () => ({ useOrgTimeZone: () => "Asia/Kolkata" }));
 jest.mock("next/navigation", () => ({
   useRouter: () => ({ push: jest.fn() }),
 }));
