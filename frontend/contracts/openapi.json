@@ -1248647,6 +1248647,13 @@
                                   "ADJUSTMENT"
                                 ]
                               },
+                              "payCategory": {
+                                "type": "string",
+                                "enum": [
+                                  "REGULAR",
+                                  "BONUS"
+                                ]
+                              },
                               "calcMethod": {
                                 "type": "string",
                                 "enum": [
@@ -1248759,6 +1248766,7 @@
                               "code",
                               "name",
                               "type",
+                              "payCategory",
                               "calcMethod",
                               "amount",
                               "percent",
@@ -1248890,6 +1248898,13 @@
                             "ADJUSTMENT"
                           ]
                         },
+                        "payCategory": {
+                          "type": "string",
+                          "enum": [
+                            "REGULAR",
+                            "BONUS"
+                          ]
+                        },
                         "calcMethod": {
                           "type": "string",
                           "enum": [
@@ -1248997,6 +1249012,7 @@
                         "code",
                         "name",
                         "type",
+                        "payCategory",
                         "calcMethod",
                         "amount",
                         "percent",
@@ -1249080,6 +1249096,13 @@
                       "REIMBURSEMENT",
                       "TAX",
                       "ADJUSTMENT"
+                    ]
+                  },
+                  "payCategory": {
+                    "type": "string",
+                    "enum": [
+                      "REGULAR",
+                      "BONUS"
                     ]
                   },
                   "calcMethod": {
@@ -1249203,6 +1249226,13 @@
                             "ADJUSTMENT"
                           ]
                         },
+                        "payCategory": {
+                          "type": "string",
+                          "enum": [
+                            "REGULAR",
+                            "BONUS"
+                          ]
+                        },
                         "calcMethod": {
                           "type": "string",
                           "enum": [
@@ -1249310,6 +1249340,7 @@
                         "code",
                         "name",
                         "type",
+                        "payCategory",
                         "calcMethod",
                         "amount",
                         "percent",
@@ -1249396,6 +1249427,13 @@
                       "REIMBURSEMENT",
                       "TAX",
                       "ADJUSTMENT"
+                    ]
+                  },
+                  "payCategory": {
+                    "type": "string",
+                    "enum": [
+                      "REGULAR",
+                      "BONUS"
                     ]
                   },
                   "calcMethod": {
