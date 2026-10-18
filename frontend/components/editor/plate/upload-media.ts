@@ -64,11 +64,35 @@ function findPlaceholderPath(
   return entry?.[1];
 }
 
+const uploadsInFlight = new WeakMap<PlateEditor, Set<string>>();
+
+function fileSignature(file: File): string {
+  return `${file.name}:${file.size}:${file.lastModified}:${file.type}`;
+}
+
 export async function uploadEditorMedia(
   editor: PlateEditor,
   file: File,
   uploadFile: EditorMediaUploader,
   mediaType: EditorMediaType = mediaTypeForFile(file),
+): Promise<void> {
+  const signature = fileSignature(file);
+  const inFlight = uploadsInFlight.get(editor) ?? new Set<string>();
+  if (inFlight.has(signature)) return;
+  inFlight.add(signature);
+  uploadsInFlight.set(editor, inFlight);
+  try {
+    await insertUploadedMedia(editor, file, uploadFile, mediaType);
+  } finally {
+    inFlight.delete(signature);
+  }
+}
+
+async function insertUploadedMedia(
+  editor: PlateEditor,
+  file: File,
+  uploadFile: EditorMediaUploader,
+  mediaType: EditorMediaType,
 ): Promise<void> {
   const placeholderId = nanoid();
   const placeholderNode: TElement = {

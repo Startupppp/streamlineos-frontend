@@ -1,4 +1,4 @@
-import { withoutPendingUploads } from "./upload-media";
+import { uploadEditorMedia, withoutPendingUploads } from "./upload-media";
 
 function placeholderCount(children: unknown): number {
   if (!Array.isArray(children)) return 0;
@@ -148,5 +148,43 @@ describe("withoutPendingUploads — an open slash, mention or emoji combobox is 
     expect(withoutPendingUploads(value)).toEqual([
       { type: "p", children: [{ type: "mention", value: "Ada", children: [{ text: "" }] }] },
     ]);
+  });
+});
+
+describe("uploadEditorMedia — KB-B-006 the same file chosen twice while uploading", () => {
+  function fakeEditor() {
+    const inserted: Array<Record<string, unknown>> = [];
+    const editor = {
+      tf: {
+        insertNodes: jest.fn((node: Record<string, unknown>) => inserted.push(node)),
+        setNodes: jest.fn(),
+        unsetNodes: jest.fn(),
+        removeNodes: jest.fn(),
+      },
+      api: { node: jest.fn(() => [inserted[0], [0]]) },
+    };
+    return { editor, inserted };
+  }
+
+  it("inserts one placeholder and uploads once for a duplicate pick, then accepts the same file again once the first upload finished", async () => {
+    const { editor, inserted } = fakeEditor();
+    const file = new File(["x"], "valid-image.png", { type: "image/png", lastModified: 1 });
+    let finish: (value: { key: string; name: string; size: number }) => void = () => undefined;
+    const uploadFile = jest.fn(() => new Promise<{ key: string; name: string; size: number }>((resolve) => { finish = resolve; }));
+
+    const first = uploadEditorMedia(editor as never, file, uploadFile);
+    await uploadEditorMedia(editor as never, file, uploadFile);
+    expect(inserted).toHaveLength(1);
+    expect(uploadFile).toHaveBeenCalledTimes(1);
+
+    finish({ key: "org/kb-media/a.png", name: "valid-image.png", size: 1 });
+    await first;
+    expect(editor.tf.setNodes).toHaveBeenCalledWith(expect.objectContaining({ url: "org/kb-media/a.png" }), { at: [0] });
+
+    const again = uploadEditorMedia(editor as never, file, uploadFile);
+    finish({ key: "org/kb-media/b.png", name: "valid-image.png", size: 1 });
+    await again;
+    expect(inserted).toHaveLength(2);
+    expect(uploadFile).toHaveBeenCalledTimes(2);
   });
 });
