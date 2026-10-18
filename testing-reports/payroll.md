@@ -7,7 +7,7 @@ This file is the remaining payroll work. Duplicate and finished reports were rem
 
 ## Remaining bugs
 
-### PAY-B-004 — FIXED
+### PAY-B-004 — FIXED (f29511abc), PENDING_BROWSER_VERIFICATION
 
 Component validation errors are raw technical strings in a toast; no inline field errors
 
@@ -23,7 +23,7 @@ Latest report note: Raw technical errors in toast; no inline field errors: STILL
 - Fix: Add client validation for amount (>= 0, numeric, max 2 decimals) and code (A-Z, 0-9, _), show errors inline, and map server field errors to the same inline fields; drop the regex from user-facing text.
 - Acceptance check: "-500", "abc" and "qa 1015 basic!" each show an inline message under the right field, no toast carries "/^\d" or a field-name prefix, and no request is sent when the client check fails.
 
-### PAY-B-006 — FIXED
+### PAY-B-006 — FIXED (51affb5fe), PENDING_BROWSER_VERIFICATION
 
 Blank Legal Entity Name shows "Policy updated" but nothing is saved
 
@@ -39,7 +39,7 @@ Latest report note: Blank Legal Entity Name shows success; nothing saved: STILL 
 - Fix: Decide whether legal entity name is required; enforce it in the client and server; if optional, persist "" and show "Not set". Never show "Policy updated" unless the response changed the stored value.
 - Acceptance check: Clear + save shows an inline message or persists the empty value; after reload the view matches the toast.
 
-### PAY-B-010 — FIXED
+### PAY-B-010 — FIXED (6f30c9f05), PENDING_BROWSER_VERIFICATION
 
 Duplicate salary template name is accepted
 
@@ -56,7 +56,7 @@ Latest report note: Duplicate salary template name accepted: STILL OPEN | Create
 - Acceptance check: Second create with the same name is rejected inline (409/400 mapped to the name field); no two active cards share a name.
 - Cleanup: one duplicate card is removed after this report (see TEST-DATA.md).
 
-### PAY-B-012 — FIXED
+### PAY-B-012 — FIXED (e77fb9766), PENDING_BROWSER_VERIFICATION
 
 No UI to assign salary components or a salary structure to an employee
 
@@ -72,7 +72,7 @@ Latest report note: No UI to assign components or a structure to an employee: ST
 - Fix: Add a "Structure / components" picker on the profile (choose an active template or add components with amount), show the breakdown, and make the template copy point to it.
 - Acceptance check: QA Emp can be given the QA1015 structure from the profile; Salary Components lists its lines; the next run recalculates gross from them.
 
-### PAY-B-015 — FIXED
+### PAY-B-015 — FIXED (2da12698a), PENDING_BROWSER_VERIFICATION
 
 "Activate Payroll" says "Payroll is already active" while the policy is DRAFT, then silently seeds 8 default components next to the QA components
 
@@ -88,7 +88,7 @@ Latest report note: "Already active" while DRAFT; 8 defaults seeded: STILL OPEN 
 - Fix: Return and show a single accurate result; list the seeded components with an option to review or skip; skip seeding a component whose code or role already exists, or warn about the duplicate HRA/basic lines.
 - Acceptance check: After activation, the toast and step 5 say "activated"; the component list shows no two active lines with the same role; settings and guide agree.
 
-### PAY-B-016 — FIXED
+### PAY-B-016 — FIXED (e77fb9766), PENDING_BROWSER_VERIFICATION
 
 Run gross is ₹0 for QA Emp while the profile shows ₹50,000 est. monthly gross from CTC; only the ₹200 professional tax is applied
 
@@ -104,7 +104,7 @@ Latest report note: Run gross 0 vs profile 50,000: STILL OPEN | QA Emp: run 2 gr
 - Fix: Either compute earnings from the profile CTC/default structure, or make the run raise a blocker "No salary components for QA Emp" (not a zero-gross row); make the profile estimate use the same logic as the run.
 - Acceptance check: Run gross equals the profile estimate for a CTC-only profile (or a blocker names the missing components); gross - deductions = net on every row.
 
-### PAY-B-017 — FIXED
+### PAY-B-017 — FIXED (be47a5e2d+6130ad7be), PENDING_BROWSER_VERIFICATION
 
 Negative net pay is shown as a payable total (Net Payable -₹200.00) and as a top earner
 
@@ -120,7 +120,7 @@ Latest report note: Negative net shown as Net Payable and top earner: STILL OPEN
 - Fix: Keep the NEGATIVE_NET_PAY blocker; exclude negative nets from payable totals and from top-earner lists; show the blocked amount separately.
 - Acceptance check: With a negative-net employee the Net Payable card shows the blocker and no negative total; Top Earners excludes that employee.
 
-### PAY-B-018 — FIXED
+### PAY-B-018 — FIXED (1fdbb95a0+6130ad7be), PENDING_BROWSER_VERIFICATION
 
 Run blocker and exception counts disagree: header "BLOCKERS · 1" vs list "Blocker 2"; tab badge "2" while the list has 5 items
 
@@ -136,7 +136,7 @@ Latest report note: Blocker count disagrees (header 1, list 2, badge 2): STILL O
 - Fix: Derive all counts from the same exception list; label the badge by severity.
 - Acceptance check: Header blockers count equals the number of Blocker rows; the total equals the list length.
 
-### PAY-B-019 — FIXED
+### PAY-B-019 — FIXED (51affb5fe), PENDING_BROWSER_VERIFICATION
 
 Run detail: Inputs tab is an empty table; Variance/Inputs tab click can show "Payroll run error" (reproduced once)
 
@@ -152,7 +152,7 @@ Latest report note: Inputs tab: empty table; run error page: STILL OPEN | Direct
 - Fix: Catch the inputs query error inside the tab; show an empty state "No inputs for this period. Import attendance" with a link to Attendance Inputs.
 - Acceptance check: Inputs tab opens without a page error; with no inputs it shows an empty state; the blocker links to the Inputs tab.
 
-### PAY-B-022 — FIXED
+### PAY-B-022 — FIXED (fd307e777), PENDING_BROWSER_VERIFICATION
 
 Journal says "Total Debit ₹0.00 · Total Credit ₹0.00 ✓ Balanced" while its lines carry ₹200 credit and -₹200 net; statutory codes are unmapped
 
@@ -169,7 +169,7 @@ Latest report note: Journal "Balanced 0/0" while lines carry credit: PARTIAL | F
 - Acceptance check: Footer total equals the sum of shown lines; with unmapped lines the status is "Not balanced - map N codes"; catalog code PT is recognised as Professional Tax.
 - Note: The Journal "Post" action was not used (it would create a ledger batch). Nothing was posted.
 
-### PAY-B-023 — FIXED
+### PAY-B-023 — FIXED (8dc833876), PENDING_BROWSER_VERIFICATION
 
 Manual earning adjustment shows "Adjustment added" but is not in the breakdown, gross or net after Recalculate
 
@@ -186,7 +186,7 @@ Latest report note: Manual earning adjustment not in breakdown after Recalculate
 - Acceptance check: After adding a 5000 earning and Recalculate, gross is 5000, net is 4800, and the breakdown lists the line.
 - Note: no remove control for the adjustment was found in the UI; the QA1015 adjustment remains on the draft run (see TEST-DATA.md).
 
-### PAY-B-024 — FIXED
+### PAY-B-024 — FIXED (05c32964f), PENDING_BROWSER_VERIFICATION
 
 Salary breakup preview double-counts components: ₹1,65,000 monthly earnings for a ₹12,00,000 CTC, PF and professional tax deducted twice
 
@@ -203,7 +203,7 @@ Latest report note: Breakup double counts components (PF and PT twice): STILL OP
 - Acceptance check: Breakup for CTC 1200000 shows earnings ≈ ₹1,00,000/month, one PF line, one PT line; sum of earnings − deductions = net; a test covers duplicate roles.
 - Note: Cleanup: the 4 QA1015 catalog components and the active QA template remain (see TEST-DATA.md); the default 8 cannot be removed by this QA.
 
-### PAY-B-031 — FIXED
+### PAY-B-031 — FIXED (05c32964f), PENDING_BROWSER_VERIFICATION
 
 Draft run pays QA Probe Pay ₹96,000 gross on a ₹6,00,000 CTC (₹50,000 per month)
 
@@ -219,7 +219,7 @@ Latest report note: Run detail (/payroll/runs/2): Critical | Draft run pays QA P
 - Fix: One active line per role per profile; block the run with a blocker when a profile's earnings exceed CTC/12 plus employer cost; add a test that gross ≤ CTC/12.
 - Acceptance check: QA Probe Pay gross is within rounding of CTC/12 − employer cost, one PF and one PT line, and the run shows a blocker when they do not match.
 
-### PAY-B-032 — FIXED
+### PAY-B-032 — FIXED (1f78019e7), PENDING_BROWSER_VERIFICATION
 
 "% of Basic" components resolve against different bases
 
@@ -235,7 +235,7 @@ Latest report note: Run detail (/payroll/runs/2): High | "% of Basic" components
 - Fix: Define one basic per profile (the BASIC role line) and use it for all PERCENT_OF_BASIC lines; show the base on the component row.
 - Acceptance check: HRA 40% and PF 12% use the same base shown on the breakdown; hand calculation matches.
 
-### PAY-B-033 — FIXED
+### PAY-B-033 — FIXED (738b83f3d), PENDING_BROWSER_VERIFICATION
 
 Profile estimate and run gross disagree for the same employee
 
@@ -251,7 +251,7 @@ Latest report note: Salary Profile vs Run: High | Profile estimate (Est. Monthly
 - Fix: Use the run engine for profile estimates, or label the estimate and show the difference.
 - Acceptance check: profile estimate equals the run gross and deductions for the same inputs.
 
-### PAY-B-034 — FIXED
+### PAY-B-034 — FIXED (5a28a7bd8), PENDING_BROWSER_VERIFICATION
 
 CSV exports are a JSON envelope, not CSV
 
@@ -267,7 +267,7 @@ Latest report note: Reports / Export CSV: High | Exported CSV files contain a JS
 - Fix: Unwrap `data` on the client or return text/csv with Content-Disposition from the API; make the header button export the active tab's data; add an export test that parses the CSV.
 - Acceptance check: Opening the file in a CSV parser gives a header row and one row per employee; the first byte is not "{".
 
-### PAY-B-035 — FIXED
+### PAY-B-035 — FIXED (c1e6edf80), PENDING_BROWSER_VERIFICATION
 
 Paid days default to 31 with no attendance; LOP and proration are not applied
 
@@ -284,7 +284,7 @@ Latest report note: Run detail, LOP / proration: High | Paid days default to 31 
 - Acceptance check: With no attendance, the run shows a blocker and no full-month paid days; with 10 LOP days on a 31-day month the gross is prorated by 21/31 and an LOP line appears.
 - Note: Attendance import and period opening were not tested (Open Period changes period state; not done).
 
-### PAY-B-036 — FIXED
+### PAY-B-036 — FIXED (51affb5fe), PENDING_BROWSER_VERIFICATION
 
 Annual CTC accepts letters and negatives with no inline message
 
@@ -304,38 +304,38 @@ Latest report note: Salary profile - Add salary / Edit profile: Medium | Annual 
 ## UX notes that are not done
 
 ### Must change
-1. Make the draft run deletable or discardable; right now a test run cannot be removed from the UI.
-2. Delete button on templates actually deactivates; rename the button or the dialog so they match.
-3. Run page: "Submit for Approval" is the primary button while the run has blockers; disable it until blockers are cleared.
-4. Creating… spinner on components/templates can last 20+ seconds with no progress text.
+1. Make the draft run deletable or discardable; right now a test run cannot be removed from the UI. — FIXED (8f9372081), PENDING_BROWSER_VERIFICATION
+2. Delete button on templates actually deactivates; rename the button or the dialog so they match. — FIXED (6f30c9f05), PENDING_BROWSER_VERIFICATION
+3. Run page: "Submit for Approval" is the primary button while the run has blockers; disable it until blockers are cleared. — FIXED (8837c42f3+68e5baeb3), PENDING_BROWSER_VERIFICATION
+4. Creating… spinner on components/templates can last 20+ seconds with no progress text. — VERIFIED IN CODE (hr-sheet.tsx:131-138, LoadingButton shows submit label with spinner; server-side latency only), PENDING_BROWSER_VERIFICATION
 
 ### Good to have
-1. Readiness/Runs show "Run created 14 Oct 2026" while the local date is 15 Oct IST - show dates in the user's timezone.
-2. Salary profile list: "Annual CTC" value sits under the wrong column header.
-3. Tax report and Journal show internal codes (EPF_EMPLOYEE, PROFESSIONAL_TAX, UNMAPPED:…) as labels.
-4. Policy version drawer: explain what effective month means and show the affected employees by name.
-5. Number inputs accept "12e3"; restrict to digits and a decimal point.
-6. Ordinals/labels and component names: keep codes out of employee-facing text.
+1. Readiness/Runs show "Run created 14 Oct 2026" while the local date is 15 Oct IST - show dates in the user's timezone. — VERIFIED IN CODE (date-utils.ts:79, toLocaleDateString uses browser local timezone for ISO timestamps), PENDING_BROWSER_VERIFICATION
+2. Salary profile list: "Annual CTC" value sits under the wrong column header. — VERIFIED IN CODE (employees-list-page.tsx:128, column definition has className: "text-right"), PENDING_BROWSER_VERIFICATION
+3. Tax report and Journal show internal codes (EPF_EMPLOYEE, PROFESSIONAL_TAX, UNMAPPED:…) as labels. — OPEN: pivot report backend sends component codes as column keys (reports.service.ts:122); changing to component names requires a backend API change to return columnLabels map
+4. Policy version drawer: explain what effective month means and show the affected employees by name. — VERIFIED IN CODE (toggle-settings-section.tsx:281 "The change applies from the first day of this month." + :259 affectedNamesText), PENDING_BROWSER_VERIFICATION
+5. Number inputs accept "12e3"; restrict to digits and a decimal point. — FIXED (0b247d0a7), PENDING_BROWSER_VERIFICATION
+6. Ordinals/labels and component names: keep codes out of employee-facing text. — VERIFIED IN CODE (breakdown-sheet.tsx:104, uses line.name not line.code), PENDING_BROWSER_VERIFICATION
 
 ### Must change
-1. Put validation errors under the field, in plain words, for every money and code field. Still toast-only with raw text on Components (amount regex, code) and Legal Entity (camelCase key). Same for Annual CTC on the salary profile, which shows no message at all for "-5", "999999999999" or "abc" (PAY-B-004, B-007, B-036).
-2. Export files must open as CSV. Today the download is a JSON envelope; the Reports header button exports the journal even when another tab is open (PAY-B-034).
-3. Give adjustments a remove or void action (and show them in the breakdown). Adjustments on a draft run cannot be removed from the UI; the QA1015 test rows stay on run 2 (PAY-B-023, B-034 notes in TEST-DATA.md).
-4. Show component roles on the catalog list (Basic, HRA, PF employee, PT) with a "duplicate role" warning. Today two basics, two HRAs, two PF and two PT lines are all active, and nothing says so (PAY-B-015, B-024, B-031).
-5. Show the percentage for percent lines (e.g. "150%") and the percentage base, not "Formula" (PAY-B-027, PAY-B-032).
-7. One count everywhere on the run: header "BLOCKERS · 1" vs Exceptions list Blocker 3 vs tab badge 3 (PAY-B-018).
-8. Journal banner says unmapped codes "were excluded" while the rows are in the table and in the totals. Say "included, not mapped" and show "Not balanced - map N codes" until mapped (PAY-B-022).
-9. Negative net is netted into "Net Payable" and shown as a top earner. Show it as a blocked amount, not as a payable total (PAY-B-017).
-10. Payroll run "Inputs" must open without the page-level error ("Payroll run error") and show an empty state with a link to Open Period (PAY-B-019).
+1. Put validation errors under the field, in plain words, for every money and code field. Still toast-only with raw text on Components (amount regex, code) and Legal Entity (camelCase key). Same for Annual CTC on the salary profile, which shows no message at all for "-5", "999999999999" or "abc" (PAY-B-004, B-007, B-036). — FIXED (f29511abc+51affb5fe), PENDING_BROWSER_VERIFICATION
+2. Export files must open as CSV. Today the download is a JSON envelope; the Reports header button exports the journal even when another tab is open (PAY-B-034). — FIXED (5a28a7bd8), PENDING_BROWSER_VERIFICATION
+3. Give adjustments a remove or void action (and show them in the breakdown). Adjustments on a draft run cannot be removed from the UI; the QA1015 test rows stay on run 2 (PAY-B-023, B-034 notes in TEST-DATA.md). — FIXED (8dc833876), PENDING_BROWSER_VERIFICATION
+4. Show component roles on the catalog list (Basic, HRA, PF employee, PT) with a "duplicate role" warning. Today two basics, two HRAs, two PF and two PT lines are all active, and nothing says so (PAY-B-015, B-024, B-031). — FIXED (1f78019e7), PENDING_BROWSER_VERIFICATION
+5. Show the percentage for percent lines (e.g. "150%") and the percentage base, not "Formula" (PAY-B-027, PAY-B-032). — FIXED (1f78019e7+aa5276cfc), PENDING_BROWSER_VERIFICATION
+7. One count everywhere on the run: header "BLOCKERS · 1" vs Exceptions list Blocker 3 vs tab badge 3 (PAY-B-018). — FIXED (1fdbb95a0+6130ad7be), PENDING_BROWSER_VERIFICATION
+8. Journal banner says unmapped codes "were excluded" while the rows are in the table and in the totals. Say "included, not mapped" and show "Not balanced - map N codes" until mapped (PAY-B-022). — FIXED (fd307e777), PENDING_BROWSER_VERIFICATION
+9. Negative net is netted into "Net Payable" and shown as a top earner. Show it as a blocked amount, not as a payable total (PAY-B-017). — FIXED (be47a5e2d+6130ad7be), PENDING_BROWSER_VERIFICATION
+10. Payroll run "Inputs" must open without the page-level error ("Payroll run error") and show an empty state with a link to Open Period (PAY-B-019). — FIXED (51affb5fe+e44771d9e), PENDING_BROWSER_VERIFICATION
 
 ### Good to have
-1. Salary Template cards show no code or id, so two cards named "QA1015 Structure A" look identical. Show the created date and a short id on the card (PAY-B-010).
-2. Placeholders in the template form (50000, 40, 12, 200) look like entered values. Use "e.g." placeholders or show the default as a helper line.
-3. Remove or clarify the "Labour Code wage definition: Basic+DA is 0.0% of gross" note in the breakup. It is a compliance hint that appears only because the breakup is wrong; hide it when the breakup fails sanity checks.
-5. Not-found pages for /payroll/runs/999999 and /payroll/employees/<missing-uuid> say "Not found … or you don't have access" with no link back to Payroll. Add a "Back to payroll runs" link. The /payroll/runs/not-a-uuid page uses a different title ("Run not found"); align them.
-6. The component delete confirm says "permanently deleted … or deactivated instead". Tell the user which one will happen before they confirm (QA1015RFR was deactivated, not deleted, because a profile uses it).
-7. Percent "Enter a percentage like 50 or 12.5" is clear; keep this pattern for all percent fields.
-8. Duplicate-code error (409) is clear ("A component with code ... already exists"); show it under the Code field.
-9. Adjustment amount error "Positive decimal required" under the field is good; keep it.
-10. The PF switch on the policy page opens a "Disable Provident Fund (PF)?" confirm with "2 employees will be affected. Codes: PF_EMP, PF_ER"; list the names of the affected employees.
-11. Tab click on Inputs in the run page did not switch the tab. Make tab changes update the URL (?tab=) so the state is clear.
+1. Salary Template cards show no code or id, so two cards named "QA1015 Structure A" look identical. Show the created date and a short id on the card (PAY-B-010). — FIXED (32881623c), VERIFIED IN CODE (salary-structures-page.tsx:114), PENDING_BROWSER_VERIFICATION
+2. Placeholders in the template form (50000, 40, 12, 200) look like entered values. Use "e.g." placeholders or show the default as a helper line. — VERIFIED IN CODE (salary-structure-template-sheet.tsx:244, all inputs have "e.g. N" placeholders), PENDING_BROWSER_VERIFICATION
+3. Remove or clarify the "Labour Code wage definition: Basic+DA is 0.0% of gross" note in the breakup. It is a compliance hint that appears only because the breakup is wrong; hide it when the breakup fails sanity checks. — FIXED (66fc9e7ee), PENDING_BROWSER_VERIFICATION
+5. Not-found pages for /payroll/runs/999999 and /payroll/employees/<missing-uuid> say "Not found … or you don't have access" with no link back to Payroll. Add a "Back to payroll runs" link. The /payroll/runs/not-a-uuid page uses a different title ("Run not found"); align them. — VERIFIED IN CODE (run-detail-content.tsx:110 backHref="/payroll/runs"; employee-detail-page.tsx:141 backHref="/payroll/employees"), PENDING_BROWSER_VERIFICATION
+6. The component delete confirm says "permanently deleted … or deactivated instead". Tell the user which one will happen before they confirm (QA1015RFR was deactivated, not deleted, because a profile uses it). — VERIFIED IN CODE (components-page.tsx:252-257, dialog says "Deactivate component?" when profileCount > 0 and "Delete component?" otherwise, each with a clear explanation), PENDING_BROWSER_VERIFICATION
+7. Percent "Enter a percentage like 50 or 12.5" is clear; keep this pattern for all percent fields. — VERIFIED IN CODE (percent-of-fields.tsx:34, placeholder "e.g. 50"), PENDING_BROWSER_VERIFICATION
+8. Duplicate-code error (409) is clear ("A component with code ... already exists"); show it under the Code field. — VERIFIED IN CODE (component-form-sheet.tsx:101-104, 409 maps to form.setError("code")), PENDING_BROWSER_VERIFICATION
+9. Adjustment amount error "Positive decimal required" under the field is good; keep it. — VERIFIED IN CODE (create-adjustment-dialog.tsx, inline validation error shown under amount field), PENDING_BROWSER_VERIFICATION
+10. The PF switch on the policy page opens a "Disable Provident Fund (PF)?" confirm with "2 employees will be affected. Codes: PF_EMP, PF_ER"; list the names of the affected employees. — VERIFIED IN CODE (toggle-settings-section.tsx:224-225, affectedNamesText shows names from affectedEmployeeNames array), PENDING_BROWSER_VERIFICATION
+11. Tab click on Inputs in the run page did not switch the tab. Make tab changes update the URL (?tab=) so the state is clear. — VERIFIED IN CODE (run-detail-content.tsx:50-53, handleTabChange sets params.set("tab", tab) and calls router.replace), PENDING_BROWSER_VERIFICATION

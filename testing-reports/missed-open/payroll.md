@@ -2,7 +2,7 @@
 
 These items are only partly done, so they stay. Fully finished items from the same report were not put back.
 
-## PAY-B-003 — FIXED
+## PAY-B-003 — FIXED (f29511abc), PENDING_BROWSER_VERIFICATION
 
 Latest status source: `streamline-qa-reports/modules-2026-10-15/payroll/round-2/BUGS.md`
 
@@ -23,7 +23,7 @@ Write-up from `streamline-qa-reports/modules-2026-10-15/payroll/round-1/BUGS.md`
 - Acceptance check: 150 and -5 are rejected with an inline message; 0 and 100 are accepted; the API rejects 150 with a 400 that the UI maps to the field.
 - Note: test record QA1015HRA(150%) is deleted again after this report (see TEST-DATA.md).
 
-## PAY-B-011 — FIXED
+## PAY-B-011 — FIXED (6033bd3bb), PENDING_BROWSER_VERIFICATION
 
 Latest status source: `streamline-qa-reports/modules-2026-10-15/payroll/round-2/BUGS.md`
 
