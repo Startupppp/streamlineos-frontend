@@ -82,6 +82,18 @@ it("hides New Release button when build:manage is denied", () => {
   expect(screen.queryByRole("button", { name: /new release/i })).not.toBeInTheDocument();
 });
 
+it("labels the page View only for a member who cannot manage releases (RBAC UX round 1, item 7)", () => {
+  mockUseCan.mockReturnValue(false);
+  render(<ReleasesPage projectId={1} />);
+  expect(screen.getByTestId("page-badge")).toHaveTextContent("View only");
+});
+
+it("shows no View only label to a release manager", () => {
+  mockUseCan.mockReturnValue(true);
+  render(<ReleasesPage projectId={1} />);
+  expect(screen.queryByTestId("page-badge")).not.toBeInTheDocument();
+});
+
 it("shows New Release button when build:manage is granted", () => {
   mockUseCan.mockReturnValue(true);
   render(<ReleasesPage projectId={1} />);

@@ -55,6 +55,17 @@ describe("MilestoneCard — actions trigger is absent for read-only viewers", ()
     render(<MilestoneCard milestone={MILESTONE} />);
     expect(screen.queryByRole("button", { name: `Actions for ${MILESTONE.name}` })).not.toBeInTheDocument();
   });
+
+  it("does not swallow the browser's right-click menu or hover like a control when the viewer has no actions (RBAC UX round 1, item 7)", () => {
+    render(<MilestoneCard milestone={MILESTONE} />);
+    expect(fireEvent.contextMenu(screen.getByText("Beta Launch"))).toBe(true);
+    expect(screen.queryByRole("menuitem")).not.toBeInTheDocument();
+  });
+
+  it("keeps the right-click menu for a viewer who can edit", () => {
+    render(<MilestoneCard milestone={MILESTONE} onEdit={jest.fn()} />);
+    expect(fireEvent.contextMenu(screen.getByText("Beta Launch"))).toBe(false);
+  });
 });
 
 describe("MilestoneCard — right click opens the same authorized actions as the row menu", () => {

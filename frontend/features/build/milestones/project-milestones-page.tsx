@@ -28,7 +28,8 @@ import {
   useProjectMilestones,
   type ProjectMilestone,
 } from "@/hooks/api/build/milestones";
-import { useCan } from "@/hooks/api/access";
+import { useAccess, useCan } from "@/hooks/api/access";
+import { Badge } from "@/components/ui/badge";
 import { useOnlineStatus } from "@/hooks/common/use-online-status";
 import { useBuildMembers } from "@/hooks/api/build/build-members";
 import { useOrgMembersByIds } from "@/hooks/api/organization";
@@ -80,6 +81,7 @@ export function ProjectMilestonesPage({
 }: ProjectMilestonesPageProps) {
   const projectId = Number(projectIdStr);
   const canManage = useCan("build:workspace:manage");
+  const viewOnly = useAccess().data !== undefined && !canManage;
   const listFilters = useBuildListFilters({
     filters: MILESTONE_FILTER_DEFINITIONS,
   });
@@ -186,6 +188,7 @@ export function ProjectMilestonesPage({
     <PageWrapper
       title="Milestones"
       subtitle="Key checkpoints and target dates for this project"
+      badge={viewOnly ? <Badge variant="secondary">View only</Badge> : undefined}
       actions={
         canManage ? (
           <AnimatedIconButton icon={PlusIcon} size="sm" className="gap-1.5" onClick={actions.handleOpenCreate}>New Milestone</AnimatedIconButton>

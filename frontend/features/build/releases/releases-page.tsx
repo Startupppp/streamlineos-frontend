@@ -4,6 +4,7 @@ import { useCallback, useMemo } from "react";
 import { Plus, WifiOff } from "lucide-react";
 import { Tag, CheckCircle2, Archive, Clock } from "lucide-react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
+import { Badge } from "@/components/ui/badge";
 import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
@@ -52,6 +53,7 @@ export function ReleasesPage({ projectId }: ReleasesPageProps) {
     isError,
     error,
     canManage,
+    viewOnly,
     isOnline,
     sheetOpen,
     editTarget,
@@ -99,6 +101,7 @@ export function ReleasesPage({ projectId }: ReleasesPageProps) {
     <PageWrapper
       title="Releases"
       subtitle="Track versions and shipped features"
+      badge={viewOnly ? <Badge variant="secondary">View only</Badge> : undefined}
       filters={
         <BuildListToolbar
           search={{

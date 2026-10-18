@@ -97,9 +97,10 @@ jest.mock("@/hooks/common/use-animated-icon", () => ({
 }));
 
 jest.mock("@/components/ui/page-wrapper", () => ({
-  PageWrapper: ({ children, title, actions, filters }: { children: React.ReactNode; title?: string; actions?: React.ReactNode; filters?: React.ReactNode }) => (
+  PageWrapper: ({ children, title, badge, actions, filters }: { children: React.ReactNode; title?: string; badge?: React.ReactNode; actions?: React.ReactNode; filters?: React.ReactNode }) => (
     <div>
       {title ? <h1>{title}</h1> : null}
+      {badge ? <div data-testid="page-badge">{badge}</div> : null}
       {actions ? <div data-testid="page-actions">{actions}</div> : null}
       {filters ? <div data-testid="page-filters">{filters}</div> : null}
       {children}
@@ -259,6 +260,18 @@ it("hides New Milestone button and delete actions when build:manage is denied", 
   mockUseCan.mockReturnValue(false);
   render(<ProjectMilestonesPage projectId="1" />);
   expect(screen.queryByRole("button", { name: /new milestone/i })).not.toBeInTheDocument();
+});
+
+it("labels the page View only for a member who cannot manage milestones (RBAC UX round 1, item 7)", () => {
+  mockUseCan.mockReturnValue(false);
+  render(<ProjectMilestonesPage projectId="1" />);
+  expect(screen.getByTestId("page-badge")).toHaveTextContent("View only");
+});
+
+it("shows no View only label to a milestone manager", () => {
+  mockUseCan.mockReturnValue(true);
+  render(<ProjectMilestonesPage projectId="1" />);
+  expect(screen.queryByTestId("page-badge")).not.toBeInTheDocument();
 });
 
 it("shows New Milestone button when build:manage is granted", () => {

@@ -2,7 +2,7 @@ import { useState, useCallback, useMemo, useRef, type MouseEvent } from "react";
 import { useBuildCursorPager } from "@/features/build/shared/use-build-cursor-pager";
 import { useReleases, useDeleteRelease } from "@/hooks/api/build/releases";
 import type { Release } from "@/types/projects";
-import { useCan } from "@/hooks/api/access";
+import { useAccess, useCan } from "@/hooks/api/access";
 import { useOnlineStatus } from "@/hooks/common/use-online-status";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
@@ -33,6 +33,7 @@ export function useReleasesPage(projectId: number) {
   });
 
   const canManage = useCan("build:manage");
+  const viewOnly = useAccess().data !== undefined && !canManage;
   const isOnline = useOnlineStatus();
   const deleteRelease = useDeleteRelease(projectId);
 
@@ -168,6 +169,7 @@ export function useReleasesPage(projectId: number) {
     isError,
     error,
     canManage,
+    viewOnly,
     isOnline,
     sheetOpen,
     editTarget,

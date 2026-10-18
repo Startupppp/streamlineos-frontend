@@ -90,11 +90,11 @@ export const MilestoneCard = memo(function MilestoneCard({
         PM_PANEL,
         "group relative overflow-hidden border-l-[3px] p-3",
         "transition-[border-color,box-shadow,background-color] duration-200 ease-out motion-reduce:transition-none",
-        "hover:border-primary/40 hover:bg-card/60 hover:shadow-md",
+        (onEdit || onDelete) && "hover:border-primary/40 hover:bg-card/60 hover:shadow-md",
         overdue ? "border-l-destructive" : cfg.stripeClassName,
         overdue && "border-destructive/40",
       )}
-      onContextMenu={handleContextMenu}
+      onContextMenu={onEdit || onDelete ? handleContextMenu : undefined}
     >
       <div className="flex min-w-0 items-start gap-2.5">
         {onSelect ? (

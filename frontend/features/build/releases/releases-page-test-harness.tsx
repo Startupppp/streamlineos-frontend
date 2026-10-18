@@ -47,9 +47,10 @@ jest.mock("@/features/build/shared/build-header-actions", () => ({
 }));
 
 jest.mock("@/components/ui/page-wrapper", () => ({
-  PageWrapper: ({ children, title, actions }: { children: React.ReactNode; title?: string; actions?: React.ReactNode }) => (
+  PageWrapper: ({ children, title, badge, actions }: { children: React.ReactNode; title?: string; badge?: React.ReactNode; actions?: React.ReactNode }) => (
     <div>
       {title ? <h1>{title}</h1> : null}
+      {badge ? <div data-testid="page-badge">{badge}</div> : null}
       {actions ? <div data-testid="page-actions">{actions}</div> : null}
       {children}
     </div>
