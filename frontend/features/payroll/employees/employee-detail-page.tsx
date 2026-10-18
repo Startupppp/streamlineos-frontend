@@ -196,12 +196,11 @@ export function EmployeeDetailPage({ employeeUserId }: EmployeeDetailPageProps) 
 
   return (
     <PageWrapper
-      title="Salary Profile"
+      title={employeeName ?? "Salary Profile"}
       backHref="/payroll/employees"
       subtitle={
         activeProfile ? (
           <span className="flex items-center gap-2">
-            {employeeName ? <span>{employeeName}</span> : null}
             <span>{formatMoney(activeProfile.annualCtc)} / year</span>
             <span
               className={cn(
@@ -212,8 +211,6 @@ export function EmployeeDetailPage({ employeeUserId }: EmployeeDetailPageProps) 
               {STATUS_CONFIG[activeProfile.status].label}
             </span>
           </span>
-        ) : employeeName ? (
-          <span>{employeeName} — no active salary profile</span>
         ) : "No active salary profile"
       }
       actions={

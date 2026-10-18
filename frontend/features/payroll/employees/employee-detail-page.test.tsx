@@ -56,11 +56,10 @@ describe("EmployeeDetailPage estimate (PAY-B-033) — the profile summed fixed l
     expect(screen.getByText(/Basic is counted 2 times/)).toBeInTheDocument();
   });
 
-  it("does not put the user id in the page title (PAY-B-013)", () => {
+  it("heads the page with the employee's name, never the user id (PAY-B-013)", () => {
     render(<EmployeeDetailPage employeeUserId={profile.userId} />);
     expect(screen.queryByText(profile.userId)).not.toBeInTheDocument();
-    expect(screen.getByRole("heading", { level: 1, name: "Salary Profile" })).toBeInTheDocument();
-    expect(screen.getByText("Asha Rao")).toBeInTheDocument();
+    expect(screen.getByRole("heading", { level: 1, name: "Asha Rao" })).toBeInTheDocument();
   });
 
   it("hides a stale percent on a fixed component (PAY-B-030)", () => {
