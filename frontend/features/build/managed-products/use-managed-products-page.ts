@@ -48,7 +48,7 @@ export function useManagedProductsPage() {
   const canUpdate = useCan("build:managed-products:update");
   const canDelete = useCan("build:managed-products:delete");
 
-  const listFilters = useBuildListFilters({ filters: FILTER_DEFINITIONS });
+  const listFilters = useBuildListFilters({ filters: FILTER_DEFINITIONS, historyMode: "push" });
   const { cursor, pageNumber, hasPrevious, goNext, goPrevious } =
     useBuildCursorPager(listFilters.resetKey);
 

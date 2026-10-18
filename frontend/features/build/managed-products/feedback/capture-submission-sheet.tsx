@@ -17,6 +17,7 @@ import { useCaptureSubmission } from "@/hooks/api/feedbucket/use-feedbucket-subm
 import { growthAndSignQueryKeys } from "@/lib/query-keys/growth-and-sign";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { useModuleEnabled } from "@/hooks/api/access";
 import {
   captureSubmissionSchema,
   type CaptureSubmissionFormValues,
@@ -50,6 +51,7 @@ export function CaptureSubmissionSheet({
 }: CaptureSubmissionSheetProps) {
   const qc = useQueryClient();
   const capture = useCaptureSubmission();
+  const feedbucketEnabled = useModuleEnabled("feedbucket");
 
   const handleSubmit = (values: CaptureSubmissionFormValues) => {
     capture.mutate(
@@ -98,7 +100,7 @@ export function CaptureSubmissionSheet({
 
   return (
     <EntityFormSheet
-      open={open}
+      open={open && feedbucketEnabled}
       onOpenChange={onOpenChange}
       title="Capture feedback"
       description="Record feedback from any source channel"

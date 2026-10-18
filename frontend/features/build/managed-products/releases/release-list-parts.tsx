@@ -6,7 +6,6 @@ import type { ManagedProductRelease } from "@/hooks/api/build/managed-product-re
 import type { StatusTone } from "@/lib/design-tokens";
 import { statusToneClasses } from "@/lib/design-tokens";
 import { cn } from "@/lib/utils";
-import { useOrgMembersByIds } from "@/hooks/api/organization";
 import { getUserDisplayName } from "@/lib/person-display";
 
 interface ReleaseSectionProps {
@@ -98,18 +97,19 @@ export function EvidenceLink({ url }: { url: string | null }) {
   );
 }
 
-function OwnerName({ ownerUserId }: { ownerUserId: string }) {
-  const { data } = useOrgMembersByIds([ownerUserId]);
-  const owner = data?.data.find((m) => m.userId === ownerUserId);
+interface OwnerUser {
+  id: string;
+  firstName: string | null;
+  lastName: string | null;
+  email: string;
+}
+
+export function OwnerIndicator({ ownerUser }: { ownerUser: OwnerUser | null }) {
+  if (!ownerUser) return null;
   return (
     <span className="flex items-center gap-1 text-dense text-muted-foreground">
       <User className="h-3 w-3 shrink-0" aria-hidden="true" />
-      <span className="truncate">{owner ? getUserDisplayName(owner) : "Owner assigned"}</span>
+      <span className="truncate">{getUserDisplayName(ownerUser)}</span>
     </span>
   );
-}
-
-export function OwnerIndicator({ ownerUserId }: { ownerUserId: string | null }) {
-  if (!ownerUserId) return null;
-  return <OwnerName ownerUserId={ownerUserId} />;
 }

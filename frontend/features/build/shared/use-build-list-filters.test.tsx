@@ -6,10 +6,11 @@ import {
 } from "./use-build-list-filters";
 
 const replace = jest.fn();
+const push = jest.fn();
 let currentParams = new URLSearchParams();
 
 jest.mock("next/navigation", () => ({
-  useRouter: () => ({ replace, push: jest.fn() }),
+  useRouter: () => ({ replace, push }),
   usePathname: () => "/build/bugs",
   useSearchParams: () => currentParams,
 }));
@@ -31,6 +32,7 @@ function lastParams(): URLSearchParams {
 beforeEach(() => {
   jest.useFakeTimers();
   replace.mockClear();
+  push.mockClear();
   setUrl("");
 });
 
@@ -323,5 +325,32 @@ describe("useBuildListFilters", () => {
     expect("search" in result.current).toBe(false);
     expect("debouncedSearch" in result.current).toBe(false);
     expect("setSearch" in result.current).toBe(false);
+  });
+
+  it("historyMode=replace (default) calls router.replace on setValue", () => {
+    const { result } = renderHook(() => useBuildListFilters({ filters: FILTERS }));
+    act(() => result.current.setValue("status", "open"));
+    expect(replace).toHaveBeenCalledTimes(1);
+    expect(push).not.toHaveBeenCalled();
+  });
+
+  it("historyMode=push calls router.push on setValue so filter changes create history entries", () => {
+    const { result } = renderHook(() =>
+      useBuildListFilters({ filters: FILTERS, historyMode: "push" }),
+    );
+    act(() => result.current.setValue("status", "open"));
+    expect(push).toHaveBeenCalledTimes(1);
+    expect(replace).not.toHaveBeenCalled();
+    expect(String(push.mock.calls[0][0])).toContain("status=open");
+  });
+
+  it("historyMode=push calls router.push on clearAll", () => {
+    setUrl("status=open&q=login");
+    const { result } = renderHook(() =>
+      useBuildListFilters({ filters: FILTERS, historyMode: "push" }),
+    );
+    act(() => result.current.clearAll());
+    expect(push).toHaveBeenCalledTimes(1);
+    expect(replace).not.toHaveBeenCalled();
   });
 });

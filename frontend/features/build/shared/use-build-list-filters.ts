@@ -31,6 +31,7 @@ export interface UseBuildListFiltersOptions {
   searchParam?: string;
   debounceMs?: number;
   withSearch?: boolean;
+  historyMode?: "push" | "replace";
 }
 
 export interface BuildListFiltersStateBase {
@@ -64,6 +65,7 @@ export function useBuildListFilters(
     searchParam = BUILD_LIST_SEARCH_PARAM,
     debounceMs = BUILD_SEARCH_DEBOUNCE_MS,
     withSearch = true,
+    historyMode = "replace",
   } = options;
 
   const router = useRouter();
@@ -79,13 +81,16 @@ export function useBuildListFilters(
       next.delete(BUILD_LIST_CURSOR_PARAM);
       next.delete(PAGE_PARAM);
       const query = next.toString();
+      const url = query ? `${pathname}?${query}` : pathname;
       startTransition(() => {
-        router.replace(query ? `${pathname}?${query}` : pathname, {
-          scroll: false,
-        });
+        if (historyMode === "push") {
+          router.push(url, { scroll: false });
+        } else {
+          router.replace(url, { scroll: false });
+        }
       });
     },
-    [pathname, router, searchParams],
+    [historyMode, pathname, router, searchParams],
   );
 
   const readValue = useCallback(
