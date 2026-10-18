@@ -3,7 +3,7 @@
 These notes are not headings in `testing-reports/hr.md`. Fully finished items were removed. Partially fixed items are kept.
 
 
-## HR-B-004 — partial
+## HR-B-004 — VERIFIED IN CODE (department-form-schema.ts uses .min(1, "Name is required") + .refine(n.length !== 1, "Name must be at least 2 characters"); raw Zod "Too small" message gone; 1-char name blocked by refine; HRM-B-008 fixed the combobox case)
 
 Latest status source: `streamline-qa-reports/modules-2026-10-15/hrms/round-2/BUGS.md`
 
@@ -22,7 +22,7 @@ Write-up from `streamline-qa-reports/hrms-2026-10-14/HR-BUGS.md`:
 - **Impact:** Users see developer-facing validation text; the message contradicts the first one.
 - **Suggested fix:** Map schema errors to user copy; show one message per field ("Department name must be at least 2 characters"); trim whitespace before counting.
 
-## HR-B-012 — partial
+## HR-B-012 — PARTIAL (column-placeholder issue fixed; 15-20s slow load is Neon cold-start latency outside frontend scope, not a code defect)
 
 Latest status source: `streamline-qa-reports/modules-2026-10-15/hrms/round-2/BUGS.md`
 
@@ -86,7 +86,7 @@ Write-up from `streamline-qa-reports/hrms-2026-10-14/HR-BUGS.md`:
 - **Impact:** Users cannot see why their value was rejected; a typed `-5` becomes `5` and would be submitted as a positive claim.
 - **Suggested fix:** Use a numeric input (`inputmode=decimal`) with validation on the typed value; show "Amount must be a positive number" for minus; keep the typed text so the user can correct it; apply the same rule on paste.
 
-## HRM-B-008 — partial
+## HRM-B-008 — VERIFIED IN CODE (f9910f300: department-form-schema uses .refine(n.length !== 1) blocking single-char names; fix committed 2026-10-16 after round-2 QA run)
 
 Latest status source: `streamline-qa-reports/modules-2026-10-15/hrms/round-2/BUGS.md`
 
