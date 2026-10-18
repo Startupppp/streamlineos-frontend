@@ -66418,7 +66418,9 @@
                                   "parent_set",
                                   "parent_removed",
                                   "relation_added",
-                                  "relation_removed"
+                                  "relation_removed",
+                                  "epic_set",
+                                  "epic_removed"
                                 ]
                               },
                               "label": {
@@ -109031,7 +109033,9 @@
                                   "parent_set",
                                   "parent_removed",
                                   "relation_added",
-                                  "relation_removed"
+                                  "relation_removed",
+                                  "epic_set",
+                                  "epic_removed"
                                 ]
                               },
                               "label": {
@@ -144663,6 +144667,50 @@
                                   }
                                 ]
                               },
+                              "ownerUser": {
+                                "anyOf": [
+                                  {
+                                    "type": "object",
+                                    "properties": {
+                                      "id": {
+                                        "type": "string"
+                                      },
+                                      "firstName": {
+                                        "anyOf": [
+                                          {
+                                            "type": "string"
+                                          },
+                                          {
+                                            "type": "null"
+                                          }
+                                        ]
+                                      },
+                                      "lastName": {
+                                        "anyOf": [
+                                          {
+                                            "type": "string"
+                                          },
+                                          {
+                                            "type": "null"
+                                          }
+                                        ]
+                                      },
+                                      "email": {
+                                        "type": "string"
+                                      }
+                                    },
+                                    "required": [
+                                      "id",
+                                      "firstName",
+                                      "lastName",
+                                      "email"
+                                    ]
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              },
                               "qaState": {
                                 "anyOf": [
                                   {
@@ -144798,6 +144846,7 @@
                               "releaseDate",
                               "recordRevision",
                               "ownerUserId",
+                              "ownerUser",
                               "qaState",
                               "deploymentEvidenceUrl",
                               "projectReleaseId",
@@ -144976,6 +145025,50 @@
                             }
                           ]
                         },
+                        "ownerUser": {
+                          "anyOf": [
+                            {
+                              "type": "object",
+                              "properties": {
+                                "id": {
+                                  "type": "string"
+                                },
+                                "firstName": {
+                                  "anyOf": [
+                                    {
+                                      "type": "string"
+                                    },
+                                    {
+                                      "type": "null"
+                                    }
+                                  ]
+                                },
+                                "lastName": {
+                                  "anyOf": [
+                                    {
+                                      "type": "string"
+                                    },
+                                    {
+                                      "type": "null"
+                                    }
+                                  ]
+                                },
+                                "email": {
+                                  "type": "string"
+                                }
+                              },
+                              "required": [
+                                "id",
+                                "firstName",
+                                "lastName",
+                                "email"
+                              ]
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
                         "qaState": {
                           "anyOf": [
                             {
@@ -145111,6 +145204,7 @@
                         "releaseDate",
                         "recordRevision",
                         "ownerUserId",
+                        "ownerUser",
                         "qaState",
                         "deploymentEvidenceUrl",
                         "projectReleaseId",
@@ -145331,6 +145425,50 @@
                           "anyOf": [
                             {
                               "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "ownerUser": {
+                          "anyOf": [
+                            {
+                              "type": "object",
+                              "properties": {
+                                "id": {
+                                  "type": "string"
+                                },
+                                "firstName": {
+                                  "anyOf": [
+                                    {
+                                      "type": "string"
+                                    },
+                                    {
+                                      "type": "null"
+                                    }
+                                  ]
+                                },
+                                "lastName": {
+                                  "anyOf": [
+                                    {
+                                      "type": "string"
+                                    },
+                                    {
+                                      "type": "null"
+                                    }
+                                  ]
+                                },
+                                "email": {
+                                  "type": "string"
+                                }
+                              },
+                              "required": [
+                                "id",
+                                "firstName",
+                                "lastName",
+                                "email"
+                              ]
                             },
                             {
                               "type": "null"
@@ -145624,6 +145762,7 @@
                         "releaseDate",
                         "recordRevision",
                         "ownerUserId",
+                        "ownerUser",
                         "qaState",
                         "deploymentEvidenceUrl",
                         "projectReleaseId",
@@ -145778,6 +145917,50 @@
                             }
                           ]
                         },
+                        "ownerUser": {
+                          "anyOf": [
+                            {
+                              "type": "object",
+                              "properties": {
+                                "id": {
+                                  "type": "string"
+                                },
+                                "firstName": {
+                                  "anyOf": [
+                                    {
+                                      "type": "string"
+                                    },
+                                    {
+                                      "type": "null"
+                                    }
+                                  ]
+                                },
+                                "lastName": {
+                                  "anyOf": [
+                                    {
+                                      "type": "string"
+                                    },
+                                    {
+                                      "type": "null"
+                                    }
+                                  ]
+                                },
+                                "email": {
+                                  "type": "string"
+                                }
+                              },
+                              "required": [
+                                "id",
+                                "firstName",
+                                "lastName",
+                                "email"
+                              ]
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
                         "qaState": {
                           "anyOf": [
                             {
@@ -145913,6 +146096,7 @@
                         "releaseDate",
                         "recordRevision",
                         "ownerUserId",
+                        "ownerUser",
                         "qaState",
                         "deploymentEvidenceUrl",
                         "projectReleaseId",
@@ -148013,6 +148197,50 @@
                                       }
                                     ]
                                   },
+                                  "ownerUser": {
+                                    "anyOf": [
+                                      {
+                                        "type": "object",
+                                        "properties": {
+                                          "id": {
+                                            "type": "string"
+                                          },
+                                          "firstName": {
+                                            "anyOf": [
+                                              {
+                                                "type": "string"
+                                              },
+                                              {
+                                                "type": "null"
+                                              }
+                                            ]
+                                          },
+                                          "lastName": {
+                                            "anyOf": [
+                                              {
+                                                "type": "string"
+                                              },
+                                              {
+                                                "type": "null"
+                                              }
+                                            ]
+                                          },
+                                          "email": {
+                                            "type": "string"
+                                          }
+                                        },
+                                        "required": [
+                                          "id",
+                                          "firstName",
+                                          "lastName",
+                                          "email"
+                                        ]
+                                      },
+                                      {
+                                        "type": "null"
+                                      }
+                                    ]
+                                  },
                                   "qaState": {
                                     "anyOf": [
                                       {
@@ -148148,6 +148376,7 @@
                                   "releaseDate",
                                   "recordRevision",
                                   "ownerUserId",
+                                  "ownerUser",
                                   "qaState",
                                   "deploymentEvidenceUrl",
                                   "projectReleaseId",
@@ -182399,6 +182628,26 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "name": "q",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 200
+            }
+          },
+          {
+            "name": "sourceKey",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 100
+            }
           }
         ],
         "responses": {
@@ -183236,6 +183485,25 @@
                       "type": "string"
                     }
                   },
+                  "guestEmails": {
+                    "maxItems": 50,
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "maxLength": 320,
+                      "format": "email",
+                      "pattern": "^(?!\\.)(?!.*\\.\\.)([A-Za-z0-9_'+\\-\\.]*)[A-Za-z0-9_+-]@([A-Za-z0-9][A-Za-z0-9\\-]*\\.)+[A-Za-z]{2,}$"
+                    }
+                  },
+                  "reminderOffsetsMinutes": {
+                    "maxItems": 12,
+                    "type": "array",
+                    "items": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 43200
+                    }
+                  },
                   "agenda": {
                     "type": "string"
                   },
@@ -183484,6 +183752,27 @@
                           "type": "integer",
                           "minimum": -9007199254740991,
                           "maximum": 9007199254740991
+                        },
+                        "guestEmails": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        },
+                        "reminderOffsetsMinutes": {
+                          "anyOf": [
+                            {
+                              "type": "array",
+                              "items": {
+                                "type": "integer",
+                                "minimum": -9007199254740991,
+                                "maximum": 9007199254740991
+                              }
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
                         }
                       },
                       "required": [
@@ -183506,7 +183795,9 @@
                         "rrule",
                         "isRecurring",
                         "canManage",
-                        "localVersion"
+                        "localVersion",
+                        "guestEmails",
+                        "reminderOffsetsMinutes"
                       ]
                     }
                   },
@@ -183845,6 +184136,25 @@
                       "type": "string"
                     }
                   },
+                  "guestEmails": {
+                    "maxItems": 50,
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "maxLength": 320,
+                      "format": "email",
+                      "pattern": "^(?!\\.)(?!.*\\.\\.)([A-Za-z0-9_'+\\-\\.]*)[A-Za-z0-9_+-]@([A-Za-z0-9][A-Za-z0-9\\-]*\\.)+[A-Za-z]{2,}$"
+                    }
+                  },
+                  "reminderOffsetsMinutes": {
+                    "maxItems": 12,
+                    "type": "array",
+                    "items": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 43200
+                    }
+                  },
                   "agenda": {
                     "anyOf": [
                       {
@@ -183956,6 +184266,28 @@
                       "properties": {
                         "deleted": {
                           "type": "boolean"
+                        },
+                        "externalEventId": {
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "integrationConnectionId": {
+                          "anyOf": [
+                            {
+                              "type": "integer",
+                              "minimum": -9007199254740991,
+                              "maximum": 9007199254740991
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
                         }
                       },
                       "required": [
@@ -1204186,7 +1204518,11 @@
       },
       "post": {
         "operationId": "EmployeeTimeOffController_create",
-        "parameters": [],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/OptionalIdempotencyKeyHeader"
+          }
+        ],
         "responses": {
           "201": {
             "description": "Created",
@@ -1204292,7 +1204628,9 @@
               }
             }
           }
-        }
+        },
+        "x-idempotency-command": "hr.leave.create",
+        "x-idempotent": true
       }
     },
     "/me/time-off/{leaveId}/cancel": {
@@ -1267311,6 +1267649,12 @@
                         "type": "string"
                       }
                     },
+                    "columnLabels": {
+                      "type": "object",
+                      "additionalProperties": {
+                        "type": "string"
+                      }
+                    },
                     "rows": {
                       "type": "array",
                       "items": {
@@ -1267386,6 +1267730,7 @@
                   "required": [
                     "provisional",
                     "columns",
+                    "columnLabels",
                     "rows",
                     "pagination"
                   ]
@@ -1267688,6 +1268033,12 @@
                         "type": "string"
                       }
                     },
+                    "columnLabels": {
+                      "type": "object",
+                      "additionalProperties": {
+                        "type": "string"
+                      }
+                    },
                     "rows": {
                       "type": "array",
                       "items": {
@@ -1267763,6 +1268114,7 @@
                   "required": [
                     "provisional",
                     "columns",
+                    "columnLabels",
                     "rows",
                     "pagination"
                   ]
@@ -1268010,6 +1268362,12 @@
                         "type": "string"
                       }
                     },
+                    "columnLabels": {
+                      "type": "object",
+                      "additionalProperties": {
+                        "type": "string"
+                      }
+                    },
                     "rows": {
                       "type": "array",
                       "items": {
@@ -1268085,6 +1268443,7 @@
                   "required": [
                     "provisional",
                     "columns",
+                    "columnLabels",
                     "rows",
                     "pagination"
                   ]
@@ -1268212,6 +1268571,12 @@
                         "type": "string"
                       }
                     },
+                    "columnLabels": {
+                      "type": "object",
+                      "additionalProperties": {
+                        "type": "string"
+                      }
+                    },
                     "rows": {
                       "type": "array",
                       "items": {
@@ -1268287,6 +1268652,7 @@
                   "required": [
                     "provisional",
                     "columns",
+                    "columnLabels",
                     "rows",
                     "pagination"
                   ]
@@ -1268549,6 +1268915,12 @@
                         "type": "string"
                       }
                     },
+                    "columnLabels": {
+                      "type": "object",
+                      "additionalProperties": {
+                        "type": "string"
+                      }
+                    },
                     "rows": {
                       "type": "array",
                       "items": {
@@ -1268624,6 +1268996,7 @@
                   "required": [
                     "provisional",
                     "columns",
+                    "columnLabels",
                     "rows",
                     "pagination"
                   ]
@@ -1393144,6 +1393517,87 @@
                     "data"
                   ],
                   "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          },
+          "422": {
+            "$ref": "#/components/responses/UnprocessableEntity"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          },
+          "503": {
+            "$ref": "#/components/responses/ServiceUnavailable"
+          }
+        },
+        "tags": [
+          "Webhooks"
+        ],
+        "x-exposure": "permissioned",
+        "x-permission": "settings:webhooks:manage",
+        "description": "Exposure: permission — settings:webhooks:manage",
+        "x-bodyless": true
+      }
+    },
+    "/webhooks/{webhookId}/test": {
+      "post": {
+        "operationId": "WebhooksController_sendTest",
+        "parameters": [
+          {
+            "name": "webhookId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "statusCode": {
+                      "anyOf": [
+                        {
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    }
+                  },
+                  "required": [
+                    "success",
+                    "statusCode"
+                  ]
                 }
               }
             }
