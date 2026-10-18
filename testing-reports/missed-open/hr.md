@@ -22,7 +22,9 @@ Write-up from `streamline-qa-reports/hrms-2026-10-14/HR-BUGS.md`:
 - **Impact:** Users see developer-facing validation text; the message contradicts the first one.
 - **Suggested fix:** Map schema errors to user copy; show one message per field ("Department name must be at least 2 characters"); trim whitespace before counting.
 
-## HR-B-012 — PARTIAL (column-placeholder issue fixed; 15-20s slow load is Neon cold-start latency outside frontend scope, not a code defect)
+## HR-B-012 — FIXED (8a66a8340), PENDING_BROWSER_VERIFICATION
+
+On first paint /hr/asset-returns now fetches only its own bounded list (backend limit 100, one joined query) behind the real-header skeleton. The employee and assigned-asset reads (100 rows each) wait until the log sheet opens, which shows "Loading assigned assets…" until they arrive (asset-returns-page.test.tsx).
 
 Latest status source: `streamline-qa-reports/modules-2026-10-15/hrms/round-2/BUGS.md`
 
@@ -155,7 +157,9 @@ Show the reason a field was ignored
 - **Observed:** Keystrokes are dropped or values reverted with no message (see HR-B-001, HR-B-011).
 - **Suggestion:** Inline hint on the field the moment a character is rejected ("Numbers are not allowed in names"); keep the typed text visible so users can correct it.
 
-## HR-U-004: Consistent name rules across HR forms
+## HR-U-004: Consistent name rules across HR forms — VERIFIED IN CODE (lib/person-name-schema.ts:24-30; step-personal-info.tsx:85,99; personal-info-section.tsx:54,68), PENDING_BROWSER_VERIFICATION
+
+Employee names accept apostrophes, hyphens and periods, and show a hint at rest in the same style as Holiday Name. Names reject digits by rule; holiday names allow them.
 - **Where:** Employee names (/hr/onboarding Personal) vs Holiday Name (/hr/holidays).
 - **Observed:** Holiday Name's helper text lists allowed characters ("letters, numbers, spaces, apostrophes, periods, and hyphens"); employee name fields accept none of the apostrophe/hyphen characters.
 - **Suggestion:** Reuse one name-validator with the same helper text everywhere (see HR-B-001).
@@ -167,7 +171,9 @@ Confirmation modal should show warnings, not just times
 - **Observed:** The modal shows `(06:00 PM – 09:00 AM)` with no warning for a non-night shift (see HR-B-007).
 - **Suggestion:** Show "Ends before it starts — enable Night Shift?" in the modal and disable the confirm button.
 
-## HR-U-008: Employee-list search needs a visible "searching…" state and an empty state
+## HR-U-008: Employee-list search needs a visible "searching…" state and an empty state — FIXED (84bb15733), PENDING_BROWSER_VERIFICATION
+
+Search was already debounced at 300ms with a searching indicator. The no-match state now reads "No employees match "zzzznomatch"" and offers Clear (employees-list-results.test.tsx).
 - **Where:** /hr/employees search box.
 - **Observed:** On a typed no-match search the list shows everyone with an error banner (HR-B-006); the URL keeps `?q=`.
 - **Suggestion:** Show "No employees match 'zzzznomatch'. Clear search" as the empty state; debounce and cancel stale responses.
@@ -181,11 +187,15 @@ Attendance corrections list needs a clear empty/filter state
 - **Observed:** Shows "No results match your filters. Corrections employees raise for this date range appear here." — good copy, but the item just actioned disappears without a success message (see HR-B-009).
 - **Suggestion:** Toast "Correction approved for Wed, 14 Oct" and keep the item visible under "Approved".
 
-## HR-U-011: Asset Returns and similar lists — use real empty states
+## HR-U-011: Asset Returns and similar lists — use real empty states — FIXED (00fcd0c88), PENDING_BROWSER_VERIFICATION
+
+Asset Returns and Devices already have illustrated empty states with the create action for managers. A viewer now sees how returns arrive instead of being asked to log one.
 - **Where:** /hr/asset-returns (HR-B-012), /hr/shifts (good empty state "Create your first shift template"), /hr/devices ("No time clock devices").
 - **Suggestion:** Copy the Shifts empty-state pattern to every list.
 
-## HR-U-017: Directory placeholder headers while loading
+## HR-U-017: Directory placeholder headers while loading — VERIFIED IN CODE (people-directory-page.tsx DataTableSkeleton headers=PERSON_TABLE_HEADERS; data-table-skeleton.tsx:90), PENDING_BROWSER_VERIFICATION
+
+/directory and /hr/asset-returns show their real column headers over skeleton rows. A skeleton without headers draws bars, never "Column N".
 - **Where:** /directory, and /hr/asset-returns (same family as HR-B-012).
 - **Observed:** "Loading results…" with placeholder headers "Column 1…6" shown for 5–10 s before the list appears.
 - **Suggestion:** Render the real column headers immediately and a skeleton for the rows.
@@ -202,12 +212,16 @@ Approver card needs requester and original vs requested times
 ---
 # Round 3 (owner step-4 pass) — UX suggestions HR-U-020+
 
-## HR-U-020: Policy edit sheet gives no feedback on save and no field-level reason
+## HR-U-020: Policy edit sheet gives no feedback on save and no field-level reason — FIXED (351e1c7e8), PENDING_BROWSER_VERIFICATION
+
+A refused save keeps the sheet open with the typed values and shows "Couldn't save: <reason>" inside the sheet, including reasons on fields the sheet does not render. A saved draft toasts "Policy saved as draft vN" (policy-upsert-sheet.test.tsx).
 - **Where:** /hr/settings/policies → Edit (draft) → "Save Changes"
 - **Observed:** Save on a draft policy (HR-B-018) closes nothing, shows no toast and no inline error. The only trace is a console 400.
 - **Suggestion:** Show "Couldn't save: <reason>" inside the sheet, keep the sheet open with the typed values, and add a success toast ("Policy saved as draft v1").
 
-## HR-U-028: Exit page reads like an HR tool but its primary button is self-service
+## HR-U-028: Exit page reads like an HR tool but its primary button is self-service — VERIFIED IN CODE (exit-management-page.tsx:148,161,238; exit-management-page.test.tsx:92-127), PENDING_BROWSER_VERIFICATION
+
+HR admins get "Record resignation", which opens the admin sheet with an employee picker, plus "Submit my resignation" for themselves. Self-service users keep "Submit resignation".
 - **Where:** /hr/exit → "Submit resignation" (top right and empty state).
 - **Observed:** Step copy says "from the employee or HR", but the dialog is "Submit Resignation" for the signed-in user ("Your last working date will be 13 Dec 2026").
 - **Suggestion:** On the HR exit page, label the button "Record resignation" with an employee picker; keep "Submit resignation" for /me (see HR-B-024).

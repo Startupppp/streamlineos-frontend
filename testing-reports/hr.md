@@ -7,7 +7,9 @@ This file is the remaining HR work. Duplicate and finished reports were removed.
 
 ## Remaining bugs
 
-### HR-B-005 — UNKNOWN
+### HR-B-005 — FIXED (backend 1813d93ec), PENDING_BROWSER_VERIFICATION
+
+Case-insensitive name and code checks already 409 (org-hierarchy-departments.service.ts:81, org-unit-crud.ts:340); the 409 now names the existing department and its code, shown on the Name/Code fields. App-level check, no DB index (prod has duplicates).
 
 Duplicate department names are accepted
 
@@ -25,7 +27,9 @@ Latest report note: Medium: Duplicate department names are accepted
 - **Suggested fix:** Enforce case-insensitive unique names per organisation (and unique codes) server-side; return a field-level error.
 - **Cleanup:** The duplicate (QAD1013B) remains; it is listed in TEST-DATA.md for archiving by the owner.
 
-### HR-B-014 — UNKNOWN
+### HR-B-014 — VERIFIED IN CODE (backend leave-entitlement.ts:48-63, leaves-approval.service.ts:124,426; spec ffec98922), PENDING_BROWSER_VERIFICATION
+
+Proration applies before approved days are subtracted (joined 14 Oct, 12/yr → 3, 1 approved → 2, pinned in leave-entitlement.spec.ts). The 11 QA saw is a balance row written before the proration fix: run `src/scripts/recompute-prorated-leave-balances.ts --apply` (dry-run by default) to correct stored rows.
 
 Leave balance jumps from 0 to 11 after a 1-day Casual leave is approved; card text still says "Prorated … 3 of 12 months"
 
@@ -45,7 +49,9 @@ Latest report note: Leave balance jumps 0 → 11 after 1-day Casual approved: ST
 - **Suggested fix:** Apply proration to the entitlement before subtracting approved days; show the calculation; recompute balance on approval and show it consistently on the owner side too.
 - **Note:** Leave policy details were not opened (owner Policies page not checked in this round). Please verify the Casual Leave policy accrual before filing as final.
 
-### HR-B-016 — UNKNOWN
+### HR-B-016 — FIXED (aa4d70528), PENDING_BROWSER_VERIFICATION
+
+A failed leaves refetch after a write keeps the last loaded data; the full-page error shows only when the first read fails with nothing loaded, and a failed request-list read shows inline in My leaves.
 
 Leave requests page showed "Leaves Error — Failed to load leaves data" once on owner reload (intermittent)
 
@@ -60,7 +66,9 @@ Latest report note: Leaves Error intermittent after write: NOT SEEN | Leave tabs
 - **Suggested fix:** Investigate the first leaves query after a write (possible cache/ordering issue); show last known data with a retry, not a blocking error.
 - **Status:** 1 occurrence (not reproduced on a second reload). Logged for follow-up.
 
-### HR-B-019 — UNKNOWN
+### HR-B-019 — VERIFIED IN CODE (backend hr-policy-conflict.service.ts:64-90,106-112; hr-policies.service.ts:289-307; spec 7866ae056), PENDING_BROWSER_VERIFICATION
+
+The conflict check excludes the policy's own versions, and activating v2 archives the active v1 in the same transaction.
 
 A new version of an active leave policy cannot be activated: "Cannot activate — resolve policy conflicts" blocks it against its own v1
 
@@ -78,7 +86,9 @@ A new version of an active leave policy cannot be activated: "Cannot activate �
 - **Suggested fix:** Exclude versions of the same policy lineage from the overlap check (or supersede the predecessor on activation); show which version it conflicts with (v1 of this same policy); hide the force option for self-conflicts; label rows by version in the list.
 - **Cleanup:** v2 draft left in place (see TEST-DATA.md R3). Not force-activated.
 
-### HR-B-020 — PARTIAL
+### HR-B-020 — VERIFIED IN CODE (backend expenses/dto/expense.schemas.ts:69-74,181,201; frontend expense-form-schema.ts:27), PENDING_BROWSER_VERIFICATION
+
+The ₹10,00,000 server cap applies to create and update on /me/expenses, /hr/expenses and imports; the amount field has no maxLength, so nothing is cut off silently.
 
 Expense claim accepts a huge amount (₹999,999,999); the amount field silently caps input at 9 digits
 
@@ -100,7 +110,9 @@ Latest report note: Expense claim accepts huge amount (₹999,999,999); silent 9
 - **Suggested fix:** Server-side max amount per category/org; client max with inline message; no silent truncation (block further digits and show "Max 9 digits" or the limit).
 - **Cleanup:** `#EXP-2026-004` edited by owner to ₹250 with description "QA 1013 cleanup: corrected from huge-amount probe" (PATCH /me/expenses/4 → 200; verified in My Expenses). Still Pending. See TEST-DATA.md R3.
 
-### HR-B-025 — PARTIAL (aae6a83cc: employee detail cache now invalidated; offboarding checklist + FnF draft creation are backend-only, not yet verified)
+### HR-B-025 — FIXED (backend f7b6f8109, 1f769c535; frontend aae6a83cc), PENDING_BROWSER_VERIFICATION
+
+One transaction already sets employment EXITED, archives the membership, seeds the offboarding checklist and creates the FnF draft and asset returns. Two fixes: completion now revokes the person's pending invitation (it stayed acceptable), and the FnF draft is linked to the employee membership so it shows on their FnF view.
 
 Completing a termination says the account will be deactivated and a settlement started, but the employee stays Active and no offboarding checklist or settlement draft appears
 
@@ -127,7 +139,9 @@ Latest report note: Termination completion leaves employee Active: NOT RE-RUN | 
 - **Suggested fix:** On complete, set employment status to terminated/inactive in one transaction and revoke sign-in; create the offboarding checklist and FnF draft (or show their status on the termination row); refresh the directory and profile; show "Account deactivated" in the completion result.
 - **Cleanup:** The owner-run termination is Completed (permanent per the UI: "This action cannot be undone"). Reverting it needs an HR admin action outside this run.
 
-### HRM-B-001 — PARTIAL
+### HRM-B-001 — FIXED (6a03af35f), PENDING_BROWSER_VERIFICATION
+
+Status defaults to "open" once statuses load. A failed status read shows the reason and Retry. While statuses are not loaded yet the select is disabled, so it never opens empty (create-position-dialog.test.tsx).
 
 Status dropdown has no options — a position cannot be created
 
@@ -214,7 +228,9 @@ Same person shows different status labels
 - **Severity:** Low. **Route:** /hr/employees vs profile.
 - **Actual:** directory card and side sheet say "Pending invite"; profile header says "Active" with "Invite sent". **Expected:** one employment status and one invite status, labelled separately. **Fix:** split the badges. **Acceptance:** same labels on all three views.
 
-### HRM-B-022 — PARTIAL
+### HRM-B-022 — VERIFIED IN CODE (app/(authenticated)/hr/employees/[employeeId]/page.tsx:31 + not-found.tsx; termination-page.tsx:129), PENDING_BROWSER_VERIFICATION
+
+An unknown id 404s into the in-shell "Employee not found / Back to directory" page, and an unknown termination employeeId shows an "Employee not found" alert with no prefill (f83e01a0f).
 
 Unknown employee deep link gives generic 404; unknown employeeId on termination is silent
 
@@ -592,7 +608,9 @@ Latest report note: Keyboard sequence navigated to /settings/billing: Low | BLOC
 - **Investigation:** `GET /org-hierarchy/dependencies/DEPARTMENT/:id` is properly registered on the backend. The frontend `dependencyPreviewContract` (`unitKind: z.enum([...uppercase...]), mode: z.enum(["archive","retire"]).catch("archive"), dependencies: z.array(...), totalDependencies: z.number()`) matches exactly what `getDependencyPreview` returns. The backend correctly handles DEPARTMENT kind with hrEmployments/hrPositions/hrPeople queries. Neither H1 (missing endpoint) nor H2 (contract mismatch) is supported by code analysis; H3 (crash on removed worker) would produce a 500 `ApiError`, not CONTRACT_VIOLATION.
 - **Conclusion:** CONTRACT_VIOLATION was not reproducible from code review. The endpoint and contract are correct in the current codebase.
 
-### BE-16 — PARTIAL (HR-B parts only; expense withdraw is HR-A scope)
+### BE-16 — VERIFIED IN CODE (backend employee-expenses.controller.ts:92, rehire.controller.ts:45; frontend archive-employee-action.tsx, departments-page.tsx:71,117), PENDING_BROWSER_VERIFICATION
+
+Expense withdraw: POST /me/expenses/:expenseId/withdraw, claimant only, PENDING/DRAFT only by conditional update, 409 INVALID_STATE, 404 for someone else's claim, audited, removed from approver queues; Withdraw with confirm on /me/expenses (expense-withdraw.spec.ts, member-expense-withdraw.test.tsx). Employee archive and rehire-restore, and department archive and restore, work end to end.
 - **Employee archive:** VERIFIED IN CODE (commit `c2d72e2f6`). `ArchiveEmployeeAction` is in `features/hr/employees/detail/employee-details-view.tsx`, uses `useArchiveEmployee` hook → `POST /hr/employees/:userId/archive`. Archive button is accessible from the employee detail page.
 - **Department archive:** EXISTS. `departments-page.tsx` uses `useHierarchyArchive` with `updateDepartment.mutate({ status: "ARCHIVED" })`. The archive UI exists in Settings → Organization → Departments. Dependency preflight calls `GET /org-hierarchy/dependencies/DEPARTMENT/:id` (see BE-15 above — verified correct). PENDING_BROWSER_VERIFICATION that archive flow completes end-to-end.
 - **Expense withdraw:** HR-A scope — not addressed in this lane.
@@ -704,7 +722,9 @@ Leave type names differ between the request form and the list
 - **Where:** /hr/leaves "Request leave" → Leave Type options "Casual Leave", "Sick Leave", "Earned Leave"; the My leaves table shows "Casual", "Sick", "Earned".
 - **Suggestion:** Use the same label in both places (e.g. "Casual Leave").
 
-### HR-U-007 — BLOCKED (HR-B domain: department check is HR-B-005)
+### HR-U-007 — FIXED (backend 1813d93ec), PENDING_BROWSER_VERIFICATION
+
+The department name/code 409 names the existing record ("A department named 'X' (code Y) already exists."), the same pattern as the onboarding email duplicate.
 - **Where:** Onboarding email duplicate (works well: "This email already belongs to an employee in your organization.") vs Departments (no check, HR-B-005).
 - **Suggestion:** Same pattern everywhere; link to the existing record ("View QA HR Thirteen").
 
@@ -714,7 +734,9 @@ Leave type names differ between the request form and the list
 
 ### HR-U-013 — VERIFIED IN CODE (HR_PERSON_NAME_MAX=100 enforced on firstName and lastName inputs in step-personal-info.tsx:73,87 and in person-name-schema.ts Zod validation)
 
-### HR-U-014 — BLOCKED (HR-B domain: onboarding gate routing)
+### HR-U-014 — FIXED (eef7cf23c), PENDING_BROWSER_VERIFICATION
+
+The onboarding detour already gave way to denial for members with no HR grant (05ce92396). It now also gives way when the access read fails, so the route's own access result shows instead of the wizard (wizard-gate.test.ts).
 - **Where:** /hr for qaview1012e redirects to /employee-onboarding ("Personal details … Skip for now") before the access-denied page. qamem1012c and qahr1014a went straight to /access-denied (or to HR after onboarding).
 - **Observed:** Same org, same non-HR role; behaviour differs. A member who has not finished the wizard is shown a profile form when they tried to open HR, which looks like HR is available to them.
 - **Suggestion:** Send only users who are allowed to onboard to the wizard; everyone else should see the Access Restricted page with the required permission.
@@ -724,12 +746,16 @@ Leave type names differ between the request form and the list
 - **Observed:** Completing or skipping the wizard did not grant any hr:* permission; all HR routes stayed on access-denied (see RBAC.md Round 2).
 - **Suggestion:** Reword to what completing the profile really does (e.g. "Complete your profile so HR can find your details"), or grant the promised access.
 
-### HR-U-016 — BLOCKED (HR-B domain: directory page)
+### HR-U-016 — FIXED (fde47bc06), PENDING_BROWSER_VERIFICATION
+
+The directory subtitle now says who is listed ("Everyone with a person record, added here or by HR onboarding. Members with only an app account appear once their record is added."). The empty and no-match states explain how people get in. Work-email visibility is unchanged.
 - **Where:** /directory for every non-HR member.
 - **Observed:** The list shows 2 people (QA HR Thirteen and the owner). The viewing member is not listed, and there is no note explaining why. Work emails of all listed people are visible to every org member.
 - **Suggestion:** Either explain the filter ("Showing people with a linked account") or list all active members. Confirm the intended visibility of work email to non-HR members.
 
-### HR-U-018 — BLOCKED: depends on HR-B-014 (leave balance proration bug); calculation shown but number is wrong from backend
+### HR-U-018 — FIXED (6f0416887), PENDING_BROWSER_VERIFICATION
+
+The balance card hint reads e.g. "Casual Leave: 3 entitled (prorated 3/12) − 1 approved = 2 available (1 pending)". A stale stored row above entitlement shows only "N available".
 
 Leave balance card should show the calculation
 - **Where:** /me/time-off "Available Days" card.
@@ -787,19 +813,21 @@ HR expense queue does not show the owner's own pending claims and says nothing a
 - **Observed:** Own claims are not in the HR approvals list, and there is no note. Same pattern as own leave ("Needs another approver", HR-U-002).
 - **Suggestion:** Show "Your own claims are approved by another approver" in the HR list, or show the owner's claims with the same note.
 
-### HR-U-032 — BLOCKED (HR-B domain: helpdesk page)
+### HR-U-032 — VERIFIED IN CODE (81d717b52, support-queues-page.tsx "New request"), PENDING_BROWSER_VERIFICATION
+
+/hr/helpdesk has a "New request" action gated on self:support (a universal self-service key), which opens the existing create-request dialog (support-queues-page.test.tsx HR-U-032 case).
 - **Where:** /hr/helpdesk ("Employee support"): queue tabs HR / IT / Finance / Admin / Legal, "Queue settings", search. Create menu has People, Comms, Work, Docs items but no helpdesk request.
 - **Observed:** "No HR requests — Requests routed to this queue appear here as employees raise them." No "New request" button. The owner could not create a helpdesk ticket (case created instead, see TEST-DATA R3-9).
 - **Suggestion:** Add "New request" for HR staff (on behalf of an employee) or state where tickets are raised.
 
 ### Must change
-1. **Owner's own expense shows no action and no explanation.** On the expenses Approvals / queue view, the owner's own pending expense (e.g. EXP-2026-006) has **no Approve/Reject (or other) action** and **no helper text** explaining why. Leave already says "Needs another approver" in a similar SoD case — expenses should do the same (or offer a clear "You cannot approve your own claim" state) so the owner is not left with a dead card.
+1. — FIXED (ec71041a6), PENDING_BROWSER_VERIFICATION: /hr/expenses rows for your own claim show the shared "needs another approver" note (admin-expense-own-claim.test.tsx). **Owner's own expense shows no action and no explanation.** On the expenses Approvals / queue view, the owner's own pending expense (e.g. EXP-2026-006) has **no Approve/Reject (or other) action** and **no helper text** explaining why. Leave already says "Needs another approver" in a similar SoD case — expenses should do the same (or offer a clear "You cannot approve your own claim" state) so the owner is not left with a dead card.
 
-2. **"Retire asset" sits right next to "Edit asset".** On the asset detail / row actions, **Retire** is adjacent to **Edit**, which makes a destructive/lifecycle action easy to hit by mistake while intending a routine edit. Separate destructive actions (Retire / Archive) from Edit — e.g. overflow menu, confirm step, or visual danger styling with spacing — so Edit cannot be fat-fingered into Retire.
+2. — VERIFIED IN CODE (886c99697, asset-columns.tsx:29-49; assets-page.tsx:386), PENDING_BROWSER_VERIFICATION: Retire is in a separate overflow menu, styled as destructive, behind a destructive confirm. **"Retire asset" sits right next to "Edit asset".** On the asset detail / row actions, **Retire** is adjacent to **Edit**, which makes a destructive/lifecycle action easy to hit by mistake while intending a routine edit. Separate destructive actions (Retire / Archive) from Edit — e.g. overflow menu, confirm step, or visual danger styling with spacing — so Edit cannot be fat-fingered into Retire.
 
 ### Good to have
-1. **Assign-asset and resignation pickers omit employees with pending invites (product question).** When assigning an asset or recording/picking someone for resignation-related flows, employees whose invite is still **pending** (e.g. QA Emp, invite pending) do not appear in the picker. Confirm product intent: if pending invitees should be assignable/selectable, include them (with a "Invite pending" badge); if not, say in the empty/search state that only active (accepted-invite) employees can be chosen.
+1. — VERIFIED IN CODE (features/hr/shared/employee-picker.tsx; employee-picker.test.tsx:71), PENDING_BROWSER_VERIFICATION: the shared picker (asset assign, HR resignation) includes invitees who have not accepted, labelled "Invite pending". **Assign-asset and resignation pickers omit employees with pending invites (product question).** When assigning an asset or recording/picking someone for resignation-related flows, employees whose invite is still **pending** (e.g. QA Emp, invite pending) do not appear in the picker. Confirm product intent: if pending invitees should be assignable/selectable, include them (with a "Invite pending" badge); if not, say in the empty/search state that only active (accepted-invite) employees can be chosen.
 
-2. **Names reject digits (e.g. "QA1015") — clarify the rule in the hint.** Person/department-style name fields reject digits (test name patterns like QA1015). The rule may be intentional, but the field should show a **hint at rest or on reject** ("Letters, spaces, apostrophes and hyphens only — numbers are not allowed") instead of silent strip or a generic required error. Align with holiday-name copy where the allowed set is already spelled out.
+2. — FIXED (bbcfb1fa2), PENDING_BROWSER_VERIFICATION: the shared HR_PERSON_NAME_HINT ("… No numbers.") shows at rest under onboarding and profile name fields; department names allow digits. **Names reject digits (e.g. "QA1015") — clarify the rule in the hint.** Person/department-style name fields reject digits (test name patterns like QA1015). The rule may be intentional, but the field should show a **hint at rest or on reject** ("Letters, spaces, apostrophes and hyphens only — numbers are not allowed") instead of silent strip or a generic required error. Align with holiday-name copy where the allowed set is already spelled out.
 
-3. **Linking an employee to an existing member email is blocked without a how-to.** Creating/linking an employee with an email that already belongs to an org member fails with **"This email belongs to a member of your organization"**. The message is correct as a block, but it should briefly explain **how to link an existing member** (e.g. choose from members, or use "Link existing member" on the profile) so HR is not stuck recreating people who already have accounts.
+3. — FIXED (0f44b837b frontend, ed02203cb backend), PENDING_BROWSER_VERIFICATION: onboarding offers "Add an employee record to this member", which uses the existing attach-to-member path, and the 409 says how to link. **Linking an employee to an existing member email is blocked without a how-to.** Creating/linking an employee with an email that already belongs to an org member fails with **"This email belongs to a member of your organization"**. The message is correct as a block, but it should briefly explain **how to link an existing member** (e.g. choose from members, or use "Link existing member" on the profile) so HR is not stuck recreating people who already have accounts.

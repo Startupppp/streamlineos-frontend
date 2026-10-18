@@ -165,7 +165,7 @@ hr-holidays.service.ts:111,150 throws ConflictException({code:"HOLIDAY_DATE_CONF
 **Edge cases:** dependents only inactive or terminated (archive allowed?) (**DECIDE**: recommend allowed), double click (idempotent), cross-org, already archived (200 idempotent or 409 `INVALID_STATE`), a parent department with children.
 **Tests:** integration tests for dependencies with mixed workers, archive blocked or allowed, unarchive, idempotent repeat, and a contract test against the shared schema.
 
-#### BE-16 — SPLIT: expense withdraw is HR-A scope (OPEN/NOT IMPLEMENTED); employee/department archive is HR-B scope. No way to withdraw expense claims or delete/archive employees and departments (NEW, cleanup)
+#### BE-16 — VERIFIED IN CODE (employee-expenses.controller.ts:92 withdraw, rehire.controller.ts:45, departments-page.tsx:71,117), PENDING_BROWSER_VERIFICATION. No way to withdraw expense claims or delete/archive employees and departments (NEW, cleanup)
 **Evidence:** claims only offer Edit (EXP-2026-001…004 stuck Pending, with no withdraw or delete). An employee can only be "Removed from directory" (the worker record stays in HR > People). There's no delete or archive for departments that works (see BE-15). Assets have Retire (which works as an archive equivalent).
 **Decision (proposed; confirm before large changes):**
 - **Expense claims:** add `POST /me/expenses/{id}/withdraw`, allowed by the claimant only while status is `PENDING` (or `DRAFT`). It moves to `WITHDRAWN`, is removed from approver queues, and is audited. Non-pending returns `409 {code:"INVALID_STATE"}`, someone else's claim returns 404/403. No hard delete.
