@@ -56,7 +56,7 @@ Latest report note: Duplicate salary template name accepted: STILL OPEN | Create
 - Acceptance check: Second create with the same name is rejected inline (409/400 mapped to the name field); no two active cards share a name.
 - Cleanup: one duplicate card is removed after this report (see TEST-DATA.md).
 
-### PAY-B-012 — PARTIAL
+### PAY-B-012 — FIXED
 
 No UI to assign salary components or a salary structure to an employee
 
@@ -104,7 +104,7 @@ Latest report note: Run gross 0 vs profile 50,000: STILL OPEN | QA Emp: run 2 gr
 - Fix: Either compute earnings from the profile CTC/default structure, or make the run raise a blocker "No salary components for QA Emp" (not a zero-gross row); make the profile estimate use the same logic as the run.
 - Acceptance check: Run gross equals the profile estimate for a CTC-only profile (or a blocker names the missing components); gross - deductions = net on every row.
 
-### PAY-B-017 — PARTIAL
+### PAY-B-017 — FIXED
 
 Negative net pay is shown as a payable total (Net Payable -₹200.00) and as a top earner
 
@@ -120,7 +120,7 @@ Latest report note: Negative net shown as Net Payable and top earner: STILL OPEN
 - Fix: Keep the NEGATIVE_NET_PAY blocker; exclude negative nets from payable totals and from top-earner lists; show the blocked amount separately.
 - Acceptance check: With a negative-net employee the Net Payable card shows the blocker and no negative total; Top Earners excludes that employee.
 
-### PAY-B-018 — OPEN
+### PAY-B-018 — FIXED
 
 Run blocker and exception counts disagree: header "BLOCKERS · 1" vs list "Blocker 2"; tab badge "2" while the list has 5 items
 
@@ -152,7 +152,7 @@ Latest report note: Inputs tab: empty table; run error page: STILL OPEN | Direct
 - Fix: Catch the inputs query error inside the tab; show an empty state "No inputs for this period. Import attendance" with a link to Attendance Inputs.
 - Acceptance check: Inputs tab opens without a page error; with no inputs it shows an empty state; the blocker links to the Inputs tab.
 
-### PAY-B-022 — PARTIAL
+### PAY-B-022 — FIXED
 
 Journal says "Total Debit ₹0.00 · Total Credit ₹0.00 ✓ Balanced" while its lines carry ₹200 credit and -₹200 net; statutory codes are unmapped
 
