@@ -21,6 +21,12 @@ type FiltersSlot = ReactNode | (() => ReactNode);
 interface PageTabsToolbarProps {
   tabs: ReactNode;
   search?: ReactNode;
+  /** Always shown inline (e.g. at most two primary selects). */
+  primaryFilters?: FiltersSlot;
+  /**
+   * Extra filters. With `primaryFilters`, these stay in the Filters dropdown
+   * at every breakpoint. Without `primaryFilters`, they follow `collapseBelow`.
+   */
   filters?: FiltersSlot;
   actions?: ReactNode;
   tabsDensity?: PageTabsDensity;
@@ -48,9 +54,50 @@ function filtersButtonClass(collapseBelow: PageTabsCollapseBelow): string {
   return "md:hidden";
 }
 
+function FiltersMenu({
+  filters,
+  triggerAlwaysVisible,
+  collapseBelow,
+}: {
+  filters: FiltersSlot;
+  triggerAlwaysVisible: boolean;
+  collapseBelow: PageTabsCollapseBelow;
+}) {
+  return (
+    <ResponsivePopover>
+      <MobileOnlyLabelTooltip label="Filters">
+        <ResponsivePopoverTrigger asChild>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className={cn(
+              "size-9 shrink-0 p-0",
+              !triggerAlwaysVisible && filtersButtonClass(collapseBelow),
+            )}
+            aria-label="Filters"
+          >
+            <ListFilter className="h-4 w-4 shrink-0" aria-hidden="true" />
+          </Button>
+        </ResponsivePopoverTrigger>
+      </MobileOnlyLabelTooltip>
+      <ResponsivePopoverContent
+        title="Filters"
+        align="end"
+        className="w-[min(18rem,calc(100vw-2rem))] space-y-2 p-3"
+      >
+        <div className="flex flex-col gap-2 [&_.contents]:flex [&_.contents]:flex-col [&_.contents]:gap-2">
+          {resolveSlot(filters)}
+        </div>
+      </ResponsivePopoverContent>
+    </ResponsivePopover>
+  );
+}
+
 export function PageTabsToolbar({
   tabs,
   search,
+  primaryFilters,
   filters,
   actions,
   tabsDensity = "labeled",
@@ -59,8 +106,10 @@ export function PageTabsToolbar({
   searchClassName,
   className,
 }: PageTabsToolbarProps) {
-  const hasFilters = filters !== undefined && filters !== null;
+  const hasPrimary = primaryFilters !== undefined && primaryFilters !== null;
+  const hasMore = filters !== undefined && filters !== null;
   const isLabeled = tabsDensity === "labeled";
+  const moreAlwaysInMenu = hasPrimary && hasMore;
 
   const searchField = search ? (
     <div
@@ -73,42 +122,35 @@ export function PageTabsToolbar({
     </div>
   ) : null;
 
-  const filterControls = hasFilters ? (
-    <>
-      <div className={inlineFilterClass(collapseBelow, filtersAlwaysVisible)}>
-        {resolveSlot(filters)}
-      </div>
-      {!filtersAlwaysVisible ? (
-        <ResponsivePopover>
-          <MobileOnlyLabelTooltip label="Filters">
-            <ResponsivePopoverTrigger asChild>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                className={cn(
-                  "size-9 shrink-0 p-0",
-                  filtersButtonClass(collapseBelow),
-                )}
-                aria-label="Filters"
-              >
-                <ListFilter className="h-4 w-4 shrink-0" aria-hidden="true" />
-              </Button>
-            </ResponsivePopoverTrigger>
-          </MobileOnlyLabelTooltip>
-          <ResponsivePopoverContent
-            title="Filters"
-            align="end"
-            className="w-[min(18rem,calc(100vw-2rem))] space-y-2 p-3"
-          >
-            <div className="flex flex-col gap-2 [&_.contents]:flex [&_.contents]:flex-col [&_.contents]:gap-2">
+  const filterControls =
+    hasPrimary || hasMore ? (
+      <>
+        {hasPrimary ? (
+          <div className="contents">{resolveSlot(primaryFilters)}</div>
+        ) : null}
+        {hasMore && moreAlwaysInMenu ? (
+          <FiltersMenu
+            filters={filters}
+            triggerAlwaysVisible
+            collapseBelow={collapseBelow}
+          />
+        ) : null}
+        {hasMore && !moreAlwaysInMenu ? (
+          <>
+            <div className={inlineFilterClass(collapseBelow, filtersAlwaysVisible)}>
               {resolveSlot(filters)}
             </div>
-          </ResponsivePopoverContent>
-        </ResponsivePopover>
-      ) : null}
-    </>
-  ) : null;
+            {!filtersAlwaysVisible ? (
+              <FiltersMenu
+                filters={filters}
+                triggerAlwaysVisible={false}
+                collapseBelow={collapseBelow}
+              />
+            ) : null}
+          </>
+        ) : null}
+      </>
+    ) : null;
 
   const actionCluster = actions ? (
     <div className="flex max-w-full shrink-0 items-center gap-2 overflow-x-auto overscroll-x-contain scrollbar-hide">

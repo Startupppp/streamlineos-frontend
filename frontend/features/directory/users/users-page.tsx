@@ -331,6 +331,19 @@ export function UsersPage() {
     />
   );
 
+  const directoryFilterProps = {
+    status,
+    role,
+    departmentId,
+    branchId,
+    departments: departmentsData?.data ?? [],
+    branches: branchesData?.data ?? [],
+    onStatusChange: handleStatusChange,
+    onRoleChange: handleRoleChange,
+    onDepartmentChange: handleDeptChange,
+    onBranchChange: handleBranchChange,
+  };
+
   return (
     <>
       <PageWrapper
@@ -358,19 +371,11 @@ export function UsersPage() {
                 onValueChange={handleSearchChange}
               />
             }
+            primaryFilters={
+              <UserDirectoryFilters slot="primary" {...directoryFilterProps} />
+            }
             filters={
-              <UserDirectoryFilters
-                status={status}
-                role={role}
-                departmentId={departmentId}
-                branchId={branchId}
-                departments={departmentsData?.data ?? []}
-                branches={branchesData?.data ?? []}
-                onStatusChange={handleStatusChange}
-                onRoleChange={handleRoleChange}
-                onDepartmentChange={handleDeptChange}
-                onBranchChange={handleBranchChange}
-              />
+              <UserDirectoryFilters slot="more" {...directoryFilterProps} />
             }
           />
         }

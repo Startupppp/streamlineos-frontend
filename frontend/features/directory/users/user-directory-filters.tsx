@@ -13,6 +13,8 @@ interface OrgUnitOption {
   name: string;
 }
 
+export type UserDirectoryFilterSlot = "all" | "primary" | "more";
+
 interface UserDirectoryFiltersProps {
   status: string;
   role: string;
@@ -24,6 +26,8 @@ interface UserDirectoryFiltersProps {
   onRoleChange: (value: string) => void;
   onDepartmentChange: (value: string) => void;
   onBranchChange: (value: string) => void;
+  /** `primary` = status + role (inline). `more` = department + branch (Filters menu). */
+  slot?: UserDirectoryFilterSlot;
 }
 
 export function UserDirectoryFilters({
@@ -37,60 +41,103 @@ export function UserDirectoryFilters({
   onRoleChange,
   onDepartmentChange,
   onBranchChange,
+  slot = "all",
 }: UserDirectoryFiltersProps) {
   const selectTriggerClass = `w-full max-md:w-full md:w-auto md:min-w-[8.5rem] md:max-w-[11rem] shrink-0 ${FILTER_SELECT_TRIGGER}`;
+  const menuTriggerClass = `w-full ${FILTER_SELECT_TRIGGER}`;
+
+  const statusSelect = (
+    <Select value={status} onValueChange={onStatusChange}>
+      <SelectTrigger aria-label="Filter users by status" className={selectTriggerClass}>
+        <SelectValue />
+      </SelectTrigger>
+      <SelectContent className="min-w-[var(--radix-select-trigger-width)]">
+        <SelectItem value="all">All statuses</SelectItem>
+        <SelectItem value="active">Active</SelectItem>
+        <SelectItem value="suspended">Suspended</SelectItem>
+        <SelectItem value="archived">Archived</SelectItem>
+      </SelectContent>
+    </Select>
+  );
+
+  const roleSelect = (
+    <Select value={role} onValueChange={onRoleChange}>
+      <SelectTrigger aria-label="Filter users by role" className={selectTriggerClass}>
+        <SelectValue />
+      </SelectTrigger>
+      <SelectContent className="min-w-[var(--radix-select-trigger-width)]">
+        <SelectItem value="all">All roles</SelectItem>
+        {USER_STRUCTURAL_ROLES.map((structuralRole) => (
+          <SelectItem key={structuralRole.value} value={structuralRole.value}>
+            {structuralRole.label}
+          </SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
+  );
+
+  const departmentSelect = (
+    <Select value={departmentId} onValueChange={onDepartmentChange}>
+      <SelectTrigger
+        aria-label="Filter users by department"
+        className={slot === "more" ? menuTriggerClass : selectTriggerClass}
+      >
+        <SelectValue />
+      </SelectTrigger>
+      <SelectContent className="min-w-[var(--radix-select-trigger-width)]">
+        <SelectItem value="all">All departments</SelectItem>
+        {departments.map((department) => (
+          <SelectItem key={department.id} value={String(department.id)}>
+            {department.name}
+          </SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
+  );
+
+  const branchSelect = (
+    <Select value={branchId} onValueChange={onBranchChange}>
+      <SelectTrigger
+        aria-label="Filter users by branch"
+        className={slot === "more" ? menuTriggerClass : selectTriggerClass}
+      >
+        <SelectValue />
+      </SelectTrigger>
+      <SelectContent className="min-w-[var(--radix-select-trigger-width)]">
+        <SelectItem value="all">All branches</SelectItem>
+        {branches.map((branch) => (
+          <SelectItem key={branch.id} value={String(branch.id)}>
+            {branch.name}
+          </SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
+  );
+
+  if (slot === "primary") {
+    return (
+      <>
+        {statusSelect}
+        {roleSelect}
+      </>
+    );
+  }
+
+  if (slot === "more") {
+    return (
+      <>
+        {departmentSelect}
+        {branchSelect}
+      </>
+    );
+  }
+
   return (
     <>
-      <Select value={status} onValueChange={onStatusChange}>
-        <SelectTrigger aria-label="Filter users by status" className={selectTriggerClass}>
-          <SelectValue />
-        </SelectTrigger>
-        <SelectContent className="min-w-[var(--radix-select-trigger-width)]">
-          <SelectItem value="all">All statuses</SelectItem>
-          <SelectItem value="active">Active</SelectItem>
-          <SelectItem value="suspended">Suspended</SelectItem>
-          <SelectItem value="archived">Archived</SelectItem>
-        </SelectContent>
-      </Select>
-      <Select value={role} onValueChange={onRoleChange}>
-        <SelectTrigger aria-label="Filter users by role" className={selectTriggerClass}>
-          <SelectValue />
-        </SelectTrigger>
-        <SelectContent className="min-w-[var(--radix-select-trigger-width)]">
-          <SelectItem value="all">All roles</SelectItem>
-          {USER_STRUCTURAL_ROLES.map((structuralRole) => (
-            <SelectItem key={structuralRole.value} value={structuralRole.value}>
-              {structuralRole.label}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-      <Select value={departmentId} onValueChange={onDepartmentChange}>
-        <SelectTrigger aria-label="Filter users by department" className={selectTriggerClass}>
-          <SelectValue />
-        </SelectTrigger>
-        <SelectContent className="min-w-[var(--radix-select-trigger-width)]">
-          <SelectItem value="all">All departments</SelectItem>
-          {departments.map((department) => (
-            <SelectItem key={department.id} value={String(department.id)}>
-              {department.name}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-      <Select value={branchId} onValueChange={onBranchChange}>
-        <SelectTrigger aria-label="Filter users by branch" className={selectTriggerClass}>
-          <SelectValue />
-        </SelectTrigger>
-        <SelectContent className="min-w-[var(--radix-select-trigger-width)]">
-          <SelectItem value="all">All branches</SelectItem>
-          {branches.map((branch) => (
-            <SelectItem key={branch.id} value={String(branch.id)}>
-              {branch.name}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
+      {statusSelect}
+      {roleSelect}
+      {departmentSelect}
+      {branchSelect}
     </>
   );
 }

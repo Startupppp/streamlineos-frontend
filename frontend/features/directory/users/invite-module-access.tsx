@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { MANIFEST } from "@/lib/module-manifest";
 import type { ModuleEntry } from "@/lib/module-manifest-schema";
 import { cn } from "@/lib/utils";
@@ -21,13 +22,6 @@ const ADMINISTRABLE_MODULES: readonly ModuleEntry[] = MANIFEST.modules.filter(
 
 type ModuleAccess = NonNullable<InviteUserFormValues["moduleAccess"]>;
 
-/**
- * BUG-HRMS-003. The job roles QA asked for, as quick fills of the Module access
- * matrix rather than a fourth org role (there are three org standings, BE-102).
- * The invite still sends `role` + `moduleAccess`, which the backend already
- * accepts and applies on acceptance, so a preset is never more than the grants
- * it shows — and every row stays editable after it is applied.
- */
 export const INVITE_ACCESS_PRESETS: readonly {
   id: string;
   label: string;
@@ -113,33 +107,21 @@ function ModuleAccessRow({
     [moduleKey, onStandingChange],
   );
   return (
-    <div className="flex min-w-0 items-center justify-between gap-2 py-0.5">
+    <div className="flex items-center justify-between gap-2 py-0.5">
       <span className="min-w-0 truncate text-sm">{displayName}</span>
-      <div
-        role="group"
-        aria-label={`Module access for ${displayName}`}
-        className="inline-flex shrink-0 flex-nowrap items-center gap-0.5"
-      >
-        {MODULE_STANDING_OPTIONS.map((option) => {
-          const selected = currentStanding === option.value;
-          return (
-            <Button
-              key={option.value}
-              type="button"
-              variant={selected ? "default" : "outline"}
-              size="sm"
-              className={cn(
-                "h-7 shrink-0 whitespace-nowrap px-2 text-xs font-normal",
-                selected && "pointer-events-none",
-              )}
-              aria-pressed={selected}
-              onClick={() => handleChange(option.value)}
-            >
-              {option.label}
-            </Button>
-          );
-        })}
-      </div>
+      <Select value={currentStanding} onValueChange={handleChange}>
+        <SelectTrigger
+          className="h-8 w-[7.25rem] shrink-0 text-xs"
+          aria-label={`Module access for ${displayName}`}
+        >
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="NONE">No access</SelectItem>
+          <SelectItem value="MEMBER">Member</SelectItem>
+          <SelectItem value="ADMIN">Admin</SelectItem>
+        </SelectContent>
+      </Select>
     </div>
   );
 }
@@ -188,66 +170,72 @@ export function ModuleAccessSection({ field }: ModuleAccessSectionProps) {
 
   return (
     <div className="min-w-0 space-y-2.5">
-      <div
-        className="flex w-full min-w-0 max-w-full flex-nowrap items-center gap-1 overflow-x-auto overscroll-x-contain scrollbar-hide touch-pan-x"
-        role="group"
-        aria-label="Access presets"
-      >
-        {INVITE_ACCESS_PRESETS.map((preset) => {
-          const selected = preset.id === activePresetId;
-          return (
-            <Button
-              key={preset.id}
-              type="button"
-              variant={selected ? "default" : "outline"}
-              size="sm"
-              className={cn(
-                "h-7 w-auto shrink-0 whitespace-nowrap px-2 text-xs font-normal",
-                selected && "pointer-events-none",
-              )}
-              aria-pressed={selected}
-              onClick={handlePreset(preset.access)}
-            >
-              {preset.label}
-            </Button>
-          );
-        })}
-      </div>
+      <ScrollArea orientation="horizontal" className="w-full min-w-0 pb-1">
+        <div
+          className="flex w-max min-w-full flex-nowrap items-center gap-1"
+          role="group"
+          aria-label="Access presets"
+        >
+          {INVITE_ACCESS_PRESETS.map((preset) => {
+            const selected = preset.id === activePresetId;
+            return (
+              <Button
+                key={preset.id}
+                type="button"
+                variant={selected ? "default" : "outline"}
+                size="sm"
+                className={cn(
+                  "h-7 w-auto shrink-0 whitespace-nowrap px-2 text-xs font-normal",
+                  selected && "pointer-events-none",
+                )}
+                aria-pressed={selected}
+                onClick={handlePreset(preset.access)}
+              >
+                {preset.label}
+              </Button>
+            );
+          })}
+        </div>
+      </ScrollArea>
 
       {includedModules.length > 0 ? (
-        <div className="flex w-full min-w-0 max-w-full flex-nowrap items-center gap-1 overflow-x-auto overscroll-x-contain scrollbar-hide touch-pan-x">
-          <span className="shrink-0 text-micro text-muted-foreground">
-            Included
-          </span>
-          {includedModules.map((mod) => (
-            <Badge
-              key={mod.id}
-              variant="outline"
-              className="h-5 shrink-0 whitespace-nowrap px-1.5 py-0 text-micro font-normal"
-              aria-label={`Module access for ${mod.displayName}: included for every member`}
-            >
-              {mod.displayName}
-            </Badge>
-          ))}
-        </div>
+        <ScrollArea orientation="horizontal" className="w-full min-w-0 pb-1">
+          <div className="flex w-max min-w-full flex-nowrap items-center gap-1">
+            <span className="shrink-0 text-micro text-muted-foreground">
+              Included
+            </span>
+            {includedModules.map((mod) => (
+              <Badge
+                key={mod.id}
+                variant="outline"
+                className="h-5 shrink-0 whitespace-nowrap px-1.5 py-0 text-micro font-normal"
+                aria-label={`Module access for ${mod.displayName}: included for every member`}
+              >
+                {mod.displayName}
+              </Badge>
+            ))}
+          </div>
+        </ScrollArea>
       ) : null}
 
-      <div className="max-h-36 space-y-0.5 overflow-y-auto pr-0.5">
-        {gatedModules.map((mod) => {
-          const entry = (field.value ?? []).find(
-            (item) => item.moduleKey === mod.id,
-          );
-          return (
-            <ModuleAccessRow
-              key={mod.id}
-              moduleKey={mod.id}
-              displayName={mod.displayName}
-              currentStanding={entry?.standing ?? "NONE"}
-              onStandingChange={handleStandingChange}
-            />
-          );
-        })}
-      </div>
+      <ScrollArea className="h-36 w-full min-w-0 pr-1">
+        <div className="space-y-0.5">
+          {gatedModules.map((mod) => {
+            const entry = (field.value ?? []).find(
+              (item) => item.moduleKey === mod.id,
+            );
+            return (
+              <ModuleAccessRow
+                key={mod.id}
+                moduleKey={mod.id}
+                displayName={mod.displayName}
+                currentStanding={entry?.standing ?? "NONE"}
+                onStandingChange={handleStandingChange}
+              />
+            );
+          })}
+        </div>
+      </ScrollArea>
     </div>
   );
 }

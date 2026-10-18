@@ -53,4 +53,19 @@ describe("PageTabsToolbar responsive layout", () => {
     expect(screen.queryByRole("button", { name: "Filters" })).not.toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Status" })).toBeInTheDocument();
   });
+
+  it("keeps primary filters inline and parks the rest behind Filters", () => {
+    render(
+      <PageTabsToolbar
+        tabs={<button type="button">List</button>}
+        primaryFilters={<button type="button">Status</button>}
+        filters={<button type="button">Department</button>}
+      />,
+    );
+
+    expect(screen.getByRole("button", { name: "Status" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Filters" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Filters" })).not.toHaveClass("md:hidden");
+    expect(screen.queryByRole("button", { name: "Department" })).not.toBeInTheDocument();
+  });
 });

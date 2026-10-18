@@ -295,7 +295,7 @@ export function UserInviteDialog({
                   control={form.control}
                   name="moduleAccess"
                   render={({ field }) => (
-                    <FormItem>
+                    <FormItem className="min-w-0">
                       <FormLabel>Module access</FormLabel>
                       <ModuleAccessSection field={field} />
                       <FormMessage />
