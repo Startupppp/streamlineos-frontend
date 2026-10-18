@@ -17,8 +17,9 @@ const ClockInWidget = dynamic(
     import("@/components/attendance/clock-in-widget").then((m) => ({
       default: m.ClockInWidget,
     })),
-  { ssr: false },
+  { ssr: false, loading: ClockInWidgetSkeleton },
 );
+import { ClockInWidgetSkeleton } from "@/components/attendance/clock-in-widget-skeleton";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { usePageState } from "@/hooks/api/use-page-state";
 import { PageState } from "@/components/shared/page-state";

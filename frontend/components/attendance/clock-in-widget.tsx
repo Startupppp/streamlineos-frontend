@@ -1,6 +1,7 @@
 "use client";
 
 import { Button } from "../ui/button";
+import { ClockInWidgetSkeleton } from "./clock-in-widget-skeleton";
 import { useState, useEffect, useMemo, useCallback } from "react";
 import {
   useHrAttendanceStatus,
@@ -72,8 +73,7 @@ export function ClockInWidget() {
     }
   }, [isCheckedIn, isOnBreak, isInCooldown, checkOutMutation, checkInMutation]);
 
-  const isPending =
-    checkInMutation.isPending || checkOutMutation.isPending || isLoading;
+  const isPending = checkInMutation.isPending || checkOutMutation.isPending;
 
   const formatCooldown = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
@@ -93,6 +93,8 @@ export function ClockInWidget() {
   }, [now, statusData?.todayLog]);
 
   const dailyStats = statusData?.dailyStats;
+
+  if (isLoading) return <ClockInWidgetSkeleton />;
 
   return (
     <div className="flex items-center gap-6">
@@ -134,7 +136,7 @@ export function ClockInWidget() {
             ? "outline"
             : isInCooldown
               ? "secondary"
-              : "destructive"
+              : "default"
         }
         disabled={isPending || isInCooldown}
         onClick={handleClockAction}
@@ -143,7 +145,7 @@ export function ClockInWidget() {
             ? "bg-background text-foreground border-border hover:bg-accent hover:text-accent-foreground"
             : isInCooldown
               ? "bg-muted text-muted-foreground cursor-not-allowed"
-              : "bg-status-danger-fill hover:bg-status-danger-fill-hover text-white shadow-red-900/20"
+              : ""
         }`}
       >
         {isPending ? (
