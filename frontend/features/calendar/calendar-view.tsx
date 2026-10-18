@@ -183,6 +183,7 @@ export function CalendarView() {
   const debouncedListSearch = useDebouncedValue(listSearch, 300);
   const router = useRouter();
   const searchParams = useSearchParams();
+  const sourceFilterParam = searchParams.get("sourceFilter");
   const {
     currentDate,
     setCurrentDate,
@@ -218,6 +219,20 @@ export function CalendarView() {
     handleOpenAccounts,
     handleCloseAccounts,
   } = useCalendarViewState();
+  const listSource = viewMode === "list" && sourceFilterParam && sourceFilterParam.length <= 100 ? sourceFilterParam : "";
+  const listQuery = viewMode === "list" ? debouncedListSearch.trim().slice(0, 200) : "";
+  const listFilter = useMemo(
+    () => (listQuery || listSource ? { q: listQuery || undefined, sourceKey: listSource || undefined } : undefined),
+    [listQuery, listSource],
+  );
+  const handleListSourceChange = useCallback(
+    (value: string) =>
+      router.replace(
+        calendarUrl(new URLSearchParams(searchParams.toString()), { sourceFilter: value === "all" ? null : value }),
+        { scroll: false },
+      ),
+    [router, searchParams],
+  );
 
   const updateEvent = useUpdateCalendarEvent();
 
@@ -327,6 +342,7 @@ export function CalendarView() {
       viewMode !== "history" &&
       viewMode !== "my-day" &&
       !savedFilterId,
+    listFilter,
   );
   const myDayStart = startOfDay(currentDate);
   const myDayWindow = selectedSavedView
@@ -441,6 +457,16 @@ export function CalendarView() {
     error: connectionsError,
     refetch: refetchConnections,
   } = useCalendarConnections(calendarModuleEnabled);
+  const listSourceOptions = useMemo(
+    () => [
+      ...(calendarSources ?? []).filter((source) => source.enabled).map((source) => ({ value: source.key, label: source.label })),
+      ...connections.map((connection) => ({
+        value: `external:${connection.toolkit}:${connection.id}`,
+        label: connection.accountEmail ?? (connection.toolkit === "outlook" ? "Outlook" : "Google Calendar"),
+      })),
+    ],
+    [calendarSources, connections],
+  );
   const savedGridEvents = useMemo(
     () => visibleSearchEvents.map((event) => toBigCalEvent(event, connections)),
     [connections, visibleSearchEvents],
@@ -620,13 +646,15 @@ export function CalendarView() {
     crmVisible: crmEventsVisible,
     attendanceVisible: attendanceEventsVisible,
   });
-  const listSearchTerm = debouncedListSearch.trim().toLowerCase();
+  const listSearchTerm = listQuery.toLowerCase();
   const listFilteredEvents = useMemo(
     () =>
-      listSearchTerm
-        ? visibleEvents.filter((e) => e.title.toLowerCase().includes(listSearchTerm))
+      listSearchTerm || listSource
+        ? visibleEvents.filter((e) =>
+            (!listSearchTerm || e.title.toLowerCase().includes(listSearchTerm)) &&
+            (!listSource || e.sourceKey === listSource))
         : visibleEvents,
-    [listSearchTerm, visibleEvents],
+    [listSearchTerm, listSource, visibleEvents],
   );
   const surfaceEvents =
     viewMode === "history"
@@ -1034,6 +1062,9 @@ export function CalendarView() {
                 mode={viewMode}
                 search={savedViewActive ? myDaySearch : viewMode === "list" ? listSearch : undefined}
                 onSearchChange={savedViewActive ? setMyDaySearch : viewMode === "list" ? setListSearch : setMyDaySearch}
+                sources={viewMode === "list" && !savedViewActive ? listSourceOptions : undefined}
+                source={listSource}
+                onSourceChange={handleListSourceChange}
               />
             ) : null
           }

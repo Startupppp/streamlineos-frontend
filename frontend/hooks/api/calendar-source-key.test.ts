@@ -4,6 +4,7 @@ import { useCan, usePermissionGate } from "@/hooks/api/access";
 import { queryKeys } from "@/lib/query-keys";
 import { partialMatchKey } from "@tanstack/react-query";
 import type { QueryKey } from "@tanstack/react-query";
+import { apiClient } from "@/lib/api-client";
 import { useCalendarEvents, useCalendarSources } from "./calendar";
 
 jest.mock("@tanstack/react-query", () => ({
@@ -105,5 +106,45 @@ describe("the calendar events key fires immediately on permission", () => {
     const sources = mockQuery.mock.calls.at(-1)?.[0] as { enabled: boolean };
 
     expect(sources.enabled).toBe(false);
+  });
+});
+
+describe("CAL-B-026 the events read carries the title search and source filter to the server", () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    mockCan.mockReturnValue(true);
+    mockGate.mockReturnValue({ allowed: true, pending: false, unavailable: false });
+    mockQuery.mockImplementation((opts: unknown) => opts);
+  });
+
+  function captureFiltered(filter?: { q?: string; sourceKey?: string }) {
+    renderHook(function useFilteredEventsProbe() {
+      return useCalendarEvents(START, END, true, filter);
+    });
+    const call = mockQuery.mock.calls
+      .map((c) => c[0] as CapturedOptions & { queryFn: (ctx: { signal: AbortSignal }) => Promise<unknown> })
+      .find((o) => o.queryKey.includes("events"));
+    if (!call) throw new Error("useCalendarEvents did not open a query");
+    return call;
+  }
+
+  it("sends q and sourceKey and keys the window by the filter", async () => {
+    const opts = captureFiltered({ q: "QA1015R3", sourceKey: "calendar-events" });
+    await opts.queryFn({ signal: new AbortController().signal });
+
+    const params = (apiClient.get as jest.Mock).mock.calls[0]?.[1];
+    expect(params).toMatchObject({ q: "QA1015R3", sourceKey: "calendar-events" });
+    expect(opts.queryKey).toContainEqual({ q: "QA1015R3", sourceKey: "calendar-events" });
+    expect(partialMatchKey(opts.queryKey as QueryKey, queryKeys.calendar.eventsAll as QueryKey)).toBe(true);
+  });
+
+  it("sends neither param when no filter is set", async () => {
+    const opts = captureFiltered();
+    await opts.queryFn({ signal: new AbortController().signal });
+
+    const params = (apiClient.get as jest.Mock).mock.calls[0]?.[1];
+    expect(params).not.toHaveProperty("q");
+    expect(params).not.toHaveProperty("sourceKey");
+    expect(params).toHaveProperty("start", START.toISOString());
   });
 });

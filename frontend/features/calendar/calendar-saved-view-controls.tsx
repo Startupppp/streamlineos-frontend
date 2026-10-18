@@ -36,12 +36,18 @@ export function CalendarSavedViewControls({
   mode,
   search,
   onSearchChange,
+  sources,
+  source,
+  onSourceChange,
 }: {
   selectedId: string | null;
   currentDate: Date;
   mode: "calendar" | "list" | "my-day";
   search?: string;
   onSearchChange?: (value: string) => void;
+  sources?: ReadonlyArray<{ value: string; label: string }>;
+  source?: string;
+  onSourceChange?: (value: string) => void;
 }) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -178,6 +184,21 @@ export function CalendarSavedViewControls({
           className="h-9 min-w-40 max-w-64 text-sm"
           maxLength={200}
         />
+      ) : null}
+      {sources && onSourceChange ? (
+        <Select value={source || "all"} onValueChange={onSourceChange}>
+          <SelectTrigger aria-label="Filter by calendar source" className="h-9 w-44 text-sm">
+            <SelectValue placeholder="All sources" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All sources</SelectItem>
+            {sources.map((option) => (
+              <SelectItem key={option.value} value={option.value}>
+                {option.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       ) : null}
       {query.isError ? <div role="alert" className="text-xs text-destructive">Saved views are unavailable. <Button type="button" size="sm" variant="ghost" onClick={() => { void query.refetch(); }}>Retry</Button></div> : null}
       {canWrite ? (

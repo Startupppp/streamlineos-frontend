@@ -116,7 +116,7 @@ export function useCalendarMemberLookup({
 
 // ---- Range-list hooks ----
 
-export function useCalendarEvents(start: Date, end: Date, enabled = true) {
+export function useCalendarEvents(start: Date, end: Date, enabled = true, filter?: { q?: string; sourceKey?: string }) {
   const qc = useQueryClient();
   const { data: session, status: sessionStatus } = useSession();
   const orgId = session?.orgId ?? "";
@@ -167,12 +167,15 @@ export function useCalendarEvents(start: Date, end: Date, enabled = true) {
       end.toISOString(),
       undefined,
       timeZone,
+      filter,
     ),
     queryFn: async ({ signal }) => {
       const result = await apiClient.get<CalendarEventsResponse>("/calendar/events", {
         start: start.toISOString(),
         end: end.toISOString(),
         timeZone,
+        ...(filter?.q ? { q: filter.q } : {}),
+        ...(filter?.sourceKey ? { sourceKey: filter.sourceKey } : {}),
       }, signal, calendarEventsResponseContract);
       return result;
     },
@@ -203,7 +206,7 @@ export function useCalendarEvents(start: Date, end: Date, enabled = true) {
       if (activeIdentity) void clearOfflineCalendarSnapshot().catch(() => undefined);
       return;
     }
-    if (offlinePolicy.data?.enabled && offlinePolicy.isFetchedAfterMount && !offlinePolicy.isFetching && !offlinePolicy.isError && eventsQuery.data && eventsQuery.isSuccess && eventsQuery.isFetchedAfterMount && !eventsQuery.isFetching && !eventsQuery.isError && eventsQuery.dataUpdatedAt > 0 && orgId && userId && canView && navigator.onLine) {
+    if (!filter?.q && !filter?.sourceKey && offlinePolicy.data?.enabled && offlinePolicy.isFetchedAfterMount && !offlinePolicy.isFetching && !offlinePolicy.isError && eventsQuery.data && eventsQuery.isSuccess && eventsQuery.isFetchedAfterMount && !eventsQuery.isFetching && !eventsQuery.isError && eventsQuery.dataUpdatedAt > 0 && orgId && userId && canView && navigator.onLine) {
       const identity = `${orgId}:${userId}`;
       if (!allowOfflineCalendarPolicy(identity, offlinePolicy.data.version)) return;
       try {
@@ -213,7 +216,7 @@ export function useCalendarEvents(start: Date, end: Date, enabled = true) {
       void saveOfflineCalendarSnapshot(identity, start, end, eventsQuery.data, offlinePolicy.data, timeZone, eventsQuery.dataUpdatedAt).catch(() => undefined);
       if ("serviceWorker" in navigator) void navigator.serviceWorker.register("/sw.js").catch(() => undefined);
     }
-  }, [offlinePolicy.data, offlinePolicy.isError, offlinePolicy.isFetching, offlinePolicy.isFetchedAfterMount, eventsQuery.data, eventsQuery.dataUpdatedAt, eventsQuery.isSuccess, eventsQuery.isFetchedAfterMount, eventsQuery.isFetching, eventsQuery.isError, orgId, userId, canView, start, end, timeZone]);
+  }, [offlinePolicy.data, offlinePolicy.isError, offlinePolicy.isFetching, offlinePolicy.isFetchedAfterMount, eventsQuery.data, eventsQuery.dataUpdatedAt, eventsQuery.isSuccess, eventsQuery.isFetchedAfterMount, eventsQuery.isFetching, eventsQuery.isError, orgId, userId, canView, start, end, timeZone, filter?.q, filter?.sourceKey]);
   return eventsQuery;
 }
 

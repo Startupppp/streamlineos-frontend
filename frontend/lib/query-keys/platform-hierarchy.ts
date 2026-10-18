@@ -13,8 +13,11 @@ export const platformHierarchyQueryKeys = {
       end: string,
       sources?: readonly string[],
       timeZone?: string,
+      filter?: { q?: string; sourceKey?: string },
     ) =>
-      sources === undefined
+      filter?.q || filter?.sourceKey
+        ? ([...base, "calendar", "events", orgId, userId, start, end, timeZone ?? null, { q: filter.q ?? null, sourceKey: filter.sourceKey ?? null }] as const)
+        : sources === undefined
         ? (timeZone === undefined
             ? ([...base, "calendar", "events", orgId, userId, start, end] as const)
             : ([...base, "calendar", "events", orgId, userId, start, end, timeZone] as const))
