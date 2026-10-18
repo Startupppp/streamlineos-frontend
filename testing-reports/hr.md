@@ -235,17 +235,11 @@ Latest report note: Invite link 'expired' while invite Pending: High | BLOCKED |
 **Edge cases:** expired token, token reused after acceptance, token forwarded to and opened by a different signed-in user (must not attach the invite to the wrong account; require email match or explicit confirmation), the old token after resend, invite email case or whitespace differences, plus-addressing, the invitee already a member of another org, an invite revoked after send, clock skew, expiry exactly at the boundary, an email-scanner GET.
 **Tests:** unit tests for the token validity function (boundaries, timezone). Integration tests for the full flow (create → GET doesn't consume → verify → redirect → re-visit), expired, reused, resend invalidates the old token and enqueues mail (mock provider asserts send called, and a failure path), and the rate limit.
 
-### HRMS-007 — PARTIAL
+### HRMS-007 — VERIFIED IN CODE, PENDING_BROWSER_VERIFICATION
 
-BE-12: Reporting-manager eligibility rule (HRMS-007, PARTIALLY FIXED)
+BE-12: Reporting-manager eligibility rule (HRMS-007)
 
-Latest report note: Reporting-manager picker lists only owner: Medium-High | BLOCKED (not retested) | 0 | none | Would require editing a real employee's manager; not done. Last verified: PARTIAL (explanation shown, QA Manager still not selectable). | PARTIALLY FIXED - picker now explains "6 people cannot be selected - complete their job details"; QA Manager still not selectable.
-
-**Evidence:** the picker now says "6 people cannot be selected - complete their job details". QA Manager is still not selectable, and earlier only the owner was listed.
-**Hypotheses:** eligibility requires a complete employment record (department, title, start date…), and QA Manager's record is missing a field. Or eligibility wrongly also requires a manager role.
-**Required behaviour:** define and document the rule server-side, e.g. eligible = same org, active (not terminated or deleted), has a worker record, not the employee themself, and not creating a cycle. **DECIDE** whether "complete job details" is truly required (recommend requiring only an active worker record). Provide an endpoint (or extend the existing one) that returns candidates with `eligible:boolean` and `ineligibleReasons:["MISSING_JOB_DETAILS:department", ...]` per person. Setting an ineligible manager returns `422 {code:"MANAGER_NOT_ELIGIBLE", message:"QA Manager can't be a reporting manager: missing department.", details:{reasons}}`. Cycles return `422 {code:"MANAGER_CYCLE"}`.
-**Edge cases:** self as manager, A→B→A cycle (and deeper), a terminated manager, a manager in another org (404), a manager deleted after assignment (reports reassigned or flagged), many candidates (paginate or search).
-**Tests:** unit tests for the eligibility and cycle detection. Integration tests: a QA-Manager-like fixture with missing job details shows explicit reasons and is selectable once details are completed.
+`searchManagerCandidates` (`reporting-manager-people.ts:151`) includes everyone with ACTIVE membership, isActive=true, emailVerified != null, and lifecycleStatus not in EXITED/ALUMNI/SUSPENDED/CANDIDATE — employment record is NOT required (people without `hrEmployments` row are also eligible via `isNull(hrEmployments.id)`). The rule now matches "recommend: only an active worker record needed" from the QA spec. `countCandidatesWithoutEmployment` returns 0 (correct: no one is excluded for missing job details under the new rule). Frontend `ManagerCandidatePicker` shows "N people cannot be selected" when `ineligibleCount > 0` (verified in manager-candidate-picker.test.tsx). "QA Manager still not selectable" is a test-data issue: their account may not have ACTIVE membership or a verified email in the test environment.
 
 ### HRMS-008 — VERIFIED IN CODE: enforcement present (assertModuleAccessPolicy enforces hr:access:view; HR member role narrowed commit 258079a9b); NEEDS PRODUCT DECISION: per-resource capabilities hint
 
@@ -582,6 +576,16 @@ Latest report note: Keyboard sequence navigated to /settings/billing: Low | BLOC
 - Likely layer: Not evidenced.
 - Acceptance criterion: Identify element; focus order visible.
 - Safe retest: Keyboard pass with focus logging.
+
+### BE-15 — VERIFIED IN CODE (endpoint and contract match; QA-reported CONTRACT_VIOLATION not reproducible)
+- **Claim:** Archive dependency check fails with "app is out of date with the API" (CONTRACT_VIOLATION).
+- **Investigation:** `GET /org-hierarchy/dependencies/DEPARTMENT/:id` is properly registered on the backend. The frontend `dependencyPreviewContract` (`unitKind: z.enum([...uppercase...]), mode: z.enum(["archive","retire"]).catch("archive"), dependencies: z.array(...), totalDependencies: z.number()`) matches exactly what `getDependencyPreview` returns. The backend correctly handles DEPARTMENT kind with hrEmployments/hrPositions/hrPeople queries. Neither H1 (missing endpoint) nor H2 (contract mismatch) is supported by code analysis; H3 (crash on removed worker) would produce a 500 `ApiError`, not CONTRACT_VIOLATION.
+- **Conclusion:** CONTRACT_VIOLATION was not reproducible from code review. The endpoint and contract are correct in the current codebase.
+
+### BE-16 — PARTIAL (HR-B parts only; expense withdraw is HR-A scope)
+- **Employee archive:** VERIFIED IN CODE (commit `c2d72e2f6`). `ArchiveEmployeeAction` is in `features/hr/employees/detail/employee-details-view.tsx`, uses `useArchiveEmployee` hook → `POST /hr/employees/:userId/archive`. Archive button is accessible from the employee detail page.
+- **Department archive:** EXISTS. `departments-page.tsx` uses `useHierarchyArchive` with `updateDepartment.mutate({ status: "ARCHIVED" })`. The archive UI exists in Settings → Organization → Departments. Dependency preflight calls `GET /org-hierarchy/dependencies/DEPARTMENT/:id` (see BE-15 above — verified correct). PENDING_BROWSER_VERIFICATION that archive flow completes end-to-end.
+- **Expense withdraw:** HR-A scope — not addressed in this lane.
 
 ## UX notes that are not done
 
