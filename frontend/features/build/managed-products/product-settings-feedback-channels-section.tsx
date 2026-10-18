@@ -25,7 +25,7 @@ export function ProductSettingsFeedbackChannelsSection({
   managedProductId,
 }: ProductSettingsFeedbackChannelsSectionProps) {
   const [collectOpen, setCollectOpen] = useState(false);
-  const feedbucketEnabled = useModuleEnabled("feedbucket");
+  const feedbucketEnabled = useModuleEnabled("build");
   const pager = useBuildCursorPager(
     String(managedProductId),
     PRODUCT_WIDGET_CURSORS_PARAM,

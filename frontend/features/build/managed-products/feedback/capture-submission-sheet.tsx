@@ -51,7 +51,7 @@ export function CaptureSubmissionSheet({
 }: CaptureSubmissionSheetProps) {
   const qc = useQueryClient();
   const capture = useCaptureSubmission();
-  const feedbucketEnabled = useModuleEnabled("feedbucket");
+  const feedbucketEnabled = useModuleEnabled("build");
 
   const handleSubmit = (values: CaptureSubmissionFormValues) => {
     capture.mutate(

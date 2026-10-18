@@ -239,7 +239,7 @@ export function InsightFeedbackPanel({
   managedProductId,
   insights,
 }: InsightPanelProps) {
-  const feedbucketEnabled = useModuleEnabled("feedbucket");
+  const feedbucketEnabled = useModuleEnabled("build");
   if (!feedbucketEnabled) {
     return (
       <section aria-label="Customer response" className="rounded-xl border border-border bg-card p-5">

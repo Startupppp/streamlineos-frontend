@@ -32,7 +32,7 @@ interface WidgetListParams {
 }
 
 export function useFeedbucketWidgets(params?: WidgetListParams) {
-  const feedbucketEnabled = useModuleEnabled("feedbucket");
+  const feedbucketEnabled = useModuleEnabled("build");
   const queryParams = params !== undefined
     ? (Object.fromEntries(
         Object.entries(params).filter(([, v]) => v !== undefined),

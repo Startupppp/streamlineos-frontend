@@ -11,7 +11,10 @@ import type { PermissionKey } from "@/lib/rbac/permissions";
 import { toBuildNavGroups } from "@/lib/build/build-nav-groups";
 import { resolveBuildNavModel } from "@/lib/build/build-nav-model";
 import { resolveBuildScope } from "@/lib/build/build-scope";
-import type { BuildNavCapability } from "@/lib/build/nav/build-nav-destination";
+import {
+  BUILD_FEEDBACK_ORG_MODULE,
+  type BuildNavCapability,
+} from "@/lib/build/nav/build-nav-destination";
 import {
   getNavGroupsForProduct,
   shouldHideProductSidebar,
@@ -23,7 +26,6 @@ import {
   type ProductKey,
 } from "./sidebar-nav-items";
 
-const BUILD_FEEDBACK_ORG_MODULE = "feedbucket";
 const EMPTY_PINS: readonly string[] = [];
 
 export function useProductSidebarVisibility(): {

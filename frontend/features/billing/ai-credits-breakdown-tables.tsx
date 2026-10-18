@@ -56,7 +56,7 @@ function BreakdownPanel({
   const peak = rows.reduce((max, row) => Math.max(max, row.credits), 0);
 
   return (
-    <div className="flex h-full min-w-0 flex-col overflow-hidden rounded-xl border border-border bg-card">
+    <div className="flex min-w-0 flex-col overflow-hidden rounded-xl border border-border bg-card">
       <div className="shrink-0 border-b border-border px-4 py-3">
         <p className="text-sm font-semibold text-foreground">{title}</p>
       </div>

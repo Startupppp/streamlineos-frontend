@@ -58,8 +58,8 @@ export function ProductFeedbackPage({
   const canUpdateSubmission = useCan("feedbucket:submissions:update");
   const canDeleteSubmission = useCan("feedbucket:submissions:delete");
   const canRouteToIntake = useCan("feedbucket:submissions:manage");
-  const feedbucketEnabled = useModuleEnabled("feedbucket");
-  const feedbucketGate = usePageState({ module: "feedbucket", isLoading: false, isError: false });
+  const feedbucketEnabled = useModuleEnabled("build");
+  const feedbucketGate = usePageState({ module: "build", isLoading: false, isError: false });
   const canCapture = useCan("feedbucket:submissions:manage") && feedbucketEnabled;
   const intakeRouting = useRouteToIntake();
 

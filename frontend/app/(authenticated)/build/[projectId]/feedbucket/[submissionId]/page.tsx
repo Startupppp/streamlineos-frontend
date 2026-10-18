@@ -14,7 +14,7 @@ export default async function ProjectFeedbackSubmissionRoute({ params }: PagePro
   const backHref = `/build/${projectId}/feedbucket`;
 
   return (
-    <RequireModule module="feedbucket">
+    <RequireModule module="build">
       <PageWrapper title="Submission" backHref={backHref}>
         <FeedbucketSubmissionDetail submissionId={id} backHref={backHref} />
       </PageWrapper>

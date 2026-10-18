@@ -75,7 +75,7 @@ describe("ProductFeedbackPage — Feedbucket module switched off", () => {
   it("hides the capture actions and does not read submissions when the module is disabled", () => {
     const { useModuleEnabled } = jest.requireMock("@/hooks/api/access") as { useModuleEnabled: jest.Mock };
     useModuleEnabled.mockReturnValue(false);
-    usePageState.mockReturnValue({ kind: "module-disabled", moduleKey: "feedbucket" });
+    usePageState.mockReturnValue({ kind: "module-disabled", moduleKey: "build" });
     useFeedbucketSubmissions.mockReturnValue(EMPTY_FEEDBUCKET_RESULT);
 
     render(<ProductFeedbackPage managedProductId={7} />);

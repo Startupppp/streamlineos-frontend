@@ -325,7 +325,7 @@ export const ROUTE_ACCESS_EXTENSIONS: readonly RouteAccessExtension[] = [
     product: "build",
     permission: "feedbucket:widgets:view",
     reason:
-      "Feedbucket widget administration inside a project. The key is the one its own first read declares; the Feedbucket module toggle is enforced separately by the backend module guard.",
+      "Feedbucket widget administration inside a project. The key is the one its own first read declares; the Build module toggle is enforced separately by the backend module guard.",
     backendRoute: { method: "get", path: "/feedbucket/widgets" },
   },
   {

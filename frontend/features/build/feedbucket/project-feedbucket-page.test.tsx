@@ -136,7 +136,7 @@ describe("ProjectFeedbucketPage — permission gating via usePageState, not bare
   });
 
   it("renders Access Restricted for module-disabled so an org without the feedbucket module sees the correct state", () => {
-    mockUsePageState.mockReturnValue({ kind: "module-disabled", moduleKey: "feedbucket" });
+    mockUsePageState.mockReturnValue({ kind: "module-disabled", moduleKey: "build" });
 
     render(<ProjectFeedbucketPage projectId={1} />);
 
@@ -167,7 +167,7 @@ describe("ProjectFeedbucketPage — permission gating via usePageState, not bare
     render(<ProjectFeedbucketPage projectId={1} />);
 
     expect(mockUsePageState).toHaveBeenCalledWith(
-      expect.objectContaining({ module: "feedbucket" }),
+      expect.objectContaining({ module: "build" }),
     );
   });
 });

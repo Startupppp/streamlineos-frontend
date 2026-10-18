@@ -60,7 +60,7 @@ export function AiCreditsDailyTable({ data, isLoading, className }: AiCreditsDai
   return (
     <div
       className={cn(
-        "overflow-hidden rounded-xl border border-border bg-card",
+        "shrink-0 overflow-hidden rounded-xl border border-border bg-card",
         className,
       )}
     >
@@ -82,7 +82,7 @@ export function AiCreditsDailyTable({ data, isLoading, className }: AiCreditsDai
           data={sorted}
           columns={DAILY_COLUMNS}
           getRowKey={getDailyRowKey}
-          className="rounded-none border-0"
+          className="h-auto flex-none rounded-none border-0"
         />
       )}
     </div>

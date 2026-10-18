@@ -49,7 +49,7 @@ export function ProjectFeedbucketPage({
 
   const pageState = usePageState({
     permission: "feedbucket:submissions:view",
-    module: "feedbucket",
+    module: "build",
     isLoading: widgetsLoading,
     isError: widgetsError,
     error: widgetsErrorValue,

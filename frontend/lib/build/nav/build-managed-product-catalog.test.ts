@@ -43,7 +43,7 @@ describe("buildManagedProductCatalog (BSN-01-032)", () => {
 
   it("gates Feedback behind the feedbucket org module so it is hidden when feedbucket is not enabled (BSN-01-012)", () => {
     const feedbackEntry = catalog.primary.find((d) => d.id === "product-feedback");
-    expect(feedbackEntry?.requiredOrgModule).toBe("feedbucket");
+    expect(feedbackEntry?.requiredOrgModule).toBe("build");
   });
 
   it("includes an Insights destination scoped to the product base path (BSN-01-022)", () => {

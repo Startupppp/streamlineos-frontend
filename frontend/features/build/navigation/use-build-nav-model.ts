@@ -9,15 +9,14 @@ import {
   resolveAuthorizedToolIds,
   resolveBuildNavModel,
 } from "@/lib/build/build-nav-model";
-import type {
-  BuildNavAccess,
-  BuildNavCapability,
-  BuildNavModel,
+import {
+  BUILD_FEEDBACK_ORG_MODULE,
+  type BuildNavAccess,
+  type BuildNavCapability,
+  type BuildNavModel,
 } from "@/lib/build/nav/build-nav-destination";
 import { resolveBuildScope, type BuildScope } from "@/lib/build/build-scope";
 import { useBuildNavPins } from "./use-build-nav-preferences";
-
-const FEEDBACK_ORG_MODULE = "feedbucket";
 
 function useBuildScope(): BuildScope {
   const pathname = usePathname() ?? "";
@@ -40,7 +39,7 @@ export function useBuildNavModel(): {
 } {
   const scope = useBuildScope();
   const { data: access, isError: isAccessQueryError, refetch: refetchAccess } = useAccess();
-  const isFeedbackEnabled = useModuleEnabled(FEEDBACK_ORG_MODULE);
+  const isFeedbackEnabled = useModuleEnabled(BUILD_FEEDBACK_ORG_MODULE);
   const { data: activeProject } = useProject(scope.projectId ?? 0);
   const projectFeatures = activeProject?.settings?.features;
 
@@ -55,7 +54,7 @@ export function useBuildNavModel(): {
 
   const isOrgModuleEnabled = useCallback(
     (orgModuleKey: string) =>
-      orgModuleKey === FEEDBACK_ORG_MODULE ? isFeedbackEnabled : true,
+      orgModuleKey === BUILD_FEEDBACK_ORG_MODULE ? isFeedbackEnabled : true,
     [isFeedbackEnabled],
   );
 

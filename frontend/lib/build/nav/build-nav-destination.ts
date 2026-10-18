@@ -5,7 +5,7 @@ import type { BuildScope } from "../build-scope";
 export const BUILD_NAV_MAX_PINS = 3;
 export const BUILD_NAV_MAX_PRIMARY = 9;
 
-export const BUILD_FEEDBACK_ORG_MODULE = "feedbucket";
+export const BUILD_FEEDBACK_ORG_MODULE = "build";
 
 export type BuildNavBadge = "inbox-unread";
 

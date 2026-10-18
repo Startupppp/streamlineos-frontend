@@ -60,7 +60,7 @@ describe("CaptureSubmissionSheet — module gate", () => {
     );
     expect(capturedOpen).toBe(true);
     expect(screen.getByTestId("sheet-open")).toBeInTheDocument();
-    expect(mockUseModuleEnabled).toHaveBeenCalledWith("feedbucket");
+    expect(mockUseModuleEnabled).toHaveBeenCalledWith("build");
   });
 
   it("blocks the sheet (passes open=false) when feedbucket module is disabled, preventing the form from rendering when the module is off", () => {

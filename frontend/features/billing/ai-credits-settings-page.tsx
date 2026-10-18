@@ -322,11 +322,7 @@ function AiCreditsPageContent() {
                 "min-h-0 overflow-hidden",
               )}
             >
-              <ScrollArea
-                fill
-                hideScrollbar
-                className={SCROLL_AREA_PAGE_BODY_CLASS}
-              >
+              <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain scrollbar-hide">
                 {usageError ? (
                   <ErrorState
                     title="Failed to load usage data"
@@ -336,7 +332,7 @@ function AiCreditsPageContent() {
                     className="rounded-xl border border-border py-8"
                   />
                 ) : (
-                  <div className="flex min-h-full flex-col gap-4 overscroll-contain">
+                  <div className="flex flex-col gap-4 pb-1">
                     <AiCreditsUsageToolbar
                       usageDays={usageDays}
                       usageLoading={usageLoading}
@@ -366,7 +362,7 @@ function AiCreditsPageContent() {
                     />
                   </div>
                 )}
-              </ScrollArea>
+              </div>
             </TabsContent>
 
             <TabsContent

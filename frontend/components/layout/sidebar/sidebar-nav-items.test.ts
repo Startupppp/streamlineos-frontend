@@ -261,7 +261,7 @@ describe("module-gate completeness", () => {
   // These share a permission prefix with admin groups but never gate a nav group.
   const ALWAYS_ENABLED_MODULE_IDS = new Set([
     "billing", "calendar", "directory", "mail", "notifications",
-    "settings", "tasks", "feedbucket",
+    "settings", "tasks",
   ]);
 
   it("every nav group gated on an independently-enabled module permission carries a module property", () => {

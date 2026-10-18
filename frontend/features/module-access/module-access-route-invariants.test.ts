@@ -15,10 +15,7 @@ const ACCESS_MANAGED_MODULES = delegableModuleIds();
  * checked and `feedbucket` had no page at all — and neither fact was visible
  * from this file.
  */
-const NO_ACCESS_PAGE: Readonly<Record<string, string>> = {
-  feedbucket:
-    "route: null in the backend module registry — feedbucket owns no product surface of its own (it renders inside /build/[projectId]/feedbucket), so there is no page to hang an access screen off. The backend still seeds FEEDBUCKET_MODULE_ADMIN/OWNER/MEMBER and generates feedbucket:access:view|manage, so this organisation cannot administer feedbucket access from the UI at all. Placement is a product decision, not a missing file.",
-};
+const NO_ACCESS_PAGE: Readonly<Record<string, string>> = {};
 
 interface RelocatedAccessPage {
   readonly segments: readonly string[];
