@@ -161,7 +161,7 @@ describe("UserInviteDialog — module access payload and standing options", () =
     await user.click(roleSelect);
     await user.click(screen.getByRole("option", { name: /^Member$/ }));
     await user.click(screen.getByRole("button", { name: "HR Admin" }));
-    await user.click(screen.getByRole("button", { name: "Viewer" }));
+    await user.click(screen.getByRole("button", { name: "No module access" }));
     await user.click(screen.getByText("Send invitation"));
 
     expect(mutateMock).toHaveBeenCalledWith({ email: "test@example.com", role: "MEMBER" }, expect.anything());
@@ -315,7 +315,7 @@ describe("UserInviteDialog — Build Member default and Cancel reset", () => {
       screen.getByLabelText(/email address/i),
       "stale@example.com",
     );
-    await user.click(screen.getByRole("button", { name: "Viewer" }));
+    await user.click(screen.getByRole("button", { name: "No module access" }));
     await user.click(screen.getByRole("button", { name: "Cancel" }));
 
     expect(onOpenChange).toHaveBeenCalledWith(false);

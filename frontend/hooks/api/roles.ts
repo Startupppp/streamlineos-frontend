@@ -215,6 +215,7 @@ export const useSetRolePermissions = () => {
         queryKey: accessAndCrmQueryKeys.roles.permissions(variables.roleId),
       });
       void queryClient.invalidateQueries({ queryKey: accessAndCrmQueryKeys.roles.list() });
+      void queryClient.invalidateQueries({ queryKey: accessAndCrmQueryKeys.roles.analytics() });
       void queryClient.invalidateQueries({ queryKey: platformCoreQueryKeys.access.me() });
       if (orgId) signalAccessInvalidation(orgId);
     },
@@ -251,6 +252,7 @@ export const useAssignRoleMember = () => {
         queryKey: accessAndCrmQueryKeys.roles.members(variables.roleId),
       });
       queryClient.invalidateQueries({ queryKey: accessAndCrmQueryKeys.roles.list() });
+      void queryClient.invalidateQueries({ queryKey: accessAndCrmQueryKeys.roles.analytics() });
       queryClient.invalidateQueries({ queryKey: platformCoreQueryKeys.access.me() });
       if (orgId) signalAccessInvalidation(orgId);
     },
@@ -270,6 +272,7 @@ export const useUnassignRoleMember = () => {
         queryKey: accessAndCrmQueryKeys.roles.members(variables.roleId),
       });
       queryClient.invalidateQueries({ queryKey: accessAndCrmQueryKeys.roles.list() });
+      void queryClient.invalidateQueries({ queryKey: accessAndCrmQueryKeys.roles.analytics() });
       queryClient.invalidateQueries({ queryKey: platformCoreQueryKeys.access.me() });
       if (orgId) signalAccessInvalidation(orgId);
     },

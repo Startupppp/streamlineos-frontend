@@ -37,11 +37,6 @@ export function ProductGrid({
   const visibleProducts = useMemo(() => {
     const products = PRODUCT_DEFINITIONS.flatMap((product) => {
       if (product.key === "administration") return [];
-      if (
-        !canManageModules &&
-        !hasAssignedProductAccess(product.key, scopes)
-      )
-        return [];
       const groups = getNavGroupsForProduct(
         product.key,
         effectiveRole,
@@ -50,7 +45,8 @@ export function ProductGrid({
         lockedModules,
       );
       const hasAccess = groups.some((group) => group.routes.length > 0);
-      if (!hasAccess && !canManageModules) return [];
+      if (!hasAccess && !canManageModules && !hasAssignedProductAccess(product.key, scopes))
+        return [];
       const planLocked = flattenNavRoutes(
         groups.flatMap((group) => group.routes),
       ).some((route) => route.locked === true);

@@ -40,7 +40,7 @@ export const INVITE_ACCESS_PRESETS: readonly { id: string; label: string; access
       { moduleKey: "accounting", standing: "ADMIN" },
     ],
   },
-  { id: "viewer", label: "Viewer", access: [] },
+  { id: "viewer", label: "No module access", access: [] },
 ];
 
 function accessKey(access: readonly { moduleKey: string; standing: string }[]): string {
@@ -150,7 +150,7 @@ export function ModuleAccessSection({ field }: ModuleAccessSectionProps) {
         ))}
       </div>
       <p className="text-xs text-muted-foreground">
-        A preset fills the grants below; Viewer clears them, leaving self-service and the included modules.
+        A preset fills the grants below; No module access clears all grants, leaving self-service and the included modules.
       </p>
       <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
         {ADMINISTRABLE_MODULES.map((mod) => {

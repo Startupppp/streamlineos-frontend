@@ -3,6 +3,7 @@
 import { useEffect, useRef } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import type { Query } from "@tanstack/react-query";
+import { toast } from "sonner";
 import { useAccess } from "@/hooks/api/access";
 import { platformCoreQueryKeys } from "@/lib/query-keys/platform-core";
 
@@ -42,6 +43,13 @@ export function useAccessVersionSync(): void {
     void queryClient.invalidateQueries({
       refetchType: "active",
       predicate: isOutsideAccessNamespace,
+    });
+    toast("Your access changed. Reload to apply.", {
+      duration: Infinity,
+      action: {
+        label: "Reload",
+        onClick: () => window.location.reload(),
+      },
     });
   }, [version, queryClient]);
 }

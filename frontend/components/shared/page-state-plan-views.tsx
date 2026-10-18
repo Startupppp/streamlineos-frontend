@@ -32,15 +32,15 @@ export function ModuleDeniedView({ moduleKey, compact, className }: ModuleDenied
       >
         <ShieldOff className={cn("text-muted-foreground", compact ? "h-4 w-4" : "h-6 w-6")} />
       </div>
-      <h3 className="font-semibold text-foreground text-sm">Access not granted</h3>
+      <h3 className="font-semibold text-foreground text-sm">{moduleName} is not available for your account</h3>
       <p
         className={cn(
           "text-muted-foreground mt-1 max-w-xs leading-relaxed",
           compact ? "text-xs" : "text-sm mt-1.5",
         )}
       >
-        Your access to <span className="font-medium text-foreground">{moduleName}</span> has been
-        turned off. Ask an organization admin to restore it.
+        You do not have access to <span className="font-medium text-foreground">{moduleName}</span>. Contact an
+        administrator to request access.
       </p>
     </div>
   );

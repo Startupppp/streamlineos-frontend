@@ -4,6 +4,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { platformCoreQueryKeys } from "@/lib/query-keys/platform-core";
 import { usersAndCommerceQueryKeys } from "@/lib/query-keys/users-and-commerce";
+import { accessAndCrmQueryKeys } from "@/lib/query-keys/access-and-crm";
 import { invalidateCalendarMemberLookups, invalidatePersonAccountAccess } from "./cache";
 import type { BulkActionResult, BulkUpdatePayload, OrgRole, UsersResponse } from "./types";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
@@ -123,6 +124,7 @@ export const useUpdateUserRole = () => {
       void queryClient.invalidateQueries({ queryKey: usersAndCommerceQueryKeys.users.all });
       void queryClient.invalidateQueries({ queryKey: usersAndCommerceQueryKeys.users.stats() });
       void queryClient.invalidateQueries({ queryKey: platformCoreQueryKeys.organization.members() });
+      void queryClient.invalidateQueries({ queryKey: accessAndCrmQueryKeys.roles.all });
       invalidatePersonAccountAccess(queryClient);
     },
   });

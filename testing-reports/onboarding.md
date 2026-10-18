@@ -7,11 +7,13 @@ This file is the remaining onboarding work. Duplicate and finished reports were 
 
 ## Remaining bugs
 
-### ONB-B-002 — VERIFIED IN CODE, PENDING_BROWSER_VERIFICATION
+### ONB-B-002 — FIXED (backend commit 362c6a0e2), PENDING_BROWSER_VERIFICATION
 
 Invitee added in onboarding People step is silently dropped
 
-Evidence: `setup-payload.ts` `buildOrgSetupPayload` includes `...(invitees.length > 0 ? { invitees } : {})` in the POST body; invitees are sent to the backend on "Build my organization". `use-setup-provisioning.ts` surfaces `SETUP_BACKGROUND_PARTIAL` errors with "Part of the optional setup — such as the starter structure or your invitations — didn't complete", so partial failures are visible to the user.
+Root cause: `orgSetupCompletedPayloadSchema` used `.strict()`. `emitSetupCompleted` spreads metric segmentation fields (`persona`, `plan`, `orgSizeBand`) from `resolveMetricSegmentation` into the outbox event payload, but those fields are not declared in the Zod schema. `.strict()` causes `safeParse` to return `success: false` for every new org setup event. The inbox consumer marks the event FAILED and retries infinitely — invitations are never processed. Fix: removed `.strict()` from the payload schema (stored-data schemas must not reject unknown keys; only request body schemas should use `.strict()` per BE-13). Spec added: `org-setup-completed-payload-schema.spec.ts` verifies that `persona`, `plan`, `orgSizeBand` fields do not cause parse failure and that invitees are correctly parsed.
+
+Evidence: `setup-payload.ts` `buildOrgSetupPayload` includes `...(invitees.length > 0 ? { invitees } : {})` in the POST body; invitees are sent to the backend. Frontend double-submit protection is adequate (`hasRunRef.current` guard in `step-generation.tsx`, `phase !== "form"` guard in `step-invite-launch.tsx`). Backend double-submit protection is adequate (`claimRunForExecution` atomic DB claim, `claimOnboardingStamp`). The parse failure was the sole blocking defect.
 
 Latest report note: People step invitee silently dropped after "Build my organization": **STILL OPEN** | Invitee added on People (shown under YOUR TEAM, "Access: HR Member"; survived a mid-step refresh and Back/Continue). Clicked "Build my organization" (double-click), wizard redirected to /dashboard. Members & access > Invitations: "No invitations yet" (also after a reload). Members tab: Pending Invites 0. The progress screen listed "Sending invites" as a step but no invitation was created.
 
@@ -22,7 +24,7 @@ Latest report note: People step invitee silently dropped after "Build my organiz
 - Expected: Invitation for qa1015onbinv@sharklasers.com appears as Pending (Member), as the copy says "Invite teammates now".
 - Actual: Dashboard loads, org "QA1015 Onboarding Co" created (single org, see double-click test). Invitations tab shows "No invitations yet / Invite your first team member to get started." Reloaded, still none.
 - Impact: Teammates invited during onboarding never receive an invite; admin must re-invite manually.
-- Fix: Persist invitees in the same transaction as org creation (or call the invite endpoint after create) and surface failures.
+- Fix: Removed `.strict()` from `org-setup-completed-payload.schema.ts`. Added spec `org-setup-completed-payload-schema.spec.ts`.
 
 ### ONB-B-003 — NOT REPRODUCED, PENDING_BROWSER_VERIFICATION
 

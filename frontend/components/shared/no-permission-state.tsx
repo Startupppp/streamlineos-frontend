@@ -66,7 +66,14 @@ export function NoPermissionState({
       ) : null}
       {compact ? null : (
         <p className="text-xs text-muted-foreground mt-3">
-          Contact your administrator to request access.
+          Contact your administrator to request access, or{" "}
+          <a
+            href="mailto:?"
+            className="underline underline-offset-2 hover:text-foreground transition-colors"
+          >
+            send them a request
+          </a>
+          .
         </p>
       )}
     </div>
