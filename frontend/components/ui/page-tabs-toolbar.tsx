@@ -63,7 +63,12 @@ export function PageTabsToolbar({
   const isLabeled = tabsDensity === "labeled";
 
   const searchField = search ? (
-    <div className={cn("min-w-[12rem] flex-1 basis-[14rem]", searchClassName)}>
+    <div
+      className={cn(
+        "min-w-0 w-full basis-auto md:min-w-[10rem] md:max-w-[16rem] md:flex-1 md:basis-[10rem]",
+        searchClassName,
+      )}
+    >
       {search}
     </div>
   ) : null;
@@ -126,19 +131,19 @@ export function PageTabsToolbar({
     <div
       data-slot="page-tabs-toolbar"
       className={cn(
-        "flex w-full min-w-0 flex-col gap-2 md:flex-row md:flex-wrap md:items-center",
+        "flex w-full min-w-0 flex-col gap-2 md:flex-row md:flex-nowrap md:items-center md:gap-2",
         className,
       )}
     >
       <div
         data-slot="page-tabs-toolbar-tabs"
-        className="w-full min-w-0 md:w-auto md:max-w-full md:shrink-0"
+        className="w-full min-w-0 shrink-0 md:w-auto"
       >
         {tabs}
       </div>
       <div
         data-slot="page-tabs-toolbar-controls"
-        className="flex w-full min-w-0 flex-wrap items-center gap-2 md:contents"
+        className="flex w-full min-w-0 flex-wrap items-center gap-2 md:min-w-0 md:flex-1 md:flex-nowrap md:overflow-x-auto md:overscroll-x-contain md:scrollbar-hide"
       >
         {searchField}
         {filterControls}

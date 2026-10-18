@@ -3,7 +3,11 @@
 import { Fragment, useRef } from "react";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { KbLink2Icon, KbMoreHorizontalIcon } from "@/features/wiki/lib/kb-icons";
+import {
+  KbInfoIcon,
+  KbLink2Icon,
+  KbMoreHorizontalIcon,
+} from "@/features/wiki/lib/kb-icons";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -49,6 +53,8 @@ interface PageDocumentToolbarProps {
   onOpenLinkedRecords: () => void;
   onDelete: () => void;
   onNavigate: (pageId: number) => void;
+  /** Opens the mobile details sheet (below xl). */
+  onOpenDetailsPanel?: () => void;
 }
 
 export function PageDocumentToolbar({
@@ -67,6 +73,7 @@ export function PageDocumentToolbar({
   onOpenLinkedRecords,
   onDelete,
   onNavigate,
+  onOpenDetailsPanel,
 }: PageDocumentToolbarProps) {
   const canCreate = useCan("kb:pages:create");
   const canUpdate = useCan("kb:pages:update");
@@ -187,6 +194,18 @@ export function PageDocumentToolbar({
 
   return (
     <div className="flex shrink-0 items-center justify-end gap-1.5 self-end sm:self-auto">
+      {onOpenDetailsPanel ? (
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          className="h-9 w-9 px-0 xl:hidden"
+          aria-label="Open details panel"
+          onClick={onOpenDetailsPanel}
+        >
+          <KbInfoIcon className="h-4 w-4" />
+        </Button>
+      ) : null}
       <KbPageAiActions
         pageId={pageId}
         currentContent={currentContent}

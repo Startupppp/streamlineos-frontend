@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react";
 import {
   KbFileTextIcon,
-  KbInfoIcon,
   KbPanelRightCloseIcon,
   KbPanelRightOpenIcon,
 } from "@/features/wiki/lib/kb-icons";
@@ -32,6 +31,7 @@ import {
   KB_STATUS_LABELS,
   KB_STATUS_BADGE_CLASS,
 } from "@/features/wiki/lib/kb-page-status";
+import { TrustBadge } from "./kb-collection-badges";
 import { getUserDisplayName } from "@/lib/person-display";
 import { cn } from "@/lib/utils";
 
@@ -39,11 +39,20 @@ const STORAGE_KEY = "wiki-right-panel-collapsed";
 const BACKLINK_DISPLAY_LIMIT = 20;
 const RECORD_LINK_DISPLAY_LIMIT = 20;
 
+const VISIBILITY_LABELS: Record<string, string> = {
+  private: "Private",
+  org: "Team",
+  public: "Public",
+};
+
 interface PageRightPanelProps {
   pageId: number;
   page: KbPageDetail;
   wordCount: number;
   onNavigate: (pageId: number) => void;
+  /** When set with onMobileOpenChange, the mobile sheet is controlled by the parent (header trigger). */
+  mobileOpen?: boolean;
+  onMobileOpenChange?: (open: boolean) => void;
 }
 
 interface PanelContentProps {
@@ -123,16 +132,17 @@ function PanelContent({ pageId, page, wordCount, onNavigate }: PanelContentProps
 
   const editorName = memberName(page.lastEditedById);
   const ownerName = memberName(page.ownerUserId);
-  const editedValue = editorName
-    ? `${kbTimeAgo(page.updatedAt)} · ${editorName}`
+  const editedValue = page.lastEditedById
+    ? `${kbTimeAgo(page.updatedAt)} · ${editorName ?? "Member unavailable"}`
     : kbTimeAgo(page.updatedAt);
-
-  const trustLabel =
-    page.trustState === "verified"
-      ? "Verified"
-      : page.trustState === "verification_expired"
-        ? "Stale"
-        : null;
+  const ownerValue = page.ownerUserId
+    ? (ownerName ?? "Member unavailable")
+    : "Unassigned";
+  const visibilityValue =
+    VISIBILITY_LABELS[page.visibility] ?? page.visibility ?? "Private";
+  const reviewValue = page.nextReviewAt
+    ? kbFormatDate(page.nextReviewAt)
+    : "Not scheduled";
 
   return (
     <div className="flex flex-col gap-5 px-4 py-4">
@@ -141,32 +151,19 @@ function PanelContent({ pageId, page, wordCount, onNavigate }: PanelContentProps
           <p className="text-xs text-muted-foreground">Status</p>
           <div className="mt-1 flex flex-wrap items-center gap-1.5">
             <StatusBadge status={page.status} />
-            {trustLabel ? (
-              <Badge
-                variant="outline"
-                className={cn(
-                  "h-5 px-1.5 text-micro",
-                  page.trustState === "verified"
-                    ? "border-status-success-rule bg-status-success-surface text-status-success-ink"
-                    : "border-status-warning-rule bg-status-warning-surface text-status-warning-ink",
-                )}
-              >
-                {trustLabel}
-              </Badge>
-            ) : null}
+            {page.trustState ? <TrustBadge trustState={page.trustState} /> : null}
           </div>
         </div>
+        <Stat label="Visibility" value={visibilityValue} />
         <Stat label="Words" value={wordCount.toLocaleString()} />
         <Stat label="Created" value={kbTimeAgo(page.createdAt)} suppressHydrationWarning />
         <Stat label="Edited" value={editedValue} suppressHydrationWarning />
-        {ownerName ? <Stat label="Owner" value={ownerName} /> : null}
-        {page.nextReviewAt ? (
-          <Stat
-            label="Review due"
-            value={kbFormatDate(page.nextReviewAt)}
-            suppressHydrationWarning
-          />
-        ) : null}
+        <Stat label="Owner" value={ownerValue} />
+        <Stat
+          label="Next review"
+          value={reviewValue}
+          suppressHydrationWarning
+        />
       </section>
 
       <section className="border-t border-border/70 pt-4">
@@ -250,10 +247,16 @@ export default function PageRightPanel({
   page,
   wordCount,
   onNavigate,
+  mobileOpen,
+  onMobileOpenChange,
 }: PageRightPanelProps) {
   const [collapsed, setCollapsed] = useState(false);
-  const [mobileSheetOpen, setMobileSheetOpen] = useState(false);
+  const [uncontrolledMobileOpen, setUncontrolledMobileOpen] = useState(false);
   const title = page.title || "Untitled";
+  const isMobileControlled = onMobileOpenChange !== undefined;
+  const mobileSheetOpen = isMobileControlled
+    ? Boolean(mobileOpen)
+    : uncontrolledMobileOpen;
 
   useEffect(() => {
     setCollapsed(localStorage.getItem(STORAGE_KEY) === "true");
@@ -267,27 +270,13 @@ export default function PageRightPanel({
     });
   }
 
-  function handleMobileOpen() {
-    setMobileSheetOpen(true);
-  }
-
   function handleMobileSheetChange(open: boolean) {
-    setMobileSheetOpen(open);
+    if (isMobileControlled) onMobileOpenChange?.(open);
+    else setUncontrolledMobileOpen(open);
   }
 
   return (
     <>
-      <Button
-        type="button"
-        variant="ghost"
-        size="icon"
-        className="fixed right-4 bottom-4 z-30 h-10 w-10 rounded-full border border-border bg-background shadow-md xl:hidden"
-        onClick={handleMobileOpen}
-        aria-label="Open details panel"
-      >
-        <KbInfoIcon className="h-4 w-4" />
-      </Button>
-
       <Sheet open={mobileSheetOpen} onOpenChange={handleMobileSheetChange}>
         <SheetContent side="right" className="gap-0 p-0 xl:hidden sm:max-w-sm">
           <SheetHeader className="border-b border-border px-4 py-3 pr-12">

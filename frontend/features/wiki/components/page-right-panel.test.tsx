@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import PageRightPanel from "./page-right-panel";
@@ -20,25 +21,29 @@ jest.mock("@/hooks/api/kb/record-links", () => ({
 }));
 
 jest.mock("@/hooks/api/organization", () => ({
-  useOrgMembersByIds: () => ({ data: undefined }),
+  useOrgMembersByIds: jest.fn(() => ({ data: undefined })),
 }));
 
 import { useKbPageBacklinks } from "@/hooks/api/kb";
 import { useKbPageRecordLinks } from "@/hooks/api/kb/record-links";
+import { useOrgMembersByIds } from "@/hooks/api/organization";
 
 const mockUseKbPageBacklinks = useKbPageBacklinks as jest.Mock;
 const mockUseKbPageRecordLinks = useKbPageRecordLinks as jest.Mock;
+const mockUseOrgMembersByIds = useOrgMembersByIds as jest.Mock;
 
 beforeEach(() => {
   mockUseKbPageBacklinks.mockReturnValue({ data: [], isLoading: false, isError: false, error: null, refetch: jest.fn() });
   mockUseKbPageRecordLinks.mockReturnValue({ data: [] });
+  mockUseOrgMembersByIds.mockReturnValue({ data: undefined });
 });
 
 const basePage = {
   id: 1,
   title: "Runbook",
   status: "published",
-  trustState: null,
+  trustState: "verified",
+  visibility: "org",
   createdAt: "2026-09-01T10:00:00.000Z",
   updatedAt: "2026-09-01T12:00:00.000Z",
   lastEditedById: null,
@@ -49,15 +54,35 @@ const basePage = {
 
 function noop() {}
 
-function renderPanel(overrides: Partial<KbPageDetail> = {}) {
-  return render(
-    <PageRightPanel
-      pageId={1}
-      page={{ ...basePage, ...overrides }}
-      wordCount={42}
-      onNavigate={noop}
-    />,
+function PanelHarness({
+  overrides = {},
+}: {
+  overrides?: Partial<KbPageDetail>;
+}) {
+  const [mobileOpen, setMobileOpen] = useState(false);
+  return (
+    <>
+      <button
+        type="button"
+        aria-label="Open details panel"
+        onClick={() => setMobileOpen(true)}
+      >
+        Open details
+      </button>
+      <PageRightPanel
+        pageId={1}
+        page={{ ...basePage, ...overrides }}
+        wordCount={42}
+        onNavigate={noop}
+        mobileOpen={mobileOpen}
+        onMobileOpenChange={setMobileOpen}
+      />
+    </>
   );
+}
+
+function renderPanel(overrides: Partial<KbPageDetail> = {}) {
+  return render(<PanelHarness overrides={overrides} />);
 }
 
 describe("PageRightPanel — mobile path for linked records", () => {
@@ -73,7 +98,7 @@ describe("PageRightPanel — mobile path for linked records", () => {
     expect(within(screen.getByRole("dialog")).getByText("1+")).toBeInTheDocument();
   });
 
-  it("renders a mobile FAB button so linked records are reachable below 1280px", () => {
+  it("opens from a parent-controlled trigger so linked records are reachable below 1280px", () => {
     renderPanel();
 
     expect(
@@ -81,14 +106,14 @@ describe("PageRightPanel — mobile path for linked records", () => {
     ).toBeInTheDocument();
   });
 
-  it("the FAB button has an aria-label so keyboard users can identify it (FE-117)", () => {
+  it("the parent trigger has an aria-label so keyboard users can identify it (FE-117)", () => {
     renderPanel();
 
-    const fab = screen.getByRole("button", { name: "Open details panel" });
-    expect(fab).toHaveAttribute("aria-label", "Open details panel");
+    const trigger = screen.getByRole("button", { name: "Open details panel" });
+    expect(trigger).toHaveAttribute("aria-label", "Open details panel");
   });
 
-  it("opens the mobile sheet when the FAB is clicked", async () => {
+  it("opens the mobile sheet when the parent trigger is clicked", async () => {
     const user = userEvent.setup();
     renderPanel();
 
@@ -237,5 +262,128 @@ describe("PageRightPanel — backlinks bounded at BACKLINK_DISPLAY_LIMIT (FE-112
       .filter((btn) => btn.hasAttribute("data-page-id"));
     expect(navButtons).toHaveLength(20);
     expect(within(dialog).queryByText(/\+\d+ more/)).not.toBeInTheDocument();
+  });
+});
+
+async function openDetailsDialog() {
+  const user = userEvent.setup();
+  await user.click(screen.getByRole("button", { name: "Open details panel" }));
+  return screen.getByRole("dialog");
+}
+
+describe("PageRightPanel — status fact visible so a future deletion fails instead of going quiet", () => {
+  it("shows Published badge for a published page", async () => {
+    renderPanel({ status: "published" });
+    expect(within(await openDetailsDialog()).getByText("Published")).toBeInTheDocument();
+  });
+
+  it("shows Draft badge for a draft page", async () => {
+    renderPanel({ status: "draft" });
+    expect(within(await openDetailsDialog()).getByText("Draft")).toBeInTheDocument();
+  });
+
+  it("shows In Review badge for an in-review page", async () => {
+    renderPanel({ status: "in_review" });
+    expect(within(await openDetailsDialog()).getByText("In Review")).toBeInTheDocument();
+  });
+
+  it("shows Archived badge for an archived page", async () => {
+    renderPanel({ status: "archived" });
+    expect(within(await openDetailsDialog()).getByText("Archived")).toBeInTheDocument();
+  });
+});
+
+describe("PageRightPanel — trustState fact visible so a future deletion fails instead of going quiet", () => {
+  it("shows Verified badge when trust state is verified", async () => {
+    renderPanel({ trustState: "verified" });
+    expect(within(await openDetailsDialog()).getByText("Verified")).toBeInTheDocument();
+  });
+
+  it("shows Unverified badge when trust state is unverified", async () => {
+    renderPanel({ trustState: "unverified" });
+    expect(within(await openDetailsDialog()).getByText("Unverified")).toBeInTheDocument();
+  });
+
+  it("shows Stale badge when trust state is verification_expired", async () => {
+    renderPanel({ trustState: "verification_expired" });
+    expect(within(await openDetailsDialog()).getByText("Stale")).toBeInTheDocument();
+  });
+});
+
+describe("PageRightPanel — visibility fact visible so a future deletion fails instead of going quiet", () => {
+  it("shows Private for private visibility", async () => {
+    renderPanel({ visibility: "private" });
+    expect(within(await openDetailsDialog()).getByText("Private")).toBeInTheDocument();
+  });
+
+  it("shows Team for org visibility", async () => {
+    renderPanel({ visibility: "org" });
+    expect(within(await openDetailsDialog()).getByText("Team")).toBeInTheDocument();
+  });
+
+  it("shows Public for public visibility", async () => {
+    renderPanel({ visibility: "public" });
+    expect(within(await openDetailsDialog()).getByText("Public")).toBeInTheDocument();
+  });
+});
+
+describe("PageRightPanel — nextReviewAt fact visible so a future deletion fails instead of going quiet", () => {
+  it("shows review due text when nextReviewAt is set", async () => {
+    renderPanel({ nextReviewAt: "2026-10-25T00:00:00.000Z" });
+    const dialog = await openDetailsDialog();
+    expect(within(dialog).getByText("Next review")).toBeInTheDocument();
+    expect(within(dialog).queryByText("Not scheduled")).not.toBeInTheDocument();
+  });
+
+  it("shows that no review is scheduled when nextReviewAt is null", async () => {
+    renderPanel({ nextReviewAt: null });
+    const dialog = await openDetailsDialog();
+    expect(within(dialog).getByText("Next review")).toBeInTheDocument();
+    expect(within(dialog).getByText("Not scheduled")).toBeInTheDocument();
+  });
+});
+
+describe("PageRightPanel — updatedAt fact visible so a future deletion fails instead of going quiet", () => {
+  it("shows an edited time for the page", async () => {
+    renderPanel({ updatedAt: "2026-09-25T10:00:00.000Z" });
+    expect(within(await openDetailsDialog()).getByText("Edited")).toBeInTheDocument();
+  });
+
+  it("shows the editor name when lastEditedById resolves to a member", async () => {
+    mockUseOrgMembersByIds.mockReturnValue({
+      data: {
+        data: [{ id: "user-alice", userId: "user-alice", name: "Alice Smith", email: "alice@co.com" }],
+        pagination: { limit: 50, hasMore: false, nextCursor: null },
+      },
+    });
+    renderPanel({ lastEditedById: "user-alice" });
+    expect(within(await openDetailsDialog()).getByText(/Alice Smith/)).toBeInTheDocument();
+  });
+
+  it("keeps a safe editor fallback when the member cannot be resolved", async () => {
+    renderPanel({ lastEditedById: "editor-missing" });
+    const dialog = await openDetailsDialog();
+    expect(within(dialog).getByText(/Member unavailable/)).toBeInTheDocument();
+    expect(within(dialog).queryByText("editor-missing")).not.toBeInTheDocument();
+  });
+});
+
+describe("PageRightPanel — owner fact visible so a future deletion fails instead of going quiet", () => {
+  it("shows owner display name when ownerUserId resolves to a member", async () => {
+    mockUseOrgMembersByIds.mockReturnValue({
+      data: {
+        data: [{ id: "user-bob", userId: "user-bob", name: "Bob Jones", email: "bob@co.com" }],
+        pagination: { limit: 50, hasMore: false, nextCursor: null },
+      },
+    });
+    renderPanel({ ownerUserId: "user-bob" });
+    expect(within(await openDetailsDialog()).getByText("Bob Jones")).toBeInTheDocument();
+  });
+
+  it("shows an unassigned owner when ownerUserId is null", async () => {
+    renderPanel({ ownerUserId: null });
+    const dialog = await openDetailsDialog();
+    expect(within(dialog).getByText("Owner")).toBeInTheDocument();
+    expect(within(dialog).getByText("Unassigned")).toBeInTheDocument();
   });
 });

@@ -17,7 +17,6 @@ import { viewKey } from "./types";
 import { lazyContract } from "@/lib/api-envelope";
 import { NO_CURSOR_YET } from "@/hooks/api/cursor-page-param";
 
-/** Deferred — see `catalog.ts`; the contracts themselves are unchanged. */
 const roleGroupPageContract = lazyContract(() =>
   import("./module-access-schema").then((m) => m.moduleRoleGroupPageContract),
 );

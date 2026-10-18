@@ -42,7 +42,6 @@ import PageIconPicker from "./page-icon-picker";
 import PageDocumentHeader from "./page-document-header";
 import PageRightPanel from "./page-right-panel";
 import { PageDocumentPropertyActions } from "./page-document-property-actions";
-import { PageDocumentMetaFooter } from "./page-document-meta-footer";
 import { PageDocumentOutline } from "./page-document-outline";
 import {
   normalizePlateValue,
@@ -126,6 +125,7 @@ export default function PageDocument({ pageId, onNavigateToPage, projectId }: Pa
   const editorContainerRef = useRef<HTMLDivElement>(null);
   const editorSnapshotRef = useRef<string | null>(null);
   const [toolbarHost, setToolbarHost] = useState<HTMLDivElement | null>(null);
+  const [detailsMobileOpen, setDetailsMobileOpen] = useState(false);
 
   const handleSavePage = useCallback(
     (payload: PageAutosavePatch & { pageId: number; expectedContentRevision: number }) =>
@@ -322,7 +322,7 @@ export default function PageDocument({ pageId, onNavigateToPage, projectId }: Pa
     .filter(Boolean).length;
 
   return (
-    <div className="wiki-document flex min-h-full flex-1 flex-col">
+    <div className="wiki-document flex h-full min-h-full flex-1 flex-col">
       <PageCover
         coverImage={page.coverImage}
         isEditable={isEditable}
@@ -337,8 +337,8 @@ export default function PageDocument({ pageId, onNavigateToPage, projectId }: Pa
       />
 
       <div className="flex min-h-0 min-w-0 flex-1">
-        <div className="flex min-h-0 min-w-0 flex-1 flex-col pb-4 sm:pb-6">
-          <div className="wiki-document-chrome sticky top-0 z-40 shrink-0 border-b">
+        <div className="flex h-full min-h-0 min-w-0 flex-1 flex-col">
+          <div className="wiki-document-chrome sticky top-0 z-40 shrink-0">
             <div className={cn(WIKI_DOCUMENT_COLUMN, "py-2.5")}>
               <PageDocumentHeader
                 page={page}
@@ -353,6 +353,7 @@ export default function PageDocument({ pageId, onNavigateToPage, projectId }: Pa
                 onApplyImprovement={handleApplyImprovement}
                 onInsertSummary={handleInsertSummary}
                 onOpenCover={handleOpenCover}
+                onOpenDetailsPanel={() => setDetailsMobileOpen(true)}
                 projectId={projectId}
               />
             </div>
@@ -441,18 +442,6 @@ export default function PageDocument({ pageId, onNavigateToPage, projectId }: Pa
               />
             </div>
 
-            <div className="mb-4 mt-2">
-              <PageDocumentMetaFooter
-                status={page.status}
-                trustState={page.trustState}
-                visibility={page.visibility}
-                nextReviewAt={page.nextReviewAt}
-                updatedAt={page.updatedAt}
-                lastEditedById={page.lastEditedById}
-                ownerUserId={page.ownerUserId}
-              />
-            </div>
-
             <PageDocumentOutline
               content={editorDraft ?? storedContent}
               containerRef={editorContainerRef}
@@ -483,6 +472,8 @@ export default function PageDocument({ pageId, onNavigateToPage, projectId }: Pa
           page={page}
           wordCount={wordCount}
           onNavigate={handleNavigateToPage}
+          mobileOpen={detailsMobileOpen}
+          onMobileOpenChange={setDetailsMobileOpen}
         />
       </div>
     </div>

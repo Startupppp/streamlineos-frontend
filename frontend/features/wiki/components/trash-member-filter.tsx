@@ -44,7 +44,7 @@ export function TrashMemberFilter({ value, onChange }: TrashMemberFilterProps) {
   }
 
   return (
-    <div className="flex flex-wrap gap-2">
+    <div className="flex flex-nowrap items-center gap-2">
       <Input
         type="search"
         aria-label="Find member"

@@ -83,6 +83,31 @@ describe("PageDocumentToolbar", () => {
     expect(screen.getByRole("button", { name: "More options" })).toBeInTheDocument();
   });
 
+  it("shows Open details panel when onOpenDetailsPanel is provided", () => {
+    const onOpenDetailsPanel = jest.fn();
+    render(
+      <PageDocumentToolbar
+        page={page}
+        pageId={5}
+        isEditable
+        onOpenMetaSheet={noop}
+        onOpenComments={noop}
+        onOpenHistory={noop}
+        onOpenMove={noop}
+        onOpenSaveAsTemplate={noop}
+        onOpenCover={noop}
+        onDelete={noop}
+        onNavigate={noop}
+        onOpenLinkedRecords={noop}
+        onOpenDetailsPanel={onOpenDetailsPanel}
+      />,
+    );
+
+    expect(
+      screen.getByRole("button", { name: "Open details panel" }),
+    ).toBeInTheDocument();
+  });
+
   it("shows the More options trigger", () => {
     renderToolbar({ coverImage: "gradient:ocean", isFavorite: true });
 

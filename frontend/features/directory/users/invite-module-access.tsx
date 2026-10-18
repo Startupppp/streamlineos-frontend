@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback } from "react";
+import { useCallback, useMemo } from "react";
 import {
   Select,
   SelectContent,
@@ -12,6 +12,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { MANIFEST } from "@/lib/module-manifest";
 import type { ModuleEntry } from "@/lib/module-manifest-schema";
+import { cn } from "@/lib/utils";
 import type { InviteUserFormValues } from "./user-invite-schema";
 
 const ADMINISTRABLE_MODULES: readonly ModuleEntry[] = MANIFEST.modules.filter(
@@ -27,11 +28,31 @@ type ModuleAccess = NonNullable<InviteUserFormValues["moduleAccess"]>;
  * accepts and applies on acceptance, so a preset is never more than the grants
  * it shows — and every row stays editable after it is applied.
  */
-export const INVITE_ACCESS_PRESETS: readonly { id: string; label: string; access: ModuleAccess }[] = [
-  { id: "build-member", label: "Build Member", access: [{ moduleKey: "build", standing: "MEMBER" }] },
-  { id: "build-admin", label: "Build Admin", access: [{ moduleKey: "build", standing: "ADMIN" }] },
-  { id: "hr-admin", label: "HR Admin", access: [{ moduleKey: "hr", standing: "ADMIN" }] },
-  { id: "manager", label: "Manager", access: [{ moduleKey: "hr", standing: "MEMBER" }] },
+export const INVITE_ACCESS_PRESETS: readonly {
+  id: string;
+  label: string;
+  access: ModuleAccess;
+}[] = [
+  {
+    id: "build-member",
+    label: "Build Member",
+    access: [{ moduleKey: "build", standing: "MEMBER" }],
+  },
+  {
+    id: "build-admin",
+    label: "Build Admin",
+    access: [{ moduleKey: "build", standing: "ADMIN" }],
+  },
+  {
+    id: "hr-admin",
+    label: "HR Admin",
+    access: [{ moduleKey: "hr", standing: "ADMIN" }],
+  },
+  {
+    id: "manager",
+    label: "Manager",
+    access: [{ moduleKey: "hr", standing: "MEMBER" }],
+  },
   {
     id: "finance",
     label: "Finance",
@@ -43,17 +64,28 @@ export const INVITE_ACCESS_PRESETS: readonly { id: string; label: string; access
   { id: "viewer", label: "No module access", access: [] },
 ];
 
-function accessKey(access: readonly { moduleKey: string; standing: string }[]): string {
-  return access.map((item) => `${item.moduleKey}:${item.standing}`).sort().join("|");
+function accessKey(
+  access: readonly { moduleKey: string; standing: string }[],
+): string {
+  return access
+    .map((item) => `${item.moduleKey}:${item.standing}`)
+    .sort()
+    .join("|");
 }
 
-export function describeModuleAccess(access: readonly { moduleKey: string; standing: string }[]): string | null {
+export function describeModuleAccess(
+  access: readonly { moduleKey: string; standing: string }[],
+): string | null {
   if (access.length === 0) return null;
-  const preset = INVITE_ACCESS_PRESETS.find((candidate) => accessKey(candidate.access) === accessKey(access));
+  const preset = INVITE_ACCESS_PRESETS.find(
+    (candidate) => accessKey(candidate.access) === accessKey(access),
+  );
   if (preset) return preset.label;
   return access
     .map((item) => {
-      const name = MANIFEST.modules.find((mod) => mod.id === item.moduleKey)?.displayName ?? item.moduleKey;
+      const name =
+        MANIFEST.modules.find((mod) => mod.id === item.moduleKey)
+          ?.displayName ?? item.moduleKey;
       return `${name} ${item.standing === "ADMIN" ? "Admin" : "Member"}`;
     })
     .join(", ");
@@ -70,21 +102,6 @@ interface ModuleAccessRowProps {
   onStandingChange: (moduleKey: string, standing: string) => void;
 }
 
-function IncludedModuleRow({ displayName }: { displayName: string }) {
-  return (
-    <div className="flex items-center justify-between gap-2">
-      <span className="text-sm">{displayName}</span>
-      <Badge
-        variant="outline"
-        className="h-5 px-2 py-0.5 text-micro"
-        aria-label={`Module access for ${displayName}: included for every member`}
-      >
-        Included
-      </Badge>
-    </div>
-  );
-}
-
 function ModuleAccessRow({
   moduleKey,
   displayName,
@@ -96,21 +113,33 @@ function ModuleAccessRow({
     [moduleKey, onStandingChange],
   );
   return (
-    <div className="flex items-center justify-between gap-2">
-      <span className="text-sm">{displayName}</span>
-      <Select value={currentStanding} onValueChange={handleChange}>
-        <SelectTrigger
-          className="w-32 h-9 text-sm"
-          aria-label={`Module access for ${displayName}`}
-        >
-          <SelectValue />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="NONE">No access</SelectItem>
-          <SelectItem value="MEMBER">Member</SelectItem>
-          <SelectItem value="ADMIN">Admin</SelectItem>
-        </SelectContent>
-      </Select>
+    <div className="flex min-w-0 items-center justify-between gap-2 py-0.5">
+      <span className="min-w-0 truncate text-sm">{displayName}</span>
+      <div
+        role="group"
+        aria-label={`Module access for ${displayName}`}
+        className="inline-flex shrink-0 flex-nowrap items-center gap-0.5"
+      >
+        {MODULE_STANDING_OPTIONS.map((option) => {
+          const selected = currentStanding === option.value;
+          return (
+            <Button
+              key={option.value}
+              type="button"
+              variant={selected ? "default" : "outline"}
+              size="sm"
+              className={cn(
+                "h-7 shrink-0 whitespace-nowrap px-2 text-xs font-normal",
+                selected && "pointer-events-none",
+              )}
+              aria-pressed={selected}
+              onClick={() => handleChange(option.value)}
+            >
+              {option.label}
+            </Button>
+          );
+        })}
+      </div>
     </div>
   );
 }
@@ -123,6 +152,23 @@ interface ModuleAccessSectionProps {
 }
 
 export function ModuleAccessSection({ field }: ModuleAccessSectionProps) {
+  const includedModules = useMemo(
+    () => ADMINISTRABLE_MODULES.filter((mod) => !mod.planGated),
+    [],
+  );
+  const gatedModules = useMemo(
+    () => ADMINISTRABLE_MODULES.filter((mod) => mod.planGated),
+    [],
+  );
+  const activePresetId = useMemo(() => {
+    const current = accessKey(field.value ?? []);
+    return (
+      INVITE_ACCESS_PRESETS.find(
+        (preset) => accessKey(preset.access) === current,
+      )?.id ?? null
+    );
+  }, [field.value]);
+
   function handleStandingChange(moduleKey: string, standing: string) {
     const current = (field.value ?? []).filter(
       (item) => item.moduleKey !== moduleKey,
@@ -141,22 +187,53 @@ export function ModuleAccessSection({ field }: ModuleAccessSectionProps) {
   }
 
   return (
-    <div className="space-y-2">
-      <div className="flex flex-wrap items-center gap-1.5" role="group" aria-label="Access presets">
-        {INVITE_ACCESS_PRESETS.map((preset) => (
-          <Button key={preset.id} type="button" variant="outline" size="sm" onClick={handlePreset(preset.access)}>
-            {preset.label}
-          </Button>
-        ))}
+    <div className="min-w-0 space-y-2.5">
+      <div
+        className="flex w-full min-w-0 max-w-full flex-nowrap items-center gap-1 overflow-x-auto overscroll-x-contain scrollbar-hide touch-pan-x"
+        role="group"
+        aria-label="Access presets"
+      >
+        {INVITE_ACCESS_PRESETS.map((preset) => {
+          const selected = preset.id === activePresetId;
+          return (
+            <Button
+              key={preset.id}
+              type="button"
+              variant={selected ? "default" : "outline"}
+              size="sm"
+              className={cn(
+                "h-7 w-auto shrink-0 whitespace-nowrap px-2 text-xs font-normal",
+                selected && "pointer-events-none",
+              )}
+              aria-pressed={selected}
+              onClick={handlePreset(preset.access)}
+            >
+              {preset.label}
+            </Button>
+          );
+        })}
       </div>
-      <p className="text-xs text-muted-foreground">
-        A preset fills the grants below; No module access clears all grants, leaving self-service and the included modules.
-      </p>
-      <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
-        {ADMINISTRABLE_MODULES.map((mod) => {
-          if (!mod.planGated) {
-            return <IncludedModuleRow key={mod.id} displayName={mod.displayName} />;
-          }
+
+      {includedModules.length > 0 ? (
+        <div className="flex w-full min-w-0 max-w-full flex-nowrap items-center gap-1 overflow-x-auto overscroll-x-contain scrollbar-hide touch-pan-x">
+          <span className="shrink-0 text-micro text-muted-foreground">
+            Included
+          </span>
+          {includedModules.map((mod) => (
+            <Badge
+              key={mod.id}
+              variant="outline"
+              className="h-5 shrink-0 whitespace-nowrap px-1.5 py-0 text-micro font-normal"
+              aria-label={`Module access for ${mod.displayName}: included for every member`}
+            >
+              {mod.displayName}
+            </Badge>
+          ))}
+        </div>
+      ) : null}
+
+      <div className="max-h-36 space-y-0.5 overflow-y-auto pr-0.5">
+        {gatedModules.map((mod) => {
           const entry = (field.value ?? []).find(
             (item) => item.moduleKey === mod.id,
           );

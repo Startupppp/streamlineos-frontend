@@ -12,6 +12,14 @@ jest.mock("next-auth/react", () => ({
   useSession: () => ({ data: { orgId: "org-1", user: { id: "user-1" } } }),
 }));
 
+jest.mock("@/hooks/api/access", () => ({
+  useAccess: () => ({ data: { permissions: [] }, isLoading: false, isError: false }),
+}));
+
+jest.mock("@/hooks/api/entitlements", () => ({
+  useEntitlements: () => ({ data: undefined }),
+}));
+
 jest.mock("@/hooks/api/calendar/booking-resources", () => ({
   usePendingCalendarBookingAllocations: (cursor: string | null) => {
     requestedCursors.push(cursor);
@@ -23,6 +31,8 @@ jest.mock("@/hooks/api/calendar/booking-resources", () => ({
       isFetching: false,
       isPending: false,
       isError: false,
+      error: null,
+      refetch: jest.fn(),
     };
   },
   useResolveCalendarBookingAllocation: () => ({ isPending: false, mutateAsync: mockResolveAllocation }),

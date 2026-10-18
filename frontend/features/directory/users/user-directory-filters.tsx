@@ -38,7 +38,7 @@ export function UserDirectoryFilters({
   onDepartmentChange,
   onBranchChange,
 }: UserDirectoryFiltersProps) {
-  const selectTriggerClass = `w-full lg:w-fit lg:min-w-32 ${FILTER_SELECT_TRIGGER}`;
+  const selectTriggerClass = `w-full max-md:w-full md:w-auto md:min-w-[8.5rem] md:max-w-[11rem] shrink-0 ${FILTER_SELECT_TRIGGER}`;
   return (
     <>
       <Select value={status} onValueChange={onStatusChange}>

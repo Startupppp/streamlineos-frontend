@@ -189,7 +189,7 @@ export default function WikiShell({ children }: { children: React.ReactNode }) {
 
         <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
           <ScrollArea fill hideScrollbar className="min-h-0 flex-1" viewportClassName="scroll-pt-28">
-            <div className="flex min-h-full flex-1 flex-col overscroll-contain">
+            <div className="flex h-full min-h-full flex-1 flex-col overscroll-contain">
               {children}
             </div>
           </ScrollArea>

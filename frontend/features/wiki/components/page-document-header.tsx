@@ -49,6 +49,7 @@ interface PageDocumentHeaderProps {
   onApplyImprovement?: (text: string) => void;
   onInsertSummary?: (text: string) => void;
   onOpenCover: () => void;
+  onOpenDetailsPanel?: () => void;
   projectId?: number;
 }
 
@@ -65,6 +66,7 @@ export default function PageDocumentHeader({
   onApplyImprovement,
   onInsertSummary,
   onOpenCover,
+  onOpenDetailsPanel,
   projectId,
 }: PageDocumentHeaderProps) {
   const router = useRouter();
@@ -191,6 +193,7 @@ export default function PageDocumentHeader({
           onOpenLinkedRecords={handleOpenLinkedRecords}
           onDelete={handleDelete}
           onNavigate={onNavigate}
+          onOpenDetailsPanel={onOpenDetailsPanel}
         />
       </div>
 

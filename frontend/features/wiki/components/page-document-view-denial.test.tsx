@@ -69,9 +69,6 @@ jest.mock("./page-document-property-actions", () => ({
   PageDocumentPropertyActions: () => null,
 }));
 jest.mock("./page-document-outline", () => ({ PageDocumentOutline: () => null }));
-jest.mock("./page-document-meta-footer", () => ({
-  PageDocumentMetaFooter: () => <div data-testid="meta-footer" />,
-}));
 jest.mock("./page-document-header", () => ({
   __esModule: true,
   default: () => <div data-testid="document-header" />,

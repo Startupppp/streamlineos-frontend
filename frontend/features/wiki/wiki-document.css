@@ -5,7 +5,6 @@
 
 .wiki-document-chrome {
   background: var(--background);
-  border-bottom: 1px solid var(--border);
 }
 
 .wiki-document-chrome [data-slot="wiki-document-toolbar"] {
@@ -15,7 +14,9 @@
 
 .wiki-document-body {
   display: flex;
+  flex: 1 1 auto;
   flex-direction: column;
+  min-height: 0;
   background: var(--card);
   color: var(--foreground);
   border: 1px solid var(--border);

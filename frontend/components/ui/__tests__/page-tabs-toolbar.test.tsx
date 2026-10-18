@@ -2,7 +2,7 @@ import { render, screen } from "@testing-library/react";
 import { PageTabsToolbar } from "@/components/ui/page-tabs-toolbar";
 
 describe("PageTabsToolbar responsive layout", () => {
-  it("keeps labeled tabs and controls in one wrapping row from tablet widths", () => {
+  it("keeps labeled tabs and controls in one row from tablet widths", () => {
     const { container } = render(
       <PageTabsToolbar
         tabs={<button type="button">List</button>}
@@ -21,11 +21,11 @@ describe("PageTabsToolbar responsive layout", () => {
     expect(toolbar).toHaveClass(
       "flex-col",
       "md:flex-row",
-      "md:flex-wrap",
+      "md:flex-nowrap",
       "md:items-center",
     );
-    expect(tabs).toHaveClass("w-full", "md:w-auto", "md:shrink-0");
-    expect(controls).toHaveClass("flex", "flex-wrap", "md:contents");
+    expect(tabs).toHaveClass("w-full", "md:w-auto", "shrink-0");
+    expect(controls).toHaveClass("flex", "flex-wrap", "md:flex-nowrap", "md:flex-1");
   });
 
   it("keeps the compact Filters trigger named and available below its collapse point", () => {

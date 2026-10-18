@@ -114,7 +114,7 @@ export function UserDetailSheet({ userId, open, onOpenChange }: UserDetailSheetP
                     <TabsTrigger
                       key={value}
                       value={value}
-                      className="min-w-0 flex-1 basis-0 px-1 text-xs font-normal truncate"
+                      className="min-w-0 flex-1 basis-0 px-1.5 text-xs font-medium truncate"
                     >
                       {label}
                     </TabsTrigger>

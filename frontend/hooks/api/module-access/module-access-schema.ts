@@ -17,15 +17,6 @@ import type {
   ModuleRoleGroup,
 } from "./types";
 
-/**
- * Module-scoped access reads. `moduleMyPermissionsContract` decides which
- * controls a module owner or admin is shown, so a dropped `isModuleOwner` is a
- * silent demotion rather than a visible failure.
- *
- * Both types are owned by `./types`, which the module's other hooks share;
- * annotating rather than re-inferring keeps one definition and lets the
- * compiler enforce that the contract still matches it.
- */
 export const moduleMyPermissionsContract: ResponseContract<ModuleMyPermissions> =
   z.object({
     permissions: z.array(
@@ -48,28 +39,6 @@ export const moduleCatalogContract: ResponseContract<ModulePermission[]> =
     }),
   );
 
-/**
- * The rest of the module-access surface. Every route below decides who may do
- * what inside a module, and each was an unchecked `apiClient.get<T>` cast until
- * these landed — the same shape of hole that shipped the chat `members[]` and
- * huddle `userId` defects, on a surface where the consequence is a wrong
- * permission screen rather than a wrong avatar.
- *
- * Derived from the backend PROJECTION, not from the frontend type. Sources
- * (streamlineos-backend):
- *   groups            module-access-group-crud.service.ts hydrateGroups()
- *   members           module-access-roster.service.ts listMembers()
- *   group members     module-access-group-members.service.ts ModuleGroupMember
- *   candidates        module-access-roster.service.ts listMemberCandidates()
- *   grants            user-permission-grants.service.ts listGrants()
- *   audit log         module-access.service.ts getAuditLog()
- *   ownership         module-access-ownership.service.ts fetchOwnership()
- *
- * Three details the frontend types get wrong and these contracts do not:
- * `avatarUrl` is always PRESENT and nullable (`users.image`), never absent;
- * `email` is coalesced to `""` server-side so it is never null; and the audit
- * row's `id` is a `serial`, so it is always a number.
- */
 
 const moduleMemberGroupContract = z.object({
   id: z.number(),
@@ -182,11 +151,6 @@ export const moduleMemberGrantsSetContract = z.object({
   granted: z.number(),
 });
 
-/**
- * `GET /module-access/:moduleKey/standing/grantable` — the ceiling of what the
- * CALLER may hand out in this module, not what anyone currently holds. The
- * effective-access screen reads it so it offers only grantable options.
- */
 export const moduleGrantableContract = z.object({
   grantableRanks: z.array(z.number()),
   scopeCeiling: dataScopeContract,

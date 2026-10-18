@@ -10,8 +10,14 @@ describe("invite module access shows core modules as included, not deniable", ()
   it("renders Knowledge Base as Included with no access selector, because every member can read it", () => {
     renderSection();
 
-    expect(screen.getByLabelText("Module access for Knowledge Base: included for every member")).toHaveTextContent("Included");
-    expect(screen.queryByRole("combobox", { name: "Module access for Knowledge Base" })).toBeNull();
+    expect(
+      screen.getByLabelText(
+        "Module access for Knowledge Base: included for every member",
+      ),
+    ).toHaveTextContent("Knowledge Base");
+    expect(
+      screen.queryByRole("combobox", { name: "Module access for Knowledge Base" }),
+    ).toBeNull();
   });
 
   it("keeps a selector for a plan-gated module such as HR", () => {

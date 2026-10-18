@@ -265,7 +265,7 @@ export function PageWrapper({
       {visibleFilters && (
         <div
           className={cn(
-            "shrink-0 w-full min-w-0 flex flex-wrap items-center gap-2 overflow-x-hidden pb-3 sm:gap-2.5",
+            "shrink-0 w-full min-w-0 flex flex-wrap items-center gap-2 overflow-x-hidden pb-3 sm:gap-2.5 md:flex-nowrap md:overflow-x-auto md:overscroll-x-contain md:scrollbar-hide",
             "[&>[data-slot=search-input]]:min-w-[12rem] [&>[data-slot=search-input]]:flex-1 [&>[data-slot=search-input]]:basis-[12rem]",
             "[&>[data-slot=select-trigger]]:shrink-0",
             PAGE_CHROME_X,

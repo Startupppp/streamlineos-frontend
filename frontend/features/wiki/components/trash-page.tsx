@@ -315,13 +315,13 @@ export default function TrashPage() {
         <div className="space-y-4">
           {canManageSettings ? <TrashRetentionSection /> : null}
 
-          <div className="flex gap-2 flex-wrap">
+          <div className="flex min-w-0 flex-nowrap items-center gap-2 overflow-x-auto scrollbar-hide [&>*]:shrink-0">
             <Input
               type="search"
               placeholder="Search deleted pages…"
               value={searchDraft}
               onChange={handleSearchChange}
-              className="max-w-sm"
+              className="w-64 max-w-sm"
               aria-label="Search deleted pages"
             />
             <TrashMemberFilter value={deletedByMembershipId} onChange={handleMemberChange} />
