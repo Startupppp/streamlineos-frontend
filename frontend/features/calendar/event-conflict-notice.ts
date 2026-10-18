@@ -26,7 +26,6 @@ interface EventConflictResult {
 /** Beyond this many names the rest are counted, so the toast stays one line. */
 const MAX_NAMED_ATTENDEES = 2;
 
-/** Beyond this many event titles we fall back to a count to keep the toast readable. */
 const MAX_NAMED_CONFLICTS = 2;
 
 function joinNames(names: string[], hiddenCount: number): string {
