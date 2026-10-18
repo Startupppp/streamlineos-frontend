@@ -41,6 +41,10 @@ const CommandPaletteDialogBody = dynamic(
   { ssr: false },
 );
 
+function isInsideRichTextEditor(target: EventTarget | null): boolean {
+  return target instanceof Element && target.closest('[contenteditable="true"]') !== null;
+}
+
 export function CommandPalette() {
   const { paletteOpen, setPaletteOpen } = useCommandPalette();
   const [isReady, setIsReady] = useState(false);
@@ -74,6 +78,7 @@ export function CommandPalette() {
         return;
       }
       if (e.key === "k" && (e.metaKey || e.ctrlKey)) {
+        if (e.defaultPrevented || isInsideRichTextEditor(e.target)) return;
         e.preventDefault();
         setPaletteOpen(!paletteOpen);
       }
