@@ -3,16 +3,7 @@
 import { useState } from "react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { useEnabledModules } from "@/hooks/api/access/org-modules";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { LoadingState } from "@/components/shared/loading-state";
 import { ErrorState } from "@/components/shared/error-state";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -203,25 +194,20 @@ export function ModuleAutomationsSettings({ config }: { config: ModuleAutomation
         />
       )}
 
-      <AlertDialog open={!!deleteTarget} onOpenChange={handleDeleteDialogChange}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Delete automation?</AlertDialogTitle>
-            <AlertDialogDescription>
-              &ldquo;{deleteTarget?.name}&rdquo; and its run history will be permanently deleted.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-              onClick={handleDelete}
-            >
-              Delete
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <ConfirmDialog
+        open={!!deleteTarget}
+        onOpenChange={handleDeleteDialogChange}
+        title="Delete automation?"
+        description={
+          <>
+            &ldquo;{deleteTarget?.name}&rdquo; and its run history will be permanently deleted.
+          </>
+        }
+        destructive
+        confirmLabel="Delete"
+        isPending={remove.isPending}
+        onConfirm={handleDelete}
+      />
     </PageWrapper>
   );
 }

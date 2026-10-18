@@ -20,7 +20,7 @@ import { cn } from "@/lib/utils";
 
 export const BUILD_FILTER_TRIGGER_CLASS = cn(
   FILTER_SELECT_TRIGGER,
-  "w-full min-w-0 md:w-fit md:min-w-40 md:max-w-80",
+  "w-full min-w-0 bg-card md:w-fit md:min-w-40 md:max-w-80",
 );
 
 export interface BuildFilterOption {
@@ -62,7 +62,7 @@ export function ResponsiveBuildFilterSelect(props: BuildFilterSelectProps) {
         <Button
           type="button"
           variant="outline"
-          className="w-auto min-w-0 max-w-48 shrink-0"
+          className="w-auto min-w-0 max-w-48 shrink-0 bg-card data-[state=open]:border-primary"
           aria-label={selectedLabel ? `${props.label}: ${selectedLabel}` : props.label}
         >
           <span className="truncate">{selectedLabel ?? props.label}</span>

@@ -42,7 +42,7 @@ export const FilterTriggerButton = forwardRef<
       icon={SlidersHorizontalIcon}
       iconSize={14}
       className={cn(
-        "relative size-9 shrink-0 gap-1 p-0 text-sm font-normal",
+        "relative size-9 shrink-0 gap-1 bg-card p-0 text-sm font-normal",
         !iconOnly && !desktopIconOnly && "md:h-9 md:w-auto md:px-2",
         !iconOnly && desktopIconOnly && "h-9 w-auto px-2 lg:size-9 lg:p-0",
         "data-[state=open]:border-primary data-[state=open]:focus-visible:border-primary",

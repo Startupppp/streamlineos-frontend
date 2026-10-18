@@ -11,16 +11,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { SearchInput } from "@/components/ui/search-input";
 import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
@@ -297,29 +288,20 @@ export function TemplatesPageContent() {
         onOpenChange={handleDuplicateOpenChange}
       />
 
-      <AlertDialog open={!!deleteTemplate} onOpenChange={handleDeleteOpenChange}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Delete template?</AlertDialogTitle>
-            <AlertDialogDescription>
-              &ldquo;{deleteTemplate?.name}&rdquo; will be permanently removed. This cannot be undone.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction asChild>
-              <LoadingButton
-                variant="destructive"
-                onClick={handleDeleteConfirm}
-                isPending={deleteTemplateMutation.isPending}
-                loadingText="Deleting…"
-              >
-                Delete
-              </LoadingButton>
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <ConfirmDialog
+        open={!!deleteTemplate}
+        onOpenChange={handleDeleteOpenChange}
+        title="Delete template?"
+        description={
+          <>
+            &ldquo;{deleteTemplate?.name}&rdquo; will be permanently removed. This cannot be undone.
+          </>
+        }
+        destructive
+        confirmLabel="Delete"
+        isPending={deleteTemplateMutation.isPending}
+        onConfirm={handleDeleteConfirm}
+      />
     </>
   );
 }

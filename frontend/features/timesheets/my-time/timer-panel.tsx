@@ -12,16 +12,7 @@ import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import {
   Dialog,
   DialogContent,
@@ -138,7 +129,6 @@ export function TimerPanel({ weekStart, weekEnd }: TimerPanelProps) {
   const handlePause = useCallback(() => { if (timer) pauseTimer.mutate(timer.id); }, [timer, pauseTimer]);
   const handleResume = useCallback(() => { if (timer) resumeTimer.mutate(timer.id); }, [timer, resumeTimer]);
   const handleOpenDiscard = useCallback(() => setDiscardOpen(true), []);
-  const handleCloseDiscard = useCallback(() => setDiscardOpen(false), []);
   const handleCloseConvert = useCallback(() => setConvertOpen(false), []);
   const handleConfirmDiscard = useCallback(() => {
     if (!timer) return;
@@ -254,29 +244,16 @@ export function TimerPanel({ weekStart, weekEnd }: TimerPanelProps) {
           </CardContent>
         </Card>
 
-        <AlertDialog open={discardOpen} onOpenChange={setDiscardOpen}>
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>Discard timer?</AlertDialogTitle>
-              <AlertDialogDescription>
-                This will permanently delete the running timer without saving any time. This cannot be undone.
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel onClick={handleCloseDiscard}>Cancel</AlertDialogCancel>
-              <AlertDialogAction asChild>
-                <LoadingButton
-                  onClick={handleConfirmDiscard}
-                  className="bg-destructive hover:bg-destructive/90"
-                  isPending={discardTimer.isPending}
-                  loadingText="Discarding…"
-                >
-                  Discard
-                </LoadingButton>
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
+        <ConfirmDialog
+          open={discardOpen}
+          onOpenChange={setDiscardOpen}
+          title="Discard timer?"
+          description="This will permanently delete the running timer without saving any time. This cannot be undone."
+          destructive
+          confirmLabel="Discard"
+          isPending={discardTimer.isPending}
+          onConfirm={handleConfirmDiscard}
+        />
 
         <Dialog open={convertOpen} onOpenChange={setConvertOpen}>
           <DialogContent className="sm:max-w-sm">

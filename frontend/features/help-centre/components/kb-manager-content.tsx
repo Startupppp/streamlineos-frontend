@@ -15,16 +15,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { EmptyState } from "@/components/ui/empty-state";
 import {
   CONTENT_FILL_PANEL,
@@ -509,46 +500,34 @@ export function KbManagerContent() {
         />
       )}
 
-      <AlertDialog open={!!deleteCategory} onOpenChange={handleDeleteCategoryOpenChange}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Delete category?</AlertDialogTitle>
-            <AlertDialogDescription>
-              &ldquo;{deleteCategory?.name}&rdquo; will be deleted. Articles in this category will
-              become uncategorized.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-              onClick={handleConfirmDeleteCategory}
-            >
-              Delete
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <ConfirmDialog
+        open={!!deleteCategory}
+        onOpenChange={handleDeleteCategoryOpenChange}
+        title="Delete category?"
+        description={
+          <>
+            &ldquo;{deleteCategory?.name}&rdquo; will be deleted. Articles in this category will
+            become uncategorized.
+          </>
+        }
+        destructive
+        confirmLabel="Delete"
+        isPending={deleteCategoryMutation.isPending}
+        onConfirm={handleConfirmDeleteCategory}
+      />
 
-      <AlertDialog open={!!deleteArticle} onOpenChange={handleDeleteArticleOpenChange}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Delete article?</AlertDialogTitle>
-            <AlertDialogDescription>
-              &ldquo;{deleteArticle?.title}&rdquo; will be permanently deleted.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-              onClick={handleConfirmDeleteArticle}
-            >
-              Delete
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <ConfirmDialog
+        open={!!deleteArticle}
+        onOpenChange={handleDeleteArticleOpenChange}
+        title="Delete article?"
+        description={
+          <>&ldquo;{deleteArticle?.title}&rdquo; will be permanently deleted.</>
+        }
+        destructive
+        confirmLabel="Delete"
+        isPending={deleteArticleMutation.isPending}
+        onConfirm={handleConfirmDeleteArticle}
+      />
     </PageWrapper>
   );
 }

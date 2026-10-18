@@ -3,7 +3,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Settings2, SlidersHorizontal } from "lucide-react";
 import Link from "next/link";
-import { ViewToggle } from "@/components/ui/view-toggle";
 import { SearchInput } from "@/components/ui/search-input";
 import {
   Select,
@@ -19,10 +18,12 @@ import {
   DropdownMenuContent,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { NOTIFICATION_CATEGORY_VALUES } from "@/types/notifications";
 import type { InboxKind } from "@/types/inbox";
 import {
   VIEWS,
+  parseView,
   type InboxView,
   type InboxFilterState,
   type InboxGrouping,
@@ -153,6 +154,11 @@ export function InboxToolbar({
     [onFromChange, onToChange],
   );
 
+  const handleViewValueChange = useCallback(
+    (value: string) => onViewChange(parseView(value)),
+    [onViewChange],
+  );
+
   const kindSelectValue =
     state.kindOverride.length === 1 ? state.kindOverride[0] : "__all__";
 
@@ -168,22 +174,23 @@ export function InboxToolbar({
   return (
     <div className="flex flex-col gap-2 shrink-0">
       <div className="flex min-w-0 items-center gap-2">
-        <div className="min-w-0 flex-1 overflow-x-auto overscroll-x-contain [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-          <ViewToggle<InboxView>
-            value={state.view}
-            options={VIEWS}
-            onChange={onViewChange}
-            showLabel={false}
-            className="flex w-max min-w-full md:hidden"
-          />
-          <ViewToggle<InboxView>
-            value={state.view}
-            options={VIEWS}
-            onChange={onViewChange}
-            showLabel
-            className="hidden max-w-full overflow-x-auto md:flex"
-          />
-        </div>
+        <Tabs
+          value={state.view}
+          onValueChange={handleViewValueChange}
+          className="min-w-0 flex-1 gap-0"
+        >
+          <TabsList aria-label="Inbox views">
+            {VIEWS.map((view) => {
+              const Icon = view.icon;
+              return (
+                <TabsTrigger key={view.value} value={view.value}>
+                  <Icon className="h-4 w-4" aria-hidden />
+                  <span className="sr-only md:not-sr-only">{view.label}</span>
+                </TabsTrigger>
+              );
+            })}
+          </TabsList>
+        </Tabs>
         <Button
           asChild
           variant="default"
@@ -206,19 +213,28 @@ export function InboxToolbar({
           onValueChange={handleSearchValueChange}
           placeholder="Search inbox…"
           className="min-w-0 flex-1 md:max-w-sm"
+          inputClassName="bg-card"
         />
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button
               type="button"
-              variant={activeFilterCount > 0 ? "default" : "outline"}
+              variant="outline"
               size="sm"
-              className="shrink-0 gap-1.5"
-              aria-label="Open inbox filters"
+              className="relative shrink-0 gap-1.5 bg-card data-[state=open]:border-primary"
+              aria-label={
+                activeFilterCount > 0
+                  ? `Open inbox filters (${activeFilterCount} active)`
+                  : "Open inbox filters"
+              }
             >
               <SlidersHorizontal className="h-3.5 w-3.5" aria-hidden />
               <span className="hidden sm:inline">Filters</span>
-              {activeFilterCount > 0 ? ` ${activeFilterCount}` : null}
+              {activeFilterCount > 0 ? (
+                <span className="flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 text-micro font-medium text-primary-foreground">
+                  {activeFilterCount}
+                </span>
+              ) : null}
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-[min(22rem,calc(100vw-2rem))] p-3">
@@ -227,7 +243,10 @@ export function InboxToolbar({
                 value={state.category || "__all__"}
                 onValueChange={handleCategoryValueChange}
               >
-                <SelectTrigger className="h-9 w-full text-sm" aria-label="Filter by category">
+                <SelectTrigger
+                  className="h-9 w-full bg-card text-sm"
+                  aria-label="Filter by category"
+                >
                   <SelectValue placeholder="Category" />
                 </SelectTrigger>
                 <SelectContent>
@@ -243,7 +262,10 @@ export function InboxToolbar({
                 value={state.priority || "__all__"}
                 onValueChange={handlePriorityValueChange}
               >
-                <SelectTrigger className="h-9 w-full text-sm" aria-label="Filter by priority">
+                <SelectTrigger
+                  className="h-9 w-full bg-card text-sm"
+                  aria-label="Filter by priority"
+                >
                   <SelectValue placeholder="Priority" />
                 </SelectTrigger>
                 <SelectContent>
@@ -256,7 +278,10 @@ export function InboxToolbar({
                 </SelectContent>
               </Select>
               <Select value={kindSelectValue} onValueChange={handleKindValueChange}>
-                <SelectTrigger className="h-9 w-full text-sm" aria-label="Filter by source">
+                <SelectTrigger
+                  className="h-9 w-full bg-card text-sm"
+                  aria-label="Filter by source"
+                >
                   <SelectValue placeholder="Source" />
                 </SelectTrigger>
                 <SelectContent>
@@ -270,7 +295,10 @@ export function InboxToolbar({
               </Select>
               {availableModules.length > 0 && (
                 <Select value={state.module || "__all__"} onValueChange={handleModuleValueChange}>
-                  <SelectTrigger className="h-9 w-full text-sm" aria-label="Filter by module">
+                  <SelectTrigger
+                    className="h-9 w-full bg-card text-sm"
+                    aria-label="Filter by module"
+                  >
                     <SelectValue placeholder="Module" />
                   </SelectTrigger>
                   <SelectContent>
@@ -288,10 +316,13 @@ export function InboxToolbar({
                 to={state.to || undefined}
                 onChange={handleDateRangeChange}
                 placeholder="Date range"
-                className="col-span-2 h-9 w-full text-sm"
+                className="col-span-2 h-9 w-full bg-card text-sm"
               />
               <Select value={state.group} onValueChange={handleGroupValueChange}>
-                <SelectTrigger className="col-span-2 h-9 w-full text-sm" aria-label="Group by">
+                <SelectTrigger
+                  className="col-span-2 h-9 w-full bg-card text-sm"
+                  aria-label="Group by"
+                >
                   <SelectValue placeholder="Group by" />
                 </SelectTrigger>
                 <SelectContent>

@@ -8,7 +8,14 @@
   border-bottom: 1px solid var(--border);
 }
 
+.wiki-document-chrome [data-slot="wiki-document-toolbar"] {
+  background: var(--card);
+  border-top-color: var(--border);
+}
+
 .wiki-document-body {
+  display: flex;
+  flex-direction: column;
   background: var(--card);
   color: var(--foreground);
   border: 1px solid var(--border);
@@ -19,6 +26,8 @@
 }
 
 .wiki-document .plate-editor {
+  flex: 1 1 auto;
+  min-height: 12rem;
   background: transparent;
   color: var(--foreground);
   box-shadow: none;

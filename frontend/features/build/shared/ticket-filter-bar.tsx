@@ -106,7 +106,7 @@ export function TicketFilterBar({
         onSubmitSearch={handleFlushSearch}
         fill={fillSearch}
         className="min-w-0 [&_svg]:left-2 [&_svg]:h-3.5 [&_svg]:w-3.5"
-        inputClassName="h-9 pl-7 pr-7"
+        inputClassName="h-9 bg-card pl-7 pr-7"
         onBlur={(event) => {
           if (collapsibleSearch && !event.currentTarget.value.trim()) {
             onSearchExpandedChange?.(false);
@@ -141,7 +141,7 @@ export function TicketFilterBar({
           iconSize={15}
           variant="outline"
           size="icon"
-          className="size-9"
+          className="size-9 bg-card"
           aria-label="Expand search"
           onClick={() => {
             onSearchExpandedChange?.(true);

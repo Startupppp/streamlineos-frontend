@@ -15,17 +15,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import type { Quote } from "@/types/crm/quotes";
 
 interface QuoteActionBarProps {
@@ -188,8 +178,8 @@ export function QuoteActionBar({
         </Button>
       )}
       {canDelete && (
-        <AlertDialog>
-          <AlertDialogTrigger asChild>
+        <ConfirmDialog
+          trigger={
             <Button
               size="sm"
               variant="outline"
@@ -198,27 +188,14 @@ export function QuoteActionBar({
               <Trash2 className="h-3.5 w-3.5 mr-1.5" />
               Delete
             </Button>
-          </AlertDialogTrigger>
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>Delete quote?</AlertDialogTitle>
-              <AlertDialogDescription>
-                This action cannot be undone. The quote will be permanently
-                removed.
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel>Cancel</AlertDialogCancel>
-              <AlertDialogAction
-                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                onClick={onDelete}
-                disabled={deletePending}
-              >
-                Delete
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
+          }
+          title="Delete quote?"
+          description="This action cannot be undone. The quote will be permanently removed."
+          destructive
+          confirmLabel="Delete"
+          isPending={deletePending}
+          onConfirm={onDelete}
+        />
       )}
     </div>
   );

@@ -4,16 +4,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Button } from "@/components/ui/button";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { useDeleteKbPageTemplate } from "@/hooks/api/kb";
 import { KbTrash2Icon, KbPencilIcon } from "@/features/wiki/lib/kb-icons";
@@ -157,27 +148,16 @@ export function TemplateCard({
         <SavedTemplatePreviewDialog template={template} onOpenChange={handlePreviewOpenChange} />
       )}
 
-      <AlertDialog open={confirmOpen} onOpenChange={handleConfirmOpenChange}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Delete template?</AlertDialogTitle>
-            <AlertDialogDescription>
-              &ldquo;{template.name}&rdquo; will be permanently deleted and
-              cannot be recovered.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-              onClick={handleConfirmDelete}
-              disabled={deleteTemplate.isPending}
-            >
-              Delete
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <ConfirmDialog
+        open={confirmOpen}
+        onOpenChange={handleConfirmOpenChange}
+        title="Delete template?"
+        description={`“${template.name}” will be permanently deleted and cannot be recovered.`}
+        destructive
+        confirmLabel="Delete"
+        isPending={deleteTemplate.isPending}
+        onConfirm={handleConfirmDelete}
+      />
     </>
   );
 }

@@ -16,11 +16,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { RecruitmentEmptyState } from "@/features/recruitment/components/recruitment-empty-state";
 import { EmptyDocumentsIllustration } from "@/components/illustrations";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetFooter, SheetBody } from "@/components/ui/sheet";
-import {
-  AlertDialog, AlertDialogAction, AlertDialogCancel,
-  AlertDialogContent, AlertDialogDescription, AlertDialogFooter,
-  AlertDialogHeader, AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import {
   useScorecardTemplates,
   useCreateScorecardTemplate,
@@ -373,25 +369,16 @@ export function ScorecardTemplatesPage() {
         editTemplate={editTemplate}
       />
 
-      <AlertDialog open={deleteId !== null} onOpenChange={handleDeleteDialogChange}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Delete template?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This will permanently delete the scorecard template. This action cannot be undone.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleConfirmDelete}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-            >
-              Delete
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <ConfirmDialog
+        open={deleteId !== null}
+        onOpenChange={handleDeleteDialogChange}
+        title="Delete template?"
+        description="This will permanently delete the scorecard template. This action cannot be undone."
+        destructive
+        confirmLabel="Delete"
+        isPending={deleteTemplate.isPending}
+        onConfirm={handleConfirmDelete}
+      />
     </>
   );
 }

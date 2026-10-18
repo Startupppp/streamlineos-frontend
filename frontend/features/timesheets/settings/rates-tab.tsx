@@ -14,16 +14,7 @@ import { PlusIcon, Trash2Icon } from "@animateicons/react/lucide";
 import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/shared/error-state";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { RateFormSheet } from "./rate-form-sheet";
 import { RatePreviewPanel } from "./rate-preview-panel";
 import { formatMoney } from "@/lib/format-utils";
@@ -265,28 +256,18 @@ export function RatesTab() {
         />
       )}
 
-      <AlertDialog open={deleteId != null} onOpenChange={handleDeleteCancel}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle className="text-sm">Remove rate?</AlertDialogTitle>
-            <AlertDialogDescription className="text-xs">
-              This rate will be permanently deleted and will no longer apply to
-              timesheet entries.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel onClick={handleDeleteCancel}>
-              Cancel
-            </AlertDialogCancel>
-            <AlertDialogAction
-              className="bg-destructive hover:bg-destructive/90"
-              onClick={handleDeleteConfirm}
-            >
-              Remove
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <ConfirmDialog
+        open={deleteId != null}
+        onOpenChange={(open) => {
+          if (!open) handleDeleteCancel();
+        }}
+        title="Remove rate?"
+        description="This rate will be permanently deleted and will no longer apply to timesheet entries."
+        destructive
+        confirmLabel="Remove"
+        isPending={deleteRate.isPending}
+        onConfirm={handleDeleteConfirm}
+      />
     </div>
   );
 }

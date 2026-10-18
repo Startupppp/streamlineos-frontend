@@ -6,16 +6,7 @@ import { motion } from "framer-motion";
 import { PlusIcon } from "@animateicons/react/lucide";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/shared/error-state";
 import { EmptyDevicesIllustration } from "@/components/illustrations";
@@ -320,83 +311,56 @@ export function WebhooksPage() {
       />
 
       {canManage && (
-        <AlertDialog
+        <ConfirmDialog
           open={rotateId !== null}
           onOpenChange={handleRotateDialogChange}
-        >
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>Rotate signing secret?</AlertDialogTitle>
-              <AlertDialogDescription>
-                A new secret is generated immediately and the current one stops
-                working. Deliveries will fail signature verification until you
-                update the receiving service with the new value.
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel>Cancel</AlertDialogCancel>
-              <AlertDialogAction onClick={handleRotateConfirm}>
-                Rotate secret
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
+          title="Rotate signing secret?"
+          description="A new secret is generated immediately and the current one stops working. Deliveries will fail signature verification until you update the receiving service with the new value."
+          confirmLabel="Rotate secret"
+          isPending={rotateSecret.isPending}
+          onConfirm={handleRotateConfirm}
+        />
       )}
 
       {canManage && (
-        <AlertDialog
+        <ConfirmDialog
           open={deleteId !== null}
           onOpenChange={handleDeleteDialogChange}
-        >
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>Delete Webhook?</AlertDialogTitle>
-              <AlertDialogDescription asChild>
-                <div className="space-y-2">
+          title="Delete Webhook?"
+          description="This webhook will stop receiving events immediately. This action cannot be undone."
+          content={
+            deleteImpact ? (
+              <div className="rounded-md border border-border bg-muted/50 px-3 py-2 text-xs space-y-1">
+                {deleteImpact.totalDeliveries > 0 && (
                   <p>
-                    This webhook will stop receiving events immediately. This
-                    action cannot be undone.
+                    <span className="font-medium tabular-nums">
+                      {deleteImpact.totalDeliveries}
+                    </span>{" "}
+                    deliveries recorded ({deleteImpact.successfulDeliveries} successful) — all history will be removed.
                   </p>
-                  {deleteImpact && (
-                    <div className="rounded-md border border-border bg-muted/50 px-3 py-2 text-xs space-y-1">
-                      {deleteImpact.totalDeliveries > 0 && (
-                        <p>
-                          <span className="font-medium tabular-nums">
-                            {deleteImpact.totalDeliveries}
-                          </span>{" "}
-                          deliveries recorded ({deleteImpact.successfulDeliveries} successful) — all history will be removed.
-                        </p>
-                      )}
-                      {deleteImpact.subscribedEvents.length > 0 && (
-                        <p>
-                          Subscribed to:{" "}
-                          <span className="font-mono">
-                            {deleteImpact.subscribedEvents.join(", ")}
-                          </span>
-                        </p>
-                      )}
-                      {deleteImpact.lastDeadLetterAt && (
-                        <p className="text-destructive">
-                          Last dead-letter:{" "}
-                          {formatDateTimeInOrgTz(deleteImpact.lastDeadLetterAt, orgTz)}
-                        </p>
-                      )}
-                    </div>
-                  )}
-                </div>
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel>Cancel</AlertDialogCancel>
-              <AlertDialogAction
-                className="bg-destructive hover:bg-destructive/90"
-                onClick={handleDelete}
-              >
-                Delete
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
+                )}
+                {deleteImpact.subscribedEvents.length > 0 && (
+                  <p>
+                    Subscribed to:{" "}
+                    <span className="font-mono">
+                      {deleteImpact.subscribedEvents.join(", ")}
+                    </span>
+                  </p>
+                )}
+                {deleteImpact.lastDeadLetterAt && (
+                  <p className="text-destructive">
+                    Last dead-letter:{" "}
+                    {formatDateTimeInOrgTz(deleteImpact.lastDeadLetterAt, orgTz)}
+                  </p>
+                )}
+              </div>
+            ) : null
+          }
+          destructive
+          confirmLabel="Delete"
+          isPending={deleteWebhook.isPending}
+          onConfirm={handleDelete}
+        />
       )}
     </PageWrapper>
   );

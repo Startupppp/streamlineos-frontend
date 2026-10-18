@@ -21,6 +21,7 @@ import {
   type KbPageEditConflict,
 } from "@/features/wiki/lib/wiki-schema";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { cn } from "@/lib/utils";
 import { KbPageNotFound } from "./kb-page-not-found";
 import PageEditConflict from "./page-edit-conflict";
 import { usePageAutosave, type PageAutosavePatch } from "./use-page-autosave";
@@ -50,6 +51,10 @@ import {
   prependPlateValue,
 } from "@/components/editor/plate/plate-value-convert";
 import "../wiki-document.css";
+
+/** Centered reading column — wider than a narrow article, not full-bleed. */
+const WIKI_DOCUMENT_COLUMN =
+  "mx-auto w-full min-w-0 max-w-4xl px-4 sm:px-8";
 
 const PlateDocumentEditor = dynamic(
   () => import("@/components/editor/plate/plate-document-editor"),
@@ -317,7 +322,7 @@ export default function PageDocument({ pageId, onNavigateToPage, projectId }: Pa
     .filter(Boolean).length;
 
   return (
-    <div className="wiki-document flex min-h-full flex-col">
+    <div className="wiki-document flex min-h-full flex-1 flex-col">
       <PageCover
         coverImage={page.coverImage}
         isEditable={isEditable}
@@ -331,10 +336,10 @@ export default function PageDocument({ pageId, onNavigateToPage, projectId }: Pa
         pageId={pageId}
       />
 
-      <div className="flex min-w-0 flex-1">
-        <div className="flex min-w-0 flex-1 flex-col">
-          <div className="wiki-document-chrome sticky top-0 z-40 border-b">
-            <div className="mx-auto w-full max-w-[46rem] px-4 py-2.5 sm:px-8">
+      <div className="flex min-h-0 min-w-0 flex-1">
+        <div className="flex min-h-0 min-w-0 flex-1 flex-col pb-4 sm:pb-6">
+          <div className="wiki-document-chrome sticky top-0 z-40 shrink-0 border-b">
+            <div className={cn(WIKI_DOCUMENT_COLUMN, "py-2.5")}>
               <PageDocumentHeader
                 page={page}
                 pageId={pageId}
@@ -354,12 +359,21 @@ export default function PageDocument({ pageId, onNavigateToPage, projectId }: Pa
             {isEditable ? (
               <div
                 ref={handleToolbarHost}
-                className="mx-auto w-full max-w-[46rem] border-t border-border/50 px-4 sm:px-8"
+                data-slot="wiki-document-toolbar"
+                className={cn(
+                  WIKI_DOCUMENT_COLUMN,
+                  "border-t border-border",
+                )}
               />
             ) : null}
           </div>
 
-          <div className="wiki-document-body mx-auto mb-8 w-full min-w-0 max-w-[46rem] flex-1 px-4 py-4 sm:px-8">
+          <div
+            className={cn(
+              "wiki-document-body flex min-h-0 flex-1 flex-col py-4",
+              WIKI_DOCUMENT_COLUMN,
+            )}
+          >
             {pendingPresentation && (
               <div role="alert" className="mb-5 flex flex-wrap items-center gap-2 rounded-lg border border-status-warning-rule bg-status-warning-surface p-3 text-sm text-status-warning-ink">
                 <span className="min-w-0 flex-1">
@@ -444,7 +458,10 @@ export default function PageDocument({ pageId, onNavigateToPage, projectId }: Pa
               containerRef={editorContainerRef}
             />
 
-            <div ref={editorContainerRef} className="min-w-0">
+            <div
+              ref={editorContainerRef}
+              className="flex min-h-0 min-w-0 flex-1 flex-col"
+            >
               <PlateDocumentEditor
                 value={editorDraft ?? storedContent ?? undefined}
                 contentKey={`${pageId}:${reloadNonce}`}

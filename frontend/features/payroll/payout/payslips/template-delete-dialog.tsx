@@ -1,17 +1,7 @@
 "use client";
 
 import { toast } from "sonner";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
-import { LoadingButton } from "@/components/ui/loading-button";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { isApiError } from "@/lib/api-envelope";
 import { useDeletePayslipTemplate } from "@/hooks/api/payroll";
@@ -47,29 +37,20 @@ export function TemplateDeleteDialog({ template, open, onOpenChange }: Props) {
   }
 
   return (
-    <AlertDialog open={open} onOpenChange={onOpenChange}>
-      <AlertDialogContent>
-        <AlertDialogHeader>
-          <AlertDialogTitle>Delete template?</AlertDialogTitle>
-          <AlertDialogDescription>
-            This will permanently delete &quot;{template.name}&quot;. This action cannot be undone.
-            Default templates cannot be deleted.
-          </AlertDialogDescription>
-        </AlertDialogHeader>
-        <AlertDialogFooter>
-          <AlertDialogCancel disabled={deleteMutation.isPending}>Cancel</AlertDialogCancel>
-          <AlertDialogAction asChild>
-            <LoadingButton
-              variant="destructive"
-              onClick={handleConfirm}
-              isPending={deleteMutation.isPending}
-              loadingText="Deleting…"
-            >
-              Delete
-            </LoadingButton>
-          </AlertDialogAction>
-        </AlertDialogFooter>
-      </AlertDialogContent>
-    </AlertDialog>
+    <ConfirmDialog
+      open={open}
+      onOpenChange={onOpenChange}
+      title="Delete template?"
+      description={
+        <>
+          This will permanently delete &quot;{template.name}&quot;. This action cannot be undone.
+          Default templates cannot be deleted.
+        </>
+      }
+      destructive
+      confirmLabel="Delete"
+      isPending={deleteMutation.isPending}
+      onConfirm={handleConfirm}
+    />
   );
 }

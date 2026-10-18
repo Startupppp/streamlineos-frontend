@@ -234,8 +234,6 @@ export function ChatHomePage() {
         onNewDM={handleNewDM}
         onNewChannel={handleNewChannel}
         onSearch={handleSearch}
-        isSidebarCollapsed={sidebarCollapsed}
-        onToggleSidebar={handleToggleSidebar}
       />
     );
 

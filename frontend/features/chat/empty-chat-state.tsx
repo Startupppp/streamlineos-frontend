@@ -4,7 +4,6 @@ import { PlusIcon, SearchIcon, UsersIcon } from "@animateicons/react/lucide";
 import { ChatIllustration } from "@/components/illustrations";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { EmptyState } from "@/components/ui/empty-state";
-import { ChannelSidebarCollapseButton } from "./channel-sidebar-collapse-button";
 
 const PANE_ACTION_CLASS = "h-11 flex-col gap-1 px-2";
 
@@ -12,25 +11,13 @@ export function EmptyChatState({
   onNewDM,
   onNewChannel,
   onSearch,
-  isSidebarCollapsed,
-  onToggleSidebar,
 }: {
   onNewDM: () => void;
   onNewChannel: () => void;
   onSearch: () => void;
-  isSidebarCollapsed?: boolean;
-  onToggleSidebar?: () => void;
 }) {
   return (
     <div className="flex h-full min-h-0 flex-col">
-      {onToggleSidebar && (
-        <div className="flex h-14 shrink-0 items-center border-b border-border/40 px-4">
-          <ChannelSidebarCollapseButton
-            isCollapsed={isSidebarCollapsed ?? false}
-            onToggle={onToggleSidebar}
-          />
-        </div>
-      )}
       <EmptyState
         illustration={<ChatIllustration className="h-44 w-44" />}
         title="Choose a conversation"

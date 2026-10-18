@@ -75,27 +75,27 @@ export function MyDocumentsPage() {
       subtitle="Track the documents requested for your employment record."
       noInternalScroll
       contentClassName="flex min-h-0 flex-1 flex-col"
-      filters={
-        <div className="flex items-center gap-2">
-          <Switch
-            id="my-documents-pending-only"
-            checked={pendingOnly}
-            onCheckedChange={handleTogglePendingOnly}
-          />
-          <Label
-            htmlFor="my-documents-pending-only"
-            className="text-dense text-muted-foreground"
-          >
-            Pending only
-          </Label>
-        </div>
-      }
       actions={
-        canUpload ? (
-          <AnimatedIconButton icon={UploadIcon} onClick={handleOpenUpload}>
-            Upload Document
-          </AnimatedIconButton>
-        ) : undefined
+        <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2">
+            <Switch
+              id="my-documents-pending-only"
+              checked={pendingOnly}
+              onCheckedChange={handleTogglePendingOnly}
+            />
+            <Label
+              htmlFor="my-documents-pending-only"
+              className="text-dense text-muted-foreground"
+            >
+              Pending only
+            </Label>
+          </div>
+          {canUpload ? (
+            <AnimatedIconButton icon={UploadIcon} onClick={handleOpenUpload}>
+              Upload Document
+            </AnimatedIconButton>
+          ) : null}
+        </div>
       }
     >
       <PageState

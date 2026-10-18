@@ -44,7 +44,7 @@ export const DisplayOptionsPanel = memo(function DisplayOptionsPanel({
             size="sm"
             className={
               iconOnly
-                ? "size-9 shrink-0 p-0"
+                ? "size-9 shrink-0 bg-card p-0 data-[state=open]:border-primary"
                 : RESPONSIVE_ICON_LABEL_TRIGGER_CLASS
             }
             aria-label="Display options"

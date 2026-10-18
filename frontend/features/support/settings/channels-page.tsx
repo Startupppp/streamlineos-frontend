@@ -34,16 +34,7 @@ import {
   FormDescription,
   FormMessage,
 } from "@/components/ui/form";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { LoadingState } from "@/components/shared/loading-state";
 import { ErrorState } from "@/components/shared/error-state";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -429,26 +420,21 @@ export function SupportChannelsPage() {
       {canManage && editTarget && <ChannelDialog channel={editTarget} onClose={handleCloseEdit} />}
 
       {canManage && (
-        <AlertDialog open={!!deleteTarget} onOpenChange={handleDeleteOpenChange}>
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>Delete channel?</AlertDialogTitle>
-              <AlertDialogDescription>
-                &ldquo;{deleteTarget?.name}&rdquo; will be permanently deleted. Inbound messages will
-                no longer create tickets through this channel.
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel>Cancel</AlertDialogCancel>
-              <AlertDialogAction
-                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                onClick={handleConfirmDelete}
-              >
-                Delete
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
+        <ConfirmDialog
+          open={!!deleteTarget}
+          onOpenChange={handleDeleteOpenChange}
+          title="Delete channel?"
+          description={
+            <>
+              &ldquo;{deleteTarget?.name}&rdquo; will be permanently deleted. Inbound messages will
+              no longer create tickets through this channel.
+            </>
+          }
+          destructive
+          confirmLabel="Delete"
+          isPending={deleteChannel.isPending}
+          onConfirm={handleConfirmDelete}
+        />
       )}
     </PageWrapper>
   );

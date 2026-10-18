@@ -21,7 +21,7 @@ import {
 } from "@animateicons/react/lucide";
 import { Button } from "@/components/ui/button";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
-import { ViewToggle, type ViewOption } from "@/components/ui/view-toggle";
+import type { ViewOption } from "@/components/ui/view-toggle";
 import {
   Select,
   SelectContent,
@@ -35,6 +35,7 @@ import {
   DropdownMenuContent,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
 import { cn } from "@/lib/utils";
 import type { View } from "./big-calendar-wrapper";
@@ -55,6 +56,7 @@ const VIEW_PERIOD_LABEL: Record<View, string> = {
 
 const NO_SOURCE_FAILURES: ReadonlyArray<{ key: string; label: string }> = [];
 const TOOL_ROW_EASE = [0.22, 1, 0.36, 1] as const;
+const OUTLINE_CONTROL_CLASS = "bg-card data-[state=open]:border-primary";
 
 const VIEW_MODE_OPTIONS: ViewOption<ViewMode>[] = [
   { value: "calendar", icon: CalendarIcon, label: "Calendar View" },
@@ -62,6 +64,13 @@ const VIEW_MODE_OPTIONS: ViewOption<ViewMode>[] = [
   { value: "history", icon: History, label: "History" },
   { value: "my-day", icon: ListTodo, label: "My Day" },
 ];
+
+function parseViewMode(value: string): ViewMode {
+  return (
+    VIEW_MODE_OPTIONS.find((option) => option.value === value)?.value ??
+    "calendar"
+  );
+}
 
 interface CalendarToolbarPrimaryActionsProps {
   activeConnectionCount: number;
@@ -95,14 +104,20 @@ export const CalendarToolbarPrimaryActions = memo(
   }: CalendarToolbarPrimaryActionsProps) {
     return (
       <div className="flex shrink-0 items-center gap-2">
-        <Button variant="outline" size="icon" aria-label="Booking pages" onClick={onOpenBookingPages}>
+        <Button
+          variant="outline"
+          size="icon"
+          className={OUTLINE_CONTROL_CLASS}
+          aria-label="Booking pages"
+          onClick={onOpenBookingPages}
+        >
           <Share2 className="h-3.5 w-3.5" />
         </Button>
 
         <Button
           variant="outline"
           size="icon"
-          className="relative"
+          className={cn("relative", OUTLINE_CONTROL_CLASS)}
           aria-label="Calendar accounts"
           onClick={onOpenAccounts}
         >
@@ -179,6 +194,10 @@ export const CalendarToolbar = memo(function CalendarToolbar({
     (v: string) => onViewChange(v as View),
     [onViewChange],
   );
+  const handleViewModeValueChange = useCallback(
+    (value: string) => onViewModeChange(parseViewMode(value)),
+    [onViewModeChange],
+  );
   const reduceMotion = useReducedMotion() === true;
   const showDateNav = viewMode === "calendar";
   const showCapacity = viewMode === "calendar" && Boolean(onOpenCapacity);
@@ -189,18 +208,29 @@ export const CalendarToolbar = memo(function CalendarToolbar({
     <div className="flex w-full min-w-0 shrink-0 flex-col gap-2">
       <div className="flex min-w-0 select-none flex-col gap-2 border-b border-border pb-2">
         <div className="flex min-w-0 flex-wrap items-center justify-between gap-2">
-          <ViewToggle<ViewMode>
+          <Tabs
             value={viewMode}
-            options={VIEW_MODE_OPTIONS}
-            onChange={onViewModeChange}
-            size="sm"
-          />
+            onValueChange={handleViewModeValueChange}
+            className="min-w-0 gap-0"
+          >
+            <TabsList aria-label="Calendar modes">
+              {VIEW_MODE_OPTIONS.map((option) => {
+                const Icon = option.icon;
+                return (
+                  <TabsTrigger key={option.value} value={option.value}>
+                    <Icon className="h-4 w-4" aria-hidden />
+                    <span className="sr-only">{option.label}</span>
+                  </TabsTrigger>
+                );
+              })}
+            </TabsList>
+          </Tabs>
           <div className="flex min-w-0 flex-wrap items-center justify-end gap-1.5 sm:gap-2">
             {showCapacity ? (
               <Button
                 variant="outline"
                 size="sm"
-                className="shrink-0 px-2.5"
+                className={cn("shrink-0 px-2.5", OUTLINE_CONTROL_CLASS)}
                 onClick={onOpenCapacity}
               >
                 Capacity
@@ -210,7 +240,7 @@ export const CalendarToolbar = memo(function CalendarToolbar({
               <Button
                 variant="outline"
                 size="sm"
-                className="shrink-0 px-2.5"
+                className={cn("shrink-0 px-2.5", OUTLINE_CONTROL_CLASS)}
                 aria-label="My time insights"
                 onClick={onOpenCoach}
               >
@@ -223,7 +253,10 @@ export const CalendarToolbar = memo(function CalendarToolbar({
                 <Button
                   variant={attendanceEventsVisible ? "secondary" : "outline"}
                   size="sm"
-                  className="gap-1 px-2.5 xl:px-3"
+                  className={cn(
+                    "gap-1 px-2.5 xl:px-3",
+                    !attendanceEventsVisible && OUTLINE_CONTROL_CLASS,
+                  )}
                   aria-label="Attendance events"
                   aria-pressed={attendanceEventsVisible}
                   onClick={onToggleAttendanceEvents}
@@ -237,7 +270,10 @@ export const CalendarToolbar = memo(function CalendarToolbar({
                 <Button
                   variant={hrEventsVisible ? "secondary" : "outline"}
                   size="sm"
-                  className="gap-1 px-2.5 xl:px-3"
+                  className={cn(
+                    "gap-1 px-2.5 xl:px-3",
+                    !hrEventsVisible && OUTLINE_CONTROL_CLASS,
+                  )}
                   aria-label="HR events"
                   aria-pressed={hrEventsVisible}
                   onClick={onToggleHrEvents}
@@ -251,7 +287,10 @@ export const CalendarToolbar = memo(function CalendarToolbar({
                 <Button
                   variant={crmEventsVisible ? "secondary" : "outline"}
                   size="sm"
-                  className="gap-1 px-2.5 xl:px-3"
+                  className={cn(
+                    "gap-1 px-2.5 xl:px-3",
+                    !crmEventsVisible && OUTLINE_CONTROL_CLASS,
+                  )}
                   aria-label="CRM events"
                   aria-pressed={crmEventsVisible}
                   onClick={onToggleCrmEvents}
@@ -273,6 +312,7 @@ export const CalendarToolbar = memo(function CalendarToolbar({
                     iconSize={16}
                     variant="outline"
                     size="icon"
+                    className={OUTLINE_CONTROL_CLASS}
                     aria-label="More calendar actions"
                   />
                 </DropdownMenuTrigger>
@@ -327,7 +367,7 @@ export const CalendarToolbar = memo(function CalendarToolbar({
               <Button
                 variant="outline"
                 size="sm"
-                className="shrink-0 px-2.5 sm:px-3"
+                className={cn("shrink-0 px-2.5 sm:px-3", OUTLINE_CONTROL_CLASS)}
                 onClick={onToday}
                 disabled={navigationDisabled}
                 aria-keyshortcuts="T"
@@ -345,7 +385,7 @@ export const CalendarToolbar = memo(function CalendarToolbar({
                   iconSize={16}
                   variant="outline"
                   size="icon"
-                  className="rounded-r-none border-r-0"
+                  className={cn("rounded-r-none border-r-0", OUTLINE_CONTROL_CLASS)}
                   aria-label={`Previous ${VIEW_PERIOD_LABEL[view]}`}
                   aria-keyshortcuts="ArrowLeft"
                   title={`Previous ${VIEW_PERIOD_LABEL[view]} (←)`}
@@ -357,7 +397,7 @@ export const CalendarToolbar = memo(function CalendarToolbar({
                   iconSize={16}
                   variant="outline"
                   size="icon"
-                  className="rounded-l-none"
+                  className={cn("rounded-l-none", OUTLINE_CONTROL_CLASS)}
                   aria-label={`Next ${VIEW_PERIOD_LABEL[view]}`}
                   aria-keyshortcuts="ArrowRight"
                   title={`Next ${VIEW_PERIOD_LABEL[view]} (→)`}
@@ -368,7 +408,10 @@ export const CalendarToolbar = memo(function CalendarToolbar({
               <Select value={view} onValueChange={handleViewChange}>
                 <SelectTrigger
                   aria-label="Calendar view"
-                  className={cn("w-fit min-w-[4.5rem]", FILTER_SELECT_TRIGGER)}
+                  className={cn(
+                    "w-fit min-w-[4.5rem] bg-card",
+                    FILTER_SELECT_TRIGGER,
+                  )}
                 >
                   <SelectValue />
                 </SelectTrigger>
@@ -388,7 +431,7 @@ export const CalendarToolbar = memo(function CalendarToolbar({
             <Button
               variant="outline"
               size="sm"
-              className="shrink-0 px-2.5"
+              className={cn("shrink-0 px-2.5", OUTLINE_CONTROL_CLASS)}
               onClick={onOpenScenario}
             >
               What if ({scenarioCount})

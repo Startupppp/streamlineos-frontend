@@ -10,6 +10,8 @@ import { toast } from "sonner";
 import { useCreateExpense, useUpdateExpense } from "@/hooks/api/hr";
 import { useUploadFile } from "@/hooks/api/use-upload-file";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { getValidationFieldErrors } from "@/lib/api-envelope";
+import { statusToneClasses } from "@/lib/design-tokens";
 import {
   parseExpenseReceipts,
   serializeExpenseReceipts,
@@ -22,6 +24,12 @@ import { useSubmitGuard } from "@/hooks/common/use-submit-guard";
 import { useIdempotentOperation } from "@/hooks/common/use-idempotent-operation";
 
 type FormData = ExpenseFormData;
+
+const SAVE_ERROR_TONE = statusToneClasses("danger");
+
+function isFormField(path: string, values: FormData): path is keyof FormData {
+  return path in values;
+}
 
 function resolveSelectableLabel(
   value: string | null | undefined,
@@ -226,7 +234,11 @@ export function CreateExpenseDialog({
         clearPendingReceipts();
         onSuccess();
       } catch (error) {
-        toast.error(getErrorMessage(error));
+        const values = form.getValues();
+        for (const { path, message } of getValidationFieldErrors(error)) {
+          if (isFormField(path, values)) form.setError(path, { message });
+        }
+        form.setError("root.server", { message: `Couldn't save: ${getErrorMessage(error)}` });
       } finally {
         setUploading(false);
       }
@@ -247,6 +259,7 @@ export function CreateExpenseDialog({
   );
 
   const guard = useSubmitGuard(onSubmit);
+  const saveError = form.formState.errors.root?.server?.message;
 
   return (
     <HrSheet
@@ -258,6 +271,14 @@ export function CreateExpenseDialog({
       submitLabel={isEditMode ? "Update Expense" : "Submit Expense"}
       isPending={guard.isSubmitting || uploading || createExpenseMutation.isPending || updateExpenseMutation.isPending}
     >
+      {saveError ? (
+        <p
+          role="alert"
+          className={`rounded-lg border px-3 py-2 text-sm ${SAVE_ERROR_TONE.surface} ${SAVE_ERROR_TONE.rule} ${SAVE_ERROR_TONE.ink}`}
+        >
+          {saveError}
+        </p>
+      ) : null}
       <ExpenseFormFields
         form={form}
         categories={categories}

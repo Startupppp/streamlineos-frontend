@@ -19,16 +19,7 @@ import {
   SheetBody,
   SheetFooter,
 } from "@/components/ui/sheet";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import {
   Form,
   FormControl,
@@ -212,31 +203,24 @@ export function NotificationProvidersPage() {
         onClose={handleSheetClose}
       />
 
-      <AlertDialog
+      <ConfirmDialog
         open={!!deleteTarget}
-        onOpenChange={(v) => !v && setDeleteTarget(null)}
-      >
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Delete provider?</AlertDialogTitle>
-            <AlertDialogDescription>
-              &ldquo;{deleteTarget?.displayName}&rdquo; will be permanently
-              removed. Notifications routed through this provider will fall back
-              to the next available provider for the channel.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-              onClick={handleDelete}
-              disabled={deleteProvider.isPending}
-            >
-              {deleteProvider.isPending ? "Deleting..." : "Delete"}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+        onOpenChange={(open) => {
+          if (!open) setDeleteTarget(null);
+        }}
+        title="Delete provider?"
+        description={
+          <>
+            &ldquo;{deleteTarget?.displayName}&rdquo; will be permanently
+            removed. Notifications routed through this provider will fall back
+            to the next available provider for the channel.
+          </>
+        }
+        destructive
+        confirmLabel="Delete"
+        isPending={deleteProvider.isPending}
+        onConfirm={handleDelete}
+      />
     </PageWrapper>
   );
 }

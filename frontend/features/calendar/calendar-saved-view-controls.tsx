@@ -156,7 +156,7 @@ export function CalendarSavedViewControls({
       >
         <SelectTrigger
           aria-label="Saved calendar view"
-          className="h-9 w-40 text-sm"
+          className="h-9 w-40 bg-card text-sm"
         >
           <SelectValue placeholder="Saved views" />
         </SelectTrigger>
@@ -181,13 +181,16 @@ export function CalendarSavedViewControls({
           onChange={(event) => onSearchChange(event.target.value)}
           placeholder="Search events"
           aria-label="Search calendar events"
-          className="h-9 min-w-40 max-w-64 text-sm"
+          className="h-9 min-w-40 max-w-64 bg-card text-sm"
           maxLength={200}
         />
       ) : null}
       {sources && onSourceChange ? (
         <Select value={source || "all"} onValueChange={onSourceChange}>
-          <SelectTrigger aria-label="Filter by calendar source" className="h-9 w-44 text-sm">
+          <SelectTrigger
+            aria-label="Filter by calendar source"
+            className="h-9 w-44 bg-card text-sm"
+          >
             <SelectValue placeholder="All sources" />
           </SelectTrigger>
           <SelectContent>
@@ -202,7 +205,15 @@ export function CalendarSavedViewControls({
       ) : null}
       {query.isError ? <div role="alert" className="text-xs text-destructive">Saved views are unavailable. <Button type="button" size="sm" variant="ghost" onClick={() => { void query.refetch(); }}>Retry</Button></div> : null}
       {canWrite ? (
-        <Button type="button" size="sm" variant="outline" disabled={query.isError} onClick={openCreate} aria-label="Save view" className="px-2.5 sm:px-3">
+        <Button
+          type="button"
+          size="sm"
+          variant="outline"
+          disabled={query.isError}
+          onClick={openCreate}
+          aria-label="Save view"
+          className="bg-card px-2.5 data-[state=open]:border-primary sm:px-3"
+        >
           <BookmarkPlus className="size-4 sm:hidden" aria-hidden />
           <span className="sr-only sm:not-sr-only">Save view</span>
         </Button>

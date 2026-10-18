@@ -32,16 +32,7 @@ import {
   FormDescription,
   FormMessage,
 } from "@/components/ui/form";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { LoadingState } from "@/components/shared/loading-state";
 import { ErrorState } from "@/components/shared/error-state";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -430,26 +421,21 @@ export function SupportCustomFieldsPage() {
       {createOpen && <FieldDialog onClose={handleCloseCreate} />}
       {editTarget && <FieldDialog field={editTarget} onClose={handleCloseEdit} />}
 
-      <AlertDialog open={!!deleteTarget} onOpenChange={handleDeleteOpenChange}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Delete field?</AlertDialogTitle>
-            <AlertDialogDescription>
-              &ldquo;{deleteTarget?.label}&rdquo; and all its captured values across every ticket will be
-              permanently deleted.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-              onClick={handleDelete}
-            >
-              Delete
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <ConfirmDialog
+        open={!!deleteTarget}
+        onOpenChange={handleDeleteOpenChange}
+        title="Delete field?"
+        description={
+          <>
+            &ldquo;{deleteTarget?.label}&rdquo; and all its captured values across every ticket will be
+            permanently deleted.
+          </>
+        }
+        destructive
+        confirmLabel="Delete"
+        isPending={deleteField.isPending}
+        onConfirm={handleDelete}
+      />
     </PageWrapper>
   );
 }

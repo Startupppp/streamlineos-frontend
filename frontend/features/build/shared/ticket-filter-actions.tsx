@@ -201,7 +201,7 @@ export function TicketFilterActions({
                   size="icon"
                   onClick={handleHideDoneClick}
                   className={cn(
-                    "size-9 shrink-0",
+                    "size-9 shrink-0 bg-card",
                     hideCompleted &&
                       "border-primary bg-primary/10 text-primary",
                   )}

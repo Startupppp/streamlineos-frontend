@@ -10,16 +10,7 @@ import {
   SidebarAnimatedNavIcon,
   useAnimatedNavIconHover,
 } from "@/components/layout/sidebar/sidebar-animated-nav";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { InfiniteScrollSentinel } from "@/components/ui/infinite-scroll-sentinel";
 import {
   DropdownMenu,
@@ -408,25 +399,16 @@ const PageTreeItem = memo(function PageTreeItemInner({
         </AnimatePresence>
       </div>
 
-      <AlertDialog open={deleteDialogOpen} onOpenChange={handleDeleteDialogOpenChange}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Move page to trash?</AlertDialogTitle>
-            <AlertDialogDescription>
-              &ldquo;{node.title || "Untitled"}&rdquo; will be moved to the Recycle Bin. You can restore it from the Recycle Bin.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleConfirmDelete}
-              disabled={deletePage.isPending}
-            >
-              Move to trash
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <ConfirmDialog
+        open={deleteDialogOpen}
+        onOpenChange={handleDeleteDialogOpenChange}
+        title="Move page to trash?"
+        description={`“${node.title || "Untitled"}” will be moved to the Recycle Bin. You can restore it from the Recycle Bin.`}
+        destructive
+        confirmLabel="Move to trash"
+        isPending={deletePage.isPending}
+        onConfirm={handleConfirmDelete}
+      />
     </>
   );
 });

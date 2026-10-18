@@ -209,7 +209,7 @@ export default function PageDocumentHeader({
         open={deleteAlertOpen}
         onOpenChange={handleDeleteAlertOpenChange}
         title="Move page to trash?"
-        description="This page will be moved to trash. You can restore it from trash later."
+        description="This page will be moved to the Recycle Bin. You can restore it from the Recycle Bin."
         destructive
         confirmLabel="Move to trash"
         isPending={deletePage.isPending}

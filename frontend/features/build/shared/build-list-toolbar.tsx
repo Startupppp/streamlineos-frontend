@@ -204,7 +204,7 @@ export function BuildListToolbar({
                     type="button"
                     variant="outline"
                     onClick={handleClearAll}
-                    className="w-full"
+                    className="w-full bg-card"
                   >
                     {BUILD_TOOLBAR_CLEAR_LABEL}
                   </Button>
@@ -238,7 +238,7 @@ export function BuildListToolbar({
           onFocus={handleSearchFocus}
           onBlur={handleSearchBlur}
           compact={searchCollapsed}
-          inputClassName={searchInputClassName}
+          inputClassName={cn("bg-card", searchInputClassName)}
           className={cn(
             "min-w-0 flex-1 basis-[12rem] md:max-w-md transition-[flex-basis,width,max-width] duration-200 ease-[cubic-bezier(0.22,1,0.36,1)]",
             searchFillsLargeScreen && "lg:max-w-none",

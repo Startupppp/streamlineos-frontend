@@ -110,7 +110,7 @@ export function CalendarSourcePanel({ failures = [] }: CalendarSourcePanelProps)
         <Button
           variant="outline"
           size="sm"
-          className="gap-1 px-2.5 text-xs font-medium xl:px-3"
+          className="gap-1 bg-card px-2.5 text-xs font-medium data-[state=open]:border-primary xl:px-3"
           aria-label="Event sources"
         >
           <Layers className="h-3.5 w-3.5" />
