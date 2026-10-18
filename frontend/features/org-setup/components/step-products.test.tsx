@@ -1,4 +1,4 @@
-import { render, screen, fireEvent, act } from "@testing-library/react";
+import { render, screen, fireEvent, act, waitFor } from "@testing-library/react";
 import type { WizardData } from "../lib/wizard-data-schema";
 import { DEFAULT_DATA, MODULE_CATALOG, MODULE_QUESTIONS, ALWAYS_ENABLED_MODULES, MODULE_GROUPS } from "../lib/constants";
 import { StepProducts } from "./step-products";
@@ -22,6 +22,10 @@ function wizard(overrides: Partial<WizardData> = {}): WizardData {
     ...overrides,
   };
 }
+
+beforeEach(() => {
+  mockPreview.mockClear();
+});
 
 describe("StepProducts — module card grid", () => {
   it("renders a card for every non-always module in the catalog", () => {
@@ -125,7 +129,7 @@ describe("StepProducts — module card grid", () => {
     );
   });
 
-  it("Continue is enabled with no selectable module chosen (only Home+kb)", () => {
+  it("Continue stays disabled with only the always-on Home+kb modules, even once the preview answers", async () => {
     render(
       <StepProducts
         data={wizard({ modules: [...ALWAYS_ENABLED_MODULES] })}
@@ -134,11 +138,12 @@ describe("StepProducts — module card grid", () => {
         onNext={jest.fn()}
       />,
     );
-    const continueBtn = screen.getByRole("button", { name: /continue/i });
-    expect(continueBtn).not.toBeDisabled();
+    await waitFor(() => expect(mockPreview).toHaveBeenCalled());
+    await act(async () => {});
+    expect(screen.getByRole("button", { name: /continue/i })).toBeDisabled();
   });
 
-  it("Continue is enabled after selecting one module", () => {
+  it("Continue is enabled after selecting one module once the availability preview matches it", async () => {
     render(
       <StepProducts
         data={wizard({ modules: ["build", "chat", "kb"] })}
@@ -148,7 +153,30 @@ describe("StepProducts — module card grid", () => {
       />,
     );
     const continueBtn = screen.getByRole("button", { name: /continue/i });
-    expect(continueBtn).not.toBeDisabled();
+    expect(continueBtn).toBeDisabled();
+    await waitFor(() => expect(continueBtn).toBeEnabled());
+    expect(mockPreview).toHaveBeenCalledWith({ modules: ["build", "chat", "kb"] });
+  });
+
+  it("an ineligible module in the preview keeps Continue disabled", async () => {
+    mockPreview.mockImplementationOnce((payload: { modules: string[] }) =>
+      Promise.resolve({
+        modules: payload.modules.map((moduleKey) => ({ moduleKey, eligible: moduleKey !== "build" })),
+        quotaSnapshot: { seats: 0, usedSeats: 0 },
+        expiresAt: new Date().toISOString(),
+      }),
+    );
+    render(
+      <StepProducts
+        data={wizard({ modules: ["build", "chat", "kb"] })}
+        patch={jest.fn()}
+        onBack={jest.fn()}
+        onNext={jest.fn()}
+      />,
+    );
+    await waitFor(() => expect(mockPreview).toHaveBeenCalled());
+    await act(async () => {});
+    expect(screen.getByRole("button", { name: /continue/i })).toBeDisabled();
   });
 
   it("shows selected count when extra modules are chosen", () => {
@@ -177,7 +205,7 @@ describe("StepProducts — module card grid", () => {
 });
 
 describe("StepProducts — module questions", () => {
-  it("shows questions when Build module is selected", () => {
+  it("shows only the first Build question when Build module is selected", () => {
     render(
       <StepProducts
         data={wizard({ modules: ["build", "chat", "kb"] })}
@@ -186,9 +214,11 @@ describe("StepProducts — module questions", () => {
         onNext={jest.fn()}
       />,
     );
-    const buildQuestions = MODULE_QUESTIONS.build ?? [];
-    for (const q of buildQuestions) {
-      expect(screen.getByText(new RegExp(q.label, "i"))).toBeInTheDocument();
+    const [first, ...rest] = MODULE_QUESTIONS.build ?? [];
+    expect(first).toBeDefined();
+    expect(screen.getByText(new RegExp(first?.label ?? "", "i"))).toBeInTheDocument();
+    for (const q of rest) {
+      expect(screen.queryByText(new RegExp(q.label, "i"))).not.toBeInTheDocument();
     }
   });
 
@@ -228,7 +258,7 @@ describe("StepProducts — module questions", () => {
     );
   });
 
-  it("shows HR questions when HR module is selected", () => {
+  it("shows only the first HR question when HR module is selected", () => {
     render(
       <StepProducts
         data={wizard({ modules: ["hr", "chat", "kb"] })}
@@ -238,22 +268,24 @@ describe("StepProducts — module questions", () => {
       />,
     );
     expect(screen.getByText(/How many people will you manage/i)).toBeInTheDocument();
-    expect(screen.getByText(/What should we set up first/i)).toBeInTheDocument();
+    expect(screen.queryByText(/What should we set up first/i)).not.toBeInTheDocument();
   });
 });
 
 describe("StepProducts — nav buttons", () => {
-  it("calls onNext when Continue is clicked", () => {
+  it("calls onNext when Continue is clicked", async () => {
     const onNext = jest.fn();
     render(
       <StepProducts
-        data={wizard()}
+        data={wizard({ modules: ["build", "chat", "kb"] })}
         patch={jest.fn()}
         onBack={jest.fn()}
         onNext={onNext}
       />,
     );
-    fireEvent.click(screen.getByRole("button", { name: /continue/i }));
+    const continueBtn = screen.getByRole("button", { name: /continue/i });
+    await waitFor(() => expect(continueBtn).toBeEnabled());
+    fireEvent.click(continueBtn);
     expect(onNext).toHaveBeenCalled();
   });
 
