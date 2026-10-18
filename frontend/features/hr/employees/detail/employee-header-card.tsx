@@ -166,7 +166,7 @@ export function EmployeeHeaderCard({
             </div>
 
             <div className="flex flex-wrap items-center gap-1.5">
-              {lifecycleBadge && !isAlreadyTerminated && (
+              {lifecycleBadge && !isAlreadyTerminated && employee.hasAccepted !== false && (
                 <span
                   className={cn(
                     "inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-micro font-semibold",

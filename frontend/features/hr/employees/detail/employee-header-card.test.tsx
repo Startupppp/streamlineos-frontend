@@ -74,7 +74,10 @@ function employee(overrides: Partial<EmployeeData> = {}): EmployeeData {
   };
 }
 
-function renderHeader(overrides: Partial<EmployeeData> = {}) {
+function renderHeader(
+  overrides: Partial<EmployeeData> = {},
+  propOverrides: { lifecycleStatus?: string | null; showEmploymentActiveBadge?: boolean } = {},
+) {
   return render(
     <EmployeeHeaderCard
       employee={employee(overrides)}
@@ -83,11 +86,11 @@ function renderHeader(overrides: Partial<EmployeeData> = {}) {
       isSelf={false}
       completeness={100}
       missingFields={[]}
-      lifecycleStatus={null}
+      lifecycleStatus={propOverrides.lifecycleStatus ?? null}
       employeeNumber={null}
       workerType={null}
       isAlreadyTerminated={false}
-      showEmploymentActiveBadge
+      showEmploymentActiveBadge={propOverrides.showEmploymentActiveBadge ?? true}
       showLegacyEmployeeId={false}
       legacyEmployeeId=""
     />,
@@ -147,5 +150,12 @@ describe("EmployeeHeaderCard status badge", () => {
 
     expect(screen.getByText("Active")).toBeInTheDocument();
     expect(screen.queryByText("Pending")).not.toBeInTheDocument();
+  });
+
+  it("hides the ACTIVE lifecycle badge for a pending employee so all views agree", () => {
+    renderHeader({ hasAccepted: false }, { lifecycleStatus: "ACTIVE" });
+
+    expect(screen.getByText("Pending")).toBeInTheDocument();
+    expect(screen.queryByText("Active")).not.toBeInTheDocument();
   });
 });
