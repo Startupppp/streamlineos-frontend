@@ -432,7 +432,12 @@ export function useCreateKbPage() {
     mutationKey: ["kb", "pages", "create"],
     mutationFn: (input: CreateKbPageInput) =>
       apiClient.post<KbPage>("/kb/pages", input, undefined, kbPageContract),
-    onSuccess: (_, variables) => {
+    onSuccess: (created, variables) => {
+      qc.setQueryData<KbPageDetail>(
+        knowledgeAndSurveysQueryKeys.kb.page(created.id),
+        { ...created, ancestors: [], isFavorite: false, canEdit: true },
+        { updatedAt: 0 },
+      );
       qc.invalidateQueries({
         queryKey: knowledgeAndSurveysQueryKeys.kb.pagesTree(),
       });

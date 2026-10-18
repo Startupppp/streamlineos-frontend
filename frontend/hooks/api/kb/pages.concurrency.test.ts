@@ -4,7 +4,7 @@ import { renderHook, act } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import type { ReactNode } from "react";
 import { createElement } from "react";
-import { useUpdateKbPage, useSetKbPageVisibility, usePublishKbPage, useArchiveKbPage, useUnarchiveKbPage } from "./pages";
+import { useCreateKbPage, useUpdateKbPage, useSetKbPageVisibility, usePublishKbPage, useArchiveKbPage, useUnarchiveKbPage } from "./pages";
 import { ApiError } from "@/lib/api-envelope";
 import { knowledgeAndSurveysQueryKeys } from "@/lib/query-keys/knowledge-and-surveys";
 import { useRestoreKbVersion } from "./page-versions";
@@ -299,5 +299,24 @@ describe("KB page version restore request", () => {
     await act(async () => { await result.current.mutateAsync({ pageId: 1, versionNumber: 2, expectedContentRevision: 4 }); });
     await act(async () => { await result.current.mutateAsync({ pageId: 1, versionNumber: 2, expectedContentRevision: 4 }); });
     expect(apiClient.post.mock.calls[1]?.[2].headers["Idempotency-Key"]).not.toBe(apiClient.post.mock.calls[0]?.[2].headers["Idempotency-Key"]);
+  });
+});
+
+describe("useCreateKbPage — KB-B-017 the new page opens from the create response", () => {
+  it("seeds the page detail cache with the created page and leaves it stale so the full detail refetches", async () => {
+    const client = makeClient();
+    const { apiClient } = jest.requireMock("@/lib/api-client") as { apiClient: { post: jest.Mock } };
+    apiClient.post.mockResolvedValueOnce({ id: 42, title: "", spaceId: 3, contentRevision: 1 });
+    const { result } = renderHook(() => useCreateKbPage(), { wrapper: wrapper(client) });
+
+    await act(async () => {
+      await result.current.mutateAsync({ spaceId: 3 });
+    });
+
+    const key = knowledgeAndSurveysQueryKeys.kb.page(42);
+    expect(client.getQueryData(key)).toEqual(
+      expect.objectContaining({ id: 42, spaceId: 3, ancestors: [], isFavorite: false, canEdit: true }),
+    );
+    expect(client.getQueryState(key)?.dataUpdatedAt).toBe(0);
   });
 });
