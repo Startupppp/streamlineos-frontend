@@ -23,7 +23,7 @@ export function DataTableFooter({
   pageSizeOptions?: readonly number[];
 }) {
   if (cursor) {
-    if (cursor.cursorVariant === "load-more") {
+    if (cursor.cursorVariant === "load-more")
       return (
         <TablePagination
           mode="cursor"
@@ -35,9 +35,9 @@ export function DataTableFooter({
           pageSize={limit}
           onPageSizeChange={cursor.onPageSizeChange}
           pageSizeOptions={cursor.pageSizeOptions}
+          showSummary={cursor.showSummary}
         />
       );
-    }
 
     return (
       <TablePagination
@@ -51,6 +51,7 @@ export function DataTableFooter({
         pageSize={limit}
         onPageSizeChange={cursor.onPageSizeChange}
         pageSizeOptions={cursor.pageSizeOptions}
+        showSummary={cursor.showSummary}
       />
     );
   }
