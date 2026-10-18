@@ -10,9 +10,7 @@ export default function RolesAuditLoading() {
       noInternalScroll
       contentClassName="flex min-h-0 flex-1 flex-col"
     >
-      <div className="flex min-h-0 flex-1 flex-col gap-4">
-        <DataTableSkeleton rows={12} columns={5} className="min-h-0 flex-1" />
-      </div>
+      <DataTableSkeleton fill columns={5} />
     </PageWrapper>
   );
 }

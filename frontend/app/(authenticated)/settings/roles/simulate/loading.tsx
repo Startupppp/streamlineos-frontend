@@ -11,6 +11,7 @@ export default function SimulateLoading() {
       backHref="/settings/roles"
       noInternalScroll
       className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden"
+      contentClassName="flex min-h-0 flex-1 flex-col"
       filters={
         <div className={FILTER_TOOLBAR_ROW}>
           <Skeleton className="h-9 w-full sm:w-[320px]" />

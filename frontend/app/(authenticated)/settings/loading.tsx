@@ -12,7 +12,12 @@ function SectionHeaderSkeleton({ titleWidth, subtitleWidth }: { titleWidth: stri
 
 export default function SettingsLoading() {
   return (
-    <PageWrapper title="Account Settings" subtitle="Manage your profile and security.">
+    <PageWrapper
+      title="Account Settings"
+      subtitle="Manage your profile and security."
+      noInternalScroll
+      contentClassName="flex min-h-0 flex-1 flex-col"
+    >
       <div className="flex min-h-0 flex-1 flex-col space-y-4">
         <section className="rounded-xl border border-border bg-card p-5 shadow-sm">
           <SectionHeaderSkeleton titleWidth="w-20" subtitleWidth="w-64" />

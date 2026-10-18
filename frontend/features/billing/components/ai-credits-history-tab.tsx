@@ -50,7 +50,7 @@ export function AiCreditsHistoryTab({
       )}
     >
       {txnLoading ? (
-        <DataTableSkeleton rows={txnLimit} columns={8} className="min-h-0 flex-1" />
+        <DataTableSkeleton fill columns={8} />
       ) : txnError ? (
         <ErrorState
           title="Failed to load transactions"

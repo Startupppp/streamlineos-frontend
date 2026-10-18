@@ -68,7 +68,7 @@ export function AiCreditsDailyTable({ data, isLoading, className }: AiCreditsDai
         <p className="text-sm font-semibold text-foreground">Daily usage</p>
       </div>
       {isLoading ? (
-        <DataTableSkeleton rows={7} columns={4} className="rounded-none border-0" />
+        <DataTableSkeleton rows={20} columns={4} className="rounded-none border-0" />
       ) : sorted.length === 0 ? (
         <EmptyState
           illustrationPreset="report"

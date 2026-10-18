@@ -11,7 +11,7 @@ export default function PersonalApiTokensLoading() {
       contentClassName="flex min-h-0 flex-1 flex-col"
       actions={<Skeleton className="h-9 w-28 rounded-md" />}
     >
-      <DataTableSkeleton rows={12} columns={6} className="min-h-0 flex-1" />
+      <DataTableSkeleton fill columns={6} />
     </PageWrapper>
   );
 }

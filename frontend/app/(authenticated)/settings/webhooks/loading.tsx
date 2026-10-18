@@ -8,11 +8,11 @@ export default function WebhooksLoading() {
       title="Webhooks"
       subtitle="Send real-time events to external systems when actions occur in your organization."
       noInternalScroll
-      contentClassName="pb-0"
+      contentClassName="flex min-h-0 flex-1 flex-col"
       actions={<Skeleton className="h-9 w-32" />}
     >
       <div className="flex min-h-0 flex-1 flex-col space-y-4">
-        {Array.from({ length: 5 }).map((_, i) => (
+        {Array.from({ length: 8 }).map((_, i) => (
           <WebhookCardSkeleton key={i} />
         ))}
       </div>

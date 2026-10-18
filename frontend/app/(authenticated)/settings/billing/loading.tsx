@@ -6,6 +6,8 @@ export default function SettingsBillingLoading() {
     <PageWrapper
       title="Billing & Plan"
       subtitle="Manage your subscription, payments, and billing details"
+      noInternalScroll
+      contentClassName="flex min-h-0 flex-1 flex-col"
     >
       <BillingPageSkeleton />
     </PageWrapper>

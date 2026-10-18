@@ -12,9 +12,8 @@ export default function StorageQuarantineLoading() {
       filters={<Skeleton className="h-9 w-44" />}
     >
       <DataTableSkeleton
+        fill
         headers={["File", "Status", "Size", "Uploaded by", "Uploaded", ""]}
-        rows={10}
-        className="min-h-0 flex-1"
       />
     </PageWrapper>
   );

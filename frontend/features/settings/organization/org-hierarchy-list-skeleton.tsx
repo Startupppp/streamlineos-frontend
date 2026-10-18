@@ -32,11 +32,7 @@ export function OrgHierarchyListSkeleton({
       }
       filters={<Skeleton className="h-9 w-full max-w-[320px]" />}
     >
-      <DataTableSkeleton
-        rows={12}
-        columns={columnCount}
-        className="min-h-0 flex-1"
-      />
+      <DataTableSkeleton fill columns={columnCount} />
     </PageWrapper>
   );
 }

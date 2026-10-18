@@ -26,7 +26,7 @@ export default function RolesLoading() {
               <Skeleton className="h-4 w-20" />
             </div>
             <div className="divide-y divide-border/60">
-              {Array.from({ length: 6 }).map((_, i) => (
+              {Array.from({ length: 12 }).map((_, i) => (
                 <div key={i} className="flex items-center justify-between px-4 py-3">
                   <div className="space-y-1.5">
                     <Skeleton className="h-4 w-28" />

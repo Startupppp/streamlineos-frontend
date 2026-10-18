@@ -53,7 +53,7 @@ export function AiCreditsPageSkeleton() {
           <div className="shrink-0 border-b border-border px-4 py-3">
             <p className="text-sm font-semibold text-foreground">Daily usage</p>
           </div>
-          <DataTableSkeleton rows={4} columns={4} className="min-h-0 flex-1 rounded-none border-0" />
+          <DataTableSkeleton fill columns={4} className="rounded-none border-0" />
         </div>
       </div>
     </div>

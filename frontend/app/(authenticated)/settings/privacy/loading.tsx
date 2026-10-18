@@ -29,9 +29,8 @@ export default function PrivacyLoading() {
           </div>
           <Skeleton className="h-9 w-full shrink-0 sm:max-w-sm" />
           <DataTableSkeleton
+            fill
             headers={["Request", "Subject", "Status", "Records", "Requested", "Due"]}
-            rows={6}
-            className="min-h-0 flex-1"
           />
         </section>
       </div>

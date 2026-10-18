@@ -199,7 +199,7 @@ export function PersonalTokensTab({
   return (
     <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
       {isLoading ? (
-        <DataTableSkeleton rows={12} columns={6} className="min-h-0 flex-1" />
+        <DataTableSkeleton fill columns={6} />
       ) : isError ? (
         <ErrorState
           className={CONTENT_FILL_PANEL}

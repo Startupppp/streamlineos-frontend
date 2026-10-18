@@ -22,7 +22,7 @@ export default function DelegationsLoading() {
       }
     >
       <div className="flex h-full min-h-0 flex-1 flex-col gap-3">
-        <DelegationSkeletons count={5} />
+        <DelegationSkeletons count={12} />
       </div>
     </PageWrapper>
   );

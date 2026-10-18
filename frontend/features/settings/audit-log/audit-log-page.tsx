@@ -276,7 +276,7 @@ export function AuditLogPage() {
             className="flex-1"
           />
         ) : isLoading ? (
-          <DataTableSkeleton rows={pageSize} columns={6} className="min-h-0 flex-1" />
+          <DataTableSkeleton fill columns={6} />
         ) : (
           <DataTable
             data={logs}

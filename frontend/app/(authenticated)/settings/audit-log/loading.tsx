@@ -8,6 +8,7 @@ export default function AuditLogLoading() {
       title="Audit Log"
       subtitle="Track system actions, logins, and changes across your organization."
       noInternalScroll
+      contentClassName="flex min-h-0 flex-1 flex-col"
       actions={<Skeleton className="h-9 w-28 rounded-md" />}
       filters={
         <>
@@ -22,9 +23,7 @@ export default function AuditLogLoading() {
         </>
       }
     >
-      <div className="flex min-h-0 flex-1 flex-col gap-3">
-        <DataTableSkeleton rows={15} columns={6} className="min-h-0 flex-1" />
-      </div>
+      <DataTableSkeleton fill columns={6} />
     </PageWrapper>
   );
 }

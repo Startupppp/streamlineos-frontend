@@ -18,7 +18,7 @@ export default function NotificationBroadcastsLoading() {
           <Skeleton className="h-7 w-16 rounded-sm" />
         </div>
         <div className="flex min-h-0 flex-1 flex-col divide-y divide-border overflow-hidden rounded-lg border border-border bg-card">
-          {Array.from({ length: 6 }).map((_, i) => (
+          {Array.from({ length: 14 }).map((_, i) => (
             <div key={i} className="flex items-start gap-3 px-3 py-2.5">
               <div className="flex-1 space-y-1.5">
                 <Skeleton className="h-3.5 w-48" />

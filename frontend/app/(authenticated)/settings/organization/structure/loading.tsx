@@ -31,6 +31,8 @@ export default function OrganizationStructureLoading() {
     <PageWrapper
       title="Organization Structure"
       subtitle="Set up reporting units once, then reuse them across people, access, payroll, and reporting."
+      noInternalScroll
+      contentClassName="flex min-h-0 flex-1 flex-col"
     >
       <div className="flex min-h-0 flex-1 flex-col gap-4">
         <div className="grid grid-cols-1 gap-4 lg:grid-cols-[1.4fr_1fr]">
@@ -40,10 +42,9 @@ export default function OrganizationStructureLoading() {
               <Skeleton className="h-3 w-48" />
             </div>
             <div className="divide-y divide-border/60 p-1.5">
-              <StructureRowSkeleton />
-              <StructureRowSkeleton />
-              <StructureRowSkeleton />
-              <StructureRowSkeleton />
+              {Array.from({ length: 8 }).map((_, i) => (
+                <StructureRowSkeleton key={i} />
+              ))}
             </div>
           </section>
 

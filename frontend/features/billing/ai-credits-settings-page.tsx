@@ -423,7 +423,7 @@ function AiCreditsPageContent() {
                 hideScrollbar
                 className={SCROLL_AREA_PAGE_BODY_CLASS}
               >
-                <div className="flex min-h-full min-w-0 flex-1 flex-col overscroll-contain">
+                <div className="flex h-full min-h-0 min-w-0 flex-1 flex-col">
                   <AiCreditsHistoryTab
                     txns={txns}
                     txnLoading={txnLoading}

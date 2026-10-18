@@ -273,7 +273,7 @@ export function EffectiveAccessSkeleton() {
           <Skeleton className="h-8 w-44" />
         </CardContent>
       </Card>
-      <DataTableSkeleton rows={10} columns={5} className="min-h-0 flex-1" />
+      <DataTableSkeleton fill columns={5} />
     </div>
   );
 }

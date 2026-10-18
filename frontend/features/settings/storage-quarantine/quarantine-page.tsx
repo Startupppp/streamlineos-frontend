@@ -160,7 +160,7 @@ export function QuarantinePage() {
     >
       <PageState
         resolution={pageState}
-        loading={<DataTableSkeleton headers={QUARANTINE_HEADERS} rows={10} className="min-h-0 flex-1" />}
+        loading={<DataTableSkeleton fill headers={QUARANTINE_HEADERS} />}
         empty={emptyState}
         onClearFilters={handleClearFilters}
         onRetry={handleRetry}

@@ -31,7 +31,7 @@ export default function UsersLoading() {
     >
       <div className="flex min-h-0 flex-1 flex-col gap-3">
         <StatCardGridSkeleton cols={5} count={5} stackOnMobile={2} />
-        <DataTableSkeleton rows={12} columns={8} className="min-h-0 flex-1" />
+        <DataTableSkeleton fill columns={8} />
       </div>
     </PageWrapper>
   );

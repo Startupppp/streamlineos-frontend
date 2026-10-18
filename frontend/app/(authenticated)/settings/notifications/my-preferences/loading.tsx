@@ -13,7 +13,7 @@ export default function NotificationMyPreferencesLoading() {
       <div className="flex min-h-0 flex-1 flex-col gap-6 overflow-y-auto">
         <Skeleton className="h-5 w-20" />
         <div className="overflow-hidden rounded-lg border border-border bg-card">
-          {Array.from({ length: 6 }).map((_, i) => (
+          {Array.from({ length: 14 }).map((_, i) => (
             <div
               key={i}
               className="flex items-center justify-between border-b border-border px-3 py-3 last:border-0"

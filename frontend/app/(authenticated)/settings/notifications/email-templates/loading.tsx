@@ -10,9 +10,8 @@ export default function EmailTemplatesLoading() {
       contentClassName="flex min-h-0 flex-1 flex-col"
     >
       <DataTableSkeleton
+        fill
         headers={["Email", "Category", "Subject", "Version", ""]}
-        rows={8}
-        className="min-h-0 flex-1"
       />
     </PageWrapper>
   );

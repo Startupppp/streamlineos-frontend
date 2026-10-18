@@ -96,7 +96,7 @@ export function EmailTemplatesPage() {
     >
       <PageState
         resolution={pageState}
-        loading={<DataTableSkeleton headers={HEADERS} rows={8} className="min-h-0 flex-1" />}
+        loading={<DataTableSkeleton fill headers={HEADERS} />}
         empty={emptyState}
         onRetry={handleRetry}
         className="flex-1"
