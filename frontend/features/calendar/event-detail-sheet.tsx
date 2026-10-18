@@ -186,12 +186,12 @@ export function EventDetailSheet({ event, onClose, onQueueScenarioStep }: EventD
   );
 
   const handleRequestDelete = useCallback(() => {
-    if (detail?.isRecurring) {
+    if (detail?.isRecurring || parsedEventId?.occurrenceStart) {
       setDeleteRecurringScopeOpen(true);
     } else {
       setConfirmOpen(true);
     }
-  }, [detail?.isRecurring]);
+  }, [detail?.isRecurring, parsedEventId?.occurrenceStart]);
   const handleDeleteScopeConfirm = useCallback(
     async (scope: SeriesScope) => {
       if (!event || numericEventId === null) return;
@@ -289,7 +289,11 @@ export function EventDetailSheet({ event, onClose, onQueueScenarioStep }: EventD
         open={confirmOpen}
         onOpenChange={setConfirmOpen}
         title="Delete Event"
-        description="This will permanently delete the event. This action cannot be undone."
+        description={
+          detail?.isRecurring
+            ? "This will permanently delete every occurrence of this recurring event. This action cannot be undone."
+            : "This will permanently delete the event. This action cannot be undone."
+        }
         confirmLabel="Delete"
         destructive
         onConfirm={handleDelete}

@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import React from "react";
 import { EventDetailSheet } from "./event-detail-sheet";
 
@@ -171,5 +171,26 @@ describe("EventDetailSheet — mutation controls follow the backend's creator-on
     setDetail(detailFixture({ canManage: false }));
     render(<EventDetailSheet event={baseEvent} onClose={jest.fn()} />);
     expect(screen.getAllByRole("button", { name: /^close$/i }).length).toBeGreaterThan(0);
+  });
+
+  it("CAL-B-014 Delete on a recurring event asks which occurrences, and the whole-series confirm says every occurrence goes", () => {
+    setDetail(detailFixture({ canManage: true, isRecurring: true, rrule: "FREQ=WEEKLY" }));
+    render(<EventDetailSheet event={baseEvent} onClose={jest.fn()} />);
+
+    fireEvent.click(screen.getByRole("button", { name: /^delete$/i }));
+    expect(screen.getByText("Which occurrences do you want to delete?")).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("radio", { name: "All occurrences" }));
+    fireEvent.click(screen.getByRole("button", { name: /^delete$/i, hidden: false }));
+    expect(screen.getByText(/permanently delete every occurrence of this recurring event/)).toBeInTheDocument();
+  });
+
+  it("CAL-B-014 Delete on a one-off event goes straight to the single-event confirm", () => {
+    setDetail(detailFixture({ canManage: true }));
+    render(<EventDetailSheet event={baseEvent} onClose={jest.fn()} />);
+
+    fireEvent.click(screen.getByRole("button", { name: /^delete$/i }));
+    expect(screen.getByText("This will permanently delete the event. This action cannot be undone.")).toBeInTheDocument();
+    expect(screen.queryByText("Which occurrences do you want to delete?")).not.toBeInTheDocument();
   });
 });
