@@ -47,6 +47,7 @@ export function FormSheetChrome({
           "flex w-full flex-col gap-0 overflow-hidden p-0 sm:max-w-md",
           className,
         )}
+        {...(description ? {} : { "aria-describedby": undefined })}
       >
         <SheetHeader
           className={cn(

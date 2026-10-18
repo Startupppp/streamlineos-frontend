@@ -50,6 +50,7 @@ export function AppDialog({
             "flex flex-col p-0 gap-0 h-auto max-h-[92dvh] rounded-t-2xl border-t pb-[env(safe-area-inset-bottom)]",
             className,
           )}
+          {...(description ? {} : { "aria-describedby": undefined })}
         >
           <div className="mx-auto mt-2 h-1.5 w-10 rounded-full bg-muted-foreground/25 shrink-0" />
           <SheetHeader className="shrink-0 px-4 pt-2 pb-3 border-b border-border/60 text-left gap-1">
@@ -80,6 +81,7 @@ export function AppDialog({
           "flex flex-col gap-0 p-0 max-w-md max-h-[90dvh]",
           className,
         )}
+        {...(description ? {} : { "aria-describedby": undefined })}
       >
         <DialogHeader className="shrink-0 gap-1 border-b border-border/60 px-4 py-3">
           <DialogTitle className="text-base font-semibold">{title}</DialogTitle>

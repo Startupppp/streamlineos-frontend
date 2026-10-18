@@ -46,6 +46,7 @@ export function AppSheet({
       <SheetContent
         side={resolvedSide}
         className={cn("flex flex-col p-0 gap-0", sideClasses, className)}
+        {...(description ? {} : { "aria-describedby": undefined })}
       >
         {resolvedSide === "bottom" && (
           <div className="mx-auto mt-2 h-1.5 w-10 rounded-full bg-muted-foreground/25 shrink-0" />

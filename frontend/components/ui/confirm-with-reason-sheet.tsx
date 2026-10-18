@@ -69,7 +69,10 @@ export function ConfirmWithReasonSheet({
 
   return (
     <Sheet open={open} onOpenChange={isPending ? undefined : onOpenChange}>
-      <SheetContent className="flex flex-col gap-0 overflow-hidden p-0 sm:max-w-md">
+      <SheetContent
+        className="flex flex-col gap-0 overflow-hidden p-0 sm:max-w-md"
+        {...(description ? {} : { "aria-describedby": undefined })}
+      >
         <SheetHeader className="shrink-0 border-b border-border px-5 pb-4 pt-5 text-left">
           <SheetTitle className="text-base font-semibold">{title}</SheetTitle>
           {description && (
