@@ -12,6 +12,7 @@ import type { NamedUser } from "@/lib/person-display";
 import { ApprovalStatusBadge } from "./approval-status-badge";
 import { BuildMobileCard } from "@/features/build/shared/build-mobile-card";
 import type { ApprovalInboxItem, ApprovalStatus } from "@/types/projects";
+import { formatShortDate } from "@/lib/date-utils";
 import { DECIDABLE, entityTypeLabel } from "./approvals-constants";
 
 export const INBOX_TABLE_HEADERS = [
@@ -148,7 +149,7 @@ export function buildApprovalsInboxColumns({
                 : "text-muted-foreground",
             )}
           >
-            {row.dueAt.slice(0, 10)}
+            {formatShortDate(row.dueAt)}
           </span>
         );
       },
