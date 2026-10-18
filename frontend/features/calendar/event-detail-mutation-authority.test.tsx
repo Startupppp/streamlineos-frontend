@@ -149,6 +149,14 @@ describe("EventDetailSheet — mutation controls follow the backend's creator-on
     expect(screen.getByTestId("event-detail-content").dataset["canUpdate"]).toBe("false");
   });
 
+  it("shows the creator's Edit and Delete at once from the projection, disabled until the detail arrives", () => {
+    setDetail(null, true);
+    const ownEvent = { ...baseEvent, actions: { ...baseEvent.actions, edit: true, delete: true } };
+    render(<EventDetailSheet event={ownEvent} onClose={jest.fn()} />);
+    expect(screen.getByRole("button", { name: /^edit$/i })).toBeDisabled();
+    expect(screen.getByRole("button", { name: /delete/i })).toBeDisabled();
+  });
+
   it("fails CLOSED when the payload carries no capability at all", () => {
     getCalendarMock().useCalendarEvent.mockReturnValue({
       data: { id: 1, title: "Team sync", isRecurring: false },

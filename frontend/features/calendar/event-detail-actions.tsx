@@ -23,6 +23,7 @@ interface EventDetailActionsProps {
   huddleHref: string | null;
   canExport: boolean;
   canMutate: boolean;
+  mutatePending?: boolean;
   showCancelOccurrence: boolean;
   showProtect: boolean;
   showRadar: boolean;
@@ -51,6 +52,7 @@ interface ActionTool {
   ariaLabel?: string;
   onClick: () => void;
   tone: keyof typeof TILE_TONE;
+  disabled?: boolean;
 }
 
 export function EventDetailActions({
@@ -59,6 +61,7 @@ export function EventDetailActions({
   huddleHref,
   canExport,
   canMutate,
+  mutatePending = false,
   showCancelOccurrence,
   showProtect,
   showRadar,
@@ -99,7 +102,7 @@ export function EventDetailActions({
           tools={(
             [
               canMutate
-                ? { key: "edit", icon: Pencil, label: "Edit", onClick: onEdit, tone: "default" }
+                ? { key: "edit", icon: Pencil, label: "Edit", onClick: onEdit, tone: "default", disabled: mutatePending }
                 : null,
               canExport
                 ? {
@@ -112,7 +115,7 @@ export function EventDetailActions({
                   }
                 : null,
               canMutate
-                ? { key: "delete", icon: Trash2, label: "Delete", onClick: onDelete, tone: "danger" }
+                ? { key: "delete", icon: Trash2, label: "Delete", onClick: onDelete, tone: "danger", disabled: mutatePending }
                 : null,
               showCancelOccurrence
                 ? {
@@ -152,6 +155,8 @@ function ActionGrid({ tools }: { tools: ActionTool[] }) {
             variant="ghost"
             aria-label={tool.ariaLabel}
             onClick={tool.onClick}
+            disabled={tool.disabled}
+            aria-busy={tool.disabled || undefined}
             className={cn(
               "h-auto justify-start gap-2.5 border border-input bg-card px-2.5 py-2 shadow-xs hover:border-primary/50 dark:border-background",
               wide && "col-span-2",

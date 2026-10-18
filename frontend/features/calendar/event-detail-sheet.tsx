@@ -85,7 +85,7 @@ export function EventDetailSheet({ event, onClose, onQueueScenarioStep }: EventD
   const { data: detail, isLoading: detailLoading } = useCalendarEvent(
     isCalendarEvent ? numericEventId : null,
   );
-  const canUpdate = isCalendarEvent && detail?.canManage === true;
+  const canUpdate = isCalendarEvent && (detail ? detail.canManage === true : event?.actions.edit === true);
   const canMutateEvent = canUpdate && event?.category !== "huddle";
   const canExport = useCan("calendar:events:export");
   const commitmentRoot: CommitmentReference | null = detail?.linkedTicket
@@ -237,6 +237,7 @@ export function EventDetailSheet({ event, onClose, onQueueScenarioStep }: EventD
           huddleHref={event?.entityId ? `/chat?channel=${event.entityId}` : null}
           canExport={canExport}
           canMutate={canMutateEvent}
+          mutatePending={isCalendarEvent && !detail}
           showCancelOccurrence={canMutateEvent && detail?.isRecurring === true}
           showProtect={canMutateEvent && !detail?.isRecurring && !event?.allDay}
           showRadar={commitmentRoot !== null}
