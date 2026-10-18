@@ -108,7 +108,7 @@ describe("CommandPaletteDialogBody — project-scoped route catalog", () => {
   beforeEach(() => {
     mockPush = jest.fn();
     accessData = { isOrgOwner: false, scopes: {} };
-    enabledModules = ["BUILD", "FEEDBUCKET"];
+    enabledModules = ["BUILD"];
     projectData = { settings: { features: { clientPortal: true } } };
     (useCan as jest.Mock).mockReturnValue(false);
     (useRouter as jest.Mock).mockReturnValue({ push: mockPush });
@@ -159,7 +159,7 @@ describe("CommandPaletteDialogBody — project-scoped route catalog", () => {
     expect(mockPush).toHaveBeenCalledWith(`${PROJECT_BASE_PATH}/risks`);
   });
 
-  it("reaches every route in the project catalog for an owner of an org with the Build and Feedbucket modules", () => {
+  it("reaches every route in the project catalog for an owner of an org with the Build module", () => {
     accessData = { isOrgOwner: true, scopes: {} };
 
     render(<CommandPaletteDialogBody />);
@@ -182,16 +182,13 @@ describe("CommandPaletteDialogBody — project-scoped route catalog", () => {
     }
   });
 
-  it("withholds the Feedbucket-gated project route when the org module is off", () => {
+  it("offers the feedback project route through the Build module alone", () => {
     accessData = { isOrgOwner: true, scopes: {} };
-    enabledModules = ["BUILD"];
 
     render(<CommandPaletteDialogBody />);
     typeQuery("project");
 
-    expect(
-      screen.queryByText(`${PROJECT_BASE_PATH}/feedbucket`),
-    ).not.toBeInTheDocument();
+    expect(screen.getByText(`${PROJECT_BASE_PATH}/feedbucket`)).toBeInTheDocument();
     expect(screen.getByText(`${PROJECT_BASE_PATH}/risks`)).toBeInTheDocument();
   });
 
