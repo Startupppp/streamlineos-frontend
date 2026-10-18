@@ -13,7 +13,7 @@ Latest report note: Week grid shows UTC times: STILL OPEN | Grid shows "12:46 PM
 
 Code fix: Timezone hint added to the New Event form (shows the browser's IANA zone name below the time inputs when creating a timed event). The underlying UTC storage requires a backend timezone field, which is out of scope for a frontend fix.
 
-### CAL-B-002 — PARTIAL (0dc757f82), PENDING_BROWSER_VERIFICATION
+### CAL-B-002 — FIXED (0dc757f82 frontend), PENDING_BROWSER_VERIFICATION
 
 New event is saved in UTC; no timezone control; user-entered wall time is treated as UTC
 
@@ -452,7 +452,7 @@ Latest report note: Medium: List / search | No calendar filter or event search; 
 - Suggested fix: Add source/calendar multi-select and a title search box in the calendar header; index upcoming events in the palette.
 - Acceptance check: Type "QA1015R3" in the calendar search → the probe appears; choose "Google" in the filter → only Google rows remain.
 
-### CAL-B-027 — OPEN
+### CAL-B-027 — DEFERRED (feature gap; no reminder table or endpoint exists)
 
 No reminder setting on calendar events (New Event or event sheet)
 
@@ -488,14 +488,14 @@ Latest report note: Medium: Calendar load | "Loading calendar sources…" for 20
 
 ## UX notes that are not done
 
-### Must change
+### Must change — DONE (0dc757f82 + acce78553)
 
-5. **Clash toast does not name the conflict.** "Event created, but it clashes with 1 event already on your calendar." Name the event and time, and offer "View" / "Keep anyway".
-4. **Save stays enabled while the form is invalid.** With end before start, the inline text "End must be on or after start" appears but Save is still enabled and clicking it does nothing visible. Disable Save and focus the first invalid field, or show a toast.
-3. **Escape silently discards an unsaved New Event.** Typed title and fields vanish with no "Discard changes?" prompt. Add a confirm when the form is dirty.
-1. **Default sync target is Outlook, silently.** New Event defaults "Sync to calendar account" to `outlook`. My all-day test event (no sync choice made) was pushed to the Outlook account and now has a read-only copy there. Default should be "Don't sync" or the user's chosen primary, and the selected target should be visible in the summary before Save.
-4. **Turn "Add Teams meeting link" off by default** (it is on in every new event; it creates a meeting link for every block and is not mentioned).
-2. **Add a timezone line to the New Event form** (e.g. "Asia/Kolkata") so the saved zone is visible before Save. The form has no zone field at all.
+5. **Clash toast does not name the conflict.** FIXED (acce78553) — toast now reads e.g. `it clashes with "Standup", "Retro"`.
+4. **Save stays enabled while the form is invalid.** FIXED (0dc757f82) — Save disabled when `dateTimeError` is present.
+3. **Escape silently discards an unsaved New Event.** FIXED (0dc757f82) — ConfirmDialog shown when title is non-empty.
+1. **Default sync target is Outlook, silently.** FIXED (0dc757f82) — `syncConnectionId` defaults to `"none"` (Don't sync).
+4. **Turn "Add Teams meeting link" off by default.** FIXED (0dc757f82) — `addConference: false` in default form state.
+2. **Add a timezone line to the New Event form.** FIXED (0dc757f82) — timezone hint (`Intl.DateTimeFormat().resolvedOptions().timeZone`) shown below time inputs; timezone also sent in create payload.
 
 ### Good to have
 
