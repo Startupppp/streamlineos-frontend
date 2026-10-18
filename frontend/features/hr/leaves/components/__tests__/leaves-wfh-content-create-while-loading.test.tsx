@@ -45,6 +45,8 @@ jest.mock("@/features/hr/leaves/components/use-leaves-wfh-data", () => ({
     isLoading: mockState.isLoading,
     isError: mockState.isError,
     errorValue: mockState.isError ? new Error("boom") : null,
+    myRequestsError: false,
+    myRequestsErrorValue: null,
     onRetryPage: jest.fn(),
     approvalsLoading: false,
     approvalsError: false,

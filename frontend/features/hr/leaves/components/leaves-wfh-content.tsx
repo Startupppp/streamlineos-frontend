@@ -50,8 +50,8 @@ export function LeavesWfhContent({ selfService = false }: LeavesWfhContentProps)
   const myLeavesState = usePageState({
     permission: "self:leaves",
     isLoading: data.isLoading,
-    isError: data.isError,
-    error: data.errorValue,
+    isError: data.myRequestsError,
+    error: data.myRequestsErrorValue,
   });
   const { activeTab, onTabChange } = useUrlTab(LEAVE_TABS, "my-leaves");
   const [wfhStatusFilter, setWfhStatusFilter] = useState("ALL");
