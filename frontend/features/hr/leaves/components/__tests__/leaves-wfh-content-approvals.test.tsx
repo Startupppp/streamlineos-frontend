@@ -163,6 +163,13 @@ describe("LeavesWfhContent — approvals read GET /hr/leaves/team as a cursor en
     expect(screen.getByRole("tab", { name: /Approvals\s*2/ })).toBeInTheDocument();
   });
 
+  it("draws tab counts at full text contrast instead of a 70% fade that measures about 3:1 on an inactive tab (UX-10)", () => {
+    renderPage();
+
+    const count = within(screen.getByRole("tab", { name: /Approvals\s*2/ })).getByText("2");
+    expect(count.className).not.toMatch(/opacity-/);
+  });
+
   it("counts only requests awaiting the viewer's decision, leaving out their own request that needs another approver (HR-U-003)", () => {
     const ownPending = { ...teamRequest(4, "PENDING", "Admin"), user: { ...teamRequest(4, "PENDING", "Admin").user, id: "user_admin" } };
     mockTeamPages = {

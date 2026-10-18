@@ -69,7 +69,7 @@ export function LeavesWfhToolbar({
           <TabsTrigger value="my-leaves" className="gap-1.5 truncate">
             {t("timeOff.tabMyLeaves")}
             {myLeaveCount > 0 ? (
-              <span className="text-xs tabular-nums opacity-70">{myLeaveCount}</span>
+              <span className="text-xs tabular-nums">{myLeaveCount}</span>
             ) : null}
           </TabsTrigger>
           <TabsTrigger value="wfh" className="gap-1.5 truncate">
@@ -80,7 +80,7 @@ export function LeavesWfhToolbar({
               Approvals
               {totalPendingApprovals > 0 ? (
                 <span
-                  className="text-xs tabular-nums opacity-70"
+                  className="text-xs tabular-nums"
                   title="Leave and WFH requests awaiting your decision"
                 >
                   {totalPendingApprovals}
