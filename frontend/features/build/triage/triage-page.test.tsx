@@ -215,7 +215,16 @@ beforeEach(() => {
   mockBuildListFilters.isFiltered = false;
   mockUseCan.mockReturnValue(true);
   mockUseAccess.mockReturnValue(ACCESS_GRANTED);
-  mockUseProject.mockReturnValue({ data: { key: "PROJ" } });
+  mockUseProject.mockReturnValue({
+    data: {
+      key: "PROJ",
+      statuses: [
+        { id: 1, orgId: "o", projectId: 1, name: "Todo", order: 0, color: null, type: "unstarted", createdAt: null, updatedAt: null },
+        { id: 2, orgId: "o", projectId: 1, name: "Shipped", order: 2, color: null, type: "completed", createdAt: null, updatedAt: null },
+        { id: 3, orgId: "o", projectId: 1, name: "Dropped", order: 3, color: null, type: "cancelled", createdAt: null, updatedAt: null },
+      ],
+    },
+  });
   mockUseTickets.mockReturnValue(
     baseTicketsResult({ data: { data: [], pagination: { hasMore: false } } }),
   );
@@ -470,6 +479,32 @@ describe("BUG-037 — triage list excludes epics and cycle-assigned tickets, and
     expect(mockRemoveTicketFromCollections).toHaveBeenCalledWith(
       mockQueryClient, 1, SUBMISSION.id,
     );
+  });
+
+  it("declines into the project's own cancelled status, not a hardcoded CANCELLED (B-047)", async () => {
+    const mutateFn = jest.fn();
+    mockUseUpdateTicket.mockReturnValue({ mutate: mutateFn, isPending: false });
+    mockUseTickets.mockReturnValue(
+      baseTicketsResult({ data: { data: [SUBMISSION], pagination: { hasMore: false } } }),
+    );
+    render(<TriagePage projectId={1} />);
+    await act(async () => { fireEvent.click(screen.getByTestId("decline-btn")); });
+    expect(mutateFn).toHaveBeenCalledWith(
+      expect.objectContaining({ ticketId: SUBMISSION.id, status: "Dropped" }),
+      expect.any(Object),
+    );
+  });
+
+  it("does not send a decline before the project statuses have loaded (B-047)", async () => {
+    const mutateFn = jest.fn();
+    mockUseUpdateTicket.mockReturnValue({ mutate: mutateFn, isPending: false });
+    mockUseProject.mockReturnValue({ data: { key: "PROJ" } });
+    mockUseTickets.mockReturnValue(
+      baseTicketsResult({ data: { data: [SUBMISSION], pagination: { hasMore: false } } }),
+    );
+    render(<TriagePage projectId={1} />);
+    await act(async () => { fireEvent.click(screen.getByTestId("decline-btn")); });
+    expect(mutateFn).not.toHaveBeenCalled();
   });
 });
 

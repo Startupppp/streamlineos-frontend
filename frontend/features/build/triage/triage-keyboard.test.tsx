@@ -123,7 +123,16 @@ beforeEach(() => {
     data: { isOrgOwner: false, scopes: { "build:tickets:view": "all" }, modules: {} },
     isLoading: false,
   });
-  mockUseProject.mockReturnValue({ data: { key: "PROJ" } });
+  mockUseProject.mockReturnValue({
+    data: {
+      key: "PROJ",
+      statuses: [
+        { id: 1, orgId: "o", projectId: 1, name: "Todo", order: 0, color: null, type: "unstarted", createdAt: null, updatedAt: null },
+        { id: 2, orgId: "o", projectId: 1, name: "Shipped", order: 2, color: null, type: "completed", createdAt: null, updatedAt: null },
+        { id: 3, orgId: "o", projectId: 1, name: "Dropped", order: 3, color: null, type: "cancelled", createdAt: null, updatedAt: null },
+      ],
+    },
+  });
   mockUseTickets.mockReturnValue(
     baseTicketsResult({ data: { data: [SUBMISSION], pagination: { hasMore: false } } }),
   );
@@ -135,7 +144,7 @@ beforeEach(() => {
 describe("BT-6bce4f4e5ecd — keyboard shortcuts: pressing a/d dispatches accept/decline for the focused row", () => {
   it.each([
     { key: "a", status: "IN_PROGRESS", label: "ACCEPT" },
-    { key: "d", status: "CANCELLED", label: "DECLINE" },
+    { key: "d", status: "Dropped", label: "DECLINE" },
   ])("pressing '$key' when a row is focused calls updateTicket with $label status", async ({ key, status }) => {
     const mutateFn = jest.fn();
     mockUseUpdateTicket.mockReturnValue({ mutate: mutateFn, isPending: false });
@@ -241,7 +250,7 @@ describe("Triage keyboard mutation guards", () => {
       });
       expect(mutate).toHaveBeenCalledTimes(1);
       expect(mutate).toHaveBeenCalledWith(
-        expect.objectContaining({ ticketId: SUBMISSION.id, status: first === "a" ? "IN_PROGRESS" : "CANCELLED" }),
+        expect.objectContaining({ ticketId: SUBMISSION.id, status: first === "a" ? "IN_PROGRESS" : "Dropped" }),
         expect.any(Object),
       );
       fireEvent.keyDown(document, { key: second });
@@ -260,7 +269,7 @@ describe("Triage keyboard mutation guards", () => {
     fireEvent.keyDown(document, { key: "d" });
     expect(mutate).toHaveBeenCalledTimes(2);
     expect(mutate).toHaveBeenLastCalledWith(
-      expect.objectContaining({ ticketId: SUBMISSION.id, status: "CANCELLED" }), expect.any(Object),
+      expect.objectContaining({ ticketId: SUBMISSION.id, status: "Dropped" }), expect.any(Object),
     );
   });
 });
