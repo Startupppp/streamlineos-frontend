@@ -104,12 +104,17 @@ interface OwnerUser {
   email: string;
 }
 
-export function OwnerIndicator({ ownerUser }: { ownerUser: OwnerUser | null }) {
-  if (!ownerUser) return null;
+interface OwnerIndicatorProps {
+  ownerUserId: string | null;
+  ownerUser: OwnerUser | null;
+}
+
+export function OwnerIndicator({ ownerUserId, ownerUser }: OwnerIndicatorProps) {
+  if (!ownerUserId) return null;
   return (
     <span className="flex items-center gap-1 text-dense text-muted-foreground">
       <User className="h-3 w-3 shrink-0" aria-hidden="true" />
-      <span className="truncate">{getUserDisplayName(ownerUser)}</span>
+      <span className="truncate">{ownerUser ? getUserDisplayName(ownerUser) : "Owner assigned"}</span>
     </span>
   );
 }

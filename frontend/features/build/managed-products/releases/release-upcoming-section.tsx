@@ -42,7 +42,7 @@ function UpcomingReleaseRow({ release, now }: { release: ManagedProductRelease; 
         <div className="flex flex-wrap items-center gap-2 text-dense text-muted-foreground">
           <UpcomingSchedule releaseDate={release.releaseDate} now={now} />
           <QaStateBadge qaState={release.qaState} />
-          <OwnerIndicator ownerUser={release.ownerUser} />
+          <OwnerIndicator ownerUserId={release.ownerUserId} ownerUser={release.ownerUser} />
         </div>
       </div>
       <ReleaseRowActions release={release} />

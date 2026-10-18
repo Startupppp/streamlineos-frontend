@@ -59,16 +59,6 @@ jest.mock("@/hooks/api/build/managed-product-releases", () => ({
   }),
 }));
 
-jest.mock("@/hooks/api/organization", () => ({
-  useOrgMembersByIds: (ids: string[]) => ({
-    data: {
-      data: ids
-        .filter((id) => id === "user-abc")
-        .map((id) => ({ userId: id, membershipId: 1, name: "Ada Lovelace", email: "ada@example.com", image: null })),
-    },
-  }),
-}));
-
 jest.mock("sonner", () => ({ toast: { success: jest.fn(), error: jest.fn() } }));
 
 const ROWS: ManagedProductRelease[] = [
@@ -94,6 +84,7 @@ const ROWS_WITH_EVIDENCE: ManagedProductRelease[] = [
     qaState: "approved",
     deploymentEvidenceUrl: "https://ci.example.com/build/99",
     ownerUserId: "user-abc",
+    ownerUser: { id: "user-abc", firstName: "Ada", lastName: "Lovelace", email: "ada@example.com" },
   }),
   release({
     id: 5,

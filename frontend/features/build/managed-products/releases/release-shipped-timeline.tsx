@@ -55,7 +55,7 @@ function ShippedReleaseItem({
         {(release.qaState || release.deploymentEvidenceUrl || release.ownerUserId) ? (
           <div className="flex flex-wrap items-center gap-2 text-dense text-muted-foreground">
             <QaStateBadge qaState={release.qaState} />
-            <OwnerIndicator ownerUser={release.ownerUser} />
+            <OwnerIndicator ownerUserId={release.ownerUserId} ownerUser={release.ownerUser} />
             <EvidenceLink url={release.deploymentEvidenceUrl} />
           </div>
         ) : null}
