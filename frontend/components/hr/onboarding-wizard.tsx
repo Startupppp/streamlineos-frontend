@@ -97,7 +97,12 @@ export function OnboardingWizard() {
       role: (savedDraft?.role as FormValues["role"]) ?? DEFAULT_INVITE_ROLE,
       employeeId: savedDraft?.employeeId ?? "",
       attachToExistingMember: false,
-      joiningDate: savedDraft?.joiningDate ? new Date(savedDraft.joiningDate) : startOfLocalDay(),
+      joiningDate: (() => {
+        const today = startOfLocalDay();
+        if (!savedDraft?.joiningDate) return today;
+        const saved = new Date(savedDraft.joiningDate);
+        return saved >= today ? saved : today;
+      })(),
       dateOfBirth: savedDraft?.dateOfBirth ? new Date(savedDraft.dateOfBirth) : undefined,
       taxId: savedDraft?.taxId ?? "",
       monthlySalary: savedDraft?.monthlySalary ?? undefined,

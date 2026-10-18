@@ -192,7 +192,7 @@ Owner can approve their own leave request (self-approval) and it is applied
 - **Suggested fix:** Decide the rule. Recommended: server rejects approve/reject where approver == requester (403 with message) unless an explicit "owner may self-approve" setting is on; hide Approve/Reject on own requests (match attendance); audit both actor IDs. Update the form copy to match.
 - **Acceptance check:** Owner's own pending leave shows no Approve/Reject (or a disabled state with "Needs another approver"); a direct approve call returns 403; a leave by another employee can still be approved by owner.
 
-### HRM-B-012 — OPEN
+### HRM-B-012 — FIXED, PENDING_BROWSER_VERIFICATION (onboarding-wizard.tsx joiningDate default: saved draft date is only used when >= today; stale past date falls back to startOfLocalDay())
 
 Joining date defaults to 14 Oct 2026 (yesterday) on the Job Details step
 
