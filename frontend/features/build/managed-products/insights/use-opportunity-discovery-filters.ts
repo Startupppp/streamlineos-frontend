@@ -58,17 +58,17 @@ export function useOpportunityDiscoveryFilters(managedProductId: number) {
     withSearch: true as const,
   });
 
-  const sortFilter = filters.value("oppSort");
-  const themePeriod = filters.value("oppThemePeriod");
-  const evidenceAgeFilter = filters.value("oppEvidenceAge");
-  const scoreMinFilter = filters.value("oppScoreMin");
-  const scoreMaxFilter = filters.value("oppScoreMax");
-
-  const stateValues = useMemo(() => splitMulti(filters.value("oppState")), [filters]);
-  const segmentValues = useMemo(() => splitMulti(filters.value("oppSegment")), [filters]);
-  const ownerValues = useMemo(() => splitMulti(filters.value("oppOwner")), [filters]);
-  const themeValues = useMemo(() => splitMulti(filters.value("oppTheme")), [filters]);
-  const confidenceValues = useMemo(() => splitMulti(filters.value("oppConfidence")), [filters]);
+  const filtersValue = filters.value;
+  const sortFilter = filtersValue("oppSort");
+  const themePeriod = filtersValue("oppThemePeriod");
+  const evidenceAgeFilter = filtersValue("oppEvidenceAge");
+  const scoreMinFilter = filtersValue("oppScoreMin");
+  const scoreMaxFilter = filtersValue("oppScoreMax");
+  const stateValues = useMemo(() => splitMulti(filtersValue("oppState")), [filtersValue]);
+  const segmentValues = useMemo(() => splitMulti(filtersValue("oppSegment")), [filtersValue]);
+  const ownerValues = useMemo(() => splitMulti(filtersValue("oppOwner")), [filtersValue]);
+  const themeValues = useMemo(() => splitMulti(filtersValue("oppTheme")), [filtersValue]);
+  const confidenceValues = useMemo(() => splitMulti(filtersValue("oppConfidence")), [filtersValue]);
 
   const cursorValue = searchParams.get(OPP_CURSOR_PARAM);
   const prevParamValue = searchParams.get(OPP_PREV_PARAM);
@@ -96,11 +96,12 @@ export function useOpportunityDiscoveryFilters(managedProductId: number) {
     [searchParams, pathname, router],
   );
 
+  const filtersSetValues = filters.setValues;
   const setFilterFromFirstPage = useCallback(
     (param: string, value: string) => {
-      filters.setValues({ [param]: value, [OPP_CURSOR_PARAM]: "", [OPP_PREV_PARAM]: "" });
+      filtersSetValues({ [param]: value, [OPP_CURSOR_PARAM]: "", [OPP_PREV_PARAM]: "" });
     },
-    [filters],
+    [filtersSetValues],
   );
 
   const facetsQuery = useFeedbucketSubmissionFacets({ managedProductId });
@@ -227,9 +228,10 @@ export function useOpportunityDiscoveryFilters(managedProductId: number) {
     },
     [setFilterFromFirstPage],
   );
+  const filtersSetValue = filters.setValue;
   const handleThemePeriodChange = useCallback(
-    (v: string) => filters.setValue("oppThemePeriod", v),
-    [filters],
+    (v: string) => filtersSetValue("oppThemePeriod", v),
+    [filtersSetValue],
   );
   const handleSegmentValuesChange = useCallback(
     (values: string[]) => {
@@ -274,7 +276,8 @@ export function useOpportunityDiscoveryFilters(managedProductId: number) {
     [setFilterFromFirstPage],
   );
 
-  const clearAll = useCallback(() => filters.clearAll(), [filters]);
+  const filtersClearAll = filters.clearAll;
+  const clearAll = useCallback(() => filtersClearAll(), [filtersClearAll]);
 
   return {
     pageNumber,

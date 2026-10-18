@@ -1,4 +1,5 @@
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
+import { BuildMultiFilterSelect } from "@/features/build/shared/build-multi-filter-select";
 import { OpportunitiesFilterBar } from "./opportunities-filter-bar";
 
 jest.mock("@/hooks/common/use-mobile", () => ({
@@ -136,5 +137,65 @@ describe("OpportunitiesFilterBar", () => {
     });
     expect(container.querySelector("[data-filter-id=oppScoreMin]")).not.toBeNull();
     expect(container.querySelector("[data-filter-id=oppScoreMax]")).not.toBeNull();
+  });
+});
+
+const STATE_OPTIONS = [
+  { label: "Identified", value: "identified" },
+  { label: "Validating", value: "validating" },
+  { label: "Accepted", value: "accepted" },
+];
+
+describe("BuildMultiFilterSelect — State toggle (MP-B-008)", () => {
+  it("adds a value when an unchecked option is clicked and nothing throws", () => {
+    const onValuesChange = jest.fn();
+    render(
+      <BuildMultiFilterSelect
+        label="State"
+        values={[]}
+        onValuesChange={onValuesChange}
+        options={STATE_OPTIONS}
+      />,
+    );
+    fireEvent.click(screen.getByRole("button", { name: "State" }));
+    const identifiedItem = screen.getByRole("menuitemcheckbox", { name: /identified/i });
+    expect(() => fireEvent.click(identifiedItem)).not.toThrow();
+    expect(onValuesChange).toHaveBeenCalledWith(["identified"]);
+  });
+
+  it("removes a value when a checked option is clicked so the filter toggles off", () => {
+    const onValuesChange = jest.fn();
+    render(
+      <BuildMultiFilterSelect
+        label="State"
+        values={["identified", "validating"]}
+        onValuesChange={onValuesChange}
+        options={STATE_OPTIONS}
+      />,
+    );
+    fireEvent.click(screen.getByRole("button", { name: "State" }));
+    const validatingItem = screen.getByRole("menuitemcheckbox", { name: /validating/i });
+    expect(() => fireEvent.click(validatingItem)).not.toThrow();
+    expect(onValuesChange).toHaveBeenCalledWith(["identified"]);
+  });
+
+  it("marks each option checked-state correctly based on the values prop", () => {
+    render(
+      <BuildMultiFilterSelect
+        label="State"
+        values={["accepted"]}
+        onValuesChange={jest.fn()}
+        options={STATE_OPTIONS}
+      />,
+    );
+    fireEvent.click(screen.getByRole("button", { name: "State" }));
+    expect(screen.getByRole("menuitemcheckbox", { name: /accepted/i })).toHaveAttribute(
+      "aria-checked",
+      "true",
+    );
+    expect(screen.getByRole("menuitemcheckbox", { name: /identified/i })).toHaveAttribute(
+      "aria-checked",
+      "false",
+    );
   });
 });

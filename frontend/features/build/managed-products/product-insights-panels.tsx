@@ -1,5 +1,6 @@
 "use client";
 
+import { Component, type ReactNode } from "react";
 import Link from "next/link";
 import {
   BarChart2,
@@ -15,11 +16,43 @@ import {
 import { Button } from "@/components/ui/button";
 import { useModuleEnabled } from "@/hooks/api/access";
 import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
+import { ErrorState } from "@/components/shared/error-state";
 import type { ManagedProductInsights } from "@/hooks/api/build/managed-products-schema";
 import { CustomerImpactPanel } from "./customer-impact-panel";
 import { OpportunityImpactTable } from "./opportunity-impact-table";
 import { getUserDisplayName } from "@/lib/person-display";
 import { ProductDiscoverySection } from "./insights/product-discovery-section";
+
+interface ProductDiscoverySectionBoundaryState {
+  hasError: boolean;
+}
+
+class ProductDiscoverySectionBoundary extends Component<
+  { children: ReactNode },
+  ProductDiscoverySectionBoundaryState
+> {
+  state: ProductDiscoverySectionBoundaryState = { hasError: false };
+
+  static getDerivedStateFromError(): ProductDiscoverySectionBoundaryState {
+    return { hasError: true };
+  }
+
+  handleRetry = (): void => {
+    this.setState({ hasError: false });
+  };
+
+  render(): ReactNode {
+    if (!this.state.hasError) return this.props.children;
+    return (
+      <ErrorState
+        compact
+        title="Discovery is unavailable"
+        description="This section could not load. Try again or reload the page."
+        onRetry={this.handleRetry}
+      />
+    );
+  }
+}
 
 interface InsightPanelProps {
   managedProductId: number;
@@ -272,5 +305,9 @@ export function InsightDiscoveryPanel({
 }: {
   managedProductId: number;
 }) {
-  return <ProductDiscoverySection managedProductId={managedProductId} />;
+  return (
+    <ProductDiscoverySectionBoundary>
+      <ProductDiscoverySection managedProductId={managedProductId} />
+    </ProductDiscoverySectionBoundary>
+  );
 }

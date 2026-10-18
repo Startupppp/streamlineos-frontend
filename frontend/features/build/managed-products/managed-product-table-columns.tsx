@@ -24,6 +24,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { toast } from "sonner";
 import type { NamedUser } from "@/lib/person-display";
+import { cn } from "@/lib/utils";
 import { TABLE_TITLE_CELL } from "@/lib/text-overflow";
 import type { ManagedProduct } from "@/types/projects";
 import { ManagedProductStatusBadge } from "./managed-product-status-badge";
@@ -251,7 +252,8 @@ export function buildManagedProductColumns({
     {
       key: "name",
       header: "Name",
-      className: TABLE_TITLE_CELL,
+      className: cn(TABLE_TITLE_CELL, "sticky left-0 z-[1] bg-card"),
+      headerClassName: "sticky left-0 z-[2] bg-muted",
       cell: renderName,
     },
     {
@@ -301,8 +303,8 @@ export function buildManagedProductColumns({
     {
       key: "actions",
       header: "Actions",
-      headerClassName: "sr-only",
-      className: "w-10",
+      headerClassName: "sr-only sticky right-0 z-[2] bg-muted",
+      className: "w-10 sticky right-0 z-[1] bg-card",
       cell: renderActions,
     },
   ];

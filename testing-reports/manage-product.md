@@ -40,12 +40,12 @@ This file is the remaining manage-product work. Duplicate and finished reports w
 - Severity: Low
 - Code audit: All mutation handlers in `opportunity-pane.tsx` call their respective `set*Open(false)` in `onSuccess`, so the modal does close on success. The multi-second delay is API latency (score/accept endpoints), not a UI freeze. No code change needed; latency is backend.
 
-### MP-B-008 — PARTIAL
+### MP-B-008 — FIXED, PENDING_BROWSER_VERIFICATION
 
 - Title: Insights opportunity "State" multi-select filter does not apply (checkbox/option does not toggle), and one click crashed the whole Insights view into an error boundary
 - Severity: High
 - Route: /build/managed-products/3/insights?view=discovery → Opportunities → "State" filter
-- Code audit: `handleStateValuesChange` in `use-opportunity-discovery-filters.ts` is correctly wired. The check-state issue and error boundary crash are intermittent; the crash was not reproduced after the initial observation. Pending browser re-verify.
+- Fix: Root cause was stale memoization in `use-opportunity-discovery-filters.ts` — `useMemo` and `useCallback` hooks used `[filters]` as dependency (the full filters object, a new reference every render) causing `stateValues` and related callbacks to be recreated every render and racing with the URL update transition. Fixed by extracting stable function references (`filtersValue`, `filtersSetValues`, `filtersSetValue`, `filtersClearAll`) and using those as deps. `InsightDiscoveryPanel` in `product-insights-panels.tsx` now wraps `ProductDiscoverySection` in a `ProductDiscoverySectionBoundary` class error boundary that shows an inline `ErrorState` (compact, with retry) instead of propagating to the Next.js route boundary and replacing the whole page. Specs added: three toggle tests in `opportunities-filter-bar.test.tsx` (add value, remove value, aria-checked state).
 
 ### MP-B-010 — FIXED, PENDING_BROWSER_VERIFICATION
 
@@ -105,9 +105,9 @@ This file is the remaining manage-product work. Duplicate and finished reports w
 - Route: Settings > Publishing > Unpublish → confirm "Unpublish".
 - Fix: The Unpublish button in `roadmap-publication-active.tsx` is now a `LoadingButton` with `isPending={isUnpublishing}`.
 
-### MP-U-009 — OPEN, BROWSER_VERIFY
+### MP-U-009 — FIXED, PENDING_BROWSER_VERIFICATION
 - Route: /build/managed-products at 300% browser zoom.
-- The directory DataTable has `overflow-x-auto` which should allow scrolling, but no pinned columns. Auto-switching to grid view at narrow viewports would require a media-query-based layout decision. Deferred.
+- Fix: `buildManagedProductColumns` in `managed-product-table-columns.tsx` now pins the Name column sticky-left (`sticky left-0 z-[1] bg-card` on data cells, `sticky left-0 z-[2] bg-muted` on the header) and the Actions column sticky-right (`sticky right-0 z-[1] bg-card` / `sticky right-0 z-[2] bg-muted`). The DataTable already has an `overflow-auto` scroll container (set by `minWidth="900px"` in `ManagedProductsPage`), so the table scrolls horizontally within the card while the Name and Actions columns remain visible at all widths. `cn` added to imports to compose with `TABLE_TITLE_CELL`.
 
 ### MP-U-010 — VERIFIED_IN_CODE, PENDING_BROWSER_VERIFICATION
 - Route: /build/managed-products/3/settings?tab=members → Add member.
