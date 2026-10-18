@@ -383,9 +383,9 @@ describe("ProjectBacklogPage — Type and Cycle columns", () => {
 });
 
 describe("ProjectBacklogPage — server sort on the columns the endpoint can order by", () => {
-  it("offers Created and Priority as server sort fields and keeps rank ascending by default", () => {
+  it("offers ID, Title, Created and Priority as server sort fields and keeps rank ascending by default (U-008)", () => {
     renderPage();
-    expect(capturedSurface?.sortState?.fields).toEqual(["created", "priority"]);
+    expect(capturedSurface?.sortState?.fields).toEqual(["id", "title", "created", "priority"]);
     expect(capturedSurface?.sortState?.field).toBeNull();
     const callArgs = mockUseProjectBoardTickets.mock.calls[0]?.[1] as Record<string, unknown>;
     expect(callArgs).toMatchObject({ orderBy: "rank", orderDir: "asc" });
@@ -403,5 +403,16 @@ describe("ProjectBacklogPage — server sort on the columns the endpoint can ord
     expect(params.get("sort")).toBe("created");
     expect(params.get("dir")).toBe("asc");
     expect(params.has("cursor")).toBe(false);
+  });
+
+  it.each([
+    ["id", "number"],
+    ["title", "title"],
+  ])("orders the server query by %s through the %s key (U-008)", (sort, orderBy) => {
+    mockSearchParamsContainer.current = new URLSearchParams(`sort=${sort}&dir=desc`);
+    renderPage();
+    const callArgs = mockUseProjectBoardTickets.mock.calls[0]?.[1] as Record<string, unknown>;
+    expect(callArgs).toMatchObject({ orderBy, orderDir: "desc" });
+    expect(capturedSurface?.sortState?.field).toBe(sort);
   });
 });

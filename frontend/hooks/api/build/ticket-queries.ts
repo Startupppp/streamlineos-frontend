@@ -45,7 +45,7 @@ export function useTickets(
   });
 }
 
-export type TicketOrderBy = "created" | "updated" | "priority" | "dueDate" | "rank";
+export type TicketOrderBy = "created" | "updated" | "priority" | "dueDate" | "number" | "title" | "rank";
 export type TicketOrderDir = "asc" | "desc";
 
 export type BoardFilters = {

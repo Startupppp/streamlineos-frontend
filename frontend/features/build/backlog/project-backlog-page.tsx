@@ -46,7 +46,7 @@ export function ProjectBacklogPage({
   const searchParams = useSearchParams();
   const router = useRouter();
   const requestLeave = useNavigationLeave();
-  const { setListParams, sortField, sortDirection, sortState } = useBacklogListUrlState();
+  const { setListParams, orderBy, sortDirection, sortState } = useBacklogListUrlState();
   const {
     q, selectedStatuses, selectedPriorities, selectedTypes,
     selectedAssignees, selectedLabels, selectedCycles,
@@ -63,7 +63,7 @@ export function ProjectBacklogPage({
     cycle: selectedCycles.length > 0 ? selectedCycles.join(",") : undefined,
     dueDateFrom: dueDateFrom || undefined,
     dueDateTo: dueDateTo || undefined,
-    orderBy: sortField,
+    orderBy,
     orderDir: sortDirection,
   };
   const {
