@@ -27,6 +27,8 @@ const HR_NAME_SHAPE = /^[\p{L}\p{M}][\p{L}\p{M} .'’-]*$/u;
 /** The HR name cap; every input bound to `hrPersonNameField` carries it as `maxLength`. */
 export const HR_PERSON_NAME_MAX = 100;
 
+export const HR_PERSON_NAME_HINT = "Letters, spaces, apostrophes, periods and hyphens. No numbers.";
+
 export function hrPersonNameField(label: string) {
   return z
     .string()

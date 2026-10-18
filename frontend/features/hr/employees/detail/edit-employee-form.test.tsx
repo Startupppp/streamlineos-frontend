@@ -62,6 +62,16 @@ function makeEmployee(overrides: Partial<EmployeeData> = {}): EmployeeData {
   };
 }
 
+describe("EditEmployeeForm — name rule hint", () => {
+  it("states the name rule under both name fields before anything is typed", () => {
+    render(<EditEmployeeForm employee={makeEmployee()} />);
+
+    expect(
+      screen.getAllByText("Letters, spaces, apostrophes, periods and hyphens. No numbers."),
+    ).toHaveLength(2);
+  });
+});
+
 describe("EditEmployeeForm — dirty-field name gate", () => {
   beforeEach(() => {
     mutateAsync.mockClear();

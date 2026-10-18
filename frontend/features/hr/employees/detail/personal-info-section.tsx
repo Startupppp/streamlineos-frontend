@@ -1,9 +1,10 @@
 "use client";
 
 import { useFormContext } from "react-hook-form";
-import { HR_PERSON_NAME_MAX } from "@/lib/person-name-schema";
+import { HR_PERSON_NAME_HINT, HR_PERSON_NAME_MAX } from "@/lib/person-name-schema";
 import {
   FormControl,
+  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -50,6 +51,7 @@ export function PersonalInfoSection() {
               <FormControl>
                 <Input maxLength={HR_PERSON_NAME_MAX} {...field} />
               </FormControl>
+              <FormDescription>{HR_PERSON_NAME_HINT}</FormDescription>
               <FormMessage />
             </FormItem>
           )}
@@ -63,6 +65,7 @@ export function PersonalInfoSection() {
               <FormControl>
                 <Input maxLength={HR_PERSON_NAME_MAX} {...field} />
               </FormControl>
+              <FormDescription>{HR_PERSON_NAME_HINT}</FormDescription>
               <FormMessage />
               {showSameNameWarning && (
                 <p className="text-xs text-status-warning-ink mt-1">
