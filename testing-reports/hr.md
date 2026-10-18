@@ -751,7 +751,7 @@ Conflict lineage now includes same-name/type versions (hr-policy-conflict.servic
 - **Observed:** Two departments share the name "QA Dept 1013" (HR-B-005). The dialog cannot say which one is being archived.
 - **Suggestion:** Show "QA Dept 1013 (QAD1013B)" in the title and the body text.
 
-### HR-U-024 — VERIFIED IN CODE, PENDING_BROWSER_VERIFICATION for holidays (icons always visible; no hover-only hiding in holiday-item.tsx); BLOCKED for shifts (HR-B domain)
+### HR-U-024 — VERIFIED IN CODE, PENDING_BROWSER_VERIFICATION (shift-templates-tab.tsx icons always visible via canManage check; no hover-only hiding; same as holidays)
 - **Where:** /hr/holidays List view (Edit / Delete icons) and /hr/shifts (pencil / trash icons).
 - **Observed:** Both rows have edit and delete icons next to each other; a mis-click opens "Delete this holiday?" (a safe confirm, which is good). Holiday List view shows the icons only on hover.
 - **Suggestion:** Keep the confirm dialogs (they work well). Show the icons always, or add a row menu ("…") so Edit and Delete are not adjacent.
