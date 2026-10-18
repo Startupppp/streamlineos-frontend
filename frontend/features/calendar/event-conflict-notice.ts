@@ -62,11 +62,18 @@ function describeOutOfOffice(conflicts: CalendarOooConflict[]): string | null {
   return `${subject} ${plural ? "are" : "is"} on approved leave`;
 }
 
+function conflictWhen(conflict: CalendarEventConflict): string {
+  if (conflict.allDay) return " (all day)";
+  if (!conflict.startDate) return "";
+  const start = parseISO(conflict.startDate);
+  return Number.isNaN(start.getTime()) ? "" : ` at ${format(start, "h:mm a")}`;
+}
+
 function describeOverlaps(conflicts: CalendarEventConflict[]): string | null {
   if (conflicts.length === 0) return null;
   const named = conflicts
     .slice(0, MAX_NAMED_CONFLICTS)
-    .map((c) => (c.title?.trim() ? `"${c.title.trim()}"` : null))
+    .map((c) => (c.title?.trim() ? `"${c.title.trim()}"${conflictWhen(c)}` : null))
     .filter((t): t is string => t !== null);
   const hidden = conflicts.length - named.length;
   if (named.length === 0)

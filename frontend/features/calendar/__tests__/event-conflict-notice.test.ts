@@ -1,5 +1,6 @@
 import * as fs from "fs";
 import * as path from "path";
+import { format, parseISO } from "date-fns";
 import { backendPath } from "@/test-utils/backend-repo";
 import { describeEventConflicts, eventConflictViewUrl } from "../event-conflict-notice";
 
@@ -116,6 +117,18 @@ describe("describeEventConflicts", () => {
         ],
       }),
     ).toBe(`it clashes with "Standup", "Retro" and 1 other`);
+  });
+
+  it("CAL-B-005 says when each named clash happens", () => {
+    const start = "2026-10-21T10:00:00.000Z";
+    expect(
+      describeEventConflicts({
+        eventConflicts: [
+          { eventId: 1, title: "TZ probe", startDate: start, allDay: false },
+          { eventId: 2, title: "Offsite", startDate: "2026-10-21T00:00:00.000Z", allDay: true },
+        ],
+      }),
+    ).toBe(`it clashes with "TZ probe" at ${format(parseISO(start), "h:mm a")}, "Offsite" (all day)`);
   });
 
   it("falls back to a count when every conflicting event has no title", () => {
