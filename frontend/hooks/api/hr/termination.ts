@@ -239,16 +239,16 @@ export function useCompleteTermination() {
   const qc = useQueryClient();
   return useAuthorizedMutation("hr:exit:manage", {
     mutationKey: [...terminationKeys.all, "complete"],
-    mutationFn: (terminationId: number) =>
+    mutationFn: ({ terminationId }: { terminationId: number; userId: string }) =>
       apiClient.patch(
         `/hr/termination/${terminationId}/complete`, undefined, undefined, terminationSuccessContract,
       ),
-    onSuccess: (_, terminationId) => {
+    onSuccess: (_, { terminationId, userId }) => {
       void qc.invalidateQueries({ queryKey: terminationKeys.all });
       void qc.invalidateQueries({
         queryKey: terminationKeys.detail(terminationId),
       });
-      void invalidateHrWorkforceQueries(qc);
+      void invalidateHrWorkforceQueries(qc, userId);
       void qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.fnfList() });
       void qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.assetReturnsList() });
     },

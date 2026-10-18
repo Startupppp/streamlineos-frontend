@@ -268,16 +268,20 @@ export function useTerminationActions({
 
   const handleCompleteConfirm = useCallback(() => {
     if (!completeTerminationId) return;
-    completeTermination.mutate(completeTerminationId, {
-      onSuccess: () => {
-        toast.success(
-          "Termination completed. Organization access removed; final settlement draft, asset returns and exit checklist created.",
-        );
-        setCompleteTerminationId(null);
+    const record = terminations.find((t) => t.id === completeTerminationId);
+    completeTermination.mutate(
+      { terminationId: completeTerminationId, userId: record?.userId ?? "" },
+      {
+        onSuccess: () => {
+          toast.success(
+            "Termination completed. Organization access removed; final settlement draft, asset returns and exit checklist created.",
+          );
+          setCompleteTerminationId(null);
+        },
+        onError: (mutationError) => toast.error(getErrorMessage(mutationError)),
       },
-      onError: (mutationError) => toast.error(getErrorMessage(mutationError)),
-    });
-  }, [completeTerminationId, completeTermination]);
+    );
+  }, [completeTerminationId, completeTermination, terminations]);
 
   const handleApprove = useCallback(
     (terminationId: number) => {
