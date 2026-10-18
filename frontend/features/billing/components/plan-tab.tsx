@@ -33,6 +33,12 @@ import {
   useCheckoutScript,
 } from "@/features/billing/lib/checkout-script";
 import type { BillingReadiness } from "@/hooks/api/subscription";
+import { useOrgTimeZone } from "@/hooks/api/org-display";
+import {
+  formatTrialDaysLeft,
+  formatTrialEndDate,
+  trialDaysRemaining,
+} from "@/components/billing/trial-end";
 
 function assertNever(x: never): never {
   throw new Error(`Unhandled readiness reason: ${String(x)}`);
@@ -85,6 +91,7 @@ const STATUS_BADGE: Record<
 export function PlanTab() {
   const { data: session } = useSession();
   const { data, isLoading, isError, error, refetch } = useSubscription();
+  const orgTz = useOrgTimeZone();
   const {
     data: plansResponse,
     isLoading: plansLoading,
@@ -271,12 +278,7 @@ export function PlanTab() {
   const statusInfo = currentStatus ? STATUS_BADGE[currentStatus] : null;
   const isBusy = isCreatingOrder || isVerifying || isReconciling;
   const trialEndsAt = data?.subscription?.trialEndsAt;
-  const trialDaysRemaining = trialEndsAt
-    ? Math.max(
-        0,
-        Math.ceil((new Date(trialEndsAt).getTime() - now) / 86_400_000),
-      )
-    : null;
+  const trialDaysLeft = trialEndsAt ? trialDaysRemaining(trialEndsAt, now) : null;
 
   const isDataLoading = isLoading || plansLoading;
 
@@ -329,19 +331,10 @@ export function PlanTab() {
           {currentStatus === "TRIAL" && trialEndsAt && (
             <p className="text-xs text-status-warning-ink mt-0.5 flex items-center gap-1">
               <Calendar className="h-3 w-3" />
-              Trial ends{" "}
-              {new Date(trialEndsAt).toLocaleDateString("en-IN", {
-                day: "numeric",
-                month: "short",
-                year: "numeric",
-              })}
-              {trialDaysRemaining !== null && trialDaysRemaining <= 7 && (
+              Trial ends {formatTrialEndDate(trialEndsAt, orgTz)}
+              {trialDaysLeft !== null && (
                 <span className="font-semibold">
-                  &nbsp;(
-                  {trialDaysRemaining === 0
-                    ? "today"
-                    : `${trialDaysRemaining}d left`}
-                  )
+                  &nbsp;({formatTrialDaysLeft(trialDaysLeft)})
                 </span>
               )}
             </p>

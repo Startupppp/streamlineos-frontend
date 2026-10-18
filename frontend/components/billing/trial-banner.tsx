@@ -4,18 +4,14 @@ import { useState } from "react";
 import Link from "next/link";
 import { X, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useOrgTimeZone } from "@/hooks/api/org-display";
 import { useSubscription } from "@/hooks/api/subscription";
-
-function getDaysRemaining(trialEndsAt: string): number {
-  return Math.max(
-    0,
-    Math.ceil((new Date(trialEndsAt).getTime() - Date.now()) / 86_400_000),
-  );
-}
+import { formatTrialDaysLeft, formatTrialEndDate, trialDaysRemaining } from "./trial-end";
 
 export function TrialBanner() {
   const [dismissed, setDismissed] = useState(false);
   const { data, isLoading, isError } = useSubscription();
+  const orgTz = useOrgTimeZone();
 
   function handleDismiss() {
     setDismissed(true);
@@ -31,11 +27,12 @@ export function TrialBanner() {
   )
     return null;
 
-  const daysLeft = getDaysRemaining(subscription.trialEndsAt);
+  const daysLeft = trialDaysRemaining(subscription.trialEndsAt, Date.now());
+  const endDate = formatTrialEndDate(subscription.trialEndsAt, orgTz);
   const label =
     daysLeft === 0
       ? "Your trial expires today"
-      : `Your trial ends in ${daysLeft} day${daysLeft === 1 ? "" : "s"}`;
+      : `Trial ends ${endDate} (${formatTrialDaysLeft(daysLeft)})`;
 
   return (
     <div
@@ -54,16 +51,10 @@ export function TrialBanner() {
           ) : (
             <>
               <span className="sm:hidden">
-                Trial ends in{" "}
-                <strong className="font-semibold">
-                  {daysLeft}d
-                </strong>
+                Trial ends <strong className="font-semibold">{endDate}</strong>
               </span>
               <span className="hidden sm:inline">
-                Your trial ends in{" "}
-                <strong className="font-semibold">
-                  {daysLeft} day{daysLeft === 1 ? "" : "s"}
-                </strong>
+                <strong className="font-semibold">{label}</strong>
                 {" — upgrade to keep full access."}
               </span>
             </>
