@@ -84,7 +84,7 @@ interface EventDetailContentProps {
   detailLoading?: boolean;
   onClose: () => void;
   onRequestUnlink: () => void;
-  onRsvp: (status: RsvpChoice) => void;
+  onRsvp: (status: RsvpChoice) => Promise<boolean>;
 }
 
 export function getEventColor(event: CalendarListItem | null) {
@@ -128,8 +128,14 @@ export function EventDetailContent({
   const chooseRsvp = useCallback(
     (status: RsvpChoice) => {
       if (numericEventId === null) return;
-      setPendingRsvp({ eventId: numericEventId, status });
-      onRsvp(status);
+      const eventId = numericEventId;
+      setPendingRsvp({ eventId, status });
+      void onRsvp(status).then((saved) => {
+        if (!saved)
+          setPendingRsvp((current) =>
+            current?.eventId === eventId && current.status === status ? null : current,
+          );
+      });
     },
     [numericEventId, onRsvp],
   );

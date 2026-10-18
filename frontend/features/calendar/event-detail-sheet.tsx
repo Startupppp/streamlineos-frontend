@@ -152,12 +152,14 @@ export function EventDetailSheet({ event, onClose, onQueueScenarioStep }: EventD
 
   const handleRsvp = useCallback(
     async (status: "accepted" | "declined" | "tentative") => {
-      if (!event || numericEventId === null) return;
+      if (!event || numericEventId === null) return false;
       try {
         await rsvpMutation({ eventId: numericEventId, status });
         toast.success(`RSVP updated: ${RSVP_STATUS_LABELS[status]}`);
+        return true;
       } catch (err) {
         toast.error(getErrorMessage(err));
+        return false;
       }
     },
     [event, numericEventId, rsvpMutation],

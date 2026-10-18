@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { EventDetailContent } from "./event-detail-content";
 import type { CalendarEventDetail, CalendarListItem } from "@/hooks/api/calendar";
 import { calendarProjectionFields } from "./calendar-projection-fixtures";
@@ -57,7 +57,7 @@ const baseProps = {
   rsvpMutationIsPending: false,
   onClose: jest.fn(),
   onRequestUnlink: jest.fn(),
-  onRsvp: jest.fn(),
+  onRsvp: jest.fn(() => Promise.resolve(true)),
 };
 
 it("keeps projected event facts visible without skeletons until the detail arrives", () => {
@@ -98,4 +98,25 @@ it("CAL-B-004 lists the event's external guests for the organizer", () => {
   render(<EventDetailContent {...baseProps} detail={{ ...detail, canManage: true, guestEmails: ["qa1015cal@sharklasers.com"] }} />);
 
   expect(screen.getByRole("list", { name: "External guests" })).toHaveTextContent("qa1015cal@sharklasers.com");
+});
+
+it("CAL-B-017 drops the optimistic RSVP when the server refuses it, so the sheet never claims a response that was not saved", async () => {
+  render(<EventDetailContent {...baseProps} detailLoading={false} detail={detail} onRsvp={() => Promise.resolve(false)} />);
+
+  fireEvent.click(screen.getByRole("button", { name: "Accept event" }));
+  expect(screen.getByRole("button", { name: "Accept event" })).toHaveAttribute("aria-pressed", "true");
+
+  await waitFor(() =>
+    expect(screen.getByRole("button", { name: "Accept event" })).toHaveAttribute("aria-pressed", "false"),
+  );
+  expect(screen.queryByText("You're going")).not.toBeInTheDocument();
+});
+
+it("CAL-B-017 keeps the chosen RSVP once the server saved it", async () => {
+  render(<EventDetailContent {...baseProps} detailLoading={false} detail={detail} onRsvp={() => Promise.resolve(true)} />);
+
+  fireEvent.click(screen.getByRole("button", { name: "Accept event" }));
+
+  await waitFor(() => expect(screen.getByText("You're going")).toBeInTheDocument());
+  expect(screen.getByRole("button", { name: "Accept event" })).toHaveAttribute("aria-pressed", "true");
 });
