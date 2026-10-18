@@ -132,6 +132,7 @@ export type UpdateKbPageInput = KbPageRevisionedPatch | KbPageNonIndexedPatch;
 
 export type MoveKbPageInput = {
   parentPageId: number | null;
+  spaceId?: number | null;
   index: number;
 };
 

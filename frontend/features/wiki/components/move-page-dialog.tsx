@@ -16,14 +16,18 @@ import { TruncatedText } from "@/components/ui/truncated-text";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { ErrorState } from "@/components/shared";
-import { useKbPagesSearch, useMoveKbPage } from "@/hooks/api/kb";
-import type { KbPageSearchResult } from "@/hooks/api/kb/page-types";
+import { useKbPagesSearch, useKbSpaces, useMoveKbPage } from "@/hooks/api/kb";
+import type { KbPageSearchResult, MoveKbPageInput } from "@/hooks/api/kb/page-types";
 import { getErrorMessage } from "@/lib/get-error-message";
 import {
   KbMoveRightIcon,
   KbFileTextIcon,
   KbSearchIcon,
 } from "@/features/wiki/lib/kb-icons";
+
+type MoveTarget = Omit<MoveKbPageInput, "index">;
+
+const SPACE_OPTION_LIMIT = 100;
 
 interface MovePageDialogProps {
   pageId: number;
@@ -39,10 +43,10 @@ export default function MovePageDialog({
   onOpenChange,
 }: MovePageDialogProps) {
   const movePage = useMoveKbPage();
-  const [selectedParent, setSelectedParent] = useState<number | null>(
-    currentParentId,
-  );
+  const [target, setTarget] = useState<MoveTarget>({ parentPageId: currentParentId });
   const [searchQuery, setSearchQuery] = useState("");
+  const { data: spacePage } = useKbSpaces({ limit: SPACE_OPTION_LIMIT });
+  const spaces = spacePage?.data ?? [];
 
   const { data: searchResults, isLoading: searching, isError: searchError, error, refetch } =
     useKbPagesSearch(searchQuery);
@@ -52,7 +56,7 @@ export default function MovePageDialog({
 
   function handleConfirm() {
     movePage.mutate(
-      { pageId, parentPageId: selectedParent, index: 0 },
+      { pageId, ...target, index: 0 },
       {
         onSuccess: () => {
           toast.success("Page moved");
@@ -64,7 +68,13 @@ export default function MovePageDialog({
   }
 
   function handleSelectRoot() {
-    setSelectedParent(null);
+    setTarget({ parentPageId: null });
+  }
+
+  function handleSpaceButtonClick(e: React.MouseEvent<HTMLButtonElement>) {
+    const id = e.currentTarget.dataset.spaceId;
+    if (!id) return;
+    setTarget({ parentPageId: null, spaceId: Number(id) });
   }
 
   function handleSearchChange(e: React.ChangeEvent<HTMLInputElement>) {
@@ -74,7 +84,7 @@ export default function MovePageDialog({
   function handleNodeButtonClick(e: React.MouseEvent<HTMLButtonElement>) {
     const id = e.currentTarget.dataset.nodeId;
     if (!id) return;
-    setSelectedParent(Number(id));
+    setTarget({ parentPageId: Number(id) });
   }
 
   function handleCancel() {
@@ -94,7 +104,7 @@ export default function MovePageDialog({
             Move page
           </DialogTitle>
           <DialogDescription className="text-xs">
-            Search for the page that should become the new parent.
+            Choose a space to move the page to its top level, or search for the page that should become the new parent.
           </DialogDescription>
         </DialogHeader>
         <div className="relative">
@@ -109,8 +119,10 @@ export default function MovePageDialog({
         <ScrollArea className="h-64 border border-border rounded-lg">
           <div className="p-2 space-y-0.5">
             <button
+              type="button"
+              aria-pressed={target.parentPageId === null && target.spaceId === undefined}
               className={`w-full text-left px-3 py-2 rounded-md text-sm transition-colors ${
-                selectedParent === null
+                target.parentPageId === null && target.spaceId === undefined
                   ? "bg-primary/10 text-foreground font-medium"
                   : "hover:bg-muted"
               }`}
@@ -118,6 +130,23 @@ export default function MovePageDialog({
             >
               Workspace root
             </button>
+            {spaces.map((space) => (
+              <button
+                key={space.id}
+                type="button"
+                data-space-id={String(space.id)}
+                aria-pressed={target.spaceId === space.id}
+                className={`w-full text-left px-3 py-2 rounded-md text-sm transition-colors flex items-center gap-2 ${
+                  target.spaceId === space.id
+                    ? "bg-primary/10 text-foreground font-medium"
+                    : "hover:bg-muted"
+                }`}
+                onClick={handleSpaceButtonClick}
+              >
+                <span className="shrink-0 text-base leading-none">{space.icon || "📚"}</span>
+                <TruncatedText text={`Top of ${space.name}`} />
+              </button>
+            ))}
             {searching && (
               <div className="px-3 py-2 text-sm text-muted-foreground">
                 Searching…
@@ -143,7 +172,7 @@ export default function MovePageDialog({
                   key={page.id}
                   data-node-id={String(page.id)}
                   className={`w-full text-left py-2 px-3 rounded-md text-sm transition-colors flex items-center gap-2 ${
-                    selectedParent === page.id
+                    target.parentPageId === page.id
                       ? "bg-primary/10 text-foreground font-medium"
                       : "hover:bg-muted"
                   }`}
