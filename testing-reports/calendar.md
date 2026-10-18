@@ -56,7 +56,7 @@ Latest report note: Double-click Save duplicates: STILL OPEN | Double-click (Pla
 - Suggested fix: Disable Save and set busy state on first click; guard submit with a ref; optionally send client-side idempotency key.
 - Acceptance check: Double-click Save → exactly one event row and one Google event; Save shows disabled/spinner during request.
 
-### CAL-B-004 — OPEN
+### CAL-B-004 — PARTIAL (a09f7a852 frontend), PENDING_BROWSER_VERIFICATION
 
 Attendee picker only lists org members — external invitee (qa1015cal@sharklasers.com) cannot be added
 
@@ -93,7 +93,7 @@ Latest report note: Clash toast does not name the conflict: STILL OPEN; no-overl
 - Suggested fix: Name the clashing event in the toast; run conflict check in the same tz as the stored event; exclude hidden sources or say so.
 - Acceptance check: Toast names the clashing event with time; no toast when no overlap.
 
-### CAL-B-006 — UNKNOWN
+### CAL-B-006 — FIXED (c46b32b23 backend + 6d4f73b62 frontend), PENDING_BROWSER_VERIFICATION
 
 Local event and its Google mirror both shown in the calendar (duplicate display)
 
@@ -133,7 +133,7 @@ Latest report note: Synced-event edit fails with "[object Object]": STILL OPEN (
 - Suggested fix: Format the error (show error.message/code); on ETag conflict, auto-refetch the provider copy and retry once, else show "Keep this version / Use Google version" actions.
 - Acceptance check: Edit a synced event → Google copy updated within 30 s with no error; if conflict is forced, the sheet shows readable text plus two resolution buttons, and "[object Object]" never appears.
 
-### CAL-B-008 — PARTIAL
+### CAL-B-008 — VERIFIED_IN_CODE (CORS config correct; infrastructure/DNS issue)
 
 Intermittent "Server temporarily unavailable" with CORS preflight failures on api.streamlineos.in
 
@@ -172,7 +172,7 @@ Latest report note: Series edit "All occurrences" drops earlier "This occurrence
 - Suggested fix: On series update, keep exception/override rows (RECURRENCE-ID based) and only update non-overridden fields; add a test for override survival.
 - Acceptance check: Detach one occurrence, then edit all occurrences; the detached occurrence still shows its own title/time; no occurrence disappears.
 
-### CAL-B-010 — OPEN
+### CAL-B-010 — FIXED (75905d97b frontend), PENDING_BROWSER_VERIFICATION
 
 Drag / resize on an existing event block does not move or resize it; the drag opens a New Event draft
 
@@ -191,7 +191,7 @@ Latest report note: Drag/resize of an existing event: STILL OPEN | Dragging the 
 - Suggested fix: Add move/resize handlers on event blocks with snapping to 15 min and a conflict check; keep empty-slot drag-to-create but do not start it from an event's hit area.
 - Acceptance check: Drag a timed event to 14:00 → block moves, list shows new time in IST, toast confirms; resize handle extends end.
 
-### CAL-B-012 — OPEN
+### CAL-B-012 — FIXED (6d4f73b62 frontend), PENDING_BROWSER_VERIFICATION
 
 Mail "Account 2" shows an unrecoverable connector error and the inbox is empty for all accounts
 
@@ -225,7 +225,7 @@ Latest report note: Delete on recurring event has no scope: STILL OPEN (re-confi
 - Suggested fix: Reuse the Edit scope dialog for Delete (this occurrence / all occurrences), default to "This occurrence only".
 - Acceptance check: Delete on an occurrence with "This occurrence only" removes only that date; other dates remain.
 
-### CAL-B-015 — UNKNOWN
+### CAL-B-015 — PARTIAL (c46b32b23 backend + 6d4f73b62 frontend), PENDING_BROWSER_VERIFICATION
 
 Deleting a synced event in StreamlineOS leaves its provider copy behind (read-only mirror stays)
 
@@ -245,7 +245,7 @@ Latest report note: Delete leaves provider copy behind: STILL OPEN (re-confirmed
 - Suggested fix: On delete of a provider-linked event, enqueue provider delete and reconcile mirror rows; show a sync status if it fails.
 - Acceptance check: Delete a synced event → within 30 s the provider copy is gone and no read-only mirror appears in list/grid.
 
-### CAL-B-016 — OPEN
+### CAL-B-016 — VERIFIED_IN_CODE (error boundary scoped; CORS config correct; see CAL-B-008)
 
 Full-page "Calendar error – Failed to load the calendar" replaces the calendar (no retry inside the panel)
 
@@ -306,7 +306,7 @@ Latest report note: Multi-day all-day event shows only its start date in List an
 - Suggested fix: Format all-day ranges as "29 Oct – 31 Oct 2026 · All day" (same helper used for the grid bar) in list rows, the detail sheet, and the Day/Agenda rows.
 - Acceptance check: Create an all-day event 29–31 Oct; list row, detail sheet, and grid all show the same three-day range; a one-day all-day event still shows a single date.
 
-### CAL-B-019 — PARTIAL (e5d275b38), PENDING_BROWSER_VERIFICATION
+### CAL-B-019 — FIXED (90ef0330a backend), PENDING_BROWSER_VERIFICATION
 
 Sync conflict fires on the FIRST edit of a synced event that was created moments earlier (no other change to the provider copy)
 
@@ -432,7 +432,7 @@ Latest report note: High: Week grid / recurrence | Monthly repeat hard-wired to 
 - Suggested fix: Derive BYMONTHDAY from the start date by default ("Day 23 of month"); always include DTSTART as the first occurrence when it matches the rule; show the computed next 3 dates in the sheet.
 - Acceptance check: Start Fri 23 Oct, Monthly → recurrence shows "Day 23 of month"; occurrences 23 Oct, 23 Nov, 23 Dec; no occurrence on the 15th.
 
-### CAL-B-026 — OPEN
+### CAL-B-026 — PARTIAL (a09f7a852 frontend), PENDING_BROWSER_VERIFICATION
 
 No way to search or filter calendar events: the list filter has only "All events" and the global palette returns no calendar items
 
@@ -469,7 +469,7 @@ Latest report note: Medium: New Event / event sheet | No reminder control
 - Suggested fix: Add reminders (multi-select) to the event form; default in calendar preferences; schedule notifications from the event worker.
 - Acceptance check: Event with "10 min before" reminder → notification fires 10 min before start (in IST).
 
-### CAL-B-028 — PARTIAL
+### CAL-B-028 — FIXED (6d4f73b62 frontend), PENDING_BROWSER_VERIFICATION
 
 Calendar stays on "Loading calendar sources…" for 20+ seconds on direct navigation
 
