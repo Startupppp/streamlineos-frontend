@@ -155,13 +155,16 @@ export default function OrgSetupPage() {
   }, []);
 
   const persistLatestDraft = useCallback((): Promise<void> => {
-    if (!userId) return Promise.resolve();
+    const target = latestDraftRef.current;
+    if (!userId || !target || target === savedDraftRef.current) {
+      return draftSaveChainRef.current;
+    }
     setSyncStatus("saving");
     const save = draftSaveChainRef.current
       .catch(() => undefined)
       .then(async () => {
-        const latest = latestDraftRef.current;
-        if (!latest || latest === savedDraftRef.current) return;
+        const latest = target;
+        if (latest === savedDraftRef.current) return;
         const result = await saveOrgSetupDraft({
           revision: draftRevisionRef.current,
           stepData: {

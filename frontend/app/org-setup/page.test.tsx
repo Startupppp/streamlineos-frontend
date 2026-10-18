@@ -555,6 +555,35 @@ describe("OrgSetupPage — ONB-B-004 Back during autosave", () => {
     expect(mockToastError).not.toHaveBeenCalled();
   });
 
+  it("saves the Continue target step even when an edit lands while the save is queued", async () => {
+    const inFlight = deferred();
+    mockSaveDraft.mockReturnValueOnce(inFlight.promise);
+    await renderOnModules();
+
+    act(() => {
+      capturedStepProps.patch?.({ enabledModules: ["hr"] });
+    });
+    await waitFor(() => expect(mockSaveDraft).toHaveBeenCalledTimes(1));
+
+    act(() => {
+      void capturedStepProps.onNext?.();
+    });
+    act(() => {
+      capturedStepProps.patch?.({ enabledModules: ["hr", "build"] });
+    });
+
+    await act(async () => {
+      inFlight.resolve({ success: true, revision: 1 });
+    });
+
+    await waitFor(() => expect(mockSaveDraft).toHaveBeenCalledTimes(2));
+    expect(mockSaveDraft.mock.calls[1]?.[0]).toEqual(
+      expect.objectContaining({
+        stepData: expect.objectContaining({ __currentStep: "invite" }),
+      }),
+    );
+  });
+
   it("shows a retry on a failed save and a successful retry clears the error", async () => {
     mockSaveDraft.mockRejectedValueOnce(new Error("offline"));
     await renderOnModules();
@@ -582,6 +611,27 @@ describe("OrgSetupPage — ONB-B-004 Back during autosave", () => {
 });
 
 describe("OrgSetupPage — session name seeds fullName once", () => {
+  const { useOrgSetupDraftQuery, useOrgSetupSessionQuery } = jest.requireMock(
+    "@/hooks/api/org-setup",
+  ) as { useOrgSetupDraftQuery: jest.Mock; useOrgSetupSessionQuery: jest.Mock };
+
+  async function renderWizard() {
+    render(<OrgSetupPage />);
+    await screen.findByText("workspace step");
+  }
+
+  beforeEach(() => {
+    useOrgSetupDraftQuery.mockReturnValue({ data: undefined, isFetched: true });
+    useOrgSetupSessionQuery.mockReturnValue({ data: undefined, isFetched: true });
+  });
+
+  afterEach(() => {
+    useOrgSetupDraftQuery.mockReturnValue({ data: undefined, isFetched: false });
+    useOrgSetupSessionQuery.mockImplementation((enabled: boolean) =>
+      mockUseOrgSetupSessionQuery(enabled),
+    );
+  });
+
   it("seeds fullName from session name when draft fullName is empty", async () => {
     const { loadDraft } = jest.requireMock("@/features/org-setup/lib/draft") as {
       loadDraft: jest.Mock;
