@@ -70,7 +70,7 @@ export function EventSyncStatus({ eventId }: EventSyncStatusProps) {
       ) : null}
       {data.repairAction === "review_conflict" ? (
         <p className="text-xs text-muted-foreground">
-          The copy in your connected calendar changed after this event was saved. Keep this version to overwrite it there, or use the connected calendar's version here.
+          The copy in your connected calendar changed after this event was saved. Keep this version to overwrite it there, or use the connected calendar&apos;s version here.
         </p>
       ) : null}
       {data.repairAction === "review_conflict" ? (
