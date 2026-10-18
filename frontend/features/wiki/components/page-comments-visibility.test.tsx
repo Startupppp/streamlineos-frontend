@@ -141,6 +141,18 @@ describe("PageCommentsSheet — comment action visibility", () => {
       await expectNoAxeViolations(view.baseElement);
     });
 
+    it("KB-B-023 shows the loading skeleton, not 'No comments yet', while the read waits for access to resolve", () => {
+      useKbPageComments.mockReturnValueOnce({ data: [], isLoading: false, isPending: true, isError: false, error: null, refetch: jest.fn() });
+      const view = render(<PageCommentsSheet pageId={1} open onOpenChange={jest.fn()} />);
+      expect(view.queryByText("No comments yet")).not.toBeInTheDocument();
+    });
+
+    it("shows 'No comments yet' once a read has settled with no comments", () => {
+      useKbPageComments.mockReturnValueOnce({ data: [], isLoading: false, isPending: false, isError: false, error: null, refetch: jest.fn(), hasNextPage: false });
+      const view = render(<PageCommentsSheet pageId={1} open onOpenChange={jest.fn()} />);
+      expect(view.getByText("No comments yet")).toBeInTheDocument();
+    });
+
     it("shows a failed read with retry instead of claiming the page has no comments", () => {
       const refetch = jest.fn();
       useKbPageComments.mockReturnValueOnce({ data: [], isLoading: false, isError: true, error: new Error("Connection lost"), refetch });

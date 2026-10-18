@@ -52,7 +52,7 @@ export default function PageCommentsSheet({ pageId, open, onOpenChange, content 
   const canManage = useCan("kb:pages:manage");
   const {
     data: comments = [],
-    isLoading,
+    isPending,
     isError,
     isFetchNextPageError,
     error,
@@ -153,7 +153,7 @@ export default function PageCommentsSheet({ pageId, open, onOpenChange, content 
                 compact
               />
             )}
-            {isLoading && (
+            {isPending && !isError && (
               <div className="space-y-4">
                 {Array.from({ length: 3 }).map((_, i) => (
                   <div key={i} className="flex gap-2">
@@ -166,7 +166,7 @@ export default function PageCommentsSheet({ pageId, open, onOpenChange, content 
                 ))}
               </div>
             )}
-            {!isLoading && !isError && !hasNextPage && topLevel.length === 0 && resolved.length === 0 && (
+            {!isPending && !isError && !hasNextPage && topLevel.length === 0 && resolved.length === 0 && (
               <EmptyState
                 title="No comments yet"
                 description="Be the first to add a comment."
