@@ -1,5 +1,6 @@
 "use client";
 
+import { useMemo } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
 import { EntityFormDialog } from "@/components/shared";
@@ -37,6 +38,7 @@ import {
 } from "@/features/hr/governance/components/position-schema";
 
 const NO_DEPARTMENT = "none";
+const DEFAULT_STATUS_NAME = "open";
 
 interface CreatePositionDialogProps {
   open: boolean;
@@ -45,12 +47,26 @@ interface CreatePositionDialogProps {
 
 export function CreatePositionDialog({ open, onOpenChange }: CreatePositionDialogProps) {
   const createPosition = useCreatePosition();
-  const { data: statuses, isLoading: statusesLoading } = usePositionStatuses({ enabled: open });
+  const statusesQuery = usePositionStatuses();
+  const statuses = statusesQuery.data;
   const { data: departments } = useHrDepartments({ enabled: open });
   const seedStatuses = useSeedPositionStatuses();
-  const activeStatuses = (statuses ?? []).filter((status) => status.isActive);
+  const activeStatuses = useMemo(() => (statuses ?? []).filter((status) => status.isActive), [statuses]);
+  const statusesPending = statuses === undefined && !statusesQuery.isError;
   const noStatuses = statuses !== undefined && activeStatuses.length === 0;
+  const defaultValues = useMemo<CreatePositionFormValues>(
+    () => ({
+      ...CREATE_POSITION_DEFAULTS,
+      status: (activeStatuses.find((status) => status.name === DEFAULT_STATUS_NAME) ?? activeStatuses[0])?.name ?? "",
+    }),
+    [activeStatuses],
+  );
   const tone = statusToneClasses("neutral");
+  const errorTone = statusToneClasses("danger");
+
+  function handleRetryStatuses() {
+    void statusesQuery.refetch();
+  }
 
   function handleSeedStatuses() {
     seedStatuses.mutate(undefined, {
@@ -85,7 +101,7 @@ export function CreatePositionDialog({ open, onOpenChange }: CreatePositionDialo
       title="Create position"
       description="A position is a budgeted seat in the org structure; assign an incumbent once it exists."
       resolver={zodResolver(createPositionFormSchema)}
-      defaultValues={CREATE_POSITION_DEFAULTS}
+      defaultValues={defaultValues}
       resetOnOpen
       onSubmit={handleSubmit}
       isSubmitting={createPosition.isPending}
@@ -112,7 +128,22 @@ export function CreatePositionDialog({ open, onOpenChange }: CreatePositionDialo
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Status</FormLabel>
-                {noStatuses ? (
+                {statusesQuery.isError ? (
+                  <div role="alert" className={`flex flex-col gap-2 rounded-lg border p-3 ${errorTone.surface} ${errorTone.rule} ${errorTone.ink}`}>
+                    <p className="text-dense">
+                      Position statuses could not load: {getErrorMessage(statusesQuery.error)}
+                    </p>
+                    <LoadingButton
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      isPending={statusesQuery.isFetching}
+                      onClick={handleRetryStatuses}
+                    >
+                      Retry
+                    </LoadingButton>
+                  </div>
+                ) : noStatuses ? (
                   <div className={`flex flex-col gap-2 rounded-lg border p-3 ${tone.surface} ${tone.rule} ${tone.ink}`}>
                     <p className="text-dense">
                       No position statuses are set up yet. Add the defaults (draft, open, filled, closed) to continue.
@@ -128,10 +159,10 @@ export function CreatePositionDialog({ open, onOpenChange }: CreatePositionDialo
                     </LoadingButton>
                   </div>
                 ) : (
-                  <Select value={field.value} onValueChange={field.onChange} disabled={statusesLoading}>
+                  <Select value={field.value} onValueChange={field.onChange} disabled={statusesPending}>
                     <FormControl>
                       <SelectTrigger>
-                        <SelectValue placeholder={statusesLoading ? "Loading statuses…" : "Select a status"} />
+                        <SelectValue placeholder={statusesPending ? "Loading statuses…" : "Select a status"} />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent className={FIELD_SELECT_CONTENT_CLASS}>
