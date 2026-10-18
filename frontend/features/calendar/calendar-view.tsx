@@ -175,8 +175,10 @@ export function CalendarView() {
   const openCoach = useCallback(() => setCoachOpen(true), []);
   const openScenario = useCallback(() => setScenarioOpen(true), []);
   const [myDaySearch, setMyDaySearch] = useState("");
+  const [listSearch, setListSearch] = useState("");
   const [clockNow, setClockNow] = useState(() => new Date());
   const debouncedMyDaySearch = useDebouncedValue(myDaySearch, 300);
+  const debouncedListSearch = useDebouncedValue(listSearch, 300);
   const router = useRouter();
   const searchParams = useSearchParams();
   const {
@@ -587,6 +589,14 @@ export function CalendarView() {
     crmVisible: crmEventsVisible,
     attendanceVisible: attendanceEventsVisible,
   });
+  const listSearchTerm = debouncedListSearch.trim().toLowerCase();
+  const listFilteredEvents = useMemo(
+    () =>
+      listSearchTerm
+        ? visibleEvents.filter((e) => e.title.toLowerCase().includes(listSearchTerm))
+        : visibleEvents,
+    [listSearchTerm, visibleEvents],
+  );
   const surfaceEvents =
     viewMode === "history"
       ? visibleHistoryEvents
@@ -991,8 +1001,8 @@ export function CalendarView() {
                 selectedId={savedFilterId}
                 currentDate={currentDate}
                 mode={viewMode}
-                search={savedViewActive ? myDaySearch : undefined}
-                onSearchChange={setMyDaySearch}
+                search={savedViewActive ? myDaySearch : viewMode === "list" ? listSearch : undefined}
+                onSearchChange={savedViewActive ? setMyDaySearch : viewMode === "list" ? setListSearch : setMyDaySearch}
               />
             ) : null
           }
@@ -1130,7 +1140,7 @@ export function CalendarView() {
                 ) : (
                   <CalendarEventsPanel
                     mode="list"
-                    events={savedViewActive ? visibleSearchEvents : visibleEvents}
+                    events={savedViewActive ? visibleSearchEvents : listFilteredEvents}
                     range={
                       savedViewActive
                         ? {
@@ -1159,7 +1169,7 @@ export function CalendarView() {
                       ? visibleHistoryEvents
                       : savedViewActive
                         ? visibleSearchEvents
-                        : visibleEvents
+                        : listFilteredEvents
                   }
                   range={
                     viewMode === "list"

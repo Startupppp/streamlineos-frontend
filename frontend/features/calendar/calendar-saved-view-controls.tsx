@@ -173,8 +173,8 @@ export function CalendarSavedViewControls({
         <Input
           value={search}
           onChange={(event) => onSearchChange(event.target.value)}
-          placeholder="Search this view"
-          aria-label="Search saved calendar view"
+          placeholder="Search events"
+          aria-label="Search calendar events"
           className="h-9 min-w-40 max-w-64 text-sm"
           maxLength={200}
         />

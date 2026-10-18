@@ -37,6 +37,8 @@ function matchesQuery(member: PickerMember, query: string): boolean {
   return name.toLowerCase().includes(query) || member.email.toLowerCase().includes(query);
 }
 
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
 export function EventAttendeesPicker({
   members,
   selectedIds,
@@ -46,6 +48,7 @@ export function EventAttendeesPicker({
   const debouncedSearch = useDebouncedValue(search, 300);
   const query = debouncedSearch.trim().toLowerCase();
   const typed = search.trim().toLowerCase();
+  const typedIsEmail = EMAIL_RE.test(search.trim());
 
   const { data: searchResults = [] } = useCalendarMemberLookup({
     search: debouncedSearch.trim(),
@@ -87,6 +90,11 @@ export function EventAttendeesPicker({
         placeholder="Add attendees"
         searchLabel="Search attendees"
       />
+      {typedIsEmail && candidates.every((c) => !selectedIds.includes(c.id)) && (
+        <p className="text-xs text-muted-foreground">
+          Only organization members can be invited. External guests are not yet supported.
+        </p>
+      )}
     </div>
   );
 }
