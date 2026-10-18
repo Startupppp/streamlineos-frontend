@@ -235,7 +235,7 @@ export function OrgCostCentersPage() {
             <Button
               variant={showArchived ? "secondary" : "outline"}
               size="sm"
-              className="flex-1 text-xs sm:flex-none"
+              className="flex-1 font-normal sm:flex-none"
               onClick={toggleArchived}
             >
               <Archive className="h-4 w-4 mr-1.5" />

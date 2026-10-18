@@ -310,7 +310,7 @@ export function OrgDepartmentsPage() {
             <Button
               variant={showArchived ? "secondary" : "outline"}
               size="sm"
-              className="flex-1 text-xs sm:flex-none"
+              className="flex-1 font-normal sm:flex-none"
               onClick={toggleArchived}
             >
               <Archive className="mr-1.5 h-4 w-4" />

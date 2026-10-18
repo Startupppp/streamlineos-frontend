@@ -85,33 +85,24 @@ describe("Settings → Notifications route access declarations", () => {
     });
   });
 
-  describe("Administration nav Notifications group points at /settings/notifications/*", () => {
+  describe("Administration nav Notifications group removed from sidebar", () => {
     const adminGroups = NAV_GROUPS.filter((g) => g.product === "administration");
     const notificationsGroup = adminGroups.find((g) => g.label === "Notifications");
-    const adminRoutes = notificationsGroup?.routes ?? [];
+    const adminHrefs = new Set(
+      adminGroups.flatMap((g) => g.routes.map((r) => r.href)),
+    );
 
-    const EXPECTED_HREFS = [
-      "/settings/notifications/templates",
-      "/settings/notifications/broadcasts",
-      "/settings/notifications/providers",
-      "/settings/notifications/events",
-      "/settings/notifications/policy",
-    ];
-
-    it("all five admin notification routes point at /settings/notifications/*", () => {
-      const hrefs = adminRoutes.map((r) => r.href);
-      for (const href of EXPECTED_HREFS) {
-        expect(hrefs).toContain(href);
-      }
+    it("Notifications group is absent from the Administration nav", () => {
+      expect(notificationsGroup).toBeUndefined();
     });
 
-    it("BITE: the old /notifications/* hrefs are absent from the admin Notifications group", () => {
-      const hrefs = new Set(adminRoutes.map((r) => r.href));
-      expect(hrefs.has("/notifications/templates")).toBe(false);
-      expect(hrefs.has("/notifications/providers")).toBe(false);
-      expect(hrefs.has("/notifications/events")).toBe(false);
-      expect(hrefs.has("/notifications/policy")).toBe(false);
-      expect(hrefs.has("/notifications/broadcasts")).toBe(false);
+    it("BITE: notification admin routes are absent from the Administration sidebar", () => {
+      expect(adminHrefs.has("/settings/notifications/templates")).toBe(false);
+      expect(adminHrefs.has("/settings/notifications/providers")).toBe(false);
+      expect(adminHrefs.has("/settings/notifications/events")).toBe(false);
+      expect(adminHrefs.has("/settings/notifications/policy")).toBe(false);
+      expect(adminHrefs.has("/settings/notifications/broadcasts")).toBe(false);
+      expect(adminHrefs.has("/settings/notifications/email-templates")).toBe(false);
     });
   });
 });

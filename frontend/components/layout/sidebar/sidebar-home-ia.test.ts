@@ -80,91 +80,34 @@ describe("Home information architecture — Notifications restructure", () => {
     });
   });
 
-  describe("Administration nav — Notifications group points at /settings/notifications/*", () => {
+  describe("Administration nav — Notifications group removed from sidebar", () => {
     const adminGroups = NAV_GROUPS.filter((g) => g.product === "administration");
     const notificationsGroup = adminGroups.find((g) => g.label === "Notifications");
-    const adminRoutes = notificationsGroup?.routes ?? [];
+    const allAdminHrefs = flattenGroupRoutes(adminGroups).map((r) => r.href);
 
-    const EXPECTED_ADMIN_ENTRIES: Array<{
-      href: string;
-      permission: string;
-      label: string;
-    }> = [
-      {
-        href: "/settings/notifications/templates",
-        permission: "notifications:templates:view",
-        label: "Templates",
-      },
-      {
-        href: "/settings/notifications/broadcasts",
-        permission: "notifications:broadcasts:view",
-        label: "Broadcasts",
-      },
-      {
-        href: "/settings/notifications/providers",
-        permission: "notifications:providers:view",
-        label: "Providers",
-      },
-      {
-        href: "/settings/notifications/events",
-        permission: "notifications:events:view",
-        label: "Events",
-      },
-      {
-        href: "/settings/notifications/policy",
-        permission: "notifications:policy:view",
-        label: "Policy",
-      },
+    const RETIRED_ADMIN_HREFS = [
+      "/settings/notifications/templates",
+      "/settings/notifications/broadcasts",
+      "/settings/notifications/providers",
+      "/settings/notifications/events",
+      "/settings/notifications/policy",
+      "/settings/notifications/email-templates",
     ];
 
-    it("Notifications group exists in the Administration nav", () => {
-      expect(notificationsGroup).toBeDefined();
+    it("Notifications group is absent from the Administration nav", () => {
+      expect(notificationsGroup).toBeUndefined();
     });
 
-    it("all five notification admin routes point at /settings/notifications/* in the Administration nav", () => {
-      const adminHrefs = adminRoutes.map((r) => r.href);
-      for (const entry of EXPECTED_ADMIN_ENTRIES) {
-        expect(adminHrefs).toContain(entry.href);
+    it("BITE: notification admin routes are absent from the Administration sidebar", () => {
+      for (const href of RETIRED_ADMIN_HREFS) {
+        expect(allAdminHrefs).not.toContain(href);
       }
     });
 
-    it("each notification admin route carries its exact permission key", () => {
-      for (const entry of EXPECTED_ADMIN_ENTRIES) {
-        const route = adminRoutes.find((r) => r.href === entry.href);
-        expect({ href: entry.href, permission: route?.requiredPermission }).toEqual({
-          href: entry.href,
-          permission: entry.permission,
-        });
-      }
-    });
-
-    it("BITE: no notification admin route is ungated", () => {
-      for (const route of adminRoutes) {
-        expect({ href: route.href, hasPermission: !!route.requiredPermission }).toEqual({
-          href: route.href,
-          hasPermission: true,
-        });
-      }
-    });
-
-    it("BITE: the five old /notifications/* admin hrefs are absent from the admin Notifications nav", () => {
-      const adminHrefs = new Set(adminRoutes.map((r) => r.href));
-      const oldHrefs = [
-        "/notifications/templates",
-        "/notifications/broadcasts",
-        "/notifications/providers",
-        "/notifications/events",
-        "/notifications/policy",
-      ];
-      for (const oldHref of oldHrefs) {
-        expect(adminHrefs.has(oldHref)).toBe(false);
-      }
-    });
-
-    it("BITE: the five admin hrefs are absent from HOME_NAV_GROUPS (personal and admin surfaces are distinct)", () => {
+    it("BITE: the five admin hrefs remain absent from HOME_NAV_GROUPS", () => {
       const allHomeHrefs = new Set(flattenGroupRoutes(HOME_NAV_GROUPS).map((r) => r.href));
-      for (const entry of EXPECTED_ADMIN_ENTRIES) {
-        expect(allHomeHrefs.has(entry.href)).toBe(false);
+      for (const href of RETIRED_ADMIN_HREFS) {
+        expect(allHomeHrefs.has(href)).toBe(false);
       }
     });
   });

@@ -52,7 +52,7 @@ const MODEL_COLUMNS: DataTableColumn<AiCreditsUsageByModel>[] = [
   },
   {
     key: "costUsd",
-    header: "Provider Cost",
+    header: "Provider cost",
     headerClassName: "text-right",
     className: "text-right tabular-nums text-xs text-muted-foreground",
     cell: (row): ReactNode => formatUsd(row.costUsd),
@@ -90,7 +90,7 @@ const FEATURE_COLUMNS: DataTableColumn<AiCreditsUsageByFeature>[] = [
   },
   {
     key: "costUsd",
-    header: "Provider Cost",
+    header: "Provider cost",
     headerClassName: "text-right",
     className: "text-right tabular-nums text-xs text-muted-foreground",
     cell: (row): ReactNode => formatUsd(row.costUsd),
@@ -120,10 +120,10 @@ export function AiCreditsBreakdownTables({
   const sortedByFeature = [...byFeature].sort((a, b) => b.credits - a.credits);
 
   return (
-    <div className="grid gap-4 lg:grid-cols-2">
+    <div className="flex flex-col gap-4">
       <div className="overflow-hidden rounded-xl border border-border bg-card">
         <div className="border-b border-border px-4 py-3">
-          <p className="text-sm font-semibold text-foreground">By Model</p>
+          <p className="text-sm font-semibold text-foreground">By model</p>
         </div>
         {isLoading ? (
           <DataTableSkeleton rows={4} columns={7} />
@@ -147,7 +147,7 @@ export function AiCreditsBreakdownTables({
 
       <div className="overflow-hidden rounded-xl border border-border bg-card">
         <div className="border-b border-border px-4 py-3">
-          <p className="text-sm font-semibold text-foreground">By Feature</p>
+          <p className="text-sm font-semibold text-foreground">By feature</p>
         </div>
         {isLoading ? (
           <DataTableSkeleton rows={4} columns={5} />

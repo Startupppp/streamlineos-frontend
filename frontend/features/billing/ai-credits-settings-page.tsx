@@ -35,7 +35,7 @@ import {
   type AiCreditsUsageDays,
 } from "@/hooks/api/ai-credits";
 import { AiCreditsBreakdownTables } from "@/features/billing/ai-credits-breakdown-tables";
-import dynamic from "next/dynamic";
+import { AiCreditsDailyTable } from "@/features/billing/ai-credits-daily-table";
 import { AiCreditPackCard } from "@/features/billing/components/ai-credit-pack-card";
 import { TXN_COLUMNS, getTxnRowKey } from "@/features/billing/components/ai-credit-txn-columns";
 import { getErrorMessage } from "@/lib/get-error-message";
@@ -52,14 +52,6 @@ import {
   AI_CREDITS_USAGE_DAYS,
   AI_CREDIT_TRANSACTION_LIMIT,
 } from "@/lib/settings-initial-reads";
-
-const AiCreditsDailyChart = dynamic(
-  () =>
-    import("@/features/billing/ai-credits-daily-chart").then((m) => ({
-      default: m.AiCreditsDailyChart,
-    })),
-  { ssr: false, loading: () => <Skeleton className="aspect-[16/7] w-full rounded-lg" /> },
-);
 
 type TxnPageSize = (typeof STANDARD_PAGE_SIZE_OPTIONS)[number];
 
@@ -236,7 +228,7 @@ export function AiCreditsSettingsPage() {
 
   return (
     <PageWrapper title="AI Credits" subtitle="Token-metered AI usage and credit wallet">
-      <div className="flex flex-1 min-h-0 flex-col gap-4">
+      <div className="flex flex-1 min-h-0 flex-col gap-6">
         {isError ? (
           <ErrorState
             title="Failed to load AI credits"
@@ -280,10 +272,15 @@ export function AiCreditsSettingsPage() {
               </StatCardGrid>
             )}
 
-            <div className="space-y-4">
+            <section className="flex flex-col gap-3">
               <div className={FILTER_TOOLBAR_ROW}>
-                <p className="text-sm font-semibold text-foreground shrink-0">Usage Analytics</p>
-                <div className="flex items-center gap-2 ml-auto">
+                <div className="min-w-0">
+                  <p className="text-sm font-semibold text-foreground">Usage</p>
+                  <p className="text-xs text-muted-foreground">
+                    Daily, model, and feature breakdown for the selected range
+                  </p>
+                </div>
+                <div className="ml-auto flex items-center gap-2">
                   <Select value={String(usageDays)} onValueChange={handleUsageDaysChange}>
                     <SelectTrigger className={cn(FILTER_SELECT_TRIGGER, "w-fit min-w-[110px]")}>
                       <SelectValue />
@@ -315,21 +312,26 @@ export function AiCreditsSettingsPage() {
                   className="border border-border rounded-xl py-8"
                 />
               ) : (
-                <>
-                  <AiCreditsDailyChart data={usageDaily} isLoading={usageLoading} />
+                <div className="flex flex-col gap-4">
+                  <AiCreditsDailyTable data={usageDaily} isLoading={usageLoading} />
                   <AiCreditsBreakdownTables
                     byModel={usageByModel}
                     byFeature={usageByFeature}
                     isLoading={usageLoading}
                   />
-                </>
+                </div>
               )}
-            </div>
+            </section>
 
-            <div>
-              <p className="mb-2 text-sm font-semibold">Credit Packs</p>
+            <section className="flex flex-col gap-3">
+              <div>
+                <p className="text-sm font-semibold text-foreground">Credit packs</p>
+                <p className="text-xs text-muted-foreground">
+                  Purchase credits to top up your wallet
+                </p>
+              </div>
               {scriptState === "failed" && (
-                <div className="mb-3 flex items-center gap-3 rounded-lg border border-status-warning-rule bg-status-warning-surface px-4 py-3 text-sm text-status-warning-ink">
+                <div className="flex items-center gap-3 rounded-lg border border-status-warning-rule bg-status-warning-surface px-4 py-3 text-sm text-status-warning-ink">
                   <span className="flex-1">
                     Payment checkout failed to load. Check your connection and try again.
                   </span>
@@ -376,14 +378,25 @@ export function AiCreditsSettingsPage() {
                   ))}
                 </div>
               )}
-            </div>
+            </section>
 
-            <div className={cn(CONTENT_PANEL_SOLID, "p-4")}>
-              <div className="mb-3 flex items-center justify-between">
-                <p className="text-sm font-semibold">Auto Top-Up</p>
-                <div className="flex items-center gap-2">
+            <section className={cn(CONTENT_PANEL_SOLID, "p-4")}>
+              <div className="mb-2 flex items-center justify-between gap-3">
+                <div className="min-w-0">
+                  <p className="text-sm font-semibold text-foreground">Auto top-up</p>
+                  <p className="text-xs text-muted-foreground">
+                    Buy credits automatically when balance is low
+                    {wallet?.autoTopUpThreshold != null
+                      ? ` (below ${formatCredits(wallet.autoTopUpThreshold)} cr)`
+                      : ""}
+                    {autoTopUp && packs[0]
+                      ? ` · ${packs.find((p) => p.id === wallet?.autoTopUpPackId)?.name ?? packs[0].name}`
+                      : ""}
+                  </p>
+                </div>
+                <div className="flex shrink-0 items-center gap-2">
                   <Label htmlFor="auto-topup" className="text-xs text-muted-foreground">
-                    {autoTopUp ? "Enabled" : "Disabled"}
+                    {autoTopUp ? "On" : "Off"}
                   </Label>
                   <Switch
                     id="auto-topup"
@@ -394,25 +407,20 @@ export function AiCreditsSettingsPage() {
                   />
                 </div>
               </div>
-              <p className="text-xs text-muted-foreground">
-                Automatically purchase credits when your balance drops below the threshold
-                {wallet?.autoTopUpThreshold != null
-                  ? ` (${formatCredits(wallet.autoTopUpThreshold)} credits)`
-                  : ""}.
-                {autoTopUp && packs[0]
-                  ? ` Uses ${packs.find((p) => p.id === wallet?.autoTopUpPackId)?.name ?? packs[0].name} when balance is low.`
-                  : ""}
-              </p>
-            </div>
+            </section>
 
-            <div className={cn(CONTENT_PANEL_SOLID, "overflow-hidden")}>
+            <section className={cn(CONTENT_PANEL_SOLID, "overflow-hidden")}>
               <div className="flex items-center justify-between border-b border-border px-4 py-3">
-                <p className="text-sm font-semibold">Usage History</p>
+                <div className="min-w-0">
+                  <p className="text-sm font-semibold text-foreground">Transaction history</p>
+                  <p className="text-xs text-muted-foreground">Purchases, grants, and usage</p>
+                </div>
                 <Button
                   variant="ghost"
                   size="sm"
                   onClick={handleRefresh}
                   aria-label="Refresh usage history"
+                  className="h-8 w-8 shrink-0 p-0"
                 >
                   <RefreshCw className="h-3.5 w-3.5" aria-hidden="true" />
                 </Button>
@@ -453,7 +461,7 @@ export function AiCreditsSettingsPage() {
                   }}
                 />
               )}
-            </div>
+            </section>
           </>
         )}
       </div>
