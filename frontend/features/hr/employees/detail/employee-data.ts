@@ -68,6 +68,7 @@ export const employeeDataSchema = z
     employmentStatus: z.string().nullable(),
     employment: employeeEmploymentSchema.nullable(),
     inviteDelivery: inviteDeliverySchema,
+    allowedActions: z.array(z.string()).optional(),
     // Compatibility-only presentation fields are explicit and remain non-sensitive.
     departmentName: z.string().nullable().optional(),
     gender: z.enum(["MALE", "FEMALE", "OTHER"]).nullable().optional(),

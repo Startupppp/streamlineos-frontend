@@ -885065,6 +885065,12 @@
                             "lastError",
                             "deliveryConfirmed"
                           ]
+                        },
+                        "allowedActions": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
                         }
                       },
                       "required": [
@@ -885091,7 +885097,8 @@
                         "phone",
                         "employmentStatus",
                         "employment",
-                        "inviteDelivery"
+                        "inviteDelivery",
+                        "allowedActions"
                       ]
                     }
                   },
