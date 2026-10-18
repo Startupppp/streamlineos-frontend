@@ -3,6 +3,7 @@
 import { useMemo, type ReactNode } from "react";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import { WizardSplitShell } from "@/components/wizard-shell";
+import { Button } from "@/components/ui/button";
 import { STEP_SUBTITLES } from "../lib/constants";
 import type { StepId } from "../lib/constants";
 import type { SyncStatus } from "../lib/draft";
@@ -21,6 +22,7 @@ type OrgSetupShellProps = {
   syncStatus?: SyncStatus;
   data: WizardData;
   onStepSelect?: (index: number) => void;
+  onRetrySave?: () => void;
   children: ReactNode;
 };
 
@@ -40,6 +42,7 @@ export function OrgSetupShell({
   syncStatus,
   data,
   onStepSelect,
+  onRetrySave,
   children,
 }: OrgSetupShellProps) {
   const reduceMotion = useReducedMotion();
@@ -95,7 +98,22 @@ export function OrgSetupShell({
                     {title}
                   </motion.h1>
                 </AnimatePresence>
-                {syncStatus && syncStatus !== "synced" && (
+                {syncStatus === "error" && onRetrySave ? (
+                  <span
+                    role="alert"
+                    className="flex items-center gap-1 text-xs text-destructive"
+                  >
+                    Couldn&apos;t save —
+                    <Button
+                      type="button"
+                      variant="link"
+                      onClick={onRetrySave}
+                      className="h-auto p-0 text-xs text-destructive"
+                    >
+                      Retry
+                    </Button>
+                  </span>
+                ) : syncStatus && syncStatus !== "synced" && (
                   <span
                     aria-live="polite"
                     className={

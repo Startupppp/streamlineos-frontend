@@ -24,7 +24,6 @@ import {
 } from "@/features/org-setup/lib/constants";
 import {
   loadDraft,
-  clearAll,
   saveDraft,
   loadStep,
   saveStep,
@@ -134,6 +133,9 @@ export default function OrgSetupPage() {
   const draftRevisionRef = useRef(0);
   const draftSaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const draftSaveChainRef = useRef<Promise<void>>(Promise.resolve());
+  const latestDraftRef = useRef<{ data: WizardData; stepId: StepId } | null>(null);
+  const savedDraftRef = useRef<{ data: WizardData; stepId: StepId } | null>(null);
+  const navigationRef = useRef(0);
 
   const { data: pendingInvitations, isPending: isInvitationsPending } =
     useMyPendingInvitations(Boolean(userId));
@@ -152,45 +154,69 @@ export default function OrgSetupPage() {
     setSaveState("saved");
   }, []);
 
+  const persistLatestDraft = useCallback((): Promise<void> => {
+    if (!userId) return Promise.resolve();
+    setSyncStatus("saving");
+    const save = draftSaveChainRef.current
+      .catch(() => undefined)
+      .then(async () => {
+        const latest = latestDraftRef.current;
+        if (!latest || latest === savedDraftRef.current) return;
+        const result = await saveOrgSetupDraft({
+          revision: draftRevisionRef.current,
+          stepData: {
+            ...latest.data,
+            __schemaVersion: 1,
+            __currentStep: latest.stepId,
+          },
+          expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+        });
+        draftRevisionRef.current = result.revision;
+        savedDraftRef.current = latest;
+      });
+    draftSaveChainRef.current = save;
+    save.then(
+      () => {
+        if (draftSaveChainRef.current === save) setSyncStatus("synced");
+      },
+      () => {
+        if (draftSaveChainRef.current === save) setSyncStatus("error");
+      },
+    );
+    return save;
+  }, [saveOrgSetupDraft, userId]);
+
   const saveServerDraft = useCallback(
     (nextData: WizardData, nextStepId: StepId): Promise<void> => {
-      if (!userId) return Promise.resolve();
-      setSyncStatus("saving");
-      const save = draftSaveChainRef.current
-        .catch(() => undefined)
-        .then(async () => {
-          const result = await saveOrgSetupDraft({
-            revision: draftRevisionRef.current,
-            stepData: {
-              ...nextData,
-              __schemaVersion: 1,
-              __currentStep: nextStepId,
-            },
-            expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
-          });
-          draftRevisionRef.current = result.revision;
-          setSyncStatus("synced");
-        })
-        .catch((error: unknown) => {
-          setSyncStatus("error");
-          throw error;
-        });
-      draftSaveChainRef.current = save;
-      return save;
+      if (draftSaveTimerRef.current) {
+        clearTimeout(draftSaveTimerRef.current);
+        draftSaveTimerRef.current = null;
+      }
+      latestDraftRef.current = { data: nextData, stepId: nextStepId };
+      return persistLatestDraft();
     },
-    [saveOrgSetupDraft, userId],
+    [persistLatestDraft],
   );
+
+  const retryDraftSave = useCallback(() => {
+    if (draftSaveTimerRef.current) {
+      clearTimeout(draftSaveTimerRef.current);
+      draftSaveTimerRef.current = null;
+    }
+    void persistLatestDraft().catch(() => undefined);
+  }, [persistLatestDraft]);
 
   const scheduleServerDraftSave = useCallback(
     (nextData: WizardData, nextStepId: StepId) => {
       if (draftSaveTimerRef.current) clearTimeout(draftSaveTimerRef.current);
+      latestDraftRef.current = { data: nextData, stepId: nextStepId };
       setSyncStatus("unsynced");
       draftSaveTimerRef.current = setTimeout(() => {
         draftSaveTimerRef.current = null;
-        void saveServerDraft(nextData, nextStepId).catch(() => undefined);
+        void persistLatestDraft().catch(() => undefined);
       }, 500);
     },
-    [saveServerDraft],
+    [persistLatestDraft],
   );
 
   const patch = useCallback(
@@ -209,52 +235,46 @@ export default function OrgSetupPage() {
   const goNext = useCallback(async () => {
     const nextStep = Math.min(step + 1, totalSteps);
     const nextStepId = sequence[nextStep - 1] ?? currentStepId;
-    if (draftSaveTimerRef.current) {
-      clearTimeout(draftSaveTimerRef.current);
-      draftSaveTimerRef.current = null;
-    }
+    navigationRef.current += 1;
+    const navigation = navigationRef.current;
     try {
       await saveServerDraft(data, nextStepId);
     } catch (error) {
-      toast.error(`We couldn't save your setup. ${getErrorMessage(error)}`);
+      if (navigation === navigationRef.current)
+        toast.error(`We couldn't save your setup. ${getErrorMessage(error)}`);
       return;
     }
+    if (navigation !== navigationRef.current) return;
     setDirection(1);
     setStep(nextStep);
     markDraftSaved();
   }, [currentStepId, data, markDraftSaved, saveServerDraft, sequence, step, totalSteps]);
 
-  const goBack = useCallback(() => {
-    const nextStep = Math.max(step - 1, 1);
-    const nextStepId = sequence[nextStep - 1] ?? currentStepId;
-    if (draftSaveTimerRef.current) {
-      clearTimeout(draftSaveTimerRef.current);
-      draftSaveTimerRef.current = null;
-    }
-    setDirection(-1);
-    setStep(nextStep);
-    function persistDraft() {
+  const leaveToStep = useCallback(
+    (nextStep: number) => {
+      const nextStepId = sequence[nextStep - 1] ?? currentStepId;
+      navigationRef.current += 1;
+      setDirection(-1);
+      setStep(nextStep);
       saveServerDraft(data, nextStepId).catch((error: unknown) => {
         toast.error(`We couldn't save your setup. ${getErrorMessage(error)}`, {
-          action: { label: "Retry", onClick: persistDraft },
+          action: { label: "Retry", onClick: retryDraftSave },
         });
       });
-    }
-    persistDraft();
-  }, [currentStepId, data, saveServerDraft, sequence, step]);
+    },
+    [currentStepId, data, retryDraftSave, saveServerDraft, sequence],
+  );
 
-  const handleStepSelect = useCallback(async (index: number) => {
-    const nextStep = index + 1;
-    const nextStepId = sequence[index] ?? currentStepId;
-    try {
-      await saveServerDraft(data, nextStepId);
-    } catch (error) {
-      toast.error(`We couldn't save your setup. ${getErrorMessage(error)}`);
-      return;
-    }
-    setDirection(-1);
-    setStep(nextStep);
-  }, [currentStepId, data, saveServerDraft, sequence]);
+  const goBack = useCallback(() => {
+    leaveToStep(Math.max(step - 1, 1));
+  }, [leaveToStep, step]);
+
+  const handleStepSelect = useCallback(
+    (index: number) => {
+      leaveToStep(index + 1);
+    },
+    [leaveToStep],
+  );
 
   useEffect(() => {
     setAutoSignOutSuppressed(true);
@@ -408,6 +428,7 @@ export default function OrgSetupPage() {
       syncStatus={syncStatus}
       data={data}
       onStepSelect={handleStepSelect}
+      onRetrySave={retryDraftSave}
     >
       {currentStepId === "workspace" && (
         <StepWorkspace

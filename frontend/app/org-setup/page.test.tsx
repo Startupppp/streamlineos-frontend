@@ -20,14 +20,42 @@ const mockUseOrgSetupSessionQuery = jest.fn((_enabled: boolean) => ({
 let capturedWelcomeProps: Record<string, unknown> = {};
 
 let capturedShellData: { fullName?: string } | null = null;
+let capturedShellProps: { syncStatus?: string; onRetrySave?: () => void } = {};
+let capturedStepProps: {
+  onBack?: () => void;
+  onNext?: () => void;
+  patch?: (updates: Record<string, unknown>) => void;
+} = {};
+const mockSaveDraft = jest.fn();
 
 jest.mock("@/features/org-setup/components/org-setup-shell", () => ({
   OrgSetupShell: ({
     children,
     data,
-  }: PropsWithChildren & { data?: { fullName?: string } }) => {
+    syncStatus,
+    onRetrySave,
+  }: PropsWithChildren & {
+    data?: { fullName?: string };
+    syncStatus?: string;
+    onRetrySave?: () => void;
+  }) => {
     capturedShellData = data ?? null;
+    capturedShellProps = { syncStatus, onRetrySave };
     return <div>{children}</div>;
+  },
+}));
+
+jest.mock("@/features/org-setup/components/step-workspace", () => ({
+  StepWorkspace: (props: typeof capturedStepProps) => {
+    capturedStepProps = props;
+    return <p>workspace step</p>;
+  },
+}));
+
+jest.mock("@/features/org-setup/components/step-products", () => ({
+  StepProducts: (props: typeof capturedStepProps) => {
+    capturedStepProps = props;
+    return <p>products step</p>;
   },
 }));
 
@@ -74,7 +102,7 @@ jest.mock("@/hooks/api/org-setup", () => ({
     mockUseOrgSetupSessionQuery(enabled),
   ),
   useOrgSetupDraftQuery: jest.fn(() => ({ data: undefined, isFetched: false })),
-  useOrgSetupDraftSaveMutation: jest.fn(() => ({ mutateAsync: jest.fn() })),
+  useOrgSetupDraftSaveMutation: jest.fn(() => ({ mutateAsync: mockSaveDraft })),
 }));
 
 jest.mock("@/features/org-setup/lib/draft", () => ({
@@ -140,6 +168,9 @@ beforeEach(() => {
   mockUseOrgSetupSessionQuery.mockClear();
   capturedWelcomeProps = {};
   capturedShellData = null;
+  capturedShellProps = {};
+  capturedStepProps = {};
+  mockSaveDraft.mockReset().mockResolvedValue({ success: true, revision: 1 });
   mockUseSession.mockReset().mockReturnValue({
     data: { user: { id: "user-1", name: "Ada" }, orgId: null },
   });
@@ -417,6 +448,136 @@ describe("OrgSetupPage — pending invitation banner", () => {
       expect(mockToastError).toHaveBeenCalled();
     });
     expect(screen.getByRole("button", { name: "Join" })).toBeEnabled();
+  });
+});
+
+describe("OrgSetupPage — ONB-B-004 Back during autosave", () => {
+  const { useOrgSetupDraftQuery, useOrgSetupSessionQuery } = jest.requireMock(
+    "@/hooks/api/org-setup",
+  ) as {
+    useOrgSetupDraftQuery: jest.Mock;
+    useOrgSetupSessionQuery: jest.Mock;
+  };
+  const { clampStep } = jest.requireMock("@/features/org-setup/lib/draft") as {
+    clampStep: jest.Mock;
+  };
+
+  function deferred() {
+    let resolve: (value: unknown) => void = () => undefined;
+    let reject: (error: unknown) => void = () => undefined;
+    const promise = new Promise((res, rej) => {
+      resolve = res;
+      reject = rej;
+    });
+    return { promise, resolve, reject };
+  }
+
+  async function renderOnModules() {
+    const { useMyPendingInvitations } = jest.requireMock(
+      "@/hooks/common/auth-hooks",
+    ) as { useMyPendingInvitations: jest.Mock };
+    useMyPendingInvitations.mockReturnValue({ data: [], isPending: false });
+    useOrgSetupDraftQuery.mockReturnValue({ data: undefined, isFetched: true });
+    useOrgSetupSessionQuery.mockReturnValue({ data: undefined, isFetched: true });
+    clampStep.mockReturnValue(2);
+    render(<OrgSetupPage />);
+    await screen.findByText("products step");
+  }
+
+  afterEach(() => {
+    clampStep.mockReturnValue(1);
+    useOrgSetupDraftQuery.mockReturnValue({ data: undefined, isFetched: false });
+    useOrgSetupSessionQuery.mockImplementation((enabled: boolean) =>
+      mockUseOrgSetupSessionQuery(enabled),
+    );
+  });
+
+  it("leaves Modules on the first Back click while a save is in flight and persists the latest values", async () => {
+    const inFlight = deferred();
+    mockSaveDraft.mockReturnValueOnce(inFlight.promise);
+    await renderOnModules();
+
+    act(() => {
+      capturedStepProps.patch?.({ enabledModules: ["hr"] });
+    });
+    await waitFor(() => expect(mockSaveDraft).toHaveBeenCalledTimes(1));
+    expect(capturedShellProps.syncStatus).toBe("saving");
+
+    act(() => {
+      capturedStepProps.onBack?.();
+    });
+
+    expect(screen.getByText("workspace step")).toBeInTheDocument();
+
+    await act(async () => {
+      inFlight.resolve({ success: true, revision: 1 });
+    });
+
+    await waitFor(() => expect(mockSaveDraft).toHaveBeenCalledTimes(2));
+    expect(mockSaveDraft.mock.calls[1]?.[0]).toEqual(
+      expect.objectContaining({
+        revision: 1,
+        stepData: expect.objectContaining({
+          enabledModules: ["hr"],
+          __currentStep: "workspace",
+        }),
+      }),
+    );
+    await waitFor(() => expect(capturedShellProps.syncStatus).toBe("synced"));
+    expect(screen.getByText("workspace step")).toBeInTheDocument();
+  });
+
+  it("does not auto-advance when a Continue save resolves after the user went Back", async () => {
+    const continueSave = deferred();
+    mockSaveDraft.mockReturnValueOnce(continueSave.promise);
+    await renderOnModules();
+
+    act(() => {
+      void capturedStepProps.onNext?.();
+    });
+    act(() => {
+      capturedStepProps.onBack?.();
+    });
+    expect(screen.getByText("workspace step")).toBeInTheDocument();
+
+    await act(async () => {
+      continueSave.resolve({ success: true, revision: 1 });
+    });
+
+    await waitFor(() => expect(capturedShellProps.syncStatus).toBe("synced"));
+    expect(mockSaveDraft).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        stepData: expect.objectContaining({ __currentStep: "workspace" }),
+      }),
+    );
+    expect(screen.getByText("workspace step")).toBeInTheDocument();
+    expect(screen.queryByText("products step")).not.toBeInTheDocument();
+    expect(mockToastError).not.toHaveBeenCalled();
+  });
+
+  it("shows a retry on a failed save and a successful retry clears the error", async () => {
+    mockSaveDraft.mockRejectedValueOnce(new Error("offline"));
+    await renderOnModules();
+
+    act(() => {
+      capturedStepProps.onBack?.();
+    });
+    expect(screen.getByText("workspace step")).toBeInTheDocument();
+
+    await waitFor(() => expect(capturedShellProps.syncStatus).toBe("error"));
+    expect(typeof capturedShellProps.onRetrySave).toBe("function");
+
+    act(() => {
+      capturedShellProps.onRetrySave?.();
+    });
+
+    await waitFor(() => expect(capturedShellProps.syncStatus).toBe("synced"));
+    expect(mockSaveDraft).toHaveBeenCalledTimes(2);
+    expect(mockSaveDraft.mock.calls[1]?.[0]).toEqual(
+      expect.objectContaining({
+        stepData: expect.objectContaining({ __currentStep: "workspace" }),
+      }),
+    );
   });
 });
 

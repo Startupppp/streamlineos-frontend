@@ -1,8 +1,8 @@
 "use client";
 
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { UseQueryOptions } from "@tanstack/react-query";
-import { lazyContract } from "@/lib/api-envelope";
+import { isApiError, lazyContract } from "@/lib/api-envelope";
 import { apiClient } from "@/lib/api-client";
 import { platformCoreQueryKeys } from "@/lib/query-keys/platform-core";
 import type { OrgSetupInvitee, OrgSetupStatus } from "@/hooks/api/org-setup-schema";
@@ -123,11 +123,35 @@ export type OrgSetupActivatePayload = {
   modules: string[];
 };
 
+function putOrgSetupDraft(payload: OrgSetupDraftSavePayload) {
+  return apiClient.put("/org/setup/draft", payload, undefined, orgSetupDraftSaveContract);
+}
+
 export function useOrgSetupDraftSaveMutation() {
+  const queryClient = useQueryClient();
   return useMutation({
     mutationKey: ["org", "setup", "draft", "save"],
-    mutationFn: (payload: OrgSetupDraftSavePayload) =>
-      apiClient.put("/org/setup/draft", payload, undefined, orgSetupDraftSaveContract),
+    mutationFn: async (payload: OrgSetupDraftSavePayload) => {
+      try {
+        return await putOrgSetupDraft(payload);
+      } catch (error) {
+        if (!isApiError(error) || error.status !== 409) throw error;
+        const current = await apiClient.get(
+          "/org/setup/draft",
+          undefined,
+          undefined,
+          orgSetupDraftContract,
+        );
+        return putOrgSetupDraft({ ...payload, revision: current?.revision ?? 0 });
+      }
+    },
+    onSuccess: (result, payload) => {
+      queryClient.setQueryData(platformCoreQueryKeys.orgSetup.draft(), {
+        revision: result.revision,
+        stepData: payload.stepData,
+        expiresAt: payload.expiresAt,
+      });
+    },
     retry: false,
   });
 }
