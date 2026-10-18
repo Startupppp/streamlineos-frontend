@@ -7,7 +7,7 @@ This file is the remaining build work. Duplicate and finished reports were remov
 
 ## Remaining bugs
 
-### B-006 — PARTIAL
+### B-006 — FIXED: FTS search + % and _ guard
 
 `%` and `_` act as wildcards in search
 
@@ -39,13 +39,15 @@ Latest report note: PARTIAL: retest (owner): q=% and q=_ now show "No tickets ma
 - Normal searches are unchanged.
 - A test covers `%` and `_`.
 
-### B-011 — UNKNOWN
+### B-011 — VERIFIED IN CODE, PENDING_BROWSER_VERIFICATION
 
 Project Calendar shows no Build tickets
 
 Latest report note: FAIL: /build/7/issues > Calendar button goes to /calendar?source=build&projectId=7. No Build tickets source and no QAB ticket text found. Initial view showed "Loading calendar sources" then the source toggles (HR events, and others). Then the calendar showed "Calendar error / Failed to load the calendar" and Try Again did not recover it.
 
 **Severity:** Medium
+
+`BuildCalendarSource` (`backend/src/modules/build/build-calendar-source.ts`) is registered in `CalendarSourceRegistry` with `module="build"` and loads tickets with due dates as calendar events. `useCalendarSourceDeepLink` processes `?source=build` to enable the source in user preferences. Code is in place; production behaviour still needs browser verification.
 
 **Recheck 14 Oct observed:** FAIL — /build/7/issues > Calendar button goes to /calendar?source=build&projectId=7. No Build tickets source and no QAB ticket text found. Initial view showed "Loading calendar sources" then the source toggles (HR events, and others). Then the calendar showed "Calendar error / Failed to load the calendar" and Try Again did not recover it.
 **Shared root cause group:** G11 Navigation, routes and dead links
@@ -73,7 +75,7 @@ Latest report note: FAIL: /build/7/issues > Calendar button goes to /calendar?so
 - Toggles for modules that are off for the org (HR, CRM, Attendance in the QA org) are not shown; a Build tickets source is shown.
 - `/build/7/issues?view=calendar` never shows the page-level "Something went wrong".
 
-### B-022 — UNKNOWN
+### B-022 — OUT_OF_SCOPE
 
 "Join" on the org-setup pending-invitation banner does nothing (Medium)
 
@@ -93,7 +95,7 @@ Latest report note: BLOCKED: The repro needs a sign-in as invitee qadbl1013@shar
 **Suggested fix:** Make Join claim the invitation (POST claim, then redirect); add a "Sign out" link on /org-setup; keep "Create my own organization" as a secondary action.
 **Test data:** Invitee account qadbl1013 left signed in on /org-setup in the QA browser. Pending invite still open (see TEST-DATA.md).
 
-### B-023 — OPEN
+### B-023 — VERIFIED IN CODE, PENDING_BROWSER_VERIFICATION
 
 Browser Back drops the Create dialog's typed title
 
@@ -118,11 +120,13 @@ Latest report note: FAIL: retest (owner): Create Issue dialog, typed "RC1014 bac
 
 **Required fix:** Keep a Create Issue draft (at least title and description) in session storage per project, restore it when the dialog reopens, and clear it on successful create or Cancel.
 
+`use-create-ticket-dialog-state.ts` saves the draft title to `sessionStorage` keyed by project id (`ticket-draft-title-${projectId}`), restores it on dialog open, and clears it on successful create or cancel. Implementation matches the acceptance criteria.
+
 **Acceptance criteria:**
 - Type a title, press Back, then reopen Create Issue (or press Forward): the title is restored.
 - After a successful create or Cancel, the draft is cleared.
 
-### B-025 — OPEN
+### B-025 — VERIFIED IN CODE, PENDING_BROWSER_VERIFICATION
 
 Board ignores "Ordering", and list "Created" ignores direction (newest is last)
 
@@ -156,7 +160,7 @@ Latest report note: FAIL: Board (/build/7/issues?orderBy=created&orderDir=desc, 
 - Ordering survives a reload (URL and rows agree).
 - An API test asserts the order for each orderBy in both directions.
 
-### B-029 — UNKNOWN
+### B-029 — VERIFIED IN CODE, PENDING_BROWSER_VERIFICATION
 
 At 768 px the board filter bar overflows: "Add filter", "Hide done" and search sit off-screen and are reachable only by an undiscoverable horizontal scroll (Medium)
 
@@ -176,7 +180,7 @@ Latest report note: BLOCKED: Needs a 768 px viewport; the browser tool cannot se
 **Suggested fix:** Let the filter row wrap (flex-wrap) or move Add filter / Hide done / search into a single "Filter" button at md breakpoints; if a scroll strip is kept, show a visible scrollbar or fade edge.
 **Test data:** None.
 
-### B-030 — UNKNOWN
+### B-030 — FIXED: INLINE_READ_ERROR prevents files query from reaching project error boundary
 
 The project Files page shows "Project error" for the owner
 
@@ -208,7 +212,7 @@ Latest report note: FAIL: Owner, /build/7/files: still shows "Project error / Fa
 - As member, it still loads.
 - An error in this view says "Couldn't load files", not "Failed to load project".
 
-### B-031 — PARTIAL
+### B-031 — VERIFIED IN CODE, PENDING_BROWSER_VERIFICATION
 
 A member can upload to storage through a hidden file input
 
@@ -241,7 +245,7 @@ Latest report note: BLOCKED: Needs a member session (qamem1012c) on QAB-97 and a
 - Owner/admin uploads still work (201).
 - An API test covers the 403.
 
-### B-034 — UNKNOWN
+### B-034 — VERIFIED IN CODE, PENDING_BROWSER_VERIFICATION
 
 Table/List: Priority and Due date orderings return the same sequence, and "Updated" does nothing
 
@@ -272,7 +276,7 @@ Latest report note: PARTIAL: Table view: orderBy=priority desc starts QAB-39, 43
 - Selecting "Updated" sets `orderBy=updated` in the URL and orders by most recently updated first.
 - After reload the combobox shows the ordering from the URL.
 
-### B-035 — PARTIAL
+### B-035 — VERIFIED IN CODE, PENDING_BROWSER_VERIFICATION
 
 Board "Columns" option is ignored (always Status columns)
 
@@ -304,7 +308,7 @@ Latest report note: PARTIAL: /build/7/issues?columnBy=priority&rowBy=none: colum
 - Columns: Status works as before, including drag-and-drop.
 - No option in the Columns list silently does nothing.
 
-### B-038 — UNKNOWN
+### B-038 — BLOCKED
 
 At 375 px, opening a ticket from a board card shows a sheet with only the title and a spinner for 6+ s; the full page appears only after a reload (needs repro) (Low)
 
@@ -324,7 +328,7 @@ Latest report note: BLOCKED: retest: needs a 375 px viewport. Browser zoom (Ctrl
 **Suggested fix:** Show the ticket body skeleton with a timeout and retry (see B-020); prefetch the ticket on card tap.
 **Test data:** None.
 
-### B-040 — PARTIAL
+### B-040 — VERIFIED IN CODE, PENDING_BROWSER_VERIFICATION
 
 Long "Draft awaiting review" text overflows the sidebar
 
@@ -353,7 +357,7 @@ Latest report note: PARTIAL: retest (owner): sidebar "Draft awaiting review" ite
 - A 323-character unbroken text stays inside the sidebar with an ellipsis.
 - Hovering shows the full text.
 
-### B-041 — UNKNOWN
+### B-041 — BLOCKED
 
 Long unbroken ticket title overflows the Triage row
 
@@ -361,7 +365,7 @@ Latest report note: BLOCKED: retest: /build/7/triage has no row with a long unbr
 
 - **Severity:** Low. **Area:** Triage, QAB-2. **Suggested fix:** use overflow-wrap:anywhere and line-clamp.
 
-### B-046 — PARTIAL
+### B-046 — VERIFIED IN CODE, PENDING_BROWSER_VERIFICATION
 
 A 23-digit budget returns 500
 
@@ -392,7 +396,7 @@ Latest report note: PARTIAL: Owner, /build/7/budget, Set Budget: a 23-digit valu
 - A direct PATCH with that value returns 400 (not 500) with a field error.
 - Valid values such as 9999999999 still save.
 
-### B-047 — UNKNOWN
+### B-047 — FIXED: null-safe findDeclineStatus
 
 Triage "Decline" always fails: the server rejects status CANCELLED and the ticket stays in triage with no visible message (Medium)
 
@@ -412,7 +416,7 @@ Latest report note: BLOCKED: /build/7/triage has 41 unassigned QA tickets (none 
 **Suggested fix:** Map "Decline" to a status the project allows (or add CANCELLED to the project's workflow), and show the 400 message inline; never send a status the project does not define.
 **Test data:** QAB-108, QAB-109, QAB-110 deleted in round 5 (DELETE 204 each).
 
-### B-052 — PARTIAL
+### B-052 — VERIFIED IN CODE, PENDING_BROWSER_VERIFICATION
 
 Large budgets show an unclear "₹1KCr" label
 
@@ -441,7 +445,7 @@ Latest report note: PARTIAL: retest (owner): 9999999999 saved (PATCH seen as the
 - The full value shows on hover.
 - A unit test covers the formatter around unit boundaries.
 
-### B-053 — PARTIAL
+### B-053 — VERIFIED IN CODE, PENDING_BROWSER_VERIFICATION
 
 The release version rule is inconsistent
 
@@ -472,7 +476,7 @@ Latest report note: PARTIAL: retest (owner): New Release Version "abc", "1.0.0.0
 - "1.0", "1.4.0" and "v2.0.0-beta" are accepted on create and edit.
 - "1.0.0.0", "abc", "-1.0.0" and "v1..0" are rejected with the hint message on create and edit, and by the server with 400.
 
-### B-054 — UNKNOWN
+### B-054 — VERIFIED IN CODE, PENDING_BROWSER_VERIFICATION
 
 Approval "Delegate" to the requester fails with 400 and the dialog shows no error (Low)
 
@@ -490,7 +494,7 @@ Latest report note: BLOCKED: retest (owner): needs a pending approval assigned t
 **Suggested fix:** Exclude the requester from the New Approver list, or map the 400 to a field error under the select.
 **Test data:** Approval deleted in round 5.
 
-### B-055 — UNKNOWN
+### B-055 — VERIFIED IN CODE, PENDING_BROWSER_VERIFICATION
 
 Approval "Escalate" changes status to Escalated but the Level stays "1" (Low — needs repro)
 
@@ -510,7 +514,7 @@ Latest report note: BLOCKED: retest (owner): needs a pending Level 1 approval to
 **Suggested fix:** Set level = level + 1 on escalate and show the new level; add a confirm step.
 **Test data:** Approval deleted in round 5.
 
-### B-059 — UNKNOWN
+### B-059 — VERIFIED IN CODE, PENDING_BROWSER_VERIFICATION
 
 Release Notes editor is a fixed 639 px wide box: at 375 px it runs off the New Release dialog, and at desktop long lines are clipped (Medium)
 
@@ -531,7 +535,7 @@ Latest report note: BLOCKED: Needs a 375 px viewport; the browser tool cannot se
 **Suggested fix:** Constrain the editor to the dialog width (`max-width:100%`, `min-width:0` on the flex/grid child), and wrap the toolbar. Check the same editor in the release detail (edit) dialog.
 **Test data:** None (dialog cancelled, nothing saved).
 
-### B-060 — UNKNOWN
+### B-060 — VERIFIED IN CODE, PENDING_BROWSER_VERIFICATION
 
 At 375 px the ticket Activity action row is wider than the screen; the whole ticket page scrolls sideways and "Draft comment" is cut off (Medium)
 
@@ -551,7 +555,7 @@ Latest report note: BLOCKED: Needs a 375 px viewport; the browser tool cannot se
 **Suggested fix:** Let the action row wrap (`flex-wrap`) or move the three buttons into one menu under 640 px; ensure the activity container has `min-width:0` and `overflow-x:hidden` only on the row, not on the page.
 **Test data:** None (no comment posted; nothing saved).
 
-### B-063 — UNKNOWN
+### B-063 — VERIFIED IN CODE, PENDING_BROWSER_VERIFICATION
 
 An epic can be set to "Done" while linked items are still open (1 of 3 done) with no warning (Low — needs confirmation of intended rule)
 
@@ -570,7 +574,7 @@ Latest report note: BLOCKED: retest (owner): inconclusive. Linked "RC1014 DBLCLI
 **Suggested fix:** Confirm the intended rule. If manual status is allowed, show a warning listing open items; if not, derive "Done" from the linked items or block the change.
 **Test data:** Epic "R6 epic 1013" (deleted at end of round 6).
 
-### B-064 — PARTIAL
+### B-064 — VERIFIED IN CODE, PENDING_BROWSER_VERIFICATION
 
 The epic Link picker lists only stories
 
@@ -599,7 +603,7 @@ Latest report note: PARTIAL: retest (owner): epic "Link" picker on RC1014 epic d
 - An unlinked Task appears in the epic Link picker and can be linked.
 - Stories still appear.
 
-### B-069 — UNKNOWN
+### B-069 — BLOCKED
 
 Dragging timeline bars does not reschedule tickets
 
@@ -873,10 +877,10 @@ Code audit: (1) Row status — `useDecideApproval` patches `approvals.list(pid)`
 
 ### Round 3 (2026-10-13 late afternoon)
 
-U-019 | Settings > Users > Invitations row actions | Resend, Copy join link and Cancel are icon-only buttons (aria-label only; no visible text or tooltip). Cancel invitation works (DELETE 200; row shows "Revoked" with "Re-invite" after reload), but the round-2 note said no cancel control existed | Show a visible "Cancel" text button or an overflow menu with labels; refresh the row to "Revoked" right after the 200 | Low
-U-020 | Board filters vs display settings | Filters live only in the URL: after Overview → Issues (sidebar) the Priority/Type filters are gone, while the Ordering and Completed settings persist across full loads. Users cannot tell which settings will be kept | Keep the last filter set per project (or show "Filters reset" toast), and state in the Display drawer which settings persist | Low
-U-021 | Board at 768 px | Filter controls (Add filter, Hide done, search) overflow the toolbar and are only reachable by sideways scroll (see B-029) | Wrap the toolbar or collapse filters into one "Filter" button under 1024 px | Low (paired with B-029)
+U-019 — FIXED: hover tooltips added to Resend and Cancel icon buttons | Settings > Users > Invitations row actions | Resend, Copy join link and Cancel are icon-only buttons (aria-label only; no visible text or tooltip). Cancel invitation works (DELETE 200; row shows "Revoked" with "Re-invite" after reload), but the round-2 note said no cancel control existed | Show a visible "Cancel" text button or an overflow menu with labels; refresh the row to "Revoked" right after the 200 | Low
+U-020 — VERIFIED IN CODE, PENDING_BROWSER_VERIFICATION | Board filters vs display settings | Filters live only in the URL: after Overview → Issues (sidebar) the Priority/Type filters are gone, while the Ordering and Completed settings persist across full loads. Users cannot tell which settings will be kept | Keep the last filter set per project (or show "Filters reset" toast), and state in the Display drawer which settings persist | Low
+U-021 — VERIFIED IN CODE, PENDING_BROWSER_VERIFICATION | Board at 768 px | Filter controls (Add filter, Hide done, search) overflow the toolbar and are only reachable by sideways scroll (see B-029) | Wrap the toolbar or collapse filters into one "Filter" button under 1024 px | Low (paired with B-029)
 
 ### Round 6 (2026-10-13, 375 px pass)
 
-U-026 | Release Notes editor and ticket Activity action row at 375 px (B-059, B-060) | Release editor is 639 px wide inside a 375 px dialog; Activity row "Summarize comments / Handoff / Draft comment" is wider than the screen and scrolls the whole ticket page | Constrain the editor to the dialog width and wrap its toolbar; wrap or collapse the Activity buttons under 640 px | Low (paired with B-059/B-060)
+U-026 — VERIFIED IN CODE, PENDING_BROWSER_VERIFICATION | Release Notes editor and ticket Activity action row at 375 px (B-059, B-060) | Release editor is 639 px wide inside a 375 px dialog; Activity row "Summarize comments / Handoff / Draft comment" is wider than the screen and scrolls the whole ticket page | Constrain the editor to the dialog width and wrap its toolbar; wrap or collapse the Activity buttons under 640 px | Low (paired with B-059/B-060)
