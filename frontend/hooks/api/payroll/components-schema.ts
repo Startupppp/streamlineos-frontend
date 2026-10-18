@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { DB_ENUMS } from "@/contracts/db-enums.generated";
 
 export const salaryComponentContract = z.object({
   id: z.number(),
@@ -13,6 +14,7 @@ export const salaryComponentContract = z.object({
     "TAX",
     "ADJUSTMENT",
   ]),
+  payCategory: z.enum(DB_ENUMS.salary_component_pay_category).catch("REGULAR"),
   calcMethod: z.enum([
     "FIXED",
     "PERCENT_OF_BASIC",

@@ -1,5 +1,6 @@
 import { z } from "zod";
-import type { ComponentType, CalcMethod } from "@/types/payroll/setup";
+import type { ComponentType, ComponentPayCategory, CalcMethod } from "@/types/payroll/setup";
+import { DB_ENUMS } from "@/contracts/db-enums.generated";
 import { PAYROLL_AMOUNT_MAX } from "@/lib/validation/payroll-bounds";
 
 export const COMPONENT_TYPES: { value: ComponentType; label: string }[] = [
@@ -10,6 +11,19 @@ export const COMPONENT_TYPES: { value: ComponentType; label: string }[] = [
   { value: "TAX", label: "Tax" },
   { value: "ADJUSTMENT", label: "Adjustment" },
 ];
+
+export const PAY_CATEGORIES: { value: ComponentPayCategory; label: string }[] = [
+  { value: "REGULAR", label: "Regular pay" },
+  { value: "BONUS", label: "Bonus (left out of Labour Code wages)" },
+];
+
+export function toPayCategoryPayload(
+  form: Pick<ComponentForm, "type" | "payCategory">,
+  saved: ComponentPayCategory | undefined,
+): { payCategory?: ComponentPayCategory } {
+  const payCategory = form.type === "EARNING" ? form.payCategory : "REGULAR";
+  return payCategory === (saved ?? "REGULAR") ? {} : { payCategory };
+}
 
 export type FormCalcMethod = Exclude<CalcMethod, "PERCENT_OF_BASIC" | "PERCENT_OF_GROSS"> | "PERCENT_OF";
 
@@ -47,6 +61,7 @@ export const componentFormSchema = z.object({
     "TAX",
     "ADJUSTMENT",
   ]),
+  payCategory: z.enum(DB_ENUMS.salary_component_pay_category),
   calcMethod: z.enum([
     "FIXED",
     "PERCENT_OF",

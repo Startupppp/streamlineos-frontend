@@ -43,7 +43,7 @@ describe("percent of another component", () => {
 
   it("refuses a percent-of with no base or no percentage", () => {
     const base = {
-      name: "HRA", code: "HRA", type: "EARNING", calcMethod: "PERCENT_OF",
+      name: "HRA", code: "HRA", type: "EARNING", payCategory: "REGULAR", calcMethod: "PERCENT_OF",
       taxable: false, showOnPayslip: true, includeInCtc: true,
     };
     expect(componentFormSchema.safeParse({ ...base, percent: "50", percentBase: "BASIC" }).success).toBe(true);
@@ -55,7 +55,7 @@ describe("percent of another component", () => {
 
 describe("component amount (BUG-019)", () => {
   const base = {
-    name: "Bonus", code: "BONUS", type: "EARNING", calcMethod: "FIXED",
+    name: "Bonus", code: "BONUS", type: "EARNING", payCategory: "REGULAR", calcMethod: "FIXED",
     taxable: true, showOnPayslip: true, includeInCtc: true,
   };
 
@@ -83,7 +83,7 @@ describe("component amount (BUG-019)", () => {
 
 describe("PAY-B-003 PAY-B-027 componentFormSchema percent-of rejects > 100", () => {
   const base = {
-    name: "HRA", code: "HRA", type: "EARNING", calcMethod: "PERCENT_OF",
+    name: "HRA", code: "HRA", type: "EARNING", payCategory: "REGULAR", calcMethod: "PERCENT_OF",
     taxable: false, showOnPayslip: true, includeInCtc: true,
   };
 
@@ -110,7 +110,7 @@ describe("PAY-B-003 PAY-B-027 componentFormSchema percent-of rejects > 100", () 
 
 describe("PAY-B-004 / PAY-B-029 / PAY-B-030 component form rules", () => {
   const fixed = {
-    name: "Basic", code: "BASIC", type: "EARNING", calcMethod: "FIXED",
+    name: "Basic", code: "BASIC", type: "EARNING", payCategory: "REGULAR", calcMethod: "FIXED",
     taxable: true, showOnPayslip: true, includeInCtc: true,
   };
 

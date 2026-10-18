@@ -21,6 +21,7 @@ const salaryComponentC = lazyContract(() =>
 import type {
   SalaryComponent,
   ComponentType,
+  ComponentPayCategory,
   CalcMethod,
   PaginatedResult,
 } from "@/types/payroll/setup";
@@ -37,6 +38,7 @@ type CreateComponentInput = {
   code: string;
   name: string;
   type: ComponentType;
+  payCategory?: ComponentPayCategory;
   calcMethod: CalcMethod;
   amount?: string;
   percent?: string;

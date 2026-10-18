@@ -26,9 +26,11 @@ import {
   componentFormSchema,
   type ComponentForm,
   COMPONENT_TYPES,
+  PAY_CATEGORIES,
   CALC_METHODS,
   FORMULA_HELP,
   toCalcPayload,
+  toPayCategoryPayload,
   fromComponentCalc,
 } from "./lib/component-form-schema";
 import { PercentOfFields } from "./percent-of-fields";
@@ -49,7 +51,7 @@ const FORM_FIELDS = new Map<string, "name" | "code" | "amount" | "percent" | "fo
 ]);
 
 const EMPTY_DEFAULTS: ComponentForm = {
-  name: "", code: "", type: "EARNING", calcMethod: "FIXED",
+  name: "", code: "", type: "EARNING", payCategory: "REGULAR", calcMethod: "FIXED",
   taxable: true, showOnPayslip: true, includeInCtc: true,
   amount: "", percent: "", percentBase: "", formula: "", sortOrder: "",
 };
@@ -65,6 +67,7 @@ export function ComponentFormSheet({ component, open, onOpenChange }: ComponentF
   });
 
   const calcMethod = form.watch("calcMethod");
+  const componentType = form.watch("type");
 
   useEffect(() => {
     form.reset(
@@ -73,6 +76,7 @@ export function ComponentFormSheet({ component, open, onOpenChange }: ComponentF
             name: component.name,
             code: component.code,
             type: component.type,
+            payCategory: component.payCategory,
             ...fromComponentCalc(component),
             taxable: component.taxable,
             showOnPayslip: component.showOnPayslip,
@@ -109,6 +113,7 @@ export function ComponentFormSheet({ component, open, onOpenChange }: ComponentF
     const sharedFields = {
       name: data.name,
       type: data.type,
+      ...toPayCategoryPayload(data, component?.payCategory),
       ...toCalcPayload(data),
       taxable: data.taxable,
       showOnPayslip: data.showOnPayslip,
@@ -248,6 +253,36 @@ export function ComponentFormSheet({ component, open, onOpenChange }: ComponentF
                   }}
                 />
               </div>
+
+              {componentType === "EARNING" && (
+                <FormField
+                  control={form.control}
+                  name="payCategory"
+                  render={({ field }) => {
+                    function handlePayCategoryChange(v: string): void {
+                      const next = PAY_CATEGORIES.find((c) => c.value === v);
+                      if (next) field.onChange(next.value);
+                    }
+                    return (
+                      <FormItem>
+                        <FormLabel className="text-xs font-medium">Pay category</FormLabel>
+                        <Select value={field.value} onValueChange={handlePayCategoryChange}>
+                          <FormControl>
+                            <SelectTrigger id="comp-pay-category" className="h-9 text-sm"><SelectValue /></SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {PAY_CATEGORIES.map((c) => (
+                              <SelectItem key={c.value} value={c.value}>{c.label}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <p className="text-micro text-muted-foreground">A bonus is paid in gross but left out of wages for the Labour Code 50% check.</p>
+                        <FormMessage className="text-xs" />
+                      </FormItem>
+                    );
+                  }}
+                />
+              )}
 
               {calcMethod === "FIXED" && (
                 <FormField

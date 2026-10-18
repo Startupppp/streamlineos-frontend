@@ -2,6 +2,7 @@
  * Every preview shape is inferred from the runtime contract that parses it, so a type here can
  * never disagree with what the seam accepts.
  */
+import type { DB_ENUMS } from "@/contracts/db-enums.generated";
 import type {
   PreviewLine,
   TemplatePreviewResult,
@@ -183,11 +184,14 @@ export type ActivateResult = {
   checklist: ActivateChecklistItem[];
 };
 
+export type ComponentPayCategory = (typeof DB_ENUMS.salary_component_pay_category)[number];
+
 export type SalaryComponent = {
   id: number;
   code: string;
   name: string;
   type: ComponentType;
+  payCategory: ComponentPayCategory;
   calcMethod: CalcMethod;
   amount: string | null;
   percent: string | null;
