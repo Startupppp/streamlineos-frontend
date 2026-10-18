@@ -15,7 +15,11 @@ export function AssetReturnsEmptyState({
       className="flex-1"
       illustration={<EmptyDevicesIllustration />}
       title="No asset returns tracked"
-      description="Log an asset return when an employee returns company equipment."
+      description={
+        isAdmin
+          ? "Log an asset return when an employee returns company equipment."
+          : "Returns appear here once HR logs equipment an employee hands back."
+      }
       action={isAdmin ? { label: "Log Return", onClick: onOpenSheet } : undefined}
     />
   );

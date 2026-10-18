@@ -1,5 +1,6 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import { AssetReturnsPage } from "./asset-returns-page";
+import { AssetReturnsEmptyState } from "./asset-return-page-states";
 
 const employeesCalls: Array<{ enabled?: boolean } | undefined> = [];
 const assetsCalls: Array<{ enabled?: boolean } | undefined> = [];
@@ -56,5 +57,13 @@ describe("asset returns page reads (HR-B-012)", () => {
     expect(employeesCalls.at(-1)).toEqual({ enabled: true });
     expect(assetsCalls.at(-1)).toEqual({ enabled: true });
     expect(screen.getByTestId("log-sheet")).toHaveTextContent("loading assets");
+  });
+
+  it("gives a viewer who cannot log returns an empty state without an action they cannot take (HR-U-011)", () => {
+    render(<AssetReturnsEmptyState isAdmin={false} onOpenSheet={jest.fn()} />);
+
+    expect(screen.getByText("No asset returns tracked")).toBeInTheDocument();
+    expect(screen.getByText("Returns appear here once HR logs equipment an employee hands back.")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /log return/i })).not.toBeInTheDocument();
   });
 });
