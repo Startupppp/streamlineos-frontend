@@ -105,17 +105,42 @@ function joinFields(fields: string[]): string {
   return `${fields.slice(0, -1).join(", ")} and ${fields[fields.length - 1]}`;
 }
 
+const FIELD_LABELS: Partial<Record<keyof TemplateFormValues, string>> = {
+  name: "Template Name",
+  basicSalary: "Basic Salary",
+  hraPercent: "HRA %",
+  specialAllowance: "Special Allowance",
+  medicalAllowance: "Medical Allowance",
+  travelAllowance: "Travel Allowance",
+  otherAllowances: "Other Allowances",
+  pfDeductionPercent: "PF Deduction %",
+  professionalTax: "Professional Tax",
+};
+
+function firstFieldProblem(values: TemplateFormValues): string | null {
+  const parsed = templateSchema.safeParse(values);
+  if (parsed.success) return null;
+  for (const issue of parsed.error.issues) {
+    const label = FIELD_LABELS[issue.path[0] as keyof TemplateFormValues];
+    if (label) return `${label}: ${issue.message}.`;
+  }
+  return null;
+}
+
 function TemplateValidity({ values }: { values: TemplateFormValues }) {
   const preview = estimateTemplateNet(values);
   const missing = missingRequiredFields(values);
-  if (missing.length === 0 && preview.valid) return null;
+  const fieldProblem = missing.length > 0 ? null : firstFieldProblem(values);
+  if (missing.length === 0 && !fieldProblem && preview.valid) return null;
   return (
     <p className="text-xs text-destructive">
       {missing.length > 0
         ? `Enter ${joinFields(missing)} before this template can be saved.`
-        : preview.hasNegativeComponent
-          ? "A salary component cannot be negative. Enter zero or more in every amount."
-          : "Deductions cannot exceed gross. Raise basic salary or lower deductions."}
+        : fieldProblem
+          ? fieldProblem
+          : preview.hasNegativeComponent
+            ? "A salary component cannot be negative. Enter zero or more in every amount."
+            : "Deductions cannot exceed gross. Raise basic salary or lower deductions."}
     </p>
   );
 }
@@ -138,6 +163,7 @@ export function SalaryStructureTemplateSheet({
     formState: { errors },
   } = useForm<TemplateFormValues>({
     resolver: zodResolver(templateSchema),
+    mode: "onTouched",
     defaultValues: {
       name: "",
       basicSalary: "",
@@ -157,7 +183,8 @@ export function SalaryStructureTemplateSheet({
   const watchedValues = watch();
   const isActiveValue = watch("isActive");
   const preview = estimateTemplateNet(watchedValues);
-  const canSubmit = missingRequiredFields(watchedValues).length === 0 && preview.valid;
+  const canSubmit =
+    missingRequiredFields(watchedValues).length === 0 && preview.valid && firstFieldProblem(watchedValues) === null;
 
   useEffect(() => {
     if (open) {
