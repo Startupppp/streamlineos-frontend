@@ -57,6 +57,7 @@ import {
 } from "@/components/command-palette/components/palette-item";
 import { isHrNavChromeKilled } from "./sidebar/hr-week-one-nav";
 import { usePalettePeopleSearch } from "@/components/command-palette/hooks/use-people-search";
+import { PaletteCalendarGroup } from "@/components/command-palette/components/palette-calendar-group";
 
 
 const ENTITY_TYPES = [
@@ -324,6 +325,7 @@ export function CommandPaletteDialogBody() {
         )}
 
         <PalettePeopleGroup search={peopleSearch} onSelect={handleSelect} />
+        <PaletteCalendarGroup query={debouncedQuery} onSelect={handleSelect} />
 
         {actionsCommands.length > 0 && (
           <>
