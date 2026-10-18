@@ -89,7 +89,7 @@ export function SpaceCard({
       >
         <div className="flex items-start justify-between gap-2">
           <div className="flex items-center gap-2 min-w-0">
-            <span className="text-lg shrink-0">{space.icon ?? "📚"}</span>
+            <span className="text-lg shrink-0">{space.icon || "📚"}</span>
             <TruncatedText text={space.name} className="text-sm font-semibold text-foreground" />
           </div>
           <Badge

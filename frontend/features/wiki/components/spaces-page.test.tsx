@@ -1,4 +1,4 @@
-import { render, screen, within } from "@testing-library/react";
+import { fireEvent, render, screen, within } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import userEvent from "@testing-library/user-event";
 import { ApiError } from "@/lib/api-envelope";
@@ -323,6 +323,43 @@ describe("SpacesPage", () => {
       expect.objectContaining({ spaceId: 1, description: null, icon: "🔧" }),
       expect.anything(),
     );
+  });
+
+  it("a rename leaves the unchanged audience out of the update, so it is not recorded as an access change", async () => {
+    mockCan.mockReturnValue(true);
+    const update = mutation();
+    mockUpdate.mockReturnValue(update);
+    renderPage();
+    await userEvent.click(screen.getByRole("button", { name: "Edit" }));
+    await userEvent.clear(screen.getByLabelText("Name"));
+    await userEvent.type(screen.getByLabelText("Name"), "Platform");
+    await userEvent.click(screen.getByRole("button", { name: "Save" }));
+    expect(update.mutate).toHaveBeenCalledWith(
+      expect.objectContaining({ spaceId: 1, name: "Platform", audience: undefined }),
+      expect.anything(),
+    );
+  });
+
+  it("a changed audience is sent with the update", async () => {
+    mockCan.mockReturnValue(true);
+    const update = mutation();
+    mockUpdate.mockReturnValue(update);
+    renderPage();
+    await userEvent.click(screen.getByRole("button", { name: "Edit" }));
+    fireEvent.keyDown(screen.getByRole("combobox", { name: "Audience" }), { key: "ArrowDown" });
+    fireEvent.click(screen.getByRole("option", { name: "Public" }));
+    await userEvent.click(screen.getByRole("button", { name: "Save" }));
+    expect(update.mutate).toHaveBeenCalledWith(
+      expect.objectContaining({ spaceId: 1, audience: "public" }),
+      expect.anything(),
+    );
+  });
+
+  it("shows the default icon for a space saved with an empty icon, and the saved icon otherwise", () => {
+    mockSpaces.mockReturnValue(listing([space({ id: 1, name: "Blank", icon: "" }), space({ id: 2, name: "Tools", slug: "tools", icon: "🔧" })]));
+    renderPage();
+    expect(screen.getByText("📚")).toBeInTheDocument();
+    expect(screen.getByText("🔧")).toBeInTheDocument();
   });
 
   it("BITE: shows the owner and last-updated line on each card", () => {

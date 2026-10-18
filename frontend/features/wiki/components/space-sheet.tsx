@@ -78,7 +78,7 @@ export function SpaceSheet({
           // An emptied field is sent as null so the edit clears it.
           description: values.description?.trim() || null,
           icon: values.icon?.trim() || null,
-          audience: values.audience,
+          audience: values.audience === editingSpace.audience ? undefined : values.audience,
         },
         {
           onSuccess: () => {
@@ -188,21 +188,21 @@ export function SpaceSheet({
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Audience</FormLabel>
-                    <FormControl>
-                      <Select
-                        value={field.value ?? "internal"}
-                        onValueChange={field.onChange}
-                      >
+                    <Select
+                      value={field.value ?? "internal"}
+                      onValueChange={field.onChange}
+                    >
+                      <FormControl>
                         <SelectTrigger>
                           <SelectValue />
                         </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="internal">Internal</SelectItem>
-                          <SelectItem value="public">Public</SelectItem>
-                          <SelectItem value="mixed">Mixed</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </FormControl>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="internal">Internal</SelectItem>
+                        <SelectItem value="public">Public</SelectItem>
+                        <SelectItem value="mixed">Mixed</SelectItem>
+                      </SelectContent>
+                    </Select>
                     <FormMessage />
                   </FormItem>
                 )}

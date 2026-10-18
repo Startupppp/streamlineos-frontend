@@ -235,7 +235,7 @@ export default function SpaceDetailPage({ spaceId }: SpaceDetailPageProps) {
       >
         <div className="flex min-h-0 flex-1 flex-col gap-4">
           <div className="bg-card border border-border rounded-xl p-4 flex items-start gap-4">
-            <span className="text-3xl shrink-0">{space?.icon ?? "📚"}</span>
+            <span className="text-3xl shrink-0">{space?.icon || "📚"}</span>
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 flex-wrap">
                 <span className="text-base font-semibold text-foreground">

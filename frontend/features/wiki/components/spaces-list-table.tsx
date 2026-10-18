@@ -125,7 +125,7 @@ function buildColumns(
       header: "Space",
       cell: (row) => (
         <div className="flex min-w-0 items-center gap-2">
-          <span className="shrink-0">{row.icon ?? "📚"}</span>
+          <span className="shrink-0">{row.icon || "📚"}</span>
           <Link
             href={spaceHref(row.id)}
             className="truncate font-medium text-foreground hover:underline"
