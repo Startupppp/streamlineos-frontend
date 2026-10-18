@@ -89,6 +89,8 @@ function detailFixture(overrides: Partial<CalendarEventDetail>): CalendarEventDe
     isRecurring: false,
     canManage: false,
     localVersion: 1,
+    guestEmails: [],
+    reminderOffsetsMinutes: null,
     ...overrides,
   };
 }

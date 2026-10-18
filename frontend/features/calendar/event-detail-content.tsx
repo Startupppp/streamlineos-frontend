@@ -203,6 +203,18 @@ export function EventDetailContent({
                 </div>
               </div>
             ) : null}
+            {detail && detail.guestEmails.length > 0 ? (
+              <div className="space-y-2">
+                <DetailFact index={4} icon={Users} well="bg-status-info-surface text-status-info-ink">
+                  <span className="font-medium">Guests ({detail.guestEmails.length})</span>
+                </DetailFact>
+                <ul aria-label="External guests" className="space-y-1 pl-11 text-sm">
+                  {detail.guestEmails.map((email) => (
+                    <li key={email} className="truncate">{email}</li>
+                  ))}
+                </ul>
+              </div>
+            ) : null}
           </>
         ) : null}
     </div>

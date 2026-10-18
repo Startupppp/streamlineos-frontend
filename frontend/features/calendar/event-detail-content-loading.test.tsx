@@ -44,6 +44,8 @@ const detail: CalendarEventDetail = {
   isRecurring: false,
   canManage: false,
   localVersion: 1,
+  guestEmails: [],
+  reminderOffsetsMinutes: null,
 };
 
 const baseProps = {
@@ -90,4 +92,10 @@ it("keeps occurrence notes when the fetched detail describes the series", () => 
 
   expect(screen.getByText("Occurrence-only agenda")).toBeInTheDocument();
   expect(screen.queryByText("Full agenda")).not.toBeInTheDocument();
+});
+
+it("CAL-B-004 lists the event's external guests for the organizer", () => {
+  render(<EventDetailContent {...baseProps} detail={{ ...detail, canManage: true, guestEmails: ["qa1015cal@sharklasers.com"] }} />);
+
+  expect(screen.getByRole("list", { name: "External guests" })).toHaveTextContent("qa1015cal@sharklasers.com");
 });
