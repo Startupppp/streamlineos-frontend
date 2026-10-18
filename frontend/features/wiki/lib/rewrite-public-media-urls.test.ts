@@ -10,6 +10,13 @@ describe("rewritePublicMediaUrls", () => {
   const objectKey = "org-1/kb-media/org-1/abc.png";
   const brokered = publicMediaBrokerUrl(shareToken, objectKey);
 
+  it("points the broker at the API origin, because the site origin does not serve /public/wiki media", () => {
+    const apiOrigin = (process.env.NEXT_PUBLIC_API_URL ?? "").replace(/\/$/, "");
+    expect(apiOrigin).toMatch(/^https?:\/\//);
+    expect(brokered).toBe(`${apiOrigin}/public/wiki/${shareToken}/media?key=${encodeURIComponent(objectKey)}`);
+    expect(publicMediaFileKey(brokered)).toBe(objectKey);
+  });
+
   it("brokers the bare object key the uploader actually stores on an image node", () => {
     const content = { type: "img", url: objectKey };
     const result = rewritePublicMediaUrls(content, shareToken) as Record<string, unknown>;
@@ -145,7 +152,7 @@ describe("publicMediaFileKey", () => {
   });
 
   it("extracts the owned object key from an absolute old broker URL", () => {
-    const oldUrl = `https://app.example.com${publicMediaBrokerUrl("old-token-123", "org-1/kb-media/org-1/a b.png")}`;
+    const oldUrl = `https://app.example.com/public/wiki/old-token-123/media?key=${encodeURIComponent("org-1/kb-media/org-1/a b.png")}`;
     expect(publicMediaFileKey(oldUrl)).toBe("org-1/kb-media/org-1/a b.png");
   });
 

@@ -2,6 +2,7 @@
 
 import { Fragment } from "react";
 import Image from "next/image";
+import { Download } from "lucide-react";
 import { isRecord } from "@/lib/is-record";
 import {
   LIST_STYLE_DECIMAL,
@@ -339,7 +340,7 @@ function renderSlateNode(node: unknown, idx: number): React.ReactNode {
     case "img": {
       const src = typeof el.url === "string" ? el.url : undefined;
       return src ? (
-        <Image key={idx} src={src} alt={typeof el.name === "string" ? el.name : ""} width={800} height={600} unoptimized className="max-w-full h-auto rounded-md my-3" />
+        <Image key={idx} src={src} alt={typeof el.name === "string" ? el.name : ""} width={800} height={600} unoptimized className="my-3 h-auto max-h-[70vh] w-auto max-w-full rounded-md object-contain" />
       ) : null;
     }
     case "video": {
@@ -358,7 +359,8 @@ function renderSlateNode(node: unknown, idx: number): React.ReactNode {
       const href = typeof el.url === "string" ? el.url : "#";
       const name = typeof el.name === "string" ? el.name : "File";
       return (
-        <a key={idx} href={href} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 rounded-lg border border-border bg-card px-4 py-3 text-sm hover:bg-muted my-2">
+        <a key={idx} href={href} target="_blank" rel="noopener noreferrer" aria-label={`Download ${name}`} className="inline-flex items-center gap-2 rounded-lg border border-border bg-card px-4 py-3 text-sm hover:bg-muted my-2">
+          <Download className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden="true" />
           {name}
         </a>
       );

@@ -85,3 +85,19 @@ describe("PublicPageContent — the editor writes indent lists, so the reader mu
     expect(screen.getByText("TipTap item").closest("li")).toHaveClass("text-base", "leading-7");
   });
 });
+
+describe("PublicPageContent — media on a shared page", () => {
+  it("renders an image at its natural size capped to the column, not stretched to a fixed 800px box", () => {
+    render(<PublicPageContent content={[{ type: "img", url: "https://api.test/public/wiki/tok-12345678/media?key=a.png", name: "diagram.png" }]} />);
+
+    const image = screen.getByRole("img", { name: "diagram.png" });
+    expect(image).toHaveClass("w-auto", "h-auto", "max-w-full");
+  });
+
+  it("renders a file attachment as a labelled download link to its brokered url", () => {
+    const url = "https://api.test/public/wiki/tok-12345678/media?key=report.pdf";
+    render(<PublicPageContent content={[{ type: "file", url, name: "report.pdf" }]} />);
+
+    expect(screen.getByRole("link", { name: "Download report.pdf" })).toHaveAttribute("href", url);
+  });
+});

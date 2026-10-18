@@ -24,6 +24,8 @@ const PUBLIC_MEDIA_PATH = /^\/public\/wiki\/[A-Za-z0-9-]{8,64}\/media$/;
 
 export const COVER_GRADIENT_PREFIX = "gradient:";
 
+const PUBLIC_API_ORIGIN = (process.env.NEXT_PUBLIC_API_URL ?? "").replace(/\/$/, "");
+
 function isRecord(v: unknown): v is Record<string, unknown> {
   return v !== null && typeof v === "object" && !Array.isArray(v);
 }
@@ -32,7 +34,7 @@ export function publicMediaBrokerUrl(
   shareToken: string,
   fileKey: string,
 ): string {
-  return `/public/wiki/${shareToken}/media?key=${encodeURIComponent(fileKey)}`;
+  return `${PUBLIC_API_ORIGIN}/public/wiki/${shareToken}/media?key=${encodeURIComponent(fileKey)}`;
 }
 
 export function publicMediaFileKey(value: string): string | null {
