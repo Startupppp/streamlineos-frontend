@@ -4,11 +4,21 @@ import { Globe } from "lucide-react";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { useCan } from "@/hooks/api/access";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { ErrorState } from "@/components/shared/error-state";
 import { RoadmapPublicationActive } from "./roadmap/roadmap-publication-active";
-import { useRoadmapPublicationControls } from "./roadmap/use-roadmap-publication-controls";
+import {
+  useRoadmapPublicationControls,
+  LINK_EXPIRY_OPTIONS,
+} from "./roadmap/use-roadmap-publication-controls";
 
 interface ProductSettingsPublicationSectionProps {
   managedProductId: number;
@@ -33,17 +43,29 @@ export function ProductSettingsPublicationSection({
           Client publication
         </h2>
         {canManage && !controls.isLoading && !controls.isError && !controls.isPublished ? (
-          <LoadingButton
-            type="button"
-            variant="outline"
-            size="sm"
-            isPending={controls.isPublishing}
-            loadingText="Publishing…"
-            onClick={controls.handlePublish}
-          >
-            <Globe aria-hidden="true" />
-            Publish roadmap
-          </LoadingButton>
+          <div className="flex items-center gap-2">
+            <Select value={controls.linkExpiry} onValueChange={controls.setLinkExpiry}>
+              <SelectTrigger className="h-9 w-auto text-sm" aria-label="Link expiry">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {LINK_EXPIRY_OPTIONS.map((o) => (
+                  <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <LoadingButton
+              type="button"
+              variant="outline"
+              size="sm"
+              isPending={controls.isPublishing}
+              loadingText="Publishing…"
+              onClick={controls.handlePublish}
+            >
+              <Globe aria-hidden="true" />
+              Publish roadmap
+            </LoadingButton>
+          </div>
         ) : null}
       </div>
 
@@ -99,6 +121,21 @@ export function ProductSettingsPublicationSection({
             onOpenChange={controls.handleRotateOpenChange}
             title="Rotate share link?"
             description="The current link will stop working immediately. A new unique link will be generated."
+            content={
+              <div className="flex items-center gap-2">
+                <span className="shrink-0 text-sm text-muted-foreground">Expires:</span>
+                <Select value={controls.linkExpiry} onValueChange={controls.setLinkExpiry}>
+                  <SelectTrigger className="h-9 text-sm">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {LINK_EXPIRY_OPTIONS.map((o) => (
+                      <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            }
             confirmLabel="Rotate link"
             destructive
             keepOpenOnConfirm

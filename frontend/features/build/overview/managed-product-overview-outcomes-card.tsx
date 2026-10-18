@@ -40,7 +40,12 @@ export function ManagedProductOverviewOutcomesCard({
     <OverviewPanel
       title="Measured outcomes"
       description="Did shipped work move the metrics it promised to?"
-      action={<OverviewSectionLink href={`/build/managed-products/${managedProductId}/goals`} icon={CircleCheckIcon}>View goals</OverviewSectionLink>}
+      action={
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+          <OverviewSectionLink href={`/build/managed-products/${managedProductId}/insights?view=discovery`}>Schedule review</OverviewSectionLink>
+          <OverviewSectionLink href={`/build/managed-products/${managedProductId}/goals`} icon={CircleCheckIcon}>View goals</OverviewSectionLink>
+        </div>
+      }
     >
       {hasReviews ? (
         <OverviewSegmentedBar
