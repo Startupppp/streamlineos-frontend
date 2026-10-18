@@ -8,13 +8,13 @@ import { CONTENT_FILL_PANEL } from "@/components/pm-chrome";
 import { useManagedProductInsights } from "@/hooks/api/build/managed-products";
 import { usePageState } from "@/hooks/api/use-page-state";
 import { PageState } from "@/components/shared/page-state";
-import { EmptyState } from "@/components/ui/empty-state";
 import { BuildFilterSelect } from "@/features/build/shared/build-filter-select";
 import { useBuildListFilters } from "@/features/build/shared/use-build-list-filters";
 import {
   MANAGED_PRODUCT_DETAIL_CONTENT_CLASS,
   ManagedProductDetailPrimarySection,
   ManagedProductDetailShell,
+  ManagedProductNotFound,
 } from "./managed-product-detail-layout";
 import { ProductInsightsSkeleton } from "./managed-product-page-skeletons";
 import {
@@ -111,6 +111,10 @@ export function ProductInsightsPage({
 
   const handleRetry = useCallback(() => void refetch(), [refetch]);
 
+  if (resolution.kind === "not-found" || resolution.kind === "empty") {
+    return <ManagedProductNotFound />;
+  }
+
   return (
     <Tabs
       value={view}
@@ -156,13 +160,6 @@ export function ProductInsightsPage({
               resolution={resolution}
               loading={<ProductInsightsSkeleton />}
               onRetry={handleRetry}
-              empty={
-                <EmptyState
-                  title="Product not found"
-                  description="This product may have been deleted or moved."
-                  className="flex-1"
-                />
-              }
               className={CONTENT_FILL_PANEL}
             >
               <TabsContent value="overview" className="mt-0 outline-none">

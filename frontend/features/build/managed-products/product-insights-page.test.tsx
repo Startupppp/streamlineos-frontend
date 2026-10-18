@@ -80,6 +80,35 @@ describe("ProductInsightsPage — page states (BSN-INS-STATE)", () => {
   });
 });
 
+describe("ProductInsightsPage — unreachable product (MP-B-021)", () => {
+  beforeEach(() => {
+    useManagedProductInsights.mockReturnValue({
+      data: null,
+      isLoading: false,
+      isError: false,
+      error: null,
+      refetch: jest.fn(),
+    });
+  });
+
+  it.each(["not-found", "empty"] as const)(
+    "renders only the shared product not-found state without the insights tabs when the read resolves to %s",
+    (kind) => {
+      usePageState.mockReturnValue({ kind });
+      render(<ProductInsightsPage managedProductId={7} />);
+      expect(screen.getByTestId("page-state-not-found")).toBeInTheDocument();
+      expect(screen.queryByRole("tablist", { name: "Insights views" })).not.toBeInTheDocument();
+    },
+  );
+
+  it("keeps the insights tabs for a reachable product", () => {
+    usePageState.mockReturnValue({ kind: "ready" });
+    render(<ProductInsightsPage managedProductId={7} />);
+    expect(screen.queryByTestId("page-state-not-found")).not.toBeInTheDocument();
+    expect(screen.getByRole("tablist", { name: "Insights views" })).toBeInTheDocument();
+  });
+});
+
 describe("ProductInsightsPage — range URL param (BSN-INS-RANGE)", () => {
   beforeEach(() => {
     useManagedProductInsights.mockReturnValue({

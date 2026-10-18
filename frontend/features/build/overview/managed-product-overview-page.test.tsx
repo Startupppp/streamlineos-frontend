@@ -109,6 +109,34 @@ describe("ManagedProductOverviewPage — access control", () => {
   });
 });
 
+describe("ManagedProductOverviewPage — unreachable product (MP-B-021)", () => {
+  it("renders only the shared Product not found state with no header actions or filters", () => {
+    usePageState.mockReturnValue({ kind: "not-found" });
+    const { useManagedProductSummary } = jest.requireMock(
+      "@/hooks/api/build/managed-product-summary",
+    );
+    (useManagedProductSummary as jest.Mock).mockReturnValue({
+      data: undefined,
+      isLoading: false,
+      isError: true,
+      error: { status: 404 },
+      dataUpdatedAt: 0,
+      refetch: jest.fn(),
+    });
+    render(<ManagedProductOverviewPage managedProductId={42} />);
+    expect(screen.getByText("Product not found")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /back to products/i })).toHaveAttribute("href", "/build/managed-products");
+    expect(screen.queryByRole("button", { name: /record opportunity/i })).not.toBeInTheDocument();
+    expect(screen.queryByText("Product overview")).not.toBeInTheDocument();
+  });
+
+  it("keeps the overview content for a reachable product", () => {
+    render(<ManagedProductOverviewPage managedProductId={42} />);
+    expect(screen.queryByText("Product not found")).not.toBeInTheDocument();
+    expect(screen.getByText("Evidence strength")).toBeInTheDocument();
+  });
+});
+
 describe("ManagedProductOverviewPage — three distinct sections", () => {
   it("places the compact product pulse first in the content below the filters", () => {
     render(<ManagedProductOverviewPage managedProductId={42} />);

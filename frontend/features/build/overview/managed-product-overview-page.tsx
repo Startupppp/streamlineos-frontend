@@ -15,6 +15,7 @@ import { PageWrapper } from "@/components/ui/page-wrapper";
 import { BuildOfflineNotice } from "@/features/build/shared/build-offline-notice";
 import { ManagedProductOverviewFilters } from "./managed-product-overview-filters";
 import { ManagedProductOverviewSkeleton } from "@/features/build/managed-products/managed-product-page-skeletons";
+import { ManagedProductNotFound } from "@/features/build/managed-products/managed-product-detail-layout";
 import { ManagedProductOverviewStrategyCard } from "./managed-product-overview-strategy-card";
 import { ManagedProductOverviewEvidenceCard } from "./managed-product-overview-evidence-card";
 import { ManagedProductOverviewDeliveryCard } from "./managed-product-overview-delivery-card";
@@ -81,6 +82,8 @@ export function ManagedProductOverviewPage({
         : [],
     [summaryData, managedProductId, now],
   );
+
+  if (resolution.kind === "not-found") return <ManagedProductNotFound />;
 
   return (
     <PageWrapper
