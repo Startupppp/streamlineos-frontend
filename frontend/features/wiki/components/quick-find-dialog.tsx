@@ -12,6 +12,7 @@ import {
   CommandGroup,
 } from "@/components/ui/command";
 import { useKbPagesSearch } from "@/hooks/api/kb";
+import { KB_PAGE_SEARCH_MAX_LENGTH } from "@/hooks/api/kb/pages";
 import { pageHref, KB_SEARCH } from "@/lib/knowledge-routes";
 import { KbFileTextIcon, KbLoader2Icon } from "@/features/wiki/lib/kb-icons";
 import { TruncatedText } from "@/components/ui/truncated-text";
@@ -67,6 +68,7 @@ export default function QuickFindDialog({ open, onOpenChange }: QuickFindDialogP
       <CommandInput
         placeholder="Search pages…"
         value={inputValue}
+        maxLength={KB_PAGE_SEARCH_MAX_LENGTH}
         onValueChange={handleInputValueChange}
       />
       <CommandList>

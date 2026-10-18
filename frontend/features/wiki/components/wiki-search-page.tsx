@@ -23,6 +23,7 @@ import { useUrlFilters, parseEnum } from "@/lib/url-state/use-url-filters";
 import { useSourceOverride } from "@/hooks/common/use-source-override";
 import { useKbPageFullSearch } from "@/hooks/api/kb/search";
 import { useKbSpaces } from "@/hooks/api/kb/spaces";
+import { KB_PAGE_SEARCH_MAX_LENGTH } from "@/hooks/api/kb/pages";
 import { useHrKbLinkConfig } from "@/hooks/api/kb/hr-link-config";
 import { WikiSearchCompanyDocuments } from "@/features/wiki/components/wiki-search-company-documents";
 import { pageHref } from "@/lib/knowledge-routes";
@@ -138,9 +139,6 @@ function SearchResultCard({
   );
 }
 
-// Matches the backend's GET /kb/pages/search `q` limit; longer text was a 400.
-const SEARCH_MAX_LENGTH = 200;
-
 export default function WikiSearchPage() {
   const searchInputId = useId();
   const searchParams = useSearchParams();
@@ -149,7 +147,7 @@ export default function WikiSearchPage() {
   const { update } = useUrlFilters();
   const { data: spacesData } = useKbSpaces({ limit: 100 });
   const spacesById = new Map((spacesData?.data ?? []).map((s) => [s.id, s.name]));
-  const q = (searchParams.get("q") ?? "").slice(0, SEARCH_MAX_LENGTH);
+  const q = (searchParams.get("q") ?? "").slice(0, KB_PAGE_SEARCH_MAX_LENGTH);
   const status = searchParams.get("status") ?? undefined;
   const type = searchParams.get("type") ?? undefined;
   const verifiedParam = searchParams.get("verified");
@@ -333,16 +331,16 @@ export default function WikiSearchPage() {
               placeholder="Search pages…"
               value={inputValue}
               onChange={handleInputChange}
-              maxLength={SEARCH_MAX_LENGTH}
+              maxLength={KB_PAGE_SEARCH_MAX_LENGTH}
               aria-describedby={`${searchInputId}-limit`}
               autoFocus
               className="h-9"
             />
             <p
               id={`${searchInputId}-limit`}
-              className={inputValue.length >= SEARCH_MAX_LENGTH ? "mt-1 text-xs text-muted-foreground" : "sr-only"}
+              className={inputValue.length >= KB_PAGE_SEARCH_MAX_LENGTH ? "mt-1 text-xs text-muted-foreground" : "sr-only"}
             >
-              Search is limited to {SEARCH_MAX_LENGTH} characters.
+              Search is limited to {KB_PAGE_SEARCH_MAX_LENGTH} characters.
             </p>
           </div>
           <div className="flex items-center gap-2">

@@ -359,13 +359,17 @@ export function useKbBulkPurgePages() {
   });
 }
 
-export function useKbPagesSearch(q: string) {
+export const KB_PAGE_SEARCH_MAX_LENGTH = 200;
+
+export function useKbPagesSearch(rawQuery: string) {
+  const q = rawQuery.slice(0, KB_PAGE_SEARCH_MAX_LENGTH);
   const canView = useCan("kb:pages:view");
   const { data: spaces, isLoading: spacesLoading } = useKbSpaces({
     limit: ACL_VERSION_SPACE_LIMIT,
   });
   const aclVersion = spacesLoading ? null : deriveAclVersion(spaces);
   return useQuery({
+    ...INLINE_READ_ERROR,
     queryKey: knowledgeAndSurveysQueryKeys.kb.pagesSearch(q, aclVersion ?? ""),
     queryFn: ({ signal }) =>
       apiClient.get<KbPageSearchPage>(

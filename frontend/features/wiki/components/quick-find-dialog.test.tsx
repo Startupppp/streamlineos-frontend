@@ -52,3 +52,11 @@ it("reports a failed Quick Find search and hides cached results after access is 
   fireEvent.click(view.getByRole("button", { name: "Try again" }));
   expect(refetch).toHaveBeenCalledTimes(1);
 });
+
+it("caps the Quick Find input at the backend's 200-character search limit", () => {
+  useKbPagesSearch.mockReturnValue({ data: undefined, isFetching: false, isError: false, error: null, refetch: jest.fn() });
+
+  const view = render(<QuickFindDialog open onOpenChange={jest.fn()} />);
+
+  expect(view.getByPlaceholderText("Search pages…")).toHaveAttribute("maxLength", "200");
+});
