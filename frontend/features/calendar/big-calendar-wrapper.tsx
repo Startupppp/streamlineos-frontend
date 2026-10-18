@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useMemo, useRef } from "react";
+import { useCallback, useEffect, useMemo, useRef } from "react";
 import {
   Calendar,
   dateFnsLocalizer,
@@ -8,11 +8,15 @@ import {
   type EventPropGetter,
   type Components,
 } from "react-big-calendar";
+import withDragAndDrop from "react-big-calendar/lib/addons/dragAndDrop";
 import { format, parse, startOfWeek, getDay } from "date-fns";
 import { enIN } from "date-fns/locale/en-IN";
 import "react-big-calendar/lib/css/react-big-calendar.css";
+import "react-big-calendar/lib/addons/dragAndDrop/styles.css";
 import { CalendarDayHeader } from "./calendar-day-header";
 import { CalendarWeekDayHeader } from "./calendar-week-day-header";
+
+const DnDCalendar = withDragAndDrop(Calendar);
 
 const localizer = dateFnsLocalizer({
   format,
@@ -75,6 +79,13 @@ export interface BigCalEvent {
   };
 }
 
+export interface EventMoveArgs {
+  event: BigCalEvent;
+  start: Date;
+  end: Date;
+  isAllDay: boolean;
+}
+
 interface BigCalendarWrapperProps {
   events: BigCalEvent[];
   date: Date;
@@ -87,6 +98,8 @@ interface BigCalendarWrapperProps {
   onSelectSlot?: (slotInfo: SlotInfo) => void;
   onSelectEvent?: (event: BigCalEvent) => void;
   eventPropGetter?: EventPropGetter<BigCalEvent>;
+  onEventDrop?: (args: EventMoveArgs) => void;
+  onEventResize?: (args: EventMoveArgs) => void;
 }
 
 export function BigCalendarWrapper({
@@ -101,6 +114,8 @@ export function BigCalendarWrapper({
   onSelectSlot,
   onSelectEvent,
   eventPropGetter,
+  onEventDrop,
+  onEventResize,
 }: BigCalendarWrapperProps) {
   const gridRef = useRef<HTMLDivElement>(null);
 
@@ -122,9 +137,30 @@ export function BigCalendarWrapper({
     [],
   );
 
+  const draggableAccessor = useCallback(
+    (event: object) => !!(event as BigCalEvent).resource?.actions?.edit,
+    [],
+  );
+
+  const handleEventDrop = useCallback(
+    ({ event, start, end, isAllDay }: { event: object; start: Date | string; end: Date | string; isAllDay?: boolean }) => {
+      if (onEventDrop)
+        onEventDrop({ event: event as BigCalEvent, start: new Date(start), end: new Date(end), isAllDay: isAllDay ?? false });
+    },
+    [onEventDrop],
+  );
+
+  const handleEventResize = useCallback(
+    ({ event, start, end }: { event: object; start: Date | string; end: Date | string; isAllDay?: boolean }) => {
+      if (onEventResize)
+        onEventResize({ event: event as BigCalEvent, start: new Date(start), end: new Date(end), isAllDay: false });
+    },
+    [onEventResize],
+  );
+
   return (
     <div ref={gridRef} className="contents">
-      <Calendar
+      <DnDCalendar
         localizer={localizer}
         events={events}
         date={date}
@@ -146,6 +182,11 @@ export function BigCalendarWrapper({
         scrollToTime={scrollToTime ?? WORKDAY_SCROLL_TIME}
         enableAutoScroll={enableAutoScroll}
         style={calendarStyle}
+        draggableAccessor={onEventDrop ? draggableAccessor : undefined}
+        resizableAccessor={onEventResize ? draggableAccessor : undefined}
+        onEventDrop={onEventDrop ? handleEventDrop : undefined}
+        onEventResize={onEventResize ? handleEventResize : undefined}
+        resizable={!!onEventResize}
       />
     </div>
   );

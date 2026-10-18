@@ -21,6 +21,8 @@ import {
   useCalendarHistory,
   useExternalCalendarEvents,
   useCalendarSources,
+  useUpdateCalendarEvent,
+  extractEventNumericId,
 } from "@/hooks/api/calendar";
 import type { CalendarListItem } from "@/hooks/api/calendar";
 import type { CalendarSearchResponse } from "@/hooks/api/calendar-types";
@@ -216,6 +218,35 @@ export function CalendarView() {
     handleOpenAccounts,
     handleCloseAccounts,
   } = useCalendarViewState();
+
+  const updateEvent = useUpdateCalendarEvent();
+
+  const handleEventDrop = useCallback(
+    ({ event, start, end, isAllDay }: { event: { id: number | string }; start: Date; end: Date; isAllDay: boolean }) => {
+      const id = typeof event.id === "number" ? event.id : extractEventNumericId(String(event.id));
+      if (!id) return;
+      updateEvent.mutate({
+        calendarEventId: id,
+        startDate: start.toISOString(),
+        endDate: end.toISOString(),
+        allDay: isAllDay,
+      });
+    },
+    [updateEvent],
+  );
+
+  const handleEventResize = useCallback(
+    ({ event, start, end }: { event: { id: number | string }; start: Date; end: Date; isAllDay: boolean }) => {
+      const id = typeof event.id === "number" ? event.id : extractEventNumericId(String(event.id));
+      if (!id) return;
+      updateEvent.mutate({
+        calendarEventId: id,
+        startDate: start.toISOString(),
+        endDate: end.toISOString(),
+      });
+    },
+    [updateEvent],
+  );
 
   const { data: calendarSources } = useCalendarSources(calendarModuleEnabled);
   const isHrEnabled =
@@ -1101,6 +1132,8 @@ export function CalendarView() {
                         : guardedSelectSlot
                     }
                     onSelectEvent={handleSelectEvent}
+                    onEventDrop={savedViewActive ? undefined : handleEventDrop}
+                    onEventResize={savedViewActive ? undefined : handleEventResize}
                   />
                 ) : savedViewActive ? (
                   <CalendarEventsPanel

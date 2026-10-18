@@ -1,6 +1,6 @@
 "use client";
 
-import { BigCalendarWrapper, type BigCalEvent, type View, type SlotInfo } from "./big-calendar-wrapper";
+import { BigCalendarWrapper, type BigCalEvent, type EventMoveArgs, type View, type SlotInfo } from "./big-calendar-wrapper";
 import { useEventPropGetter } from "./use-event-prop-getter";
 
 interface CalendarGridLayerProps {
@@ -12,6 +12,8 @@ interface CalendarGridLayerProps {
   onNavigate: (date: Date) => void;
   onSelectSlot: ((slotInfo: SlotInfo) => void) | undefined;
   onSelectEvent: (event: BigCalEvent) => void;
+  onEventDrop?: (args: EventMoveArgs) => void;
+  onEventResize?: (args: EventMoveArgs) => void;
 }
 
 export function CalendarGridLayer({
@@ -23,6 +25,8 @@ export function CalendarGridLayer({
   onNavigate,
   onSelectSlot,
   onSelectEvent,
+  onEventDrop,
+  onEventResize,
 }: CalendarGridLayerProps) {
   const eventPropGetter = useEventPropGetter();
 
@@ -37,6 +41,8 @@ export function CalendarGridLayer({
       onSelectSlot={onSelectSlot}
       onSelectEvent={onSelectEvent}
       eventPropGetter={eventPropGetter}
+      onEventDrop={onEventDrop}
+      onEventResize={onEventResize}
     />
   );
 }
