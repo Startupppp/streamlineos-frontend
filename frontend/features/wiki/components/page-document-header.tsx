@@ -32,6 +32,8 @@ import { PageRecordLinks } from "./page-record-links";
 import { PageDocumentBreadcrumb } from "./page-document-breadcrumb";
 import { PageDocumentToolbar } from "./page-document-toolbar";
 import { KNOWLEDGE_BASE } from "@/lib/knowledge-routes";
+import { isApiError } from "@/lib/api-envelope";
+import { getErrorMessage } from "@/lib/get-error-message";
 import type { PageSaveState } from "./use-page-autosave";
 
 interface PageDocumentHeaderProps {
@@ -129,7 +131,7 @@ export default function PageDocumentHeader({
         toast.success("Page moved to trash");
         router.push(afterDeleteHref);
       },
-      onError: () => toast.error("Failed to delete page"),
+      onError: (error) => toast.error(getErrorMessage(error)),
     });
   }
 
@@ -138,16 +140,22 @@ export default function PageDocumentHeader({
   }
 
   function handleConfirmTemplate() {
-    if (!templateName.trim()) return;
+    const name = templateName.trim();
+    if (!name) return;
     createTemplate.mutate(
-      { fromPageId: pageId, name: templateName.trim() },
+      { fromPageId: pageId, name },
       {
         onSuccess: () => {
           toast.success("Template saved");
           setTemplateDialogOpen(false);
           setTemplateName("");
         },
-        onError: () => toast.error("Failed to save template"),
+        onError: (error) =>
+          toast.error(
+            isApiError(error) && error.status === 409
+              ? `A template named "${name}" already exists. Choose another name.`
+              : getErrorMessage(error),
+          ),
       },
     );
   }
