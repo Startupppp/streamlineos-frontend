@@ -1,6 +1,7 @@
 import { cleanup, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { DatePicker } from "@/components/ui/date-picker";
+import { Sheet, SheetContent, SheetDescription, SheetTitle } from "@/components/ui/sheet";
 
 beforeEach(() => {
   jest.useFakeTimers({
@@ -141,3 +142,38 @@ describe("DatePicker keyboard navigation", () => {
     await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
   });
 });
+
+describe("DatePicker inside a sheet, as the leave request drawer uses it (UX-05)", () => {
+  it("opens with keyboard focus on a day cell, then arrows and Enter pick a date without the mouse", async () => {
+    const user = userEvent.setup();
+    const onChange = jest.fn();
+    render(
+      <Sheet open>
+        <SheetContent>
+          <SheetTitle>Request leave</SheetTitle>
+          <SheetDescription>Pick the dates</SheetDescription>
+          <DatePicker
+            onChange={onChange}
+            ariaLabel="Start date"
+            fromDate={new Date("2026-10-14T00:00:00")}
+            disabledDays={isWeekendDay}
+          />
+        </SheetContent>
+      </Sheet>,
+    );
+    screen.getByRole("button", { name: "Start date" }).focus();
+    await user.keyboard("{Enter}");
+    await waitFor(() =>
+      expect(document.activeElement).toHaveAttribute("role", "gridcell"),
+    );
+    expect(document.activeElement?.textContent).toBe("14");
+    await user.keyboard("{ArrowRight}");
+    await waitFor(() => expect(document.activeElement?.textContent).toBe("15"));
+    await user.keyboard("{Enter}");
+    expect(onChange).toHaveBeenCalledWith("2026-10-15");
+  });
+});
+
+function isWeekendDay(date: Date): boolean {
+  return date.getDay() === 0 || date.getDay() === 6;
+}

@@ -102,6 +102,10 @@ export function DatePicker({
   const handleOpenChange = useCallback((o: boolean) => setOpen(o), []);
   const handleOpenAutoFocus = useCallback((e: Event) => {
     e.preventDefault();
+    if (!(e.currentTarget instanceof HTMLElement)) return;
+    e.currentTarget
+      .querySelector<HTMLElement>('[role="gridcell"][tabindex="0"]')
+      ?.focus();
   }, []);
   const handleClear = useCallback(() => {
     onChange("");
