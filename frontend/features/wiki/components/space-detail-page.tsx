@@ -198,9 +198,9 @@ export default function SpaceDetailPage({ spaceId }: SpaceDetailPageProps) {
 
   return (
     <PageWrapper
-      title={visibleSpace?.name ?? "Space"}
-      subtitle={visibleSpace?.description ?? undefined}
-      leading={<SpaceBreadcrumb spaceName={visibleSpace?.name ?? "Space"} />}
+      title={space?.name ?? "Space"}
+      subtitle={space?.description ?? undefined}
+      leading={<SpaceBreadcrumb spaceName={space?.name ?? "Space"} />}
       actions={headerActions}
     >
       <PageState

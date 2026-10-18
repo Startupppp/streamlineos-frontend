@@ -88,6 +88,7 @@ export default function WikiShell({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
       if ((e.metaKey || e.ctrlKey) && e.key === "k") {
+        if (document.activeElement?.getAttribute("contenteditable") === "true") return;
         e.preventDefault();
         setQuickFindOpen(true);
       }

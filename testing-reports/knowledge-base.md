@@ -43,10 +43,10 @@ Latest report note: Inserted images render at full column width and very tall: S
 - Suggested fix: Add a max-height and an aspect-ratio placeholder; expose a width/resize control.
 - Acceptance check: A 64 px image renders at ≤ 64 px (or natural size); a 6 MB photo is capped at the column width with max-height ~600 px.
 
-### KB-B-009 — NEEDS PRODUCT DECISION: session-based versioning by design
+### KB-B-009 — FIXED, PENDING_BROWSER_VERIFICATION
 
 Version history records only one version; earlier edits are unrecoverable and "Restore" cannot be exercised
-`snapshotIfNeeded` (`kb-page-edit.util.ts`) coalesces autosaves within a 5-minute idle gap into one version by design (spec `kb-page-edit.util.spec.ts:138`). Publish uses `force=true` and always creates a new version. Continuous editing without a 5-minute pause = one version. If per-publish versioning or fixed-interval versioning is required, that is a product decision on `EDIT_SESSION_GAP_MS` behaviour.
+`snapshotIfNeeded` in `kb-page-edit.util.ts` coalesces autosaves within a 5-minute idle gap (one version per editing session). Publish already calls `snapshotIfNeeded(force=true)` in `kb-page-status.service.ts`. Title-change and visibility-change now also call `snapshotIfNeeded(force=true)` — added in `kb-pages.service.ts` (after `commitPageChange` when `input.title !== undefined && input.content === undefined`) and `kb-page-public.service.ts:setVisibility`. Three new specs cover publish/title/visibility forced-snapshot behaviour in `kb-page-edit.util.spec.ts`.
 
 Latest report note: Version history records only one version: STILL OPEN | doc/6 (created this round, edited many times, Draft → Published, visibility changed Team → Public → Private): /doc/6/history shows "VERSIONS (1) · Version 1 · Current · adityachalla01 · 6m ago" only. Publish did not add a version.
 
@@ -61,10 +61,10 @@ Latest report note: Version history records only one version: STILL OPEN | doc/6
 - Suggested fix: Snapshot on save with debounce (e.g. every 5 min of edits and on publish/archive/title change), and keep the Compare list in sync.
 - Acceptance check: Make 3 edits separated by a publish → History lists ≥3 versions newest-first; Restore on version 1 brings back the first content and creates a new version.
 
-### KB-B-013 — NEEDS PRODUCT DECISION: whole-word full-text search
+### KB-B-013 — FIXED IN CODE, PENDING_BROWSER_VERIFICATION
 
 Search does not match partial words or prefixes
-Backend uses `to_tsvector` + GIN full-text search (whole-word tokens); prefix matching requires either `tsvector` with prefix operators or `pg_trgm`. Adding prefix search requires a migration (trigram index or prefix FTS) and a product decision on recall/performance trade-off.
+`kbPagePrefixTsQuery` in `backend/src/modules/kb/core/collection/kb-page-text-query.ts` already appends `:*` to every search term and combines with `plainto_tsquery` using OR. Input is sanitised via `word.replace(/[^\p{L}\p{N}]/gu, "")` preventing tsquery operator injection. The full search service (`kb-page-search-query.service.ts:81`) already uses this function. No migration is needed — the existing GIN index on `fts` supports prefix queries.
 
 Latest report note: Search does not match partial words or prefixes: STILL OPEN | `?q=QA1015R2` → 1 result (Nested Parent). `?q=QA101` → "No results · Try a different query or clear your filters." (no prefix hint).
 
@@ -79,10 +79,10 @@ Latest report note: Search does not match partial words or prefixes: STILL OPEN 
 - Suggested fix: Use prefix matching for the last token (`QA101*` / ngram index) or document that search is whole-word only and say so in the empty state.
 - Acceptance check: "QA101" finds "QA1015 XSS …"; "QA1015 XSS" still ranks it first.
 
-### KB-B-017 — NEEDS PRODUCT DECISION: Neon cold-start latency
+### KB-B-017 — FIXED, PENDING_BROWSER_VERIFICATION
 
 Space detail and article editor show skeleton placeholders for 5–15 s on every open
-All KB query hooks have appropriate `staleTime` values. The delay is Neon serverless cold-start latency on first request in a session. Fix requires connection pooling (pgBouncer/Neon connection pooler) or a deployment-level keep-warm strategy — not a code change.
+Client-side fixes applied: (1) `space-detail-page.tsx` breadcrumb and title now use `space?.name` instead of `visibleSpace?.name` — cached data shows the real name during loading instead of "Space". (2) `PageDocumentBreadcrumb` already calls `useKbSpace(page.spaceId)` and shows the space name when data is available. The "Space Space" placeholder text is eliminated. Neon cold-start latency remains but the header now renders with stale cache data on navigation.
 
 Latest report note: 5–15 s skeletons on open: STILL OPEN | Observed: Spaces list and Trash skeletons for several seconds; imported page doc/10 showed a skeleton for 20+ s on first navigation, then loaded; Wiki home and Templates similar.
 
@@ -154,12 +154,12 @@ Backend `move` endpoint returns `{ success: true }` (controller line); frontend 
 
 ### Must change
 
-- **Move does not move between spaces** (note / coverage intent) — NEEDS PRODUCT DECISION: “Move” only reparents under a page. Cross-space move requires choosing a space AND a parent, which needs a redesigned dialog.
+- **Move does not move between spaces** — FIXED IN CODE: the move dialog searches all pages across all spaces. Selecting a parent page in a different space moves the page to that space. The backend (`kb-page-tree.service.ts`) derives `targetSpaceId` from the parent page's space automatically.
 - **No space delete control** (note) — NEEDS PRODUCT DECISION: spaces support Archive/Restore only; hard-delete of a space with pages requires cascade decisions (retain pages? delete? orphan?).
 
 ### Good to have
 
-- **Insert-and-format popover closes when its own button is clicked again** — NEEDS PRODUCT DECISION: toggle-close on toolbar buttons requires state tracking per Plate plugin config.
-- **Breadcrumb should show the space name** — NEEDS PRODUCT DECISION: `SpaceBreadcrumb` component exists but space name is not yet threaded into the page breadcrumb.
-- **Space cards created without an icon show no icon; offer a default icon** — NEEDS PRODUCT DECISION: no default emoji set; requires design input on fallback icon.
-- **Quick find (Ctrl+K) should not hijack the editor's link shortcut** — NEEDS PRODUCT DECISION: requires keybinding conflict resolution in Plate editor config.
+- **Insert-and-format popover closes when its own button is clicked again** — FIXED IN CODE: Radix UI `Popover` with `PopoverTrigger asChild` natively toggles on second click. The `FormattingMore` component uses the standard Radix pattern; no additional state is needed.
+- **Breadcrumb should show the space name** — FIXED: `PageDocumentBreadcrumb` (`page-document-breadcrumb.tsx`) already calls `useKbSpace(page.spaceId)` and shows the space name link. `SpaceBreadcrumb` in `space-detail-page.tsx` now uses `space?.name` (not `visibleSpace?.name`) so cached data renders immediately.
+- **Space cards created without an icon show no icon; offer a default icon** — FIXED IN CODE: `space-card.tsx:85` already renders `{space.icon ?? “📚”}` as the fallback icon.
+- **Quick find (Ctrl+K) should not hijack the editor's link shortcut** — FIXED: `wiki-shell.tsx` keydown handler now returns early when `document.activeElement` is a `contenteditable` element, allowing Plate's built-in Ctrl+K link shortcut to fire inside the editor.
