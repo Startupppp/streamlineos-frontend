@@ -330,6 +330,8 @@ export const CalendarToolbar = memo(function CalendarToolbar({
                 className="shrink-0 px-2.5 sm:px-3"
                 onClick={onToday}
                 disabled={navigationDisabled}
+                aria-keyshortcuts="T"
+                title="Today (T)"
               >
                 Today
               </Button>
@@ -345,6 +347,8 @@ export const CalendarToolbar = memo(function CalendarToolbar({
                   size="icon"
                   className="rounded-r-none border-r-0"
                   aria-label={`Previous ${VIEW_PERIOD_LABEL[view]}`}
+                  aria-keyshortcuts="ArrowLeft"
+                  title={`Previous ${VIEW_PERIOD_LABEL[view]} (←)`}
                   disabled={navigationDisabled}
                   onClick={onPrev}
                 />
@@ -355,6 +359,8 @@ export const CalendarToolbar = memo(function CalendarToolbar({
                   size="icon"
                   className="rounded-l-none"
                   aria-label={`Next ${VIEW_PERIOD_LABEL[view]}`}
+                  aria-keyshortcuts="ArrowRight"
+                  title={`Next ${VIEW_PERIOD_LABEL[view]} (→)`}
                   disabled={navigationDisabled}
                   onClick={onNext}
                 />

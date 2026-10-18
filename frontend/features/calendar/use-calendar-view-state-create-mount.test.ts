@@ -2,9 +2,11 @@ import { act, renderHook } from "@testing-library/react";
 import { useCalendarViewState } from "./use-calendar-view-state";
 
 const mockReplace = jest.fn();
+const mockPush = jest.fn();
+let mockSearch = "";
 jest.mock("next/navigation", () => ({
-  useRouter: () => ({ replace: mockReplace, push: jest.fn() }),
-  useSearchParams: () => new URLSearchParams(),
+  useRouter: () => ({ replace: mockReplace, push: mockPush }),
+  useSearchParams: () => new URLSearchParams(mockSearch),
 }));
 
 jest.mock("./use-calendar-slot-selection-guard", () => ({
@@ -13,6 +15,8 @@ jest.mock("./use-calendar-slot-selection-guard", () => ({
 
 beforeEach(() => {
   mockReplace.mockReset();
+  mockPush.mockReset();
+  mockSearch = "";
 });
 
 describe("useCalendarViewState — shouldMountCreate latch (#187)", () => {
@@ -55,5 +59,50 @@ describe("useCalendarViewState — shouldMountCreate latch (#187)", () => {
     });
     expect(result.current.shouldMountCreate).toBe(true);
     expect(result.current.isCreateOpen).toBe(true);
+  });
+});
+
+describe("useCalendarViewState — UX notes", () => {
+  it("defaults a new event to the day being viewed, not today", () => {
+    mockSearch = "date=2027-03-10";
+    const { result } = renderHook(() => useCalendarViewState());
+    act(() => {
+      result.current.handleOpenCreate();
+    });
+    expect(result.current.createSlot?.start.getFullYear()).toBe(2027);
+    expect(result.current.createSlot?.start.getMonth()).toBe(2);
+    expect(result.current.createSlot?.start.getDate()).toBe(10);
+    expect(result.current.createSlot?.start.getHours()).toBe(9);
+  });
+
+  it("moves by one period with the arrow keys and returns to today with t", () => {
+    mockSearch = "date=2027-03-10&view=week";
+    renderHook(() => useCalendarViewState());
+
+    act(() => {
+      window.dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowRight" }));
+    });
+    expect(mockPush).toHaveBeenLastCalledWith(expect.stringContaining("date=2027-03-17"));
+    act(() => {
+      window.dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowLeft" }));
+    });
+    expect(mockPush).toHaveBeenLastCalledWith(expect.stringContaining("date=2027-03-03"));
+    act(() => {
+      window.dispatchEvent(new KeyboardEvent("keydown", { key: "t" }));
+    });
+    expect(mockPush).toHaveBeenCalledTimes(3);
+  });
+
+  it("ignores the shortcuts while the user types in a field", () => {
+    mockSearch = "date=2027-03-10&view=week";
+    renderHook(() => useCalendarViewState());
+    const input = document.createElement("input");
+    document.body.appendChild(input);
+
+    act(() => {
+      input.dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowRight", bubbles: true }));
+    });
+    expect(mockPush).not.toHaveBeenCalled();
+    input.remove();
   });
 });

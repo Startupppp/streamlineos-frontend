@@ -17,6 +17,9 @@ import {
   addDays,
   subDays,
   format,
+  isSameDay,
+  setHours,
+  startOfDay,
 } from "date-fns";
 import type { View, SlotInfo, BigCalEvent } from "./big-calendar-wrapper";
 import { useCalendarSlotSelectionGuard } from "./use-calendar-slot-selection-guard";
@@ -173,10 +176,15 @@ export function useCalendarViewState() {
   );
 
   const handleOpenCreate = useCallback(() => {
-    setCreateSlot(null);
+    const viewedDay = startOfDay(currentDate);
+    setCreateSlot(
+      isSameDay(viewedDay, new Date())
+        ? null
+        : { start: setHours(viewedDay, 9), end: setHours(viewedDay, 10) },
+    );
     setHasMountedCreate(true);
     setIsCreateOpen(true);
-  }, [setIsCreateOpen]);
+  }, [currentDate, setIsCreateOpen]);
 
   const handleSelectEvent = useCallback(
     (event: BigCalEvent) => {
@@ -221,6 +229,27 @@ export function useCalendarViewState() {
     () => setCurrentDate(new Date()),
     [setCurrentDate],
   );
+  useEffect(() => {
+    if (viewMode !== "calendar" && viewMode !== "my-day") return;
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.defaultPrevented || event.altKey || event.ctrlKey || event.metaKey || event.shiftKey) return;
+      if (isCalendarOverlayOpen) return;
+      const target = event.target;
+      if (
+        target instanceof HTMLElement &&
+        (target.isContentEditable || ["INPUT", "TEXTAREA", "SELECT"].includes(target.tagName) || target.closest("[role='dialog'],[role='menu'],[role='listbox']"))
+      )
+        return;
+      if (event.key === "ArrowLeft") handlePrev();
+      else if (event.key === "ArrowRight") handleNext();
+      else if (event.key === "t" || event.key === "T") handleToday();
+      else return;
+      event.preventDefault();
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [handleNext, handlePrev, handleToday, isCalendarOverlayOpen, viewMode]);
+
   const handleCloseSelected = useCallback(() => {
     window.history.replaceState(
       null,

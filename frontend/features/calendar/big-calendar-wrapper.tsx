@@ -179,6 +179,7 @@ export function BigCalendarWrapper({
         eventPropGetter={eventPropGetter as EventPropGetter<object>}
         components={components}
         toolbar={false}
+        popup
         scrollToTime={scrollToTime ?? WORKDAY_SCROLL_TIME}
         enableAutoScroll={enableAutoScroll}
         style={calendarStyle}
