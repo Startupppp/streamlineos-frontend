@@ -111,6 +111,7 @@ describe("employee detail opens for every shape the API returns, because a stric
       joiningDate: "2026-09-23",
       probationEndDate: null,
       confirmationDate: null,
+      rowVersion: 1,
     },
   };
 

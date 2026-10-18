@@ -128,3 +128,49 @@ describe("EditEmployeeForm — dirty-field name gate", () => {
     expect(payload).toMatchObject({ userId: "user-1", firstName: "Alicia" });
   });
 });
+
+describe("EditEmployeeForm — BE-19 stale-tab save", () => {
+  beforeEach(() => {
+    mutateAsync.mockClear();
+  });
+
+  const employment = {
+    id: 9,
+    personId: 8,
+    employeeNumber: "EMP-1",
+    lifecycleStatus: "ACTIVE",
+    workerType: "FULL_TIME",
+    departmentId: null,
+    designation: "Engineer",
+    joiningDate: null,
+    probationEndDate: null,
+    confirmationDate: null,
+    rowVersion: 7,
+  };
+
+  it("sends the employment version it was opened at, so the server can refuse a save over a newer one", async () => {
+    const user = userEvent.setup();
+    render(<EditEmployeeForm employee={makeEmployee({ employment })} />);
+
+    const designationInput = screen.getByDisplayValue("Engineer");
+    await user.clear(designationInput);
+    await user.type(designationInput, "Staff Engineer");
+    await user.click(screen.getByRole("button", { name: /save changes/i }));
+
+    await waitFor(() => expect(mutateAsync).toHaveBeenCalledTimes(1));
+    expect(mutateAsync.mock.calls[0][0]).toMatchObject({ designation: "Staff Engineer", expectedVersion: 7 });
+  });
+
+  it("sends no version for a person with no employment record", async () => {
+    const user = userEvent.setup();
+    render(<EditEmployeeForm employee={makeEmployee()} />);
+
+    const designationInput = screen.getByDisplayValue("Engineer");
+    await user.clear(designationInput);
+    await user.type(designationInput, "Staff Engineer");
+    await user.click(screen.getByRole("button", { name: /save changes/i }));
+
+    await waitFor(() => expect(mutateAsync).toHaveBeenCalledTimes(1));
+    expect(mutateAsync.mock.calls[0][0].expectedVersion).toBeUndefined();
+  });
+});

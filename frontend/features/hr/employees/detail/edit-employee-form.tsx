@@ -84,11 +84,12 @@ export function EditEmployeeForm({
         phone: values.phone,
         gender: values.gender,
         joiningDate: values.joiningDate?.toISOString().slice(0, 10),
+        expectedVersion: employee.employment?.rowVersion,
       });
       form.reset(values);
       router.refresh();
     },
-    [employee.id, form, router, updateProfileMutation],
+    [employee.id, employee.employment?.rowVersion, form, router, updateProfileMutation],
   );
 
   const { requestLeave, dialogProps } = useUnsavedChangesGuard({

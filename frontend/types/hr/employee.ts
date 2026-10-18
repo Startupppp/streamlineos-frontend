@@ -225,6 +225,7 @@ export interface UpdateProfileInput {
   role?: string;
   gender?: "MALE" | "FEMALE" | "OTHER";
   joiningDate?: string;
+  expectedVersion?: number;
   /* Managers change only through PUT /hr/reporting-lines/:id (HRM-15). */
 }
 
