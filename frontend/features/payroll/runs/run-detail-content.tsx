@@ -12,7 +12,7 @@ import {
   TabsList,
   TabsTrigger,
 } from "@/components/ui/tabs";
-import { DollarSign, TrendingDown, Users } from "lucide-react";
+import { ArrowLeft, DollarSign, TrendingDown, Users } from "lucide-react";
 import { RunStatusBadge } from "@/features/payroll/runs/run-status-badge";
 import { RunStatusStepper } from "@/features/payroll/runs/run-status-stepper";
 import { RunActionsSlot } from "@/features/payroll/runs/run-actions-slot";
@@ -26,8 +26,10 @@ import { formatMoney, formatMonth } from "@/features/payroll/shared/payroll-form
 import { ReadinessRail } from "@/features/payroll/shared/readiness-rail";
 import { usePayrollRun } from "@/hooks/api/payroll/runs";
 import { useAccess, usePermissionGate } from "@/hooks/api/access";
+import Link from "next/link";
 import { ErrorState } from "@/components/shared";
 import { NoPermissionState } from "@/components/shared/no-permission-state";
+import { NotFoundView } from "@/components/shared/page-state-views";
 
 const LOCKED_STATUSES = new Set(["APPROVED", "LOCKED", "PAID", "PAYSLIPS_PUBLISHED", "CLOSED"]);
 
@@ -107,8 +109,19 @@ export function RunDetailContent({ runId }: RunDetailContentProps) {
 
   if (!run) {
     return (
-      <PageWrapper title="Run not found" backHref="/payroll/runs">
-        <p className="text-sm text-muted-foreground">This payroll run does not exist.</p>
+      <PageWrapper title="Not found" backHref="/payroll/runs">
+        <NotFoundView
+          title="Run not found"
+          description="This payroll run does not exist or you don't have access to it."
+          action={
+            <Button asChild variant="outline" className="gap-2">
+              <Link href="/payroll/runs">
+                <ArrowLeft className="h-4 w-4" />
+                Back to payroll runs
+              </Link>
+            </Button>
+          }
+        />
       </PageWrapper>
     );
   }

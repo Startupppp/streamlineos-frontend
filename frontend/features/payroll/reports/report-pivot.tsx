@@ -28,6 +28,14 @@ interface ReportPivotProps {
   workerType?: string;
 }
 
+function humaniseCode(code: string): string {
+  return code
+    .replace(/^UNMAPPED:/, "")
+    .replace(/_/g, " ")
+    .toLowerCase()
+    .replace(/\b\w/g, (c) => c.toUpperCase());
+}
+
 const REPORT_TITLES: Record<PivotReportType, string> = {
   earnings: "Earnings",
   deductions: "Deductions",
@@ -73,7 +81,7 @@ function buildColumns(report: ComponentPivotReport): DataTableColumn<ComponentPi
 
   const dynamic: DataTableColumn<ComponentPivotRow>[] = report.columns.map((code) => ({
     key: code,
-    header: code,
+    header: report.columnLabels?.[code] ?? humaniseCode(code),
     className: "text-right",
     cell: (row) => (
       <span className="font-mono text-dense tabular-nums">

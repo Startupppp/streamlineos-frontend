@@ -75,6 +75,7 @@ export const costCenterReportContract = z.object({
 export const componentPivotReportContract = z.object({
   provisional: z.boolean(),
   columns: z.array(z.string()),
+  columnLabels: z.record(z.string(), z.string()).optional(),
   rows: z.array(
     z.object({
       employeeId: z.string(),

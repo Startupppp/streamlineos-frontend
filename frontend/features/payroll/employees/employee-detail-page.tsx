@@ -3,14 +3,16 @@
 import { useCallback, useMemo, useState } from "react";
 import Link from "next/link";
 import { PageWrapper } from "@/components/ui/page-wrapper";
+import { NotFoundView } from "@/components/shared/page-state-views";
 import { StatCard, StatCardGrid, StatCardGridSkeleton } from "@/components/ui/stat-card";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/shared/error-state";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { DollarSign } from "lucide-react";
+import { ArrowLeft, DollarSign } from "lucide-react";
 import { SalaryProfileSheet } from "@/features/payroll/runs/salary-profile-sheet";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { isApiError } from "@/lib/api-envelope";
 import { formatMoney } from "@/features/payroll/shared/payroll-format";
 import {
   useEmployeeProfile,
@@ -156,6 +158,25 @@ export function EmployeeDetailPage({ employeeUserId }: EmployeeDetailPageProps) 
           <Skeleton className="h-48 rounded-xl" />
           <Skeleton className="h-32 rounded-xl" />
         </div>
+      </PageWrapper>
+    );
+  }
+
+  if (isError && isApiError(error) && error.status === 404) {
+    return (
+      <PageWrapper title="Not found" backHref="/payroll/employees">
+        <NotFoundView
+          title="Employee not found"
+          description="This salary profile does not exist or you don't have access to it."
+          action={
+            <Button asChild variant="outline" className="gap-2">
+              <Link href="/payroll/employees">
+                <ArrowLeft className="h-4 w-4" />
+                Back to employees
+              </Link>
+            </Button>
+          }
+        />
       </PageWrapper>
     );
   }
