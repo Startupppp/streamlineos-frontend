@@ -5,7 +5,6 @@ import { toast } from "sonner";
 import { FilePen } from "lucide-react";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { LoadingButton } from "@/components/ui/loading-button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
 import { PageState } from "@/components/shared/page-state";
@@ -37,6 +36,7 @@ import {
 import { RegularizationRow } from "./regularization-row";
 import { RejectReasonSheet } from "./reject-reason-sheet";
 import { SelfApprovalConfirmDialog, useIsSoleSelfApprover } from "@/features/hr/shared/self-approval";
+import { formatIstDate } from "@/lib/hrms/payroll-cutoff";
 
 const PAGE_SIZE = 50;
 const QUEUE_STATUSES = ["PENDING", "APPROVED", "REJECTED"] as const;
@@ -103,6 +103,21 @@ export function RegularizationQueueCard() {
     setCursorHistory([undefined]);
   }, []);
 
+  const rows = useMemo(() => data?.data ?? [], [data]);
+
+  const decidedLabel = useCallback(
+    (regularizationId: number) => {
+      const row = rows.find((candidate) => candidate.id === regularizationId);
+      if (!row) return "";
+      const day = formatIstDate(`${row.attendanceDate.slice(0, 10)}T00:00:00Z`);
+      return row.requesterName ? ` for ${row.requesterName} on ${day}` : ` for ${day}`;
+    },
+    [rows],
+  );
+
+  const handleShowApproved = useCallback(() => handleStatusChange("APPROVED"), [handleStatusChange]);
+  const handleShowRejected = useCallback(() => handleStatusChange("REJECTED"), [handleStatusChange]);
+
   const handleRetry = useCallback(() => {
     void refetch();
   }, [refetch]);
@@ -126,13 +141,15 @@ export function RegularizationQueueCard() {
           onSuccess: () => {
             invalidateAttendanceDay();
             setConfirmingSelfId(null);
-            toast.success("Correction approved and applied");
+            toast.success(`Correction approved and applied${decidedLabel(regularizationId)}`, {
+              action: { label: "View approved", onClick: handleShowApproved },
+            });
           },
           onError: (err) => toast.error(getErrorMessage(err)),
         },
       );
     },
-    [applyMutation, invalidateAttendanceDay],
+    [applyMutation, invalidateAttendanceDay, decidedLabel, handleShowApproved],
   );
 
   const handleApply = useCallback(
@@ -180,7 +197,9 @@ export function RegularizationQueueCard() {
       {
         onSuccess: () => {
           invalidateAttendanceDay();
-          toast.success("Correction rejected");
+          toast.success(`Correction rejected${decidedLabel(rejectingId)}`, {
+            action: { label: "View rejected", onClick: handleShowRejected },
+          });
           handleRejectCancel();
         },
         onError: (err) => toast.error(getErrorMessage(err)),
@@ -192,9 +211,10 @@ export function RegularizationQueueCard() {
     rejectMutation,
     invalidateAttendanceDay,
     handleRejectCancel,
+    decidedLabel,
+    handleShowRejected,
   ]);
 
-  const rows = data?.data ?? [];
   const pagination = data?.pagination;
 
   return (

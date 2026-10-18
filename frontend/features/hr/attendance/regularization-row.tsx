@@ -85,7 +85,10 @@ export function RegularizationRow({
           {isSelf && mayApproveOwn && isDecidable ? <SelfApprovalBadge /> : null}
         </div>
         {row.requesterName ? (
-          <p className="text-dense text-muted-foreground">{row.requesterName}</p>
+          <p className="text-dense font-medium text-foreground">
+            <span className="sr-only">Requested by </span>
+            {row.requesterName}
+          </p>
         ) : null}
         {row.originalCheckIn ?? row.originalCheckOut ? (
           <p className="text-dense tabular-nums text-muted-foreground">
@@ -93,7 +96,9 @@ export function RegularizationRow({
             {row.originalCheckIn ? formatTimeInOrgTz(row.originalCheckIn, orgTz) : "—"} · Out{" "}
             {row.originalCheckOut ? formatTimeInOrgTz(row.originalCheckOut, orgTz) : "—"}
           </p>
-        ) : null}
+        ) : (
+          <p className="text-dense text-muted-foreground">Original · No punch recorded</p>
+        )}
         <p className="text-dense tabular-nums text-muted-foreground">
           Requested · In{" "}
           {row.requestedCheckIn ? formatTimeInOrgTz(row.requestedCheckIn, orgTz) : "—"} · Out{" "}

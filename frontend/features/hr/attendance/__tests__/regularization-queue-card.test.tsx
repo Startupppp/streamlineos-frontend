@@ -1,5 +1,5 @@
 import * as React from "react";
-import { fireEvent, render, screen, within } from "@testing-library/react";
+import { act, fireEvent, render, screen, within } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 const applyMutate = jest.fn();
@@ -64,7 +64,7 @@ const toastSuccess = jest.fn();
 const toastError = jest.fn();
 jest.mock("sonner", () => ({
   toast: {
-    success: (message: string) => toastSuccess(message),
+    success: (message: string, options?: unknown) => toastSuccess(message, options),
     error: (message: string) => toastError(message),
   },
 }));
@@ -179,7 +179,26 @@ describe("RegularizationQueueCard", () => {
 
     expect(applyMutate.mock.calls[0][0]).toEqual({ regularizationId: 55 });
     expect(invalidateAttendanceDay).toHaveBeenCalledTimes(1);
-    expect(toastSuccess).toHaveBeenCalledWith("Correction approved and applied");
+    expect(toastSuccess).toHaveBeenCalledWith(
+      expect.stringMatching(/^Correction approved and applied for .*9 Oct/),
+      expect.objectContaining({ action: expect.objectContaining({ label: "View approved" }) }),
+    );
+  });
+
+  it("names the requester and day in the success toast and offers the Approved filter where the item now lives (HR-U-010)", () => {
+    queueRows = [{ ...PENDING_ROW, requesterName: "Priya Nair" }];
+    applyMutate.mockImplementation(
+      (_id: number, opts: { onSuccess: () => void }) => opts.onSuccess(),
+    );
+    renderCard();
+
+    fireEvent.click(screen.getByRole("button", { name: /Approve/ }));
+
+    const [message, options] = toastSuccess.mock.calls[0];
+    expect(message).toMatch(/^Correction approved and applied for Priya Nair on .*9 Oct/);
+    queueParams.length = 0;
+    act(() => options.action.onClick());
+    expect(queueParams.at(-1)?.status).toBe("APPROVED");
   });
 
   it("refuses a rejection with no reason", () => {

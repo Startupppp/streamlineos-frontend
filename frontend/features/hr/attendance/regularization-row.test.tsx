@@ -42,4 +42,16 @@ describe("RegularizationRow change line (HR-U-019)", () => {
     renderRow({ ...base, originalCheckIn: null, originalCheckOut: null });
     expect(screen.queryByText(/^Change/)).not.toBeInTheDocument();
   });
+
+  it("shows the requester and both the original and requested punches to the approver", () => {
+    renderRow(base);
+    expect(screen.getByText("Amit Shah")).toBeInTheDocument();
+    expect(screen.getByText(/^Original · In/)).toBeInTheDocument();
+    expect(screen.getByText(/^Requested · In/)).toBeInTheDocument();
+  });
+
+  it("says there was no punch instead of hiding the original line", () => {
+    renderRow({ ...base, originalCheckIn: null, originalCheckOut: null });
+    expect(screen.getByText("Original · No punch recorded")).toBeInTheDocument();
+  });
 });
