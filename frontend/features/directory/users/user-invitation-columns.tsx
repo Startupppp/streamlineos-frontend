@@ -178,6 +178,7 @@ function InvitationActionCell({
           isPending={isResendingRow}
           disabled={isCancelling}
           aria-label={`Resend invitation to ${invitation.email}`}
+          title="Resend invitation"
         >
           <RefreshCw className="h-4 w-4" />
         </LoadingButton>
@@ -222,6 +223,7 @@ function InvitationActionCell({
           onClick={handleCancel}
           disabled={isResendingRow || isCancelling}
           aria-label={`Cancel invitation to ${invitation.email}`}
+          title="Cancel invitation"
         />
       )}
     </div>
