@@ -15,6 +15,8 @@ import "react-big-calendar/lib/css/react-big-calendar.css";
 import "react-big-calendar/lib/addons/dragAndDrop/styles.css";
 import { CalendarDayHeader } from "./calendar-day-header";
 import { CalendarWeekDayHeader } from "./calendar-week-day-header";
+import { useCalendarTimeZone } from "./calendar-time-zone-context";
+import { zonedWallClock } from "@/lib/date-utils";
 
 const DnDCalendar = withDragAndDrop(Calendar);
 
@@ -118,6 +120,8 @@ export function BigCalendarWrapper({
   onEventResize,
 }: BigCalendarWrapperProps) {
   const gridRef = useRef<HTMLDivElement>(null);
+  const timeZone = useCalendarTimeZone();
+  const getNow = useCallback(() => zonedWallClock(new Date(), timeZone), [timeZone]);
 
   const calendarStyle =
     view === "month"
@@ -162,6 +166,7 @@ export function BigCalendarWrapper({
     <div ref={gridRef} className="contents">
       <DnDCalendar
         localizer={localizer}
+        getNow={getNow}
         events={events}
         date={date}
         view={view}

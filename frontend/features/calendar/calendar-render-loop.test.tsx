@@ -313,6 +313,24 @@ describe("/calendar render stability", () => {
     },
   );
 
+  it("CAL-B-001 names the account zone in the header when it differs from the device zone", async () => {
+    mockApiGet.mockImplementation((path: unknown) =>
+      Promise.resolve(path === "/me/preferences" ? { language: "en", timezone: "Pacific/Chatham" } : routeGet(path)),
+    );
+    const { findByTestId } = await renderCalendar();
+    expect(await findByTestId("calendar-time-zone-label")).toHaveTextContent("Times in Pacific/Chatham");
+  });
+
+  it("shows no zone label when the account zone is the device zone", async () => {
+    const deviceZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    mockApiGet.mockImplementation((path: unknown) =>
+      Promise.resolve(path === "/me/preferences" ? { language: "en", timezone: deviceZone } : routeGet(path)),
+    );
+    const { queryByTestId, findByLabelText } = await renderCalendar();
+    await findByLabelText(/Choose month and year/);
+    expect(queryByTestId("calendar-time-zone-label")).not.toBeInTheDocument();
+  });
+
   it("keeps the week grid on a desktop-width window", async () => {
     mockPush.mockClear();
     await renderCalendar();

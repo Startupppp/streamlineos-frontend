@@ -1,5 +1,6 @@
 "use client";
 
+import { useMemo } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useSession } from "next-auth/react";
 import { apiClient } from "@/lib/api-client";
@@ -7,6 +8,7 @@ import { lazyContract } from "@/lib/api-envelope";
 import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
 import { supportAndWorkflowsQueryKeys } from "@/lib/query-keys/support-and-workflows";
 import type { Language } from "@/lib/i18n/languages";
+import { resolveOrgTimeZone } from "@/lib/date-utils";
 
 const myPreferencesContract = lazyContract(() =>
   import("@/hooks/api/me-preferences-schema").then((m) => m.myPreferencesContract),
@@ -17,6 +19,7 @@ const updateMyPreferencesContract = lazyContract(() =>
 
 export interface MyPreferences {
   language: Language;
+  timezone?: string | null;
 }
 
 const myPreferencesKey = supportAndWorkflowsQueryKeys.auth.myPreferences();
@@ -33,6 +36,11 @@ export function useMyPreferences() {
   });
 }
 
+export function useAccountTimeZone(): string {
+  const zone = useMyPreferences().data?.timezone ?? null;
+  return useMemo(() => resolveOrgTimeZone(zone), [zone]);
+}
+
 export function useUpdateMyLanguage() {
   const qc = useQueryClient();
   return useMutation({
@@ -47,7 +55,7 @@ export function useUpdateMyLanguage() {
     onMutate: async (language) => {
       await qc.cancelQueries({ queryKey: myPreferencesKey, exact: true });
       const previous = qc.getQueryData<MyPreferences>(myPreferencesKey);
-      qc.setQueryData<MyPreferences>(myPreferencesKey, { language });
+      qc.setQueryData<MyPreferences>(myPreferencesKey, { ...previous, language });
       return { previous };
     },
     onError: (_error, _language, context) => {

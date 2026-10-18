@@ -7,7 +7,8 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { List, useDynamicRowHeight, type RowComponentProps } from "react-window";
 import type { CalendarListItem } from "@/hooks/api/calendar";
 import { TruncatedText } from "@/components/ui/truncated-text";
-import { formatEventDateRange, formatEventTimeRange } from "@/lib/date-utils";
+import { formatEventDateRange, formatEventTimeRange, formatInZone } from "@/lib/date-utils";
+import { useCalendarTimeZone } from "./calendar-time-zone-context";
 import { EVENT_COLORS } from "./calendar-event-constants";
 import { CalendarVirtualScroll } from "./calendar-virtual-scroll";
 import { CalendarLoadingStatus } from "./calendar-lazy-fallbacks";
@@ -32,6 +33,7 @@ type PanelRow =
 interface PanelRowData {
   rows: PanelRow[];
   onSelectEvent: (event: CalendarListItem) => void;
+  timeZone: string;
 }
 
 const ESTIMATED_ROW_HEIGHT = 96;
@@ -42,19 +44,21 @@ const DEFAULT_LIST_HEIGHT = 600;
 function groupByDate(
   events: CalendarListItem[],
   mode: "list" | "history",
+  timeZone: string,
 ): Map<string, CalendarListItem[]> {
   const groups = new Map<string, CalendarListItem[]>();
   for (const event of events) {
     const key = mode === "history"
       ? event.time.kind === "date"
         ? event.time.endDate
-        : format(
+        : formatInZone(
             new Date(Math.max(Date.parse(event.start), Date.parse(event.end) - 1)),
+            timeZone,
             "yyyy-MM-dd",
           )
       : event.time.kind === "date"
         ? event.time.startDate
-        : format(new Date(event.start), "yyyy-MM-dd");
+        : formatInZone(new Date(event.start), timeZone, "yyyy-MM-dd");
     const existing = groups.get(key);
     if (existing) {
       existing.push(event);
@@ -88,6 +92,7 @@ function PanelVirtualRow({
   ariaAttributes,
   rows,
   onSelectEvent,
+  timeZone,
 }: RowComponentProps<PanelRowData>) {
   const row = rows[index];
   if (!row) return <div style={style} {...ariaAttributes} />;
@@ -131,7 +136,7 @@ function PanelVirtualRow({
                 ? event.time.kind === "date" && event.time.startDate !== event.time.endDate
                   ? formatEventDateRange(event.time.startDate, event.time.endDate, event.timezone)
                   : "All day"
-                : formatEventTimeRange(event.start, event.end, event.timezone)}
+                : formatEventTimeRange(event.start, event.end, event.timezone, timeZone)}
             </span>
             {event.location ? (
               <TruncatedText
@@ -160,6 +165,7 @@ export function CalendarEventsPanel({
   onLoadMore,
   loadedPageCount = 0,
 }: CalendarEventsPanelProps) {
+  const timeZone = useCalendarTimeZone();
   const requestedPageRef = useRef<number | null>(null);
   const tailVisibleRef = useRef(false);
   const filteredEvents = useMemo(() => {
@@ -175,17 +181,17 @@ export function CalendarEventsPanel({
     }
 
     const inRange = range
-      ? events.filter((event) => eventOverlapsRange(event, range))
+      ? events.filter((event) => eventOverlapsRange(event, range, timeZone))
       : events;
 
     return inRange.sort(
       (a, b) => new Date(a.start).getTime() - new Date(b.start).getTime(),
     );
-  }, [events, mode, range]);
+  }, [events, mode, range, timeZone]);
 
   const grouped = useMemo(
-    () => groupByDate(filteredEvents, mode),
-    [filteredEvents, mode],
+    () => groupByDate(filteredEvents, mode, timeZone),
+    [filteredEvents, mode, timeZone],
   );
 
   const rows = useMemo<PanelRow[]>(() => {
@@ -200,8 +206,8 @@ export function CalendarEventsPanel({
   }, [grouped]);
 
   const rowProps = useMemo<PanelRowData>(
-    () => ({ rows, onSelectEvent }),
-    [rows, onSelectEvent],
+    () => ({ rows, onSelectEvent, timeZone }),
+    [rows, onSelectEvent, timeZone],
   );
 
   const heightKey = useMemo(

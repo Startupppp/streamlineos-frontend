@@ -28,6 +28,8 @@ import { CalendarConnectInline } from "./calendar-connect-inline";
 import { EVENT_COLORS, EVENT_CATEGORIES, eventCategoryLabel } from "./calendar-event-constants";
 import type { EventCategory, RecurrenceState } from "./event-form-state";
 import { RecurrenceEditor } from "./event-recurrence-editor";
+import { useCalendarTimeZone } from "./calendar-time-zone-context";
+import { zonedWallClock } from "@/lib/date-utils";
 
 interface EventFormFieldsProps {
   title: string;
@@ -115,8 +117,10 @@ export function EventFormFields({
   const syncedConnectionLabel = syncedConnection
     ? syncedConnection.accountEmail ?? syncedConnection.accountLabel ?? syncedConnection.toolkit
     : null;
+  const timeZone = useCalendarTimeZone();
   const [openedAt] = useState(() => new Date());
-  const pastFloor = format(subYears(openedAt, 1), "yyyy-MM-dd");
+  const openedWall = zonedWallClock(openedAt, timeZone);
+  const pastFloor = format(subYears(openedWall, 1), "yyyy-MM-dd");
   const startBounds = planningStartPickerProps({
     existingValue: isEdit && startDate < pastFloor ? startDate : pastFloor,
   });
@@ -126,7 +130,7 @@ export function EventFormFields({
     enforceTodayFloor: false,
   });
   const startsAt = allDay ? parseISO(startDate) : parseISO(`${startDate}T${startTime || "00:00"}`);
-  const startsInPast = !isEdit && !Number.isNaN(startsAt.getTime()) && (allDay ? startDate < format(openedAt, "yyyy-MM-dd") : startsAt < openedAt);
+  const startsInPast = !isEdit && !Number.isNaN(startsAt.getTime()) && (allDay ? startDate < format(openedWall, "yyyy-MM-dd") : startsAt < openedWall);
 
   return (
     <div className="space-y-2">
@@ -238,7 +242,7 @@ export function EventFormFields({
 
         {!allDay && !isEdit && (
           <p className="text-micro text-muted-foreground pl-6">
-            {Intl.DateTimeFormat().resolvedOptions().timeZone}
+            {timeZone}
           </p>
         )}
         {dateTimeError && (

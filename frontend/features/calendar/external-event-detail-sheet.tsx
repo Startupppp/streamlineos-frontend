@@ -2,7 +2,8 @@
 
 import { motion, useReducedMotion } from "framer-motion";
 import { ArrowRight, CalendarDays, ExternalLink, MapPin, Video } from "lucide-react";
-import { formatEventDate, formatEventTimeRange } from "@/lib/date-utils";
+import { formatEventDate, formatEventTimeRange, fromZonedWallClock } from "@/lib/date-utils";
+import { useCalendarTimeZone } from "./calendar-time-zone-context";
 import { AppSheet } from "@/components/shared/app-sheet";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -63,6 +64,7 @@ interface ExternalEventDetailSheetProps {
 }
 
 export function ExternalEventDetailSheet({ event, onClose }: ExternalEventDetailSheetProps) {
+  const timeZone = useCalendarTimeZone();
   return (
     <AppSheet
       open={event !== null}
@@ -95,7 +97,12 @@ export function ExternalEventDetailSheet({ event, onClose }: ExternalEventDetail
               <span>
                 {event.allDay
                   ? `${formatEventDate(event.start, "UTC")} · All day`
-                  : formatEventTimeRange(event.start, event.end, event.resource?.timezone)}
+                  : formatEventTimeRange(
+                      fromZonedWallClock(event.start, timeZone),
+                      fromZonedWallClock(event.end, timeZone),
+                      event.resource?.timezone,
+                      timeZone,
+                    )}
               </span>
             </div>
             {event.resource?.location && (

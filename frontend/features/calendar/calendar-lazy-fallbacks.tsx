@@ -4,14 +4,15 @@ import Image from "next/image";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import type { CalendarListItem } from "@/hooks/api/calendar";
 import { formatEventDate, formatEventTimeRange } from "@/lib/date-utils";
+import { useCalendarTimeZone } from "./calendar-time-zone-context";
 import { EVENT_COLORS } from "./calendar-event-constants";
 
-function agendaWhen(event: CalendarListItem): string {
+function agendaWhen(event: CalendarListItem, timeZone: string): string {
   if (event.allDay)
     return `${event.time.kind === "date"
       ? formatEventDate(`${event.time.startDate}T12:00:00.000Z`, "UTC")
       : formatEventDate(event.start, event.timezone ?? "UTC")} · All day`;
-  return formatEventTimeRange(event.start, event.end, event.timezone);
+  return formatEventTimeRange(event.start, event.end, event.timezone, timeZone);
 }
 
 export function CalendarAgendaPreview({
@@ -23,6 +24,7 @@ export function CalendarAgendaPreview({
   maxEvents?: number;
   onSelectEvent?: (event: CalendarListItem) => void;
 }) {
+  const timeZone = useCalendarTimeZone();
   const upcoming = events
     .slice()
     .sort((a, b) => new Date(a.start).getTime() - new Date(b.start).getTime())
@@ -57,7 +59,7 @@ export function CalendarAgendaPreview({
               {event.title}
             </p>
             <p className="text-xs text-muted-foreground">
-              {agendaWhen(event)}
+              {agendaWhen(event, timeZone)}
             </p>
           </div>
         </button>

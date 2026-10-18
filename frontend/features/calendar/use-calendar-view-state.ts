@@ -29,18 +29,19 @@ import {
   type CalendarSelectionSource,
   type CalendarViewMode,
 } from "./calendar-url-state";
+import { readerTimeZone, zonedWallClock } from "@/lib/date-utils";
 
-export function useCalendarViewState() {
+export function useCalendarViewState(timeZone: string = readerTimeZone()) {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const [fallbackNow] = useState(() => new Date());
+  const [mountedAt] = useState(() => new Date());
   const urlState = useMemo(
     () =>
       parseCalendarUrlState(
         new URLSearchParams(searchParams.toString()),
-        fallbackNow,
+        zonedWallClock(mountedAt, timeZone),
       ),
-    [fallbackNow, searchParams],
+    [mountedAt, searchParams, timeZone],
   );
   const currentDate = urlState.date;
   const view = urlState.view;
@@ -178,13 +179,13 @@ export function useCalendarViewState() {
   const handleOpenCreate = useCallback(() => {
     const viewedDay = startOfDay(currentDate);
     setCreateSlot(
-      isSameDay(viewedDay, new Date())
+      isSameDay(viewedDay, zonedWallClock(new Date(), timeZone))
         ? null
         : { start: setHours(viewedDay, 9), end: setHours(viewedDay, 10) },
     );
     setHasMountedCreate(true);
     setIsCreateOpen(true);
-  }, [currentDate, setIsCreateOpen]);
+  }, [currentDate, setIsCreateOpen, timeZone]);
 
   const handleSelectEvent = useCallback(
     (event: BigCalEvent) => {
@@ -226,8 +227,8 @@ export function useCalendarViewState() {
   }, [setCurrentDate, view, viewMode]);
 
   const handleToday = useCallback(
-    () => setCurrentDate(new Date()),
-    [setCurrentDate],
+    () => setCurrentDate(zonedWallClock(new Date(), timeZone)),
+    [setCurrentDate, timeZone],
   );
   useEffect(() => {
     if (viewMode !== "calendar" && viewMode !== "my-day") return;

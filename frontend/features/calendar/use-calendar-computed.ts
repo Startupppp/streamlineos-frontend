@@ -17,6 +17,7 @@ import type {
 import type { IntegrationConnection } from "@/hooks/api/integrations";
 import type { BigCalEvent, View } from "./big-calendar-wrapper";
 import { accountColor } from "./calendar-account-colors";
+import { formatInZone, fromZonedWallClock, readerTimeZone, zonedWallClock } from "@/lib/date-utils";
 
 export type CalendarSourceFamily =
   | "calendar"
@@ -45,6 +46,7 @@ export function calendarSourceFamily(
 export function eventOverlapsRange(
   event: Pick<CalendarListItem, "start" | "end" | "time">,
   range: { start: Date; end: Date },
+  timeZone: string = readerTimeZone(),
 ): boolean {
   if (
     !Number.isFinite(range.start.getTime()) ||
@@ -53,8 +55,8 @@ export function eventOverlapsRange(
   )
     return false;
   if (event.time.kind === "date") {
-    const firstDate = format(range.start, "yyyy-MM-dd");
-    const lastDate = format(new Date(range.end.getTime() - 1), "yyyy-MM-dd");
+    const firstDate = formatInZone(range.start, timeZone, "yyyy-MM-dd");
+    const lastDate = formatInZone(new Date(range.end.getTime() - 1), timeZone, "yyyy-MM-dd");
     return event.time.startDate <= lastDate && event.time.endDate >= firstDate;
   }
   const eventStart = new Date(event.start).getTime();
@@ -96,6 +98,7 @@ export function filterCalendarEventsBySources(
 export function mergeSelfAttendanceEvents(
   events: CalendarListItem[],
   selfAttendanceEvents: CalendarListItem[],
+  timeZone: string = readerTimeZone(),
 ): CalendarListItem[] {
   if (selfAttendanceEvents.length === 0) return events;
   const aggregateAttendanceDates = new Set(
@@ -104,7 +107,7 @@ export function mergeSelfAttendanceEvents(
       .map((event) =>
         event.time.kind === "date"
           ? event.time.startDate
-          : format(new Date(event.start), "yyyy-MM-dd"),
+          : formatInZone(new Date(event.start), timeZone, "yyyy-MM-dd"),
       ),
   );
   const additions = selfAttendanceEvents.filter(
@@ -112,7 +115,7 @@ export function mergeSelfAttendanceEvents(
       !aggregateAttendanceDates.has(
         event.time.kind === "date"
           ? event.time.startDate
-          : format(new Date(event.start), "yyyy-MM-dd"),
+          : formatInZone(new Date(event.start), timeZone, "yyyy-MM-dd"),
       ),
   );
   if (additions.length === 0) return events;
@@ -172,6 +175,7 @@ function normalizeExternalEvents(
 export function toBigCalEvent(
   event: CalendarListItem,
   connections: IntegrationConnection[] = [],
+  timeZone: string = readerTimeZone(),
 ): BigCalEvent {
   const family = calendarSourceFamily(event);
   const connectionIndex =
@@ -186,11 +190,11 @@ export function toBigCalEvent(
     start:
       event.time.kind === "date"
         ? new Date(`${event.time.startDate}T00:00:00`)
-        : new Date(event.start),
+        : zonedWallClock(new Date(event.start), timeZone),
     end:
       event.time.kind === "date"
         ? new Date(`${event.time.endDate}T23:59:59.999`)
-        : new Date(event.end),
+        : zonedWallClock(new Date(event.end), timeZone),
     allDay: event.allDay ?? false,
     resource: {
       color:
@@ -231,6 +235,7 @@ interface UseCalendarComputedParams {
   hrVisible?: boolean;
   crmVisible?: boolean;
   attendanceVisible?: boolean;
+  timeZone?: string;
 }
 
 export function useCalendarComputed({
@@ -243,6 +248,7 @@ export function useCalendarComputed({
   hrVisible = true,
   crmVisible = true,
   attendanceVisible = true,
+  timeZone = readerTimeZone(),
 }: UseCalendarComputedParams) {
   const [historyCutoff] = useState(() => Date.now());
   const unifiedEvents = useMemo(() => {
@@ -268,8 +274,8 @@ export function useCalendarComputed({
   );
 
   const allCalEvents = useMemo(
-    () => visibleEvents.map((event) => toBigCalEvent(event, connections)),
-    [connections, visibleEvents],
+    () => visibleEvents.map((event) => toBigCalEvent(event, connections, timeZone)),
+    [connections, timeZone, visibleEvents],
   );
 
   const formattedRange = useMemo(() => {
@@ -290,35 +296,25 @@ export function useCalendarComputed({
   }, [currentDate, view]);
 
   const visibleRange = useMemo(() => {
-    if (view === "month") {
-      return {
-        start: startOfMonth(currentDate),
-        end: new Date(endOfMonth(currentDate).getTime() + 1),
-      };
-    }
-    if (view === "week") {
-      return {
-        start: startOfWeek(currentDate, { weekStartsOn: 1 }),
-        end: new Date(
-          endOfWeek(currentDate, { weekStartsOn: 1 }).getTime() + 1,
-        ),
-      };
-    }
-    return {
-      start: startOfDay(currentDate),
-      end: new Date(endOfDay(currentDate).getTime() + 1),
-    };
-  }, [currentDate, view]);
+    const inZone = (start: Date, end: Date) => ({
+      start: fromZonedWallClock(start, timeZone),
+      end: fromZonedWallClock(new Date(end.getTime() + 1), timeZone),
+    });
+    if (view === "month") return inZone(startOfMonth(currentDate), endOfMonth(currentDate));
+    if (view === "week")
+      return inZone(startOfWeek(currentDate, { weekStartsOn: 1 }), endOfWeek(currentDate, { weekStartsOn: 1 }));
+    return inZone(startOfDay(currentDate), endOfDay(currentDate));
+  }, [currentDate, timeZone, view]);
 
   const rangeEvents = useMemo(
     () =>
       visibleEvents
-        .filter((event) => eventOverlapsRange(event, visibleRange))
+        .filter((event) => eventOverlapsRange(event, visibleRange, timeZone))
         .sort(
           (left, right) =>
             new Date(left.start).getTime() - new Date(right.start).getTime(),
         ),
-    [visibleEvents, visibleRange],
+    [timeZone, visibleEvents, visibleRange],
   );
 
   const historyEvents = useMemo(

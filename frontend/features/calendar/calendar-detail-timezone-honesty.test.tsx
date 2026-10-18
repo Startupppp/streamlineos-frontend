@@ -5,6 +5,7 @@ import { CalendarAgendaPreview } from "./calendar-lazy-fallbacks";
 import type { BigCalEvent } from "./big-calendar-wrapper";
 import type { CalendarListItem } from "@/hooks/api/calendar";
 import { calendarProjectionFields } from "./calendar-projection-fixtures";
+import { zonedWallClock } from "@/lib/date-utils";
 
 const READER_ZONE = "America/New_York";
 const CLOCK = /\d{1,2}:\d{2}/;
@@ -38,8 +39,8 @@ function externalTimed(): BigCalEvent {
   return {
     id: "ext-1-def",
     title: "Partner sync",
-    start: new Date("2027-09-14T13:00:00.000Z"),
-    end: new Date("2027-09-14T14:00:00.000Z"),
+    start: zonedWallClock(new Date("2027-09-14T13:00:00.000Z"), READER_ZONE),
+    end: zonedWallClock(new Date("2027-09-14T14:00:00.000Z"), READER_ZONE),
     allDay: false,
     resource: { source: "external", accountEmail: "someone@example.com" },
   };
@@ -146,8 +147,8 @@ function externalAuthoredTimed(): ExternalBigCalEvent {
   return {
     id: "ext-1-ghi",
     title: "Vendor call",
-    start: new Date("2027-09-14T13:00:00.000Z"),
-    end: new Date("2027-09-14T14:00:00.000Z"),
+    start: zonedWallClock(new Date("2027-09-14T13:00:00.000Z"), READER_ZONE),
+    end: zonedWallClock(new Date("2027-09-14T14:00:00.000Z"), READER_ZONE),
     allDay: false,
     resource: {
       source: "external",

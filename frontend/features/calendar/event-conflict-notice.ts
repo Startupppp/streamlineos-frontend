@@ -1,29 +1,17 @@
-import { format, parseISO } from "date-fns";
+import { parseISO } from "date-fns";
+import { formatInZone, readerTimeZone } from "@/lib/date-utils";
 import { calendarUrl } from "./calendar-url-state";
 import type {
   CalendarEventConflict,
   CalendarOooConflict,
 } from "@/hooks/api/calendar";
 
-/**
- * One sentence naming what the newly created event clashes with.
- *
- * `POST /calendar/events` computes two conflict lists on every create — a paged
- * scan for overlapping occurrences and a join against approved leave — and both
- * were discarded by the client, so double-booking yourself and inviting someone
- * on approved leave were both reported as a plain "Event created".
- *
- * The conflicts arrive WITH the created row (the scan runs inside the insert's
- * transaction and has no route of its own), so this is a notice after the fact,
- * not a gate before it.
- */
 
 interface EventConflictResult {
   eventConflicts?: CalendarEventConflict[] | null;
   oooConflicts?: CalendarOooConflict[] | null;
 }
 
-/** Beyond this many names the rest are counted, so the toast stays one line. */
 const MAX_NAMED_ATTENDEES = 2;
 
 const MAX_NAMED_CONFLICTS = 2;
@@ -37,10 +25,7 @@ function joinNames(names: string[], hiddenCount: number): string {
   return `${parts.slice(0, -1).join(", ")} and ${parts[parts.length - 1]}`;
 }
 
-/**
- * A missing name is COUNTED, never replaced with the user id: a visible id is a
- * defect in its own right (frontend CLAUDE.md §5).
- */
+
 function describeOutOfOffice(conflicts: CalendarOooConflict[]): string | null {
   const byUser = new Map<string, string | null>();
   for (const conflict of conflicts) {
@@ -62,18 +47,18 @@ function describeOutOfOffice(conflicts: CalendarOooConflict[]): string | null {
   return `${subject} ${plural ? "are" : "is"} on approved leave`;
 }
 
-function conflictWhen(conflict: CalendarEventConflict): string {
+function conflictWhen(conflict: CalendarEventConflict, timeZone: string): string {
   if (conflict.allDay) return " (all day)";
   if (!conflict.startDate) return "";
   const start = parseISO(conflict.startDate);
-  return Number.isNaN(start.getTime()) ? "" : ` at ${format(start, "h:mm a")}`;
+  return Number.isNaN(start.getTime()) ? "" : ` at ${formatInZone(start, timeZone, "h:mm a")}`;
 }
 
-function describeOverlaps(conflicts: CalendarEventConflict[]): string | null {
+function describeOverlaps(conflicts: CalendarEventConflict[], timeZone: string): string | null {
   if (conflicts.length === 0) return null;
   const named = conflicts
     .slice(0, MAX_NAMED_CONFLICTS)
-    .map((c) => (c.title?.trim() ? `"${c.title.trim()}"${conflictWhen(c)}` : null))
+    .map((c) => (c.title?.trim() ? `"${c.title.trim()}"${conflictWhen(c, timeZone)}` : null))
     .filter((t): t is string => t !== null);
   const hidden = conflicts.length - named.length;
   if (named.length === 0)
@@ -83,10 +68,13 @@ function describeOverlaps(conflicts: CalendarEventConflict[]): string | null {
   return `it clashes with ${joined}${tail}`;
 }
 
-export function describeEventConflicts(result: EventConflictResult): string | null {
+export function describeEventConflicts(
+  result: EventConflictResult,
+  timeZone: string = readerTimeZone(),
+): string | null {
   const parts: string[] = [];
 
-  const overlapMsg = describeOverlaps(result.eventConflicts ?? []);
+  const overlapMsg = describeOverlaps(result.eventConflicts ?? [], timeZone);
   if (overlapMsg) parts.push(overlapMsg);
 
   const outOfOffice = describeOutOfOffice(result.oooConflicts ?? []);
@@ -95,13 +83,17 @@ export function describeEventConflicts(result: EventConflictResult): string | nu
   return parts.length > 0 ? parts.join(", and ") : null;
 }
 
-export function eventConflictViewUrl(result: EventConflictResult, search: string): string | null {
+export function eventConflictViewUrl(
+  result: EventConflictResult,
+  search: string,
+  timeZone: string = readerTimeZone(),
+): string | null {
   const first = result.eventConflicts?.[0];
   if (!first?.startDate) return null;
   const start = parseISO(first.startDate);
   if (Number.isNaN(start.getTime())) return null;
   return calendarUrl(new URLSearchParams(search), {
-    date: format(start, "yyyy-MM-dd"),
+    date: formatInZone(start, timeZone, "yyyy-MM-dd"),
     view: "day",
     mode: "calendar",
     event: null,

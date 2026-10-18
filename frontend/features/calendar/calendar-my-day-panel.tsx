@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { EVENT_COLORS } from "./calendar-event-constants";
 import type { CalendarListItem, CalendarSearchResponse } from "@/hooks/api/calendar-types";
 import { formatEventTimeRange } from "@/lib/date-utils";
+import { useCalendarTimeZone } from "./calendar-time-zone-context";
 import { calendarSearchIsPartial } from "./calendar-search-coverage";
 import { CalendarVirtualScroll } from "./calendar-virtual-scroll";
 import { CalendarLoadingStatus } from "./calendar-lazy-fallbacks";
@@ -20,6 +21,7 @@ type MyDayRow =
 interface MyDayRowData {
   rows: MyDayRow[];
   onSelectEvent: (event: CalendarListItem) => void;
+  timeZone: string;
 }
 
 function freshnessLabel(event: CalendarListItem): string {
@@ -49,7 +51,7 @@ function rowKey(index: number, data: MyDayRowData): Key {
   return row.type === "header" ? `header:${row.title}` : `event:${row.event.sourceKey}:${row.event.occurrenceId}`;
 }
 
-function MyDayVirtualRow({ index, style, ariaAttributes, rows, onSelectEvent }: RowComponentProps<MyDayRowData>) {
+function MyDayVirtualRow({ index, style, ariaAttributes, rows, onSelectEvent, timeZone }: RowComponentProps<MyDayRowData>) {
   const row = rows[index];
   if (!row) return <div style={style} {...ariaAttributes} />;
   if (row.type === "header")
@@ -62,7 +64,7 @@ function MyDayVirtualRow({ index, style, ariaAttributes, rows, onSelectEvent }: 
 
   const event = row.event;
   const rail = EVENT_COLORS[event.color ?? "blue"] ?? EVENT_COLORS.blue;
-  const timeLabel = event.timeKind === "date" ? "All day" : formatEventTimeRange(event.start, event.end, event.timezone);
+  const timeLabel = event.timeKind === "date" ? "All day" : formatEventTimeRange(event.start, event.end, event.timezone, timeZone);
   const action = nextAction(event);
   function handleSelectEvent() {
     onSelectEvent(event);
@@ -109,6 +111,7 @@ export function CalendarMyDayPanel({
   hasMore: boolean;
   isLoadingMore: boolean;
 }) {
+  const timeZone = useCalendarTimeZone();
   const [now, setNow] = useState(() => Date.now());
   const lastRequestedPageRef = useRef<{ search: string; page: CalendarSearchResponse | undefined } | null>(null);
   const rows = useMemo<MyDayRow[]>(() => {
@@ -126,7 +129,7 @@ export function CalendarMyDayPanel({
       ? []
       : [{ type: "header" as const, title: group.title }, ...group.events.map((event) => ({ type: "event" as const, event }))]);
   }, [events, now]);
-  const rowProps = useMemo<MyDayRowData>(() => ({ rows, onSelectEvent }), [rows, onSelectEvent]);
+  const rowProps = useMemo<MyDayRowData>(() => ({ rows, onSelectEvent, timeZone }), [rows, onSelectEvent, timeZone]);
   const heightKey = useMemo(
     () => rows.map((row) => row.type === "header" ? `header:${row.title}` : `event:${row.event.sourceKey}:${row.event.occurrenceId}`).join("|"),
     [rows],

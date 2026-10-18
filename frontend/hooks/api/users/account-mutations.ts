@@ -4,6 +4,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { platformCoreQueryKeys } from "@/lib/query-keys/platform-core";
 import { usersAndCommerceQueryKeys } from "@/lib/query-keys/users-and-commerce";
+import { supportAndWorkflowsQueryKeys } from "@/lib/query-keys/support-and-workflows";
 import { invalidateCalendarMemberLookups } from "./cache";
 import type {
   UpdateUserInput,
@@ -110,6 +111,7 @@ export const useUpdateUserPreferences = () => {
       apiClient.patch<UserPreferences>(`/users/${userId}/preferences`, data, undefined, userPreferencesContract),
     onSuccess: (_, { userId }) => {
       void queryClient.invalidateQueries({ queryKey: usersAndCommerceQueryKeys.users.preferences(userId) });
+      void queryClient.invalidateQueries({ queryKey: supportAndWorkflowsQueryKeys.auth.myPreferences(), exact: true });
     },
   });
 };

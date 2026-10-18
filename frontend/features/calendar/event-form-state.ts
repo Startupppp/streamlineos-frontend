@@ -9,6 +9,7 @@ import {
 import type { CalendarListItem } from "@/hooks/api/calendar";
 import type { RecurrenceState } from "./event-recurrence-schema";
 import { defaultRecurrenceState, parseRrule } from "./event-recurrence-schema";
+import { fromZonedWallClock, readerTimeZone, zonedWallClock } from "@/lib/date-utils";
 
 export type EventCategory =
   | "general"
@@ -58,8 +59,9 @@ export type { RecurrenceState };
 
 export function toDefaultForm(
   slot?: { start: Date; end: Date } | null,
+  timeZone: string = readerTimeZone(),
 ): FormState {
-  const start = slot?.start ?? new Date();
+  const start = slot?.start ?? zonedWallClock(new Date(), timeZone);
   const end = slot?.end ?? addHours(start, 1);
   const startDate = format(start, "yyyy-MM-dd");
   return {
@@ -83,10 +85,15 @@ export function toDefaultForm(
   };
 }
 
-export function toEditForm(event: CalendarListItem, rrule?: string | null): FormState {
-  const start = new Date(event.start);
-  const end = new Date(event.end);
-  const startDate = format(start, "yyyy-MM-dd");
+export function toEditForm(
+  event: CalendarListItem,
+  rrule?: string | null,
+  timeZone: string = readerTimeZone(),
+): FormState {
+  const start = zonedWallClock(new Date(event.start), timeZone);
+  const end = zonedWallClock(new Date(event.end), timeZone);
+  const dateOnly = event.time.kind === "date" ? event.time : null;
+  const startDate = dateOnly?.startDate ?? format(start, "yyyy-MM-dd");
   const recurrence = rrule
     ? parseRrule(rrule)
     : defaultRecurrenceState(startDate);
@@ -99,7 +106,7 @@ export function toEditForm(event: CalendarListItem, rrule?: string | null): Form
     category: eventCategory(event.category),
     startDate,
     startTime: format(start, "HH:mm"),
-    endDate: format(end, "yyyy-MM-dd"),
+    endDate: dateOnly?.endDate ?? format(end, "yyyy-MM-dd"),
     endTime: format(end, "HH:mm"),
     attendeeIds: [],
     guestEmails: null,
@@ -158,6 +165,16 @@ export function needsEndDateField(
 }
 
 export function resolveEventDateTimes(
+  form: FormState,
+  showEndDate: boolean,
+  timeZone?: string,
+): { start: Date; end: Date } | null {
+  const wall = resolveWallDateTimes(form, showEndDate);
+  if (!wall || !timeZone) return wall;
+  return { start: fromZonedWallClock(wall.start, timeZone), end: fromZonedWallClock(wall.end, timeZone) };
+}
+
+function resolveWallDateTimes(
   form: FormState,
   showEndDate: boolean,
 ): { start: Date; end: Date } | null {

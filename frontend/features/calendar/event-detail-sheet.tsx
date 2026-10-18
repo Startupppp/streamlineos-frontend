@@ -18,7 +18,8 @@ import {
 import { useCan } from "@/hooks/api/access";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { formatEventDate, formatEventDateRange, formatEventTimeRange } from "@/lib/date-utils";
+import { formatEventDate, formatEventDateRange, formatEventTimeRange, zonedWallClock } from "@/lib/date-utils";
+import { useCalendarTimeZone } from "./calendar-time-zone-context";
 import { downloadCalendarExport } from "./calendar-export";
 import { EventSeriesScopeDialog, type SeriesScope } from "./event-series-scope-dialog";
 import { EventDetailActions } from "./event-detail-actions";
@@ -88,6 +89,7 @@ export function EventDetailSheet({ event, onClose, onQueueScenarioStep }: EventD
   const canUpdate = isCalendarEvent && (detail ? detail.canManage === true : event?.actions.edit === true);
   const canMutateEvent = canUpdate && event?.category !== "huddle";
   const canExport = useCan("calendar:events:export");
+  const calendarTimeZone = useCalendarTimeZone();
   const commitmentRoot: CommitmentReference | null = detail?.linkedTicket
     ? { source: "build", type: "ticket", recordId: String(detail.linkedTicket.id) }
     : event?.entityType === "deal" && event.entityId && /^\d+$/.test(event.entityId)
@@ -99,7 +101,7 @@ export function EventDetailSheet({ event, onClose, onQueueScenarioStep }: EventD
       ? event.time.kind === "date" && event.time.startDate !== event.time.endDate
         ? formatEventDateRange(event.time.startDate, event.time.endDate, event.timezone)
         : `${formatEventDate(event.start, event.timezone)} · All day`
-      : formatEventTimeRange(event.start, event.end, event.timezone);
+      : formatEventTimeRange(event.start, event.end, event.timezone, calendarTimeZone);
 
   const handleUnlink = useCallback(async () => {
     if (numericEventId === null) return;
@@ -168,7 +170,9 @@ export function EventDetailSheet({ event, onClose, onQueueScenarioStep }: EventD
   const handleExportDay = useCallback(async () => {
     if (!event) return;
     try {
-      const startDay = new Date(event.start);
+      const startDay = event.time.kind === "date"
+        ? new Date(`${event.time.startDate}T00:00:00`)
+        : zonedWallClock(new Date(event.start), calendarTimeZone);
       await downloadCalendarExport(
         format(startDay, "yyyy-MM-dd"),
         format(addDays(startDay, 1), "yyyy-MM-dd"),
@@ -176,7 +180,7 @@ export function EventDetailSheet({ event, onClose, onQueueScenarioStep }: EventD
     } catch (err) {
       toast.error(getErrorMessage(err));
     }
-  }, [event]);
+  }, [calendarTimeZone, event]);
 
   const handleSheetOpenChange = useCallback(
     (open: boolean) => {

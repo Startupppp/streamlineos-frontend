@@ -1,6 +1,7 @@
 import { differenceInMinutes } from "date-fns";
 import { isValidUrl, reminderOffsets, resolveEventDateTimes, type FormState } from "./event-form-state";
 import { buildRrule } from "./event-recurrence-schema";
+import { readerTimeZone } from "@/lib/date-utils";
 import type { TicketSearchResult } from "@/types/projects";
 
 export function validateEventTitle(title: string): string | null {
@@ -55,6 +56,8 @@ interface BuildEventPayloadArgs {
   linkedTicket: TicketSearchResult | null;
   existingEntityId: string | null;
   isEdit: boolean;
+  timeZone?: string;
+  allDayTimeZone?: string;
 }
 
 export type BuildEventPayloadResult =
@@ -67,6 +70,8 @@ export function buildEventPayload({
   linkedTicket,
   existingEntityId,
   isEdit,
+  timeZone = readerTimeZone(),
+  allDayTimeZone = timeZone,
 }: BuildEventPayloadArgs): BuildEventPayloadResult {
   if (!form.startDate) return { payload: {}, error: "Start date is required" };
   if (!form.allDay && !form.startTime) return { payload: {}, error: "Start time is required" };
@@ -74,7 +79,7 @@ export function buildEventPayload({
   if (showEndDate && !form.allDay && !form.endTime)
     return { payload: {}, error: "End time is required" };
 
-  const resolved = resolveEventDateTimes(form, showEndDate);
+  const resolved = resolveEventDateTimes(form, showEndDate, form.allDay ? allDayTimeZone : timeZone);
   if (!resolved) return { payload: {}, error: "Invalid date or time" };
 
   const { start: startDate, end: endDate } = resolved;
@@ -95,7 +100,7 @@ export function buildEventPayload({
       startDate: startDate.toISOString(),
       endDate: endDate.toISOString(),
       /*
-       * A CREATE declares the author's browser zone; an EDIT declares nothing.
+       * A CREATE declares the author's account zone; an EDIT declares nothing.
        *
        * `timezone` is the anchor the server re-projects every future occurrence
        * from — `expandRecurring` builds `dtstart` as
@@ -110,7 +115,7 @@ export function buildEventPayload({
        * JSON.stringify drops an undefined value, so the key never reaches the
        * `input.timezone !== undefined` check at all.
        */
-      timezone: isEdit ? undefined : Intl.DateTimeFormat().resolvedOptions().timeZone,
+      timezone: isEdit ? undefined : timeZone,
       allDay: form.allDay,
       color: form.color,
       category: form.category,

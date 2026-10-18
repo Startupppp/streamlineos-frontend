@@ -29,6 +29,7 @@ import {
   type FormState,
 } from "./event-form-state";
 import { useEventSeriesScope } from "./use-event-series-scope";
+import { useCalendarTimeZone } from "./calendar-time-zone-context";
 import {
   validateEventTitle,
   validateEventDescription,
@@ -54,15 +55,16 @@ export function useEventCreateDialog({
   rrule,
 }: UseEventCreateDialogProps) {
   const isEdit = !!event;
+  const timeZone = useCalendarTimeZone();
   const editNumericId = useMemo(
     () => (isEdit && event ? extractEventNumericId(event.id) : null),
     [isEdit, event],
   );
   const [form, setForm] = useState<FormState>(() =>
-    isEdit && event ? toEditForm(event, rrule) : { ...toDefaultForm(defaultSlot), syncConnectionId: "none" },
+    isEdit && event ? toEditForm(event, rrule, timeZone) : { ...toDefaultForm(defaultSlot, timeZone), syncConnectionId: "none" },
   );
   const [showEndDate, setShowEndDate] = useState(() =>
-    needsEndDateField(isEdit && event ? toEditForm(event, rrule) : toDefaultForm(defaultSlot)),
+    needsEndDateField(isEdit && event ? toEditForm(event, rrule, timeZone) : toDefaultForm(defaultSlot, timeZone)),
   );
   const [dateTimeError, setDateTimeError] = useState("");
   const [titleError, setTitleError] = useState("");
@@ -91,7 +93,7 @@ export function useEventCreateDialog({
 
   useEffect(() => {
     if (!open) return;
-    const base = isEdit && event ? toEditForm(event, rrule) : toDefaultForm(defaultSlot);
+    const base = isEdit && event ? toEditForm(event, rrule, timeZone) : toDefaultForm(defaultSlot, timeZone);
     setForm(isEdit ? base : { ...base, syncConnectionId: "none" });
     setShowEndDate(needsEndDateField(base));
     setDateTimeError("");
@@ -101,7 +103,7 @@ export function useEventCreateDialog({
     setExistingEntityId(
       isEdit && event?.entityType === "ticket" && event.entityId ? event.entityId : null,
     );
-  }, [open, defaultSlot, event, isEdit]);
+  }, [open, defaultSlot, event, isEdit, timeZone]);
 
   const effectiveForm = useMemo(() => {
     if (isEdit) return formWithDetail;
@@ -270,7 +272,8 @@ export function useEventCreateDialog({
     const locErr = validateEventLocation(form.location);
     if (locErr) { toast.error(locErr); return; }
 
-    const result = buildEventPayload({ form: submittedForm, showEndDate, linkedTicket, existingEntityId, isEdit });
+    const allDayTimeZone = isEdit ? editingDetail?.timezone ?? event?.timezone ?? timeZone : timeZone;
+    const result = buildEventPayload({ form: submittedForm, showEndDate, linkedTicket, existingEntityId, isEdit, timeZone, allDayTimeZone });
     if (result.error !== null) { toast.error(result.error); return; }
 
     if (isEdit && rrule) {
@@ -295,8 +298,8 @@ export function useEventCreateDialog({
         const res = await createEvent.mutateAsync(result.payload);
         if (res.syncQueued) toast.success("Event created — syncing to your calendar");
         else toast.success("Event created");
-        const conflictNotice = describeEventConflicts(res);
-        const conflictUrl = eventConflictViewUrl(res, window.location.search);
+        const conflictNotice = describeEventConflicts(res, timeZone);
+        const conflictUrl = eventConflictViewUrl(res, window.location.search, timeZone);
         if (conflictNotice)
           toast.warning(
             `Event created, but ${conflictNotice}.`,
@@ -311,7 +314,7 @@ export function useEventCreateDialog({
     } finally {
       submittingRef.current = false;
     }
-  }, [form, effectiveForm, showEndDate, isEdit, event, rrule, createEvent, updateEvent, handleClose, existingEntityId, linkedTicket, seriesScope, editingDetail, descriptionTouched]);
+  }, [form, effectiveForm, showEndDate, isEdit, event, rrule, createEvent, updateEvent, handleClose, existingEntityId, linkedTicket, seriesScope, editingDetail, descriptionTouched, timeZone]);
 
   const handleOpenTicketPicker = useCallback(() => setTicketPickerOpen(true), []);
 

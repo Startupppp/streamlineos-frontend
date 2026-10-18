@@ -156,6 +156,37 @@ function zoneOffsetMs(instant: Date, timeZone: string): number {
   return wall - Math.floor(instant.getTime() / 1000) * 1000;
 }
 
+export function zonedWallClock(instant: Date, zone: string): Date {
+  const wall = new Date(instant.getTime() + zoneOffsetMs(instant, zone));
+  return new Date(
+    wall.getUTCFullYear(),
+    wall.getUTCMonth(),
+    wall.getUTCDate(),
+    wall.getUTCHours(),
+    wall.getUTCMinutes(),
+    wall.getUTCSeconds(),
+    wall.getUTCMilliseconds(),
+  );
+}
+
+export function fromZonedWallClock(wall: Date, zone: string): Date {
+  const wallMs = Date.UTC(
+    wall.getFullYear(),
+    wall.getMonth(),
+    wall.getDate(),
+    wall.getHours(),
+    wall.getMinutes(),
+    wall.getSeconds(),
+    wall.getMilliseconds(),
+  );
+  const guess = new Date(wallMs - zoneOffsetMs(new Date(wallMs), zone));
+  return new Date(wallMs - zoneOffsetMs(guess, zone));
+}
+
+export function formatInZone(instant: Date, zone: string, pattern: string): string {
+  return format(zonedWallClock(instant, zone), pattern);
+}
+
 export function endOfDayInTimeZone(now: Date, zone: string | null | undefined): Date {
   const timeZone = resolveTimeZone(zone, readerTimeZone());
   const today = new Date(now.getTime() + zoneOffsetMs(now, timeZone));
@@ -192,11 +223,12 @@ export function formatEventTimeRange(
   start: string | Date,
   end: string | Date,
   timezone?: string | null,
+  readerZone?: string,
 ): string {
   const from = start instanceof Date ? start : new Date(start);
   const to = end instanceof Date ? end : new Date(end);
   if (Number.isNaN(from.getTime()) || Number.isNaN(to.getTime())) return "";
-  const reader = readerTimeZone();
+  const reader = readerZone ?? readerTimeZone();
   const zone = resolveTimeZone(timezone, reader);
   const date = new Intl.DateTimeFormat("en-IN", { ...EVENT_DATE_PARTS, timeZone: zone }).format(from);
   const fromTime = new Intl.DateTimeFormat("en-IN", { ...EVENT_TIME_PARTS, timeZone: zone }).format(from);

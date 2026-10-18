@@ -58,6 +58,11 @@ import { useCalendarViewState } from "./use-calendar-view-state";
 import { useAfterLoad } from "@/hooks/common/use-after-load";
 import { useShellVariant } from "@/components/layout/shell-variant-context";
 import { useIsMobile } from "@/hooks/common/use-mobile";
+import { useHydrated } from "@/hooks/common/use-hydrated";
+import type { EventMoveArgs } from "./big-calendar-wrapper";
+import { CalendarTimeZoneProvider } from "./calendar-time-zone-context";
+import { useAccountTimeZone } from "@/hooks/api/me-preferences";
+import { fromZonedWallClock, readerTimeZone } from "@/lib/date-utils";
 import { SectionErrorBoundary } from "@/components/shared/section-error-boundary";
 import { calendarUrl } from "./calendar-url-state";
 import { useCalendarSearch } from "@/hooks/api/calendar-search";
@@ -181,6 +186,7 @@ export function CalendarView() {
   const [myDaySearch, setMyDaySearch] = useState("");
   const [listSearch, setListSearch] = useState("");
   const [clockNow, setClockNow] = useState(() => new Date());
+  const calendarTimeZone = useAccountTimeZone();
   const debouncedMyDaySearch = useDebouncedValue(myDaySearch, 300);
   const debouncedListSearch = useDebouncedValue(listSearch, 300);
   const router = useRouter();
@@ -220,7 +226,7 @@ export function CalendarView() {
     handleCloseSelected,
     handleOpenAccounts,
     handleCloseAccounts,
-  } = useCalendarViewState();
+  } = useCalendarViewState(calendarTimeZone);
   const listSource = viewMode === "list" && sourceFilterParam && sourceFilterParam.length <= 100 ? sourceFilterParam : "";
   const listQuery = viewMode === "list" ? debouncedListSearch.trim().slice(0, 200) : "";
   const listFilter = useMemo(
@@ -237,32 +243,36 @@ export function CalendarView() {
   );
 
   const updateEvent = useUpdateCalendarEvent();
+  const hydrated = useHydrated();
+  const showTimeZoneLabel = hydrated && calendarTimeZone !== readerTimeZone();
 
   const handleEventDrop = useCallback(
-    ({ event, start, end, isAllDay }: { event: { id: number | string }; start: Date; end: Date; isAllDay: boolean }) => {
+    ({ event, start, end, isAllDay }: EventMoveArgs) => {
       const id = typeof event.id === "number" ? event.id : extractEventNumericId(String(event.id));
       if (!id) return;
+      const zone = isAllDay ? event.resource?.timezone ?? calendarTimeZone : calendarTimeZone;
       updateEvent.mutate({
         calendarEventId: id,
-        startDate: start.toISOString(),
-        endDate: end.toISOString(),
+        startDate: fromZonedWallClock(start, zone).toISOString(),
+        endDate: fromZonedWallClock(end, zone).toISOString(),
         allDay: isAllDay,
       });
     },
-    [updateEvent],
+    [calendarTimeZone, updateEvent],
   );
 
   const handleEventResize = useCallback(
-    ({ event, start, end }: { event: { id: number | string }; start: Date; end: Date; isAllDay: boolean }) => {
+    ({ event, start, end }: EventMoveArgs) => {
       const id = typeof event.id === "number" ? event.id : extractEventNumericId(String(event.id));
       if (!id) return;
+      const zone = event.allDay ? event.resource?.timezone ?? calendarTimeZone : calendarTimeZone;
       updateEvent.mutate({
         calendarEventId: id,
-        startDate: start.toISOString(),
-        endDate: end.toISOString(),
+        startDate: fromZonedWallClock(start, zone).toISOString(),
+        endDate: fromZonedWallClock(end, zone).toISOString(),
       });
     },
-    [updateEvent],
+    [calendarTimeZone, updateEvent],
   );
 
   const { data: calendarSources } = useCalendarSources(calendarModuleEnabled);
@@ -350,8 +360,8 @@ export function CalendarView() {
   const myDayWindow = selectedSavedView
     ? calendarSavedViewWindow(selectedSavedView.definition.dateLogic, clockNow)
     : {
-        start: myDayStart.toISOString(),
-        end: addDays(myDayStart, 1).toISOString(),
+        start: fromZonedWallClock(myDayStart, calendarTimeZone).toISOString(),
+        end: fromZonedWallClock(addDays(myDayStart, 1), calendarTimeZone).toISOString(),
       };
   const displayedGridView = selectedSavedView
     ? calendarSavedViewGridView(selectedSavedView.definition.dateLogic)
@@ -470,8 +480,8 @@ export function CalendarView() {
     [calendarSources, connections],
   );
   const savedGridEvents = useMemo(
-    () => visibleSearchEvents.map((event) => toBigCalEvent(event, connections)),
-    [connections, visibleSearchEvents],
+    () => visibleSearchEvents.map((event) => toBigCalEvent(event, connections, calendarTimeZone)),
+    [calendarTimeZone, connections, visibleSearchEvents],
   );
   const finalize = useFinalizeIntegrationConnection();
   const finalizeRef = useRef(false);
@@ -527,8 +537,8 @@ export function CalendarView() {
       !savedFilterId,
   );
   const calendarEvents = useMemo(
-    () => mergeSelfAttendanceEvents(events, attendanceCoverage.events),
-    [attendanceCoverage.events, events],
+    () => mergeSelfAttendanceEvents(events, attendanceCoverage.events, calendarTimeZone),
+    [attendanceCoverage.events, calendarTimeZone, events],
   );
 
   const {
@@ -648,6 +658,7 @@ export function CalendarView() {
     hrVisible: hrEventsVisible,
     crmVisible: crmEventsVisible,
     attendanceVisible: attendanceEventsVisible,
+    timeZone: calendarTimeZone,
   });
   const listSearchTerm = listQuery.toLowerCase();
   const listFilteredEvents = useMemo(
@@ -694,8 +705,8 @@ export function CalendarView() {
   ]);
   const selectedBigEvent = useMemo(
     () =>
-      selectedListEvent ? toBigCalEvent(selectedListEvent, connections) : null,
-    [connections, selectedListEvent],
+      selectedListEvent ? toBigCalEvent(selectedListEvent, connections, calendarTimeZone) : null,
+    [calendarTimeZone, connections, selectedListEvent],
   );
   const selectedExternal =
     selected?.source === "external" ? selectedBigEvent : null;
@@ -751,8 +762,8 @@ export function CalendarView() {
   ]);
   const handleSelectListEvent = useCallback(
     (event: CalendarListItem) =>
-      handleSelectEvent(toBigCalEvent(event, connections)),
-    [connections, handleSelectEvent],
+      handleSelectEvent(toBigCalEvent(event, connections, calendarTimeZone)),
+    [calendarTimeZone, connections, handleSelectEvent],
   );
   const handleSavedViewNavigate = useCallback(
     (date: Date) => {
@@ -926,6 +937,7 @@ export function CalendarView() {
     );
 
   return (
+    <CalendarTimeZoneProvider timeZone={calendarTimeZone}>
     <PageWrapper
       title={
         viewMode === "history" ? (
@@ -952,11 +964,18 @@ export function CalendarView() {
             </span>
           </div>
         ) : (
-          <CalendarMonthYearPicker
-            currentDate={currentDate}
-            title={formattedRange}
-            onDateChange={setCurrentDate}
-          />
+          <div className="flex flex-col">
+            <CalendarMonthYearPicker
+              currentDate={currentDate}
+              title={formattedRange}
+              onDateChange={setCurrentDate}
+            />
+            {showTimeZoneLabel ? (
+              <span className="text-xs font-normal text-muted-foreground" data-testid="calendar-time-zone-label">
+                Times in {calendarTimeZone}
+              </span>
+            ) : null}
+          </div>
         )
       }
       noInternalScroll
@@ -1545,5 +1564,6 @@ export function CalendarView() {
         {bookingPagesOpen && <CalendarBookingRulesSheet onClose={() => setBookingPagesOpen(false)} />}
       </div>
     </PageWrapper>
+    </CalendarTimeZoneProvider>
   );
 }
