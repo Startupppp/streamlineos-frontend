@@ -40,7 +40,6 @@ function summarise(result: ExecuteSubjectRequestResult): string {
     : `Filed as incomplete: ${result.failureSummary ?? "a region did not report success"}`;
 }
 
-/** The compliance queue: every filed subject request, and running a new one. */
 export function SubjectRequestsPanel() {
   const layout = useTenantLayout(SUBJECT_REQUEST_LAYOUT);
   const router = useRouter();
@@ -129,37 +128,51 @@ export function SubjectRequestsPanel() {
       filtersActive={subject !== undefined}
       onClearFilters={handleClearFilters}
       action={canExecute ? { label: "Run a request", onClick: handleOpenForm } : undefined}
-      className="flex-1 min-h-[30vh]"
+      className="flex-1 min-h-[40vh]"
     />
   );
 
   return (
-    <section className="flex min-h-0 flex-col gap-4 rounded-xl border border-border bg-card p-5 shadow-sm" aria-labelledby="subject-requests-heading">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-        <div>
-          <h2 id="subject-requests-heading" className="text-sm font-semibold text-foreground">
-            Subject requests
-          </h2>
-          <p className="mt-0.5 text-xs text-muted-foreground">
-            Requests from anyone, member or not, identified by email. Only declared operators can run them.
-          </p>
-        </div>
+    <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-hidden">
+      <div className="flex shrink-0 flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+        <SearchInput
+          placeholder="Filter by exact email…"
+          value={search}
+          onValueChange={handleSearchChange}
+          className="w-full sm:max-w-sm"
+        />
         {canExecute ? (
-          <AnimatedIconButton icon={PlusIcon} iconSize={16} iconClassName="mr-1.5" size="sm" onClick={handleOpenForm}>
+          <AnimatedIconButton
+            icon={PlusIcon}
+            iconSize={16}
+            iconClassName="mr-1.5"
+            size="sm"
+            className="w-full shrink-0 sm:w-auto"
+            onClick={handleOpenForm}
+          >
             Run a request
           </AnimatedIconButton>
         ) : null}
       </div>
-      <SearchInput placeholder="Filter by exact email" value={search} onValueChange={handleSearchChange} className="sm:max-w-sm" />
+
       <PageState
         resolution={pageState}
         loading={<DataTableSkeleton fill headers={HEADERS} />}
         empty={emptyState}
         onClearFilters={handleClearFilters}
         onRetry={handleRetry}
-        compact
+        className="flex min-h-0 flex-1 flex-col"
       >
-        <RecordList layout={layout} rows={rows} getRowKey={rowKey} cells={CELLS} emptyState={emptyState} minWidth="720px" pagination={{ pageSize: 20 }} />
+        <RecordList
+          layout={layout}
+          rows={rows}
+          getRowKey={rowKey}
+          cells={CELLS}
+          emptyState={emptyState}
+          minWidth="720px"
+          className="flex min-h-0 flex-1 flex-col"
+          pagination={{ pageSize: 20 }}
+        />
       </PageState>
 
       <SubjectRequestDialog open={formOpen} onOpenChange={setFormOpen} isSubmitting={execute.isPending} onSubmit={handleSubmit} />
@@ -175,6 +188,6 @@ export function SubjectRequestsPanel() {
           onConfirm={handleConfirmErasure}
         />
       ) : null}
-    </section>
+    </div>
   );
 }

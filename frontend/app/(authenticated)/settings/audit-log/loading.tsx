@@ -12,7 +12,6 @@ export default function AuditLogLoading() {
       actions={<Skeleton className="h-9 w-28 rounded-md" />}
       filters={
         <>
-          <Skeleton className="h-9 w-[5.5rem] shrink-0 rounded-md md:hidden" />
           <div className="min-w-0 flex-1 md:min-w-[160px] md:max-w-xs">
             <Skeleton className="h-9 w-full rounded-md" />
           </div>
@@ -20,6 +19,7 @@ export default function AuditLogLoading() {
           <Skeleton className="hidden h-9 w-32 rounded-md md:block" />
           <Skeleton className="hidden h-9 w-[140px] rounded-md md:block" />
           <Skeleton className="hidden h-9 w-[140px] rounded-md md:block" />
+          <Skeleton className="ml-auto size-9 shrink-0 rounded-md md:hidden" />
         </>
       }
     >

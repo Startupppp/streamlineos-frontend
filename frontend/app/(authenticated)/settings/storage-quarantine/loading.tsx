@@ -8,8 +8,9 @@ export default function StorageQuarantineLoading() {
       title="Upload quarantine"
       subtitle="Files held back until a malware scan clears them."
       noInternalScroll
+      actionsInline
+      actions={<Skeleton className="h-9 w-44" />}
       contentClassName="flex min-h-0 flex-1 flex-col"
-      filters={<Skeleton className="h-9 w-44" />}
     >
       <DataTableSkeleton
         fill

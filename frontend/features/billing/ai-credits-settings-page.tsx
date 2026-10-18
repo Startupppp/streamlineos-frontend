@@ -73,12 +73,6 @@ function AiCreditsPageContent() {
   const canPurchase = useCan("billing:ai-credits:purchase");
   const { state: scriptState, retry: retryScript } = useCheckoutScript();
 
-  /*
-   * SETTINGS-014. This page read the checkout script's state but never asked for
-   * the script, so it sat on "idle" and every Buy answered "Payment checkout is
-   * not available" — a dead button, every time, on a page whose wallet and packs
-   * loaded fine. The Plan tab has always loaded it; this is the same line.
-   */
   useEffect(() => {
     void loadCheckoutScript();
   }, []);

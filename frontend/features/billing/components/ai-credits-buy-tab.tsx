@@ -104,8 +104,6 @@ export function AiCreditsBuyTab({
                 pack={pack}
                 canPurchase={canPurchase}
                 isPending={isBusy && selectedPackId === pack.id}
-                // Buy stays down until the gateway script is there, so a
-                // click cannot land on a checkout that cannot open.
                 isBusy={isBusy || scriptState !== "ready"}
                 onBuy={onBuy}
               />

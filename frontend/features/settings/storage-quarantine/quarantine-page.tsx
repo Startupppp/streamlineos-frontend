@@ -141,7 +141,8 @@ export function QuarantinePage() {
       title="Upload quarantine"
       subtitle="Files held back until a malware scan clears them."
       noInternalScroll
-      filters={
+      actionsInline
+      actions={
         <Select value={status ?? "all"} onValueChange={handleStatusChange}>
           <SelectTrigger className={cn("w-44", FILTER_SELECT_TRIGGER)} aria-label="Status">
             <SelectValue />

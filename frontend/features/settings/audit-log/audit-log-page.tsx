@@ -238,32 +238,32 @@ export function AuditLogPage() {
       }
       filters={
         <>
-          <ResponsivePopover>
-            <ResponsivePopoverTrigger asChild>
-              <Button
-                variant="outline"
-                size="sm"
-                className="h-9 shrink-0 gap-1.5 text-xs md:hidden"
-                aria-label="Filters"
-              >
-                <SlidersHorizontal className="h-4 w-4" />
-                <span className="truncate">Filters</span>
-              </Button>
-            </ResponsivePopoverTrigger>
-            <ResponsivePopoverContent
-              className="w-[min(22rem,calc(100vw-2rem))] max-w-[calc(100vw-2rem)] p-3"
-              align="start"
-              title="Filters"
-            >
-              {renderFilterSelects()}
-            </ResponsivePopoverContent>
-          </ResponsivePopover>
           <SearchInput
             placeholder="Search by name or email…"
             value={userSearch}
             onValueChange={handleUserSearchChange}
           />
           <div className="hidden md:contents">{renderFilterSelects()}</div>
+          <ResponsivePopover>
+            <ResponsivePopoverTrigger asChild>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="ml-auto size-9 shrink-0 p-0 md:hidden"
+                aria-label="Filters"
+              >
+                <SlidersHorizontal className="h-4 w-4" aria-hidden="true" />
+              </Button>
+            </ResponsivePopoverTrigger>
+            <ResponsivePopoverContent
+              className="w-[min(22rem,calc(100vw-2rem))] max-w-[calc(100vw-2rem)] p-3"
+              align="end"
+              title="Filters"
+            >
+              {renderFilterSelects()}
+            </ResponsivePopoverContent>
+          </ResponsivePopover>
         </>
       }
     >
