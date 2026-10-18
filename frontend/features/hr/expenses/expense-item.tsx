@@ -26,6 +26,7 @@ import {
 } from "@/lib/expense-constants";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { activationProps } from "@/lib/keyboard-activation";
+import { NeedsAnotherApprover } from "@/features/hr/shared/self-approval";
 
 interface AdminExpenseItemProps {
   expense: ExpenseWithRelations;
@@ -313,9 +314,7 @@ export function AdminExpenseItem({
             </LoadingButton>
           </div>
         ) : status === "PENDING" ? (
-          <p className="text-right text-xs text-muted-foreground italic">
-            Your own claim — needs another approver
-          </p>
+          <NeedsAnotherApprover className="ml-auto text-right" />
         ) : null}
       </div>
     </div>
