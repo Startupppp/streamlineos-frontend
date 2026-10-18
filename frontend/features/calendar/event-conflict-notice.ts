@@ -1,3 +1,5 @@
+import { format, parseISO } from "date-fns";
+import { calendarUrl } from "./calendar-url-state";
 import type {
   CalendarEventConflict,
   CalendarOooConflict,
@@ -85,4 +87,18 @@ export function describeEventConflicts(result: EventConflictResult): string | nu
   if (outOfOffice) parts.push(outOfOffice);
 
   return parts.length > 0 ? parts.join(", and ") : null;
+}
+
+export function eventConflictViewUrl(result: EventConflictResult, search: string): string | null {
+  const first = result.eventConflicts?.[0];
+  if (!first) return null;
+  const start = parseISO(first.startDate);
+  if (Number.isNaN(start.getTime())) return null;
+  return calendarUrl(new URLSearchParams(search), {
+    date: format(start, "yyyy-MM-dd"),
+    view: "day",
+    mode: "calendar",
+    event: null,
+    eventSource: null,
+  });
 }

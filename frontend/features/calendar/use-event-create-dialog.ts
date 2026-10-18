@@ -18,7 +18,7 @@ import type { IntegrationConnection } from "@/hooks/api/integrations";
 import { toast } from "sonner";
 import type { TicketSearchResult } from "@/types/projects";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { describeEventConflicts } from "./event-conflict-notice";
+import { describeEventConflicts, eventConflictViewUrl } from "./event-conflict-notice";
 import {
   getDateTimeError,
   isValidUrl,
@@ -295,7 +295,14 @@ export function useEventCreateDialog({
         if (res.syncQueued) toast.success("Event created — syncing to your calendar");
         else toast.success("Event created");
         const conflictNotice = describeEventConflicts(res);
-        if (conflictNotice) toast.warning(`Event created, but ${conflictNotice}.`);
+        const conflictUrl = eventConflictViewUrl(res, window.location.search);
+        if (conflictNotice)
+          toast.warning(
+            `Event created, but ${conflictNotice}.`,
+            conflictUrl
+              ? { action: { label: "View", onClick: () => window.history.pushState(null, "", conflictUrl) } }
+              : undefined,
+          );
       }
       handleClose();
     } catch (error) {

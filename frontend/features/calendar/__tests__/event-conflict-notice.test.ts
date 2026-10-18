@@ -1,7 +1,7 @@
 import * as fs from "fs";
 import * as path from "path";
 import { backendPath } from "@/test-utils/backend-repo";
-import { describeEventConflicts } from "../event-conflict-notice";
+import { describeEventConflicts, eventConflictViewUrl } from "../event-conflict-notice";
 
 /**
  * The conflicts the server computes reach the person who caused them.
@@ -192,5 +192,33 @@ describe("describeEventConflicts", () => {
         ],
       }),
     ).toBe(`it clashes with "1:1", and Ada is on approved leave`);
+  });
+});
+
+describe("UX: the clash toast can jump to the clashing event's day", () => {
+  const conflict = {
+    eventId: 4,
+    title: "Standup",
+    startDate: "2026-10-21T09:00:00.000Z",
+    endDate: "2026-10-21T09:15:00.000Z",
+    nominalStart: "2026-10-21T09:00:00.000Z",
+    allDay: false,
+    timezone: "UTC",
+    orgId: "org-1",
+  };
+
+  it("opens the day view on the first clash and keeps the other params", () => {
+    const url = eventConflictViewUrl({ eventConflicts: [conflict] }, "?hr=0&event=event-9");
+    expect(url).toMatch(/^\/calendar\?/);
+    const params = new URLSearchParams(url?.split("?")[1]);
+    expect(params.get("view")).toBe("day");
+    expect(params.get("mode")).toBe("calendar");
+    expect(params.get("date")).toMatch(/^2026-10-2[01]$/);
+    expect(params.get("hr")).toBe("0");
+    expect(params.has("event")).toBe(false);
+  });
+
+  it("offers no jump when nothing clashes", () => {
+    expect(eventConflictViewUrl({ eventConflicts: [] }, "")).toBeNull();
   });
 });
