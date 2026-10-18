@@ -128,6 +128,7 @@ export function PolicyUpsertSheet({ open, onOpenChange, policy }: Props) {
           priority: data.priority,
           rules: withExplicitSwitches(policy.policyType, data.rules),
           scopes: data.scopes,
+          expectedUpdatedAt: policy.updatedAt,
         };
         update.mutate(
           { policyId: policy.id, ...editPayload },

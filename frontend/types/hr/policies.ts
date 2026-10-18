@@ -109,7 +109,7 @@ export interface CreatePolicyInput {
 
 export type UpdatePolicyInput = Partial<
   Omit<CreatePolicyInput, "policyType">
->;
+> & { expectedUpdatedAt?: string };
 
 export const POLICY_TYPE_LABELS: Record<HrPolicyType, string> = {
   leave: "Leave",
