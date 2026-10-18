@@ -52,7 +52,9 @@ Duplicate cost-centre code returns 409 with no user-visible message
 - Fix: Map 409 to an inline Code error ("Code already in use") and show a generic error toast for other failures.
 - Acceptance: Duplicate code shows "Code already in use" inline; no console-only failures.
 
-### ORG-B-014 — UNKNOWN
+### ORG-B-014 — VERIFIED IN CODE, PENDING_BROWSER_VERIFICATION
+
+Evidence: a slow write now ends as "Request timed out" (`TIMEOUT`), never a network error (`frontend/lib/api-client.ts:425-431`, mutation timeout 15 s at `:22`); every mutation carries an auto `Idempotency-Key` so a retry cannot duplicate (`api-client.ts:355`); hierarchy and settings writes settle on the server response instead of the list refetch (59c756568, pinned in `hooks/api/organization.test.tsx`); the dependency check drops its per-call catalog query (backend 1ceb0a2b1). The remaining "Network error" is a fetch that never reached the API (first seen only with HTML-like address text), which the client cannot tell apart from a dropped connection.
 
 Intermittent "Network error" on create/archive; first attempt not saved, retries succeed
 
@@ -181,7 +183,9 @@ Secondary colour is inconsistent: view shows blank; edit shows a default picker 
 
 Evidence: `org-branding-fields.tsx` `BrandingColor` renders `{color || <span>Not set</span>}` in view. `ColorField` uses `opacity-0` on the color `<input>` when `!isSet` and shows a dashed-border placeholder instead; text input shows empty value.
 
-### ORG-B-023 — DEFERRED TO MP LANE
+### ORG-B-023 — FIXED (891739cef), PENDING_BROWSER_VERIFICATION
+
+The round dark "…" button is the mobile quick-actions FAB (`components/layout/mobile/mobile-shell-fab.tsx:118-126`), not the companion. 891739cef reserves the FAB lane on module-bottom-nav routes such as /settings/organization and docks the minimised companion beside it (`companion-launcher.tsx:334`, `:373-377`), with tests. 516b83ea0 only starts the companion minimised on phones.
 
 At 400% zoom (about 320 px wide) the floating "…" button covers the General "Edit" button
 
@@ -229,7 +233,9 @@ Evidence: `use-organization-settings-form.ts` `save()` keeps `isEditing = true` 
 - Fix: Keep the form open with a disabled Save and "Saving…" until the response; show success toast; update the view from the response.
 - Acceptance: Each save shows Saving… until the response, and the view matches the saved value at the moment the form closes.
 
-### ORG-B-027 — NOT REPRODUCED + PERF FIXED (backend commit 1ceb0a2b1)
+### ORG-B-027 — VERIFIED IN CODE (org-branding-fields.tsx:23, :41), PENDING_BROWSER_VERIFICATION
+
+No render path reads an empty logo or colour unguarded (`BrandingImage` returns "Not set" for an empty logo, `BrandingColor` for an empty colour); the dependency-check latency is fixed in backend 1ceb0a2b1.
 
 Organization page showed "Something went wrong" once after a branding save and reload
 
@@ -267,24 +273,24 @@ Evidence: `plan-usage-meters.tsx` `LIMIT_LABELS` map has `hrCandidates: "HR Cand
 1. **No Send-test control for webhooks — FIXED (2d5b49d + e5a83b5), PENDING_BROWSER_VERIFICATION.** Added `POST /webhooks/:webhookId/test` on the backend; frontend shows a flask icon button per card that posts the test delivery and toasts success/failure with status code.
 
 ### Good to have
-1. **Inline validation for session-policy fields.** Validate max sessions (e.g. −5), bad domain, and bad IP inline in the form before Save, even when the policy is not persisted in this round (lockout risk).
+1. **Inline validation for session-policy fields.** Validate max sessions (e.g. −5), bad domain, and bad IP inline in the form before Save, even when the policy is not persisted in this round (lockout risk). — FIXED (f287a2e95), PENDING_BROWSER_VERIFICATION. Org settings forms validate on blur (`mode: "onTouched"` in `use-organization-settings-form.ts`); `org-security-section.test.tsx` shows each error before any Save.
 
 ### Must change
-1. **Audit trail is not trustworthy as an audit trail.** Group create and token create/revoke are missing (ORG-B-017); archives read "Updated" (ORG-B-018); settings rows do not say what changed (ORG-B-020); the footer total is wrong (ORG-B-019). Fix these before anything else on this page.
-3. **Save feedback.** Business Hours closes at once and shows the old value for about 9 s (ORG-B-026). Keep the form open with "Saving…" until the server answers, then toast.
-5. **Pickers before data.** Branch and Department show "No branch" or "Loading options…" and accept a click; a department can be saved unlinked (ORG-B-024). Disable the select until its options load.
-6. **Colour fields disagree.** Secondary shows blank in view, and edit shows a #0b1220 picker with an empty hex (ORG-B-022, extends ORG-B-005).
-7. **Raw keys on Billing.** "hrCandidates" and "hrJobPostings" appear in Plan Usage; the current plan card still says "Upgrade" (ORG-B-028).
-8. **Duplicate code message.** The 409 for cost centres now shows a toast with a raw "code:" prefix and no inline error on the Code field (ORG-B-013).
-9. **Permission groups.** Still no Delete, Archive or create-role control (ORG-B-009). Each test group is permanent until an admin removes it.
-10. **Timezone everywhere.** Audit Log, PAT expiry default and other times use UTC while the org is Asia/Calcutta (ORG-B-016). Label the zone at least.
+1. **Audit trail is not trustworthy as an audit trail.** Group create and token create/revoke are missing (ORG-B-017); archives read "Updated" (ORG-B-018); settings rows do not say what changed (ORG-B-020); the footer total is wrong (ORG-B-019). Fix these before anything else on this page. — VERIFIED IN CODE, PENDING_BROWSER_VERIFICATION. Group create writes `principal_group.created` (`backend/src/modules/rbac/principal-groups.service.ts:142`); PAT create/revoke write `api_token.created`/`api_token.revoked` (`user-api-tokens.service.ts:124`, `:183`); archive/restore write `*.archived`/`*.restored` with the status change (`org-unit-crud.ts:444`); settings rows carry a field diff (`organization-settings.service.ts:165-167`); the footer has no false total (cursor mode, ORG-B-019). Labels fixed in c1a7a3cb1 (Good to have 2).
+3. **Save feedback.** Business Hours closes at once and shows the old value for about 9 s (ORG-B-026). Keep the form open with "Saving…" until the server answers, then toast. — VERIFIED IN CODE, PENDING_BROWSER_VERIFICATION. The form leaves edit mode only in `onSuccess` (`use-organization-settings-form.ts:81`), Save shows `Saving…` (`org-business-hours-section.tsx:169`), and the saved values are patched into the cache before it closes (`hooks/api/organization.ts:186`).
+5. **Pickers before data.** Branch and Department show "No branch" or "Loading options…" and accept a click; a department can be saved unlinked (ORG-B-024). Disable the select until its options load. — VERIFIED IN CODE, PENDING_BROWSER_VERIFICATION. While options load the list shows only "Loading options…" and no "No branch" choice (`components/organization/hierarchy-parent-selector.tsx:226`, `:254`); pinned by `hierarchy-parent-selector.test.tsx` (c1a7a3cb1).
+6. **Colour fields disagree.** Secondary shows blank in view, and edit shows a #0b1220 picker with an empty hex (ORG-B-022, extends ORG-B-005). — VERIFIED IN CODE, PENDING_BROWSER_VERIFICATION. View shows "Not set" (`org-branding-fields.tsx:41`); with an empty hex the picker is hidden behind a dashed placeholder (`:107`, `:128`), pinned in `org-branding-fields.test.tsx`.
+7. **Raw keys on Billing.** "hrCandidates" and "hrJobPostings" appear in Plan Usage; the current plan card still says "Upgrade" (ORG-B-028). — FIXED (c1a7a3cb1), PENDING_BROWSER_VERIFICATION. Plan usage now uses the shared `humanizeLimitKey` (sentence case, added `crmClients`, and a camelCase fallback so no raw key can show); the current paid plan reads "Current Plan" and a current trial reads "Subscribe" (`plan-card.tsx:53`, `:138`).
+8. **Duplicate code message.** The 409 for cost centres now shows a toast with a raw "code:" prefix and no inline error on the Code field (ORG-B-013). — FIXED (9f7cd5421), PENDING_BROWSER_VERIFICATION. The raw "code:" toast came from the global mutation error toast firing after the form had already set the inline error. The cost-centre and department create/update hooks now leave errors to their forms (`meta: { errorToast: false }`), so the 409 shows only under Code.
+9. **Permission groups.** Still no Delete, Archive or create-role control (ORG-B-009). Each test group is permanent until an admin removes it. — VERIFIED IN CODE, PENDING_BROWSER_VERIFICATION. Custom groups have a Delete control behind a destructive confirm (`features/settings/roles/groups/groups-panel.tsx:89`) calling `DELETE /principal-groups/:groupId` (`principal-groups.controller.ts:84`); pinned by `groups-panel.test.tsx` (7f009fae5). A create-role control is not built on purpose: FE-52 and BE-102 forbid role creation (six fixed standings).
+10. **Timezone everywhere.** Audit Log, PAT expiry default and other times use UTC while the org is Asia/Calcutta (ORG-B-016). Label the zone at least. — FIXED (7f009fae5), PENDING_BROWSER_VERIFICATION. Audit log, delegations, webhooks and token tables already format in the org zone (`formatDateTimeInOrgTz`). The PAT expiry was the gap: its default came from the browser clock and it was sent with no zone, so the server read it as UTC. The default now comes from the org clock, the picked time is sent as the matching instant in the org zone, and the field names the zone.
 
 ### Good to have
-1. **Notification toggles** save silently. Show a small "Saved" confirmation per toggle, as Quiet hours does not show one either.
-2. **Consistent labels.** Audit labels mix styles: "Team Created", "Member Role Changed", "Org — CostCenter — Created", "Settings — Updated". Use one pattern (object + verb, sentence case).
-3. **Role names** are title-cased from identifiers: "Crm Module Admin", "Hr Module Member" (carried from round 1). Use "CRM Module Admin" and "HR Module Member".
-4. **Mobile header at 400% zoom.** The trial banner and header take most of the first screen; the "Upgrade" button is the only action visible (ORG-B-023 covers the overlap).
-5. **Keyboard.** Tab order through the header and sidebar is logical and the focus ring is visible. Account-menu items are not exposed as menu items to assistive tech (carried from round 1).
-6. **Plan copy.** "Trial ends 26 Oct 2026" on Billing and "Your trial ends in 11 days" on the banner should show the same date.
-7. **Cost centre duplicate** needs a fast response; a 20 s wait with no feedback looks like a hang (ORG-B-013/026).
-8. **Branding preview** updates live as colours are typed (good); it still shows a grey placeholder for the logo area when a logo is set (not verified with a valid logo; not saved).
+1. **Notification toggles** save silently. Show a small "Saved" confirmation per toggle, as Quiet hours does not show one either. — FIXED (0401c9843), PENDING_BROWSER_VERIFICATION. Each channel and category toggle shows "Saved" beside itself for 2.5 s after the server confirms (category toggles used to be silent); quiet hours keep their toast.
+2. **Consistent labels.** Audit labels mix styles: "Team Created", "Member Role Changed", "Org — CostCenter — Created", "Settings — Updated". Use one pattern (object + verb, sentence case). — FIXED (c1a7a3cb1), PENDING_BROWSER_VERIFICATION. `formatActionLabel` now gives one sentence-case object + verb pattern ("Cost center created", "Team created", "Settings updated", "API key revoked") in the table, the action filter and the detail sheet. This changes visible text (FE-129).
+3. **Role names** are title-cased from identifiers: "Crm Module Admin", "Hr Module Member" (carried from round 1). Use "CRM Module Admin" and "HR Module Member". — FIXED (backend 67d535b9b, migration 2090 applied), PENDING_BROWSER_VERIFICATION. Seeded names use the module display name (`seed-system-roles.ts:206`); a read-only production query shows every system row as "CRM Module Admin", "HR Module Member" and so on, with no "Crm"/"Hr" names left.
+4. **Mobile header at 400% zoom.** The trial banner and header take most of the first screen; the "Upgrade" button is the only action visible (ORG-B-023 covers the overlap). — FIXED (891739cef), PENDING_BROWSER_VERIFICATION. On phones the banner is one dismissible line ("Trial ends 26 Oct", `components/billing/trial-banner.tsx`), and the FAB no longer covers page actions (ORG-B-023).
+5. **Keyboard.** Tab order through the header and sidebar is logical and the focus ring is visible. Account-menu items are not exposed as menu items to assistive tech (carried from round 1). — FIXED (97b794dc5), PENDING_BROWSER_VERIFICATION. The availability and clear-after chips inside the account menu were plain buttons the arrow keys skipped. In the menu they are now menu radio items (`menuitemradio` with `aria-checked`) that the arrow keys reach. Links and Sign out were already menu items.
+6. **Plan copy.** "Trial ends 26 Oct 2026" on Billing and "Your trial ends in 11 days" on the banner should show the same date. — FIXED (94616c4e9, 8d863ac5d), PENDING_BROWSER_VERIFICATION. Both now come from `components/billing/trial-end.ts`: "Trial ends 26 Oct 2026 (11 days left)", with the date in the org time zone.
+7. **Cost centre duplicate** needs a fast response; a 20 s wait with no feedback looks like a hang (ORG-B-013/026). — FIXED (9f7cd5421), PENDING_BROWSER_VERIFICATION. A code already on the loaded list is flagged under Code at once, with no request; other duplicates still get the server 409 inline. Save shows "Saving…" meanwhile.
+8. **Branding preview** updates live as colours are typed (good); it still shows a grey placeholder for the logo area when a logo is set (not verified with a valid logo; not saved). — FIXED (c1a7a3cb1), PENDING_BROWSER_VERIFICATION. The email preview drew the logo through `brightness-0 invert`, which turns a logo with a solid background into a plain block that looks like the placeholder. It now renders the logo as the email does (`backend/src/modules/email/templates/base.ts:40`).

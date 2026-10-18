@@ -75,7 +75,9 @@ Latest report note: FAIL: /build/7/issues > Calendar button goes to /calendar?so
 - Toggles for modules that are off for the org (HR, CRM, Attendance in the QA org) are not shown; a Build tickets source is shown.
 - `/build/7/issues?view=calendar` never shows the page-level "Something went wrong".
 
-### B-022 — FIXED
+### B-022 — FIXED, sign-out control 4fd778dc3, PENDING_BROWSER_VERIFICATION
+
+The /org-setup Sign out button is now a `LoadingButton` showing "Signing out…" while the request runs (FE-80), pinned in `app/org-setup/page.test.tsx`.
 
 "Join" on the org-setup pending-invitation banner does nothing (Medium)
 
