@@ -38,12 +38,15 @@ import { useCan } from "@/hooks/api/access";
 import { PolicyRulesFields } from "./policy-rules-fields";
 import { policyFormSchema, withExplicitSwitches, type PolicyFormValues } from "./policy-form-types";
 import { numericFieldChangeOr } from "@/lib/numeric-field";
+import { statusToneClasses } from "@/lib/design-tokens";
 
 interface Props {
   open: boolean;
   onOpenChange: (v: boolean) => void;
   policy?: HrPolicy;
 }
+
+const SAVE_ERROR_TONE = statusToneClasses("danger");
 
 const LABEL_CLASS = "text-xs font-semibold text-foreground/80 uppercase tracking-wider";
 
@@ -102,21 +105,18 @@ export function PolicyUpsertSheet({ open, onOpenChange, policy }: Props) {
     (data: PolicyFormValues) => {
       const handleError = (err: unknown) => {
         const fieldErrors = getValidationFieldErrors(err);
-        if (fieldErrors.length > 0) {
-          let anySet = false;
-          const topLevel = form.getValues();
-          for (const { path, message } of fieldErrors) {
-            if (path in topLevel) {
-              form.setError(path as keyof PolicyFormValues, { message });
-            } else {
-              form.setError(`rules.${path}` as `rules.${string}`, { message });
-            }
-            anySet = true;
+        const topLevel = form.getValues();
+        for (const { path, message } of fieldErrors) {
+          if (path in topLevel) {
+            form.setError(path as keyof PolicyFormValues, { message });
+          } else {
+            form.setError(`rules.${path}` as `rules.${string}`, { message });
           }
-          if (!anySet) toast.error(getErrorMessage(err));
-          return;
         }
-        toast.error(getErrorMessage(err));
+        const reasons = fieldErrors.map(({ message }) => message);
+        form.setError("root.server", {
+          message: `Couldn't save: ${reasons.length > 0 ? reasons.join(" ") : getErrorMessage(err)}`,
+        });
       };
 
       if (isEdit && policy) {
@@ -133,7 +133,9 @@ export function PolicyUpsertSheet({ open, onOpenChange, policy }: Props) {
           { policyId: policy.id, ...editPayload },
           {
             onSuccess: () => {
-              toast.success("Policy updated");
+              toast.success(
+                policy.status === "draft" ? `Policy saved as draft v${policy.version}` : "Policy updated",
+              );
               onOpenChange(false);
             },
             onError: handleError,
@@ -162,6 +164,11 @@ export function PolicyUpsertSheet({ open, onOpenChange, policy }: Props) {
     [isEdit, policy, form, create, update, onOpenChange],
   );
 
+  const handleInvalid = useCallback(() => {
+    form.setError("root.server", { message: "Couldn't save: fix the highlighted fields below." });
+  }, [form]);
+
+  const saveError = form.formState.errors.root?.server?.message;
   const policyType = form.watch("policyType") as HrPolicyType;
   const isActive = policy?.status === "active";
   const handleActivated = useCallback(() => onOpenChange(false), [onOpenChange]);
@@ -176,13 +183,18 @@ export function PolicyUpsertSheet({ open, onOpenChange, policy }: Props) {
           ? "Active policies are read-only. Create a new version to change rules."
           : "Define a new HR policy and its scope."
       }
-      onSubmit={form.handleSubmit(onSubmit)}
+      onSubmit={form.handleSubmit(onSubmit, handleInvalid)}
       submitLabel={isEdit ? "Save Changes" : "Create Policy"}
       isPending={isPending}
       submitDisabled={isActive}
     >
       <Form {...form}>
         <div className="space-y-6">
+          {saveError ? (
+            <p role="alert" className={`rounded-lg border px-3 py-2 text-sm ${SAVE_ERROR_TONE.surface} ${SAVE_ERROR_TONE.rule} ${SAVE_ERROR_TONE.ink}`}>
+              {saveError}
+            </p>
+          ) : null}
           <div className="space-y-4">
             <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
               Basics
