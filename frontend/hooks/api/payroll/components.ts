@@ -1,6 +1,10 @@
 "use client";
 
-import { keepPreviousData, useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  keepPreviousData,
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
 import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
@@ -13,10 +17,14 @@ import { useCan } from "@/hooks/api/access";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 const componentListC = lazyContract(() =>
-  import("@/hooks/api/payroll/components-schema").then((m) => m.componentListResponseContract),
+  import("@/hooks/api/payroll/components-schema").then(
+    (m) => m.componentListResponseContract,
+  ),
 );
 const salaryComponentC = lazyContract(() =>
-  import("@/hooks/api/payroll/components-schema").then((m) => m.salaryComponentContract),
+  import("@/hooks/api/payroll/components-schema").then(
+    (m) => m.salaryComponentContract,
+  ),
 );
 import type {
   SalaryComponent,
@@ -61,10 +69,7 @@ export function usePayrollComponents(params?: ComponentListParams) {
   return useQuery({
     queryKey: payrollQueryKeys.payroll.components(params),
     queryFn: ({ signal }) =>
-      apiClient.get(
-        "/payroll/components",
-        params, signal, componentListC,
-      ),
+      apiClient.get("/payroll/components", params, signal, componentListC),
     staleTime: 2 * 60_000,
     placeholderData: keepPreviousData,
     enabled: canView,
@@ -77,9 +82,16 @@ export function useCreatePayrollComponent() {
   return useAuthorizedMutation("payroll:components:manage", {
     mutationKey: ["payroll", "components", "create"],
     mutationFn: (data: CreateComponentInput) =>
-      apiClient.post<SalaryComponent>("/payroll/components", data, undefined, salaryComponentC),
+      apiClient.post<SalaryComponent>(
+        "/payroll/components",
+        data,
+        undefined,
+        salaryComponentC,
+      ),
     onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: payrollQueryKeys.payroll.components() });
+      void qc.invalidateQueries({
+        queryKey: payrollQueryKeys.payroll.components(),
+      });
     },
   });
 }
@@ -89,9 +101,16 @@ export function useUpdatePayrollComponent() {
   return useAuthorizedMutation("payroll:components:manage", {
     mutationKey: ["payroll", "components", "update"],
     mutationFn: ({ componentId, data }: UpdateComponentInput) =>
-      apiClient.patch<SalaryComponent>(`/payroll/components/${componentId}`, data, undefined, salaryComponentC),
+      apiClient.patch<SalaryComponent>(
+        `/payroll/components/${componentId}`,
+        data,
+        undefined,
+        salaryComponentC,
+      ),
     onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: payrollQueryKeys.payroll.components() });
+      void qc.invalidateQueries({
+        queryKey: payrollQueryKeys.payroll.components(),
+      });
     },
   });
 }
@@ -102,10 +121,15 @@ export function useDeletePayrollComponent() {
     mutationKey: ["payroll", "components", "delete"],
     mutationFn: (componentId: number) =>
       apiClient.delete<void>(
-        `/payroll/components/${componentId}`, undefined, undefined, noContentC,
+        `/payroll/components/${componentId}`,
+        undefined,
+        undefined,
+        noContentC,
       ),
     onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: payrollQueryKeys.payroll.components() });
+      void qc.invalidateQueries({
+        queryKey: payrollQueryKeys.payroll.components(),
+      });
     },
   });
 }

@@ -88,8 +88,19 @@ export function EmailTemplatesPage() {
   const emptyState = <EmptyState illustrationPreset="mail" title="No email templates" description="The platform ships none for this organisation yet." />;
 
   return (
-    <PageWrapper title="Email templates" subtitle="Preview the emails this workspace sends and send yourself a test." contentClassName="flex min-h-0 flex-1 flex-col">
-      <PageState resolution={pageState} loading={<DataTableSkeleton headers={HEADERS} rows={8} />} empty={emptyState} onRetry={handleRetry} className="flex-1">
+    <PageWrapper
+      title="Email templates"
+      subtitle="Preview the emails this workspace sends and send yourself a test."
+      noInternalScroll
+      contentClassName="flex min-h-0 flex-1 flex-col"
+    >
+      <PageState
+        resolution={pageState}
+        loading={<DataTableSkeleton headers={HEADERS} rows={8} className="min-h-0 flex-1" />}
+        empty={emptyState}
+        onRetry={handleRetry}
+        className="flex-1"
+      >
         <RecordList layout={layout} rows={rows} getRowKey={rowKey} cells={CELLS} actions={renderActions} emptyState={emptyState} minWidth="720px" className="flex-1 min-h-0" pagination={{ pageSize: 20 }} />
       </PageState>
 

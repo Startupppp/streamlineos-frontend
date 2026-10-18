@@ -1,7 +1,3 @@
-/**
- * Every preview shape is inferred from the runtime contract that parses it, so a type here can
- * never disagree with what the seam accepts.
- */
 import type { DB_ENUMS } from "@/contracts/db-enums.generated";
 import type {
   PreviewLine,
@@ -152,7 +148,13 @@ export type VersionRow = {
 
 export type StatutoryPackConfig = {
   country: string;
-  items: { key: string; enabled: boolean; percentOverride?: number; label?: string; kind?: string | null }[];
+  items: {
+    key: string;
+    enabled: boolean;
+    percentOverride?: number;
+    label?: string;
+    kind?: string | null;
+  }[];
   complianceChecklist: ComplianceChecklistItem[];
 };
 
@@ -184,7 +186,8 @@ export type ActivateResult = {
   checklist: ActivateChecklistItem[];
 };
 
-export type ComponentPayCategory = (typeof DB_ENUMS.salary_component_pay_category)[number];
+export type ComponentPayCategory =
+  (typeof DB_ENUMS.salary_component_pay_category)[number];
 
 export type SalaryComponent = {
   id: number;

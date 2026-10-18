@@ -153,7 +153,7 @@ export function SubjectRequestsPanel() {
       <SearchInput placeholder="Filter by exact email" value={search} onValueChange={handleSearchChange} className="sm:max-w-sm" />
       <PageState
         resolution={pageState}
-        loading={<DataTableSkeleton headers={HEADERS} rows={6} />}
+        loading={<DataTableSkeleton headers={HEADERS} rows={6} className="min-h-0 flex-1" />}
         empty={emptyState}
         onClearFilters={handleClearFilters}
         onRetry={handleRetry}

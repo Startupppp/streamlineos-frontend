@@ -13,6 +13,10 @@ import {
   TabsTrigger,
   TABS_CONTENT_PAGE_BODY_CLASS,
 } from "@/components/ui/tabs";
+import {
+  ScrollArea,
+  SCROLL_AREA_PAGE_BODY_CLASS,
+} from "@/components/ui/scroll-area";
 import { useCan } from "@/hooks/api/access";
 import {
   useAiCreditsWallet,
@@ -56,7 +60,13 @@ function AiCreditsPageContent() {
   const searchParams = useSearchParams();
   const activeTab = resolveAiCreditsTab(searchParams.get("tab"));
 
-  const { data, isLoading, isError, error: walletError, refetch } = useAiCreditsWallet();
+  const {
+    data,
+    isLoading,
+    isError,
+    error: walletError,
+    refetch,
+  } = useAiCreditsWallet();
   const configureTopUp = useConfigureAutoTopUp();
   const purchaseMutation = usePurchaseAiCredits();
   const verifyMutation = useVerifyAiCreditPurchase();
@@ -73,9 +83,15 @@ function AiCreditsPageContent() {
     void loadCheckoutScript();
   }, []);
 
-  const [txnLimit, setTxnLimit] = useState<TxnPageSize>(AI_CREDIT_TRANSACTION_LIMIT);
-  const [txnCursors, setTxnCursors] = useState<Array<string | undefined>>([undefined]);
-  const [usageDays, setUsageDays] = useState<AiCreditsUsageDays>(AI_CREDITS_USAGE_DAYS);
+  const [txnLimit, setTxnLimit] = useState<TxnPageSize>(
+    AI_CREDIT_TRANSACTION_LIMIT,
+  );
+  const [txnCursors, setTxnCursors] = useState<Array<string | undefined>>([
+    undefined,
+  ]);
+  const [usageDays, setUsageDays] = useState<AiCreditsUsageDays>(
+    AI_CREDITS_USAGE_DAYS,
+  );
   const txnCursor = txnCursors.at(-1);
 
   const {
@@ -97,7 +113,7 @@ function AiCreditsPageContent() {
   const [localAutoTopUp, setLocalAutoTopUp] = useState<boolean | null>(null);
   const [selectedPack, setSelectedPack] = useState<AiCreditPack | null>(null);
 
-  const autoTopUp = localAutoTopUp ?? (data?.wallet.autoTopUpEnabled ?? false);
+  const autoTopUp = localAutoTopUp ?? data?.wallet.autoTopUpEnabled ?? false;
   const wallet = data?.wallet;
   const packs = data?.packs ?? [];
   const txns = txnData?.data ?? [];
@@ -108,12 +124,18 @@ function AiCreditsPageContent() {
   const usageDaily = usageData?.daily ?? [];
   const usageByModel = usageData?.byModel ?? [];
   const usageByFeature = usageData?.byFeature ?? [];
-  const autoTopUpPackName = packs.find((pack) => pack.id === wallet?.autoTopUpPackId)?.name ?? packs[0]?.name;
+  const autoTopUpPackName =
+    packs.find((pack) => pack.id === wallet?.autoTopUpPackId)?.name ??
+    packs[0]?.name;
   const autoTopUpDescription = [
     "Buy credits automatically when balance is low",
-    wallet?.autoTopUpThreshold != null ? `(below ${formatCredits(wallet.autoTopUpThreshold)} cr)` : "",
+    wallet?.autoTopUpThreshold != null
+      ? `(below ${formatCredits(wallet.autoTopUpThreshold)} cr)`
+      : "",
     autoTopUp && autoTopUpPackName ? `· ${autoTopUpPackName}` : "",
-  ].filter(Boolean).join(" ");
+  ]
+    .filter(Boolean)
+    .join(" ");
 
   const handleTabChange = useCallback(
     (tab: string) => {
@@ -124,7 +146,9 @@ function AiCreditsPageContent() {
         params.set("tab", tab);
       }
       const query = params.toString();
-      router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false });
+      router.replace(query ? `${pathname}?${query}` : pathname, {
+        scroll: false,
+      });
     },
     [pathname, searchParams, router],
   );
@@ -178,7 +202,10 @@ function AiCreditsPageContent() {
     setSelectedPack(null);
   }
 
-  function handleCheckoutSuccess(response: CheckoutPaymentResponse, pack: AiCreditPack) {
+  function handleCheckoutSuccess(
+    response: CheckoutPaymentResponse,
+    pack: AiCreditPack,
+  ) {
     verifyMutation.mutate(
       {
         packId: pack.id,
@@ -196,7 +223,9 @@ function AiCreditsPageContent() {
 
   async function handleBuyPack(pack: AiCreditPack) {
     if (scriptState !== "ready") {
-      toast.error("Payment checkout is not available. Please retry or refresh the page.");
+      toast.error(
+        "Payment checkout is not available. Please retry or refresh the page.",
+      );
       return;
     }
     setSelectedPack(pack);
@@ -251,110 +280,166 @@ function AiCreditsPageContent() {
       title="AI Credits"
       subtitle="Token-metered AI usage and credit wallet"
       noInternalScroll
+      className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden"
       contentClassName="flex min-h-0 flex-1 flex-col"
     >
-      <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
+      <div className="flex h-full min-h-0 flex-1 flex-col overflow-hidden">
         {isError ? (
           <ErrorState
             title="Failed to load AI credits"
             description={getErrorMessage(walletError)}
             onRetry={handleRefresh}
-            className="flex-1"
+            className="min-h-0 flex-1"
           />
         ) : (
           <Tabs
             value={activeTab}
             onValueChange={handleTabChange}
-            className="flex min-h-0 flex-1 flex-col gap-0 overflow-hidden"
+            className="flex h-full min-h-0 flex-1 flex-col gap-0 overflow-hidden"
           >
             <TabsList className="mb-4 shrink-0">
               <TabsTrigger value="usage">
-                <BarChart3 className="h-3.5 w-3.5 max-sm:hidden" aria-hidden="true" />
+                <BarChart3
+                  className="h-3.5 w-3.5 max-sm:hidden"
+                  aria-hidden="true"
+                />
                 Usage
               </TabsTrigger>
               <TabsTrigger value="buy">
-                <ShoppingBag className="h-3.5 w-3.5 max-sm:hidden" aria-hidden="true" />
+                <ShoppingBag
+                  className="h-3.5 w-3.5 max-sm:hidden"
+                  aria-hidden="true"
+                />
                 Buy credits
               </TabsTrigger>
               <TabsTrigger value="history">
-                <History className="h-3.5 w-3.5 max-sm:hidden" aria-hidden="true" />
+                <History
+                  className="h-3.5 w-3.5 max-sm:hidden"
+                  aria-hidden="true"
+                />
                 History
               </TabsTrigger>
             </TabsList>
 
             <TabsContent
               value="usage"
-              className={cn(TABS_CONTENT_PAGE_BODY_CLASS, "gap-4 overflow-hidden")}
-            >
-              {usageError ? (
-                <ErrorState
-                  title="Failed to load usage data"
-                  description={getErrorMessage(usageErrorObj)}
-                  onRetry={handleUsageRetry}
-                  compact
-                  className="rounded-xl border border-border py-8"
-                />
-              ) : (
-                <>
-                  <AiCreditsUsageToolbar
-                    usageDays={usageDays}
-                    usageLoading={usageLoading}
-                    requestsLabel={usageTotals ? usageTotals.requests.toLocaleString() : "—"}
-                    tokensLabel={usageTotals ? formatTokens(usageTotals.totalTokens) : "—"}
-                    creditsUsedLabel={usageTotals ? formatCredits(usageTotals.credits) : "—"}
-                    onUsageDaysChange={handleUsageDaysChange}
-                  />
-                  <AiCreditsBreakdownTables
-                    byModel={usageByModel}
-                    byFeature={usageByFeature}
-                    isLoading={usageLoading}
-                  />
-                  <AiCreditsDailyTable data={usageDaily} isLoading={usageLoading} />
-                </>
+              className={cn(
+                TABS_CONTENT_PAGE_BODY_CLASS,
+                "min-h-0 overflow-hidden",
               )}
+            >
+              <ScrollArea
+                fill
+                hideScrollbar
+                className={SCROLL_AREA_PAGE_BODY_CLASS}
+              >
+                {usageError ? (
+                  <ErrorState
+                    title="Failed to load usage data"
+                    description={getErrorMessage(usageErrorObj)}
+                    onRetry={handleUsageRetry}
+                    compact
+                    className="rounded-xl border border-border py-8"
+                  />
+                ) : (
+                  <div className="flex min-h-full flex-col gap-4 overscroll-contain">
+                    <AiCreditsUsageToolbar
+                      usageDays={usageDays}
+                      usageLoading={usageLoading}
+                      requestsLabel={
+                        usageTotals
+                          ? usageTotals.requests.toLocaleString()
+                          : "—"
+                      }
+                      tokensLabel={
+                        usageTotals
+                          ? formatTokens(usageTotals.totalTokens)
+                          : "—"
+                      }
+                      creditsUsedLabel={
+                        usageTotals ? formatCredits(usageTotals.credits) : "—"
+                      }
+                      onUsageDaysChange={handleUsageDaysChange}
+                    />
+                    <AiCreditsBreakdownTables
+                      byModel={usageByModel}
+                      byFeature={usageByFeature}
+                      isLoading={usageLoading}
+                    />
+                    <AiCreditsDailyTable
+                      data={usageDaily}
+                      isLoading={usageLoading}
+                    />
+                  </div>
+                )}
+              </ScrollArea>
             </TabsContent>
 
             <TabsContent
               value="buy"
-              className={cn(TABS_CONTENT_PAGE_BODY_CLASS, "overflow-y-auto")}
+              className={cn(
+                TABS_CONTENT_PAGE_BODY_CLASS,
+                "min-h-0 overflow-hidden",
+              )}
             >
-              <AiCreditsBuyTab
-                packs={packs}
-                isLoading={isLoading}
-                canPurchase={canPurchase}
-                isBusy={isBusy}
-                selectedPackId={selectedPack?.id ?? null}
-                scriptState={scriptState}
-                balanceLabel={formatCredits(wallet?.balance ?? 0)}
-                walletLoading={isLoading}
-                autoTopUpEnabled={autoTopUp}
-                autoTopUpDescription={autoTopUpDescription}
-                autoTopUpDisabled={!canPurchase || configureTopUp.isPending || packs.length === 0}
-                onAutoTopUpToggle={handleAutoTopUpToggle}
-                onBuy={handleBuyPack}
-                onRetryScript={handleRetryScript}
-                onRefresh={handleRefresh}
-              />
+              <ScrollArea
+                fill
+                hideScrollbar
+                className={SCROLL_AREA_PAGE_BODY_CLASS}
+              >
+                <AiCreditsBuyTab
+                  packs={packs}
+                  isLoading={isLoading}
+                  canPurchase={canPurchase}
+                  isBusy={isBusy}
+                  selectedPackId={selectedPack?.id ?? null}
+                  scriptState={scriptState}
+                  balanceLabel={formatCredits(wallet?.balance ?? 0)}
+                  walletLoading={isLoading}
+                  autoTopUpEnabled={autoTopUp}
+                  autoTopUpDescription={autoTopUpDescription}
+                  autoTopUpDisabled={
+                    !canPurchase ||
+                    configureTopUp.isPending ||
+                    packs.length === 0
+                  }
+                  onAutoTopUpToggle={handleAutoTopUpToggle}
+                  onBuy={handleBuyPack}
+                  onRetryScript={handleRetryScript}
+                  onRefresh={handleRefresh}
+                />
+              </ScrollArea>
             </TabsContent>
 
             <TabsContent
               value="history"
-              className={cn(TABS_CONTENT_PAGE_BODY_CLASS, "overflow-hidden")}
+              className={cn(
+                TABS_CONTENT_PAGE_BODY_CLASS,
+                "min-h-0 overflow-hidden",
+              )}
             >
-              <AiCreditsHistoryTab
-                txns={txns}
-                txnLoading={txnLoading}
-                txnError={txnError}
-                txnErrorObj={txnErrorObj}
-                txnLimit={txnLimit}
-                hasMore={txnPagination?.hasMore ?? false}
-                hasPrevious={txnCursors.length > 1}
-                isFirstPage={txnCursors.length === 1}
-                onRetry={handleTxnRetry}
-                onNext={handleNextTxnPage}
-                onPrevious={handlePreviousTxnPage}
-                onPageSizeChange={handleTxnPageSizeChange}
-              />
+              <ScrollArea
+                fill
+                hideScrollbar
+                className={SCROLL_AREA_PAGE_BODY_CLASS}
+              >
+                <div className="flex min-h-full min-w-0 flex-1 flex-col overscroll-contain">
+                  <AiCreditsHistoryTab
+                    txns={txns}
+                    txnLoading={txnLoading}
+                    txnError={txnError}
+                    txnErrorObj={txnErrorObj}
+                    txnLimit={txnLimit}
+                    hasMore={txnPagination?.hasMore ?? false}
+                    hasPrevious={txnCursors.length > 1}
+                    isFirstPage={txnCursors.length === 1}
+                    onRetry={handleTxnRetry}
+                    onNext={handleNextTxnPage}
+                    onPrevious={handlePreviousTxnPage}
+                    onPageSizeChange={handleTxnPageSizeChange}
+                  />
+                </div>
+              </ScrollArea>
             </TabsContent>
           </Tabs>
         )}
@@ -371,6 +456,7 @@ export function AiCreditsSettingsPage() {
           title="AI Credits"
           subtitle="Token-metered AI usage and credit wallet"
           noInternalScroll
+          className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden"
           contentClassName="flex min-h-0 flex-1 flex-col"
         >
           <AiCreditsPageSkeleton />

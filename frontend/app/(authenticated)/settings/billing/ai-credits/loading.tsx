@@ -7,6 +7,7 @@ export default function SettingsAiCreditsLoading() {
       title="AI Credits"
       subtitle="Token-metered AI usage and credit wallet"
       noInternalScroll
+      className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden"
       contentClassName="flex min-h-0 flex-1 flex-col"
     >
       <AiCreditsPageSkeleton />

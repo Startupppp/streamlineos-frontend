@@ -8,6 +8,8 @@ export default function UsersLoading() {
     <PageWrapper
       title="Members & access"
       subtitle="Manage people who can sign in, their roles, and organization access."
+      noInternalScroll
+      contentClassName="flex min-h-0 flex-1 flex-col"
       actions={
         <div className="flex gap-2">
           <Skeleton className="h-9 w-24" />
@@ -16,9 +18,9 @@ export default function UsersLoading() {
       }
       filters={
         <div className="flex w-full min-w-0 flex-col gap-2 lg:flex-row lg:flex-nowrap lg:items-center lg:justify-between">
-          <Skeleton className="h-9 w-56 rounded-lg shrink-0" />
+          <Skeleton className="h-9 w-56 shrink-0 rounded-lg" />
           <div className="flex min-w-0 items-center gap-2">
-            <Skeleton className="h-9 flex-1 max-w-[320px]" />
+            <Skeleton className="h-9 max-w-[320px] flex-1" />
             <Skeleton className="h-9 w-28 shrink-0" />
             <Skeleton className="h-9 w-28 shrink-0" />
             <Skeleton className="h-9 w-28 shrink-0" />
@@ -27,9 +29,9 @@ export default function UsersLoading() {
         </div>
       }
     >
-      <div className="flex flex-1 min-h-0 flex-col gap-3">
-        <StatCardGridSkeleton cols={5} count={5} />
-        <DataTableSkeleton rows={12} columns={9} />
+      <div className="flex min-h-0 flex-1 flex-col gap-3">
+        <StatCardGridSkeleton cols={5} count={5} stackOnMobile={2} />
+        <DataTableSkeleton rows={12} columns={8} className="min-h-0 flex-1" />
       </div>
     </PageWrapper>
   );

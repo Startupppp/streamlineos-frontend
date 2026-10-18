@@ -4,7 +4,15 @@ import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
-import { Sheet, SheetBody, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import {
+  Sheet,
+  SheetBody,
+  SheetContent,
+  SheetDescription,
+  SheetFooter,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
 import {
@@ -16,11 +24,20 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { getValidationFieldErrors, isApiError } from "@/lib/api-envelope";
-import { useCreatePayrollComponent, useUpdatePayrollComponent } from "@/hooks/api/payroll";
+import {
+  useCreatePayrollComponent,
+  useUpdatePayrollComponent,
+} from "@/hooks/api/payroll";
 import type { SalaryComponent } from "@/types/payroll/setup";
 import {
   componentFormSchema,
@@ -41,7 +58,10 @@ type ComponentFormSheetProps = {
   onOpenChange: (open: boolean) => void;
 };
 
-const FORM_FIELDS = new Map<string, "name" | "code" | "amount" | "percent" | "formula" | "sortOrder">([
+const FORM_FIELDS = new Map<
+  string,
+  "name" | "code" | "amount" | "percent" | "formula" | "sortOrder"
+>([
   ["name", "name"],
   ["code", "code"],
   ["amount", "amount"],
@@ -51,12 +71,26 @@ const FORM_FIELDS = new Map<string, "name" | "code" | "amount" | "percent" | "fo
 ]);
 
 const EMPTY_DEFAULTS: ComponentForm = {
-  name: "", code: "", type: "EARNING", payCategory: "REGULAR", calcMethod: "FIXED",
-  taxable: true, showOnPayslip: true, includeInCtc: true,
-  amount: "", percent: "", percentBase: "", formula: "", sortOrder: "",
+  name: "",
+  code: "",
+  type: "EARNING",
+  payCategory: "REGULAR",
+  calcMethod: "FIXED",
+  taxable: true,
+  showOnPayslip: true,
+  includeInCtc: true,
+  amount: "",
+  percent: "",
+  percentBase: "",
+  formula: "",
+  sortOrder: "",
 };
 
-export function ComponentFormSheet({ component, open, onOpenChange }: ComponentFormSheetProps) {
+export function ComponentFormSheet({
+  component,
+  open,
+  onOpenChange,
+}: ComponentFormSheetProps) {
   const create = useCreatePayrollComponent();
   const update = useUpdatePayrollComponent();
 
@@ -98,7 +132,10 @@ export function ComponentFormSheet({ component, open, onOpenChange }: ComponentF
     for (const issue of getValidationFieldErrors(err)) {
       const field = FORM_FIELDS.get(issue.path);
       if (!field) continue;
-      const shown = field === "formula" && form.getValues("calcMethod") === "PERCENT_OF" ? "percent" : field;
+      const shown =
+        field === "formula" && form.getValues("calcMethod") === "PERCENT_OF"
+          ? "percent"
+          : field;
       form.setError(shown, { message: issue.message });
       mapped = true;
     }
@@ -118,7 +155,8 @@ export function ComponentFormSheet({ component, open, onOpenChange }: ComponentF
       taxable: data.taxable,
       showOnPayslip: data.showOnPayslip,
       includeInCtc: data.includeInCtc,
-      amount: data.calcMethod === "FIXED" ? data.amount || undefined : undefined,
+      amount:
+        data.calcMethod === "FIXED" ? data.amount || undefined : undefined,
       sortOrder: data.sortOrder ? parseInt(data.sortOrder, 10) : undefined,
     };
 
@@ -126,15 +164,24 @@ export function ComponentFormSheet({ component, open, onOpenChange }: ComponentF
       update.mutate(
         { componentId: component.id, data: sharedFields },
         {
-          onSuccess: () => { toast.success("Component updated"); handleOpenChange(false); },
+          onSuccess: () => {
+            toast.success("Component updated");
+            handleOpenChange(false);
+          },
           onError: handleSaveError,
         },
       );
     } else {
-      create.mutate({ code: data.code.toUpperCase(), ...sharedFields }, {
-        onSuccess: () => { toast.success("Component created"); handleOpenChange(false); },
-        onError: handleSaveError,
-      });
+      create.mutate(
+        { code: data.code.toUpperCase(), ...sharedFields },
+        {
+          onSuccess: () => {
+            toast.success("Component created");
+            handleOpenChange(false);
+          },
+          onError: handleSaveError,
+        },
+      );
     }
   }
 
@@ -142,9 +189,21 @@ export function ComponentFormSheet({ component, open, onOpenChange }: ComponentF
   const isEdit = !!component;
 
   const toggleFields = [
-    { name: "taxable" as const, label: "Taxable income", desc: "Counts toward TDS. Turn off for exempt allowances." },
-    { name: "showOnPayslip" as const, label: "Show on Payslip", desc: "Display on employee payslips" },
-    { name: "includeInCtc" as const, label: "Include in CTC", desc: "Count toward Cost to Company" },
+    {
+      name: "taxable" as const,
+      label: "Taxable income",
+      desc: "Counts toward TDS. Turn off for exempt allowances.",
+    },
+    {
+      name: "showOnPayslip" as const,
+      label: "Show on Payslip",
+      desc: "Display on employee payslips",
+    },
+    {
+      name: "includeInCtc" as const,
+      label: "Include in CTC",
+      desc: "Count toward Cost to Company",
+    },
   ];
 
   return (
@@ -152,15 +211,22 @@ export function ComponentFormSheet({ component, open, onOpenChange }: ComponentF
       <SheetContent className="p-0 flex flex-col gap-0 overflow-hidden sm:max-w-lg">
         <div className="shrink-0 px-6 py-4 border-b">
           <SheetHeader>
-            <SheetTitle className="text-base">{isEdit ? "Edit Component" : "Add Component"}</SheetTitle>
+            <SheetTitle className="text-base">
+              {isEdit ? "Edit Component" : "Add Component"}
+            </SheetTitle>
             <SheetDescription className="text-xs">
-              {isEdit ? "Update this salary component" : "Define a new salary component"}
+              {isEdit
+                ? "Update this salary component"
+                : "Define a new salary component"}
             </SheetDescription>
           </SheetHeader>
         </div>
 
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col flex-1 min-h-0 overflow-hidden">
+          <form
+            onSubmit={form.handleSubmit(onSubmit)}
+            className="flex flex-col flex-1 min-h-0 overflow-hidden"
+          >
             <SheetBody className="px-6 py-4 space-y-4">
               <div className="grid grid-cols-2 gap-3">
                 <FormField
@@ -187,7 +253,12 @@ export function ComponentFormSheet({ component, open, onOpenChange }: ComponentF
                         Code <span className="text-destructive">*</span>
                       </FormLabel>
                       <FormControl>
-                        <Input id="comp-code" {...field} disabled={isEdit} className="text-sm font-mono uppercase" />
+                        <Input
+                          id="comp-code"
+                          {...field}
+                          disabled={isEdit}
+                          className="text-sm font-mono uppercase"
+                        />
                       </FormControl>
                       <FormMessage className="text-xs" />
                     </FormItem>
@@ -209,13 +280,20 @@ export function ComponentFormSheet({ component, open, onOpenChange }: ComponentF
                         <FormLabel className="text-xs font-medium">
                           Type <span className="text-destructive">*</span>
                         </FormLabel>
-                        <Select value={field.value} onValueChange={handleTypeChange}>
+                        <Select
+                          value={field.value}
+                          onValueChange={handleTypeChange}
+                        >
                           <FormControl>
-                            <SelectTrigger className="h-9 text-sm"><SelectValue /></SelectTrigger>
+                            <SelectTrigger className="h-9 text-sm">
+                              <SelectValue />
+                            </SelectTrigger>
                           </FormControl>
                           <SelectContent>
                             {COMPONENT_TYPES.map((t) => (
-                              <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>
+                              <SelectItem key={t.value} value={t.value}>
+                                {t.label}
+                              </SelectItem>
                             ))}
                           </SelectContent>
                         </Select>
@@ -235,15 +313,23 @@ export function ComponentFormSheet({ component, open, onOpenChange }: ComponentF
                     return (
                       <FormItem>
                         <FormLabel className="text-xs font-medium">
-                          Calc. Method <span className="text-destructive">*</span>
+                          Calc. Method{" "}
+                          <span className="text-destructive">*</span>
                         </FormLabel>
-                        <Select value={field.value} onValueChange={handleCalcMethodChange}>
+                        <Select
+                          value={field.value}
+                          onValueChange={handleCalcMethodChange}
+                        >
                           <FormControl>
-                            <SelectTrigger className="h-9 text-sm"><SelectValue /></SelectTrigger>
+                            <SelectTrigger className="h-9 text-sm">
+                              <SelectValue />
+                            </SelectTrigger>
                           </FormControl>
                           <SelectContent>
                             {CALC_METHODS.map((m) => (
-                              <SelectItem key={m.value} value={m.value}>{m.label}</SelectItem>
+                              <SelectItem key={m.value} value={m.value}>
+                                {m.label}
+                              </SelectItem>
                             ))}
                           </SelectContent>
                         </Select>
@@ -265,18 +351,33 @@ export function ComponentFormSheet({ component, open, onOpenChange }: ComponentF
                     }
                     return (
                       <FormItem>
-                        <FormLabel className="text-xs font-medium">Pay category</FormLabel>
-                        <Select value={field.value} onValueChange={handlePayCategoryChange}>
+                        <FormLabel className="text-xs font-medium">
+                          Pay category
+                        </FormLabel>
+                        <Select
+                          value={field.value}
+                          onValueChange={handlePayCategoryChange}
+                        >
                           <FormControl>
-                            <SelectTrigger id="comp-pay-category" className="h-9 text-sm"><SelectValue /></SelectTrigger>
+                            <SelectTrigger
+                              id="comp-pay-category"
+                              className="h-9 text-sm"
+                            >
+                              <SelectValue />
+                            </SelectTrigger>
                           </FormControl>
                           <SelectContent>
                             {PAY_CATEGORIES.map((c) => (
-                              <SelectItem key={c.value} value={c.value}>{c.label}</SelectItem>
+                              <SelectItem key={c.value} value={c.value}>
+                                {c.label}
+                              </SelectItem>
                             ))}
                           </SelectContent>
                         </Select>
-                        <p className="text-micro text-muted-foreground">A bonus is paid in gross but left out of wages for the Labour Code 50% check.</p>
+                        <p className="text-micro text-muted-foreground">
+                          A bonus is paid in gross but left out of wages for the
+                          Labour Code 50% check.
+                        </p>
                         <FormMessage className="text-xs" />
                       </FormItem>
                     );
@@ -290,27 +391,45 @@ export function ComponentFormSheet({ component, open, onOpenChange }: ComponentF
                   name="amount"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-xs font-medium">Fixed Amount</FormLabel>
+                      <FormLabel className="text-xs font-medium">
+                        Fixed Amount
+                      </FormLabel>
                       <FormControl>
-                        <Input id="comp-amount" {...field} className="text-sm font-mono" placeholder="e.g. 5000" />
+                        <Input
+                          id="comp-amount"
+                          {...field}
+                          className="text-sm font-mono"
+                          placeholder="e.g. 5000"
+                        />
                       </FormControl>
                       <FormMessage className="text-xs" />
                     </FormItem>
                   )}
                 />
               )}
-              {calcMethod === "PERCENT_OF" && <PercentOfFields form={form} ownCode={form.watch("code")} />}
+              {calcMethod === "PERCENT_OF" && (
+                <PercentOfFields form={form} ownCode={form.watch("code")} />
+              )}
               {calcMethod === "FORMULA" && (
                 <FormField
                   control={form.control}
                   name="formula"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-xs font-medium">Formula</FormLabel>
+                      <FormLabel className="text-xs font-medium">
+                        Formula
+                      </FormLabel>
                       <FormControl>
-                        <Input id="comp-formula" {...field} className="text-sm font-mono" placeholder="e.g. basic * 0.12" />
+                        <Input
+                          id="comp-formula"
+                          {...field}
+                          className="text-sm font-mono"
+                          placeholder="e.g. basic * 0.12"
+                        />
                       </FormControl>
-                      <p className="text-micro text-muted-foreground">{FORMULA_HELP}</p>
+                      <p className="text-micro text-muted-foreground">
+                        {FORMULA_HELP}
+                      </p>
                       <FormMessage className="text-xs" />
                     </FormItem>
                   )}
@@ -322,9 +441,16 @@ export function ComponentFormSheet({ component, open, onOpenChange }: ComponentF
                 name="sortOrder"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-xs font-medium">Sort Order</FormLabel>
+                    <FormLabel className="text-xs font-medium">
+                      Sort Order
+                    </FormLabel>
                     <FormControl>
-                      <Input id="comp-sort" {...field} className="text-sm w-24" placeholder="0" />
+                      <Input
+                        id="comp-sort"
+                        {...field}
+                        className="text-sm w-24"
+                        placeholder="0"
+                      />
                     </FormControl>
                     <FormMessage className="text-xs" />
                   </FormItem>
@@ -341,10 +467,16 @@ export function ComponentFormSheet({ component, open, onOpenChange }: ComponentF
                       <FormItem className="flex items-center justify-between py-2.5 border-b border-border/50 last:border-0">
                         <div>
                           <p className="text-xs font-medium">{label}</p>
-                          <p className="text-micro text-muted-foreground">{desc}</p>
+                          <p className="text-micro text-muted-foreground">
+                            {desc}
+                          </p>
                         </div>
                         <FormControl>
-                          <Switch id={name} checked={field.value as boolean} onCheckedChange={field.onChange} />
+                          <Switch
+                            id={name}
+                            checked={field.value as boolean}
+                            onCheckedChange={field.onChange}
+                          />
                         </FormControl>
                       </FormItem>
                     )}
@@ -354,10 +486,20 @@ export function ComponentFormSheet({ component, open, onOpenChange }: ComponentF
             </SheetBody>
 
             <SheetFooter className="shrink-0 px-6 py-4 border-t">
-              <Button type="button" variant="outline" size="sm" onClick={() => handleOpenChange(false)}>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => handleOpenChange(false)}
+              >
                 Cancel
               </Button>
-              <LoadingButton type="submit" size="sm" isPending={isLoading} loadingText={isEdit ? "Saving…" : "Creating…"}>
+              <LoadingButton
+                type="submit"
+                size="sm"
+                isPending={isLoading}
+                loadingText={isEdit ? "Saving…" : "Creating…"}
+              >
                 {isEdit ? "Save Changes" : "Add Component"}
               </LoadingButton>
             </SheetFooter>

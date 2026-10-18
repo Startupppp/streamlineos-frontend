@@ -16,6 +16,8 @@ export function PersonalApiTokensPage() {
     <PageWrapper
       title="Personal Access Tokens"
       subtitle="Create credentials that act only with your current, explicitly selected access."
+      noInternalScroll
+      contentClassName="flex min-h-0 flex-1 flex-col"
       actions={
         canCreate ? (
           <AnimatedIconButton

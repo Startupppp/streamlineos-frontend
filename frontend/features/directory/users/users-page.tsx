@@ -353,6 +353,8 @@ export function UsersPage() {
       <PageWrapper
         title="Members & access"
         subtitle="Manage people who can sign in, their roles, and organization access."
+        noInternalScroll
+        contentClassName="flex min-h-0 flex-1 flex-col"
         actions={
           <UserDirectoryActions
             canCreate={canCreate}

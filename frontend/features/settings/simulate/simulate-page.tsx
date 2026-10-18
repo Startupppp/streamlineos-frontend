@@ -256,7 +256,7 @@ function SimulateContent() {
   );
 }
 
-function EffectiveAccessSkeleton() {
+export function EffectiveAccessSkeleton() {
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-3">
       <Card>
@@ -273,7 +273,7 @@ function EffectiveAccessSkeleton() {
           <Skeleton className="h-8 w-44" />
         </CardContent>
       </Card>
-      <DataTableSkeleton rows={10} columns={5} />
+      <DataTableSkeleton rows={10} columns={5} className="min-h-0 flex-1" />
     </div>
   );
 }

@@ -140,6 +140,7 @@ export function QuarantinePage() {
     <PageWrapper
       title="Upload quarantine"
       subtitle="Files held back until a malware scan clears them."
+      noInternalScroll
       filters={
         <Select value={status ?? "all"} onValueChange={handleStatusChange}>
           <SelectTrigger className={cn("w-44", FILTER_SELECT_TRIGGER)} aria-label="Status">
@@ -159,7 +160,7 @@ export function QuarantinePage() {
     >
       <PageState
         resolution={pageState}
-        loading={<DataTableSkeleton headers={QUARANTINE_HEADERS} rows={10} />}
+        loading={<DataTableSkeleton headers={QUARANTINE_HEADERS} rows={10} className="min-h-0 flex-1" />}
         empty={emptyState}
         onClearFilters={handleClearFilters}
         onRetry={handleRetry}

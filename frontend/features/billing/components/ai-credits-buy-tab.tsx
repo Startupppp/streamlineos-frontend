@@ -14,7 +14,7 @@ interface AiCreditsBuyTabProps {
   isLoading: boolean;
   canPurchase: boolean;
   isBusy: boolean;
-  selectedPackId: string | null;
+  selectedPackId: number | null;
   scriptState: ScriptState;
   balanceLabel: string;
   walletLoading: boolean;
@@ -45,7 +45,7 @@ export function AiCreditsBuyTab({
   onRefresh,
 }: AiCreditsBuyTabProps) {
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex min-h-full flex-col gap-4 overscroll-contain">
       <AiCreditsWalletPanel
         balanceLabel={balanceLabel}
         walletLoading={walletLoading}

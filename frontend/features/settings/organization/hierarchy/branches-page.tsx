@@ -319,6 +319,8 @@ export function OrgBranchesPage() {
       <PageWrapper
         title="Branches"
         subtitle="Branches within your organization."
+        noInternalScroll
+        contentClassName="flex min-h-0 flex-1 flex-col"
         actions={
           <div className="flex w-full items-center gap-2 sm:w-auto">
             <Button

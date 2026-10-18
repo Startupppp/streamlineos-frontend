@@ -46,7 +46,9 @@ const componentListPaginationContract = z.object({
   nextCursor: z.string().nullable(),
 });
 
-const componentListItemContract = salaryComponentContract.extend({ profileCount: z.number() });
+const componentListItemContract = salaryComponentContract.extend({
+  profileCount: z.number(),
+});
 
 export const componentListResponseContract = z.object({
   items: z.array(componentListItemContract),
@@ -55,4 +57,6 @@ export const componentListResponseContract = z.object({
 
 export type SalaryComponent = z.infer<typeof salaryComponentContract>;
 export type SalaryComponentListItem = z.infer<typeof componentListItemContract>;
-export type ComponentListResponse = z.infer<typeof componentListResponseContract>;
+export type ComponentListResponse = z.infer<
+  typeof componentListResponseContract
+>;

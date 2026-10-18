@@ -8,28 +8,26 @@ export default function RolesLoading() {
       title="Roles & Permissions"
       subtitle="Configure access controls for each role."
       noInternalScroll
-      actions={
-        <div className="flex items-center gap-2">
-          <Skeleton className="h-9 w-24 rounded-md" />
-          <Skeleton className="h-9 w-32 rounded-md" />
-          <Skeleton className="h-9 w-28 rounded-md" />
-          <Skeleton className="h-9 w-24 rounded-md" />
-        </div>
-      }
+      contentClassName="flex min-h-0 flex-1 flex-col"
+      actions={<Skeleton className="h-9 w-9 rounded-md" />}
       filters={<Skeleton className="h-9 w-full max-w-[320px]" />}
     >
-      <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-hidden">
-        <div className="shrink-0">
-          <StatCardGridSkeleton cols={5} count={5} />
+      <div className="flex min-h-0 flex-1 flex-col gap-3">
+        <div className="flex h-9 w-fit items-center gap-1 rounded-md border border-border bg-card p-1">
+          <Skeleton className="h-7 w-16 rounded-sm" />
+          <Skeleton className="h-7 w-16 rounded-sm" />
         </div>
-        <div className="flex min-h-0 flex-1 flex-col gap-3 lg:grid lg:grid-cols-[320px_1fr]">
-          <div className="rounded-xl border border-border bg-card">
-            <div className="px-4 py-3 border-b border-border">
+        <div className="shrink-0">
+          <StatCardGridSkeleton cols={4} count={4} stackOnMobile={2} />
+        </div>
+        <div className="grid min-h-0 flex-1 grid-cols-1 gap-3 max-lg:shrink-0 lg:grid-cols-[320px_minmax(0,1fr)] lg:items-stretch lg:overflow-hidden">
+          <div className="min-h-0 max-lg:h-[min(420px,50dvh)] lg:h-full rounded-xl border border-border bg-card">
+            <div className="border-b border-border px-4 py-3">
               <Skeleton className="h-4 w-20" />
             </div>
             <div className="divide-y divide-border/60">
               {Array.from({ length: 6 }).map((_, i) => (
-                <div key={i} className="px-4 py-3 flex items-center justify-between">
+                <div key={i} className="flex items-center justify-between px-4 py-3">
                   <div className="space-y-1.5">
                     <Skeleton className="h-4 w-28" />
                     <Skeleton className="h-3 w-16" />
@@ -39,7 +37,7 @@ export default function RolesLoading() {
               ))}
             </div>
           </div>
-          <div className="rounded-xl border border-border bg-card flex-1 min-h-0 flex items-center justify-center">
+          <div className="flex min-h-0 flex-1 items-center justify-center rounded-xl border border-border bg-card">
             <div className="flex flex-col items-center gap-3">
               <Skeleton className="h-24 w-24 rounded-full" />
               <Skeleton className="h-4 w-40" />

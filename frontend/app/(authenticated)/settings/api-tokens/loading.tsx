@@ -7,9 +7,11 @@ export default function PersonalApiTokensLoading() {
     <PageWrapper
       title="Personal Access Tokens"
       subtitle="Create credentials that act only with your current, explicitly selected access."
+      noInternalScroll
+      contentClassName="flex min-h-0 flex-1 flex-col"
       actions={<Skeleton className="h-9 w-28 rounded-md" />}
     >
-      <DataTableSkeleton rows={8} columns={6} />
+      <DataTableSkeleton rows={12} columns={6} className="min-h-0 flex-1" />
     </PageWrapper>
   );
 }

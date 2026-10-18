@@ -60,30 +60,29 @@ export function AiCreditsDailyTable({ data, isLoading, className }: AiCreditsDai
   return (
     <div
       className={cn(
-        "flex min-h-64 min-w-0 flex-1 flex-col overflow-hidden rounded-xl border border-border bg-card",
+        "overflow-hidden rounded-xl border border-border bg-card",
         className,
       )}
     >
-      <div className="shrink-0 border-b border-border px-4 py-3">
+      <div className="border-b border-border px-4 py-3">
         <p className="text-sm font-semibold text-foreground">Daily usage</p>
       </div>
       {isLoading ? (
-        <DataTableSkeleton rows={7} columns={4} className="min-h-0 flex-1 rounded-none border-0" />
+        <DataTableSkeleton rows={7} columns={4} className="rounded-none border-0" />
       ) : sorted.length === 0 ? (
         <EmptyState
           illustrationPreset="report"
           compact
           title="No daily usage"
           description="Usage will appear here once AI features are used."
-          className="min-h-0 flex-1 border-0 bg-transparent py-6"
+          className="border-0 bg-transparent py-6"
         />
       ) : (
         <DataTable
           data={sorted}
           columns={DAILY_COLUMNS}
           getRowKey={getDailyRowKey}
-          className="min-h-0 flex-1 rounded-none border-0"
-          scrollRegionLabel="Daily usage"
+          className="rounded-none border-0"
         />
       )}
     </div>

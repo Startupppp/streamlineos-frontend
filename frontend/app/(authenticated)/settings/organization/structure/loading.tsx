@@ -31,17 +31,11 @@ export default function OrganizationStructureLoading() {
     <PageWrapper
       title="Organization Structure"
       subtitle="Set up reporting units once, then reuse them across people, access, payroll, and reporting."
-      actions={
-        <div className="flex items-center gap-2">
-          <Skeleton className="h-8 w-28" />
-          <Skeleton className="h-8 w-20" />
-        </div>
-      }
     >
-      <div className="space-y-4">
+      <div className="flex min-h-0 flex-1 flex-col gap-4">
         <div className="grid grid-cols-1 gap-4 lg:grid-cols-[1.4fr_1fr]">
           <section className="rounded-xl border border-border bg-card shadow-sm">
-            <div className="border-b border-border px-4 py-3 space-y-1">
+            <div className="space-y-1 border-b border-border px-4 py-3">
               <Skeleton className="h-3.5 w-32" />
               <Skeleton className="h-3 w-48" />
             </div>
@@ -55,7 +49,7 @@ export default function OrganizationStructureLoading() {
 
           <div className="flex flex-col gap-4">
             <section className="rounded-xl border border-border bg-card shadow-sm">
-              <div className="border-b border-border px-4 py-3 space-y-1">
+              <div className="space-y-1 border-b border-border px-4 py-3">
                 <Skeleton className="h-3.5 w-28" />
                 <Skeleton className="h-3 w-44" />
               </div>
