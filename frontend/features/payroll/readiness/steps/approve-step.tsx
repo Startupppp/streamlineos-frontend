@@ -11,6 +11,7 @@ interface ApproveStepProps {
   runId: number;
   status: string;
   isCurrent: boolean;
+  openBlockers?: number;
 }
 
 function resolveApproveCta(
@@ -22,7 +23,7 @@ function resolveApproveCta(
 ): ReactNode {
   if (isCurrent && SUBMITTABLE.has(status)) {
     return canSubmit ? (
-      <SubmitApprovalAction runId={runId} status={status} />
+      <SubmitApprovalAction runId={runId} status={status} openBlockers={openBlockers} />
     ) : (
       <StepNote>Someone who can update payroll runs needs to submit this run.</StepNote>
     );
@@ -37,7 +38,7 @@ function resolveApproveCta(
   return null;
 }
 
-export function ApproveStep({ runId, status, isCurrent }: ApproveStepProps) {
+export function ApproveStep({ runId, status, isCurrent, openBlockers = 0 }: ApproveStepProps) {
   const canSubmit = useCan("payroll:runs:update");
   const canLock = useCan("payroll:runs:manage");
 

@@ -44,7 +44,7 @@ export function CloseStepBody({ stepKey, month, close, onRunCreated }: CloseStep
   if (stepKey === "compare") {
     return <CompareStep runId={runId} headcount={close.run?.employeeCount ?? null} variance={close.variance} />;
   }
-  if (stepKey === "approve") return <ApproveStep runId={runId} status={status} isCurrent={isCurrent} />;
+  if (stepKey === "approve") return <ApproveStep runId={runId} status={status} isCurrent={isCurrent} openBlockers={close.openBlockers} />;
   if (stepKey === "pay") return <PayStep runId={runId} isCurrent={isCurrent} />;
   return <ReleaseStep runId={runId} status={status} heldCount={close.heldCount} isCurrent={isCurrent} />;
 }
