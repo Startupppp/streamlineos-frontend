@@ -2,7 +2,6 @@ import type { BulkOnboardEmployeeRow } from "@/types/hr";
 import { isUserInviteRole } from "@/lib/constants/user-invite-roles";
 import { HR_WORKER_TYPE_VALUES, isHrWorkerType } from "@/lib/constants/hr-worker-types";
 import { EMAIL_RE, type ColumnKey, type ParsedRow } from "./bulk-onboard-columns";
-import { EXTRA_COLUMNS_KEY } from "./bulk-onboard-parse";
 import { validateManagerColumns } from "./bulk-onboard-managers";
 import type { AssignedDefault } from "@/components/hr/reporting-lines/policy-default-primary";
 
@@ -19,7 +18,6 @@ export interface PreviewRow {
   joiningDate: string;
   valid: boolean;
   errors: string[];
-  warnings: string[];
 }
 
 export const GENDER_VALUES = new Set(["MALE", "FEMALE", "OTHER"]);
@@ -42,11 +40,9 @@ export function validateAndMap(
 ): {
   payload: BulkOnboardEmployeeRow | null;
   errors: string[];
-  warnings: string[];
   preview: Omit<PreviewRow, "_idx">;
 } {
   const errors: string[] = [];
-  const warnings: string[] = [];
   const firstName = cell(raw, "firstName");
   const lastName = cell(raw, "lastName");
   const email = cell(raw, "email").toLowerCase();
@@ -117,10 +113,6 @@ export function validateAndMap(
     errors.push("invalid phone number");
   }
 
-  if (raw[EXTRA_COLUMNS_KEY]) {
-    warnings.push("extra columns present (they will be ignored)");
-  }
-
   if (dateOfBirth) {
     const dob = /^\d{4}-\d{2}-\d{2}$/.test(dateOfBirth)
       ? new Date(`${dateOfBirth}T00:00:00`)
@@ -154,11 +146,10 @@ export function validateAndMap(
     joiningDate,
     valid: errors.length === 0,
     errors,
-    warnings,
   };
 
   if (errors.length > 0) {
-    return { payload: null, errors, warnings, preview };
+    return { payload: null, errors, preview };
   }
 
   const hasBank =
@@ -200,5 +191,5 @@ export function validateAndMap(
       : {}),
   };
 
-  return { payload, errors, warnings, preview };
+  return { payload, errors, preview };
 }

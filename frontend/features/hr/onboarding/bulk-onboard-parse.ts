@@ -1,13 +1,10 @@
 import { collectManagerColumns, resolveManagerHeader } from "@/components/hr/reporting-lines/manager-columns";
 import { BULK_ONBOARD_COLUMNS, CONFLICT_KEY, LEGACY_PRIMARY_KEY, SOURCE_ROW_KEY, normalizeHeader, type ColumnKey, type ParsedRow } from "./bulk-onboard-columns";
 
-export const EXTRA_COLUMNS_KEY = "__hasExtraColumns";
-
 interface SourceRow {
   values: Record<string, string>;
   /** Data-row number in the file, header not counted. */
   sourceRow: number;
-  hasExtra: boolean;
 }
 
 function isBlankRow(values: Record<string, string | undefined>): boolean {
@@ -56,7 +53,7 @@ function mapRawRows(
     if (mapped) keyMap.set(h, mapped);
   }
 
-  return data.map(({ values: row, sourceRow, hasExtra }) => {
+  return data.map(({ values: row, sourceRow }) => {
     const out: ParsedRow = { [SOURCE_ROW_KEY]: String(sourceRow) };
     const conflicts = new Set<string>();
     for (const [header, value] of Object.entries(row)) {
@@ -74,7 +71,6 @@ function mapRawRows(
     for (const column of managers.conflicts) conflicts.add(column);
     if (managers.legacyPrimaryHeader) out[LEGACY_PRIMARY_KEY] = managers.legacyPrimaryHeader;
     if (conflicts.size > 0) out[CONFLICT_KEY] = [...conflicts].join(",");
-    if (hasExtra) out[EXTRA_COLUMNS_KEY] = "1";
     return out;
   });
 }
@@ -84,6 +80,23 @@ export function missingRequiredHeaders(rows: ParsedRow[]): string[] {
   return BULK_ONBOARD_COLUMNS.filter((column) => column.required && !(column.key in first)).map(
     (column) => column.header,
   );
+}
+
+function extraValues(values: Record<string, unknown>): unknown[] {
+  const extra: unknown = values.__parsed_extra;
+  return Array.isArray(extra) ? extra : [];
+}
+
+function withoutExtra(values: Record<string, string>): Record<string, string> {
+  return Object.fromEntries(Object.entries(values).filter(([key]) => key !== "__parsed_extra"));
+}
+
+function extraCount(values: Record<string, unknown>): number {
+  return extraValues(values).length;
+}
+
+function filledExtraCount(values: Record<string, unknown>): number {
+  return extraValues(values).filter((value) => String(value ?? "").trim() !== "").length;
 }
 
 export class ParseStructuralError extends Error {
@@ -107,15 +120,19 @@ export async function parseFile(file: File): Promise<ParsedRow[]> {
       const fileLineNumber = (structuralError.row ?? 0) + 1;
       throw new ParseStructuralError(`Line ${fileLineNumber}: unclosed quote`);
     }
+    const headers = result.meta.fields ?? [];
+    const overfull = result.data.findIndex((values) => filledExtraCount(values) > 0);
+    const overfullRow = result.data[overfull];
+    if (overfullRow !== undefined) {
+      const columns = headers.length + extraCount(overfullRow);
+      throw new ParseStructuralError(
+        `Line ${overfull + 2} has ${columns} columns; expected ${headers.length}. Wrap any value that contains a comma in double quotes.`,
+      );
+    }
     const rows = result.data
-      .map((values, index) => {
-        const hasExtra =
-          Array.isArray((values as Record<string, unknown>).__parsed_extra) &&
-          ((values as Record<string, unknown>).__parsed_extra as unknown[]).length > 0;
-        return { values, sourceRow: index + 1, hasExtra };
-      })
+      .map((values, index) => ({ values: withoutExtra(values), sourceRow: index + 1 }))
       .filter((row) => !isBlankRow(row.values));
-    return mapRawRows(result.meta.fields ?? [], rows);
+    return mapRawRows(headers, rows);
   }
 
   const ExcelJS = (await import("exceljs")).default;
@@ -142,7 +159,7 @@ export async function parseFile(file: File): Promise<ParsedRow[]> {
       if (val) empty = false;
       entry[header] = val;
     });
-    if (!empty) dataRows.push({ values: entry, sourceRow: rowNumber - 1, hasExtra: false });
+    if (!empty) dataRows.push({ values: entry, sourceRow: rowNumber - 1 });
   });
 
   return mapRawRows(headers.filter(Boolean), dataRows);

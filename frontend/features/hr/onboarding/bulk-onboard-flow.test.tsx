@@ -25,7 +25,7 @@ function flowRow(fileRow: number, overrides: Partial<BulkOnboardFlowRow> = {}): 
   const email = `p${fileRow}@example.com`;
   return {
     fileRow,
-    preview: { _idx: fileRow, firstName: "P", lastName: String(fileRow), email, designation: "Dev", department: "Engineering", phone: "", joiningDate: "", valid: true, errors: [], warnings: [] },
+    preview: { _idx: fileRow, firstName: "P", lastName: String(fileRow), email, designation: "Dev", department: "Engineering", phone: "", joiningDate: "", valid: true, errors: [] },
     payload: { firstName: "P", lastName: String(fileRow), email, designation: "Dev", department: "Engineering" },
     server: null,
     dependsOnFileRow: null,
@@ -248,6 +248,41 @@ describe("BulkOnboardPanel — while the reporting policy is still loading", () 
 });
 
 describe("BulkOnboardPanel — rows keep their file number through preview and result", () => {
+  it("HRM-B-018: an overfull row keeps a file-level banner naming the line, shows no preview and sends nothing", async () => {
+    const user = userEvent.setup();
+    const csv = [
+      "firstName,lastName,email,designation,department",
+      "Ann,One,ann@example.com,Dev,Engineering",
+      "Bob,Two,bob@example.com,Dev,Engineering",
+      "Cy,Three,cy@example.com,Dev,Engineering,Extra,More",
+    ].join("\n");
+    const file = new File([csv], "wide.csv", { type: "text/csv" });
+    Object.defineProperty(file, "text", { value: () => Promise.resolve(csv) });
+    previewMutateAsync.mockClear();
+
+    render(<BulkOnboardPanel />);
+    await user.upload(screen.getByLabelText("Choose employee onboard file"), file);
+
+    const banner = await screen.findByRole("alert");
+    expect(banner).toHaveTextContent("wide.csv: Line 4 has 7 columns; expected 5.");
+    expect(banner).toHaveTextContent("Nothing was imported");
+    expect(screen.queryByRole("region", { name: "Preview rows" })).not.toBeInTheDocument();
+    expect(previewMutateAsync).not.toHaveBeenCalled();
+  });
+
+  it("HRM-B-019: a file with the wrong header gets one banner listing the missing columns", async () => {
+    const user = userEvent.setup();
+    const csv = ["title,type,priority", "Fix login,BUG,HIGH"].join("\n");
+    const file = new File([csv], "tasks.csv", { type: "text/csv" });
+    Object.defineProperty(file, "text", { value: () => Promise.resolve(csv) });
+
+    render(<BulkOnboardPanel />);
+    await user.upload(screen.getByLabelText("Choose employee onboard file"), file);
+
+    expect(await screen.findByRole("alert")).toHaveTextContent(/tasks\.csv is missing required columns: .*firstName/);
+    expect(screen.queryByRole("region", { name: "Preview rows" })).not.toBeInTheDocument();
+  });
+
   it("names a row by its place in the file even after a blank line", async () => {
     const user = userEvent.setup();
     const csv = [

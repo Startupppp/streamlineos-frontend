@@ -151,6 +151,7 @@ export function useBulkOnboardFlow(
   const [commit, setCommit] = useState<BulkOnboardCommit | null>(null);
   const [parsing, setParsing] = useState(false);
   const [checkFailed, setCheckFailed] = useState(false);
+  const [fileError, setFileError] = useState<string | null>(null);
 
   const [seats, setSeats] = useState<BulkOnboardSeats | null>(null);
 
@@ -172,24 +173,25 @@ export function useBulkOnboardFlow(
 
   async function handleFile(file: File) {
     setParsing(true);
+    setFileError(null);
     try {
       const parsed = await parseFile(file);
       if (parsed.length === 0) {
-        toast.error(
-          "No data rows found. Keep the header row and add employees below it.",
+        setFileError(
+          `${file.name}: no data rows found. Keep the header row and add employees below it.`,
         );
         return;
       }
       const missingHeaders = missingRequiredHeaders(parsed);
       if (missingHeaders.length > 0) {
-        toast.error(
-          `This file is missing required columns: ${missingHeaders.join(", ")}. Download the template and keep its header row.`,
+        setFileError(
+          `${file.name} is missing required columns: ${missingHeaders.join(", ")}. Download the template and keep its header row.`,
         );
         return;
       }
       if (parsed.length > MAX_ROWS) {
-        toast.error(
-          `Too many rows (${parsed.length}). Maximum is ${MAX_ROWS} per upload.`,
+        setFileError(
+          `${file.name} has too many rows (${parsed.length}). Maximum is ${MAX_ROWS} per upload.`,
         );
         return;
       }
@@ -205,13 +207,11 @@ export function useBulkOnboardFlow(
       setStep("preview");
       await runServerPreview(withAdmission);
     } catch (err) {
-      if (err instanceof ParseStructuralError) {
-        toast.error(getErrorMessage(err));
-      } else {
-        toast.error(
-          "Failed to parse file. Use the template (.xlsx) or a CSV with the same headers.",
-        );
-      }
+      setFileError(
+        err instanceof ParseStructuralError
+          ? `${file.name}: ${getErrorMessage(err)}`
+          : `${file.name} could not be read. Use the template (.xlsx) or a CSV with the same headers.`,
+      );
     } finally {
       setParsing(false);
     }
@@ -263,6 +263,7 @@ export function useBulkOnboardFlow(
     setRows([]);
     setCommit(null);
     setCheckFailed(false);
+    setFileError(null);
     setSeats(null);
   }
 
@@ -274,6 +275,7 @@ export function useBulkOnboardFlow(
     parsing,
     checking: preview.isPending,
     checkFailed,
+    fileError,
     seats,
     committing: bulkOnboard.isPending,
     committableCount: committable.length,

@@ -67,6 +67,26 @@ Bob,Jones,bob@example.com,Designer,Design,2026-01-15,+911234567890
   });
 });
 
+describe("parseFile (CSV) — HRM-B-018 rows wider than the header", () => {
+  it("rejects the whole file naming the first overfull line and both column counts", async () => {
+    const csv = [
+      "firstName,lastName,email",
+      "Ann,One,ann@example.com",
+      "Bob,Two,bob@example.com",
+      "Cy,Three,cy@example.com,Engineer,Senior",
+    ].join("\n");
+    await expect(parseFile(csvFile(csv))).rejects.toBeInstanceOf(ParseStructuralError);
+    await expect(parseFile(csvFile(csv))).rejects.toMatchObject({
+      message: "Line 4 has 5 columns; expected 3. Wrap any value that contains a comma in double quotes.",
+    });
+  });
+
+  it("accepts trailing empty cells a spreadsheet export leaves behind", async () => {
+    const rows = await parseFile(csvFile("firstName,email\nAnn,ann@example.com,,\n"));
+    expect(rows).toEqual([{ firstName: "Ann", email: "ann@example.com", [SOURCE_ROW_KEY]: "1" }]);
+  });
+});
+
 describe("parseFile (xlsx)", () => {
   it("reads rich text, dates and formula results from the Employees sheet", async () => {
     const ExcelJS = (await import("exceljs")).default;

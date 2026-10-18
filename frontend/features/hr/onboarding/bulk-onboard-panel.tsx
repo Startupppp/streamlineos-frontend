@@ -114,7 +114,7 @@ export function BulkOnboardPanel() {
         </CardContent>
       </Card>
 
-      {flow.step === "upload" ? <BulkOnboardUploadCard parsing={flow.parsing} onFile={handleFile} /> : null}
+      {flow.step === "upload" ? <BulkOnboardUploadCard parsing={flow.parsing} fileError={flow.fileError} onFile={handleFile} /> : null}
 
       {flow.step === "preview" ? (
         <Card className="min-w-0 border-border/70 shadow-sm">

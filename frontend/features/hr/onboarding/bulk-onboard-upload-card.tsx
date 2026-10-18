@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef, type ChangeEvent, type DragEvent, type KeyboardEvent } from "react";
-import { FileSpreadsheet, Loader2, Upload } from "lucide-react";
+import { AlertCircle, FileSpreadsheet, Loader2, Upload } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { PolicyMissingBanner } from "@/components/hr/reporting-lines/policy-missing-banner";
 import { cn } from "@/lib/utils";
@@ -9,10 +9,11 @@ import { MAX_ROWS } from "./bulk-onboard-columns";
 
 interface BulkOnboardUploadCardProps {
   parsing: boolean;
+  fileError: string | null;
   onFile: (file: File) => void;
 }
 
-export function BulkOnboardUploadCard({ parsing, onFile }: BulkOnboardUploadCardProps) {
+export function BulkOnboardUploadCard({ parsing, fileError, onFile }: BulkOnboardUploadCardProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   function handleFileInput(event: ChangeEvent<HTMLInputElement>) {
@@ -52,6 +53,15 @@ export function BulkOnboardUploadCard({ parsing, onFile }: BulkOnboardUploadCard
       </CardHeader>
       <CardContent className="flex flex-col gap-3">
         <PolicyMissingBanner context="file" />
+        {fileError ? (
+          <div
+            role="alert"
+            className="flex items-start gap-2 rounded-lg border border-status-danger-rule bg-status-danger-surface px-3 py-2 text-xs text-status-danger-ink"
+          >
+            <AlertCircle className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+            <span className="min-w-0 break-words">{fileError} Nothing was imported; fix the file and upload it again.</span>
+          </div>
+        ) : null}
         <div
           role="button"
           tabIndex={0}

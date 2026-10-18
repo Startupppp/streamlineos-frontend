@@ -40,7 +40,6 @@ function SecondaryManagersCell(row: BulkOnboardFlowRow) {
 
 function StatusCell(row: BulkOnboardFlowRow) {
   const clientErrors = row.preview.errors;
-  const clientWarnings = row.preview.warnings;
   const messages = clientErrors.length > 0 ? clientErrors : (row.server?.messages ?? []);
   const codes = clientErrors.length > 0 ? [] : (row.server?.codes ?? []);
   const status = clientErrors.length > 0 ? "ERROR" : row.server?.status;
@@ -51,11 +50,6 @@ function StatusCell(row: BulkOnboardFlowRow) {
       {messages.map((message) => (
         <span key={message} className="text-micro text-muted-foreground">
           {message}
-        </span>
-      ))}
-      {clientWarnings.map((warning) => (
-        <span key={warning} className="text-micro text-status-warning-ink">
-          {warning}
         </span>
       ))}
     </span>
