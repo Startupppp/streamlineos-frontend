@@ -151,7 +151,7 @@ import { BillingPageSkeleton } from "@/features/billing/components/billing-page-
 import { KnowledgeGapStatusBadge } from "@/features/support/components/knowledge-gap-status-badge";
 import { KbPageNotFound } from "@/features/wiki/components/kb-page-not-found";
 import { ChannelAvatar } from "@/features/chat/channel-avatar";
-import { HomeSectionBoundary } from "@/features/dashboard/home-section-boundary";
+import { SectionErrorBoundary } from "@/components/shared/section-error-boundary";
 import { WorkflowCard } from "@/features/workflows/components/workflow-card";
 import type { Workflow } from "@/hooks/api/workflows";
 
@@ -228,21 +228,21 @@ describe("Module-level a11y — Chat (ChannelAvatar)", () => {
   });
 });
 
-describe("Module-level a11y — Home/Dashboard (HomeSectionBoundary)", () => {
+describe("Module-level a11y — Home/Dashboard (SectionErrorBoundary)", () => {
   it("renders children when no error", () => {
     render(
-      <HomeSectionBoundary sectionLabel="My Work">
+      <SectionErrorBoundary sectionLabel="My Work">
         <div>My Work Content</div>
-      </HomeSectionBoundary>,
+      </SectionErrorBoundary>,
     );
     expect(screen.getByText("My Work Content")).toBeInTheDocument();
   });
 
   it("passes axe with normal children", async () => {
     const { baseElement } = render(
-      <HomeSectionBoundary sectionLabel="Announcements">
+      <SectionErrorBoundary sectionLabel="Announcements">
         <p>Announcement text</p>
-      </HomeSectionBoundary>,
+      </SectionErrorBoundary>,
     );
     await expectNoAxeViolations(baseElement);
   });

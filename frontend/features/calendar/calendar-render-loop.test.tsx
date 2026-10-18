@@ -14,8 +14,12 @@ let mockCalendarPermission = {
 let mockCalendarModuleEnabled = true;
 let mockSearchAccess = false;
 
+let mockGridThrows = false;
 jest.mock("./big-calendar-wrapper", () => ({
-  BigCalendarWrapper: () => null,
+  BigCalendarWrapper: () => {
+    if (mockGridThrows) throw new Error("Maximum update depth exceeded");
+    return null;
+  },
 }));
 
 const mockReplace = jest.fn();
@@ -124,6 +128,7 @@ function routeGet(path: unknown): unknown {
 }
 
 beforeEach(() => {
+  mockGridThrows = false;
   mockSearchParams = new URLSearchParams();
   mockCalendarPermission = {
     allowed: true,
@@ -272,6 +277,16 @@ describe("/calendar render stability", () => {
   it("mounts the grid without an unbounded render loop (bounded so a loop fails instead of hanging)", async () => {
     await renderCalendar();
     expect(mockRenderCount).toBeLessThanOrEqual(60);
+  });
+
+  it("CAL-B-016 a crashing grid is replaced by an in-panel retry while the calendar header stays", async () => {
+    const consoleError = jest.spyOn(console, "error").mockImplementation(() => undefined);
+    mockGridThrows = true;
+    const { findByText, getByLabelText } = await renderCalendar();
+
+    expect(await findByText("The calendar grid is unavailable")).toBeInTheDocument();
+    expect(getByLabelText(/Choose month and year/)).toBeInTheDocument();
+    consoleError.mockRestore();
   });
 
   it("actually reaches the grid data path it is asserting about", async () => {

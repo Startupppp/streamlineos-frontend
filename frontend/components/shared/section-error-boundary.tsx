@@ -3,22 +3,24 @@
 import { Component, type ReactNode } from "react";
 import { ErrorState } from "@/components/shared/error-state";
 
-interface HomeSectionBoundaryProps {
+interface SectionErrorBoundaryProps {
   sectionLabel: string;
+  description?: string;
+  className?: string;
   children: ReactNode;
 }
 
-interface HomeSectionBoundaryState {
+interface SectionErrorBoundaryState {
   hasError: boolean;
 }
 
-export class HomeSectionBoundary extends Component<
-  HomeSectionBoundaryProps,
-  HomeSectionBoundaryState
+export class SectionErrorBoundary extends Component<
+  SectionErrorBoundaryProps,
+  SectionErrorBoundaryState
 > {
-  state: HomeSectionBoundaryState = { hasError: false };
+  state: SectionErrorBoundaryState = { hasError: false };
 
-  static getDerivedStateFromError(): HomeSectionBoundaryState {
+  static getDerivedStateFromError(): SectionErrorBoundaryState {
     return { hasError: true };
   }
 
@@ -31,8 +33,9 @@ export class HomeSectionBoundary extends Component<
     return (
       <ErrorState
         compact
+        className={this.props.className}
         title={`${this.props.sectionLabel} is unavailable`}
-        description="This section could not load. The rest of your Home page is unaffected."
+        description={this.props.description ?? "This section could not load. The rest of the page is unaffected."}
         onRetry={this.handleRetry}
       />
     );

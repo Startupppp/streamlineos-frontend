@@ -57,6 +57,7 @@ import { useAttendanceCalendarEvents } from "./use-attendance-calendar-events";
 import { useCalendarViewState } from "./use-calendar-view-state";
 import { useAfterLoad } from "@/hooks/common/use-after-load";
 import { useShellVariant } from "@/components/layout/shell-variant-context";
+import { SectionErrorBoundary } from "@/components/shared/section-error-boundary";
 import { calendarUrl } from "./calendar-url-state";
 import { useCalendarSearch } from "@/hooks/api/calendar-search";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
@@ -1144,28 +1145,34 @@ export function CalendarView() {
                 ) : calendarWindowErrorState ? (
                   calendarWindowErrorState
                 ) : gridActive ? (
-                  <CalendarGridLayer
-                    events={savedViewActive ? savedGridEvents : allCalEvents}
-                    currentDate={
-                      savedViewActive
-                        ? new Date(myDayWindow.start)
-                        : currentDate
-                    }
-                    view={displayedGridView}
-                    calHeight={calHeight}
-                    onView={handleGridViewChange}
-                    onNavigate={
-                      savedViewActive ? handleSavedViewNavigate : setCurrentDate
-                    }
-                    onSelectSlot={
-                      isCalendarOverlayOpen || savedViewActive
-                        ? undefined
-                        : guardedSelectSlot
-                    }
-                    onSelectEvent={handleSelectEvent}
-                    onEventDrop={savedViewActive ? undefined : handleEventDrop}
-                    onEventResize={savedViewActive ? undefined : handleEventResize}
-                  />
+                  <SectionErrorBoundary
+                    sectionLabel="The calendar grid"
+                    description="The header, filters and any open event are unaffected."
+                    className="flex-1"
+                  >
+                    <CalendarGridLayer
+                      events={savedViewActive ? savedGridEvents : allCalEvents}
+                      currentDate={
+                        savedViewActive
+                          ? new Date(myDayWindow.start)
+                          : currentDate
+                      }
+                      view={displayedGridView}
+                      calHeight={calHeight}
+                      onView={handleGridViewChange}
+                      onNavigate={
+                        savedViewActive ? handleSavedViewNavigate : setCurrentDate
+                      }
+                      onSelectSlot={
+                        isCalendarOverlayOpen || savedViewActive
+                          ? undefined
+                          : guardedSelectSlot
+                      }
+                      onSelectEvent={handleSelectEvent}
+                      onEventDrop={savedViewActive ? undefined : handleEventDrop}
+                      onEventResize={savedViewActive ? undefined : handleEventResize}
+                    />
+                  </SectionErrorBoundary>
                 ) : savedViewActive ? (
                   <CalendarEventsPanel
                     mode="list"

@@ -21,7 +21,7 @@ import { useMotionVariants } from "@/lib/motion-variants";
 import { useCan, useModuleEnabled } from "@/hooks/api/access";
 import { WidgetSkeleton } from "@/components/dashboard/widget-skeleton";
 import { DeferredDashboardContent } from "./deferred-dashboard-content";
-import { HomeSectionBoundary } from "./home-section-boundary";
+import { SectionErrorBoundary } from "@/components/shared/section-error-boundary";
 import { HomeSectionHeader } from "./home-section-header";
 import { HomeWidgetGrid } from "./home-widget-grid";
 import type { DashboardTicket } from "@/features/dashboard/my-issues-card";
@@ -287,24 +287,24 @@ export function DashboardDeferredBody({
               <HomeSectionHeader title="Team" />
             </div>
             {canViewLeaves && (
-              <HomeSectionBoundary sectionLabel="Who is out today">
+              <SectionErrorBoundary sectionLabel="Who is out today">
                 <LeavesTodayWidget />
-              </HomeSectionBoundary>
+              </SectionErrorBoundary>
             )}
             {canViewAttendance && (
-              <HomeSectionBoundary sectionLabel="Team attendance">
+              <SectionErrorBoundary sectionLabel="Team attendance">
                 <TeamAttendanceWidget
                   data={teamAttendance}
                   isLoading={teamLoading}
                   error={teamError}
                   onRetry={handleRetryTeam}
                 />
-              </HomeSectionBoundary>
+              </SectionErrorBoundary>
             )}
             {canApproveLeaves && (
-              <HomeSectionBoundary sectionLabel="Pending approvals">
+              <SectionErrorBoundary sectionLabel="Pending approvals">
                 <PendingApprovalsWidget />
-              </HomeSectionBoundary>
+              </SectionErrorBoundary>
             )}
           </motion.div>
         )}
@@ -316,20 +316,20 @@ export function DashboardDeferredBody({
             animate="visible"
             className="grid grid-cols-1 gap-4 md:grid-cols-2"
           >
-            <HomeSectionBoundary sectionLabel="Birthdays">
+            <SectionErrorBoundary sectionLabel="Birthdays">
               <BirthdaysWidget />
-            </HomeSectionBoundary>
-            <HomeSectionBoundary sectionLabel="Upcoming holidays">
+            </SectionErrorBoundary>
+            <SectionErrorBoundary sectionLabel="Upcoming holidays">
               <UpcomingHolidaysWidget />
-            </HomeSectionBoundary>
+            </SectionErrorBoundary>
           </motion.div>
         )}
 
         {batch2Ready && showDocumentsCard && publicDocumentsSlot ? (
           <motion.div variants={fadeUp} initial="hidden" animate="visible">
-            <HomeSectionBoundary sectionLabel="Company documents">
+            <SectionErrorBoundary sectionLabel="Company documents">
               {publicDocumentsSlot}
-            </HomeSectionBoundary>
+            </SectionErrorBoundary>
           </motion.div>
         ) : null}
 
@@ -344,24 +344,24 @@ export function DashboardDeferredBody({
               <HomeSectionHeader title="Business" />
             </div>
             <div className="min-h-0 lg:col-span-4">
-              <HomeSectionBoundary sectionLabel="My issues">
+              <SectionErrorBoundary sectionLabel="My issues">
                 <MyIssuesCard
                   tickets={sortedMyTickets}
                   isLoading={ticketsLoading}
                   error={ticketsError}
                   onRetry={handleRetryTickets}
                 />
-              </HomeSectionBoundary>
+              </SectionErrorBoundary>
             </div>
             <div className="min-h-0 lg:col-span-3">
-              <HomeSectionBoundary sectionLabel="Active sprint">
+              <SectionErrorBoundary sectionLabel="Active sprint">
                 <SprintCard
                   summary={sprintSummary ?? undefined}
                   isLoading={sprintLoading}
                   error={sprintError}
                   onRetry={handleRetrySprint}
                 />
-              </HomeSectionBoundary>
+              </SectionErrorBoundary>
             </div>
           </motion.div>
         )}
@@ -375,7 +375,7 @@ export function DashboardDeferredBody({
           >
             {projectsEnabled && canViewTickets && (
               <div className="min-h-0">
-                <HomeSectionBoundary sectionLabel="Recent projects">
+                <SectionErrorBoundary sectionLabel="Recent projects">
                   <RecentProjectsCard
                     projects={recentProjects?.map((p) => ({
                       ...p,
@@ -386,31 +386,31 @@ export function DashboardDeferredBody({
                     onCreateProject={handleGoToProjects}
                     onRetry={handleRetryProjects}
                   />
-                </HomeSectionBoundary>
+                </SectionErrorBoundary>
               </div>
             )}
             {projectsEnabled && canViewTickets && (
               <div className="min-h-0">
-                <HomeSectionBoundary sectionLabel="Recent activity">
+                <SectionErrorBoundary sectionLabel="Recent activity">
                   <RecentActivityCard
                     items={recentActivity}
                     isLoading={activityLoading}
                     error={activityError}
                     onRetry={handleRetryActivity}
                   />
-                </HomeSectionBoundary>
+                </SectionErrorBoundary>
               </div>
             )}
             {hrEnabled && canViewAttendance && (
               <div className="min-h-0">
-                <HomeSectionBoundary sectionLabel="Team availability">
+                <SectionErrorBoundary sectionLabel="Team availability">
                   <TeamCard
                     members={teamAvailability}
                     isLoading={teamLoading}
                     error={teamError}
                     onRetry={handleRetryTeam}
                   />
-                </HomeSectionBoundary>
+                </SectionErrorBoundary>
               </div>
             )}
           </motion.div>

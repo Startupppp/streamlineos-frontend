@@ -5,7 +5,7 @@ import dynamic from "next/dynamic";
 import { motion } from "framer-motion";
 import { useMotionVariants } from "@/lib/motion-variants";
 import { WidgetSkeleton } from "@/components/dashboard/widget-skeleton";
-import { HomeSectionBoundary } from "./home-section-boundary";
+import { SectionErrorBoundary } from "@/components/shared/section-error-boundary";
 import { HomeSectionHeader } from "./home-section-header";
 import {
   HomeCustomisationBar,
@@ -173,59 +173,59 @@ export function HomeWidgetGrid({
 
   const widgetNodes: Record<string, ReactNode> = {
     "My tasks": (
-      <HomeSectionBoundary sectionLabel="My tasks">
+      <SectionErrorBoundary sectionLabel="My tasks">
         <MyTasksWidget />
-      </HomeSectionBoundary>
+      </SectionErrorBoundary>
     ),
     Timesheet: (
-      <HomeSectionBoundary sectionLabel="Timesheet">
+      <SectionErrorBoundary sectionLabel="Timesheet">
         <TimesheetWidget />
-      </HomeSectionBoundary>
+      </SectionErrorBoundary>
     ),
     "Leave balance": (
-      <HomeSectionBoundary sectionLabel="Leave balance">
+      <SectionErrorBoundary sectionLabel="Leave balance">
         <LeaveBalanceWidget />
-      </HomeSectionBoundary>
+      </SectionErrorBoundary>
     ),
     Alerts: (
-      <HomeSectionBoundary sectionLabel="Alerts">
+      <SectionErrorBoundary sectionLabel="Alerts">
         <AlertsWidget />
-      </HomeSectionBoundary>
+      </SectionErrorBoundary>
     ),
     Announcements: (
-      <HomeSectionBoundary sectionLabel="Announcements">
+      <SectionErrorBoundary sectionLabel="Announcements">
         <AnnouncementsWidget />
-      </HomeSectionBoundary>
+      </SectionErrorBoundary>
     ),
     "Upcoming events": (
-      <HomeSectionBoundary sectionLabel="Upcoming events">
+      <SectionErrorBoundary sectionLabel="Upcoming events">
         <UpcomingEventsWidget />
-      </HomeSectionBoundary>
+      </SectionErrorBoundary>
     ),
     "Business pulse": (
-      <HomeSectionBoundary sectionLabel="Business pulse">
+      <SectionErrorBoundary sectionLabel="Business pulse">
         <BusinessPulseWidget />
-      </HomeSectionBoundary>
+      </SectionErrorBoundary>
     ),
     "Today's activities": (
-      <HomeSectionBoundary sectionLabel="Today's activities">
+      <SectionErrorBoundary sectionLabel="Today's activities">
         <TodayActivitiesWidget />
-      </HomeSectionBoundary>
+      </SectionErrorBoundary>
     ),
     "My attendance": (
-      <HomeSectionBoundary sectionLabel="My attendance">
+      <SectionErrorBoundary sectionLabel="My attendance">
         <MyAttendanceWidget />
-      </HomeSectionBoundary>
+      </SectionErrorBoundary>
     ),
     Payroll: (
-      <HomeSectionBoundary sectionLabel="Payroll">
+      <SectionErrorBoundary sectionLabel="Payroll">
         <PayrollWidget />
-      </HomeSectionBoundary>
+      </SectionErrorBoundary>
     ),
     Expenses: expensesSlot ? (
-      <HomeSectionBoundary sectionLabel="Expenses">
+      <SectionErrorBoundary sectionLabel="Expenses">
         {expensesSlot}
-      </HomeSectionBoundary>
+      </SectionErrorBoundary>
     ) : null,
   };
 

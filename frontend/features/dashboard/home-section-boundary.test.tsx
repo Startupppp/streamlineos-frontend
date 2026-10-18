@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { render, screen } from "@testing-library/react";
-import { HomeSectionBoundary } from "./home-section-boundary";
+import { SectionErrorBoundary } from "@/components/shared/section-error-boundary";
 
 function Exploding(): never {
   throw new Error("section blew up");
@@ -20,18 +20,18 @@ describe("a failing Home section is contained", () => {
 
   it("renders its child when nothing throws", () => {
     render(
-      <HomeSectionBoundary sectionLabel="Payroll">
+      <SectionErrorBoundary sectionLabel="Payroll">
         <Fine />
-      </HomeSectionBoundary>,
+      </SectionErrorBoundary>,
     );
     expect(screen.getByText("healthy section content")).toBeInTheDocument();
   });
 
   it("replaces only the failing section and names it", () => {
     render(
-      <HomeSectionBoundary sectionLabel="Payroll">
+      <SectionErrorBoundary sectionLabel="Payroll">
         <Exploding />
-      </HomeSectionBoundary>,
+      </SectionErrorBoundary>,
     );
     expect(screen.getByText("Payroll is unavailable")).toBeInTheDocument();
   });
@@ -39,12 +39,12 @@ describe("a failing Home section is contained", () => {
   it("keeps a sibling section rendering when its neighbour throws", () => {
     render(
       <div>
-        <HomeSectionBoundary sectionLabel="Payroll">
+        <SectionErrorBoundary sectionLabel="Payroll">
           <Exploding />
-        </HomeSectionBoundary>
-        <HomeSectionBoundary sectionLabel="Expenses">
+        </SectionErrorBoundary>
+        <SectionErrorBoundary sectionLabel="Expenses">
           <Fine />
-        </HomeSectionBoundary>
+        </SectionErrorBoundary>
       </div>,
     );
     expect(screen.getByText("Payroll is unavailable")).toBeInTheDocument();
@@ -53,9 +53,9 @@ describe("a failing Home section is contained", () => {
 
   it("never leaks the underlying error text to the user", () => {
     render(
-      <HomeSectionBoundary sectionLabel="Payroll">
+      <SectionErrorBoundary sectionLabel="Payroll">
         <Exploding />
-      </HomeSectionBoundary>,
+      </SectionErrorBoundary>,
     );
     expect(screen.queryByText(/section blew up/)).not.toBeInTheDocument();
   });
@@ -111,7 +111,7 @@ describe("every Home widget is individually contained", () => {
   ];
 
   it("reads the Home composition files", () => {
-    expect(source).toContain("HomeSectionBoundary");
+    expect(source).toContain("SectionErrorBoundary");
   });
 
   it("finds every widget it claims to check, so a moved widget cannot go unchecked", () => {
@@ -127,7 +127,7 @@ describe("every Home widget is individually contained", () => {
       if (index < 0) return true;
       return !source
         .slice(Math.max(0, index - 400), index)
-        .includes("HomeSectionBoundary");
+        .includes("SectionErrorBoundary");
     }).map((mount) => mount.label);
     expect(unwrapped).toEqual([]);
   });

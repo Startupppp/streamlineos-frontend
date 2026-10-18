@@ -152,7 +152,7 @@ import { BillingPageSkeleton } from "@/features/billing/components/billing-page-
 import { KnowledgeGapStatusBadge } from "@/features/support/components/knowledge-gap-status-badge";
 import { KbPageNotFound } from "@/features/wiki/components/kb-page-not-found";
 import { ChannelAvatar } from "@/features/chat/channel-avatar";
-import { HomeSectionBoundary } from "@/features/dashboard/home-section-boundary";
+import { SectionErrorBoundary } from "@/components/shared/section-error-boundary";
 import { WorkflowCard } from "@/features/workflows/components/workflow-card";
 import type { Workflow } from "@/hooks/api/workflows";
 
