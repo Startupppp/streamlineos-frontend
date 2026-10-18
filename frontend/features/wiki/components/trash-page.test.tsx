@@ -306,7 +306,9 @@ describe("trash bulk purge impact confirmation", () => {
     act(() => mutate.mock.calls[0][1].onSuccess({ results: [{ pageId: 9, result: "succeeded" }, { pageId: 10, result: "notFound" }] }));
 
     expect(toast.success).toHaveBeenCalledWith("Restored 1 page");
-    expect(toast.error).toHaveBeenCalledWith("1 page could not be restored");
+    expect(toast.error).toHaveBeenCalledWith("1 page could not be restored", {
+      description: "1: no longer in Trash. They are still selected so you can try again.",
+    });
     expect(table.mock.calls.at(-1)?.[0].selection.selected).toEqual(new Set(["10"]));
   });
 
@@ -320,7 +322,9 @@ describe("trash bulk purge impact confirmation", () => {
     act(() => mutate.mock.calls[0][1].onSuccess({ results: [{ pageId: 9, result: "conflict" }] }));
 
     expect(toast.success).not.toHaveBeenCalled();
-    expect(toast.error).toHaveBeenCalledWith("1 page could not be permanently deleted");
+    expect(toast.error).toHaveBeenCalledWith("1 page could not be permanently deleted", {
+      description: "1: is on legal hold, has a subpage outside Trash, or changed since you selected it. They are still selected so you can try again.",
+    });
     expect((DataTable as jest.Mock).mock.calls.at(-1)?.[0].selection.selected).toEqual(new Set(["9"]));
   });
 
