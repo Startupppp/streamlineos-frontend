@@ -13,6 +13,10 @@ jest.mock("@/hooks/api/build/milestones", () => ({
   useProjectMilestones: () => ({ data: [] }),
 }));
 
+jest.mock("@/hooks/api/build/ticket-update-mutation", () => ({
+  useUpdateTicket: () => ({ mutate: jest.fn() }),
+}));
+
 jest.mock("@/hooks/api/use-page-state", () => ({
   usePageState: () => ({ kind: "ready" }),
 }));

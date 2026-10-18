@@ -15,6 +15,12 @@ jest.mock("@/hooks/api/build/milestones", () => ({
   useProjectMilestones: () => ({ data: [] }),
 }));
 
+const mockMutate = jest.fn();
+
+jest.mock("@/hooks/api/build/ticket-update-mutation", () => ({
+  useUpdateTicket: () => ({ mutate: mockMutate }),
+}));
+
 jest.mock("@/hooks/api/use-page-state", () => ({
   usePageState: () => ({ kind: "ready" }),
 }));
@@ -173,5 +179,50 @@ describe("GanttView — B-069: drag on a bar suppresses click so accidental scro
     fireEvent.mouseDown(row, { clientX: 100, clientY: 100 });
     fireEvent.click(row, { clientX: 100, clientY: 100 });
     expect(onTicketClick).toHaveBeenCalledWith(2);
+  });
+});
+
+function isoDay(offset: number) {
+  const d = new Date();
+  d.setDate(d.getDate() + offset);
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+}
+
+function renderScheduledBar() {
+  render(
+    <GanttView
+      tickets={[{ id: 7, title: "Scheduled item", status: "TODO", type: "TASK", startDate: isoDay(0), dueDate: isoDay(2), ticketNumber: 7 }]}
+      projectId={1}
+      onTicketClick={onTicketClick}
+    />,
+  );
+  const bar = document.querySelector<SVGGElement>("[data-bar-ticket-id='7']");
+  if (!bar) throw new Error("bar not rendered");
+  bar.setPointerCapture = jest.fn();
+  return bar;
+}
+
+function pointer(bar: SVGGElement, type: "pointerdown" | "pointerup", clientX: number) {
+  fireEvent(bar, new MouseEvent(type, { bubbles: true, cancelable: true, clientX }));
+}
+
+describe("GanttView — B-069: dragging a bar reschedules the ticket", () => {
+  it("shifts both dates by the dragged day count and saves them", () => {
+    const bar = renderScheduledBar();
+    pointer(bar, "pointerdown", 100);
+    pointer(bar, "pointerup", 180);
+    expect(mockMutate).toHaveBeenCalledWith(
+      expect.objectContaining({ ticketId: 7, startDate: isoDay(2), dueDate: isoDay(4) }),
+    );
+    expect(onTicketClick).not.toHaveBeenCalled();
+  });
+
+  it("opens the ticket instead of rescheduling when the bar barely moved", () => {
+    const bar = renderScheduledBar();
+    pointer(bar, "pointerdown", 100);
+    pointer(bar, "pointerup", 102);
+    expect(mockMutate).not.toHaveBeenCalled();
+    expect(onTicketClick).toHaveBeenCalledWith(7);
   });
 });
