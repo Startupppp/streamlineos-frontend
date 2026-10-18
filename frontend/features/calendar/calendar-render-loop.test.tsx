@@ -23,9 +23,10 @@ jest.mock("./big-calendar-wrapper", () => ({
 }));
 
 const mockReplace = jest.fn();
+const mockPush = jest.fn();
 let mockSearchParams = new URLSearchParams();
 jest.mock("next/navigation", () => ({
-  useRouter: () => ({ replace: mockReplace, push: jest.fn(), refresh: jest.fn() }),
+  useRouter: () => ({ replace: mockReplace, push: mockPush, refresh: jest.fn() }),
   useSearchParams: () => mockSearchParams,
   usePathname: () => "/calendar",
 }));
@@ -287,6 +288,26 @@ describe("/calendar render stability", () => {
     expect(await findByText("The calendar grid is unavailable")).toBeInTheDocument();
     expect(getByLabelText(/Choose month and year/)).toBeInTheDocument();
     consoleError.mockRestore();
+  });
+
+  it("CAL-B-025 a phone-width window gets the readable list instead of seven squeezed week columns", async () => {
+    const width = window.innerWidth;
+    window.innerWidth = 390;
+    mockPush.mockClear();
+    mockGridThrows = true;
+    try {
+      const { queryByText } = await renderCalendar();
+      expect(mockPush).toHaveBeenCalledWith(expect.stringContaining("mode=list"));
+      expect(queryByText("The calendar grid is unavailable")).not.toBeInTheDocument();
+    } finally {
+      window.innerWidth = width;
+    }
+  });
+
+  it("keeps the week grid on a desktop-width window", async () => {
+    mockPush.mockClear();
+    await renderCalendar();
+    expect(mockPush).not.toHaveBeenCalledWith(expect.stringContaining("mode=list"));
   });
 
   it("actually reaches the grid data path it is asserting about", async () => {

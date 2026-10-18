@@ -57,6 +57,7 @@ import { useAttendanceCalendarEvents } from "./use-attendance-calendar-events";
 import { useCalendarViewState } from "./use-calendar-view-state";
 import { useAfterLoad } from "@/hooks/common/use-after-load";
 import { useShellVariant } from "@/components/layout/shell-variant-context";
+import { useIsMobile } from "@/hooks/common/use-mobile";
 import { SectionErrorBoundary } from "@/components/shared/section-error-boundary";
 import { calendarUrl } from "./calendar-url-state";
 import { useCalendarSearch } from "@/hooks/api/calendar-search";
@@ -485,7 +486,8 @@ export function CalendarView() {
   const afterLoad = useAfterLoad();
 
   const shellVariant = useShellVariant();
-  const isMobile = shellVariant === "mobile";
+  const narrowViewport = useIsMobile();
+  const isMobile = shellVariant === "mobile" || narrowViewport;
   useEffect(() => {
     if (isMobile && viewMode === "calendar" && !savedFilterId)
       setViewMode("list");
