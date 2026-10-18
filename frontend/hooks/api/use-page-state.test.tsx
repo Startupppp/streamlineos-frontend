@@ -49,6 +49,20 @@ describe("resolveModuleAvailability", () => {
     });
   });
 
+  it("RBAC-B-005: a module switched off for this person reads as user-denied, not org-disabled", () => {
+    expect(resolveModuleAvailability("build", false, { build: false }, [], { build: "user-denied" })).toMatchObject({
+      status: "unavailable",
+      reason: "user-denied",
+      upgradePath: null,
+    });
+  });
+
+  it("RBAC-B-005: keeps org-disabled when the server says the org switched the module off", () => {
+    expect(resolveModuleAvailability("build", false, { build: false }, [], { build: "org-disabled" })).toMatchObject({
+      reason: "org-disabled",
+    });
+  });
+
   it("returns unavailable not-in-plan when entitlements list includes the module", () => {
     expect(resolveModuleAvailability("hr", false, { hr: false }, ["hr"])).toMatchObject({
       status: "unavailable",
@@ -63,6 +77,12 @@ describe("usePageState", () => {
     mockAccess({ data: undefined, isLoading: true });
     const { result } = renderHook(() => usePageState({ module: "hr", isLoading: false, isError: false }));
     expect(result.current).toEqual({ kind: "loading" });
+  });
+
+  it("RBAC-B-005: shows the per-person denial when the access snapshot says the module is off for this user", () => {
+    mockAccess({ data: { modules: { build: false }, moduleReasons: { build: "user-denied" }, scopes: {}, isOrgOwner: false } });
+    const { result } = renderHook(() => usePageState({ module: "build", isLoading: false, isError: false }));
+    expect(result.current).toEqual({ kind: "module-denied", moduleKey: "build" });
   });
 
   it("calls a module plan-locked only when entitlements say so, not because it is plan-gated", () => {

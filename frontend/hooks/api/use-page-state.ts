@@ -12,6 +12,7 @@ import {
   type PageStateResolution,
 } from "@/lib/page-state/resolve-page-state";
 import type { PermissionKey } from "@/lib/rbac/permissions";
+import type { ModuleDenialReason } from "@/lib/page-state/page-state-schema";
 
 export interface UsePageStateOptions {
   readonly permission?: PermissionKey;
@@ -28,6 +29,7 @@ export function resolveModuleAvailability(
   accessLoading: boolean,
   modules: Record<string, boolean> | undefined,
   lockedModules: string[] | undefined,
+  moduleReasons?: Partial<Record<string, ModuleDenialReason>>,
 ): ModuleAvailability {
   const moduleKey = normalizeOrgModuleKey(module);
   if (accessLoading || modules === undefined) return { status: "loading" };
@@ -36,11 +38,12 @@ export function resolveModuleAvailability(
     lockedModules?.some(
       (locked) => normalizeOrgModuleKey(locked) === moduleKey,
     ) ?? false;
+  const reason = planLocked ? "not-in-plan" : (moduleReasons?.[moduleKey] ?? "org-disabled");
   return {
     status: "unavailable",
     moduleKey,
-    reason: planLocked ? "not-in-plan" : "org-disabled",
-    upgradePath: planLocked ? "/settings/billing" : null,
+    reason,
+    upgradePath: reason === "not-in-plan" ? "/settings/billing" : null,
   };
 }
 
@@ -62,6 +65,7 @@ export function usePageState(
           accessLoading || access === undefined,
           access?.modules,
           entitlements?.lockedModules,
+          access?.moduleReasons,
         )
       : undefined;
 
