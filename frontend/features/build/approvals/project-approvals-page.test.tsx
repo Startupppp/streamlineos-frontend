@@ -125,8 +125,10 @@ jest.mock("@/components/ui/data-table", () => ({
     selection,
     mobileCard,
     pagination,
+    onRowClick,
   }: {
     data: typeof approvalRow[];
+    onRowClick?: (row: typeof approvalRow) => void;
     selection?: { onChange?: (ids: Set<string>) => void; selected?: Set<string | number> };
     mobileCard?: (row: typeof approvalRow) => React.ReactNode;
     pagination?: typeof mockCapturedPagination;
@@ -139,6 +141,9 @@ jest.mock("@/components/ui/data-table", () => ({
     function handleOpenDelegate() {
       if (data[0]) mockSetDelegateTarget?.(data[0]);
     }
+    function handleRowClick() {
+      if (data[0]) onRowClick?.(data[0]);
+    }
     return (
     <div data-testid="data-table" data-rows={data.length} data-selected={selection?.selected?.size ?? 0}>
       <button
@@ -150,6 +155,11 @@ jest.mock("@/components/ui/data-table", () => ({
         type="button"
         data-testid="open-delegate"
         onClick={handleOpenDelegate}
+      />
+      <button
+        type="button"
+        data-testid="click-row-1"
+        onClick={handleRowClick}
       />
       {data[0] && mobileCard ? mobileCard(data[0]) : null}
     </div>
@@ -209,7 +219,7 @@ jest.mock("./request-approval-sheet", () => ({
 }));
 
 jest.mock("./decide-dialog", () => ({
-  DecideDialog: () => null,
+  DecideDialog: ({ open }: { open: boolean }) => (open ? <div data-testid="decide-dialog" /> : null),
 }));
 
 jest.mock("./delegate-dialog", () => ({
@@ -233,6 +243,7 @@ jest.mock("./approval-status-badge", () => ({
 }));
 
 jest.mock("./approvals-constants", () => ({
+  canDecideApproval: jest.requireActual("./approvals-constants").canDecideApproval,
   STATUS_OPTIONS: [],
   ENTITY_OPTIONS: [],
   DECIDABLE: new Set(),
@@ -603,4 +614,30 @@ it("hides cancellation without management permission", () => {
   render(<ProjectApprovalsPage projectId={1} />);
   fireEvent.click(screen.getByTestId("select-row-1"));
   expect(screen.queryByTestId("bulk-cancel-btn")).not.toBeInTheDocument();
+});
+
+describe("approval row click (RBAC UX round 1, item 5)", () => {
+  function renderWithRow(viewerMembershipId: number | null) {
+    mockUseCan.mockImplementation((key: string) => key === "build:approvals:decide");
+    mockUseAccess.mockReturnValue({
+      ...ACCESS_GRANTED,
+      data: { ...ACCESS_GRANTED.data, membershipId: viewerMembershipId },
+    });
+    mockUseProjectApprovals.mockReturnValue(
+      baseQueryResult({ data: approvalPages([{ ...approvalRow, approverMembershipId: 22 }]) }),
+    );
+    render(<ProjectApprovalsPage projectId={1} />);
+  }
+
+  it("opens the decision dialog when the assigned approver clicks the row", () => {
+    renderWithRow(22);
+    fireEvent.click(screen.getByTestId("click-row-1"));
+    expect(screen.getByTestId("decide-dialog")).toBeInTheDocument();
+  });
+
+  it("opens nothing when someone other than the assigned approver clicks the row", () => {
+    renderWithRow(23);
+    fireEvent.click(screen.getByTestId("click-row-1"));
+    expect(screen.queryByTestId("decide-dialog")).not.toBeInTheDocument();
+  });
 });

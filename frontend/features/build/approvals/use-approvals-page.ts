@@ -6,7 +6,7 @@ import {
   useUpdateApproval,
   useDeleteApproval,
 } from "@/hooks/api/build/approvals";
-import { useCan } from "@/hooks/api/access";
+import { useAccess, useCan } from "@/hooks/api/access";
 import { useBuildListKeyboard } from "@/hooks/common/use-build-list-keyboard";
 import { useApprovalsColumns } from "./use-approvals-columns";
 import type {
@@ -16,6 +16,7 @@ import type {
 import type { ApprovalEntityType } from "@/types/projects";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useApprovalsData } from "./use-approvals-data";
+import { canDecideApproval } from "./approvals-constants";
 
 export function useApprovalsPage(projectId: number) {
   const { data: session } = useSession();
@@ -23,6 +24,8 @@ export function useApprovalsPage(projectId: number) {
   const canRequest = useCan("build:approvals:request");
   const canDecide = useCan("build:approvals:decide");
   const canManage = useCan("build:approvals:manage");
+  const { data: access } = useAccess();
+  const viewerMembershipId = access?.membershipId;
 
   const {
     listFilters,
@@ -79,9 +82,15 @@ export function useApprovalsPage(projectId: number) {
   const handleRequestRelease = useCallback(() => handleOpenRequest("release"), [handleOpenRequest]);
   const handleRequestMilestone = useCallback(() => handleOpenRequest("milestone"), [handleOpenRequest]);
 
+  const handleRowClick = useCallback(
+    (row: BuildApprovalsCreateApprovalResponse) => {
+      if (canDecideApproval(row, viewerMembershipId, canDecide)) setDecideTarget(row);
+    },
+    [viewerMembershipId, canDecide],
+  );
   const handleOpenFocused = useCallback(
-    (index: number) => { if (items[index]) setDecideTarget(items[index]); },
-    [items],
+    (index: number) => { const row = items[index]; if (row) handleRowClick(row); },
+    [items, handleRowClick],
   );
   useBuildListKeyboard({
     itemCount: items.length,
@@ -225,6 +234,7 @@ export function useApprovalsPage(projectId: number) {
     handleRetry,
     handleNextPage,
     handlePreviousPage,
+    handleRowClick,
     isRowSelectable,
     handleDecideDialogChange,
     handleDelegateDialogChange,

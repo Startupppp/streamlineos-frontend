@@ -7,21 +7,10 @@ import { TruncatedText } from "@/components/ui/truncated-text";
 import { TABLE_TITLE_CELL } from "@/lib/text-overflow";
 import { ApprovalStatusBadge } from "./approval-status-badge";
 import { ApprovalActions } from "./approvals-toolbar";
-import { DECIDABLE, entityTypeLabel } from "./approvals-constants";
+import { APPROVAL_STATUS_VALUES, canDecideApproval, entityTypeLabel } from "./approvals-constants";
 import { useAccess } from "@/hooks/api/access";
 import type { BuildApprovalsCreateApprovalResponse } from "@/contracts/build-contracts.generated";
-import type { ApprovalStatus } from "@/types/projects";
 import { formatShortDate } from "@/lib/date-utils";
-
-const APPROVAL_STATUS_VALUES: ApprovalStatus[] = [
-  "requested",
-  "pending",
-  "approved",
-  "rejected",
-  "changes_requested",
-  "escalated",
-  "cancelled",
-];
 
 interface UseApprovalsColumnsParams {
   canDecide: boolean;
@@ -56,8 +45,7 @@ function ApprovalsActionsCell({
   const narrowStatus =
     APPROVAL_STATUS_VALUES.find((v) => v === row.status) ?? "pending";
   const { data: access } = useAccess();
-  const assigned = access?.membershipId != null && access.membershipId === row.approverMembershipId;
-  const canDecideRow = canDecide && DECIDABLE.has(narrowStatus) && assigned;
+  const canDecideRow = canDecideApproval(row, access?.membershipId, canDecide);
 
   const handleDecide = useCallback(
     () => setDecideTarget(row),

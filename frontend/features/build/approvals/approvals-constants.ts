@@ -64,4 +64,18 @@ export const ENTITY_OPTIONS: { value: string; label: string }[] = [
 ];
 
 export const DECIDABLE = new Set<ApprovalStatus>(["pending", "escalated", "changes_requested"]);
+
+export function canDecideApproval(
+  row: { status: string; approverMembershipId: number | null },
+  viewerMembershipId: number | null | undefined,
+  canDecide: boolean,
+): boolean {
+  const status = APPROVAL_STATUS_VALUES.find((v) => v === row.status) ?? "pending";
+  return (
+    canDecide &&
+    DECIDABLE.has(status) &&
+    viewerMembershipId != null &&
+    viewerMembershipId === row.approverMembershipId
+  );
+}
 export const EDITABLE = new Set<ApprovalStatus>(["requested", "pending", "escalated", "changes_requested"]);

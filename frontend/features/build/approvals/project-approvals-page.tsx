@@ -76,6 +76,7 @@ export function ProjectApprovalsPage({
     handleRetry,
     handleNextPage,
     handlePreviousPage,
+    handleRowClick,
     isRowSelectable,
     handleDecideDialogChange,
     handleDelegateDialogChange,
@@ -156,6 +157,7 @@ export function ProjectApprovalsPage({
             error={error}
             isFiltered={listFilters.isFiltered}
             getRowKey={(row) => row.id}
+            onRowClick={handleRowClick}
             mobileCard={renderMobileCard}
             selection={{
               selected: selectedIds,
