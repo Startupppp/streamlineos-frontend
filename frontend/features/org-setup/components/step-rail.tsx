@@ -16,6 +16,7 @@ type StepRailProps = {
 
 function StepRailInner({ sequence, currentIndex, saveState, onStepSelect }: StepRailProps) {
   const minutesLeft = ESTIMATED_MINUTES_REMAINING[sequence[currentIndex] ?? "welcome"] ?? 0;
+  const isLastStep = currentIndex === sequence.length - 1;
 
   return (
     <div className="mb-2 hidden w-full min-w-0 md:block">
@@ -86,7 +87,7 @@ function StepRailInner({ sequence, currentIndex, saveState, onStepSelect }: Step
 
       <div className="mt-1 flex items-center justify-between gap-3">
         <p className="text-dense text-muted-foreground">
-          {minutesLeft > 0 ? `About ${minutesLeft} min left` : "Almost done"}
+          {isLastStep ? "Last step" : minutesLeft > 0 ? `About ${minutesLeft} min left` : "Almost done"}
         </p>
         <motion.p
           key={saveState}

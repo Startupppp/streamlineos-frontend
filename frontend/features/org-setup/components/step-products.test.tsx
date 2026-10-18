@@ -42,6 +42,20 @@ describe("StepProducts — module card grid", () => {
     }
   });
 
+  it("says the always-on modules do not count toward the one-product rule", () => {
+    render(
+      <StepProducts
+        data={wizard()}
+        patch={jest.fn()}
+        onBack={jest.fn()}
+        onNext={jest.fn()}
+      />,
+    );
+    expect(screen.getByText(/Choose at least one product to continue/)).toHaveTextContent(
+      "Home and Knowledge base are always on and do not count toward this.",
+    );
+  });
+
   it("shows the always-included Home and Knowledge base cards", () => {
     render(
       <StepProducts

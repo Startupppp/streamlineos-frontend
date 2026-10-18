@@ -394,8 +394,8 @@ export function StepProducts({
 
       {extraCount === 0 ? (
         <p role="alert" className="text-xs text-status-warning-ink">
-          Select at least one product to continue. Home, Chat, and Knowledge are
-          included with every workspace.
+          Choose at least one product to continue. Home and Knowledge base are
+          always on and do not count toward this.
         </p>
       ) : null}
 

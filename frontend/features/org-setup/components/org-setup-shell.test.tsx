@@ -3,11 +3,11 @@ import userEvent from "@testing-library/user-event";
 import { DEFAULT_DATA } from "../lib/constants";
 import { OrgSetupShell } from "./org-setup-shell";
 
-function renderShell(syncStatus: "error" | "saving" | "synced", onRetrySave?: () => void) {
+function renderShell(syncStatus: "error" | "saving" | "synced", onRetrySave?: () => void, currentIndex = 1) {
   return render(
     <OrgSetupShell
       sequence={["workspace", "products", "invite"]}
-      currentIndex={1}
+      currentIndex={currentIndex}
       title="Modules"
       direction={1}
       saveState="idle"
@@ -43,5 +43,20 @@ describe("OrgSetupShell — ONB-B-004 save status", () => {
 
     expect(screen.getByText("Saving…")).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Retry" })).not.toBeInTheDocument();
+  });
+});
+
+describe("OrgSetupShell — time estimate", () => {
+  it("gives an estimate before the last step", () => {
+    renderShell("synced", undefined, 1);
+
+    expect(screen.getByText("About 1 min left")).toBeInTheDocument();
+  });
+
+  it("says Last step on the final step instead of a stale minute estimate", () => {
+    renderShell("synced", undefined, 2);
+
+    expect(screen.getByText("Last step")).toBeInTheDocument();
+    expect(screen.queryByText(/min left/)).not.toBeInTheDocument();
   });
 });

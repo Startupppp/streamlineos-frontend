@@ -184,6 +184,11 @@ export function StepWorkspace({
             aria-describedby={errors.displayName ? "display-name-error" : undefined}
           />
           <InlineError id="display-name-error" message={errors.displayName} />
+          {data.displayName.length >= DISPLAY_NAME_MAX_LENGTH - 20 ? (
+            <p className="text-dense tabular-nums text-muted-foreground" aria-live="polite">
+              {data.displayName.length}/{DISPLAY_NAME_MAX_LENGTH} characters
+            </p>
+          ) : null}
         </div>
 
         <div className="min-w-0 space-y-1">

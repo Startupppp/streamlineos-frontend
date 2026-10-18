@@ -16,7 +16,7 @@ export const workspaceStepSchema = z.object({
       DISPLAY_NAME_MAX_LENGTH,
       `Workspace name must be ${DISPLAY_NAME_MAX_LENGTH} characters or fewer.`,
     ),
-  teamSize: z.string().trim().min(1, "Select a team size."),
+  teamSize: z.string().trim().min(1, "Team size is required."),
   timezone: z.string().optional(),
   region: z.string().optional(),
   companyName: z
@@ -30,7 +30,7 @@ export const workspaceStepSchema = z.object({
   industry: z
     .string()
     .trim()
-    .min(1, "Select an industry.")
+    .min(1, "Industry is required.")
     .max(
       INDUSTRY_MAX_LENGTH,
       `Industry must be ${INDUSTRY_MAX_LENGTH} characters or fewer.`,

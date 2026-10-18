@@ -23,8 +23,8 @@ describe("workspaceStepSchema", () => {
   });
 
   it("requires the fields the completion API requires", () => {
-    expect(issueFor("teamSize", { displayName: "Acme", teamSize: "", industry: "Agency" })).toBe("Select a team size.");
-    expect(issueFor("industry", { displayName: "Acme", teamSize: "1-10", industry: "" })).toBe("Select an industry.");
+    expect(issueFor("teamSize", { displayName: "Acme", teamSize: "", industry: "Agency" })).toBe("Team size is required.");
+    expect(issueFor("industry", { displayName: "Acme", teamSize: "1-10", industry: "" })).toBe("Industry is required.");
     expect(workspaceStepSchema.safeParse({ displayName: "Acme", teamSize: "1-10", industry: "Agency" }).success).toBe(true);
   });
 
