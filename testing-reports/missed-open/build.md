@@ -310,7 +310,7 @@ Write-up from `streamline-qa-reports/build-2026-10-11-v2/NEW-BUGS.md`:
 - Actual: toast "Project created" shows, the wizard closes, but the list still shows only "My First Project" for at least 3 s. After a reload the new row is there. (Contrast: the team list refreshes within ~3 s; and creating "QA Project Gamma" navigated to /build/5 instead of staying on the list, so the post-create behaviour is inconsistent.)
 - Evidence: evidence/build-2026-10-12/02b-project-created-toast-list-stale.png, evidence/build-2026-10-12/18-projects-list-after-reload-shows-new-project.png
 
-## NEW-08 — NEEDS PRODUCT DECISION — AI Companion bubble covers primary controls (Medium, UX; blocked test steps)
+## NEW-08 — FIXED (516b83ea0), PENDING_BROWSER_VERIFICATION — AI Companion bubble covers primary controls (Medium, UX; blocked test steps)
 - Steps: open New Project wizard (step 1 "Next →"), or open a ticket and click "Set due" in the Schedule section (right panel).
 - Expected: the companion bubble does not sit over Next / date controls, or can be dismissed without a settings change.
 - Actual: the companion overlay intercepts clicks on "Next →" (Playwright reports "subtree intercepts pointer events"), and its chat panel opens over the Due date control. Workaround used: keyboard focus + Enter, and "Minimize chat".
