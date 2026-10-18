@@ -96,6 +96,7 @@ export function useCalendarMemberLookup({
   const requestedLimit =
     limit ?? (isSearch ? MEMBER_PICKER_SEARCH_LIMIT : MEMBER_PICKER_ROSTER_LIMIT);
   return useQuery({
+    ...INLINE_READ_ERROR,
     queryKey: isSearch
       ? platformHierarchyQueryKeys.calendar.memberSearch(term, requestedLimit)
       : platformHierarchyQueryKeys.calendar.orgMembers(requestedLimit),

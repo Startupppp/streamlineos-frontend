@@ -5,7 +5,8 @@ import { queryKeys } from "@/lib/query-keys";
 import { partialMatchKey } from "@tanstack/react-query";
 import type { QueryKey } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
-import { useCalendarEvents, useCalendarSources } from "./calendar";
+import { useCalendarEvents, useCalendarMemberLookup, useCalendarSources } from "./calendar";
+import { useCalendarEvent, useEventAttendees, useEventSyncStatus } from "./calendar-event-detail";
 
 jest.mock("@tanstack/react-query", () => ({
   ...jest.requireActual("@tanstack/react-query"),
@@ -146,5 +147,28 @@ describe("CAL-B-026 the events read carries the title search and source filter t
     expect(params).not.toHaveProperty("q");
     expect(params).not.toHaveProperty("sourceKey");
     expect(params).toHaveProperty("start", START.toISOString());
+  });
+});
+
+describe("CAL-B-016 a failed calendar read stays inside its own panel", () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    mockCan.mockReturnValue(true);
+    mockGate.mockReturnValue({ allowed: true, pending: false, unavailable: false });
+    mockQuery.mockImplementation((opts: unknown) => opts);
+  });
+
+  it.each([
+    ["events", () => useCalendarEvents(START, END)],
+    ["sources", () => useCalendarSources()],
+    ["member lookup", () => useCalendarMemberLookup()],
+    ["event detail", () => useCalendarEvent(7)],
+    ["attendees", () => useEventAttendees(7)],
+    ["sync status", () => useEventSyncStatus(7)],
+  ])("%s never throws its error to the page boundary", (_name, hook) => {
+    renderHook(hook);
+    const options = mockQuery.mock.calls.at(-1)?.[0] as { throwOnError?: unknown; queryKey: unknown };
+    expect(options.queryKey).toBeDefined();
+    expect(options.throwOnError).toBe(false);
   });
 });

@@ -21,6 +21,7 @@ const calendarRsvpContract = lazyContract(() =>
 );
 import { platformHierarchyQueryKeys } from "@/lib/query-keys/platform-hierarchy";
 import { useCan } from "@/hooks/api/access";
+import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
 import type { z } from "zod";
 import type {
   calendarEventAttendeesContract as calendarEventAttendeesContractDef,
@@ -39,6 +40,7 @@ const calendarSyncStatusKey = (eventId: number) =>
 export function useCalendarEvent(eventId: number | null) {
   const can = useCan("calendar:read");
   return useQuery({
+    ...INLINE_READ_ERROR,
     queryKey: platformHierarchyQueryKeys.calendar.eventDetail(eventId ?? 0),
     queryFn: ({ signal }) =>
       apiClient.get<CalendarEventDetail>(`/calendar/events/${eventId}`, undefined, signal, calendarEventDetailContract),
@@ -50,6 +52,7 @@ export function useCalendarEvent(eventId: number | null) {
 export function useEventAttendees(eventId: number | null) {
   const can = useCan("calendar:read");
   return useQuery({
+    ...INLINE_READ_ERROR,
     queryKey: platformHierarchyQueryKeys.calendar.attendees(eventId ?? 0),
     queryFn: ({ signal }) =>
       apiClient.get<EventAttendee[]>(
@@ -83,6 +86,7 @@ export function useRsvpCalendarEvent() {
 
 export function useEventSyncStatus(eventId: number | null) {
   return useQuery({
+    ...INLINE_READ_ERROR,
     queryKey: calendarSyncStatusKey(eventId ?? 0),
     queryFn: ({ signal }) =>
       apiClient.get<EventSyncStatusResponse>(
