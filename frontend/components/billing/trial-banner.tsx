@@ -74,9 +74,12 @@ export function TrialBanner() {
         <Button
           asChild
           size="sm"
-          className="h-7 border-0 bg-status-warning-fill px-2.5 text-dense text-white hover:bg-status-warning-fill-hover sm:h-6 sm:px-3"
+          className="h-7 border-0 bg-status-warning-fill px-2.5 text-dense text-white hover:bg-status-warning-fill-hover focus-visible:ring-2 focus-visible:ring-status-warning-ink focus-visible:ring-offset-2 focus-visible:ring-offset-status-warning-surface sm:h-6 sm:px-3"
         >
-          <Link href="/settings/billing?tab=plan">
+          <Link
+            href="/settings/billing?tab=plan"
+            aria-label="Upgrade now, opens billing plans"
+          >
             <span className="sm:hidden">Upgrade</span>
             <span className="hidden sm:inline">Upgrade now</span>
           </Link>
@@ -85,7 +88,7 @@ export function TrialBanner() {
           type="button"
           onClick={handleDismiss}
           aria-label="Dismiss trial notice"
-          className="flex h-7 w-7 items-center justify-center rounded text-status-warning-ink transition-colors hover:bg-status-warning-surface hover:text-status-warning-ink sm:h-5 sm:w-5"
+          className="flex h-7 w-7 items-center justify-center rounded text-status-warning-ink transition-colors hover:bg-status-warning-rule outline-none focus-visible:ring-2 focus-visible:ring-status-warning-ink sm:h-5 sm:w-5"
         >
           <X className="h-3 w-3" aria-hidden="true" />
         </button>
