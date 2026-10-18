@@ -24,6 +24,7 @@ import {
   useUpdateOrgDepartment,
 } from "@/hooks/api/org-hierarchy";
 import { useOrgMembers } from "@/hooks/api/organization";
+import { isApiError } from "@/lib/api-envelope";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { cn } from "@/lib/utils";
 import type { OrgDepartment } from "@/types/org-hierarchy";
@@ -100,18 +101,27 @@ export function OrgDepartmentsPage() {
   const handleUpdate = useCallback(
     async (values: DepartmentFormValues) => {
       if (!editingDepartment) return;
-      await updateDepartment.mutateAsync({
-        departmentId: editingDepartment.id,
-        name: values.name,
-        code: values.code.toUpperCase(),
-        branchId: values.branchId || null,
-        headUserId: values.headUserId || null,
-        description: values.description || null,
-      });
+      try {
+        await updateDepartment.mutateAsync({
+          departmentId: editingDepartment.id,
+          name: values.name,
+          code: values.code.toUpperCase(),
+          branchId: values.branchId || null,
+          headUserId: values.headUserId || null,
+          description: values.description || null,
+          expectedUpdatedAt: editingDepartment.updatedAt,
+        });
+      } catch (mutationError) {
+        if (isApiError(mutationError) && mutationError.status === 409 && mutationError.code === "VERSION_CONFLICT") {
+          setEditingDepartment(null);
+          void refetch();
+        }
+        throw mutationError;
+      }
       toast.success("Department updated");
       setEditingDepartment(null);
     },
-    [editingDepartment, updateDepartment],
+    [editingDepartment, refetch, updateDepartment],
   );
 
   const handleRestore = useCallback(
