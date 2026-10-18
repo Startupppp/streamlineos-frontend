@@ -336,6 +336,18 @@ describe("OrgSetupPage — pending invitation banner", () => {
     expect(mockSignOut).toHaveBeenCalledTimes(1);
   });
 
+  it("shows the sign-out in progress on the button itself (B-022, FE-80)", async () => {
+    const { useSignOut } = jest.requireMock("@/hooks/common/auth-hooks");
+    useSignOut.mockReturnValue({ mutate: mockSignOut, isPending: true });
+    withInvitations();
+    render(<OrgSetupPage />);
+
+    const signingOut = await screen.findByRole("button", { name: /Signing out/ });
+    expect(signingOut).toBeDisabled();
+    expect(signingOut).toHaveAttribute("aria-busy", "true");
+    useSignOut.mockReturnValue({ mutate: mockSignOut, isPending: false });
+  });
+
   it("calls claimMutation.mutate with the invitation id when Join is clicked", async () => {
     const mutate = jest.fn();
     withInvitations(mutate);

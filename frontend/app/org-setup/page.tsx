@@ -7,6 +7,7 @@ import { useSession } from "next-auth/react";
 import { toast } from "sonner";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { setAutoSignOutSuppressed } from "@/lib/api-client";
 import {
@@ -361,14 +362,16 @@ export default function OrgSetupPage() {
           <Button variant="ghost" className="self-start" onClick={handleCreateOwnOrg}>
             Create my own organization instead
           </Button>
-          <Button
+          <LoadingButton
+            type="button"
             variant="ghost"
             className="self-start text-muted-foreground"
             onClick={handleSignOut}
-            disabled={signOutMutation.isPending}
+            isPending={signOutMutation.isPending}
+            loadingText="Signing out…"
           >
             Sign out
-          </Button>
+          </LoadingButton>
         </div>
       </div>
     );
