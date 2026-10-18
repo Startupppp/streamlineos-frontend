@@ -209,8 +209,8 @@ it("opens the page's version history from its collection action menu", async () 
 it("copies the selected page URL without navigating away", async () => {
   mockSearchParams = new URLSearchParams("view=card");
   const writeText = jest.fn().mockResolvedValue(undefined);
-  Object.defineProperty(navigator, "clipboard", { configurable: true, value: { writeText } });
   const user = userEvent.setup();
+  Object.defineProperty(navigator, "clipboard", { configurable: true, value: { writeText } });
   render(<WikiPageCollectionTable fixedParams={{ owner: "me" }} emptyTitle="No pages" />);
 
   await user.click(screen.getByRole("button", { name: "Page actions" }));

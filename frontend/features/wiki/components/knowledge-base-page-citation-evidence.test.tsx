@@ -59,6 +59,7 @@ jest.mock("@/hooks/api/kb/chat-history", () => ({
                   title: "Unreviewed draft",
                   spaceId: 3,
                   updatedAt: FIVE_DAYS_AGO,
+                  passage: "Part-time employees accrue leave pro rata.",
                 },
               ],
               createdAt: "2026-09-01T00:00:00.000Z",

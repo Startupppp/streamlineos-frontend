@@ -54,6 +54,7 @@ jest.mock("@/hooks/api/kb", () => ({
   useCancelImportJob: () => ({ mutate: jest.fn(), isPending: false }),
   useDryRunImport: () => ({ mutate: jest.fn(), isPending: false, data: undefined, reset: jest.fn() }),
   useKbImportJobs: () => emptyJobList,
+  useRetryImportJob: () => ({ mutate: jest.fn(), isPending: false, variables: undefined }),
   useKbExportJobs: () => emptyJobList,
 }));
 
