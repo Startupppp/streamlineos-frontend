@@ -26,7 +26,6 @@ interface UserDirectoryFiltersProps {
   onRoleChange: (value: string) => void;
   onDepartmentChange: (value: string) => void;
   onBranchChange: (value: string) => void;
-  /** `primary` = status + role (inline). `more` = department + branch (Filters menu). */
   slot?: UserDirectoryFilterSlot;
 }
 
@@ -48,7 +47,10 @@ export function UserDirectoryFilters({
 
   const statusSelect = (
     <Select value={status} onValueChange={onStatusChange}>
-      <SelectTrigger aria-label="Filter users by status" className={selectTriggerClass}>
+      <SelectTrigger
+        aria-label="Filter users by status"
+        className={selectTriggerClass}
+      >
         <SelectValue />
       </SelectTrigger>
       <SelectContent className="min-w-[var(--radix-select-trigger-width)]">
@@ -62,7 +64,10 @@ export function UserDirectoryFilters({
 
   const roleSelect = (
     <Select value={role} onValueChange={onRoleChange}>
-      <SelectTrigger aria-label="Filter users by role" className={selectTriggerClass}>
+      <SelectTrigger
+        aria-label="Filter users by role"
+        className={selectTriggerClass}
+      >
         <SelectValue />
       </SelectTrigger>
       <SelectContent className="min-w-[var(--radix-select-trigger-width)]">

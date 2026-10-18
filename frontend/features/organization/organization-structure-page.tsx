@@ -10,8 +10,6 @@ import {
   Coins,
   GitBranch,
   MapPin,
-  Network,
-  Settings,
   Users,
   type LucideIcon,
 } from "lucide-react";
@@ -20,7 +18,6 @@ import { ErrorState } from "@/components/shared/error-state";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAccess, useCan } from "@/hooks/api/access";
 import { useOrgHierarchyOverview } from "@/hooks/api/org-hierarchy";
@@ -217,28 +214,12 @@ export function OrganizationStructurePage() {
   return (
     <PageWrapper
       title="Organization Structure"
-        subtitle={
-          overview
-            ? `${totalEntities} configured · Business Unit → Branch → Department → Team`
-            : "Set up reporting units once, then reuse them across people, access, payroll, and reporting."
-        }
-        actions={
-          <div className="flex items-center gap-2">
-            <Button asChild variant="outline" size="sm" className="h-8 gap-1.5">
-              <Link href="/settings/organization" aria-label="Org settings">
-                <Settings className="size-3.5" />
-                <span className="hidden sm:inline">Org settings</span>
-              </Link>
-            </Button>
-            <Button asChild size="sm" className="h-8 gap-1.5">
-              <Link href="/settings/organization/chart">
-                <Network className="size-3.5" />
-                Chart
-              </Link>
-            </Button>
-          </div>
-        }
-      >
+      subtitle={
+        overview
+          ? `${totalEntities} configured · Business Unit → Branch → Department → Team`
+          : "Set up reporting units once, then reuse them across people, access, payroll, and reporting."
+      }
+    >
         <div className="flex flex-1 min-h-0 flex-col gap-4">
           <div className="grid grid-cols-1 gap-4 lg:grid-cols-[1.4fr_1fr]">
             <section className="rounded-xl border border-border bg-card shadow-sm">

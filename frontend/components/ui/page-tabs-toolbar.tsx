@@ -113,8 +113,9 @@ export function PageTabsToolbar({
 
   const searchField = search ? (
     <div
+      data-slot="page-tabs-toolbar-search"
       className={cn(
-        "min-w-0 w-full basis-auto md:min-w-[10rem] md:max-w-[16rem] md:flex-1 md:basis-[10rem]",
+        "min-w-0 w-[min(100%,16rem)] flex-1 basis-[10rem] sm:max-w-[16rem]",
         searchClassName,
       )}
     >
@@ -158,11 +159,20 @@ export function PageTabsToolbar({
     </div>
   ) : null;
 
+  const tabsWithSearch = (
+    <div
+      data-slot="page-tabs-toolbar-tabs"
+      className="flex min-w-0 flex-1 items-center gap-2 md:flex-none"
+    >
+      <div className="shrink-0">{tabs}</div>
+      {searchField}
+    </div>
+  );
+
   if (!isLabeled) {
     return (
       <div className={cn("flex w-full min-w-0 flex-wrap items-center gap-2", className)}>
-        <div className="min-w-0">{tabs}</div>
-        {searchField}
+        {tabsWithSearch}
         {filterControls}
         {actionCluster}
       </div>
@@ -177,17 +187,11 @@ export function PageTabsToolbar({
         className,
       )}
     >
-      <div
-        data-slot="page-tabs-toolbar-tabs"
-        className="w-full min-w-0 shrink-0 md:w-auto"
-      >
-        {tabs}
-      </div>
+      {tabsWithSearch}
       <div
         data-slot="page-tabs-toolbar-controls"
-        className="flex w-full min-w-0 flex-wrap items-center gap-2 md:min-w-0 md:flex-1 md:flex-nowrap md:overflow-x-auto md:overscroll-x-contain md:scrollbar-hide"
+        className="flex w-full min-w-0 flex-wrap items-center gap-2 md:ml-auto md:w-auto md:flex-nowrap md:justify-end md:overflow-x-auto md:overscroll-x-contain md:scrollbar-hide"
       >
-        {searchField}
         {filterControls}
         {actionCluster}
       </div>

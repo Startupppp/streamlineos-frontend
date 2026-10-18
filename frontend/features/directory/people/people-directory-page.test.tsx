@@ -155,7 +155,7 @@ describe("PeopleDirectoryPage access states", () => {
     );
 
     expect(
-      screen.getByText(/Members with only an app account appear once their record is added/),
+      screen.getByText(/Person records from Directory or HR onboarding/),
     ).toBeInTheDocument();
     expect(await screen.findByText("No person records yet")).toBeInTheDocument();
     expect(screen.getByText(/Add people here, or onboard them in HR/)).toBeInTheDocument();

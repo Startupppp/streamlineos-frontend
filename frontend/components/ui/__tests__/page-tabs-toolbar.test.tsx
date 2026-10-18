@@ -2,7 +2,7 @@ import { render, screen } from "@testing-library/react";
 import { PageTabsToolbar } from "@/components/ui/page-tabs-toolbar";
 
 describe("PageTabsToolbar responsive layout", () => {
-  it("keeps labeled tabs and controls in one row from tablet widths", () => {
+  it("keeps labeled tabs and search together, with filters in the trailing controls", () => {
     const { container } = render(
       <PageTabsToolbar
         tabs={<button type="button">List</button>}
@@ -14,6 +14,7 @@ describe("PageTabsToolbar responsive layout", () => {
 
     const toolbar = container.querySelector('[data-slot="page-tabs-toolbar"]');
     const tabs = container.querySelector('[data-slot="page-tabs-toolbar-tabs"]');
+    const search = container.querySelector('[data-slot="page-tabs-toolbar-search"]');
     const controls = container.querySelector(
       '[data-slot="page-tabs-toolbar-controls"]',
     );
@@ -24,8 +25,10 @@ describe("PageTabsToolbar responsive layout", () => {
       "md:flex-nowrap",
       "md:items-center",
     );
-    expect(tabs).toHaveClass("w-full", "md:w-auto", "shrink-0");
-    expect(controls).toHaveClass("flex", "flex-wrap", "md:flex-nowrap", "md:flex-1");
+    expect(tabs).toContainElement(search as HTMLElement);
+    expect(tabs).toHaveClass("flex", "items-center", "gap-2");
+    expect(controls).toHaveClass("flex", "flex-wrap", "md:ml-auto", "md:flex-nowrap");
+    expect(controls).not.toContainElement(search as HTMLElement);
   });
 
   it("keeps the compact Filters trigger named and available below its collapse point", () => {

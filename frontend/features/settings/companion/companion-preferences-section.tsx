@@ -220,7 +220,7 @@ function CompanionPreferencesForm({ data }: { data: CompanionPreferences }) {
   });
   const { control, register, handleSubmit, watch, formState } = form;
   const consent = watch("activityConsent");
-  const previewName = watch("name").trim() || "Companion";
+  const previewName = watch("name").trim();
   const previewPreset = watch("preset");
   const previewAnimation = watch("animation");
   const presetOptions = useMemo(
@@ -348,14 +348,11 @@ function CompanionPreferencesForm({ data }: { data: CompanionPreferences }) {
             animation={previewAnimation}
             className="size-12"
           />
-          <div>
-            <p className="text-sm font-semibold text-foreground">
-              {previewName}
-            </p>
-            <p className="text-xs text-muted-foreground">
-              Live appearance and animation preview
-            </p>
-          </div>
+          {previewName ? (
+            <p className="text-sm font-semibold text-foreground">{previewName}</p>
+          ) : (
+            <p className="text-xs text-muted-foreground">Appearance preview</p>
+          )}
         </div>
         <div className="grid gap-3 sm:grid-cols-2">
           <div className="flex flex-col gap-1.5">
@@ -464,8 +461,7 @@ export function CompanionPreferencesSection() {
       <div>
         <h2 className="text-sm font-semibold text-foreground">Companion</h2>
         <p className="mt-0.5 text-xs text-muted-foreground">
-          Choose how your assistant looks and when it may suggest something.
-          Drag the pet to move it.
+          Appearance, prompts, and when suggestions appear.
         </p>
       </div>
       {isLoading ? <Skeleton className="h-40 w-full" /> : null}

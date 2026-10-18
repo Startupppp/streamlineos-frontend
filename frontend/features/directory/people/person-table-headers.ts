@@ -10,4 +10,4 @@ export const PERSON_TABLE_HEADERS = [
 export const DIRECTORY_TITLE = "Directory";
 
 export const DIRECTORY_SUBTITLE =
-  "Everyone with a person record, added here or by HR onboarding. Members with only an app account appear once their record is added.";
+  "Person records from Directory or HR onboarding.";
