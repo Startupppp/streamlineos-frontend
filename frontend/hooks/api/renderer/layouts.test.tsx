@@ -151,6 +151,21 @@ describe("two tenants sharing one browser", () => {
     expect(columnsFor(globex.result.current.data)).toEqual(["mass", "label", "owner", "site"]);
   });
 
+  it("a refused read stays inline so the declared layout renders instead of the error page", async () => {
+    const client = new QueryClient({
+      defaultOptions: { queries: { retry: false, throwOnError: true } },
+    });
+    mockedGet.mockRejectedValueOnce(new Error("Validation failed."));
+    actingAs(ACME);
+
+    const { result } = renderHook(() => useLayoutAdjustment("settings:storage-quarantine"), {
+      wrapper: makeWrapper(client),
+    });
+
+    await waitFor(() => expect(result.current.isError).toBe(true));
+    expect(result.current.data).toBeUndefined();
+  });
+
   it("asks for nothing at all until a tenant is known", () => {
     const wrapper = makeWrapper(freshClient());
     mockedSession.mockReturnValue({ data: null, status: "loading" });

@@ -8,6 +8,7 @@ import { platformCoreQueryKeys } from "@/lib/query-keys/platform-core";
 import { useCan } from "@/hooks/api/access";
 import type { LayoutAdjustment } from "@/lib/renderer/layout-adjustment";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
 
 const layoutAdjustmentContract = lazyContract(() =>
   import("@/hooks/api/renderer/layouts-schema").then((m) => m.layoutAdjustmentContract),
@@ -90,6 +91,7 @@ export function useLayoutAdjustment(layoutKey: string) {
     */
     retry: false,
     enabled: !!orgId && !!layoutKey,
+    ...INLINE_READ_ERROR,
   });
 }
 
