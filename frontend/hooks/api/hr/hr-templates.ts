@@ -6,6 +6,7 @@ import { lazyContract } from "@/lib/api-envelope";
 import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
 import { useCan, useModuleEnabled } from "@/hooks/api/access";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
 import type {
   HrTemplate,
   HrTemplateKind,
@@ -33,6 +34,7 @@ export function useHrTemplates(params?: ListParams) {
     staleTime: 60_000,
     placeholderData: keepPreviousData,
     enabled: hrEnabled && canView,
+    ...INLINE_READ_ERROR,
   });
 }
 

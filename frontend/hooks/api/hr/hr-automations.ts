@@ -50,6 +50,7 @@ export function useHrAutomations(params?: { search?: string; triggerEvent?: stri
     staleTime: 30_000,
     placeholderData: keepPreviousData,
     enabled: canView && hrEnabled,
+    ...INLINE_READ_ERROR,
   });
 }
 
@@ -61,6 +62,7 @@ export function useHrAutomationEvents() {
     queryFn: ({ signal }) => apiClient.get<{ events: HrEventDefinition[] }>("/hr/automations/events", undefined, signal, lazyContract(() => import("@/hooks/api/hr/hr-automations-schema").then(m => m.automationEventsListContract))),
     staleTime: 5 * 60_000,
     enabled: canView && hrEnabled,
+    ...INLINE_READ_ERROR,
   });
 }
 

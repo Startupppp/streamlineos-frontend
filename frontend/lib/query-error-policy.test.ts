@@ -1,6 +1,7 @@
 import { createAppQueryClient } from "@/components/providers/query-provider";
 import { ApiError } from "@/lib/api-envelope";
 import {
+  ACCESS_UNAVAILABLE_DIGEST,
   INLINE_READ_ERROR,
   isTransientNetworkError,
   projectReadErrorReachesBoundary,
@@ -138,6 +139,19 @@ describe("transient server failures", () => {
     const error = new Error("Could not load your permissions. Please try again.");
     error.name = "AccessUnavailableError";
     expect(isTransientNetworkError(error)).toBe(true);
+  });
+
+  it("retries a server-component access failure that reaches the client with only its digest, as production delivers it", () => {
+    const productionError = Object.assign(
+      new Error("An error occurred in the Server Components render."),
+      { digest: ACCESS_UNAVAILABLE_DIGEST },
+    );
+    expect(isTransientNetworkError(productionError)).toBe(true);
+    expect(
+      isTransientNetworkError(
+        Object.assign(new Error("An error occurred in the Server Components render."), { digest: "605193880" }),
+      ),
+    ).toBe(false);
   });
 
   it("retries normalized server fetch failures", () => {

@@ -20,7 +20,8 @@ jest.mock("@/lib/rbac/get-server-access", () => ({
 
 import { redirect } from "next/navigation";
 import { getServerAccessResult } from "@/lib/rbac/get-server-access";
-import { requireModulePermission } from "@/lib/rbac/require-permission";
+import { AccessUnavailableError, requireModulePermission, requirePermission } from "@/lib/rbac/require-permission";
+import { ACCESS_UNAVAILABLE_DIGEST, isTransientNetworkError } from "@/lib/query-error-policy";
 import type { ModuleDenialReason } from "@/lib/page-state/page-state-schema";
 
 function accessWith(
@@ -71,5 +72,16 @@ describe("requireModulePermission denial reason", () => {
     await expect(requireModulePermission("build")).resolves.toMatchObject({
       access: { modules: { build: true } },
     });
+  });
+});
+
+describe("permission snapshot outage", () => {
+  it("throws an error carrying the access-unavailable digest so production clients can auto-retry it", async () => {
+    jest.mocked(getServerAccessResult).mockResolvedValue({ ok: false, error: new Error("503") });
+    await expect(requirePermission("hr:employees:view")).rejects.toMatchObject({
+      name: "AccessUnavailableError",
+      digest: ACCESS_UNAVAILABLE_DIGEST,
+    });
+    expect(isTransientNetworkError(new AccessUnavailableError())).toBe(true);
   });
 });

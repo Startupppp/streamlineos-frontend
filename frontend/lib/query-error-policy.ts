@@ -37,8 +37,16 @@ export async function optionalSignalRead<T>(
   }
 }
 
+export const ACCESS_UNAVAILABLE_DIGEST = "STREAMLINE_ACCESS_UNAVAILABLE";
+
 export function isTransientNetworkError(error: unknown): boolean {
   if (error instanceof Error && error.name === "AccessUnavailableError")
+    return true;
+  if (
+    error instanceof Error &&
+    "digest" in error &&
+    error.digest === ACCESS_UNAVAILABLE_DIGEST
+  )
     return true;
   if (!isApiError(error)) return false;
   if (error.code === "NETWORK_ERROR" || error.code === "TIMEOUT") return true;

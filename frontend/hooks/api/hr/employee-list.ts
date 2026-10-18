@@ -205,6 +205,7 @@ export function useHrEmployeeCounts(params: HrEmployeeCountsParams) {
     // stat tiles to skeletons on every settled search.
     placeholderData: keepPreviousData,
     enabled: hrEnabled && canView,
+    ...INLINE_READ_ERROR,
   });
 }
 

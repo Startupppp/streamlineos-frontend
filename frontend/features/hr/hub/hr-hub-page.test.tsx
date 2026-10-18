@@ -4,14 +4,16 @@ import { HrHubPage } from "./hr-hub-page";
 
 let mockCapabilities: HrHubAccess = EMPTY_HR_HUB_ACCESS;
 let mockIsLoading = false;
+let mockAwaitingSession = false;
 
 jest.mock("@/hooks/api/hr/hub", () => ({
   ...jest.requireActual("@/hooks/api/hr/hub"),
   useHrHubSnapshot: () => ({
-    data: mockIsLoading
+    data: mockIsLoading || mockAwaitingSession
       ? undefined
       : { generatedAt: "", today: "", capabilities: mockCapabilities, sections: {} },
     isLoading: mockIsLoading,
+    isPending: mockIsLoading || mockAwaitingSession,
     isError: false,
     refetch: jest.fn(),
   }),
@@ -31,6 +33,7 @@ beforeEach(() => {
   mockSetupEmpty = false;
   mockDismissed = false;
   mockIsLoading = false;
+  mockAwaitingSession = false;
 });
 
 describe("HR hub without recruitment", () => {
@@ -66,6 +69,15 @@ describe("HR hub loading state (BUG-HRMS-016)", () => {
     expect(screen.queryByText("No HR panels available to you")).not.toBeInTheDocument();
     expect(screen.queryByText("Today")).not.toBeInTheDocument();
     expect(screen.queryByText("Needs you")).not.toBeInTheDocument();
+  });
+
+  it("keeps the skeletons while the snapshot read waits for the session, instead of claiming no panels", () => {
+    mockAwaitingSession = true;
+    mockCapabilities = { ...EMPTY_HR_HUB_ACCESS, canLeaveCalendar: true };
+    const { container } = render(<HrHubPage />);
+
+    expect(screen.queryByText("No HR panels available to you")).not.toBeInTheDocument();
+    expect(container.querySelector(".animate-pulse")).not.toBeNull();
   });
 
   it("offers Still loading / Try again once the snapshot has been pending for 10s (UX-16)", () => {

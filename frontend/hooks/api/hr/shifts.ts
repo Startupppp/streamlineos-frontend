@@ -7,6 +7,7 @@ import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
 import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
 import { useCan, useModuleEnabled } from "@/hooks/api/access";
+import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
 
 const shiftListContract = lazyContract(() =>
   import("@/hooks/api/hr/shifts-schema").then((m) => m.shiftTemplateListContract),
@@ -69,6 +70,7 @@ export function useHrShifts() {
     queryFn: ({ signal }) => apiClient.get("/hr/shifts", undefined, signal, shiftListContract),
     staleTime: 2 * 60_000,
     enabled: hrEnabled && canView,
+    ...INLINE_READ_ERROR,
   });
 }
 

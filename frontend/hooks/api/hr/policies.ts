@@ -81,6 +81,7 @@ export function useHrPolicies(params?: {
     staleTime: 60_000,
     placeholderData: keepPreviousData,
     enabled: canView && hrEnabled,
+    ...INLINE_READ_ERROR,
   });
 }
 

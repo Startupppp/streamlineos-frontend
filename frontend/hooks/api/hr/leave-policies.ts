@@ -4,6 +4,7 @@ import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
 import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
 import { useCan } from "@/hooks/api/access";
+import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
 
 const leavePoliciesListC = lazyContract(() =>
   import("@/hooks/api/hr/leave-policies-schema").then((m) => m.leavePoliciesListContract),
@@ -59,6 +60,7 @@ export function useLeavePolicies() {
     queryFn: ({ signal }) => apiClient.get<LeavePolicy[]>("/hr/leave-policies", undefined, signal, leavePoliciesListC),
     staleTime: 60_000,
     enabled: canView,
+    ...INLINE_READ_ERROR,
   });
 }
 

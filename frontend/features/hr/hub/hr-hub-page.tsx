@@ -60,7 +60,8 @@ export function HrHubPage() {
   const handleRetry = () => {
     void hub.refetch();
   };
-  const hubStalled = useStalledAfter(hub.isLoading, PANEL_STALLED_AFTER_MS);
+  const hubLoading = hub.isPending;
+  const hubStalled = useStalledAfter(hubLoading, PANEL_STALLED_AFTER_MS);
 
   const visibleActions = useMemo(
     () => ALL_QUICK_ACTIONS.filter((a) => access[a.permKey]),
@@ -151,7 +152,7 @@ export function HrHubPage() {
             <StalledReadNotice subject="the HR overview" onRetry={handleRetry} />
           ) : null}
 
-          {!setupEmpty && !hub.isLoading && !hub.isError && !hasAnyPanel ? (
+          {!setupEmpty && !hubLoading && !hub.isError && !hasAnyPanel ? (
             <EmptyState
               className="flex-1"
               illustrationPreset="team"
@@ -165,25 +166,25 @@ export function HrHubPage() {
           <HrHubQueues
             access={access}
             snapshot={hub.data}
-            isLoading={hub.isLoading}
+            isLoading={hubLoading}
             onRetry={handleRetry}
           />
           <HrHubToday
             access={access}
             snapshot={hub.data}
-            isLoading={hub.isLoading}
+            isLoading={hubLoading}
             onRetry={handleRetry}
           />
           <HrHubActivity
             access={access}
             snapshot={hub.data}
-            isLoading={hub.isLoading}
+            isLoading={hubLoading}
             onRetry={handleRetry}
           />
           <HrHubMetrics
             access={access}
             snapshot={hub.data}
-            isLoading={hub.isLoading}
+            isLoading={hubLoading}
             onRetry={handleRetry}
           />
             </>

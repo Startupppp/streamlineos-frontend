@@ -11,6 +11,7 @@ import { grantsPermission } from "@/lib/rbac/permission-gate";
 import type { AccessResponse } from "@/types/access";
 import type { PermissionKey } from "@/lib/rbac/permissions";
 import { normalizeOrgModuleKey } from "@/lib/org-module-keys";
+import { ACCESS_UNAVAILABLE_DIGEST } from "@/lib/query-error-policy";
 
 interface RequirePermissionResult {
   session: Session;
@@ -18,6 +19,8 @@ interface RequirePermissionResult {
 }
 
 export class AccessUnavailableError extends Error {
+  readonly digest = ACCESS_UNAVAILABLE_DIGEST;
+
   constructor(cause?: unknown) {
     super("Could not load your permissions. Please try again.");
     this.name = "AccessUnavailableError";

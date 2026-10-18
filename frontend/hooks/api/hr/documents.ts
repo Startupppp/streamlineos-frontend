@@ -78,6 +78,7 @@ export function useHrDocumentStats(options?: { enabled?: boolean }) {
     queryFn: ({ signal }) => apiClient.get<HrDocumentStats>("/hr/documents/stats", undefined, signal, documentStatsLazy),
     staleTime: 2 * 60_000,
     enabled: hrEnabled && canDocs && (options?.enabled ?? true),
+    ...INLINE_READ_ERROR,
   });
 }
 
