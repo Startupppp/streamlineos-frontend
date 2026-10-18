@@ -103,3 +103,60 @@ describe("the agenda (list) view", () => {
     expect(container.querySelectorAll('[role="presentation"]')).toHaveLength(0);
   });
 });
+
+describe("overlapping timed events in the week grid", () => {
+  const OVERLAPPING: BigCalEvent[] = [
+    {
+      id: "ov-1",
+      title: "Calendar Outlook sync review",
+      start: new Date(2026, 8, 15, 14, 0),
+      end: new Date(2026, 8, 15, 15, 0),
+    },
+    {
+      id: "ov-2",
+      title: "Quarterly planning",
+      start: new Date(2026, 8, 15, 14, 30),
+      end: new Date(2026, 8, 15, 15, 30),
+    },
+  ];
+
+  function renderOverlapping() {
+    return render(
+      <BigCalendarWrapper
+        events={OVERLAPPING}
+        date={new Date(2026, 8, 15, 10, 0)}
+        view="week"
+        onView={handleView}
+        onNavigate={handleNavigate}
+      />,
+    );
+  }
+
+  it("lays the clashing blocks side by side at equal width instead of stacking narrow offset blocks", () => {
+    const { container } = renderOverlapping();
+    const blocks = Array.from(
+      container.querySelectorAll<HTMLElement>(".rbc-time-content .rbc-event"),
+    );
+    expect(blocks).toHaveLength(2);
+    const percentOf = (value: string) => parseFloat(value.replace("calc(", ""));
+    const widths = blocks.map((block) => percentOf(block.style.width));
+    const lefts = blocks.map((block) => percentOf(block.style.left)).sort((a, b) => a - b);
+    expect(widths[0]).toBeCloseTo(50);
+    expect(widths[1]).toBeCloseTo(50);
+    expect(lefts[0]).toBeCloseTo(0);
+    expect(lefts[1]).toBeCloseTo(50);
+  });
+
+  it("keeps the vendor hover tooltip carrying each block's full time range and untruncated title", () => {
+    const { container } = renderOverlapping();
+    const titles = Array.from(
+      container.querySelectorAll<HTMLElement>(".rbc-time-content .rbc-event"),
+    ).map((block) => block.getAttribute("title"));
+    expect(titles).toEqual(
+      expect.arrayContaining([
+        "2:00 PM – 3:00 PM: Calendar Outlook sync review",
+        "2:30 PM – 3:30 PM: Quarterly planning",
+      ]),
+    );
+  });
+});

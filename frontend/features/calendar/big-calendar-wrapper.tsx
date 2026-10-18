@@ -181,6 +181,7 @@ export function BigCalendarWrapper({
         components={components}
         toolbar={false}
         popup
+        dayLayoutAlgorithm="no-overlap"
         scrollToTime={scrollToTime ?? WORKDAY_SCROLL_TIME}
         enableAutoScroll={enableAutoScroll}
         style={calendarStyle}
