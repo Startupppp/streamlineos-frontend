@@ -260,7 +260,7 @@ Evidence: `plan-usage-meters.tsx` `LIMIT_LABELS` map has `hrCandidates: "HR Cand
 ## UX notes that are not done
 
 ### Must change
-1. **No Send-test control for webhooks.** After create there is no way to fire a test delivery from the UI. Add a "Send test" action so operators can verify the URL without waiting for a real event.
+1. **No Send-test control for webhooks — FIXED (2d5b49d + e5a83b5), PENDING_BROWSER_VERIFICATION.** Added `POST /webhooks/:webhookId/test` on the backend; frontend shows a flask icon button per card that posts the test delivery and toasts success/failure with status code.
 
 ### Good to have
 1. **Inline validation for session-policy fields.** Validate max sessions (e.g. −5), bad domain, and bad IP inline in the form before Save, even when the policy is not persisted in this round (lockout risk).
