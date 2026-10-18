@@ -34,10 +34,18 @@ export function AssetReturnsPage() {
   // Backend POST/PATCH /hr/asset-returns require hr:assets:manage (assets.controller.ts).
   const isAdmin = useCan("hr:assets:manage");
 
-  const { data: employeesRaw } = useHrEmployees({ limit: 100 });
+  const [sheetOpen, setSheetOpen] = useState(false);
+  const { data: employeesRaw } = useHrEmployees({ limit: 100 }, { enabled: sheetOpen });
   const employees = useMemo(() => unwrapEmployees(employeesRaw), [employeesRaw]);
 
-  const { data: assignedAssetsData, error: assignedAssetsError } = useHrAssetList({ status: "ASSIGNED", limit: 100 });
+  const {
+    data: assignedAssetsData,
+    error: assignedAssetsError,
+    isPending: assignedAssetsPending,
+  } = useHrAssetList(
+    { status: "ASSIGNED", limit: 100 },
+    { enabled: sheetOpen },
+  );
 
   const allAssignedAssets = useMemo<Asset[]>(() => {
     const rows = assignedAssetsData?.data ?? [];
@@ -64,7 +72,6 @@ export function AssetReturnsPage() {
     [allAssignedAssets, employees],
   );
 
-  const [sheetOpen, setSheetOpen] = useState(false);
   const [returnId, setReturnId] = useState<number | null>(null);
   const [selectedAssetId, setSelectedAssetId] = useState("");
   const [overrideUserId, setOverrideUserId] = useState<string | null>(null);
@@ -206,6 +213,7 @@ export function AssetReturnsPage() {
         onOpenChange={handleSheetOpenChange}
         assetOptions={assetOptions}
         assetLoadError={assignedAssetsError ? getErrorMessage(assignedAssetsError) : undefined}
+        assetsLoading={assignedAssetsPending}
         allAssignedAssets={allAssignedAssets}
         selectedAssetId={selectedAssetId}
         resolvedUserId={resolvedUserId}

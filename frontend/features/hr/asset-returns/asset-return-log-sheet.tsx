@@ -37,6 +37,7 @@ interface AssetReturnLogSheetProps {
   onOpenChange: (open: boolean) => void;
   assetOptions: ComboboxOption[];
   assetLoadError?: string;
+  assetsLoading: boolean;
   allAssignedAssets: Asset[];
   selectedAssetId: string;
   resolvedUserId: string;
@@ -60,6 +61,7 @@ export function AssetReturnLogSheet({
   onOpenChange,
   assetOptions,
   assetLoadError,
+  assetsLoading,
   allAssignedAssets,
   selectedAssetId,
   resolvedUserId,
@@ -112,7 +114,7 @@ export function AssetReturnLogSheet({
         />
         {assetLoadError === undefined && allAssignedAssets.length === 0 && (
           <p className="text-xs text-muted-foreground">
-            No currently assigned assets found.
+            {assetsLoading ? "Loading assigned assets…" : "No currently assigned assets found."}
           </p>
         )}
         <FieldError id="asset-return-asset-error" message={fieldErrors.asset ?? assetLoadError} />
