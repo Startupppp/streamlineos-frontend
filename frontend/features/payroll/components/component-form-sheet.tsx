@@ -182,7 +182,7 @@ export function ComponentFormSheet({ component, open, onOpenChange }: ComponentF
                         Code <span className="text-destructive">*</span>
                       </FormLabel>
                       <FormControl>
-                        <Input id="comp-code" {...field} className="text-sm font-mono uppercase" />
+                        <Input id="comp-code" {...field} disabled={isEdit} className="text-sm font-mono uppercase" />
                       </FormControl>
                       <FormMessage className="text-xs" />
                     </FormItem>
