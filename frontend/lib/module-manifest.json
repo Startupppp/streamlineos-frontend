@@ -46,7 +46,9 @@
       "schemaFolder": "blog"
     },
     {
-      "administersNamespaces": [],
+      "administersNamespaces": [
+        "feedbucket"
+      ],
       "administrable": true,
       "cacheNamespaces": [
         "projects",
@@ -130,20 +132,6 @@
       "publicExposure": false,
       "route": "/directory",
       "schemaFolder": "directory"
-    },
-    {
-      "administersNamespaces": [],
-      "administrable": true,
-      "cacheNamespaces": [],
-      "displayName": "Feedbucket",
-      "id": "feedbucket",
-      "ladder": "delegable",
-      "moduleFolder": "feedbucket",
-      "planGated": true,
-      "productKey": null,
-      "publicExposure": true,
-      "route": null,
-      "schemaFolder": null
     },
     {
       "administersNamespaces": [

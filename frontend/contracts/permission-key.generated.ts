@@ -207,7 +207,6 @@ export type PermissionKey =
   | "chat:messages:pin"
   | "chat:messages:read"
   | "chat:messages:write"
-  | "chat:org-settings:manage"
   | "compliance:subject-requests:execute"
   | "compliance:subject-requests:view"
   | "crm:access:manage"
@@ -314,8 +313,6 @@ export type PermissionKey =
   | "directory:workers:manage"
   | "directory:workers:terminate"
   | "directory:workers:view"
-  | "feedbucket:access:manage"
-  | "feedbucket:access:view"
   | "feedbucket:submissions:ai"
   | "feedbucket:submissions:assign"
   | "feedbucket:submissions:delete"
@@ -996,7 +993,6 @@ export const PERMISSION_METADATA: Readonly<Record<PermissionKey, PermissionMetad
   "chat:messages:pin": { resource: "chat:messages", action: "pin", description: "Pin or unpin messages in a channel" },
   "chat:messages:read": { resource: "chat:messages", action: "read", description: "Read chat messages" },
   "chat:messages:write": { resource: "chat:messages", action: "write", description: "Send and edit chat messages" },
-  "chat:org-settings:manage": { resource: "chat:org-settings", action: "manage", description: "Manage organisation-wide chat settings" },
   "compliance:subject-requests:execute": { resource: "compliance:subject-requests", action: "execute", description: "Run a data subject erasure or export across every region. Also requires being named as a subject request operator for this deployment" },
   "compliance:subject-requests:view": { resource: "compliance:subject-requests", action: "view", description: "Read the record of data subject requests: which regions were visited, what each did, and whether the request may be reported as complete" },
   "crm:access:manage": { resource: "crm:access", action: "manage", description: "View access administration for the crm module; changing roles, permissions, or assignments additionally requires Module Admin, Module Owner, Org Admin, or Org Owner authority" },
@@ -1103,8 +1099,6 @@ export const PERMISSION_METADATA: Readonly<Record<PermissionKey, PermissionMetad
   "directory:workers:manage": { resource: "directory:workers", action: "manage", description: "Create and update workforce worker records" },
   "directory:workers:terminate": { resource: "directory:workers", action: "terminate", description: "Terminate workforce workers" },
   "directory:workers:view": { resource: "directory:workers", action: "view", description: "View workforce worker records" },
-  "feedbucket:access:manage": { resource: "feedbucket:access", action: "manage", description: "View access administration for the feedbucket module; changing roles, permissions, or assignments additionally requires Module Admin, Module Owner, Org Admin, or Org Owner authority" },
-  "feedbucket:access:view": { resource: "feedbucket:access", action: "view", description: "View roles, permissions and assignments for the feedbucket module" },
   "feedbucket:submissions:ai": { resource: "feedbucket:submissions", action: "ai", description: "Run AI triage analysis on feedback submissions" },
   "feedbucket:submissions:assign": { resource: "feedbucket:submissions", action: "assign", description: "Assign feedback submissions to team members" },
   "feedbucket:submissions:delete": { resource: "feedbucket:submissions", action: "delete", description: "Delete feedback submissions" },

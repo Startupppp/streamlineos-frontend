@@ -27860,11 +27860,9 @@
                     "type": "boolean"
                   },
                   "blockedInputTax": {
-                    "default": false,
                     "type": "boolean"
                   },
                   "taxInclusive": {
-                    "default": false,
                     "type": "boolean"
                   },
                   "placeOfSupplyCode": {
@@ -63315,7 +63313,6 @@
                     "minLength": 1
                   },
                   "type": {
-                    "default": "INFO",
                     "type": "string",
                     "enum": [
                       "INFO",
@@ -63325,7 +63322,6 @@
                     ]
                   },
                   "priority": {
-                    "default": "NORMAL",
                     "type": "string",
                     "enum": [
                       "LOW",
@@ -63335,7 +63331,6 @@
                     ]
                   },
                   "category": {
-                    "default": "SYSTEM",
                     "type": "string",
                     "enum": [
                       "SECURITY",
@@ -63350,9 +63345,6 @@
                     ]
                   },
                   "channels": {
-                    "default": [
-                      "IN_APP"
-                    ],
                     "minItems": 1,
                     "type": "array",
                     "items": {
@@ -69930,7 +69922,6 @@
                     ]
                   },
                   "conditions": {
-                    "default": [],
                     "maxItems": 50,
                     "type": "array",
                     "items": {
@@ -70079,7 +70070,6 @@
                     }
                   },
                   "isActive": {
-                    "default": true,
                     "type": "boolean"
                   }
                 },
@@ -172792,7 +172782,6 @@
                     "maxLength": 120
                   },
                   "description": {
-                    "default": null,
                     "anyOf": [
                       {
                         "type": "string",
@@ -172804,7 +172793,6 @@
                     ]
                   },
                   "status": {
-                    "default": "active",
                     "type": "string",
                     "enum": [
                       "active",
@@ -172841,7 +172829,6 @@
                     }
                   },
                   "conditions": {
-                    "default": [],
                     "maxItems": 20,
                     "type": "array",
                     "items": {
@@ -219563,225 +219550,6 @@
         "description": "Exposure: permission — chat:channels:read"
       }
     },
-    "/chat/settings": {
-      "get": {
-        "operationId": "ChatOrgSettingsController_get",
-        "parameters": [],
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "success": {
-                      "type": "boolean",
-                      "enum": [
-                        true
-                      ]
-                    },
-                    "data": {
-                      "type": "object",
-                      "properties": {
-                        "orgId": {
-                          "type": "string",
-                          "minLength": 1
-                        },
-                        "defaultNotificationPreference": {
-                          "type": "string",
-                          "enum": [
-                            "ALL",
-                            "MENTIONS",
-                            "NOTHING"
-                          ]
-                        },
-                        "maxAttachmentSizeMb": {
-                          "type": "integer",
-                          "minimum": 1,
-                          "maximum": 1000
-                        },
-                        "maxHuddleParticipants": {
-                          "type": "integer",
-                          "minimum": 2,
-                          "maximum": 500
-                        }
-                      },
-                      "required": [
-                        "orgId",
-                        "defaultNotificationPreference",
-                        "maxAttachmentSizeMb",
-                        "maxHuddleParticipants"
-                      ],
-                      "additionalProperties": false
-                    }
-                  },
-                  "required": [
-                    "success",
-                    "data"
-                  ],
-                  "additionalProperties": false
-                }
-              }
-            }
-          },
-          "400": {
-            "$ref": "#/components/responses/BadRequest"
-          },
-          "401": {
-            "$ref": "#/components/responses/Unauthorized"
-          },
-          "403": {
-            "$ref": "#/components/responses/Forbidden"
-          },
-          "429": {
-            "$ref": "#/components/responses/TooManyRequests"
-          },
-          "503": {
-            "$ref": "#/components/responses/ServiceUnavailable"
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "summary": "Get the effective chat settings for the current org",
-        "tags": [
-          "Chat Org Settings"
-        ],
-        "x-exposure": "permissioned",
-        "x-permission": "chat:channels:read",
-        "description": "Exposure: permission — chat:channels:read"
-      },
-      "patch": {
-        "operationId": "ChatOrgSettingsController_update",
-        "parameters": [],
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "success": {
-                      "type": "boolean",
-                      "enum": [
-                        true
-                      ]
-                    },
-                    "data": {
-                      "type": "object",
-                      "properties": {
-                        "orgId": {
-                          "type": "string",
-                          "minLength": 1
-                        },
-                        "defaultNotificationPreference": {
-                          "type": "string",
-                          "enum": [
-                            "ALL",
-                            "MENTIONS",
-                            "NOTHING"
-                          ]
-                        },
-                        "maxAttachmentSizeMb": {
-                          "type": "integer",
-                          "minimum": 1,
-                          "maximum": 1000
-                        },
-                        "maxHuddleParticipants": {
-                          "type": "integer",
-                          "minimum": 2,
-                          "maximum": 500
-                        }
-                      },
-                      "required": [
-                        "orgId",
-                        "defaultNotificationPreference",
-                        "maxAttachmentSizeMb",
-                        "maxHuddleParticipants"
-                      ],
-                      "additionalProperties": false
-                    }
-                  },
-                  "required": [
-                    "success",
-                    "data"
-                  ],
-                  "additionalProperties": false
-                }
-              }
-            }
-          },
-          "400": {
-            "$ref": "#/components/responses/BadRequest"
-          },
-          "401": {
-            "$ref": "#/components/responses/Unauthorized"
-          },
-          "403": {
-            "$ref": "#/components/responses/Forbidden"
-          },
-          "409": {
-            "$ref": "#/components/responses/Conflict"
-          },
-          "422": {
-            "$ref": "#/components/responses/UnprocessableEntity"
-          },
-          "429": {
-            "$ref": "#/components/responses/TooManyRequests"
-          },
-          "503": {
-            "$ref": "#/components/responses/ServiceUnavailable"
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "summary": "Update org-level chat settings (chat admins only)",
-        "tags": [
-          "Chat Org Settings"
-        ],
-        "x-exposure": "permissioned",
-        "x-permission": "chat:org-settings:manage",
-        "description": "Exposure: permission — chat:org-settings:manage",
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "defaultNotificationPreference": {
-                    "type": "string",
-                    "enum": [
-                      "ALL",
-                      "MENTIONS",
-                      "NOTHING"
-                    ]
-                  },
-                  "maxAttachmentSizeMb": {
-                    "type": "integer",
-                    "minimum": 1,
-                    "maximum": 1000
-                  },
-                  "maxHuddleParticipants": {
-                    "type": "integer",
-                    "minimum": 2,
-                    "maximum": 500
-                  }
-                },
-                "additionalProperties": false
-              }
-            }
-          }
-        }
-      }
-    },
     "/chat/starter-suggestions": {
       "get": {
         "operationId": "ChatAssistantController_starterSuggestions",
@@ -240910,7 +240678,6 @@
                     "maxLength": 500
                   },
                   "isActive": {
-                    "default": true,
                     "type": "boolean"
                   }
                 },
@@ -241737,29 +241504,24 @@
                     "minLength": 1
                   },
                   "requiredFields": {
-                    "default": [],
                     "type": "array",
                     "items": {
                       "type": "string"
                     }
                   },
                   "requiredActivityTypeKeys": {
-                    "default": [],
                     "type": "array",
                     "items": {
                       "type": "string"
                     }
                   },
                   "requiresApproval": {
-                    "default": false,
                     "type": "boolean"
                   },
                   "requiresQuote": {
-                    "default": false,
                     "type": "boolean"
                   },
                   "autoTaskTemplates": {
-                    "default": [],
                     "type": "array",
                     "items": {
                       "type": "object",
@@ -241770,7 +241532,6 @@
                     }
                   },
                   "sortOrder": {
-                    "default": 0,
                     "type": "integer",
                     "minimum": 0,
                     "maximum": 9007199254740991
@@ -265125,21 +264886,17 @@
                     "maxLength": 100
                   },
                   "sortOrder": {
-                    "default": 0,
                     "type": "integer",
                     "minimum": 0,
                     "maximum": 9007199254740991
                   },
                   "isActive": {
-                    "default": true,
                     "type": "boolean"
                   },
                   "isSystemDefault": {
-                    "default": false,
                     "type": "boolean"
                   },
                   "isTerminal": {
-                    "default": false,
                     "type": "boolean"
                   },
                   "metadata": {
@@ -268276,7 +268033,6 @@
                 "type": "object",
                 "properties": {
                   "type": {
-                    "default": "custom",
                     "type": "string",
                     "enum": [
                       "lead",
@@ -268303,15 +268059,12 @@
                     "maxLength": 500
                   },
                   "isDefault": {
-                    "default": false,
                     "type": "boolean"
                   },
                   "isActive": {
-                    "default": true,
                     "type": "boolean"
                   },
                   "sortOrder": {
-                    "default": 0,
                     "type": "integer",
                     "minimum": 0,
                     "maximum": 9007199254740991
@@ -793413,19 +793166,16 @@
                     "maxLength": 100
                   },
                   "sortOrder": {
-                    "default": 0,
                     "type": "integer",
                     "minimum": 0,
                     "maximum": 9007199254740991
                   },
                   "probability": {
-                    "default": 0,
                     "type": "integer",
                     "minimum": 0,
                     "maximum": 100
                   },
                   "stageType": {
-                    "default": "open",
                     "type": "string",
                     "enum": [
                       "open",
@@ -793435,7 +793185,6 @@
                     ]
                   },
                   "isTerminal": {
-                    "default": false,
                     "type": "boolean"
                   },
                   "slaHours": {
@@ -793451,18 +793200,15 @@
                     ]
                   },
                   "requiresApproval": {
-                    "default": false,
                     "type": "boolean"
                   },
                   "requiredFields": {
-                    "default": [],
                     "type": "array",
                     "items": {
                       "type": "string"
                     }
                   },
                   "allowedNextStageKeys": {
-                    "default": null,
                     "anyOf": [
                       {
                         "type": "array",
@@ -793476,7 +793222,6 @@
                     ]
                   },
                   "isActive": {
-                    "default": true,
                     "type": "boolean"
                   }
                 },
@@ -795518,7 +795263,6 @@
                     ]
                   },
                   "config": {
-                    "default": {},
                     "type": "object",
                     "propertyNames": {
                       "type": "string"
@@ -795539,11 +795283,9 @@
                     "maxLength": 500
                   },
                   "isActive": {
-                    "default": true,
                     "type": "boolean"
                   },
                   "sortOrder": {
-                    "default": 0,
                     "type": "integer",
                     "minimum": 0,
                     "maximum": 9007199254740991
@@ -826911,7 +826653,6 @@
                 "type": "object",
                 "properties": {
                   "status": {
-                    "default": "active",
                     "type": "string",
                     "enum": [
                       "active",
@@ -891223,7 +890964,6 @@
                     "maxLength": 50
                   },
                   "lifecycleStatus": {
-                    "default": "ACTIVE",
                     "type": "string",
                     "enum": [
                       "CANDIDATE",
@@ -891239,7 +890979,6 @@
                     ]
                   },
                   "workerType": {
-                    "default": "FULL_TIME",
                     "type": "string",
                     "enum": [
                       "FULL_TIME",
@@ -925729,13 +925468,11 @@
                     }
                   },
                   "reminderDaysBefore": {
-                    "default": 7,
                     "type": "integer",
                     "minimum": 0,
                     "maximum": 365
                   },
                   "active": {
-                    "default": true,
                     "type": "boolean"
                   }
                 },
@@ -926944,7 +926681,6 @@
                     "type": "string"
                   },
                   "renewalReminderDays": {
-                    "default": 30,
                     "type": "integer",
                     "minimum": 0,
                     "maximum": 365
@@ -926955,11 +926691,9 @@
                     "maximum": 9007199254740991
                   },
                   "timesheetBased": {
-                    "default": false,
                     "type": "boolean"
                   },
                   "status": {
-                    "default": "active",
                     "type": "string",
                     "enum": [
                       "active",
@@ -928843,7 +928577,6 @@
                     "type": "string"
                   },
                   "status": {
-                    "default": "active",
                     "type": "string",
                     "enum": [
                       "active",
@@ -934745,7 +934478,6 @@
                 "type": "object",
                 "properties": {
                   "fromStatusId": {
-                    "default": null,
                     "anyOf": [
                       {
                         "type": "integer",
@@ -961677,7 +961409,6 @@
                     ]
                   },
                   "isActive": {
-                    "default": true,
                     "type": "boolean"
                   }
                 },
@@ -962839,7 +962570,6 @@
                     "maxLength": 100
                   },
                   "lastName": {
-                    "default": "",
                     "type": "string",
                     "maxLength": 100
                   },
@@ -1009849,7 +1009579,6 @@
                     "maxLength": 200
                   },
                   "headcount": {
-                    "default": 1,
                     "type": "integer",
                     "minimum": 1,
                     "maximum": 999
@@ -1009871,7 +1009600,6 @@
                     "type": "string"
                   },
                   "priority": {
-                    "default": "MEDIUM",
                     "type": "string",
                     "enum": [
                       "LOW",
@@ -1009881,7 +1009609,6 @@
                     ]
                   },
                   "type": {
-                    "default": "FULL_TIME",
                     "type": "string",
                     "enum": [
                       "FULL_TIME",
@@ -1090930,32 +1090657,26 @@
                     "type": "boolean"
                   },
                   "costPrice": {
-                    "default": "0",
                     "type": "string",
                     "pattern": "^\\d+(\\.\\d{1,4})?$"
                   },
                   "sellingPrice": {
-                    "default": "0",
                     "type": "string",
                     "pattern": "^\\d+(\\.\\d{1,4})?$"
                   },
                   "reorderPoint": {
-                    "default": "0",
                     "type": "string",
                     "pattern": "^\\d+(\\.\\d{1,4})?$"
                   },
                   "minStockLevel": {
-                    "default": "0",
                     "type": "string",
                     "pattern": "^\\d+(\\.\\d{1,4})?$"
                   },
                   "maxStockLevel": {
-                    "default": "0",
                     "type": "string",
                     "pattern": "^\\d+(\\.\\d{1,4})?$"
                   },
                   "hasVariants": {
-                    "default": false,
                     "type": "boolean"
                   },
                   "imageUrl": {
@@ -1092305,17 +1092026,14 @@
                     "maxLength": 100
                   },
                   "costPrice": {
-                    "default": "0",
                     "type": "string",
                     "pattern": "^\\d+(\\.\\d{1,4})?$"
                   },
                   "sellingPrice": {
-                    "default": "0",
                     "type": "string",
                     "pattern": "^\\d+(\\.\\d{1,4})?$"
                   },
                   "attributeValues": {
-                    "default": {},
                     "type": "object",
                     "propertyNames": {
                       "type": "string"
@@ -1140002,19 +1139720,16 @@
                     "maxLength": 20
                   },
                   "leadTimeDays": {
-                    "default": 7,
                     "type": "integer",
                     "minimum": 0,
                     "maximum": 9007199254740991
                   },
                   "paymentTermsDays": {
-                    "default": 30,
                     "type": "integer",
                     "minimum": 0,
                     "maximum": 9007199254740991
                   },
                   "currency": {
-                    "default": "INR",
                     "type": "string",
                     "minLength": 3,
                     "maxLength": 3
@@ -1141976,7 +1141691,6 @@
                     ]
                   },
                   "isDefault": {
-                    "default": false,
                     "type": "boolean"
                   },
                   "branchId": {
@@ -1211570,7 +1211284,6 @@
                     ]
                   },
                   "category": {
-                    "default": "SYSTEM",
                     "type": "string",
                     "enum": [
                       "SECURITY",
@@ -1211585,7 +1211298,6 @@
                     ]
                   },
                   "locale": {
-                    "default": "en",
                     "type": "string",
                     "minLength": 2,
                     "maxLength": 10
@@ -1211599,7 +1211311,6 @@
                     "minLength": 1
                   },
                   "variables": {
-                    "default": [],
                     "type": "array",
                     "items": {
                       "type": "string"
@@ -1214993,15 +1214704,12 @@
                     "additionalProperties": {}
                   },
                   "enabled": {
-                    "default": true,
                     "type": "boolean"
                   },
                   "sandboxMode": {
-                    "default": true,
                     "type": "boolean"
                   },
                   "isDefault": {
-                    "default": false,
                     "type": "boolean"
                   },
                   "dailySendLimit": {
@@ -1228670,7 +1228378,6 @@
                     "pattern": "[a-zA-Z0-9]"
                   },
                   "targetType": {
-                    "default": "ALL",
                     "type": "string",
                     "enum": [
                       "ALL",
@@ -1228680,7 +1228387,6 @@
                     ]
                   },
                   "targetIds": {
-                    "default": [],
                     "maxItems": 1000,
                     "type": "array",
                     "items": {
@@ -1228689,7 +1228395,6 @@
                     }
                   },
                   "status": {
-                    "default": "DRAFT",
                     "type": "string",
                     "enum": [
                       "DRAFT",
@@ -1228719,11 +1228424,9 @@
                     ]
                   },
                   "isPinned": {
-                    "default": false,
                     "type": "boolean"
                   },
                   "attachmentUrls": {
-                    "default": [],
                     "type": "array",
                     "items": {
                       "type": "string"
@@ -1241184,7 +1240887,6 @@
                     "maxLength": 5000
                   },
                   "requireManualApproval": {
-                    "default": true,
                     "type": "boolean"
                   }
                 },
@@ -1249461,19 +1249163,15 @@
                     "maxLength": 500
                   },
                   "taxable": {
-                    "default": false,
                     "type": "boolean"
                   },
                   "showOnPayslip": {
-                    "default": true,
                     "type": "boolean"
                   },
                   "includeInCtc": {
-                    "default": true,
                     "type": "boolean"
                   },
                   "isStatutory": {
-                    "default": false,
                     "type": "boolean"
                   },
                   "statutoryKey": {
@@ -1249481,7 +1249179,6 @@
                     "maxLength": 50
                   },
                   "sortOrder": {
-                    "default": 0,
                     "type": "integer",
                     "minimum": 0,
                     "maximum": 9007199254740991
@@ -1250839,7 +1250536,6 @@
                     "pattern": "^\\d+(\\.\\d{1,2})?$"
                   },
                   "workerType": {
-                    "default": "EMPLOYEE",
                     "type": "string",
                     "enum": [
                       "EMPLOYEE",
@@ -1250850,7 +1250546,6 @@
                     ]
                   },
                   "currency": {
-                    "default": "INR",
                     "type": "string",
                     "minLength": 3,
                     "maxLength": 3
@@ -1250872,7 +1250567,6 @@
                     "maxLength": 100
                   },
                   "components": {
-                    "default": [],
                     "maxItems": 200,
                     "type": "array",
                     "items": {
@@ -1278652,7 +1278346,6 @@
                     "pattern": "^\\d+(\\.\\d{1,2})?$"
                   },
                   "workerType": {
-                    "default": "EMPLOYEE",
                     "type": "string",
                     "enum": [
                       "EMPLOYEE",
@@ -1278663,7 +1278356,6 @@
                     ]
                   },
                   "currency": {
-                    "default": "INR",
                     "type": "string",
                     "minLength": 3,
                     "maxLength": 3
@@ -1278685,7 +1278377,6 @@
                     "maxLength": 100
                   },
                   "components": {
-                    "default": [],
                     "maxItems": 200,
                     "type": "array",
                     "items": {
@@ -1317291,7 +1316982,6 @@
                     "maximum": 9007199254740991
                   },
                   "appliesStates": {
-                    "default": [],
                     "maxItems": 20,
                     "type": "array",
                     "items": {
@@ -1317305,37 +1316995,29 @@
                     "maxLength": 200
                   },
                   "opacity": {
-                    "default": 30,
                     "type": "integer",
                     "minimum": 0,
                     "maximum": 100
                   },
                   "angle": {
-                    "default": 45,
                     "type": "integer",
                     "minimum": -180,
                     "maximum": 180
                   },
                   "color": {
-                    "default": "#94A3B8",
                     "type": "string",
                     "maxLength": 20
                   },
                   "fontSize": {
-                    "default": 36,
                     "type": "integer",
                     "minimum": 6,
                     "maximum": 200
                   },
                   "placement": {
-                    "default": "diagonal_tiled",
                     "type": "string",
                     "maxLength": 50
                   },
                   "pages": {
-                    "default": {
-                      "mode": "all"
-                    },
                     "type": "object",
                     "properties": {
                       "mode": {
@@ -1317361,15 +1317043,12 @@
                     ]
                   },
                   "showOnFinalPdf": {
-                    "default": true,
                     "type": "boolean"
                   },
                   "previewOnly": {
-                    "default": false,
                     "type": "boolean"
                   },
                   "enabled": {
-                    "default": true,
                     "type": "boolean"
                   }
                 },
@@ -1321529,7 +1321208,6 @@
                     "maxLength": 5000
                   },
                   "routingMode": {
-                    "default": "parallel",
                     "type": "string",
                     "enum": [
                       "parallel",
@@ -1321538,7 +1321216,6 @@
                     ]
                   },
                   "ccTiming": {
-                    "default": "on_complete",
                     "type": "string",
                     "enum": [
                       "on_send",
@@ -1321546,7 +1321223,6 @@
                     ]
                   },
                   "allowDecline": {
-                    "default": true,
                     "type": "boolean"
                   },
                   "sourceModule": {
@@ -1321577,7 +1321253,6 @@
                     "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
                   },
                   "reminderEnabled": {
-                    "default": true,
                     "type": "boolean"
                   },
                   "reminderFirstAfterDays": {
@@ -1326816,15 +1326491,12 @@
                     "maximum": 9007199254740991
                   },
                   "required": {
-                    "default": false,
                     "type": "boolean"
                   },
                   "readonly": {
-                    "default": false,
                     "type": "boolean"
                   },
                   "orderIndex": {
-                    "default": 0,
                     "type": "integer",
                     "minimum": 0,
                     "maximum": 9007199254740991
@@ -1327333,7 +1327005,6 @@
                     "maxLength": 100
                   },
                   "recipientType": {
-                    "default": "signer",
                     "type": "string",
                     "enum": [
                       "signer",
@@ -1327365,13 +1327036,11 @@
                     "maximum": 9007199254740991
                   },
                   "routingOrder": {
-                    "default": 1,
                     "type": "integer",
                     "minimum": 1,
                     "maximum": 50
                   },
                   "authMethod": {
-                    "default": "email_link",
                     "type": "string",
                     "enum": [
                       "email_link",
@@ -1328572,7 +1328241,6 @@
                     "maxLength": 100
                   },
                   "templateJson": {
-                    "default": {},
                     "type": "object",
                     "propertyNames": {
                       "type": "string"
