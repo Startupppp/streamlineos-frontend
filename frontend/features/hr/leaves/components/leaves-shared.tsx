@@ -30,7 +30,6 @@ import type { WfhRequest } from "./leaves-types";
 export const balanceCardConfig: Record<
   string,
   {
-    label: string;
     barColor: string;
     valueColor: string;
     iconBg: string;
@@ -39,7 +38,6 @@ export const balanceCardConfig: Record<
   }
 > = {
   "Casual Leave": {
-    label: "CASUAL",
     barColor: "bg-status-info-fill",
     valueColor: "text-status-info-ink",
     iconBg: "bg-status-info-surface",
@@ -47,7 +45,6 @@ export const balanceCardConfig: Record<
     icon: CalendarDays,
   },
   "Sick Leave": {
-    label: "SICK",
     barColor: "bg-status-danger-fill",
     valueColor: "text-status-danger-ink",
     iconBg: "bg-status-danger-surface",
@@ -55,7 +52,6 @@ export const balanceCardConfig: Record<
     icon: Heart,
   },
   "Unpaid Leave": {
-    label: "UNPAID",
     barColor: "bg-muted-foreground/50",
     valueColor: "text-muted-foreground",
     iconBg: "bg-muted",
@@ -65,7 +61,6 @@ export const balanceCardConfig: Record<
 };
 
 export const DEFAULT_CARD_CONFIG = {
-  label: "LEAVE",
   barColor: "bg-muted-foreground/50",
   valueColor: "text-muted-foreground",
   iconBg: "bg-muted",
@@ -138,8 +133,8 @@ export const BalanceCard = React.memo(function BalanceCard({
               aria-hidden="true"
             />
           </div>
-          <span className="text-dense font-semibold text-muted-foreground uppercase tracking-wider">
-            {config.label}
+          <span className="min-w-0 truncate text-dense font-semibold text-muted-foreground">
+            {name}
           </span>
         </div>
 
