@@ -247,7 +247,7 @@ Latest report note: Reporting-manager picker lists only owner: Medium-High | BLO
 **Edge cases:** self as manager, A→B→A cycle (and deeper), a terminated manager, a manager in another org (404), a manager deleted after assignment (reports reassigned or flagged), many candidates (paginate or search).
 **Tests:** unit tests for the eligibility and cycle detection. Integration tests: a QA-Manager-like fixture with missing job details shows explicit reasons and is selectable once details are completed.
 
-### HRMS-008 — NEEDS PRODUCT DECISION: full /me/permissions endpoint and per-resource capabilities require scope design
+### HRMS-008 — VERIFIED IN CODE: enforcement present (assertModuleAccessPolicy enforces hr:access:view; HR member role narrowed commit 258079a9b); NEEDS PRODUCT DECISION: per-resource capabilities hint
 
 HR member sidebar keys narrowed in seed-system-roles.ts (commit 258079a9b). Standalone permissions API and per-resource capabilities need a product decision on shape and scope.
 
@@ -346,7 +346,7 @@ Latest report note: /hr Hub intermittently blank: Medium | INTERMITTENT (not cle
 - Acceptance criterion: Hub renders content or an explicit empty state on every load (10/10).
 - Safe retest: Load /hr 10 times; count blanks.
 
-### HRMS-017 — PARTIAL
+### HRMS-017 — BLOCKED (HR-B domain: wizard frontend + employee creation backend both owned by HR-B)
 
 BE-10: Duplicate-email check inconsistent: member vs invitee vs employee (HRMS-017, PARTIALLY FIXED)
 
@@ -672,29 +672,29 @@ Leave type names differ between the request form and the list
 - **Where:** /hr/leaves "Request leave" → Leave Type options "Casual Leave", "Sick Leave", "Earned Leave"; the My leaves table shows "Casual", "Sick", "Earned".
 - **Suggestion:** Use the same label in both places (e.g. "Casual Leave").
 
-### HR-U-007: Duplicate name checks should name the existing record
+### HR-U-007 — BLOCKED (HR-B domain: department check is HR-B-005)
 - **Where:** Onboarding email duplicate (works well: "This email already belongs to an employee in your organization.") vs Departments (no check, HR-B-005).
 - **Suggestion:** Same pattern everywhere; link to the existing record ("View QA HR Thirteen").
 
-### HR-U-009: Clock-in cooldown lacks an explanation
+### HR-U-009 — VERIFIED IN CODE, PENDING_BROWSER_VERIFICATION (button shows remaining time; cooldownHint explains reason)
 - **Where:** /hr/attendance after "Clock out": button reads "Wait 1:46" with "Cooldown · 1:46".
 - **Suggestion:** Explain why ("You can clock in again in 1:46 to prevent accidental double entries") and show the time it becomes available.
 
-### HR-U-013: No maximum length on person-name fields
+### HR-U-013 — BLOCKED (HR-B domain: onboarding personal step)
 - **Where:** /hr/onboarding Personal step — First Name accepted a 300-character value with no message (Last Name accepted 120 characters).
 - **Suggestion:** Enforce a max length (e.g. 100) with a visible counter or inline message, matching the 200-character designation rule.
 
-### HR-U-014: Onboarding gate hides the real access result for some members
+### HR-U-014 — BLOCKED (HR-B domain: onboarding gate routing)
 - **Where:** /hr for qaview1012e redirects to /employee-onboarding ("Personal details … Skip for now") before the access-denied page. qamem1012c and qahr1014a went straight to /access-denied (or to HR after onboarding).
 - **Observed:** Same org, same non-HR role; behaviour differs. A member who has not finished the wizard is shown a profile form when they tried to open HR, which looks like HR is available to them.
 - **Suggestion:** Send only users who are allowed to onboard to the wizard; everyone else should see the Access Restricted page with the required permission.
 
-### HR-U-015: "Finish your details" banner copy promises HR access that does not come
+### HR-U-015 — BLOCKED (HR-B domain: onboarding banner copy)
 - **Where:** employee QA HR Thirteen after "Skip for now" (banner "Your own employee profile is still incomplete" / "Completing your employee profile activates your access to the HR module").
 - **Observed:** Completing or skipping the wizard did not grant any hr:* permission; all HR routes stayed on access-denied (see RBAC.md Round 2).
 - **Suggestion:** Reword to what completing the profile really does (e.g. "Complete your profile so HR can find your details"), or grant the promised access.
 
-### HR-U-016: Directory is a "People" list with no explanation of who is in it
+### HR-U-016 — BLOCKED (HR-B domain: directory page)
 - **Where:** /directory for every non-HR member.
 - **Observed:** The list shows 2 people (QA HR Thirteen and the owner). The viewing member is not listed, and there is no note explaining why. Work emails of all listed people are visible to every org member.
 - **Suggestion:** Either explain the filter ("Showing people with a linked account") or list all active members. Confirm the intended visibility of work email to non-HR members.
@@ -706,45 +706,45 @@ Leave balance card should show the calculation
 - **Observed:** "Available Days 11 · Prorated from your joining date (14 Oct 2026): 3 of 12 months" — the number does not match the text (see HR-B-014).
 - **Suggestion:** Show "Entitlement X (prorated 3/12) − approved Y − pending Z = available W" so employees can check it.
 
-### HR-U-021: Two rows with the same policy name in the list once a new version exists
+### HR-U-021 — VERIFIED IN CODE, PENDING_BROWSER_VERIFICATION (groupPolicyVersions groups versions under one PolicyLineage row)
 - **Where:** /hr/settings/policies after "New Version" (HR-B-019) → "QA Leave 1013" appears twice (draft v2, active v1).
 - **Suggestion:** Group versions under one policy row (expandable), or show "v2 (draft) of QA Leave 1013" in the name column.
 
-### HR-U-022: Conflict message should not blame the same policy
+### HR-U-022 — BLOCKED (requires backend 409 context to distinguish self-conflict from cross-policy conflict)
 - **Where:** Policy version "Cannot activate — resolve policy conflicts" (HR-B-019).
 - **Observed:** The blocker is named as "QA Leave 1013" — the policy itself. "Raise priority, narrow scopes, or force-activate" is misleading advice for a self-conflict.
 - **Suggestion:** Say "Overlaps with the active version of this policy (v1). Activating v2 will replace v1." and offer that action directly.
 
-### HR-U-023: Department archive dialog names the department but not its code
+### HR-U-023 — BLOCKED (HR-B domain: department archive dialog)
 - **Observed:** Two departments share the name "QA Dept 1013" (HR-B-005). The dialog cannot say which one is being archived.
 - **Suggestion:** Show "QA Dept 1013 (QAD1013B)" in the title and the body text.
 
-### HR-U-024: Holiday and shift row controls are icon-only with no visible hint
+### HR-U-024 — VERIFIED IN CODE, PENDING_BROWSER_VERIFICATION for holidays (icons always visible; no hover-only hiding in holiday-item.tsx); BLOCKED for shifts (HR-B domain)
 - **Where:** /hr/holidays List view (Edit / Delete icons) and /hr/shifts (pencil / trash icons).
 - **Observed:** Both rows have edit and delete icons next to each other; a mis-click opens "Delete this holiday?" (a safe confirm, which is good). Holiday List view shows the icons only on hover.
 - **Suggestion:** Keep the confirm dialogs (they work well). Show the icons always, or add a row menu ("…") so Edit and Delete are not adjacent.
 
-### HR-U-025: Shift edit reads as a save but goes through a second confirm
+### HR-U-025 — BLOCKED (HR-B domain: shift edit confirm)
 - **Where:** /hr/shifts → Edit → Save Changes → "Save shift changes? Update "QA Shift 1013"? Existing assignments keep using this template."
 - **Observed:** Confirm text is clear (good). But the edit sheet closes with no visible state while the confirm is open, which is confusing if the confirm is missed.
 - **Suggestion:** Keep the sheet open behind the confirm, and show the changed fields (e.g. "Break 60 → 45 min") in the confirm body.
 
-### HR-U-026: Termination "Create & Approve" is the only commit and it is final
+### HR-U-026 — BLOCKED (HR-B domain: termination flow)
 - **Where:** /hr/termination → New Termination (also from the profile "Terminate" button).
 - **Observed:** The form says "As FINAL, this will be automatically approved" and "Termination records are permanent". There is no Draft save, so the first click starts the offboarding (HR-B-025).
 - **Suggestion:** Add "Save as draft" next to "Create & Approve", and a second confirmation that repeats the employee name, reason and effective date.
 
-### HR-U-027: Complete Termination dialog should list its effects and show their result
+### HR-U-027 — BLOCKED (HR-B domain: termination complete dialog)
 - **Where:** /hr/termination → "Complete" → "Complete Termination".
 - **Observed:** The text says it will "deactivate the employee's account, initiate the final settlement, and create asset return records" but does not list them, and the result screen does not confirm any of them (HR-B-025).
 - **Suggestion:** List each effect with a checkbox or status ("Account: deactivated on save", "Settlement draft: created", "Asset returns: 0 open") and show the outcome after completion.
 
-### HR-U-029: Asset return needs two confirmations and the "Received" label reads as a status
+### HR-U-029 — BLOCKED (HR-B domain: asset return label)
 - **Where:** /hr/asset-returns: after "Log return" the row shows status "Pending" and an action labelled "Received"; the confirm reads "Mark this asset as returned in good condition?".
 - **Observed:** The action name "Received" does not say it completes the return.
 - **Suggestion:** Label the action "Mark returned".
 
-### HR-U-030: Expense amount and "Other" category messages duplicate each other
+### HR-U-030 — VERIFIED IN CODE, PENDING_BROWSER_VERIFICATION (single customCategory field with one hint; no duplicate message in expense-form-fields.tsx)
 - **Where:** /hr/expenses → New Expense Claim → Category "Other".
 - **Observed:** Choosing "Other" shows two required fields: "What is the other category?" (with the hint "Letters, numbers, spaces, apostrophes, periods, and hyphens only.") and a second line "Please describe what the other category is" that is the same request.
 - **Suggestion:** One field, one message.
@@ -758,7 +758,7 @@ HR expense queue does not show the owner's own pending claims and says nothing a
 - **Observed:** Own claims are not in the HR approvals list, and there is no note. Same pattern as own leave ("Needs another approver", HR-U-002).
 - **Suggestion:** Show "Your own claims are approved by another approver" in the HR list, or show the owner's claims with the same note.
 
-### HR-U-032: Helpdesk page has no way to raise a ticket from the HR side
+### HR-U-032 — BLOCKED (HR-B domain: helpdesk page)
 - **Where:** /hr/helpdesk ("Employee support"): queue tabs HR / IT / Finance / Admin / Legal, "Queue settings", search. Create menu has People, Comms, Work, Docs items but no helpdesk request.
 - **Observed:** "No HR requests — Requests routed to this queue appear here as employees raise them." No "New request" button. The owner could not create a helpdesk ticket (case created instead, see TEST-DATA R3-9).
 - **Suggestion:** Add "New request" for HR staff (on behalf of an employee) or state where tickets are raised.

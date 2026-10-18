@@ -37,7 +37,7 @@ Status legend from QA (the Retest 2 column of `retest_2026-10-14.md` is authorit
 
 ### P0: Authorization and data protection
 
-#### BE-01: Server must expose effective permissions; all HR admin endpoints must enforce them (HRMS-008, STILL OPEN; HRMS-024, BLOCKED; UX-15, BLOCKED) — NEEDS PRODUCT DECISION: standalone /me/permissions endpoint and per-resource capabilities require scope design; HR member sidebar keys narrowed in seed-system-roles.ts (commit 258079a9b)
+#### BE-01: Server must expose effective permissions; all HR admin endpoints must enforce them (HRMS-008, STILL OPEN; HRMS-024, BLOCKED; UX-15, BLOCKED) — VERIFIED IN CODE: enforcement present via assertModuleAccessPolicy (resolveModuleStanding checks hr:access:view from resolved permissions; users without it get level "none" → 403); sidebar filters via requiredPermission; page guard via requirePermission; spec covers denial; HR member role narrowed (commit 258079a9b). NEEDS PRODUCT DECISION: per-resource capabilities hint (e.g. capabilities: { canEdit } on employee detail response) requires scope design decision.
 **Evidence (observed):**
 - An HR Module **Member** (QA Employee) sees the full admin sidebar: HR configuration, Access & governance, HR access, People analytics, Cases, Expenses, Compensation & Benefits. Many items redirect to Access Restricted when opened (e.g. custom-fields, approvals).
 - `/hr/access` is readable by the Member: role groups and full permission lists (e.g. "Owner 144/144"), read-only.
