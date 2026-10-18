@@ -56,7 +56,9 @@ Latest report note: Double-click Save duplicates: STILL OPEN | Double-click (Pla
 - Suggested fix: Disable Save and set busy state on first click; guard submit with a ref; optionally send client-side idempotency key.
 - Acceptance check: Double-click Save → exactly one event row and one Google event; Save shows disabled/spinner during request.
 
-### CAL-B-004 — PARTIAL (a09f7a852 frontend), PENDING_BROWSER_VERIFICATION
+### CAL-B-004 — FIXED (50d196386 backend + db1850f06, e9e2f12de frontend), PENDING_BROWSER_VERIFICATION
+
+Fix: `guestEmails` on create/update writes guest rows to the existing `calendar_invitations.guest_email` column (no migration), so the existing invitation email delivery and guards apply; the picker takes a typed email as a guest chip (Enter or "Invite … as a guest"); organizers see guests on the event and in Edit.
 
 Attendee picker only lists org members — external invitee (qa1015cal@sharklasers.com) cannot be added
 
@@ -133,7 +135,9 @@ Latest report note: Synced-event edit fails with "[object Object]": STILL OPEN (
 - Suggested fix: Format the error (show error.message/code); on ETag conflict, auto-refetch the provider copy and retry once, else show "Keep this version / Use Google version" actions.
 - Acceptance check: Edit a synced event → Google copy updated within 30 s with no error; if conflict is forced, the sheet shows readable text plus two resolution buttons, and "[object Object]" never appears.
 
-### CAL-B-008 — VERIFIED_IN_CODE (CORS config correct; infrastructure/DNS issue)
+### CAL-B-008 — VERIFIED IN CODE (backend/src/common/http/cors.config.ts:21, frontend/lib/api-client.ts:347), PENDING_BROWSER_VERIFICATION
+
+Evidence: the client only sends `authorization`, `content-type`, `idempotency-key` and `x-correlation-id`, and all four are in `CORS_ALLOWED_HEADERS`; no calendar hook adds any other header. A preflight with no `Access-Control-Allow-Origin` means the API did not answer (an edge 502/timeout), not a missing header. The `/org/members` read that blanked the page now stays inline (see CAL-B-016, 817d29fc6).
 
 Intermittent "Server temporarily unavailable" with CORS preflight failures on api.streamlineos.in
 
@@ -225,7 +229,9 @@ Latest report note: Delete on recurring event has no scope: STILL OPEN (re-confi
 - Suggested fix: Reuse the Edit scope dialog for Delete (this occurrence / all occurrences), default to "This occurrence only".
 - Acceptance check: Delete on an occurrence with "This occurrence only" removes only that date; other dates remain.
 
-### CAL-B-015 — PARTIAL (c46b32b23 backend + 6d4f73b62 frontend), PENDING_BROWSER_VERIFICATION
+### CAL-B-015 — FIXED (ea85b615f backend), PENDING_BROWSER_VERIFICATION
+
+Fix: the local delete already queues the provider delete in the same transaction; the queued delete carried the stale provider version, so a 412 marked it FAILED and the copy stayed. The sweep now retries a whole-event delete once without the stale version on 412. Also fixed `deleteEvent` returning a null mapping (`const [mapping]` destructure), which made the frontend's mirror removal inert.
 
 Deleting a synced event in StreamlineOS leaves its provider copy behind (read-only mirror stays)
 
@@ -245,7 +251,9 @@ Latest report note: Delete leaves provider copy behind: STILL OPEN (re-confirmed
 - Suggested fix: On delete of a provider-linked event, enqueue provider delete and reconcile mirror rows; show a sync status if it fails.
 - Acceptance check: Delete a synced event → within 30 s the provider copy is gone and no read-only mirror appears in list/grid.
 
-### CAL-B-016 — VERIFIED_IN_CODE (error boundary scoped; CORS config correct; see CAL-B-008)
+### CAL-B-016 — FIXED (817d29fc6), PENDING_BROWSER_VERIFICATION
+
+Fix: member lookup (`/org/members`), event detail, attendees and sync-status reads had no inline error policy, so one failure reached the page boundary; all calendar reads now use `INLINE_READ_ERROR` (pinned in hooks/api/calendar-source-key.test.ts).
 
 Full-page "Calendar error – Failed to load the calendar" replaces the calendar (no retry inside the panel)
 
@@ -432,7 +440,9 @@ Latest report note: High: Week grid / recurrence | Monthly repeat hard-wired to 
 - Suggested fix: Derive BYMONTHDAY from the start date by default ("Day 23 of month"); always include DTSTART as the first occurrence when it matches the rule; show the computed next 3 dates in the sheet.
 - Acceptance check: Start Fri 23 Oct, Monthly → recurrence shows "Day 23 of month"; occurrences 23 Oct, 23 Nov, 23 Dec; no occurrence on the 15th.
 
-### CAL-B-026 — PARTIAL (a09f7a852 frontend), PENDING_BROWSER_VERIFICATION
+### CAL-B-026 — FIXED (b0ca7d030 backend + 7f99df967, 0f8817956 frontend), PENDING_BROWSER_VERIFICATION
+
+Fix: `GET /calendar/events` takes `q` (title, LIKE-escaped with `escapeLike`, also matching overridden occurrence titles) and `sourceKey`; the List view sends its search and a new "All sources" filter (`sourceFilter` URL param) to it; the command palette lists matching calendar events.
 
 No way to search or filter calendar events: the list filter has only "All events" and the global palette returns no calendar items
 
@@ -452,7 +462,9 @@ Latest report note: Medium: List / search | No calendar filter or event search; 
 - Suggested fix: Add source/calendar multi-select and a title search box in the calendar header; index upcoming events in the palette.
 - Acceptance check: Type "QA1015R3" in the calendar search → the probe appears; choose "Google" in the filter → only Google rows remain.
 
-### CAL-B-027 — DEFERRED (feature gap; no reminder table or endpoint exists)
+### CAL-B-027 — FIXED (50d196386 backend + db1850f06 frontend), PENDING_BROWSER_VERIFICATION
+
+Fix: reminders already live on `calendar_invitations.reminder_offsets_minutes` and are scheduled by the invitation delivery planner; the event form now has a Reminder selector that sets the organizer's offsets on create and edit (default stays 1 day / 1 hour / 15 minutes).
 
 No reminder setting on calendar events (New Event or event sheet)
 
@@ -488,46 +500,46 @@ Latest report note: Medium: Calendar load | "Loading calendar sources…" for 20
 
 ## UX notes that are not done
 
-### Must change — DONE (0dc757f82 + acce78553)
+### Must change — DONE (0dc757f82 + acce78553), VERIFIED IN CODE, PENDING_BROWSER_VERIFICATION
 
-5. **Clash toast does not name the conflict.** FIXED (acce78553) — toast now reads e.g. `it clashes with "Standup", "Retro"`.
-4. **Save stays enabled while the form is invalid.** FIXED (0dc757f82) — Save disabled when `dateTimeError` is present.
-3. **Escape silently discards an unsaved New Event.** FIXED (0dc757f82) — ConfirmDialog shown when title is non-empty.
-1. **Default sync target is Outlook, silently.** FIXED (0dc757f82) — `syncConnectionId` defaults to `"none"` (Don't sync).
-4. **Turn "Add Teams meeting link" off by default.** FIXED (0dc757f82) — `addConference: false` in default form state.
-2. **Add a timezone line to the New Event form.** FIXED (0dc757f82) — timezone hint (`Intl.DateTimeFormat().resolvedOptions().timeZone`) shown below time inputs; timezone also sent in create payload.
+5. **Clash toast does not name the conflict.** FIXED (acce78553) — toast now reads e.g. `it clashes with "Standup", "Retro"`. VERIFIED IN CODE (frontend/features/calendar/event-conflict-notice.ts describeOverlaps).
+4. **Save stays enabled while the form is invalid.** FIXED (0dc757f82) — Save disabled when `dateTimeError` is present. VERIFIED IN CODE (event-create-form.tsx Save `disabled={!form.title.trim() || !!dateTimeError}`).
+3. **Escape silently discards an unsaved New Event.** FIXED (0dc757f82) — ConfirmDialog shown when title is non-empty. VERIFIED IN CODE (event-create-form.tsx handleOpenChange).
+1. **Default sync target is Outlook, silently.** FIXED (0dc757f82) — `syncConnectionId` defaults to `"none"` (Don't sync). VERIFIED IN CODE (event-form-state.ts toDefaultForm).
+4. **Turn "Add Teams meeting link" off by default.** FIXED (0dc757f82) — `addConference: false` in default form state. VERIFIED IN CODE (event-form-state.ts toDefaultForm).
+2. **Add a timezone line to the New Event form.** FIXED (0dc757f82) — timezone hint shown below time inputs; timezone also sent in create payload. VERIFIED IN CODE (event-form-fields.tsx, event-create-validators.ts).
 
 ### Good to have
 
-12. Positive: Escape returns focus to the "Calendar accounts" trigger; the 100-character title limit has a clear message ("Event title must be at most 100 characters"); blank/space-only titles keep Save disabled; the <script> title renders as literal text (no alert, no HTML injection); event delete shows a clear confirm with "cannot be undone"; Mail composer blocks an empty body ("Message body is required").
-11. Console: /inventory/warehouses returns 402 (payment required) on the Capacity sheet and shows no in-app message. Show a plan-upgrade notice instead of a raw error.
-10. Sheets for "Calendar accounts" and "Event sources" are not announced as dialogs (no dialog role in the accessibility tree), which affects screen readers and Escape focus management.
-9. Week navigation: the first click on "Previous week" / "Next week" sometimes did not move the range in my runs (two attempts, then worked with a forced click). Needs repro before filing; logged here only.
-8. Share button gives no visible result in the header (no sheet, no toast, focus ring only). Confirm what it does or hide it.
-7. "Loading calendar sources…" appears for several seconds on every load and the list is briefly partial (standups/external events pop in after). Show a skeleton per source or a count.
-6. Event detail sheet shows loading skeletons for a noticeable time before the Edit button renders; clicking Edit too early does nothing. Show the Edit button immediately or disable it with a spinner.
-5. Edit form for an existing event hides Sync account, Teams link, and recurrence rule (only the scope dialog appears). Users cannot see or change the repeat rule from Edit.
-4. "Add Teams meeting link" is ON by default for every new event, including Google-synced ones. Default off unless the account is Outlook/Teams.
-3. Source filter state ("Event sources" toggles) is not reflected in the URL, so a filtered view cannot be shared or bookmarked. Holidays off persisted across reload (good), but the URL does not say so.
-2. Week grid labels are cut off where events overlap (e.g. "12:51 PM – 1:5", "Calendar Outlook…" clipped). Use stacked lanes or show a "+n more" chip.
-1. Time inputs in New Event are too narrow: "10:00 AM" renders as "00 AM" in the time box (described in words; no screenshot kept). Widen the field or use a 24-hour mask with a visible format hint.
-13. **Holes in the standup series.** No standup is shown for the weeks of 16 Nov and 7 Dec (OBSERVED; cause not checked). If that is intended, label it; if not, check the series exceptions.
-12. **Loading states.** The List view showed "Loading events" for more than 25 s on a cold load of one week (once), and provider rows (External) appear late or not at all (List vs Week mismatch). Show a progress state per source.
-11. **"Teams link on by default"** adds a Join link to every new event. Make it opt-in or remember the last choice.
-10. **Organiser label.** "Created by adityachalla01" shows the login name, not the display name.
-9. **Title limit feedback.** The 100-character limit is only enforced on Save ("Event title must be at most 100 characters"). Show a counter at 80+.
-8. **"Create" and "Add to calendar" both exist** in the header with similar roles. Pick one name for "new event".
-7. **Slow sheet open.** The event sheet shows grey skeleton blocks for 2–5 s, and Edit/Delete appear only after sync finishes (about 5 s). Show Edit/Delete at once and disable them only while a sync is running.
-5. **Keyboard shortcuts for day navigation.** ArrowLeft/Right and "t" (today) do nothing in Day or Week view. The Previous/Next buttons work with Enter, so add the shortcuts and list them in a help hint.
-4. **Cannot log a past meeting.** Past dates are disabled in the picker, so a meeting that already happened can't be added. Allow it with a "logged after the fact" flag.
-3. **Past times on today are accepted silently.** The date picker blocks past days, but a 00:05 start on today's date saves with no warning. Either block both or warn "This starts in the past".
-2. **Month view "+2 more"** hides events with no visible list. Let the chip open the day.
-1. **Grid readability for overlapping events.** Two or three overlapping events render as narrow, truncated blocks ("2:00 PM – 2…", "QA10…"). Show a count chip or open a list on hover/click.
-12. Toast "Event created, but it clashes…" should be an action toast with "View" to jump to the clashing event.
-11. Drag-to-create on an empty slot starts a 3-hour default span (10:30 → 1:30 PM) when the drag is short; shorten to the drag length or 30 minutes.
-10. Discarding the sheet by mis-click loses the draft; add an "unsaved changes" confirm.
-9. New Event sheet keeps "Oct 15" as the default date even when the user is looking at Oct 21; default to the day being viewed.
-7. Week grid: overlapping events render at 1/3 width with titles cut off; show the count ("+2") or stack them side-by-side at readable width.
-6. Share menu: "Email calendar" sends mail directly from the menu; consider a confirm step (not tested — sending was out of scope).
-5. "Sources" button should open a panel or show a state; it currently changes nothing visible.
-2. Event search in the ⌘K palette ("QA1015R3" returns "No results" while events exist).
+12. Positive: Escape returns focus to the "Calendar accounts" trigger; the 100-character title limit has a clear message ("Event title must be at most 100 characters"); blank/space-only titles keep Save disabled; the <script> title renders as literal text (no alert, no HTML injection); event delete shows a clear confirm with "cannot be undone"; Mail composer blocks an empty body ("Message body is required"). — NO ACTION (positive observation).
+11. Console: /inventory/warehouses returns 402 (payment required) on the Capacity sheet and shows no in-app message. Show a plan-upgrade notice instead of a raw error. — FIXED (528755f3e), PENDING_BROWSER_VERIFICATION: "Warehouse work" is hidden and the warehouse read never fires when inventory is not enabled; it loads only once that mode is chosen, inline.
+10. Sheets for "Calendar accounts" and "Event sources" are not announced as dialogs (no dialog role in the accessibility tree), which affects screen readers and Escape focus management. — VERIFIED IN CODE (calendar-accounts-sheet.tsx uses AppSheet, a Radix Dialog with `role="dialog"`; Event sources is a Radix Popover via ResponsivePopover, calendar-source-panel.tsx:107), PENDING_BROWSER_VERIFICATION.
+9. Week navigation: the first click on "Previous week" / "Next week" sometimes did not move the range in my runs (two attempts, then worked with a forced click). Needs repro before filing; logged here only. — VERIFIED IN CODE (use-calendar-view-state.ts handlePrev/handleNext push a new `date` on every click), PENDING_BROWSER_VERIFICATION; the arrow keys now also navigate (4f8a4e142).
+8. Share button gives no visible result in the header (no sheet, no toast, focus ring only). Confirm what it does or hide it. — VERIFIED IN CODE (calendar-toolbar.tsx: the share icon is labelled "Booking pages" and opens the booking pages sheet), PENDING_BROWSER_VERIFICATION.
+7. "Loading calendar sources…" appears for several seconds on every load and the list is briefly partial (standups/external events pop in after). Show a skeleton per source or a count. — VERIFIED IN CODE via CAL-B-028 (6d4f73b62 keepPreviousData; native events render without waiting for provider sources), PENDING_BROWSER_VERIFICATION.
+6. Event detail sheet shows loading skeletons for a noticeable time before the Edit button renders; clicking Edit too early does nothing. Show the Edit button immediately or disable it with a spinner. — FIXED (bf01b87f5), PENDING_BROWSER_VERIFICATION: Edit/Delete render at once from the list projection and stay disabled (aria-busy) until the detail arrives.
+5. Edit form for an existing event hides Sync account, Teams link, and recurrence rule (only the scope dialog appears). Users cannot see or change the repeat rule from Edit. — FIXED (80443c220), PENDING_BROWSER_VERIFICATION: the repeat rule is editable in Edit and the form states which account the event is synced to (the sync account is fixed after create; the update API has no sync-target field).
+4. "Add Teams meeting link" is ON by default for every new event, including Google-synced ones. Default off unless the account is Outlook/Teams. — FIXED (0dc757f82), VERIFIED IN CODE (event-form-state.ts `addConference: false`).
+3. Source filter state ("Event sources" toggles) is not reflected in the URL, so a filtered view cannot be shared or bookmarked. Holidays off persisted across reload (good), but the URL does not say so. — VERIFIED IN CODE (calendar-url-state.ts:109-112 `hr`/`crm`/`attendance`/`hiddenAccounts`; the list source filter is `sourceFilter`, 7f99df967); the Event sources popover toggles are saved per-user preferences by design, PENDING_BROWSER_VERIFICATION.
+2. Week grid labels are cut off where events overlap (e.g. "12:51 PM – 1:5", "Calendar Outlook…" clipped). Use stacked lanes or show a "+n more" chip. — NOT CHANGED: lane layout is react-big-calendar's overlap algorithm; every block carries its full title as a hover tooltip (default `tooltipAccessor`), and month view now opens a "+n more" popup (4f8a4e142).
+1. Time inputs in New Event are too narrow: "10:00 AM" renders as "00 AM" in the time box (described in words; no screenshot kept). Widen the field or use a 24-hour mask with a visible format hint. — FIXED (0dc757f82, CAL-B-001/021 time input width), VERIFIED IN CODE (event-form-fields-end-time-height.test.tsx).
+13. **Holes in the standup series.** No standup is shown for the weeks of 16 Nov and 7 Dec (OBSERVED; cause not checked). If that is intended, label it; if not, check the series exceptions. — NOT A CODE CHANGE: occurrences are the series rule minus its cancelled exceptions (calendar-native-event-source.ts expandToOccurrences); the holes need a data check of that series' `calendar_event_exceptions` rows on production, which this lane may not read.
+12. **Loading states.** The List view showed "Loading events" for more than 25 s on a cold load of one week (once), and provider rows (External) appear late or not at all (List vs Week mismatch). Show a progress state per source. — VERIFIED IN CODE via CAL-B-028 (6d4f73b62), PENDING_BROWSER_VERIFICATION.
+11. **"Teams link on by default"** adds a Join link to every new event. Make it opt-in or remember the last choice. — FIXED (0dc757f82), VERIFIED IN CODE (event-form-state.ts `addConference: false`).
+10. **Organiser label.** "Created by adityachalla01" shows the login name, not the display name. — VERIFIED IN CODE (calendar-event-detail.service.ts and calendar-event-source.loader.ts read `users.name`, the display name; this account's display name is that value), PENDING_BROWSER_VERIFICATION.
+9. **Title limit feedback.** The 100-character limit is only enforced on Save ("Event title must be at most 100 characters"). Show a counter at 80+. — FIXED (80443c220), PENDING_BROWSER_VERIFICATION: an `n/100` counter shows from 80 characters.
+8. **"Create" and "Add to calendar" both exist** in the header with similar roles. Pick one name for "new event". — VERIFIED IN CODE (calendar-toolbar.tsx AddEventButton is the calendar's only new-event control; "Create" is the global shell quick-create menu), PENDING_BROWSER_VERIFICATION.
+7. **Slow sheet open.** The event sheet shows grey skeleton blocks for 2–5 s, and Edit/Delete appear only after sync finishes (about 5 s). Show Edit/Delete at once and disable them only while a sync is running. — FIXED (bf01b87f5), PENDING_BROWSER_VERIFICATION (same change as Good-to-have 6).
+5. **Keyboard shortcuts for day navigation.** ArrowLeft/Right and "t" (today) do nothing in Day or Week view. The Previous/Next buttons work with Enter, so add the shortcuts and list them in a help hint. — FIXED (4f8a4e142), PENDING_BROWSER_VERIFICATION: Left/Right/T navigate when no field or overlay has focus; the buttons carry `aria-keyshortcuts` and a tooltip hint.
+4. **Cannot log a past meeting.** Past dates are disabled in the picker, so a meeting that already happened can't be added. Allow it with a "logged after the fact" flag. — FIXED (80443c220), PENDING_BROWSER_VERIFICATION: the start picker allows dates up to a year back and the form says the event will be saved as a past event.
+3. **Past times on today are accepted silently.** The date picker blocks past days, but a 00:05 start on today's date saves with no warning. Either block both or warn "This starts in the past". — FIXED (80443c220), PENDING_BROWSER_VERIFICATION: "This starts in the past" warning.
+2. **Month view "+2 more"** hides events with no visible list. Let the chip open the day. — FIXED (4f8a4e142), PENDING_BROWSER_VERIFICATION: the chip opens a popup listing that day's events.
+1. **Grid readability for overlapping events.** Two or three overlapping events render as narrow, truncated blocks ("2:00 PM – 2…", "QA10…"). Show a count chip or open a list on hover/click. — NOT CHANGED: same as Good-to-have 2 (full title on hover; month "+n more" popup).
+12. Toast "Event created, but it clashes…" should be an action toast with "View" to jump to the clashing event. — FIXED (7cd114985), PENDING_BROWSER_VERIFICATION: the toast has a "View" action that opens the day view on the first clash.
+11. Drag-to-create on an empty slot starts a 3-hour default span (10:30 → 1:30 PM) when the drag is short; shorten to the drag length or 30 minutes. — VERIFIED IN CODE (use-calendar-view-state.ts handleSelectSlot passes the selected slot's own start/end; a click gives one 30-minute slot), PENDING_BROWSER_VERIFICATION.
+10. Discarding the sheet by mis-click loses the draft; add an "unsaved changes" confirm. — FIXED (0dc757f82), VERIFIED IN CODE (event-create-form.tsx discard ConfirmDialog).
+9. New Event sheet keeps "Oct 15" as the default date even when the user is looking at Oct 21; default to the day being viewed. — FIXED (4f8a4e142), PENDING_BROWSER_VERIFICATION: "Add" pre-fills 09:00–10:00 on the viewed day when it is not today.
+7. Week grid: overlapping events render at 1/3 width with titles cut off; show the count ("+2") or stack them side-by-side at readable width. — NOT CHANGED: same as Good-to-have 2.
+6. Share menu: "Email calendar" sends mail directly from the menu; consider a confirm step (not tested — sending was out of scope). — VERIFIED IN CODE (the toolbar has no "Email calendar" action any more; calendar-toolbar.test.tsx:62).
+5. "Sources" button should open a panel or show a state; it currently changes nothing visible. — VERIFIED IN CODE (calendar-source-panel.tsx:107 opens the "Event sources" popover with per-source toggles), PENDING_BROWSER_VERIFICATION.
+2. Event search in the ⌘K palette ("QA1015R3" returns "No results" while events exist). — FIXED (0f8817956), PENDING_BROWSER_VERIFICATION: the palette lists matching calendar events (`/calendar/search`) and opens the chosen one.
