@@ -166,6 +166,11 @@ export function LabelCreateForm({
           autoFocus={autoFocus}
           aria-label="Label name"
         />
+        {name && !trimmedName ? (
+          <p role="status" className="text-xs text-muted-foreground">
+            Enter a label name. Spaces alone are not a name.
+          </p>
+        ) : null}
       </div>
 
       <LabelColorPicker value={resolvedColor} onChange={onColorChange} swatchSize="md" />

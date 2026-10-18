@@ -191,6 +191,11 @@ export function ActivityFeed({
             </div>
           </div>
         ) : null}
+        {canUpdate && composerReady && newComment && !newComment.trim() ? (
+          <p role="status" className="text-xs text-muted-foreground">
+            Type a comment to post. Spaces alone cannot be posted.
+          </p>
+        ) : null}
         {canUpdate && draftLoading ? (
           <p role="status" className="text-xs text-muted-foreground">
             Loading saved draft…

@@ -190,3 +190,11 @@ it("does not render a composer for a user without ticket update permission", () 
   expect(mockSave).not.toHaveBeenCalled();
   expect(mockPost).not.toHaveBeenCalled();
 });
+
+it("explains why Post is disabled when the comment is only spaces (U-011)", () => {
+  mockDraft = null;
+  render(<ActivityFeed ticketId={7} projectId={1} comments={[]} />);
+  fireEvent.change(screen.getByRole("textbox", { name: "Comment body" }), { target: { value: "   " } });
+  expect(screen.getByText("Type a comment to post. Spaces alone cannot be posted.")).toBeInTheDocument();
+  expect(screen.getByRole("button", { name: "Post comment" })).toBeDisabled();
+});
