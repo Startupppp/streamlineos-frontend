@@ -6,4 +6,3 @@ Items here are not done in code. Finished items were removed, including ones tha
 | --- | --- |
 | hr.md | HRMS-008: a per-resource capabilities hint needs a product decision |
 | knowledge-base.md | Permanent space delete needs a product decision |
-| rbac.md | RBAC-B-007: custom role create and edit is not built and needs a product decision |
