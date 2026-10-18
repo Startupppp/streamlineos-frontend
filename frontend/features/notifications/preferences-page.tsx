@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Bell, Mail, Smartphone, MessageSquare, Volume2, Moon, BellOff } from "lucide-react";
 import { XIcon } from "@animateicons/react/lucide";
 import { toast } from "sonner";
@@ -45,6 +45,16 @@ const CHANNELS = [
   { key: "soundEnabled" as const, label: "Sound", description: "Play sound for new notifications", icon: Volume2, backendChannel: null },
 ];
 
+const SAVED_CONFIRMATION_MS = 2500;
+
+function SavedConfirmation({ visible }: { visible: boolean }) {
+  return (
+    <span role="status" aria-live="polite" className="w-12 shrink-0 text-right text-xs text-muted-foreground">
+      {visible ? "Saved" : null}
+    </span>
+  );
+}
+
 const DIGEST_OPTIONS: Array<{ value: DigestMode; label: string }> = [
   { value: "disabled", label: "Off — deliver immediately" },
   { value: "hourly", label: "Hourly digest" },
@@ -75,6 +85,13 @@ export function NotificationPreferencesPage() {
   const removeSuppression = useRemoveSuppression();
   const resetPreferences = useResetNotificationPreferences();
   const [confirmReset, setConfirmReset] = useState(false);
+  const [savedToggle, setSavedToggle] = useState<{ key: string; at: number } | null>(null);
+
+  useEffect(() => {
+    if (!savedToggle) return;
+    const timer = setTimeout(() => setSavedToggle(null), SAVED_CONFIRMATION_MS);
+    return () => clearTimeout(timer);
+  }, [savedToggle]);
 
   const handleOpenReset = useCallback(() => setConfirmReset(true), []);
 
@@ -93,7 +110,7 @@ export function NotificationPreferencesPage() {
       updatePreferences.mutate(
         { [key]: value },
         {
-          onSuccess: () => toast.success("Preferences saved"),
+          onSuccess: () => setSavedToggle({ key, at: Date.now() }),
           onError: (error) => toast.error(getErrorMessage(error)),
         },
       );
@@ -132,7 +149,10 @@ export function NotificationPreferencesPage() {
       const current = prefs?.categories ?? {};
       updatePreferences.mutate(
         { categories: { ...current, [category]: enabled } },
-        { onError: (error) => toast.error(getErrorMessage(error)) },
+        {
+          onSuccess: () => setSavedToggle({ key: `category:${category}`, at: Date.now() }),
+          onError: (error) => toast.error(getErrorMessage(error)),
+        },
       );
     },
     [prefs?.categories, updatePreferences],
@@ -223,13 +243,16 @@ export function NotificationPreferencesPage() {
                       </p>
                     </div>
                   </div>
-                  <Switch
-                    checked={enabled && !providerUnavailable}
-                    onCheckedChange={(v) => handleChannelToggle(key, v)}
-                    disabled={updatePreferences.isPending || providerUnavailable}
-                    aria-label={providerUnavailable ? `${label} unavailable — no provider configured` : undefined}
-                    className="shrink-0"
-                  />
+                  <div className="flex shrink-0 items-center gap-2">
+                    <SavedConfirmation visible={savedToggle?.key === key} />
+                    <Switch
+                      checked={enabled && !providerUnavailable}
+                      onCheckedChange={(v) => handleChannelToggle(key, v)}
+                      disabled={updatePreferences.isPending || providerUnavailable}
+                      aria-label={providerUnavailable ? `${label} unavailable — no provider configured` : label}
+                      className="shrink-0"
+                    />
+                  </div>
                 </div>
               );
             })}
@@ -313,11 +336,15 @@ export function NotificationPreferencesPage() {
                     </div>
                     <p className="text-sm font-medium">{config.label}</p>
                   </div>
-                  <Switch
-                    checked={enabled}
-                    onCheckedChange={(v) => handleCategoryToggle(cat, v)}
-                    disabled={updatePreferences.isPending}
-                  />
+                  <div className="flex shrink-0 items-center gap-2">
+                    <SavedConfirmation visible={savedToggle?.key === `category:${cat}`} />
+                    <Switch
+                      checked={enabled}
+                      onCheckedChange={(v) => handleCategoryToggle(cat, v)}
+                      disabled={updatePreferences.isPending}
+                      aria-label={config.label}
+                    />
+                  </div>
                 </div>
               );
             })}
