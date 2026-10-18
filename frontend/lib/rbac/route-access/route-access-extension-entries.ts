@@ -106,6 +106,12 @@ export const ROUTE_ACCESS_EXTENSIONS: readonly RouteAccessExtension[] = [
     reason: "Canonical settings route for broadcast administration. Mirrors /notifications/broadcasts which remains as a compatibility redirect.",
   },
   {
+    prefix: "/settings/roles/audit",
+    permission: "audit-log:read",
+    reason: "Role change audit trail. Matches the backend gate on GET /audit-log (audit-log:read) and the page's own requirePermission, so the /settings layout and the page deny with one reason instead of racing between settings:rbac:manage and audit-log:read.",
+    backendRoute: { method: "get", path: "/audit-log" },
+  },
+  {
     prefix: "/knowledge/wiki/search",
     permission: "kb:pages:view",
     reason:

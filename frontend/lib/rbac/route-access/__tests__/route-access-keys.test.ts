@@ -182,6 +182,21 @@ describe("route-access registry keys", () => {
     expect(isUniversalRoute("/settings/billing")).toBe(false);
   });
 
+  it("RBAC-UX-8: every /settings/roles page denies with one reason because the parallel /settings layout gate resolves the same key the page requires", () => {
+    const pages = collectAppRoutes("(authenticated)").filter((route) => route.path === "/settings/roles" || route.path.startsWith("/settings/roles/"));
+    expect(pages.map((route) => route.path).sort()).toEqual(["/settings/roles", "/settings/roles/1", "/settings/roles/audit", "/settings/roles/simulate"]);
+    const mismatches: string[] = [];
+    for (const route of pages) {
+      const source = fs.readFileSync(path.join(process.cwd(), "app", route.file), "utf8");
+      const pageKeys = [...source.matchAll(/requirePermission\(\s*"([^"]+)"/g)].map((match) => match[1]);
+      expect(pageKeys.length).toBeGreaterThan(0);
+      if (keysOf(route.path).join(",") !== pageKeys.join(",")) mismatches.push(`${route.path}: layout ${keysOf(route.path).join(",")} vs page ${pageKeys.join(",")}`);
+    }
+    expect(mismatches).toEqual([]);
+    expect(keysOf("/settings/roles")).toEqual(["settings:rbac:manage"]);
+    expect(keysOf("/settings/roles/audit")).toEqual(["audit-log:read"]);
+  });
+
   it("BITE: accounting routes resolve to the accounting module — layout must check module enablement via enforceRouteAccess", () => {
     const accountingRoutes = [
       "/accounting/settings",
