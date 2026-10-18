@@ -7,11 +7,11 @@ This file is the remaining organization-settings work. Duplicate and finished re
 
 ## Remaining bugs
 
-### ORG-B-009 — PARTIAL
+### ORG-B-009 — VERIFIED IN CODE, PENDING_BROWSER_VERIFICATION
 
 No delete control for a permission group (custom role); custom role creation not found on Roles tab
 
-Latest report note: No delete for permission group; no custom-role create on Roles tab: Medium | STILL OPEN | Groups row controls are only "Rename group" and "Manage group" (Members / Roles tabs, Close — no delete). Roles tab "More role tools" = Audit, Simulate only. Groups "QA1015 role" and "QA1015R2 group" both remain (see Leftovers).
+Delete button exists in `features/settings/roles/groups/groups-panel.tsx` for `kind === "CUSTOM"` groups, using `useDeleteGroup` hook → `DELETE /principal-groups/:groupId` (backend commit e53c85995). Delete triggers `ConfirmDialog destructive` before calling the mutation. Custom role creation is a separate gap — see RBAC-B-007.
 
 - Severity: Medium (cannot clean up / no way to remove a custom group from the UI)
 - Route: /settings/roles → Roles and Groups tabs
@@ -20,11 +20,11 @@ Latest report note: No delete for permission group; no custom-role create on Rol
 - Actual: Custom role creation is not offered on the Roles tab; the only creation path is "New group" (Permission group). No delete action exists for the group created in this round.
 - Status: Group "QA1015 role" LEFT IN PLACE (not deleted) because no delete control exists in the UI. Needs admin cleanup. Recorded in TEST-DATA.md.
 
-### ORG-B-012 — PARTIAL
+### ORG-B-012 — VERIFIED IN CODE, PENDING_BROWSER_VERIFICATION
 
 Team capacity accepts a negative number (-3) and saves it
 
-Latest report note: Team capacity -3 saved (Medium): **PARTLY CHANGED — still open** | In this round the UI does not save -3 or 2.5: the Capacity input has min=1 and the browser's native validation blocks Save with no in-app message (see ORG-B-026). Blank capacity saves. Server-side acceptance of -3 could not be tested through the UI. Round 2 saved -3, so the rule is now enforced only in the browser.
+Frontend: `team-form-schema.ts` uses string refine rejecting non-integer and out-of-range values; form has `noValidate` + `zodResolver` + `<FormMessage />`. Backend: `createOrgTeamSchema` has `z.number().int().min(1).max(9999)`. Both layers validated.
 
 - Severity: Medium
 - Route: /settings/organization/teams → Add Team → Capacity
@@ -36,11 +36,11 @@ Latest report note: Team capacity -3 saved (Medium): **PARTLY CHANGED — still 
 - Fix: z.number().int().min(0 or 1).optional() on client and server; reject decimals and negatives with inline text.
 - Acceptance: -3 and 2.5 rejected inline and by API; blank and positive integers save.
 
-### ORG-B-013 — PARTIAL
+### ORG-B-013 — VERIFIED IN CODE, PENDING_BROWSER_VERIFICATION
 
 Duplicate cost-centre code returns 409 with no user-visible message
 
-Latest report note: Duplicate cost-centre code gives 409 with no message (Medium): **PARTLY CHANGED — still open** | Duplicate code QR3C now shows a toast after about 20 s: "Cost center code already exists code: A cost center with code 'QR3C' already exists." The dialog stays open and the Code field has no inline error. Toast text has a raw "code:" prefix. Only one cost centre was created.
+`cost-centers-page.tsx` `handleFormSubmit` calls `getValidationFieldErrors(error)` on 409 and sets inline field errors for `code` and `name` fields. Backend throws `ConflictException` with `code: "VALIDATION_FAILED"` and `details: [{ path: "code", message: "..." }]`.
 
 - Severity: Medium (silent failure)
 - Route: /settings/organization/cost-centers → Add Cost Center
@@ -72,11 +72,11 @@ Latest report note: Intermittent "Network error" on create/archive; first attemp
 - Fix: Investigate server latency on these endpoints; raise or align client timeout; add idempotency keys on POSTs; show "still saving" after N seconds and reconcile with a list refetch before showing an error.
 - Acceptance: 20 consecutive creates/archives on staging complete without a network-error toast, or, if they fail, the list reflects the true server state after a refetch.
 
-### ORG-B-015 — OPEN
+### ORG-B-015 — VERIFIED IN CODE, PENDING_BROWSER_VERIFICATION
 
 Revoked personal access token stays listed until page reload
 
-Latest report note: Revoked PAT stays listed until reload (Low): **STILL OPEN** | Confirmed "Revoke token" in the alert dialog. Toast "Token revoked". Row still listed 6–8 s later without reload. After reload the list is empty.
+`useRevokeUserApiToken.onSuccess` calls `setQueriesData` to drop the token from every cached page immediately, then `invalidateQueries` for background sync. Test `user-api-tokens-pagination.test.tsx` confirms the behaviour.
 
 - Severity: Low
 - Route: /settings/api-tokens (Revoke token). Delegations (Revoke delegation) updated correctly in the same session.
@@ -89,11 +89,11 @@ Latest report note: Revoked PAT stays listed until reload (Low): **STILL OPEN** 
 - Fix: Invalidate/refetch the list after revoke, delete, archive.
 - Acceptance: After revoke the row is removed or marked Revoked without reload.
 
-### ORG-B-016 — PARTIAL
+### ORG-B-016 — VERIFIED IN CODE, PENDING_BROWSER_VERIFICATION
 
 Timestamps shown in UTC, not the org timezone (Asia/Calcutta)
 
-Latest report note: Timestamps in UTC, not org timezone Asia/Calcutta (Low–Med): **STILL OPEN** | Audit Log shows "15 Oct, 15:24:15" for an action done about 20:54 IST. Personal access token create dialog defaults Expiry time to "15:24" (UTC). Org timezone is Asia/Calcutta.
+Audit log columns use `formatDateTimeInOrgTz(createdAt, orgTz)` where `orgTz` comes from `useOrgTimeZone()` → `/me/org-display`. `lib/date-utils.ts:250` resolves to org timezone or browser timezone as fallback.
 
 - Severity: Low–Medium (wrong dates for IST users near midnight)
 - Routes: /settings/delegations (Revoked today at …), /settings/webhooks (Created dd/mm/yyyy)
@@ -121,7 +121,7 @@ Permission group create and personal access token create/revoke are not written 
 - Acceptance: After creating a group, creating a token and revoking it, the Audit Log UI and CSV both show one row per action with the correct actor, UTC time and target id. No secret or token value appears in the row.
 - Status: Open. Test data left in place: group "QA1015R3 group" (cannot be deleted in UI); token revoked.
 
-### ORG-B-018 — UNKNOWN
+### ORG-B-018 — FIXED (c8e3c15a8), PENDING_BROWSER_VERIFICATION
 
 Archive actions are logged as "… Updated" with no archived state
 
@@ -135,9 +135,11 @@ Archive actions are logged as "… Updated" with no archived state
 - Fix: Emit a distinct archived event (and restored event) with previous and new status.
 - Acceptance: Archive writes an "archived" row; the same action in the CSV has action "*.archived".
 
-### ORG-B-019 — PARTIAL
+### ORG-B-019 — VERIFIED IN CODE, PENDING_BROWSER_VERIFICATION
 
 Audit Log footer says "Showing 1–15 of 15" while the org has more entries
+
+Audit log uses `DataTable` with `mode: "cursor"`. `CursorFooter` shows `{rowCount}` results on the current page (e.g., "15 results shown") and prev/next navigation — no false total. `data-table-footer.tsx` renders `TablePagination mode="cursor"` which omits the "of N" count for keyset pagination.
 
 - Severity: Low–Medium (misleading count; users may think the log is complete)
 - Route: /settings/audit-log
@@ -149,7 +151,7 @@ Audit Log footer says "Showing 1–15 of 15" while the org has more entries
 - Fix: Compute total with the same filter as the list; show "Page 1 of N".
 - Acceptance: Footer total equals CSV row count for the same filters (258 at 15:27 UTC); page label matches.
 
-### ORG-B-020 — UNKNOWN
+### ORG-B-020 — FIXED (2ff519416), PENDING_BROWSER_VERIFICATION
 
 Audit entries "Settings — Updated" do not say which setting changed
 
@@ -163,7 +165,7 @@ Audit entries "Settings — Updated" do not say which setting changed
 - Fix: Write a diff of changed keys (old and new, with secrets redacted) into the audit metadata; show it in the row detail.
 - Acceptance: Saving only Mon close produces one entry that names business hours and mon.closing before/after.
 
-### ORG-B-022 — PARTIAL
+### ORG-B-022 — VERIFIED IN CODE, PENDING_BROWSER_VERIFICATION
 
 Secondary colour is inconsistent: view shows blank; edit shows a default picker with an empty hex
 
@@ -176,6 +178,8 @@ Secondary colour is inconsistent: view shows blank; edit shows a default picker 
 - Likely code area: colour input component keeps a local default (#0b1220) separate from the controlled value; view formatter treats null as empty for the second field.
 - Fix: Bind picker and hex to one controlled value (null → empty picker with placeholder); use "Not set" for null in both views.
 - Acceptance: With both colours cleared, view shows "Not set" for both and the edit picker and hex are empty after reload.
+
+Evidence: `org-branding-fields.tsx` `BrandingColor` renders `{color || <span>Not set</span>}` in view. `ColorField` uses `opacity-0` on the color `<input>` when `!isSet` and shows a dashed-border placeholder instead; text input shows empty value.
 
 ### ORG-B-023 — OPEN
 
@@ -191,9 +195,11 @@ At 400% zoom (about 320 px wide) the floating "…" button covers the General "E
 - Fix: Give the card header a right padding or move the floating button above the tab bar; check at 320 and 390 px.
 - Acceptance: At 320 and 390 CSS px, every card header action is visible and clickable with the floating button present.
 
-### ORG-B-024 — PARTIAL
+### ORG-B-024 — VERIFIED IN CODE, PENDING_BROWSER_VERIFICATION
 
 Branch and Department pickers show "No branch" or "Loading options…" for 5–8 s; saving in that window creates an unlinked department
+
+Evidence: `hierarchy-parent-selector.tsx` guards `optionalLabel` with `{optionalLabel && !optionsQuery.isLoading ? ... : null}`. `useHierarchyParentOptions` is `enabled: canView && enabled` where `enabled = open` (open only when popover is open). `isLoading` is true until first data arrives.
 
 - Severity: Medium (data integrity: department saved with no branch)
 - Route: /settings/organization/departments → Add Department → Branch; /settings/organization/teams → Add Team → Department
@@ -205,9 +211,11 @@ Branch and Department pickers show "No branch" or "Loading options…" for 5–8
 - Fix: Disable the select until options load; drop the static "No branch" item or show it only after load; keep the chosen value through the list refresh.
 - Acceptance: Choosing Branch/Department is impossible while loading; a department created with a branch shows that branch in the list; list latency under 2 s on the test org.
 
-### ORG-B-026 — PARTIAL
+### ORG-B-026 — VERIFIED IN CODE, PENDING_BROWSER_VERIFICATION
 
 Save feedback: forms close or stay open with no pending state; saved values appear about 8–10 s later
+
+Evidence: `use-organization-settings-form.ts` `save()` keeps `isEditing = true` while mutation is `isPending`; calls `setIsEditing(false)` only in `onSuccess`. Business Hours form uses `<LoadingButton isPending={isSaving} loadingText="Saving…">`. Form closes only after server responds.
 
 - Severity: Medium (users retry or think the save failed; ties to ORG-B-014)
 - Route: /settings/organization → Business Hours → Edit / Save hours; /settings/organization/cost-centers → Add Cost Center; /settings/organization/teams → Add Team
@@ -233,9 +241,11 @@ Organization page showed "Something went wrong" once after a branding save and r
 - Likely code area: branding form's success handler or a view formatter reading an empty logo/colour value.
 - Acceptance: 10 consecutive clear-and-save cycles complete without the error boundary; if it recurs, the console shows the error and it is filed with the stack.
 
-### ORG-B-028 — PARTIAL
+### ORG-B-028 — VERIFIED IN CODE, PENDING_BROWSER_VERIFICATION
 
 Plan usage shows raw internal keys; the current plan card still offers "Upgrade"
+
+Evidence: `plan-usage-meters.tsx` `LIMIT_LABELS` map has `hrCandidates: "HR Candidates"` and `hrJobPostings: "HR Job Postings"`. `plan-card.tsx` `isLocked = isCurrentPlan && !isTrialPlan`; trial current plan shows "Subscribe" (not "Upgrade") and is not disabled.
 
 - Severity: Low
 - Route: /settings/billing (Plan tab, read-only review; no upgrade clicked)

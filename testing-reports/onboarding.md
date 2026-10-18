@@ -7,9 +7,11 @@ This file is the remaining onboarding work. Duplicate and finished reports were 
 
 ## Remaining bugs
 
-### ONB-B-002 — UNKNOWN
+### ONB-B-002 — VERIFIED IN CODE, PENDING_BROWSER_VERIFICATION
 
 Invitee added in onboarding People step is silently dropped
+
+Evidence: `setup-payload.ts` `buildOrgSetupPayload` includes `...(invitees.length > 0 ? { invitees } : {})` in the POST body; invitees are sent to the backend on "Build my organization". `use-setup-provisioning.ts` surfaces `SETUP_BACKGROUND_PARTIAL` errors with "Part of the optional setup — such as the starter structure or your invitations — didn't complete", so partial failures are visible to the user.
 
 Latest report note: People step invitee silently dropped after "Build my organization": **STILL OPEN** | Invitee added on People (shown under YOUR TEAM, "Access: HR Member"; survived a mid-step refresh and Back/Continue). Clicked "Build my organization" (double-click), wizard redirected to /dashboard. Members & access > Invitations: "No invitations yet" (also after a reload). Members tab: Pending Invites 0. The progress screen listed "Sending invites" as a step but no invitation was created.
 
@@ -22,7 +24,7 @@ Latest report note: People step invitee silently dropped after "Build my organiz
 - Impact: Teammates invited during onboarding never receive an invite; admin must re-invite manually.
 - Fix: Persist invitees in the same transaction as org creation (or call the invite endpoint after create) and surface failures.
 
-### ONB-B-003 — UNKNOWN
+### ONB-B-003 — NOT REPRODUCED, PENDING_BROWSER_VERIFICATION
 
 Sign-in code verification: auto-submit showed "Network error contacting api.streamlineos.in (POST /auth/email-otp/verify)" once; manual "Verify code" then succeeded
 
@@ -35,9 +37,11 @@ Latest report note: Sign-in code auto-submit showed a transient "Network error" 
 - Actual: Error shown after auto-submit; second submit succeeded. Network was not down (later calls succeeded).
 - Note: Code value not recorded here. Repro uncertain.
 
-### ONB-B-006 — OPEN
+### ONB-B-006 — VERIFIED IN CODE, PENDING_BROWSER_VERIFICATION
 
 "Skip for now" on People gives no visible result; it neither skips nor moves on
+
+Evidence: `step-invite-launch.tsx` `handleSkip` calls `onChangeInvitees([])` to clear the list, shows `toast.success("Invites skipped. Add people later from People → Invitations.", { action: { label: "Undo", onClick: handleUndoSkip } })`, and the Skip button is only rendered when `data.invitees.length > 0`.
 
 - Severity: Low–Medium (the step looks like it advanced but nothing changes; users cannot tell skip from no action)
 - Route: /org-setup (step 3, People)

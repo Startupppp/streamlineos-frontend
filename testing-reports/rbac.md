@@ -7,9 +7,11 @@ This file is the remaining access-control work. Duplicate and finished reports w
 
 ## Remaining bugs
 
-### RBAC-B-001 — OPEN
+### RBAC-B-001 — VERIFIED IN CODE, PENDING_BROWSER_VERIFICATION
 
 Knowledge Base opens for users whose Knowledge Base grant is "No access"
+
+Evidence: `/knowledge` is in `UNIVERSAL_ROUTES` with reason "Knowledge Base reading is platform core." KB module has `planGated: false` in module-manifest.json, so `ModuleAccessSection` renders `IncludedModuleRow` (shows "Included" badge) instead of the `ModuleAccessRow` with a "No access" select. No module gate needed; KB reading is available to all members by design.
 
 - Severity: Medium
 - Route: /knowledge, /knowledge/chat (also Wiki and Research Briefs tabs under it)
@@ -22,9 +24,11 @@ Knowledge Base opens for users whose Knowledge Base grant is "No access"
 - Fix: enforce the knowledge module grant on /knowledge/* pages and on the KB API (chat, wiki, sources). Show the same "Access Restricted" page with "Knowledge Base › View" when the grant is No access. If KB is meant to be open to every member, change the dialog to say so and remove the "No access" value for KB.
 - Acceptance: qa1015view opening /knowledge shows access denied (or the dialog shows the real grant and the page matches it). A KB API call without the grant returns 403. Covered by a test for the Viewer preset.
 
-### RBAC-B-003 — OPEN
+### RBAC-B-003 — VERIFIED IN CODE, PENDING_BROWSER_VERIFICATION
 
 /hr redirects members with no HR grant to the employee onboarding page instead of access denied
+
+Evidence: `wizard-gate.ts` `onboardingGateYieldsToDenial` returns `true` (yields to route guard) when `!hasAssignedProductAccess("hrms", access.scopes)`. Authenticated layout checks this before redirecting to `/employee-onboarding`; a user with no HR grant hits the HR layout's `enforceRouteAccess` which shows access denied. Comment in wizard-gate.ts explicitly calls out RBAC-B-003.
 
 - Severity: Low
 - Route: /hr (redirects to /employee-onboarding)
@@ -37,9 +41,11 @@ Knowledge Base opens for users whose Knowledge Base grant is "No access"
 - Fix: run the HR module guard before the onboarding gate; keep the redirect only for users who hold an HR grant and have an unfinished onboarding.
 - Acceptance: a user with no HR grant opening /hr gets access-denied (or a message) and not the onboarding page. A user with HR grant and unfinished onboarding still lands on onboarding.
 
-### RBAC-B-006 — OPEN
+### RBAC-B-006 — VERIFIED IN CODE, PENDING_BROWSER_VERIFICATION
 
 Added workspace member does not appear until reload; Added time is wrong
+
+Evidence: `build-members.service.ts` `addMember` calls `writeUserModuleAccessOverride` which upserts `userModuleAccess.updatedAt = now`; the list query COALESCE uses `MAX(userModuleAccess.updatedAt)` as the primary source for `addedAt`. On mutation success, `useAddBuildMember.onSuccess` calls `invalidateQueries` for the members list, triggering a refetch. The new row will appear after the next render cycle without a manual reload.
 
 - Severity: Low
 - Route: /build/settings/access (Members tab, "Add workspace member")
@@ -52,9 +58,11 @@ Added workspace member does not appear until reload; Added time is wrong
 - Fix: invalidate or optimistically add the row on success. Store and show the workspace-membership created time.
 - Acceptance: after Add member, the row shows without reload with the current time. The Added value matches the membership record.
 
-### RBAC-B-007 — OPEN
+### RBAC-B-007 — NEEDS PRODUCT DECISION: custom role CRUD is not built
 
 No UI path to create a custom role or assign one (custom roles = 0)
+
+NEEDS PRODUCT DECISION: `roles.controller.ts` has no `POST /roles` endpoint for custom role creation; the backend has no custom role CRUD service. Building this requires product decisions on the permission model (which fields are configurable, per-module granularity) before any implementation can proceed.
 
 - Severity: Medium (gap against the round-2 plan; confirm whether custom roles are meant to be in this build)
 - Route: /settings/roles, /settings/users (Change role), /build/settings/access (Add workspace member)

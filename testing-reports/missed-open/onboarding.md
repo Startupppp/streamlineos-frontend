@@ -2,7 +2,7 @@
 
 These items are only partly done, so they stay. Fully finished items from the same report were not put back.
 
-## ONB-B-004 — partial
+## ONB-B-004 — NOT REPRODUCED, PENDING_BROWSER_VERIFICATION
 
 Latest status source: `streamline-qa-reports/modules-2026-10-15/onboarding/round-3/BUGS.md`
 
