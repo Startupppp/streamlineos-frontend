@@ -1,5 +1,6 @@
 "use client";
 
+import { useMemo, useCallback } from "react";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -241,16 +242,13 @@ export function SpacesListTable({
   onViewMembers,
   emptyState,
 }: SpacesListTableProps) {
-  const columns = buildColumns(
-    canManage,
-    onEdit,
-    onArchiveToggle,
-    onDelete,
-    onViewMembers,
+  const columns = useMemo(
+    () => buildColumns(canManage, onEdit, onArchiveToggle, onDelete, onViewMembers),
+    [canManage, onEdit, onArchiveToggle, onDelete, onViewMembers],
   );
 
-  function renderMobileCard(row: KbSpaceListItem) {
-    return (
+  const renderMobileCard = useCallback(
+    (row: KbSpaceListItem) => (
       <SpaceCard
         space={row}
         canManage={canManage}
@@ -260,12 +258,11 @@ export function SpacesListTable({
         onDelete={onDelete}
         onViewMembers={onViewMembers}
       />
-    );
-  }
+    ),
+    [canManage, onEdit, onArchiveToggle, onDelete, onViewMembers],
+  );
 
-  function getRowKey(row: KbSpaceListItem) {
-    return row.id;
-  }
+  const getRowKey = useCallback((row: KbSpaceListItem) => row.id, []);
 
   return (
     <DataTable

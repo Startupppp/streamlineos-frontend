@@ -257,9 +257,11 @@ export default function OrgSetupPage() {
     (nextStep: number) => {
       const nextStepId = sequence[nextStep - 1] ?? currentStepId;
       navigationRef.current += 1;
+      const nav = navigationRef.current;
       setDirection(-1);
       setStep(nextStep);
       saveServerDraft(data, nextStepId).catch((error: unknown) => {
+        if (nav !== navigationRef.current) return;
         toast.error(`We couldn't save your setup. ${getErrorMessage(error)}`, {
           action: { label: "Retry", onClick: retryDraftSave },
         });

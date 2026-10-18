@@ -16,9 +16,6 @@ const orgSetupStatusContract = lazyContract(() =>
 const orgSetupCompleteContract = lazyContract(() =>
   import("@/hooks/api/org-setup-schema").then((m) => m.orgSetupCompleteContract),
 );
-const orgSetupSkipContract = lazyContract(() =>
-  import("@/hooks/api/org-setup-schema").then((m) => m.orgSetupSkipContract),
-);
 
 export type OrgSetupPayload = {
   industry: string;
@@ -36,7 +33,6 @@ export type OrgSetupPayload = {
 
 export type OrgSetupResponse = { success: boolean; orgId: string; autoLoginToken?: string };
 export type OrgSetupCompleteResponse = OrgSetupResponse & { destination: string };
-export type OrgSetupSkipResponse = OrgSetupResponse;
 
 export type OrgSetupSession = {
   id: number;
@@ -85,14 +81,6 @@ export function useCompleteOrgSetupMutation() {
   });
 }
 
-export function useSkipOrgSetupMutation() {
-  return useMutation({
-    mutationKey: ["org", "setup", "skip"],
-    mutationFn: (payload: { reason?: string } = {}) =>
-      apiClient.post<OrgSetupSkipResponse>("/org/setup/skip", payload, undefined, orgSetupSkipContract),
-    retry: false,
-  });
-}
 
 const orgSetupDraftSaveContract = lazyContract(() =>
   import("@/hooks/api/org-setup-schema").then((m) => m.orgSetupDraftSaveContract),

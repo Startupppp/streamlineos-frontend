@@ -46,7 +46,7 @@ export function SpaceDeleteDialog({ space, onOpenChange, onDeleted }: SpaceDelet
       destructive
       keepOpenOnConfirm
       isPending={deleteSpace.isPending}
-      confirmDisabled={impact.isLoading}
+      confirmDisabled={impact.isLoading || impact.isError}
       onConfirm={handleConfirm}
     />
   );

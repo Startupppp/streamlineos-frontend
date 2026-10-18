@@ -128,10 +128,6 @@ export const orgSetupCompleteContract = z.union([
   z.object({ success: z.literal(true), orgId: z.string(), destination: z.string() }),
 ]);
 
-export const orgSetupSkipContract = z.union([
-  z.object({ success: z.literal(true), orgId: z.string(), autoLoginToken: z.string() }),
-  z.object({ success: z.literal(true), orgId: z.string() }),
-]);
 
 export const orgSetupDraftSaveContract = z
   .object({ success: z.literal(true), revision: z.number().int().nonnegative() })

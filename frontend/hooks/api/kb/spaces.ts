@@ -181,7 +181,9 @@ export function useDeleteKbSpace() {
     onSuccess: () => {
       operation.settle();
       qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.kb.spaces() });
-      qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.kb.kbPages() });
+      qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.kb.pagesTree() });
+      qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.kb.pagesTrash() });
+      qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.kb.pageCollection() });
     },
   });
 }

@@ -95,13 +95,12 @@ export function EmployeeDetailsView({ employee }: { employee: EmployeeData }) {
   );
   const isSelf = hydrated && session?.user?.id === employee.id;
   const showManageActions = hydrated && canManageEmployees;
-  const showExportPdf = serverActions ? serverActions.has("export") : showManageActions;
-  const showSensitiveTab = serverActions
-    ? serverActions.has("view_sensitive")
-    : hydrated && sensitiveScope !== "none" && (isSelf || sensitiveScope !== "own");
-  const showEditTab = serverActions
-    ? serverActions.has("update")
-    : hydrated && canUpdateEmployee && (isSelf || manageScope === "all");
+  const showExportPdf = serverActions?.has("export") ?? showManageActions;
+  const showSensitiveTab =
+    serverActions?.has("view_sensitive") ??
+    (hydrated && sensitiveScope !== "none" && (isSelf || sensitiveScope !== "own"));
+  const showEditTab =
+    serverActions?.has("update") ?? (hydrated && canUpdateEmployee && (isSelf || manageScope === "all"));
   // V-023/V-025: the same helper the header card uses. Composing first+last
   // here ignored `employee.name`, so a display-name-only person exported a PDF
   // called "Employee".
@@ -235,12 +234,11 @@ export function EmployeeDetailsView({ employee }: { employee: EmployeeData }) {
       : null;
   const isAlreadyTerminated =
     employee.isActive === false || employmentStatus === "EXITED" || employmentStatus === "ALUMNI";
-  const canRehire = serverActions
-    ? serverActions.has("rehire")
-    : hydrated && canManageExits && isAlreadyTerminated;
-  const canTerminate = serverActions
-    ? serverActions.has("terminate")
-    : hydrated &&
+  const canRehire =
+    serverActions?.has("rehire") ?? (hydrated && canManageExits && isAlreadyTerminated);
+  const canTerminate =
+    serverActions?.has("terminate") ??
+    (hydrated &&
       !isAlreadyTerminated &&
       canDeleteEmployee(
         employee.role ?? "",
@@ -248,8 +246,8 @@ export function EmployeeDetailsView({ employee }: { employee: EmployeeData }) {
         true,
         session?.user?.id,
         canManageExits,
-      );
-  const canArchive = serverActions ? serverActions.has("archive") : canTerminate;
+      ));
+  const canArchive = serverActions?.has("archive") ?? canTerminate;
 
   const lifecycleBadgeLabel = lifecycleStatus
     ? (LIFECYCLE_BADGE[lifecycleStatus]?.label ?? lifecycleStatus)
