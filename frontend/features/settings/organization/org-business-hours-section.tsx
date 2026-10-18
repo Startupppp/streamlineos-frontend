@@ -132,7 +132,7 @@ export function OrgBusinessHoursSection({ org, canEdit }: OrgBusinessHoursSectio
     <OrgSettingsCard
       title="Business Hours"
       description="Define working days and hours for your organization."
-      icon={<Clock className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />}
+      icon={<Clock className="h-3.5 w-3.5 shrink-0" />}
       action={canEdit && !isEditing ? <OrgSettingsEditButton onClick={handleEdit} /> : undefined}
     >
       {!isEditing ? (

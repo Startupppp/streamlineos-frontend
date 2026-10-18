@@ -112,7 +112,7 @@ export function OrgLocalizationSection({ org, canEdit }: OrgLocalizationSectionP
     <OrgSettingsCard
       title="Localization"
       description="Timezone, currency, language, and date/time format defaults."
-      icon={<Globe className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />}
+      icon={<Globe className="h-3.5 w-3.5 shrink-0" />}
       action={canEdit && !isEditing ? <OrgSettingsEditButton onClick={handleEdit} /> : undefined}
     >
       {!isEditing ? (

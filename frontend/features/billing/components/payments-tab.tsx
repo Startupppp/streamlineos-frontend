@@ -67,7 +67,7 @@ function getPaymentRowKey(row: Payment): string | number {
 
 const EMPTY_STATE = (
   <EmptyState
-    className="border-0 bg-transparent py-10"
+    className="min-h-0 flex-1 border-0 bg-transparent"
     title="No payments yet"
     description="Subscription payment history will appear here after your first payment."
   />
@@ -82,9 +82,9 @@ export function PaymentsTab() {
 
   if (isLoading) {
     return (
-      <div className="flex flex-1 min-h-0 flex-col gap-3">
-        <Skeleton className="h-4 w-32" />
-        <div className="divide-y divide-border rounded-xl border border-border">
+      <div className="flex h-full min-h-0 flex-1 flex-col gap-3">
+        <Skeleton className="h-4 w-32 shrink-0" />
+        <div className="min-h-0 flex-1 divide-y divide-border overflow-hidden rounded-xl border border-border">
           {[1, 2, 3, 4, 5].map((i) => (
             <div key={i} className="flex gap-4 px-4 py-3">
               <Skeleton className="h-4 w-36" />
@@ -104,7 +104,7 @@ export function PaymentsTab() {
         title="Failed to load payment history"
         description={getErrorMessage(error)}
         onRetry={handleRetry}
-        className="flex-1"
+        className="h-full min-h-0 flex-1"
       />
     );
   }
@@ -115,19 +115,13 @@ export function PaymentsTab() {
   }));
 
   return (
-    <div className="flex flex-1 min-h-0 flex-col gap-3">
-      <div>
-        <p className="text-sm font-semibold text-foreground">Subscription Payments</p>
-        <p className="text-xs text-muted-foreground mt-0.5">
-          Razorpay payment history for your subscription
-        </p>
-      </div>
+    <div className="flex h-full min-h-0 flex-1 flex-col">
       <DataTable
         data={payments}
         columns={PAYMENT_COLUMNS}
         getRowKey={getPaymentRowKey}
         emptyState={EMPTY_STATE}
-        className="flex-1 min-h-0"
+        className="h-full min-h-0 flex-1"
       />
     </div>
   );

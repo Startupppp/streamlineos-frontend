@@ -80,7 +80,7 @@ export function OrgSecuritySection({ org, canEdit }: OrgSecuritySectionProps) {
     <OrgSettingsCard
       title="Session policy"
       description="Set organization-wide sign-in and session requirements."
-      icon={<ShieldCheck className="h-4 w-4 text-muted-foreground" />}
+      icon={<ShieldCheck className="h-4 w-4" />}
       action={
         canEdit && !isEditing ? <OrgSettingsEditButton onClick={handleEdit} /> : undefined
       }

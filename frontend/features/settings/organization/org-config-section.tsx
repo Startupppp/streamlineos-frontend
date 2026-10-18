@@ -65,7 +65,7 @@ export function OrgConfigSection({ org, canEdit }: OrgConfigSectionProps) {
     <OrgSettingsCard
       title="App Configuration"
       description="Currency, timezone, fiscal year, and directory visibility."
-      icon={<SlidersHorizontal className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />}
+      icon={<SlidersHorizontal className="h-3.5 w-3.5 shrink-0" />}
       action={canEdit && !isEditing ? <OrgSettingsEditButton onClick={handleEdit} /> : undefined}
     >
       {!isEditing ? (

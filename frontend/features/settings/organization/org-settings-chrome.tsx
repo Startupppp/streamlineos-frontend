@@ -163,7 +163,7 @@ export function OrgSettingsEditButton({
       onClick={onClick}
       className="h-7 gap-1.5 px-2.5 text-xs shrink-0"
     >
-      <Pencil className="h-3 w-3" />
+      <Pencil className="h-3 w-3 text-current" aria-hidden="true" />
       {label}
     </Button>
   );

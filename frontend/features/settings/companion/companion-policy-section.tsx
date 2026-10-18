@@ -133,7 +133,7 @@ export function CompanionPolicySection() {
     <OrgSettingsCard
       title="Companion"
       description="Decide whether members see the companion character and which prompts it may show. This never grants access members lack."
-      icon={<Bot className="h-4 w-4 text-muted-foreground" />}
+      icon={<Bot className="h-4 w-4" />}
     >
       {isLoading ? <Skeleton className="h-40 w-full" /> : null}
       {isError ? (

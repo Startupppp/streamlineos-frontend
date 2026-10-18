@@ -83,7 +83,7 @@ export function OrgProfileSection({ org, canEdit }: OrgProfileSectionProps) {
     <OrgSettingsCard
       title="General"
       description="Legal identity, contact details, and organization code."
-      icon={<Building2 className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />}
+      icon={<Building2 className="h-3.5 w-3.5 shrink-0" />}
       action={canEdit && !isEditing ? <OrgSettingsEditButton onClick={handleEdit} /> : undefined}
     >
       {!isEditing ? (

@@ -90,7 +90,7 @@ export function OrgBrandingSection({ org, canEdit }: OrgBrandingSectionProps) {
     <OrgSettingsCard
       title="Branding"
       description="Logo, favicon, colors, and email branding defaults."
-      icon={<Palette className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />}
+      icon={<Palette className="h-3.5 w-3.5 shrink-0" />}
       action={canEdit && !isEditing ? <OrgSettingsEditButton onClick={handleEdit} /> : undefined}
     >
       {!isEditing ? (

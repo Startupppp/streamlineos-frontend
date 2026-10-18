@@ -1,11 +1,9 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { motion } from "framer-motion";
 import { Download, FileArchive, ShieldAlert, Trash2, UserRound } from "lucide-react";
 import { toast } from "sonner";
 import { MemberPicker } from "@/components/members/member-picker";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
 import {
@@ -17,10 +15,9 @@ import { useMemberDirectory, type DirectoryScope } from "@/hooks/api/members/use
 import { useCan } from "@/hooks/api/access";
 import { useCreatePersonExportJob, useEraseSubject, useExportPersonData } from "@/hooks/api/privacy/gdpr";
 import type { GdprErasureResult } from "@/hooks/api/privacy/gdpr-schema";
-import { useMotionVariants } from "@/lib/motion-variants";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { getUserDisplayName, getUserInitials } from "@/lib/person-display";
-import { cn, resolveImageUrl } from "@/lib/utils";
+import { getUserDisplayName } from "@/lib/person-display";
+import { cn } from "@/lib/utils";
 import { ExportJobStatus } from "./export-job-status";
 import { PrivacyActionRow } from "./privacy-action-row";
 import { TypedEmailConfirmDialog } from "./typed-email-confirm-dialog";
@@ -38,7 +35,6 @@ function describeErasure(result: GdprErasureResult): string {
 
 export function PersonDataPanel() {
   const canManage = useCan("hr:retention:manage");
-  const motionVariants = useMotionVariants();
   const [personId, setPersonId] = useState<string | null>(null);
   const [jobId, setJobId] = useState<string | null>(null);
   const [erasing, setErasing] = useState(false);
@@ -116,23 +112,23 @@ export function PersonDataPanel() {
   return (
     <RichPageContent className="min-h-0 flex-1 overflow-y-auto pb-1">
       <RichPanel padded={false}>
-        <div className="flex items-start gap-2.5 border-b border-border/60 px-4 py-3.5 sm:px-5">
-          <RichIconWell tone="blue" size="sm" className="mt-0.5">
-            <UserRound className="size-3.5" aria-hidden="true" />
-          </RichIconWell>
-          <div className="min-w-0">
-            <h2 className="text-sm font-semibold tracking-tight text-foreground">
-              Choose whose data you are acting on
-            </h2>
-            <p className="mt-0.5 text-xs leading-relaxed text-muted-foreground">
-              Exports and erasures apply only to this member. Preview erasure first if a legal hold might apply.
-            </p>
+        <div className="flex flex-col gap-3 px-4 py-3.5 sm:flex-row sm:items-center sm:justify-between sm:gap-4 sm:px-5">
+          <div className="flex min-w-0 items-start gap-2.5">
+            <RichIconWell tone="blue" size="sm" className="mt-0.5">
+              <UserRound className="size-3.5" aria-hidden="true" />
+            </RichIconWell>
+            <div className="min-w-0">
+              <h2 className="text-sm font-semibold tracking-tight text-foreground">
+                Member
+              </h2>
+              <p className="mt-0.5 text-xs leading-relaxed text-muted-foreground">
+                Exports and erasures apply only to the person you select.
+              </p>
+            </div>
           </div>
-        </div>
-        <div className="flex max-w-xl flex-col gap-3 px-4 py-3.5 sm:px-5">
-          <div className="flex flex-col gap-1.5">
-            <label htmlFor="privacy-member-picker" className="text-sm font-medium text-foreground">
-              Member
+          <div className="w-full shrink-0 sm:max-w-sm">
+            <label htmlFor="privacy-member-picker" className="sr-only">
+              Search members
             </label>
             <MemberPicker
               id="privacy-member-picker"
@@ -144,31 +140,6 @@ export function PersonDataPanel() {
               className="w-full"
             />
           </div>
-
-          {person ? (
-            <motion.div
-              key={person.id}
-              variants={motionVariants.fadeIn}
-              initial="hidden"
-              animate="visible"
-              className="flex items-center gap-3 rounded-xl border border-border bg-surface-inset px-3 py-2.5 dark:border-background"
-            >
-              <Avatar className="size-9 shrink-0">
-                <AvatarImage src={resolveImageUrl(person.image)} alt={displayName} />
-                <AvatarFallback className="text-sm font-semibold">
-                  {getUserInitials(person)}
-                </AvatarFallback>
-              </Avatar>
-              <div className="min-w-0">
-                <p className="truncate text-sm font-semibold text-foreground">{displayName}</p>
-                <p className="truncate text-xs text-muted-foreground">{person.email}</p>
-              </div>
-            </motion.div>
-          ) : (
-            <p className="text-xs leading-snug text-muted-foreground">
-              Select a member to unlock export and erasure.
-            </p>
-          )}
         </div>
       </RichPanel>
 

@@ -35,7 +35,7 @@ export function OrgDataPrivacySection({ canEdit }: OrgDataPrivacySectionProps) {
     <OrgSettingsCard
       title="Data & Privacy"
       description="Manage data retention policies."
-      icon={<Shield className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />}
+      icon={<Shield className="h-3.5 w-3.5 shrink-0" />}
       contentClassName="space-y-1"
     >
       <div className="flex flex-col gap-2.5 py-1 sm:flex-row sm:items-end sm:justify-between sm:gap-4">

@@ -138,9 +138,9 @@ export function SubjectRequestsPanel() {
         padded={false}
         className="flex min-h-0 flex-1 flex-col overflow-hidden"
       >
-        <div className="shrink-0 space-y-3 border-b border-border/60 px-4 py-3.5 sm:px-5">
+        <div className="flex shrink-0 flex-col gap-4 border-b border-border/60 px-4 py-3.5 sm:px-5">
           <RichSectionHeader
-            className="mb-0"
+            className="mb-0 gap-3 sm:gap-4"
             title="Filed subject requests"
             description="Run an access or erasure request, then keep the filed outcome for audit."
             action={
