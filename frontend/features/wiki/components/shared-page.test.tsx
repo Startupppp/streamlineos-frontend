@@ -24,6 +24,10 @@ jest.mock("@/hooks/api/kb", () => ({
   useDeleteKbPage: jest.fn(() => ({ mutate: jest.fn(), isPending: false })),
 }));
 
+jest.mock("@/hooks/api/kb/export-page", () => ({
+  useExportKbPage: jest.fn(() => ({ mutate: jest.fn(), isPending: false })),
+}));
+
 jest.mock("@/hooks/api/access", () => ({
   useCan: () => true,
 }));
