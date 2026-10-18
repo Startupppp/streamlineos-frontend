@@ -10,6 +10,7 @@ import { formatTrialDaysLeft, formatTrialEndDate, trialDaysRemaining } from "./t
 
 export function TrialBanner() {
   const [dismissed, setDismissed] = useState(false);
+  const [now] = useState(Date.now);
   const { data, isLoading, isError } = useSubscription();
   const orgTz = useOrgTimeZone();
 
@@ -27,7 +28,7 @@ export function TrialBanner() {
   )
     return null;
 
-  const daysLeft = trialDaysRemaining(subscription.trialEndsAt, Date.now());
+  const daysLeft = trialDaysRemaining(subscription.trialEndsAt, now);
   const endDate = formatTrialEndDate(subscription.trialEndsAt, orgTz);
   const label =
     daysLeft === 0
