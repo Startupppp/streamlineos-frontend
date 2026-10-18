@@ -1,6 +1,8 @@
 "use client";
 
 import { ShieldAlert } from "lucide-react";
+import { toast } from "sonner";
+import { useCopyFeedback } from "@/hooks/common/use-copy-feedback";
 import { cn } from "@/lib/utils";
 import type { PermissionKey } from "@/lib/rbac/permissions";
 import { permissionKeyLabel } from "@/lib/rbac/administering-module";
@@ -21,6 +23,13 @@ export function NoPermissionState({
   compact = false,
 }: NoPermissionStateProps) {
   const permissions = permission === undefined ? [] : typeof permission === "string" ? [permission] : permission;
+  const { copied, copy } = useCopyFeedback();
+
+  async function handleCopyRequest() {
+    const needs = permissions.length > 0 ? ` I need: ${permissions.join(" or ")}.` : "";
+    const ok = await copy(`Please give me access to ${window.location.href}.${needs}`);
+    if (!ok) toast.error("Couldn't copy the request. Copy this page's address instead.");
+  }
   return (
     <div
       className={cn(
@@ -67,13 +76,15 @@ export function NoPermissionState({
       {compact ? null : (
         <p className="text-xs text-muted-foreground mt-3">
           Contact your administrator to request access, or{" "}
-          <a
-            href="mailto:?"
+          <button
+            type="button"
+            onClick={handleCopyRequest}
             className="underline underline-offset-2 hover:text-foreground transition-colors"
           >
-            send them a request
-          </a>
-          .
+            copy an access request
+          </button>{" "}
+          to send them.
+          {copied ? <span className="ml-1 text-foreground">Copied.</span> : null}
         </p>
       )}
     </div>

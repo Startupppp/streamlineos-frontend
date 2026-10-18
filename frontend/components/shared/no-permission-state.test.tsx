@@ -1,3 +1,4 @@
+import userEvent from "@testing-library/user-event";
 import { render, screen } from "@testing-library/react";
 import { NoPermissionState } from "./no-permission-state";
 
@@ -59,7 +60,7 @@ describe("NoPermissionState — semantic structure", () => {
     expect(
       screen.queryByText(/Contact your administrator to request access/),
     ).not.toBeInTheDocument();
-    expect(screen.queryByRole("link", { name: "send them a request" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "copy an access request" })).not.toBeInTheDocument();
   });
 
   it("renders the administrator contact line in full mode", () => {
@@ -67,6 +68,19 @@ describe("NoPermissionState — semantic structure", () => {
     expect(
       screen.getByText(/Contact your administrator to request access, or/),
     ).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "send them a request" })).toHaveAttribute("href", "mailto:?");
+    expect(screen.getByRole("button", { name: "copy an access request" })).toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: /request/ })).not.toBeInTheDocument();
+    expect(document.querySelector('a[href^="mailto:"]')).toBeNull();
+  });
+
+  it("copies a real access request naming this page and the permission, and confirms it", async () => {
+    const writeText = jest.fn().mockResolvedValue(undefined);
+    Object.defineProperty(navigator, "clipboard", { value: { writeText }, configurable: true });
+    render(<NoPermissionState permission="hr:employees:view" />);
+    await userEvent.click(screen.getByRole("button", { name: "copy an access request" }));
+    expect(writeText).toHaveBeenCalledWith(
+      `Please give me access to ${window.location.href}. I need: hr:employees:view.`,
+    );
+    expect(await screen.findByText("Copied.")).toBeInTheDocument();
   });
 });
