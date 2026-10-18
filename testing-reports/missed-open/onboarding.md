@@ -2,7 +2,8 @@
 
 These items are only partly done, so they stay. Fully finished items from the same report were not put back.
 
-## ONB-B-004 — NOT REPRODUCED, PENDING_BROWSER_VERIFICATION
+## ONB-B-004 — FIXED (979ff2dfb), PENDING_BROWSER_VERIFICATION
+Back and the step rail navigate at once and save the latest values in the background; a Continue save that lands after Back no longer advances; the header shows "Couldn't save — Retry" and clears on the next successful save; the save cache tracks the new revision and a 409 re-saves on the server revision.
 
 Latest status source: `streamline-qa-reports/modules-2026-10-15/onboarding/round-3/BUGS.md`
 
