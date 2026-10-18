@@ -12,6 +12,7 @@ const mockClearAll = jest.fn();
 const mockToastError = jest.fn();
 const mockLocationReplace = jest.fn();
 const mockSetAutoSignOutSuppressed = jest.fn();
+const mockSignOut = jest.fn();
 const mockUseOrgSetupSessionQuery = jest.fn((_enabled: boolean) => ({
   data: undefined,
 }));
@@ -50,6 +51,7 @@ jest.mock("@/hooks/common/auth-hooks", () => ({
   useSessionClaimsRefresh: jest.fn(() => mockRefreshSessionClaims),
   useMyPendingInvitations: jest.fn(() => ({ data: [] })),
   useClaimInvitation: jest.fn(() => ({ mutate: jest.fn(), isPending: false })),
+  useSignOut: jest.fn(() => ({ mutate: mockSignOut, isPending: false })),
 }));
 
 jest.mock("@/hooks/common/use-confirmed-session-claims-refresh", () => ({
@@ -318,6 +320,20 @@ describe("OrgSetupPage — pending invitation banner", () => {
 
     expect(screen.getByRole("button", { name: "Join" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /create my own organization/i })).toBeInTheDocument();
+  });
+
+  it("signs the user out from the pending invitation view (B-022)", async () => {
+    mockSignOut.mockClear();
+    withInvitations();
+    render(<OrgSetupPage />);
+
+    await waitFor(() => {
+      expect(screen.getByRole("button", { name: "Sign out" })).toBeInTheDocument();
+    });
+
+    await userEvent.click(screen.getByRole("button", { name: "Sign out" }));
+
+    expect(mockSignOut).toHaveBeenCalledTimes(1);
   });
 
   it("calls claimMutation.mutate with the invitation id when Join is clicked", async () => {
