@@ -322,7 +322,10 @@ function AiCreditsPageContent() {
                 "min-h-0 overflow-hidden",
               )}
             >
-              <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain scrollbar-hide">
+              <ScrollArea
+                hideScrollbar
+                className={cn(SCROLL_AREA_PAGE_BODY_CLASS, "h-full")}
+              >
                 {usageError ? (
                   <ErrorState
                     title="Failed to load usage data"
@@ -362,7 +365,7 @@ function AiCreditsPageContent() {
                     />
                   </div>
                 )}
-              </div>
+              </ScrollArea>
             </TabsContent>
 
             <TabsContent
