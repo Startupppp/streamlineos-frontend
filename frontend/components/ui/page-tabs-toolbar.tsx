@@ -190,7 +190,7 @@ export function PageTabsToolbar({
       {tabsWithSearch}
       <div
         data-slot="page-tabs-toolbar-controls"
-        className="flex w-full min-w-0 flex-wrap items-center gap-2 md:ml-auto md:w-auto md:flex-nowrap md:justify-end md:overflow-x-auto md:overscroll-x-contain md:scrollbar-hide"
+        className="flex w-full min-w-0 flex-wrap items-center gap-2 md:ml-auto md:w-auto md:justify-end"
       >
         {filterControls}
         {actionCluster}

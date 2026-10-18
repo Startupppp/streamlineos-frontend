@@ -139,7 +139,7 @@ export function AiCreditsBreakdownTables({
   );
 
   return (
-    <div className="grid gap-4 md:grid-cols-2 md:items-stretch">
+    <div className="grid shrink-0 gap-4 md:grid-cols-2 md:items-stretch">
       <BreakdownPanel
         title="By model"
         rows={modelRows}

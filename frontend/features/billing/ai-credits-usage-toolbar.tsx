@@ -34,7 +34,7 @@ export function AiCreditsUsageToolbar({
   onUsageDaysChange,
 }: AiCreditsUsageToolbarProps) {
   return (
-    <div className="flex flex-col gap-3">
+    <div className="flex shrink-0 flex-col gap-3">
       <div className={FILTER_TOOLBAR_ROW}>
         <div className="min-w-0 flex-1">
           <p className="text-sm font-semibold text-foreground">

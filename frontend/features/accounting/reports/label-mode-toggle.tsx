@@ -26,8 +26,12 @@ export function LabelModeToggle({
       className={cn("shrink-0", className)}
     >
       <TabsList aria-label="Wording">
-        <TabsTrigger value="founder">Plain English</TabsTrigger>
-        <TabsTrigger value="accountant">Accounting terms</TabsTrigger>
+        <TabsTrigger value="founder" aria-controls={undefined}>
+          Plain English
+        </TabsTrigger>
+        <TabsTrigger value="accountant" aria-controls={undefined}>
+          Accounting terms
+        </TabsTrigger>
       </TabsList>
     </Tabs>
   );

@@ -27,7 +27,9 @@ describe("PageTabsToolbar responsive layout", () => {
     );
     expect(tabs).toContainElement(search as HTMLElement);
     expect(tabs).toHaveClass("flex", "items-center", "gap-2");
-    expect(controls).toHaveClass("flex", "flex-wrap", "md:ml-auto", "md:flex-nowrap");
+    expect(controls).toHaveClass("flex", "flex-wrap", "md:ml-auto");
+    expect(controls).not.toHaveClass("md:flex-nowrap");
+    expect(controls).not.toHaveClass("md:overflow-x-auto");
     expect(controls).not.toContainElement(search as HTMLElement);
   });
 

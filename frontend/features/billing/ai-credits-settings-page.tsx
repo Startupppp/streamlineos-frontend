@@ -296,21 +296,19 @@ function AiCreditsPageContent() {
                 />
               ) : (
                 <>
-                  <div className="flex shrink-0 flex-col gap-4 overflow-y-auto">
-                    <AiCreditsUsageToolbar
-                      usageDays={usageDays}
-                      usageLoading={usageLoading}
-                      requestsLabel={usageTotals ? usageTotals.requests.toLocaleString() : "—"}
-                      tokensLabel={usageTotals ? formatTokens(usageTotals.totalTokens) : "—"}
-                      creditsUsedLabel={usageTotals ? formatCredits(usageTotals.credits) : "—"}
-                      onUsageDaysChange={handleUsageDaysChange}
-                    />
-                    <AiCreditsBreakdownTables
-                      byModel={usageByModel}
-                      byFeature={usageByFeature}
-                      isLoading={usageLoading}
-                    />
-                  </div>
+                  <AiCreditsUsageToolbar
+                    usageDays={usageDays}
+                    usageLoading={usageLoading}
+                    requestsLabel={usageTotals ? usageTotals.requests.toLocaleString() : "—"}
+                    tokensLabel={usageTotals ? formatTokens(usageTotals.totalTokens) : "—"}
+                    creditsUsedLabel={usageTotals ? formatCredits(usageTotals.credits) : "—"}
+                    onUsageDaysChange={handleUsageDaysChange}
+                  />
+                  <AiCreditsBreakdownTables
+                    byModel={usageByModel}
+                    byFeature={usageByFeature}
+                    isLoading={usageLoading}
+                  />
                   <AiCreditsDailyTable data={usageDaily} isLoading={usageLoading} />
                 </>
               )}
