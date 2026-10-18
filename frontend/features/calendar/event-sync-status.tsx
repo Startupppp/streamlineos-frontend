@@ -57,7 +57,7 @@ export function EventSyncStatus({ eventId }: EventSyncStatusProps) {
       ) : null}
       {data.repairAction === "review_conflict" ? (
         <p className="text-xs text-muted-foreground">
-          The provider copy changed after this event was loaded. Reload it before deciding which version to keep.
+          The copy in your connected calendar changed after this event was saved. Keep this version to overwrite it there, or edit this event to match it.
         </p>
       ) : null}
       {data.retryable ? (
@@ -67,7 +67,7 @@ export function EventSyncStatus({ eventId }: EventSyncStatusProps) {
           isPending={retry.isPending}
           onClick={handleRetry}
         >
-          Retry sync
+          {data.repairAction === "review_conflict" ? "Keep this version" : "Retry sync"}
         </LoadingButton>
       ) : null}
     </div>

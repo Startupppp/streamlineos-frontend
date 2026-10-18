@@ -196,18 +196,24 @@ describe("EventSyncStatus — failed state", () => {
     expect(screen.getByText(/cannot represent the requested change/i)).toBeInTheDocument();
   });
 
-  it("directs provider version conflicts to reload before choosing a version", () => {
+  it("CAL-B-007 explains a provider version conflict and offers to keep this version", () => {
+    const mutate = jest.fn();
+    getCalendarMock().useRetryEventSync.mockReturnValue({ mutate, isPending: false });
     getCalendarMock().useEventSyncStatus.mockReturnValue(
       makeStatus({
         status: "failed",
         failureKind: "conflict",
         repairAction: "review_conflict",
-        retryable: false,
+        retryable: true,
+        lastError: "[object Object]",
       }),
     );
-    render(<EventSyncStatus eventId={1} />);
-    expect(screen.getByText(/provider copy changed/i)).toBeInTheDocument();
+    render(<EventSyncStatus eventId={7} />);
+    expect(screen.getByText(/changed after this event was saved/i)).toBeInTheDocument();
+    expect(screen.queryByText("[object Object]")).toBeNull();
     expect(screen.queryByRole("button", { name: /retry sync/i })).toBeNull();
+    fireEvent.click(screen.getByRole("button", { name: "Keep this version" }));
+    expect(mutate).toHaveBeenCalledWith({ eventId: 7 }, expect.any(Object));
   });
 });
 
