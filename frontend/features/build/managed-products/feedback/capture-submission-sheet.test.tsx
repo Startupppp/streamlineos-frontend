@@ -24,7 +24,7 @@ let capturedOpen: boolean | undefined;
 jest.mock("@/components/shared", () => ({
   EntityFormSheet: ({ open, children }: { open: boolean; children: (form: unknown) => unknown }) => {
     capturedOpen = open;
-    return open ? <div data-testid="sheet-open">{children(null)}</div> : null;
+    return open ? <div data-testid="sheet-open">{children({ control: {} })}</div> : null;
   },
 }));
 
@@ -59,6 +59,7 @@ describe("CaptureSubmissionSheet — module gate", () => {
       <CaptureSubmissionSheet managedProductId={1} open={true} onOpenChange={jest.fn()} />,
     );
     expect(capturedOpen).toBe(true);
+    expect(screen.getByTestId("sheet-open")).toBeInTheDocument();
     expect(mockUseModuleEnabled).toHaveBeenCalledWith("feedbucket");
   });
 

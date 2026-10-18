@@ -392,7 +392,7 @@ describe("ProductGoalsPage — offline state (BSN-STATE-GOALS-OFFLINE)", () => {
 
 describe("ProductGoalsPage — stale check-ins stat (BSN-GOALS-STALE-STAT)", () => {
   beforeEach(() => {
-    useGoalsPage.mockReturnValue(EMPTY_GOALS_PAGE_RESULT);
+    useGoalsPage.mockReturnValue(goalsPageResult(5, 1));
   });
 
   it("renders the Stale Check-ins stat card so stale cadence is visible at a glance", () => {
@@ -413,6 +413,15 @@ describe("ProductGoalsPage — stale check-ins stat (BSN-GOALS-STALE-STAT)", () 
     const cards = screen.getAllByTestId("stat-card");
     const staleCard = cards.find((c) => c.getAttribute("data-label") === "Stale Check-ins");
     expect(staleCard).toHaveTextContent("3");
+  });
+
+  it("hides the summary tiles when the member's goal list is empty, so the stats never contradict the list (MP-B-018)", () => {
+    useGoalsPage.mockReturnValue(EMPTY_GOALS_PAGE_RESULT);
+    useGoalStats.mockReturnValue({
+      data: { total: 2, atRisk: 0, avgProgress: 0, byStatus: {}, staleCheckIns: 0 },
+    });
+    render(<ProductGoalsPage managedProductId={7} />);
+    expect(screen.queryAllByTestId("stat-card")).toHaveLength(0);
   });
 });
 
