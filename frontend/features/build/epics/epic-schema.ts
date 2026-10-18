@@ -8,8 +8,8 @@ const MEANINGFUL_TEXT_RE = /[a-zA-Z0-9À-ɏЀ-ӿ一-鿿]/;
 export const createEpicSchema = z.object({
   title: z
     .string()
-    .min(1, "Epic title is required")
     .trim()
+    .min(1, "Epic title is required")
     .min(3, "Title must be at least 3 characters")
     .max(120, "Title must be 120 characters or fewer")
     .refine((v) => MEANINGFUL_TEXT_RE.test(v), "Title must contain at least one letter or number"),
@@ -22,8 +22,8 @@ export type CreateEpicInput = z.infer<typeof createEpicSchema>;
 export const editEpicSchema = z.object({
   title: z
     .string()
-    .min(1, "Title is required")
     .trim()
+    .min(1, "Title is required")
     .min(3, "Title must be at least 3 characters")
     .max(120, "Title must be 120 characters or fewer")
     .refine((v) => MEANINGFUL_TEXT_RE.test(v), "Title must contain at least one letter or number"),

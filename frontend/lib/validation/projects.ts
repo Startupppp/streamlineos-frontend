@@ -44,7 +44,7 @@ export const createTicketInputSchema = z.object({
     .pipe(
       z
         .string()
-        .min(1, "Title is required")
+        .refine((v) => v.trim().length > 0, { message: "Title is required" })
         .max(TICKET_TITLE_MAX, `Title must be ${TICKET_TITLE_MAX} characters or fewer`)
         .refine((v) => v.trim().length >= 3, { message: "Title must be at least 3 characters" })
         .refine((v) => /[a-zA-Z0-9]/.test(v.trim()), { message: "Title must contain at least one letter or number" }),

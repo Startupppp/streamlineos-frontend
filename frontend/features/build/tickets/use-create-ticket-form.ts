@@ -104,6 +104,7 @@ export function useCreateTicketForm({
 
   const form = useForm<CreateTicketFormValues>({
     resolver: zodResolver(formSchema),
+    mode: "onTouched",
     defaultValues: {
       title: "",
       type: "TASK",

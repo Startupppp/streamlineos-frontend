@@ -1,4 +1,4 @@
-import { budgetFormSchema, BUDGET_MAX, updateProjectSettingsInputSchema } from "./projects";
+import { budgetFormSchema, BUDGET_MAX, createTicketInputSchema, updateProjectSettingsInputSchema } from "./projects";
 
 describe("budgetFormSchema — input validation (B-046, B-050, B-051)", () => {
   function parse(input: string) {
@@ -77,5 +77,24 @@ describe("updateProjectSettingsInputSchema — name trim (B-007)", () => {
   it("matches the server's 2..100 bounds after trimming", () => {
     expect(updateProjectSettingsInputSchema.safeParse({ ...base, name: " a " }).success).toBe(false);
     expect(updateProjectSettingsInputSchema.safeParse({ ...base, name: "x".repeat(101) }).success).toBe(false);
+  });
+});
+
+describe("createTicketInputSchema — one required message for an empty or blank title (U-005)", () => {
+  function titleMessages(title: string): string[] {
+    const result = createTicketInputSchema.safeParse({ projectId: 1, title, type: "TASK" });
+    return result.success ? [] : result.error.issues.map((issue) => issue.message);
+  }
+
+  it.each(["", "   "])("leads with 'Title is required' for %j", (title) => {
+    expect(titleMessages(title)[0]).toBe("Title is required");
+  });
+
+  it("still asks for at least 3 characters once something is typed", () => {
+    expect(titleMessages("x")[0]).toBe("Title must be at least 3 characters");
+  });
+
+  it("accepts a normal title", () => {
+    expect(titleMessages("Fix login")).toEqual([]);
   });
 });

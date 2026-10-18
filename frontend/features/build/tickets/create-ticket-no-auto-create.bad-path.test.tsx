@@ -186,6 +186,31 @@ describe("Create Issue empty-title validation (NEW-05)", () => {
     expect(mockCreateTicket).not.toHaveBeenCalled();
   });
 
+  it("shows the same 'Title is required' for a spaces-only title (U-005)", async () => {
+    renderDialog();
+    fireEvent.click(screen.getByRole("button", { name: /create issue/i }));
+    const title = await screen.findByPlaceholderText("Issue title");
+    fireEvent.change(title, { target: { value: "   " } });
+    fireEvent.click(screen.getByRole("button", { name: "Create issue" }));
+    await waitFor(() => {
+      expect(screen.getByText(/title is required/i)).toBeInTheDocument();
+    });
+    expect(screen.queryByText(/at least 3 characters/i)).not.toBeInTheDocument();
+    expect(mockCreateTicket).not.toHaveBeenCalled();
+  });
+
+  it("tells the user the title is required when they leave it empty, not only on Create (U-005)", async () => {
+    renderDialog();
+    fireEvent.click(screen.getByRole("button", { name: /create issue/i }));
+    const title = await screen.findByPlaceholderText("Issue title");
+    fireEvent.focus(title);
+    fireEvent.blur(title);
+    await waitFor(() => {
+      expect(screen.getByText(/title is required/i)).toBeInTheDocument();
+    });
+    expect(mockCreateTicket).not.toHaveBeenCalled();
+  });
+
   it("shows 'at least 3 characters' inline when Create is clicked with a one-character title", async () => {
     renderDialog();
     fireEvent.click(screen.getByRole("button", { name: /create issue/i }));
