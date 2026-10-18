@@ -21,6 +21,7 @@ export const personNameSchema = z
     "Remove the extra spaces from this name",
   );
 
+const HR_NAME_HAS_MARKUP = /[<>]/;
 const HR_NAME_HAS_DIGIT = /\p{N}/u;
 const HR_NAME_SHAPE = /^[\p{L}\p{M}][\p{L}\p{M} .'’-]*$/u;
 
@@ -35,6 +36,10 @@ export function hrPersonNameField(label: string) {
     .trim()
     .min(1, `${label} is required`)
     .max(HR_PERSON_NAME_MAX, `${label} must be at most ${HR_PERSON_NAME_MAX} characters`)
+    .refine((v) => !HR_NAME_HAS_MARKUP.test(v), {
+      message: "Angle brackets are not allowed in names",
+      abort: true,
+    })
     .refine(
       (v) => v.length === 0 || !HR_NAME_HAS_DIGIT.test(v),
       "Numbers are not allowed in names",

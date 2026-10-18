@@ -39,14 +39,15 @@ describe("hrPersonNameField", () => {
     }
   });
 
-  it("rejects HTML tags and returns the shape message", () => {
-    const result = schema.safeParse("<b>x</b>");
-    expect(result.success).toBe(false);
-    if (!result.success) {
-      const messages = result.error.issues.map((i) => i.message);
-      expect(messages).toContain(
-        "Names can contain letters, spaces, apostrophes, periods and hyphens",
-      );
+  it("HRM-B-013: rejects HTML tags with the angle-bracket message, not the digit or shape message", () => {
+    for (const input of ["<b>x</b>", "<script>alert(1)</script>"]) {
+      const result = schema.safeParse(input);
+      expect(result.success).toBe(false);
+      if (!result.success) {
+        const messages = result.error.issues.map((i) => i.message);
+        expect(messages[0]).toBe("Angle brackets are not allowed in names");
+        expect(messages).not.toContain("Numbers are not allowed in names");
+      }
     }
   });
 
