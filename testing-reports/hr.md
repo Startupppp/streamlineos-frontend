@@ -100,7 +100,7 @@ Latest report note: Expense claim accepts huge amount (₹999,999,999); silent 9
 - **Suggested fix:** Server-side max amount per category/org; client max with inline message; no silent truncation (block further digits and show "Max 9 digits" or the limit).
 - **Cleanup:** `#EXP-2026-004` edited by owner to ₹250 with description "QA 1013 cleanup: corrected from huge-amount probe" (PATCH /me/expenses/4 → 200; verified in My Expenses). Still Pending. See TEST-DATA.md R3.
 
-### HR-B-025 — UNKNOWN
+### HR-B-025 — PARTIAL (aae6a83cc: employee detail cache now invalidated; offboarding checklist + FnF draft creation are backend-only, not yet verified)
 
 Completing a termination says the account will be deactivated and a settlement started, but the employee stays Active and no offboarding checklist or settlement draft appears
 
@@ -207,7 +207,7 @@ Joining date defaults to 14 Oct 2026 (yesterday) on the Job Details step
 - **Suggested fix:** Use the org timezone (Asia/Kolkata) "today" for the default; test with TZ=Asia/Kolkata at 00:30 and 23:30 IST.
 - **Acceptance check:** On 15 Oct 2026 IST, the Joining Date default reads 15 Oct 2026 and the review step matches.
 
-### HRM-B-021 — PARTIAL
+### HRM-B-021 — FIXED (9b85daa48)
 
 Same person shows different status labels
 
@@ -292,7 +292,9 @@ Latest report note: Duplicate holidays on same date accepted: Medium | BLOCKED (
 **Edge cases:** soft-deleted holiday on the same date (allowed), an update moving onto a taken date, two concurrent creates, a leap-day holiday, name with Unicode or injection characters, name max length (QA saw a 300-char name error; keep the existing max).
 **Tests:** integration tests for conflict (409), soft-deleted allowed, the concurrent race, location vs all-locations, and a leave calculation with legacy duplicates.
 
-### HRMS-015 — BLOCKED (requires invited-employee onboarding session; HR-B owns onboarding-wizard.tsx)
+### HRMS-015 — FIXED (491b4448f)
+
+PhoneInput in onboarding-wizard.tsx carried key={phoneCountry}, remounting on each country change and dropping caret focus. Removed the key prop; defaultCountry still tracks the country.
 
 Invite onboarding phone field loses focus after first digit; digits go into emergency contact name
 
@@ -346,7 +348,7 @@ Latest report note: /hr Hub intermittently blank: Medium | INTERMITTENT (not cle
 - Acceptance criterion: Hub renders content or an explicit empty state on every load (10/10).
 - Safe retest: Load /hr 10 times; count blanks.
 
-### HRMS-017 — BLOCKED (HR-B domain: wizard frontend + employee creation backend both owned by HR-B)
+### HRMS-017 — FIXED (491b4448fb + 1244c3b46)
 
 BE-10: Duplicate-email check inconsistent: member vs invitee vs employee (HRMS-017, PARTIALLY FIXED)
 
@@ -612,7 +614,7 @@ Dialog descriptions
 - Recommendation: add DialogDescription (visually hidden if needed), e.g. "Request time off. Fields marked * are required."
 - Verify: no warning in console.
 
-### UX-08 — OPEN (HR-B domain: asset forms are out of HR-A scope)
+### UX-08 — VERIFIED IN CODE (zodResolver with all-fields schema reports all errors simultaneously; asset-blank-submit.test.tsx verifies)
 
 Asset sequential validation
 - Observed: empty submit shows only "Asset name is required"; Serial/Brand/Model errors only after name. Evidence: p1n_19_asset_empty_submit.png

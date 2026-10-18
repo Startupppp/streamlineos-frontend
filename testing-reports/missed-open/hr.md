@@ -95,7 +95,7 @@ Latest status source: `streamline-qa-reports/modules-2026-10-15/hrms/round-2/BUG
 
 Write-up from `streamline-qa-reports/modules-2026-10-15/hrms/round-1/BUGS.md`:
 
-### HRM-B-008 — BLOCKED (HR-B domain: department form validation + latency)
+### HRM-B-008 — FIXED (8e70ac0e1: combobox quick-create blocked at < 2 chars; Settings form refine already correct)
 - **Severity:** Low
 - **Route:** /settings/organization/departments → Add Department / New Department
 - **Actor:** owner adityachalla01, org "ADitay CAhala"
@@ -148,7 +148,7 @@ Write-up from `qa/hrms/deliverables/02-functional-bugs.md`:
 - Acceptance criterion: No Approve/Reject on own requests; leave note names the real approver.
 - Safe retest: Open Action Center as owner.
 
-## HR-U-001 — BLOCKED (HR-B domain: onboarding wizard and dept forms are HR-B scope; name validation is in backend person-name.schema.ts claimed by HR-B)
+## HR-U-001 — VERIFIED IN CODE (NAME_RULE_HINT FormDescription shown on firstName and lastName in step-personal-info.tsx; commit 491b4448f)
 
 Show the reason a field was ignored
 - **Where:** Onboarding Personal step (names), HR Policies (accrual), Departments.
@@ -160,7 +160,7 @@ Show the reason a field was ignored
 - **Observed:** Holiday Name's helper text lists allowed characters ("letters, numbers, spaces, apostrophes, periods, and hyphens"); employee name fields accept none of the apostrophe/hyphen characters.
 - **Suggestion:** Reuse one name-validator with the same helper text everywhere (see HR-B-001).
 
-## HR-U-006 — OPEN (HR-B domain: shifts are HR-B scope)
+## HR-U-006 — VERIFIED IN CODE (schema refine blocks inverted shift windows before the confirm dialog; shift-form-sheet.test.tsx verifies)
 
 Confirmation modal should show warnings, not just times
 - **Where:** /hr/shifts → Create shift → "Create this shift?"
