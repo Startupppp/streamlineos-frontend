@@ -59,6 +59,10 @@ jest.mock("@/components/command-palette/hooks/use-global-search", () => ({
   }),
 }));
 
+jest.mock("@/hooks/api/calendar-search", () => ({
+  useCalendarSearch: () => ({ data: undefined }),
+}));
+
 jest.mock("@/components/theme/app-theme-provider", () => ({
   useAppTheme: () => ({ setMode: jest.fn(), theme: "light", mode: "system", isDark: false }),
 }));
