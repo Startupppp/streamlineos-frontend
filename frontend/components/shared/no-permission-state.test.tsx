@@ -57,14 +57,16 @@ describe("NoPermissionState — semantic structure", () => {
   it("omits the administrator contact line in compact mode", () => {
     render(<NoPermissionState permission="hr:employees:view" compact />);
     expect(
-      screen.queryByText("Contact your administrator to request access."),
+      screen.queryByText(/Contact your administrator to request access/),
     ).not.toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: "send them a request" })).not.toBeInTheDocument();
   });
 
   it("renders the administrator contact line in full mode", () => {
     render(<NoPermissionState permission="hr:employees:view" />);
     expect(
-      screen.getByText("Contact your administrator to request access."),
+      screen.getByText(/Contact your administrator to request access, or/),
     ).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "send them a request" })).toHaveAttribute("href", "mailto:?");
   });
 });
