@@ -134,19 +134,19 @@ describe("resolveBuildNavModel — org module filtering", () => {
     expect(missingPermission.moreTools.some((d) => d.id === "project-wiki")).toBe(false);
   });
 
-  it("hides the Feedback tool from moreTools when feedbucket is disabled even if the permission is held", () => {
+  it("hides the Feedback tool from moreTools when Build is disabled even if the permission is held", () => {
     const model = resolveBuildNavModel({
       scope: projectScope,
-      access: accessWith(ALL_BUILD_PERMISSIONS, { feedbucket: false }),
+      access: accessWith(ALL_BUILD_PERMISSIONS, { build: false }),
       pinnedIds: [],
     });
     expect(model.moreTools.some((d) => d.id === "project-feedback")).toBe(false);
   });
 
-  it("includes the Feedback tool in moreTools when feedbucket is enabled and permission is held", () => {
+  it("includes the Feedback tool in moreTools when Build is enabled and permission is held", () => {
     const model = resolveBuildNavModel({
       scope: projectScope,
-      access: accessWith(ALL_BUILD_PERMISSIONS, { feedbucket: true }),
+      access: accessWith(ALL_BUILD_PERMISSIONS, { build: true }),
       pinnedIds: [],
     });
     expect(model.moreTools.some((d) => d.id === "project-feedback")).toBe(true);
@@ -157,7 +157,7 @@ describe("resolveBuildNavModel — scope separation", () => {
   it("all project-scope primary hrefs are under the project base path so no org-scope href leaks in", () => {
     const model = resolveBuildNavModel({
       scope: projectScope,
-      access: accessWith(ALL_BUILD_PERMISSIONS, { feedbucket: true }),
+      access: accessWith(ALL_BUILD_PERMISSIONS, { build: true }),
       pinnedIds: [],
     });
     for (const destination of model.primary) {
@@ -170,7 +170,7 @@ describe("resolveBuildNavModel — scope separation", () => {
   it("no org-scope primary href contains a project-id numeric segment so project-scope hrefs never appear there", () => {
     const model = resolveBuildNavModel({
       scope: orgScope,
-      access: accessWith(ALL_BUILD_PERMISSIONS, { feedbucket: true }),
+      access: accessWith(ALL_BUILD_PERMISSIONS, { build: true }),
       pinnedIds: [],
     });
     for (const destination of model.primary) {
@@ -181,7 +181,7 @@ describe("resolveBuildNavModel — scope separation", () => {
 
 describe("resolveBuildNavModel — primary destination ceiling", () => {
   it("never produces more than BUILD_NAV_MAX_PRIMARY primary destinations for a fully-permissioned caller across all scope types", () => {
-    const access = accessWith(ALL_BUILD_PERMISSIONS, { feedbucket: true });
+    const access = accessWith(ALL_BUILD_PERMISSIONS, { build: true });
     const scopes = [
       orgScope,
       projectScope,
@@ -195,7 +195,7 @@ describe("resolveBuildNavModel — primary destination ceiling", () => {
 });
 
 describe("resolveBuildNavModel — pin resolution", () => {
-  const access = accessWith(ALL_BUILD_PERMISSIONS, { feedbucket: true });
+  const access = accessWith(ALL_BUILD_PERMISSIONS, { build: true });
 
   it("resolves pinned ids from the active scope's moreTools preserving the stored order", () => {
     const model = resolveBuildNavModel({
@@ -404,7 +404,7 @@ describe("resolveBuildNavModel — createActions", () => {
 describe("toBuildNavGroups", () => {
   const model = resolveBuildNavModel({
     scope: projectScope,
-    access: accessWith(ALL_BUILD_PERMISSIONS, { feedbucket: true }),
+    access: accessWith(ALL_BUILD_PERMISSIONS, { build: true }),
     pinnedIds: [],
   });
   const groups = toBuildNavGroups(model);

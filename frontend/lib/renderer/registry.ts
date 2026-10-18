@@ -56,49 +56,10 @@ import { SLA_BREACH_LAYOUT, SLA_POLICY_LAYOUT } from "./crm/settings/sla-policy-
 import { TERRITORY_LAYOUT } from "./crm/settings/territory-layout";
 import { VALIDATION_RULE_LAYOUT } from "./crm/settings/validation-rule-layout";
 
-/**
- * Every record type the product describes rather than draws.
- *
- * The registry exists because ticket 20 needed a list of record types to offer
- * an administrator, and nothing in the product had one — each surface imported
- * its own description and no code could enumerate them. That absence is also why
- * "the layout is data" had not yet bought a tenant anything: data nobody can
- * find is data nobody can edit.
- *
- * Deliberately not a place descriptions live. A layout is declared next to the
- * domain it belongs to; this file only collects them, so a new record type is
- * one description plus one line here rather than a directory of components.
- *
- * It has a second job, and `registry.test.ts` is the reason: every entry is held
- * to the engine's rules — valid as declared, still valid after a tenant hides
- * everything they may, still valid after a proposed rearrangement. That test is
- * what stands in for testing generated screens, which is the whole bargain of
- * having one engine.
- */
-
 export interface RegisteredLayout {
   readonly layout: RecordLayout;
-  /** Groups the picker, so thirty record types are not one flat list. */
   readonly section: string;
-  /**
-   * The permission that governs reading these records at all.
-   *
-   * Arranging a record type you cannot read is not something anybody needs to
-   * do, and offering it would put the field names of a module a tenant has not
-   * bought in front of them. Hiding a field never relaxes a permission, and
-   * neither does this: it is the same read gate the surface itself uses.
-   */
   readonly viewPermission: PermissionKey;
-  /**
-   * True where the record type is a report projection rather than something a
-   * person creates.
-   *
-   * An aging row, a leaderboard row and an attribution row are all real record
-   * shapes — they have fields, kinds and alignment, and they render through the
-   * same engine — but nobody fills one in. They are worth arranging (a tenant
-   * who never reads one column should not scroll past it) and worth validating,
-   * and they are not worth offering under the same heading as a lead.
-   */
   readonly derived?: boolean;
 }
 
@@ -120,11 +81,6 @@ export const LAYOUT_REGISTRY: readonly RegisteredLayout[] = [
   { layout: NURTURE_SEQUENCE_LAYOUT, section: "CRM", viewPermission: "crm:autonomy:view" },
   { layout: NURTURE_ENROLLMENT_LAYOUT, section: "CRM", viewPermission: "crm:autonomy:view" },
 
-  /*
-    Records that only ever appear inside another record's page. Registered
-    anyway: a panel is where a tenant most feels four columns too many, and a
-    description that renders is a description worth validating.
-  */
   { layout: QUOTE_LINE_ITEM_LAYOUT, section: "CRM", viewPermission: "crm:quotes:read" },
   { layout: CONTACT_ROLE_LAYOUT, section: "CRM", viewPermission: "crm:contacts:view" },
   { layout: CLIENT_OPPORTUNITY_LAYOUT, section: "CRM", viewPermission: "crm:clients:read" },
@@ -175,11 +131,6 @@ export const LAYOUT_REGISTRY: readonly RegisteredLayout[] = [
   },
   {
     layout: REP_CALL_METRICS_LAYOUT,
-    /*
-      The key the coaching page itself is gated on -- every CRM member holds it
-      and sees their own numbers -- rather than `:view-team`. Arranging the
-      columns is not the same act as reading somebody else's row.
-    */
     viewPermission: "crm:call-analysis:view",
     section: "Reports",
     derived: true,
@@ -240,21 +191,11 @@ export const LAYOUT_REGISTRY: readonly RegisteredLayout[] = [
     section: "CRM settings",
     viewPermission: "crm:settings:manage",
   },
-  /*
-    A singleton: organisation-wide quote defaults, one record, never listed. It
-    declares no list columns, which `validateLayout` allows precisely so a record
-    you only ever edit does not have to invent a table to be described.
-  */
   {
     layout: QUOTE_SETTINGS_LAYOUT,
     section: "CRM settings",
     viewPermission: "crm:settings:manage",
   },
-  /*
-    A record you only ever fill in: a token is created here, revealed once and
-    never listed as a record surface. Registered anyway -- a description that
-    renders a form is a description worth holding to the engine's rules.
-  */
   {
     layout: MCP_TOKEN_LAYOUT,
     section: "CRM settings",
@@ -263,9 +204,6 @@ export const LAYOUT_REGISTRY: readonly RegisteredLayout[] = [
   {
     layout: CUSTOM_FIELD_LAYOUT,
     section: "CRM settings",
-    // The key that already governs custom fields, rather than the CRM one: a
-    // custom field is a platform setting a CRM administrator happens to reach
-    // from here.
     viewPermission: "settings:custom-fields:manage",
   },
   {
@@ -291,12 +229,6 @@ export const LAYOUT_REGISTRY: readonly RegisteredLayout[] = [
   },
 ];
 
-/**
- * Just the descriptions.
- *
- * Derived rather than declared beside the registry, so the two cannot fall out
- * of step.
- */
 export const RECORD_LAYOUTS: readonly RecordLayout[] = LAYOUT_REGISTRY.map(
   (entry) => entry.layout,
 );
