@@ -20,6 +20,7 @@ interface EmployeesListResultsProps {
   view: EmployeesListView;
   isFetching: boolean;
   hasFilters: boolean;
+  searchTerm: string;
   canOnboard: boolean;
   onClearFilters: () => void;
   onOpenPerson: (employee: EmployeeListItem) => void;
@@ -31,6 +32,7 @@ export function EmployeesListResults({
   view,
   isFetching,
   hasFilters,
+  searchTerm,
   canOnboard,
   onClearFilters,
   onOpenPerson,
@@ -40,7 +42,11 @@ export function EmployeesListResults({
       <EmptyState
         illustrationPreset="team"
         title="No matches"
-        description="No people match this search or these filters."
+        description={
+          searchTerm.trim()
+            ? `No employees match "${searchTerm.trim()}". Clear the search or change the filters.`
+            : "No people match these filters."
+        }
         filtersActive
         onClearFilters={onClearFilters}
         className={PAGE_BODY_EMPTY_CLASS}

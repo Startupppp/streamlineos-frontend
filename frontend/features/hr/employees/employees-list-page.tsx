@@ -244,6 +244,7 @@ export function EmployeesListPage() {
               view={view}
               isFetching={isFetching}
               hasFilters={hasFilters}
+              searchTerm={debouncedSearch}
               canOnboard={canOnboard}
               onClearFilters={clearFilters}
               onOpenPerson={handleOpenPerson}
