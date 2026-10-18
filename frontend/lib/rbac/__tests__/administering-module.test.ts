@@ -15,7 +15,7 @@ import {
  */
 describe("administeringModuleOf (Simulate screen grouping)", () => {
   it("groups chat namespace under home, not chat", () => {
-    expect(administeringModuleOf("chat:org-settings:manage")).toBe("home");
+    expect(administeringModuleOf("chat:huddles:moderate")).toBe("home");
   });
 
   it("groups mail namespace under home", () => {

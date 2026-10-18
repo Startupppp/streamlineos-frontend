@@ -1,7 +1,6 @@
 import type { PermissionKey } from "@/lib/rbac/permissions";
 import type { RecordLayout } from "./layout";
 import { UNPOSTED_MOVEMENT_LAYOUT } from "./accounting/unposted-movement-layout";
-import { CHAT_ORG_SETTINGS_LAYOUT } from "./chat/chat-org-settings-layout";
 import { EMAIL_TEMPLATE_PREVIEW_LAYOUT } from "./notifications/email-template-preview-layout";
 import { QUARANTINE_RECORD_LAYOUT } from "./settings/quarantine-record-layout";
 import { SUBJECT_REQUEST_LAYOUT } from "./settings/subject-request-layout";
@@ -274,14 +273,6 @@ export const LAYOUT_REGISTRY: readonly RegisteredLayout[] = [
     section: "Accounting",
     viewPermission: "accounting:reports:read",
     derived: true,
-  },
-  /*
-    A singleton: organisation-wide chat defaults, one record, never listed.
-  */
-  {
-    layout: CHAT_ORG_SETTINGS_LAYOUT,
-    section: "Chat",
-    viewPermission: "chat:org-settings:manage",
   },
   {
     layout: EMAIL_TEMPLATE_PREVIEW_LAYOUT,
