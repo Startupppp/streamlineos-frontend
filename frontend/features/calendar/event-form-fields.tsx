@@ -1,5 +1,7 @@
 "use client";
 
+import { useState } from "react";
+import { format, parseISO, subYears } from "date-fns";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
@@ -109,14 +111,22 @@ export function EventFormFields({
 }: EventFormFieldsProps) {
   const activeConnections = connections.filter((c) => c.status === "active");
   const selectedToolkit = activeConnections.find((c) => String(c.id) === syncConnectionId)?.toolkit;
+  const syncedConnection = connections.find((c) => String(c.id) === syncConnectionId);
+  const syncedConnectionLabel = syncedConnection
+    ? syncedConnection.accountEmail ?? syncedConnection.accountLabel ?? syncedConnection.toolkit
+    : null;
+  const [openedAt] = useState(() => new Date());
+  const pastFloor = format(subYears(openedAt, 1), "yyyy-MM-dd");
   const startBounds = planningStartPickerProps({
-    existingValue: isEdit ? startDate : undefined,
+    existingValue: isEdit && startDate < pastFloor ? startDate : pastFloor,
   });
   const endBounds = planningEndPickerProps({
     startDate,
     mode: "onOrAfter",
-    existingValue: isEdit ? endDate : undefined,
+    enforceTodayFloor: false,
   });
+  const startsAt = allDay ? parseISO(startDate) : parseISO(`${startDate}T${startTime || "00:00"}`);
+  const startsInPast = !isEdit && !Number.isNaN(startsAt.getTime()) && (allDay ? startDate < format(openedAt, "yyyy-MM-dd") : startsAt < openedAt);
 
   return (
     <div className="space-y-2">
@@ -138,6 +148,14 @@ export function EventFormFields({
           {titleError && (
             <p className="text-micro text-destructive">{titleError}</p>
           )}
+          {title.length >= 80 ? (
+            <p
+              className={cn("text-micro tabular-nums", title.length > 100 ? "text-destructive" : "text-muted-foreground")}
+              aria-live="polite"
+            >
+              {title.length}/100
+            </p>
+          ) : null}
         </div>
       </div>
 
@@ -226,6 +244,11 @@ export function EventFormFields({
         {dateTimeError && (
           <p className="text-micro text-destructive pl-6">{dateTimeError}</p>
         )}
+        {startsInPast && !dateTimeError ? (
+          <p className="text-micro text-status-warning-ink pl-6" role="status">
+            This starts in the past. It will be saved as a past event.
+          </p>
+        ) : null}
       </div>
 
       <div className="flex items-start gap-2.5">
@@ -282,13 +305,11 @@ export function EventFormFields({
         </div>
       </div>
 
-      {!isEdit && (
-        <RecurrenceEditor
-          state={recurrence}
-          onChange={onRecurrenceChange}
-          startDate={startDate}
-        />
-      )}
+      <RecurrenceEditor
+        state={recurrence}
+        onChange={onRecurrenceChange}
+        startDate={startDate}
+      />
 
       <div className="flex items-start gap-2.5">
         <FileText className="h-4 w-4 text-muted-foreground shrink-0 mt-2.5" />
@@ -304,7 +325,13 @@ export function EventFormFields({
         </div>
       </div>
 
-      {!isEdit && (
+      {isEdit ? (
+        <p className="pl-7 text-xs text-muted-foreground">
+          {syncedConnectionLabel
+            ? `Synced to ${syncedConnectionLabel}. The sync account is fixed once an event is created.`
+            : "Not synced to a calendar account."}
+        </p>
+      ) : (
         activeConnections.length > 0 ? (
           <div className="space-y-1.5">
             <Label className="text-xs font-medium">Sync to calendar account</Label>

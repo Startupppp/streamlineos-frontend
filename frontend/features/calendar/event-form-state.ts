@@ -105,7 +105,7 @@ export function toEditForm(event: CalendarListItem, rrule?: string | null): Form
     guestEmails: null,
     reminder: null,
     locationError: "",
-    syncConnectionId: "none",
+    syncConnectionId: event.connectionId != null ? String(event.connectionId) : "none",
     addConference: false,
     recurrence,
   };

@@ -1,4 +1,4 @@
-import { render } from "@testing-library/react";
+import { render, screen } from "@testing-library/react";
 import { EventFormFields } from "./event-form-fields";
 import type { RecurrenceState } from "./event-form-state";
 import { defaultRecurrenceState } from "./event-recurrence-schema";
@@ -10,7 +10,7 @@ jest.mock("./calendar-connect-inline", () => ({
   CalendarConnectInline: () => null,
 }));
 jest.mock("./event-recurrence-editor", () => ({
-  RecurrenceEditor: () => null,
+  RecurrenceEditor: () => <div data-testid="recurrence-editor" />,
 }));
 jest.mock("@/components/ui/date-picker", () => ({
   DatePicker: ({ value }: { value: string }) => (
@@ -53,6 +53,9 @@ const baseProps = {
   members: [],
   attendeeIds: [],
   onToggleAttendee: jest.fn(),
+  guestEmails: [],
+  onAddGuest: jest.fn(),
+  onRemoveGuest: jest.fn(),
 };
 
 describe("EventFormFields — end time input height (#188)", () => {
@@ -69,5 +72,34 @@ describe("EventFormFields — end time input height (#188)", () => {
     const timeInputs = container.querySelectorAll('input[type="time"]');
     const startTimeInput = timeInputs[0] as HTMLInputElement;
     expect(startTimeInput.className).not.toContain("h-8");
+  });
+});
+
+describe("EventFormFields — UX notes", () => {
+  const google = { id: 9, toolkit: "googlecalendar" as const, accountEmail: "me@gmail.test", accountLabel: null, status: "active" as const, isPrimary: true, createdAt: "2026-01-01T00:00:00Z" };
+
+  it("keeps the repeat rule editable and names the sync account when editing", () => {
+    render(<EventFormFields {...baseProps} isEdit connections={[google]} syncConnectionId="9" />);
+    expect(screen.getByTestId("recurrence-editor")).toBeInTheDocument();
+    expect(screen.getByText(/Synced to me@gmail.test/)).toBeInTheDocument();
+  });
+
+  it("says an unsynced event is not synced when editing", () => {
+    render(<EventFormFields {...baseProps} isEdit />);
+    expect(screen.getByText("Not synced to a calendar account.")).toBeInTheDocument();
+  });
+
+  it("shows a title counter from 80 characters and not before", () => {
+    const { rerender } = render(<EventFormFields {...baseProps} title={"a".repeat(79)} />);
+    expect(screen.queryByText("79/100")).toBeNull();
+    rerender(<EventFormFields {...baseProps} title={"a".repeat(85)} />);
+    expect(screen.getByText("85/100")).toBeInTheDocument();
+  });
+
+  it("warns when a new event starts in the past and stays quiet for a future one", () => {
+    const { rerender } = render(<EventFormFields {...baseProps} startDate="2020-01-06" endDate="2020-01-06" />);
+    expect(screen.getByText(/This starts in the past/)).toBeInTheDocument();
+    rerender(<EventFormFields {...baseProps} startDate="2099-01-06" endDate="2099-01-06" />);
+    expect(screen.queryByText(/This starts in the past/)).toBeNull();
   });
 });
