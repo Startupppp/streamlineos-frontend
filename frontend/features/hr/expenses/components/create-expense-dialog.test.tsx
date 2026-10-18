@@ -43,9 +43,10 @@ describe("CreateExpenseDialog — R2-UX-G8 a refused save stays in the sheet wit
 
     await user.click(screen.getByRole("button", { name: "Update Expense" }));
 
-    const alert = await screen.findByRole("alert");
-    expect(alert).toHaveTextContent(/^Couldn't save:/);
-    await waitFor(() => expect(screen.getAllByText("Amount must be ₹10,00,000 or less").length).toBeGreaterThan(0));
+    const banner = await screen.findByText(/^Couldn't save:/);
+    expect(banner).toHaveAttribute("role", "alert");
+    expect(banner).toHaveTextContent("Amount must be ₹10,00,000 or less");
+    expect(screen.getByText("Amount must be ₹10,00,000 or less", { selector: "[data-slot='form-message']" })).toBeInTheDocument();
     expect(screen.getByPlaceholderText("0.00")).toHaveValue("50");
     expect(onSuccess).not.toHaveBeenCalled();
   });
