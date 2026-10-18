@@ -144,4 +144,37 @@ describe("PeopleDirectoryPage access states", () => {
       screen.queryByRole("button", { name: /Add person record/i }),
     ).not.toBeInTheDocument();
   });
+
+  it("says who the directory lists and why a member without a person record is absent", async () => {
+    (apiClient.get as jest.Mock).mockResolvedValue({ data: [], pageInfo: { limit: 20, hasMore: false, nextCursor: null } });
+
+    render(
+      <Wrapper>
+        <PeopleDirectoryPage />
+      </Wrapper>,
+    );
+
+    expect(
+      screen.getByText(/Members with only an app account appear once their record is added/),
+    ).toBeInTheDocument();
+    expect(await screen.findByText("No person records yet")).toBeInTheDocument();
+    expect(screen.getByText(/Add people here, or onboard them in HR/)).toBeInTheDocument();
+  });
+
+  it("tells a member who cannot add records how people get into the directory", async () => {
+    (apiClient.get as jest.Mock).mockResolvedValue({ data: [], pageInfo: { limit: 20, hasMore: false, nextCursor: null } });
+    (useCan as jest.Mock).mockImplementation(
+      (permission: string) => permission !== "directory:people:create",
+    );
+
+    render(
+      <Wrapper>
+        <PeopleDirectoryPage />
+      </Wrapper>,
+    );
+
+    expect(
+      await screen.findByText("Nobody has a person record yet. People appear here once an admin adds them or HR onboards them."),
+    ).toBeInTheDocument();
+  });
 });

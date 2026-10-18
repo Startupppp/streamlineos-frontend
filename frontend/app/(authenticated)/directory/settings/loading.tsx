@@ -1,12 +1,13 @@
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Skeleton } from "@/components/ui/skeleton";
 import { DataTableSkeleton } from "@/components/ui/data-table-skeleton";
+import { DIRECTORY_SUBTITLE, DIRECTORY_TITLE } from "@/features/directory/people/person-table-headers";
 
 export default function DirectorySettingsLoading() {
   return (
     <PageWrapper
-      title="Directory"
-      subtitle="People in your organization—with or without application access."
+      title={DIRECTORY_TITLE}
+      subtitle={DIRECTORY_SUBTITLE}
       filters={<Skeleton className="h-9 w-full max-w-sm" />}
       actions={<Skeleton className="h-9 w-28" />}
       noInternalScroll

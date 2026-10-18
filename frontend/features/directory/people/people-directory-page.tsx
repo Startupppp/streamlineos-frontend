@@ -31,7 +31,7 @@ import {
   buildPersonColumns,
   personDisplayName,
 } from "./person-table-columns";
-import { PERSON_TABLE_HEADERS } from "./person-table-headers";
+import { DIRECTORY_SUBTITLE, DIRECTORY_TITLE, PERSON_TABLE_HEADERS } from "./person-table-headers";
 import { PersonPeekDrawer } from "./person-peek-drawer";
 
 const PAGE_SIZE = 20;
@@ -164,8 +164,8 @@ export function PeopleDirectoryPage({
 
   return (
     <PageWrapper
-      title="Directory"
-      subtitle="People in your organization—with or without application access."
+      title={DIRECTORY_TITLE}
+      subtitle={DIRECTORY_SUBTITLE}
       filters={filtersBar}
       noInternalScroll
       contentClassName="flex min-h-0 flex-1 flex-col"
@@ -188,8 +188,8 @@ export function PeopleDirectoryPage({
             <EmptyState
               className={cn(CONTENT_FILL_PANEL, PAGE_BODY_EMPTY_CLASS)}
               illustrationPreset="team"
-              title="No person records yet"
-              description={isFiltered ? "No results match your filters." : "The organization directory is empty. Add people here before linking them as workers, contacts, or payees."}
+              title={isFiltered ? "No people match your search" : "No person records yet"}
+              description={isFiltered ? `Nobody in the directory matches "${debouncedSearch.trim()}".` : canCreate ? "Nobody has a person record yet. Add people here, or onboard them in HR, before linking them as workers, contacts, or payees." : "Nobody has a person record yet. People appear here once an admin adds them or HR onboards them."}
               filtersActive={isFiltered}
               onClearFilters={handleClearSearch}
               action={!isFiltered && canCreate ? { label: "Add person record", onClick: handleOpenCreate } : undefined}
