@@ -7,6 +7,8 @@ const insertNodes = jest.fn();
 const setNodes = jest.fn();
 const focus = jest.fn();
 let selected = true;
+let blockAbove: [Record<string, unknown>, number[]] | undefined = [{ type: "p", children: [] }, [0]];
+let blockText = "";
 
 jest.mock("platejs/react", () => ({
   PlateElement: ({ children }: { children: React.ReactNode }) => <span>{children}</span>,
@@ -14,7 +16,8 @@ jest.mock("platejs/react", () => ({
   useEditorRef: () => ({
     api: {
       findPath: () => [0, 1],
-      above: () => [{ type: "p", children: [] }, [0]],
+      block: () => blockAbove,
+      string: () => blockText,
     },
     tf: {
       removeNodes,
@@ -46,6 +49,8 @@ function props(): PlateElementProps {
 beforeEach(() => {
   jest.clearAllMocks();
   selected = true;
+  blockAbove = [{ type: "p", children: [] }, [0]];
+  blockText = "";
 });
 
 describe("slash command input", () => {
@@ -110,6 +115,41 @@ describe("slash command input", () => {
 
     expect(setNodes).toHaveBeenCalledWith({ type: "h1" }, { at: [0] });
     expect(insertNodes).not.toHaveBeenCalled();
+  });
+
+  it("applies a command typed inside a heading, not only inside a paragraph", () => {
+    blockAbove = [{ type: "h2", children: [] }, [2]];
+    render(<SlashInputElement {...props()} />);
+    const input = screen.getByRole("textbox", { name: "Slash command" });
+    fireEvent.change(input, { target: { value: "heading 3" } });
+
+    fireEvent.keyDown(input, { key: "Enter" });
+
+    expect(removeNodes).toHaveBeenCalledWith({ at: [0, 1] });
+    expect(setNodes).toHaveBeenCalledWith({ type: "h3" }, { at: [2] });
+  });
+
+  it("inserts a table after a line that already has text instead of replacing that line", () => {
+    blockText = "Typed before the slash";
+    render(<SlashInputElement {...props()} />);
+    const input = screen.getByRole("textbox", { name: "Slash command" });
+    fireEvent.change(input, { target: { value: "table" } });
+
+    fireEvent.keyDown(input, { key: "Enter" });
+
+    expect(insertNodes).toHaveBeenCalledWith(expect.objectContaining({ type: "table" }), { at: [1] });
+    expect(removeNodes).toHaveBeenCalledTimes(1);
+  });
+
+  it("replaces an empty line with the table, so no blank line is left above it", () => {
+    render(<SlashInputElement {...props()} />);
+    const input = screen.getByRole("textbox", { name: "Slash command" });
+    fireEvent.change(input, { target: { value: "table" } });
+
+    fireEvent.keyDown(input, { key: "Enter" });
+
+    expect(insertNodes).toHaveBeenCalledWith(expect.objectContaining({ type: "table" }), { at: [0] });
+    expect(removeNodes).toHaveBeenLastCalledWith({ at: [1] });
   });
 
   it("does not open the menu for a node it was not just typed into", () => {

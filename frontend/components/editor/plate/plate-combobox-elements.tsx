@@ -54,13 +54,22 @@ function useQueryActiveIndex(query: string) {
 }
 
 function applySlashCommand(editor: PlateEditor, key: string, path: Path) {
-  const blockEntry = editor.api.above({ at: path, match: { type: 'p' } }) as [TElement, Path] | undefined;
+  const blockEntry = editor.api.block<TElement>({ at: path, above: true });
+  editor.tf.removeNodes({ at: path });
   if (!blockEntry) return;
   const [, blockPath] = blockEntry;
 
-  editor.tf.removeNodes({ at: path });
-
   const nextPath = [...blockPath.slice(0, -1), blockPath[blockPath.length - 1]! + 1];
+  const keepsTypedText = editor.api.string(blockPath).length > 0;
+
+  function insertBlock(node: TElement) {
+    if (keepsTypedText) {
+      editor.tf.insertNodes(node, { at: nextPath });
+      return;
+    }
+    editor.tf.insertNodes(node, { at: blockPath });
+    editor.tf.removeNodes({ at: nextPath });
+  }
 
   switch (key) {
     case 'h1':
@@ -88,10 +97,10 @@ function applySlashCommand(editor: PlateEditor, key: string, path: Path) {
       editor.tf.setNodes({ type: 'callout', icon: '💡' }, { at: blockPath });
       break;
     case 'hr':
-      editor.tf.setNodes({ type: 'hr' }, { at: blockPath });
+      insertBlock({ type: 'hr', children: [{ text: '' }] });
       break;
     case 'table':
-      editor.tf.insertNodes(
+      insertBlock(
         {
           type: 'table',
           children: [
@@ -105,19 +114,11 @@ function applySlashCommand(editor: PlateEditor, key: string, path: Path) {
             ] },
           ],
         },
-        { at: blockPath }
       );
-      editor.tf.removeNodes({ at: nextPath });
       break;
     case 'img': {
       const url = window.prompt('Image URL:');
-      if (url) {
-        editor.tf.insertNodes(
-          { type: 'img', url, children: [{ text: '' }] },
-          { at: blockPath }
-        );
-        editor.tf.removeNodes({ at: nextPath });
-      }
+      if (url) insertBlock({ type: 'img', url, children: [{ text: '' }] });
       break;
     }
     case 'toggle':
@@ -131,13 +132,7 @@ function applySlashCommand(editor: PlateEditor, key: string, path: Path) {
       break;
     case 'link_preview': {
       const url = window.prompt('Link URL:');
-      if (url) {
-        editor.tf.insertNodes(
-          { type: 'link_preview', url, children: [{ text: '' }] },
-          { at: blockPath },
-        );
-        editor.tf.removeNodes({ at: nextPath });
-      }
+      if (url) insertBlock({ type: 'link_preview', url, children: [{ text: '' }] });
       break;
     }
     default:
