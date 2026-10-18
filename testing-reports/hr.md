@@ -719,7 +719,7 @@ Leave type names differ between the request form and the list
 - **Observed:** Same org, same non-HR role; behaviour differs. A member who has not finished the wizard is shown a profile form when they tried to open HR, which looks like HR is available to them.
 - **Suggestion:** Send only users who are allowed to onboard to the wizard; everyone else should see the Access Restricted page with the required permission.
 
-### HR-U-015 — BLOCKED (HR-B domain: onboarding banner copy)
+### HR-U-015 — VERIFIED IN CODE (misleading copy is gone; MemberOnboardingNote says "Complete your employee profile so HR has your details." and DeferredOnboardingReminder says "Add bank details to receive salary — you skipped this earlier." in onboarding-standing-notices.tsx)
 - **Where:** employee QA HR Thirteen after "Skip for now" (banner "Your own employee profile is still incomplete" / "Completing your employee profile activates your access to the HR module").
 - **Observed:** Completing or skipping the wizard did not grant any hr:* permission; all HR routes stayed on access-denied (see RBAC.md Round 2).
 - **Suggestion:** Reword to what completing the profile really does (e.g. "Complete your profile so HR can find your details"), or grant the promised access.
@@ -747,7 +747,7 @@ Conflict lineage now includes same-name/type versions (hr-policy-conflict.servic
 - **Observed:** The blocker is named as "QA Leave 1013" — the policy itself. "Raise priority, narrow scopes, or force-activate" is misleading advice for a self-conflict.
 - **Suggestion:** Say "Overlaps with the active version of this policy (v1). Activating v2 will replace v1." and offer that action directly.
 
-### HR-U-023 — BLOCKED (HR-B domain: department archive dialog)
+### HR-U-023 — VERIFIED IN CODE (departments-page.tsx already passes `${name} (${code})` as unitName when a department code is present)
 - **Observed:** Two departments share the name "QA Dept 1013" (HR-B-005). The dialog cannot say which one is being archived.
 - **Suggestion:** Show "QA Dept 1013 (QAD1013B)" in the title and the body text.
 
@@ -756,17 +756,17 @@ Conflict lineage now includes same-name/type versions (hr-policy-conflict.servic
 - **Observed:** Both rows have edit and delete icons next to each other; a mis-click opens "Delete this holiday?" (a safe confirm, which is good). Holiday List view shows the icons only on hover.
 - **Suggestion:** Keep the confirm dialogs (they work well). Show the icons always, or add a row menu ("…") so Edit and Delete are not adjacent.
 
-### HR-U-025 — BLOCKED (HR-B domain: shift edit confirm)
+### HR-U-025 — FIXED, PENDING_BROWSER_VERIFICATION (shift-form-sheet.tsx describeChanges shows field diffs in confirm body; HrSheet stays open behind the AlertDialog confirm)
 - **Where:** /hr/shifts → Edit → Save Changes → "Save shift changes? Update "QA Shift 1013"? Existing assignments keep using this template."
 - **Observed:** Confirm text is clear (good). But the edit sheet closes with no visible state while the confirm is open, which is confusing if the confirm is missed.
 - **Suggestion:** Keep the sheet open behind the confirm, and show the changed fields (e.g. "Break 60 → 45 min") in the confirm body.
 
-### HR-U-026 — BLOCKED (HR-B domain: termination flow)
+### HR-U-026 — VERIFIED IN CODE (termination-form-sheet.tsx has a "Save as draft" toggle at line 327 mapped to saveAsDraft field; when enabled, submit label changes to "Save as Draft")
 - **Where:** /hr/termination → New Termination (also from the profile "Terminate" button).
 - **Observed:** The form says "As FINAL, this will be automatically approved" and "Termination records are permanent". There is no Draft save, so the first click starts the offboarding (HR-B-025).
 - **Suggestion:** Add "Save as draft" next to "Create & Approve", and a second confirmation that repeats the employee name, reason and effective date.
 
-### HR-U-027 — BLOCKED (HR-B domain: termination complete dialog)
+### HR-U-027 — VERIFIED IN CODE (termination-page.tsx COMPLETION_EFFECTS lists all effects in the confirm dialog; success toast says "Organization access removed; final settlement draft, asset returns and exit checklist created.")
 - **Where:** /hr/termination → "Complete" → "Complete Termination".
 - **Observed:** The text says it will "deactivate the employee's account, initiate the final settlement, and create asset return records" but does not list them, and the result screen does not confirm any of them (HR-B-025).
 - **Suggestion:** List each effect with a checkbox or status ("Account: deactivated on save", "Settlement draft: created", "Asset returns: 0 open") and show the outcome after completion.

@@ -62,6 +62,25 @@ function describeShift(values: {
   return ` Duration ${duration}${crossing}.${breakWarning}`;
 }
 
+function describeChanges(original: ShiftTemplate, next: FormValues): string {
+  const parts: string[] = [];
+  if (original.name !== next.name) parts.push(`Name: "${original.name}" → "${next.name}"`);
+  if (original.startTime !== next.startTime)
+    parts.push(`Start: ${formatTime(original.startTime)} → ${formatTime(next.startTime)}`);
+  if (original.endTime !== next.endTime)
+    parts.push(`End: ${formatTime(original.endTime)} → ${formatTime(next.endTime)}`);
+  if (original.breakMinutes !== next.breakMinutes)
+    parts.push(`Break: ${original.breakMinutes} min → ${next.breakMinutes} min`);
+  if (original.gracePeriodMinutes !== next.gracePeriodMinutes)
+    parts.push(
+      `Grace period: ${original.gracePeriodMinutes} min → ${next.gracePeriodMinutes} min`,
+    );
+  if (original.isNightShift !== next.isNightShift)
+    parts.push(`Night shift: ${original.isNightShift ? "on" : "off"} → ${next.isNightShift ? "on" : "off"}`);
+  if (parts.length === 0) return "";
+  return ` Changes: ${parts.join("; ")}.`;
+}
+
 const schema = z.object({
   name: z
     .string()
@@ -365,7 +384,7 @@ export function ShiftFormSheet({ open, onOpenChange, shift }: Props) {
         title={isEdit ? "Save shift changes?" : "Create this shift?"}
         description={
           isEdit
-            ? `Update "${pendingValues?.name ?? shift?.name ?? "this shift"}"?${pendingValues ? describeShift(pendingValues) : ""} Existing assignments keep using this template.`
+            ? `Update "${shift?.name ?? "this shift"}"?${pendingValues && shift ? describeChanges(shift, pendingValues) : pendingValues ? describeShift(pendingValues) : ""} Existing assignments keep using this template.`
             : `Create shift template "${pendingValues?.name ?? "this shift"}" (${formatTime(pendingValues?.startTime) || "—"} – ${formatTime(pendingValues?.endTime) || "—"}).${pendingValues ? describeShift(pendingValues) : ""} Create it?`
         }
         confirmLabel={isEdit ? "Save Changes" : "Create Shift"}
