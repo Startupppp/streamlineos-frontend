@@ -113,7 +113,7 @@ export function DepartmentCombobox({
   const canAdd =
     allowCreate &&
     canCreate &&
-    search.trim().length > 0 &&
+    search.trim().length >= 2 &&
     !exactMatch &&
     !createDepartment.isPending;
 
