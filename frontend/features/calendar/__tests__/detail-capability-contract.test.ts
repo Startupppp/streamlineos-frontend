@@ -72,7 +72,7 @@ describe("calendar detail capability survives the response contract", () => {
   it("the backend detail service derives the capability from the creating membership", () => {
     const source = fs.readFileSync(BACKEND_DETAIL_SERVICE, "utf8");
 
-    expect(source).toMatch(/canManage:[^\n]*createdByMembershipId/);
-    expect(source).toMatch(/canManage:[^\n]*callerMembershipId > 0/);
+    expect(source).toMatch(/canManage\s*[:=][^\n]*createdByMembershipId/);
+    expect(source).toMatch(/canManage\s*[:=][^\n]*callerMembershipId > 0/);
   });
 });
