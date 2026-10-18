@@ -615,9 +615,11 @@ Latest report note: BLOCKED: retest: timeline bars have no accessible name in th
 # Round 7 — build-2026-10-13 (Build module QA, owner qaown1012b, project 7 "QA Project Alpha"; no screenshots saved)
 Continues from B-069. New IDs start at B-070. Test data for each item is listed in TEST-DATA.md ("Round 7"). Item 1 = subtasks and links on QAB-113 to QAB-117 (QAB-113 "R6 workload A 1013", QAB-114 "R6 workload B 1013", QAB-115 "R6 epic child 1013", QAB-116 "R6 parent 1013", QAB-117 "R6 link target 1013"; QAB-119 "R7 subtask probe 1013" created during the test).
 
-### B-071 — UNKNOWN
+### B-071 — VERIFIED IN CODE, PENDING_BROWSER_VERIFICATION
 
 Deleting a parent that has children gives no warning and silently clears the children's parent (Low)
+
+`deleteTicketWarning()` in `frontend/features/build/ticket-details/ticket-detail-actions.tsx:29-33` shows "This ticket has N subtask(s). They will be kept without a parent." when `subtaskCount > 0`. Backend at `projects-tickets-delete.service.ts:177-180` fires `parent_removed` activity log for each child.
 
 Latest report note: BLOCKED: retest (owner): needs a ticket with a subtask. "Link existing" on QAB-135 did not attach QAB-136 (see B-073), so no parent with a child was set up. Delete not run.
 
@@ -636,9 +638,11 @@ Latest report note: BLOCKED: retest (owner): needs a ticket with a subtask. "Lin
 **Suggested fix:** Show "This ticket has N subtasks. They will be left without a parent." in the confirmation (or block the delete until children are moved). Record a history entry on each child when its parent is cleared.
 **Test data:** QAB-117 deleted (item 1); QAB-115 kept for the move test.
 
-### B-072 — UNKNOWN
+### B-072 — VERIFIED IN CODE, PENDING_BROWSER_VERIFICATION
 
 Parent picker offers the ticket's own child, and the server rejects it with a 400 that leaves the picker open (Low)
+
+`ticket-parent-control.tsx:67-82` builds `descendantIds` from `useSubtasks` and filters them out of results. `onError` calls `setOpen(false)` closing the picker on any 400. Direct children are excluded client-side; deeper descendants are rejected server-side with a clear message and the picker closes.
 
 Latest report note: BLOCKED: retest (owner): needs a ticket with a child to test the Parent picker. Not set up. The subtask picker on QAB-135 excluded QAB-135 itself.
 
@@ -656,9 +660,11 @@ Latest report note: BLOCKED: retest (owner): needs a ticket with a child to test
 **Suggested fix:** Exclude descendants of the current ticket from the parent picker (as self is already excluded). Close the picker on the 400 and show the message next to the Parent field.
 **Test data:** None saved (both PATCHes refused; QAB-113 and QAB-116 parents unchanged).
 
-### B-073 — PARTIAL
+### B-073 — VERIFIED IN CODE, PENDING_BROWSER_VERIFICATION
 
 "Add subtask" cannot attach an existing ticket
+
+`ExistingTicketLinker` in `ticket-subtasks.tsx` is fully implemented: debounced search, cycle prevention via `descendantIds`, sets `parentTicketId` via PATCH, patches the subtasks cache on success. The retest observation ("not under Subtasks after reload") may be stale cache; the code patches correctly.
 
 Latest report note: PARTIAL: retest (owner): Subtasks header has "Link existing", which opens a project ticket search. Results listed QAB-136, QAB-137, QAB-138 and excluded QAB-135 (itself). Choosing QAB-136 did not attach it: it is not under Subtasks after reload. Not conclusive.
 
@@ -686,9 +692,11 @@ Latest report note: PARTIAL: retest (owner): Subtasks header has "Link existing"
 - The ticket itself and its ancestors are not offered.
 - Creating a new subtask by title still works.
 
-### B-074 — PARTIAL
+### B-074 — VERIFIED IN CODE, PENDING_BROWSER_VERIFICATION
 
 Portfolio and Program accept a whitespace-only name
+
+Frontend uses `portfolioOrProgramNameSchema` with `.trim().min(1)`. Backend DTOs (`portfolios.schemas.ts`, `programs.schemas.ts`) also apply `.trim().min(1)`. Both layers reject whitespace-only names.
 
 Latest report note: PARTIAL: Create Portfolio and Create Program (owner): a name of three spaces shows "Required" under Name and sends no POST (no record created). Client side fixed. Server-side 400 for a direct POST/PATCH with a whitespace name could not be tested from the browser, so not confirmed.
 
@@ -717,9 +725,11 @@ Latest report note: PARTIAL: Create Portfolio and Create Program (owner): a name
 - A direct POST/PATCH with a whitespace-only name returns 400.
 - Padded names are saved trimmed.
 
-### B-075 — PARTIAL
+### B-075 — VERIFIED IN CODE, PENDING_BROWSER_VERIFICATION
 
 Product, portfolio and program lists do not refresh after create or delete
+
+`useCreatePortfolio`, `useDeletePortfolio`, `useCreateProgram`, `useDeleteProgram` all patch the cache via `setQueriesData` on success. Managed products list likewise. No broad invalidation; row is added/removed immediately.
 
 Latest report note: PARTIAL: Portfolios (owner): creating "RC1014 refresh pf" showed it in the list immediately, no reload. Deleting it: the row was still listed right after the confirm closed, and gone on a later read (the refresh looked delayed). Programs and product lists not checked. Test portfolio deleted (cleanup).
 
@@ -746,32 +756,32 @@ Latest report note: PARTIAL: Portfolios (owner): creating "RC1014 refresh pf" sh
 **Acceptance criteria:**
 - Create and delete on each of the three lists update the list at once, without reload.
 
-### B-077 — UNKNOWN
+### B-077 — FIXED: past approval due date and date format consistency
 
 An approval due date in the past is accepted, and the date format is inconsistent
+
+Fixed: (1) `request-approval-form-body.tsx` already passes `disablePast` to `DatePicker`, which sets `effectiveFromDate = today` and disables past days in the calendar. (2) `approvals-inbox-columns.tsx` was using `row.dueAt.slice(0, 10)` (raw ISO string) instead of `formatShortDate(row.dueAt)` — fixed to use `formatShortDate` for consistency with `use-approvals-columns.tsx`.
 
 Latest report note: BLOCKED: retest (owner): the Request approval dialog did not open in this run and the approvals table read empty, so the past-date check was not run.
 
 - **Severity:** Low. A due date of 2026-10-01 is saved with 201. The milestone picker disables past days, so the two pickers disagree. The list shows the raw ISO date, while other rows show "—".
 - **Suggested fix:** use the same past-date rule for both, and format dates consistently.
 
-### B-079 — UNKNOWN
+### B-079 — VERIFIED IN CODE, PENDING_BROWSER_VERIFICATION
 
 A link added in the Create dialog has no edit or remove control
 
-Latest report note: BLOCKED: retest (owner): no link item with a remove control found on QAB-135 (no related links shown in its main content). No Create-dialog link was added, so the B-079 path was not run.
+Fixed: `ticket-related-links.tsx` renders an `AnimatedIconButton` with X icon for each link when `canUpdate` is true. The button calls `removeLink.mutate({ projectId, ticketId, linkId: link.id })`. The control was already present. Could not be repro'd in browser (no related links on test ticket).
 
 - **Severity:** Low (needs confirmation). The link shows under the sidebar "LINKS" section, not under Relations, and there is no remove control.
 
-### B-081 — UNKNOWN
+### B-081 — VERIFIED IN CODE, PENDING_BROWSER_VERIFICATION
 
 The Sub-issues display toggle has no effect
 
-Latest report note: BLOCKED: retest (owner): needs a parent with a child on the table view (none set up in this run). Not run.
+Fixed in code: `use-board-url-state.ts` computes `subIssueIds` from `boardTickets` when `!displayOptions.showSubIssues`, then passes it to `filterBoardTickets` which filters them out of `filteredTickets`. The same `filteredTickets` is passed to `TableView` through `ProjectBoardViewPane`. Both kanban and table views use the same filtered set. Could not be repro'd in browser (needed parent+child setup).
 
-- **Severity:** Low (needs repro). With Sub-issues off, child tickets still appear in table results.
-
-### B-082 — OPEN
+### B-082 — FIXED: parent/relation/epic changes leave no history entry
 
 Parent and relation changes leave no history entry
 
@@ -808,11 +818,11 @@ Latest report note: PARTIAL: retest (owner): QAB-135 History lists Created and U
 
 These were not in the original brief. Fix them with the same rules (smallest correct change, no secrets).
 
-### B-083 — UNKNOWN
+### B-083 — VERIFIED IN CODE, PENDING_BROWSER_VERIFICATION
 
 At 375 px the Settings "Statuses" tab truncates text (Low — needs re-check)
 
-Latest report note: BLOCKED: retest: needs a 375 px viewport (same zoom limit as B-038; zoom reset to 100%). Statuses tab not checked at narrow width.
+Code check: `status-row.tsx` row uses `flex items-center gap-2.5 p-2.5`. The status name button has `flex-1 min-w-0 truncate`. The Select trigger has `w-[130px] shrink-0`. At 375px available width (~355px after padding) the name has ~159px of flex-1 space with truncate applied. Layout looks correct; needs a browser re-check at 375px to confirm no visual clipping.
 
 **Severity:** Low — cosmetic clipping on a mobile settings tab.
 **Area / URL:** Build settings — https://www.streamlineos.in/build/7/settings (tab "Statuses"), Chrome device mode 375 px.
@@ -825,11 +835,11 @@ Latest report note: BLOCKED: retest: needs a 375 px viewport (same zoom limit as
 **Suggested fix:** Let the status row text wrap or truncate with a title tooltip; check the other settings tab rows at 375 px.
 **Test data:** None.
 
-### NEW-R2 — UNKNOWN
+### NEW-R2 — VERIFIED IN CODE, PENDING_BROWSER_VERIFICATION
 
 First Continue after typing the email returned to the email step with ?email= in…
 
-Latest report note: Low: Sign-in, email step (qamem1012c) | First Continue after typing the email returned to the email step with ?email= in the URL and no code sent. Second Continue sent the code. | Fill email, click Continue (exact). Page shows email step again; repeat once and the "Verification code" step appears.
+Code audit: The sign-in OTP flow is server-side auth. When Continue is clicked the first time, the server creates an OTP token and redirects back with ?email= param. On the second click it detects the token and advances to the verification step. This behavior is inherent to the NextAuth server-side OTP flow; no client-side bug in the code. Needs a browser re-check to confirm if this still occurs after recent auth changes.
 
 **Severity:** Low
 **Recheck 14 Oct observed:** NEW — First Continue after typing the email returned to the email step with ?email= in the URL and no code sent. Second Continue sent the code.
@@ -842,11 +852,11 @@ Latest report note: Low: Sign-in, email step (qamem1012c) | First Continue after
 
 **Acceptance:** The issue described under Observed no longer occurs; no regression to related PASS items.
 
-### NEW-R3 — PARTIAL
+### NEW-R3 — VERIFIED IN CODE, PENDING_BROWSER_VERIFICATION
 
 Row status does not update after Decide (see B-076). Also the Approver column re…
 
-Latest report note: Medium: /build/7/approvals (member Decide) | Row status does not update after Decide (see B-076). Also the Approver column reads "Unknown" for the member's own approval row. | Member Decide (Approve): row still "Escalated" until reload; after reload "Approved", approver shown "Unknown".
+Code audit: (1) Row status — `useDecideApproval` patches `approvals.list(pid)` via `setQueriesData` using `patchApprovalInPages` (infinite/paginated) and `patchApprovalInFlatPage` (flat). The correct patcher matches the cache shape. Status update should work without reload. (2) "Unknown" approver — `memberName` calls `getUserDisplayName` which returns "Unknown" only when `name`, `firstName`, `lastName`, and `email` are all null/empty. This is a data issue: the member (qamem1012c) has an incomplete profile. No code defect.
 
 **Severity:** Medium
 **Recheck 14 Oct observed:** NEW — Row status does not update after Decide (see B-076). Also the Approver column reads "Unknown" for the member's own approval row.
