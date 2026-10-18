@@ -95,7 +95,7 @@ Latest status source: `streamline-qa-reports/modules-2026-10-15/hrms/round-2/BUG
 
 Write-up from `streamline-qa-reports/modules-2026-10-15/hrms/round-1/BUGS.md`:
 
-### HRM-B-008: Create takes 15–20 s on "Saving…"; 1-character name "A" is not blocked client-side
+### HRM-B-008 — BLOCKED (HR-B domain: department form validation + latency)
 - **Severity:** Low
 - **Route:** /settings/organization/departments → Add Department / New Department
 - **Actor:** owner adityachalla01, org "ADitay CAhala"
