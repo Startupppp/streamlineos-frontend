@@ -6,7 +6,7 @@ import { platformCoreQueryKeys } from "@/lib/query-keys/platform-core";
 import type { OrgSettings } from "@/types/organization";
 import { useDeleteOrg, useUpdateOrgSettings } from "./organization";
 import { useBulkDeleteLeads } from "./leads";
-import { useCreateOrgCostCenter } from "./org-hierarchy";
+import { useCreateOrgCostCenter, useCreateOrgDepartment, useUpdateOrgCostCenter, useUpdateOrgDepartment } from "./org-hierarchy";
 import { platformHierarchyQueryKeys } from "@/lib/query-keys/platform-hierarchy";
 
 jest.mock("@/hooks/api/access", () => ({
@@ -108,5 +108,30 @@ describe("organization mutations", () => {
     });
 
     expect(invalidate).toHaveBeenCalledWith({ queryKey: platformHierarchyQueryKeys.hierarchy.all });
+  });
+  it("ORG-B-013: hierarchy create and update mutations leave error reporting to their form, so a duplicate code never also raises a raw 'code:' toast", async () => {
+    (apiClient.post as jest.Mock).mockRejectedValue(new Error("conflict"));
+    (apiClient.patch as jest.Mock).mockRejectedValue(new Error("conflict"));
+    const client = new QueryClient({ defaultOptions: { mutations: { retry: false } } });
+    function sharedWrapper({ children }: { children: ReactNode }) {
+      return <QueryClientProvider client={client}>{children}</QueryClientProvider>;
+    }
+    const createCostCenter = renderHook(() => useCreateOrgCostCenter(), { wrapper: sharedWrapper });
+    const updateCostCenter = renderHook(() => useUpdateOrgCostCenter(), { wrapper: sharedWrapper });
+    const createDepartment = renderHook(() => useCreateOrgDepartment(), { wrapper: sharedWrapper });
+    const updateDepartment = renderHook(() => useUpdateOrgDepartment(), { wrapper: sharedWrapper });
+
+    await act(async () => {
+      await createCostCenter.result.current.mutateAsync({ name: "Ops", code: "OPS" }).catch(() => undefined);
+      await updateCostCenter.result.current.mutateAsync({ id: "cc-1", code: "OPS" }).catch(() => undefined);
+      await createDepartment.result.current.mutateAsync({ name: "Ops", code: "OPS" }).catch(() => undefined);
+      await updateDepartment.result.current.mutateAsync({ departmentId: "d-1", code: "OPS" }).catch(() => undefined);
+    });
+
+    const mutations = client.getMutationCache().getAll();
+    expect(mutations).toHaveLength(4);
+    for (const mutation of mutations) {
+      expect(mutation.options.meta).toEqual(expect.objectContaining({ errorToast: false }));
+    }
   });
 });

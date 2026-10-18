@@ -212,6 +212,7 @@ export function useCreateOrgCostCenter() {
   const qc = useQueryClient();
   return useAuthorizedMutation("settings:organization:manage", {
     mutationKey: ["create", "org", "cost", "center"],
+    meta: { errorToast: false },
     mutationFn: (data: { code: string; name: string; description?: string }) =>
       apiClient.post<OrgCostCenter>("/org-hierarchy/cost-centers", data, undefined, costCenterContract),
     onSuccess: () => {
@@ -224,6 +225,7 @@ export function useUpdateOrgCostCenter() {
   const qc = useQueryClient();
   return useAuthorizedMutation("settings:organization:manage", {
     mutationKey: ["update", "org", "cost", "center"],
+    meta: { errorToast: false },
     mutationFn: ({ id, ...data }: { id: string } & Record<string, unknown>) =>
       apiClient.patch<OrgCostCenter>(`/org-hierarchy/cost-centers/${id}`, data, undefined, costCenterContract),
     onSuccess: () => {

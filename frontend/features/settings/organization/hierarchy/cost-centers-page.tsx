@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, type ChangeEvent } from "react";
+import { useState, useCallback } from "react";
 import { Archive } from "lucide-react";
 import { toast } from "sonner";
 import {
@@ -9,7 +9,6 @@ import {
   useUpdateOrgCostCenter,
 } from "@/hooks/api/org-hierarchy";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { getValidationFieldErrors } from "@/lib/api-envelope";
 import { cn } from "@/lib/utils";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
@@ -23,22 +22,10 @@ import {
   SheetClose,
   SheetBody,
 } from "@/components/ui/sheet";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { Input } from "@/components/ui/input";
 import { SearchInput } from "@/components/ui/search-input";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { PlusIcon } from "@animateicons/react/lucide";
-import { Textarea } from "@/components/ui/textarea";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { ErrorState } from "@/components/shared/error-state";
 import { CursorPageControls } from "@/components/ui/cursor-page-controls";
@@ -48,97 +35,9 @@ import { useHierarchyArchive } from "./use-hierarchy-archive";
 import { useHierarchyListState } from "./use-hierarchy-list-state";
 import { RequireModule } from "@/components/auth/require-module";
 import { useCan } from "@/hooks/api/access";
-import {
-  costCenterFormSchema,
-  type CostCenterFormValues,
-} from "./cost-center-form-schema";
+import type { CostCenterFormValues } from "./cost-center-form-schema";
+import { CostCenterForm } from "./cost-center-form";
 import { CostCenterActionsCell } from "./cost-center-actions-cell";
-
-function CostCenterForm({
-  defaultValues,
-  onSubmit,
-  isPending: _,
-}: {
-  defaultValues?: CostCenterFormValues;
-  onSubmit: (v: CostCenterFormValues) => Promise<void>;
-  isPending: boolean;
-}) {
-  const form = useForm<CostCenterFormValues>({
-    resolver: zodResolver(costCenterFormSchema),
-    defaultValues: defaultValues ?? { code: "", name: "", description: "" },
-  });
-
-  async function handleFormSubmit(values: CostCenterFormValues) {
-    try {
-      await onSubmit(values);
-    } catch (error) {
-      const fieldErrors = getValidationFieldErrors(error).filter(
-        (issue) => issue.path === "code" || issue.path === "name",
-      );
-      if (fieldErrors.length === 0) {
-        toast.error(getErrorMessage(error));
-        return;
-      }
-      for (const issue of fieldErrors) {
-        if (issue.path === "code" || issue.path === "name")
-          form.setError(issue.path, { message: issue.message });
-      }
-    }
-  }
-
-  return (
-    <Form {...form}>
-      <form id="cc-form" onSubmit={form.handleSubmit(handleFormSubmit)} className="space-y-4">
-        <div className="grid grid-cols-2 gap-3">
-          <FormField
-            control={form.control}
-            name="code"
-            render={({ field }) => {
-              function handleCodeChange(e: ChangeEvent<HTMLInputElement>) {
-                field.onChange(e.target.value.toUpperCase());
-              }
-              return (
-                <FormItem>
-                  <FormLabel>Code</FormLabel>
-                  <FormControl>
-                    <Input placeholder="CC001" {...field} onChange={handleCodeChange} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              );
-            }}
-          />
-          <FormField
-            control={form.control}
-            name="name"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Name</FormLabel>
-                <FormControl>
-                  <Input placeholder="Engineering" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        </div>
-        <FormField
-          control={form.control}
-          name="description"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Description</FormLabel>
-              <FormControl>
-                <Textarea rows={3} placeholder="Optional description…" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-      </form>
-    </Form>
-  );
-}
 
 export function OrgCostCentersPage() {
   const {
@@ -403,7 +302,7 @@ export function OrgCostCentersPage() {
               <SheetTitle>New Cost Center</SheetTitle>
             </SheetHeader>
             <SheetBody className="px-6 py-5">
-              <CostCenterForm onSubmit={handleCreate} isPending={create.isPending} />
+              <CostCenterForm onSubmit={handleCreate} knownCostCenters={displayed} />
             </SheetBody>
             <div className="shrink-0 px-6 py-4 border-t">
               <div className="grid grid-cols-2 gap-2">
@@ -441,7 +340,8 @@ export function OrgCostCentersPage() {
                     description: editing.description ?? "",
                   }}
                   onSubmit={handleUpdate}
-                  isPending={update.isPending}
+                  knownCostCenters={displayed}
+                  editingId={editing.id}
                 />
               )}
             </SheetBody>

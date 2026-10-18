@@ -168,6 +168,7 @@ export function useCreateOrgDepartment() {
   const qc = useQueryClient();
   return useAuthorizedMutation("settings:organization:manage", {
     mutationKey: ["create", "org", "department"],
+    meta: { errorToast: false },
     mutationFn: (data: { name: string; code: string; branchId?: string; headUserId?: string; description?: string }) =>
       apiClient.post<OrgDepartment>("/org-hierarchy/departments", data, undefined, departmentContract),
     onSuccess: () => {
@@ -180,6 +181,7 @@ export function useUpdateOrgDepartment() {
   const qc = useQueryClient();
   return useAuthorizedMutation("settings:organization:manage", {
     mutationKey: ["update", "org", "department"],
+    meta: { errorToast: false },
     mutationFn: ({ departmentId, ...data }: { departmentId: string } & Record<string, unknown>) =>
       apiClient.patch<OrgDepartment>(`/org-hierarchy/departments/${departmentId}`, data, undefined, departmentContract),
     onSuccess: () => {
