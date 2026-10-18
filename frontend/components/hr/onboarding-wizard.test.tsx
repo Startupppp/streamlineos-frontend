@@ -82,16 +82,24 @@ describe("employeeAdmissionGuidance — the four admission outcomes are distinct
     expect(guidanceFor("available")).toEqual({
       blocking: false,
       attachToExistingMember: false,
+      canAttach: false,
       message: null,
     });
   });
 
-  it("blocks a member who holds no employment and directs to Users", () => {
+  it("blocks a member who holds no employment until the admin chooses to link them", () => {
     const guidance = guidanceFor("member-without-employment");
     expect(guidance.blocking).toBe(true);
     expect(guidance.attachToExistingMember).toBe(false);
+    expect(guidance.canAttach).toBe(true);
     expect(guidance.message).toMatch(/belongs to a member/i);
-    expect(guidance.message).toMatch(/users panel/i);
+    expect(guidance.message).toMatch(/Add an employee record to this member/);
+  });
+
+  it("offers the link only for a member without employment", () => {
+    expect(guidanceFor("employee").canAttach).toBe(false);
+    expect(guidanceFor("archived-member").canAttach).toBe(false);
+    expect(guidanceFor("invite").canAttach).toBe(false);
   });
 
   it("blocks an existing employee and says so", () => {
@@ -141,7 +149,7 @@ describe("OnboardingWizard — the email check explains which case the admin is 
     expect(screen.getByLabelText(/^email/i)).toHaveAttribute("aria-invalid", "false");
   });
 
-  it("blocks a member without employment and directs to the Users panel", async () => {
+  it("blocks a member without employment and explains how to link them", async () => {
     const user = userEvent.setup();
     admissionCheck.mockResolvedValue({
       exists: true,
@@ -155,6 +163,37 @@ describe("OnboardingWizard — the email check explains which case the admin is 
     expect(message).toHaveTextContent(/belongs to a member/i);
     expect(screen.getByLabelText(/^email/i)).toHaveAttribute("aria-invalid", "true");
     expect(screen.queryByRole("status")).toBeNull();
+    expect(screen.getByRole("button", { name: "Add an employee record to this member" })).toBeInTheDocument();
+  });
+
+  it("links a member without employment once the admin chooses to", async () => {
+    const user = userEvent.setup();
+    admissionCheck.mockResolvedValue({
+      exists: true,
+      status: "member-without-employment",
+      memberStatus: null,
+    });
+
+    await enterEmail(user);
+    await user.click(await screen.findByRole("button", { name: "Add an employee record to this member" }));
+
+    expect(screen.getByRole("status")).toHaveTextContent(/does not create a second login/i);
+    expect(screen.getByLabelText(/^email/i)).toHaveAttribute("aria-invalid", "false");
+    expect(screen.queryByRole("button", { name: "Add an employee record to this member" })).toBeNull();
+  });
+
+  it("offers no link for an address that already belongs to an employee", async () => {
+    const user = userEvent.setup();
+    admissionCheck.mockResolvedValue({
+      exists: true,
+      status: "employee",
+      memberStatus: null,
+    });
+
+    await enterEmail(user);
+
+    await screen.findByRole("alert");
+    expect(screen.queryByRole("button", { name: "Add an employee record to this member" })).toBeNull();
   });
 
   it("marks the field invalid for an address that already belongs to an employee", async () => {

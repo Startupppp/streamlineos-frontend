@@ -146,8 +146,9 @@ export function OnboardingWizard() {
           const res = await fetchEmployeeAdmissionCheck(email);
           checkedEmail.current = email;
           const guidance = employeeAdmissionGuidance(res.status);
-          form.setValue("attachToExistingMember", guidance.attachToExistingMember);
-          if (guidance.blocking && guidance.message) {
+          const attachConfirmed = guidance.canAttach && form.getValues("attachToExistingMember") === true;
+          form.setValue("attachToExistingMember", guidance.attachToExistingMember || attachConfirmed);
+          if (guidance.blocking && guidance.message && !attachConfirmed) {
             checkedEmail.current = "";
             form.setError("email", { message: guidance.message });
             toast.error(guidance.message);

@@ -16,7 +16,10 @@ import {
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
+import { Button } from "@/components/ui/button";
 import {
+  ATTACH_EXISTING_MEMBER_LABEL,
+  ATTACHED_EXISTING_MEMBER_NOTICE,
   employeeAdmissionGuidance,
   fetchEmployeeAdmissionCheck,
 } from "@/components/hr/check-employee-email";
@@ -38,6 +41,7 @@ interface StepPersonalInfoProps {
 export function StepPersonalInfo({ form }: StepPersonalInfoProps) {
   const checkedEmailRef = useRef<string>("");
   const [attachNotice, setAttachNotice] = useState<string | null>(null);
+  const [attachOffered, setAttachOffered] = useState(false);
   const minDob = useMemo(() => new Date(Date.now() - MIN_EMPLOYMENT_AGE_YEARS * 365.25 * 24 * 60 * 60 * 1000), []);
 
   const handleEmailBlur = useCallback(async () => {
@@ -51,11 +55,20 @@ export function StepPersonalInfo({ form }: StepPersonalInfoProps) {
       const guidance = employeeAdmissionGuidance(res.status);
       form.setValue("attachToExistingMember", guidance.attachToExistingMember);
       setAttachNotice(guidance.attachToExistingMember ? guidance.message : null);
+      setAttachOffered(guidance.canAttach);
       if (guidance.blocking && guidance.message)
         form.setError("email", { type: "manual", message: guidance.message });
     } catch {
       setAttachNotice(null);
+      setAttachOffered(false);
     }
+  }, [form]);
+
+  const handleAttachExistingMember = useCallback(() => {
+    form.setValue("attachToExistingMember", true);
+    form.clearErrors("email");
+    setAttachOffered(false);
+    setAttachNotice(ATTACHED_EXISTING_MEMBER_NOTICE);
   }, [form]);
 
   return (
@@ -108,6 +121,11 @@ export function StepPersonalInfo({ form }: StepPersonalInfoProps) {
                 />
               </FormControl>
               <FormMessage />
+              {attachOffered ? (
+                <Button type="button" variant="outline" size="sm" className="self-start" onClick={handleAttachExistingMember}>
+                  {ATTACH_EXISTING_MEMBER_LABEL}
+                </Button>
+              ) : null}
               {attachNotice ? (
                 <p
                   role="status"
