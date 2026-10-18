@@ -11,16 +11,23 @@ import { getErrorMessage } from "@/lib/get-error-message";
 
 type Selection = Set<string | number>;
 
-type FailedResult = Exclude<BulkPageResult["results"][number]["result"], "succeeded">;
+type FailedResult = Exclude<
+  BulkPageResult["results"][number]["result"],
+  "succeeded"
+>;
 
-const FAILURE_REASONS: Record<"restore" | "purge", Record<FailedResult, string>> = {
+const FAILURE_REASONS: Record<
+  "restore" | "purge",
+  Record<FailedResult, string>
+> = {
   restore: {
     conflict: "changed since you selected it",
     notFound: "no longer in Trash",
     denied: "you do not have permission",
   },
   purge: {
-    conflict: "is on legal hold, has a subpage outside Trash, or changed since you selected it",
+    conflict:
+      "is on legal hold, has a subpage outside Trash, or changed since you selected it",
     notFound: "no longer in Trash",
     denied: "you do not have permission",
   },
@@ -32,9 +39,12 @@ function describeFailures(
 ): string {
   const counts = new Map<FailedResult, number>();
   for (const item of failed) {
-    if (item.result !== "succeeded") counts.set(item.result, (counts.get(item.result) ?? 0) + 1);
+    if (item.result !== "succeeded")
+      counts.set(item.result, (counts.get(item.result) ?? 0) + 1);
   }
-  const reasons = [...counts].map(([result, count]) => `${count}: ${FAILURE_REASONS[action][result]}`);
+  const reasons = [...counts].map(
+    ([result, count]) => `${count}: ${FAILURE_REASONS[action][result]}`,
+  );
   return `${reasons.join("; ")}. They are still selected so you can try again.`;
 }
 
@@ -43,21 +53,31 @@ export function reportTrashBulkResult(
   action: "restore" | "purge",
   setSelected: Dispatch<SetStateAction<Selection>>,
 ) {
-  const succeeded = result.results.filter((item) => item.result === "succeeded");
+  const succeeded = result.results.filter(
+    (item) => item.result === "succeeded",
+  );
   const succeededIds = new Set(succeeded.map((item) => item.pageId));
   const failed = result.results.filter((item) => item.result !== "succeeded");
   const failedCount = failed.length;
   if (succeeded.length > 0) {
     const verb = action === "restore" ? "Restored" : "Permanently deleted";
-    toast.success(`${verb} ${succeeded.length} page${succeeded.length === 1 ? "" : "s"}`);
+    toast.success(
+      `${verb} ${succeeded.length} page${succeeded.length === 1 ? "" : "s"}`,
+    );
   }
   if (failedCount > 0) {
     const verb = action === "restore" ? "restored" : "permanently deleted";
-    toast.error(`${failedCount} page${failedCount === 1 ? "" : "s"} could not be ${verb}`, {
-      description: describeFailures(failed, action),
-    });
+    toast.error(
+      `${failedCount} page${failedCount === 1 ? "" : "s"} could not be ${verb}`,
+      {
+        description: describeFailures(failed, action),
+      },
+    );
   }
-  setSelected((previous) => new Set([...previous].filter((id) => !succeededIds.has(Number(id)))));
+  setSelected(
+    (previous) =>
+      new Set([...previous].filter((id) => !succeededIds.has(Number(id)))),
+  );
 }
 
 interface TrashBulkActionsProps {
@@ -89,7 +109,13 @@ export function TrashBulkActions({
     <div className="flex items-center gap-2">
       {selectedCount > 0 && (
         <>
-          <Button type="button" variant="outline" size="sm" onClick={onRestore} disabled={restoring}>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={onRestore}
+            disabled={restoring}
+          >
             <KbRotateCcwIcon className="mr-1.5 h-3.5 w-3.5" />
             Restore {selectedCount}
           </Button>
@@ -108,18 +134,21 @@ export function TrashBulkActions({
           )}
         </>
       )}
-      {canPurge && canManageSettings && pageCount > 0 && selectedCount === 0 && (
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          onClick={onEmpty}
-          disabled={emptying}
-          className="text-destructive border-destructive/30 hover:bg-destructive/10 hover:text-destructive"
-        >
-          Empty Trash
-        </Button>
-      )}
+      {canPurge &&
+        canManageSettings &&
+        pageCount > 0 &&
+        selectedCount === 0 && (
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={onEmpty}
+            disabled={emptying}
+            className="text-destructive border-destructive/30 hover:bg-destructive/10 hover:text-destructive"
+          >
+            Empty Trash
+          </Button>
+        )}
     </div>
   );
 }
@@ -134,16 +163,33 @@ interface TrashEmptyConfirmationProps {
   onConfirm: () => void;
 }
 
-export function TrashEmptyConfirmation({ open, onOpenChange, pageCount, hasMore, isPending, error, onConfirm }: TrashEmptyConfirmationProps) {
+export function TrashEmptyConfirmation({
+  open,
+  onOpenChange,
+  pageCount,
+  hasMore,
+  isPending,
+  error,
+  onConfirm,
+}: TrashEmptyConfirmationProps) {
   return (
     <ConfirmDialog
       open={open}
       onOpenChange={onOpenChange}
       title="Empty the trash?"
-      description={hasMore
-        ? "This permanently deletes every page currently in the trash, not just the ones shown on this page. This cannot be undone."
-        : `All ${pageCount} page${pageCount === 1 ? "" : "s"} in the trash will be permanently deleted. This cannot be undone.`}
-      content={error ? <div role="alert" className="text-sm text-destructive">{getErrorMessage(error)}<ErrorReference error={error} /></div> : undefined}
+      description={
+        hasMore
+          ? "This permanently deletes every page currently in the trash, not just the ones shown on this page. This cannot be undone."
+          : `All ${pageCount} page${pageCount === 1 ? "" : "s"} in the trash will be permanently deleted. This cannot be undone.`
+      }
+      content={
+        error ? (
+          <div role="alert" className="text-sm text-destructive">
+            {getErrorMessage(error)}
+            <ErrorReference error={error} />
+          </div>
+        ) : undefined
+      }
       confirmLabel="Empty Trash"
       destructive
       keepOpenOnConfirm
@@ -171,24 +217,52 @@ interface TrashBulkPurgeConfirmationProps {
 }
 
 export function TrashBulkPurgeConfirmation({
-  open, onOpenChange, selectedCount, description, canPurge, impactLoading,
-  impactError, impactAvailable, impactReadError, writeError, canConfirm,
-  isPending, onRetryImpact, onConfirm,
+  open,
+  onOpenChange,
+  selectedCount,
+  description,
+  canPurge,
+  impactLoading,
+  impactError,
+  impactAvailable,
+  impactReadError,
+  writeError,
+  canConfirm,
+  isPending,
+  onRetryImpact,
+  onConfirm,
 }: TrashBulkPurgeConfirmationProps) {
-  const impactFailure = canPurge && !impactLoading && (impactError || !impactAvailable);
+  const impactFailure =
+    canPurge && !impactLoading && (impactError || !impactAvailable);
   return (
     <ConfirmDialog
       open={open}
       onOpenChange={onOpenChange}
       title={`Permanently delete ${selectedCount} page${selectedCount === 1 ? "" : "s"}?`}
       description={description}
-      content={writeError || impactFailure ? (
-        <div role="alert" className="space-y-2 text-sm text-destructive">
-          {writeError ? <>{getErrorMessage(writeError)}<ErrorReference error={writeError} /></> : null}
-          {impactError && <ErrorReference error={impactReadError} />}
-          {impactFailure && <Button type="button" variant="outline" size="sm" onClick={onRetryImpact}>Retry impact check</Button>}
-        </div>
-      ) : undefined}
+      content={
+        writeError || impactFailure ? (
+          <div role="alert" className="space-y-2 text-sm text-destructive">
+            {writeError ? (
+              <>
+                {getErrorMessage(writeError)}
+                <ErrorReference error={writeError} />
+              </>
+            ) : null}
+            {impactError && <ErrorReference error={impactReadError} />}
+            {impactFailure && (
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={onRetryImpact}
+              >
+                Retry impact check
+              </Button>
+            )}
+          </div>
+        ) : undefined
+      }
       confirmLabel="Delete Forever"
       destructive
       keepOpenOnConfirm
