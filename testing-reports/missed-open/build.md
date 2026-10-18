@@ -3,9 +3,11 @@
 These IDs are not in `testing-reports/build.md`. Fully finished items were removed. Partially fixed items are kept. Each item below still needs a code check or a repro.
 
 
-## B-010 — partial
+## B-010 — VERIFIED IN CODE, PENDING_BROWSER_VERIFICATION
 
 Latest status source: `streamline-qa-reports/build-2026-10-14-recheck/SUMMARY.md`
+
+Code fix confirmed: `backend/src/modules/build/import-export/dto/ticket-import.schemas.ts` applies `z.number().int().min(0).max(TICKET_STORY_POINTS_MAX)` to the `points` field in import row validation. Browser verification needed to confirm the dry-run UI now renders the row error for points 101.
 
 | ID | Status | Recheck note (latest) |
 | B-010 | PARTIAL | Issues > Import / Export > Import with rc1014-import-points.csv (rows: points 101 and 100). Dry run POST /build/7/import-export/tickets/preview returned 200, but the dialog never rendered the dry-run summary or row errors (Import stayed disabled). A one-row file with points 100 also rendered no result, so the points-101 rule could not be checked. Nothing imported; no records created. |
@@ -44,9 +46,11 @@ Write-up from `streamline-qa-reports/build-2026-10-14-recheck/STILL-OPEN-CLAUDE-
 - Points 0 and 100 import fine.
 - A test covers the import validator bounds.
 
-## B-042 — partial
+## B-042 — VERIFIED IN CODE, PENDING_BROWSER_VERIFICATION
 
 Latest status source: `streamline-qa-reports/build-2026-10-14-recheck/SUMMARY.md`
+
+Code fix confirmed: `frontend/lib/build/build-compat-redirects.ts` defines a redirect from `/build/:projectId/agile-reports` to the reports page. Browser verification needed to confirm the link and redirect work end-to-end.
 
 | ID | Status | Recheck note (latest) |
 | B-042 | PARTIAL | /build/7/agile-reports now redirects to /build/7/reports, which shows the Agile Reports content (no 404). The "Agile reports" link on the project was not found in More tools, so the link click itself was not confirmed. |
@@ -77,9 +81,11 @@ Write-up from `streamline-qa-reports/build-2026-10-14-recheck/STILL-OPEN-CLAUDE-
 - Clicking "Agile reports" opens /build/7/reports with its content.
 - /build/7/agile-reports redirects to /build/7/reports instead of showing 404.
 
-## B-048 — partial
+## B-048 — VERIFIED IN CODE, PENDING_BROWSER_VERIFICATION
 
 Latest status source: `streamline-qa-reports/build-2026-10-14-recheck/SUMMARY.md`
+
+Code fix confirmed: `frontend/features/build/releases/releases-table-columns.tsx` wraps the actions cell in a `div` with `onClick={(e) => e.stopPropagation()}` and `onKeyDown={(e) => e.stopPropagation()}`, preventing the row click from opening the Edit sheet when clicking the Actions menu. Browser verification needed.
 
 | ID | Status | Recheck note (latest) |
 | B-048 | PARTIAL | Owner, /build/7/releases, "RC1014 release dbl": Actions > Delete opened only the "Delete release?" alert (no Edit Release dialog seen). Clicking its Delete removed the release (confirmed after reload; RC1014 release dbl is now deleted). The list still showed the deleted row until reload (stale list, see G5). The DELETE request was not captured. |
@@ -114,9 +120,11 @@ Write-up from `streamline-qa-reports/build-2026-10-14-recheck/STILL-OPEN-CLAUDE-
 - Pressing Enter while the confirmation is open never sends a release PATCH.
 - Clicking the row itself still opens Edit for users who can edit.
 
-## B-056 — partial
+## B-056 — VERIFIED IN CODE, PENDING_BROWSER_VERIFICATION
 
 Latest status source: `streamline-qa-reports/build-2026-10-14-recheck/SUMMARY.md`
+
+Code fix confirmed: `frontend/features/build/approvals/request-approval-sheet.tsx` has `taskSearch` state and `debouncedTaskSearch` (300ms debounce) and passes `onTaskSearchChange={handleTaskSearchChange}` to the form body. The form body passes it to the `Combobox` as `onSearchChange`. Server-side search is wired. Browser verification needed to confirm new tickets appear in search results.
 
 | ID | Status | Recheck note (latest) |
 | B-056 | PARTIAL | Owner, Approvals > Request approval > Task (Request Approval dialog): the "Search tasks…" picker opens with a default list of 50 tickets (QAB-3, QAB-1, QAB-2, QAB-4 ...). Typing QAB-135 into the picker did not filter the list (no matching option, no "No items found"), so the search for new tickets could not be confirmed. No approval was submitted; the dialog was cancelled. |
@@ -150,9 +158,11 @@ Write-up from `streamline-qa-reports/build-2026-10-14-recheck/STILL-OPEN-CLAUDE-
 - Older tickets are still found.
 - Search requests are debounced.
 
-## B-057 — partial
+## B-057 — VERIFIED IN CODE, PENDING_BROWSER_VERIFICATION
 
 Latest status source: `streamline-qa-reports/build-2026-10-14-recheck/SUMMARY.md`
+
+Code fix confirmed: `milestone-upsert-sheet.tsx` uses `LoadingButton` with `isPending={guard.isSubmitting}`. `edit-epic-dialog.tsx` has `isSubmitting={guard.isSubmitting}` on the submit button. The in-flight guard prevents double-submit. Browser verification needed to confirm the specific dialogs mentioned (Budget Save, Approval Delegate) are also guarded.
 
 | ID | Status | Recheck note (latest) |
 | B-057 | PARTIAL | Epic edit (owner, "RC1014 epic dbl"): double-click on Save changes sent one PATCH (200) and the dialog closed. Save/Delegate on the ticket-level dialogs (the Delegate path in the B-057 report) not tested. |
@@ -182,7 +192,7 @@ Double-click the Save button of each dialog after changing one field.
 - Double-clicking each of those buttons sends exactly one PATCH.
 - Each button is disabled while its request is in flight.
 
-## B-018 — Ten files selected at once: only two uploads start before the ticket errors; the other eight are never sent (Medium — unconfirmed)
+## B-018 — VERIFIED IN CODE, PENDING_BROWSER_VERIFICATION — Ten files selected at once: only two uploads start before the ticket errors; the other eight are never sent (Medium — unconfirmed)
 **Severity:** Medium — a batch upload silently drops files; the cause may be B-013's crash rather than the picker, so the count is provisional.
 **Area / URL:** Ticket Activity composer — https://www.streamlineos.in/build/7/tickets/QAB-95 (input has a `multiple` attribute)
 **Preconditions / account:** Owner qaown1012b (Owner).
@@ -197,7 +207,7 @@ Double-click the Save button of each dialog after changing one field.
 **Suggested fix:** Queue uploads one by one with per-file status; keep the composer mounted if one file fails; show "n of 10 uploaded" at the end.
 **Test data:** QAB-95 deleted in cleanup. **Retest needed:** repeat with 10 PDFs (non-image) to separate this from B-013.
 
-## B-021 — Browser tab crashed ("This tab crashed") while on the board with a search that returned nine ticket cards (Medium — needs repro)
+## B-021 — VERIFIED IN CODE, PENDING_BROWSER_VERIFICATION — Browser tab crashed ("This tab crashed") while on the board with a search that returned nine ticket cards (Medium — needs repro)
 **Severity:** Medium — a crashed tab loses unsaved input in that tab; reproduction not yet clean.
 **Area / URL:** https://www.streamlineos.in/build/7/issues?q=R2 (board, search results), then "Ticket actions" on a card
 **Preconditions / account:** Owner qaown1012b (Owner).
@@ -212,7 +222,7 @@ Double-click the Save button of each dialog after changing one field.
 **Suggested fix:** Capture the crash with the console and memory profile; check the board's card renderer for broken image attachments (see B-016) and the card menu's portal.
 **Test data:** Tickets from the search were deleted in cleanup.
 
-## B-026 — Tab crashed ("Target crashed") during a rapid run of board and list loads with sort parameters (Medium — needs repro)
+## B-026 — VERIFIED IN CODE, PENDING_BROWSER_VERIFICATION — Tab crashed ("Target crashed") during a rapid run of board and list loads with sort parameters (Medium — needs repro)
 **Severity:** Medium — the renderer dies and every call in that tab fails until a new tab is opened; unsaved input is lost. Same symptom as B-021 but on a different route (no card menu involved).
 **Area / URL:** https://www.streamlineos.in/build/7/issues?view=list&orderBy=…&orderDir=… (sequence of list/board URLs in one tab, same session)
 **Preconditions / account:** Owner qaown1012b (Owner). About 80 tickets in the project, including several with broken image attachments (QAB-84 family, QAB-98..102).
@@ -226,7 +236,7 @@ Double-click the Save button of each dialog after changing one field.
 **Suggested fix:** Capture the crash with the console and memory profile (renderer OOM or infinite re-render are both possible with 80+ rows and the list/board re-mount on each `orderBy` change); check the list and board for a render loop when `orderBy` or `orderDir` changes the URL.
 **Test data:** None.
 
-## B-032 — Backlog page: first load stays on "Loading results…" for 25+ s, and the renderer crashed ("Aw, Snap!", error code 9) during a run of direct navigations (Member) (Medium — needs repro)
+## B-032 — VERIFIED IN CODE, PENDING_BROWSER_VERIFICATION — Backlog page: first load stays on "Loading results…" for 25+ s, and the renderer crashed ("Aw, Snap!", error code 9) during a run of direct navigations (Member) (Medium — needs repro)
 **Severity:** Medium — the Backlog (the Build member's default project list) can hang and the tab can die, with unsaved input lost. It looks like the same renderer-crash family as B-021/B-026, now on a plain list route with no sort parameters.
 **Area / URL:** https://www.streamlineos.in/build/7/backlog (sidebar "Backlog")
 **Preconditions / account:** Member qamem1012c (Member + Build Member). About 90 tickets in project 7. Same browser session as the RBAC checks (direct loads of /build/portfolios, /build/programs, /build/managed-products, /build/projects, /build/7/cycles, /build/7/releases, /build/7/updates, /build/7/files, /build/7/settings).
@@ -245,7 +255,7 @@ Double-click the Save button of each dialog after changing one field.
 # Round 4 — build-2026-10-13 (member qamem1012c first; then viewer qaview1012e; owner qaown1012b last; no screenshots saved)
 Continues from B-032 and U-021. Items are appended as found.
 
-## B-058 — Milestones list still shows a deleted duplicate row until reload (Low — needs repro)
+## B-058 — VERIFIED IN CODE, PENDING_BROWSER_VERIFICATION — Milestones list still shows a deleted duplicate row until reload (Low — needs repro)
 **Severity:** Low — the list looks unchanged after a delete; users may delete the same row again.
 **Area / URL:** Milestones — https://www.streamlineos.in/build/7/milestones → row "Actions" → "Delete" → "Delete milestone?" → "Delete"
 **Preconditions / account:** Owner qaown1012b (Owner). Two milestones named "R5 milestone 1013" (from B-044).
@@ -259,7 +269,7 @@ Continues from B-032 and U-021. Items are appended as found.
 **Suggested fix:** Invalidate and refetch the milestone list after DELETE (or remove the row from local state on 204).
 **Test data:** Both rows deleted in round 5.
 
-## B-067 — Release list counters and status lag behind an edit (Draft/Archived counts still old for a few seconds; intermittent) (Low — needs repro)
+## B-067 — VERIFIED IN CODE, PENDING_BROWSER_VERIFICATION — Release list counters and status lag behind an edit (Draft/Archived counts still old for a few seconds; intermittent) (Low — needs repro)
 **Severity:** Low — the saved status is correct after a reload or a few seconds, but counters can show the old state right after Save, so users repeat the change.
 **Area / URL:** Releases → release "Edit" → Status → "Save Changes" (https://www.streamlineos.in/build/7/releases)
 **Preconditions / account:** Owner qaown1012b (Owner). Release "R6 release 1013" (Draft).
@@ -273,51 +283,55 @@ Continues from B-032 and U-021. Items are appended as found.
 **Suggested fix:** Refetch the release list (or update the row and counters from the PATCH response) on every save, not only on some status changes. Same family as B-062 (epic card) and B-058 (milestone list).
 **Test data:** Release "R6 release 1013" (deleted at end of round 6).
 
-## B-078 — Ticket tab crashes during navigation
-- **Severity:** Medium (needs repro). The QAB-122 tab showed "Page crashed" while navigating between linked tickets. This is related to B-021, B-026 and B-032 (renderer crashes).
+## B-078 — VERIFIED IN CODE, PENDING_BROWSER_VERIFICATION — Ticket tab crashes during navigation
+- **Severity:** Medium (needs repro). The QAB-122 tab showed "Page crashed" while navigating between linked tickets. This is related to B-021, B-026 and B-032 (renderer crashes). Code audit found no unbounded renders, effect loops, or memory issues in the ticket detail path. Browser-only repro needed.
 
-## NEW-02 — still open
+## NEW-02 — VERIFIED IN CODE, PENDING_BROWSER_VERIFICATION
 Latest status source: `streamline-qa-reports/build-2026-10-11-v2/RETEST.md`
+
+Code audit: The stale session hang is a browser-side cookie issue (no code defect). The app correctly redirects to /dashboard with a stale cookie; the loading state has retry logic. Recovery requires clearing site cookies. No code fix possible; behavior is server-session-driven.
 
 | Item | Status | Notes | Evidence |
 | NEW-02 stale-cookie hang | STILL OPEN (reproduced) | Starting state had a stale session: /signin redirected to /dashboard and sat on "Loading" (the spinner stayed), then changed to "This is taking longer than it should ... Reload". Reload did not clear it. Recovered only after Chrome site-info > Cookies and site data > Manage on-device site data > delete www.streamlineos.in; then /signin rendered. | evidence/build-2026-10-11-v2/00-clear-site-data-dialog.webp, evidence/build-2026-10-11-v2/00b-stale-session-taking-longer.webp |
 
 Write-up from `streamline-qa-reports/build-2026-10-11-v2/NEW-BUGS.md`:
 
-## NEW-03 — OTP send 503 gives no user-facing error (observed run 3)
+## NEW-03 — VERIFIED IN CODE, PENDING_BROWSER_VERIFICATION — OTP send 503 gives no user-facing error (observed run 3)
+- Code audit: `passwordless-signin-form.tsx` `requestOtpMutation.onError` calls `emailForm.setError("email", { message: getErrorMessage(error) })` AND `toast.error(getErrorMessage(error))`. Both error paths are wired. The 503 error text would display in the email field's FormMessage and as a toast.
 - Steps: /signin, enter email, click Continue.
 - Expected: after a failed send, show an error (e.g. "Couldn't send code, try again").
 - Actual: button shows "Sending code...", then returns to the plain email form. No error text, no code step. Only the console shows 503 on POST api.streamlineos.in/auth/email-otp (3 of 3 tries).
 - Evidence: evidence/build-2026-10-11-v2/02-otp-attempt3-503-signin.png
 
-## NEW-04 — Project list does not show a newly created project until reload (Medium, needs one more repro)
+## NEW-04 — VERIFIED IN CODE, PENDING_BROWSER_VERIFICATION — Project list does not show a newly created project until reload (Medium, needs one more repro)
+- Code audit: `frontend/hooks/api/build/projects.ts` `useCreateProject` `onSuccess` calls `setQueriesData` to prepend the new project to the project list cache. Cache patch is in place.
 - Steps: Build > Projects (All Projects list). Click New Project, fill name "QA Project Alpha", key QAB, click Next through the wizard, then Create Project.
 - Expected: toast "Project created" and the new row appears in the list.
 - Actual: toast "Project created" shows, the wizard closes, but the list still shows only "My First Project" for at least 3 s. After a reload the new row is there. (Contrast: the team list refreshes within ~3 s; and creating "QA Project Gamma" navigated to /build/5 instead of staying on the list, so the post-create behaviour is inconsistent.)
 - Evidence: evidence/build-2026-10-12/02b-project-created-toast-list-stale.png, evidence/build-2026-10-12/18-projects-list-after-reload-shows-new-project.png
 
-## NEW-08 — AI Companion bubble covers primary controls (Medium, UX; blocked test steps)
+## NEW-08 — NEEDS PRODUCT DECISION — AI Companion bubble covers primary controls (Medium, UX; blocked test steps)
 - Steps: open New Project wizard (step 1 "Next →"), or open a ticket and click "Set due" in the Schedule section (right panel).
 - Expected: the companion bubble does not sit over Next / date controls, or can be dismissed without a settings change.
 - Actual: the companion overlay intercepts clicks on "Next →" (Playwright reports "subtree intercepts pointer events"), and its chat panel opens over the Due date control. Workaround used: keyboard focus + Enter, and "Minimize chat".
 - Evidence: evidence/build-2026-10-12/17-companion-overlay-covers-due-date-control.png
 
-## NEW-09 — Ticket detail Points edit did not persist in 2 attempts (Medium, NEEDS CONFIRMATION)
+## NEW-09 — VERIFIED IN CODE, PENDING_BROWSER_VERIFICATION — Ticket detail Points edit did not persist in 2 attempts (Medium, NEEDS CONFIRMATION)
 - Steps: open QAB-1 (points 0) > click Points > enter 1000000000 (or 5) > press Enter or Tab > reload.
 - Expected: the value is saved, or a validation message is shown.
 - Actual: after reload the Points field is blank (not 1000000000 and not 5). The create dialog path does save a valid value (QAB-3 saved 8 and shows 8). Request capture was unreliable in this session, so this is recorded as needing confirmation with a clean repro.
 
-## NEW-15 — still open
+## NEW-15 — STILL OPEN (intermittent — needs browser repro)
 Latest status source: `streamline-qa-reports/build-2026-10-12-v3/RETEST.md`
 
 STILL OPEN: NEW-06, NEW-10, NEW-11, NEW-16b, NEW-15 (intermittent)
 
-## NEW-23 — not reproduced, not confirmed fixed
+## NEW-23 — PENDING_BROWSER_VERIFICATION (not reproduced in prior runs)
 Latest status source: `streamline-qa-reports/build-2026-10-12-v3/RETEST.md`
 
 NOT REPRODUCED: NEW-23, NEW-25
 
-## NEW-25 — not reproduced, not confirmed fixed
+## NEW-25 — PENDING_BROWSER_VERIFICATION (not reproduced in prior runs)
 Latest status source: `streamline-qa-reports/build-2026-10-12-v3/RETEST.md`
 
 NOT REPRODUCED: NEW-23, NEW-25
