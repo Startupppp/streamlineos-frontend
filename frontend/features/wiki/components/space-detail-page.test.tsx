@@ -136,6 +136,15 @@ describe("SpaceDetailPage", () => {
     expect(screen.queryByText("Engineering Hub")).not.toBeInTheDocument();
   });
 
+  it("names the space from cache in the header while a refetch is loading (KB-B-017)", () => {
+    mockKbSpace.mockReturnValue(spaceQuery({ isLoading: true }));
+
+    render(<SpaceDetailPage spaceId={5} />);
+
+    expect(screen.getAllByText("Engineering Hub").length).toBeGreaterThan(0);
+    expect(screen.queryByRole("button", { name: /New page/i })).not.toBeInTheDocument();
+  });
+
   it("renders the not-found recovery state for a 404 response, not a generic error", () => {
     mockKbSpace.mockReturnValue(
       spaceQuery({

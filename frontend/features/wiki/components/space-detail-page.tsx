@@ -98,6 +98,7 @@ export default function SpaceDetailPage({ spaceId }: SpaceDetailPageProps) {
     isEmpty: !isLoading && !isError && !space,
   });
   const visibleSpace = pageState.kind === "ready" ? space : undefined;
+  const headerSpace = pageState.kind === "loading" ? space : visibleSpace;
 
   function handleRetry() {
     void refetch();
@@ -198,9 +199,9 @@ export default function SpaceDetailPage({ spaceId }: SpaceDetailPageProps) {
 
   return (
     <PageWrapper
-      title={space?.name ?? "Space"}
-      subtitle={space?.description ?? undefined}
-      leading={<SpaceBreadcrumb spaceName={space?.name ?? "Space"} />}
+      title={headerSpace?.name ?? "Space"}
+      subtitle={headerSpace?.description ?? undefined}
+      leading={<SpaceBreadcrumb spaceName={headerSpace?.name ?? "Space"} />}
       actions={headerActions}
     >
       <PageState
