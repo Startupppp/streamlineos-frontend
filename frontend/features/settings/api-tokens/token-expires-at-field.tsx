@@ -4,7 +4,9 @@ import { useCallback, useMemo, type ChangeEvent } from "react";
 import { addDays } from "date-fns";
 import { DatePicker } from "@/components/ui/date-picker";
 import { Input } from "@/components/ui/input";
+import { useOrgTimeZone } from "@/hooks/api/org-display";
 import { startOfLocalDay } from "@/lib/date-constraints";
+import { resolveOrgTimeZone, toIsoOnDateInOrgTz } from "@/lib/date-utils";
 
 function splitDateTime(value: string): { date: string; time: string } {
   if (!value) return { date: "", time: "23:59" };
@@ -20,6 +22,12 @@ function joinDateTime(date: string, time: string): string {
   return `${date}T${time || "23:59"}`;
 }
 
+export function tokenExpiryToIso(value: string, orgTz: string | null): string {
+  const { date, time } = splitDateTime(value);
+  if (!date) return value;
+  return toIsoOnDateInOrgTz(date, time, orgTz);
+}
+
 interface TokenExpiresAtFieldProps {
   value: string;
   onChange: (value: string) => void;
@@ -33,6 +41,7 @@ export function TokenExpiresAtField({
   maxDays,
   id,
 }: TokenExpiresAtFieldProps) {
+  const orgTz = useOrgTimeZone();
   const { date, time } = useMemo(() => splitDateTime(value), [value]);
   const toDate = useMemo(
     () => addDays(startOfLocalDay(), maxDays),
@@ -72,6 +81,9 @@ export function TokenExpiresAtField({
         className="w-[7.5rem] shrink-0"
         aria-label="Expiry time"
       />
+      <p className="w-full text-xs text-muted-foreground">
+        Time zone: {resolveOrgTimeZone(orgTz)}
+      </p>
     </div>
   );
 }

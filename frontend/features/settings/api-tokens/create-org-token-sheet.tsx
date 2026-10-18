@@ -31,8 +31,9 @@ import {
   FormMessage,
   FormDescription,
 } from "@/components/ui/form";
-import { TokenExpiresAtField } from "./token-expires-at-field";
+import { TokenExpiresAtField, tokenExpiryToIso } from "./token-expires-at-field";
 import { datetimeLocalAfterDays } from "@/lib/date-utils";
+import { useOrgTimeZone } from "@/hooks/api/org-display";
 import {
   orgTokenFormSchema,
   type OrgTokenFormValues,
@@ -50,13 +51,14 @@ export function CreateOrgTokenSheet({
   onCreated,
 }: CreateOrgTokenSheetProps) {
   const create = useCreateApiToken();
+  const orgTz = useOrgTimeZone();
 
   const form = useForm<OrgTokenFormValues>({
     resolver: zodResolver(orgTokenFormSchema),
     defaultValues: {
       name: "",
       description: "",
-      expiresAt: datetimeLocalAfterDays(30),
+      expiresAt: datetimeLocalAfterDays(30, orgTz),
     },
   });
 
@@ -65,7 +67,7 @@ export function CreateOrgTokenSheet({
       const input: CreateApiTokenInput = {
         name: values.name,
         description: values.description || undefined,
-        expiresAt: values.expiresAt,
+        expiresAt: tokenExpiryToIso(values.expiresAt, orgTz),
       };
       create.mutate(input, {
         onSuccess: (result) => {
@@ -75,7 +77,7 @@ export function CreateOrgTokenSheet({
         onError: (err) => toast.error(getErrorMessage(err)),
       });
     },
-    [create, form, onCreated],
+    [create, form, onCreated, orgTz],
   );
 
   const handleCancel = useCallback(() => {

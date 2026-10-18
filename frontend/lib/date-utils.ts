@@ -325,10 +325,12 @@ export function formatClockInOrgTz(instant: Date, orgTz: string | null): string 
   return `${get("hour")}:${get("minute")} ${get("dayPeriod")} - ${get("weekday")} ${get("day")}, ${get("month")} ${get("year")}`.toUpperCase();
 }
 
-/** `YYYY-MM-DDTHH:mm` in the reader's own zone, for a `datetime-local` input default. */
-export function datetimeLocalAfterDays(days: number): string {
-  const value = new Date(Date.now() + days * 24 * 60 * 60 * 1000);
-  return new Date(value.getTime() - value.getTimezoneOffset() * 60_000)
-    .toISOString()
-    .slice(0, 16);
+export function datetimeLocalAfterDays(days: number, orgTz: string | null): string {
+  const tz = resolveTimeZone(orgTz, readerTimeZone());
+  const instant = new Date(Date.now() + days * 24 * 60 * 60 * 1000);
+  return new Date(instant.getTime() + zoneOffsetMs(instant, tz)).toISOString().slice(0, 16);
+}
+
+export function resolveOrgTimeZone(orgTz: string | null): string {
+  return resolveTimeZone(orgTz, readerTimeZone());
 }

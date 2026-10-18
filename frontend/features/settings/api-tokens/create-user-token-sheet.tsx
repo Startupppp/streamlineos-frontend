@@ -31,8 +31,9 @@ import {
   FormDescription,
 } from "@/components/ui/form";
 import { PermissionScopeSelector } from "./permission-scope-selector";
-import { TokenExpiresAtField } from "./token-expires-at-field";
+import { TokenExpiresAtField, tokenExpiryToIso } from "./token-expires-at-field";
 import { datetimeLocalAfterDays } from "@/lib/date-utils";
+import { useOrgTimeZone } from "@/hooks/api/org-display";
 import {
   userTokenFormSchema,
   type UserTokenFormValues,
@@ -50,10 +51,11 @@ export function CreateUserTokenSheet({
   onCreated,
 }: CreateUserTokenSheetProps) {
   const create = useCreateUserApiToken();
+  const orgTz = useOrgTimeZone();
 
   const form = useForm<UserTokenFormValues>({
     resolver: zodResolver(userTokenFormSchema),
-    defaultValues: { name: "", scopes: [], expiresAt: datetimeLocalAfterDays(30) },
+    defaultValues: { name: "", scopes: [], expiresAt: datetimeLocalAfterDays(30, orgTz) },
   });
 
   const handleSubmit = useCallback(
@@ -61,7 +63,7 @@ export function CreateUserTokenSheet({
       const input: CreateUserApiTokenInput = {
         name: values.name,
         scopes: values.scopes,
-        expiresAt: values.expiresAt,
+        expiresAt: tokenExpiryToIso(values.expiresAt, orgTz),
       };
       create.mutate(input, {
         onSuccess: (result) => {
@@ -71,7 +73,7 @@ export function CreateUserTokenSheet({
         onError: (err) => toast.error(getErrorMessage(err)),
       });
     },
-    [create, form, onCreated],
+    [create, form, onCreated, orgTz],
   );
 
   const handleCancel = useCallback(() => {
