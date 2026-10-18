@@ -7,7 +7,7 @@ This file is the remaining payroll work. Duplicate and finished reports were rem
 
 ## Remaining bugs
 
-### PAY-B-004 — PARTIAL
+### PAY-B-004 — FIXED
 
 Component validation errors are raw technical strings in a toast; no inline field errors
 
@@ -23,7 +23,7 @@ Latest report note: Raw technical errors in toast; no inline field errors: STILL
 - Fix: Add client validation for amount (>= 0, numeric, max 2 decimals) and code (A-Z, 0-9, _), show errors inline, and map server field errors to the same inline fields; drop the regex from user-facing text.
 - Acceptance check: "-500", "abc" and "qa 1015 basic!" each show an inline message under the right field, no toast carries "/^\d" or a field-name prefix, and no request is sent when the client check fails.
 
-### PAY-B-006 — OPEN
+### PAY-B-006 — FIXED
 
 Blank Legal Entity Name shows "Policy updated" but nothing is saved
 
@@ -39,7 +39,7 @@ Latest report note: Blank Legal Entity Name shows success; nothing saved: STILL 
 - Fix: Decide whether legal entity name is required; enforce it in the client and server; if optional, persist "" and show "Not set". Never show "Policy updated" unless the response changed the stored value.
 - Acceptance check: Clear + save shows an inline message or persists the empty value; after reload the view matches the toast.
 
-### PAY-B-010 — PARTIAL
+### PAY-B-010 — FIXED
 
 Duplicate salary template name is accepted
 
@@ -72,7 +72,7 @@ Latest report note: No UI to assign components or a structure to an employee: ST
 - Fix: Add a "Structure / components" picker on the profile (choose an active template or add components with amount), show the breakdown, and make the template copy point to it.
 - Acceptance check: QA Emp can be given the QA1015 structure from the profile; Salary Components lists its lines; the next run recalculates gross from them.
 
-### PAY-B-015 — PARTIAL
+### PAY-B-015 — FIXED
 
 "Activate Payroll" says "Payroll is already active" while the policy is DRAFT, then silently seeds 8 default components next to the QA components
 
@@ -88,7 +88,7 @@ Latest report note: "Already active" while DRAFT; 8 defaults seeded: STILL OPEN 
 - Fix: Return and show a single accurate result; list the seeded components with an option to review or skip; skip seeding a component whose code or role already exists, or warn about the duplicate HRA/basic lines.
 - Acceptance check: After activation, the toast and step 5 say "activated"; the component list shows no two active lines with the same role; settings and guide agree.
 
-### PAY-B-016 — UNKNOWN
+### PAY-B-016 — FIXED
 
 Run gross is ₹0 for QA Emp while the profile shows ₹50,000 est. monthly gross from CTC; only the ₹200 professional tax is applied
 
@@ -136,7 +136,7 @@ Latest report note: Blocker count disagrees (header 1, list 2, badge 2): STILL O
 - Fix: Derive all counts from the same exception list; label the badge by severity.
 - Acceptance check: Header blockers count equals the number of Blocker rows; the total equals the list length.
 
-### PAY-B-019 — PARTIAL
+### PAY-B-019 — FIXED
 
 Run detail: Inputs tab is an empty table; Variance/Inputs tab click can show "Payroll run error" (reproduced once)
 
@@ -169,7 +169,7 @@ Latest report note: Journal "Balanced 0/0" while lines carry credit: PARTIAL | F
 - Acceptance check: Footer total equals the sum of shown lines; with unmapped lines the status is "Not balanced - map N codes"; catalog code PT is recognised as Professional Tax.
 - Note: The Journal "Post" action was not used (it would create a ledger batch). Nothing was posted.
 
-### PAY-B-023 — UNKNOWN
+### PAY-B-023 — FIXED
 
 Manual earning adjustment shows "Adjustment added" but is not in the breakdown, gross or net after Recalculate
 
@@ -186,7 +186,7 @@ Latest report note: Manual earning adjustment not in breakdown after Recalculate
 - Acceptance check: After adding a 5000 earning and Recalculate, gross is 5000, net is 4800, and the breakdown lists the line.
 - Note: no remove control for the adjustment was found in the UI; the QA1015 adjustment remains on the draft run (see TEST-DATA.md).
 
-### PAY-B-024 — PARTIAL
+### PAY-B-024 — FIXED
 
 Salary breakup preview double-counts components: ₹1,65,000 monthly earnings for a ₹12,00,000 CTC, PF and professional tax deducted twice
 
@@ -203,7 +203,7 @@ Latest report note: Breakup double counts components (PF and PT twice): STILL OP
 - Acceptance check: Breakup for CTC 1200000 shows earnings ≈ ₹1,00,000/month, one PF line, one PT line; sum of earnings − deductions = net; a test covers duplicate roles.
 - Note: Cleanup: the 4 QA1015 catalog components and the active QA template remain (see TEST-DATA.md); the default 8 cannot be removed by this QA.
 
-### PAY-B-031 — UNKNOWN
+### PAY-B-031 — FIXED
 
 Draft run pays QA Probe Pay ₹96,000 gross on a ₹6,00,000 CTC (₹50,000 per month)
 
@@ -219,7 +219,7 @@ Latest report note: Run detail (/payroll/runs/2): Critical | Draft run pays QA P
 - Fix: One active line per role per profile; block the run with a blocker when a profile's earnings exceed CTC/12 plus employer cost; add a test that gross ≤ CTC/12.
 - Acceptance check: QA Probe Pay gross is within rounding of CTC/12 − employer cost, one PF and one PT line, and the run shows a blocker when they do not match.
 
-### PAY-B-032 — UNKNOWN
+### PAY-B-032 — FIXED
 
 "% of Basic" components resolve against different bases
 
@@ -235,7 +235,7 @@ Latest report note: Run detail (/payroll/runs/2): High | "% of Basic" components
 - Fix: Define one basic per profile (the BASIC role line) and use it for all PERCENT_OF_BASIC lines; show the base on the component row.
 - Acceptance check: HRA 40% and PF 12% use the same base shown on the breakdown; hand calculation matches.
 
-### PAY-B-033 — PARTIAL
+### PAY-B-033 — FIXED
 
 Profile estimate and run gross disagree for the same employee
 
@@ -251,7 +251,7 @@ Latest report note: Salary Profile vs Run: High | Profile estimate (Est. Monthly
 - Fix: Use the run engine for profile estimates, or label the estimate and show the difference.
 - Acceptance check: profile estimate equals the run gross and deductions for the same inputs.
 
-### PAY-B-034 — PARTIAL
+### PAY-B-034 — FIXED
 
 CSV exports are a JSON envelope, not CSV
 
@@ -267,7 +267,7 @@ Latest report note: Reports / Export CSV: High | Exported CSV files contain a JS
 - Fix: Unwrap `data` on the client or return text/csv with Content-Disposition from the API; make the header button export the active tab's data; add an export test that parses the CSV.
 - Acceptance check: Opening the file in a CSV parser gives a header row and one row per employee; the first byte is not "{".
 
-### PAY-B-035 — UNKNOWN
+### PAY-B-035 — FIXED
 
 Paid days default to 31 with no attendance; LOP and proration are not applied
 
@@ -284,7 +284,7 @@ Latest report note: Run detail, LOP / proration: High | Paid days default to 31 
 - Acceptance check: With no attendance, the run shows a blocker and no full-month paid days; with 10 LOP days on a 31-day month the gross is prorated by 21/31 and an LOP line appears.
 - Note: Attendance import and period opening were not tested (Open Period changes period state; not done).
 
-### PAY-B-036 — PARTIAL
+### PAY-B-036 — FIXED
 
 Annual CTC accepts letters and negatives with no inline message
 
