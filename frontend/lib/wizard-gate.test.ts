@@ -606,14 +606,14 @@ describe("onboardingGateYieldsToDenial (QA 2026-10-13: denial wins over the onbo
   };
 
   it("lets the denial win on a route whose permission the user lacks", () => {
-    expect(onboardingGateYieldsToDenial("/hr/employees", employee)).toBe(true);
+    expect(onboardingGateYieldsToDenial("/hr/employees", { ok: true, access: employee })).toBe(true);
   });
 
   it("keeps the onboarding gate on a route the user may open", () => {
     expect(
       onboardingGateYieldsToDenial("/hr/employees", {
-        isOrgOwner: false,
-        scopes: { "hr:employees:view": "all" },
+        ok: true,
+        access: { ...employee, scopes: { "hr:employees:view": "all" } },
       }),
     ).toBe(false);
   });
@@ -622,8 +622,8 @@ describe("onboardingGateYieldsToDenial (QA 2026-10-13: denial wins over the onbo
   it("yields on /hr/leaves for a member whose only HR keys are member defaults", () => {
     expect(
       onboardingGateYieldsToDenial("/hr/leaves", {
-        isOrgOwner: false,
-        scopes: { "self:leaves": "own", "hr:leaves:create": "own" },
+        ok: true,
+        access: { ...employee, scopes: { "self:leaves": "own", "hr:leaves:create": "own" } },
       }),
     ).toBe(true);
   });
@@ -631,14 +631,30 @@ describe("onboardingGateYieldsToDenial (QA 2026-10-13: denial wins over the onbo
   it("keeps the onboarding gate on /hr/leaves for an HR-managed member", () => {
     expect(
       onboardingGateYieldsToDenial("/hr/leaves", {
-        isOrgOwner: false,
-        scopes: { "self:leaves": "own", "hr:leaves:view": "own" },
+        ok: true,
+        access: { ...employee, scopes: { "self:leaves": "own", "hr:leaves:view": "own" } },
       }),
     ).toBe(false);
   });
 
   it("keeps the onboarding gate for an owner and for routes with no permission", () => {
-    expect(onboardingGateYieldsToDenial("/hr/employees", { isOrgOwner: true, scopes: {} })).toBe(false);
-    expect(onboardingGateYieldsToDenial("/dashboard", employee)).toBe(false);
+    expect(onboardingGateYieldsToDenial("/hr/employees", { ok: true, access: { ...employee, isOrgOwner: true, scopes: {} } })).toBe(false);
+    expect(onboardingGateYieldsToDenial("/dashboard", { ok: true, access: employee })).toBe(false);
+  });
+
+  it("yields to the route's own guard when the access read failed instead of detouring to the wizard", () => {
+    expect(onboardingGateYieldsToDenial("/hr", { ok: false, error: new Error("access down") })).toBe(true);
+  });
+
+  it("yields on the HR hub for a member with no HR grant so the denial is what they see", () => {
+    expect(
+      onboardingGateYieldsToDenial("/hr", { ok: true, access: { ...employee, scopes: { "self:leaves": "own" } } }),
+    ).toBe(true);
+  });
+
+  it("keeps the onboarding detour on the HR hub for an HR-managed member who may open it", () => {
+    expect(
+      onboardingGateYieldsToDenial("/hr", { ok: true, access: { ...employee, scopes: { "hr:employees:view": "all" } } }),
+    ).toBe(false);
   });
 });

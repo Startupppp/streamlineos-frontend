@@ -69,8 +69,12 @@ export function resolveWizardGate(
 // guard then decides, so a self:leaves holder sees their leave page and everyone else the denial.
 export function onboardingGateYieldsToDenial(
   destination: string,
-  access: Pick<AccessResponse, "isOrgOwner" | "scopes">,
+  accessResult:
+    | { ok: true; access: Pick<AccessResponse, "isOrgOwner" | "scopes"> }
+    | { ok: false },
 ): boolean {
+  if (!accessResult.ok) return true;
+  const { access } = accessResult;
   const decision = resolveRouteAccess(destination);
   if (decision.kind !== "permission" || decision.permission === null) return false;
   if (!access.isOrgOwner && !hasAssignedProductAccess("hrms", access.scopes)) return true;

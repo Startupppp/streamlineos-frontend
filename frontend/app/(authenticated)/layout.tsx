@@ -34,8 +34,7 @@ export default async function DashboardLayout({
 
   if (gate === "/employee-onboarding") {
     const gateAccess = await getServerAccessResult();
-    if (!gateAccess.ok || !onboardingGateYieldsToDenial(pathname, gateAccess.access))
-      redirect(gate);
+    if (!onboardingGateYieldsToDenial(pathname, gateAccess)) redirect(gate);
   } else if (gate) redirect(gate);
 
   const isMfaRemedyRoute = pathname === "/settings";
