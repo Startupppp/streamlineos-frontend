@@ -13,6 +13,9 @@ const calendarSyncStatusContract = lazyContract(() =>
 const calendarSyncRetryContract = lazyContract(() =>
   import("@/hooks/api/calendar-schema").then((m) => m.calendarSyncRetryContract),
 );
+const calendarSyncUseProviderContract = lazyContract(() =>
+  import("@/hooks/api/calendar-schema").then((m) => m.calendarSyncUseProviderContract),
+);
 const calendarEventAttendeesContract = lazyContract(() =>
   import("@/hooks/api/calendar-schema").then((m) => m.calendarEventAttendeesContract),
 );
@@ -20,6 +23,7 @@ const calendarRsvpContract = lazyContract(() =>
   import("@/hooks/api/calendar-schema").then((m) => m.calendarRsvpContract),
 );
 import { platformHierarchyQueryKeys } from "@/lib/query-keys/platform-hierarchy";
+import { invalidateCalendarProjectionWindows } from "@/lib/calendar-projection-cache";
 import { useCan } from "@/hooks/api/access";
 import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
 import type { z } from "zod";
@@ -100,6 +104,25 @@ export function useEventSyncStatus(eventId: number | null) {
     refetchInterval: (query) => {
       const status = query.state.data?.status;
       return status === "pending" || status === "in_flight" ? 5_000 : false;
+    },
+  });
+}
+
+export function useTakeProviderEventVersion() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationKey: ["calendar", "events", "sync-conflict", "use-provider"],
+    mutationFn: ({ eventId }: { eventId: number }) =>
+      apiClient.post<{ applied: boolean }>(
+        `/calendar/events/${eventId}/sync-conflict/use-provider`,
+        {},
+        undefined,
+        calendarSyncUseProviderContract,
+      ),
+    onSuccess: (_, { eventId }) => {
+      void qc.invalidateQueries({ queryKey: calendarSyncStatusKey(eventId), exact: true });
+      void qc.invalidateQueries({ queryKey: platformHierarchyQueryKeys.calendar.eventDetail(eventId), exact: true });
+      invalidateCalendarProjectionWindows(qc);
     },
   });
 }

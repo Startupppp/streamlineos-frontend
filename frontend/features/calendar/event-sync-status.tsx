@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils";
 import { statusToneClasses } from "@/lib/design-tokens";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { useEventSyncStatus, useRetryEventSync } from "@/hooks/api/calendar";
+import { useEventSyncStatus, useRetryEventSync, useTakeProviderEventVersion } from "@/hooks/api/calendar";
 
 interface EventSyncStatusProps {
   eventId: number | null;
@@ -14,6 +14,7 @@ interface EventSyncStatusProps {
 export function EventSyncStatus({ eventId }: EventSyncStatusProps) {
   const { data } = useEventSyncStatus(eventId);
   const retry = useRetryEventSync();
+  const takeProvider = useTakeProviderEventVersion();
   const tone = statusToneClasses("danger");
 
   if (!data || data.status === "synced" || data.status === "not_synced") return null;
@@ -28,6 +29,18 @@ export function EventSyncStatus({ eventId }: EventSyncStatusProps) {
       { eventId },
       {
         onSuccess: () => toast.success("Sync re-queued"),
+        onError: (error) => toast.error(getErrorMessage(error)),
+      },
+    );
+  };
+
+  const handleTakeProvider = () => {
+    if (!eventId) return;
+    takeProvider.mutate(
+      { eventId },
+      {
+        onSuccess: (result) =>
+          toast.success(result.applied ? "Took the connected calendar's version" : "This conflict was already resolved"),
         onError: (error) => toast.error(getErrorMessage(error)),
       },
     );
@@ -57,8 +70,18 @@ export function EventSyncStatus({ eventId }: EventSyncStatusProps) {
       ) : null}
       {data.repairAction === "review_conflict" ? (
         <p className="text-xs text-muted-foreground">
-          The copy in your connected calendar changed after this event was saved. Keep this version to overwrite it there, or edit this event to match it.
+          The copy in your connected calendar changed after this event was saved. Keep this version to overwrite it there, or use the connected calendar's version here.
         </p>
+      ) : null}
+      {data.repairAction === "review_conflict" ? (
+        <LoadingButton
+          size="sm"
+          variant="outline"
+          isPending={takeProvider.isPending}
+          onClick={handleTakeProvider}
+        >
+          Use the connected calendar&apos;s version
+        </LoadingButton>
       ) : null}
       {data.retryable ? (
         <LoadingButton

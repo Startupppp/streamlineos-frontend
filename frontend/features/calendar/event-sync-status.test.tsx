@@ -29,6 +29,7 @@ jest.mock("@/lib/design-tokens", () => ({
 jest.mock("@/hooks/api/calendar", () => ({
   useEventSyncStatus: jest.fn(),
   useRetryEventSync: jest.fn(),
+  useTakeProviderEventVersion: jest.fn(),
 }));
 
 jest.mock("@/components/ui/loading-button", () => ({
@@ -52,6 +53,7 @@ import React from "react";
 type CalendarMock = {
   useEventSyncStatus: jest.Mock;
   useRetryEventSync: jest.Mock;
+  useTakeProviderEventVersion: jest.Mock;
 };
 
 type SonerMock = { toast: { error: jest.Mock; success: jest.Mock } };
@@ -70,6 +72,10 @@ beforeEach(() => {
   jest.clearAllMocks();
   getCalendarMock().useRetryEventSync.mockReturnValue({
     mutate: defaultMutate,
+    isPending: false,
+  });
+  getCalendarMock().useTakeProviderEventVersion.mockReturnValue({
+    mutate: jest.fn(),
     isPending: false,
   });
 });
@@ -214,6 +220,30 @@ describe("EventSyncStatus — failed state", () => {
     expect(screen.queryByRole("button", { name: /retry sync/i })).toBeNull();
     fireEvent.click(screen.getByRole("button", { name: "Keep this version" }));
     expect(mutate).toHaveBeenCalledWith({ eventId: 7 }, expect.any(Object));
+  });
+
+  it("CAL-B-007 takes the connected calendar's version and confirms it", () => {
+    const take = jest.fn((_vars: { eventId: number }, options: { onSuccess: (result: { applied: boolean }) => void }) =>
+      options.onSuccess({ applied: true }),
+    );
+    getCalendarMock().useTakeProviderEventVersion.mockReturnValue({ mutate: take, isPending: false });
+    getCalendarMock().useEventSyncStatus.mockReturnValue(
+      makeStatus({ status: "failed", failureKind: "conflict", repairAction: "review_conflict", retryable: true }),
+    );
+    render(<EventSyncStatus eventId={7} />);
+    fireEvent.click(screen.getByRole("button", { name: "Use the connected calendar's version" }));
+    expect(take).toHaveBeenCalledWith({ eventId: 7 }, expect.any(Object));
+    expect(defaultMutate).not.toHaveBeenCalled();
+    expect(getSonerMock().toast.success).toHaveBeenCalledWith("Took the connected calendar's version");
+  });
+
+  it("offers the connected calendar's version only for a version conflict", () => {
+    getCalendarMock().useEventSyncStatus.mockReturnValue(
+      makeStatus({ status: "failed", failureKind: "transient", repairAction: "retry", retryable: true }),
+    );
+    render(<EventSyncStatus eventId={7} />);
+    expect(screen.getByRole("button", { name: /retry sync/i })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Use the connected calendar's version" })).toBeNull();
   });
 });
 

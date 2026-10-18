@@ -388,6 +388,10 @@ export const calendarSyncRetryContract = z.object({
   requeued: z.number().int(),
 });
 
+export const calendarSyncUseProviderContract = z.object({
+  applied: z.boolean(),
+});
+
 /**
  * `GET /org/members`. NOT `orgMemberListResponseSchema`, which declares
  * `{ userId?, membershipId?, status? }` — `OrgMembersService.listMembers`

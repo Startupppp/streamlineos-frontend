@@ -74,6 +74,7 @@ export {
   useRsvpCalendarEvent,
   useEventSyncStatus,
   useRetryEventSync,
+  useTakeProviderEventVersion,
 } from "./calendar-event-detail";
 
 // ---- Member lookup hook ----
