@@ -13,6 +13,9 @@ const profileListC = lazyContract(() =>
 const profileDetailC = lazyContract(() =>
   import("@/hooks/api/payroll/employees-schema").then((m) => m.profileDetailResponseContract),
 );
+const employeeProfileDetailC = lazyContract(() =>
+  import("@/hooks/api/payroll/employees-schema").then((m) => m.employeeProfileDetailResponseContract),
+);
 const profileHistoryC = lazyContract(() =>
   import("@/hooks/api/payroll/employees-schema").then((m) => m.profileHistoryResponseContract),
 );
@@ -67,7 +70,7 @@ export function useEmployeeProfile(employeeUserId: string) {
   return useQuery({
     queryKey: payrollQueryKeys.payroll.employee(employeeUserId),
     queryFn: ({ signal }) =>
-      apiClient.get(`/payroll/employees/${employeeUserId}`, undefined, signal, profileDetailC),
+      apiClient.get(`/payroll/employees/${employeeUserId}`, undefined, signal, employeeProfileDetailC),
     staleTime: 60_000,
     enabled: canView && !!employeeUserId,
   });

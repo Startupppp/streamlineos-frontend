@@ -42,6 +42,9 @@ export const profileDetailResponseContract = z.object({
   active: profileDetailContract.nullable(),
   components: z.array(profileComponentContract),
   history: z.array(profileDetailContract),
+});
+
+export const employeeProfileDetailResponseContract = profileDetailResponseContract.extend({
   employee: z.object({ name: z.string().nullable(), email: z.string() }),
 });
 
