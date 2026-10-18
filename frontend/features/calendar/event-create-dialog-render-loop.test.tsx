@@ -73,12 +73,12 @@ describe("EventCreateDialog render loop (BUG-007)", () => {
     expect(lastProps?.form.syncConnectionId).toBe("none");
   });
 
-  it("defaults the sync target to the primary connection and keeps an explicit 'none'", () => {
+  it("defaults the sync target to 'none' and keeps an explicit connection choice", () => {
     mockConnections = [connection(4, false), connection(7, true)];
     renderDialog();
-    expect(lastProps?.form.syncConnectionId).toBe("7");
-    act(() => lastProps?.onSyncConnectionChange("none"));
     expect(lastProps?.form.syncConnectionId).toBe("none");
+    act(() => lastProps?.onSyncConnectionChange("7"));
+    expect(lastProps?.form.syncConnectionId).toBe("7");
   });
 
   it("shows an error toast when the create times out", async () => {

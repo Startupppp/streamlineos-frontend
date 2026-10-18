@@ -56,6 +56,8 @@ jest.mock("@/components/ui/sheet", () => ({
   ),
   SheetHeader: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
   SheetTitle: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+  SheetDescription: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+  SheetBody: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
 }));
 
 const mockDownload = downloadCalendarExport as jest.Mock;
