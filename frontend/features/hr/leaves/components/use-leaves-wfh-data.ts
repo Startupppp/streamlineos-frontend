@@ -9,7 +9,7 @@ import {
   useHrLeavesThisWeek,
 } from "@/hooks/api/hr";
 import { useCan, useModuleEnabled } from "@/hooks/api/access";
-import { approvedDaysInYear } from "@/features/hr/leaves/leave-date-helpers";
+import { approvedDaysInYear, pendingDaysByLeaveType } from "@/features/hr/leaves/leave-date-helpers";
 import { useAwaitsMyDecision } from "@/features/hr/shared/self-approval";
 import { buildAvailableHint } from "./leaves-summary-strip";
 import type {
@@ -58,6 +58,11 @@ export function useLeavesWfhData(selfService: boolean) {
     [incomingLeaveRequests, pendingWfhRequests, awaitsMine],
   );
 
+  const pendingDaysByType = useMemo(
+    () => pendingDaysByLeaveType(myLeaveRequests),
+    [myLeaveRequests],
+  );
+
   const noPolicyConfigured =
     context.data?.noPolicyConfigured ?? leaveTypes.length === 0;
 
@@ -87,7 +92,7 @@ export function useLeavesWfhData(selfService: boolean) {
     joiningDate,
     approvalRoute: context.data?.approvalRoute,
     noPolicyConfigured,
-    availableHint: buildAvailableHint(balances, joiningDate, noPolicyConfigured),
+    availableHint: buildAvailableHint(balances, joiningDate, noPolicyConfigured, pendingDaysByType),
     totalAvailable: balances.reduce(
       (sum, b) => Math.round((sum + Number(b.balance ?? 0)) * 10) / 10,
       0,

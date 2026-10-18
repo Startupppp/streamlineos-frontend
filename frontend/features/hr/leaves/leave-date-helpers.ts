@@ -34,6 +34,24 @@ function toDay(value: string | Date | null | undefined): string | null {
     : null;
 }
 
+interface DatedLeaveRequest {
+  status: string | null;
+  startDate: string | Date;
+  endDate: string | Date;
+  isHalfDay?: boolean;
+}
+
+function leaveDaysInYear(r: DatedLeaveRequest, year: number): number {
+  const start = toDay(r.startDate);
+  const end = toDay(r.endDate);
+  if (!start || !end) return 0;
+  const from = start < `${year}-01-01` ? `${year}-01-01` : start;
+  const to = end > `${year}-12-31` ? `${year}-12-31` : end;
+  if (from > to) return 0;
+  const days = countWorkdays(from, to);
+  return r.isHalfDay && days === 1 ? 0.5 : days;
+}
+
 /**
  * V-045. Approved leave *days* taken in `year` — workdays, halved for a
  * half-day request, clamped to the year so a request spanning new year is not
@@ -41,25 +59,24 @@ function toDay(value: string | Date | null | undefined): string | null {
  * is not what "Approved (YTD)" means to anyone reading it.
  */
 export function approvedDaysInYear(
-  requests: Array<{
-    status: string | null;
-    startDate: string | Date;
-    endDate: string | Date;
-    isHalfDay?: boolean;
-  }>,
+  requests: DatedLeaveRequest[],
   year: number = new Date().getFullYear(),
 ): number {
   const total = requests
     .filter((r) => r.status === "APPROVED")
-    .reduce((sum, r) => {
-      const start = toDay(r.startDate);
-      const end = toDay(r.endDate);
-      if (!start || !end) return sum;
-      const from = start < `${year}-01-01` ? `${year}-01-01` : start;
-      const to = end > `${year}-12-31` ? `${year}-12-31` : end;
-      if (from > to) return sum;
-      const days = countWorkdays(from, to);
-      return sum + (r.isHalfDay && days === 1 ? 0.5 : days);
-    }, 0);
+    .reduce((sum, r) => sum + leaveDaysInYear(r, year), 0);
   return Math.round(total * 10) / 10;
+}
+
+export function pendingDaysByLeaveType(
+  requests: Array<DatedLeaveRequest & { leaveTypeId?: number | null }>,
+  year: number = new Date().getFullYear(),
+): Map<number, number> {
+  const byType = new Map<number, number>();
+  for (const r of requests) {
+    if (r.status !== "PENDING" || r.leaveTypeId == null) continue;
+    const days = leaveDaysInYear(r, year);
+    byType.set(r.leaveTypeId, Math.round(((byType.get(r.leaveTypeId) ?? 0) + days) * 10) / 10);
+  }
+  return byType;
 }

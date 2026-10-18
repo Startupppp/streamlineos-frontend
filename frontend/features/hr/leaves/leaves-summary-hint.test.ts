@@ -1,5 +1,5 @@
 import { buildAvailableHint } from "./components/leaves-summary-strip";
-import { approvedDaysInYear } from "./leave-date-helpers";
+import { approvedDaysInYear, pendingDaysByLeaveType } from "./leave-date-helpers";
 
 /**
  * V-045. This suite used to agree with the bug: it asserted the no-policy copy
@@ -42,9 +42,45 @@ describe("the available-days hint distinguishes an unconfigured organisation fro
       false,
     );
 
-    expect(hint).toContain("Casual Leave: 3 entitled − 1 used = 2");
+    expect(hint).toContain("Casual Leave: 3 entitled (prorated 3/12) − 1 approved = 2 available");
     expect(hint).toContain("3 of 12 months");
-    expect(hint).toContain("Pending requests are deducted when approved");
+    expect(hint).toContain("Pending days are deducted when approved");
+  });
+
+  it("HR-U-018 names the pending days per type next to the calculation", () => {
+    const year = new Date().getFullYear();
+    const pending = pendingDaysByLeaveType(
+      [
+        { leaveTypeId: 1, status: "PENDING", startDate: `${year}-10-19`, endDate: `${year}-10-19` },
+        { leaveTypeId: 2, status: "REJECTED", startDate: `${year}-10-22`, endDate: `${year}-10-22` },
+      ],
+      year,
+    );
+    const hint = buildAvailableHint(
+      [
+        { id: 1, leaveTypeId: 1, typeName: "Casual Leave", balance: "3", daysPerYear: 12 },
+        { id: 2, leaveTypeId: 2, typeName: "Sick Leave", balance: "3", daysPerYear: 12 },
+      ],
+      `${year}-10-14`,
+      false,
+      pending,
+    );
+
+    expect(hint).toContain("Casual Leave: 3 entitled (prorated 3/12) − 0 approved = 3 available (1 pending)");
+    expect(hint).toContain("Sick Leave: 3 entitled (prorated 3/12) − 0 approved = 3 available");
+    expect(hint).not.toContain("Sick Leave: 3 entitled (prorated 3/12) − 0 approved = 3 available (");
+  });
+
+  it("HR-B-014 does not invent a negative approval when the stored balance exceeds the prorated entitlement", () => {
+    const year = new Date().getFullYear();
+    const hint = buildAvailableHint(
+      [{ id: 1, leaveTypeId: 1, typeName: "Casual Leave", balance: "11", daysPerYear: 12 }],
+      `${year}-10-14`,
+      false,
+    );
+
+    expect(hint).toContain("Casual Leave: 11 available");
+    expect(hint).not.toContain("entitled");
   });
 });
 

@@ -16,6 +16,7 @@ export interface LeaveType {
 
 export interface LeaveRequest {
   id: number;
+  leaveTypeId?: number | null;
   startDate: string | Date;
   endDate: string | Date;
   status: string | null;
