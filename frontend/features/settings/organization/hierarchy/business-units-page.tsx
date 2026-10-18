@@ -74,40 +74,24 @@ export function BusinessUnitsPage() {
   });
 
   const handleCreate = useCallback(
-    (values: BusinessUnitFormValues) => {
-      createBusinessUnit.mutate(
-        { ...values, code: values.code.toUpperCase() },
-        {
-          onSuccess: () => {
-            toast.success("Business unit created");
-            setCreateSheetOpen(false);
-          },
-          onError: (mutationError) =>
-            toast.error(getErrorMessage(mutationError)),
-        },
-      );
+    async (values: BusinessUnitFormValues) => {
+      await createBusinessUnit.mutateAsync({ ...values, code: values.code.toUpperCase() });
+      toast.success("Business unit created");
+      setCreateSheetOpen(false);
     },
     [createBusinessUnit],
   );
 
   const handleUpdate = useCallback(
-    (values: BusinessUnitFormValues) => {
+    async (values: BusinessUnitFormValues) => {
       if (!editingBusinessUnit) return;
-      updateBusinessUnit.mutate(
-        {
-          id: editingBusinessUnit.id,
-          ...values,
-          code: values.code.toUpperCase(),
-        },
-        {
-          onSuccess: () => {
-            toast.success("Business unit updated");
-            setEditingBusinessUnit(null);
-          },
-          onError: (mutationError) =>
-            toast.error(getErrorMessage(mutationError)),
-        },
-      );
+      await updateBusinessUnit.mutateAsync({
+        id: editingBusinessUnit.id,
+        ...values,
+        code: values.code.toUpperCase(),
+      });
+      toast.success("Business unit updated");
+      setEditingBusinessUnit(null);
     },
     [editingBusinessUnit, updateBusinessUnit],
   );

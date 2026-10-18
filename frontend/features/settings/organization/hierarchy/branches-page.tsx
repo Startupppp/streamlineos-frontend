@@ -82,61 +82,45 @@ export function OrgBranchesPage() {
   );
 
   const handleCreate = useCallback(
-    (values: BranchFormValues) => {
-      createBranch.mutate(
-        {
-          name: values.name,
-          code: values.code.toUpperCase(),
-          businessUnitId: values.businessUnitId || undefined,
-          managerUserId: values.managerUserId || undefined,
-          city: values.city || undefined,
-          state: values.state || undefined,
-          country: values.country || undefined,
-          postalCode: values.postalCode || undefined,
-          address: values.address || undefined,
-          phone: values.phone || undefined,
-          email: values.email || undefined,
-        },
-        {
-          onSuccess: () => {
-            toast.success("Branch created");
-            setCreateSheetOpen(false);
-          },
-          onError: (mutationError) =>
-            toast.error(getErrorMessage(mutationError)),
-        },
-      );
+    async (values: BranchFormValues) => {
+      await createBranch.mutateAsync({
+        name: values.name,
+        code: values.code.toUpperCase(),
+        businessUnitId: values.businessUnitId || undefined,
+        managerUserId: values.managerUserId || undefined,
+        city: values.city || undefined,
+        state: values.state || undefined,
+        country: values.country || undefined,
+        postalCode: values.postalCode || undefined,
+        address: values.address || undefined,
+        phone: values.phone || undefined,
+        email: values.email || undefined,
+      });
+      toast.success("Branch created");
+      setCreateSheetOpen(false);
     },
     [createBranch],
   );
 
   const handleUpdate = useCallback(
-    (values: BranchFormValues) => {
+    async (values: BranchFormValues) => {
       if (!editingBranch) return;
-      updateBranch.mutate(
-        {
-          branchId: editingBranch.id,
-          name: values.name,
-          code: values.code.toUpperCase(),
-          businessUnitId: values.businessUnitId || null,
-          managerUserId: values.managerUserId || null,
-          city: values.city || null,
-          state: values.state || null,
-          country: values.country || null,
-          postalCode: values.postalCode || null,
-          address: values.address || null,
-          phone: values.phone || null,
-          email: values.email || null,
-        },
-        {
-          onSuccess: () => {
-            toast.success("Branch updated");
-            setEditingBranch(null);
-          },
-          onError: (mutationError) =>
-            toast.error(getErrorMessage(mutationError)),
-        },
-      );
+      await updateBranch.mutateAsync({
+        branchId: editingBranch.id,
+        name: values.name,
+        code: values.code.toUpperCase(),
+        businessUnitId: values.businessUnitId || null,
+        managerUserId: values.managerUserId || null,
+        city: values.city || null,
+        state: values.state || null,
+        country: values.country || null,
+        postalCode: values.postalCode || null,
+        address: values.address || null,
+        phone: values.phone || null,
+        email: values.email || null,
+      });
+      toast.success("Branch updated");
+      setEditingBranch(null);
     },
     [editingBranch, updateBranch],
   );

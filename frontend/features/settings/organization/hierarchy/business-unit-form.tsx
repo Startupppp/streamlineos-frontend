@@ -18,10 +18,11 @@ import {
   EMPTY_BUSINESS_UNIT_FORM_VALUES,
   type BusinessUnitFormValues,
 } from "./business-unit-form-schema";
+import { submitWithFieldErrors } from "./submit-with-field-errors";
 
 interface BusinessUnitFormProps {
   defaultValues?: BusinessUnitFormValues;
-  onSubmit: (values: BusinessUnitFormValues) => void;
+  onSubmit: (values: BusinessUnitFormValues) => Promise<void>;
 }
 
 export function BusinessUnitForm({
@@ -33,11 +34,15 @@ export function BusinessUnitForm({
     defaultValues: defaultValues ?? EMPTY_BUSINESS_UNIT_FORM_VALUES,
   });
 
+  async function handleFormSubmit(values: BusinessUnitFormValues) {
+    await submitWithFieldErrors(form, ["name", "code"], () => onSubmit(values));
+  }
+
   return (
     <Form {...form}>
       <form
         id="business-unit-form"
-        onSubmit={form.handleSubmit(onSubmit)}
+        onSubmit={form.handleSubmit(handleFormSubmit)}
         className="space-y-4"
       >
         <FormField

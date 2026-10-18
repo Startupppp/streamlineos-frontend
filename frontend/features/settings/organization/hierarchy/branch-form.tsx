@@ -20,11 +20,12 @@ import {
   EMPTY_BRANCH_FORM_VALUES,
   type BranchFormValues,
 } from "./branch-form-schema";
+import { submitWithFieldErrors } from "./submit-with-field-errors";
 
 interface BranchFormProps {
   defaultValues?: BranchFormValues;
   selectedBusinessUnitName?: string | null;
-  onSubmit: (values: BranchFormValues) => void;
+  onSubmit: (values: BranchFormValues) => Promise<void>;
 }
 
 export function BranchForm({
@@ -37,11 +38,15 @@ export function BranchForm({
     defaultValues: defaultValues ?? EMPTY_BRANCH_FORM_VALUES,
   });
 
+  async function handleFormSubmit(values: BranchFormValues) {
+    await submitWithFieldErrors(form, ["name", "code", "phone", "email"], () => onSubmit(values));
+  }
+
   return (
     <Form {...form}>
       <form
         id="branch-form"
-        onSubmit={form.handleSubmit(onSubmit)}
+        onSubmit={form.handleSubmit(handleFormSubmit)}
         className="space-y-4"
       >
         <div className="grid grid-cols-2 gap-3">

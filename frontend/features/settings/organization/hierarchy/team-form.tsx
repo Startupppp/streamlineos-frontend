@@ -20,11 +20,12 @@ import {
   teamFormSchema,
   type TeamFormValues,
 } from "./team-form-schema";
+import { submitWithFieldErrors } from "./submit-with-field-errors";
 
 interface TeamFormProps {
   defaultValues?: Partial<TeamFormValues>;
   selectedDepartmentName?: string | null;
-  onSubmit: (values: TeamFormValues) => void;
+  onSubmit: (values: TeamFormValues) => Promise<void>;
 }
 
 export function TeamForm({
@@ -41,12 +42,16 @@ export function TeamForm({
     },
   });
 
+  async function handleFormSubmit(values: TeamFormValues) {
+    await submitWithFieldErrors(form, ["name", "code", "capacity"], () => onSubmit(values));
+  }
+
   return (
     <Form {...form}>
       <form
         id="team-form"
         noValidate
-        onSubmit={form.handleSubmit(onSubmit)}
+        onSubmit={form.handleSubmit(handleFormSubmit)}
         className="space-y-5"
       >
         <FormField

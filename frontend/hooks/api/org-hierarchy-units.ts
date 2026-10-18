@@ -76,6 +76,7 @@ export function useCreateBusinessUnit() {
   const qc = useQueryClient();
   return useAuthorizedMutation("settings:organization:manage", {
     mutationKey: ["create", "business", "unit"],
+    meta: { errorToast: false },
     mutationFn: (data: { name: string; code: string; description?: string }) =>
       apiClient.post<OrgBusinessUnit>("/org-hierarchy/business-units", data, undefined, businessUnitContract),
     onSuccess: () => {
@@ -88,6 +89,7 @@ export function useUpdateBusinessUnit() {
   const qc = useQueryClient();
   return useAuthorizedMutation("settings:organization:manage", {
     mutationKey: ["update", "business", "unit"],
+    meta: { errorToast: false },
     mutationFn: ({ id, ...data }: { id: string; name?: string; code?: string; description?: string; status?: string }) =>
       apiClient.patch<OrgBusinessUnit>(`/org-hierarchy/business-units/${id}`, data, undefined, businessUnitContract),
     onSuccess: () => {
@@ -122,6 +124,7 @@ export function useCreateOrgBranch() {
   const qc = useQueryClient();
   return useAuthorizedMutation("settings:organization:manage", {
     mutationKey: ["create", "org", "branch"],
+    meta: { errorToast: false },
     mutationFn: (data: Record<string, unknown>) =>
       apiClient.post<OrgBranch>("/org-hierarchy/branches", data, undefined, orgBranchContract),
     onSuccess: () => {
@@ -134,6 +137,7 @@ export function useUpdateOrgBranch() {
   const qc = useQueryClient();
   return useAuthorizedMutation("settings:organization:manage", {
     mutationKey: ["update", "org", "branch"],
+    meta: { errorToast: false },
     mutationFn: ({ branchId, ...data }: { branchId: string } & Record<string, unknown>) =>
       apiClient.patch<OrgBranch>(`/org-hierarchy/branches/${branchId}`, data, undefined, orgBranchContract),
     onSuccess: () => {
@@ -212,6 +216,7 @@ export function useCreateOrgTeam() {
   const qc = useQueryClient();
   return useAuthorizedMutation("settings:organization:manage", {
     mutationKey: ["create", "org", "team"],
+    meta: { errorToast: false },
     mutationFn: (data: { name: string; code: string; departmentId: string; leadUserId?: string; description?: string; capacity?: number }) =>
       apiClient.post<OrgTeam>("/org-hierarchy/teams", data, undefined, teamContract),
     onSuccess: () => {
@@ -224,6 +229,7 @@ export function useUpdateOrgTeam() {
   const qc = useQueryClient();
   return useAuthorizedMutation("settings:organization:manage", {
     mutationKey: ["update", "org", "team"],
+    meta: { errorToast: false },
     mutationFn: ({ teamId, ...data }: { teamId: string } & Record<string, unknown>) =>
       apiClient.patch<OrgTeam>(`/org-hierarchy/teams/${teamId}`, data, undefined, teamContract),
     onSuccess: () => {

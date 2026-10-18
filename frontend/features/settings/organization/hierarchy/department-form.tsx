@@ -3,7 +3,6 @@
 import type { ChangeEvent } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
-import { toast } from "sonner";
 import { HierarchyParentSelector } from "@/components/organization/hierarchy-parent-selector";
 import {
   Form,
@@ -16,13 +15,12 @@ import {
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { UserCombobox } from "@/components/ui/user-combobox";
-import { getValidationFieldErrors } from "@/lib/api-envelope";
-import { getErrorMessage } from "@/lib/get-error-message";
 import {
   departmentFormSchema,
   EMPTY_DEPARTMENT_FORM_VALUES,
   type DepartmentFormValues,
 } from "./department-form-schema";
+import { submitWithFieldErrors } from "./submit-with-field-errors";
 
 interface DepartmentFormProps {
   defaultValues?: DepartmentFormValues;
@@ -41,21 +39,7 @@ export function DepartmentForm({
   });
 
   async function handleFormSubmit(values: DepartmentFormValues) {
-    try {
-      await onSubmit(values);
-    } catch (error) {
-      const fieldErrors = getValidationFieldErrors(error).filter(
-        (issue) => issue.path === "name" || issue.path === "code",
-      );
-      if (fieldErrors.length === 0) {
-        toast.error(getErrorMessage(error));
-        return;
-      }
-      for (const issue of fieldErrors) {
-        if (issue.path === "name" || issue.path === "code")
-          form.setError(issue.path, { message: issue.message });
-      }
-    }
+    await submitWithFieldErrors(form, ["name", "code"], () => onSubmit(values));
   }
 
   return (

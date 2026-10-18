@@ -3,7 +3,6 @@
 import type { ChangeEvent } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { toast } from "sonner";
 import {
   Form,
   FormControl,
@@ -14,13 +13,12 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { getValidationFieldErrors } from "@/lib/api-envelope";
-import { getErrorMessage } from "@/lib/get-error-message";
 import type { OrgCostCenter } from "@/types/org-hierarchy";
 import {
   costCenterFormSchema,
   type CostCenterFormValues,
 } from "./cost-center-form-schema";
+import { submitWithFieldErrors } from "./submit-with-field-errors";
 
 interface CostCenterFormProps {
   defaultValues?: CostCenterFormValues;
@@ -51,21 +49,7 @@ export function CostCenterForm({
       });
       return;
     }
-    try {
-      await onSubmit(values);
-    } catch (error) {
-      const fieldErrors = getValidationFieldErrors(error).filter(
-        (issue) => issue.path === "code" || issue.path === "name",
-      );
-      if (fieldErrors.length === 0) {
-        toast.error(getErrorMessage(error));
-        return;
-      }
-      for (const issue of fieldErrors) {
-        if (issue.path === "code" || issue.path === "name")
-          form.setError(issue.path, { message: issue.message });
-      }
-    }
+    await submitWithFieldErrors(form, ["code", "name"], () => onSubmit(values));
   }
 
   return (

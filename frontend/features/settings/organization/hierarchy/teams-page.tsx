@@ -82,51 +82,35 @@ export function OrgTeamsPage() {
   );
 
   const handleCreate = useCallback(
-    (values: TeamFormValues) => {
-      createTeam.mutate(
-        {
-          name: values.name,
-          code: values.code.toUpperCase(),
-          departmentId: values.departmentId,
-          leadUserId: values.leadUserId || undefined,
-          description: values.description || undefined,
-          capacity: values.capacity ? Number(values.capacity) : undefined,
-        },
-        {
-          onSuccess: () => {
-            toast.success("Team created");
-            setCreateSheetOpen(false);
-          },
-          onError: (mutationError) =>
-            toast.error(getErrorMessage(mutationError)),
-        },
-      );
+    async (values: TeamFormValues) => {
+      await createTeam.mutateAsync({
+        name: values.name,
+        code: values.code.toUpperCase(),
+        departmentId: values.departmentId,
+        leadUserId: values.leadUserId || undefined,
+        description: values.description || undefined,
+        capacity: values.capacity ? Number(values.capacity) : undefined,
+      });
+      toast.success("Team created");
+      setCreateSheetOpen(false);
     },
     [createTeam],
   );
 
   const handleUpdate = useCallback(
-    (values: TeamFormValues) => {
+    async (values: TeamFormValues) => {
       if (!editingTeam) return;
-      updateTeam.mutate(
-        {
-          teamId: editingTeam.id,
-          name: values.name,
-          code: values.code.toUpperCase(),
-          departmentId: values.departmentId,
-          leadUserId: values.leadUserId || null,
-          description: values.description || null,
-          capacity: values.capacity ? Number(values.capacity) : null,
-        },
-        {
-          onSuccess: () => {
-            toast.success("Team updated");
-            setEditingTeam(null);
-          },
-          onError: (mutationError) =>
-            toast.error(getErrorMessage(mutationError)),
-        },
-      );
+      await updateTeam.mutateAsync({
+        teamId: editingTeam.id,
+        name: values.name,
+        code: values.code.toUpperCase(),
+        departmentId: values.departmentId,
+        leadUserId: values.leadUserId || null,
+        description: values.description || null,
+        capacity: values.capacity ? Number(values.capacity) : null,
+      });
+      toast.success("Team updated");
+      setEditingTeam(null);
     },
     [editingTeam, updateTeam],
   );
