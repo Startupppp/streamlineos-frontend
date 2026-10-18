@@ -109,7 +109,7 @@ export function UserAccessLinksSection({ userId }: UserAccessLinksSectionProps) 
         Access management
       </p>
       <p className="text-dense text-muted-foreground">
-        Manage org-wide roles here, then assign module roles where this person works.
+        Org roles are Owner, Admin and Member. Narrow this person&apos;s access with module access presets and the module availability above.
       </p>
 
       {canManageRbac && (
@@ -117,7 +117,7 @@ export function UserAccessLinksSection({ userId }: UserAccessLinksSectionProps) 
           <AccessNavRow
             href="/settings/roles"
             label="Roles & Permissions"
-            description="Org-wide roles and custom grants"
+            description="Owner, Admin and Member permissions"
           />
         </div>
       )}

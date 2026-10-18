@@ -48,7 +48,7 @@ const comparison: PricingComparisonGroup[] = [
   {
     title: "Scale",
     rows: [
-      { feature: "Workflows, custom roles, and API", tiers: [false, true, true, true] },
+      { feature: "Workflows and API", tiers: [false, true, true, true] },
       { feature: "AI assistance and advanced reports", tiers: [false, false, true, true] },
       { feature: "SSO and multi-branch", tiers: [false, false, true, true] },
     ],

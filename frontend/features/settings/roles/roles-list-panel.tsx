@@ -161,7 +161,7 @@ function RolesListBody({
       <EmptyState
         illustrationPreset="security"
         title="No roles yet"
-        description={search.trim() ? "No results match your filters." : "Create a role to manage permissions."}
+        description={search.trim() ? "No results match your filters." : "Org roles are Owner, Admin and Member. Narrow access with module access presets and per-person module availability."}
         filtersActive={!!search.trim()}
         onClearFilters={onClearSearch}
         compact

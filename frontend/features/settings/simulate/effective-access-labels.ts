@@ -103,7 +103,7 @@ export const UNAVAILABLE_MODULE_EXPLANATION =
  */
 const GRANTABLE_RANK_LABELS: Readonly<Record<number, string>> = {
   20: "Module admin",
-  30: "Module custom role",
+  30: "Module member",
   40: "Functional role",
 };
 

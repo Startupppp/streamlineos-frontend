@@ -313,7 +313,7 @@ describe("standing panels", () => {
       <ModuleGrantabilityNote
         moduleKey="crm"
         grantable={{
-          grantableRanks: [20, 40],
+          grantableRanks: [20, 30, 40],
           scopeCeiling: "own",
           canGrantModuleOwnership: false,
           isOrgOwner: false,
@@ -324,8 +324,9 @@ describe("standing panels", () => {
       />,
     );
     expect(
-      screen.getByText("Module admin, Functional role"),
+      screen.getByText("Module admin, Module member, Functional role"),
     ).toBeInTheDocument();
+    expect(screen.queryByText(/custom role/i)).not.toBeInTheDocument();
     expect(screen.getByText("Own records")).toBeInTheDocument();
   });
 
