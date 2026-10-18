@@ -3,6 +3,7 @@
 import { useEpics } from "@/hooks/api/build/epics";
 import { useModules } from "@/hooks/api/build/modules";
 import { useCycles } from "@/hooks/api/build/cycles";
+import { usePermissionGate } from "@/hooks/api/access";
 import { LabelPicker, TicketLabelChip } from "../tickets/label-picker";
 import { RecurrencePicker } from "../tickets/recurrence-picker";
 import {
@@ -95,6 +96,7 @@ export function TicketSidebar({
   const { data: modules } = useModules(projectId ?? 0);
   const { data: cycles } = useCycles(projectId ?? 0);
   const setRecurrence = useSetRecurrence(projectId ?? 0, ticketId);
+  const viewOnly = usePermissionGate("build:tickets:update").denied;
   const selectableEpics = (epics ?? []).filter((e) => e.id !== ticket.id);
 
   const handleCustomerChange = (id: number | null) =>
@@ -188,6 +190,11 @@ export function TicketSidebar({
 
       <div className="space-y-4 px-4 py-4">
         <h3 className="text-xs font-semibold text-muted-foreground">Workflow</h3>
+        {viewOnly ? (
+          <p className="text-xs text-muted-foreground">
+            View only. You can read these fields, but your role cannot change them.
+          </p>
+        ) : null}
         <SidebarSelectFields
           key={`${ticket.id}:${ticket.points ?? ""}`}
           ticket={ticket}
