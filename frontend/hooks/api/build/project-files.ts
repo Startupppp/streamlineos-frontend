@@ -9,6 +9,7 @@ import { useCan } from "@/hooks/api/access";
 import { NO_CURSOR_YET } from "@/hooks/api/cursor-page-param";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { readFileAsBase64 } from "@/lib/read-file-as-base64";
+import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
 
 const filePageContract = lazyContract(() =>
   import("@/hooks/api/build/project-files-schema").then((m) => m.filePageContract),
@@ -72,6 +73,7 @@ export function useProjectFiles(projectId: number, filters?: { q?: string }) {
   const canView = useCan("build:files:view");
   const keyFilters = filters?.q ? { q: filters.q } : undefined;
   const query = useInfiniteQuery({
+    ...INLINE_READ_ERROR,
     queryKey: buildWorkQueryKeys.projects.files.list(projectId, keyFilters),
     queryFn: ({ signal, pageParam }) => {
       const params: Record<string, string> = {};
