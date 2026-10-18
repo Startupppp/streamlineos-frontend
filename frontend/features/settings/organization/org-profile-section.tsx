@@ -101,7 +101,7 @@ export function OrgProfileSection({ org, canEdit }: OrgProfileSectionProps) {
         </SettingsFieldGrid>
       ) : (
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(handleSave)} className="space-y-3">
+          <form noValidate onSubmit={form.handleSubmit(handleSave)} className="space-y-3">
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               <FormField
                 control={form.control}
@@ -110,7 +110,7 @@ export function OrgProfileSection({ org, canEdit }: OrgProfileSectionProps) {
                   <FormItem className="gap-1.5">
                     <FormLabel className="text-xs">Organization name <span className="text-destructive">*</span></FormLabel>
                     <FormControl>
-                      <Input {...field} />
+                      <Input {...field} maxLength={100} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -123,7 +123,7 @@ export function OrgProfileSection({ org, canEdit }: OrgProfileSectionProps) {
                   <FormItem className="gap-1.5">
                     <FormLabel className="text-xs">Slug <span className="text-destructive">*</span></FormLabel>
                     <FormControl>
-                      <Input {...field} />
+                      <Input {...field} maxLength={50} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -149,7 +149,7 @@ export function OrgProfileSection({ org, canEdit }: OrgProfileSectionProps) {
                   <FormItem className="gap-1.5">
                     <FormLabel className="text-xs">Organization code</FormLabel>
                     <FormControl>
-                      <Input {...field} placeholder="ACM-001" className="font-mono" />
+                      <Input {...field} placeholder="ACM-001" className="font-mono" maxLength={20} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -209,7 +209,7 @@ export function OrgProfileSection({ org, canEdit }: OrgProfileSectionProps) {
                   <FormItem className="gap-1.5">
                     <FormLabel className="text-xs">Tax / GST number</FormLabel>
                     <FormControl>
-                      <Input {...field} placeholder="GSTIN / PAN / VAT" className="font-mono" />
+                      <Input {...field} placeholder="GSTIN / PAN / VAT" className="font-mono" maxLength={100} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>

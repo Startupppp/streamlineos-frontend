@@ -9,18 +9,18 @@ const httpUrlOrEmpty = z
   .optional();
 
 export const orgGeneralSchema = z.object({
-  name: z.string().trim().min(1, "Name is required").max(100),
-  slug: z.string().min(1, "Slug is required").max(50).regex(/^[a-z0-9-]+$/, "Lowercase letters, numbers, hyphens only"),
+  name: z.string().trim().min(1, "Name is required").max(100, "Name must be at most 100 characters"),
+  slug: z.string().min(1, "Slug is required").max(50, "Slug must be at most 50 characters").regex(/^[a-z0-9-]+$/, "Lowercase letters, numbers, hyphens only"),
   legalName: z.string().max(200, "Legal name must be at most 200 characters").optional(),
-  orgCode: z.string().max(20).optional(),
+  orgCode: z.string().max(20, "Organization code must be at most 20 characters").optional(),
   industry: z.string().optional(),
   website: httpUrlOrEmpty,
   registrationNumber: z.string().max(100, "Registration number must be at most 100 characters").optional(),
-  taxNumber: z.string().max(100).optional(),
+  taxNumber: z.string().max(100, "Tax number must be at most 100 characters").optional(),
   supportEmail: z.string().email("Must be a valid email").or(z.literal("")).optional(),
   supportPhone: z
     .string()
-    .max(30)
+    .max(30, "Enter a valid phone number")
     .refine((val) => !val || isValidPhoneNumber(val), "Enter a valid phone number")
     .optional(),
 });

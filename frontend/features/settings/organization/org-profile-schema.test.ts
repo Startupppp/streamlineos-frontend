@@ -119,4 +119,23 @@ describe("organization profile form", () => {
       orgGeneralSchema.safeParse({ ...BASE, supportPhone: "" }).success,
     ).toBe(true);
   });
+
+  it.each([
+    ["name", 101, "Name must be at most 100 characters"],
+    ["slug", 51, "Slug must be at most 50 characters"],
+    ["legalName", 201, "Legal name must be at most 200 characters"],
+    ["orgCode", 21, "Organization code must be at most 20 characters"],
+    ["registrationNumber", 101, "Registration number must be at most 100 characters"],
+    ["taxNumber", 101, "Tax number must be at most 100 characters"],
+  ] as const)("ORG-B-010: an over-long %s gets plain copy, never raw validator text", (field, length, message) => {
+    const result = orgGeneralSchema.safeParse({ ...BASE, [field]: "a".repeat(length) });
+    expect(result.success).toBe(false);
+    const issue = result.error?.issues.find((i) => i.path[0] === field);
+    expect(issue?.message).toBe(message);
+    expect(issue?.message).not.toMatch(/Too big/);
+  });
+
+  it("ORG-B-010: a value at the limit is accepted", () => {
+    expect(orgGeneralSchema.safeParse({ ...BASE, legalName: "a".repeat(200), name: "a".repeat(100) }).success).toBe(true);
+  });
 });
