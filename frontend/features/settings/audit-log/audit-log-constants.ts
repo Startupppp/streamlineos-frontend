@@ -14,7 +14,7 @@ export const ACTION_COLORS: Record<string, string> = {
   "org.businessUnit": "bg-status-info-surface text-status-info-ink border-status-info-rule",
   "org.branch": "bg-status-info-surface text-status-info-ink border-status-info-rule",
   "org.department": "bg-status-info-surface text-status-info-ink border-status-info-rule",
- "org.team": "bg-status-info-surface text-status-info-ink border-status-info-rule",
+  "org.team": "bg-status-info-surface text-status-info-ink border-status-info-rule",
   "org.holiday": "bg-status-warning-surface text-status-warning-ink border-status-warning-rule",
   "org.domain": "bg-status-info-surface text-status-info-ink border-status-info-rule",
   "org.setup": "bg-status-success-surface text-status-success-ink border-status-success-rule",
@@ -77,7 +77,7 @@ export function readAuditLogFilters(params: SearchParamsReader): AuditLogFilters
 
 export function formatActionLabel(action: string): string {
   const known = ACTION_LABELS[action];
-  if (known) return known;
+  if (known !== undefined) return known;
   const segments = action.split(".").filter(Boolean);
   const meaningful = segments[0] === "org" && segments.length > 1 ? segments.slice(1) : segments;
   const words = meaningful

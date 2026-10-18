@@ -51,7 +51,6 @@ export function useOrganizationSettingsForm<
   const [isEditing, setIsEditing] = useState(false);
   const inFlightRef = useRef(false);
 
-  // `keepDirtyValues` is what stops a background refetch overwriting an active edit.
   const form = useForm<TValues, unknown, TValues>({
     resolver,
     mode: "onTouched",
