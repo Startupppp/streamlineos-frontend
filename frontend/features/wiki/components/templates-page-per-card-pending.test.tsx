@@ -4,6 +4,7 @@ import TemplatesPage from "./templates-page";
 import { STARTER_TEMPLATES } from "@/features/wiki/lib/starter-templates";
 import { getPlainText, normalizePlateValue } from "@/components/editor/plate/plate-value-convert";
 import { pageHref } from "@/lib/knowledge-routes";
+import { getErrorMessage } from "@/lib/get-error-message";
 
 const createMutate = jest.fn();
 const updateMutate = jest.fn();
@@ -118,7 +119,10 @@ describe("using one wiki template must not put every other template into a pendi
     expect(mockPush).not.toHaveBeenCalled();
     expect(toast.error).toHaveBeenCalledWith(
       "Page created, but template content was not saved",
-      expect.objectContaining({ action: expect.objectContaining({ label: "Retry content" }) }),
+      expect.objectContaining({
+        description: getErrorMessage(new Error("network interrupted")),
+        action: expect.objectContaining({ label: "Retry content" }),
+      }),
     );
 
     act(() => toast.error.mock.calls[0][1].action.onClick());

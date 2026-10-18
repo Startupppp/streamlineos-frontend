@@ -49,7 +49,10 @@ import { TemplatePreviewDialog } from "./template-preview-dialog";
 const VALID_TABS = ["starters", "saved"] as const;
 
 const ALL_CATEGORIES = "all";
-const CATEGORY_FILTER_VALUES = [ALL_CATEGORIES, ...STARTER_TEMPLATE_CATEGORIES] as const;
+const CATEGORY_FILTER_VALUES = [
+  ALL_CATEGORIES,
+  ...STARTER_TEMPLATE_CATEGORIES,
+] as const;
 
 function savedTemplateKey(templateId: number): string {
   return `saved:${templateId}`;
@@ -63,7 +66,10 @@ function TemplatesSkeleton() {
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
       {Array.from({ length: 12 }).map((_, i) => (
-        <Skeleton key={i} className="h-20 w-full rounded-lg border border-border bg-card" />
+        <Skeleton
+          key={i}
+          className="h-20 w-full rounded-lg border border-border bg-card"
+        />
       ))}
     </div>
   );
@@ -73,15 +79,22 @@ export default function TemplatesPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const activeTab = parseEnum(searchParams.get("tab"), VALID_TABS, "starters");
-  const activeCategory = parseEnum(searchParams.get("category"), CATEGORY_FILTER_VALUES, ALL_CATEGORIES);
+  const activeCategory = parseEnum(
+    searchParams.get("category"),
+    CATEGORY_FILTER_VALUES,
+    ALL_CATEGORIES,
+  );
   const q = searchParams.get("q") ?? "";
   const queryString = searchParams.toString();
 
   const [searchDraft, setSearchDraft] = useSourceOverride(q, q);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  useEffect(() => () => {
-    if (debounceRef.current) clearTimeout(debounceRef.current);
-  }, [queryString]);
+  useEffect(
+    () => () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+    },
+    [queryString],
+  );
 
   const {
     error,
@@ -111,13 +124,16 @@ export default function TemplatesPage() {
     error: undefined,
   });
 
-  const [previewTemplate, setPreviewTemplate] = useState<StarterTemplate | null>(null);
+  const [previewTemplate, setPreviewTemplate] =
+    useState<StarterTemplate | null>(null);
 
   function handleRetryTemplates() {
     void refetchTemplates();
   }
 
-  function handleLoadMore() { void fetchNextPage(); }
+  function handleLoadMore() {
+    void fetchNextPage();
+  }
 
   function updateParams(patch: Record<string, string | null>) {
     const params = new URLSearchParams(queryString);
@@ -126,7 +142,9 @@ export default function TemplatesPage() {
       else params.set(key, value);
     }
     const qs = params.toString();
-    router.replace(qs ? `${KB_TEMPLATES}?${qs}` : KB_TEMPLATES, { scroll: false });
+    router.replace(qs ? `${KB_TEMPLATES}?${qs}` : KB_TEMPLATES, {
+      scroll: false,
+    });
   }
 
   function handleTabChange(value: string) {
@@ -140,7 +158,10 @@ export default function TemplatesPage() {
   function handleSearchChange(value: string) {
     setSearchDraft(value);
     if (debounceRef.current) clearTimeout(debounceRef.current);
-    debounceRef.current = setTimeout(() => updateParams({ q: value || null }), 300);
+    debounceRef.current = setTimeout(
+      () => updateParams({ q: value || null }),
+      300,
+    );
   }
 
   function handlePreviewOpenChange(open: boolean) {
@@ -148,15 +169,22 @@ export default function TemplatesPage() {
   }
 
   const searchTerm = q.trim().toLowerCase();
-  const filteredStarters = STARTER_TEMPLATES.filter((template) =>
-    (activeCategory === ALL_CATEGORIES || template.category === activeCategory) &&
-    (!searchTerm || `${template.name} ${template.description} ${template.expectedOutput}`.toLowerCase().includes(searchTerm)),
+  const filteredStarters = STARTER_TEMPLATES.filter(
+    (template) =>
+      (activeCategory === ALL_CATEGORIES ||
+        template.category === activeCategory) &&
+      (!searchTerm ||
+        `${template.name} ${template.description} ${template.expectedOutput}`
+          .toLowerCase()
+          .includes(searchTerm)),
   );
 
   const createPage = useCreateKbPage();
   const updatePage = useUpdateKbPage();
 
-  const [pendingTemplateKey, setPendingTemplateKey] = useState<string | null>(null);
+  const [pendingTemplateKey, setPendingTemplateKey] = useState<string | null>(
+    null,
+  );
   // KB-B-018: pendingTemplateKey only disables after a re-render, so a fast
   // double-click created two pages. The ref closes synchronously.
   const createInFlight = useRef(false);
@@ -175,9 +203,9 @@ export default function TemplatesPage() {
           onSuccess: (page) => {
             router.push(pageHref(page.id));
           },
-          onError: () => {
+          onError: (error) => {
             setPendingTemplateKey(null);
-            toast.error("Failed to create page from template");
+            toast.error(getErrorMessage(error));
           },
         },
       );
@@ -209,20 +237,27 @@ export default function TemplatesPage() {
                 },
                 {
                   onSuccess: () => router.push(pageHref(page.id)),
-                  onError: () => {
+                  onError: (error) => {
                     setPendingTemplateKey(null);
-                    toast.error("Page created, but template content was not saved", {
-                      action: { label: "Retry content", onClick: saveContent },
-                    });
+                    toast.error(
+                      "Page created, but template content was not saved",
+                      {
+                        description: getErrorMessage(error),
+                        action: {
+                          label: "Retry content",
+                          onClick: saveContent,
+                        },
+                      },
+                    );
                   },
                 },
               );
             }
             saveContent();
           },
-          onError: () => {
+          onError: (error) => {
             setPendingTemplateKey(null);
-            toast.error("Failed to create page from starter template");
+            toast.error(getErrorMessage(error));
           },
         },
       );
@@ -234,7 +269,10 @@ export default function TemplatesPage() {
     setPreviewTemplate(template);
   }, []);
 
-  const subtitle = activeTab === "saved" ? "Templates created from your wiki pages" : "Built-in skeletons ready to use";
+  const subtitle =
+    activeTab === "saved"
+      ? "Templates created from your wiki pages"
+      : "Built-in skeletons ready to use";
 
   return (
     <PageWrapper
@@ -260,39 +298,50 @@ export default function TemplatesPage() {
 
         <TabsContent value="starters" className={TABS_CONTENT_PAGE_BODY_CLASS}>
           <PageState resolution={startersState} loading={<TemplatesSkeleton />}>
-          <div className="mb-3 flex items-center gap-2">
-            <Select value={activeCategory} onValueChange={handleCategoryChange}>
-              <SelectTrigger className="w-[220px]" aria-label="Filter templates by category">
-                <SelectValue placeholder="All categories" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value={ALL_CATEGORIES}>All categories</SelectItem>
-                {STARTER_TEMPLATE_CATEGORIES.map((category) => (
-                  <SelectItem key={category} value={category}>
-                    {category}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          {filteredStarters.length === 0 && (
-            <p className="text-sm text-muted-foreground">No starter templates match these filters.</p>
-          )}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-            {filteredStarters.map((template) => (
-              <StarterTemplateCard
-                key={template.key}
-                template={template}
-                onUse={handleUseStarter}
-                onPreview={handlePreviewStarter}
-                isPending={pendingTemplateKey === starterTemplateKey(template)}
-                isDisabled={
-                  !canCreate || (pendingTemplateKey !== null &&
-                  pendingTemplateKey !== starterTemplateKey(template))
-                }
-              />
-            ))}
-          </div>
+            <div className="mb-3 flex items-center gap-2">
+              <Select
+                value={activeCategory}
+                onValueChange={handleCategoryChange}
+              >
+                <SelectTrigger
+                  className="w-[220px]"
+                  aria-label="Filter templates by category"
+                >
+                  <SelectValue placeholder="All categories" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value={ALL_CATEGORIES}>All categories</SelectItem>
+                  {STARTER_TEMPLATE_CATEGORIES.map((category) => (
+                    <SelectItem key={category} value={category}>
+                      {category}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            {filteredStarters.length === 0 && (
+              <p className="text-sm text-muted-foreground">
+                No starter templates match these filters.
+              </p>
+            )}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+              {filteredStarters.map((template) => (
+                <StarterTemplateCard
+                  key={template.key}
+                  template={template}
+                  onUse={handleUseStarter}
+                  onPreview={handlePreviewStarter}
+                  isPending={
+                    pendingTemplateKey === starterTemplateKey(template)
+                  }
+                  isDisabled={
+                    !canCreate ||
+                    (pendingTemplateKey !== null &&
+                      pendingTemplateKey !== starterTemplateKey(template))
+                  }
+                />
+              ))}
+            </div>
           </PageState>
         </TabsContent>
 
@@ -332,10 +381,13 @@ export default function TemplatesPage() {
                   template={template}
                   canDelete={canDelete}
                   onUse={handleUseTemplate}
-                  isPending={pendingTemplateKey === savedTemplateKey(template.id)}
+                  isPending={
+                    pendingTemplateKey === savedTemplateKey(template.id)
+                  }
                   isDisabled={
-                    !canCreate || (pendingTemplateKey !== null &&
-                    pendingTemplateKey !== savedTemplateKey(template.id))
+                    !canCreate ||
+                    (pendingTemplateKey !== null &&
+                      pendingTemplateKey !== savedTemplateKey(template.id))
                   }
                 />
               ))}
@@ -343,10 +395,16 @@ export default function TemplatesPage() {
             {isError && templates.length > 0 ? (
               <ErrorState
                 compact
-                title={isFetchNextPageError ? "Couldn't load more templates" : "Couldn't refresh templates"}
+                title={
+                  isFetchNextPageError
+                    ? "Couldn't load more templates"
+                    : "Couldn't refresh templates"
+                }
                 description={getErrorMessage(error)}
                 error={error}
-                onRetry={isFetchNextPageError ? handleLoadMore : handleRetryTemplates}
+                onRetry={
+                  isFetchNextPageError ? handleLoadMore : handleRetryTemplates
+                }
               />
             ) : (
               <InfiniteScrollSentinel
