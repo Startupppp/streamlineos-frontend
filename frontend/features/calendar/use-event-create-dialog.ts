@@ -154,6 +154,7 @@ export function useEventCreateDialog({
     updateEvent,
     upsertOccurrenceException,
     expectedVersion: editingDetail?.localVersion,
+    series: editingDetail,
     onClose: handleClose,
   });
 

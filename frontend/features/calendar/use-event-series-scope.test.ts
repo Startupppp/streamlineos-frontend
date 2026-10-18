@@ -86,7 +86,13 @@ function callsFor(operation: "occurrence" | "series"): RecordedCall[] {
   });
 }
 
-function renderScope(event: CalendarListItem | null, onClose = jest.fn()) {
+const SERIES = { startDate: "2026-03-04T09:00:00.000Z", endDate: "2026-03-04T09:30:00.000Z" };
+
+function renderScope(
+  event: CalendarListItem | null,
+  onClose = jest.fn(),
+  series: { startDate: string; endDate: string } | null = SERIES,
+) {
   return renderHook(() => {
     const updateEvent = useUpdateCalendarEvent();
     const upsertOccurrenceException = useUpsertOccurrenceException();
@@ -95,6 +101,7 @@ function renderScope(event: CalendarListItem | null, onClose = jest.fn()) {
       updateEvent,
       upsertOccurrenceException,
       expectedVersion: 7,
+      series,
       onClose,
     });
   });
@@ -171,13 +178,43 @@ describe("useEventSeriesScope — series edits", () => {
       calendarEventId: 42,
       title: PAYLOAD.title,
       description: PAYLOAD.description,
-      startDate: PAYLOAD.startDate,
-      endDate: PAYLOAD.endDate,
+      startDate: "2026-03-04T10:00:00.000Z",
+      endDate: "2026-03-04T10:30:00.000Z",
       category: PAYLOAD.category,
       expectedVersion: 7,
     });
     expect(callsFor("occurrence")).toHaveLength(0);
     expect(toastSuccess).toHaveBeenCalledWith("Event updated");
+  });
+
+  it("BITE: an all-occurrences edit from a later occurrence keeps the series start, so an earlier one-off override stays on the calendar", async () => {
+    const { result } = renderScope(MOVED_OCCURRENCE);
+
+    act(() => result.current.openWithPayload({
+      ...PAYLOAD,
+      startDate: MOVED_OCCURRENCE.start,
+      endDate: MOVED_OCCURRENCE.end,
+    }));
+    await act(async () => {
+      await result.current.handleSeriesScopeConfirm("series");
+    });
+
+    const vars = callsFor("series")[0]?.vars;
+    expect(vars).toEqual(expect.objectContaining({ calendarEventId: 42, title: PAYLOAD.title }));
+    expect(vars).not.toHaveProperty("startDate");
+    expect(vars).not.toHaveProperty("endDate");
+  });
+
+  it("refuses to move the series while its own start is still loading", async () => {
+    const { result } = renderScope(MOVED_OCCURRENCE, jest.fn(), null);
+
+    act(() => result.current.openWithPayload(PAYLOAD));
+    await act(async () => {
+      await result.current.handleSeriesScopeConfirm("series");
+    });
+
+    expect(calls).toHaveLength(0);
+    expect(toastError).toHaveBeenCalledWith("The series is still loading. Try again in a moment.");
   });
 
 });
