@@ -7,7 +7,7 @@ This file is the remaining onboarding work. Duplicate and finished reports were 
 
 ## Remaining bugs
 
-### ONB-B-002 — FIXED (backend commit 362c6a0e2), PENDING_BROWSER_VERIFICATION
+### ONB-B-002 — FIXED (backend commit 362c6a0e2; corrected by backend fd4cab958), PENDING_BROWSER_VERIFICATION
 
 Invitee added in onboarding People step is silently dropped
 

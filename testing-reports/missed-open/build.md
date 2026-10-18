@@ -321,17 +321,20 @@ Write-up from `streamline-qa-reports/build-2026-10-11-v2/NEW-BUGS.md`:
 - Expected: the value is saved, or a validation message is shown.
 - Actual: after reload the Points field is blank (not 1000000000 and not 5). The create dialog path does save a valid value (QAB-3 saved 8 and shows 8). Request capture was unreliable in this session, so this is recorded as needing confirmation with a clean repro.
 
-## NEW-15 — STILL OPEN (intermittent — needs browser repro)
+## NEW-15 — FIXED (2ef75847b), PENDING_BROWSER_VERIFICATION — Feedback widget config 404 on every page
+The widget probe remembers a 404 for the key for 24 h and skips the request (`hooks/api/feedbucket/use-feedbucket-widget-ready.ts:10-25,35-41`); the script only mounts once the probe succeeds (`components/feedbucket/feedbucket-embed.tsx:15`). `use-feedbucket-widget-ready.test.tsx` passes (probe once, then stop; a 5xx is not written off).
 Latest status source: `streamline-qa-reports/build-2026-10-12-v3/RETEST.md`
 
 STILL OPEN: NEW-06, NEW-10, NEW-11, NEW-16b, NEW-15 (intermittent)
 
-## NEW-23 — PENDING_BROWSER_VERIFICATION (not reproduced in prior runs)
+## NEW-23 — FIXED (4735e31fb), PENDING_BROWSER_VERIFICATION — Todo column count changes across reloads with no data change
+The board is an infinite query, and until `/tickets/column-counts` answered the header fell back to the rows paged in so far, so the number depended on timing. The header now shows no count until the server aggregate arrives (`features/build/views/kanban-board.tsx:134,197`, `kanban-column-header.tsx:62,249`); the aggregate itself is one deterministic GROUP BY (`backend/.../projects-tickets-read.service.ts:394`). Covered in `kanban-column-header.test.tsx`.
 Latest status source: `streamline-qa-reports/build-2026-10-12-v3/RETEST.md`
 
 NOT REPRODUCED: NEW-23, NEW-25
 
-## NEW-25 — PENDING_BROWSER_VERIFICATION (not reproduced in prior runs)
+## NEW-25 — VERIFIED IN CODE (backend organization.controller.ts:172-180, organization-settings.service.ts:274-306), PENDING_BROWSER_VERIFICATION — GET /organization/settings 500 (x2) on Build > Projects load
+The handler is two bounded reads of the org row and up to 100 allowed domains, cached per org; no write or outbound call. A response-contract mismatch logs and does not 500 in production (`common/openapi/response-contract.interceptor.ts:176-179`). Seen once on 12 Oct (the day prod moved to Neon), not reproduced in the v3 retest. No code path left that returns 500 for a valid org.
 Latest status source: `streamline-qa-reports/build-2026-10-12-v3/RETEST.md`
 
 NOT REPRODUCED: NEW-23, NEW-25

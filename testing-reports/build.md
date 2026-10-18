@@ -7,7 +7,7 @@ This file is the remaining build work. Duplicate and finished reports were remov
 
 ## Remaining bugs
 
-### B-006 — FIXED: FTS search + % and _ guard
+### B-006 — FIXED: FTS search + % and _ guard (corrected by backend 3c4fe71da), PENDING_BROWSER_VERIFICATION
 
 `%` and `_` act as wildcards in search
 

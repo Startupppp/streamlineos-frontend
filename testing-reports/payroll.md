@@ -186,7 +186,7 @@ Latest report note: Manual earning adjustment not in breakdown after Recalculate
 - Acceptance check: After adding a 5000 earning and Recalculate, gross is 5000, net is 4800, and the breakdown lists the line.
 - Note: no remove control for the adjustment was found in the UI; the QA1015 adjustment remains on the draft run (see TEST-DATA.md).
 
-### PAY-B-024 — FIXED (05c32964f), PENDING_BROWSER_VERIFICATION
+### PAY-B-024 — FIXED (05c32964f; corrected by backend c09520db2), PENDING_BROWSER_VERIFICATION
 
 Salary breakup preview double-counts components: ₹1,65,000 monthly earnings for a ₹12,00,000 CTC, PF and professional tax deducted twice
 
@@ -203,7 +203,7 @@ Latest report note: Breakup double counts components (PF and PT twice): STILL OP
 - Acceptance check: Breakup for CTC 1200000 shows earnings ≈ ₹1,00,000/month, one PF line, one PT line; sum of earnings − deductions = net; a test covers duplicate roles.
 - Note: Cleanup: the 4 QA1015 catalog components and the active QA template remain (see TEST-DATA.md); the default 8 cannot be removed by this QA.
 
-### PAY-B-031 — FIXED (05c32964f), PENDING_BROWSER_VERIFICATION
+### PAY-B-031 — FIXED (05c32964f; corrected by backend c09520db2), PENDING_BROWSER_VERIFICATION
 
 Draft run pays QA Probe Pay ₹96,000 gross on a ₹6,00,000 CTC (₹50,000 per month)
 
