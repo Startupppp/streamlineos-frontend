@@ -47,12 +47,18 @@ describe("add holiday form", () => {
     ).toBe(true);
   });
 
-  it("rejects a name that exceeds 200 characters", () => {
+  it("rejects a name that exceeds 100 characters, the server limit", () => {
     expect(
       addHolidaySchema.safeParse({
-        name: "A".repeat(201),
+        name: "A".repeat(101),
         date: "2026-01-26",
       }).success,
     ).toBe(false);
+  });
+
+  it("an empty date shows one plain message, not Invalid date", () => {
+    const result = addHolidaySchema.safeParse({ name: "Republic Day", date: "" });
+    expect(result.success).toBe(false);
+    expect(result.error?.issues[0]?.message).toBe("Date is required");
   });
 });
