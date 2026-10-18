@@ -365,7 +365,11 @@ export default function InvitationPage() {
     );
   }
 
-  if (acceptanceBlocker === "already-member") {
+  if (
+    acceptanceBlocker === "already-member" ||
+    (isApiError(invitationError) &&
+      getApiErrorCode(invitationError) === "INVITE_ALREADY_ACCEPTED")
+  ) {
     return <InvitationAlreadyMemberState onGoToSignIn={goToSignIn} />;
   }
 

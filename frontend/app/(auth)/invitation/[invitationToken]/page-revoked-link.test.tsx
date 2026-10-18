@@ -102,3 +102,23 @@ it("shows the expired card for a revoked link instead of throwing to the route b
   );
   consoleError.mockRestore();
 });
+
+it("tells a now-member their invitation was already accepted, not that the link expired, after the token was consumed (HRMS-026)", async () => {
+  jest
+    .mocked(apiClient.get)
+    .mockRejectedValue(new ApiError("This invitation was already accepted.", 409, "INVITE_ALREADY_ACCEPTED"));
+  const consoleError = jest.spyOn(console, "error").mockImplementation(() => {});
+
+  render(
+    <QueryClientProvider client={createAppQueryClient()}>
+      <RouteSegmentBoundary>
+        <InvitationPage />
+      </RouteSegmentBoundary>
+    </QueryClientProvider>,
+  );
+
+  expect(await screen.findByText("Already a member")).toBeVisible();
+  expect(screen.queryByText("Invitation link unavailable")).toBeNull();
+  expect(screen.queryByText("route boundary hit")).toBeNull();
+  consoleError.mockRestore();
+});
