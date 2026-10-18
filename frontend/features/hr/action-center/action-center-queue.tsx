@@ -12,7 +12,7 @@ import {
   ContentFillPanel,
 } from "@/components/ui/content-fill-panel";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { useIsSoleSelfApprover } from "@/features/hr/shared/self-approval";
+import { useAwaitsMyDecision } from "@/features/hr/shared/self-approval";
 import { formatIstDate } from "@/lib/hrms/payroll-cutoff";
 import { ActionCenterFilters } from "@/features/hr/action-center/action-center-filters";
 import { ActionCenterBulkBar } from "@/features/hr/action-center/action-center-bulk-bar";
@@ -23,6 +23,7 @@ import {
   ACTION_CENTER_NO_FILTERS,
   filterQueueItems,
   filtersActive,
+  itemAwaitsMyDecision,
   type ActionCenterFacet,
   type ActionCenterFilterState,
   type ActionCenterItem,
@@ -54,8 +55,7 @@ export function ActionCenterQueueView({
   const [selectedIds, setSelectedIds] = useState<readonly string[]>([]);
   const [decidedIds, setDecidedIds] = useState<readonly string[]>([]);
   const decisions = useActionCenterDecisions();
-  const mayDecideOwnLeave = useIsSoleSelfApprover("leave", currentUserId);
-  const mayDecideOwnAttendance = useIsSoleSelfApprover("attendance_correction", currentUserId);
+  const awaitsMine = useAwaitsMyDecision();
 
   const live = useMemo(
     () => queue.items.filter((item) => !decidedIds.includes(item.id)),
@@ -65,7 +65,10 @@ export function ActionCenterQueueView({
     () => filterQueueItems(live, filters),
     [live, filters],
   );
-  const counts = useMemo(() => facetCounts(live), [live]);
+  const counts = useMemo(
+    () => facetCounts(live.filter((item) => itemAwaitsMyDecision(item, awaitsMine))),
+    [live, awaitsMine],
+  );
   const cutoffCount = useMemo(
     () => live.filter((item) => item.deadlineAffected).length,
     [live],
@@ -207,11 +210,8 @@ export function ActionCenterQueueView({
             <AnimatePresence initial={false}>
               {visible.map((item, index) => {
                 const isOwnItem = !!currentUserId && item.requester?.userId === currentUserId;
-                const selfApproval =
-                  isOwnItem &&
-                  ((item.source === "leave" && mayDecideOwnLeave) ||
-                    (item.source === "attendance" && mayDecideOwnAttendance));
-                const ownItemBlocked = isOwnItem && !selfApproval;
+                const ownItemBlocked = !itemAwaitsMyDecision(item, awaitsMine);
+                const selfApproval = isOwnItem && !ownItemBlocked;
                 const canDecideItem = decisions.canDecide(item.source) && !ownItemBlocked;
                 return (
                   <ActionCenterRow

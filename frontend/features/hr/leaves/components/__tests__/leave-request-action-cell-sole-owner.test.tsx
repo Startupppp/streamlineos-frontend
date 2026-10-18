@@ -75,7 +75,7 @@ describe("BUG-HRMS-017/018: own pending leave row", () => {
     expect(screen.getByText("Awaiting approval from HR approvals")).toBeInTheDocument();
   });
 
-  it("shows only cancel when route has no approver or queue info", () => {
+  it("shows a generic Awaiting approval hint and cancel when the route names no approver or queue (UX-14)", () => {
     mockedRoute.mockReturnValue({
       data: { ownerSelfApproval: false, approver: null, queue: null },
     });
@@ -83,7 +83,7 @@ describe("BUG-HRMS-017/018: own pending leave row", () => {
     render(<RequestActionCell request={pending()} onCancel={jest.fn()} />);
 
     expect(screen.queryByRole("link")).not.toBeInTheDocument();
-    expect(screen.queryByText(/awaiting/i)).not.toBeInTheDocument();
+    expect(screen.getByText("Awaiting approval")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /cancel request/i })).toBeInTheDocument();
   });
 });

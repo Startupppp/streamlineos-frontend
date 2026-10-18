@@ -79,8 +79,12 @@ export function LeavesWfhToolbar({
             <TabsTrigger value="approvals" className="gap-1.5 truncate">
               Approvals
               {totalPendingApprovals > 0 ? (
-                <span className="text-xs tabular-nums opacity-70">
+                <span
+                  className="text-xs tabular-nums opacity-70"
+                  title="Leave and WFH requests awaiting your decision"
+                >
                   {totalPendingApprovals}
+                  <span className="sr-only"> awaiting your decision</span>
                 </span>
               ) : null}
             </TabsTrigger>

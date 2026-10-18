@@ -1,5 +1,7 @@
 "use client";
 
+import { useCallback } from "react";
+import { useSession } from "next-auth/react";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { statusToneClasses } from "@/lib/design-tokens";
 import { useMyApprover } from "@/hooks/api/hr/approvers";
@@ -23,6 +25,37 @@ export function useIsSoleSelfApprover(
 ): boolean {
   const { data: route } = useMyApprover(kind, { enabled: enabled && !!currentUserId });
   return route?.ownerSelfApproval === true && route.approver?.userId === currentUserId;
+}
+
+export function awaitsMyDecision(
+  requesterUserId: string | null | undefined,
+  currentUserId: string | undefined,
+  mayDecideOwn: boolean,
+): boolean {
+  if (!currentUserId || requesterUserId !== currentUserId) return true;
+  return mayDecideOwn;
+}
+
+export type AwaitsMyDecision = (
+  kind: ApprovalRequestKind | null,
+  requesterUserId: string | null | undefined,
+) => boolean;
+
+export function useAwaitsMyDecision(): AwaitsMyDecision {
+  const { data: session } = useSession();
+  const currentUserId = session?.user?.id;
+  const mayDecideOwnLeave = useIsSoleSelfApprover("leave", currentUserId);
+  const mayDecideOwnAttendance = useIsSoleSelfApprover("attendance_correction", currentUserId);
+  return useCallback(
+    (kind, requesterUserId) =>
+      awaitsMyDecision(
+        requesterUserId,
+        currentUserId,
+        (kind === "leave" && mayDecideOwnLeave) ||
+          (kind === "attendance_correction" && mayDecideOwnAttendance),
+      ),
+    [currentUserId, mayDecideOwnLeave, mayDecideOwnAttendance],
+  );
 }
 
 export function NeedsAnotherApprover({ className = "" }: { className?: string }) {

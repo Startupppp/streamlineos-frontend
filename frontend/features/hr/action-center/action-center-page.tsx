@@ -23,7 +23,11 @@ import { ActionCenterQueueView } from "@/features/hr/action-center/action-center
 import { ActedHistory } from "@/features/hr/action-center/acted-history";
 import { PersonQueueOverview } from "@/features/hr/action-center/person-queue-overview";
 import { useActionCenterQueue } from "@/features/hr/action-center/use-action-center-queue";
-import type { ActionCenterItem } from "@/features/hr/action-center/queue-item";
+import {
+  itemAwaitsMyDecision,
+  type ActionCenterItem,
+} from "@/features/hr/action-center/queue-item";
+import { useAwaitsMyDecision } from "@/features/hr/shared/self-approval";
 
 export function HrActionCenterPage() {
   const reduced = useReducedMotion();
@@ -46,6 +50,11 @@ export function HrActionCenterPage() {
     [queue.items, personUserId],
   );
   const person = personItems[0]?.requester ?? null;
+  const awaitsMine = useAwaitsMyDecision();
+  const awaitingMeCount = useMemo(
+    () => queue.items.filter((item) => itemAwaitsMyDecision(item, awaitsMine)).length,
+    [queue.items, awaitsMine],
+  );
 
   function handleOpenDelegation(): void {
     setDelegationOpen(true);
@@ -103,12 +112,13 @@ export function HrActionCenterPage() {
               <TabsList>
                 <TabsTrigger value="pending" className="gap-1.5">
                   Pending
-                  {queue.items.length > 0 ? (
+                  {awaitingMeCount > 0 ? (
                     <Badge
                       variant="secondary"
                       className="text-micro h-4 px-1.5 leading-none tabular-nums"
                     >
-                      {queue.items.length}
+                      {awaitingMeCount}
+                      <span className="sr-only"> awaiting your decision</span>
                     </Badge>
                   ) : null}
                 </TabsTrigger>

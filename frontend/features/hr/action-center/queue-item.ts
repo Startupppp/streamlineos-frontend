@@ -1,4 +1,5 @@
 import type { PersonSummary } from "@/components/shared/person-drawer";
+import type { AwaitsMyDecision } from "@/features/hr/shared/self-approval";
 
 export type ActionCenterSource = "leave" | "wfh" | "attendance" | "expense" | "workflow";
 
@@ -30,6 +31,19 @@ export interface ActionCenterItem {
   readonly policyNote: string | null;
   readonly deadlineAffected: boolean;
   readonly detailHref: string | null;
+}
+
+export function itemAwaitsMyDecision(
+  item: ActionCenterItem,
+  awaitsMyDecision: AwaitsMyDecision,
+): boolean {
+  const kind =
+    item.source === "leave"
+      ? "leave"
+      : item.source === "attendance"
+        ? "attendance_correction"
+        : null;
+  return awaitsMyDecision(kind, item.requester?.userId);
 }
 
 export interface ActionCenterFilterState {

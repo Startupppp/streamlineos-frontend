@@ -18,6 +18,7 @@ import { getErrorMessage } from "@/lib/get-error-message";
 
 import { LeaveStatusBadge } from "./leave-status-badge";
 import {
+  awaitsMyDecision,
   NeedsAnotherApprover,
   SelfApprovalBadge,
   SelfApprovalConfirmDialog,
@@ -263,7 +264,7 @@ export function LeaveDecisionButtons({
 
   if (status !== "PENDING" || !canDecide) return <LeaveStatusBadge status={status} />;
 
-  if (isSelfRequest && !mayDecideOwn) return <NeedsAnotherApprover />;
+  if (!awaitsMyDecision(request.user?.id, currentUserId, mayDecideOwn)) return <NeedsAnotherApprover />;
 
   return (
     <>

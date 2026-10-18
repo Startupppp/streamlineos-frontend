@@ -61,6 +61,7 @@ const TEAM_PAGES = {
   pageParams: [null, 2],
 };
 
+let mockTeamPages: typeof TEAM_PAGES = TEAM_PAGES;
 let mockQueryString = "";
 jest.mock("next/navigation", () => ({
   useRouter: () => ({
@@ -117,7 +118,7 @@ jest.mock("@/hooks/api/hr", () => {
         pages: [{ data: [], pageInfo: { limit: 20, hasMore: false, nextCursor: null } }],
         pageParams: [null],
       }),
-    useHrLeaveApprovals: () => queryStub(TEAM_PAGES),
+    useHrLeaveApprovals: () => queryStub(mockTeamPages),
     useHrLeavesThisWeek: () => queryStub([]),
     useHrPendingWfhRequests: () => queryStub([]),
     useHrWfhRequests: () => queryStub([]),
@@ -153,12 +154,24 @@ function renderPage() {
 describe("LeavesWfhContent — approvals read GET /hr/leaves/team as a cursor envelope", () => {
   beforeEach(() => {
     mockQueryString = "";
+    mockTeamPages = TEAM_PAGES;
   });
 
   it("counts pending approvals across every loaded page, not from a retired `pending` field", () => {
     renderPage();
 
     expect(screen.getByRole("tab", { name: /Approvals\s*2/ })).toBeInTheDocument();
+  });
+
+  it("counts only requests awaiting the viewer's decision, leaving out their own request that needs another approver (HR-U-003)", () => {
+    const ownPending = { ...teamRequest(4, "PENDING", "Admin"), user: { ...teamRequest(4, "PENDING", "Admin").user, id: "user_admin" } };
+    mockTeamPages = {
+      ...TEAM_PAGES,
+      pages: [{ ...TEAM_PAGES.pages[0], data: [...TEAM_PAGES.pages[0].data, ownPending] }, TEAM_PAGES.pages[1]],
+    };
+    renderPage();
+
+    expect(screen.getByRole("tab", { name: "Approvals 2 awaiting your decision" })).toBeInTheDocument();
   });
 
   it("lists every loaded page under All and only PENDING rows under Pending", () => {

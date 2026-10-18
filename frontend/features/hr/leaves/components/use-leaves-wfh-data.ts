@@ -10,6 +10,7 @@ import {
 } from "@/hooks/api/hr";
 import { useCan, useModuleEnabled } from "@/hooks/api/access";
 import { approvedDaysInYear } from "@/features/hr/leaves/leave-date-helpers";
+import { useAwaitsMyDecision } from "@/features/hr/shared/self-approval";
 import { buildAvailableHint } from "./leaves-summary-strip";
 import type {
   ApprovedLeave,
@@ -49,6 +50,13 @@ export function useLeavesWfhData(selfService: boolean) {
     [allIncomingLeaveRequests],
   );
   const approvedLeavesThisWeek: ApprovedLeave[] = thisWeekData ?? [];
+  const awaitsMine = useAwaitsMyDecision();
+  const totalPendingApprovals = useMemo(
+    () =>
+      incomingLeaveRequests.filter((request) => awaitsMine("leave", request.user?.id)).length +
+      (pendingWfhRequests ?? []).filter((request) => awaitsMine(null, request.user?.id)).length,
+    [incomingLeaveRequests, pendingWfhRequests, awaitsMine],
+  );
 
   const noPolicyConfigured =
     context.data?.noPolicyConfigured ?? leaveTypes.length === 0;
@@ -90,8 +98,7 @@ export function useLeavesWfhData(selfService: boolean) {
     allIncomingLeaveRequests,
     incomingLeaveRequests,
     approvedLeavesThisWeek,
-    totalPendingApprovals:
-      incomingLeaveRequests.length + (pendingWfhRequests?.length ?? 0),
+    totalPendingApprovals,
     isLoading: context.isLoading || myRequests.isLoading,
     isError: context.isError || myRequests.isError,
     errorValue: context.error ?? myRequests.error,
