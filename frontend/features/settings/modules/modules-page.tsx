@@ -3,14 +3,17 @@
 import { useCallback } from "react";
 import { EmptyState } from "@/components/ui/empty-state";
 import { toast } from "sonner";
-import { useOrgModules, useToggleOrgModule } from "@/hooks/api/access/org-modules";
+import { cn } from "@/lib/utils";
+import {
+  useOrgModules,
+  useToggleOrgModule,
+} from "@/hooks/api/access/org-modules";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { ErrorState } from "@/components/shared/error-state";
 import { Switch } from "@/components/ui/switch";
 import { Skeleton } from "@/components/ui/skeleton";
 import { getModuleCatalogEntry } from "@/lib/module-catalog";
-import { cn } from "@/lib/utils";
 
 export function ModuleCardSkeleton() {
   return (
@@ -105,9 +108,7 @@ export function ModulesPage() {
         { moduleKey, enabled },
         {
           onSuccess: () =>
-            toast.success(
-              `${entry.label} ${enabled ? "enabled" : "disabled"}`,
-            ),
+            toast.success(`${entry.label} ${enabled ? "enabled" : "disabled"}`),
           onError: (toggleError) => toast.error(getErrorMessage(toggleError)),
         },
       );

@@ -9,6 +9,7 @@ import { DataTableSkeleton } from "@/components/ui/data-table-skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
 import { SearchInput } from "@/components/ui/search-input";
 import { PageState } from "@/components/shared/page-state";
+import { RichPanel, RichSectionHeader } from "@/components/shared/rich-surface";
 import { RecordList } from "@/components/renderer";
 import { useTenantLayout } from "@/components/renderer/use-tenant-layout";
 import { usePageState } from "@/hooks/api/use-page-state";
@@ -127,53 +128,66 @@ export function SubjectRequestsPanel() {
       description="Access and erasure requests run here are filed with their outcome, so you can show what was done and when."
       filtersActive={subject !== undefined}
       onClearFilters={handleClearFilters}
-      action={canExecute ? { label: "Run a request", onClick: handleOpenForm } : undefined}
       className="flex-1 min-h-[40vh]"
     />
   );
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-hidden">
-      <div className="flex shrink-0 flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-        <SearchInput
-          placeholder="Filter by exact email…"
-          value={search}
-          onValueChange={handleSearchChange}
-          className="w-full sm:max-w-sm"
-        />
-        {canExecute ? (
-          <AnimatedIconButton
-            icon={PlusIcon}
-            iconSize={16}
-            iconClassName="mr-1.5"
-            size="sm"
-            className="w-full shrink-0 sm:w-auto"
-            onClick={handleOpenForm}
-          >
-            Run a request
-          </AnimatedIconButton>
-        ) : null}
-      </div>
-
-      <PageState
-        resolution={pageState}
-        loading={<DataTableSkeleton fill headers={HEADERS} />}
-        empty={emptyState}
-        onClearFilters={handleClearFilters}
-        onRetry={handleRetry}
-        className="flex min-h-0 flex-1 flex-col"
+    <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
+      <RichPanel
+        padded={false}
+        className="flex min-h-0 flex-1 flex-col overflow-hidden"
       >
-        <RecordList
-          layout={layout}
-          rows={rows}
-          getRowKey={rowKey}
-          cells={CELLS}
-          emptyState={emptyState}
-          minWidth="720px"
-          className="flex min-h-0 flex-1 flex-col"
-          pagination={{ pageSize: 20 }}
-        />
-      </PageState>
+        <div className="shrink-0 space-y-3 border-b border-border/60 px-4 py-3.5 sm:px-5">
+          <RichSectionHeader
+            className="mb-0"
+            title="Filed subject requests"
+            description="Run an access or erasure request, then keep the filed outcome for audit."
+            action={
+              canExecute ? (
+                <AnimatedIconButton
+                  icon={PlusIcon}
+                  iconSize={16}
+                  iconClassName="mr-1.5"
+                  size="sm"
+                  className="w-full shrink-0 sm:w-auto"
+                  onClick={handleOpenForm}
+                >
+                  Run a request
+                </AnimatedIconButton>
+              ) : undefined
+            }
+          />
+          <SearchInput
+            placeholder="Filter by exact email…"
+            value={search}
+            onValueChange={handleSearchChange}
+            className="w-full sm:max-w-sm"
+          />
+        </div>
+
+        <div className="flex min-h-0 flex-1 flex-col px-2 pb-2 pt-2 sm:px-3">
+          <PageState
+            resolution={pageState}
+            loading={<DataTableSkeleton fill headers={HEADERS} />}
+            empty={emptyState}
+            onClearFilters={handleClearFilters}
+            onRetry={handleRetry}
+            className="flex min-h-0 flex-1 flex-col"
+          >
+            <RecordList
+              layout={layout}
+              rows={rows}
+              getRowKey={rowKey}
+              cells={CELLS}
+              emptyState={emptyState}
+              minWidth="720px"
+              className="flex min-h-0 flex-1 flex-col"
+              pagination={{ pageSize: 20 }}
+            />
+          </PageState>
+        </div>
+      </RichPanel>
 
       <SubjectRequestDialog open={formOpen} onOpenChange={setFormOpen} isSubmitting={execute.isPending} onSubmit={handleSubmit} />
       {pendingErasure ? (

@@ -1,25 +1,28 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Download, FileArchive, ShieldAlert, Trash2 } from "lucide-react";
+import { motion } from "framer-motion";
+import { Download, FileArchive, ShieldAlert, Trash2, UserRound } from "lucide-react";
 import { toast } from "sonner";
 import { MemberPicker } from "@/components/members/member-picker";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { EmptyState } from "@/components/ui/empty-state";
 import { LoadingButton } from "@/components/ui/loading-button";
 import {
-  ScrollArea,
-  SCROLL_AREA_PAGE_BODY_CLASS,
-} from "@/components/ui/scroll-area";
+  RichIconWell,
+  RichPageContent,
+  RichPanel,
+} from "@/components/shared/rich-surface";
 import { useMemberDirectory, type DirectoryScope } from "@/hooks/api/members/use-member-directory";
 import { useCan } from "@/hooks/api/access";
 import { useCreatePersonExportJob, useEraseSubject, useExportPersonData } from "@/hooks/api/privacy/gdpr";
 import type { GdprErasureResult } from "@/hooks/api/privacy/gdpr-schema";
+import { useMotionVariants } from "@/lib/motion-variants";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { getUserDisplayName, getUserInitials } from "@/lib/person-display";
 import { cn, resolveImageUrl } from "@/lib/utils";
 import { ExportJobStatus } from "./export-job-status";
+import { PrivacyActionRow } from "./privacy-action-row";
 import { TypedEmailConfirmDialog } from "./typed-email-confirm-dialog";
 import type { ErasureConfirmValues } from "./erasure-confirm-schema";
 
@@ -35,6 +38,7 @@ function describeErasure(result: GdprErasureResult): string {
 
 export function PersonDataPanel() {
   const canManage = useCan("hr:retention:manage");
+  const motionVariants = useMotionVariants();
   const [personId, setPersonId] = useState<string | null>(null);
   const [jobId, setJobId] = useState<string | null>(null);
   const [erasing, setErasing] = useState(false);
@@ -107,36 +111,49 @@ export function PersonDataPanel() {
   }
 
   const displayName = person ? getUserDisplayName(person) : "";
+  const ready = Boolean(person) && canManage;
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
-      <div className="shrink-0 space-y-1.5 pb-4">
-        <label htmlFor="privacy-member-picker" className="text-sm font-medium text-foreground">
-          Member
-        </label>
-        <MemberPicker
-          id="privacy-member-picker"
-          scope={ORG_SCOPE}
-          value={personId ?? undefined}
-          onChange={handlePersonChange}
-          placeholder="Search by name or email…"
-          disabled={!canManage}
-          className="w-full sm:max-w-md"
-        />
-      </div>
+    <RichPageContent className="min-h-0 flex-1 overflow-y-auto pb-1">
+      <RichPanel padded={false}>
+        <div className="flex items-start gap-2.5 border-b border-border/60 px-4 py-3.5 sm:px-5">
+          <RichIconWell tone="blue" size="sm" className="mt-0.5">
+            <UserRound className="size-3.5" aria-hidden="true" />
+          </RichIconWell>
+          <div className="min-w-0">
+            <h2 className="text-sm font-semibold tracking-tight text-foreground">
+              Choose whose data you are acting on
+            </h2>
+            <p className="mt-0.5 text-xs leading-relaxed text-muted-foreground">
+              Exports and erasures apply only to this member. Preview erasure first if a legal hold might apply.
+            </p>
+          </div>
+        </div>
+        <div className="flex max-w-xl flex-col gap-3 px-4 py-3.5 sm:px-5">
+          <div className="flex flex-col gap-1.5">
+            <label htmlFor="privacy-member-picker" className="text-sm font-medium text-foreground">
+              Member
+            </label>
+            <MemberPicker
+              id="privacy-member-picker"
+              scope={ORG_SCOPE}
+              value={personId ?? undefined}
+              onChange={handlePersonChange}
+              placeholder="Search by name or email…"
+              disabled={!canManage}
+              className="w-full"
+            />
+          </div>
 
-      <ScrollArea fill className={cn(SCROLL_AREA_PAGE_BODY_CLASS, "min-h-0 flex-1")}>
-        {!person ? (
-          <EmptyState
-            illustrationPreset="team"
-            title="Choose a member"
-            description="Select whose personal data you need to export or erase. Erasure is permanent and blocked while a legal hold applies."
-            className="flex-1 min-h-[40vh]"
-          />
-        ) : (
-          <div className="flex flex-col gap-6 pb-2">
-            <div className="flex items-center gap-3">
-              <Avatar className="size-11 shrink-0">
+          {person ? (
+            <motion.div
+              key={person.id}
+              variants={motionVariants.fadeIn}
+              initial="hidden"
+              animate="visible"
+              className="flex items-center gap-3 rounded-xl border border-border bg-surface-inset px-3 py-2.5 dark:border-background"
+            >
+              <Avatar className="size-9 shrink-0">
                 <AvatarImage src={resolveImageUrl(person.image)} alt={displayName} />
                 <AvatarFallback className="text-sm font-semibold">
                   {getUserInitials(person)}
@@ -146,96 +163,119 @@ export function PersonDataPanel() {
                 <p className="truncate text-sm font-semibold text-foreground">{displayName}</p>
                 <p className="truncate text-xs text-muted-foreground">{person.email}</p>
               </div>
-            </div>
+            </motion.div>
+          ) : (
+            <p className="text-xs leading-snug text-muted-foreground">
+              Select a member to unlock export and erasure.
+            </p>
+          )}
+        </div>
+      </RichPanel>
 
-            <div className="divide-y divide-border border-y border-border">
-              <div className="flex flex-col gap-3 py-4 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
-                <div className="flex min-w-0 items-start gap-3">
-                  <span
-                    className="mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-md bg-muted text-muted-foreground"
-                    aria-hidden="true"
-                  >
-                    <Download className="size-4" />
-                  </span>
-                  <div className="min-w-0 space-y-0.5">
-                    <p className="text-sm font-medium text-foreground">Export their data</p>
-                    <p className="text-xs leading-snug text-muted-foreground">
-                      Instant download, or a full archive prepared in the background.
-                    </p>
-                  </div>
-                </div>
-                <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-end">
-                  <LoadingButton
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    className="w-full sm:w-auto"
-                    isPending={exportNow.isPending}
-                    onClick={handleExport}
-                  >
-                    Download now
-                  </LoadingButton>
-                  <LoadingButton
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    className="w-full sm:w-auto"
-                    isPending={createJob.isPending}
-                    onClick={handleArchive}
-                  >
-                    <FileArchive className="size-3.5" aria-hidden="true" />
-                    Prepare archive
-                  </LoadingButton>
-                </div>
-              </div>
-
-              <div className="flex flex-col gap-3 py-4 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
-                <div className="flex min-w-0 items-start gap-3">
-                  <span
-                    className="mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-md bg-destructive/10 text-destructive"
-                    aria-hidden="true"
-                  >
-                    <Trash2 className="size-4" />
-                  </span>
-                  <div className="min-w-0 space-y-1.5">
-                    <p className="text-sm font-medium text-foreground">Erase their data</p>
-                    <p className="text-xs leading-snug text-muted-foreground">
-                      Anonymises personal data across this organisation and purges stored files. Cannot be undone.
-                    </p>
-                    <p className="flex items-start gap-1.5 text-xs leading-snug text-muted-foreground">
-                      <ShieldAlert className="mt-0.5 size-3.5 shrink-0" aria-hidden="true" />
-                      <span>Preview first if a legal hold might apply — a hold blocks erasure without deleting anything.</span>
-                    </p>
-                  </div>
-                </div>
-                <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-end">
-                  <LoadingButton
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    className="w-full sm:w-auto"
-                    isPending={erase.isPending && erase.variables?.dryRun === true}
-                    onClick={handleDryRun}
-                  >
-                    Preview erasure
-                  </LoadingButton>
-                  <Button
-                    type="button"
-                    variant="destructive"
-                    size="sm"
-                    className="w-full sm:w-auto"
-                    onClick={handleOpenErase}
-                  >
-                    Erase permanently…
-                  </Button>
-                </div>
-              </div>
-            </div>
-
-            {jobId ? <ExportJobStatus jobId={jobId} /> : null}
+      <RichPanel padded={false} className={cn(!ready && "opacity-70")}>
+        <div className="flex items-start gap-2.5 border-b border-border/60 px-4 py-3.5 sm:px-5">
+          <RichIconWell tone="blue" size="sm" className="mt-0.5">
+            <Download className="size-3.5" aria-hidden="true" />
+          </RichIconWell>
+          <div className="min-w-0">
+            <h2 className="text-sm font-semibold tracking-tight text-foreground">Export a copy</h2>
+            <p className="mt-0.5 text-xs leading-relaxed text-muted-foreground">
+              Download personal data now, or prepare a full archive in the background.
+            </p>
           </div>
-        )}
-      </ScrollArea>
+        </div>
+        <div className="px-4 sm:px-5">
+          <PrivacyActionRow
+            title="Instant download"
+            description="A portable copy of this member's personal data, ready right away."
+          >
+            <LoadingButton
+              type="button"
+              variant="outline"
+              size="sm"
+              disabled={!ready}
+              isPending={exportNow.isPending}
+              onClick={handleExport}
+            >
+              Download now
+            </LoadingButton>
+          </PrivacyActionRow>
+          <PrivacyActionRow
+            title="Full archive"
+            description="A background job that packages everything available. You can download it when it is ready."
+            showBorder={false}
+          >
+            <LoadingButton
+              type="button"
+              variant="outline"
+              size="sm"
+              disabled={!ready}
+              isPending={createJob.isPending}
+              onClick={handleArchive}
+            >
+              <FileArchive className="size-3.5" aria-hidden="true" />
+              Prepare archive
+            </LoadingButton>
+          </PrivacyActionRow>
+          {jobId ? (
+            <div className="border-t border-border/60 py-3.5">
+              <ExportJobStatus jobId={jobId} />
+            </div>
+          ) : null}
+        </div>
+      </RichPanel>
+
+      <RichPanel padded={false} className={cn("border-destructive/40", !ready && "opacity-70")}>
+        <div className="flex items-start gap-2.5 border-b border-destructive/20 px-4 py-3.5 sm:px-5">
+          <RichIconWell tone="rose" size="sm" className="mt-0.5">
+            <Trash2 className="size-3.5" aria-hidden="true" />
+          </RichIconWell>
+          <div className="min-w-0">
+            <h2 className="text-sm font-semibold tracking-tight text-destructive">Erase their data</h2>
+            <p className="mt-0.5 text-xs leading-relaxed text-muted-foreground">
+              Anonymises personal data and purges stored files. This cannot be undone.
+            </p>
+          </div>
+        </div>
+        <div className="px-4 sm:px-5">
+          <div className="flex items-start gap-2 rounded-xl border border-status-warning-rule bg-status-warning-surface px-3 py-2.5 my-3.5">
+            <ShieldAlert className="mt-0.5 size-3.5 shrink-0 text-status-warning-ink" aria-hidden="true" />
+            <p className="text-xs leading-snug text-status-warning-ink">
+              Preview first. A legal hold blocks erasure and deletes nothing.
+            </p>
+          </div>
+          <PrivacyActionRow
+            title="Preview erasure"
+            description="See what would be anonymised without changing any records."
+          >
+            <LoadingButton
+              type="button"
+              variant="outline"
+              size="sm"
+              disabled={!ready}
+              isPending={erase.isPending && erase.variables?.dryRun === true}
+              onClick={handleDryRun}
+            >
+              Preview erasure
+            </LoadingButton>
+          </PrivacyActionRow>
+          <PrivacyActionRow
+            title="Erase permanently"
+            description="Requires typing the member's email to confirm."
+            showBorder={false}
+          >
+            <Button
+              type="button"
+              variant="destructive"
+              size="sm"
+              disabled={!ready}
+              onClick={handleOpenErase}
+            >
+              Erase permanently…
+            </Button>
+          </PrivacyActionRow>
+        </div>
+      </RichPanel>
 
       {person ? (
         <TypedEmailConfirmDialog
@@ -250,6 +290,6 @@ export function PersonDataPanel() {
           onConfirm={handleConfirmErase}
         />
       ) : null}
-    </div>
+    </RichPageContent>
   );
 }

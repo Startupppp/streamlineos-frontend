@@ -176,26 +176,27 @@ export function RolesPage() {
           </div>
         ) : undefined
       }
-      filters={
-        activeTab === "roles" ? (
-          <SearchInput
-            placeholder="Search roles..."
-            value={search}
-            onValueChange={setSearch}
-            maxLength={100}
-          />
-        ) : undefined
-      }
     >
       <Tabs
         value={activeTab}
         onValueChange={handleTabChange}
         className="flex min-h-0 flex-1 flex-col gap-3"
       >
-        <TabsList className="shrink-0">
-          <TabsTrigger value="roles">Roles</TabsTrigger>
-          <TabsTrigger value="groups">Groups</TabsTrigger>
-        </TabsList>
+        <div className="flex shrink-0 flex-col gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-3">
+          <TabsList>
+            <TabsTrigger value="roles">Roles</TabsTrigger>
+            <TabsTrigger value="groups">Groups</TabsTrigger>
+          </TabsList>
+          {activeTab === "roles" ? (
+            <SearchInput
+              placeholder="Search roles..."
+              value={search}
+              onValueChange={setSearch}
+              maxLength={100}
+              className="w-full sm:max-w-xs lg:max-w-sm"
+            />
+          ) : null}
+        </div>
 
         <TabsContent value="groups">
           <GroupsPanel />

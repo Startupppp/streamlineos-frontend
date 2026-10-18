@@ -10,12 +10,14 @@ export default function RolesLoading() {
       noInternalScroll
       contentClassName="flex min-h-0 flex-1 flex-col"
       actions={<Skeleton className="h-9 w-9 rounded-md" />}
-      filters={<Skeleton className="h-9 w-full max-w-[320px]" />}
     >
       <div className="flex min-h-0 flex-1 flex-col gap-3">
-        <div className="flex h-9 w-fit items-center gap-1 rounded-md border border-border bg-card p-1">
-          <Skeleton className="h-7 w-16 rounded-sm" />
-          <Skeleton className="h-7 w-16 rounded-sm" />
+        <div className="flex shrink-0 flex-col gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-3">
+          <div className="flex h-9 w-fit items-center gap-1 rounded-md border border-border bg-card p-1">
+            <Skeleton className="h-7 w-16 rounded-sm" />
+            <Skeleton className="h-7 w-16 rounded-sm" />
+          </div>
+          <Skeleton className="h-9 w-full sm:max-w-xs lg:max-w-sm" />
         </div>
         <div className="shrink-0">
           <StatCardGridSkeleton cols={4} count={4} stackOnMobile={2} />

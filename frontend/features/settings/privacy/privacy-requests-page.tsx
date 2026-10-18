@@ -49,8 +49,8 @@ export function PrivacyRequestsPage() {
 
   return (
     <PageWrapper
-      title="Privacy requests"
-      subtitle="Export or erase member data, and run subject-access requests."
+      title="Privacy Requests"
+      subtitle="Handle member data exports, erasures, and filed subject-access requests."
       noInternalScroll
       className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden"
       contentClassName="flex min-h-0 flex-1 flex-col"
@@ -61,7 +61,7 @@ export function PrivacyRequestsPage() {
           onValueChange={handleTabChange}
           className="flex h-full min-h-0 flex-1 flex-col gap-0 overflow-hidden"
         >
-          <TabsList className="mb-4 shrink-0">
+          <TabsList className="mb-3 shrink-0 sm:mb-4">
             <TabsTrigger value="member">
               <Download className="h-3.5 w-3.5 max-sm:hidden" aria-hidden="true" />
               Member data
