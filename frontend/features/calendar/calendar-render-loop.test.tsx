@@ -304,6 +304,15 @@ describe("/calendar render stability", () => {
     }
   });
 
+  it.each(["mode=calendar&date=2026-10-21", "mode=calendar&date=2026-11-15&view=week", "mode=list&date=2026-10-28", "mode=calendar&date=2026-10-23&view=month"])(
+    "CAL-B-016 a fresh deep link (%s) settles without an unbounded render loop",
+    async (query) => {
+      mockSearchParams = new URLSearchParams(query);
+      await renderCalendar();
+      expect(mockRenderCount).toBeLessThanOrEqual(60);
+    },
+  );
+
   it("keeps the week grid on a desktop-width window", async () => {
     mockPush.mockClear();
     await renderCalendar();
