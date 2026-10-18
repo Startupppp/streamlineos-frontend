@@ -148,7 +148,9 @@ Write-up from `qa/hrms/deliverables/02-functional-bugs.md`:
 - Acceptance criterion: No Approve/Reject on own requests; leave note names the real approver.
 - Safe retest: Open Action Center as owner.
 
-## HR-U-001: Show the reason a field was ignored
+## HR-U-001 — BLOCKED (HR-B domain: onboarding wizard and dept forms are HR-B scope; name validation is in backend person-name.schema.ts claimed by HR-B)
+
+Show the reason a field was ignored
 - **Where:** Onboarding Personal step (names), HR Policies (accrual), Departments.
 - **Observed:** Keystrokes are dropped or values reverted with no message (see HR-B-001, HR-B-011).
 - **Suggestion:** Inline hint on the field the moment a character is rejected ("Numbers are not allowed in names"); keep the typed text visible so users can correct it.
@@ -158,7 +160,9 @@ Write-up from `qa/hrms/deliverables/02-functional-bugs.md`:
 - **Observed:** Holiday Name's helper text lists allowed characters ("letters, numbers, spaces, apostrophes, periods, and hyphens"); employee name fields accept none of the apostrophe/hyphen characters.
 - **Suggestion:** Reuse one name-validator with the same helper text everywhere (see HR-B-001).
 
-## HR-U-006: Confirmation modal should show warnings, not just times
+## HR-U-006 — OPEN (HR-B domain: shifts are HR-B scope)
+
+Confirmation modal should show warnings, not just times
 - **Where:** /hr/shifts → Create shift → "Create this shift?"
 - **Observed:** The modal shows `(06:00 PM – 09:00 AM)` with no warning for a non-night shift (see HR-B-007).
 - **Suggestion:** Show "Ends before it starts — enable Night Shift?" in the modal and disable the confirm button.
@@ -168,7 +172,9 @@ Write-up from `qa/hrms/deliverables/02-functional-bugs.md`:
 - **Observed:** On a typed no-match search the list shows everyone with an error banner (HR-B-006); the URL keeps `?q=`.
 - **Suggestion:** Show "No employees match 'zzzznomatch'. Clear search" as the empty state; debounce and cancel stale responses.
 
-## HR-U-010: Attendance corrections list needs a clear empty/filter state
+## HR-U-010 — OPEN (the post-action empty state copy is good; the missing toast is an enhancement)
+
+Attendance corrections list needs a clear empty/filter state
 - **Where:** /hr/attendance "Attendance corrections" with filter "Needs a decision" after an action.
 - **Observed:** Shows "No results match your filters. Corrections employees raise for this date range appear here." — good copy, but the item just actioned disappears without a success message (see HR-B-009).
 - **Suggestion:** Toast "Correction approved for Wed, 14 Oct" and keep the item visible under "Approved".
@@ -182,7 +188,9 @@ Write-up from `qa/hrms/deliverables/02-functional-bugs.md`:
 - **Observed:** "Loading results…" with placeholder headers "Column 1…6" shown for 5–10 s before the list appears.
 - **Suggestion:** Render the real column headers immediately and a skeleton for the rows.
 
-## HR-U-019: Approver card needs requester and original vs requested times
+## HR-U-019 — OPEN (attendance correction card is an HR-A domain enhancement; requires attendance card component changes)
+
+Approver card needs requester and original vs requested times
 - **Where:** /hr/attendance → "Attendance corrections" → "Needs a decision".
 - **Observed:** The card shows only the requested times and reason (see HR-B-015).
 - **Suggestion:** Show requester name/avatar, original punch, requested punch, and the delta.

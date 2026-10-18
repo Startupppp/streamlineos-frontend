@@ -292,7 +292,7 @@ Latest report note: Duplicate holidays on same date accepted: Medium | BLOCKED (
 **Edge cases:** soft-deleted holiday on the same date (allowed), an update moving onto a taken date, two concurrent creates, a leap-day holiday, name with Unicode or injection characters, name max length (QA saw a 300-char name error; keep the existing max).
 **Tests:** integration tests for conflict (409), soft-deleted allowed, the concurrent race, location vs all-locations, and a leave calculation with legacy duplicates.
 
-### HRMS-015 — UNKNOWN
+### HRMS-015 — BLOCKED (requires invited-employee onboarding session; HR-B owns onboarding-wizard.tsx)
 
 Invite onboarding phone field loses focus after first digit; digits go into emergency contact name
 
@@ -319,7 +319,7 @@ Latest report note: Invite onboarding phone field loses focus: Medium | BLOCKED 
 - Acceptance criterion: Typing a 10-digit number keeps focus and stores all digits in phone.
 - Safe retest: Next invited user: type phone, verify fields.
 
-### HRMS-016 — UNKNOWN
+### HRMS-016 — INTERMITTENT, BLOCKED (not reproduced in 3 loads; needs 10+ load browser test)
 
 /hr HR overview (Hub) body intermittently blank
 
@@ -358,7 +358,7 @@ Latest report note: Onboarding duplicate-email check inconsistent: Medium | BLOC
 **Edge cases:** case or whitespace variants, Unicode/IDN domains, plus-addressing, the same email in another org (allowed), two concurrent creates with the same email (one wins), an email belonging to a terminated employee.
 **Tests:** unit tests for normalization. Integration tests: each kind returns 409 on both check and create, the concurrent create race, and cross-org allowed.
 
-### HRMS-018 — UNKNOWN
+### HRMS-018 — INTERMITTENT, BLOCKED (not reproduced in 3 loads; needs 50+ load browser test)
 
 Intermittent error boundary on /hr/employees hard load (React #441)
 
@@ -385,7 +385,7 @@ Latest report note: Error boundary on /hr/employees hard load (React #441): Low 
 - Acceptance criterion: 0 error boundaries in 50 hard loads.
 - Safe retest: Loop hard loads with console capture.
 
-### HRMS-019 — UNKNOWN
+### HRMS-019 — INTERMITTENT, NOT REPRODUCED (not reproduced in P2/P3; needs 50 direct-load browser test)
 
 Settings sub-pages intermittently showed wrong content on direct load
 
@@ -498,7 +498,9 @@ Latest report note: Notifications event stream drops (ERR_HTTP2_PROTOCOL_ERROR):
 **Edge cases:** an origin not in the allowlist (no ACAO header), `null` origin, the origin with a trailing slash or different case, a long-lived stream past 10 minutes, a token expiring mid-stream, the user's org switch mid-stream.
 **Tests:** integration tests: SSE emits a heartbeat within N s with a fake clock, the correct headers, and cleanup on disconnect. CORS tests per origin (allowed apex and www, disallowed evil.com) on 200, 404, 500, and OPTIONS.
 
-### HRMS-024 — UNKNOWN
+### HRMS-024 — VERIFIED IN CODE, PENDING_BROWSER_VERIFICATION
+
+employee-details-view.tsx:95 showEditTab = hydrated && canUpdateEmployee && (isSelf || manageScope === "all"); manager with "reports" scope gets showEditTab=false on non-reports.
 
 Manager sees editable Edit tab on non-report; save rejected only by server toast
 
@@ -525,7 +527,7 @@ Latest report note: Manager sees editable Edit tab on non-report: Low | BLOCKED 
 - Acceptance criterion: Edit hidden/disabled without hr:employees:update.
 - Safe retest: Repeat as Manager.
 
-### HRMS-026 — UNKNOWN
+### HRMS-026 — BLOCKED (requires invite verification flow with PIN step; not reached in this session)
 
 Invite verification PIN dropped a digit
 
@@ -552,7 +554,7 @@ Latest report note: Invite verification PIN dropped a digit: Low | BLOCKED | 0 |
 - Acceptance criterion: Typing/pasting the code keeps every digit.
 - Safe retest: Next invite verification.
 
-### HRMS-027 — UNKNOWN
+### HRMS-027 — BLOCKED (triggering element unknown; requires keyboard focus-logging browser test)
 
 Keyboard sequence unexpectedly navigated to /settings/billing?tab=plan
 
@@ -581,58 +583,92 @@ Latest report note: Keyboard sequence navigated to /settings/billing: Low | BLOC
 
 ## UX notes that are not done
 
-### UX-03 Sign-in email validation
+### UX-03 — VERIFIED IN CODE, PENDING_BROWSER_VERIFICATION
+
+passwordless-signin-form.tsx emailSchema: .min(1, "Email is required").email("Enter a valid email, e.g. name@company.com") — two distinct messages already implemented.
+
+Sign-in email validation
 - Tries: submit empty, then 'abc'. Observed: same message both times. Evidence: 10_signin_empty_submit_validation.webp, 11_signin_abc_validation.webp
 - Recommendation: empty -> "Email is required"; malformed -> "Enter a valid email, e.g. name@company.com". Verify: two distinct messages.
 
-### UX-05 Leave date picker keyboard
+### UX-05 — BLOCKED (requires browser keyboard test, out of code scope)
+
+Leave date picker keyboard
 - Tries: pick a date via keyboard. Observed: focus lands on "Previous month"; arrows did nothing; day cell never reached. Evidence: p2_t6_leave_drawer_datepicker_focus.png
 - Recommendation: focus the selected/today cell on open; arrows move days, PageUp/Down months, Enter selects; or allow typed date entry (DD/MM/YYYY).
 - Why: WCAG 2.1.1. Verify: complete a date selection with keyboard only.
 
-### UX-06 Tab order / skip link
+### UX-06 — BLOCKED (requires browser focus-order test)
+
+Tab order / skip link
 - Observed: ~45 sidebar stops; First Name ~54th stop; "Skip to content" reached only after the last control.
 - Recommendation: make "Skip to main content" the first focusable element, targeting <main>.
 - Verify: first Tab shows the skip link; Enter moves focus to page heading.
 
-### UX-07 Dialog descriptions
+### UX-07 — BLOCKED (requires browser console test)
+
+Dialog descriptions
 - Observed: console "Missing Description or aria-describedby={undefined} for DialogContent" (several, incl. leave drawer).
 - Recommendation: add DialogDescription (visually hidden if needed), e.g. "Request time off. Fields marked * are required."
 - Verify: no warning in console.
 
-### UX-08 Asset sequential validation
+### UX-08 — OPEN (HR-B domain: asset forms are out of HR-A scope)
+
+Asset sequential validation
 - Observed: empty submit shows only "Asset name is required"; Serial/Brand/Model errors only after name. Evidence: p1n_19_asset_empty_submit.png
 - Recommendation: show all required-field errors at once with a summary "3 fields need attention".
 - Verify: one submit lists all errors.
 
-### UX-09 375px layout
+### UX-09 — BLOCKED (requires 375px browser test)
+
+375px layout
 - Observed: /hr/leaves module tabs clipped ("Approvals 1"), Status column and "Cancel request" off-screen; onboarding tabs clipped. Evidence: p2_r5_375_leaves.png, p2_r5_375_onboarding.png
 - Recommendation: card layout per leave on mobile with actions visible; scroll fade indicator on tab row.
 - Verify: at 375 every row action visible without horizontal scroll.
 
-### UX-10 Contrast (INFERRED)
+### UX-10 — BLOCKED (requires contrast tool measurement)
+
+Contrast (INFERRED)
 - Placeholder/helper text looks light; not measured. Recommendation: verify >=4.5:1 for helper text; placeholders not used as labels. Verify: axe/contrast tool.
 
-### UX-14 Self-approver note
+### UX-14 — FIXED (a48443f43), PENDING_BROWSER_VERIFICATION
+
+leave-request-action-cell.tsx: added showGenericPending flag — when route is loaded but has no named approver or queue, shows "Awaiting approval" fallback text.
+
+Self-approver note
 - Observed: /hr/leaves "You are the approver - decide in Action Center" on own leave, which cannot be self-approved. Evidence: p2_t1_leaves_self_approver_note.webp. Recommendation: "Awaiting approval from HR approvals queue" naming the actual approver. Verify: own leave shows correct approver.
 
-### UX-15 Permission keys in access-denied
+### UX-15 — VERIFIED IN CODE, PENDING_BROWSER_VERIFICATION
+
+no-permission-state.tsx: raw permission keys are behind a <details> toggle, main description uses permissionKeyLabel() for human-readable labels.
+
+Permission keys in access-denied
 - Observed: /access-denied?required=module:hr, hr:custom-fields:manage etc. Recommendation: human copy "You don't have access to Custom fields. Ask your HR admin." Keep keys out of the URL/body or behind a details toggle. Verify: no raw keys displayed. (Low risk: keys are not secrets.)
 
-### UX-16 Long skeletons
+### UX-16 — BLOCKED (requires throttled network browser test; backend perf is HRMS-020 already verified)
+
+Long skeletons
 - Observed: directory ~4 s skeleton; audit drawer ~20 s. Recommendation: after 5 s show "Still loading..." and after 15 s a Retry. Verify: messages appear on throttled network.
 
-### HR-U-002: Explain "Needs another approver" on own leave requests
+### HR-U-002 — FIXED (a48443f43), PENDING_BROWSER_VERIFICATION
+
+leave-request-action-cell.tsx: showGenericPending added — "Awaiting approval" shown when route loaded but no named approver/queue.
+
+Explain "Needs another approver" on own leave requests
 - **Where:** /hr/leaves?tab=approvals (Leave Requests cards) and /hr/leaves "My leaves".
 - **Observed:** Own leave requests show "Needs another approver" with no explanation or next step; the owner (HR admin) cannot act on them.
 - **Suggestion:** Add a tooltip or line: "You cannot approve your own request. The HR approvals queue will review it." Link to the approver list.
 
-### HR-U-003: Two different counts for "pending approvals"
+### HR-U-003 — NEEDS PRODUCT DECISION: define "pending for me" — own requests vs others' requests awaiting action
+
+Two different counts for "pending approvals"
 - **Where:** /hr/leaves tab "Approvals 2" vs /hr/approvals (Action Center) Leave count `0`, same user.
 - **Observed:** Leaves tab counts 2 (own requests, which cannot be actioned) while Action Center counts 0 for Leave.
 - **Suggestion:** Use one definition of "pending for me" across tabs, or label the leaves count "Pending across org".
 
-### HR-U-005: Leave type names differ between the request form and the list
+### HR-U-005 — NEEDS DATA FIX: both form and list use leave_types.name from the backend; inconsistency is in the DB values, not frontend code
+
+Leave type names differ between the request form and the list
 - **Where:** /hr/leaves "Request leave" → Leave Type options "Casual Leave", "Sick Leave", "Earned Leave"; the My leaves table shows "Casual", "Sick", "Earned".
 - **Suggestion:** Use the same label in both places (e.g. "Casual Leave").
 
@@ -663,7 +699,9 @@ Latest report note: Keyboard sequence navigated to /settings/billing: Low | BLOC
 - **Observed:** The list shows 2 people (QA HR Thirteen and the owner). The viewing member is not listed, and there is no note explaining why. Work emails of all listed people are visible to every org member.
 - **Suggestion:** Either explain the filter ("Showing people with a linked account") or list all active members. Confirm the intended visibility of work email to non-HR members.
 
-### HR-U-018: Leave balance card should show the calculation
+### HR-U-018 — BLOCKED: depends on HR-B-014 (leave balance proration bug); calculation shown but number is wrong from backend
+
+Leave balance card should show the calculation
 - **Where:** /me/time-off "Available Days" card.
 - **Observed:** "Available Days 11 · Prorated from your joining date (14 Oct 2026): 3 of 12 months" — the number does not match the text (see HR-B-014).
 - **Suggestion:** Show "Entitlement X (prorated 3/12) − approved Y − pending Z = available W" so employees can check it.
@@ -711,7 +749,11 @@ Latest report note: Keyboard sequence navigated to /settings/billing: Low | BLOC
 - **Observed:** Choosing "Other" shows two required fields: "What is the other category?" (with the hint "Letters, numbers, spaces, apostrophes, periods, and hyphens only.") and a second line "Please describe what the other category is" that is the same request.
 - **Suggestion:** One field, one message.
 
-### HR-U-031: HR expense queue does not show the owner's own pending claims and says nothing about it
+### HR-U-031 — FIXED (a48443f43), PENDING_BROWSER_VERIFICATION
+
+expense-list.tsx AdminExpenseList header now shows "Your own claims are reviewed by another approver".
+
+HR expense queue does not show the owner's own pending claims and says nothing about it
 - **Where:** /hr/expenses ("Expense Claims 0–0 of 0 total", "No expenses found") vs /me/expenses (4 Pending claims, including the owner's own).
 - **Observed:** Own claims are not in the HR approvals list, and there is no note. Same pattern as own leave ("Needs another approver", HR-U-002).
 - **Suggestion:** Show "Your own claims are approved by another approver" in the HR list, or show the owner's claims with the same note.
