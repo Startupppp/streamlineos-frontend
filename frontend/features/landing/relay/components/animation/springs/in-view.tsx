@@ -29,12 +29,9 @@
 
 "use client";
 
-import { animated, useSpring } from "@react-spring/web";
+import { useSpring } from "@react-spring/web";
 import {
-  CSSProperties,
-  ElementType,
   forwardRef,
-  ReactNode,
   useEffect,
   useImperativeHandle,
   useMemo,
@@ -49,11 +46,11 @@ import { AnimatedVarTextTag } from "./animated-var-text-tag";
 type SpringProps = {
   children?: React.ReactNode;
   enabled?: boolean;
-  from?: Record<string, any>;
-  to?: Record<string, any>;
+  from?: Record<string, unknown>;
+  to?: Record<string, unknown>;
   mode?: "always" | "once" | "forward";
   style?: React.CSSProperties;
-  config?: Record<string, any>;
+  config?: Record<string, unknown>;
   delayIn?: number;
   delayOut?: number;
   innerClassName?: string;

@@ -24,9 +24,6 @@ import { BreathingDot } from "./breathing-dot";
 
 /** The exit is the entrance reversed, quicker — a menu leaves faster than it arrives. */
 const SPRING_OUT = { tension: 420, friction: 40 } as const;
-/** Link rows trail in this far apart, ms. */
-const ROW_STEP = 50;
-
 const REDUCE = "(prefers-reduced-motion: reduce)";
 const noop = () => () => {};
 

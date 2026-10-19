@@ -87,7 +87,7 @@ export const BrandCta = ({
         <animated.span className="relative" style={{ x: p.to((v) => -5 * v) }}>
           {label}
           <animated.span
-            className="absolute top-1/2 left-full ml-[0.4em] inline-flex -translate-y-1/2 text-[0.8em]"
+            className="absolute top-1/2 left-full ml-1.5 inline-flex -translate-y-1/2 text-[0.8em]"
             style={{ x: p.to((v) => -8 + 8 * v), opacity: p }}
           >
             <Chevrons />

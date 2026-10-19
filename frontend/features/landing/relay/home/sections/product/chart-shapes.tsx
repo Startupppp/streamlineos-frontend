@@ -17,13 +17,13 @@ type Tone = "dim" | "accent";
 /** `useId` output made safe inside `url(#…)`. */
 const useSvgId = () => useId().replace(/[^A-Za-z0-9_-]/g, "");
 
-const FACES = ["left", "right", "top"] as const;
+type Face = "left" | "right" | "top";
 
 /** One cube body, 76 wide and `h` tall in the export's own units; stretched to its box. */
 export const ChartCube = ({ h, tone }: { h: number; tone: Tone }) => {
   const id = useSvgId();
-  const grad = (face: (typeof FACES)[number]) => `${id}-${face}`;
-  const stops = (face: (typeof FACES)[number]) => (
+  const grad = (face: Face) => `${id}-${face}`;
+  const stops = (face: Face) => (
     <>
       <stop style={{ stopColor: `var(--product-cube-${tone}-${face}-from)` }} />
       <stop

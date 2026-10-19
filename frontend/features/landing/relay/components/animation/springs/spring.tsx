@@ -44,11 +44,11 @@ import { Tags } from "@/features/landing/relay/types/springs";
 type SpringProps = {
   children?: React.ReactNode;
   enabled?: boolean;
-  from?: Record<string, any>;
-  to?: Record<string, any>;
+  from?: Record<string, unknown>;
+  to?: Record<string, unknown>;
   mode?: "always" | "once" | "forward";
   style?: React.CSSProperties;
-  config?: Record<string, any>;
+  config?: Record<string, unknown>;
   delayIn?: number;
   delayOut?: number;
   disableOnMobile?: boolean;
@@ -56,7 +56,7 @@ type SpringProps = {
 } & React.HTMLAttributes<HTMLElement>;
 
 export interface VarTextTagProps {
-  tag?: keyof Tags;
+  tag?: Tags;
   children: ReactNode;
   className?: string;
   style?: CSSProperties;
@@ -65,7 +65,6 @@ const AnimatedVarTextTag = forwardRef<HTMLElement, VarTextTagProps>(
   ({ tag = "span", children, className, style, ...props }, outerRef) => {
     const ref = useRef<HTMLElement | null>(null);
     useImperativeHandle(outerRef, () => ref.current as HTMLElement);
-    // @ts-expect-error
     const Tag = animated[tag] as ElementType;
 
     return (
@@ -169,7 +168,7 @@ export const Spring = forwardRef<HTMLElement, SpringProps & { tag?: Tags }>(
 
     return (
       <AnimatedVarTextTag
-        tag={Tag as any}
+        tag={Tag}
         ref={innerRef}
         style={{ ...springs, ...style }}
         {...props}

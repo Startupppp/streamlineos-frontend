@@ -158,7 +158,7 @@ export function useSpringTrigger({
   }
 
   useLoopInView(
-    // @ts-expect-error
+    // @ts-expect-error -- the trigger ref and the element ref differ only in their element type
     trigger || elementRef,
     () => {
       if (typeof window === "undefined") return;
