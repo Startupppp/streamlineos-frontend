@@ -1,0 +1,51 @@
+/* Inner public pages (PublicShell) — the backdrop behind every page that is
+   not the homepage: a soft brand glow from the top edge over the homepage's
+   dot field, both fading out by ~50rem so long pages end on the page black.
+   Same three tiers as relay.css; names prefixed `page-`. */
+
+.relay-root {
+  --raw-page-glow-blue: color-mix(in srgb, var(--raw-color-brand-blue) 16%, transparent);
+  --raw-page-glow-cyan: color-mix(in srgb, var(--raw-color-brand-cyan) 9%, transparent);
+  --raw-page-backdrop-height: 52rem;
+  --raw-page-dots-opacity: 0.8;
+}
+
+.relay-root.relay-root {
+  --page-glow-primary: var(--raw-page-glow-blue);
+  --page-glow-secondary: var(--raw-page-glow-cyan);
+  --page-backdrop-height: var(--raw-page-backdrop-height);
+  --page-dots-opacity: var(--raw-page-dots-opacity);
+}
+
+.relay-page-backdrop {
+  position: absolute;
+  inset-inline: 0;
+  top: 0;
+  height: var(--page-backdrop-height);
+  pointer-events: none;
+  background:
+    radial-gradient(55% 60% at 50% 0%, var(--page-glow-primary), transparent 70%),
+    radial-gradient(30% 40% at 82% 6%, var(--page-glow-secondary), transparent 70%),
+    linear-gradient(to bottom, var(--backdrop-light), transparent 45%);
+}
+
+/* the homepage's dot field (backdrop/index.tsx), masked out towards the bottom */
+.relay-page-backdrop::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: url("/landing/relay/backdrop/backdrop-dot-field.svg") top center / var(--page-width) auto no-repeat;
+  opacity: var(--page-dots-opacity);
+  -webkit-mask-image: linear-gradient(to bottom, #000 25%, transparent 90%);
+  mask-image: linear-gradient(to bottom, #000 25%, transparent 90%);
+}
+
+/* the accent base line the homepage closes its top backdrop with, faint */
+.relay-page-backdrop::after {
+  content: "";
+  position: absolute;
+  inset-inline: 0;
+  top: 0;
+  height: 1px;
+  background: linear-gradient(to right, transparent, var(--backdrop-base-line), transparent);
+}

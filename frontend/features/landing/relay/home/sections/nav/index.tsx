@@ -20,13 +20,19 @@ import { NavShell } from "./nav-shell";
  *   sits 16 px from the edges — globals.css, owner review 2) — links and status hidden, wordmark 16 px, CTA plus a
  *   menu button that opens a full-screen menu (3893:2123; owner review)
  */
-export const Nav = ({ brand, links, status, cta }: NavContent) => (
-  <NavShell>
-    <Reveal
-      tag="header"
-      variant="fade"
-      className="relative z-10 mx-page flex h-22 w-page items-center justify-between px-page-inset w768:h-16 w768:px-8 w390:h-14 w390:px-page-inset"
-    >
+type NavProps = NavContent & {
+  /** Fade in on arrival (the homepage, behind its preloader). Inner pages pass
+   *  false: the fade is server-rendered at opacity 0, so the bar stayed
+   *  invisible until the spring ran. */
+  reveal?: boolean;
+};
+
+const BAR =
+  "relative z-10 mx-page flex h-22 w-page items-center justify-between px-page-inset w768:h-16 w768:px-8 w390:h-14 w390:px-page-inset";
+
+export const Nav = ({ brand, links, status, cta, reveal = true }: NavProps) => {
+  const bar = (
+    <>
       <Link href={brand.href} className="flex items-center gap-3">
         <Image
           src="/landing/relay/nav/nav-logo-mark.svg"
@@ -66,6 +72,17 @@ export const Nav = ({ brand, links, status, cta }: NavContent) => (
         <PillButton href={cta.href}>{cta.label}</PillButton>
         <NavMenu brand={brand} links={links} status={status} cta={cta} />
       </div>
-    </Reveal>
-  </NavShell>
-);
+    </>
+  );
+  return (
+    <NavShell>
+      {reveal ? (
+        <Reveal tag="header" variant="fade" className={BAR}>
+          {bar}
+        </Reveal>
+      ) : (
+        <header className={BAR}>{bar}</header>
+      )}
+    </NavShell>
+  );
+};

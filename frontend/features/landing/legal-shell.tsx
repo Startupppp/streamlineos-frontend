@@ -23,65 +23,55 @@ const legalNav = [
   { href: "/legal/security", label: "Security" },
 ];
 
+/**
+ * Long-form legal page in the Relay look: display title, a glass "On this
+ * page" card (sticky beside the text from 901px, above it below that) and a
+ * readable prose column. Typography and the token remaps that restyle the
+ * pages' own markup live in relay/styles/pages/legal.css.
+ */
 export function LegalShell({ eyebrow, title, intro, effectiveDate, sections, children }: Props) {
   return (
     <PublicShell>
-      <section className="container mx-auto px-4 lg:px-8 max-w-5xl">
-        <PublicEyebrow>{eyebrow}</PublicEyebrow>
-        <h1 className="font-display text-4xl sm:text-5xl lg:text-[3.5rem] font-extrabold tracking-[-0.03em] leading-[1.05] text-foreground mb-5">
-          {title}
-        </h1>
-        <p className="text-muted-foreground text-lg leading-relaxed max-w-3xl">{intro}</p>
+      <div className="relay-legal mx-page w-page px-page-inset">
+        <header className="legal-hero">
+          <PublicEyebrow>{eyebrow}</PublicEyebrow>
+          <h1 className="legal-title">{title}</h1>
+          <p className="legal-intro">{intro}</p>
 
-        <div className="mt-8 flex flex-wrap items-center gap-x-4 gap-y-2 text-xs font-medium text-muted-foreground">
-          <span className="inline-flex items-center gap-1.5">
-            <Calendar className="h-3 w-3 text-status-info-ink" />
-            Effective {effectiveDate}
-          </span>
-          <span className="hidden sm:inline h-1 w-1 rounded-full bg-status-neutral-fill" />
-          {legalNav.map((l, i) => (
-            <span key={l.href} className="inline-flex items-center gap-3">
-              {i > 0 && <span className="hidden sm:inline h-1 w-1 rounded-full bg-status-neutral-fill" />}
-              <Link
-                href={l.href}
-                className="hover:text-status-info-ink transition-colors inline-flex items-center gap-1"
-              >
-                {l.label}
-                <ArrowUpRight className="h-3 w-3" />
-              </Link>
+          <div className="legal-meta">
+            <span className="legal-meta-date">
+              <Calendar aria-hidden="true" className="size-3.5" />
+              Effective {effectiveDate}
             </span>
-          ))}
-        </div>
-      </section>
-
-      <section className="container mx-auto px-4 lg:px-8 max-w-7xl mt-12 lg:mt-16 grid lg:grid-cols-12 gap-10">
-        <aside className="lg:col-span-3 order-2 lg:order-1">
-          <div className="lg:sticky lg:top-28 rounded-2xl border border-border bg-card/70 backdrop-blur-sm p-5">
-            <p className="text-dense font-medium text-muted-foreground mb-3">
-              On this page
-            </p>
-            <ol className="space-y-1.5">
-              {sections.map((s, i) => (
-                <li key={s.id}>
-                  <a
-                    href={`#${s.id}`}
-                    className="group flex items-start gap-3 text-label text-muted-foreground hover:text-status-info-ink transition-colors py-1"
-                  >
-                    <span className="text-micro font-mono tabular-nums text-muted-foreground group-hover:text-status-info-ink mt-1 shrink-0">
-                      {String(i + 1).padStart(2, "0")}
-                    </span>
-                    <span className="leading-snug">{s.title}</span>
-                  </a>
-                </li>
-              ))}
-            </ol>
+            {legalNav.map((l) => (
+              <Link key={l.href} href={l.href} className="legal-meta-link">
+                {l.label}
+                <ArrowUpRight aria-hidden="true" className="size-3.5" />
+              </Link>
+            ))}
           </div>
-        </aside>
+        </header>
 
-        <article className="lg:col-span-9 order-1 lg:order-2 legal-prose">
-          {children}
-        </article>
-      </section>
+        <div className="legal-layout">
+          <aside className="legal-toc-slot">
+            <nav aria-label="On this page" className="legal-toc" data-lenis-prevent>
+              <p className="legal-toc-label">On this page</p>
+              <ol className="legal-toc-list">
+                {sections.map((s, i) => (
+                  <li key={s.id}>
+                    <a href={`#${s.id}`} className="legal-toc-link">
+                      <span className="legal-toc-index">{String(i + 1).padStart(2, "0")}</span>
+                      <span>{s.title}</span>
+                    </a>
+                  </li>
+                ))}
+              </ol>
+            </nav>
+          </aside>
+
+          <article className="legal-prose">{children}</article>
+        </div>
+      </div>
     </PublicShell>
   );
 }
@@ -96,21 +86,17 @@ export function LegalSection({
   children: ReactNode;
 }) {
   return (
-    <section id={id} className="scroll-mt-28 mb-12">
-      <h2 className="font-display text-2xl lg:text-[1.75rem] font-extrabold tracking-[-0.02em] text-foreground mb-4 leading-tight">
-        {title}
-      </h2>
-      <div className="space-y-4 text-sm text-foreground leading-relaxed">{children}</div>
+    <section id={id} className="legal-section">
+      <h2 className="legal-heading">{title}</h2>
+      <div className="legal-body">{children}</div>
     </section>
   );
 }
 
 export function PlainEnglish({ children }: { children: ReactNode }) {
   return (
-    <div className="not-prose rounded-xl border border-status-info-rule bg-status-info-surface px-4 py-3.5 my-5 text-sm text-foreground leading-relaxed">
-      <p className="text-dense font-semibold text-status-info-ink mb-1.5">
-        Plain English
-      </p>
+    <div className="not-prose legal-callout">
+      <p className="legal-callout-label">Plain English</p>
       {children}
     </div>
   );
