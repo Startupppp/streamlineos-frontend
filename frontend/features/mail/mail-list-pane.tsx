@@ -47,7 +47,6 @@ import type {
 } from "@/types/mail";
 
 function friendlyMailAccountError(raw: string): string {
-  if (/unable to retrieve tool with slug/i.test(raw)) return "This account needs reconnecting to fetch messages.";
   if (/authentication|auth|unauthorized|unauthenticated/i.test(raw)) return "Authentication expired — please reconnect this account.";
   if (/rate.?limit|too many requests/i.test(raw)) return "Too many requests — will retry shortly.";
   return "Could not load messages for this account.";
