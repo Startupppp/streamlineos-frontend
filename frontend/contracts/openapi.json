@@ -1228976,17 +1228976,17 @@
                       "type": "string",
                       "enum": [
                         "hr",
+                        "kb",
                         "crm",
                         "build",
-                        "accounting",
-                        "inventory",
-                        "kb",
-                        "chat",
+                        "sign",
                         "support",
                         "surveys",
                         "payroll",
-                        "sign",
-                        "timesheets"
+                        "timesheets",
+                        "inventory",
+                        "accounting",
+                        "chat"
                       ]
                     }
                   }
@@ -1229148,17 +1229148,17 @@
                       "type": "string",
                       "enum": [
                         "hr",
+                        "kb",
                         "crm",
                         "build",
-                        "accounting",
-                        "inventory",
-                        "kb",
-                        "chat",
+                        "sign",
                         "support",
                         "surveys",
                         "payroll",
-                        "sign",
-                        "timesheets"
+                        "timesheets",
+                        "inventory",
+                        "accounting",
+                        "chat"
                       ]
                     }
                   },
@@ -1229193,17 +1229193,17 @@
                                 "type": "string",
                                 "enum": [
                                   "hr",
+                                  "kb",
                                   "crm",
                                   "build",
-                                  "accounting",
-                                  "inventory",
-                                  "kb",
-                                  "chat",
+                                  "sign",
                                   "support",
                                   "surveys",
                                   "payroll",
-                                  "sign",
-                                  "timesheets"
+                                  "timesheets",
+                                  "inventory",
+                                  "accounting",
+                                  "chat"
                                 ]
                               },
                               "standing": {
@@ -1229546,17 +1229546,17 @@
                       "type": "string",
                       "enum": [
                         "hr",
+                        "kb",
                         "crm",
                         "build",
-                        "accounting",
-                        "inventory",
-                        "kb",
-                        "chat",
+                        "sign",
                         "support",
                         "surveys",
                         "payroll",
-                        "sign",
-                        "timesheets"
+                        "timesheets",
+                        "inventory",
+                        "accounting",
+                        "chat"
                       ]
                     }
                   },
@@ -1399010,17 +1399010,17 @@
                       "type": "string",
                       "enum": [
                         "hr",
+                        "kb",
                         "crm",
                         "build",
-                        "accounting",
-                        "inventory",
-                        "kb",
-                        "chat",
+                        "sign",
                         "support",
                         "surveys",
                         "payroll",
-                        "sign",
-                        "timesheets"
+                        "timesheets",
+                        "inventory",
+                        "accounting",
+                        "chat"
                       ]
                     }
                   }

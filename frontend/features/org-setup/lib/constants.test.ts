@@ -15,9 +15,8 @@ describe("selectOnboardingQuestions", () => {
   });
 
   it("does not allocate questions to universal or unselected modules", () => {
-    const result = selectOnboardingQuestions(["chat", "kb", "build"]);
+    const result = selectOnboardingQuestions(["kb", "build"]);
 
-    expect(result.chat).toBeUndefined();
     expect(result.kb).toBeUndefined();
     expect(result.build?.map((question) => question.key)).toEqual(["workType"]);
   });

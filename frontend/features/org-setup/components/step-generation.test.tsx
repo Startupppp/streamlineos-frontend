@@ -97,7 +97,7 @@ jest.mock("../lib/setup-payload", () => ({
   buildOrgSetupPayload: jest.fn(() => ({
     industry: "IT Services",
     companySize: "1-10",
-    enabledModules: ["chat", "kb"],
+    enabledModules: ["kb"],
   })),
 }));
 

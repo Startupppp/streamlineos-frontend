@@ -14,7 +14,6 @@ import {
   ClipboardList,
   LayoutDashboard,
   BookOpen,
-  MessageCircle,
   Check,
 } from "lucide-react";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
@@ -54,7 +53,6 @@ const MODULE_ICONS: Record<OrgModuleKey, React.ElementType> = {
   build: Hammer,
   sign: FileSignature,
   surveys: ClipboardList,
-  chat: MessageCircle,
   kb: BookOpen,
 };
 

@@ -4,7 +4,6 @@ import {
   Briefcase,
   Contact2,
   Headphones,
-  MessageSquare,
   Package,
   Receipt,
   Users,
@@ -23,7 +22,6 @@ export const MODULE_ICON: Record<string, ModuleIcon> = {
   build: Briefcase,
   support: Headphones,
   kb: BookOpen,
-  chat: MessageSquare,
 };
 
 const MODULE_OUTCOMES: Record<string, readonly string[]> = {
@@ -34,7 +32,6 @@ const MODULE_OUTCOMES: Record<string, readonly string[]> = {
   inventory: ["Stock levels", "Warehouses", "Purchase orders"],
   support: ["Ticket queue", "SLA timers", "Customer replies"],
   kb: ["Team wiki", "SOPs & FAQs", "Searchable docs"],
-  chat: ["Channels", "DMs & mentions", "Quick huddles"],
 };
 
 const STAT_PRESETS: Record<string, { label: string; value: string }> = {
@@ -45,7 +42,6 @@ const STAT_PRESETS: Record<string, { label: string; value: string }> = {
   inventory: { label: "Stock", value: "Ready" },
   support: { label: "Support", value: "Ready" },
   kb: { label: "Docs", value: "Ready" },
-  chat: { label: "Chat", value: "Ready" },
 };
 
 export type MockStat = { id: string; label: string; value: string };

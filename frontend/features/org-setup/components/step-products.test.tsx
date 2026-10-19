@@ -93,7 +93,7 @@ describe("StepProducts — module card grid", () => {
     const patch = jest.fn();
     render(
       <StepProducts
-        data={wizard({ modules: ["build", "crm", "hr", "chat", "kb"] })}
+        data={wizard({ modules: ["build", "crm", "hr", "kb"] })}
         patch={patch}
         onBack={jest.fn()}
         onNext={jest.fn()}
@@ -113,7 +113,7 @@ describe("StepProducts — module card grid", () => {
     const patch = jest.fn();
     render(
       <StepProducts
-        data={wizard({ modules: ["chat", "kb"] })}
+        data={wizard({ modules: ["kb"] })}
         patch={patch}
         onBack={jest.fn()}
         onNext={jest.fn()}
@@ -146,7 +146,7 @@ describe("StepProducts — module card grid", () => {
   it("Continue is enabled after selecting one module once the availability preview matches it", async () => {
     render(
       <StepProducts
-        data={wizard({ modules: ["build", "chat", "kb"] })}
+        data={wizard({ modules: ["build", "kb"] })}
         patch={jest.fn()}
         onBack={jest.fn()}
         onNext={jest.fn()}
@@ -155,7 +155,7 @@ describe("StepProducts — module card grid", () => {
     const continueBtn = screen.getByRole("button", { name: /continue/i });
     expect(continueBtn).toBeDisabled();
     await waitFor(() => expect(continueBtn).toBeEnabled());
-    expect(mockPreview).toHaveBeenCalledWith({ modules: ["build", "chat", "kb"] });
+    expect(mockPreview).toHaveBeenCalledWith({ modules: ["build", "kb"] });
   });
 
   it("an ineligible module in the preview keeps Continue disabled", async () => {
@@ -168,7 +168,7 @@ describe("StepProducts — module card grid", () => {
     );
     render(
       <StepProducts
-        data={wizard({ modules: ["build", "chat", "kb"] })}
+        data={wizard({ modules: ["build", "kb"] })}
         patch={jest.fn()}
         onBack={jest.fn()}
         onNext={jest.fn()}
@@ -182,7 +182,7 @@ describe("StepProducts — module card grid", () => {
   it("shows selected count when extra modules are chosen", () => {
     render(
       <StepProducts
-        data={wizard({ modules: ["build", "crm", "chat", "kb"] })}
+        data={wizard({ modules: ["build", "crm", "kb"] })}
         patch={jest.fn()}
         onBack={jest.fn()}
         onNext={jest.fn()}
@@ -194,7 +194,7 @@ describe("StepProducts — module card grid", () => {
   it("shows singular count for one extra module", () => {
     render(
       <StepProducts
-        data={wizard({ modules: ["build", "chat", "kb"] })}
+        data={wizard({ modules: ["build", "kb"] })}
         patch={jest.fn()}
         onBack={jest.fn()}
         onNext={jest.fn()}
@@ -208,7 +208,7 @@ describe("StepProducts — module questions", () => {
   it("shows only the first Build question when Build module is selected", () => {
     render(
       <StepProducts
-        data={wizard({ modules: ["build", "chat", "kb"] })}
+        data={wizard({ modules: ["build", "kb"] })}
         patch={jest.fn()}
         onBack={jest.fn()}
         onNext={jest.fn()}
@@ -225,7 +225,7 @@ describe("StepProducts — module questions", () => {
   it("does not show Build questions when Build is unchecked", () => {
     render(
       <StepProducts
-        data={wizard({ modules: ["chat", "kb"] })}
+        data={wizard({ modules: ["kb"] })}
         patch={jest.fn()}
         onBack={jest.fn()}
         onNext={jest.fn()}
@@ -241,7 +241,7 @@ describe("StepProducts — module questions", () => {
     const patch = jest.fn();
     render(
       <StepProducts
-        data={wizard({ modules: ["build", "chat", "kb"] })}
+        data={wizard({ modules: ["build", "kb"] })}
         patch={patch}
         onBack={jest.fn()}
         onNext={jest.fn()}
@@ -261,7 +261,7 @@ describe("StepProducts — module questions", () => {
   it("shows only the first HR question when HR module is selected", () => {
     render(
       <StepProducts
-        data={wizard({ modules: ["hr", "chat", "kb"] })}
+        data={wizard({ modules: ["hr", "kb"] })}
         patch={jest.fn()}
         onBack={jest.fn()}
         onNext={jest.fn()}
@@ -277,7 +277,7 @@ describe("StepProducts — nav buttons", () => {
     const onNext = jest.fn();
     render(
       <StepProducts
-        data={wizard({ modules: ["build", "chat", "kb"] })}
+        data={wizard({ modules: ["build", "kb"] })}
         patch={jest.fn()}
         onBack={jest.fn()}
         onNext={onNext}

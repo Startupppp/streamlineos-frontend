@@ -7,7 +7,6 @@ export const ORG_MODULE_KEYS = [
   "accounting",
   "inventory",
   "kb",
-  "chat",
   "support",
   "surveys",
   "payroll",
@@ -29,16 +28,25 @@ export const inviteeModuleAccessSchema = z
   )
   .max(MAX_INVITEE_MODULE_ACCESS)
   .refine(
-    (items) => new Set(items.map((item) => item.moduleKey)).size === items.length,
+    (items) =>
+      new Set(items.map((item) => item.moduleKey)).size === items.length,
     "Each module can be assigned once per invitee.",
   );
 
-export type InviteeModuleAccess = z.infer<typeof inviteeModuleAccessSchema>[number];
+export type InviteeModuleAccess = z.infer<
+  typeof inviteeModuleAccessSchema
+>[number];
 
 export const orgSetupSessionContract = z.object({
   id: z.number().int(),
   type: z.string(),
-  status: z.enum(["not_started", "in_progress", "completed", "skipped", "abandoned"]),
+  status: z.enum([
+    "not_started",
+    "in_progress",
+    "completed",
+    "skipped",
+    "abandoned",
+  ]),
   currentStep: z.string().nullable(),
   completedSteps: z.array(z.string()),
   skippedSteps: z.array(z.string()),
@@ -124,13 +132,24 @@ export const orgSetupStatusContract = z.object({
 export type OrgSetupStatus = z.infer<typeof orgSetupStatusContract>;
 
 export const orgSetupCompleteContract = z.union([
-  z.object({ success: z.literal(true), orgId: z.string(), autoLoginToken: z.string(), destination: z.string() }),
-  z.object({ success: z.literal(true), orgId: z.string(), destination: z.string() }),
+  z.object({
+    success: z.literal(true),
+    orgId: z.string(),
+    autoLoginToken: z.string(),
+    destination: z.string(),
+  }),
+  z.object({
+    success: z.literal(true),
+    orgId: z.string(),
+    destination: z.string(),
+  }),
 ]);
 
-
 export const orgSetupDraftSaveContract = z
-  .object({ success: z.literal(true), revision: z.number().int().nonnegative() })
+  .object({
+    success: z.literal(true),
+    revision: z.number().int().nonnegative(),
+  })
   .strict();
 
 export const orgSetupDraftContract = z

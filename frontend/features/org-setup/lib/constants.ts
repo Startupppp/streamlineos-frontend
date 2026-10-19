@@ -32,7 +32,7 @@ export const GOALS = [
   { id: "everything", label: "Build Everything", outcome: "Enable the full StreamlineOS suite" },
 ] as const;
 
-export const ALWAYS_ENABLED_MODULES = ["chat", "kb"] as const satisfies readonly OrgModuleKey[];
+export const ALWAYS_ENABLED_MODULES = ["kb"] as const satisfies readonly OrgModuleKey[];
 
 export const TEAM_SIZES = [
   { value: "1-10", label: "1–10 employees" },
@@ -83,7 +83,6 @@ export const MODULE_CATALOG: Record<OrgModuleKey, { label: string; description: 
   build: { label: "Build", description: "Tasks and delivery tracking", setupTasks: ["Create first project", "Invite team"] },
   support: { label: "Support", description: "Tickets and customer SLAs", setupTasks: ["Configure SLA policy"] },
   kb: { label: "Knowledge", description: "SOPs and team docs", setupTasks: ["Create team space"] },
-  chat: { label: "Chat", description: "Team messaging", setupTasks: ["Create first channel"] },
   payroll: { label: "Payroll", description: "Pay runs and payslips", setupTasks: ["Configure pay schedule"] },
   timesheets: { label: "Timesheets", description: "Time tracking by project or client", setupTasks: ["Set up projects for tracking"] },
   surveys: { label: "Surveys", description: "Employee and customer feedback", setupTasks: ["Create first survey"] },

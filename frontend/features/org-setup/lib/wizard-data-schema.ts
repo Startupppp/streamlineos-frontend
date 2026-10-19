@@ -2,6 +2,7 @@ import { z } from "zod";
 import {
   ORG_MODULE_KEYS,
   inviteeModuleAccessSchema,
+  type OrgModuleKey,
 } from "@/hooks/api/org-setup-schema";
 export {
   ORG_MODULE_KEYS,
@@ -12,6 +13,10 @@ export type {
   InviteeModuleAccess,
   OrgModuleKey,
 } from "@/hooks/api/org-setup-schema";
+
+function isOrgModuleKey(key: string): key is OrgModuleKey {
+  return ORG_MODULE_KEYS.some((candidate) => candidate === key);
+}
 
 const optionalString = z.string().optional().catch(undefined);
 
@@ -38,9 +43,14 @@ export const wizardDataSchema = z.object({
   businessAddress: optionalString,
   taxId: optionalString,
   installedApps: z.array(z.string()).catch([]),
-  modules: z.array(z.enum(ORG_MODULE_KEYS)).catch([]),
+  modules: z
+    .array(z.string())
+    .transform((keys) => keys.filter(isOrgModuleKey))
+    .catch([]),
   invitees: z.array(inviteeSchema).catch([]),
-  moduleAnswers: z.record(z.string(), z.record(z.string(), z.unknown())).catch({}),
+  moduleAnswers: z
+    .record(z.string(), z.record(z.string(), z.unknown()))
+    .catch({}),
 });
 
 export type Invitee = z.infer<typeof inviteeSchema>;

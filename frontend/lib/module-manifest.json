@@ -82,7 +82,7 @@
     },
     {
       "administersNamespaces": [],
-      "administrable": true,
+      "administrable": false,
       "cacheNamespaces": [],
       "displayName": "Chat",
       "id": "chat",

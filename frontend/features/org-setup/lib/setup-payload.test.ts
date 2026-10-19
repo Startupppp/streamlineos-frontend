@@ -9,7 +9,7 @@ import { parseWizardDraft, type Invitee, type OrgModuleKey, type WizardData } fr
 
 function wizard(
   invitees: Invitee[],
-  modules: OrgModuleKey[] = ["build", "crm", "hr", "chat", "kb"],
+  modules: OrgModuleKey[] = ["build", "crm", "hr", "kb"],
 ): WizardData {
   return {
     ...DEFAULT_DATA,
@@ -28,8 +28,8 @@ describe("org setup invitation access", () => {
     expect(payload.companySize).toBe("1-10");
     expect(payload.industry).toBe("Agency");
   });
-  it("defaults a MEMBER to MEMBER on every selected module except chat and kb", () => {
-    const modules: OrgModuleKey[] = ["build", "crm", "hr", "chat", "kb"];
+  it("defaults a MEMBER to MEMBER on every selected module except kb", () => {
+    const modules: OrgModuleKey[] = ["build", "crm", "hr", "kb"];
     expect(defaultInviteModuleAccess("MEMBER", modules)).toEqual([
       { moduleKey: "build", standing: "MEMBER" },
       { moduleKey: "crm", standing: "MEMBER" },
@@ -38,13 +38,13 @@ describe("org setup invitation access", () => {
   });
 
   it("gives no access when only always-on modules are selected", () => {
-    expect(defaultInviteModuleAccess("MEMBER", ["chat", "kb"])).toEqual([]);
+    expect(defaultInviteModuleAccess("MEMBER", ["kb"])).toEqual([]);
   });
 
   it("builds payload with per-module MEMBER access for an hr+crm org", () => {
     const data = wizard(
       [{ email: "member@example.com", role: "MEMBER" }],
-      ["hr", "crm", "chat", "kb"],
+      ["hr", "crm", "kb"],
     );
     expect(buildOrgSetupPayload(data).invitees).toEqual([
       {
@@ -70,12 +70,12 @@ describe("org setup invitation access", () => {
           ],
         },
       ],
-      ["hr", "chat", "kb"],
+      ["hr", "kb"],
     );
     expect(getInviteAccessError(data)).toMatch(/kb access, but that product is on for everyone/);
     expect(getInviteAccessError(wizard(
       [{ email: "member@example.com", role: "MEMBER", moduleAccess: [{ moduleKey: "hr", standing: "MEMBER" }] }],
-      ["hr", "chat", "kb"],
+      ["hr", "kb"],
     ))).toBeNull();
   });
 
@@ -116,10 +116,16 @@ describe("org setup invitation access", () => {
     );
   });
 
+  it("restores a draft saved while chat was a selectable module without losing the other modules, because chat is part of Home", () => {
+    const restored = parseWizardDraft({ ...wizard([]), modules: ["chat", "kb", "hr"] });
+    expect(restored.modules).toEqual(["kb", "hr"]);
+    expect(buildOrgSetupPayload(restored).enabledModules).toEqual(["kb", "hr"]);
+  });
+
   it("blocks a grant when its product was deselected after being configured", () => {
     const data = wizard(
       [{ email: "member@example.com", role: "MEMBER", moduleAccess: [{ moduleKey: "hr", standing: "ADMIN" }] }],
-      ["build", "chat", "kb"],
+      ["build", "kb"],
     );
 
     expect(getInviteAccessError(data)).toMatch(/hr access.*no longer selected/i);
@@ -141,7 +147,7 @@ describe("org setup invitation access", () => {
 
     const eleven: OrgModuleKey[] = [
       "build", "crm", "hr", "accounting", "inventory", "support",
-      "surveys", "payroll", "sign", "timesheets", "chat",
+      "surveys", "payroll", "sign", "timesheets", "kb",
     ];
     const oversized = wizard(
       [{ email: "member@example.com", role: "MEMBER", moduleAccess: eleven.map((moduleKey) => ({ moduleKey, standing: "MEMBER" })) }],
@@ -203,8 +209,8 @@ describe("buildOrgSetupPayload — moduleAnswers", () => {
       ...DEFAULT_DATA,
       industry: "Technology",
       teamSize: "1-10",
-      modules: ["build", "hr", "chat", "kb"],
-      installedApps: ["build", "hr", "chat", "kb"],
+      modules: ["build", "hr", "kb"],
+      installedApps: ["build", "hr", "kb"],
       invitees: [],
       moduleAnswers: {
         build: { workType: "Software", firstProjectName: "Alpha" },
@@ -223,8 +229,8 @@ describe("buildOrgSetupPayload — moduleAnswers", () => {
       ...DEFAULT_DATA,
       industry: "Technology",
       teamSize: "1-10",
-      modules: ["build", "chat", "kb"],
-      installedApps: ["build", "chat", "kb"],
+      modules: ["build", "kb"],
+      installedApps: ["build", "kb"],
       invitees: [],
       moduleAnswers: { build: { workType: "", firstProjectName: "" } },
     };
@@ -237,8 +243,8 @@ describe("buildOrgSetupPayload — moduleAnswers", () => {
       ...DEFAULT_DATA,
       industry: "Technology",
       teamSize: "1-10",
-      modules: ["crm", "chat", "kb"],
-      installedApps: ["crm", "chat", "kb"],
+      modules: ["crm", "kb"],
+      installedApps: ["crm", "kb"],
       invitees: [],
       moduleAnswers: {
         build: { workType: "Software" },

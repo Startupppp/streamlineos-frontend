@@ -27,8 +27,8 @@ function wizard(invitees: Invitee[] = []): WizardData {
   return {
     ...DEFAULT_DATA,
     goals: ["build", "sales", "hr"],
-    modules: ["build", "crm", "hr", "chat", "kb"],
-    installedApps: ["build", "crm", "hr", "chat", "kb"],
+    modules: ["build", "crm", "hr", "kb"],
+    installedApps: ["build", "crm", "hr", "kb"],
     invitees,
   };
 }
@@ -106,7 +106,7 @@ describe("People step product access", () => {
         ],
       },
     ]);
-    data.modules = ["build", "chat", "kb"];
+    data.modules = ["build", "kb"];
 
     render(
       <StepInviteLaunch
@@ -139,7 +139,7 @@ describe("People step product access", () => {
       { email: "one@example.com", role: "MEMBER", moduleAccess: staleAccess },
       { email: "two@example.com", role: "MEMBER", moduleAccess: staleAccess },
     ]);
-    data.modules = ["build", "chat", "kb"];
+    data.modules = ["build", "kb"];
 
     render(
       <StepInviteLaunch
