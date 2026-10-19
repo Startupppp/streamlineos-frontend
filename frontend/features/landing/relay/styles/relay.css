@@ -20,6 +20,9 @@
 @import "./sections/pricing.css";
 @import "./sections/footer.css";
 @import "./sections/preloader.css";
+/* Page-scoped styles for the inner public pages. */
+@import "./pages/public-shell.css";
+@import "./pages/legal.css";
 
 /* ---------------------------------------------------------------------------
    TIER 1 — PRIMITIVES  (`--raw-*`)
@@ -322,7 +325,7 @@
 /* Tokens the narrower frames redefine. Unlayered, like the tiers above: a
    `:root` inside `@layer base` would lose to them. */
 @media (width <= 1200px) {
-  .relay-root {
+  .relay-root.relay-root {
     --page-width: var(--raw-size-page-1024);
     --page-inset: var(--raw-size-page-inset-1024);
     --section-gap: var(--raw-size-section-gap-1024);
@@ -334,7 +337,7 @@
 }
 
 @media (width <= 900px) {
-  .relay-root {
+  .relay-root.relay-root {
     --page-width: var(--raw-size-page-768);
     --page-inset: var(--raw-size-page-inset-768);
     --section-gap: var(--raw-size-section-gap-768);
@@ -346,7 +349,7 @@
 }
 
 @media (width <= 580px) {
-  .relay-root {
+  .relay-root.relay-root {
     --page-width: var(--raw-size-page-390);
     --page-inset: var(--raw-size-page-inset-390);
     --section-gap: var(--raw-size-section-gap-390);
