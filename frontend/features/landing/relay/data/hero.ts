@@ -1,3 +1,10 @@
+import { PRICING } from "@/lib/pricing";
+
+import { SIGN_IN_HREF, TRIAL_LABEL } from "./pricing";
+
+const FREE = `free for up to ${PRICING.freeSeatLimit} people`;
+const TRIAL = `${TRIAL_LABEL} trial on paid plans`;
+
 /** 02 Hero — Figma 3488:21055. Copy is verbatim from the frame. */
 export const heroMock = {
   chip: "one system / every function",
@@ -5,14 +12,14 @@ export const heroMock = {
   subhead:
     "The operating system for your business: HR, payroll, CRM, inventory, finance, workflows, helpdesk and AI in one place.",
   actions: {
-    primary: { label: "Start free", href: "https://app.streamlineos.in" },
+    primary: { label: "Start free", href: SIGN_IN_HREF },
     secondary: { label: "See a workflow run", href: "#product" },
   },
-  note: "free for up to 5 people / 14-day trial on paid plans",
+  note: `${FREE} / ${TRIAL}`,
   /** The same note as the 1024 frame breaks it (3603:2158, 380 wide, 2 lines). */
-  noteLines: ["free for up to 5 people / 14-day trial on", "paid plans"],
+  noteLines: [`${FREE} / ${TRIAL_LABEL} trial on`, "paid plans"],
   /** …and as the 390 frame breaks it (3893:2158, 217 wide, 12px, centred). */
-  noteLines390: ["free for up to 5 people /", "14-day trial on paid plans"],
+  noteLines390: [`${FREE} /`, TRIAL],
   window: {
     label: "StreamlineOS workflow preview",
     title: "Deals over ₹10L",

@@ -145,7 +145,10 @@
    uses --type-* / --line-* / --letter-spacing-* for typography.
    The design is dark-only, so there is no prefers-color-scheme override.
    --------------------------------------------------------------------------- */
-.relay-root {
+/* Doubled so it outranks the app's `.dark` palette, which `.relay-root`
+   also carries (RelayRoot) so page bodies built on app tokens — cards,
+   muted text, borders, status tints — render dark too. */
+.relay-root.relay-root {
   --background: var(--raw-color-black);
   --foreground: var(--raw-color-white);
   --foreground-muted: var(--raw-color-neutral-400);
@@ -415,11 +418,6 @@
 
   html:has(.relay-root) body {
     overflow-x: clip;
-  }
-
-  /* Page bodies inside the shell keep the app's `border-border`, on dark. */
-  .relay-root {
-    --border: var(--border-subtle);
   }
 
   /* Relay's own markup (`.relay-ui`: the home page, nav and footer) was

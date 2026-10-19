@@ -181,12 +181,24 @@ export const NavMenu = ({
   const onLink = (e: MouseEvent<HTMLElement>) => {
     const a = (e.target as HTMLElement).closest("a");
     const href = a?.getAttribute("href");
-    if (!href?.startsWith("#")) return;
+    if (!href) return;
+    // `/#section` is a homepage anchor; on the homepage it glides like `#section`.
+    const hash = href.startsWith("#")
+      ? href
+      : href.startsWith("/#") && location.pathname === "/"
+        ? href.slice(1)
+        : null;
+    if (!hash) {
+      // another page: let the link navigate, and take the menu down with it
+      refocus.current = false;
+      shut();
+      return;
+    }
     e.preventDefault();
     refocus.current = false;
     shut();
-    history.replaceState(null, "", href);
-    const target = document.getElementById(href.slice(1));
+    history.replaceState(null, "", hash);
+    const target = document.getElementById(hash.slice(1));
     if (!target) return;
     // glide once the scroll lock has let go — Lenis restarting resets any
     // scroll begun while it was stopped
@@ -321,7 +333,8 @@ export const NavMenu = ({
               </PillButton>
             </animated.div>
           </animated.div>,
-          document.body,
+          // inside the wrapper that carries Relay's tokens
+          document.querySelector(".relay-root") ?? document.body,
         )}
     </>
   );

@@ -28,6 +28,9 @@ import { Footer } from "@/features/landing/relay/home/sections/footer";
 import { Preloader } from "@/features/landing/relay/home/preloader";
 import { ParticleStream } from "@/features/landing/relay/home/stream/particle-stream";
 import { footerMock } from "@/features/landing/relay/data/footer";
+import { Faq } from "@/features/landing/relay/home/sections/faq";
+import type { FAQ } from "@/features/landing/data/faqs";
+import { PreloadScript } from "@/features/landing/relay/home/preload-script";
 
 /**
  * Home view — the Relay landing page, drawn as four Figma frames: 1440
@@ -49,13 +52,21 @@ import { footerMock } from "@/features/landing/relay/data/footer";
  * `app/robot-view`): no preloader, no particle stream, no cursor; every spring
  * at rest (`RobotView` sets react-spring's `skipAnimation`).
  */
-export const HomeView = ({ robot = false }: { robot?: boolean }) => (
+interface HomeViewProps {
+  faqs: readonly FAQ[];
+  /** CSP nonce for the inline preload script. */
+  nonce?: string;
+  robot?: boolean;
+}
+
+export const HomeView = ({ faqs, nonce, robot = false }: HomeViewProps) => (
   <RobotProvider robot={robot}>
     {robot && <RobotView />}
+    {!robot && <PreloadScript nonce={nonce} />}
     {!robot && <Preloader />}
     {/* The page column centres between the frames' widths; decorations may
         bleed past it into the margins, clipped at the viewport here. */}
-    <div className="overflow-x-clip">
+    <div className="relay-ui overflow-x-clip">
       <main className="relative mx-page w-page overflow-y-clip">
         <Backdrop />
         {/* the accent particle stream: fixed to the viewport over the backdrop,
@@ -132,6 +143,8 @@ export const HomeView = ({ robot = false }: { robot?: boolean }) => (
             <Pricing {...pricingMock} />
           </HydrateNear>
         </Suspense>
+        <div aria-hidden="true" className="h-section-gap" />
+        <Faq faqs={faqs} />
         <div aria-hidden="true" className="h-section-gap" />
         <Suspense>
           <HydrateNear id="footer">

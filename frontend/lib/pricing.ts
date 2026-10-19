@@ -44,6 +44,8 @@ export type PricingTier = {
   price: string;
   period: string;
   bestFor: string;
+  /** Seats included — mirrors PLAN_LIMITS.members (Enterprise: the negotiated starting point). */
+  seatLimit: number;
   features: string[];
   cta: string;
   ctaHref: string;
@@ -72,6 +74,7 @@ export const PRICING_TIERS: PricingTier[] = [
     price: `${PRICING.currency}0`,
     period: `up to ${PRICING.freeSeatLimit} seats`,
     bestFor: "Solo founders, evaluating",
+    seatLimit: PRICING.freeSeatLimit,
     features: [
       `Up to ${PRICING.freeSeatLimit} seats`,
       "All core modules — HR, Projects, CRM, Chat",
@@ -99,8 +102,9 @@ export const PRICING_TIERS: PricingTier[] = [
     price: fmt(PRICING.starterMonthlyInr),
     period: "per org / month",
     bestFor: "Small teams getting operational",
+    seatLimit: 10,
     features: [
-      `Up to 10 seats`,
+      "Up to 10 seats",
       "Everything in Free",
       "Payroll management",
       "Leave & attendance",
@@ -128,6 +132,7 @@ export const PRICING_TIERS: PricingTier[] = [
     price: fmt(PRICING.professionalMonthlyInr),
     period: "per org / month",
     bestFor: "Growing companies",
+    seatLimit: 50,
     features: [
       "Up to 50 seats",
       "Everything in Starter",
@@ -155,6 +160,7 @@ export const PRICING_TIERS: PricingTier[] = [
     price: `from ${fmt(PRICING.enterpriseMonthlyInr)}`,
     period: "per org / month",
     bestFor: "Large / regulated teams",
+    seatLimit: 500,
     features: [
       "Everything in Professional",
       "Negotiated seat limits",
