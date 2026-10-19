@@ -1,6 +1,9 @@
 import type { Metadata } from "next";
+import { headers } from "next/headers";
 import { redirect } from "next/navigation";
-import { LandingPage } from "@/features/landing/landing-page";
+import { HomeView } from "@/features/landing/relay/home";
+import { RelayRoot } from "@/features/landing/relay/relay-root";
+import { isBotUserAgent } from "@/features/landing/relay/utils/bot-ua";
 import { BRAND_NAME, BRAND_URL } from "@/lib/branding";
 import {
   SoftwareApplicationJsonLd,
@@ -47,11 +50,18 @@ export default async function HomePage() {
     }
   }
 
+  const requestHeaders = await headers();
   return (
     <>
       <SoftwareApplicationJsonLd />
       <FAQJsonLd faqs={faqs} />
-      <LandingPage />
+      <RelayRoot>
+        <HomeView
+          faqs={faqs}
+          nonce={requestHeaders.get("x-nonce") ?? undefined}
+          robot={isBotUserAgent(requestHeaders.get("user-agent"))}
+        />
+      </RelayRoot>
     </>
   );
 }

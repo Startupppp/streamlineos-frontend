@@ -1,10 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
-import { Check, ArrowRight } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Check } from "lucide-react";
+import { BrandCta } from "@/features/landing/relay/components/ui/brand-cta";
+import { GlassTierButton } from "@/features/landing/relay/home/sections/pricing/glass-tier-button";
 import {
   PRICING,
   PRICING_TIERS,
@@ -16,33 +16,6 @@ import { IncludedAppsGrid } from "./included-apps-grid";
 import { EASE_OUT } from "./motion/variants";
 
 const fmt = (n: number) => `${PRICING.currency}${n.toLocaleString("en-IN")}`;
-
-const TIER_SUMMARY: Record<PricingTier["id"], string[]> = {
-  free: [
-    "All core apps",
-    `Up to ${PRICING.freeSeatLimit} seats`,
-    "StreamlineOS Cloud",
-    "Community support",
-  ],
-  starter: [
-    "All apps",
-    "Up to 10 seats",
-    "Payroll & leave",
-    "Email support",
-  ],
-  professional: [
-    "All apps",
-    "Up to 50 seats",
-    "CRM, recruitment, AI",
-    "Priority support",
-  ],
-  enterprise: [
-    "All apps",
-    "Negotiated seats",
-    "Custom SLA & compliance",
-    "Dedicated CSM",
-  ],
-};
 
 type PricingTierGridProps = {
   showAppsGrid?: boolean;
@@ -69,8 +42,10 @@ export function PricingTierGrid({
 
   return (
     <>
-      <PricingBillingToggle period={period} onChange={setPeriod} className="mb-8" />
-      <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-4">
+      <PricingBillingToggle period={period} onChange={setPeriod} className="mb-10 w390:mb-8" />
+      {/* Four across at 1440 (the homepage's 20 gap), 2 × 2 at 1024 and 768,
+          stacked at 390 — the homepage pricing cards' rhythm. */}
+      <div className="grid grid-cols-4 gap-5 w1024:grid-cols-2 w1024:gap-3 w390:grid-cols-1">
         {tiers.map((tier, i) => (
           <PricingCard key={tier.id} tier={tier} period={period} index={i} />
         ))}
@@ -82,6 +57,12 @@ export function PricingTierGrid({
   );
 }
 
+/**
+ * Relay plan card (features/landing/relay/home/sections/pricing/tier-card.tsx):
+ * glass card on the hairline border, mono plan name, the brand-gradient tag,
+ * and — on the featured plan — the accent stroke and glow plus the brand CTA.
+ * Every feature line comes from `lib/pricing.ts`.
+ */
 function PricingCard({
   tier,
   period,
@@ -97,66 +78,77 @@ function PricingCard({
     period === "annual" && tier.monthly && tier.annual && tier.monthly > tier.annual
       ? fmt(tier.monthly)
       : null;
-  const bullets = TIER_SUMMARY[tier.id];
 
   return (
-    <motion.div
+    <motion.article
       initial={{ opacity: 0, y: 16 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: "-5% 0px" }}
       transition={{ duration: 0.4, delay: index * 0.04, ease: EASE_OUT }}
-      className={`relative flex flex-col rounded-2xl border bg-white transition-shadow hover:shadow-md min-w-0 ${
-        tier.highlight
-          ? "border-status-info-rule shadow-sm ring-1 ring-status-info-rule"
-          : "border-border shadow-sm"
+      className={`relative flex min-w-0 flex-col rounded-pricing-card border border-pricing-card-border bg-pricing-card p-7.75 backdrop-blur-card w1024:p-5.75 w390:p-4.75 ${
+        tier.highlight ? "shadow-pricing-featured" : ""
       }`}
     >
-      {tier.badge ? (
-        <div className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-status-info-fill px-3 py-0.5 text-dense font-semibold text-white tracking-wide whitespace-nowrap">
-          {tier.badge}
-        </div>
+      {tier.highlight ? (
+        <span
+          aria-hidden="true"
+          className="stroke-ring pointer-events-none absolute -inset-px rounded-pricing-card [background:var(--pricing-featured-stroke)]"
+        />
       ) : null}
 
-      <div className="border-b border-border px-4 sm:px-5 pt-6 pb-5">
-        <h3 className="font-display text-lg font-bold text-foreground">{tier.name}</h3>
-        <p className="mt-0.5 text-xs text-muted-foreground">{tier.tagline}</p>
+      {/* One row height on every card, so the tag never pushes the featured
+          plan's lines out of step with the others. */}
+      <div className="flex min-h-8 items-center justify-between gap-3">
+        <h3 className="min-w-0 font-mono text-relay-label leading-label text-foreground-muted">
+          {tier.name}
+        </h3>
+        {tier.badge ? (
+          <p className="shrink-0 rounded-pricing-tag bg-linear-135 from-brand-from to-brand-to px-3 py-1.5 font-mono text-relay-label leading-label whitespace-nowrap text-on-accent">
+            {tier.badge}
+          </p>
+        ) : null}
+      </div>
+      <p className="text-relay-label leading-label text-foreground-dim">{tier.tagline}</p>
 
-        <div className="mt-5 flex items-baseline gap-2 flex-wrap">
+      <div className="mt-6 flex flex-col items-start gap-1">
+        <div className="flex flex-wrap items-baseline gap-x-2">
           {comparePrice ? (
-            <span className="text-base font-medium text-muted-foreground line-through tabular-nums">
+            <span className="text-body leading-body text-foreground-dim line-through tabular-nums">
               {comparePrice}
             </span>
           ) : null}
-          <AnimatePresence mode="wait">
+          <AnimatePresence mode="wait" initial={false}>
             <motion.span
               key={displayPrice}
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.2, ease: EASE_OUT }}
-              className="font-display text-2xl sm:text-3xl font-extrabold text-foreground tabular-nums leading-none"
+              className="text-pricing-price leading-pricing-price font-semibold tracking-title text-foreground tabular-nums"
             >
               {displayPrice}
             </motion.span>
           </AnimatePresence>
-          <span className="text-sm text-muted-foreground">{tier.period}</span>
         </div>
-
-        {period === "annual" && tier.monthly && tier.annual ? (
-          <p className="mt-2 text-xs font-medium text-status-success-ink">
-            Save {PRICING.annualDiscountPct}% vs monthly
-          </p>
-        ) : null}
+        <p className="font-mono text-relay-label leading-label text-foreground-dim">{tier.period}</p>
+        {/* Always laid out (hidden when it does not apply) so every card's
+            feature list starts on the same line. */}
+        <p
+          className={`mt-1 font-mono text-relay-label leading-label text-accent-soft ${
+            period === "annual" && tier.monthly && tier.annual ? "" : "invisible"
+          }`}
+        >
+          Save {PRICING.annualDiscountPct}% vs monthly
+        </p>
       </div>
 
-      <ul className="flex-1 space-y-2.5 px-4 sm:px-5 py-5">
-        {bullets.map((item) => (
-          <li
-            key={item}
-            className="flex items-start gap-2.5 text-sm text-muted-foreground leading-snug"
-          >
+      <span aria-hidden="true" className="my-6 block h-px bg-pricing-hairline" />
+
+      <ul className="flex flex-1 flex-col gap-3">
+        {tier.features.map((item) => (
+          <li key={item} className="flex items-start gap-2.5 text-body leading-body text-foreground-muted">
             <Check
-              className="mt-0.5 h-4 w-4 shrink-0 text-status-success-ink"
+              className={`mt-1 size-4 shrink-0 ${tier.highlight ? "text-accent-soft" : "text-pricing-check"}`}
               strokeWidth={2.5}
               aria-hidden
             />
@@ -165,17 +157,19 @@ function PricingCard({
         ))}
       </ul>
 
-      <div className="space-y-2 px-4 sm:px-5 pb-5">
-        <Link href={tier.ctaHref} className="block">
-          <Button
-            variant={tier.highlight ? "default" : "outline"}
-            className="h-10 w-full font-semibold"
-          >
+      <div className="mt-8">
+        {tier.highlight ? (
+          <BrandCta
+            href={tier.ctaHref}
+            label={tier.cta}
+            className="h-12 w-full text-body leading-body"
+          />
+        ) : (
+          <GlassTierButton href={tier.ctaHref} className="w-full w1024:h-12">
             {tier.cta}
-            <ArrowRight className="ml-2 h-3.5 w-3.5" aria-hidden />
-          </Button>
-        </Link>
+          </GlassTierButton>
+        )}
       </div>
-    </motion.div>
+    </motion.article>
   );
 }

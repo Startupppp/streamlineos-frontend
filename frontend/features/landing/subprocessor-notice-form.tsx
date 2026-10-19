@@ -39,7 +39,7 @@ export function SubprocessorNoticeForm() {
 
   return (
     <Form {...form}>
-      <form onSubmit={handleSubscribe} className="not-prose flex flex-col gap-3 rounded-xl border border-border bg-card p-4" noValidate>
+      <form onSubmit={handleSubscribe} className="not-prose flex flex-col gap-4 rounded-2xl border border-border-subtle bg-card-glass p-5 shadow-float backdrop-blur-card" noValidate>
         <FormField
           control={form.control}
           name="email"

@@ -20,11 +20,11 @@ export function IncludedAppsGrid({
   return (
     <div className={compact ? "mt-8" : "mt-12"}>
       <MotionReveal className="text-center mb-5 max-w-2xl mx-auto">
-        <h3 className="font-display text-base sm:text-lg font-semibold text-foreground tracking-tight">
+        <h3 className="text-lead leading-lead font-medium text-foreground">
           {title}
         </h3>
         {subtitle ? (
-          <p className="text-sm text-muted-foreground mt-1 leading-relaxed">{subtitle}</p>
+          <p className="mt-1 text-body leading-body text-foreground-muted">{subtitle}</p>
         ) : null}
       </MotionReveal>
       <MotionStagger
@@ -41,7 +41,7 @@ export function IncludedAppsGrid({
         ))}
       </MotionStagger>
       {subtitle ? (
-        <MotionReveal delay={0.15} className="mt-5 text-center text-xs text-muted-foreground max-w-xl mx-auto leading-relaxed">
+        <MotionReveal delay={0.15} className="mx-auto mt-5 max-w-xl text-center text-relay-label leading-label text-foreground-muted">
           All plans include hosting, maintenance, and support. No hidden costs, no limits on
           features or data.
         </MotionReveal>
@@ -64,21 +64,19 @@ function AppChip({
     <motion.div
       whileHover={{ y: -2, scale: 1.02 }}
       transition={staggerItemDelay(index, 0)}
-      className={`group flex items-center gap-2 rounded-lg border border-border bg-muted/50 transition-colors hover:border-muted-foreground/40 hover:bg-card ${
+      className={`group flex items-center gap-2 rounded-xl border border-border-subtle bg-card-glass backdrop-blur-card transition-colors hover:border-border-glass ${
         compact ? "px-2 py-1.5" : "px-3 py-2.5"
       }`}
     >
       <motion.span
         whileHover={{ rotate: [0, -8, 8, 0] }}
         transition={{ duration: 0.4 }}
-        className="h-7 w-7 rounded-md bg-muted group-hover:bg-status-info-surface inline-flex items-center justify-center shrink-0 transition-colors"
+        className="inline-flex size-7 shrink-0 items-center justify-center rounded-lg bg-surface-glass"
       >
-        <Icon className="h-3.5 w-3.5 text-muted-foreground group-hover:text-status-info-ink" aria-hidden />
+        <Icon className="size-3.5 text-foreground-muted transition-colors group-hover:text-accent-soft" aria-hidden />
       </motion.span>
       <span
-        className={`font-medium text-foreground truncate ${
-          compact ? "text-dense" : "text-xs"
-        }`}
+        className="truncate text-relay-label leading-label font-medium text-foreground"
       >
         {app.name}
       </span>

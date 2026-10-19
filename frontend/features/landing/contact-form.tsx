@@ -7,17 +7,28 @@ import { z } from "zod";
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowRight, CheckCircle2 } from "lucide-react";
 import { LoadingButton } from "@/components/ui/loading-button";
-import { Input } from "@/components/ui/input";
 import { PhoneInput } from "@/components/ui/phone-input";
-import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 import {
   TurnstileWidget,
   isTurnstileEnabled,
 } from "@/components/security/turnstile-widget";
-import { PublicFormField } from "./components/public-form-field";
+import { PublicFormField, fieldErrorId } from "./components/public-form-field";
 import { withCorrelation } from "@/lib/observability/with-correlation";
 import { contactErrorBodySchema } from "./contact-api-schema";
+
+/* Relay's footer signup field — a light pill with navy ink — on the dark page.
+   Focus draws a light-cyan outline outside the pill; an invalid field a danger
+   ring, so the two never hide each other. */
+const FIELD_BASE =
+  "w-full bg-footer-signup-fill px-5 text-body leading-body text-on-accent outline-none placeholder:text-footer-ink-copy transition-shadow duration-(--motion-fast) focus-visible:outline-2 focus-visible:outline-offset-3 focus-visible:outline-solid focus-visible:outline-accent-soft aria-invalid:ring-2 aria-invalid:ring-status-danger-ink";
+const FIELD = `${FIELD_BASE} h-13 rounded-full`;
+const TEXTAREA_FIELD = `${FIELD_BASE} min-h-32 resize-y rounded-footer-panel py-4`;
+
+/* The phone control is a composite (country button + input): the pill is its
+   wrapper, the inner parts go transparent on it. */
+const PHONE_FIELD =
+  "h-13 items-center rounded-full bg-footer-signup-fill pr-5 pl-2 focus-within:outline-2 focus-within:outline-offset-3 focus-within:outline-solid focus-within:outline-accent-soft [&_button]:h-10 [&_button]:rounded-full [&_button]:border-0 [&_button]:bg-transparent [&_button]:text-on-accent [&_input]:h-12 [&_input]:border-0 [&_input]:bg-transparent [&_input]:px-3 [&_input]:text-base [&_input]:text-on-accent [&_input]:shadow-none [&_input]:placeholder:text-footer-ink-copy [&_input]:focus-visible:ring-0 [&_input]:focus-visible:ring-offset-0";
 
 type ContactTopic = "sales" | "support" | "partnership" | "press" | "other";
 
@@ -130,8 +141,12 @@ export function ContactForm() {
     setSubmitted(false);
   }
 
+  const nameError = form.formState.errors.name?.message ?? serverFieldErrors.name;
+  const emailError = form.formState.errors.email?.message ?? serverFieldErrors.email;
+  const messageError = form.formState.errors.message?.message ?? serverFieldErrors.message;
+
   return (
-    <div className="relative rounded-2xl border border-border bg-white/85 backdrop-blur-sm p-3 lg:p-6 shadow-[0_18px_44px_-18px_rgba(30,64,175,0.18)]">
+    <div className="relative rounded-footer-panel border border-border-subtle bg-card-glass p-8 shadow-float backdrop-blur-card w768:p-6 w390:p-5">
       <AnimatePresence mode="wait">
         {submitted ? (
           <motion.div
@@ -139,27 +154,28 @@ export function ContactForm() {
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -8 }}
-            transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
+            transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
             className="py-10 text-center"
           >
-            <div className="mx-auto mb-5 h-14 w-14 rounded-full bg-gradient-to-br from-gradient-info-from to-gradient-info-to inline-flex items-center justify-center shadow-[0_18px_40px_-12px_rgba(59,130,246,0.45)]">
-              <CheckCircle2 className="w-7 text-white" strokeWidth={2.5} />
+            <div className="mx-auto mb-6 inline-flex size-14 items-center justify-center rounded-full bg-linear-135 from-brand-from to-brand-to text-on-accent shadow-float">
+              <CheckCircle2 className="size-7" strokeWidth={2.5} aria-hidden />
             </div>
-            <h3 className="font-display text-2xl font-bold text-foreground mb-2">
+            <h3 className="mb-3 text-section-title leading-section-title font-semibold tracking-title text-foreground">
               Message received.
             </h3>
-            <p className="text-muted-foreground text-sm leading-relaxed max-w-md mx-auto">
+            <p className="mx-auto max-w-md text-body leading-body text-foreground-muted">
               Thanks,{" "}
               <span className="font-semibold text-foreground">
                 {watchedName}
               </span>
               . A human on our team will get back to you within one business day
-              at <span className="font-mono text-status-info-ink">{watchedEmail}</span>
+              at <span className="font-mono break-all text-accent-soft">{watchedEmail}</span>
               .
             </p>
             <button
+              type="button"
               onClick={handleReset}
-              className="mt-7 text-xs font-medium text-foreground hover:text-muted-foreground transition-colors"
+              className="mt-8 rounded-full px-3 py-1.5 text-relay-label leading-label font-medium text-foreground transition-colors duration-(--motion-fast) outline-none hover:text-accent-soft focus-visible:ring-2 focus-visible:ring-accent-soft"
             >
               ← Send another message
             </button>
@@ -174,25 +190,26 @@ export function ContactForm() {
             transition={{ duration: 0.3 }}
             noValidate
             aria-busy={pending}
-            className="space-y-5"
+            className="flex flex-col gap-6"
           >
-            <div>
-              <Label className="text-label font-medium text-foreground mb-2 block">
+            <fieldset>
+              <legend className="mb-3 text-relay-label leading-label font-medium text-foreground">
                 What can we help with?
-              </Label>
-              <div className="grid grid-cols-2 sm:grid-cols-5 gap-1.5">
+              </legend>
+              <div className="flex flex-wrap gap-2">
                 {TOPICS.map((t) => {
                   const selected = watchedTopic === t.value;
                   return (
                     <button
                       key={t.value}
                       type="button"
+                      aria-pressed={selected}
                       onClick={() => handleTopicSelect(t.value)}
                       className={cn(
-                        "text-xs font-medium rounded-lg border px-2.5 py-2 transition-all",
+                        "rounded-full border px-4 py-2 text-relay-label leading-label font-medium transition-colors duration-(--motion-fast) outline-none focus-visible:ring-2 focus-visible:ring-accent-soft focus-visible:ring-offset-2 focus-visible:ring-offset-background",
                         selected
-                          ? "bg-status-neutral-fill text-white border-border shadow-sm"
-                          : "bg-white text-foreground border-border hover:border-status-info-rule hover:text-muted-foreground",
+                          ? "border-transparent bg-linear-135 from-brand-from to-brand-to text-on-accent"
+                          : "border-border-glass bg-surface-glass text-foreground-muted hover:border-glass-stroke-active hover:text-foreground",
                       )}
                     >
                       {t.label}
@@ -200,48 +217,72 @@ export function ContactForm() {
                   );
                 })}
               </div>
-            </div>
+            </fieldset>
 
-            <div className="grid sm:grid-cols-2 gap-4">
-              <PublicFormField
-                label="Name"
-                error={form.formState.errors.name?.message ?? serverFieldErrors.name}
-                required
-              >
-                <Input
+            <div className="grid grid-cols-2 gap-5 w768:grid-cols-1">
+              <PublicFormField label="Name" htmlFor="contact-name" error={nameError} required>
+                <input
+                  id="contact-name"
+                  autoComplete="name"
                   placeholder="Aditya Sharma"
+                  aria-invalid={nameError ? true : undefined}
+                  aria-describedby={nameError ? fieldErrorId("contact-name") : undefined}
+                  className={FIELD}
                   {...form.register("name")}
                 />
               </PublicFormField>
-              <PublicFormField
-                label="Work email"
-                error={form.formState.errors.email?.message ?? serverFieldErrors.email}
-                required
-              >
-                <Input
+              <PublicFormField label="Work email" htmlFor="contact-email" error={emailError} required>
+                <input
+                  id="contact-email"
                   type="email"
+                  autoComplete="email"
                   placeholder="you@company.com"
+                  aria-invalid={emailError ? true : undefined}
+                  aria-describedby={emailError ? fieldErrorId("contact-email") : undefined}
+                  className={FIELD}
                   {...form.register("email")}
                 />
               </PublicFormField>
             </div>
 
-            <div className="grid sm:grid-cols-2 gap-4">
-              <PublicFormField label="Company" error={serverFieldErrors.company}>
-                <Input
+            <div className="grid grid-cols-2 gap-5 w768:grid-cols-1">
+              <PublicFormField
+                label="Company"
+                htmlFor="contact-company"
+                error={serverFieldErrors.company}
+              >
+                <input
+                  id="contact-company"
+                  autoComplete="organization"
                   placeholder="Acme Inc."
+                  aria-invalid={serverFieldErrors.company ? true : undefined}
+                  aria-describedby={
+                    serverFieldErrors.company ? fieldErrorId("contact-company") : undefined
+                  }
+                  className={FIELD}
                   {...form.register("company")}
                 />
               </PublicFormField>
-              <PublicFormField label="Phone" hint="optional" error={serverFieldErrors.phone}>
+              <PublicFormField
+                label="Phone"
+                htmlFor="contact-phone"
+                hint="optional"
+                error={serverFieldErrors.phone}
+              >
                 <Controller
                   control={form.control}
                   name="phone"
                   render={({ field }) => (
                     <PhoneInput
+                      id="contact-phone"
                       value={field.value}
                       onChange={field.onChange}
                       defaultCountry="IN"
+                      aria-invalid={serverFieldErrors.phone ? true : undefined}
+                      aria-describedby={
+                        serverFieldErrors.phone ? fieldErrorId("contact-phone") : undefined
+                      }
+                      className={PHONE_FIELD}
                     />
                   )}
                 />
@@ -250,13 +291,17 @@ export function ContactForm() {
 
             <PublicFormField
               label="Tell us what you need"
-              error={form.formState.errors.message?.message ?? serverFieldErrors.message}
+              htmlFor="contact-message"
+              error={messageError}
               required
             >
               <textarea
+                id="contact-message"
                 rows={5}
                 placeholder="Team size, what you're trying to solve, when you'd like to start…"
-                className="w-full rounded-md border border-border bg-white px-3 py-2.5 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-status-info-rule focus-visible:border-status-info-rule resize-y min-h-[120px]"
+                aria-invalid={messageError ? true : undefined}
+                aria-describedby={messageError ? fieldErrorId("contact-message") : undefined}
+                className={TEXTAREA_FIELD}
                 {...form.register("message")}
               />
             </PublicFormField>
@@ -266,7 +311,10 @@ export function ContactForm() {
             )}
 
             {serverError && (
-              <p role="alert" className="text-sm text-status-danger-ink">
+              <p
+                role="alert"
+                className="rounded-2xl border border-status-danger-ink px-5 py-3 text-body leading-body text-status-danger-ink"
+              >
                 {serverError}
               </p>
             )}
@@ -276,13 +324,13 @@ export function ContactForm() {
               disabled={turnstileRequired && !turnstileToken}
               isPending={pending}
               loadingText="Sending…"
-              className="w-full h-11"
+              className="h-13 w-full rounded-full bg-linear-135 from-brand-from to-brand-to text-base font-medium text-on-accent drop-shadow-cta hover:bg-none hover:bg-brand-deep hover:text-accent-soft focus-visible:ring-2 focus-visible:ring-accent-soft focus-visible:ring-offset-2 focus-visible:ring-offset-background"
             >
               Send message
-              <ArrowRight className="ml-2 h-4 w-4" />
+              <ArrowRight className="size-4" aria-hidden />
             </LoadingButton>
 
-            <p className="text-xs font-medium text-muted-foreground text-center">
+            <p className="text-center text-relay-label leading-label text-foreground-muted">
               Your message is encrypted in transit. We&apos;ll never share your
               email.
             </p>
