@@ -10,5 +10,5 @@
 - [ ] Removed guests and cancelled occurrences cannot use obsolete links or join information.
 - [ ] Rescheduling and cancellation update every current attendee while suppressing obsolete reminders.
 - [ ] Reminder defaults, channels, quiet hours, snooze, missed-delivery recovery, and per-occurrence deduplication are enforced.
-- [ ] Tests cover organizer departure, email change, late RSVP, duplicate delivery, cancellation during send, and no-show marking.
+- [x] Tests cover organizer departure, email change, late RSVP, duplicate delivery, cancellation during send, and no-show marking.
 

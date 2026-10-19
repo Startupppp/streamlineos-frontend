@@ -10,5 +10,5 @@
 - [ ] Definitions, denominator, timezone, deduplication, corrections, and partial-source coverage are visible.
 - [ ] Small cohorts and restricted HR, Finance, or private event inputs cannot reveal individual activity.
 - [ ] Admins can govern booking domains, link revocation, provider scope, retention, export, automation limits, and abuse controls.
-- [ ] Tests cover late events, duplicates, source outage, changed routing, deleted records, and small-cohort suppression.
+- [x] Tests cover late events, duplicates, source outage, changed routing, deleted records, and small-cohort suppression.
 

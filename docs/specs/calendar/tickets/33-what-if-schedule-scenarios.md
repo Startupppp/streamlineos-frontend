@@ -10,5 +10,5 @@
 - [ ] Before/after impact identifies affected people, commitments, resources, customers, and evidence confidence.
 - [ ] A scenario expires when any relevant version, permission, policy, or availability input changes.
 - [ ] Applying selected changes reauthorizes each owner and returns per-step outcomes.
-- [ ] Tests cover cyclic dependency, hidden node, stale scenario, partial application, owner rejection, and repair after timeout.
+- [x] Tests cover cyclic dependency, hidden node, stale scenario, partial application, owner rejection, and repair after timeout.
 

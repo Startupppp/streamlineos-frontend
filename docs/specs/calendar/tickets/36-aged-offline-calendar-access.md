@@ -10,5 +10,5 @@
 - [ ] Sensitive offline detail follows organization policy and cannot be exposed after known membership revocation.
 - [ ] Booking, availability confirmation, provider writes, and source-owner actions cannot claim success offline.
 - [ ] Reconnection rechecks tenant, membership, object permission, source version, availability, and current policy before asking the user to confirm.
-- [ ] Tests cover revoked access, organization switch, queued intent conflict, expired booking rule, stale occurrence, and partial reconnect.
+- [x] Tests cover revoked access, organization switch, queued intent conflict, expired booking rule, stale occurrence, and partial reconnect.
 

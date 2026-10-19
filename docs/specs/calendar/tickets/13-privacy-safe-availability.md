@@ -10,5 +10,5 @@
 - [ ] A stale, failed, disconnected, or truncated source cannot silently become free.
 - [ ] Guest explanations are generic while authorized host/admin diagnostics identify safe policy or source reasons.
 - [ ] Deadline-style commitments do not block time unless their type explicitly declares that behavior.
-- [ ] Tests cover timezones, DST, working hours, leave, buffers, optional attendees, disconnected providers, and permission-limited inputs.
+- [x] Tests cover timezones, DST, working hours, leave, buffers, optional attendees, disconnected providers, and permission-limited inputs.
 

@@ -10,5 +10,5 @@
 - [ ] Inactive, offboarded, on-leave, over-limit, disconnected, or otherwise ineligible hosts are excluded.
 - [ ] Fairness state updates transactionally with booking and duplicate retries retain the same assignment.
 - [ ] CRM-owner continuity, territory, skill, language, collective/all-host, and safe no-match fallback are covered.
-- [ ] Race tests prove concurrent bookings cannot corrupt fairness or double-assign constrained capacity.
+- [x] Race tests prove concurrent bookings cannot corrupt fairness or double-assign constrained capacity.
 

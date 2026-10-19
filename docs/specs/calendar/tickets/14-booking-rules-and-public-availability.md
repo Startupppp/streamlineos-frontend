@@ -10,5 +10,5 @@
 - [ ] Public visitors see only valid offered slots and minimal configured intake fields.
 - [ ] Stale or unavailable source coverage blocks public confirmation and provides safe alternatives.
 - [ ] Rule changes apply predictably to new bookings without silently rewriting existing bookings.
-- [ ] End-to-end tests cover timezone display, notice, buffers, daily limits, disabled host, revoked rule, and no-slot behavior.
+- [x] End-to-end tests cover timezone display, notice, buffers, daily limits, disabled host, revoked rule, and no-slot behavior.
 
