@@ -17,6 +17,7 @@ import {
   isMobileNavRouteActive,
   shouldShowMobileModuleBottomNav,
   MAX_MOBILE_MODULE_TABS,
+  ASK_OS_CONTENT_PADDING_CLASS,
   MOBILE_MODULE_CONTENT_PADDING_CLASS,
 } from "./mobile-module-nav-items";
 
@@ -229,6 +230,12 @@ describe("mobile module nav items", () => {
       expect(MOBILE_MODULE_CONTENT_PADDING_CLASS).toContain("safe-area-inset-bottom");
       expect(MOBILE_MODULE_CONTENT_PADDING_CLASS).not.toContain("--mb-fab-lane");
       expect(MOBILE_MODULE_CONTENT_PADDING_CLASS).toContain("max-lg:pb-[");
+    });
+
+    it("clears the Ask OS launcher on desktop", () => {
+      expect(ASK_OS_CONTENT_PADDING_CLASS).toContain("lg:pb-[");
+      expect(ASK_OS_CONTENT_PADDING_CLASS).toContain("3.5rem");
+      expect(ASK_OS_CONTENT_PADDING_CLASS).toContain("safe-area-inset-bottom");
     });
 
     it("skips padding when the module bottom nav is hidden", () => {

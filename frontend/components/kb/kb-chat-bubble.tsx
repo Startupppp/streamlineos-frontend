@@ -111,7 +111,7 @@ function Citations({
                 type="button"
                 data-page-id={citation.pageId}
                 onClick={onCitation}
-                className="inline-flex max-w-48 items-center gap-1 rounded-full border border-border bg-muted/40 px-2 py-0.5 text-dense text-accent transition-colors hover:bg-muted"
+                className="inline-flex max-w-48 items-center gap-1 rounded-full border border-border bg-muted/40 px-2 py-0.5 text-dense text-foreground transition-colors hover:bg-muted"
               >
                 <BookOpenTextIcon size={11} />
                 <TruncatedText
@@ -128,7 +128,7 @@ function Citations({
                 data-linked-document-id={citation.linkedDocumentId}
                 aria-label={`HR document: ${(citation.title ?? "").trim() || "Company document"}`}
                 onClick={onCitation}
-                className="inline-flex max-w-48 items-center gap-1 rounded-full border border-border bg-muted/40 px-2 py-0.5 text-dense text-accent transition-colors hover:bg-muted"
+                className="inline-flex max-w-48 items-center gap-1 rounded-full border border-border bg-muted/40 px-2 py-0.5 text-dense text-foreground transition-colors hover:bg-muted"
               >
                 <Building2 className="h-3 w-3 shrink-0" aria-hidden="true" />
                 <TruncatedText

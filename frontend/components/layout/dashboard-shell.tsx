@@ -32,6 +32,7 @@ import { getChatMobileContentPaddingClassName } from "./mobile/chat-mobile-chrom
 import { MobileModuleBottomNav } from "./mobile/mobile-module-bottom-nav";
 import { MobileShellFab } from "./mobile/mobile-shell-fab";
 import {
+  ASK_OS_CONTENT_PADDING_CLASS,
   MOBILE_MODULE_CONTENT_PADDING_CLASS,
   shouldShowMobileModuleBottomNav,
 } from "./mobile/mobile-module-nav-items";
@@ -350,9 +351,12 @@ export function DashboardShell({
                           ? getChatMobileContentPaddingClassName(
                               isChatConversationOpen,
                             )
-                          : showModuleBottomNav
-                            ? MOBILE_MODULE_CONTENT_PADDING_CLASS
-                            : undefined,
+                          : cn(
+                              ASK_OS_CONTENT_PADDING_CLASS,
+                              showModuleBottomNav
+                                ? MOBILE_MODULE_CONTENT_PADDING_CLASS
+                                : "max-lg:pb-[calc(3.5rem+env(safe-area-inset-bottom,0px))]",
+                            ),
                       )}
                     >
                       <div className="flex h-full min-h-0 flex-1 flex-col overflow-hidden [&>:first-child]:h-full [&>:first-child]:min-h-0 [&>:first-child]:flex-1">
