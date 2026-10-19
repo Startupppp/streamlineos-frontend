@@ -1,5 +1,7 @@
 "use client";
 
+import { createElement } from "react";
+
 import { InviewSeen } from "@/features/landing/relay/components/ui/inview-seen";
 import { SPRING_SOFT } from "@/features/landing/relay/lib/motion";
 import type { Tags } from "@/features/landing/relay/types/springs";
@@ -21,7 +23,16 @@ export interface DisplayTitleProps extends TitleParts {
   accentClassName?: string;
   /** ms before the focus-in starts. */
   delay?: number;
+  /**
+   * Render without the focus-in. Page h1s use this: the animated version
+   * server-renders at opacity 0, which leaves the heading blank for crawlers
+   * and until hydration.
+   */
+  still?: boolean;
 }
+
+const TITLE_CLASS =
+  "bg-linear-to-b/srgb from-title-gradient-from to-title-gradient-to bg-clip-text font-semibold tracking-title text-transparent";
 
 /**
  * Inter Semi Bold title with a white → grey vertical gradient and one solid
@@ -42,7 +53,19 @@ export const DisplayTitle = ({
   className = "",
   accentClassName = "",
   delay = 0,
-}: DisplayTitleProps) => (
+  still = false,
+}: DisplayTitleProps) => {
+  const accentRun = (
+    <span
+      className={`font-relay-serif leading-none font-normal text-title-accent italic ${accentClassName}`}
+    >
+      {accent}
+    </span>
+  );
+  if (still) {
+    return createElement(tag, { className: `${TITLE_CLASS} ${className}` }, before, accentRun, after);
+  }
+  return (
   <InviewSeen
     tag={tag}
     mode="once"
@@ -56,14 +79,11 @@ export const DisplayTitle = ({
       WebkitMaskImage:
         "linear-gradient(90deg, black calc(var(--reveal) - 40%), transparent var(--reveal))",
     }}
-    className={`bg-linear-to-b/srgb from-title-gradient-from to-title-gradient-to bg-clip-text font-semibold tracking-title text-transparent ${className}`}
+    className={`${TITLE_CLASS} ${className}`}
   >
     {before}
-    <span
-      className={`font-relay-serif leading-none font-normal text-title-accent italic ${accentClassName}`}
-    >
-      {accent}
-    </span>
+    {accentRun}
     {after}
   </InviewSeen>
-);
+  );
+};

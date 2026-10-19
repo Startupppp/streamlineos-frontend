@@ -23,6 +23,7 @@ export default function ClaimPage() {
           <PublicEyebrow>Waitlist</PublicEyebrow>
           <DisplayTitle
             tag="h1"
+            still
             before="Waitlist sign-up has "
             accent="closed"
             after=""

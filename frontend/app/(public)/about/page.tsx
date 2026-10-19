@@ -54,6 +54,7 @@ export default function AboutPage() {
           <PublicEyebrow>{`About ${BRAND_NAME}`}</PublicEyebrow>
           <DisplayTitle
             tag="h1"
+            still
             before="We're building the operating system "
             accent="teams actually use"
             after="."

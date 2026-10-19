@@ -3,7 +3,6 @@ import Link from "next/link";
 import { PublicShell } from "@/features/landing/public-shell";
 import { Badge } from "@/features/landing/relay/components/ui/badge";
 import { DisplayTitle } from "@/features/landing/relay/components/ui/display-title";
-import { FocusText } from "@/features/landing/relay/components/ui/focus-text";
 import { SectionHead } from "@/features/landing/relay/components/ui/section-head";
 import { REVEAL } from "@/features/landing/relay/lib/motion";
 import { BRAND_NAME, BRAND_URL, BRAND_SUPPORT_EMAIL } from "@/lib/branding";
@@ -145,6 +144,7 @@ export default async function PricingPage({
             <Badge label="pricing" />
             <DisplayTitle
               tag="h1"
+              still
               before="One price per "
               accent="organisation"
               after="."
@@ -152,12 +152,9 @@ export default async function PricingPage({
               className="max-w-240 text-hero-title leading-hero-title"
               accentClassName="text-hero-title-accent"
             />
-            <FocusText
-              delay={2 * REVEAL.step}
-              className="max-w-150 text-lead leading-lead text-foreground-muted w390:text-body w390:leading-body"
-            >
+            <p              className="max-w-150 text-lead leading-lead text-foreground-muted w390:text-body w390:leading-body">
               Free, Starter, Professional, or Enterprise. Seat caps sit on the plan. There is no per-seat meter and no per-app fee.
-            </FocusText>
+            </p>
           </header>
 
           <section aria-label="Plans">

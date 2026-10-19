@@ -51,6 +51,7 @@ export default function ContactPage() {
           <PublicEyebrow>Contact us</PublicEyebrow>
           <DisplayTitle
             tag="h1"
+            still
             before="Tell us what you're "
             accent="trying to solve"
             after="."
