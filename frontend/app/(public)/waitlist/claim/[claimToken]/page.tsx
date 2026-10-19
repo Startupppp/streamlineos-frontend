@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { PublicShell, PublicEyebrow } from "@/features/landing/public-shell";
-import { Button } from "@/components/ui/button";
+import { BrandCta } from "@/features/landing/relay/components/ui/brand-cta";
+import { DisplayTitle } from "@/features/landing/relay/components/ui/display-title";
+import { GlassButton } from "@/features/landing/relay/components/ui/glass-button";
 import { BRAND_NAME } from "@/lib/branding";
 
 export const metadata: Metadata = {
@@ -17,24 +18,29 @@ export const metadata: Metadata = {
 export default function ClaimPage() {
   return (
     <PublicShell>
-      <section className="container mx-auto max-w-lg px-4 py-16 text-center lg:px-8 lg:py-24">
-        <PublicEyebrow>Waitlist</PublicEyebrow>
-        <h1 className="mt-3 font-display text-3xl font-extrabold tracking-tight text-foreground">
-          Waitlist sign-up has closed
-        </h1>
-        <p className="mt-3 text-sm text-muted-foreground">
-          This invitation link no longer creates a workspace. If you already have a {BRAND_NAME}{" "}
-          account, sign in. Otherwise, contact us and we&rsquo;ll get you set up.
-        </p>
-        <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
-          <Button asChild>
-            <Link href="/signin">Sign in</Link>
-          </Button>
-          <Button asChild variant="outline">
-            <Link href="/contact">Contact us</Link>
-          </Button>
-        </div>
-      </section>
+      <div className="mx-page w-page px-page-inset">
+        <section className="mx-auto flex max-w-160 flex-col items-center rounded-footer-panel border border-border-subtle bg-card-glass px-10 py-14 text-center shadow-float backdrop-blur-card w768:px-6 w768:py-10">
+          <PublicEyebrow>Waitlist</PublicEyebrow>
+          <DisplayTitle
+            tag="h1"
+            before="Waitlist sign-up has "
+            accent="closed"
+            after=""
+            className="text-section-title leading-section-title"
+            accentClassName="text-section-title-accent"
+          />
+          <p className="mt-4 text-body leading-body text-foreground-muted">
+            This invitation link no longer creates a workspace. If you already have a {BRAND_NAME}{" "}
+            account, sign in. Otherwise, contact us and we&rsquo;ll get you set up.
+          </p>
+          <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
+            <BrandCta label="Sign in" href="/signin" className="h-12 px-7 text-body" />
+            <GlassButton href="/contact" className="h-12 px-7 text-body">
+              Contact us
+            </GlassButton>
+          </div>
+        </section>
+      </div>
     </PublicShell>
   );
 }

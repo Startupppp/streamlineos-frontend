@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Mail, MessageSquare, Shield, BookOpen } from "lucide-react";
 import { PublicShell, PublicEyebrow } from "@/features/landing/public-shell";
+import { DisplayTitle } from "@/features/landing/relay/components/ui/display-title";
 import { ContactForm } from "@/features/landing/contact-form";
 import { BRAND_NAME, BRAND_SUPPORT_EMAIL } from "@/lib/branding";
 
@@ -23,7 +24,7 @@ const channels = [
     icon: MessageSquare,
     label: "Existing customer support",
     description: "Open a ticket from inside your organization for the fastest response.",
-    value: "Help Â· in-app",
+    value: "Help · in-app",
     href: "/signin",
   },
   {
@@ -45,51 +46,59 @@ const channels = [
 export default function ContactPage() {
   return (
     <PublicShell>
-      <section className="container mx-auto px-4 lg:px-8 max-w-3xl text-center">
-        <PublicEyebrow>Contact us</PublicEyebrow>
-        <h1 className="font-display text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-[-0.035em] leading-[1.02] text-foreground mb-5">
-          Tell us what you&apos;re{" "}
-          <span className="text-status-info-ink">trying to solve.</span>
-        </h1>
-        <p className="text-muted-foreground text-lg leading-relaxed max-w-2xl mx-auto">
-          Pricing questions, demos, partnerships, security disclosures — every message reaches
-          a human on our team. We aim to reply within one business day.
-        </p>
-      </section>
+      <div className="mx-page flex w-page flex-col px-page-inset">
+        <section className="mx-auto flex max-w-190 flex-col items-center text-center">
+          <PublicEyebrow>Contact us</PublicEyebrow>
+          <DisplayTitle
+            tag="h1"
+            before="Tell us what you're "
+            accent="trying to solve"
+            after="."
+            className="text-hero-title leading-hero-title"
+            accentClassName="text-hero-title-accent"
+          />
+          <p className="mt-6 max-w-150 text-lead leading-lead text-foreground-muted w390:text-body w390:leading-body">
+            Pricing questions, demos, partnerships, security disclosures — every message reaches
+            a human on our team. We aim to reply within one business day.
+          </p>
+        </section>
 
-      <section className="container mx-auto px-4 lg:px-8 max-w-6xl mt-12 lg:mt-16 grid lg:grid-cols-12 gap-8 items-start">
-        <div className="lg:col-span-7">
-          <ContactForm />
-        </div>
+        <div aria-hidden="true" className="h-section-gap" />
 
-        <aside className="lg:col-span-5 space-y-3">
-          {channels.map((c) => {
-            const Icon = c.icon;
-            return (
-              <Link
-                key={c.label}
-                href={c.href}
-                className="group block rounded-2xl border border-border bg-card/70 backdrop-blur-sm p-5 hover:border-status-info-rule hover:bg-card transition-colors"
-              >
-                <div className="flex items-start gap-4">
-                  <span className="h-10 w-10 rounded-xl bg-gradient-to-br from-gradient-info-from to-gradient-info-to inline-flex items-center justify-center shrink-0 shadow-[0_6px_18px_-6px_rgba(59,130,246,0.5)] group-hover:scale-105 transition-transform">
-                    <Icon className="h-4 w-4 text-white" />
+        <section className="grid grid-cols-12 items-start gap-8 w768:grid-cols-1 w768:gap-6">
+          <div className="col-span-7 w1024:col-span-7 w768:col-span-1">
+            <ContactForm />
+          </div>
+
+          <aside className="col-span-5 flex flex-col gap-3 w768:col-span-1">
+            {channels.map((c) => {
+              const Icon = c.icon;
+              return (
+                <Link
+                  key={c.label}
+                  href={c.href}
+                  className="group flex items-start gap-4 rounded-2xl border border-border-subtle bg-card-glass p-5 backdrop-blur-card transition-colors duration-(--motion-fast) ease-entrance outline-none hover:border-border-glass focus-visible:ring-2 focus-visible:ring-accent-soft"
+                >
+                  <span className="inline-flex size-10 shrink-0 items-center justify-center rounded-xl bg-linear-135 from-brand-from to-brand-to text-on-accent transition-transform duration-(--motion-fast) group-hover:scale-105">
+                    <Icon className="size-4" aria-hidden />
                   </span>
-                  <div className="min-w-0">
-                    <p className="font-display text-sm font-bold text-foreground mb-0.5">
+                  <span className="flex min-w-0 flex-col gap-1">
+                    <span className="text-body leading-body font-medium text-foreground">
                       {c.label}
-                    </p>
-                    <p className="text-label text-muted-foreground leading-relaxed mb-1.5">
+                    </span>
+                    <span className="text-relay-label leading-label text-foreground-muted">
                       {c.description}
-                    </p>
-                    <p className="text-xs font-mono text-status-info-ink break-all">{c.value}</p>
-                  </div>
-                </div>
-              </Link>
-            );
-          })}
-        </aside>
-      </section>
+                    </span>
+                    <span className="font-mono text-relay-label leading-label break-all text-accent-soft">
+                      {c.value}
+                    </span>
+                  </span>
+                </Link>
+              );
+            })}
+          </aside>
+        </section>
+      </div>
     </PublicShell>
   );
 }

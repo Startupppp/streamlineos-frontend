@@ -1,22 +1,12 @@
-"use client";
+import { Badge } from "@/features/landing/relay/components/ui/badge";
 
-import type { ReactNode } from "react";
-import { motion } from "framer-motion";
-import { fadeUp, transitionBase, VIEWPORT_DEFAULT } from "./motion/variants";
+type PublicEyebrowProps = { children: string };
 
-type PublicEyebrowProps = { children: ReactNode };
-
+/** A public page's eyebrow — Relay's section badge (accent dot + label pill). */
 export function PublicEyebrow({ children }: PublicEyebrowProps) {
   return (
-    <motion.p
-      initial="hidden"
-      whileInView="visible"
-      viewport={VIEWPORT_DEFAULT}
-      variants={fadeUp}
-      transition={transitionBase}
-      className="text-label font-medium text-status-info-ink mb-3"
-    >
-      {children}
-    </motion.p>
+    <div className="mb-4">
+      <Badge label={children} />
+    </div>
   );
 }
