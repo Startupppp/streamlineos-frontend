@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState, type Key } from "react";
+import Link from "next/link";
 import { Search } from "lucide-react";
 import { List, useDynamicRowHeight, type RowComponentProps } from "react-window";
 import { Badge } from "@/components/ui/badge";
@@ -45,6 +46,16 @@ function kind(event: CalendarListItem, now: number): "action" | "preparation" | 
   return "information";
 }
 
+function resolveItemDeepLink(webLink: string | null | undefined):
+  | { kind: "internal"; href: string }
+  | { kind: "external"; href: string }
+  | null {
+  if (!webLink) return null;
+  if (webLink.startsWith("/") && !webLink.startsWith("//") && !webLink.startsWith("/\\")) return { kind: "internal", href: webLink };
+  if (webLink.startsWith("https://") || webLink.startsWith("http://")) return { kind: "external", href: webLink };
+  return null;
+}
+
 function rowKey(index: number, data: MyDayRowData): Key {
   const row = data.rows[index];
   if (!row) return index;
@@ -66,6 +77,7 @@ function MyDayVirtualRow({ index, style, ariaAttributes, rows, onSelectEvent, ti
   const rail = EVENT_COLORS[event.color ?? "blue"] ?? EVENT_COLORS.blue;
   const timeLabel = event.timeKind === "date" ? "All day" : formatEventTimeRange(event.start, event.end, event.timezone, timeZone);
   const action = nextAction(event);
+  const deepLink = resolveItemDeepLink(event.webLink);
   function handleSelectEvent() {
     onSelectEvent(event);
   }
@@ -77,10 +89,15 @@ function MyDayVirtualRow({ index, style, ariaAttributes, rows, onSelectEvent, ti
           <div className="min-w-0 space-y-1.5">
             <div className="truncate text-sm font-medium">{event.title}</div>
             <p className="text-xs text-muted-foreground">{timeLabel}</p>
-            <div className="flex flex-wrap gap-1">
+            <div className="flex flex-wrap items-center gap-1">
               <Badge variant="secondary" className="capitalize">{event.source}</Badge>
               <Badge variant="outline">{event.status ?? "Scheduled"}</Badge>
               <Badge variant="outline">{freshnessLabel(event)}</Badge>
+              {deepLink?.kind === "internal" ? (
+                <Link href={deepLink.href} className="text-xs text-primary hover:underline" aria-label={`Go to source record for ${event.title}`}>Open source</Link>
+              ) : deepLink?.kind === "external" ? (
+                <a href={deepLink.href} target="_blank" rel="noopener noreferrer" className="text-xs text-primary hover:underline" aria-label={`Go to source record for ${event.title}`}>Open source</a>
+              ) : null}
             </div>
           </div>
           <Button type="button" variant="outline" size="sm" className="shrink-0" onClick={handleSelectEvent} aria-label={`Open ${event.title}, ${timeLabel}, ${event.source} to ${action.toLowerCase()}`}>

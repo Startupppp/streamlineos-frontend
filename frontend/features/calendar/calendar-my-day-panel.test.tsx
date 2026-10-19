@@ -1,9 +1,16 @@
 import { fireEvent, render, screen } from "@testing-library/react";
-import type { ComponentType } from "react";
+import type { ComponentType, PropsWithChildren } from "react";
 import { List } from "react-window";
 import { CalendarMyDayPanel } from "./calendar-my-day-panel";
 import { calendarProjectionFields } from "./calendar-projection-fixtures";
 import type { CalendarListItem } from "@/hooks/api/calendar-types";
+
+jest.mock("next/link", () => ({
+  __esModule: true,
+  default: function Link({ children, href, ...props }: PropsWithChildren<React.AnchorHTMLAttributes<HTMLAnchorElement>>) {
+    return <a href={href} {...props}>{children}</a>;
+  },
+}));
 
 jest.mock("react-window", () => ({
   List: jest.fn(({ rowCount, rowComponent: Row, rowProps }: { rowCount: number; rowComponent: ComponentType<Record<string, unknown>>; rowProps: Record<string, unknown> }) => (
@@ -186,5 +193,87 @@ describe("CalendarMyDayPanel", () => {
     fireEvent.click(firstAction);
     expect(onSelectEvent).toHaveBeenCalledWith(first);
     expect(onSelectEvent).toHaveBeenCalledTimes(1);
+  });
+
+  it("renders an internal deep link for a webLink starting with /", () => {
+    const internalEvent: CalendarListItem = {
+      ...event("internal-link", "2026-01-01T09:00:00.000Z"),
+      webLink: "/build/42/issues?ticket=1",
+    };
+    render(
+      <CalendarMyDayPanel
+        events={[internalEvent]}
+        pages={[]}
+        search=""
+        onSearchChange={jest.fn()}
+        onSelectEvent={jest.fn()}
+        onLoadMore={jest.fn()}
+        hasMore={false}
+        isLoadingMore={false}
+      />,
+    );
+    const link = screen.getByRole("link", { name: "Go to source record for Event internal-link" });
+    expect(link).toHaveAttribute("href", "/build/42/issues?ticket=1");
+    expect(link).not.toHaveAttribute("target");
+    expect(link).not.toHaveAttribute("rel");
+  });
+
+  it("renders an external deep link for an https webLink with noopener noreferrer", () => {
+    const externalEvent: CalendarListItem = {
+      ...event("external-link", "2026-01-01T09:00:00.000Z"),
+      webLink: "https://calendar.google.com/event?id=abc123",
+    };
+    render(
+      <CalendarMyDayPanel
+        events={[externalEvent]}
+        pages={[]}
+        search=""
+        onSearchChange={jest.fn()}
+        onSelectEvent={jest.fn()}
+        onLoadMore={jest.fn()}
+        hasMore={false}
+        isLoadingMore={false}
+      />,
+    );
+    const link = screen.getByRole("link", { name: "Go to source record for Event external-link" });
+    expect(link).toHaveAttribute("href", "https://calendar.google.com/event?id=abc123");
+    expect(link).toHaveAttribute("target", "_blank");
+    expect(link).toHaveAttribute("rel", "noopener noreferrer");
+  });
+
+  it("renders no deep link when webLink is absent", () => {
+    render(
+      <CalendarMyDayPanel
+        events={[event("no-link", "2026-01-01T09:00:00.000Z")]}
+        pages={[]}
+        search=""
+        onSearchChange={jest.fn()}
+        onSelectEvent={jest.fn()}
+        onLoadMore={jest.fn()}
+        hasMore={false}
+        isLoadingMore={false}
+      />,
+    );
+    expect(screen.queryByRole("link", { name: /Go to source record for/ })).toBeNull();
+  });
+
+  it.each(["javascript:alert(1)", "//evil.example/path", "/\\evil.example"])("renders no deep link for unsafe link %s", (webLink) => {
+    const unsafeEvent: CalendarListItem = {
+      ...event("unsafe", "2026-01-01T09:00:00.000Z"),
+      webLink,
+    };
+    render(
+      <CalendarMyDayPanel
+        events={[unsafeEvent]}
+        pages={[]}
+        search=""
+        onSearchChange={jest.fn()}
+        onSelectEvent={jest.fn()}
+        onLoadMore={jest.fn()}
+        hasMore={false}
+        isLoadingMore={false}
+      />,
+    );
+    expect(screen.queryByRole("link", { name: /Go to source record for/ })).toBeNull();
   });
 });

@@ -17,12 +17,14 @@ const policy = jest.requireMock<{ useCalendarOfflinePolicy: jest.Mock }>("@/hook
 const online = jest.requireMock<{ useOnlineStatus: jest.Mock }>("@/hooks/common/use-online-status").useOnlineStatus;
 const refetch = jest.fn();
 
-function setup(options: { stale?: boolean; isFetching?: boolean; isError?: boolean; online?: boolean } = {}) {
+function setup(options: { stale?: boolean; isFetching?: boolean; isError?: boolean; online?: boolean; policyVersionMismatch?: boolean; policyDisabled?: boolean } = {}) {
   const now = Date.now();
   session.mockReturnValue({ status: "authenticated", data: { orgId: "org-1", user: { id: "user-1" } } });
   can.mockReturnValue(true);
   online.mockReturnValue(options.online ?? true);
-  policy.mockReturnValue({ isFetchedAfterMount: true, isFetching: false, isError: false, dataUpdatedAt: now, data: { enabled: true, version: 2 } });
+  const policyDataVersion = options.policyVersionMismatch ? 3 : 2;
+  const policyEnabled = !options.policyDisabled;
+  policy.mockReturnValue({ isFetchedAfterMount: true, isFetching: false, isError: false, dataUpdatedAt: now, data: { enabled: policyEnabled, version: policyDataVersion } });
   query.mockReturnValue({
     data: { evaluatedAt: new Date(now - (options.stale ? 61_000 : 0)).toISOString(), slots: [{ state: "free", coverageState: "complete", explanation: "Available" }] },
     dataUpdatedAt: now,
@@ -80,5 +82,15 @@ describe("offline Calendar intent review", () => {
     expect(setup({ stale: true })).toBeDisabled();
     fireEvent.click(screen.getByRole("button", { name: "Recheck availability" }));
     expect(refetch).toHaveBeenCalledTimes(1);
+  });
+
+  it("keeps continue disabled when the policy version changed since the draft was created", () => {
+    expect(setup({ policyVersionMismatch: true })).toBeDisabled();
+    expect(screen.getByText("The offline policy changed. Discard this draft and start again.")).toBeInTheDocument();
+  });
+
+  it("keeps continue disabled when the offline booking rule is disabled", () => {
+    expect(setup({ policyDisabled: true })).toBeDisabled();
+    expect(screen.getByText("The offline policy changed. Discard this draft and start again.")).toBeInTheDocument();
   });
 });
