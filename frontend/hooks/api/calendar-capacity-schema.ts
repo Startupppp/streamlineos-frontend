@@ -18,6 +18,20 @@ export const calendarResourceListContract = z.object({
   nextCursor: z.string().nullable(),
 });
 
+export const calendarCapacityAllocationItemContract = z.object({
+  id: z.string().uuid(),
+  bookingId: z.string().uuid(),
+  start: z.string(),
+  end: z.string(),
+  units: z.number().int().positive(),
+  state: z.enum(["confirmed", "tentative"]),
+  version: z.string(),
+  sourceKey: z.string().nullable(),
+  bookingLifecycleVersion: z.string(),
+});
+
+export type CalendarCapacityAllocationItem = z.infer<typeof calendarCapacityAllocationItemContract>;
+
 export const calendarCapacityContract = z.object({
   resourceId: z.number().int().positive(),
   resourceVersion: z.string(),
@@ -32,6 +46,7 @@ export const calendarCapacityContract = z.object({
     state: z.enum(["available", "limited", "over_capacity", "unknown"]),
     reasons: z.array(z.enum(["capacity", "location", "skill", "shift", "maintenance", "leave", "unavailable", "restricted_input"])),
   })),
+  allocations: z.array(calendarCapacityAllocationItemContract).optional(),
 });
 
 export type CalendarResourceList = z.infer<typeof calendarResourceListContract>;

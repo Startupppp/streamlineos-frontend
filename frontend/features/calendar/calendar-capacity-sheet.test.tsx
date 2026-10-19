@@ -3,6 +3,15 @@ import { fireEvent, screen } from "@testing-library/react";
 import { renderWithProviders } from "@/test-utils";
 import { CalendarCapacitySheet } from "./calendar-capacity-sheet";
 
+jest.mock("./calendar-capacity-allocation-proposal", () => ({
+  CalendarCapacityAllocationProposal: ({ allocation, onDone }: { allocation: { id: string }; onDone: () => void }) => (
+    <div data-testid="allocation-proposal">
+      allocation-{allocation.id}
+      <button onClick={onDone}>Done</button>
+    </div>
+  ),
+}));
+
 const fetchNextPage = jest.fn();
 
 jest.mock("@/components/shared/app-sheet", () => ({
@@ -42,7 +51,24 @@ jest.mock("@/hooks/api/calendar-capacity", () => ({
   }),
   useCalendarCapacity: () => ({
     isLoading: false,
-    data: { coverage: "complete", evaluatedAt: "2026-10-16T12:00:00.000Z", slices: [] },
+    data: {
+      coverage: "complete",
+      evaluatedAt: "2026-10-16T12:00:00.000Z",
+      slices: [],
+      allocations: [
+        {
+          id: "alloc-1",
+          bookingId: "booking-1",
+          start: "2026-10-16T10:00:00.000Z",
+          end: "2026-10-16T11:00:00.000Z",
+          units: 1,
+          state: "confirmed",
+          version: "1",
+          sourceKey: null,
+          bookingLifecycleVersion: "2",
+        },
+      ],
+    },
   }),
   useCalendarPersonalCapacity: () => ({ isLoading: false }),
   useCalendarTeamCapacity: () => ({ isLoading: false }),
@@ -68,6 +94,23 @@ it("identifies source-owner coverage for source-owned equipment", async () => {
   fireEvent.click(await screen.findByRole("option", { name: /QA equipment/ }));
 
   expect(screen.getByText(/Complete source-owner resource coverage/)).toBeInTheDocument();
+});
+
+describe("allocation reschedule proposal", () => {
+  it("shows a Reschedule button for each allocation in a resources capacity view", () => {
+    renderWithProviders(<CalendarCapacitySheet onClose={jest.fn()} />);
+    expect(screen.getByRole("button", { name: "Reschedule" })).toBeInTheDocument();
+  });
+
+  it("renders the proposal panel when Reschedule is clicked and closes it on Done", async () => {
+    renderWithProviders(<CalendarCapacitySheet onClose={jest.fn()} />);
+    fireEvent.click(screen.getByRole("button", { name: "Reschedule" }));
+    const panel = await screen.findByTestId("allocation-proposal");
+    expect(panel).toHaveTextContent("allocation-alloc-1");
+    fireEvent.click(screen.getByRole("button", { name: "Done" }));
+    expect(screen.queryByTestId("allocation-proposal")).toBeNull();
+    expect(screen.getByRole("button", { name: "Reschedule" })).toBeInTheDocument();
+  });
 });
 
 describe("UX: inventory off the plan never reaches the warehouse read", () => {

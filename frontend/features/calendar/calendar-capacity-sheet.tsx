@@ -25,6 +25,7 @@ import { useCan, useModuleEnabled, useScope } from "@/hooks/api/access";
 import { usePeople } from "@/hooks/api/directory/people";
 import { useWarehouses } from "@/hooks/api/inventory/warehouses";
 import { CapacityWindowFields } from "./calendar-capacity-window";
+import { CalendarCapacityAllocationProposal } from "./calendar-capacity-allocation-proposal";
 
 export function CalendarCapacitySheet({ onClose }: { onClose: () => void }) {
   const [mode, setMode] = useState<
@@ -41,6 +42,7 @@ export function CalendarCapacitySheet({ onClose }: { onClose: () => void }) {
     format(new Date(Date.now() + 60 * 60_000), "yyyy-MM-dd'T'HH:mm"),
   );
   const [units, setUnits] = useState(1);
+  const [proposalAllocationId, setProposalAllocationId] = useState<string | null>(null);
   const resources = useCalendarResources();
   const inventoryEnabled = useModuleEnabled("inventory");
   const canReadWarehouses = useCan("inventory:warehouses:read") && inventoryEnabled;
@@ -467,6 +469,18 @@ export function CalendarCapacitySheet({ onClose }: { onClose: () => void }) {
                   ) : null}
                 </div>
               ))}
+              {(capacity.data.allocations ?? []).map((alloc) =>
+                proposalAllocationId === alloc.id ? (
+                  <CalendarCapacityAllocationProposal key={alloc.id} allocation={alloc} onDone={() => setProposalAllocationId(null)} />
+                ) : (
+                  <div key={alloc.id} className="flex items-center justify-between rounded-md border p-3">
+                    <p className="text-xs text-muted-foreground">
+                      {new Date(alloc.start).toLocaleString()} – {new Date(alloc.end).toLocaleString()} · {alloc.state} · {alloc.units} unit{alloc.units !== 1 ? "s" : ""}
+                    </p>
+                    <Button variant="outline" size="sm" onClick={() => setProposalAllocationId(alloc.id)}>Reschedule</Button>
+                  </div>
+                ),
+              )}
             </>
           ) : null}
         </div>
