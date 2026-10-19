@@ -1,6 +1,11 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { PublicShell, PublicEyebrow } from "@/features/landing/public-shell";
+import { PublicShell } from "@/features/landing/public-shell";
+import { Badge } from "@/features/landing/relay/components/ui/badge";
+import { DisplayTitle } from "@/features/landing/relay/components/ui/display-title";
+import { FocusText } from "@/features/landing/relay/components/ui/focus-text";
+import { SectionHead } from "@/features/landing/relay/components/ui/section-head";
+import { REVEAL } from "@/features/landing/relay/lib/motion";
 import { BRAND_NAME, BRAND_URL, BRAND_SUPPORT_EMAIL } from "@/lib/branding";
 import {
   PRICING,
@@ -133,59 +138,73 @@ export default async function PricingPage({
     <>
       <FAQJsonLd faqs={[...faqs, ...pricingFaqs]} />
       <PublicShell>
-        <section className="container mx-auto max-w-2xl px-4 text-center lg:px-8">
-          <PublicEyebrow>Pricing</PublicEyebrow>
-          <h1 className="font-display text-4xl font-extrabold leading-[1.08] tracking-tight text-foreground sm:text-5xl">
-            One price per organisation.
-          </h1>
-          <p className="mx-auto mt-4 max-w-xl text-base leading-relaxed text-muted-foreground sm:text-lg">
-            Free, Starter, Professional, or Enterprise. Seat caps sit on the plan. There is no per-seat meter and no per-app fee.
-          </p>
-        </section>
+        {/* Relay's page column and section rhythm (features/landing/relay/home):
+            the same 1280 / 928 / 688 / 350 content edge and h-section-gap. */}
+        <div className="relay-ui mx-page flex w-page flex-col gap-section-gap px-page-inset">
+          <header className="flex flex-col items-center gap-6 pt-12 text-center w768:pt-6 w390:gap-4">
+            <Badge label="pricing" />
+            <DisplayTitle
+              tag="h1"
+              before="One price per "
+              accent="organisation"
+              after="."
+              delay={REVEAL.step}
+              className="max-w-240 text-hero-title leading-hero-title"
+              accentClassName="text-hero-title-accent"
+            />
+            <FocusText
+              delay={2 * REVEAL.step}
+              className="max-w-150 text-lead leading-lead text-foreground-muted w390:text-body w390:leading-body"
+            >
+              Free, Starter, Professional, or Enterprise. Seat caps sit on the plan. There is no per-seat meter and no per-app fee.
+            </FocusText>
+          </header>
 
-        <section className="mt-10">
-          <div className="container mx-auto max-w-6xl px-4 lg:px-8">
+          <section aria-label="Plans">
             <PricingTierGrid showAppsGrid={false} tiers={tiers} />
             {notice ? (
-              <p className="mt-6 text-center text-xs text-muted-foreground">{notice}</p>
+              <p className="mt-6 text-center text-relay-label leading-label text-foreground-muted">{notice}</p>
             ) : null}
-          </div>
-        </section>
+          </section>
 
-        <section className="mt-16">
-          <div className="container mx-auto max-w-6xl px-4 lg:px-8">
-            <h2 className="mb-6 text-center font-display text-2xl font-bold tracking-tight text-foreground">
-              Compare plans
-            </h2>
+          <section aria-label="Compare plans" className="flex flex-col gap-12 w1024:gap-10 w390:gap-8">
+            <SectionHead
+              badge="compare"
+              title={{ before: "Compare ", accent: "plans", after: "." }}
+              aside="Every plan runs every app. What changes is how many people, how much storage, and the controls a larger team needs."
+            />
             <PricingFeatureMatrix groups={comparison} />
-          </div>
-        </section>
+          </section>
 
-        <section className="mt-16 border-t border-border bg-muted">
-          <div className="container mx-auto max-w-3xl px-4 py-14 lg:px-8">
-            <h2 className="mb-8 text-center font-display text-2xl font-bold tracking-tight text-foreground">
-              What the same team costs elsewhere
-            </h2>
+          <section aria-label="Savings calculator" className="flex flex-col gap-12 w1024:gap-10 w390:gap-8">
+            <SectionHead
+              badge="savings"
+              title={{ before: "What the same team costs ", accent: "elsewhere", after: "." }}
+              aside="Move the slider to your headcount and compare a year on StreamlineOS against a per-seat platform or a stack of separate tools."
+            />
             <SavingsCalculator />
-          </div>
-        </section>
+          </section>
 
-        <DataResidencySection residency={residency} />
+          <DataResidencySection residency={residency} />
 
-        <section className="border-t border-border">
-          <div className="container mx-auto max-w-2xl px-4 py-14 lg:px-8">
-            <h2 className="mb-6 text-center font-display text-2xl font-bold tracking-tight text-foreground">
-              Questions
-            </h2>
+          <section aria-label="Pricing questions" className="flex flex-col gap-12 w1024:gap-10 w390:gap-8">
+            <SectionHead
+              badge="faq"
+              title={{ before: "Pricing, ", accent: "answered", after: "." }}
+              aside="Billing, seats, discounts and plan changes — what teams ask before they pick a plan."
+            />
             <PricingFaqAccordion items={pricingFaqs} />
-            <p className="mt-8 text-center text-sm text-muted-foreground">
+            <p className="text-center text-body leading-body text-foreground-muted">
               Not sure which plan fits?{" "}
-              <Link href="/contact?topic=sales" className="font-medium text-foreground underline-offset-4 hover:underline">
+              <Link
+                href="/contact?topic=sales"
+                className="font-medium text-accent-soft underline underline-offset-4 transition-colors hover:text-foreground focus-visible:rounded-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+              >
                 Book a call
               </Link>
             </p>
-          </div>
-        </section>
+          </section>
+        </div>
       </PublicShell>
     </>
   );

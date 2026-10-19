@@ -35,19 +35,19 @@ export function SavingsCalculator() {
     0;
 
   return (
-    <div className="rounded-2xl border border-border bg-card p-4 sm:p-6 md:p-8 shadow-sm min-w-0">
-      <div className="mb-6 sm:mb-8">
+    <div className="min-w-0 rounded-pricing-card border border-pricing-card-border bg-pricing-card p-8 backdrop-blur-card w1024:p-6 w390:p-4.75">
+      <div className="mb-8 w390:mb-6">
         <label
           htmlFor="seats-slider"
-          className="mb-3 flex items-center justify-between gap-3 text-sm"
+          className="mb-4 flex items-center justify-between gap-3"
         >
-          <span className="inline-flex items-center gap-2 font-medium text-foreground min-w-0">
-            <Users className="h-4 w-4 text-muted-foreground shrink-0" aria-hidden />
+          <span className="inline-flex min-w-0 items-center gap-2 font-mono text-relay-label leading-label text-foreground-muted">
+            <Users className="size-4 shrink-0 text-accent-soft" aria-hidden />
             Team size
           </span>
-          <span className="font-display text-xl sm:text-2xl font-bold tabular-nums text-foreground shrink-0">
+          <span className="shrink-0 text-pricing-price leading-pricing-price font-semibold tracking-title tabular-nums text-foreground">
             {seats}
-            <span className="ml-1.5 text-sm font-medium text-muted-foreground">users</span>
+            <span className="ml-2 font-mono text-relay-label leading-label font-normal tracking-normal text-foreground-dim">users</span>
           </span>
         </label>
         <input
@@ -58,13 +58,13 @@ export function SavingsCalculator() {
           step={1}
           value={seats}
           onChange={(e) => setSeats(Number(e.target.value))}
-          className="h-1.5 w-full cursor-pointer appearance-none rounded-full bg-muted accent-blue-600 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-status-info-fill [&::-webkit-slider-thumb]:shadow-sm"
+          className="h-1.5 w-full cursor-pointer appearance-none rounded-full bg-pricing-track accent-accent focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent [&::-moz-range-thumb]:size-4 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:border-0 [&::-moz-range-thumb]:bg-accent-soft [&::-webkit-slider-thumb]:size-4 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-accent-soft [&::-webkit-slider-thumb]:shadow-pricing-button-glow"
           aria-label="Number of users"
           aria-valuemin={MIN_SEATS}
           aria-valuemax={MAX_SEATS}
           aria-valuenow={seats}
         />
-        <div className="relative mt-2 h-4">
+        <div className="relative mt-2 h-5">
           {SEAT_TICKS.map((tick) => {
             const pct = seatTickPosition(tick);
             const isMin = tick === MIN_SEATS;
@@ -72,7 +72,7 @@ export function SavingsCalculator() {
             return (
               <span
                 key={tick}
-                className="absolute text-xs text-muted-foreground"
+                className="absolute font-mono text-relay-label leading-label text-foreground-dim"
                 style={{
                   left: isMin ? "0%" : isMax ? "100%" : `${pct}%`,
                   transform: isMin
@@ -89,7 +89,7 @@ export function SavingsCalculator() {
         </div>
       </div>
 
-      <div className="grid gap-3 sm:grid-cols-2">
+      <div className="grid grid-cols-2 gap-3 w390:grid-cols-1">
         <ComparisonCard
           label="Typical all-in-one platform"
           subtitle={`${INR(COMPETITOR_PRICES.allInOneErp)} × ${seats} × 12 mo`}
@@ -103,29 +103,36 @@ export function SavingsCalculator() {
         />
       </div>
 
-      <div className="mt-4 rounded-xl bg-status-info-fill px-5 py-4 text-white">
-        <p className="text-xs font-medium text-white/80">Annual savings</p>
+      <div className="mt-3 rounded-2xl bg-linear-135 from-brand-from to-brand-to px-6 py-5 text-on-accent w390:px-4.75">
+        <p className="font-mono text-relay-label leading-label">Annual savings</p>
         <div className="mt-1 flex flex-wrap items-end justify-between gap-3">
-          <p className="font-display text-3xl font-extrabold tabular-nums">
+          <p className="text-pricing-price leading-pricing-price font-semibold tracking-title tabular-nums">
             {INR(vsAllInOne.savings)}
-            <span className="ml-2 text-sm font-medium text-white/80">/ year</span>
+            <span className="ml-2 font-mono text-relay-label leading-label font-normal tracking-normal">/ year</span>
           </p>
-          <span className="rounded-full bg-white/15 px-3 py-1 text-sm font-semibold">
+          <span className="rounded-full bg-brand-navy px-3 py-1 text-relay-label leading-label font-semibold text-accent-soft">
             {vsAllInOne.savingsPct}% less
           </span>
         </div>
       </div>
 
-      <details className="mt-5 group">
-        <summary className="cursor-pointer text-sm font-medium text-foreground transition-colors hover:text-muted-foreground">
+      <details className="group mt-6">
+        <summary className="flex w-fit cursor-pointer list-none items-center gap-3 rounded-sm text-body leading-body font-medium text-foreground marker:hidden focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent [&::-webkit-details-marker]:hidden">
+          <span
+            aria-hidden="true"
+            className="relative size-3.5 shrink-0 text-accent transition-transform duration-(--motion-fast) ease-entrance group-open:rotate-45"
+          >
+            <span className="absolute inset-x-0 top-1/2 h-px -translate-y-1/2 bg-current" />
+            <span className="absolute inset-y-0 left-1/2 w-px -translate-x-1/2 bg-current" />
+          </span>
           Compare against a per-tool stack
         </summary>
-        <div className="mt-4 space-y-3 rounded-xl border border-border bg-muted p-4">
-          <p className="text-sm leading-relaxed text-muted-foreground">
+        <div className="mt-4 flex flex-col gap-3 rounded-2xl border border-border-subtle bg-surface-glass p-5 w390:p-4">
+          <p className="text-body leading-body text-foreground-muted">
             HR + CRM + Chat + Docs separately (Keka + HubSpot + a chat tool + Notion) costs ~
             {INR(vsStack.stackPerSeat)} per seat.
           </p>
-          <div className="grid gap-3 sm:grid-cols-2">
+          <div className="grid grid-cols-2 gap-3 w390:grid-cols-1">
             <ComparisonCard
               label="Per-tool stack"
               subtitle={`${INR(vsStack.stackPerSeat)} × ${seats} × 12 mo`}
@@ -140,7 +147,7 @@ export function SavingsCalculator() {
               compact
             />
           </div>
-          <p className="text-sm font-medium text-status-success-ink">
+          <p className="text-body leading-body font-medium text-accent-soft">
             Save {INR(vsStack.savings)} / year ({vsStack.savingsPct}% off the stack)
           </p>
         </div>
@@ -164,26 +171,24 @@ function ComparisonCard({
 }) {
   return (
     <div
-      className={`rounded-xl border p-4 ${
-        highlight
-          ? "border-status-info-rule bg-status-info-surface"
-          : "border-border bg-muted"
-      } ${compact ? "" : "sm:p-5"}`}
+      className={`rounded-2xl border ${
+        highlight ? "border-border-glass bg-surface-glass" : "border-border-subtle bg-background"
+      } ${compact ? "p-4" : "p-5 w390:p-4"}`}
     >
       <p
-        className={`text-xs font-medium ${highlight ? "text-status-info-ink" : "text-muted-foreground"}`}
+        className={`font-mono text-relay-label leading-label ${highlight ? "text-accent-soft" : "text-foreground-muted"}`}
       >
         {label}
       </p>
       <p
-        className={`mt-1 font-display font-bold tabular-nums tracking-tight ${
-          compact ? "text-xl" : "text-2xl"
-        } ${highlight ? "text-status-info-ink" : "text-foreground"}`}
+        className={`mt-1.5 font-semibold tracking-title tabular-nums text-foreground ${
+          compact ? "text-lead leading-lead" : "text-section-title leading-section-title"
+        }`}
       >
         {amount}
-        <span className="ml-1.5 text-xs font-medium text-muted-foreground">/ year</span>
+        <span className="ml-1.5 font-mono text-relay-label leading-label font-normal tracking-normal text-foreground-dim">/ year</span>
       </p>
-      <p className="mt-1 text-xs text-muted-foreground">{subtitle}</p>
+      <p className="mt-1 text-relay-label leading-label text-foreground-dim">{subtitle}</p>
     </div>
   );
 }
