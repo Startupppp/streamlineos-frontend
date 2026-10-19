@@ -1,5 +1,7 @@
 @import "tailwindcss";
 @import "./themes.css";
+/* Public marketing site (Relay). Every token is scoped to .relay-root. */
+@import "./features/landing/relay/styles/relay.css";
 @plugin "@tailwindcss/typography";
 
 @custom-variant dark (&:is(.dark *));
