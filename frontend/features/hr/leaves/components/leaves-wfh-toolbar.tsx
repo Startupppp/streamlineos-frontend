@@ -10,7 +10,12 @@ import {
 } from "@/components/ui/select";
 import { FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
-import { DownloadIcon, EllipsisIcon, HouseIcon, PlusIcon } from "@animateicons/react/lucide";
+import {
+  DownloadIcon,
+  EllipsisIcon,
+  HouseIcon,
+  PlusIcon,
+} from "@animateicons/react/lucide";
 import Link from "next/link";
 import {
   DropdownMenu,
@@ -107,7 +112,10 @@ export function LeavesWfhToolbar({
             </AnimatedIconButton>
           ) : null}
           {activeTab === "wfh" ? (
-            <Select value={wfhStatusFilter} onValueChange={onWfhStatusFilterChange}>
+            <Select
+              value={wfhStatusFilter}
+              onValueChange={onWfhStatusFilterChange}
+            >
               <SelectTrigger
                 className={`${FILTER_SELECT_TRIGGER} w-[130px]`}
                 aria-label="Filter WFH requests by status"
@@ -128,11 +136,31 @@ export function LeavesWfhToolbar({
   );
 }
 
-const LEAVE_LINKS: readonly { label: string; href: string; permission: PermissionKey }[] = [
-  { label: "Leave types & policies", href: "/hr/leave-policies", permission: "hr:leaves:manage" },
-  { label: "HR policies", href: "/hr/settings/policies", permission: "hr:policies:view" },
-  { label: "Holiday calendar", href: "/hr/holidays", permission: "self:attendance" },
-  { label: "Leave analytics", href: "/hr/leaves/analytics", permission: "hr:leaves:view" },
+const LEAVE_LINKS: readonly {
+  label: string;
+  href: string;
+  permission: PermissionKey;
+}[] = [
+  {
+    label: "Leave types & policies",
+    href: "/hr/leave-policies",
+    permission: "hr:leaves:manage",
+  },
+  {
+    label: "HR policies",
+    href: "/hr/settings/policies",
+    permission: "hr:policies:view",
+  },
+  {
+    label: "Holiday calendar",
+    href: "/hr/holidays",
+    permission: "self:attendance",
+  },
+  {
+    label: "Leave analytics",
+    href: "/hr/leaves/analytics",
+    permission: "hr:leaves:view",
+  },
 ];
 
 function LeaveLinksMenu() {
@@ -156,7 +184,7 @@ function LeaveLinksMenu() {
           iconSize={16}
           variant="outline"
           size="icon"
-          className="min-h-11 md:min-h-0"
+          className="shrink-0 min-h-11 !w-9 !min-w-9 md:min-h-0"
           aria-label="Leave settings and reports"
         />
       </DropdownMenuTrigger>
