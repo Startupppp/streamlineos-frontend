@@ -105,7 +105,7 @@ function PricingCard({
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: "-5% 0px" }}
       transition={{ duration: 0.4, delay: index * 0.04, ease: EASE_OUT }}
-      className={`relative flex flex-col rounded-2xl border bg-white transition-shadow hover:shadow-md min-w-0 ${
+      className={`relative flex flex-col rounded-2xl border bg-card transition-shadow hover:shadow-md min-w-0 ${
         tier.highlight
           ? "border-status-info-rule shadow-sm ring-1 ring-status-info-rule"
           : "border-border shadow-sm"

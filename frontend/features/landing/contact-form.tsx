@@ -131,7 +131,7 @@ export function ContactForm() {
   }
 
   return (
-    <div className="relative rounded-2xl border border-border bg-white/85 backdrop-blur-sm p-3 lg:p-6 shadow-[0_18px_44px_-18px_rgba(30,64,175,0.18)]">
+    <div className="relative rounded-2xl border border-border bg-card/85 backdrop-blur-sm p-3 lg:p-6 shadow-[0_18px_44px_-18px_rgba(30,64,175,0.18)]">
       <AnimatePresence mode="wait">
         {submitted ? (
           <motion.div
@@ -192,7 +192,7 @@ export function ContactForm() {
                         "text-xs font-medium rounded-lg border px-2.5 py-2 transition-all",
                         selected
                           ? "bg-status-neutral-fill text-white border-border shadow-sm"
-                          : "bg-white text-foreground border-border hover:border-status-info-rule hover:text-muted-foreground",
+                          : "bg-card text-foreground border-border hover:border-status-info-rule hover:text-muted-foreground",
                       )}
                     >
                       {t.label}
@@ -256,7 +256,7 @@ export function ContactForm() {
               <textarea
                 rows={5}
                 placeholder="Team size, what you're trying to solve, when you'd like to start…"
-                className="w-full rounded-md border border-border bg-white px-3 py-2.5 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-status-info-rule focus-visible:border-status-info-rule resize-y min-h-[120px]"
+                className="w-full rounded-md border border-border bg-card px-3 py-2.5 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-status-info-rule focus-visible:border-status-info-rule resize-y min-h-[120px]"
                 {...form.register("message")}
               />
             </PublicFormField>

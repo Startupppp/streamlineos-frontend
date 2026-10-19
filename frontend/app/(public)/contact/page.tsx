@@ -69,7 +69,7 @@ export default function ContactPage() {
               <Link
                 key={c.label}
                 href={c.href}
-                className="group block rounded-2xl border border-border bg-white/70 backdrop-blur-sm p-5 hover:border-status-info-rule hover:bg-white transition-colors"
+                className="group block rounded-2xl border border-border bg-card/70 backdrop-blur-sm p-5 hover:border-status-info-rule hover:bg-card transition-colors"
               >
                 <div className="flex items-start gap-4">
                   <span className="h-10 w-10 rounded-xl bg-gradient-to-br from-gradient-info-from to-gradient-info-to inline-flex items-center justify-center shrink-0 shadow-[0_6px_18px_-6px_rgba(59,130,246,0.5)] group-hover:scale-105 transition-transform">

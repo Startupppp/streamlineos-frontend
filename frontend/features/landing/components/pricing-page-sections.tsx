@@ -34,7 +34,7 @@ export function PricingFeatureMatrix({ groups }: PricingFeatureMatrixProps) {
   const columnCount = PRICING_TIERS.length + 1;
 
   return (
-    <div className="overflow-hidden rounded-2xl border border-border bg-white shadow-sm">
+    <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
       <div className="overflow-x-auto">
         <table className="w-full min-w-[720px] text-left">
           <thead>
@@ -65,7 +65,7 @@ export function PricingFeatureMatrix({ groups }: PricingFeatureMatrixProps) {
                 </tr>
                 {group.rows.map((row) => (
                   <tr key={`${group.title}-${row.feature}`} className="border-b border-border last:border-0">
-                    <td className="sticky left-0 z-10 bg-white px-4 py-2.5 text-sm text-foreground">
+                    <td className="sticky left-0 z-10 bg-card px-4 py-2.5 text-sm text-foreground">
                       {row.feature}
                     </td>
                     {row.tiers.map((value, index) => (
@@ -90,7 +90,7 @@ export function PricingFaqAccordion({ items }: { items: FaqItem[] }) {
   const [open, setOpen] = useState<number | null>(0);
 
   return (
-    <div className="divide-y divide-border rounded-2xl border border-border bg-white shadow-sm">
+    <div className="divide-y divide-border rounded-2xl border border-border bg-card shadow-sm">
       {items.map((f, i) => {
         const isOpen = open === i;
         return (

@@ -60,7 +60,7 @@ export default function AboutPage() {
       <section className="container mx-auto px-4 lg:px-8 max-w-5xl mt-16 lg:mt-24">
         <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-px rounded-2xl glass-panel-strong overflow-hidden">
           {numbers.map((n) => (
-            <div key={n.label} className="px-6 py-8 text-center bg-white/70 backdrop-blur">
+            <div key={n.label} className="px-6 py-8 text-center bg-card/70 backdrop-blur">
               <p className="font-display text-3xl lg:text-4xl font-extrabold text-status-info-ink leading-none mb-1.5">
                 {n.value}
               </p>
@@ -118,7 +118,7 @@ export default function AboutPage() {
             return (
               <div
                 key={v.title}
-                className="rounded-2xl border border-border bg-white/70 backdrop-blur-sm p-7"
+                className="rounded-2xl border border-border bg-card/70 backdrop-blur-sm p-7"
               >
                 <span className="h-11 w-11 rounded-xl bg-gradient-to-br from-gradient-info-from to-gradient-info-to inline-flex items-center justify-center mb-4 shadow-[0_8px_18px_-6px_rgba(59,130,246,0.5)]">
                   <Icon className="h-5 w-5 text-white" />
@@ -153,7 +153,7 @@ export default function AboutPage() {
             <Link href="/contact">
               <Button
                 size="lg"
-                className="bg-white text-foreground hover:bg-status-info-surface font-bold border-0 shadow-[0_18px_50px_-12px_rgba(255,255,255,0.3)] h-12 px-8 text-sm"
+                className="bg-card text-foreground hover:bg-status-info-surface font-bold border-0 shadow-[0_18px_50px_-12px_rgba(255,255,255,0.3)] h-12 px-8 text-sm"
               >
                 Get in touch
                 <ArrowRight className="ml-2 h-4 w-4" />

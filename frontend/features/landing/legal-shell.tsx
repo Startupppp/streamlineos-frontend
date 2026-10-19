@@ -56,7 +56,7 @@ export function LegalShell({ eyebrow, title, intro, effectiveDate, sections, chi
 
       <section className="container mx-auto px-4 lg:px-8 max-w-7xl mt-12 lg:mt-16 grid lg:grid-cols-12 gap-10">
         <aside className="lg:col-span-3 order-2 lg:order-1">
-          <div className="lg:sticky lg:top-28 rounded-2xl border border-border bg-white/70 backdrop-blur-sm p-5">
+          <div className="lg:sticky lg:top-28 rounded-2xl border border-border bg-card/70 backdrop-blur-sm p-5">
             <p className="text-dense font-medium text-muted-foreground mb-3">
               On this page
             </p>

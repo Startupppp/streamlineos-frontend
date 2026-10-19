@@ -35,7 +35,7 @@ export function SavingsCalculator() {
     0;
 
   return (
-    <div className="rounded-2xl border border-border bg-white p-4 sm:p-6 md:p-8 shadow-sm min-w-0">
+    <div className="rounded-2xl border border-border bg-card p-4 sm:p-6 md:p-8 shadow-sm min-w-0">
       <div className="mb-6 sm:mb-8">
         <label
           htmlFor="seats-slider"

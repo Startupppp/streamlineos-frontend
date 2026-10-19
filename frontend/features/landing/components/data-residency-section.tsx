@@ -36,7 +36,7 @@ export function DataResidencySection({ residency }: { residency: DataResidency |
           {residency.options.map((option) => (
             <div
               key={option.region}
-              className="rounded-xl border border-border bg-white p-5 shadow-sm"
+              className="rounded-xl border border-border bg-card p-5 shadow-sm"
             >
               <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-status-info-surface text-status-info-ink">
                 <Globe2 className="h-4 w-4" aria-hidden />
