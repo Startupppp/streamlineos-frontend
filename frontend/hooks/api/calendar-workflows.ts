@@ -35,6 +35,10 @@ export interface CalendarWorkflowPolicyInput {
   maxRules?: number;
   maxEffectsPerEvent?: number;
   maxEffectsPerDay?: number;
+  quietHoursStart?: string | null;
+  quietHoursEnd?: string | null;
+  quietHoursTimezone?: string | null;
+  quietHoursBehavior?: "delay" | "skip" | null;
 }
 
 export interface CalendarWorkflowRuleInput {

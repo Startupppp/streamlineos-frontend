@@ -69,6 +69,10 @@ export const calendarWorkflowPolicyContract = z.object({
   maxRules: z.number().int().positive(),
   maxEffectsPerEvent: z.number().int().positive(),
   maxEffectsPerDay: z.number().int().positive(),
+  quietHoursStart: z.string().nullable().default(null),
+  quietHoursEnd: z.string().nullable().default(null),
+  quietHoursTimezone: z.string().nullable().default(null),
+  quietHoursBehavior: z.enum(["delay", "skip"]).nullable().default(null),
   updatedAt: z.string().nullable(),
 });
 
