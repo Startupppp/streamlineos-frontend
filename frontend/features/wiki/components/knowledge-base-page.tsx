@@ -641,8 +641,8 @@ export default function KnowledgeBasePage() {
 
   return (
     <PageWrapper
-      title="Knowledge Base"
-      subtitle="Chat with your files, notes and wiki — answers are grounded in your content."
+      title="Ask documents"
+      subtitle="Ask across your files and docs. Every answer stays grounded in content you can access."
       noInternalScroll
       contentClassName="flex min-h-0 min-w-0 flex-col px-4 sm:px-6"
       actions={

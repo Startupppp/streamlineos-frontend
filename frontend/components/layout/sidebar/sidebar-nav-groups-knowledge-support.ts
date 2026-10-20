@@ -1,4 +1,4 @@
-import { Clock, FileText, BarChart3, BookOpen, Network, ClipboardList, ShieldCheck, Share2, Globe, Scale, MailOpen, ListChecks, History, LifeBuoy, Inbox, Send, SlidersHorizontal, Library, NotebookPen, Workflow, PenTool, FileStack, FlaskConical } from "lucide-react";
+import { Clock, FileText, BarChart3, BookOpen, Network, ClipboardList, ShieldCheck, Share2, Globe, Scale, MailOpen, ListChecks, History, LifeBuoy, Inbox, Send, SlidersHorizontal, Library, NotebookPen, Workflow, PenTool, FileStack } from "lucide-react";
 import type { NavGroup } from "./sidebar-nav-types";
 
 export const KNOWLEDGE_SUPPORT_NAV_GROUPS: NavGroup[] = [
@@ -174,20 +174,14 @@ export const KNOWLEDGE_SUPPORT_NAV_GROUPS: NavGroup[] = [
     product: "documents",
     routes: [
       {
-        label: "Ask KB",
-        icon: Library,
-        href: "/knowledge/chat",
-      },
-      {
         label: "Docs",
         icon: NotebookPen,
         href: "/knowledge/wiki",
       },
       {
-        label: "Research Briefs",
-        icon: FlaskConical,
-        href: "/knowledge/research-briefs",
-        requiredPermission: "kb:pages:view",
+        label: "Ask documents",
+        icon: Library,
+        href: "/knowledge/chat",
       },
     ],
   },

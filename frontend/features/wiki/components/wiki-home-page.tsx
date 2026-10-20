@@ -152,7 +152,7 @@ export default function WikiHomePage({ projectId }: WikiHomePageProps) {
       disabled={createPage.isSubmitting}
       suppressHydrationWarning
     >
-      New page
+      New document
     </AnimatedIconButton>
   ) : undefined;
 
@@ -165,7 +165,7 @@ export default function WikiHomePage({ projectId }: WikiHomePageProps) {
         subtitle={
           isProjectScoped
             ? "Docs and decisions for this project"
-            : "Your team knowledge base"
+            : "Files, documents and decisions for your team"
         }
         actions={newPageAction}
       >
@@ -179,7 +179,7 @@ export default function WikiHomePage({ projectId }: WikiHomePageProps) {
               placeholder={
                 isProjectScoped
                   ? "Filter this project's pages…"
-                  : "Search docs…"
+                  : "Search documents…"
               }
               fill
             />
@@ -270,7 +270,7 @@ export default function WikiHomePage({ projectId }: WikiHomePageProps) {
             <section className="flex min-h-0 flex-1 flex-col">
               {!isProjectScoped && (
                 <h2 className="text-sm font-semibold text-foreground mb-3">
-                  All pages
+                  All documents
                 </h2>
               )}
               <WikiHomeAllPages

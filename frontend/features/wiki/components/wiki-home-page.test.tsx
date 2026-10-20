@@ -395,16 +395,16 @@ describe("WikiHomePage — first-run and filtered-empty states", () => {
 
     render(<WikiHomePage />);
 
-    expect(screen.getByText("Your wiki starts here")).toBeInTheDocument();
+    expect(screen.getByText("Your Docs workspace starts here")).toBeInTheDocument();
     expect(
-      screen.getByRole("button", { name: /create a page/i }),
+      screen.getByRole("button", { name: /create a document/i }),
     ).toBeInTheDocument();
   });
 
   it("does not show the first-run empty state when pages exist", () => {
     render(<WikiHomePage />);
 
-    expect(screen.queryByText("Your wiki starts here")).not.toBeInTheDocument();
+    expect(screen.queryByText("Your Docs workspace starts here")).not.toBeInTheDocument();
     expect(screen.getByTestId("table-rows")).toBeInTheDocument();
   });
 
@@ -439,7 +439,7 @@ describe("WikiHomePage — first-run and filtered-empty states", () => {
     expect(
       screen.getByRole("button", { name: /clear filters/i }),
     ).toBeInTheDocument();
-    expect(screen.queryByText("Your wiki starts here")).not.toBeInTheDocument();
+    expect(screen.queryByText("Your Docs workspace starts here")).not.toBeInTheDocument();
   });
 
   it("filtered-empty renders differently from first-run — filtered offers clear action that first-run does not", () => {
@@ -457,14 +457,14 @@ describe("WikiHomePage — first-run and filtered-empty states", () => {
     expect(
       screen.getByRole("button", { name: /clear filters/i }),
     ).toBeInTheDocument();
-    expect(screen.queryByText("Your wiki starts here")).not.toBeInTheDocument();
+    expect(screen.queryByText("Your Docs workspace starts here")).not.toBeInTheDocument();
 
     mockSearchParams = new URLSearchParams();
     rerender(<WikiHomePage />);
     expect(
       screen.queryByRole("button", { name: /clear filters/i }),
     ).not.toBeInTheDocument();
-    expect(screen.getByText("Your wiki starts here")).toBeInTheDocument();
+    expect(screen.getByText("Your Docs workspace starts here")).toBeInTheDocument();
   });
 });
 
@@ -715,15 +715,15 @@ describe("WikiHomePage — the create control fails closed on kb:pages:create", 
     mockUseBuildListKeyboard.mockClear();
   });
 
-  it("renders no New page action when kb:pages:create is denied", () => {
+  it("renders no New document action when kb:pages:create is denied", () => {
     mockCan = (key) => key !== "kb:pages:create";
     render(<WikiHomePage />);
-    expect(screen.queryByRole("button", { name: /new page/i })).toBeNull();
+    expect(screen.queryByRole("button", { name: /new document/i })).toBeNull();
   });
 
-  it("renders the New page action when kb:pages:create is granted — paired positive control for the denial above", () => {
+  it("renders the New document action when kb:pages:create is granted — paired positive control for the denial above", () => {
     render(<WikiHomePage />);
-    expect(screen.getByRole("button", { name: /new page/i })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /new document/i })).toBeInTheDocument();
   });
 
   it("passes no onCreate to the keyboard hook when kb:pages:create is denied so the c shortcut cannot create a page", () => {

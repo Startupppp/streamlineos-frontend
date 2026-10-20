@@ -15,17 +15,11 @@ async function openAccordionGroup(label: string) {
   await userEvent.hover(screen.getByRole("button", { name: label }));
 }
 
-describe("WikiSidebarNav — company documents", () => {
-  it("does not list company documents unless HR documents are switched on", () => {
+describe("WikiSidebarNav — focused document library", () => {
+  it("keeps linked company documents out of the primary library navigation", () => {
     renderWithProviders(<WikiSidebarNav canViewAnalytics={false} canViewReviews={false} canManageContent={false} canManageTemplates={false} canImportPages={false} canViewSpaces={false} />);
 
     expect(screen.queryByRole("link", { name: "Company documents" })).toBeNull();
-  });
-
-  it("lists company documents next to the other places a reader browses once they are switched on", () => {
-    renderWithProviders(<WikiSidebarNav canViewAnalytics={false} canViewReviews={false} canManageContent={false} canManageTemplates={false} canImportPages={false} canViewSpaces={false} showCompanyDocuments />);
-
-    expect(screen.getByRole("link", { name: "Company documents" })).toHaveAttribute("href", "/knowledge/wiki/company-documents");
     expect(screen.getByRole("link", { name: "My files" })).toBeInTheDocument();
   });
 
@@ -38,7 +32,7 @@ describe("WikiSidebarNav — company documents", () => {
 });
 
 describe("WikiSidebarNav — wiki hides the Documents product sidebar", () => {
-  it("keeps Ask KB as a list destination, not a tab", () => {
+  it("leads with Docs, keeps Ask contextual, and removes the duplicate Search destination", () => {
     renderWithProviders(
       <WikiSidebarNav
         canViewAnalytics={false}
@@ -47,9 +41,13 @@ describe("WikiSidebarNav — wiki hides the Documents product sidebar", () => {
       />,
     );
 
-    const askKb = screen.getByRole("link", { name: "Ask KB" });
+    const links = screen.getAllByRole("link");
+    const docs = screen.getByRole("link", { name: "Docs" });
+    const askKb = screen.getByRole("link", { name: "Ask documents" });
     expect(askKb).toHaveAttribute("href", "/knowledge/chat");
     expect(askKb).not.toHaveAttribute("aria-current");
+    expect(links.indexOf(docs)).toBeLessThan(links.indexOf(askKb));
+    expect(screen.queryByRole("link", { name: "Search" })).toBeNull();
     expect(screen.queryByRole("navigation", { name: "Documents" })).toBeNull();
   });
 
@@ -105,7 +103,7 @@ describe("WikiSidebarNav — wiki hides the Documents product sidebar", () => {
     expect(screen.queryByRole("link", { name: "My files" })).toBeNull();
   });
 
-  it("keeps Ask KB in the collapsed wiki rail", () => {
+  it("keeps Ask documents in the collapsed wiki rail", () => {
     renderWithProviders(
       <WikiSidebarNav
         isCollapsed
@@ -115,7 +113,7 @@ describe("WikiSidebarNav — wiki hides the Documents product sidebar", () => {
       />,
     );
 
-    expect(screen.getByRole("link", { name: "Ask KB" })).toHaveAttribute(
+    expect(screen.getByRole("link", { name: "Ask documents" })).toHaveAttribute(
       "href",
       "/knowledge/chat",
     );

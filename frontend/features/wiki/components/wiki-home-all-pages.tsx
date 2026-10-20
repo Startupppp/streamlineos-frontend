@@ -238,7 +238,7 @@ function AllPagesItemMenu({ page, resolveHref, menuOpen: controlledOpen, onMenuO
 
   function handleDeleteConfirm() {
     deletePage.mutate(page.id, {
-      onSuccess: () => toast.success("Page deleted"),
+      onSuccess: () => toast.success("Document moved to trash"),
       onError: (err) => toast.error(getErrorMessage(err)),
     });
     setDeleteOpen(false);
@@ -257,7 +257,7 @@ function AllPagesItemMenu({ page, resolveHref, menuOpen: controlledOpen, onMenuO
     } else if (actionId === "duplicate") {
       duplicatePage.mutate(page.id, {
         onSuccess: (dup) => {
-          toast.success("Page duplicated");
+          toast.success("Document duplicated");
           router.push(resolveHref(dup.id));
         },
         onError: (err) => toast.error(getErrorMessage(err)),
@@ -279,8 +279,8 @@ function AllPagesItemMenu({ page, resolveHref, menuOpen: controlledOpen, onMenuO
   return (
     <>
       <ConfirmDialog
-        title="Delete page"
-        description="This page will be moved to trash and can be restored for 30 days."
+        title="Delete document"
+        description="This document will be moved to trash and can be restored for 30 days."
         confirmLabel="Delete"
         destructive
         isPending={deletePage.isPending}
@@ -295,7 +295,7 @@ function AllPagesItemMenu({ page, resolveHref, menuOpen: controlledOpen, onMenuO
             variant="ghost"
             size="icon"
             className="h-7 w-7 shrink-0"
-            aria-label="Page actions"
+            aria-label="Document actions"
           >
             <KbMoreHorizontalIcon className="h-4 w-4" />
           </Button>
@@ -431,7 +431,7 @@ export function WikiHomeAllPages({ projectId, onItemCountChange, onRowsChange }:
     limit: PAGE_LIMIT,
   });
 
-  const rows = data?.data ?? [];
+  const rows = useMemo(() => data?.data ?? [], [data?.data]);
   const isEmpty = data !== undefined && rows.length === 0;
 
   useEffect(() => {
@@ -537,7 +537,7 @@ export function WikiHomeAllPages({ projectId, onItemCountChange, onRowsChange }:
   const emptyNode = filtersActive ? (
     <EmptyState
       illustrationPreset="default"
-      title="All pages"
+      title="All documents"
       filtersActive
       filteredTitle="No pages match your filters."
       onClearFilters={handleClearFilters}
@@ -546,12 +546,12 @@ export function WikiHomeAllPages({ projectId, onItemCountChange, onRowsChange }:
   ) : (
     <EmptyState
       illustrationPreset="default"
-      title="Your wiki starts here"
-      description="Create your first page to build a shared knowledge base for your team."
-      action={canCreate ? { label: "Create a page", onClick: handleNewPage } : undefined}
+      title="Your Docs workspace starts here"
+      description="Create your first document to give your team one place for current knowledge."
+      action={canCreate ? { label: "Create a document", onClick: handleNewPage } : undefined}
       secondaryAction={{ label: "Browse templates", href: KB_TEMPLATES }}
       tertiaryAction={
-        canImport ? { label: "Import pages", href: KB_IMPORT } : undefined
+        canImport ? { label: "Import documents", href: KB_IMPORT } : undefined
       }
       className={CONTENT_FILL_PANEL}
     />
@@ -626,8 +626,8 @@ export function WikiHomeAllPages({ projectId, onItemCountChange, onRowsChange }:
           {data !== undefined && (
             <span className="text-sm text-muted-foreground tabular-nums">
               {data.boundedCount.isExact
-                ? `${data.boundedCount.count} ${data.boundedCount.count === 1 ? "page" : "pages"}`
-                : `${data.boundedCount.count}+ pages`}
+                ? `${data.boundedCount.count} ${data.boundedCount.count === 1 ? "document" : "documents"}`
+                : `${data.boundedCount.count}+ documents`}
             </span>
           )}
           <div className="flex items-center gap-1">

@@ -331,7 +331,7 @@ describe("WikiHomeAllPages — card view descriptor parity", () => {
     render(<WikiHomeAllPages />);
 
     expect(
-      screen.queryByRole("button", { name: /page actions/i }),
+      screen.queryByRole("button", { name: /document actions/i }),
     ).not.toBeInTheDocument();
   });
 
@@ -339,7 +339,7 @@ describe("WikiHomeAllPages — card view descriptor parity", () => {
     render(<WikiHomeAllPages />);
 
     expect(
-      screen.getAllByRole("button", { name: /page actions/i }),
+      screen.getAllByRole("button", { name: /document actions/i }),
     ).toHaveLength(1);
   });
 
@@ -459,7 +459,7 @@ describe("WikiHomeAllPages — bounded count display", () => {
 
     render(<WikiHomeAllPages />);
 
-    expect(screen.getByText("2 pages")).toBeInTheDocument();
+    expect(screen.getByText("2 documents")).toBeInTheDocument();
   });
 
   it("renders the count in N+ form when isExact is false, so the user knows more pages exist beyond the count cap", () => {
@@ -473,7 +473,7 @@ describe("WikiHomeAllPages — bounded count display", () => {
 
     render(<WikiHomeAllPages />);
 
-    expect(screen.getByText("500+ pages")).toBeInTheDocument();
+    expect(screen.getByText("500+ documents")).toBeInTheDocument();
   });
 
   it("does not render a count while the collection is loading", () => {
@@ -488,7 +488,7 @@ describe("WikiHomeAllPages — bounded count display", () => {
 
     render(<WikiHomeAllPages />);
 
-    expect(screen.queryByText(/pages$/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/documents$/)).not.toBeInTheDocument();
   });
 });
 
@@ -638,7 +638,7 @@ describe("WikiHomeAllPages — right-click context menu on card view (task G)", 
   it("right-clicking a card calls e.preventDefault to suppress the native browser context menu", () => {
     render(<WikiHomeAllPages />);
 
-    const pageActionsBtn = screen.getByRole("button", { name: /page actions/i });
+    const pageActionsBtn = screen.getByRole("button", { name: /document actions/i });
     const notCancelled = fireEvent.contextMenu(pageActionsBtn);
 
     expect(notCancelled).toBe(false);
@@ -805,7 +805,7 @@ describe("WikiHomeAllPages — the q URL parameter reaches the collection reques
     expect(
       screen.getByRole("button", { name: /clear filters/i }),
     ).toBeInTheDocument();
-    expect(screen.queryByText("Your wiki starts here")).not.toBeInTheDocument();
+    expect(screen.queryByText("Your Docs workspace starts here")).not.toBeInTheDocument();
   });
 
   it("clear-filters removes q alongside the other filter params in one URL write", async () => {

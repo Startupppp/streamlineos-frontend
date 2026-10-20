@@ -30,7 +30,7 @@ export const PRODUCT_HREF_EXCEPTIONS: Readonly<
   Partial<Record<ProductKey, string>>
 > = {
   administration: "/settings",
-  documents: "/knowledge/chat",
+  documents: "/knowledge/wiki",
   recruitment: "/recruitment",
 };
 
@@ -163,7 +163,7 @@ export const PRODUCT_DESCRIPTIONS: Record<ProductKey, string> = {
   inventory: "Stock & orders",
   finance: "Accounts & books",
   helpdesk: "Tickets & support",
-  documents: "Knowledge base",
+  documents: "Files, docs & team knowledge",
   surveys: "Surveys & feedback",
   administration: "Settings & access",
   payroll: "Runs, payslips & compliance",

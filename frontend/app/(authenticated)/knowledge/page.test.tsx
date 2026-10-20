@@ -18,11 +18,11 @@ describe("/knowledge compatibility redirect", () => {
     jest.clearAllMocks();
   });
 
-  it("authenticates, records a hit, and redirects to the KB chat", async () => {
+  it("authenticates, records a hit, and redirects to the Docs home", async () => {
     await KnowledgeRootPage();
     expect(requireSession).toHaveBeenCalledTimes(1);
-    expect(recordLegacyRedirect).toHaveBeenCalledWith("/knowledge", "/knowledge/chat");
-    expect(redirect).toHaveBeenCalledWith("/knowledge/chat");
+    expect(recordLegacyRedirect).toHaveBeenCalledWith("/knowledge", "/knowledge/wiki");
+    expect(redirect).toHaveBeenCalledWith("/knowledge/wiki");
     expect(jest.mocked(requireSession).mock.invocationCallOrder[0]).toBeLessThan(
       jest.mocked(recordLegacyRedirect).mock.invocationCallOrder[0] ?? 0,
     );

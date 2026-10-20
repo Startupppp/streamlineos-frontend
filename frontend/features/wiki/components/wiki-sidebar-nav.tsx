@@ -8,7 +8,6 @@ import {
   KbBarChart2Icon,
   KbBookOpenTextIcon,
   KbClipboardCheckIcon,
-  KbFileTextIcon,
   KbLayoutGridIcon,
   KbLayoutTemplateIcon,
   KbLockIcon,
@@ -42,12 +41,10 @@ import {
   KNOWLEDGE_BASE,
   KB_ANALYTICS,
   KB_CHAT,
-  KB_COMPANY_DOCUMENTS,
   KB_IMPORT,
   KB_PRIVATE,
   KB_MANAGE,
   KB_REVIEWS,
-  KB_SEARCH,
   KB_SHARED,
   KB_SPACES,
   KB_TEMPLATES,
@@ -77,7 +74,6 @@ interface WikiSidebarNavProps {
   canManageTemplates: boolean;
   canImportPages: boolean;
   canViewSpaces: boolean;
-  showCompanyDocuments?: boolean;
 }
 
 interface WikiSidebarFooterProps {
@@ -86,7 +82,7 @@ interface WikiSidebarFooterProps {
 }
 
 function buildAskKbItem(): WikiNavItem {
-  return { label: "Ask KB", href: KB_CHAT, icon: KbMessageSquareIcon };
+  return { label: "Ask documents", href: KB_CHAT, icon: KbMessageSquareIcon };
 }
 
 function buildPrimaryItems(): WikiNavItem[] {
@@ -97,7 +93,7 @@ function buildPrimaryItems(): WikiNavItem[] {
       icon: KbBookOpenTextIcon,
       exact: true,
     },
-    { label: "Search", href: KB_SEARCH, icon: KbSearchIcon },
+    buildAskKbItem(),
   ];
 }
 
@@ -108,7 +104,6 @@ function buildNavGroups({
   canManageTemplates,
   canImportPages,
   canViewSpaces,
-  showCompanyDocuments,
 }: Omit<WikiSidebarNavProps, "isCollapsed">): WikiNavGroup[] {
   const manageItems: WikiNavItem[] = [];
 
@@ -161,15 +156,6 @@ function buildNavGroups({
         { label: "Shared with me", href: KB_SHARED, icon: KbUsersIcon },
         ...(canViewSpaces
           ? [{ label: "Team folders", href: KB_SPACES, icon: KbLayoutGridIcon }]
-          : []),
-        ...(showCompanyDocuments === true
-          ? [
-              {
-                label: "Company documents",
-                href: KB_COMPANY_DOCUMENTS,
-                icon: KbFileTextIcon,
-              },
-            ]
           : []),
       ],
     },
@@ -389,10 +375,8 @@ export default function WikiSidebarNav({
   canManageTemplates,
   canImportPages,
   canViewSpaces,
-  showCompanyDocuments = false,
 }: WikiSidebarNavProps) {
   const pathname = usePathname();
-  const askKbItem = useMemo(() => buildAskKbItem(), []);
   const primaryItems = useMemo(() => buildPrimaryItems(), []);
   const groups = useMemo(
     () =>
@@ -403,7 +387,6 @@ export default function WikiSidebarNav({
         canManageTemplates,
         canImportPages,
         canViewSpaces,
-        showCompanyDocuments,
       }),
     [
       canViewAnalytics,
@@ -412,7 +395,6 @@ export default function WikiSidebarNav({
       canManageTemplates,
       canImportPages,
       canViewSpaces,
-      showCompanyDocuments,
     ],
   );
   const accordionItems = useMemo(
@@ -443,12 +425,6 @@ export default function WikiSidebarNav({
   if (isCollapsed) {
     return (
       <div className="flex flex-col items-center gap-0.5 px-1 py-1">
-        <WikiNavLink
-          item={askKbItem}
-          isActive={isNavItemActive(pathname, askKbItem.href)}
-          isCollapsed
-        />
-        <Separator className="my-1 w-6" />
         {primaryItems.map((item) => (
           <WikiNavLink
             key={item.href}
@@ -471,13 +447,6 @@ export default function WikiSidebarNav({
 
   return (
     <div className="px-2 pb-1 pt-1">
-      <div className="space-y-0.5">
-        <WikiNavLink
-          item={askKbItem}
-          isActive={isNavItemActive(pathname, askKbItem.href)}
-        />
-      </div>
-      <Separator className="my-1" />
       <div className="space-y-0.5">
         {primaryItems.map((item) => (
           <WikiNavLink
