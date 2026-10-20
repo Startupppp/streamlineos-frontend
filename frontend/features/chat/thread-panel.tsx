@@ -75,15 +75,21 @@ export function ThreadPanel({
     el.style.height = Math.min(el.scrollHeight, 120) + "px";
   }, []);
 
+  const pendingSendRef = useRef<{ content: string; clientKey: string } | null>(null);
+
   const handleSend = useCallback(async () => {
     const content = input.trim();
     if (!content) return;
+    const clientKey =
+      pendingSendRef.current?.content === content ? pendingSendRef.current.clientKey : crypto.randomUUID();
+    pendingSendRef.current = { content, clientKey };
     setInput("");
     if (inputRef.current) {
       inputRef.current.style.height = "auto";
     }
     try {
-      await sendReply.mutateAsync({ content, clientKey: crypto.randomUUID() });
+      await sendReply.mutateAsync({ content, clientKey });
+      pendingSendRef.current = null;
       viewportRef.current?.scrollTo({ top: viewportRef.current.scrollHeight, behavior: "smooth" });
     } catch (error) {
       setInput(content);

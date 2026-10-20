@@ -6,7 +6,7 @@ import { InfiniteScrollSentinel } from "@/components/ui/infinite-scroll-sentinel
 import { ChannelListEntry } from "./channel-list-entry";
 import type { Channel } from "@/types/chat";
 
-export const CHANNEL_SECTION_PAGE_SIZE = 30;
+const CHANNEL_SECTION_PAGE_SIZE = 30;
 
 interface ChannelSectionListProps {
   channels: Channel[];

@@ -40,9 +40,9 @@ const MATRIX: readonly MatrixRow[] = [
   // ── /chat ───────────────────────────────────────────────────────────────────
   // root read allowed
   { path: "/chat", universalMatch: true, decisionKind: "universal", label: "chat root" },
-  // approved descendants allowed (channels and invite acceptance)
-  { path: "/chat/channels", universalMatch: true, decisionKind: "universal", label: "channel list" },
-  { path: "/chat/channels/general", universalMatch: true, decisionKind: "universal", label: "channel conversation" },
+  // approved descendant allowed (invite acceptance)
+  { path: "/chat/channels", universalMatch: false, decisionKind: "unknown", label: "retired channel list — redirects to /chat?search=channels" },
+  { path: "/chat/channels/general", universalMatch: false, decisionKind: "unknown", label: "retired channel subtree — no route" },
   { path: "/chat/invite/token123", universalMatch: true, decisionKind: "universal", label: "invite acceptance" },
 
   // ── /calendar ───────────────────────────────────────────────────────────────

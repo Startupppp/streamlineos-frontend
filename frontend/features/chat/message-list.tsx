@@ -16,6 +16,8 @@ import { MessageItem } from "./message-list-item";
 import { useOlderHistoryLoader } from "./use-chat-scroll";
 import { ErrorState } from "@/components/shared/error-state";
 import { EntityActionsProvider } from "./entity-actions-context";
+import { ChannelJoinState } from "./channel-join-state";
+import type { ChannelJoinRequired } from "./chat-helpers";
 
 
 interface GroupedMessages {
@@ -35,6 +37,7 @@ interface MessageListProps {
   isError?: boolean;
   errorMessage?: string;
   onRetry?: () => void;
+  joinRequired?: ChannelJoinRequired | null;
   hasNextPage: boolean | undefined;
   isFetchingNextPage: boolean;
   fetchNextPage: () => void;
@@ -125,6 +128,7 @@ export function MessageList({
   isError,
   errorMessage,
   onRetry,
+  joinRequired,
   hasNextPage,
   isFetchingNextPage,
   fetchNextPage,
@@ -195,6 +199,8 @@ export function MessageList({
    * shared-files-panel) already branch here; the timeline was the one that
    * rendered a failure as an ordinary empty conversation.
    */
+  if (joinRequired) return <ChannelJoinState channelId={channelId} channelName={joinRequired.channelName} />;
+
   if (isError) {
     return (
       <div className="flex-1 min-h-0 min-w-0 flex flex-col justify-center p-4">

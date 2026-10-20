@@ -3,10 +3,10 @@
 import { useEffect, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { collaborationQueryKeys } from "@/lib/query-keys/collaboration";
-import { useChatPoll, type ChatPollPosition } from "@/hooks/api/chat-core-read";
+import { useChatPoll, type ChatPollPosition } from "@/hooks/api/chat-message-windows";
 
 const EPOCH_POLL_SINCE = new Date(0).toISOString();
-export const OFFLINE_HISTORY_RECONCILE_INTERVAL_MS = 120_000;
+const OFFLINE_HISTORY_RECONCILE_INTERVAL_MS = 120_000;
 
 function openingPollPosition(
   newestLoadedAt: Date | string | null,

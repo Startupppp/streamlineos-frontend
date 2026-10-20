@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { CheckCircle2, Loader2, MessageSquareText, XCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { useJoinViaInviteLink } from "@/hooks/api/chat-personal-b";
+import { useJoinViaInviteLink } from "@/hooks/api/chat-invite-links";
 
 export function ChatInviteJoinPage({ token }: { token: string }) {
   const router = useRouter();

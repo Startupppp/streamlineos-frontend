@@ -5,7 +5,7 @@ import type {
   messageCallback,
 } from "ably";
 
-export type AblyMessageListener = messageCallback<InboundMessage>;
+type AblyMessageListener = messageCallback<InboundMessage>;
 
 function isCapabilityError(error: unknown): boolean {
   if (typeof error !== "object" || error === null) return false;

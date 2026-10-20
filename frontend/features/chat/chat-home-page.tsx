@@ -3,11 +3,6 @@
 import { useState, useCallback, useEffect } from "react";
 import dynamic from "next/dynamic";
 import { useSession } from "next-auth/react";
-import {
-  useRouter,
-  useSearchParams,
-  type ReadonlyURLSearchParams,
-} from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   ChannelSidebar,
@@ -20,10 +15,8 @@ import {
   useChatSidebarCollapse,
 } from "@/features/chat/chat-shell";
 import { ChatPanelFallback } from "@/features/chat/chat-lazy-fallbacks";
-import {
-  readChatSearchScope,
-  type ChatSearchScope,
-} from "@/features/chat/chat-search-scope";
+import { readChatSearchScope } from "@/features/chat/chat-search-scope";
+import { useChatHomeUrl } from "@/features/chat/use-chat-home-url";
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { PageState } from "@/components/shared/page-state";
@@ -66,32 +59,20 @@ const ChannelInfoPanel = dynamic(
   },
 );
 
-type UrlWrite = "push" | "replace";
-
-function dropActionParams(next: URLSearchParams) {
-  next.delete("search");
-  next.delete("dm");
-}
-
-function readPositiveIntParam(
-  params: ReadonlyURLSearchParams,
-  name: string,
-): number | null {
-  const raw = params.get(name);
-  const parsed = raw ? Number(raw) : NaN;
-  return Number.isInteger(parsed) && parsed > 0 ? parsed : null;
-}
-
 export function ChatHomePage() {
   const { data: session } = useSession();
   const currentUserId = session?.user?.id;
-  const router = useRouter();
-  const searchParams = useSearchParams();
-  const activeChannelId = readPositiveIntParam(searchParams, "channel");
-  const messageId =
-    activeChannelId === null ? null : readPositiveIntParam(searchParams, "message");
-  const searchScope = readChatSearchScope(searchParams.get("search"));
-  const dmRequested = searchParams.get("dm") === "1";
+  const {
+    activeChannelId,
+    messageId,
+    searchScope,
+    dmRequested,
+    navigateToConversation,
+    setSearchScope: handleSearchScopeChange,
+    clearDmParam,
+    closeConversation,
+    leaveMessage,
+  } = useChatHomeUrl();
   const showConversationList = activeChannelId === null;
 
   const [showInfoPanel, setShowInfoPanel] = useState(false);
@@ -121,36 +102,12 @@ export function ChatHomePage() {
     error: channelsErrorValue,
   });
 
-  const writeUrl = useCallback(
-    (mode: UrlWrite, update: (next: URLSearchParams) => void) => {
-      const next = new URLSearchParams(searchParams.toString());
-      update(next);
-      const query = next.toString();
-      const href = query ? `/chat?${query}` : "/chat";
-      if (mode === "push") router.push(href, { scroll: false });
-      else router.replace(href, { scroll: false });
-    },
-    [searchParams, router],
-  );
-
   const openConversation = useCallback(
     (channelId: number, targetMessageId: number | null) => {
       setCreateDialogOverride(null);
-      const hasActionParams = searchParams.has("search") || searchParams.has("dm");
-      if (hasActionParams) writeUrl("replace", dropActionParams);
-      const unchanged =
-        channelId === activeChannelId &&
-        targetMessageId === null &&
-        !searchParams.has("message");
-      if (unchanged) return;
-      writeUrl("push", (next) => {
-        dropActionParams(next);
-        next.set("channel", String(channelId));
-        if (targetMessageId === null) next.delete("message");
-        else next.set("message", String(targetMessageId));
-      });
+      navigateToConversation(channelId, targetMessageId);
     },
-    [activeChannelId, searchParams, writeUrl],
+    [navigateToConversation],
   );
 
   const handleSelectChannel = useCallback(
@@ -164,38 +121,20 @@ export function ChatHomePage() {
     [openConversation],
   );
 
-  const handleSearchScopeChange = useCallback(
-    (scope: ChatSearchScope | null) => {
-      writeUrl("replace", (next) => {
-        if (scope === null) next.delete("search");
-        else next.set("search", scope);
-      });
-    },
-    [writeUrl],
-  );
-
   const handleCreateDialogChange = useCallback(
     (dialog: ChatCreateDialog | null) => {
       setCreateDialogOverride(dialog);
-      if (dmRequested) writeUrl("replace", (next) => next.delete("dm"));
+      if (dmRequested) clearDmParam();
     },
-    [dmRequested, writeUrl],
+    [dmRequested, clearDmParam],
   );
 
-  const handleBack = useCallback(() => {
-    writeUrl("push", (next) => {
-      next.delete("channel");
-      next.delete("message");
-    });
-  }, [writeUrl]);
+  const handleBack = useCallback(() => closeConversation("push"), [closeConversation]);
 
   const handleConversationGone = useCallback(() => {
     setShowInfoPanel(false);
-    writeUrl("replace", (next) => {
-      next.delete("channel");
-      next.delete("message");
-    });
-  }, [writeUrl]);
+    closeConversation("replace");
+  }, [closeConversation]);
 
   const handleOpenChannelSettings = useCallback(
     (channelId: number) => {
@@ -231,8 +170,8 @@ export function ChatHomePage() {
 
   const consumeDmParam = dmRequested && createDialogOverride === "dm";
   useEffect(() => {
-    if (consumeDmParam) writeUrl("replace", (next) => next.delete("dm"));
-  }, [consumeDmParam, writeUrl]);
+    if (consumeDmParam) clearDmParam();
+  }, [consumeDmParam, clearDmParam]);
 
   useEffect(() => {
     window.dispatchEvent(
@@ -262,10 +201,6 @@ export function ChatHomePage() {
     handleSearchScopeChange,
   ]);
 
-  const handleLeaveMessage = useCallback(() => {
-    writeUrl("replace", (next) => next.delete("message"));
-  }, [writeUrl]);
-
   const panelChildren =
     activeChannelId && currentUserId ? (
       <MessagePanel
@@ -282,7 +217,7 @@ export function ChatHomePage() {
         }
         onAutoStartHandled={handleAutoStartHandled}
         scrollToMessageId={messageId}
-        onLeaveMessage={handleLeaveMessage}
+        onLeaveMessage={leaveMessage}
       />
     ) : (
       <EmptyChatState

@@ -104,7 +104,7 @@ describe("chat read hooks — stay idle without permission", () => {
   });
 
   it("useChannelInviteLink — mints nothing when chat:invite-links:manage denied", async () => {
-    const { useChannelInviteLink } = await import("@/hooks/api/chat-personal-b");
+    const { useChannelInviteLink } = await import("@/hooks/api/chat-invite-links");
     const client = freshClient();
     const { result } = renderHook(() => useChannelInviteLink(5, true), {
       wrapper: makeWrapper(client),

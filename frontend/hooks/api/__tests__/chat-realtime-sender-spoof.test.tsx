@@ -4,10 +4,8 @@ import { renderHook, waitFor, act } from "@testing-library/react";
 import type { InfiniteData } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/query-keys";
 import type { MessagesPage } from "@/types/chat";
-import {
-  useChatRealtime,
-  isTrustedChatFrame,
-} from "@/hooks/api/chat-realtime";
+import { useChatRealtime } from "@/hooks/api/chat-realtime";
+import { isForgedServerFrame } from "@/lib/ably-safe-subscribe";
 
 /**
  * A member of a channel can PUBLISH on it, so an inbound frame is not evidence of anything.
@@ -118,12 +116,12 @@ beforeEach(() => {
   jest.clearAllMocks();
 });
 
-describe("isTrustedChatFrame", () => {
+describe("isForgedServerFrame on chat events", () => {
   it("accepts a server frame, which carries no clientId", () => {
-    expect(isTrustedChatFrame("message", undefined)).toBe(true);
-    expect(isTrustedChatFrame("message:updated", undefined)).toBe(true);
-    expect(isTrustedChatFrame("message:deleted", undefined)).toBe(true);
-    expect(isTrustedChatFrame("reaction:updated", undefined)).toBe(true);
+    expect(isForgedServerFrame("message", undefined)).toBe(false);
+    expect(isForgedServerFrame("message:updated", undefined)).toBe(false);
+    expect(isForgedServerFrame("message:deleted", undefined)).toBe(false);
+    expect(isForgedServerFrame("reaction:updated", undefined)).toBe(false);
   });
 
   it("rejects a browser-published frame on every server-authored event", () => {
@@ -133,12 +131,12 @@ describe("isTrustedChatFrame", () => {
       "message:deleted",
       "reaction:updated",
     ] as const)
-      expect(isTrustedChatFrame(event, "user-2")).toBe(false);
+      expect(isForgedServerFrame(event, "user-2")).toBe(true);
   });
 
   it("rejects a browser frame even when it names ITS OWN publisher", () => {
     // The rule is not "do not lie about who you are", it is "you are not the server".
-    expect(isTrustedChatFrame("message", "user-1")).toBe(false);
+    expect(isForgedServerFrame("message", "user-1")).toBe(true);
   });
 });
 

@@ -2,8 +2,8 @@ import { act, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { toast } from "sonner";
 import { ThreadPanel } from "./thread-panel";
-import { PANEL_RENDER_PAGE_SIZE } from "./panel-render-window";
 import type { Message } from "@/types/chat";
+const PANEL_RENDER_PAGE_SIZE = 25;
 
 const useThreadReplies = jest.fn();
 const useSendThreadReply = jest.fn();

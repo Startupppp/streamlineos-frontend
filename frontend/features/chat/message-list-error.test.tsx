@@ -9,6 +9,10 @@ jest.mock("@/lib/api-client", () => ({
   apiClient: { get: jest.fn(), post: jest.fn(), patch: jest.fn(), delete: jest.fn() },
 }));
 
+jest.mock("./channel-join-state", () => ({
+  ChannelJoinState: ({ channelName }: { channelName: string | null }) => <button type="button">Join #{channelName}</button>,
+}));
+
 jest.mock("@/hooks/api/access", () => ({
   useCan: jest.fn(() => true),
   useModuleEnabled: jest.fn(() => true),
@@ -94,6 +98,12 @@ describe("MessageList", () => {
 
     screen.getByRole("button", { name: /try again/i }).click();
     expect(onRetry).toHaveBeenCalledTimes(1);
+  });
+
+  it("offers to join a public channel the reader is not in, instead of a retry that can never succeed", () => {
+    renderList(<MessageList {...props({ isError: true, joinRequired: { channelName: "general" } })} />);
+    expect(screen.getByRole("button", { name: "Join #general" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /try again/i })).toBeNull();
   });
 
   it("does not claim failure for a channel that is genuinely empty", () => {

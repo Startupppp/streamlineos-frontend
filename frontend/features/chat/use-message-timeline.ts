@@ -3,11 +3,11 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { InfiniteData } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { useChatMessageContext } from "@/hooks/api/chat-core-read";
+import { useChatMessageContext } from "@/hooks/api/chat-message-windows";
 import { isApiError } from "@/lib/api-envelope";
 import { getErrorMessage } from "@/lib/get-error-message";
 import type { ChannelMember, Message, MessagesPage, SendMessageInput } from "@/types/chat";
-import { getDateLabel } from "./chat-helpers";
+import { getDateLabel, readChannelJoinRequired } from "./chat-helpers";
 import { resolveFirstUnreadIndex } from "./chat-read-position";
 import { flattenMessagePages } from "./message-page-merge";
 import { resolveMessageWindowStart } from "./message-render-window";
@@ -97,7 +97,7 @@ export function useMessageTimeline({
   }, [keepThreadOpen, dropAnchor]);
   const { error: contextError, refetch: refetchContext } = context;
   useEffect(() => {
-    if (!contextEnabled || !contextError) return;
+    if (!contextEnabled || !contextError || readChannelJoinRequired(contextError)) return;
     const toastId = `chat-message-context-${channelId}-${anchorMessageId}`;
     if (isApiError(contextError) && (contextError.status === 403 || contextError.status === 404)) {
       toast.error(MESSAGE_UNAVAILABLE_COPY, { id: toastId });

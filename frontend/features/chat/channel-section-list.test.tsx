@@ -6,10 +6,9 @@
  */
 import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import {
-  ChannelSectionList,
-  CHANNEL_SECTION_PAGE_SIZE,
-} from "./channel-section-list";
+import { ChannelSectionList } from "./channel-section-list";
+
+const CHANNEL_SECTION_PAGE_SIZE = 30;
 import type { Channel } from "@/types/chat";
 
 jest.mock("./channel-item", () => ({

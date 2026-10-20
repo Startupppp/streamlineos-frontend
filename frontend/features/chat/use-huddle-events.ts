@@ -1,14 +1,17 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { useAbly } from "ably/react";
 import type { InboundMessage } from "ably";
 import { useSession } from "next-auth/react";
 import { toast } from "sonner";
+import { z } from "zod";
 import { isForgedServerFrame, safeSubscribe, safeUnsubscribe } from "@/lib/ably-safe-subscribe";
 import { huddleChannelName } from "@/lib/ably-channels";
 import type { HuddleParticipant } from "@/types/chat";
 import { useAblyConnection } from "./use-ably-connection";
+
+const huddleMemberEventSchema = z.object({ userId: z.string() });
 
 interface UseHuddleEventsOptions {
   channelId: number;
@@ -25,6 +28,11 @@ export function useHuddleEvents({
   const { data: session, status: sessionStatus } = useSession();
   const orgId = session?.orgId;
   const { isConnected: isAblyConnected } = useAblyConnection();
+  const participantsRef = useRef(participants);
+
+  useEffect(() => {
+    participantsRef.current = participants;
+  }, [participants]);
 
   useEffect(() => {
     if (!orgId || sessionStatus !== "authenticated" || !isAblyConnected) return;
@@ -34,23 +42,20 @@ export function useHuddleEvents({
     const subscribedHuddle: Array<"huddle:user_joined" | "huddle:user_left"> = [];
 
     const nameFor = (userId: string): string => {
-      const participant = participants.find((p) => p.userId === userId);
+      const participant = participantsRef.current.find((p) => p.userId === userId);
       return participant?.user?.name ?? "Someone";
     };
 
-    const handleJoined = (msg: InboundMessage) => {
-      if (isForgedServerFrame("huddle:user_joined", msg.clientId)) return;
-      const data = msg.data as { userId: string };
-      if (data.userId === currentUserId) return;
-      toast(`${nameFor(data.userId)} joined the huddle`);
+    const announce = (event: "huddle:user_joined" | "huddle:user_left", msg: InboundMessage) => {
+      if (isForgedServerFrame(event, msg.clientId)) return;
+      const parsed = huddleMemberEventSchema.safeParse(msg.data);
+      if (!parsed.success || parsed.data.userId === currentUserId) return;
+      const verb = event === "huddle:user_joined" ? "joined" : "left";
+      toast(`${nameFor(parsed.data.userId)} ${verb} the huddle`);
     };
 
-    const handleLeft = (msg: InboundMessage) => {
-      if (isForgedServerFrame("huddle:user_left", msg.clientId)) return;
-      const data = msg.data as { userId: string };
-      if (data.userId === currentUserId) return;
-      toast(`${nameFor(data.userId)} left the huddle`);
-    };
+    const handleJoined = (msg: InboundMessage) => announce("huddle:user_joined", msg);
+    const handleLeft = (msg: InboundMessage) => announce("huddle:user_left", msg);
 
     async function setup() {
       try {
@@ -86,5 +91,5 @@ export function useHuddleEvents({
         );
       }
     };
-  }, [ably, orgId, channelId, currentUserId, participants, isAblyConnected, sessionStatus]);
+  }, [ably, orgId, channelId, currentUserId, isAblyConnected, sessionStatus]);
 }

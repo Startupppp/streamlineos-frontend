@@ -146,6 +146,7 @@ export function HuddlePanel({ huddle, channelId, currentUserId }: HuddlePanelPro
           <HuddleInviteSection
             show={showInviteDialog}
             currentUserId={currentUserId}
+            channelId={channelId}
             huddleId={huddle.id}
             participants={huddle.participants}
           />

@@ -146,9 +146,11 @@ describe("F7d — a counted message that was read before it was deleted does not
     const unreadTotal = collaborationQueryKeys.chat.unreadTotal();
     client.setQueryData(listKey, { pages: [{ channels: [row], nextCursor: null }], pageParams: [null] });
     client.setQueryData(unreadTotal, { total: 0 });
-    const { unmount } = renderHook(() => useChatGlobalNotifications([row], CHANNEL_ID, "user-1"), {
-      wrapper: wrapperFor(client),
-    });
+    const cacheSubscribe = jest.spyOn(client.getQueryCache(), "subscribe");
+    const { unmount, rerender } = renderHook(
+      ({ channels }) => useChatGlobalNotifications(channels, CHANNEL_ID, "user-1"),
+      { wrapper: wrapperFor(client), initialProps: { channels: [row] } },
+    );
     await waitFor(() => expect(ably.handlers.get("message:deleted")?.length).toBe(1));
     const deliver = (id: number) =>
       ably.handlers.get("message")?.[0]?.({
@@ -157,10 +159,13 @@ describe("F7d — a counted message that was read before it was deleted does not
     act(() => {
       deliver(900);
     });
+    rerender({ channels: [{ ...row, unreadCount: 1 }] });
     act(() => {
       client.setQueryData(listKey, { pages: [{ channels: [{ ...row, unreadCount: 0 }], nextCursor: null }], pageParams: [null] });
       client.setQueryData(unreadTotal, { total: 0 });
     });
+    rerender({ channels: [{ ...row, unreadCount: 0 }] });
+    expect(cacheSubscribe).not.toHaveBeenCalled();
     act(() => {
       deliver(901);
     });
@@ -173,6 +178,62 @@ describe("F7d — a counted message that was read before it was deleted does not
       ably.handlers.get("message:deleted")?.[0]?.({ data: { id: 901, channelId: 42 } });
     });
     expect(client.getQueryData(unreadTotal)).toEqual({ total: 0 });
+    unmount();
+  });
+});
+
+describe("F7e — a background channel's timeline goes stale instead of silently missing events", () => {
+  const row = {
+    id: 42, name: "random", type: "PUBLIC" as const, avatarUrl: null, isArchived: false, entityType: null,
+    entityId: null, members: [], memberCount: 2, membersTruncated: false, unreadCount: 0, lastMessage: null,
+  };
+  const background = collaborationQueryKeys.chat.messages(42);
+  const backgroundContext = collaborationQueryKeys.chat.messageContext(42, 5);
+  const page = { pages: [{ messages: [], nextCursor: null }], pageParams: [undefined] };
+
+  async function mount(activeChannelId: number | null) {
+    const { useChatGlobalNotifications } = await import("@/hooks/api/chat-notifications");
+    const ably = ablyMock();
+    useAbly.mockReturnValue(ably);
+    const client = freshClient();
+    client.setQueryData(background, page);
+    client.setQueryData(backgroundContext, page);
+    const view = renderHook(() => useChatGlobalNotifications([row], activeChannelId, "user-1"), {
+      wrapper: wrapperFor(client),
+    });
+    await waitFor(() => expect(ably.handlers.get("reaction:updated")?.length).toBe(1));
+    return { ably, client, unmount: view.unmount };
+  }
+
+  const isStale = (client: ReturnType<typeof freshClient>, key: readonly unknown[]) =>
+    client.getQueryState(key)?.isInvalidated;
+
+  it.each([
+    ["message", { id: 900, channelId: 42, senderId: "user-2", senderName: "Bo", content: "m", createdAt: "2026-10-01T10:00:00.000Z" }],
+    ["message:updated", { id: 900, channelId: 42, content: "edited", isEdited: true, updatedAt: "2026-10-01T10:01:00.000Z" }],
+    ["message:deleted", { id: 900, channelId: 42 }],
+    ["reaction:updated", { messageId: 900, channelId: 42, reactions: { "+1": ["user-2"] } }],
+  ])("marks the timeline and its context windows stale on %s, so returning within the stale window refetches", async (event, data) => {
+    const { ably, client, unmount } = await mount(null);
+    const refetch = jest.spyOn(client, "refetchQueries");
+    act(() => {
+      ably.handlers.get(event)?.[0]?.({ data });
+    });
+    expect(isStale(client, background)).toBe(true);
+    expect(isStale(client, backgroundContext)).toBe(true);
+    expect(refetch).not.toHaveBeenCalled();
+    unmount();
+  });
+
+  it("leaves the open channel's timeline to its own realtime merge", async () => {
+    const { ably, client, unmount } = await mount(42);
+    act(() => {
+      ably.handlers.get("reaction:updated")?.[0]?.({ data: { messageId: 900, channelId: 42, reactions: {} } });
+      ably.handlers.get("message")?.[0]?.({
+        data: { id: 901, channelId: 42, senderId: "user-2", senderName: "Bo", content: "m", createdAt: "2026-10-01T10:00:00.000Z" },
+      });
+    });
+    expect(isStale(client, background)).toBe(false);
     unmount();
   });
 });

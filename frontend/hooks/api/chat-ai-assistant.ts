@@ -144,7 +144,7 @@ export function useAiConversationMessages(conversationId: number | null, enabled
   });
 }
 
-export type AskAiStreamOutcome =
+type AskAiStreamOutcome =
   | { status: "completed"; text: string }
   | { status: "cancelled"; text: string }
   | { status: "busy" };

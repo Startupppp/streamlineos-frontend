@@ -175,6 +175,36 @@ export function recordInboundChannelMessage(
   if (inbound.countsAsUnread) patchUnreadTotal(queryClient, (total) => total + 1);
 }
 
+export function markChannelTimelineStale(queryClient: QueryClient, channelId: number): void {
+  void queryClient.invalidateQueries({
+    queryKey: collaborationQueryKeys.chat.messages(channelId),
+    exact: true,
+    refetchType: "none",
+  });
+  void queryClient.invalidateQueries({
+    queryKey: collaborationQueryKeys.chat.messageContextsInChannel(channelId),
+    refetchType: "none",
+  });
+}
+
+export function refreshJoinedChannel(queryClient: QueryClient, channelId: number): void {
+  void queryClient.invalidateQueries({
+    queryKey: collaborationQueryKeys.chat.myChannels(),
+    exact: true,
+    refetchType: findChannelRow(queryClient, channelId) ? "none" : "active",
+  });
+  for (const queryKey of [
+    collaborationQueryKeys.chat.messages(channelId),
+    collaborationQueryKeys.chat.channel(channelId),
+    collaborationQueryKeys.chat.messageContextsInChannel(channelId),
+  ])
+    void queryClient.refetchQueries({
+      queryKey,
+      type: "active",
+      predicate: (query) => query.state.status === "error",
+    });
+}
+
 export function invalidateChatReconnect(
   queryClient: QueryClient,
   channelId: number,

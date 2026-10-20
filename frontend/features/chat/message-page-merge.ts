@@ -43,7 +43,7 @@ export function mergeInboundMessage(
       pages: old.pages.map((page) => ({
         ...page,
         messages: page.messages.map((message) =>
-          sameSend(message, clientKey) ? incoming : message,
+          sameSend(message, clientKey) ? { ...incoming, replyTo: incoming.replyTo ?? message.replyTo } : message,
         ),
       })),
     };

@@ -41,7 +41,7 @@ beforeEach(() => {
 
 describe("useChannelInviteLink mints through a mutation, never a POST inside a query", () => {
   it("mints once when enabled and returns the token in the same { data, isLoading } shape", async () => {
-    const { useChannelInviteLink } = await import("@/hooks/api/chat-personal-b");
+    const { useChannelInviteLink } = await import("@/hooks/api/chat-invite-links");
     const client = freshClient();
     mockedPost.mockResolvedValue({ token: "tok-1" });
     const { result } = renderHook(() => useChannelInviteLink(CHANNEL_ID, true), { wrapper: wrapperFor(client) });
@@ -52,7 +52,7 @@ describe("useChannelInviteLink mints through a mutation, never a POST inside a q
   });
 
   it("useRegenerateInviteLink writes the new token in place without re-minting", async () => {
-    const { useChannelInviteLink, useRegenerateInviteLink } = await import("@/hooks/api/chat-personal-b");
+    const { useChannelInviteLink, useRegenerateInviteLink } = await import("@/hooks/api/chat-invite-links");
     const client = freshClient();
     mockedPost.mockResolvedValueOnce({ token: "tok-1" }).mockResolvedValueOnce({ token: "tok-2" });
     const link = renderHook(() => useChannelInviteLink(CHANNEL_ID, true), { wrapper: wrapperFor(client) });
@@ -66,7 +66,7 @@ describe("useChannelInviteLink mints through a mutation, never a POST inside a q
   });
 
   it("mints once under StrictMode's double effect run", async () => {
-    const { useChannelInviteLink } = await import("@/hooks/api/chat-personal-b");
+    const { useChannelInviteLink } = await import("@/hooks/api/chat-invite-links");
     const { StrictMode, createElement } = await import("react");
     const client = freshClient();
     mockedPost.mockResolvedValue({ token: "tok-1", expiresAt: null, maxUses: null, useCount: 0 });
@@ -82,7 +82,7 @@ describe("useChannelInviteLink mints through a mutation, never a POST inside a q
   it("re-mints after the server expiry, but never sooner than 30s after the last mint", async () => {
     jest.useFakeTimers();
     try {
-      const { useChannelInviteLink } = await import("@/hooks/api/chat-personal-b");
+      const { useChannelInviteLink } = await import("@/hooks/api/chat-invite-links");
       const client = freshClient();
       mockedPost
         .mockResolvedValueOnce({ token: "tok-1", expiresAt: new Date(Date.now() + 50).toISOString(), maxUses: null, useCount: 0 })
@@ -109,7 +109,7 @@ describe("useChannelInviteLink mints through a mutation, never a POST inside a q
   it("stops re-minting when the server answers with the same expiry, so a skewed client clock cannot loop", async () => {
     jest.useFakeTimers();
     try {
-      const { useChannelInviteLink } = await import("@/hooks/api/chat-personal-b");
+      const { useChannelInviteLink } = await import("@/hooks/api/chat-invite-links");
       const client = freshClient();
       const skewed = { token: "tok-s", expiresAt: new Date(Date.now() - 60_000).toISOString(), maxUses: null, useCount: 0 };
       mockedPost.mockResolvedValue(skewed);
@@ -125,7 +125,7 @@ describe("useChannelInviteLink mints through a mutation, never a POST inside a q
 
   it("does not mint when the viewer cannot manage invite links", async () => {
     useCan.mockReturnValue(false);
-    const { useChannelInviteLink } = await import("@/hooks/api/chat-personal-b");
+    const { useChannelInviteLink } = await import("@/hooks/api/chat-invite-links");
     const { result } = renderHook(() => useChannelInviteLink(CHANNEL_ID, true), {
       wrapper: wrapperFor(freshClient()),
     });

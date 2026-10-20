@@ -208430,7 +208430,11 @@
                               "maximum": 9007199254740991
                             },
                             "status": {
-                              "type": "string"
+                              "type": "string",
+                              "enum": [
+                                "active",
+                                "ended"
+                              ]
                             },
                             "calendarEventId": {
                               "anyOf": [
@@ -208470,15 +208474,8 @@
                               ]
                             },
                             "startedAt": {
-                              "anyOf": [
-                                {
-                                  "type": "string",
-                                  "format": "date-time"
-                                },
-                                {
-                                  "type": "null"
-                                }
-                              ]
+                              "type": "string",
+                              "format": "date-time"
                             },
                             "endedAt": {
                               "anyOf": [
@@ -208727,7 +208724,11 @@
                           "maximum": 9007199254740991
                         },
                         "status": {
-                          "type": "string"
+                          "type": "string",
+                          "enum": [
+                            "active",
+                            "ended"
+                          ]
                         },
                         "calendarEventId": {
                           "anyOf": [
@@ -208767,15 +208768,8 @@
                           ]
                         },
                         "startedAt": {
-                          "anyOf": [
-                            {
-                              "type": "string",
-                              "format": "date-time"
-                            },
-                            {
-                              "type": "null"
-                            }
-                          ]
+                          "type": "string",
+                          "format": "date-time"
                         },
                         "endedAt": {
                           "anyOf": [
@@ -210242,7 +210236,12 @@
                                 "type": "boolean"
                               },
                               "messageType": {
-                                "type": "string"
+                                "type": "string",
+                                "enum": [
+                                  "text",
+                                  "lead_submission",
+                                  "system"
+                                ]
                               },
                               "metadata": {
                                 "anyOf": [
@@ -210302,50 +210301,43 @@
                                 ]
                               },
                               "sender": {
-                                "anyOf": [
-                                  {
-                                    "type": "object",
-                                    "properties": {
-                                      "id": {
-                                        "anyOf": [
-                                          {
-                                            "type": "string"
-                                          },
-                                          {
-                                            "type": "null"
-                                          }
-                                        ]
+                                "type": "object",
+                                "properties": {
+                                  "id": {
+                                    "anyOf": [
+                                      {
+                                        "type": "string"
                                       },
-                                      "name": {
-                                        "anyOf": [
-                                          {
-                                            "type": "string"
-                                          },
-                                          {
-                                            "type": "null"
-                                          }
-                                        ]
-                                      },
-                                      "image": {
-                                        "anyOf": [
-                                          {
-                                            "type": "string"
-                                          },
-                                          {
-                                            "type": "null"
-                                          }
-                                        ]
+                                      {
+                                        "type": "null"
                                       }
-                                    },
-                                    "required": [
-                                      "id",
-                                      "name",
-                                      "image"
                                     ]
                                   },
-                                  {
-                                    "type": "null"
+                                  "name": {
+                                    "anyOf": [
+                                      {
+                                        "type": "string"
+                                      },
+                                      {
+                                        "type": "null"
+                                      }
+                                    ]
+                                  },
+                                  "image": {
+                                    "anyOf": [
+                                      {
+                                        "type": "string"
+                                      },
+                                      {
+                                        "type": "null"
+                                      }
+                                    ]
                                   }
+                                },
+                                "required": [
+                                  "id",
+                                  "name",
+                                  "image"
                                 ]
                               },
                               "reactions": {
@@ -210662,7 +210654,12 @@
                           "type": "boolean"
                         },
                         "messageType": {
-                          "type": "string"
+                          "type": "string",
+                          "enum": [
+                            "text",
+                            "lead_submission",
+                            "system"
+                          ]
                         },
                         "metadata": {
                           "anyOf": [
@@ -211210,7 +211207,12 @@
                                 "type": "boolean"
                               },
                               "messageType": {
-                                "type": "string"
+                                "type": "string",
+                                "enum": [
+                                  "text",
+                                  "lead_submission",
+                                  "system"
+                                ]
                               },
                               "metadata": {
                                 "anyOf": [
@@ -211270,50 +211272,43 @@
                                 ]
                               },
                               "sender": {
-                                "anyOf": [
-                                  {
-                                    "type": "object",
-                                    "properties": {
-                                      "id": {
-                                        "anyOf": [
-                                          {
-                                            "type": "string"
-                                          },
-                                          {
-                                            "type": "null"
-                                          }
-                                        ]
+                                "type": "object",
+                                "properties": {
+                                  "id": {
+                                    "anyOf": [
+                                      {
+                                        "type": "string"
                                       },
-                                      "name": {
-                                        "anyOf": [
-                                          {
-                                            "type": "string"
-                                          },
-                                          {
-                                            "type": "null"
-                                          }
-                                        ]
-                                      },
-                                      "image": {
-                                        "anyOf": [
-                                          {
-                                            "type": "string"
-                                          },
-                                          {
-                                            "type": "null"
-                                          }
-                                        ]
+                                      {
+                                        "type": "null"
                                       }
-                                    },
-                                    "required": [
-                                      "id",
-                                      "name",
-                                      "image"
                                     ]
                                   },
-                                  {
-                                    "type": "null"
+                                  "name": {
+                                    "anyOf": [
+                                      {
+                                        "type": "string"
+                                      },
+                                      {
+                                        "type": "null"
+                                      }
+                                    ]
+                                  },
+                                  "image": {
+                                    "anyOf": [
+                                      {
+                                        "type": "string"
+                                      },
+                                      {
+                                        "type": "null"
+                                      }
+                                    ]
                                   }
+                                },
+                                "required": [
+                                  "id",
+                                  "name",
+                                  "image"
                                 ]
                               },
                               "reactions": {
@@ -211922,7 +211917,12 @@
                               "type": "boolean"
                             },
                             "messageType": {
-                              "type": "string"
+                              "type": "string",
+                              "enum": [
+                                "text",
+                                "lead_submission",
+                                "system"
+                              ]
                             },
                             "metadata": {
                               "anyOf": [
@@ -211982,50 +211982,43 @@
                               ]
                             },
                             "sender": {
-                              "anyOf": [
-                                {
-                                  "type": "object",
-                                  "properties": {
-                                    "id": {
-                                      "anyOf": [
-                                        {
-                                          "type": "string"
-                                        },
-                                        {
-                                          "type": "null"
-                                        }
-                                      ]
+                              "type": "object",
+                              "properties": {
+                                "id": {
+                                  "anyOf": [
+                                    {
+                                      "type": "string"
                                     },
-                                    "name": {
-                                      "anyOf": [
-                                        {
-                                          "type": "string"
-                                        },
-                                        {
-                                          "type": "null"
-                                        }
-                                      ]
-                                    },
-                                    "image": {
-                                      "anyOf": [
-                                        {
-                                          "type": "string"
-                                        },
-                                        {
-                                          "type": "null"
-                                        }
-                                      ]
+                                    {
+                                      "type": "null"
                                     }
-                                  },
-                                  "required": [
-                                    "id",
-                                    "name",
-                                    "image"
                                   ]
                                 },
-                                {
-                                  "type": "null"
+                                "name": {
+                                  "anyOf": [
+                                    {
+                                      "type": "string"
+                                    },
+                                    {
+                                      "type": "null"
+                                    }
+                                  ]
+                                },
+                                "image": {
+                                  "anyOf": [
+                                    {
+                                      "type": "string"
+                                    },
+                                    {
+                                      "type": "null"
+                                    }
+                                  ]
                                 }
+                              },
+                              "required": [
+                                "id",
+                                "name",
+                                "image"
                               ]
                             },
                             "reactions": {
@@ -212255,7 +212248,12 @@
                                 "type": "boolean"
                               },
                               "messageType": {
-                                "type": "string"
+                                "type": "string",
+                                "enum": [
+                                  "text",
+                                  "lead_submission",
+                                  "system"
+                                ]
                               },
                               "metadata": {
                                 "anyOf": [
@@ -212315,50 +212313,43 @@
                                 ]
                               },
                               "sender": {
-                                "anyOf": [
-                                  {
-                                    "type": "object",
-                                    "properties": {
-                                      "id": {
-                                        "anyOf": [
-                                          {
-                                            "type": "string"
-                                          },
-                                          {
-                                            "type": "null"
-                                          }
-                                        ]
+                                "type": "object",
+                                "properties": {
+                                  "id": {
+                                    "anyOf": [
+                                      {
+                                        "type": "string"
                                       },
-                                      "name": {
-                                        "anyOf": [
-                                          {
-                                            "type": "string"
-                                          },
-                                          {
-                                            "type": "null"
-                                          }
-                                        ]
-                                      },
-                                      "image": {
-                                        "anyOf": [
-                                          {
-                                            "type": "string"
-                                          },
-                                          {
-                                            "type": "null"
-                                          }
-                                        ]
+                                      {
+                                        "type": "null"
                                       }
-                                    },
-                                    "required": [
-                                      "id",
-                                      "name",
-                                      "image"
                                     ]
                                   },
-                                  {
-                                    "type": "null"
+                                  "name": {
+                                    "anyOf": [
+                                      {
+                                        "type": "string"
+                                      },
+                                      {
+                                        "type": "null"
+                                      }
+                                    ]
+                                  },
+                                  "image": {
+                                    "anyOf": [
+                                      {
+                                        "type": "string"
+                                      },
+                                      {
+                                        "type": "null"
+                                      }
+                                    ]
                                   }
+                                },
+                                "required": [
+                                  "id",
+                                  "name",
+                                  "image"
                                 ]
                               },
                               "reactions": {
@@ -212686,7 +212677,12 @@
                           "type": "boolean"
                         },
                         "messageType": {
-                          "type": "string"
+                          "type": "string",
+                          "enum": [
+                            "text",
+                            "lead_submission",
+                            "system"
+                          ]
                         },
                         "metadata": {
                           "anyOf": [
@@ -213035,7 +213031,12 @@
                                 "type": "boolean"
                               },
                               "messageType": {
-                                "type": "string"
+                                "type": "string",
+                                "enum": [
+                                  "text",
+                                  "lead_submission",
+                                  "system"
+                                ]
                               },
                               "metadata": {
                                 "anyOf": [
@@ -213095,50 +213096,43 @@
                                 ]
                               },
                               "sender": {
-                                "anyOf": [
-                                  {
-                                    "type": "object",
-                                    "properties": {
-                                      "id": {
-                                        "anyOf": [
-                                          {
-                                            "type": "string"
-                                          },
-                                          {
-                                            "type": "null"
-                                          }
-                                        ]
+                                "type": "object",
+                                "properties": {
+                                  "id": {
+                                    "anyOf": [
+                                      {
+                                        "type": "string"
                                       },
-                                      "name": {
-                                        "anyOf": [
-                                          {
-                                            "type": "string"
-                                          },
-                                          {
-                                            "type": "null"
-                                          }
-                                        ]
-                                      },
-                                      "image": {
-                                        "anyOf": [
-                                          {
-                                            "type": "string"
-                                          },
-                                          {
-                                            "type": "null"
-                                          }
-                                        ]
+                                      {
+                                        "type": "null"
                                       }
-                                    },
-                                    "required": [
-                                      "id",
-                                      "name",
-                                      "image"
                                     ]
                                   },
-                                  {
-                                    "type": "null"
+                                  "name": {
+                                    "anyOf": [
+                                      {
+                                        "type": "string"
+                                      },
+                                      {
+                                        "type": "null"
+                                      }
+                                    ]
+                                  },
+                                  "image": {
+                                    "anyOf": [
+                                      {
+                                        "type": "string"
+                                      },
+                                      {
+                                        "type": "null"
+                                      }
+                                    ]
                                   }
+                                },
+                                "required": [
+                                  "id",
+                                  "name",
+                                  "image"
                                 ]
                               },
                               "reactions": {
@@ -213798,7 +213792,12 @@
                                 "type": "boolean"
                               },
                               "messageType": {
-                                "type": "string"
+                                "type": "string",
+                                "enum": [
+                                  "text",
+                                  "lead_submission",
+                                  "system"
+                                ]
                               },
                               "channelPosition": {
                                 "type": "integer",
@@ -214339,7 +214338,22 @@
                             "type": "object",
                             "properties": {
                               "type": {
-                                "type": "string"
+                                "type": "string",
+                                "enum": [
+                                  "ticket",
+                                  "task",
+                                  "project",
+                                  "cycle",
+                                  "release",
+                                  "incident",
+                                  "client",
+                                  "deal",
+                                  "lead",
+                                  "employee",
+                                  "doc_page",
+                                  "calendar_event",
+                                  "support_ticket"
+                                ]
                               },
                               "id": {
                                 "type": "string"
@@ -214350,7 +214364,22 @@
                                     "type": "object",
                                     "properties": {
                                       "type": {
-                                        "type": "string"
+                                        "type": "string",
+                                        "enum": [
+                                          "ticket",
+                                          "task",
+                                          "project",
+                                          "cycle",
+                                          "release",
+                                          "incident",
+                                          "client",
+                                          "deal",
+                                          "lead",
+                                          "employee",
+                                          "doc_page",
+                                          "calendar_event",
+                                          "support_ticket"
+                                        ]
                                       },
                                       "id": {
                                         "type": "string"
@@ -218691,7 +218720,12 @@
                                     "type": "boolean"
                                   },
                                   "messageType": {
-                                    "type": "string"
+                                    "type": "string",
+                                    "enum": [
+                                      "text",
+                                      "lead_submission",
+                                      "system"
+                                    ]
                                   },
                                   "metadata": {
                                     "anyOf": [
@@ -219348,7 +219382,12 @@
                             "type": "boolean"
                           },
                           "messageType": {
-                            "type": "string"
+                            "type": "string",
+                            "enum": [
+                              "text",
+                              "lead_submission",
+                              "system"
+                            ]
                           },
                           "channelPosition": {
                             "type": "integer",
@@ -219754,7 +219793,12 @@
                                 "type": "boolean"
                               },
                               "messageType": {
-                                "type": "string"
+                                "type": "string",
+                                "enum": [
+                                  "text",
+                                  "lead_submission",
+                                  "system"
+                                ]
                               },
                               "channelPosition": {
                                 "type": "integer",

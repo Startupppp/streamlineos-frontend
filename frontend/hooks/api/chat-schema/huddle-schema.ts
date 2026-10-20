@@ -18,7 +18,7 @@ import { chatPreviewUserContract } from "./user-schema";
  * `startedBy` is the host's USER id, not a membership id — a distinction no
  * static check can make, which is why it is written down here.
  */
-export const chatHuddleParticipantContract = z
+const chatHuddleParticipantContract = z
   .object({
     id: z.number(),
     huddleId: z.number(),
@@ -47,5 +47,3 @@ export const chatHuddleContract = z
 
 /** No active huddle is a 200 with a `null` body, not a 404. */
 export const chatActiveHuddleContract = chatHuddleContract.nullable();
-
-export type ChatHuddleWire = z.infer<typeof chatHuddleContract>;

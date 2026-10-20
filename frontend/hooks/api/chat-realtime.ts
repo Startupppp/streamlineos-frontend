@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback, useRef } from "react";
 import { useAbly } from "ably/react";
-import type { InboundMessage, ConnectionState, PresenceMessage } from "ably";
+import type { InboundMessage, PresenceMessage } from "ably";
 import { useQueryClient } from "@tanstack/react-query";
 import { useSession } from "next-auth/react";
 import { collaborationQueryKeys } from "@/lib/query-keys/collaboration";
@@ -37,17 +37,7 @@ const TYPING_IDLE_MS = 3_000;
 const CHAT_EVENTS = ["message", "message:updated", "message:deleted", "reaction:updated"] as const;
 type ChatEvent = (typeof CHAT_EVENTS)[number];
 
-export function isTrustedChatFrame(event: ChatEvent, clientId: string | undefined): boolean {
-  return !isForgedServerFrame(event, clientId);
-}
-
-export function reconnectShouldResync(
-  previousState: ConnectionState,
-): boolean {
-  return previousState === "disconnected" || previousState === "suspended";
-}
-
-function payloadToMessage(payload: MessagePayload): Message {
+function payloadToMessage(payload: MessagePayload, parent: Message | undefined): Message {
   const createdAt = payload.createdAt ?? new Date().toISOString();
   return {
     id: payload.id,
@@ -70,7 +60,7 @@ function payloadToMessage(payload: MessagePayload): Message {
       image: payload.senderImage ?? null,
     },
     attachments: payload.attachments ?? [],
-    replyTo: null,
+    replyTo: parent ? { id: parent.id, content: parent.content, sender: parent.sender } : null,
   };
 }
 
@@ -116,7 +106,9 @@ export function useChatRealtime(channelId: number | null): {
       const parsed = messagePayloadSchema.safeParse(msg.data);
       if (!parsed.success) return;
       const payload = parsed.data;
-      const incoming = payloadToMessage(payload);
+      const parent =
+        payload.replyToId != null ? findCachedMessage(queryClient, channelId, payload.replyToId) : undefined;
+      const incoming = payloadToMessage(payload, parent);
 
       queryClient.setQueryData<InfiniteData<MessagesPage>>(
         collaborationQueryKeys.chat.messages(channelId),
@@ -182,7 +174,7 @@ export function useChatRealtime(channelId: number | null): {
       const existing = guardedHandlers.get(event);
       if (existing !== undefined) return existing;
       const wrapped = (msg: InboundMessage): void => {
-        if (!isTrustedChatFrame(event, msg.clientId ?? undefined)) return;
+        if (isForgedServerFrame(event, msg.clientId)) return;
         handler(msg);
       };
       guardedHandlers.set(event, wrapped);

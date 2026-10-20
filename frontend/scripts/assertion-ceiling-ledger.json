@@ -269,14 +269,6 @@
       "as": 1,
       "nonNull": 0
     },
-    "features/chat/chat-bubble.tsx": {
-      "as": 1,
-      "nonNull": 0
-    },
-    "features/chat/use-huddle-events.ts": {
-      "as": 2,
-      "nonNull": 0
-    },
     "features/crm/autonomy/autonomy-review-feed.tsx": {
       "as": 2,
       "nonNull": 0

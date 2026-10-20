@@ -1,11 +1,5 @@
 import { renderHook, act } from "@testing-library/react";
-import {
-  computeFallbackDelay,
-  FALLBACK_BASE_MS,
-  FALLBACK_MAX_MS,
-  FALLBACK_JITTER_MS,
-  useChatPresence,
-} from "../use-chat-presence";
+import { useChatPresence } from "../use-chat-presence";
 
 jest.mock("next-auth/react", () => ({
   useSession: jest.fn(),
@@ -22,6 +16,10 @@ jest.mock("ably/react", () => ({
 jest.mock("@/hooks/api/chat-core-mutations-b", () => ({
   useChatHeartbeat: jest.fn(),
 }));
+
+const FALLBACK_BASE_MS = 15_000;
+const FALLBACK_MAX_MS = 120_000;
+const FALLBACK_JITTER_MS = 5_000;
 
 const { useSession } = jest.requireMock("next-auth/react") as {
   useSession: jest.Mock;
@@ -136,24 +134,68 @@ afterEach(() => {
   jest.clearAllMocks();
 });
 
-describe("computeFallbackDelay", () => {
-  it("returns a value within [base, base + jitter] for attempt 0", () => {
-    const delay = computeFallbackDelay(0);
-    expect(delay).toBeGreaterThanOrEqual(FALLBACK_BASE_MS);
-    expect(delay).toBeLessThan(FALLBACK_BASE_MS + FALLBACK_JITTER_MS);
+describe("useChatPresence — fallback heartbeat backoff", () => {
+  let mutate: jest.Mock;
+  let random: jest.SpyInstance;
+
+  afterEach(() => random.mockRestore());
+
+  beforeEach(() => {
+    mutate = jest.fn();
+    random = jest.spyOn(Math, "random");
+    const ablyMock = makeAblyMock();
+    ablyMock.connection.state = "disconnected";
+    useAbly.mockReturnValue(ablyMock);
+    useSession.mockReturnValue({ data: { orgId: "org-1", user: { id: "user-1" } }, status: "authenticated" });
+    useChatHeartbeat.mockReturnValue({ mutate });
+    Object.defineProperty(navigator, "onLine", { value: true, configurable: true, writable: true });
+    Object.defineProperty(navigator, "locks", { value: makeLockManager(), configurable: true });
   });
 
-  it("grows with attempt", () => {
-    const d0 = computeFallbackDelay(0) - FALLBACK_JITTER_MS;
-    const d1 = computeFallbackDelay(1) - FALLBACK_JITTER_MS;
-    const d2 = computeFallbackDelay(2) - FALLBACK_JITTER_MS;
-    expect(d1).toBeGreaterThan(d0);
-    expect(d2).toBeGreaterThan(d1);
+  async function advance(ms: number) {
+    await act(async () => {
+      jest.advanceTimersByTime(ms);
+    });
+  }
+
+  it("waits between base and base + jitter before the first retry", async () => {
+    random.mockReturnValue(0.999);
+    const { unmount } = renderHook(() => useChatPresence());
+    await advance(0);
+    expect(mutate).toHaveBeenCalledTimes(1);
+    await advance(FALLBACK_BASE_MS + FALLBACK_JITTER_MS - 6);
+    expect(mutate).toHaveBeenCalledTimes(1);
+    await advance(1);
+    expect(mutate).toHaveBeenCalledTimes(2);
+    unmount();
   });
 
-  it("caps at FALLBACK_MAX_MS + FALLBACK_JITTER_MS", () => {
-    const delay = computeFallbackDelay(20);
-    expect(delay).toBeLessThanOrEqual(FALLBACK_MAX_MS + FALLBACK_JITTER_MS);
+  it("grows with attempt", async () => {
+    random.mockReturnValue(0);
+    const { unmount } = renderHook(() => useChatPresence());
+    await advance(FALLBACK_BASE_MS);
+    expect(mutate).toHaveBeenCalledTimes(2);
+    await advance(FALLBACK_BASE_MS * 2 - 1);
+    expect(mutate).toHaveBeenCalledTimes(2);
+    await advance(1);
+    expect(mutate).toHaveBeenCalledTimes(3);
+    await advance(FALLBACK_BASE_MS * 4 - 1);
+    expect(mutate).toHaveBeenCalledTimes(3);
+    await advance(1);
+    expect(mutate).toHaveBeenCalledTimes(4);
+    unmount();
+  });
+
+  it("caps at FALLBACK_MAX_MS + FALLBACK_JITTER_MS", async () => {
+    random.mockReturnValue(0.999);
+    const { unmount } = renderHook(() => useChatPresence());
+    await advance(FALLBACK_MAX_MS * 4);
+    const settled = mutate.mock.calls.length;
+    await advance(FALLBACK_MAX_MS + FALLBACK_JITTER_MS);
+    expect(mutate).toHaveBeenCalledTimes(settled + 1);
+    await advance(FALLBACK_MAX_MS + FALLBACK_JITTER_MS);
+    expect(mutate).toHaveBeenCalledTimes(settled + 2);
+    unmount();
   });
 });
 

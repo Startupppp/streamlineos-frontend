@@ -8,12 +8,12 @@ import { chatPresenceChannelName } from "@/lib/ably-channels";
 
 const LEADER_LOCK_NAME = "chat-presence-leader";
 
-export const FALLBACK_BASE_MS = 15_000;
-export const FALLBACK_MAX_MS = 120_000;
-export const FALLBACK_JITTER_MS = 5_000;
+const FALLBACK_BASE_MS = 15_000;
+const FALLBACK_MAX_MS = 120_000;
+const FALLBACK_JITTER_MS = 5_000;
 const MAX_BACKOFF_ATTEMPT = 5;
 
-export function computeFallbackDelay(attempt: number): number {
+function computeFallbackDelay(attempt: number): number {
   const base = Math.min(FALLBACK_BASE_MS * 2 ** attempt, FALLBACK_MAX_MS);
   return base + Math.floor(Math.random() * FALLBACK_JITTER_MS);
 }

@@ -110,7 +110,7 @@ describe("usePrefetchChatChannel — instant channel switching", () => {
 
 describe("useChatMessageContext — exact-message window in its own cache entry", () => {
   it("reads the context window into messageContext and never writes the main timeline", async () => {
-    const { useChatMessageContext } = await import("@/hooks/api/chat-core-read");
+    const { useChatMessageContext } = await import("@/hooks/api/chat-message-windows");
     const client = freshClient();
     mockedGet.mockResolvedValue({
       messages: [40, 41, 42].map((id) => ({ ...message({ id }), channelPosition: id })),
@@ -128,14 +128,14 @@ describe("useChatMessageContext — exact-message window in its own cache entry"
   });
 
   it("reads nothing while disabled, so a target already in the timeline costs no request", async () => {
-    const { useChatMessageContext } = await import("@/hooks/api/chat-core-read");
+    const { useChatMessageContext } = await import("@/hooks/api/chat-message-windows");
     renderHook(() => useChatMessageContext(CHANNEL_ID, 41, false), { wrapper: wrapperFor(freshClient()) });
     await act(async () => {});
     expect(mockedGet).not.toHaveBeenCalled();
   });
 
   it("does not retry a message the viewer cannot see", async () => {
-    const { useChatMessageContext } = await import("@/hooks/api/chat-core-read");
+    const { useChatMessageContext } = await import("@/hooks/api/chat-message-windows");
     const client = freshClient();
     mockedGet.mockRejectedValue(new ApiError("Not found", 404));
     const { result } = renderHook(() => useChatMessageContext(CHANNEL_ID, 41, true), { wrapper: wrapperFor(client) });

@@ -13,11 +13,23 @@ jest.mock("@/hooks/api/chat-huddles", () => ({
 
 jest.mock("./use-huddle-events", () => ({ useHuddleEvents: jest.fn() }));
 
-jest.mock("@/hooks/api/members/use-member-directory", () => ({
-  useMemberDirectory: () => ({ members: [], selectedMembers: [], isServerFiltered: false, isLoading: false }),
+const channelMembers = [
+  { userId: "u-me", user: { id: "u-me", name: "Me", email: "me@x.io", image: null } },
+  { userId: "u-ada", user: { id: "u-ada", name: "Ada", email: "ada@x.io", image: null } },
+  { userId: "u-bo", user: { id: "u-bo", name: "Bo", email: "bo@x.io", image: null } },
+];
+
+jest.mock("@/hooks/api/chat-core-read", () => ({
+  useChatChannel: () => ({ data: { members: channelMembers } }),
 }));
 
-jest.mock("@/components/ui/user-combobox", () => ({ UserCombobox: () => null }));
+const pickerCandidates = jest.fn();
+jest.mock("@/components/members/member-picker", () => ({
+  MemberPicker: (props: { candidates?: Array<{ id: string }> }) => {
+    pickerCandidates(props.candidates?.map((c) => c.id));
+    return null;
+  },
+}));
 
 function makeHuddle(overrides: Partial<Huddle>): Huddle {
   return {
@@ -92,5 +104,14 @@ describe("HuddlePanel provider awareness", () => {
   it("collapsed mini bar join link carries the provider name for assistive tech", () => {
     renderPanel(makeHuddle({ meetingProvider: "microsoft_teams" }));
     expect(screen.getByRole("link", { name: "Join Microsoft Teams" })).toBeInTheDocument();
+  });
+});
+
+describe("HuddlePanel invite picker", () => {
+  it("offers only channel members who are not already in the huddle, because the server refuses anyone else", () => {
+    renderPanel(makeHuddle({}));
+    expand();
+    fireEvent.click(screen.getByRole("button", { name: "Invite users" }));
+    expect(pickerCandidates).toHaveBeenLastCalledWith(["u-bo"]);
   });
 });

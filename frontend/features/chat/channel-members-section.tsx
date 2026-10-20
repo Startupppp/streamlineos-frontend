@@ -8,6 +8,7 @@ import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { InfiniteScrollSentinel } from "@/components/ui/infinite-scroll-sentinel";
 import { getErrorMessage } from "@/lib/get-error-message";
 import {
+  useLeaveChannel,
   useRemoveChannelMember,
   useUpdateChannelMemberRole,
 } from "@/hooks/api/chat-core-mutations-b";
@@ -52,6 +53,7 @@ export function ChannelMembersSection({
     null,
   );
   const removeMember = useRemoveChannelMember();
+  const leaveChannel = useLeaveChannel();
   const updateRole = useUpdateChannelMemberRole();
   const changingRoleUserId = updateRole.isPending
     ? (updateRole.variables?.userId ?? null)
@@ -128,7 +130,8 @@ export function ChannelMembersSection({
     if (!pendingRemoval) return;
     const { userId, isYou } = pendingRemoval;
     try {
-      await removeMember.mutateAsync({ channelId, userId });
+      if (isYou) await leaveChannel.mutateAsync(channelId);
+      else await removeMember.mutateAsync({ channelId, userId });
       setPendingRemoval(null);
       toast.success(isYou ? "You left the channel" : "Member removed");
       if (isYou) {
@@ -269,7 +272,7 @@ export function ChannelMembersSection({
         }
         confirmLabel={pendingRemoval?.isYou ? "Leave channel" : "Remove member"}
         destructive
-        isPending={removeMember.isPending}
+        isPending={removeMember.isPending || leaveChannel.isPending}
         keepOpenOnConfirm
         onConfirm={handleConfirmRemoval}
       />

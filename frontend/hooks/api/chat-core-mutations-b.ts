@@ -45,6 +45,7 @@ import {
   removeMembership,
   type ChannelCreateInput,
 } from "@/hooks/api/chat-channel-rows";
+import { refreshJoinedChannel } from "@/hooks/api/chat-read-cache";
 import { refreshRealtimeCapability } from "./chat-shared";
 
 const chatOkContract = lazyContract(() =>
@@ -132,9 +133,9 @@ export function useJoinChannel() {
       return { rollback: () => runRollbacks(rollbacks) };
     },
     onError: (_error, _channelId, context) => context?.rollback(),
-    onSuccess: () => {
+    onSuccess: (_data, channelId) => {
       refreshRealtimeCapability();
-      markStale(queryClient, collaborationQueryKeys.chat.myChannels());
+      refreshJoinedChannel(queryClient, channelId);
     },
   });
 }

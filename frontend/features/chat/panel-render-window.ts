@@ -2,7 +2,7 @@
 
 import { useCallback, useState } from "react";
 
-export const PANEL_RENDER_PAGE_SIZE = 25;
+const PANEL_RENDER_PAGE_SIZE = 25;
 
 interface PanelRenderWindow {
   visibleCount: number;
@@ -24,16 +24,8 @@ interface PanelRenderWindow {
  * never both fetches a page and mounts it, and nothing is skipped between a
  * reveal and the fetch that follows it.
  */
-export function resolvePanelVisibleCount(total: number, pagesShown: number): number {
+function resolvePanelVisibleCount(total: number, pagesShown: number): number {
   return Math.min(Math.max(0, total), Math.max(1, pagesShown) * PANEL_RENDER_PAGE_SIZE);
-}
-
-/**
- * Saved messages and shared files read newest-first and window the head; thread
- * replies read oldest-first and window the tail, so they slice from here.
- */
-export function resolvePanelWindowStart(total: number, pagesShown: number): number {
-  return Math.max(0, total) - resolvePanelVisibleCount(total, pagesShown);
 }
 
 export function panelRevealLabel(

@@ -12,7 +12,7 @@ type GlobalSearchResponse = z.infer<typeof globalSearchContract>;
 
 export type GlobalSearchResult = GlobalSearchResponse["results"][number];
 
-export type GlobalSearchType = GlobalSearchResult["type"];
+type GlobalSearchType = GlobalSearchResult["type"];
 
 type LegacySearchType = "lead" | "deal" | "contact" | "client" | "ticket";
 

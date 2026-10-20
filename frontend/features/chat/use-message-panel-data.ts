@@ -17,7 +17,7 @@ import { useChatRealtime } from "@/hooks/api/chat-realtime";
 import { useStartHuddle, useJoinHuddle, useActiveHuddle } from "@/hooks/api/chat-huddles";
 import { useHuddleRealtime } from "./huddle-realtime";
 import { useAblyConnection } from "./use-ably-connection";
-import { buildChatUserMap, resolveChatUserName } from "./chat-helpers";
+import { buildChatUserMap, readChannelJoinRequired, resolveChatUserName } from "./chat-helpers";
 import type { Message } from "@/types/chat";
 import type { AiAction } from "@/components/ai";
 import { useChatSummarize } from "@/hooks/api/chat-summarize";
@@ -63,6 +63,7 @@ export function useMessagePanelData({
     error: messagesErrorValue,
     refetch: refetchMessages,
   } = history;
+  const joinRequired = useMemo(() => readChannelJoinRequired(messagesErrorValue), [messagesErrorValue]);
   const markReadRef = useRef(useMarkChannelRead());
   const markRead = markReadRef.current;
   const sendMutation = useSendMessage();
@@ -256,7 +257,7 @@ export function useMessagePanelData({
   const otherMember =
     channel?.type === "DIRECT" ? resolveDirectPartner(channel.members, currentUserId) : null;
   const displayName =
-    channel?.type === "DIRECT" ? (otherMember?.name ?? "Unknown") : (channel?.name ?? "Chat");
+    channel?.type === "DIRECT" ? (otherMember?.name ?? "Unknown") : (channel?.name ?? joinRequired?.channelName ?? "Chat");
   const memberCount = channel?.memberCount ?? channel?.members?.length ?? 0;
   const isOtherOnline = channel?.type === "DIRECT" && otherMember ? onlineUserIds.has(otherMember.id) : false;
 
@@ -302,7 +303,7 @@ export function useMessagePanelData({
   return {
     header: { onBack, displayName, channel, otherMember, isOtherOnline, memberCount, activeHuddle, isInHuddle, onHuddle: handleHuddle, huddleStartPending: startHuddle.isPending, huddleJoinPending: joinHuddle.isPending, canUseAi, summarizeAction, onToggleSaved: handleToggleSaved, onToggleInfo, showInfoPanel },
     workspace: {
-      messageList: { ...timelineList, isError: messagesError, errorMessage: messagesError ? getErrorMessage(messagesErrorValue) : undefined, onRetry: handleRetryMessages, currentUserId, channelId, displayName, channelType: channel?.type, editingMessage, editInput, pinnedMessageIds, savedMessageIds, replyCountMap, onEditInputChange: setEditInput, onStartEdit: handleStartEdit, onCancelEdit: handleCancelEdit, onSaveEdit: handleEdit, onReply: handleReply, onOpenThread: handleOpenThread, onDelete: handleDelete, onReact: handleReact, onPin: handlePin, onUnpin: handleUnpin, onSave: handleSave, onUnsaveMsg: handleUnsaveMsg, onForward: handleForward, resolveUserName, scrollToMessageId },
+      messageList: { ...timelineList, isError: messagesError, errorMessage: messagesError ? getErrorMessage(messagesErrorValue) : undefined, onRetry: handleRetryMessages, joinRequired, currentUserId, channelId, displayName, channelType: channel?.type, editingMessage, editInput, pinnedMessageIds, savedMessageIds, replyCountMap, onEditInputChange: setEditInput, onStartEdit: handleStartEdit, onCancelEdit: handleCancelEdit, onSaveEdit: handleEdit, onReply: handleReply, onOpenThread: handleOpenThread, onDelete: handleDelete, onReact: handleReact, onPin: handlePin, onUnpin: handleUnpin, onSave: handleSave, onUnsaveMsg: handleUnsaveMsg, onForward: handleForward, resolveUserName, scrollToMessageId },
       messageInput: { channelId, displayName, channelType: channel?.type, messageInput, setMessageInput, inputRef, fileInputRef, replyTo, setReplyTo, pendingAttachments, setPendingAttachments, uploading, onFileSelect: handleFileSelect, showEmojiPicker, setShowEmojiPicker, emojiRef, insertEmoji, showMentions, setShowMentions, mentionIndex, filteredMentions, insertMention, mentionPrompt, onDismissMentionPrompt: dismissMentionPrompt, recordPicker, onSelectRecord: selectRecord, linkedRecords, onRemoveLinkedRecord: removeLinkedRecord, typingText, sendMessage, onSend: handleSend, onKeyDown: handleKeyDown, onInputChange: handleInputChange, onFilesSelected: handlePastedFiles },
       huddle: activeHuddle && isInHuddle ? { huddle: activeHuddle, channelId, currentUserId } : undefined,
     },

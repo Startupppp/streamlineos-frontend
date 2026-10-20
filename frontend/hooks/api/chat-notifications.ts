@@ -26,13 +26,15 @@ import {
 import {
   applyDeletedUnread,
   decrementChannelUnread,
+  markChannelTimelineStale,
   patchUnreadTotal,
   recordInboundChannelMessage,
 } from "@/hooks/api/chat-read-cache";
 import { findCachedMessage, patchChatMessage } from "@/hooks/api/chat-message-cache";
-import { findChannelRow } from "@/hooks/api/chat-channel-cache";
 import { messageDeletedPayloadSchema } from "@/hooks/api/chat-realtime-schema";
 import { collaborationQueryKeys } from "@/lib/query-keys/collaboration";
+
+type BackgroundChannelEvent = "message" | "message:deleted" | "message:updated" | "reaction:updated";
 
 export function useChatGlobalNotifications(
   channels: Channel[] | undefined,
@@ -83,7 +85,7 @@ export function useChatGlobalNotifications(
     let cancelled = false;
     const subs: Array<{
       ch: ReturnType<typeof ably.channels.get>;
-      event: "message" | "message:deleted";
+      event: BackgroundChannelEvent;
       h: (msg: InboundMessage) => void;
     }> = [];
 
@@ -96,7 +98,9 @@ export function useChatGlobalNotifications(
         const handler = (msg: InboundMessage) => {
           if (isForgedServerFrame("message", msg.clientId)) return;
           const payload = readChatNotification(msg.data);
-          if (!payload || payload.senderId === currentUserIdRef.current) return;
+          if (!payload) return;
+          if (channelId !== activeChannelIdRef.current) markChannelTimelineStale(queryClient, channelId);
+          if (payload.senderId === currentUserIdRef.current) return;
           if (!rememberMessage(seen, payload.id)) return;
 
           const current = channelsRef.current?.find((c) => c.id === channelId);
@@ -146,6 +150,7 @@ export function useChatGlobalNotifications(
           if (channelId === activeChannelIdRef.current) return;
           const parsed = messageDeletedPayloadSchema.safeParse(msg.data);
           if (!parsed.success) return;
+          markChannelTimelineStale(queryClient, channelId);
           const messageId = parsed.data.id;
           if (countedUnread.get(messageId) === channelId) {
             countedUnread.delete(messageId);
@@ -160,9 +165,17 @@ export function useChatGlobalNotifications(
           patchChatMessage(queryClient, channelId, messageId, { isDeleted: true, content: null });
         };
 
+        const changedHandler = (event: "message:updated" | "reaction:updated") => (msg: InboundMessage) => {
+          if (isForgedServerFrame(event, msg.clientId)) return;
+          if (channelId === activeChannelIdRef.current) return;
+          markChannelTimelineStale(queryClient, channelId);
+        };
+
         for (const [event, h] of [
           ["message", handler],
           ["message:deleted", deletedHandler],
+          ["message:updated", changedHandler("message:updated")],
+          ["reaction:updated", changedHandler("reaction:updated")],
         ] as const) {
           const ok = await safeSubscribe(ablyChannel, event, h);
           if (cancelled) {
@@ -188,17 +201,13 @@ export function useChatGlobalNotifications(
     if (activeChannelId !== null) forgetChannelUnread(countedUnread, activeChannelId);
   }, [activeChannelId, countedUnread]);
 
-  useEffect(
-    () =>
-      queryClient.getQueryCache().subscribe((event) => {
-        if (event.type !== "updated" || countedUnread.size === 0) return;
-        for (const channelId of new Set(countedUnread.values())) {
-          if (findChannelRow(queryClient, channelId)?.unreadCount === 0)
-            forgetChannelUnread(countedUnread, channelId);
-        }
-      }),
-    [queryClient, countedUnread],
-  );
+  useEffect(() => {
+    if (countedUnread.size === 0) return;
+    for (const channelId of new Set(countedUnread.values())) {
+      if (channels?.find((c) => c.id === channelId)?.unreadCount === 0)
+        forgetChannelUnread(countedUnread, channelId);
+    }
+  }, [channels, countedUnread]);
 
   useEffect(() => {
     if (!orgId || !currentUserId) return;

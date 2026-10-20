@@ -9,6 +9,21 @@ const chatEntityCardContract = z.object({
   href: z.string(),
 });
 
+const linkedRecordTypeContract = z.enum([
+  "task",
+  "project",
+  "cycle",
+  "release",
+  "incident",
+  "client",
+  "deal",
+  "lead",
+  "employee",
+  "doc_page",
+  "calendar_event",
+  "support_ticket",
+]);
+
 const chatEntityRefContract = z.discriminatedUnion("type", [
   z.object({
     type: z.literal("ticket"),
@@ -16,31 +31,20 @@ const chatEntityRefContract = z.discriminatedUnion("type", [
     card: chatEntityCardContract.nullable().optional(),
   }),
   z.object({
-    type: z.enum([
-      "task",
-      "project",
-      "cycle",
-      "release",
-      "incident",
-      "client",
-      "deal",
-      "lead",
-      "employee",
-      "doc_page",
-      "calendar_event",
-      "support_ticket",
-    ]),
+    type: linkedRecordTypeContract,
     id: z.string(),
     card: chatEntityCardContract.nullable().optional(),
   }),
 ]);
 
+const resolvedReferenceTypeContract = z.enum(["ticket", ...linkedRecordTypeContract.options]);
+
 export const chatResolvedReferencesContract = z.object({
   references: z.array(
     z.object({
-      type: z.string(),
+      type: resolvedReferenceTypeContract,
       id: z.string(),
-      card: chatEntityCardContract.nullable(),
+      card: chatEntityCardContract.extend({ type: resolvedReferenceTypeContract }).nullable(),
     }),
   ),
 });
@@ -132,13 +136,7 @@ export const chatMessagesPageContract = z.object({
 });
 
 export const chatMessageContextContract = z.object({
-  messages: z.array(
-    chatMessageContract.extend({
-      sender: chatMessageSenderContract
-        .nullable()
-        .transform((sender) => sender ?? { id: null, name: null, image: null }),
-    }),
-  ),
+  messages: z.array(chatMessageContract),
   targetMessageId: z.number(),
   olderCursor: z.number().nullable(),
   hasNewer: z.boolean(),

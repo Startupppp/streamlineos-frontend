@@ -289,7 +289,7 @@ export function MessagePanelView({
             dropdownTriggerRef={dropdownTriggerRef}
           />
         ) : null}
-        <MessageInput {...workspace.messageInput} />
+        {workspace.messageList.joinRequired ? null : <MessageInput {...workspace.messageInput} />}
         {workspace.huddle ? <HuddlePanel {...workspace.huddle} /> : null}
       </div>
 

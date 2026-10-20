@@ -100,6 +100,8 @@ async function renderReconciliation(options: {
   return { ...view, refetchHistory };
 }
 
+const OFFLINE_SWEEP_MS = 120_000;
+
 describe("chat poll reconciliation — server positions, not the browser clock", () => {
   it("opens the sequence at the newest SERVER message time", async () => {
     const { result } = await renderReconciliation({ newestLoadedAt: SERVER_NEWEST });
@@ -247,7 +249,7 @@ describe("chat poll reconciliation — the bounded offline sweep", () => {
   });
 
   it("sweeps history while realtime is down even when nothing new arrives", async () => {
-    const { useChatPollReconciliation, OFFLINE_HISTORY_RECONCILE_INTERVAL_MS } =
+    const { useChatPollReconciliation } =
       await import("@/features/chat/use-chat-poll-reconciliation");
     const refetchHistory = jest.fn().mockResolvedValue({ isError: false });
 
@@ -265,13 +267,13 @@ describe("chat poll reconciliation — the bounded offline sweep", () => {
 
     expect(refetchHistory).not.toHaveBeenCalled();
     await act(async () => {
-      jest.advanceTimersByTime(OFFLINE_HISTORY_RECONCILE_INTERVAL_MS);
+      jest.advanceTimersByTime(OFFLINE_SWEEP_MS);
     });
     expect(refetchHistory).toHaveBeenCalled();
   });
 
   it("stops sweeping the moment realtime supplies the same data", async () => {
-    const { useChatPollReconciliation, OFFLINE_HISTORY_RECONCILE_INTERVAL_MS } =
+    const { useChatPollReconciliation } =
       await import("@/features/chat/use-chat-poll-reconciliation");
     const refetchHistory = jest.fn().mockResolvedValue({ isError: false });
 
@@ -294,7 +296,7 @@ describe("chat poll reconciliation — the bounded offline sweep", () => {
     const pollsAtReconnect = pollParams().length;
 
     await act(async () => {
-      jest.advanceTimersByTime(OFFLINE_HISTORY_RECONCILE_INTERVAL_MS * 3);
+      jest.advanceTimersByTime(OFFLINE_SWEEP_MS * 3);
     });
     expect(refetchHistory).not.toHaveBeenCalled();
     expect(pollParams()).toHaveLength(pollsAtReconnect);

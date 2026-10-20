@@ -7,13 +7,16 @@
 import { render, screen, within, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { ChannelMembersSection } from "./channel-members-section";
-import { PANEL_RENDER_PAGE_SIZE } from "./panel-render-window";
 import type { ChannelMember } from "@/types/chat";
 
+const PANEL_RENDER_PAGE_SIZE = 25;
+
 const mockRemoveMember = jest.fn();
+const mockLeaveChannel = jest.fn();
 
 jest.mock("@/hooks/api/chat-core-mutations-b", () => ({
   useRemoveChannelMember: () => ({ mutateAsync: mockRemoveMember, isPending: false }),
+  useLeaveChannel: () => ({ mutateAsync: mockLeaveChannel, isPending: false }),
   useUpdateChannelMemberRole: () => ({ mutate: jest.fn(), isPending: false }),
 }));
 
@@ -141,6 +144,8 @@ describe("ChannelMembersSection — removing and leaving are confirmed", () => {
   beforeEach(() => {
     mockRemoveMember.mockReset();
     mockRemoveMember.mockResolvedValue(undefined);
+    mockLeaveChannel.mockReset();
+    mockLeaveChannel.mockResolvedValue(undefined);
   });
 
   it("asks before removing another member and only removes after confirm", async () => {
@@ -156,15 +161,14 @@ describe("ChannelMembersSection — removing and leaving are confirmed", () => {
     );
   });
 
-  it("asks before leaving the channel yourself", async () => {
+  it("asks before leaving the channel yourself, then leaves through the leave route so the sidebar row, unread total and realtime grant follow", async () => {
     const user = userEvent.setup();
     renderSection(3);
     await user.click(screen.getByRole("button", { name: "Leave channel" }));
     const dialog = await screen.findByRole("alertdialog");
     await user.click(within(dialog).getByRole("button", { name: "Leave channel" }));
-    await waitFor(() =>
-      expect(mockRemoveMember).toHaveBeenCalledWith({ channelId: 1, userId: "user-1" }),
-    );
+    await waitFor(() => expect(mockLeaveChannel).toHaveBeenCalledWith(1));
+    expect(mockRemoveMember).not.toHaveBeenCalled();
   });
 
   it("cancelling keeps the member", async () => {

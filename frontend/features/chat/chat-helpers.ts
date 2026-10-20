@@ -3,6 +3,18 @@ import {
   getUserDisplayName,
   type NamedUser,
 } from "@/lib/person-display";
+import { isApiError } from "@/lib/api-envelope";
+import { isRecord } from "@/lib/is-record";
+
+export interface ChannelJoinRequired {
+  channelName: string | null;
+}
+
+export function readChannelJoinRequired(error: unknown): ChannelJoinRequired | null {
+  if (!isApiError(error) || error.code !== "CHAT_CHANNEL_JOIN_REQUIRED") return null;
+  const name = isRecord(error.details) ? error.details.channelName : undefined;
+  return { channelName: typeof name === "string" && name ? name : null };
+}
 
 type ChatOrgUser = {
   id: string;

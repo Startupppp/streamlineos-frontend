@@ -15,7 +15,7 @@ jest.mock("@/hooks/api/chat-core-read", () => ({
 jest.mock("@/hooks/api/chat-core-mutations-b", () => ({
   useAddChannelMember: () => ({ mutateAsync: jest.fn(), isPending: false }),
 }));
-jest.mock("@/hooks/api/chat-personal-b", () => ({
+jest.mock("@/hooks/api/chat-invite-links", () => ({
   useChannelInviteLink: () => ({ data: undefined, isLoading: false }),
   useRegenerateInviteLink: () => ({ mutateAsync: jest.fn(), isPending: false }),
 }));

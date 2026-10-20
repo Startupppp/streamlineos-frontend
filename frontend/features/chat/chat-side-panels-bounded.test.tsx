@@ -10,9 +10,12 @@ import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { SharedFilesPanel } from "./shared-files-panel";
 import { SavedMessagesPanel } from "./saved-messages-panel";
-import { PANEL_RENDER_PAGE_SIZE } from "./panel-render-window";
-import type { ChannelFile } from "@/hooks/api/chat-personal-b";
+import type { z } from "zod";
+import type { chatChannelFilesContract } from "@/hooks/api/chat-schema/file-schema";
 import type { SavedMessage } from "@/types/chat";
+
+const PANEL_RENDER_PAGE_SIZE = 25;
+type ChannelFile = z.infer<typeof chatChannelFilesContract>["files"][number];
 
 const useChannelFiles = jest.fn();
 const useSavedMessages = jest.fn();

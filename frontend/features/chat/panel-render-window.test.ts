@@ -1,10 +1,27 @@
-import {
-  PANEL_RENDER_PAGE_SIZE,
-  resolvePanelVisibleCount,
-  resolvePanelWindowStart,
-  usePanelRenderWindow,
-} from "./panel-render-window";
+import { usePanelRenderWindow } from "./panel-render-window";
 import { act, renderHook } from "@testing-library/react";
+
+const PANEL_RENDER_PAGE_SIZE = 25;
+
+function noop() {
+  return undefined;
+}
+
+function windowAt(total: number, pages: number) {
+  const { result, unmount } = renderHook(() => usePanelRenderWindow(total, false, noop));
+  for (let shown = 1; shown < pages; shown += 1) act(() => result.current.onLoadMore());
+  const { visibleCount, windowStart } = result.current;
+  unmount();
+  return { visibleCount, windowStart };
+}
+
+function resolvePanelVisibleCount(total: number, pages: number) {
+  return windowAt(total, pages).visibleCount;
+}
+
+function resolvePanelWindowStart(total: number, pages: number) {
+  return windowAt(total, pages).windowStart;
+}
 
 describe("resolvePanelVisibleCount — the mounted row count is bounded", () => {
   it("mounts the whole collection while it fits inside one page", () => {

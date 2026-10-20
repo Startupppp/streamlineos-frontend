@@ -1,7 +1,6 @@
-import {
-  MESSAGE_RENDER_PAGE_SIZE,
-  resolveMessageWindowStart,
-} from "./message-render-window";
+import { resolveMessageWindowStart } from "./message-render-window";
+
+const MESSAGE_RENDER_PAGE_SIZE = 60;
 
 describe("resolveMessageWindowStart — the mounted message count is bounded", () => {
   it("renders the whole history while it fits inside one page", () => {

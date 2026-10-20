@@ -12,11 +12,12 @@ import {
   formatMessageTimeFull,
   getForwardedDisplay,
 } from "./chat-helpers";
-import type { Message, TicketEntityRef, MessageMetadata } from "@/types/chat";
+import type { Message, TicketEntityRef } from "@/types/chat";
 import { useCan } from "@/hooks/api/access";
 import { useEntityAction } from "./entity-actions-context";
 import { ChatOverlayFallback } from "./chat-lazy-fallbacks";
 import { ChatBubbleAttachments } from "./chat-bubble-attachments";
+import { ChatBubbleEditForm } from "./chat-bubble-edit-form";
 import { renderFormattedContent } from "./formatted-message-content";
 import { getInitials } from "@/lib/format-utils";
 const MessageActions = dynamic(
@@ -104,7 +105,7 @@ export function ChatBubble({
   const [convertDialogOpen, setConvertDialogOpen] = useState(false);
   const [assignDialogOpen, setAssignDialogOpen] = useState(false);
   const [dueDateDialogOpen, setDueDateDialogOpen] = useState(false);
-  const bubbleMeta = message.metadata as MessageMetadata | null;
+  const bubbleMeta = message.metadata;
   const ticketEntity = (bubbleMeta?.entities ?? []).find(
     (e): e is TicketEntityRef => e.type === "ticket",
   );
@@ -146,21 +147,6 @@ export function ChatBubble({
     [],
   );
 
-  const handleEditInputChange = useCallback(
-    (e: React.ChangeEvent<HTMLTextAreaElement>) =>
-      onEditInputChange(e.target.value),
-    [onEditInputChange],
-  );
-  const handleEditKeyDown = useCallback(
-    (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-      if (e.key === "Enter" && !e.shiftKey) {
-        e.preventDefault();
-        onSaveEdit();
-      }
-      if (e.key === "Escape") onCancelEdit();
-    },
-    [onSaveEdit, onCancelEdit],
-  );
   const handleCopy = useCallback(() => {
     navigator.clipboard.writeText(message.content ?? "");
     toast.success("Copied");
@@ -265,36 +251,12 @@ export function ChatBubble({
         )}
 
         {isEditing ? (
-          <div className="mx-1">
-            <div className="rounded-xl border border-primary/40 bg-background overflow-hidden shadow-sm focus-within:ring-2 focus-within:ring-ring/50">
-              <textarea
-                aria-label="Edit message"
-                value={editInput}
-                onChange={handleEditInputChange}
-                onKeyDown={handleEditKeyDown}
-                className="w-full bg-transparent text-sm resize-none px-3 py-2 focus:outline-none min-h-[40px]"
-                autoFocus
-              />
-            </div>
-            <div className="flex items-center gap-2 mt-1 px-1">
-              <button
-                onClick={onCancelEdit}
-                className="text-dense text-muted-foreground hover:text-foreground"
-              >
-                Cancel
-              </button>
-              <span className="text-muted-foreground">|</span>
-              <button
-                onClick={onSaveEdit}
-                className="text-dense text-primary font-bold hover:underline"
-              >
-                Save
-              </button>
-              <span className="text-micro text-muted-foreground ml-auto hidden sm:inline">
-                Esc / Enter
-              </span>
-            </div>
-          </div>
+          <ChatBubbleEditForm
+            editInput={editInput}
+            onEditInputChange={onEditInputChange}
+            onSaveEdit={onSaveEdit}
+            onCancelEdit={onCancelEdit}
+          />
         ) : (
           <div
             className={cn(

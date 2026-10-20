@@ -40,7 +40,6 @@ export const UNIVERSAL_ROUTES: readonly UniversalRoute[] = [
   {
     path: "/chat",
     universalDescendants: [
-      { path: "/chat/channels", subtree: true },
       { path: "/chat/invite", subtree: true },
     ],
     reason:
