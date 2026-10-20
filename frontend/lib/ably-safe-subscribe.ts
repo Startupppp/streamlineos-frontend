@@ -23,7 +23,6 @@ const SERVER_AUTHORED_EVENTS: ReadonlySet<string> = new Set([
   "huddle:user_left",
   "huddle:ended",
   "huddle:state_updated",
-  "huddle:kicked",
   "notification:message",
   "notification:mention",
 ]);

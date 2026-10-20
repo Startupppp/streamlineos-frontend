@@ -26,7 +26,8 @@ export function HuddlePanel({ huddle, channelId, currentUserId }: HuddlePanelPro
   const [showInviteDialog, setShowInviteDialog] = useState(false);
 
   const leaveHuddle = useLeaveHuddle();
-  useHuddleHeartbeat(huddle.id, channelId);
+  const isJoined = huddle.participants.some((p) => p.userId === currentUserId);
+  useHuddleHeartbeat(huddle.id, channelId, isJoined);
   const elapsed = useElapsedTime(huddle.startedAt);
 
   const meetingUrl = huddle.meetingUrl;

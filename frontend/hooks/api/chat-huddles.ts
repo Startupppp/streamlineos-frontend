@@ -18,6 +18,8 @@ import type { Huddle } from "@/types/chat";
 
 const HEARTBEAT_INTERVAL_MS = 30_000;
 
+let optimisticParticipantSeq = 0;
+
 const activeHuddleContract = lazyContract(() =>
   import("@/hooks/api/chat-schema").then((m) => m.chatActiveHuddleContract),
 );
@@ -87,8 +89,10 @@ export function useStartHuddle() {
         undefined,
         huddleContract,
       ),
-    onSuccess: (huddle, channelId) => {
-      queryClient.setQueryData(collaborationQueryKeys.chat.huddle(channelId), huddle);
+    onSuccess: async (huddle, channelId) => {
+      const queryKey = collaborationQueryKeys.chat.huddle(channelId);
+      await queryClient.cancelQueries({ queryKey, exact: true });
+      queryClient.setQueryData(queryKey, huddle);
       queryClient.invalidateQueries({
         queryKey: platformHierarchyQueryKeys.calendar.all,
         exact: false,
@@ -127,7 +131,7 @@ export function useJoinHuddle() {
       patchActiveHuddle(queryClient, channelId, (current) => {
         if (!viewer?.id || current.participants.some((p) => p.userId === viewer.id)) return current;
         const joined = {
-          id: -huddleId,
+          id: --optimisticParticipantSeq,
           huddleId,
           joinedAt: new Date().toISOString(),
           leftAt: null,
@@ -182,7 +186,7 @@ export function useLeaveHuddle() {
   });
 }
 
-export function useHuddleHeartbeat(huddleId: number, channelId: number): void {
+export function useHuddleHeartbeat(huddleId: number, channelId: number, isJoined: boolean): void {
   const queryClient = useQueryClient();
   const heartbeat = useAuthorizedMutation("chat:channels:read", {
     mutationKey: ["chat", "huddle", "heartbeat"],
@@ -197,6 +201,7 @@ export function useHuddleHeartbeat(huddleId: number, channelId: number): void {
   const { mutate } = heartbeat;
 
   useEffect(() => {
+    if (!isJoined) return;
     const id = setInterval(
       () =>
         mutate(huddleId, {
@@ -209,7 +214,7 @@ export function useHuddleHeartbeat(huddleId: number, channelId: number): void {
       HEARTBEAT_INTERVAL_MS,
     );
     return () => clearInterval(id);
-  }, [huddleId, channelId, mutate, queryClient]);
+  }, [huddleId, channelId, isJoined, mutate, queryClient]);
 }
 
 export function useInviteToHuddle() {

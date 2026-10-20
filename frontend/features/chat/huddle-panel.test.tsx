@@ -86,7 +86,7 @@ describe("HuddlePanel provider awareness", () => {
 
   it("passes the channel to the heartbeat so a refusal can refresh the right huddle", () => {
     renderPanel(makeHuddle({}));
-    expect(heartbeat).toHaveBeenCalledWith(11, 7);
+    expect(heartbeat).toHaveBeenCalledWith(11, 7, false);
   });
 
   it("collapsed mini bar join link carries the provider name for assistive tech", () => {

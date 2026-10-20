@@ -167,3 +167,36 @@ describe("MessagePanelView header — one details entry plus one overflow", () =
     expect(within(toolbar).queryByRole("button", { name: /^AI/ })).toBeNull();
   });
 });
+
+describe("MessagePanelView header huddle button is provider aware", () => {
+  const joined = {
+    id: 3,
+    channelId: 9,
+    status: "active" as const,
+    calendarEventId: null,
+    meetingUrl: "https://meet.google.com/abc-defg-hij",
+    startedAt: "2026-09-02T12:00:00.000Z",
+    endedAt: null,
+    startedBy: "u1",
+    startedByUser: { id: "u1", name: "Ada" },
+    participants: [
+      { id: 1, huddleId: 3, joinedAt: "2026-09-02T12:00:00.000Z", leftAt: null, userId: "u1", user: null },
+      { id: 2, huddleId: 3, joinedAt: "2026-09-02T12:00:00.000Z", leftAt: null, userId: "u2", user: null },
+    ],
+  };
+
+  it.each([
+    ["google_meet" as const, "Join Google Meet"],
+    ["microsoft_teams" as const, "Join Microsoft Teams"],
+    [null, "Join meeting"],
+  ])("labels the %s huddle button %s and keeps the joined count in its accessible name", (meetingProvider, label) => {
+    render(<MessagePanelView {...makeProps({ activeHuddle: { ...joined, meetingProvider } })} />);
+    const button = screen.getByRole("button", { name: `${label}, 2 joined through StreamlineOS` });
+    expect(button).toHaveTextContent(`${label} (2)`);
+  });
+
+  it("keeps Start huddle when nothing is active", () => {
+    render(<MessagePanelView {...makeProps()} />);
+    expect(screen.getByRole("button", { name: "Start huddle" })).toBeInTheDocument();
+  });
+});

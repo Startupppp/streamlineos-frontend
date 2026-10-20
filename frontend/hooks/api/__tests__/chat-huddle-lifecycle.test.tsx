@@ -89,6 +89,26 @@ describe("huddle cache patching", () => {
     });
   });
 
+  it("join gives each optimistic participant its own negative id so two huddles never collide", async () => {
+    const { client, wrapper } = setup();
+    const otherKey = collaborationQueryKeys.chat.huddle(8);
+    client.setQueryData(KEY, huddle([participant(1, "u-other")]));
+    client.setQueryData(otherKey, { ...huddle([participant(1, "u-other")]), id: 11, channelId: 8 });
+    (apiClient.post as jest.Mock).mockReturnValue(new Promise(() => undefined));
+    const { result } = renderHook(() => useJoinHuddle(), { wrapper });
+    act(() => {
+      result.current.mutate({ huddleId: 11, channelId: CHANNEL });
+      result.current.mutate({ huddleId: 11, channelId: 8 });
+    });
+    await waitFor(() => {
+      expect(client.getQueryData<Huddle>(otherKey)?.participants).toHaveLength(2);
+    });
+    const ids = [KEY, otherKey].map((k) => client.getQueryData<Huddle>(k)?.participants[1]?.id);
+    expect(ids[0]).toBeLessThan(0);
+    expect(ids[1]).toBeLessThan(0);
+    expect(ids[0]).not.toBe(ids[1]);
+  });
+
   it("join does not add the viewer twice", async () => {
     const { client, wrapper } = setup();
     client.setQueryData(KEY, huddle([participant(1, "u-me")]));
@@ -160,6 +180,17 @@ describe("huddle cache patching", () => {
     expect(client.getQueryData<Huddle>(KEY)).toEqual(started);
     expect(apiClient.get).not.toHaveBeenCalled();
   });
+
+  it("start cancels an in-flight active-huddle fetch before seeding so a stale null cannot overwrite it", async () => {
+    const { client, wrapper } = setup();
+    const cancel = jest.spyOn(client, "cancelQueries");
+    (apiClient.post as jest.Mock).mockResolvedValue(huddle([participant(1, "u-me")]));
+    const { result } = renderHook(() => useStartHuddle(), { wrapper });
+    await act(async () => {
+      await result.current.mutateAsync(CHANNEL);
+    });
+    expect(cancel).toHaveBeenCalledWith({ queryKey: KEY, exact: true });
+  });
 });
 
 describe("huddle heartbeat", () => {
@@ -168,7 +199,7 @@ describe("huddle heartbeat", () => {
     const { client, wrapper } = setup();
     const invalidate = jest.spyOn(client, "invalidateQueries");
     (apiClient.patch as jest.Mock).mockRejectedValue(new ApiError("Not joined", 409, "HUDDLE_NOT_JOINED"));
-    renderHook(() => useHuddleHeartbeat(11, CHANNEL), { wrapper });
+    renderHook(() => useHuddleHeartbeat(11, CHANNEL, true), { wrapper });
     await act(async () => {
       await jest.advanceTimersByTimeAsync(30_000);
     });
@@ -182,11 +213,45 @@ describe("huddle heartbeat", () => {
     expect(toast.error).not.toHaveBeenCalled();
   });
 
+  it("restarts after a rejoin while mounted, when joined state flips back to true", async () => {
+    jest.useFakeTimers();
+    const { wrapper } = setup();
+    (apiClient.patch as jest.Mock).mockRejectedValueOnce(new ApiError("Not joined", 409, "HUDDLE_NOT_JOINED"));
+    (apiClient.patch as jest.Mock).mockResolvedValue({ ok: true });
+    const hook = renderHook(({ joined }) => useHuddleHeartbeat(11, CHANNEL, joined), {
+      wrapper,
+      initialProps: { joined: true },
+    });
+    await act(async () => {
+      await jest.advanceTimersByTimeAsync(30_000);
+    });
+    await act(async () => {
+      await jest.advanceTimersByTimeAsync(60_000);
+    });
+    expect(apiClient.patch).toHaveBeenCalledTimes(1);
+    hook.rerender({ joined: false });
+    hook.rerender({ joined: true });
+    await act(async () => {
+      await jest.advanceTimersByTimeAsync(30_000);
+    });
+    expect(apiClient.patch).toHaveBeenCalledTimes(2);
+  });
+
+  it("does not heartbeat while the viewer is not joined", async () => {
+    jest.useFakeTimers();
+    const { wrapper } = setup();
+    renderHook(() => useHuddleHeartbeat(11, CHANNEL, false), { wrapper });
+    await act(async () => {
+      await jest.advanceTimersByTimeAsync(90_000);
+    });
+    expect(apiClient.patch).not.toHaveBeenCalled();
+  });
+
   it("keeps heartbeating after a transient failure", async () => {
     jest.useFakeTimers();
     const { wrapper } = setup();
     (apiClient.patch as jest.Mock).mockRejectedValue(new ApiError("Down", 503));
-    renderHook(() => useHuddleHeartbeat(11, CHANNEL), { wrapper });
+    renderHook(() => useHuddleHeartbeat(11, CHANNEL, true), { wrapper });
     await act(async () => {
       await jest.advanceTimersByTimeAsync(90_000);
     });

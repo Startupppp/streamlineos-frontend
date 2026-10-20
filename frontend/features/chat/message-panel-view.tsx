@@ -23,6 +23,7 @@ import { ChatPanelFallback } from "./chat-lazy-fallbacks";
 import type { ChannelMember, Huddle } from "@/types/chat";
 import type { ChatChannelDetailWire } from "@/hooks/api/chat-extra-schema";
 import { getInitials } from "@/lib/format-utils";
+import { huddleProviderPresentation } from "./huddle-provider";
 
 const ThreadPanel = dynamic(
   () => import("./thread-panel").then((m) => ({ default: m.ThreadPanel })),
@@ -218,10 +219,16 @@ export function MessagePanelView({
                 )}
                 onClick={onHuddle}
                 disabled={huddleStartPending || huddleJoinPending}
-                aria-label={activeHuddle ? "Join huddle" : "Start huddle"}
+                aria-label={
+                  activeHuddle
+                    ? `${huddleProviderPresentation(activeHuddle.meetingProvider).joinLabel}, ${activeHuddle.participants.length} joined through StreamlineOS`
+                    : "Start huddle"
+                }
               >
                 {activeHuddle ? (
-                  <span>Join ({activeHuddle.participants.length})</span>
+                  <span>
+                    {huddleProviderPresentation(activeHuddle.meetingProvider).joinLabel} ({activeHuddle.participants.length})
+                  </span>
                 ) : (
                   <span>Huddle</span>
                 )}

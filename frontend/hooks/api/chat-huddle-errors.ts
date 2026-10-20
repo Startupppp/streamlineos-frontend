@@ -86,7 +86,7 @@ function describeRejected(ids: string[], nameFor: (userId: string) => string | u
   }
   if (first === undefined) return `${ids.length} people are not members of this channel, so they cannot be invited.`;
   const others = ids.length - 1;
-  return `${first} and ${others} ${others === 1 ? "other is" : "others are"} not members of this channel, so they cannot be invited.`;
+  return `${first} and ${others} ${others === 1 ? "other" : "others"} are not members of this channel, so they cannot be invited.`;
 }
 
 export function describeHuddleInviteError(

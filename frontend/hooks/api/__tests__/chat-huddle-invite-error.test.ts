@@ -8,7 +8,7 @@ describe("describeHuddleInviteError", () => {
     });
     const names = new Map([["u1", "Ada"]]);
     expect(describeHuddleInviteError(error, (id) => names.get(id))).toBe(
-      "Ada and 1 other is not members of this channel, so they cannot be invited.",
+      "Ada and 1 other are not members of this channel, so they cannot be invited.",
     );
   });
 
@@ -16,6 +16,13 @@ describe("describeHuddleInviteError", () => {
     const error = new ApiError("x", 422, "HUDDLE_INVITEE_NOT_MEMBER", { invalidUserIds: ["u1"] });
     expect(describeHuddleInviteError(error, () => "Ada")).toBe(
       "Ada is not a member of this channel, so they cannot be invited.",
+    );
+  });
+
+  it("pluralises others when more than one more is rejected", () => {
+    const error = new ApiError("x", 422, "HUDDLE_INVITEE_NOT_MEMBER", { invalidUserIds: ["u1", "u2", "u3"] });
+    expect(describeHuddleInviteError(error, (id) => (id === "u1" ? "Ada" : undefined))).toBe(
+      "Ada and 2 others are not members of this channel, so they cannot be invited.",
     );
   });
 
