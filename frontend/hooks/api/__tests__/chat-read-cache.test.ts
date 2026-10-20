@@ -1,11 +1,12 @@
 import { QueryClient, type InfiniteData } from "@tanstack/react-query";
 import { collaborationQueryKeys } from "@/lib/query-keys/collaboration";
 import {
+  applyDeletedUnread,
   applyOptimisticUnread,
   invalidateChatReconnect,
   patchOwnMember,
   patchUnreadTotal,
-} from "@/lib/chat-read-state";
+} from "@/hooks/api/chat-read-cache";
 import type { ChatChannelDetailWire } from "@/hooks/api/chat-extra-schema";
 import type { Channel, ChannelPage } from "@/types/chat";
 
@@ -176,5 +177,52 @@ describe("applyOptimisticUnread", () => {
     seedRows(client, [row({ lastMessage: null })]);
     applyOptimisticUnread(client, EDITED_CHANNEL);
     expect(firstRow(client)?.unreadCount).toBe(0);
+  });
+});
+
+describe("applyDeletedUnread — a deleted message stops counting as unread", () => {
+  function seedReadState(client: QueryClient, lastReadAt: string | null) {
+    seedRows(client, [row({ unreadCount: 2 })]);
+    client.setQueryData(PROBES.unreadTotal, { total: 4 });
+    client.setQueryData(collaborationQueryKeys.chat.channel(EDITED_CHANNEL), {
+      id: EDITED_CHANNEL,
+      members: [{ ...ownMember, lastReadAt, joinedAt: "2026-09-01T00:00:00.000Z", archivedAt: null }],
+    });
+  }
+
+  const unseen = {
+    id: 9,
+    channelId: EDITED_CHANNEL,
+    senderId: "user-2",
+    content: "x",
+    replyToId: null,
+    isEdited: false,
+    isDeleted: false,
+    messageType: "text" as const,
+    metadata: null,
+    actionStatus: null,
+    reactions: {},
+    createdAt: "2026-10-01T12:00:00.000Z",
+    updatedAt: "2026-10-01T12:00:00.000Z",
+    sender: { id: "user-2", name: "Bo", image: null },
+    attachments: [],
+    replyTo: null,
+  };
+
+  it("decrements the row and the total when the message was after the viewer's read position", () => {
+    const client = freshClient();
+    seedReadState(client, "2026-10-01T00:00:00.000Z");
+    applyDeletedUnread(client, unseen, "user-1");
+    expect(firstRow(client)?.unreadCount).toBe(1);
+    expect(client.getQueryData(PROBES.unreadTotal)).toEqual({ total: 3 });
+  });
+
+  it("leaves both alone for a message the viewer had already read, or sent", () => {
+    const client = freshClient();
+    seedReadState(client, "2026-10-02T00:00:00.000Z");
+    applyDeletedUnread(client, unseen, "user-1");
+    applyDeletedUnread(client, { ...unseen, createdAt: "2026-10-03T00:00:00.000Z", senderId: "user-1" }, "user-1");
+    expect(firstRow(client)?.unreadCount).toBe(2);
+    expect(client.getQueryData(PROBES.unreadTotal)).toEqual({ total: 4 });
   });
 });

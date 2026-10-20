@@ -8,12 +8,12 @@ import { useSession } from "next-auth/react";
 import { collaborationQueryKeys } from "@/lib/query-keys/collaboration";
 import { isForgedServerFrame, safeSubscribe, safeUnsubscribe } from "@/lib/ably-safe-subscribe";
 import { chatChannelName } from "@/lib/ably-channels";
-import { invalidateChatReconnect } from "@/lib/chat-read-state";
+import { applyDeletedUnread, invalidateChatReconnect } from "@/hooks/api/chat-read-cache";
 import {
   appendThreadReply,
   mergeInboundMessage,
 } from "@/features/chat/message-page-merge";
-import { patchChatMessage } from "@/hooks/api/chat-message-cache";
+import { findCachedMessage, patchChatMessage } from "@/hooks/api/chat-message-cache";
 import { patchChannelRow } from "@/hooks/api/chat-channel-cache";
 import { useAblyConnection } from "@/features/chat/use-ably-connection";
 import type { Message, MessagesPage, ThreadPage } from "@/types/chat";
@@ -118,7 +118,7 @@ export function useChatRealtime(channelId: number | null): {
         collaborationQueryKeys.chat.messages(channelId),
         (old) => old && mergeInboundMessage(old, incoming, payload.clientKey),
       );
-      if (payload.replyToId !== null)
+      if (payload.replyToId != null)
         queryClient.setQueryData<InfiniteData<ThreadPage>>(
           collaborationQueryKeys.chat.thread(channelId, payload.replyToId),
           (old) => appendThreadReply(old, incoming),
@@ -139,6 +139,7 @@ export function useChatRealtime(channelId: number | null): {
         if (messageEntitiesUpdatedPayloadSchema.safeParse(msg.data).success)
           void queryClient.invalidateQueries({
             queryKey: collaborationQueryKeys.chat.messages(channelId),
+            exact: true,
           });
         return;
       }
@@ -149,6 +150,7 @@ export function useChatRealtime(channelId: number | null): {
     const messageDeletedHandler = (msg: InboundMessage) => {
       const parsed = messageDeletedPayloadSchema.safeParse(msg.data);
       if (!parsed.success) return;
+      applyDeletedUnread(queryClient, findCachedMessage(queryClient, channelId, parsed.data.id), currentUserId);
       patchChatMessage(queryClient, channelId, parsed.data.id, { isDeleted: true, content: null });
     };
 

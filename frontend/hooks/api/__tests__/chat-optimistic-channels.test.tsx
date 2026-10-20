@@ -342,6 +342,32 @@ describe("useChannelInviteLink mints through a mutation, never a POST inside a q
     expect(mockedPost).toHaveBeenCalledTimes(2);
   });
 
+  it("mints once under StrictMode's double effect run", async () => {
+    const { useChannelInviteLink } = await import("@/hooks/api/chat-personal-b");
+    const { StrictMode, createElement } = await import("react");
+    const client = freshClient();
+    mockedPost.mockResolvedValue({ token: "tok-1", expiresAt: null, maxUses: null, useCount: 0 });
+    const Inner = wrapperFor(client);
+    function Strict({ children }: { children: ReactNode }) {
+      return createElement(StrictMode, null, createElement(Inner, null, children));
+    }
+    const { result } = renderHook(() => useChannelInviteLink(CHANNEL_ID, true), { wrapper: Strict });
+    await waitFor(() => expect(result.current.data?.token).toBe("tok-1"));
+    expect(mockedPost).toHaveBeenCalledTimes(1);
+  });
+
+  it("re-mints when the link's server expiry passes", async () => {
+    const { useChannelInviteLink } = await import("@/hooks/api/chat-personal-b");
+    const client = freshClient();
+    mockedPost
+      .mockResolvedValueOnce({ token: "tok-1", expiresAt: new Date(Date.now() + 50).toISOString(), maxUses: null, useCount: 0 })
+      .mockResolvedValueOnce({ token: "tok-2", expiresAt: null, maxUses: null, useCount: 0 });
+    const { result } = renderHook(() => useChannelInviteLink(CHANNEL_ID, true), { wrapper: wrapperFor(client) });
+    await waitFor(() => expect(result.current.data?.token).toBe("tok-1"));
+    await waitFor(() => expect(result.current.data?.token).toBe("tok-2"));
+    expect(mockedPost).toHaveBeenCalledTimes(2);
+  });
+
   it("does not mint when the viewer cannot manage invite links", async () => {
     useCan.mockReturnValue(false);
     const { useChannelInviteLink } = await import("@/hooks/api/chat-personal-b");

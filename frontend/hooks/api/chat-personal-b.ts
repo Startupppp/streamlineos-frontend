@@ -52,7 +52,7 @@ import {
   removeChannelRow,
 } from "@/hooks/api/chat-channel-cache";
 import { channelRowFromDetail, markStale } from "@/hooks/api/chat-channel-rows";
-import { applyOptimisticUnread, patchOwnMember } from "@/lib/chat-read-state";
+import { applyOptimisticUnread, patchOwnMember } from "@/hooks/api/chat-read-cache";
 
 interface RollbackContext {
   rollback: ChatCacheRollback;
@@ -240,37 +240,59 @@ export function useUnfavoriteChannel() {
   return useOwnMemberToggle("unfavorite", "unfavorite", { isFavorite: false });
 }
 
-function useMintChannelInviteLink() {
+type InviteLink = { token: string; expiresAt: string | null; maxUses: number | null; useCount: number };
+
+const INVITE_LINK_REFRESH_MS = 5 * 60_000;
+const MAX_TIMER_MS = 2_147_483_647;
+
+function inviteMintKey(channelId: number) {
+  return ["chat", "channels", "invite-link", "mint", channelId] as const;
+}
+
+function useMintChannelInviteLink(channelId: number) {
   const queryClient = useQueryClient();
-  return useAuthorizedMutation<{ token: string }, Error, { channelId: number }>("chat:invite-links:manage", {
-    mutationKey: ["chat", "channels", "invite-link", "mint"],
-    mutationFn: ({ channelId }) =>
-      apiClient.post<{ token: string }>(
+  return useAuthorizedMutation<InviteLink, Error, void>("chat:invite-links:manage", {
+    mutationKey: inviteMintKey(channelId),
+    mutationFn: () =>
+      apiClient.post<InviteLink>(
         `/chat/channels/${channelId}/invite-link`,
         undefined,
         undefined,
         chatInviteLinkContract,
       ),
-    onSuccess: (link, { channelId }) => {
+    onSuccess: (link) => {
       queryClient.setQueryData(collaborationQueryKeys.chat.inviteLink(channelId), link);
     },
   });
 }
 
 export function useChannelInviteLink(channelId: number, enabled: boolean) {
+  const queryClient = useQueryClient();
   const canManage = useCan("chat:invite-links:manage");
   const active = canManage && enabled && channelId > 0;
-  const link = useQuery<{ token: string }>({
+  const link = useQuery<InviteLink>({
     queryKey: collaborationQueryKeys.chat.inviteLink(channelId),
     queryFn: skipToken,
-    staleTime: 60_000,
+    staleTime: INVITE_LINK_REFRESH_MS,
   });
-  const mint = useMintChannelInviteLink();
+  const mint = useMintChannelInviteLink(channelId);
   const { mutate } = mint;
   const hasLink = link.data !== undefined;
+  const expiresAt = link.data?.expiresAt ?? null;
+  const { dataUpdatedAt } = link;
   useEffect(() => {
-    if (active && !hasLink) mutate({ channelId });
-  }, [active, hasLink, channelId, mutate]);
+    if (!active) return;
+    const dueAt = !hasLink
+      ? 0
+      : expiresAt !== null
+        ? Date.parse(expiresAt)
+        : dataUpdatedAt + INVITE_LINK_REFRESH_MS;
+    const mintWhenIdle = () => {
+      if (queryClient.isMutating({ mutationKey: inviteMintKey(channelId) }) === 0) mutate();
+    };
+    const timer = setTimeout(mintWhenIdle, Math.min(MAX_TIMER_MS, Math.max(0, dueAt - Date.now())));
+    return () => clearTimeout(timer);
+  }, [active, hasLink, expiresAt, dataUpdatedAt, channelId, mutate, queryClient]);
   return {
     data: active ? link.data : undefined,
     isLoading: active && !hasLink && !mint.isError,
@@ -287,12 +309,12 @@ export interface RegenerateInviteLinkInput {
 
 export function useRegenerateInviteLink() {
   const queryClient = useQueryClient();
-  return useAuthorizedMutation<{ token: string }, Error, RegenerateInviteLinkInput>(
+  return useAuthorizedMutation<InviteLink, Error, RegenerateInviteLinkInput>(
     "chat:invite-links:manage",
     {
       mutationKey: ["chat", "channels", "invite-link", "regenerate"],
       mutationFn: ({ channelId, ttlSeconds, maxUses }) =>
-        apiClient.post<{ token: string }>(
+        apiClient.post<InviteLink>(
           `/chat/channels/${channelId}/invite-link/regenerate`,
           { ...(ttlSeconds !== undefined && { ttlSeconds }), ...(maxUses !== undefined && { maxUses }) },
           undefined,

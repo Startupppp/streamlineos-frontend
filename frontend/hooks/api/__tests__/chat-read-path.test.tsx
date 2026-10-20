@@ -4,7 +4,7 @@ import { act, renderHook, waitFor } from "@testing-library/react";
 import { apiClient } from "@/lib/api-client";
 import { ApiError } from "@/lib/api-envelope";
 import { collaborationQueryKeys } from "@/lib/query-keys/collaboration";
-import { invalidateChatReconnect, recordInboundChannelMessage } from "@/lib/chat-read-state";
+import { invalidateChatReconnect, recordInboundChannelMessage } from "@/hooks/api/chat-read-cache";
 import type { Channel, ChannelPage, Message, MessagesPage, ThreadPage } from "@/types/chat";
 
 jest.mock("next-auth/react", () => ({

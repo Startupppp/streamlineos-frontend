@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useAbly } from "ably/react";
 import type { InboundMessage } from "ably";
 import { useQueryClient } from "@tanstack/react-query";
@@ -16,7 +16,7 @@ import {
   chatAlertIsRaised,
   viewerChannelState,
 } from "@/lib/chat-alert-policy";
-import { patchUnreadTotal, recordInboundChannelMessage } from "@/lib/chat-read-state";
+import { patchUnreadTotal, recordInboundChannelMessage } from "@/hooks/api/chat-read-cache";
 import { collaborationQueryKeys } from "@/lib/query-keys/collaboration";
 
 /**
@@ -82,6 +82,8 @@ export function useChatGlobalNotifications(
   // eslint-disable-next-line react-hooks/refs
   channelsRef.current = channels;
 
+  const [seen] = useState(() => new Set<number>());
+
   const channelIdSignature = useMemo(
     () =>
       (channels ?? [])
@@ -103,7 +105,6 @@ export function useChatGlobalNotifications(
     // `setup` declaration below, and the channel name builder takes a string.
     const org = orgId;
     const channelIds = channelIdSignature.split(",").map(Number);
-    const seen = new Set<number>();
     let cancelled = false;
     const subs: Array<{
       ch: ReturnType<typeof ably.channels.get>;
@@ -179,7 +180,7 @@ export function useChatGlobalNotifications(
         safeUnsubscribe(ch, "message", h);
       }
     };
-  }, [orgId, channelIdSignature, ably, queryClient]);
+  }, [orgId, channelIdSignature, ably, queryClient, seen]);
 
   useEffect(() => {
     if (!orgId || !currentUserId) return;
@@ -202,11 +203,14 @@ export function useChatGlobalNotifications(
       const channelId = data.channelId;
       const loaded = channelsRef.current?.find((c) => c.id === channelId);
       if (loaded !== undefined) return;
-      patchUnreadTotal(queryClient, (total) => total + 1);
-      void queryClient.invalidateQueries({
-        queryKey: collaborationQueryKeys.chat.myChannels(),
-        exact: true,
-      });
+      const firstSighting = typeof data.messageId !== "number" || rememberMessage(seen, data.messageId);
+      if (firstSighting) {
+        patchUnreadTotal(queryClient, (total) => total + 1);
+        void queryClient.invalidateQueries({
+          queryKey: collaborationQueryKeys.chat.myChannels(),
+          exact: true,
+        });
+      }
       const decision = chatAlertDecision({
         kind: event === "notification:mention" ? "mention" : "message",
         channelId,
@@ -246,5 +250,5 @@ export function useChatGlobalNotifications(
       cancelled = true;
       for (const [event, handler] of subscribed) safeUnsubscribe(notifChannel, event, handler);
     };
-  }, [orgId, currentUserId, ably, queryClient]);
+  }, [orgId, currentUserId, ably, queryClient, seen]);
 }

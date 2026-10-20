@@ -1,19 +1,25 @@
-import type { ReactNode } from "react";
-import { QueryClient, QueryClientProvider, type InfiniteData } from "@tanstack/react-query";
 import { act, renderHook, waitFor } from "@testing-library/react";
 import { apiClient } from "@/lib/api-client";
 import { ApiError } from "@/lib/api-envelope";
-import { collaborationQueryKeys } from "@/lib/query-keys/collaboration";
-import type { ChatChannelDetailWire } from "@/hooks/api/chat-extra-schema";
-import type {
-  Channel,
-  ChannelPage,
-  Message,
-  MessagesPage,
-  PinnedMessage,
-  SavedMessagesPage,
-  ThreadPage,
-} from "@/types/chat";
+import type { InfiniteData } from "@tanstack/react-query";
+import type { PinnedMessage, ThreadPage } from "@/types/chat";
+import {
+  CHANNEL_ID,
+  channelRow,
+  channelRows,
+  deferred,
+  freshClient,
+  installRandomUuid,
+  message,
+  myChannelsKey,
+  pinsKey,
+  refetchingInvalidations,
+  seedChannels,
+  seedTimeline,
+  threadKey,
+  timeline,
+  wrapperFor,
+} from "@/hooks/api/chat-cache-test-harness";
 
 jest.mock("next-auth/react", () => ({
   useSession: jest.fn().mockReturnValue({
@@ -40,155 +46,12 @@ jest.mock("@/hooks/api/authorized-mutation", () => {
 jest.mock("@/lib/ably", () => ({ reauthorizeAblyClients: jest.fn().mockResolvedValue(undefined) }));
 jest.mock("sonner", () => ({ toast: Object.assign(jest.fn(), { error: jest.fn() }) }));
 
+
 const mockedPost = jest.mocked(apiClient.post);
 const mockedPatch = jest.mocked(apiClient.patch);
 const mockedDelete = jest.mocked(apiClient.delete);
 
-const CHANNEL_ID = 7;
-const messagesKey = collaborationQueryKeys.chat.messages(CHANNEL_ID);
-const threadKey = collaborationQueryKeys.chat.thread(CHANNEL_ID, 1);
-const pinsKey = collaborationQueryKeys.chat.pins(CHANNEL_ID);
-const savedKey = collaborationQueryKeys.chat.savedMessages();
-const myChannelsKey = collaborationQueryKeys.chat.myChannels();
-const unreadKey = collaborationQueryKeys.chat.unreadTotal();
-const detailKey = collaborationQueryKeys.chat.channel(CHANNEL_ID);
-
-function deferred<T>() {
-  let resolve: (value: T) => void = () => undefined;
-  let reject: (reason: unknown) => void = () => undefined;
-  const promise = new Promise<T>((res, rej) => {
-    resolve = res;
-    reject = rej;
-  });
-  return { promise, resolve, reject };
-}
-
-function freshClient() {
-  return new QueryClient({ defaultOptions: { queries: { retry: false }, mutations: { retry: false } } });
-}
-
-function wrapperFor(client: QueryClient) {
-  function Wrapper({ children }: { children: ReactNode }) {
-    return <QueryClientProvider client={client}>{children}</QueryClientProvider>;
-  }
-  return Wrapper;
-}
-
-function message(over: Partial<Message> = {}): Message {
-  return {
-    id: 1,
-    channelId: CHANNEL_ID,
-    senderId: "user-2",
-    content: "hi",
-    replyToId: null,
-    isEdited: false,
-    isDeleted: false,
-    messageType: "text",
-    metadata: null,
-    actionStatus: null,
-    reactions: {},
-    createdAt: "2026-09-30T10:00:00.000Z",
-    updatedAt: "2026-09-30T10:00:00.000Z",
-    sender: { id: "user-2", name: "Bo", image: null },
-    attachments: [],
-    replyTo: null,
-    ...over,
-  };
-}
-
-function channelRow(over: Partial<Channel> = {}): Channel {
-  return {
-    id: CHANNEL_ID,
-    name: "general",
-    type: "PUBLIC",
-    avatarUrl: null,
-    isArchived: false,
-    entityType: null,
-    entityId: null,
-    members: [],
-    memberCount: 2,
-    membersTruncated: false,
-    unreadCount: 0,
-    lastMessage: null,
-    ...over,
-  };
-}
-
-function detail(over: Partial<ChatChannelDetailWire> = {}): ChatChannelDetailWire {
-  return {
-    id: CHANNEL_ID,
-    orgId: "org-1",
-    name: "general",
-    description: null,
-    type: "PUBLIC",
-    avatarUrl: null,
-    isArchived: false,
-    entityType: null,
-    entityId: null,
-    isPinned: false,
-    isPrivate: false,
-    messageCount: 2,
-    lastMessageAt: "2026-09-30T10:00:00.000Z",
-    createdAt: "2026-09-01T10:00:00.000Z",
-    updatedAt: "2026-09-01T10:00:00.000Z",
-    members: [
-      {
-        id: 11,
-        channelId: CHANNEL_ID,
-        userId: "user-1",
-        role: "MEMBER",
-        mutedUntil: null,
-        isFavorite: false,
-        notificationPreference: "DEFAULT",
-        lastReadAt: "2026-09-30T09:00:00.000Z",
-        joinedAt: "2026-09-01T10:00:00.000Z",
-        archivedAt: null,
-        user: { id: "user-1", name: "Ada", image: null, email: "ada@example.com" },
-      },
-    ],
-    ...over,
-  };
-}
-
-function seedTimeline(client: QueryClient, messages: Message[]) {
-  const data: InfiniteData<MessagesPage> = { pages: [{ messages, nextCursor: null }], pageParams: [undefined] };
-  client.setQueryData(messagesKey, data);
-}
-
-function seedChannels(client: QueryClient, channels: Channel[]) {
-  const data: InfiniteData<ChannelPage<Channel>> = { pages: [{ channels, nextCursor: null }], pageParams: [null] };
-  client.setQueryData(myChannelsKey, data);
-}
-
-function timeline(client: QueryClient): Message[] {
-  return client.getQueryData<InfiniteData<MessagesPage>>(messagesKey)?.pages.flatMap((p) => p.messages) ?? [];
-}
-
-function threadReplies(client: QueryClient): Message[] {
-  return client.getQueryData<InfiniteData<ThreadPage>>(threadKey)?.pages.flatMap((p) => p.replies) ?? [];
-}
-
-function channelRows(client: QueryClient): Channel[] {
-  return client.getQueryData<InfiniteData<ChannelPage<Channel>>>(myChannelsKey)?.pages.flatMap((p) => p.channels) ?? [];
-}
-
-function refetchingInvalidations(spy: jest.SpyInstance) {
-  return spy.mock.calls.filter(([filters]) => filters?.refetchType !== "none");
-}
-
-let nextUuid = 0;
-
-beforeAll(() => {
-  if (typeof globalThis.crypto?.randomUUID !== "function")
-    Object.defineProperty(globalThis, "crypto", {
-      writable: true,
-      configurable: true,
-      value: {
-        ...globalThis.crypto,
-        randomUUID: () => `00000000-0000-4000-8000-${String(++nextUuid).padStart(12, "0")}`,
-      },
-    });
-});
+installRandomUuid();
 
 beforeEach(() => jest.clearAllMocks());
 
@@ -290,6 +153,39 @@ describe("useSendMessage — instant send with in-place reconciliation", () => {
     const keys = mockedPost.mock.calls.map(([, body]) => Reflect.get(Object(body), "clientKey"));
     expect(keys).toEqual(["ck-1", "ck-1"]);
     expect(timeline(client).map((m) => m.id)).toEqual([501]);
+  });
+});
+
+describe("useSendMessage — attachments and sidebar ordering", () => {
+  it("shows the attachments in the optimistic copy under temporary ids", async () => {
+    const { useSendMessage } = await import("@/hooks/api/chat-core-mutations-a");
+    const client = freshClient();
+    seedTimeline(client, []);
+    mockedPost.mockReturnValue(deferred<Record<string, unknown>>().promise);
+    const { result } = renderHook(() => useSendMessage(), { wrapper: wrapperFor(client) });
+    const file = { fileName: "a.png", fileUrl: "u", fileKey: "k", fileSize: 3, mimeType: "image/png" };
+    act(() => {
+      result.current.mutate({ channelId: CHANNEL_ID, content: "pic", clientKey: "ck-a", attachments: [file] });
+    });
+    await waitFor(() => expect(timeline(client)).toHaveLength(1));
+    const [attachment] = timeline(client)[0].attachments;
+    expect(attachment).toEqual(expect.objectContaining(file));
+    expect(attachment.id).toBeLessThan(0);
+  });
+
+  it("cancels an in-flight sidebar fetch before moving the row, so the fetch cannot overwrite the patch", async () => {
+    const { useSendMessage } = await import("@/hooks/api/chat-core-mutations-a");
+    const client = freshClient();
+    seedTimeline(client, []);
+    seedChannels(client, [channelRow()]);
+    const cancel = jest.spyOn(client, "cancelQueries");
+    mockedPost.mockReturnValue(deferred<Record<string, unknown>>().promise);
+    const { result } = renderHook(() => useSendMessage(), { wrapper: wrapperFor(client) });
+    act(() => {
+      result.current.mutate({ channelId: CHANNEL_ID, content: "x", clientKey: "ck-c" });
+    });
+    await waitFor(() => expect(channelRows(client)[0].lastMessage?.content).toBe("x"));
+    expect(cancel).toHaveBeenCalledWith({ queryKey: myChannelsKey, exact: true });
   });
 });
 
@@ -417,6 +313,27 @@ describe("useToggleReaction — optimistic toggle", () => {
     expect(timeline(client)[0].reactions).toEqual({});
   });
 
+  it("sends a second toggle on the same emoji only after the first has been answered", async () => {
+    const { useToggleReaction } = await import("@/hooks/api/chat-core-mutations-a");
+    const client = freshClient();
+    seedTimeline(client, [message()]);
+    const first = deferred<{ reactions: Record<string, string[]> }>();
+    mockedPost.mockReturnValue(first.promise);
+    mockedDelete.mockResolvedValue({ reactions: {} });
+    const { result } = renderHook(() => useToggleReaction(CHANNEL_ID), { wrapper: wrapperFor(client) });
+    act(() => {
+      result.current.mutate({ messageId: 1, emoji: "👍" });
+    });
+    await waitFor(() => expect(mockedPost).toHaveBeenCalledTimes(1));
+    act(() => {
+      result.current.mutate({ messageId: 1, emoji: "👍" });
+    });
+    await waitFor(() => expect(timeline(client)[0].reactions).toEqual({}));
+    expect(mockedDelete).not.toHaveBeenCalled();
+    await act(async () => first.resolve({ reactions: { "👍": ["user-1"] } }));
+    await waitFor(() => expect(mockedDelete).toHaveBeenCalledTimes(1));
+  });
+
   it("rolls the reaction back when the server refuses", async () => {
     const { useToggleReaction } = await import("@/hooks/api/chat-core-mutations-a");
     const client = freshClient();
@@ -430,155 +347,3 @@ describe("useToggleReaction — optimistic toggle", () => {
   });
 });
 
-describe("useMarkChannelRead — optimistic read state", () => {
-  it("zeroes the row, subtracts it from the total and moves lastReadAt forward before the server answers", async () => {
-    const { useMarkChannelRead } = await import("@/hooks/api/chat-core-mutations-a");
-    const client = freshClient();
-    seedTimeline(client, [message({ id: 1, createdAt: "2026-09-30T10:00:00.000Z" })]);
-    seedChannels(client, [channelRow({ unreadCount: 3 })]);
-    client.setQueryData(unreadKey, { total: 5 });
-    client.setQueryData(detailKey, detail());
-    const pending = deferred<{ ok: true }>();
-    mockedPost.mockReturnValue(pending.promise);
-    const invalidate = jest.spyOn(client, "invalidateQueries");
-    const { result } = renderHook(() => useMarkChannelRead(), { wrapper: wrapperFor(client) });
-    act(() => {
-      result.current.mutate({ channelId: CHANNEL_ID });
-    });
-    await waitFor(() => expect(channelRows(client)[0].unreadCount).toBe(0));
-    expect(client.getQueryData(unreadKey)).toEqual({ total: 2 });
-    expect(client.getQueryData<ChatChannelDetailWire>(detailKey)?.members[0].lastReadAt).toBe(
-      "2026-09-30T10:00:00.000Z",
-    );
-    await act(async () => pending.resolve({ ok: true }));
-    await waitFor(() => expect(result.current.isSuccess).toBe(true));
-    expect(refetchingInvalidations(invalidate)).toEqual([]);
-  });
-
-  it("never moves lastReadAt backwards when the visible window is older than the read marker", async () => {
-    const { useMarkChannelRead } = await import("@/hooks/api/chat-core-mutations-a");
-    const client = freshClient();
-    seedTimeline(client, [message({ createdAt: "2026-09-29T10:00:00.000Z" })]);
-    client.setQueryData(detailKey, detail());
-    mockedPost.mockResolvedValue({ ok: true });
-    const { result } = renderHook(() => useMarkChannelRead(), { wrapper: wrapperFor(client) });
-    await act(async () => {
-      await result.current.mutateAsync({ channelId: CHANNEL_ID });
-    });
-    expect(client.getQueryData<ChatChannelDetailWire>(detailKey)?.members[0].lastReadAt).toBe(
-      "2026-09-30T09:00:00.000Z",
-    );
-  });
-
-  it("restores the unread badge when the mark fails", async () => {
-    const { useMarkChannelRead } = await import("@/hooks/api/chat-core-mutations-a");
-    const client = freshClient();
-    seedChannels(client, [channelRow({ unreadCount: 3 })]);
-    client.setQueryData(unreadKey, { total: 5 });
-    mockedPost.mockRejectedValue(new ApiError("Forbidden", 403));
-    const { result } = renderHook(() => useMarkChannelRead(), { wrapper: wrapperFor(client) });
-    await act(async () => {
-      await result.current.mutateAsync({ channelId: CHANNEL_ID }).catch(() => undefined);
-    });
-    expect(channelRows(client)[0].unreadCount).toBe(3);
-    expect(client.getQueryData(unreadKey)).toEqual({ total: 5 });
-  });
-});
-
-describe("useSendThreadReply — instant thread reply", () => {
-  it("shows the reply at once and swaps in the server row without refetching the thread", async () => {
-    const { useSendThreadReply } = await import("@/hooks/api/chat-search");
-    const client = freshClient();
-    client.setQueryData<InfiniteData<ThreadPage>>(threadKey, {
-      pages: [{ parentMessage: message(), replies: [], nextCursor: null }],
-      pageParams: [undefined],
-    });
-    const pending = deferred<Record<string, unknown>>();
-    mockedPost.mockReturnValue(pending.promise);
-    const invalidate = jest.spyOn(client, "invalidateQueries");
-    const { result } = renderHook(() => useSendThreadReply(CHANNEL_ID, 1), { wrapper: wrapperFor(client) });
-    act(() => {
-      result.current.mutate({ content: "re", clientKey: "ck-t" });
-    });
-    await waitFor(() => expect(threadReplies(client)).toHaveLength(1));
-    expect(threadReplies(client)[0].id).toBeLessThan(0);
-    await act(async () =>
-      pending.resolve({
-        id: 900,
-        orgId: "org-1",
-        channelId: CHANNEL_ID,
-        senderMembershipId: 11,
-        content: "re",
-        replyToId: 1,
-        isEdited: false,
-        isDeleted: false,
-        messageType: "text",
-        metadata: null,
-        actionStatus: null,
-        clientKey: "ck-t",
-        channelPosition: 10,
-        createdAt: "2026-09-30T11:00:00.000Z",
-        updatedAt: "2026-09-30T11:00:00.000Z",
-      }),
-    );
-    await waitFor(() => expect(threadReplies(client).map((m) => m.id)).toEqual([900]));
-    expect(refetchingInvalidations(invalidate)).toEqual([]);
-  });
-});
-
-describe("saved messages share the optimistic recipe", () => {
-  it("useSaveMessage lists the message as saved before the server answers and unsave removes it", async () => {
-    const { useSaveMessage, useUnsaveMessage } = await import("@/hooks/api/chat-personal-a");
-    const client = freshClient();
-    seedTimeline(client, [message()]);
-    client.setQueryData<InfiniteData<SavedMessagesPage>>(savedKey, {
-      pages: [{ items: [], nextCursor: undefined }],
-      pageParams: [undefined],
-    });
-    const pending = deferred<{ ok: true }>();
-    mockedPost.mockReturnValue(pending.promise);
-    const save = renderHook(() => useSaveMessage(), { wrapper: wrapperFor(client) });
-    act(() => {
-      save.result.current.mutate(1);
-    });
-    const savedIds = () =>
-      client.getQueryData<InfiniteData<SavedMessagesPage>>(savedKey)?.pages.flatMap((p) => p.items.map((i) => i.messageId));
-    await waitFor(() => expect(savedIds()).toEqual([1]));
-    await act(async () => pending.resolve({ ok: true }));
-    mockedDelete.mockRejectedValue(new ApiError("Forbidden", 403));
-    const unsave = renderHook(() => useUnsaveMessage(), { wrapper: wrapperFor(client) });
-    await act(async () => {
-      await unsave.result.current.mutateAsync(1).catch(() => undefined);
-    });
-    expect(savedIds()).toEqual([1]);
-    mockedDelete.mockResolvedValue({ ok: true });
-    await act(async () => {
-      await unsave.result.current.mutateAsync(1);
-    });
-    expect(savedIds()).toEqual([]);
-  });
-});
-
-describe("pins share the optimistic recipe", () => {
-  it("usePinMessage pins at once and useUnpinMessage restores the pin when the server refuses", async () => {
-    const { usePinMessage, useUnpinMessage } = await import("@/hooks/api/chat-search");
-    const client = freshClient();
-    seedTimeline(client, [message()]);
-    client.setQueryData<PinnedMessage[]>(pinsKey, []);
-    const pending = deferred<{ ok: true }>();
-    mockedPost.mockReturnValue(pending.promise);
-    const pin = renderHook(() => usePinMessage(), { wrapper: wrapperFor(client) });
-    act(() => {
-      pin.result.current.mutate({ channelId: CHANNEL_ID, messageId: 1 });
-    });
-    const pinnedIds = () => client.getQueryData<PinnedMessage[]>(pinsKey)?.map((p) => p.messageId);
-    await waitFor(() => expect(pinnedIds()).toEqual([1]));
-    await act(async () => pending.resolve({ ok: true }));
-    mockedDelete.mockRejectedValue(new ApiError("Forbidden", 403));
-    const unpin = renderHook(() => useUnpinMessage(), { wrapper: wrapperFor(client) });
-    await act(async () => {
-      await unpin.result.current.mutateAsync({ channelId: CHANNEL_ID, messageId: 1 }).catch(() => undefined);
-    });
-    expect(pinnedIds()).toEqual([1]);
-  });
-});

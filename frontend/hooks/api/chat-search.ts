@@ -49,12 +49,12 @@ import {
 } from "@/features/chat/message-page-merge";
 import {
   chatSendRetry,
+  optimisticMessage,
   reconcileSentMessage,
   sendClientKey,
 } from "@/hooks/api/chat-send-policy";
 import type {
   AttachmentInput,
-  Message,
   PinnedMessage,
   ThreadPage,
   SearchMessagesResult,
@@ -215,26 +215,13 @@ export function useSendThreadReply(channelId: number, parentMessageId: number) {
       ),
     onMutate: async (body) => {
       await cancelLoadedQueries(queryClient, [threadKey]);
-      const now = new Date().toISOString();
-      const optimistic: Message = {
-        id: nextChatTempId(),
+      const optimistic = optimisticMessage({
+        ...body,
         channelId,
-        senderId: user?.id ?? null,
-        content: body.content ?? null,
-        replyToId: parentMessageId,
-        isEdited: false,
-        isDeleted: false,
-        messageType: "text",
-        metadata: null,
-        actionStatus: null,
-        reactions: {},
         clientKey: sendClientKey(body),
-        createdAt: now,
-        updatedAt: now,
-        sender: { id: user?.id ?? null, name: user?.name ?? null, image: user?.image ?? null },
-        attachments: [],
-        replyTo: null,
-      };
+        author: user,
+        replyToId: parentMessageId,
+      });
       queryClient.setQueryData<InfiniteData<ThreadPage>>(threadKey, (old) => appendThreadReply(old, optimistic));
       return {
         rollback: () =>

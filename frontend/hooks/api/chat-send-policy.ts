@@ -1,5 +1,6 @@
 import { isApiError } from "@/lib/api-envelope";
-import type { Message } from "@/types/chat";
+import { nextChatTempId } from "@/hooks/api/chat-message-cache";
+import type { AttachmentInput, Message, MessageMetadata } from "@/types/chat";
 import type { ChatSendResponse } from "@/hooks/api/chat-schema";
 
 const SEND_RETRY_LIMIT = 3;
@@ -29,7 +30,7 @@ function isTransientSendError(error: unknown): boolean {
 export const chatSendRetry = {
   retry: (failureCount: number, error: unknown) =>
     failureCount < SEND_RETRY_LIMIT && isTransientSendError(error),
-  retryDelay: (attempt: number) => Math.min(500 * 2 ** attempt, SEND_RETRY_MAX_DELAY_MS),
+  retryDelay: (attempt: number) => Math.min(1_000 * 2 ** attempt, SEND_RETRY_MAX_DELAY_MS),
 };
 
 export function reconcileSentMessage(optimistic: Message, row: ChatSendResponse): Message {
@@ -47,4 +48,54 @@ export function reconcileSentMessage(optimistic: Message, row: ChatSendResponse)
     createdAt: row.createdAt,
     updatedAt: row.updatedAt,
   };
+}
+
+interface OptimisticMessageInput {
+  channelId: number;
+  clientKey: string;
+  author: { id?: string | null; name?: string | null; image?: string | null } | undefined;
+  content?: string;
+  replyToId?: number | null;
+  metadata?: MessageMetadata | null;
+  attachments?: AttachmentInput[];
+  replyTo?: Message | undefined;
+}
+
+export function optimisticMessage(input: OptimisticMessageInput): Message {
+  const now = new Date().toISOString();
+  const authorId = input.author?.id ?? null;
+  const { replyTo } = input;
+  return {
+    id: nextChatTempId(),
+    channelId: input.channelId,
+    senderId: authorId,
+    content: input.content ?? null,
+    replyToId: input.replyToId ?? null,
+    isEdited: false,
+    isDeleted: false,
+    messageType: "text",
+    metadata: input.metadata ?? null,
+    actionStatus: null,
+    reactions: {},
+    clientKey: input.clientKey,
+    createdAt: now,
+    updatedAt: now,
+    sender: { id: authorId, name: input.author?.name ?? null, image: input.author?.image ?? null },
+    attachments: (input.attachments ?? []).map((attachment) => ({ ...attachment, id: nextChatTempId() })),
+    replyTo: replyTo ? { id: replyTo.id, content: replyTo.content, sender: replyTo.sender } : null,
+  };
+}
+
+const reactionQueues = new Map<string, Promise<unknown>>();
+
+export function enqueueReaction<T>(key: string, run: () => Promise<T>): Promise<T> {
+  const previous = reactionQueues.get(key) ?? Promise.resolve();
+  const next = previous.catch(() => undefined).then(run);
+  reactionQueues.set(key, next);
+  void next
+    .catch(() => undefined)
+    .finally(() => {
+      if (reactionQueues.get(key) === next) reactionQueues.delete(key);
+    });
+  return next;
 }

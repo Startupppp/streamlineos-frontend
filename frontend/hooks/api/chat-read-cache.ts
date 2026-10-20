@@ -7,7 +7,8 @@ import {
   patchChannelRow,
 } from "@/hooks/api/chat-channel-cache";
 import { runRollbacks, type ChatCacheRollback } from "@/hooks/api/chat-message-cache";
-import type { Channel, MessagesPage } from "@/types/chat";
+import type { ChatChannelDetailWire } from "@/hooks/api/chat-extra-schema";
+import type { Channel, Message, MessagesPage } from "@/types/chat";
 
 const UNREAD_TOTAL_CAP = 100;
 
@@ -97,6 +98,40 @@ export function applyOptimisticRead(
       })),
     );
   return () => runRollbacks(rollbacks);
+}
+
+export function reconcileUnreadAfterRead(
+  queryClient: QueryClient,
+  rowWasLoaded: boolean,
+): void {
+  if (rowWasLoaded) return;
+  void queryClient.invalidateQueries({
+    queryKey: collaborationQueryKeys.chat.unreadTotal(),
+    exact: true,
+  });
+}
+
+export function applyDeletedUnread(
+  queryClient: QueryClient,
+  deleted: Message | undefined,
+  userId: string | undefined,
+): void {
+  if (!deleted || deleted.id < 0 || deleted.isDeleted || !userId || deleted.senderId === userId) return;
+  const channelId = deleted.channelId;
+  const row = findChannelRow(queryClient, channelId);
+  if (!row || row.unreadCount === 0) return;
+  const own = queryClient
+    .getQueryData<ChatChannelDetailWire>(collaborationQueryKeys.chat.channel(channelId))
+    ?.members.find((member) => member.userId === userId);
+  if (!own) return;
+  const unread =
+    own.lastReadAt === null || Date.parse(deleted.createdAt) > Date.parse(own.lastReadAt);
+  if (!unread) return;
+  patchChannelRow(queryClient, channelId, (channel) => ({
+    ...channel,
+    unreadCount: Math.max(0, channel.unreadCount - 1),
+  }));
+  patchUnreadTotal(queryClient, (total) => total - 1);
 }
 
 export function applyOptimisticUnread(

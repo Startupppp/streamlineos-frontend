@@ -10,8 +10,8 @@ import { collaborationQueryKeys } from "@/lib/query-keys/collaboration";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import {
   cancelChatMessageQueries,
+  cancelLoadedQueries,
   findCachedMessage,
-  nextChatTempId,
   patchChatMessage,
   type ChatCacheRollback,
 } from "@/hooks/api/chat-message-cache";
@@ -20,16 +20,21 @@ import {
   removeOptimisticMessage,
   replaceOptimisticMessage,
 } from "@/features/chat/message-page-merge";
-import { cancelChatChannelQueries, moveChannelRowToTop } from "@/hooks/api/chat-channel-cache";
-import { applyOptimisticRead } from "@/lib/chat-read-state";
+import {
+  cancelChatChannelQueries,
+  findChannelRow,
+  moveChannelRowToTop,
+} from "@/hooks/api/chat-channel-cache";
+import { applyOptimisticRead, reconcileUnreadAfterRead } from "@/hooks/api/chat-read-cache";
 import {
   chatSendRetry,
+  enqueueReaction,
+  optimisticMessage,
   reconcileSentMessage,
   sendClientKey,
 } from "@/hooks/api/chat-send-policy";
 import type {
   EditMessageInput,
-  Message,
   MessagesPage,
   SendMessageInput,
 } from "@/types/chat";
@@ -49,6 +54,10 @@ const chatReactionsContract = lazyContract(() =>
 
 interface RollbackContext {
   rollback: ChatCacheRollback;
+}
+
+interface ReadContext extends RollbackContext {
+  rowWasLoaded: boolean;
 }
 
 export function useSendMessage() {
@@ -72,38 +81,30 @@ export function useSendMessage() {
       onMutate: async (variables) => {
         const clientKey = sendClientKey(variables);
         const { channelId } = variables;
-        await cancelChatMessageQueries(queryClient, channelId);
-        const now = new Date().toISOString();
-        const parent =
-          variables.replyToId !== undefined
-            ? findCachedMessage(queryClient, channelId, variables.replyToId)
-            : undefined;
-        const optimistic: Message = {
-          id: nextChatTempId(),
-          channelId,
-          senderId: user?.id ?? null,
-          content: variables.content ?? null,
-          replyToId: variables.replyToId ?? null,
-          isEdited: false,
-          isDeleted: false,
-          messageType: "text",
-          metadata: variables.metadata ?? null,
-          actionStatus: null,
-          reactions: {},
+        await Promise.all([
+          cancelChatMessageQueries(queryClient, channelId),
+          cancelLoadedQueries(queryClient, [collaborationQueryKeys.chat.myChannels()]),
+        ]);
+        const optimistic = optimisticMessage({
+          ...variables,
           clientKey,
-          createdAt: now,
-          updatedAt: now,
-          sender: { id: user?.id ?? null, name: user?.name ?? null, image: user?.image ?? null },
-          attachments: [],
-          replyTo: parent ? { id: parent.id, content: parent.content, sender: parent.sender } : null,
-        };
+          author: user,
+          replyTo:
+            variables.replyToId !== undefined
+              ? findCachedMessage(queryClient, channelId, variables.replyToId)
+              : undefined,
+        });
         queryClient.setQueryData<InfiniteData<MessagesPage>>(
           collaborationQueryKeys.chat.messages(channelId),
           (old) => appendTimelineMessage(old, optimistic),
         );
         const undoRow = moveChannelRowToTop(queryClient, channelId, (channel) => ({
           ...channel,
-          lastMessage: { content: optimistic.content, senderName: user?.name ?? null, createdAt: now },
+          lastMessage: {
+            content: optimistic.content,
+            senderName: user?.name ?? null,
+            createdAt: optimistic.createdAt,
+          },
         }));
         return { rollback: undoRow };
       },
@@ -209,7 +210,7 @@ export function useMarkChannelRead() {
   const queryClient = useQueryClient();
   const { data: session } = useSession();
   const userId = session?.user?.id;
-  return useAuthorizedMutation<{ ok: boolean }, Error, { channelId: number }, RollbackContext>(
+  return useAuthorizedMutation<{ ok: boolean }, Error, { channelId: number }, ReadContext>(
     "chat:messages:read",
     {
       mutationKey: ["chat", "channels", "mark-read"],
@@ -217,9 +218,15 @@ export function useMarkChannelRead() {
         apiClient.post<{ ok: boolean }>(`/chat/channels/${channelId}/read`, undefined, undefined, chatOkContract),
       onMutate: async ({ channelId }) => {
         await cancelChatChannelQueries(queryClient, channelId);
-        return { rollback: applyOptimisticRead(queryClient, channelId, userId) };
+        return {
+          rowWasLoaded: findChannelRow(queryClient, channelId) !== undefined,
+          rollback: applyOptimisticRead(queryClient, channelId, userId),
+        };
       },
       onError: (_error, _variables, context) => context?.rollback(),
+      onSuccess: (_data, _variables, context) => {
+        reconcileUnreadAfterRead(queryClient, context?.rowWasLoaded ?? false);
+      },
     },
   );
 }
@@ -227,7 +234,6 @@ export function useMarkChannelRead() {
 type ReactionsResponse = { reactions: Record<string, string[]> };
 
 const reactionRemovals = new WeakMap<object, boolean>();
-
 export function useToggleReaction(channelId: number) {
   const queryClient = useQueryClient();
   const { data: session } = useSession();
@@ -242,19 +248,21 @@ export function useToggleReaction(channelId: number) {
       mutationFn: (variables) => {
         const { messageId, emoji } = variables;
         const remove = reactionRemovals.get(variables) ?? viewerReacted(messageId, emoji);
-        return remove
-          ? apiClient.delete<ReactionsResponse>(
-              `/chat/channels/${channelId}/messages/${messageId}/reactions/${encodeURIComponent(emoji)}`,
-              undefined,
-              undefined,
-              chatReactionsContract,
-            )
-          : apiClient.post<ReactionsResponse>(
-              `/chat/channels/${channelId}/messages/${messageId}/reactions`,
-              { emoji },
-              undefined,
-              chatReactionsContract,
-            );
+        return enqueueReaction(`${channelId}:${messageId}:${emoji}`, () =>
+          remove
+            ? apiClient.delete<ReactionsResponse>(
+                `/chat/channels/${channelId}/messages/${messageId}/reactions/${encodeURIComponent(emoji)}`,
+                undefined,
+                undefined,
+                chatReactionsContract,
+              )
+            : apiClient.post<ReactionsResponse>(
+                `/chat/channels/${channelId}/messages/${messageId}/reactions`,
+                { emoji },
+                undefined,
+                chatReactionsContract,
+              ),
+        );
       },
       onMutate: async (variables) => {
         const { messageId, emoji } = variables;

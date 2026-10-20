@@ -7,7 +7,7 @@ import {
 export const messagePayloadSchema = z.object({
   id: z.number(),
   channelId: z.number(),
-  senderId: z.string(),
+  senderId: z.string().nullable(),
   senderName: z.string().nullable(),
   senderImage: z.string().nullable().optional(),
   content: z.string().nullable(),

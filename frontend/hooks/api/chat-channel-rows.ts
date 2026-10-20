@@ -22,7 +22,7 @@ import {
   patchPublicChannel,
   removeChannelRow,
 } from "@/hooks/api/chat-channel-cache";
-import { patchUnreadTotal } from "@/lib/chat-read-state";
+import { patchUnreadTotal } from "@/hooks/api/chat-read-cache";
 
 type ChannelMemberPreview = Channel["members"][number];
 type ChannelDetailMember = ChatChannelDetailWire["members"][number];
