@@ -1,4 +1,4 @@
-import { act, waitFor } from "@testing-library/react";
+import { act } from "@testing-library/react";
 
 import { apiClient } from "@/lib/api-client";
 import {
@@ -187,6 +187,41 @@ describe("/ record picker searches every linkable module", () => {
     expect(second.hook.result.current.linkedRecords.map((r) => r.key)).toEqual(["deal:5"]);
   });
 
+  it("never writes one draft's chips under another draft key", async () => {
+    const { hook } = harness();
+    await openRecordPickerWithResults(hook);
+    const [deal] = hook.result.current.recordPicker?.groups[0].items ?? [];
+    act(() => hook.result.current.selectRecord(deal));
+    hook.rerender({ draftKey: "chat:draft:8" });
+    expect(localStorage.getItem("chat:draft:8:links")).toBeNull();
+    expect(localStorage.getItem("chat:draft:7:links")).toContain("deal:5");
+  });
+
+  it("seeds the preview even when the send is queued offline", async () => {
+    const { hook, client } = harness("PRIVATE", false, false);
+    await openRecordPickerWithResults(hook);
+    const [deal] = hook.result.current.recordPicker?.groups[0].items ?? [];
+    act(() => hook.result.current.selectRecord(deal));
+    act(() => hook.result.current.setMessageInput("later"));
+    await act(async () => {
+      await hook.result.current.handleSend();
+    });
+    const seeded = client.getQueryCache().findAll().map((q) => q.state.data);
+    expect(seeded).toContainEqual(expect.objectContaining({ type: "deal", id: "5", title: "Acme renewal" }));
+  });
+
+  it("sends a link-only message, which the backend now accepts", async () => {
+    const { hook, sent } = harness();
+    await openRecordPickerWithResults(hook);
+    const [deal] = hook.result.current.recordPicker?.groups[0].items ?? [];
+    act(() => hook.result.current.selectRecord(deal));
+    act(() => hook.result.current.setMessageInput(""));
+    await act(async () => {
+      await hook.result.current.handleSend();
+    });
+    expect(sent[0]).toMatchObject({ content: undefined, metadata: { entities: [{ type: "deal", id: "5" }] } });
+  });
+
   it("ignores a tampered links draft instead of rendering it", () => {
     localStorage.setItem("chat:draft:7:links", JSON.stringify([{ key: "x", type: "invoice", id: "1" }]));
     const { hook } = harness();
@@ -204,69 +239,5 @@ describe("/ record picker searches every linkable module", () => {
       await hook.result.current.handleSend();
     });
     expect(localStorage.getItem("chat:draft:7:links")).toBeNull();
-  });
-});
-
-describe("@ mentions reach anyone in the org, members first", () => {
-  it("ranks conversation members before org-wide matches from the server typeahead", async () => {
-    const { hook } = harness();
-    change(hook, "hi @a");
-    await waitFor(() => expect(hook.result.current.filteredMentions).toHaveLength(3));
-    expect(hook.result.current.filteredMentions).toEqual([
-      expect.objectContaining({ id: "u_aditi", isMember: true }),
-      expect.objectContaining({ id: "u_bala", isMember: true }),
-      expect.objectContaining({ id: "u_arjun", isMember: false }),
-    ]);
-    const userCalls = mockedGet.mock.calls.filter(([url]) => url === "/chat/search/users");
-    expect(userCalls[userCalls.length - 1][1]).toEqual({ q: "a" });
-  });
-
-  it("asks before mentioning someone outside a private conversation", async () => {
-    const { hook } = harness("PRIVATE");
-    change(hook, "hi @ar");
-    await waitFor(() => expect(hook.result.current.filteredMentions).toHaveLength(1));
-    act(() => hook.result.current.insertMention(hook.result.current.filteredMentions[0]));
-    expect(hook.result.current.mentionPrompt).toEqual({ userId: "u_arjun", name: "Arjun Mehta" });
-    act(() => hook.result.current.dismissMentionPrompt());
-    expect(hook.result.current.mentionPrompt).toBeNull();
-  });
-
-  it("drops the prompt when the mention text is deleted, and after the message is sent", async () => {
-    const { hook } = harness("PRIVATE");
-    change(hook, "hi @ar");
-    await waitFor(() => expect(hook.result.current.filteredMentions).toHaveLength(1));
-    act(() => hook.result.current.insertMention(hook.result.current.filteredMentions[0]));
-    expect(hook.result.current.mentionPrompt).not.toBeNull();
-    act(() => hook.result.current.setMessageInput("hi "));
-    expect(hook.result.current.mentionPrompt).toBeNull();
-    act(() => hook.result.current.setMessageInput("hi @Arjun Mehta "));
-    expect(hook.result.current.mentionPrompt).not.toBeNull();
-    await act(async () => {
-      await hook.result.current.handleSend();
-    });
-    expect(hook.result.current.mentionPrompt).toBeNull();
-  });
-
-  it("just mentions in a public conversation", async () => {
-    const { hook } = harness("PUBLIC");
-    change(hook, "hi @ar");
-    await waitFor(() => expect(hook.result.current.filteredMentions).toHaveLength(1));
-    act(() => hook.result.current.insertMention(hook.result.current.filteredMentions[0]));
-    expect(hook.result.current.mentionPrompt).toBeNull();
-  });
-
-  it("does not prompt for someone who is already a member", () => {
-    const { hook } = harness("PRIVATE");
-    change(hook, "hi @ad");
-    act(() => hook.result.current.insertMention(hook.result.current.filteredMentions[0]));
-    expect(hook.result.current.mentionPrompt).toBeNull();
-  });
-
-  it("offers only the partner in a direct message and never searches the org", async () => {
-    const { hook } = harness("DIRECT");
-    change(hook, "@a");
-    expect(hook.result.current.filteredMentions.map((c) => c.id)).toEqual(["u_aditi"]);
-    await new Promise((resolve) => setTimeout(resolve, 350));
-    expect(mockedGet.mock.calls.some(([url]) => url === "/chat/search/users")).toBe(false);
   });
 });

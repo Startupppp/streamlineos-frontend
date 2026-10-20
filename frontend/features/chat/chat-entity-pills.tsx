@@ -16,11 +16,8 @@ import type { EntityRef } from "@/types/chat";
 import { isApiError } from "@/lib/api-envelope";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useEntityAction } from "./entity-actions-context";
-import {
-  useLinkedRecordPreview,
-  useSubmitEntityAction,
-  type EntityReferenceInput,
-} from "@/hooks/api/chat-entities";
+import { useSubmitEntityAction, type EntityReferenceInput } from "@/hooks/api/chat-entities";
+import { useLinkedRecordPreview, useResolvedReferenceCard } from "@/hooks/api/chat-reference-cards";
 import { getStatusBadgeClass } from "@/components/shared/ticket-status-badge";
 import { useSourceOverride } from "@/hooks/common/use-source-override";
 import { LINKED_RECORD_META } from "./linked-record-meta";
@@ -129,7 +126,8 @@ interface LinkedRecordPillProps {
 export function LinkedRecordPill({ entity, channelId }: LinkedRecordPillProps) {
   const router = useRouter();
   const preview = useLinkedRecordPreview(entity);
-  const card = entity.card ?? preview;
+  const resolved = useResolvedReferenceCard(channelId, entity, entity.card === undefined);
+  const card = entity.card !== undefined ? entity.card : resolved !== undefined ? resolved : preview;
   const meta = LINKED_RECORD_META[entity.type];
   const href = card?.href ?? null;
   const reference = useMemo(() => ({ type: entity.type, id: entity.id }), [entity.type, entity.id]);
@@ -138,7 +136,7 @@ export function LinkedRecordPill({ entity, channelId }: LinkedRecordPillProps) {
     if (href) router.push(href);
   }, [router, href]);
 
-  if (entity.card === null)
+  if (card === null)
     return (
       <span className={cn(PILL_CLASS, "bg-muted/30 text-muted-foreground")}>
         <Lock className="h-3 w-3 shrink-0" aria-hidden />

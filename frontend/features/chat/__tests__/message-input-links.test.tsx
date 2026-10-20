@@ -105,6 +105,7 @@ describe("/ record picker", () => {
       "aria-activedescendant",
       options[1].id,
     );
+    expect(screen.getByRole("textbox", { name: "Message launch" })).toHaveAttribute("aria-controls", listbox.id);
   });
 
   it("inserts the clicked record", async () => {
@@ -124,6 +125,7 @@ describe("/ record picker", () => {
     expect(screen.getByText(/No records match/)).toBeInTheDocument();
     expect(screen.getByText(/Only records you can open are shown/)).toBeInTheDocument();
     expect(screen.queryByRole("listbox")).not.toBeInTheDocument();
+    expect(screen.getByRole("textbox", { name: "Message launch" })).not.toHaveAttribute("aria-controls");
   });
 
   it("offers a retry when the search fails", async () => {

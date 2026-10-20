@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type SetStateAction } from "react";
 import type React from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -17,7 +17,7 @@ import {
 import type { Message, MessageMetadata } from "./chat-types";
 import type { AttachmentInput, EditMessageInput, EntityRef, SendMessageInput } from "@/types/chat";
 import type { ChatChannelDetailWire } from "@/hooks/api/chat-extra-schema";
-import { seedLinkedRecordPreview } from "@/hooks/api/chat-entities";
+import { seedLinkedRecordPreview } from "@/hooks/api/chat-reference-cards";
 import { GLOBAL_SEARCH_MIN_LENGTH, useGlobalSearch } from "@/components/command-palette/hooks/use-global-search";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import { useChatMentions, type MentionCandidate } from "./use-chat-mentions";
@@ -93,7 +93,7 @@ export function useMessageComposer({
   const [pendingPrompt, setMentionPrompt] = useState<PendingMentionPrompt | null>(null);
   const [recordQuery, setRecordQuery] = useState<string | null>(null);
   const [recordIndex, setRecordIndex] = useState(0);
-  const [linkedRecords, setLinkedRecords] = useState<LinkedRecordDraft[]>(() => readDraftLinks(draftKey));
+  const [linkState, setLinkState] = useState(() => ({ draftKey, records: readDraftLinks(draftKey) }));
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const emojiRef = useRef<HTMLDivElement>(null);
@@ -145,11 +145,19 @@ export function useMessageComposer({
     [pendingPrompt, messageInput],
   );
 
+  const linkedRecords = linkState.records;
+  const setLinkedRecords = useCallback((next: SetStateAction<LinkedRecordDraft[]>) => {
+    setLinkState((prev) => {
+      const base = prev.draftKey === draftKey ? prev.records : readDraftLinks(draftKey);
+      return { draftKey, records: typeof next === "function" ? next(base) : next };
+    });
+  }, [draftKey]);
+
   useEffect(() => {
-    const key = linksKeyFor(draftKey);
-    if (linkedRecords.length) localStorage.setItem(key, JSON.stringify(linkedRecords));
+    const key = linksKeyFor(linkState.draftKey);
+    if (linkState.records.length) localStorage.setItem(key, JSON.stringify(linkState.records));
     else localStorage.removeItem(key);
-  }, [draftKey, linkedRecords]);
+  }, [linkState]);
 
   const uploadFiles = useCallback(async (files: File[]) => {
     setUploading(true);
@@ -201,10 +209,10 @@ export function useMessageComposer({
     if (linkedRecords.length >= LINKED_RECORD_LIMIT && !linkedRecords.some((r) => r.key === draft.key)) toast.info(`A message can link up to ${LINKED_RECORD_LIMIT} records.`);
     setLinkedRecords((prev) => (prev.some((r) => r.key === draft.key) || prev.length >= LINKED_RECORD_LIMIT ? prev : [...prev, draft]));
     setTimeout(() => { el?.focus(); el?.setSelectionRange(caret, caret); }, 0);
-  }, [messageInput, linkedRecords, closeRecordPicker]);
+  }, [messageInput, linkedRecords, closeRecordPicker, setLinkedRecords]);
   const removeLinkedRecord = useCallback((key: string) => {
     setLinkedRecords((prev) => prev.filter((r) => r.key !== key));
-  }, []);
+  }, [setLinkedRecords]);
 
   const flushMessageQueue = useCallback(async () => {
     const queued = messageQueue.current;
@@ -222,7 +230,7 @@ export function useMessageComposer({
   }, [channelId, sendMessage]);
 
   const handleSend = useCallback(async () => {
-    const content = messageInput.trim(); if (!content && !pendingAttachments.length) return;
+    const content = messageInput.trim(); if (!content && !pendingAttachments.length && !linkedRecords.length) return;
     const attachments = [...pendingAttachments], records = [...linkedRecords]; const replyToMessage = replyTo; const replyToId = replyTo?.id;
     const entities = records.map(({ type, id }): EntityRef => ({ type, id }));
     const metadata = entities.length ? { entities } : undefined;
@@ -231,8 +239,8 @@ export function useMessageComposer({
     const signature = sendSignature(content, replyToId, attachments, records);
     const clientKey = pendingSendRef.current?.signature === signature ? pendingSendRef.current.clientKey : crypto.randomUUID();
     pendingSendRef.current = { signature, clientKey };
-    if (!isOnline) { messageQueue.current.push({ content, replyToId, attachments: attachments.length ? attachments : undefined, metadata, mentionedUserIds: mentionedUserIds.length ? mentionedUserIds : undefined, clientKey }); pendingSendRef.current = null; toast.info("You're offline — message will be sent when you reconnect"); return; }
     for (const record of records) seedLinkedRecordPreview(queryClient, { type: record.type, id: record.id, title: record.title, subtitle: record.subtitle, status: null, href: record.href });
+    if (!isOnline) { messageQueue.current.push({ content, replyToId, attachments: attachments.length ? attachments : undefined, metadata, mentionedUserIds: mentionedUserIds.length ? mentionedUserIds : undefined, clientKey }); pendingSendRef.current = null; toast.info("You're offline — message will be sent when you reconnect"); return; }
     try {
       await sendMessage.mutateAsync({ channelId, clientKey, content: content || undefined, replyToId, attachments: attachments.length ? attachments : undefined, metadata, mentionedUserIds: mentionedUserIds.length ? mentionedUserIds : undefined });
       pendingSendRef.current = null;
@@ -250,7 +258,7 @@ export function useMessageComposer({
       setMessageInput(content); setPendingAttachments(attachments); setReplyTo(replyToMessage); setLinkedRecords(records); pendingMentionsRef.current = mentions;
       toast.error(getErrorMessage(error));
     }
-  }, [messageInput, pendingAttachments, linkedRecords, replyTo, draftKey, isOnline, sendMessage, channelId, markRead, scrollToBottom, queryClient]);
+  }, [messageInput, pendingAttachments, linkedRecords, replyTo, draftKey, isOnline, sendMessage, channelId, markRead, scrollToBottom, queryClient, setLinkedRecords]);
   const handleEdit = useCallback(async (messageId: number) => { const content = editInput.trim(); if (!content) return; try { await editMessage.mutateAsync({ channelId, messageId, content }); setEditingMessage(null); setEditInput(""); } catch (error) { toast.error(getErrorMessage(error)); } }, [editInput, editMessage, channelId]);
   const handleInputChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const value = e.target.value; setMessageInput(value); e.target.style.height = "auto"; e.target.style.height = `${Math.min(e.target.scrollHeight, 160)}px`;

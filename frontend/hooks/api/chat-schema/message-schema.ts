@@ -35,6 +35,16 @@ const chatEntityRefContract = z.discriminatedUnion("type", [
   }),
 ]);
 
+export const chatResolvedReferencesContract = z.object({
+  references: z.array(
+    z.object({
+      type: z.string(),
+      id: z.string(),
+      card: chatEntityCardContract.nullable(),
+    }),
+  ),
+});
+
 const chatEntityRefsContract = z.array(z.unknown()).transform((entries) =>
   entries.flatMap((entry) => {
     const parsed = chatEntityRefContract.safeParse(entry);

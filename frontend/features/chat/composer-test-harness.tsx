@@ -59,7 +59,7 @@ export const ORG_USERS = [
   { id: "u_arjun", name: "Arjun Mehta", email: "arjun@acme.test", image: null },
 ];
 
-export function harness(type: ChannelType = "PRIVATE", fail = false) {
+export function harness(type: ChannelType = "PRIVATE", fail = false, isOnline = true) {
   const sent: SendMessageInput[] = [];
   const sendMessage = {
     mutateAsync: jest.fn(async (input: SendMessageInput) => {
@@ -73,11 +73,11 @@ export function harness(type: ChannelType = "PRIVATE", fail = false) {
     return <QueryClientProvider client={client}>{children}</QueryClientProvider>;
   }
   const hook = renderHook(
-    () =>
+    ({ draftKey }: { draftKey: string }) =>
       useMessageComposer({
         channelId: 7,
-        draftKey: "chat:draft:7",
-        isOnline: true,
+        draftKey,
+        isOnline,
         sendMessage,
         editMessage: { mutateAsync: jest.fn(async () => ({})) },
         markRead: { mutate: jest.fn() },
@@ -86,7 +86,7 @@ export function harness(type: ChannelType = "PRIVATE", fail = false) {
         channel: channelOf(type),
         currentUserId: "me",
       }),
-    { wrapper: Wrapper },
+    { wrapper: Wrapper, initialProps: { draftKey: "chat:draft:7" } },
   );
   return { hook, sendMessage, sent, client };
 }

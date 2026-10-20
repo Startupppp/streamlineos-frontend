@@ -62,6 +62,10 @@ interface RecordLinkPickerProps {
   className?: string;
 }
 
+export function isRecordListboxShown(picker: RecordPickerState): boolean {
+  return picker.query.trim().length >= GLOBAL_SEARCH_MIN_LENGTH && !picker.isError && picker.groups.length > 0;
+}
+
 export function RecordLinkPicker({ picker, listboxId, onSelect, className }: RecordLinkPickerProps) {
   const query = picker.query.trim();
   const hasResults = picker.groups.length > 0;
@@ -166,19 +170,15 @@ const LinkedRecordChip = memo(function LinkedRecordChip({ record, onRemove }: Li
 interface ChatLinkedRecordsRowProps {
   records: LinkedRecordDraft[];
   onRemove: (key: string) => void;
-  needsText: boolean;
 }
 
-export function ChatLinkedRecordsRow({ records, onRemove, needsText }: ChatLinkedRecordsRowProps) {
+export function ChatLinkedRecordsRow({ records, onRemove }: ChatLinkedRecordsRowProps) {
   if (records.length === 0) return null;
   return (
     <div className="mb-2 flex flex-wrap items-center gap-1.5">
       {records.map((record) => (
         <LinkedRecordChip key={record.key} record={record} onRemove={onRemove} />
       ))}
-      {needsText && (
-        <span className="text-dense text-muted-foreground">Add a message to send these links.</span>
-      )}
     </div>
   );
 }

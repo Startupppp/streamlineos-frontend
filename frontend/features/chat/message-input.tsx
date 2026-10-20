@@ -18,7 +18,7 @@ import {
   ChatMentionSuggestionsOverlay,
   ChatReplyPreview,
 } from "./message-input-items";
-import { ChatLinkedRecordsRow, RecordLinkPicker, recordOptionId } from "./record-link-picker";
+import { ChatLinkedRecordsRow, RecordLinkPicker, isRecordListboxShown, recordOptionId } from "./record-link-picker";
 
 const EmojiGrid = dynamic(
   () => import("./emoji-grid").then((m) => ({ default: m.EmojiGrid })),
@@ -243,7 +243,6 @@ export function MessageInput({
           <ChatLinkedRecordsRow
             records={linkedRecords}
             onRemove={onRemoveLinkedRecord}
-            needsText={!messageInput.trim() && pendingAttachments.length === 0}
           />
 
           <AnimatePresence>
@@ -291,7 +290,7 @@ export function MessageInput({
               onKeyDown={handleComposerKeyDown}
               onPaste={handlePaste}
               aria-label={`Message ${displayName}`}
-              aria-controls={recordPicker ? recordListboxId : undefined}
+              aria-controls={recordPicker && isRecordListboxShown(recordPicker) ? recordListboxId : undefined}
               aria-activedescendant={
                 recordPicker && recordPicker.activeIndex >= 0
                   ? recordOptionId(recordListboxId, recordPicker.activeIndex)
@@ -351,13 +350,13 @@ export function MessageInput({
                   type="button"
                   onClick={onSend}
                   disabled={
-                    (!messageInput.trim() && pendingAttachments.length === 0) ||
+                    (!messageInput.trim() && pendingAttachments.length === 0 && linkedRecords.length === 0) ||
                     sendMessage.isPending
                   }
                   aria-label="Send"
                   className={cn(
                     "h-9 w-9 rounded-xl flex items-center justify-center transition-all",
-                    messageInput.trim() || pendingAttachments.length > 0
+                    messageInput.trim() || pendingAttachments.length > 0 || linkedRecords.length > 0
                       ? "bg-gradient-to-r from-gradient-info-from to-gradient-gold-to text-white shadow-md hover:shadow-lg hover:scale-105"
                       : "bg-muted/50 text-muted-foreground cursor-not-allowed",
                   )}

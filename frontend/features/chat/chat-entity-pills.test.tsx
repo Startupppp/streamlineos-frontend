@@ -3,7 +3,7 @@ import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { LinkedRecordPill } from "./chat-entity-pills";
-import { seedLinkedRecordPreview } from "@/hooks/api/chat-entities";
+import { seedLinkedRecordPreview } from "@/hooks/api/chat-reference-cards";
 import type { EntityRef } from "@/types/chat";
 
 const push = jest.fn();
@@ -13,6 +13,12 @@ const mutateAsync = jest.fn();
 jest.mock("@/hooks/api/chat-entities", () => ({
   ...jest.requireActual("@/hooks/api/chat-entities"),
   useSubmitEntityAction: () => ({ mutateAsync }),
+}));
+
+jest.mock("@/hooks/api/access", () => ({ useCan: () => true }));
+
+jest.mock("@/lib/api-client", () => ({
+  apiClient: { post: jest.fn(() => new Promise(() => undefined)), get: jest.fn() },
 }));
 
 const availableActions = new Map<string, string[]>();
