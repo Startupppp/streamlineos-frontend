@@ -239,7 +239,7 @@ Deferred behind adoption evidence:
 - [x] **CHAT-006** — Link provider and internal calendar lifecycle; move fan-out after commit.
 - [x] **CHAT-007** — Extend backend/OpenAPI/frontend contracts additively and regenerate parity artifacts.
 - [x] **CHAT-008** — Validate Huddle invites/heartbeats/lifecycle/entitlements/audits server-side.
-- [ ] **CHAT-009** — Close send/offline/realtime/read-marker/unread reliability gaps.
+- [x] **CHAT-009** — Close send/offline/realtime/read-marker/unread reliability gaps.
 - [x] **CHAT-010** — Implement the complete URL/history/mobile-Back contract.
 - [ ] **CHAT-011** — Add bounded, authorized exact-message context loading.
 - [x] **CHAT-012** — Unify search; join public channels and open/create DMs correctly.
