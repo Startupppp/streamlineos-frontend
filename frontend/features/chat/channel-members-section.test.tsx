@@ -4,15 +4,21 @@
  * put its whole headcount into a 320px column. The two groups are windowed
  * independently, and each row still carries its position in its own group.
  */
-import { render, screen, within } from "@testing-library/react";
+import { render, screen, within, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { ChannelMembersSection } from "./channel-members-section";
 import { PANEL_RENDER_PAGE_SIZE } from "./panel-render-window";
 import type { ChannelMember } from "@/types/chat";
 
+const mockRemoveMember = jest.fn();
+
 jest.mock("@/hooks/api/chat-core-mutations-b", () => ({
-  useRemoveChannelMember: () => ({ mutateAsync: jest.fn() }),
+  useRemoveChannelMember: () => ({ mutateAsync: mockRemoveMember, isPending: false }),
   useUpdateChannelMemberRole: () => ({ mutate: jest.fn(), isPending: false }),
+}));
+
+jest.mock("sonner", () => ({
+  toast: { success: jest.fn(), error: jest.fn() },
 }));
 
 jest.mock("@/hooks/api/chat-huddles", () => ({
@@ -20,9 +26,28 @@ jest.mock("@/hooks/api/chat-huddles", () => ({
 }));
 
 jest.mock("./channel-member-row", () => ({
-  ChannelMemberRow: ({ member }: { member: { user: { name: string } | null } }) => (
-    <span>{member.user?.name}</span>
-  ),
+  ChannelMemberRow: ({
+    member,
+    currentUserId,
+    onRemove,
+  }: {
+    member: { user: { id: string; name: string } | null };
+    currentUserId: string;
+    onRemove: (userId: string, userName: string | null | undefined, isYou: boolean) => void;
+  }) => {
+    const isYou = member.user?.id === currentUserId;
+    function handleRemove() {
+      onRemove(member.user?.id ?? "", member.user?.name, isYou);
+    }
+    return (
+      <span>
+        {member.user?.name}
+        <button type="button" onClick={handleRemove}>
+          {isYou ? "Leave channel" : `Remove ${member.user?.name ?? ""}`}
+        </button>
+      </span>
+    );
+  },
 }));
 
 jest.mock("./add-channel-members-dialog", () => ({
@@ -109,5 +134,54 @@ describe("ChannelMembersSection — no member is lost behind the bound", () => {
     const rows = screen.getAllByRole("listitem");
     expect(rows[0]).toHaveAttribute("aria-posinset", "1");
     expect(rows[0]).toHaveAttribute("aria-setsize", "500");
+  });
+});
+
+describe("ChannelMembersSection — removing and leaving are confirmed", () => {
+  beforeEach(() => {
+    mockRemoveMember.mockReset();
+    mockRemoveMember.mockResolvedValue(undefined);
+  });
+
+  it("asks before removing another member and only removes after confirm", async () => {
+    const user = userEvent.setup();
+    renderSection(3);
+    await user.click(screen.getByRole("button", { name: "Remove Member 2" }));
+    const dialog = await screen.findByRole("alertdialog");
+    expect(within(dialog).getByText("Remove Member 2?")).toBeInTheDocument();
+    expect(mockRemoveMember).not.toHaveBeenCalled();
+    await user.click(within(dialog).getByRole("button", { name: "Remove member" }));
+    await waitFor(() =>
+      expect(mockRemoveMember).toHaveBeenCalledWith({ channelId: 1, userId: "user-2" }),
+    );
+  });
+
+  it("asks before leaving the channel yourself", async () => {
+    const user = userEvent.setup();
+    renderSection(3);
+    await user.click(screen.getByRole("button", { name: "Leave channel" }));
+    const dialog = await screen.findByRole("alertdialog");
+    await user.click(within(dialog).getByRole("button", { name: "Leave channel" }));
+    await waitFor(() =>
+      expect(mockRemoveMember).toHaveBeenCalledWith({ channelId: 1, userId: "user-1" }),
+    );
+  });
+
+  it("cancelling keeps the member", async () => {
+    const user = userEvent.setup();
+    renderSection(3);
+    await user.click(screen.getByRole("button", { name: "Remove Member 3" }));
+    const dialog = await screen.findByRole("alertdialog");
+    await user.click(within(dialog).getByRole("button", { name: "Cancel" }));
+    expect(mockRemoveMember).not.toHaveBeenCalled();
+  });
+
+  it("never falls back to the browser's window.confirm", async () => {
+    const user = userEvent.setup();
+    const confirmSpy = jest.spyOn(window, "confirm");
+    renderSection(3);
+    await user.click(screen.getByRole("button", { name: "Remove Member 2" }));
+    expect(confirmSpy).not.toHaveBeenCalled();
+    confirmSpy.mockRestore();
   });
 });

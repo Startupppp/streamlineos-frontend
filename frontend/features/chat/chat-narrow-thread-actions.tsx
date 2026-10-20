@@ -1,27 +1,12 @@
 "use client";
 
-import { EllipsisIcon, MicIcon } from "@animateicons/react/lucide";
+import type { RefObject } from "react";
+import { InfoIcon, MicIcon } from "@animateicons/react/lucide";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 import type { AiAction } from "@/components/ai";
-import dynamic from "next/dynamic";
-import type { RefObject } from "react";
-import { ChatTriggerFallback } from "./chat-lazy-fallbacks";
 import type { Huddle } from "@/types/chat";
-
-const AiActionsMenu = dynamic(
-  () => import("@/components/ai").then((m) => ({ default: m.AiActionsMenu })),
-  {
-    ssr: false,
-    loading: () => <ChatTriggerFallback label="Loading AI actions" />,
-  },
-);
+import { ConversationOverflowMenu } from "./message-panel-actions";
 
 interface ChatNarrowThreadActionsProps {
   activeHuddle: Huddle | null | undefined;
@@ -31,12 +16,13 @@ interface ChatNarrowThreadActionsProps {
   huddleJoinPending: boolean;
   canUseAi: boolean;
   summarizeAction: AiAction;
-  channelId: number;
-  onToggleFiles: () => void;
   onToggleSaved: () => void;
   onToggleInfo: () => void;
+  showInfoPanel: boolean;
   dropdownTriggerRef: RefObject<HTMLButtonElement | null>;
 }
+
+const NARROW_ACTION_CLASS = "h-11 min-w-11 flex-1 flex-col gap-0.5 text-dense";
 
 export function ChatNarrowThreadActions({
   activeHuddle,
@@ -46,10 +32,9 @@ export function ChatNarrowThreadActions({
   huddleJoinPending,
   canUseAi,
   summarizeAction,
-  channelId,
-  onToggleFiles,
   onToggleSaved,
   onToggleInfo,
+  showInfoPanel,
   dropdownTriggerRef,
 }: ChatNarrowThreadActionsProps) {
   return (
@@ -60,13 +45,11 @@ export function ChatNarrowThreadActions({
     >
       {!isInHuddle && (
         <AnimatedIconButton
+          type="button"
           icon={MicIcon}
           iconSize={18}
           variant="ghost"
-          className={cn(
-            "h-11 min-w-11 flex-1 flex-col gap-0.5 text-dense",
-            activeHuddle && "text-status-success-ink",
-          )}
+          className={cn(NARROW_ACTION_CLASS, activeHuddle && "text-status-success-ink")}
           onClick={onHuddle}
           disabled={huddleStartPending || huddleJoinPending}
           aria-label={activeHuddle ? "Join huddle" : "Start huddle"}
@@ -74,34 +57,27 @@ export function ChatNarrowThreadActions({
           {activeHuddle ? "Join" : "Huddle"}
         </AnimatedIconButton>
       )}
-      {canUseAi && (
-        <AiActionsMenu
-          actions={[summarizeAction]}
-          align="end"
-          disabled={!channelId}
-          triggerLabel="AI"
-          className="h-11 min-w-11 flex-1 px-2 text-dense"
-        />
-      )}
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <AnimatedIconButton
-            ref={dropdownTriggerRef}
-            icon={EllipsisIcon}
-            iconSize={18}
-            variant="ghost"
-            className="h-11 min-w-11 flex-1 flex-col gap-0.5 text-dense"
-            aria-label="More conversation actions"
-          >
-            More
-          </AnimatedIconButton>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="w-48">
-          <DropdownMenuItem onSelect={onToggleFiles}>Shared files</DropdownMenuItem>
-          <DropdownMenuItem onSelect={onToggleSaved}>Saved messages</DropdownMenuItem>
-          <DropdownMenuItem onSelect={onToggleInfo}>Member details</DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
+      <AnimatedIconButton
+        type="button"
+        icon={InfoIcon}
+        iconSize={18}
+        variant="ghost"
+        className={NARROW_ACTION_CLASS}
+        onClick={onToggleInfo}
+        aria-label="Conversation details"
+        aria-expanded={showInfoPanel}
+      >
+        Details
+      </AnimatedIconButton>
+      <ConversationOverflowMenu
+        canUseAi={canUseAi}
+        summarizeAction={summarizeAction}
+        onOpenSaved={onToggleSaved}
+        triggerClassName={NARROW_ACTION_CLASS}
+        triggerRef={dropdownTriggerRef}
+      >
+        More
+      </ConversationOverflowMenu>
     </div>
   );
 }

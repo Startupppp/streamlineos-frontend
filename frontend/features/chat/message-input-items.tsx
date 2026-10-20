@@ -18,13 +18,19 @@ interface MentionItemProps {
   onInsert: (name: string, userId: string) => void;
 }
 
-export function MentionItem({ user, idx, mentionIndex, onInsert }: MentionItemProps) {
+export function MentionItem({
+  user,
+  idx,
+  mentionIndex,
+  onInsert,
+}: MentionItemProps) {
   const handleClick = useCallback(
     () => onInsert(user.name ?? "", user.id),
     [user.name, user.id, onInsert],
   );
   return (
     <button
+      type="button"
       onClick={handleClick}
       className={cn(
         "w-full flex items-center gap-2.5 px-3 py-2 text-left hover:bg-muted/40 transition-colors",
@@ -33,10 +39,14 @@ export function MentionItem({ user, idx, mentionIndex, onInsert }: MentionItemPr
     >
       <Avatar className="h-6 w-6">
         <AvatarImage src={resolveImageUrl(user.image)} />
-        <AvatarFallback className="text-micro">{getInitials(user.name)}</AvatarFallback>
+        <AvatarFallback className="text-micro">
+          {getInitials(user.name)}
+        </AvatarFallback>
       </Avatar>
       <span className="text-label font-medium">{user.name}</span>
-      <span className="text-dense text-muted-foreground ml-auto">{user.role}</span>
+      <span className="text-dense text-muted-foreground ml-auto">
+        {user.role}
+      </span>
     </button>
   );
 }
@@ -47,7 +57,11 @@ interface PendingAttachmentItemProps {
   onRemove: (idx: number) => void;
 }
 
-export function PendingAttachmentItem({ att, idx, onRemove }: PendingAttachmentItemProps) {
+export function PendingAttachmentItem({
+  att,
+  idx,
+  onRemove,
+}: PendingAttachmentItemProps) {
   const handleRemove = useCallback(() => onRemove(idx), [idx, onRemove]);
   const colors = getFileColor(att.fileName);
   return (
@@ -62,21 +76,34 @@ export function PendingAttachmentItem({ att, idx, onRemove }: PendingAttachmentI
           className="h-11 w-11 rounded-lg object-cover border border-border/30"
         />
       ) : (
-        <div className={cn("h-11 w-11 rounded-lg flex flex-col items-center justify-center relative", colors.bg)}>
+        <div
+          className={cn(
+            "h-11 w-11 rounded-lg flex flex-col items-center justify-center relative",
+            colors.bg,
+          )}
+        >
           <FileText className={cn("h-5 w-5", colors.text)} />
-          <span className={cn("text-micro font-bold text-white px-1 rounded mt-0.5", colors.badge)}>
+          <span
+            className={cn(
+              "text-micro font-bold text-white px-1 rounded mt-0.5",
+              colors.badge,
+            )}
+          >
             {getFileExt(att.fileName)}
           </span>
         </div>
       )}
       <div className="min-w-0 max-w-[140px]">
         <p className="text-xs font-medium truncate">{att.fileName}</p>
-        <p className="text-micro text-muted-foreground">{formatFileSize(att.fileSize)}</p>
+        <p className="text-micro text-muted-foreground">
+          {formatFileSize(att.fileSize)}
+        </p>
       </div>
       <button
+        type="button"
         onClick={handleRemove}
         aria-label="Remove attachment"
-        className="absolute -top-1.5 -right-1.5 h-5 w-5 rounded-full bg-status-danger-fill text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shadow-sm"
+        className="absolute -top-1.5 -right-1.5 h-5 w-5 rounded-full bg-status-danger-fill text-white flex items-center justify-center opacity-0 group-hover:opacity-100 focus-visible:opacity-100 [@media(hover:none)]:opacity-100 transition-opacity shadow-sm"
       >
         <X className="h-3 w-3" />
       </button>
@@ -112,6 +139,7 @@ export function ChatReplyPreview({ replyTo, onCancel }: ChatReplyPreviewProps) {
               </p>
             </div>
             <button
+              type="button"
               onClick={onCancel}
               className="p-1 hover:bg-muted rounded-md"
               aria-label="Cancel reply"
@@ -175,7 +203,11 @@ interface ChatAttachmentsRowProps {
   uploading: boolean;
 }
 
-export function ChatAttachmentsRow({ pendingAttachments, onRemove, uploading }: ChatAttachmentsRowProps) {
+export function ChatAttachmentsRow({
+  pendingAttachments,
+  onRemove,
+  uploading,
+}: ChatAttachmentsRowProps) {
   if (pendingAttachments.length === 0) return null;
   return (
     <div className="flex flex-wrap gap-2 mb-2">

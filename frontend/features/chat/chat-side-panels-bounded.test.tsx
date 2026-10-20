@@ -45,6 +45,19 @@ jest.mock("./chat-attachment", () => ({
   ChatAttachment: ({ fileName }: { fileName: string }) => <span>{fileName}</span>,
 }));
 
+const mockPush = jest.fn();
+
+jest.mock("next/navigation", () => ({
+  useRouter: () => ({ push: mockPush }),
+}));
+
+jest.mock("@/hooks/common/use-animated-icon", () => ({
+  useAnimatedIcon: () => ({
+    iconRef: { current: null },
+    hoverHandlers: { onMouseEnter: jest.fn(), onMouseLeave: jest.fn() },
+  }),
+}));
+
 const fetchNextPage = jest.fn();
 
 function infiniteResult(pages: unknown[], hasNextPage: boolean) {
@@ -135,7 +148,7 @@ describe("SharedFilesPanel — the mounted row count is bounded", () => {
     useChannelFiles.mockReturnValue(
       infiniteResult([{ files: makeFiles(total), nextCursor: undefined }], hasNextPage),
     );
-    return render(<SharedFilesPanel channelId={1} onClose={noop} />);
+    return render(<SharedFilesPanel channelId={1} />);
   }
 
   it("mounts one page of rows for 500 accumulated files, not 500", () => {
@@ -180,10 +193,10 @@ describe("SharedFilesPanel — the mounted row count is bounded", () => {
     useChannelFiles.mockReturnValue(
       infiniteResult([{ files: makeFiles(500), nextCursor: undefined }], false),
     );
-    const { rerender } = render(<SharedFilesPanel channelId={1} onClose={noop} />);
+    const { rerender } = render(<SharedFilesPanel channelId={1} />);
     await user.click(screen.getByRole("button", { name: /next page/i }));
     expect(screen.getAllByRole("listitem")).toHaveLength(PANEL_RENDER_PAGE_SIZE * 2);
-    rerender(<SharedFilesPanel channelId={2} onClose={noop} />);
+    rerender(<SharedFilesPanel channelId={2} />);
     expect(screen.getAllByRole("listitem")).toHaveLength(PANEL_RENDER_PAGE_SIZE);
   });
 
@@ -199,7 +212,7 @@ describe("SharedFilesPanel — revealing held rows is not a cursor request", () 
     useChannelFiles.mockReturnValue(
       infiniteResult([{ files: makeFiles(500), nextCursor: 500 }], true),
     );
-    render(<SharedFilesPanel channelId={1} onClose={noop} />);
+    render(<SharedFilesPanel channelId={1} />);
     await user.click(screen.getByRole("button", { name: /next page/i }));
     expect(fetchNextPage).not.toHaveBeenCalled();
   });
@@ -209,7 +222,7 @@ describe("SharedFilesPanel — revealing held rows is not a cursor request", () 
     useChannelFiles.mockReturnValue(
       infiniteResult([{ files: makeFiles(10), nextCursor: 10 }], true),
     );
-    render(<SharedFilesPanel channelId={1} onClose={noop} />);
+    render(<SharedFilesPanel channelId={1} />);
     await user.click(screen.getByRole("button", { name: /next page/i }));
     expect(fetchNextPage).toHaveBeenCalledTimes(1);
   });
@@ -220,7 +233,7 @@ describe("SavedMessagesPanel — the mounted row count is bounded", () => {
     useSavedMessages.mockReturnValue(
       infiniteResult([{ items: makeSaved(total), nextCursor: undefined }], hasNextPage),
     );
-    return render(<SavedMessagesPanel onClose={noop} onJumpToChannel={noop} />);
+    return render(<SavedMessagesPanel onClose={noop} onJumped={noop} />);
   }
 
   it("mounts one page of cards for 500 saved messages, not 500", () => {
@@ -241,6 +254,38 @@ describe("SavedMessagesPanel — the mounted row count is bounded", () => {
     renderPanel(500);
     expect(screen.getByRole("list", { name: "Saved messages" })).toBeInTheDocument();
     expect(screen.getAllByRole("listitem")[0]).toHaveAttribute("aria-setsize", "500");
+  });
+});
+
+describe("SavedMessagesPanel — saved items are user-global and jump to the exact message", () => {
+  it("opens the saved message itself, not just its channel", async () => {
+    const user = userEvent.setup();
+    const saved = makeSaved(1).map((item) => ({
+      ...item,
+      messageId: 77,
+      message: { ...item.message, id: 77, channelId: 12, channel: { id: 12, name: "launch", type: "PUBLIC" } },
+    }));
+    useSavedMessages.mockReturnValue(infiniteResult([{ items: saved, nextCursor: undefined }], false));
+    const onJumped = jest.fn();
+    render(<SavedMessagesPanel onClose={noop} onJumped={onJumped} />);
+    await user.click(screen.getByRole("button", { name: "Open saved message in launch" }));
+    expect(mockPush).toHaveBeenCalledWith("/chat?channel=12&message=77");
+    expect(onJumped).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe("ThreadPanel — older replies load by scrolling, not by a visible button", () => {
+  it("renders the older-replies control as a scroll sentinel whose button is screen-reader only", () => {
+    useThreadReplies.mockReturnValue(
+      infiniteResult(
+        [{ parentMessage: makeMessage(0), replies: Array.from({ length: 60 }, (_, i) => makeMessage(i + 1)), nextCursor: undefined }],
+        false,
+      ),
+    );
+    render(<ThreadPanel channelId={1} parentMessageId={7} currentUserId="user-1" onClose={noop} />);
+    const control = screen.getByRole("button", { name: /show 25 more/i });
+    expect(control.className).toContain("sr-only");
+    expect(screen.queryByRole("button", { name: /load older replies/i })).toBeNull();
   });
 });
 

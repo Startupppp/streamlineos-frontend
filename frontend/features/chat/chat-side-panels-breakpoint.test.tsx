@@ -104,12 +104,9 @@ const noopBool = (_: boolean) => undefined;
 function renderPanels(isPanelNarrow: boolean, showSavedPanel: boolean) {
   return render(
     <MessagePanelSidePanels
-      channelId={1}
       isPanelNarrow={isPanelNarrow}
       showSavedPanel={showSavedPanel}
       setShowSavedPanel={noopBool}
-      showFilesPanel={false}
-      setShowFilesPanel={noopBool}
       forwardMessage={null}
       setForwardMessage={noop}
     />,

@@ -1,15 +1,15 @@
 "use client";
 
 import { useCallback, useMemo } from "react";
+import { useRouter } from "next/navigation";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Bookmark, Hash } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ErrorState } from "@/components/shared/error-state";
 import { XIcon } from "@animateicons/react/lucide";
-import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
-import React from "react";
-import { cn, resolveImageUrl } from "@/lib/utils";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
+import { resolveImageUrl } from "@/lib/utils";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useSavedMessages, useUnsaveMessage } from "@/hooks/api/chat-personal-a";
@@ -20,18 +20,6 @@ import { TablePagination } from "@/components/ui/table-pagination";
 import type { SavedMessage } from "@/types/chat";
 import { getInitials } from "@/lib/format-utils";
 
-const UnsaveButton = React.forwardRef<
-  HTMLButtonElement,
-  React.ButtonHTMLAttributes<HTMLButtonElement>
->(function UnsaveButton({ className, ...props }, ref) {
-  const { iconRef, hoverHandlers } = useAnimatedIcon();
-  return (
-    <button ref={ref} {...hoverHandlers} className={className} {...props}>
-      <XIcon ref={iconRef} size={12} className="text-muted-foreground" />
-    </button>
-  );
-});
-
 function SavedMessageCard({
   item,
   onUnsave,
@@ -40,15 +28,15 @@ function SavedMessageCard({
 }: {
   item: SavedMessage;
   onUnsave: (messageId: number) => void;
-  onJump: (channelId: number) => void;
+  onJump: (channelId: number, messageId: number) => void;
   resolveUserName: (
     userId: string | null,
     embedded?: { name?: string | null; email?: string | null } | null,
   ) => string;
 }) {
   const handleJump = useCallback(() => {
-    if (item.message.channel) onJump(item.message.channel.id);
-  }, [item.message.channel, onJump]);
+    if (item.message.channel) onJump(item.message.channel.id, item.messageId);
+  }, [item.message.channel, item.messageId, onJump]);
 
   const handleUnsave = useCallback(() => onUnsave(item.messageId), [item.messageId, onUnsave]);
   const senderName = resolveUserName(item.message.senderId, item.message.sender);
@@ -67,8 +55,10 @@ function SavedMessageCard({
             <span className="text-xs font-bold text-foreground">{senderName}</span>
             {item.message.channel && (
               <button
+                type="button"
                 onClick={handleJump}
                 className="flex items-center gap-1 text-micro text-primary hover:underline"
+                aria-label={`Open saved message in ${item.message.channel.name ?? "conversation"}`}
               >
                 <Hash className="h-2.5 w-2.5" />
                 {item.message.channel.name}
@@ -83,38 +73,29 @@ function SavedMessageCard({
             </p>
           )}
         </div>
-        <UnsaveButton
+        <AnimatedIconButton
+          type="button"
+          icon={XIcon}
+          iconSize={12}
+          variant="ghost"
           onClick={handleUnsave}
-          className={cn(
-            "h-6 w-6 rounded-lg flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-muted",
-          )}
-          title="Unsave"
-          aria-label="Unsave message"
+          className="size-7 rounded-lg p-0 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100 focus-visible:opacity-100 [@media(hover:none)]:opacity-100"
+          title="Remove from saved"
+          aria-label="Remove from saved"
         />
       </div>
     </div>
   );
 }
 
-const SavedPanelCloseButton = React.forwardRef<
-  HTMLButtonElement,
-  React.ButtonHTMLAttributes<HTMLButtonElement>
->(function SavedPanelCloseButton({ className, ...props }, ref) {
-  const { iconRef, hoverHandlers } = useAnimatedIcon();
-  return (
-    <button ref={ref} {...hoverHandlers} className={className} {...props}>
-      <XIcon ref={iconRef} size={16} className="text-muted-foreground" />
-    </button>
-  );
-});
-
 export function SavedMessagesPanel({
   onClose,
-  onJumpToChannel,
+  onJumped,
 }: {
   onClose: () => void;
-  onJumpToChannel: (channelId: number) => void;
+  onJumped: () => void;
 }) {
+  const router = useRouter();
   const { data, isLoading, isError, error, hasNextPage, isFetchingNextPage, fetchNextPage, refetch } = useSavedMessages();
   const unsave = useUnsaveMessage();
   const { data: orgUsers } = useChatOrgUsers();
@@ -149,6 +130,14 @@ export function SavedMessagesPanel({
 
   function handleNoPrevious() {}
 
+  const handleJump = useCallback(
+    (channelId: number, messageId: number) => {
+      router.push(`/chat?channel=${channelId}&message=${messageId}`);
+      onJumped();
+    },
+    [router, onJumped],
+  );
+
   const handleRetry = useCallback(() => void refetch(), [refetch]);
 
   return (
@@ -156,9 +145,17 @@ export function SavedMessagesPanel({
       <div className="h-[56px] px-4 border-b border-border/40 flex items-center justify-between shrink-0">
         <div className="flex items-center gap-2">
           <Bookmark className="h-4 w-4 text-status-warning-ink fill-amber-500" />
-          <h3 className="text-sm font-bold">Saved Messages</h3>
+          <h3 className="text-sm font-bold">Saved messages</h3>
         </div>
-        <SavedPanelCloseButton onClick={onClose} className="p-1.5 hover:bg-muted rounded-lg" aria-label="Close" />
+        <AnimatedIconButton
+          type="button"
+          icon={XIcon}
+          iconSize={16}
+          variant="ghost"
+          onClick={onClose}
+          className="size-8 rounded-lg p-0 text-muted-foreground"
+          aria-label="Close saved messages"
+        />
       </div>
 
       <ScrollArea className="flex-1">
@@ -208,7 +205,7 @@ export function SavedMessagesPanel({
                   <SavedMessageCard
                     item={item}
                     onUnsave={handleUnsave}
-                    onJump={onJumpToChannel}
+                    onJump={handleJump}
                     resolveUserName={resolveUserName}
                   />
                 </div>

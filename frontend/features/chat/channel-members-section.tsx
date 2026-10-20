@@ -2,11 +2,15 @@
 
 import { useState, useMemo, useCallback } from "react";
 import { UserPlusIcon } from "@animateicons/react/lucide";
-import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
-import React from "react";
 import { toast } from "sonner";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { InfiniteScrollSentinel } from "@/components/ui/infinite-scroll-sentinel";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { useRemoveChannelMember, useUpdateChannelMemberRole } from "@/hooks/api/chat-core-mutations-b";
+import {
+  useRemoveChannelMember,
+  useUpdateChannelMemberRole,
+} from "@/hooks/api/chat-core-mutations-b";
 import type { ChannelMember } from "@/types/chat";
 import { ChannelMemberRow } from "./channel-member-row";
 import {
@@ -16,18 +20,11 @@ import {
 } from "./panel-render-window";
 import { AddChannelMembersDialog } from "./add-channel-members-dialog";
 
-const AddMemberButton = React.forwardRef<
-  HTMLButtonElement,
-  React.ButtonHTMLAttributes<HTMLButtonElement>
->(function AddMemberButton({ className, ...props }, ref) {
-  const { iconRef, hoverHandlers } = useAnimatedIcon();
-  return (
-    <button ref={ref} type="button" {...hoverHandlers} className={className} {...props}>
-      <UserPlusIcon ref={iconRef} size={14} />
-      Add
-    </button>
-  );
-});
+interface PendingRemoval {
+  userId: string;
+  userName: string | null | undefined;
+  isYou: boolean;
+}
 
 interface ChannelMembersSectionProps {
   channelId: number;
@@ -51,13 +48,21 @@ export function ChannelMembersSection({
   onClose,
 }: ChannelMembersSectionProps) {
   const [showAddMembers, setShowAddMembers] = useState(false);
-  const [removingUserId, setRemovingUserId] = useState<string | null>(null);
+  const [pendingRemoval, setPendingRemoval] = useState<PendingRemoval | null>(
+    null,
+  );
   const removeMember = useRemoveChannelMember();
   const updateRole = useUpdateChannelMemberRole();
-  const changingRoleUserId = updateRole.isPending ? updateRole.variables?.userId ?? null : null;
+  const changingRoleUserId = updateRole.isPending
+    ? (updateRole.variables?.userId ?? null)
+    : null;
 
   const handleChangeRole = useCallback(
-    (userId: string, role: ChannelMember["role"], userName: string | null | undefined) => {
+    (
+      userId: string,
+      role: ChannelMember["role"],
+      userName: string | null | undefined,
+    ) => {
       updateRole.mutate(
         { channelId, userId, role },
         {
@@ -77,8 +82,12 @@ export function ChannelMembersSection({
   const { onlineMembers, offlineMembers } = useMemo(() => {
     const byName = (a: ChannelMember, b: ChannelMember) =>
       (a.user?.name ?? "").localeCompare(b.user?.name ?? "");
-    const online = members.filter((m) => onlineUserIds.has(m.user?.id ?? "")).sort(byName);
-    const offline = members.filter((m) => !onlineUserIds.has(m.user?.id ?? "")).sort(byName);
+    const online = members
+      .filter((m) => onlineUserIds.has(m.user?.id ?? ""))
+      .sort(byName);
+    const offline = members
+      .filter((m) => !onlineUserIds.has(m.user?.id ?? ""))
+      .sort(byName);
     return { onlineMembers: online, offlineMembers: offline };
   }, [members, onlineUserIds]);
 
@@ -100,27 +109,41 @@ export function ChannelMembersSection({
     [members],
   );
 
-  const handleRemoveMember = useCallback(
-    async (userId: string, userName: string | null | undefined, isYou: boolean) => {
-      const label = isYou ? "leave this channel" : `remove ${userName ?? "this member"}`;
-      if (!window.confirm(`Are you sure you want to ${label}?`)) return;
-
-      setRemovingUserId(userId);
-      try {
-        await removeMember.mutateAsync({ channelId, userId });
-        toast.success(isYou ? "You left the channel" : "Member removed");
-        if (isYou) {
-          onLeftChannel?.();
-          onClose();
-        }
-      } catch (error) {
-        toast.error(getErrorMessage(error));
-      } finally {
-        setRemovingUserId(null);
-      }
+  const handleRequestRemove = useCallback(
+    (userId: string, userName: string | null | undefined, isYou: boolean) => {
+      setPendingRemoval({ userId, userName, isYou });
     },
-    [channelId, removeMember, onLeftChannel, onClose],
+    [],
   );
+
+  function handleRemovalOpenChange(open: boolean) {
+    if (!open) setPendingRemoval(null);
+  }
+
+  function handleOpenAddMembers() {
+    setShowAddMembers(true);
+  }
+
+  async function handleConfirmRemoval() {
+    if (!pendingRemoval) return;
+    const { userId, isYou } = pendingRemoval;
+    try {
+      await removeMember.mutateAsync({ channelId, userId });
+      setPendingRemoval(null);
+      toast.success(isYou ? "You left the channel" : "Member removed");
+      if (isYou) {
+        onLeftChannel?.();
+        onClose();
+      }
+    } catch (error) {
+      toast.error(getErrorMessage(error));
+    }
+  }
+
+  const removingUserId = removeMember.isPending
+    ? (pendingRemoval?.userId ?? null)
+    : null;
+  const removalName = pendingRemoval?.userName ?? "this member";
 
   return (
     <div>
@@ -129,10 +152,17 @@ export function ChannelMembersSection({
           Members ({members.length})
         </h5>
         {isAdmin && isMultiMemberChannel && (
-          <AddMemberButton
-            onClick={() => setShowAddMembers(true)}
-            className="inline-flex items-center gap-1 text-dense font-medium text-primary hover:text-primary/80 transition-colors"
-          />
+          <AnimatedIconButton
+            type="button"
+            icon={UserPlusIcon}
+            iconSize={14}
+            variant="ghost"
+            size="sm"
+            onClick={handleOpenAddMembers}
+            className="h-7 gap-1 px-2 text-dense font-medium text-primary hover:text-primary/80"
+          >
+            Add
+          </AnimatedIconButton>
         )}
       </div>
 
@@ -142,36 +172,41 @@ export function ChannelMembersSection({
             Online — {onlineMembers.length}
           </p>
           <div role="list" aria-label="Online members" className="space-y-0.5">
-            {onlineMembers.slice(0, onlineWindow.visibleCount).map((m, index) => (
-              <div
-                key={m.user?.id}
-                role="listitem"
-                aria-posinset={index + 1}
-                aria-setsize={onlineMembers.length}
-              >
-                <ChannelMemberRow
-                  member={m}
-                  isOnline
-                  currentUserId={currentUserId}
-                  isAdmin={isAdmin}
-                  isMultiMemberChannel={isMultiMemberChannel}
-                  isRemoving={removingUserId === m.user?.id}
-                  onRemove={handleRemoveMember}
-                  isChangingRole={changingRoleUserId === m.user?.id}
-                  onChangeRole={handleChangeRole}
-                />
-              </div>
-            ))}
+            {onlineMembers
+              .slice(0, onlineWindow.visibleCount)
+              .map((m, index) => (
+                <div
+                  key={m.user?.id}
+                  role="listitem"
+                  aria-posinset={index + 1}
+                  aria-setsize={onlineMembers.length}
+                >
+                  <ChannelMemberRow
+                    member={m}
+                    isOnline
+                    currentUserId={currentUserId}
+                    isAdmin={isAdmin}
+                    isMultiMemberChannel={isMultiMemberChannel}
+                    isRemoving={removingUserId === m.user?.id}
+                    onRemove={handleRequestRemove}
+                    isChangingRole={changingRoleUserId === m.user?.id}
+                    onChangeRole={handleChangeRole}
+                  />
+                </div>
+              ))}
           </div>
-          {onlineWindow.hasMore ? (
-            <button
-              type="button"
-              onClick={onlineWindow.onLoadMore}
-              className="w-full rounded-lg px-2 py-1.5 text-left text-dense font-medium text-muted-foreground transition-colors hover:bg-muted/40 hover:text-foreground"
-            >
-              {panelRevealLabel(onlineWindow, onlineMembers.length, false, "Show all")}
-            </button>
-          ) : null}
+          <InfiniteScrollSentinel
+            hasNextPage={onlineWindow.hasMore}
+            isFetchingNextPage={false}
+            onLoadMore={onlineWindow.onLoadMore}
+            label={panelRevealLabel(
+              onlineWindow,
+              onlineMembers.length,
+              false,
+              "Show all",
+            )}
+            className="py-1"
+          />
         </div>
       )}
 
@@ -181,38 +216,63 @@ export function ChannelMembersSection({
             Offline — {offlineMembers.length}
           </p>
           <div role="list" aria-label="Offline members" className="space-y-0.5">
-            {offlineMembers.slice(0, offlineWindow.visibleCount).map((m, index) => (
-              <div
-                key={m.user?.id}
-                role="listitem"
-                aria-posinset={index + 1}
-                aria-setsize={offlineMembers.length}
-              >
-                <ChannelMemberRow
-                  member={m}
-                  isOnline={false}
-                  currentUserId={currentUserId}
-                  isAdmin={isAdmin}
-                  isMultiMemberChannel={isMultiMemberChannel}
-                  isRemoving={removingUserId === m.user?.id}
-                  onRemove={handleRemoveMember}
-                  isChangingRole={changingRoleUserId === m.user?.id}
-                  onChangeRole={handleChangeRole}
-                />
-              </div>
-            ))}
+            {offlineMembers
+              .slice(0, offlineWindow.visibleCount)
+              .map((m, index) => (
+                <div
+                  key={m.user?.id}
+                  role="listitem"
+                  aria-posinset={index + 1}
+                  aria-setsize={offlineMembers.length}
+                >
+                  <ChannelMemberRow
+                    member={m}
+                    isOnline={false}
+                    currentUserId={currentUserId}
+                    isAdmin={isAdmin}
+                    isMultiMemberChannel={isMultiMemberChannel}
+                    isRemoving={removingUserId === m.user?.id}
+                    onRemove={handleRequestRemove}
+                    isChangingRole={changingRoleUserId === m.user?.id}
+                    onChangeRole={handleChangeRole}
+                  />
+                </div>
+              ))}
           </div>
-          {offlineWindow.hasMore ? (
-            <button
-              type="button"
-              onClick={offlineWindow.onLoadMore}
-              className="w-full rounded-lg px-2 py-1.5 text-left text-dense font-medium text-muted-foreground transition-colors hover:bg-muted/40 hover:text-foreground"
-            >
-              {panelRevealLabel(offlineWindow, offlineMembers.length, false, "Show all")}
-            </button>
-          ) : null}
+          <InfiniteScrollSentinel
+            hasNextPage={offlineWindow.hasMore}
+            isFetchingNextPage={false}
+            onLoadMore={offlineWindow.onLoadMore}
+            label={panelRevealLabel(
+              offlineWindow,
+              offlineMembers.length,
+              false,
+              "Show all",
+            )}
+            className="py-1"
+          />
         </div>
       )}
+
+      <ConfirmDialog
+        open={pendingRemoval !== null}
+        onOpenChange={handleRemovalOpenChange}
+        title={
+          pendingRemoval?.isYou
+            ? "Leave this channel?"
+            : `Remove ${removalName}?`
+        }
+        description={
+          pendingRemoval?.isYou
+            ? "You stop receiving its messages and it leaves your conversation list."
+            : `${removalName} loses access to this channel and its history.`
+        }
+        confirmLabel={pendingRemoval?.isYou ? "Leave channel" : "Remove member"}
+        destructive
+        isPending={removeMember.isPending}
+        keepOpenOnConfirm
+        onConfirm={handleConfirmRemoval}
+      />
 
       <AddChannelMembersDialog
         open={showAddMembers}

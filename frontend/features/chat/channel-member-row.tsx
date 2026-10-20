@@ -1,9 +1,7 @@
 "use client";
 
-import { Loader2 } from "lucide-react";
 import { UserMinusIcon } from "@animateicons/react/lucide";
-import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
-import React from "react";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { resolveImageUrl } from "@/lib/utils";
@@ -11,22 +9,6 @@ import type { ChannelMember } from "@/types/chat";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { FLEX_TITLE_SLOT } from "@/lib/text-overflow";
 import { getInitials } from "@/lib/format-utils";
-
-const RemoveMemberButton = React.forwardRef<
-  HTMLButtonElement,
-  React.ButtonHTMLAttributes<HTMLButtonElement> & { isRemoving: boolean }
->(function RemoveMemberButton({ isRemoving, className, ...props }, ref) {
-  const { iconRef, hoverHandlers } = useAnimatedIcon();
-  return (
-    <button ref={ref} {...hoverHandlers} className={className} {...props}>
-      {isRemoving ? (
-        <Loader2 className="h-3.5 w-3.5 animate-spin" />
-      ) : (
-        <UserMinusIcon ref={iconRef} size={14} />
-      )}
-    </button>
-  );
-});
 
 export function ChannelMemberRow({
   member,
@@ -55,6 +37,7 @@ export function ChannelMemberRow({
   const canChangeRole = Boolean(isAdmin) && isMultiMemberChannel && !isYou && Boolean(member.user?.id);
   const nextRole: ChannelMember["role"] = member.role === "ADMIN" ? "MEMBER" : "ADMIN";
   const handleChangeRole = () => onChangeRole(member.user?.id ?? "", nextRole, member.user?.name);
+  const handleRemove = () => onRemove(member.user?.id ?? "", member.user?.name, isYou);
 
   return (
     <div className="flex min-w-0 items-center gap-2.5 overflow-hidden px-2 py-1.5 rounded-lg hover:bg-muted/30 transition-colors group">
@@ -96,7 +79,7 @@ export function ChannelMemberRow({
           type="button"
           onClick={handleChangeRole}
           disabled={isChangingRole}
-          className="shrink-0 rounded-md px-1.5 py-0.5 text-micro font-medium text-muted-foreground opacity-0 transition-opacity hover:bg-muted hover:text-foreground focus-visible:opacity-100 group-hover:opacity-100 disabled:opacity-50"
+          className="shrink-0 rounded-md px-1.5 py-0.5 text-micro font-medium text-muted-foreground opacity-0 transition-opacity hover:bg-muted hover:text-foreground focus-visible:opacity-100 group-hover:opacity-100 [@media(hover:none)]:opacity-100 disabled:opacity-50"
           aria-label={
             nextRole === "ADMIN"
               ? `Make ${member.user?.name ?? "member"} an admin`
@@ -107,12 +90,14 @@ export function ChannelMemberRow({
         </button>
       )}
       {canRemove && (
-        <RemoveMemberButton
+        <AnimatedIconButton
           type="button"
-          isRemoving={isRemoving}
-          onClick={() => onRemove(member.user?.id ?? "", member.user?.name, isYou)}
+          icon={UserMinusIcon}
+          iconSize={14}
+          variant="ghost"
+          onClick={handleRemove}
           disabled={isRemoving}
-          className="shrink-0 p-1 rounded-md text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors disabled:opacity-50"
+          className="size-7 shrink-0 rounded-md p-0 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
           title={isYou ? "Leave channel" : "Remove member"}
           aria-label={isYou ? "Leave channel" : `Remove ${member.user?.name ?? "member"}`}
         />

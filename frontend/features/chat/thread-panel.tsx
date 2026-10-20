@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useCallback, useMemo } from "react";
+import { useState, useRef, useCallback, useEffect, useMemo } from "react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Loader2, MessageSquare, Send } from "lucide-react";
 import { SendIcon, XIcon } from "@animateicons/react/lucide";
@@ -14,6 +14,7 @@ import { useChatOrgUsers } from "@/hooks/api/chat-core-read";
 import { buildChatUserMap, resolveChatUserName } from "./chat-helpers";
 import { ThreadMessage } from "./thread-message";
 import { panelRevealLabel, usePanelRenderWindow } from "./panel-render-window";
+import { InfiniteScrollSentinel } from "@/components/ui/infinite-scroll-sentinel";
 
 const ThreadCloseButton = React.forwardRef<
   HTMLButtonElement,
@@ -65,6 +66,11 @@ export function ThreadPanel({
     isFetchingNextPage,
     fetchNextPage,
   } = useThreadReplies(channelId, parentMessageId);
+
+  useEffect(() => {
+    if (isLoading) return;
+    bottomRef.current?.scrollIntoView({ block: "end" });
+  }, [isLoading, parentMessageId]);
 
   const sendReply = useSendThreadReply(channelId, parentMessageId);
   const { data: orgUsers } = useChatOrgUsers();
@@ -169,23 +175,14 @@ export function ThreadPanel({
               </>
             )}
 
-            {renderWindow.hasMore && (
-              <div className="flex justify-center pb-2">
-                <button
-                  type="button"
-                  onClick={renderWindow.onLoadMore}
-                  disabled={isFetchingNextPage}
-                  className="text-dense text-primary hover:underline disabled:opacity-50"
-                >
-                  {panelRevealLabel(
-                    renderWindow,
-                    total,
-                    isFetchingNextPage,
-                    "Load older replies",
-                  )}
-                </button>
-              </div>
-            )}
+            <InfiniteScrollSentinel
+              hasNextPage={renderWindow.hasMore}
+              isFetchingNextPage={isFetchingNextPage}
+              onLoadMore={renderWindow.onLoadMore}
+              label={panelRevealLabel(renderWindow, total, isFetchingNextPage, "Load older replies")}
+              pending="Loading older replies…"
+              className="py-1"
+            />
 
             {replies.length === 0 && !isLoading && (
               <div className="flex flex-col items-center justify-center py-8 px-4">
@@ -227,6 +224,7 @@ export function ThreadPanel({
             value={input}
             onChange={handleInputChange}
             onKeyDown={handleKeyDown}
+            aria-label="Reply in thread"
             placeholder="Reply in thread..."
             rows={1}
             className="flex-1 bg-transparent text-label resize-none focus:outline-none min-h-[22px] max-h-[120px] leading-[1.5]"

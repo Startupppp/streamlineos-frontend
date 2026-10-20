@@ -6,29 +6,14 @@ import { Paperclip } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ErrorState } from "@/components/shared/error-state";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { XIcon } from "@animateicons/react/lucide";
-import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
-import React from "react";
 import { useChannelFiles } from "@/hooks/api/chat-personal-b";
 import { ChatAttachment } from "./chat-attachment";
 import { usePanelRenderWindow } from "./panel-render-window";
 import { TablePagination } from "@/components/ui/table-pagination";
 
-const FilesPanelCloseButton = React.forwardRef<
-  HTMLButtonElement,
-  React.ButtonHTMLAttributes<HTMLButtonElement>
->(function FilesPanelCloseButton({ className, ...props }, ref) {
-  const { iconRef, hoverHandlers } = useAnimatedIcon();
-  return (
-    <button ref={ref} {...hoverHandlers} className={className} {...props}>
-      <XIcon ref={iconRef} size={16} className="text-muted-foreground" />
-    </button>
-  );
-});
-
 function handleNoPrevious() {}
 
-export function SharedFilesPanel({ channelId, onClose }: { channelId: number; onClose: () => void }) {
+export function SharedFilesPanel({ channelId }: { channelId: number }) {
   const { data, isLoading, isError, error, refetch, hasNextPage, isFetchingNextPage, fetchNextPage } =
     useChannelFiles(channelId);
   const files = useMemo(() => data?.pages.flatMap((p) => p.files) ?? [], [data]);
@@ -39,16 +24,12 @@ export function SharedFilesPanel({ channelId, onClose }: { channelId: number; on
     [files, renderWindow.visibleCount],
   );
 
-  return (
-    <div className="flex flex-col h-full w-80 border-l border-border/40 bg-card/50">
-      <div className="h-[56px] px-4 border-b border-border/40 flex items-center justify-between shrink-0">
-        <div className="flex items-center gap-2">
-          <Paperclip className="h-4 w-4 text-muted-foreground" />
-          <h3 className="text-sm font-bold">Shared Files</h3>
-        </div>
-        <FilesPanelCloseButton onClick={onClose} className="p-1.5 hover:bg-muted rounded-lg" aria-label="Close" />
-      </div>
+  function handleRetry() {
+    void refetch();
+  }
 
+  return (
+    <div className="flex min-h-0 flex-1 flex-col">
       <ScrollArea className="flex-1">
         {isLoading ? (
           <div className="space-y-1 p-2" aria-busy="true">
@@ -69,7 +50,7 @@ export function SharedFilesPanel({ channelId, onClose }: { channelId: number; on
             className="m-3"
             title="Couldn't load shared files"
             description={getErrorMessage(error)}
-            onRetry={() => void refetch()}
+            onRetry={handleRetry}
           />
         ) : files.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-12 px-4">

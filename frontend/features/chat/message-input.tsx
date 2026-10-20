@@ -3,16 +3,7 @@
 import { useCallback } from "react";
 import dynamic from "next/dynamic";
 import { motion, AnimatePresence } from "framer-motion";
-import {
-  AtSign,
-  Bold,
-  Code,
-  Italic,
-  Loader2,
-  Paperclip,
-  Send,
-  Smile,
-} from "lucide-react";
+import { AtSign, Loader2, Paperclip, Send, Smile } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
   CHAT_ATTACHMENT_ACCEPT,
@@ -32,25 +23,40 @@ const TicketMentionPicker = dynamic(
     import("./ticket-mention-picker").then((m) => ({
       default: m.TicketMentionPicker,
     })),
-  { ssr: false, loading: () => <ChatPopoverFallback label="Loading ticket picker" /> },
+  {
+    ssr: false,
+    loading: () => <ChatPopoverFallback label="Loading ticket picker" />,
+  },
 );
 
 const EmojiGrid = dynamic(
   () => import("./emoji-grid").then((m) => ({ default: m.EmojiGrid })),
-  { ssr: false, loading: () => <ChatPopoverFallback label="Loading emoji picker" /> },
+  {
+    ssr: false,
+    loading: () => <ChatPopoverFallback label="Loading emoji picker" />,
+  },
 );
 
 export type { MessageInputProps } from "./message-input-types";
 
-function markerRunBefore(value: string, index: number, character: string): number {
+function markerRunBefore(
+  value: string,
+  index: number,
+  character: string,
+): number {
   let run = 0;
   while (index - run > 0 && value[index - run - 1] === character) run += 1;
   return run;
 }
 
-function markerRunAfter(value: string, index: number, character: string): number {
+function markerRunAfter(
+  value: string,
+  index: number,
+  character: string,
+): number {
   let run = 0;
-  while (index + run < value.length && value[index + run] === character) run += 1;
+  while (index + run < value.length && value[index + run] === character)
+    run += 1;
   return run;
 }
 
@@ -58,6 +64,8 @@ function isSameMarker(before: number, after: number, length: number): boolean {
   if (before !== after) return false;
   return before === length || (before === 3 && length <= 2);
 }
+
+const FORMAT_SHORTCUTS: Record<string, string> = { b: "**", i: "*", e: "`" };
 
 function selectAfterFormat(
   el: HTMLTextAreaElement,
@@ -103,48 +111,57 @@ export function MessageInput({
   onInputChange,
   onFilesSelected,
 }: MessageInputProps) {
-  const formatSelection = useCallback((marker: string, block = false) => {
-    const el = inputRef.current;
-    if (!el) return;
-    const start = el.selectionStart;
-    const end = el.selectionEnd;
-    const selected = el.value.slice(start, end);
+  const formatSelection = useCallback(
+    (marker: string) => {
+      const el = inputRef.current;
+      if (!el) return;
+      const start = el.selectionStart;
+      const end = el.selectionEnd;
+      const selected = el.value.slice(start, end);
 
-    if (block) {
-      const fenced = `\`\`\`\n${selected || "code"}\n\`\`\``;
-      setMessageInput(el.value.slice(0, start) + fenced + el.value.slice(end));
-      selectAfterFormat(el, start + 4, (selected || "code").length);
-      return;
-    }
+      const character = marker[0] ?? "";
+      const before = markerRunBefore(el.value, start, character);
+      const after = markerRunAfter(el.value, end, character);
 
-    const character = marker[0] ?? "";
-    const before = markerRunBefore(el.value, start, character);
-    const after = markerRunAfter(el.value, end, character);
+      if (isSameMarker(before, after, marker.length)) {
+        const unwrapped =
+          el.value.slice(0, start - marker.length) +
+          selected +
+          el.value.slice(end + marker.length);
+        setMessageInput(unwrapped);
+        selectAfterFormat(el, start - marker.length, selected.length);
+        return;
+      }
 
-    if (isSameMarker(before, after, marker.length)) {
-      const unwrapped =
-        el.value.slice(0, start - marker.length) +
-        selected +
-        el.value.slice(end + marker.length);
-      setMessageInput(unwrapped);
-      selectAfterFormat(el, start - marker.length, selected.length);
-      return;
-    }
+      const body = selected || "text";
+      setMessageInput(
+        el.value.slice(0, start) + marker + body + marker + el.value.slice(end),
+      );
+      selectAfterFormat(el, start + marker.length, body.length);
+    },
+    [inputRef, setMessageInput],
+  );
 
-    const body = selected || "text";
-    setMessageInput(el.value.slice(0, start) + marker + body + marker + el.value.slice(end));
-    selectAfterFormat(el, start + marker.length, body.length);
-  }, [inputRef, setMessageInput]);
-
-  const handleFormatBold = useCallback(() => formatSelection("**"), [formatSelection]);
-  const handleFormatItalic = useCallback(() => formatSelection("*"), [formatSelection]);
-  const handleFormatCode = useCallback(() => formatSelection("`"), [formatSelection]);
-  const handlePreventBlur = useCallback((e: React.MouseEvent<HTMLButtonElement>) => {
-    e.preventDefault();
-  }, []);
+  const handleComposerKeyDown = useCallback(
+    (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+      const marker =
+        e.ctrlKey || e.metaKey
+          ? FORMAT_SHORTCUTS[e.key.toLowerCase()]
+          : undefined;
+      if (marker && !e.altKey && !e.shiftKey) {
+        e.preventDefault();
+        formatSelection(marker);
+        return;
+      }
+      onKeyDown(e);
+    },
+    [formatSelection, onKeyDown],
+  );
 
   const handleCancelReply = useCallback(() => setReplyTo(null), [setReplyTo]);
-  const handleOpenFileInput = useCallback(() => { fileInputRef.current?.click(); }, [fileInputRef]);
+  const handleOpenFileInput = useCallback(() => {
+    fileInputRef.current?.click();
+  }, [fileInputRef]);
   const handleToggleEmoji = useCallback(() => {
     setShowEmojiPicker((p) => !p);
     setShowMentions(false);
@@ -157,23 +174,40 @@ export function MessageInput({
       setMessageInput(newVal);
       setShowMentions(true);
       setShowEmojiPicker(false);
-      setTimeout(() => { el.focus(); el.setSelectionRange(pos + 1, pos + 1); }, 0);
+      setTimeout(() => {
+        el.focus();
+        el.setSelectionRange(pos + 1, pos + 1);
+      }, 0);
     }
-  }, [inputRef, messageInput, setMessageInput, setShowMentions, setShowEmojiPicker]);
-  const handleRemoveAttachment = useCallback((idx: number) => {
-    setPendingAttachments((prev) => prev.filter((_, i) => i !== idx));
-  }, [setPendingAttachments]);
+  }, [
+    inputRef,
+    messageInput,
+    setMessageInput,
+    setShowMentions,
+    setShowEmojiPicker,
+  ]);
+  const handleRemoveAttachment = useCallback(
+    (idx: number) => {
+      setPendingAttachments((prev) => prev.filter((_, i) => i !== idx));
+    },
+    [setPendingAttachments],
+  );
 
-  const handlePaste = useCallback((e: React.ClipboardEvent<HTMLTextAreaElement>) => {
-    const items = Array.from(e.clipboardData.items);
-    const imageItems = items.filter(item => item.type.startsWith("image/"));
-    if (imageItems.length === 0) return;
-    e.preventDefault();
-    const files = imageItems.map(item => item.getAsFile()).filter((f): f is File => f !== null);
-    if (files.length > 0 && onFilesSelected) {
-      onFilesSelected(files);
-    }
-  }, [onFilesSelected]);
+  const handlePaste = useCallback(
+    (e: React.ClipboardEvent<HTMLTextAreaElement>) => {
+      const items = Array.from(e.clipboardData.items);
+      const imageItems = items.filter((item) => item.type.startsWith("image/"));
+      if (imageItems.length === 0) return;
+      e.preventDefault();
+      const files = imageItems
+        .map((item) => item.getAsFile())
+        .filter((f): f is File => f !== null);
+      if (files.length > 0 && onFilesSelected) {
+        onFilesSelected(files);
+      }
+    },
+    [onFilesSelected],
+  );
 
   return (
     <>
@@ -186,7 +220,6 @@ export function MessageInput({
         )}
       >
         <div className="max-w-[900px] mx-auto">
-
           <ChatMentionSuggestionsOverlay
             showMentions={showMentions}
             filteredMentions={filteredMentions}
@@ -245,8 +278,10 @@ export function MessageInput({
               ref={inputRef}
               value={messageInput}
               onChange={onInputChange}
-              onKeyDown={onKeyDown}
+              onKeyDown={handleComposerKeyDown}
               onPaste={handlePaste}
+              aria-label={`Message ${displayName}`}
+              aria-keyshortcuts="Control+B Control+I Control+E Meta+B Meta+I Meta+E"
               placeholder={`Message ${channelType === "DIRECT" ? displayName : "#" + displayName}...`}
               rows={1}
               className="w-full bg-transparent text-sm resize-none px-4 pt-3 pb-1 focus:outline-none placeholder:text-muted-foreground min-h-[40px] max-h-[160px]"
@@ -291,41 +326,10 @@ export function MessageInput({
                 >
                   <AtSign className="h-[18px] w-[18px]" />
                 </button>
-                <div className="w-px h-4 bg-border/40 mx-0.5" />
-                <button
-                  type="button"
-                  onClick={handleFormatBold}
-                  onMouseDown={handlePreventBlur}
-                  className="p-2 rounded-lg hover:bg-muted/60 text-muted-foreground hover:text-foreground transition-colors font-bold"
-                  title="Bold (**text**)"
-                  aria-label="Bold"
-                >
-                  <Bold className="h-[16px] w-[16px]" />
-                </button>
-                <button
-                  type="button"
-                  onClick={handleFormatItalic}
-                  onMouseDown={handlePreventBlur}
-                  className="p-2 rounded-lg hover:bg-muted/60 text-muted-foreground hover:text-foreground transition-colors"
-                  title="Italic (*text*)"
-                  aria-label="Italic"
-                >
-                  <Italic className="h-[16px] w-[16px]" />
-                </button>
-                <button
-                  type="button"
-                  onClick={handleFormatCode}
-                  onMouseDown={handlePreventBlur}
-                  className="p-2 rounded-lg hover:bg-muted/60 text-muted-foreground hover:text-foreground transition-colors font-mono"
-                  title="Inline code (`code`)"
-                  aria-label="Code"
-                >
-                  <Code className="h-[16px] w-[16px]" />
-                </button>
               </div>
               <div className="flex items-center gap-2">
                 <span className="text-micro text-muted-foreground hidden sm:inline">
-                  Shift+Enter for new line
+                  Shift+Enter for new line · Ctrl+B, I, E to format
                 </span>
                 <button
                   type="button"

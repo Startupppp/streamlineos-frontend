@@ -1,9 +1,13 @@
 "use client";
 
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo } from "react";
+import dynamic from "next/dynamic";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { LoadingButton } from "@/components/ui/loading-button";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Archive,
   ArchiveRestore,
@@ -11,8 +15,6 @@ import {
   Pencil,
 } from "lucide-react";
 import { XIcon } from "@animateicons/react/lucide";
-import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
-import React from "react";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { formatDistanceToNow } from "date-fns";
@@ -25,30 +27,12 @@ import { ChannelMembersSection } from "./channel-members-section";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { getInitials } from "@/lib/format-utils";
 import { ConversationNotificationSettings } from "./conversation-notification-settings";
+import { ChatPanelFallback } from "./chat-lazy-fallbacks";
 
-const CloseButton = React.forwardRef<
-  HTMLButtonElement,
-  React.ButtonHTMLAttributes<HTMLButtonElement>
->(function CloseButton({ className, ...props }, ref) {
-  const { iconRef, hoverHandlers } = useAnimatedIcon();
-  return (
-    <button ref={ref} {...hoverHandlers} className={className} {...props}>
-      <XIcon ref={iconRef} size={16} className="text-muted-foreground" />
-    </button>
-  );
-});
-
-const UnpinButton = React.forwardRef<
-  HTMLButtonElement,
-  React.ButtonHTMLAttributes<HTMLButtonElement>
->(function UnpinButton({ className, ...props }, ref) {
-  const { iconRef, hoverHandlers } = useAnimatedIcon();
-  return (
-    <button ref={ref} {...hoverHandlers} className={className} {...props}>
-      <XIcon ref={iconRef} size={12} />
-    </button>
-  );
-});
+const SharedFilesPanel = dynamic(
+  () => import("./shared-files-panel").then((m) => ({ default: m.SharedFilesPanel })),
+  { ssr: false, loading: () => <ChatPanelFallback label="Loading shared files" /> },
+);
 
 export function ChannelInfoPanel({
   channelId,
@@ -69,6 +53,9 @@ export function ChannelInfoPanel({
   const unpinMessage = useUnpinMessage();
   const archiveChannel = useArchiveChannel();
   const unarchiveChannel = useUnarchiveChannel();
+  const [editing, setEditing] = useState(false);
+  const [confirmArchiveOpen, setConfirmArchiveOpen] = useState(false);
+  const [unpinMessageId, setUnpinMessageId] = useState<number | null>(null);
 
   const onlineUserIds = useMemo(
     () => new Set(onlineUsers?.map((u: { userId: string }) => u.userId) ?? []),
@@ -78,37 +65,54 @@ export function ChannelInfoPanel({
   const myMember = channel?.members?.find((m) => m.user?.id === currentUserId);
   const isArchivedForMe = Boolean(myMember?.archivedAt);
 
-  const handleArchive = useCallback(async () => {
+  async function handleConfirmArchive() {
     try {
       await archiveChannel.mutateAsync(channelId);
+      setConfirmArchiveOpen(false);
       toast.success("Chat archived");
       onArchived?.();
     } catch (error) {
       toast.error(getErrorMessage(error));
     }
-  }, [archiveChannel, channelId, onArchived]);
+  }
 
-  const handleUnarchive = useCallback(async () => {
+  async function handleUnarchive() {
     try {
       await unarchiveChannel.mutateAsync(channelId);
       toast.success("Chat unarchived");
     } catch (error) {
       toast.error(getErrorMessage(error));
     }
-  }, [unarchiveChannel, channelId]);
+  }
 
-  function unpinMessageHandler(messageId: number): () => void {
-    return function handleUnpinMessage(): void {
-      unpinMessage.mutate({ channelId, messageId });
+  function handleRequestArchive() {
+    setConfirmArchiveOpen(true);
+  }
+
+  function handleStartEditing() {
+    setEditing(true);
+  }
+
+  function requestUnpinHandler(messageId: number): () => void {
+    return function handleRequestUnpin(): void {
+      setUnpinMessageId(messageId);
     };
+  }
+
+  function handleUnpinOpenChange(open: boolean) {
+    if (!open) setUnpinMessageId(null);
+  }
+
+  function handleConfirmUnpin() {
+    if (unpinMessageId === null) return;
+    unpinMessage.mutate({ channelId, messageId: unpinMessageId });
+    setUnpinMessageId(null);
   }
 
   const isAdmin = channel?.members?.some(
     (m) => m.user?.id === currentUserId && m.role === "ADMIN",
   );
   const isMultiMemberChannel = channel?.type !== "DIRECT";
-
-  const [editing, setEditing] = useState(false);
 
   return (
     <div className="flex h-full w-80 min-w-0 flex-col overflow-hidden">
@@ -117,7 +121,8 @@ export function ChannelInfoPanel({
         <div className="flex items-center gap-1">
           {isAdmin && isMultiMemberChannel && !editing && (
             <button
-              onClick={() => setEditing(true)}
+              type="button"
+              onClick={handleStartEditing}
               className="p-1.5 hover:bg-muted rounded-lg"
               title="Edit channel"
               aria-label="Edit channel"
@@ -125,122 +130,167 @@ export function ChannelInfoPanel({
               <Pencil className="h-3.5 w-3.5 text-muted-foreground" />
             </button>
           )}
-          <CloseButton
+          <AnimatedIconButton
+            type="button"
+            icon={XIcon}
+            iconSize={16}
+            variant="ghost"
             onClick={onClose}
-            className="p-1.5 hover:bg-muted rounded-lg"
-            aria-label="Close"
+            className="size-8 rounded-lg p-0 text-muted-foreground"
+            aria-label="Close details"
           />
         </div>
       </div>
 
-      <ScrollArea className="min-w-0 flex-1">
-        <div className="min-w-0 w-full max-w-full overflow-x-hidden p-4">
-          <ChannelInfoPanelProfile
-            channel={channel}
-            currentUserId={currentUserId}
-            isAdmin={Boolean(isAdmin)}
-            onlineUserIds={onlineUserIds}
-            editing={editing}
-            onEditingChange={setEditing}
-          />
+      <Tabs defaultValue="about" className="flex min-h-0 flex-1 flex-col gap-0">
+        <div className="shrink-0 px-4 pt-3">
+          <TabsList className="w-full">
+            <TabsTrigger value="about">About</TabsTrigger>
+            <TabsTrigger value="files">Files</TabsTrigger>
+          </TabsList>
+        </div>
 
-          {pins && pins.length > 0 && (
-            <div className="mb-6">
-              <h5 className="text-dense font-bold text-muted-foreground uppercase tracking-wider mb-3 px-1 flex items-center gap-1.5">
-                <Bookmark className="h-3 w-3" />
-                Pinned Messages ({pins.length})
-              </h5>
-              <div className="space-y-1.5">
-                {pins.map((pin) => (
-                  <div
-                    key={pin.id}
-                    className="flex items-start gap-2.5 px-2 py-2 rounded-lg bg-muted/20 border border-border/20 hover:bg-muted/30 transition-colors"
-                  >
-                    <Avatar className="h-6 w-6 shrink-0 mt-0.5">
-                      <AvatarImage
-                        src={resolveImageUrl(pin.message.sender?.image)}
-                      />
-                      <AvatarFallback className="text-micro font-bold">
-                        {getInitials(pin.message.sender?.name)}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div className="flex-1 min-w-0">
-                      <TruncatedText text={pin.message.sender?.name ?? ""} className="text-dense font-semibold" />
-                      <p className="text-xs text-muted-foreground line-clamp-2 break-words">
-                        {pin.message.content ??
-                          (pin.message.attachments.length > 0
-                            ? `${pin.message.attachments.length} attachment(s)`
-                            : "")}
-                      </p>
-                    </div>
-                    <UnpinButton
-                      onClick={unpinMessageHandler(pin.messageId)}
-                      className="shrink-0 p-1 hover:bg-muted rounded text-muted-foreground hover:text-foreground"
-                      title="Unpin"
-                      aria-label="Unpin message"
-                    />
+        <TabsContent value="about" className="mt-0 flex min-h-0 flex-1 flex-col">
+          <ScrollArea className="min-w-0 flex-1">
+            <div className="min-w-0 w-full max-w-full overflow-x-hidden p-4">
+              <ChannelInfoPanelProfile
+                channel={channel}
+                currentUserId={currentUserId}
+                isAdmin={Boolean(isAdmin)}
+                onlineUserIds={onlineUserIds}
+                editing={editing}
+                onEditingChange={setEditing}
+              />
+
+              {pins && pins.length > 0 && (
+                <div className="mb-6">
+                  <h5 className="text-dense font-bold text-muted-foreground uppercase tracking-wider mb-3 px-1 flex items-center gap-1.5">
+                    <Bookmark className="h-3 w-3" />
+                    Pinned Messages ({pins.length})
+                  </h5>
+                  <div className="space-y-1.5">
+                    {pins.map((pin) => (
+                      <div
+                        key={pin.id}
+                        className="flex items-start gap-2.5 px-2 py-2 rounded-lg bg-muted/20 border border-border/20 hover:bg-muted/30 transition-colors"
+                      >
+                        <Avatar className="h-6 w-6 shrink-0 mt-0.5">
+                          <AvatarImage
+                            src={resolveImageUrl(pin.message.sender?.image)}
+                          />
+                          <AvatarFallback className="text-micro font-bold">
+                            {getInitials(pin.message.sender?.name)}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div className="flex-1 min-w-0">
+                          <TruncatedText text={pin.message.sender?.name ?? ""} className="text-dense font-semibold" />
+                          <p className="text-xs text-muted-foreground line-clamp-2 break-words">
+                            {pin.message.content ??
+                              (pin.message.attachments.length > 0
+                                ? `${pin.message.attachments.length} attachment(s)`
+                                : "")}
+                          </p>
+                        </div>
+                        <AnimatedIconButton
+                          type="button"
+                          icon={XIcon}
+                          iconSize={12}
+                          variant="ghost"
+                          onClick={requestUnpinHandler(pin.messageId)}
+                          className="size-7 shrink-0 rounded p-0 text-muted-foreground hover:text-foreground"
+                          title="Unpin"
+                          aria-label="Unpin message"
+                        />
+                      </div>
+                    ))}
                   </div>
-                ))}
+                </div>
+              )}
+
+              <ChannelMembersSection
+                channelId={channelId}
+                currentUserId={currentUserId}
+                members={channel?.members ?? []}
+                isAdmin={Boolean(isAdmin)}
+                isMultiMemberChannel={isMultiMemberChannel}
+                onlineUserIds={onlineUserIds}
+                onLeftChannel={onLeftChannel}
+                onClose={onClose}
+              />
+
+              {channel && myMember && (
+                <ConversationNotificationSettings
+                  channelId={channelId}
+                  mutedUntil={myMember.mutedUntil}
+                  preference={myMember.notificationPreference}
+                />
+              )}
+
+              {channel?.createdAt && (
+                <div className="mt-6 pt-4 border-t border-border/30">
+                  <p className="text-dense text-muted-foreground text-center">
+                    {channel.type === "GROUP"
+                      ? `Created ${formatDistanceToNow(new Date(channel.createdAt), { addSuffix: true })}`
+                      : `Started ${formatDistanceToNow(new Date(channel.createdAt), { addSuffix: true })}`}
+                  </p>
+                </div>
+              )}
+
+              <div className="mt-4 pt-4 border-t border-border/30">
+                {isArchivedForMe ? (
+                  <LoadingButton
+                    variant="outline"
+                    size="sm"
+                    className="w-full h-8 text-xs"
+                    onClick={handleUnarchive}
+                    isPending={unarchiveChannel.isPending}
+                  >
+                    {!unarchiveChannel.isPending && <ArchiveRestore className="h-3.5 w-3.5 mr-1.5" />}
+                    Unarchive chat
+                  </LoadingButton>
+                ) : (
+                  <LoadingButton
+                    variant="outline"
+                    size="sm"
+                    className="w-full h-8 text-xs"
+                    onClick={handleRequestArchive}
+                    isPending={archiveChannel.isPending}
+                  >
+                    {!archiveChannel.isPending && <Archive className="h-3.5 w-3.5 mr-1.5" />}
+                    Archive chat
+                  </LoadingButton>
+                )}
               </div>
             </div>
-          )}
+          </ScrollArea>
+        </TabsContent>
 
-          <ChannelMembersSection
-            channelId={channelId}
-            currentUserId={currentUserId}
-            members={channel?.members ?? []}
-            isAdmin={Boolean(isAdmin)}
-            isMultiMemberChannel={isMultiMemberChannel}
-            onlineUserIds={onlineUserIds}
-            onLeftChannel={onLeftChannel}
-            onClose={onClose}
-          />
+        <TabsContent value="files" className="mt-0 flex min-h-0 flex-1 flex-col">
+          <SharedFilesPanel channelId={channelId} />
+        </TabsContent>
+      </Tabs>
 
-          {channel && myMember && (
-            <ConversationNotificationSettings
-              channelId={channelId}
-              mutedUntil={myMember.mutedUntil}
-              preference={myMember.notificationPreference}
-            />
-          )}
+      <ConfirmDialog
+        open={confirmArchiveOpen}
+        onOpenChange={setConfirmArchiveOpen}
+        title="Archive this chat?"
+        description="It moves out of your conversation list into Archive. You can unarchive it from there at any time."
+        confirmLabel="Archive"
+        destructive
+        isPending={archiveChannel.isPending}
+        keepOpenOnConfirm
+        onConfirm={handleConfirmArchive}
+      />
 
-          {channel?.createdAt && (
-            <div className="mt-6 pt-4 border-t border-border/30">
-              <p className="text-dense text-muted-foreground text-center">
-                {channel.type === "GROUP"
-                  ? `Created ${formatDistanceToNow(new Date(channel.createdAt), { addSuffix: true })}`
-                  : `Started ${formatDistanceToNow(new Date(channel.createdAt), { addSuffix: true })}`}
-              </p>
-            </div>
-          )}
-
-          <div className="mt-4 pt-4 border-t border-border/30">
-            {isArchivedForMe ? (
-              <LoadingButton
-                variant="outline"
-                size="sm"
-                className="w-full h-8 text-xs"
-                onClick={handleUnarchive}
-                isPending={unarchiveChannel.isPending}
-              >
-                {!unarchiveChannel.isPending && <ArchiveRestore className="h-3.5 w-3.5 mr-1.5" />}
-                Unarchive chat
-              </LoadingButton>
-            ) : (
-              <LoadingButton
-                variant="outline"
-                size="sm"
-                className="w-full h-8 text-xs"
-                onClick={handleArchive}
-                isPending={archiveChannel.isPending}
-              >
-                {!archiveChannel.isPending && <Archive className="h-3.5 w-3.5 mr-1.5" />}
-                Archive chat
-              </LoadingButton>
-            )}
-          </div>
-        </div>
-      </ScrollArea>
+      <ConfirmDialog
+        open={unpinMessageId !== null}
+        onOpenChange={handleUnpinOpenChange}
+        title="Unpin this message?"
+        description="It is removed from the pinned list for everyone in the conversation."
+        confirmLabel="Unpin"
+        destructive
+        onConfirm={handleConfirmUnpin}
+      />
     </div>
   );
 }

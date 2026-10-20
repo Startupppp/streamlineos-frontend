@@ -15,14 +15,6 @@ const SavedMessagesPanel = dynamic(
   { ssr: false, loading: () => <ChatPanelFallback label="Loading saved messages" /> },
 );
 
-const SharedFilesPanel = dynamic(
-  () =>
-    import("./shared-files-panel").then((m) => ({
-      default: m.SharedFilesPanel,
-    })),
-  { ssr: false, loading: () => <ChatPanelFallback label="Loading shared files" /> },
-);
-
 const ForwardMessageDialog = dynamic(
   () =>
     import("./forward-message-dialog").then((m) => ({
@@ -32,12 +24,9 @@ const ForwardMessageDialog = dynamic(
 );
 
 type SidePanelsProps = {
-  channelId: number;
   isPanelNarrow: boolean;
   showSavedPanel: boolean;
   setShowSavedPanel: (open: boolean) => void;
-  showFilesPanel: boolean;
-  setShowFilesPanel: (open: boolean) => void;
   forwardMessage: ForwardableMessage | null;
   setForwardMessage: (message: ForwardableMessage | null) => void;
   dropdownTriggerRef?: RefObject<HTMLButtonElement | null>;
@@ -52,18 +41,18 @@ const panelMotion = {
 };
 
 export function MessagePanelSidePanels({
-  channelId,
   isPanelNarrow,
   showSavedPanel,
   setShowSavedPanel,
-  showFilesPanel,
-  setShowFilesPanel,
   forwardMessage,
   setForwardMessage,
   dropdownTriggerRef,
 }: SidePanelsProps) {
   const handleCloseSaved = () => setShowSavedPanel(false);
-  const handleCloseFiles = () => setShowFilesPanel(false);
+
+  function handleForwardOpenChange(open: boolean) {
+    if (!open) setForwardMessage(null);
+  }
 
   function handleCloseAutoFocus(event: Event) {
     if (!dropdownTriggerRef?.current) return;
@@ -78,7 +67,7 @@ export function MessagePanelSidePanels({
           <motion.div {...panelMotion}>
             <SavedMessagesPanel
               onClose={handleCloseSaved}
-              onJumpToChannel={handleCloseSaved}
+              onJumped={handleCloseSaved}
             />
           </motion.div>
         )}
@@ -90,30 +79,7 @@ export function MessagePanelSidePanels({
             <SheetTitle className="sr-only">Saved messages</SheetTitle>
             <SavedMessagesPanel
               onClose={handleCloseSaved}
-              onJumpToChannel={handleCloseSaved}
-            />
-          </SheetContent>
-        </Sheet>
-      )}
-
-      <AnimatePresence>
-        {!isPanelNarrow && showFilesPanel && (
-          <motion.div {...panelMotion}>
-            <SharedFilesPanel
-              channelId={channelId}
-              onClose={handleCloseFiles}
-            />
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {isPanelNarrow && (
-        <Sheet open={showFilesPanel} onOpenChange={setShowFilesPanel}>
-          <SheetContent className="flex w-full flex-col gap-0 overflow-hidden p-0" onCloseAutoFocus={handleCloseAutoFocus}>
-            <SheetTitle className="sr-only">Shared files</SheetTitle>
-            <SharedFilesPanel
-              channelId={channelId}
-              onClose={handleCloseFiles}
+              onJumped={handleCloseSaved}
             />
           </SheetContent>
         </Sheet>
@@ -123,9 +89,7 @@ export function MessagePanelSidePanels({
         <ForwardMessageDialog
           message={forwardMessage}
           open
-          onOpenChange={(open) => {
-            if (!open) setForwardMessage(null);
-          }}
+          onOpenChange={handleForwardOpenChange}
         />
       )}
     </>

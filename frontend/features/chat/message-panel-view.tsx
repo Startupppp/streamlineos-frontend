@@ -3,7 +3,7 @@
 import React from "react";
 import dynamic from "next/dynamic";
 import { ArrowLeft } from "lucide-react";
-import { MicIcon, UsersIcon } from "@animateicons/react/lucide";
+import { InfoIcon, MicIcon } from "@animateicons/react/lucide";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { AnimatePresence, motion } from "framer-motion";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -13,14 +13,13 @@ import { TruncatedText } from "@/components/ui/truncated-text";
 import type { AiAction } from "@/components/ai";
 import { useIsChatPanelNarrow } from "./use-chat-mobile";
 import { ChannelAvatar } from "./channel-avatar";
-import { MessagePanelWorkspace } from "./message-panel-workspace";
+import { MessageList } from "./message-list";
+import { MessageInput } from "./message-input";
+import type { HuddlePanel as HuddlePanelType } from "./huddle-panel";
 import { ChatNarrowThreadActions } from "./chat-narrow-thread-actions";
 import { MessagePanelSidePanels } from "./message-panel-side-panels";
-import { BookmarkButton, PaperclipButton } from "./message-panel-actions";
-import {
-  ChatPanelFallback,
-  ChatTriggerFallback,
-} from "./chat-lazy-fallbacks";
+import { ConversationOverflowMenu } from "./message-panel-actions";
+import { ChatPanelFallback } from "./chat-lazy-fallbacks";
 import type { ChannelMember, Huddle } from "@/types/chat";
 import type { ChatChannelDetailWire } from "@/hooks/api/chat-extra-schema";
 import { getInitials } from "@/lib/format-utils";
@@ -30,16 +29,9 @@ const ThreadPanel = dynamic(
   { ssr: false, loading: () => <ChatPanelFallback label="Loading thread" /> },
 );
 
-/**
- * The trigger is a fixed-size toolbar button, so the fallback matches its box
- * rather than collapsing the header row while the AI chunk lands.
- */
-const AiActionsMenu = dynamic(
-  () => import("@/components/ai").then((m) => ({ default: m.AiActionsMenu })),
-  {
-    ssr: false,
-    loading: () => <ChatTriggerFallback label="Loading AI actions" />,
-  },
+const HuddlePanel = dynamic(
+  () => import("./huddle-panel").then((m) => ({ default: m.HuddlePanel })),
+  { ssr: false, loading: () => <ChatPanelFallback label="Loading huddle" /> },
 );
 
 interface PanelHeaderProps {
@@ -59,15 +51,9 @@ interface PanelHeaderProps {
   huddleJoinPending: boolean;
   canUseAi: boolean;
   summarizeAction: AiAction;
-  channelId: number;
-  onToggleFiles: () => void;
   onToggleSaved: () => void;
-  showFilesPanel: boolean;
-  showSavedPanel: boolean;
   onToggleInfo: () => void;
   showInfoPanel: boolean;
-  isSidebarCollapsed?: boolean;
-  onToggleSidebar?: () => void;
 }
 
 interface ThreadProps {
@@ -77,9 +63,15 @@ interface ThreadProps {
   onClose: () => void;
 }
 
+interface WorkspaceProps {
+  messageList: React.ComponentProps<typeof MessageList>;
+  messageInput: React.ComponentProps<typeof MessageInput>;
+  huddle?: React.ComponentProps<typeof HuddlePanelType>;
+}
+
 interface MessagePanelViewProps {
   header: PanelHeaderProps;
-  workspace: React.ComponentProps<typeof MessagePanelWorkspace>;
+  workspace: WorkspaceProps;
   thread: ThreadProps;
   sidePanels: React.ComponentProps<typeof MessagePanelSidePanels>;
   isOnline: boolean;
@@ -108,11 +100,7 @@ export function MessagePanelView({
     huddleJoinPending,
     canUseAi,
     summarizeAction,
-    channelId,
-    onToggleFiles,
     onToggleSaved,
-    showFilesPanel,
-    showSavedPanel,
     onToggleInfo,
     showInfoPanel,
   } = header;
@@ -239,46 +227,22 @@ export function MessagePanelView({
                 )}
               </AnimatedIconButton>
             )}
-            {canUseAi && (
-              <AiActionsMenu
-                actions={[summarizeAction]}
-                align="end"
-                disabled={!channelId}
-              />
-            )}
-            <PaperclipButton
-              onClick={onToggleFiles}
-              className={cn(
-                "h-8 w-8 rounded-lg flex items-center justify-center hover:bg-muted/60 transition-colors",
-                showFilesPanel
-                  ? "bg-muted text-status-info-ink"
-                  : "text-muted-foreground hover:text-foreground",
-              )}
-              title="Shared files"
-              aria-label="Shared files"
-            />
-            <BookmarkButton
-              active={showSavedPanel}
-              onClick={onToggleSaved}
-              className={cn(
-                "h-8 w-8 rounded-lg flex items-center justify-center hover:bg-muted/60 transition-colors",
-                showSavedPanel
-                  ? "bg-muted text-status-warning-ink"
-                  : "text-muted-foreground hover:text-foreground",
-              )}
-              title="Saved messages"
-              aria-label="Saved messages"
-            />
             <AnimatedIconButton
-              icon={UsersIcon}
+              type="button"
+              icon={InfoIcon}
               iconSize={16}
               variant="ghost"
               size="icon"
-              className={cn("w-8 rounded-lg", showInfoPanel && "bg-muted")}
+              className={cn("size-8 rounded-lg", showInfoPanel && "bg-muted")}
               onClick={onToggleInfo}
-              aria-label="Toggle member info"
-              aria-pressed={showInfoPanel}
+              aria-label="Conversation details"
               aria-expanded={showInfoPanel}
+            />
+            <ConversationOverflowMenu
+              canUseAi={canUseAi}
+              summarizeAction={summarizeAction}
+              onOpenSaved={onToggleSaved}
+              triggerClassName="size-8 rounded-lg p-0 text-muted-foreground hover:text-foreground"
             />
           </div>
         </div>
@@ -301,27 +265,24 @@ export function MessagePanelView({
             Reconnecting to live chat…
           </div>
         ) : null}
-        <MessagePanelWorkspace
-          {...workspace}
-          mobileActions={
-            isPanelNarrow ? (
-              <ChatNarrowThreadActions
-                activeHuddle={activeHuddle}
-                isInHuddle={isInHuddle}
-                onHuddle={onHuddle}
-                huddleStartPending={huddleStartPending}
-                huddleJoinPending={huddleJoinPending}
-                canUseAi={canUseAi}
-                summarizeAction={summarizeAction}
-                channelId={channelId}
-                onToggleFiles={onToggleFiles}
-                onToggleSaved={onToggleSaved}
-                onToggleInfo={onToggleInfo}
-                dropdownTriggerRef={dropdownTriggerRef}
-              />
-            ) : null
-          }
-        />
+        <MessageList {...workspace.messageList} />
+        {isPanelNarrow ? (
+          <ChatNarrowThreadActions
+            activeHuddle={activeHuddle}
+            isInHuddle={isInHuddle}
+            onHuddle={onHuddle}
+            huddleStartPending={huddleStartPending}
+            huddleJoinPending={huddleJoinPending}
+            canUseAi={canUseAi}
+            summarizeAction={summarizeAction}
+            onToggleSaved={onToggleSaved}
+            onToggleInfo={onToggleInfo}
+            showInfoPanel={showInfoPanel}
+            dropdownTriggerRef={dropdownTriggerRef}
+          />
+        ) : null}
+        <MessageInput {...workspace.messageInput} />
+        {workspace.huddle ? <HuddlePanel {...workspace.huddle} /> : null}
       </div>
 
       <AnimatePresence>
