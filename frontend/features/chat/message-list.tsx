@@ -191,6 +191,8 @@ export function MessageList({
     handleLoadOlder();
   }, [scrollContainerRef, handleLoadOlder]);
 
+  if (joinRequired) return <ChannelJoinState channelId={channelId} channelName={joinRequired.channelName} />;
+
   /*
    * Before the empty layout, and before the entity-action provider mounts a
    * query of its own: a channel whose history could not be read has nothing to
@@ -199,8 +201,6 @@ export function MessageList({
    * shared-files-panel) already branch here; the timeline was the one that
    * rendered a failure as an ordinary empty conversation.
    */
-  if (joinRequired) return <ChannelJoinState channelId={channelId} channelName={joinRequired.channelName} />;
-
   if (isError) {
     return (
       <div className="flex-1 min-h-0 min-w-0 flex flex-col justify-center p-4">

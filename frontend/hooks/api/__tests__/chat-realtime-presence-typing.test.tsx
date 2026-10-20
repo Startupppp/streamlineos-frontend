@@ -138,3 +138,20 @@ describe("useChatRealtime typing over presence", () => {
     });
   });
 });
+
+describe("useChatRealtime after an in-panel join", () => {
+  it("attaches message and presence subscriptions only once the join requirement clears", async () => {
+    const ably = makeAbly();
+    useAbly.mockReturnValue(ably.client);
+    const { result, rerender } = renderHook(({ pending }) => useChatRealtime(7, pending), {
+      wrapper,
+      initialProps: { pending: true },
+    });
+    expect(ably.channel.subscribe).not.toHaveBeenCalled();
+    expect(ably.channel.presence.subscribe).not.toHaveBeenCalled();
+    expect(result.current.isConnected).toBe(false);
+    rerender({ pending: false });
+    await waitFor(() => expect(result.current.isConnected).toBe(true));
+    expect(ably.channel.presence.subscribe).toHaveBeenCalledTimes(1);
+  });
+});

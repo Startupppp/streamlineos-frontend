@@ -77,7 +77,7 @@ export function useMessagePanelData({
   const saveMessage = useSaveMessage();
   const unsaveMessage = useUnsaveMessage();
   const { data: onlineUsers } = useChatOnlineUsers();
-  const { isConnected: ablyConnected, typingUserIds, publishTyping } = useChatRealtime(channelId);
+  const { isConnected: ablyConnected, typingUserIds, publishTyping } = useChatRealtime(channelId, joinRequired !== null);
   const { isConnected: ablySocketConnected } = useAblyConnection();
 
   useHuddleRealtime(channelId);

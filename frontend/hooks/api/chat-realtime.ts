@@ -64,7 +64,10 @@ function payloadToMessage(payload: MessagePayload, parent: Message | undefined):
   };
 }
 
-export function useChatRealtime(channelId: number | null): {
+export function useChatRealtime(
+  channelId: number | null,
+  joinRequired = false,
+): {
   isConnected: boolean;
   typingUserIds: string[];
   publishTyping: () => void;
@@ -95,7 +98,7 @@ export function useChatRealtime(channelId: number | null): {
   }, [reconnectCount, channelId, queryClient]);
 
   useEffect(() => {
-    if (!orgId || !channelId || channelId <= 0) return;
+    if (joinRequired || !orgId || !channelId || channelId <= 0) return;
 
     const channelName = chatChannelName(orgId, channelId);
     const channel = ably.channels.get(channelName);
@@ -204,10 +207,10 @@ export function useChatRealtime(channelId: number | null): {
         safeUnsubscribe(channel, event, guarded(event, handlers[event]));
       }
     };
-  }, [ably, channelId, orgId, queryClient, currentUserId]);
+  }, [ably, channelId, orgId, queryClient, currentUserId, joinRequired]);
 
   useEffect(() => {
-    if (!orgId || !channelId || channelId <= 0) return;
+    if (joinRequired || !orgId || !channelId || channelId <= 0) return;
     const channel = ably.channels.get(chatChannelName(orgId, channelId));
     const timers = typingTimers.current;
     const stop = (userId: string): void => {
@@ -241,7 +244,7 @@ export function useChatRealtime(channelId: number | null): {
       idleTimer.current = null;
       setTypingUserIds([]);
     };
-  }, [ably, channelId, orgId, currentUserId]);
+  }, [ably, channelId, orgId, currentUserId, joinRequired]);
 
   const publishTyping = useCallback(() => {
     if (!orgId || !channelId || channelId <= 0 || !currentUserId || !isConnected) return;

@@ -197,6 +197,8 @@ export function refreshJoinedChannel(queryClient: QueryClient, channelId: number
     collaborationQueryKeys.chat.messages(channelId),
     collaborationQueryKeys.chat.channel(channelId),
     collaborationQueryKeys.chat.messageContextsInChannel(channelId),
+    collaborationQueryKeys.chat.pins(channelId),
+    collaborationQueryKeys.chat.huddle(channelId),
   ])
     void queryClient.refetchQueries({
       queryKey,

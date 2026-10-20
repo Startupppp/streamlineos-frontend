@@ -1,9 +1,12 @@
 import type { ReactNode } from "react";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { QueryClient, QueryClientProvider, useQuery } from "@tanstack/react-query";
 import { act, render, renderHook, screen, waitFor } from "@testing-library/react";
 import { toast } from "sonner";
 import { apiClient } from "@/lib/api-client";
 import { ApiError } from "@/lib/api-envelope";
+import { useCan } from "@/hooks/api/access";
+import { collaborationQueryKeys } from "@/lib/query-keys/collaboration";
+import { refreshJoinedChannel } from "@/hooks/api/chat-read-cache";
 import { useJoinChannel } from "@/hooks/api/chat-core-mutations-b";
 import { readChannelJoinRequired } from "./chat-helpers";
 import { ChannelJoinState } from "./channel-join-state";
@@ -92,6 +95,37 @@ describe("ChannelJoinState", () => {
       screen.getByRole("button", { name: "Join #general" }).click();
     });
     await waitFor(() => expect(mockedPost).toHaveBeenCalledWith(`/chat/channels/${CHANNEL_ID}/join`, undefined, undefined, expect.anything()));
+  });
+});
+
+describe("ChannelJoinState without chat:channels:write", () => {
+  it("shows no Join button", () => {
+    jest.mocked(useCan).mockReturnValueOnce(false);
+    render(<ChannelJoinState channelId={CHANNEL_ID} channelName="general" />, { wrapper: Wrapper });
+    expect(screen.queryByRole("button")).toBeNull();
+    expect(screen.getByText(/don't have permission to join/i)).toBeInTheDocument();
+  });
+});
+
+describe("refreshJoinedChannel", () => {
+  it("refetches errored pins and huddle queries", async () => {
+    const calls = { pins: 0, huddle: 0 };
+    const read = (name: "pins" | "huddle") => () => {
+      calls[name] += 1;
+      return joined ? Promise.resolve(null) : Promise.reject(joinRequired());
+    };
+    renderHook(
+      () => [
+        useQuery({ queryKey: collaborationQueryKeys.chat.pins(CHANNEL_ID), queryFn: read("pins"), retry: false }),
+        useQuery({ queryKey: collaborationQueryKeys.chat.huddle(CHANNEL_ID), queryFn: read("huddle"), retry: false }),
+      ],
+      { wrapper: Wrapper },
+    );
+    await waitFor(() => expect(calls).toEqual({ pins: 1, huddle: 1 }));
+    await waitFor(() => expect(client.getQueryState(collaborationQueryKeys.chat.huddle(CHANNEL_ID))?.status).toBe("error"));
+    joined = true;
+    refreshJoinedChannel(client, CHANNEL_ID);
+    await waitFor(() => expect(calls).toEqual({ pins: 2, huddle: 2 }));
   });
 });
 
