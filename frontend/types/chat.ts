@@ -1,198 +1,72 @@
 import type { z } from "zod";
 import type {
+  ChatChannelMemberWire,
+  chatChannelContract,
+  chatChannelMemberPreviewContract,
+  chatHuddleContract,
+  chatMessageContract,
+  chatMessagesPageContract,
+  chatNotifPrefResponseContract,
+  chatOrgUsersContract,
+  chatPinItemContract,
+  chatPublicChannelContract,
   chatSavedMessagesContract,
+  chatSearchChannelsContract,
   chatSearchMessagesContract,
+  chatSearchUsersContract,
+  chatThreadPageContract,
 } from "@/hooks/api/chat-schema";
 
-/**
- * Resolved for the reader at read time. A null card means the record is gone,
- * or the reader may not see it — the two are deliberately indistinguishable.
- */
-export interface EntityCard {
-  type: string;
-  id: string;
-  title: string;
-  subtitle: string | null;
-  status: string | null;
-  href: string;
-}
+export type Message = z.infer<typeof chatMessageContract>;
+export type MessagesPage = z.infer<typeof chatMessagesPageContract>;
+export type ThreadPage = z.infer<typeof chatThreadPageContract>;
 
-export interface TicketEntityRef {
-  type: "ticket";
-  id: string;
-  card?: EntityCard | null;
-  projectId?: number;
-  ticketNumber?: number;
-  projectKey?: string;
-  title?: string;
-  status?: string;
-  priority?: string;
-}
+export type MessageMetadata = NonNullable<Message["metadata"]>;
+export type EntityRef = NonNullable<MessageMetadata["entities"]>[number];
+export type TicketEntityRef = Extract<EntityRef, { type: "ticket" }>;
+export type CommentEntityRef = Extract<EntityRef, { type: "comment" }>;
 
-export interface CommentEntityRef {
-  type: "comment";
-  id: string;
-  ticketId: number;
-  projectId: number;
-}
+type ChannelMemberPreviewWire = z.infer<
+  typeof chatChannelMemberPreviewContract
+>;
 
-export type EntityRef = TicketEntityRef | CommentEntityRef;
+export type ChannelMember = Omit<ChannelMemberPreviewWire, "user"> &
+  Partial<
+    Pick<ChatChannelMemberWire, "lastReadAt" | "joinedAt" | "archivedAt">
+  > & {
+    user:
+      | (NonNullable<ChannelMemberPreviewWire["user"]> &
+          Partial<Pick<NonNullable<ChatChannelMemberWire["user"]>, "email">>)
+      | null;
+  };
 
-export interface MessageMetadata {
-  entities?: EntityRef[];
-  forwardCount?: number;
-}
-
-export type ChannelType = "DIRECT" | "GROUP" | "PUBLIC" | "PRIVATE";
-
-export type ChannelMemberRole = "ADMIN" | "MEMBER";
-
-export type MessageType = "text" | "lead_submission" | "system";
-
-
-export type ChatNotificationPreference = "DEFAULT" | "ALL" | "MENTIONS" | "NOTHING";
-
-/**
- * Mirrors the backend's one member wire shape (`chat-channel-member-shape.ts`), which the detail
- * route, the paginated member list, the entity-channel read and the bounded channel-list preview
- * all emit. Until 2026-09-03 those shipped the identity nested as `membership.user`, this interface
- * declared it flat, and `apiClient.get<Channel>` cast the difference away — so `user` was undefined
- * on every member and every DIRECT header read "Unknown".
- *
- * `userId` is nullable because a member whose organization row is gone flattens to nulls rather
- * than to missing keys. `email` is absent from the list preview and present on the detail route.
- */
-export interface ChannelMember {
-  id: number;
-  channelId: number;
-  userId: string | null;
-  role: ChannelMemberRole;
-  lastReadAt?: Date | string | null;
-  joinedAt?: Date | string | null;
-  mutedUntil: Date | string | null;
-  archivedAt?: Date | string | null;
-  isFavorite: boolean;
-  notificationPreference: ChatNotificationPreference;
-  user: {
-    id: string;
-    name: string | null;
-    image: string | null;
-    email?: string | null;
-  } | null;
-}
-
-export interface LastMessage {
-  content: string | null;
-  senderName: string | null;
-  createdAt: Date | string | null;
-}
-
-/**
- * `createdBy` was declared here and emitted by NO read path: `chat_channels` has
- * no `created_by` column, only `created_by_membership_id`, which the list
- * projection deliberately omits. Nothing read it, so it never showed — the same
- * class as the three chat defects, caught by writing `chatChannelContract`.
- */
-export interface Channel {
-  id: number;
-  orgId?: string;
-  name: string;
-  type: ChannelType;
-  description?: string | null;
-  avatarUrl: string | null;
-  isArchived: boolean;
-  isPrivate?: boolean;
-  entityType: string | null;
-  entityId: string | null;
-  lastMessageAt?: Date | string | null;
-  createdAt?: Date | string | null;
-  updatedAt?: Date | string | null;
-  members: ChannelMember[];
-  /** List rows only: the TRUE roster size, which `members.length` is a bounded preview of. */
-  memberCount?: number;
-  membersTruncated?: boolean;
-  unreadCount: number;
-  lastMessage: LastMessage | null;
-}
-
-export interface PublicChannel {
-  id: number;
-  name: string;
-  description: string | null;
-  avatarUrl: string | null;
-  type: ChannelType;
-  memberCount: number;
-  isMember: boolean;
-  createdAt: Date | string | null;
-  lastMessageAt: Date | string | null;
-}
-
-/**
- * The six keys the timeline projects. `messageId` and `createdAt` were declared
- * and never emitted by that read path; `fileUrl` was declared, never emitted, and
- * READ — forwarding a message re-posts its attachments and the send DTO requires
- * `fileUrl`, so every forward of a message with an attachment came back 400.
- * `fileUrl` is now in the projection; the two nobody reads are gone.
- */
-export interface MessageAttachment {
-  id: number;
-  fileName: string;
-  fileUrl: string;
-  fileKey: string;
-  fileSize: number;
-  mimeType: string;
-}
-
-export interface MessageReplyTo {
-  id: number;
-  content: string | null;
-  sender: { id: string | null; name: string | null; image: string | null };
-}
-
-/**
- * `senderId` is NULLABLE — `sender_membership_id` is `ON DELETE SET NULL` — and
- * `sender` is the opposite: the read path always builds the object, with all
- * three fields null when the identity is gone. Declared the other way round,
- * these were the half of the `isOwn` defect a typecheck could not see.
- */
-export interface Message {
-  id: number;
-  channelId: number;
-  senderId: string | null;
-  content: string | null;
-  replyToId: number | null;
-  isEdited: boolean;
-  isDeleted: boolean;
-  messageType: MessageType;
-  metadata: MessageMetadata | null;
-  actionStatus: string | null;
-  createdAt: Date | string | null;
-  updatedAt: Date | string | null;
-  sender: { id: string | null; name: string | null; image: string | null };
-  attachments: MessageAttachment[];
-  replyTo: MessageReplyTo | null;
-  reactions?: Record<string, string[]>;
-  /** Set only on the sender's optimistic copy, so the realtime echo can replace it. */
-  clientKey?: string | null;
-}
-
-export interface OrgUser {
-  id: string;
-  name: string | null;
-  email: string | null;
-  image: string | null;
-  role: string | null;
-}
-
-export interface MessagesPage {
-  messages: Message[];
-  nextCursor: number | null;
-}
+export type Channel = z.infer<typeof chatChannelContract>;
+export type PublicChannel = z.infer<typeof chatPublicChannelContract>;
 
 export interface ChannelPage<TChannel> {
   channels: TChannel[];
   nextCursor: string | null;
 }
+
+export type ChatNotificationPreference = z.infer<
+  typeof chatNotifPrefResponseContract
+>["notificationPreference"];
+
+export type OrgUser = z.infer<typeof chatOrgUsersContract>[number];
+
+export type PinnedMessage = z.infer<typeof chatPinItemContract>;
+
+export type Huddle = z.infer<typeof chatHuddleContract>;
+export type HuddleParticipant = Huddle["participants"][number];
+
+export type SearchMessagesResult = z.infer<typeof chatSearchMessagesContract>;
+export type SearchChannelResult = z.infer<
+  typeof chatSearchChannelsContract
+>[number];
+export type SearchUserResult = z.infer<typeof chatSearchUsersContract>[number];
+
+export type SavedMessagesPage = z.infer<typeof chatSavedMessagesContract>;
+export type SavedMessage = SavedMessagesPage["items"][number];
 
 export interface CreateDMInput {
   targetUserId: string;
@@ -240,89 +114,10 @@ export interface SendMessageInput {
   replyToId?: number;
   attachments?: AttachmentInput[];
   metadata?: MessageMetadata;
-  /**
-   * Per-logical-send idempotency key, matching `clientKey` in the backend's
-   * `chat.schemas.ts`. The send path pre-checks it, arbitrates on the partial
-   * unique index `uniq_chat_messages_client_key` and replays the winner of a
-   * race — but only when the client actually sends one. Minted by
-   * `use-message-composer.ts` and held stable while the draft is unchanged, so a
-   * send re-issued after a timeout replays instead of inserting a second row.
-   */
   clientKey?: string;
 }
 
 export interface EditMessageInput {
   messageId: number;
   content: string;
-}
-
-export interface ThreadPage {
-  parentMessage: Message;
-  replies: Message[];
-  nextCursor: number | null;
-}
-
-export interface PinnedMessage {
-  id: number;
-  channelId: number;
-  messageId: number;
-  /** The pinner's user id; the person is `pinnedByUser`. */
-  pinnedBy: string | null;
-  pinnedByUser: { id: string; name: string | null } | null;
-  pinnedAt: Date | string;
-  /** Loaded without `replyTo`; `sender` is null once the sender's membership is gone. */
-  message: Omit<Message, "replyTo" | "metadata" | "actionStatus" | "sender"> & {
-    sender: { id: string; name: string | null; image: string | null } | null;
-  };
-}
-
-/**
- * `userId` and `startedBy` are NULLABLE, and the backend has always emitted them
- * that way: `flattenChannelMember` and `loadHuddleWire` both resolve a missing
- * `organization_members` row to `null`. Declared non-nullable here, they were the
- * half of the huddle defect a typecheck could not see.
- */
-export interface HuddleParticipant {
-  id: number;
-  huddleId: number;
-  userId: string | null;
-  joinedAt: Date | string;
-  leftAt: Date | string | null;
-  user?: { id: string; name: string | null; image: string | null } | null;
-}
-
-export interface Huddle {
-  id: number;
-  channelId: number;
-  startedBy: string | null;
-  status: "active" | "ended";
-  calendarEventId: number | null;
-  meetingUrl: string | null;
-  startedAt: Date | string;
-  endedAt: Date | string | null;
-  participants: HuddleParticipant[];
-  startedByUser?: { id: string; name: string | null } | null;
-}
-
-export type SearchMessagesResult = z.infer<typeof chatSearchMessagesContract>;
-
-
-
-export type SavedMessagesPage = z.infer<typeof chatSavedMessagesContract>;
-export type SavedMessage = SavedMessagesPage["items"][number];
-
-export interface SearchChannelResult {
-  id: number;
-  name: string | null;
-  type: string;
-  description: string | null;
-  avatarUrl: string | null;
-  isMember: boolean;
-}
-
-export interface SearchUserResult {
-  id: string;
-  name: string | null;
-  email: string;
-  image: string | null;
 }

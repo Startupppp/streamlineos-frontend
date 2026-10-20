@@ -2,12 +2,6 @@ import type { ReactNode } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { act, render, screen } from "@testing-library/react";
 
-/**
- * CHAT-015. /chat resolves through usePageState + PageState over the
- * conversation-list read: denial is not emptiness, loading is a skeleton of the
- * real layout, and a read that never answers says so with a Try again instead
- * of an endless skeleton (CHAT-F-001/F-004, moved here from the sidebar).
- */
 
 const mockScopes: { current: Record<string, string> } = { current: {} };
 

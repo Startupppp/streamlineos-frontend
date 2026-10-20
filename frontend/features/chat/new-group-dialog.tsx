@@ -116,6 +116,11 @@ export function NewGroupDialog({
   const createPrivate = useCreatePrivateChannel();
   const [channelKind, setChannelKind] = useState<ChannelKind>("GROUP");
   const [name, setName] = useState("");
+  /**
+   * The slugifier drops everything it cannot use, so typing only spaces or
+   * punctuation leaves the field exactly as empty as it started and nothing on screen
+   * says why. This remembers that the last keystroke was rejected, so the hint can.
+   */
   const [nameRejected, setNameRejected] = useState(false);
   const [description, setDescription] = useState("");
   const [avatarUrl, setAvatarUrl] = useState("");
@@ -123,7 +128,7 @@ export function NewGroupDialog({
   const avatarInputRef = useRef<HTMLInputElement>(null);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [step, setStep] = useState<"info" | "members">("info");
-  const chatUsers = useChatOrgUsers(open && step === "members");
+  const chatUsers = useChatOrgUsers(step === "members");
   const candidates = useMemo(
     () =>
       (chatUsers.data ?? []).map((u) => ({

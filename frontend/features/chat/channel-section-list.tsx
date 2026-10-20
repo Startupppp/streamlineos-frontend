@@ -2,6 +2,7 @@
 
 import { useCallback, useState } from "react";
 import { cn } from "@/lib/utils";
+import { InfiniteScrollSentinel } from "@/components/ui/infinite-scroll-sentinel";
 import { ChannelListEntry } from "./channel-list-entry";
 import type { Channel } from "./chat-types";
 
@@ -41,7 +42,7 @@ export function ChannelSectionList({
 }: ChannelSectionListProps) {
   const [pagesShown, setPagesShown] = useState(1);
 
-  const handleShowMore = useCallback(() => setPagesShown((p) => p + 1), []);
+  const handleRevealMore = useCallback(() => setPagesShown((p) => p + 1), []);
 
   const total = channels.length;
   const visibleCount = Math.min(total, pagesShown * CHANNEL_SECTION_PAGE_SIZE);
@@ -72,15 +73,13 @@ export function ChannelSectionList({
           </div>
         ))}
       </div>
-      {hiddenCount > 0 ? (
-        <button
-          type="button"
-          onClick={handleShowMore}
-          className="w-full rounded-lg px-2 py-1.5 text-left text-dense font-medium text-muted-foreground transition-colors hover:bg-muted/40 hover:text-foreground"
-        >
-          {`Show ${Math.min(hiddenCount, CHANNEL_SECTION_PAGE_SIZE)} more ${label.toLowerCase()} (${visibleCount} of ${total})`}
-        </button>
-      ) : null}
+      <InfiniteScrollSentinel
+        hasNextPage={hiddenCount > 0}
+        isFetchingNextPage={false}
+        onLoadMore={handleRevealMore}
+        label={`Load more ${label.toLowerCase()} (${visibleCount} of ${total})`}
+        className={cn("py-1", compact && "w-auto")}
+      />
     </>
   );
 }

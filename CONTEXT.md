@@ -13,3 +13,19 @@
 **Linked record**: a record from another module (Build ticket/project, CRM client/deal/lead, …) referenced by type and id, resolved and access-checked through an entity adapter.
 
 **Record conversation**: the conversation attached to one linked record, embeddable on that record's module page.
+
+## Docs
+
+**Page access**: the single decision of what an actor may do to one page (view, comment, edit, manage). Every surface — open, edit, restore, visibility, export, search, Ask, preview — asks it; no caller re-derives it.
+
+**Page head**: the fixed set of page facts page access returns with its decision (id, space, status, lock, trashed state, visibility, owner, content and ACL revisions). Callers load content separately by id.
+
+**Capabilities**: the `can` set (view, comment, edit, manage) page access computes for one actor and page; the frontend renders from it instead of re-deriving permissions.
+
+**Readable pages**: the set-shaped form of page access — a predicate lists, search and Ask filter by, built from the same rules as page access.
+
+**Actor standing**: who the actor is for Docs purposes (membership, roles, admin flags, reachable spaces, permissions version). Cached across requests and keyed by ACL revision; page decisions are not.
+
+**Owner**: the member who controls a page's sharing and visibility. Ownership can transfer; the creator is history, not a right.
+
+**Deleter**: the member who moved a page to Trash; may restore it alongside anyone with manage.

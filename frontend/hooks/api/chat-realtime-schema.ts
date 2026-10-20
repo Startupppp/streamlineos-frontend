@@ -1,28 +1,8 @@
 import { z } from "zod";
-import type { EntityRef } from "@/types/chat";
-
-const entityRefSchema = z.custom<EntityRef>((val) => {
-  if (!val || typeof val !== "object" || Array.isArray(val)) return false;
-  if (!("type" in val)) return false;
-  return val.type === "ticket" || val.type === "comment";
-});
-
-const metadataSchema = z
-  .object({
-    entities: z.array(entityRefSchema).optional(),
-    forwardCount: z.number().optional(),
-  })
-  .nullable()
-  .optional();
-
-const realtimeAttachmentSchema = z.object({
-  id: z.number(),
-  fileName: z.string(),
-  fileUrl: z.string(),
-  fileKey: z.string(),
-  fileSize: z.number(),
-  mimeType: z.string(),
-});
+import {
+  chatMessageAttachmentContract,
+  chatMessageMetadataContract,
+} from "@/hooks/api/chat-schema/message-schema";
 
 export const messagePayloadSchema = z.object({
   id: z.number(),
@@ -33,9 +13,9 @@ export const messagePayloadSchema = z.object({
   content: z.string().nullable(),
   createdAt: z.string().nullable(),
   replyToId: z.number().nullable(),
-  metadata: metadataSchema,
+  metadata: chatMessageMetadataContract.optional(),
   messageType: z.enum(["text", "lead_submission", "system"]).optional(),
-  attachments: z.array(realtimeAttachmentSchema).optional(),
+  attachments: z.array(chatMessageAttachmentContract).optional(),
   idempotencyKey: z.string().optional(),
   // The sender's per-send key, so the sender's own window can swap its optimistic copy.
   clientKey: z.string().nullable().optional(),
@@ -49,10 +29,6 @@ export const messageUpdatedPayloadSchema = z.object({
   updatedAt: z.string(),
 });
 
-/**
- * `ChatMessagesService.attachEntity`: a record was made from the message (convert
- * to task). Only `{type, id}` travels — each reader's refetch resolves the card.
- */
 export const messageEntitiesUpdatedPayloadSchema = z.object({
   id: z.number(),
   channelId: z.number(),

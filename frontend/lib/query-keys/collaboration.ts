@@ -8,10 +8,13 @@ export const collaborationQueryKeys = {
     publicChannels: () => [...base, "chat", "publicChannels"] as const,
     channel: (channelId: number) =>
       [...base, "chat", "channel", channelId] as const,
+    messagesAll: () => [...base, "chat", "messages"] as const,
     messages: (channelId: number, cursor?: number) =>
       cursor === undefined
         ? ([...base, "chat", "messages", channelId] as const)
         : ([...base, "chat", "messages", channelId, cursor] as const),
+    messageContext: (channelId: number, messageId: number) =>
+      [...base, "chat", "messageContext", channelId, messageId] as const,
     poll: (channelId: number, since: string) =>
       [...base, "chat", "poll", channelId, since] as const,
     entityActions: (channelId: number, referenceKeys: string) =>
@@ -21,7 +24,14 @@ export const collaborationQueryKeys = {
     unreadTotal: () => [...base, "chat", "unreadTotal"] as const,
     onlineUsers: () => [...base, "chat", "onlineUsers"] as const,
     orgUsers: () => [...base, "chat", "orgUsers"] as const,
-    search: (query: string) => [...base, "chat", "search", query] as const,
+    searchMessages: (query: string) =>
+      [...base, "chat", "search", "messages", query] as const,
+    searchChannels: (query: string) =>
+      [...base, "chat", "search", "channels", query] as const,
+    searchUsers: (query: string) =>
+      [...base, "chat", "search", "users", query] as const,
+    entityChannel: (entityType: string | null, entityId: string | null) =>
+      [...base, "chat", "entity", entityType, entityId] as const,
     pins: (channelId: number) => [...base, "chat", "pins", channelId] as const,
     thread: (channelId: number, messageId: number) =>
       [...base, "chat", "thread", channelId, messageId] as const,

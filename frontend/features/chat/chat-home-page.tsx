@@ -68,6 +68,11 @@ const ChannelInfoPanel = dynamic(
 
 type UrlWrite = "push" | "replace";
 
+function dropActionParams(next: URLSearchParams) {
+  next.delete("search");
+  next.delete("dm");
+}
+
 function readPositiveIntParam(
   params: ReadonlyURLSearchParams,
   name: string,
@@ -95,7 +100,7 @@ export function ChatHomePage() {
     type: "huddle";
   } | null>(null);
   const [createDialogOverride, setCreateDialogOverride] =
-    useState<ChatCreateDialog | null>(null);
+    useState<ChatCreateDialog | null>(() => (dmRequested ? "dm" : null));
   const createDialog =
     createDialogOverride ?? (dmRequested ? "dm" : null);
   const { sidebarCollapsed, handleToggleSidebar } = useChatSidebarCollapse();
@@ -128,36 +133,35 @@ export function ChatHomePage() {
     [searchParams, router],
   );
 
-  const handleSelectChannel = useCallback(
-    (channelId: number) => {
+  const openConversation = useCallback(
+    (channelId: number, targetMessageId: number | null) => {
       setCreateDialogOverride(null);
+      const hasActionParams = searchParams.has("search") || searchParams.has("dm");
+      if (hasActionParams) writeUrl("replace", dropActionParams);
       const unchanged =
         channelId === activeChannelId &&
-        !searchParams.has("message") &&
-        !searchParams.has("search") &&
-        !searchParams.has("dm");
+        targetMessageId === null &&
+        !searchParams.has("message");
       if (unchanged) return;
       writeUrl("push", (next) => {
+        dropActionParams(next);
         next.set("channel", String(channelId));
-        next.delete("message");
-        next.delete("search");
-        next.delete("dm");
+        if (targetMessageId === null) next.delete("message");
+        else next.set("message", String(targetMessageId));
       });
     },
     [activeChannelId, searchParams, writeUrl],
   );
 
+  const handleSelectChannel = useCallback(
+    (channelId: number) => openConversation(channelId, null),
+    [openConversation],
+  );
+
   const handleOpenMessage = useCallback(
-    (channelId: number, targetMessageId: number) => {
-      setCreateDialogOverride(null);
-      writeUrl("push", (next) => {
-        next.set("channel", String(channelId));
-        next.set("message", String(targetMessageId));
-        next.delete("search");
-        next.delete("dm");
-      });
-    },
-    [writeUrl],
+    (channelId: number, targetMessageId: number) =>
+      openConversation(channelId, targetMessageId),
+    [openConversation],
   );
 
   const handleSearchScopeChange = useCallback(
@@ -224,6 +228,11 @@ export function ChatHomePage() {
     () => handleSearchScopeChange("messages"),
     [handleSearchScopeChange],
   );
+
+  const consumeDmParam = dmRequested && createDialogOverride === "dm";
+  useEffect(() => {
+    if (consumeDmParam) writeUrl("replace", (next) => next.delete("dm"));
+  }, [consumeDmParam, writeUrl]);
 
   useEffect(() => {
     window.dispatchEvent(

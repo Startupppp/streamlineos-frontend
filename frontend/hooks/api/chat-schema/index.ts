@@ -65,6 +65,7 @@ export {
 } from "./huddle-schema";
 export type { ChatHuddleWire } from "./huddle-schema";
 export {
+  chatMessageContextContract,
   chatMessageContract,
   chatMessagesPageContract,
   chatPollPageContract,

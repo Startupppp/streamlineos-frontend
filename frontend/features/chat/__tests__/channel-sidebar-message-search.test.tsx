@@ -3,12 +3,6 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 
-/**
- * CHAT-012. One search dialog for messages, channels and people, owned by the
- * sidebar. Each result kind must land somewhere actionable: a message result on
- * the exact message, a non-member public channel joined before it opens, a
- * person on a direct message.
- */
 
 jest.mock("next/navigation", () => ({
   useRouter: () => ({ push: jest.fn(), replace: jest.fn() }),

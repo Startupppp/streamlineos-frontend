@@ -4,19 +4,18 @@ import {
   Fragment,
   useCallback,
   useEffect,
-  useLayoutEffect,
   useMemo,
   useRef,
 } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { InfiniteScrollSentinel } from "@/components/ui/infinite-scroll-sentinel";
 import { Send, ArrowDown } from "lucide-react";
 import React from "react";
 import { cn } from "@/lib/utils";
 import type { Message } from "./chat-types";
 import { MessageItem } from "./message-list-item";
+import { useOlderHistoryLoader } from "./use-chat-scroll";
 import { ErrorState } from "@/components/shared/error-state";
 import { EntityActionsProvider } from "./entity-actions-context";
 
@@ -32,6 +31,11 @@ interface MessageListProps {
   groupedMessages: GroupedMessages[];
   messages: Message[];
   isLoading: boolean;
+  /**
+   * The history read failed. Without this the list fell through to its empty
+   * layout, so a 500 or a 403 on `GET /chat/channels/:id/messages` was
+   * indistinguishable from a channel nobody has written in yet.
+   */
   isError?: boolean;
   errorMessage?: string;
   onRetry?: () => void;
@@ -148,48 +152,6 @@ function useMessageAnchor({
   return isPresent && messageId ? messageId : null;
 }
 
-interface PrependScrollKeeperOptions {
-  scrollContainerRef: React.RefObject<HTMLDivElement | null>;
-  groupedMessages: GroupedMessages[];
-  hasNextPage: boolean | undefined;
-  isFetchingNextPage: boolean;
-  fetchNextPage: () => void;
-}
-
-function usePrependScrollKeeper({
-  scrollContainerRef,
-  groupedMessages,
-  hasNextPage,
-  isFetchingNextPage,
-  fetchNextPage,
-}: PrependScrollKeeperOptions): () => void {
-  const pendingRef = useRef<{ fromBottom: number; height: number } | null>(
-    null,
-  );
-
-  const loadOlder = useCallback(() => {
-    const el = scrollContainerRef.current;
-    pendingRef.current = el
-      ? { fromBottom: el.scrollHeight - el.scrollTop, height: el.scrollHeight }
-      : null;
-    fetchNextPage();
-  }, [fetchNextPage, scrollContainerRef]);
-
-  useLayoutEffect(() => {
-    const el = scrollContainerRef.current;
-    const pending = pendingRef.current;
-    if (!el || !pending || isFetchingNextPage) return;
-    if (el.scrollHeight === pending.height) {
-      if (!hasNextPage) pendingRef.current = null;
-      return;
-    }
-    el.scrollTop = el.scrollHeight - pending.fromBottom;
-    pendingRef.current = null;
-  }, [groupedMessages, hasNextPage, isFetchingNextPage, scrollContainerRef]);
-
-  return loadOlder;
-}
-
 const ScrollToBottomButton = React.forwardRef<
   HTMLButtonElement,
   React.ButtonHTMLAttributes<HTMLButtonElement>
@@ -256,14 +218,24 @@ export function MessageList({
     isFetchingNextPage,
     fetchNextPage,
   });
-  const handleLoadOlder = usePrependScrollKeeper({
+  const olderHistorySentinelRef = useOlderHistoryLoader({
     scrollContainerRef,
-    groupedMessages,
+    contentKey: groupedMessages,
+    isLoading,
+    isAwayFromLatest: showScrollBtn,
     hasNextPage,
     isFetchingNextPage,
     fetchNextPage,
   });
 
+  /*
+   * Before the empty layout, and before the entity-action provider mounts a
+   * query of its own: a channel whose history could not be read has nothing to
+   * resolve references against. The four sibling chat surfaces
+   * (channel-sidebar, channels-discovery-page, saved-messages-panel,
+   * shared-files-panel) already branch here; the timeline was the one that
+   * rendered a failure as an ordinary empty conversation.
+   */
   if (isError) {
     return (
       <div className="flex-1 min-h-0 min-w-0 flex flex-col justify-center p-4">
@@ -327,16 +299,20 @@ export function MessageList({
                   messages.length > 0 ? "justify-end" : "justify-center",
                 )}
               >
-                {showScrollBtn && (
-                  <InfiniteScrollSentinel
-                    hasNextPage={Boolean(hasNextPage)}
-                    isFetchingNextPage={isFetchingNextPage}
-                    onLoadMore={handleLoadOlder}
-                    label="Load older messages"
-                    pending="Loading older messages…"
-                    rootMargin="300px 0px 0px 0px"
-                    className="shrink-0 pt-0 pb-3"
-                  />
+                <div
+                  ref={olderHistorySentinelRef}
+                  data-older-history-sentinel
+                  aria-hidden="true"
+                  className="h-px shrink-0"
+                />
+                {isFetchingNextPage && (
+                  <p
+                    role="status"
+                    aria-live="polite"
+                    className="shrink-0 pb-3 text-center text-xs text-muted-foreground"
+                  >
+                    Loading older messages…
+                  </p>
                 )}
 
                 {groupedMessages.map((group) => (

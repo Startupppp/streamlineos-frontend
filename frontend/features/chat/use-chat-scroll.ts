@@ -1,6 +1,12 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from "react";
 
 const AT_BOTTOM_THRESHOLD = 80;
 
@@ -71,4 +77,92 @@ export function useChatScroll({
     handleScroll,
     isAtBottomRef,
   };
+}
+
+interface OlderHistoryLoaderOptions {
+  scrollContainerRef: React.RefObject<HTMLDivElement | null>;
+  contentKey: unknown;
+  isLoading: boolean;
+  isAwayFromLatest: boolean;
+  hasNextPage: boolean | undefined;
+  isFetchingNextPage: boolean;
+  fetchNextPage: () => void;
+}
+
+export function useOlderHistoryLoader({
+  scrollContainerRef,
+  contentKey,
+  isLoading,
+  isAwayFromLatest,
+  hasNextPage,
+  isFetchingNextPage,
+  fetchNextPage,
+}: OlderHistoryLoaderOptions): React.RefObject<HTMLDivElement | null> {
+  const sentinelRef = useRef<HTMLDivElement>(null);
+  const pendingRef = useRef<{
+    fromBottom: number;
+    height: number;
+    sawFetch: boolean;
+  } | null>(null);
+  const autoLoadedForRef = useRef<unknown>(null);
+
+  const loadOlder = useCallback(() => {
+    const el = scrollContainerRef.current;
+    pendingRef.current = el
+      ? {
+          fromBottom: el.scrollHeight - el.scrollTop,
+          height: el.scrollHeight,
+          sawFetch: false,
+        }
+      : null;
+    fetchNextPage();
+  }, [fetchNextPage, scrollContainerRef]);
+
+  useLayoutEffect(() => {
+    const el = scrollContainerRef.current;
+    const pending = pendingRef.current;
+    if (!el || !pending) return;
+    if (isFetchingNextPage) {
+      pending.sawFetch = true;
+      return;
+    }
+    if (el.scrollHeight === pending.height) {
+      if (pending.sawFetch || !hasNextPage) pendingRef.current = null;
+      return;
+    }
+    el.scrollTop = el.scrollHeight - pending.fromBottom;
+    pendingRef.current = null;
+  }, [contentKey, hasNextPage, isFetchingNextPage, scrollContainerRef]);
+
+  useEffect(() => {
+    const root = scrollContainerRef.current;
+    const target = sentinelRef.current;
+    if (!root || !target || isLoading || !hasNextPage || isFetchingNextPage) return;
+    if (root.scrollHeight <= root.clientHeight) {
+      if (autoLoadedForRef.current === contentKey) return;
+      autoLoadedForRef.current = contentKey;
+      loadOlder();
+      return;
+    }
+    if (!isAwayFromLatest || typeof IntersectionObserver === "undefined") return;
+    function handleIntersection(entries: IntersectionObserverEntry[]) {
+      if (entries.some((entry) => entry.isIntersecting)) loadOlder();
+    }
+    const observer = new IntersectionObserver(handleIntersection, {
+      root,
+      rootMargin: "300px 0px 0px 0px",
+    });
+    observer.observe(target);
+    return () => observer.disconnect();
+  }, [
+    scrollContainerRef,
+    contentKey,
+    isLoading,
+    isAwayFromLatest,
+    hasNextPage,
+    isFetchingNextPage,
+    loadOlder,
+  ]);
+
+  return sentinelRef;
 }

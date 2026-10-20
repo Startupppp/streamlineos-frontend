@@ -4,12 +4,6 @@ import { toast } from "sonner";
 import { MessageList } from "./message-list";
 import type { Message } from "./chat-types";
 
-const mockSentinel = jest.fn((_props: Record<string, unknown>) => null);
-
-jest.mock("@/components/ui/infinite-scroll-sentinel", () => ({
-  InfiniteScrollSentinel: (props: Record<string, unknown>) => mockSentinel(props),
-}));
-
 jest.mock("./chat-bubble", () => ({
   ChatBubble: ({ message }: { message: { id: number; content: string } }) => (
     <div id={`message-${message.id}`}>{message.content}</div>
@@ -85,17 +79,64 @@ function props(over: Partial<Parameters<typeof MessageList>[0]> = {}) {
 }
 
 let scrollIntoView: jest.Mock;
+const layout = { scrollHeight: 2000, clientHeight: 600 };
+const observers: Array<{
+  callback: IntersectionObserverCallback;
+  options: IntersectionObserverInit | undefined;
+  disconnect: jest.Mock;
+}> = [];
+
+class MockIntersectionObserver {
+  disconnect = jest.fn();
+  constructor(callback: IntersectionObserverCallback, options?: IntersectionObserverInit) {
+    observers.push({ callback, options, disconnect: this.disconnect });
+  }
+  observe() {}
+  unobserve() {}
+  takeRecords() {
+    return [];
+  }
+}
+
+beforeAll(() => {
+  Object.defineProperty(HTMLElement.prototype, "scrollHeight", {
+    configurable: true,
+    get: () => layout.scrollHeight,
+  });
+  Object.defineProperty(HTMLElement.prototype, "clientHeight", {
+    configurable: true,
+    get: () => layout.clientHeight,
+  });
+});
 
 beforeEach(() => {
   jest.clearAllMocks();
   jest.useFakeTimers();
+  layout.scrollHeight = 2000;
+  layout.clientHeight = 600;
+  observers.length = 0;
   scrollIntoView = jest.fn();
   Element.prototype.scrollIntoView = scrollIntoView;
+  Object.defineProperty(window, "IntersectionObserver", {
+    configurable: true,
+    writable: true,
+    value: MockIntersectionObserver,
+  });
 });
 
 afterEach(() => {
   jest.useRealTimers();
 });
+
+function fireIntersection() {
+  const observer = observers[observers.length - 1];
+  act(() => {
+    observer.callback(
+      [{ isIntersecting: true } as IntersectionObserverEntry],
+      {} as IntersectionObserver,
+    );
+  });
+}
 
 describe("MessageList — older history loads by infinite scroll, never a button", () => {
   it("renders no 'Load older messages' button", () => {
@@ -103,28 +144,104 @@ describe("MessageList — older history loads by infinite scroll, never a button
     expect(screen.queryByRole("button", { name: /older/i })).toBeNull();
   });
 
-  it("puts an IntersectionObserver sentinel at the top once the reader leaves the bottom", () => {
-    render(<MessageList {...props({ showScrollBtn: true })} />);
-    expect(mockSentinel).toHaveBeenCalledWith(
-      expect.objectContaining({ hasNextPage: true, isFetchingNextPage: false }),
-    );
+  it("observes the top sentinel inside the conversation's scroll viewport, not the window", () => {
+    const scrollContainerRef = createRef<HTMLDivElement>();
+    render(<MessageList {...props({ showScrollBtn: true, scrollContainerRef })} />);
+    expect(observers).toHaveLength(1);
+    expect(observers[0].options?.root).toBe(scrollContainerRef.current);
+    expect(scrollContainerRef.current).not.toBeNull();
   });
 
-  it("holds the sentinel back while the reader sits at the latest message, so opening a channel does not pull an extra page", () => {
-    render(<MessageList {...props({ showScrollBtn: false })} />);
-    expect(mockSentinel).not.toHaveBeenCalled();
+  it("holds the observer back while the reader sits at the latest message, so opening a channel does not pull an extra page", () => {
+    const fetchNextPage = jest.fn();
+    render(<MessageList {...props({ showScrollBtn: false, fetchNextPage })} />);
+    expect(observers).toHaveLength(0);
+    expect(fetchNextPage).not.toHaveBeenCalled();
   });
 
-  it("the sentinel's load fetches the next older page", () => {
+  it("the sentinel coming into view fetches the next older page", () => {
     const fetchNextPage = jest.fn();
     render(<MessageList {...props({ showScrollBtn: true, fetchNextPage })} />);
-    const sentinelProps = mockSentinel.mock.calls[mockSentinel.mock.calls.length - 1][0];
-    const onLoadMore = sentinelProps.onLoadMore;
-    if (typeof onLoadMore !== "function") throw new Error("sentinel has no onLoadMore");
-    act(() => {
-      onLoadMore();
-    });
+    fireIntersection();
     expect(fetchNextPage).toHaveBeenCalledTimes(1);
+  });
+
+  it("loads older history when the first page does not fill the viewport, so there is nothing to scroll", () => {
+    layout.scrollHeight = 400;
+    const fetchNextPage = jest.fn();
+    const groupedMessages = grouped([10, 11, 12]);
+    const { rerender } = render(<MessageList {...props({ fetchNextPage, groupedMessages })} />);
+    expect(fetchNextPage).toHaveBeenCalledTimes(1);
+
+    rerender(
+      <MessageList {...props({ fetchNextPage, groupedMessages, isFetchingNextPage: true })} />,
+    );
+    rerender(<MessageList {...props({ fetchNextPage, groupedMessages })} />);
+    expect(fetchNextPage).toHaveBeenCalledTimes(1);
+
+    rerender(<MessageList {...props({ fetchNextPage, groupedMessages: grouped([9, 10, 11, 12]) })} />);
+    expect(fetchNextPage).toHaveBeenCalledTimes(2);
+  });
+
+  it("restores the reader's distance from the bottom after older messages are prepended", () => {
+    const fetchNextPage = jest.fn();
+    const scrollContainerRef = createRef<HTMLDivElement>();
+    const { rerender } = render(
+      <MessageList {...props({ showScrollBtn: true, fetchNextPage, scrollContainerRef })} />,
+    );
+    const viewport = scrollContainerRef.current;
+    if (!viewport) throw new Error("no viewport");
+    viewport.scrollTop = 100;
+    fireIntersection();
+
+    rerender(
+      <MessageList
+        {...props({ showScrollBtn: true, fetchNextPage, scrollContainerRef, isFetchingNextPage: true })}
+      />,
+    );
+    layout.scrollHeight = 2600;
+    rerender(
+      <MessageList
+        {...props({
+          showScrollBtn: true,
+          fetchNextPage,
+          scrollContainerRef,
+          groupedMessages: grouped([7, 8, 9, 10, 11, 12]),
+        })}
+      />,
+    );
+    expect(viewport.scrollTop).toBe(700);
+  });
+});
+
+describe("MessageList — a failed older-page fetch leaves no stale scroll restore", () => {
+  it("forgets the pending restore once the fetch settles without new content", () => {
+    const fetchNextPage = jest.fn();
+    const scrollContainerRef = createRef<HTMLDivElement>();
+    const groupedMessages = grouped([10, 11, 12]);
+    const { rerender } = render(
+      <MessageList {...props({ showScrollBtn: true, fetchNextPage, scrollContainerRef, groupedMessages })} />,
+    );
+    const viewport = scrollContainerRef.current;
+    if (!viewport) throw new Error("no viewport");
+    viewport.scrollTop = 100;
+    fireIntersection();
+    rerender(
+      <MessageList
+        {...props({ showScrollBtn: true, fetchNextPage, scrollContainerRef, groupedMessages, isFetchingNextPage: true })}
+      />,
+    );
+    rerender(
+      <MessageList {...props({ showScrollBtn: true, fetchNextPage, scrollContainerRef, groupedMessages })} />,
+    );
+
+    layout.scrollHeight = 2100;
+    rerender(
+      <MessageList
+        {...props({ showScrollBtn: true, fetchNextPage, scrollContainerRef, groupedMessages: grouped([10, 11, 12, 13]) })}
+      />,
+    );
+    expect(viewport.scrollTop).toBe(100);
   });
 });
 

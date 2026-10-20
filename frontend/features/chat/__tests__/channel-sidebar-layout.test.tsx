@@ -3,11 +3,6 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 
-/**
- * CHAT-013. The sidebar is Starred plus one Conversations list, URL-backed
- * filters, one New menu, one search entry and Archive as a secondary
- * destination. It owns the single New DM / New channel / search instance.
- */
 
 jest.mock("next/navigation", () => ({
   useRouter: () => ({ push: jest.fn(), replace: jest.fn() }),

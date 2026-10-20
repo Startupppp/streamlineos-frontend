@@ -287,17 +287,22 @@ describe("ChatHomePage — one owner for New DM / New channel / search", () => {
     expect(screen.queryByTestId("page-new-group-dialog")).toBeNull();
   });
 
-  it("?dm=1 opens the sidebar's New DM dialog, and closing it removes dm=1 without losing other params", async () => {
+  it("?dm=1 is consumed once on mount: the URL drops dm (keeping other params) while the sidebar's New DM dialog stays open", async () => {
     mockSearchParams = new URLSearchParams("dm=1&inbox=unread");
-    render(<ChatHomePage />);
+    const { rerender } = render(<ChatHomePage />);
     await act(async () => {});
     expect(screen.getByTestId("sidebar-create-dialog")).toHaveTextContent("dm");
-
-    fireEvent.click(screen.getByTestId("close-create"));
     const params = lastUrl(mockReplace);
     expect(params.has("dm")).toBe(false);
     expect(params.get("inbox")).toBe("unread");
     expect(mockPush).not.toHaveBeenCalled();
+
+    mockSearchParams = params;
+    rerender(<ChatHomePage />);
+    expect(screen.getByTestId("sidebar-create-dialog")).toHaveTextContent("dm");
+
+    fireEvent.click(screen.getByTestId("close-create"));
+    expect(screen.getByTestId("sidebar-create-dialog")).toHaveTextContent("none");
   });
 
   it("empty-state actions open the sidebar's dialogs", async () => {
@@ -359,6 +364,26 @@ describe("ChatHomePage — gated through PageState", () => {
     expect(screen.queryByTestId("empty-chat")).toBeNull();
   });
 
+  it("the loading skeleton follows the URL: with ?channel the mobile view shows the conversation, not the list", async () => {
+    mockPageState.current = { kind: "loading" };
+    mockSearchParams = new URLSearchParams("channel=5");
+    const { container } = render(<ChatHomePage />);
+    await act(async () => {});
+    const panes = container.querySelectorAll('[aria-busy="true"] > div');
+    expect(panes[0].className).toContain("hidden lg:flex");
+    expect(panes[1].className.split(" ")).not.toContain("hidden");
+  });
+
+  it("the loading skeleton honours the collapsed-sidebar cookie so the pane does not jump", async () => {
+    mockPageState.current = { kind: "loading" };
+    document.cookie = "chat-sidebar-collapsed=true; path=/";
+    const { container } = render(<ChatHomePage />);
+    await act(async () => {});
+    document.cookie = "chat-sidebar-collapsed=false; path=/";
+    const panes = container.querySelectorAll('[aria-busy="true"] > div');
+    expect(panes[0].className).toContain("lg:w-[3.5rem]");
+  });
+
   it("renders the denied surface instead of an empty inbox", async () => {
     mockPageState.current = { kind: "denied" };
     render(<ChatHomePage />);
@@ -381,5 +406,74 @@ describe("/chat/channels — preserved through a redirect to the unified channel
     render(<ChatHomePage />);
     await act(async () => {});
     expect(screen.getByTestId("sidebar-search-scope")).toHaveTextContent("channels");
+  });
+});
+
+describe("ChatHomePage — Back never reopens a consumed action param", () => {
+  let history: string[];
+
+  function syncFromHistory() {
+    const top = history[history.length - 1];
+    mockSearchParams = new URLSearchParams(top.includes("?") ? top.split("?")[1] : "");
+  }
+
+  beforeEach(() => {
+    history = [];
+    mockPush.mockImplementation((href: string) => {
+      history.push(href);
+    });
+    mockReplace.mockImplementation((href: string) => {
+      history[history.length - 1] = href;
+    });
+  });
+
+  it("mount ?dm=1, create the DM, press Back: the New DM dialog stays closed", async () => {
+    history = ["/chat?dm=1"];
+    syncFromHistory();
+    const { rerender } = render(<ChatHomePage />);
+    await act(async () => {});
+    syncFromHistory();
+    rerender(<ChatHomePage />);
+
+    fireEvent.click(screen.getByTestId("select-ch-5"));
+    syncFromHistory();
+    rerender(<ChatHomePage />);
+    expect(screen.getByTestId("panel-channel")).toHaveTextContent("5");
+
+    history.pop();
+    syncFromHistory();
+    rerender(<ChatHomePage />);
+    expect(mockSearchParams.has("dm")).toBe(false);
+    expect(screen.getByTestId("sidebar-create-dialog")).toHaveTextContent("none");
+  });
+
+  it("open search, pick a message result, press Back: search stays closed", async () => {
+    history = ["/chat?channel=2&search=messages"];
+    syncFromHistory();
+    const { rerender } = render(<ChatHomePage />);
+    await act(async () => {});
+    expect(screen.getByTestId("sidebar-search-scope")).toHaveTextContent("messages");
+
+    fireEvent.click(screen.getByTestId("open-message"));
+    syncFromHistory();
+    rerender(<ChatHomePage />);
+    expect(screen.getByTestId("panel-message")).toHaveTextContent("99");
+    expect(screen.getByTestId("sidebar-search-scope")).toHaveTextContent("none");
+
+    history.pop();
+    syncFromHistory();
+    rerender(<ChatHomePage />);
+    expect(screen.getByTestId("panel-channel")).toHaveTextContent("2");
+    expect(screen.getByTestId("sidebar-search-scope")).toHaveTextContent("none");
+  });
+
+  it("picking a channel from search on the conversation already open drops search without a new history entry", async () => {
+    history = ["/chat?channel=5&search=channels"];
+    syncFromHistory();
+    render(<ChatHomePage />);
+    await act(async () => {});
+    fireEvent.click(screen.getByTestId("select-ch-5"));
+    expect(mockPush).not.toHaveBeenCalled();
+    expect(history).toEqual(["/chat?channel=5"]);
   });
 });
