@@ -69,4 +69,72 @@ describe("useChatRealtime typing over presence", () => {
     act(() => ably.emitPresence({ clientId: "user-2", action: "leave", data: null }));
     expect(result.current.typingUserIds).toEqual([]);
   });
+
+  describe("with fake timers", () => {
+    beforeEach(() => {
+      jest.useFakeTimers();
+    });
+    afterEach(() => {
+      jest.useRealTimers();
+    });
+
+    it("ignores a replayed present member, since nothing ever clears its typing flag", async () => {
+      const ably = makeAbly();
+      useAbly.mockReturnValue(ably.client);
+      const { result } = renderHook(() => useChatRealtime(7), { wrapper });
+      await waitFor(() => expect(ably.channel.presence.subscribe).toHaveBeenCalled());
+      act(() => ably.emitPresence({ clientId: "user-2", action: "present", data: { typing: true } }));
+      expect(result.current.typingUserIds).toEqual([]);
+    });
+
+    it("drops a typing user once no further update arrives within the typing timeout", async () => {
+      const ably = makeAbly();
+      useAbly.mockReturnValue(ably.client);
+      const { result } = renderHook(() => useChatRealtime(7), { wrapper });
+      await waitFor(() => expect(ably.channel.presence.subscribe).toHaveBeenCalled());
+      act(() => ably.emitPresence({ clientId: "user-2", action: "update", data: { typing: true } }));
+      expect(result.current.typingUserIds).toEqual(["user-2"]);
+      act(() => {
+        jest.advanceTimersByTime(5_000);
+      });
+      expect(result.current.typingUserIds).toEqual([]);
+    });
+
+    it("unsubscribes, leaves presence and clears pending timers on unmount", async () => {
+      const ably = makeAbly();
+      useAbly.mockReturnValue(ably.client);
+      const { result, unmount } = renderHook(() => useChatRealtime(7), { wrapper });
+      await waitFor(() => expect(result.current.isConnected).toBe(true));
+      act(() => ably.emitPresence({ clientId: "user-2", action: "update", data: { typing: true } }));
+      act(() => result.current.publishTyping());
+      unmount();
+      expect(ably.channel.presence.unsubscribe).toHaveBeenCalled();
+      expect(ably.channel.presence.leave).toHaveBeenCalled();
+      expect(jest.getTimerCount()).toBe(0);
+      act(() => {
+        jest.advanceTimersByTime(10_000);
+      });
+      expect(ably.channel.presence.update).toHaveBeenCalledTimes(1);
+    });
+
+    it("sends typing false after the composer has been idle", async () => {
+      const ably = makeAbly();
+      useAbly.mockReturnValue(ably.client);
+      const { result } = renderHook(() => useChatRealtime(7), { wrapper });
+      await waitFor(() => expect(result.current.isConnected).toBe(true));
+      act(() => result.current.publishTyping());
+      act(() => {
+        jest.advanceTimersByTime(2_000);
+      });
+      act(() => result.current.publishTyping());
+      act(() => {
+        jest.advanceTimersByTime(2_999);
+      });
+      expect(ably.channel.presence.update).not.toHaveBeenCalledWith({ typing: false });
+      act(() => {
+        jest.advanceTimersByTime(1);
+      });
+      expect(ably.channel.presence.update).toHaveBeenLastCalledWith({ typing: false });
+    });
+  });
 });

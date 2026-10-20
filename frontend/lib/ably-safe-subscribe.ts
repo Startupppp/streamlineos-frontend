@@ -13,12 +13,6 @@ function isCapabilityError(error: unknown): boolean {
   return error.statusCode === 401 || error.statusCode === 403;
 }
 
-/**
- * Events only the SERVER may author. Typing rides presence and the browser publishes
- * nothing, but a token that still carries `publish` would let any member forge a
- * `message`, `reaction:updated` or huddle frame. The backend publishes over REST with the API key and no `clientId`; Ably
- * stamps every browser publish with the token's `clientId`, which cannot be forged.
- */
 const SERVER_AUTHORED_EVENTS: ReadonlySet<string> = new Set([
   "message",
   "message:updated",
@@ -39,7 +33,11 @@ export function isForgedServerFrame(
   event: string,
   clientId: string | null | undefined,
 ): boolean {
-  return SERVER_AUTHORED_EVENTS.has(event) && clientId !== undefined && clientId !== null;
+  return (
+    SERVER_AUTHORED_EVENTS.has(event) &&
+    clientId !== undefined &&
+    clientId !== null
+  );
 }
 
 export async function safeSubscribe(

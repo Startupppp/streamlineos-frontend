@@ -16,7 +16,7 @@ export function HuddleParticipantCard({
   isCurrentUser,
 }: HuddleParticipantCardProps) {
   return (
-    <div className="flex flex-col items-center gap-1.5 p-2 rounded-xl bg-muted/30">
+    <div role="listitem" className="flex flex-col items-center gap-1.5 p-2 rounded-xl bg-muted/30">
       <Avatar className="h-10 w-10 border-2 border-transparent">
         <AvatarImage src={resolveImageUrl(participant.user?.image)} />
         <AvatarFallback className="text-dense font-semibold">

@@ -6,7 +6,6 @@ import { ChevronDownIcon, ChevronUpIcon, UserPlusIcon } from "@animateicons/reac
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { Button } from "@/components/ui/button";
 import { useLeaveHuddle, useHuddleHeartbeat } from "@/hooks/api/chat-huddles";
-import { useEntitlements } from "@/hooks/api/entitlements";
 import type { Huddle } from "@/types/chat";
 import { useHuddleEvents } from "./use-huddle-events";
 import { TruncatedText } from "@/components/ui/truncated-text";
@@ -14,8 +13,6 @@ import { HuddleParticipantCard } from "./huddle-participant-card";
 import { useElapsedTime } from "./use-elapsed-time";
 import { HuddleInviteSection } from "./huddle-invite-section";
 import { HuddleMiniBar } from "./huddle-mini-bar";
-
-const FREE_PLAN_HUDDLE_CAP = 2;
 
 interface HuddlePanelProps {
   huddle: Huddle;
@@ -33,10 +30,6 @@ export function HuddlePanel({ huddle, channelId, currentUserId }: HuddlePanelPro
 
   const meetingUrl = huddle.meetingUrl;
   const participantCount = huddle.participants.length;
-
-  const { data: entitlements } = useEntitlements();
-  const groupHuddlesAllowed = entitlements?.features.chatGroupHuddles ?? false;
-  const inviteBlockedByPlan = !groupHuddlesAllowed && participantCount >= FREE_PLAN_HUDDLE_CAP;
 
   const handleLeave = useCallback(() => {
     leaveHuddle.mutate({ huddleId: huddle.id, channelId });
@@ -104,7 +97,11 @@ export function HuddlePanel({ huddle, channelId, currentUserId }: HuddlePanelPro
             </div>
           )}
 
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mb-3">
+          <div
+            role="list"
+            aria-label="Joined through StreamlineOS"
+            className="grid grid-cols-2 sm:grid-cols-3 gap-2 mb-3"
+          >
             {huddle.participants.map((participant) => {
               const isSelf = participant.userId !== null && participant.userId === currentUserId;
               return (
@@ -142,7 +139,6 @@ export function HuddlePanel({ huddle, channelId, currentUserId }: HuddlePanelPro
 
           <HuddleInviteSection
             show={showInviteDialog}
-            inviteBlockedByPlan={inviteBlockedByPlan}
             currentUserId={currentUserId}
             huddleId={huddle.id}
             participants={huddle.participants}

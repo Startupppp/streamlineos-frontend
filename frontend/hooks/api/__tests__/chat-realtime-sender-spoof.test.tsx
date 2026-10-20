@@ -14,8 +14,9 @@ import {
  *
  * The chat token grants every channel the caller belongs to
  * `subscribe` + `presence` (typing is presence), and a token that still carried `publish`
- * would let any member publish a `message` frame onto the channel. This hook took `payload.senderId` and `payload.senderName` from that frame and
- * wrote them into the message cache and into a desktop Notification, unverified. One member
+ * would let any member publish a `message` frame onto the channel. This hook took
+ * `payload.senderId` and `payload.senderName` from that frame and wrote them into the
+ * message cache and into a desktop Notification, unverified. One member
  * could therefore make a message appear in every open window of the channel, attributed to a
  * colleague, saying whatever they chose. Nothing is persisted, which is what makes it quiet.
  *

@@ -26,6 +26,7 @@ import {
 } from "./chat-realtime-schema";
 
 const TYPING_TIMEOUT_MS = 5_000;
+const TYPING_IDLE_MS = 3_000;
 
 const CHAT_EVENTS = ["message", "message:updated", "message:deleted", "reaction:updated"] as const;
 type ChatEvent = (typeof CHAT_EVENTS)[number];
@@ -108,6 +109,7 @@ export function useChatRealtime(channelId: number | null): {
   const isConnected = socketConnected && channelAttached;
   const [typingUserIds, setTypingUserIds] = useState<string[]>([]);
   const typingTimers = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map());
+  const idleTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const resyncedAtRef = useRef(reconnectCount);
 
   useEffect(() => {
@@ -278,8 +280,7 @@ export function useChatRealtime(channelId: number | null): {
       const userId = member.clientId;
       if (!userId || userId === currentUserId) return;
       const typing =
-        member.action !== "leave" &&
-        member.action !== "absent" &&
+        (member.action === "enter" || member.action === "update") &&
         typeof member.data === "object" &&
         member.data !== null &&
         "typing" in member.data &&
@@ -296,16 +297,21 @@ export function useChatRealtime(channelId: number | null): {
       void channel.presence.leave().catch(() => {});
       timers.forEach((timer) => clearTimeout(timer));
       timers.clear();
+      if (idleTimer.current) clearTimeout(idleTimer.current);
+      idleTimer.current = null;
       setTypingUserIds([]);
     };
   }, [ably, channelId, orgId, currentUserId]);
 
   const publishTyping = useCallback(() => {
     if (!orgId || !channelId || channelId <= 0 || !currentUserId || !isConnected) return;
-    void ably.channels
-      .get(chatChannelName(orgId, channelId))
-      .presence.update({ typing: true })
-      .catch(() => {});
+    const channel = ably.channels.get(chatChannelName(orgId, channelId));
+    void channel.presence.update({ typing: true }).catch(() => {});
+    if (idleTimer.current) clearTimeout(idleTimer.current);
+    idleTimer.current = setTimeout(() => {
+      idleTimer.current = null;
+      void channel.presence.update({ typing: false }).catch(() => {});
+    }, TYPING_IDLE_MS);
   }, [ably, channelId, orgId, currentUserId, isConnected]);
 
   return { isConnected, typingUserIds, publishTyping };

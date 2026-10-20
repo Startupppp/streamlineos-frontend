@@ -10,7 +10,6 @@ import type { Huddle } from "@/types/chat";
 
 interface HuddleInviteSectionProps {
   show: boolean;
-  inviteBlockedByPlan: boolean;
   currentUserId: string;
   huddleId: number;
   participants: Huddle["participants"];
@@ -18,7 +17,6 @@ interface HuddleInviteSectionProps {
 
 export function HuddleInviteSection({
   show,
-  inviteBlockedByPlan,
   currentUserId,
   huddleId,
   participants,
@@ -27,17 +25,6 @@ export function HuddleInviteSection({
   const inviteToHuddle = useInviteToHuddle();
 
   if (!show) return null;
-
-  if (inviteBlockedByPlan) {
-    return (
-      <div className="mt-3 border border-border/40 rounded-xl p-3 bg-muted/20">
-        <p className="text-dense font-semibold mb-1">Invite to huddle</p>
-        <p className="text-dense text-muted-foreground">
-          Huddles are one-to-one on the Free plan. Upgrade to start group huddles.
-        </p>
-      </div>
-    );
-  }
 
   const handleInvite = () => {
     if (participants.some((p) => p.userId === inviteUserId)) {
