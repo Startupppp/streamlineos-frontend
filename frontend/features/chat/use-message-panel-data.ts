@@ -145,9 +145,8 @@ export function useMessagePanelData({
   }, [flushMessageQueue]);
 
   useEffect(() => {
-    setMessageInput(localStorage.getItem(draftKey) ?? "");
     inputRef.current?.focus();
-  }, [channelId]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [channelId, inputRef]);
 
   useEffect(() => {
     const key = draftKeyRef.current;

@@ -55,11 +55,13 @@ export function mapPages<TPage>(
   return changed ? { ...data, pages } : data;
 }
 
-function mapTimeline(
-  data: InfiniteData<MessagesPage> | undefined,
+type MessageListPage = Pick<MessagesPage, "messages">;
+
+function mapTimeline<TPage extends MessageListPage>(
+  data: InfiniteData<TPage> | undefined,
   messageId: number,
   fn: (message: Message) => Message,
-): InfiniteData<MessagesPage> | undefined {
+): InfiniteData<TPage> | undefined {
   return mapPages(data, (page) => {
     const messages = mapMessageList(page.messages, messageId, fn);
     return messages === page.messages ? page : { ...page, messages };
@@ -101,6 +103,10 @@ export function patchItems<TData, TItem>(
   };
 }
 
+function messageContextsInChannel(channelId: number): QueryKey {
+  return collaborationQueryKeys.chat.messageContext(channelId, 0).slice(0, -1);
+}
+
 export function findCachedMessage(
   queryClient: QueryClient,
   channelId: number,
@@ -111,6 +117,14 @@ export function findCachedMessage(
     ?.pages.flatMap((page) => page.messages)
     .find((message) => message.id === messageId);
   if (timeline) return timeline;
+  for (const [, data] of queryClient.getQueriesData<InfiniteData<MessageListPage>>({
+    queryKey: messageContextsInChannel(channelId),
+  })) {
+    const found = data?.pages
+      .flatMap((page) => page.messages)
+      .find((message) => message.id === messageId);
+    if (found) return found;
+  }
   for (const [, data] of queryClient.getQueriesData<InfiniteData<ThreadPage>>({
     queryKey: collaborationQueryKeys.chat.threadsInChannel(channelId),
   })) {
@@ -159,6 +173,7 @@ export async function cancelChatMessageQueries(
 ): Promise<void> {
   await cancelLoadedQueries(queryClient, [
     collaborationQueryKeys.chat.messages(channelId),
+    messageContextsInChannel(channelId),
     collaborationQueryKeys.chat.threadsInChannel(channelId),
     collaborationQueryKeys.chat.pins(channelId),
     collaborationQueryKeys.chat.savedMessages(),
@@ -183,6 +198,18 @@ export function patchChatMessage(
       (message) => ({ ...message, ...patch }),
     ),
   );
+  for (const [key] of queryClient.getQueriesData<InfiniteData<MessageListPage>>({
+    queryKey: messageContextsInChannel(channelId),
+  })) {
+    keep(
+      patchItems<InfiniteData<MessageListPage>, Message>(
+        queryClient,
+        key,
+        (data, fn) => mapTimeline(data, messageId, fn),
+        (message) => ({ ...message, ...patch }),
+      ),
+    );
+  }
   for (const [key] of queryClient.getQueriesData<InfiniteData<ThreadPage>>({
     queryKey: collaborationQueryKeys.chat.threadsInChannel(channelId),
   })) {

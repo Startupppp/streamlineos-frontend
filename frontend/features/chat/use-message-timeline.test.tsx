@@ -79,9 +79,14 @@ function getCalls(suffix: string) {
   return mockedGet.mock.calls.filter(([path]) => String(path).endsWith(suffix));
 }
 
+const leaveSpy = jest.fn();
+
 function useHarness(initialAnchor: number | null) {
   const [anchor, setAnchor] = useState<number | null>(initialAnchor);
-  const handleLeave = useCallback(() => setAnchor(null), []);
+  const handleLeave = useCallback(() => {
+    leaveSpy();
+    setAnchor(null);
+  }, []);
   const history = useChatMessages(CHANNEL_ID);
   const send = useSendMessage();
   const timeline = useMessageTimeline({
@@ -151,11 +156,82 @@ describe("useMessageTimeline — an old ?message renders its own context window,
     expect(getCalls("/messages/41/context")).toHaveLength(1);
   });
 
-  it("does not ask for a context window when the target is already in the newest page", async () => {
+  it("does not ask for a context window when the cached newest page already holds the target", async () => {
+    client.setQueryData<InfiniteData<MessagesPage>>(messagesKey, {
+      pages: [{ messages: [message(100), message(101), message(102)], nextCursor: 99 }],
+      pageParams: [undefined],
+    });
     const { result } = renderHook(() => useHarness(101), { wrapper: Wrapper });
     await waitFor(() => expect(ids(result)).toEqual([100, 101, 102]));
     expect(getCalls("/context")).toHaveLength(0);
     expect(result.current.timeline.list.latestLabel).toBe("New messages");
+  });
+
+  it("starts the context read in parallel with the first page, not after it", async () => {
+    let releaseMain: (page: unknown) => void = () => undefined;
+    mockedGet.mockImplementation((path: string, params?: unknown) => {
+      if (path.endsWith("/messages") && !(params && typeof params === "object" && "cursor" in params))
+        return new Promise((resolve) => {
+          releaseMain = resolve;
+        });
+      return routeGet(path, params);
+    });
+    const { result } = renderHook(() => useHarness(41), { wrapper: Wrapper });
+    await waitFor(() => expect(getCalls("/messages/41/context")).toHaveLength(1));
+    expect(result.current.timeline.list.isLoading).toBe(true);
+    await act(async () => {
+      releaseMain({ messages: [message(100), message(101), message(102)], nextCursor: 99 });
+    });
+    await waitFor(() => expect(ids(result)).toEqual([40, 41, 42]));
+  });
+
+  it("renders the main page, not the context window, when the first page turns out to hold the target", async () => {
+    const { result } = renderHook(() => useHarness(101), { wrapper: Wrapper });
+    await waitFor(() => expect(ids(result)).toEqual([100, 101, 102]));
+    expect(result.current.timeline.list.latestLabel).toBe("New messages");
+  });
+
+  it("hides tombstones in the context window, except the anchored message itself", async () => {
+    contextResult = () =>
+      Promise.resolve({
+        messages: [
+          { ...positioned(40), isDeleted: true, content: null },
+          { ...positioned(41), isDeleted: true, content: null },
+          positioned(42),
+        ],
+        targetMessageId: 41,
+        olderCursor: null,
+        hasNewer: false,
+      });
+    const { result } = renderHook(() => useHarness(41), { wrapper: Wrapper });
+    await waitFor(() => expect(ids(result)).toEqual([41, 42]));
+  });
+
+  it("leaving is idempotent per anchor: two jumps write the URL once", async () => {
+    const { result } = await landOnOldMessage();
+    const jump = result.current.timeline.list.scrollToBottom;
+    act(() => {
+      jump();
+      jump();
+    });
+    expect(leaveSpy).toHaveBeenCalledTimes(1);
+  });
+
+  it("an auto-opened anchor thread stays open after leaving context mode", async () => {
+    contextResult = () =>
+      Promise.resolve({
+        messages: [positioned(40), { ...positioned(41), replyToId: 40 }, positioned(42)],
+        targetMessageId: 41,
+        olderCursor: null,
+        hasNewer: true,
+      });
+    const { result } = renderHook(() => useHarness(41), { wrapper: Wrapper });
+    await waitFor(() => expect(result.current.timeline.threadMessageId).toBe(40));
+    act(() => result.current.timeline.list.scrollToBottom());
+    expect(result.current.anchor).toBeNull();
+    expect(result.current.timeline.threadMessageId).toBe(40);
+    act(() => result.current.timeline.closeThread());
+    expect(result.current.timeline.threadMessageId).toBeNull();
   });
 
   it("a refetch of the main history does not move the reader off the context window", async () => {

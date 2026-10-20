@@ -416,6 +416,35 @@ describe("ThreadPanel — a ?message reply is highlighted and scrolled to inside
     expect(scrollIntoView).toHaveBeenCalled();
   });
 
+  it("pages older replies until the anchored reply arrives, and stops after a bounded number of pages", () => {
+    fetchNextPage.mockClear();
+    useThreadReplies.mockReturnValue(
+      infiniteResult(
+        [{ parentMessage: makeMessage(0), replies: [makeMessage(90), makeMessage(91)], nextCursor: 89 }],
+        true,
+      ),
+    );
+    const { rerender } = render(
+      <ThreadPanel channelId={1} parentMessageId={7} currentUserId="user-1" onClose={noop} highlightedReplyId={5} />,
+    );
+    expect(fetchNextPage).toHaveBeenCalledTimes(1);
+    for (let page = 0; page < 20; page += 1) {
+      const pages = [
+        { parentMessage: makeMessage(0), replies: [makeMessage(89 - page), makeMessage(90), makeMessage(91)], nextCursor: 1 },
+      ];
+      useThreadReplies.mockReturnValue({ ...infiniteResult(pages, true), isFetchingNextPage: true });
+      rerender(
+        <ThreadPanel channelId={1} parentMessageId={7} currentUserId="user-1" onClose={noop} highlightedReplyId={5} />,
+      );
+      useThreadReplies.mockReturnValue(infiniteResult(pages, true));
+      rerender(
+        <ThreadPanel channelId={1} parentMessageId={7} currentUserId="user-1" onClose={noop} highlightedReplyId={5} />,
+      );
+    }
+    expect(fetchNextPage.mock.calls.length).toBeGreaterThan(1);
+    expect(fetchNextPage.mock.calls.length).toBeLessThanOrEqual(10);
+  });
+
   it("marks nothing when no reply is anchored", () => {
     const { container } = renderThread(null);
     expect(container.querySelector('[data-anchored="true"]')).toBeNull();

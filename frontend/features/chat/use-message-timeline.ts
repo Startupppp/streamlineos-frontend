@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { InfiniteData } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { useChatMessageContext } from "@/hooks/api/chat-core-read";
@@ -65,26 +65,44 @@ export function useMessageTimeline({
   const mainMessages = useMemo(() => flattenMessagePages(history.data), [history.data]);
   const anchorInMain =
     anchorMessageId !== null && mainMessages.some((message) => message.id === anchorMessageId);
-  const contextEnabled = anchorMessageId !== null && !history.isLoading && !anchorInMain;
+  const contextEnabled = anchorMessageId !== null && !anchorInMain;
   const context = useChatMessageContext(channelId, anchorMessageId ?? 0, contextEnabled);
+  const showContext = contextEnabled && !history.isLoading;
   const contextMessages = useMemo(
     () =>
-      contextEnabled && context.data
-        ? [...context.data.pages].reverse().flatMap((page) => page.messages)
+      showContext && context.data
+        ? [...context.data.pages]
+            .reverse()
+            .flatMap((page) => page.messages)
+            .filter((message) => !message.isDeleted || message.id === anchorMessageId)
         : null,
-    [contextEnabled, context.data],
+    [showContext, context.data, anchorMessageId],
   );
   const inContext = contextMessages !== null;
   const messages = contextMessages ?? mainMessages;
 
-  const leave = useCallback(() => onLeaveAnchor?.(), [onLeaveAnchor]);
+  const anchor = useMessageAnchorTarget({ channelId, anchorMessageId, messages });
+  const leftAnchorRef = useRef<number | null>(null);
+  useEffect(() => {
+    if (anchorMessageId === null) leftAnchorRef.current = null;
+  }, [anchorMessageId]);
+  const dropAnchor = useCallback(() => {
+    if (anchorMessageId === null || leftAnchorRef.current === anchorMessageId) return;
+    leftAnchorRef.current = anchorMessageId;
+    onLeaveAnchor?.();
+  }, [anchorMessageId, onLeaveAnchor]);
+  const { keepThreadOpen } = anchor;
+  const leave = useCallback(() => {
+    keepThreadOpen();
+    dropAnchor();
+  }, [keepThreadOpen, dropAnchor]);
   const { error: contextError, refetch: refetchContext } = context;
   useEffect(() => {
     if (!contextEnabled || !contextError) return;
     const toastId = `chat-message-context-${channelId}-${anchorMessageId}`;
     if (isApiError(contextError) && (contextError.status === 403 || contextError.status === 404)) {
       toast.error(MESSAGE_UNAVAILABLE_COPY, { id: toastId });
-      leave();
+      dropAnchor();
       return;
     }
     function retryContext() {
@@ -94,9 +112,7 @@ export function useMessageTimeline({
       id: toastId,
       action: { label: "Try again", onClick: retryContext },
     });
-  }, [contextEnabled, contextError, refetchContext, leave, channelId, anchorMessageId]);
-
-  const anchor = useMessageAnchorTarget({ channelId, anchorMessageId, messages });
+  }, [contextEnabled, contextError, refetchContext, dropAnchor, channelId, anchorMessageId]);
 
   const [revealed, setRevealed] = useState({ channelId, pages: 1 });
 

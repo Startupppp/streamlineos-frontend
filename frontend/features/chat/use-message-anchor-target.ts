@@ -47,11 +47,15 @@ export function useMessageAnchorTarget({
     () => setChoice({ channelId, anchorMessageId, messageId: null }),
     [channelId, anchorMessageId],
   );
+  const keepThreadOpen = useCallback(
+    () => setChoice({ channelId, anchorMessageId: null, messageId: threadMessageId }),
+    [channelId, threadMessageId],
+  );
 
   const highlightedReplyId =
     anchorParentId !== null && threadMessageId === anchorParentId
       ? anchorMessageId
       : null;
 
-  return { anchorIndex, threadMessageId, highlightedReplyId, openThread, closeThread };
+  return { anchorIndex, threadMessageId, highlightedReplyId, openThread, closeThread, keepThreadOpen };
 }

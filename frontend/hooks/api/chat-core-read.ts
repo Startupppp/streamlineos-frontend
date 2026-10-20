@@ -9,7 +9,6 @@ import {
   useQueryClient,
 } from "@tanstack/react-query";
 import { useSession } from "next-auth/react";
-import { z } from "zod";
 import { apiClient } from "@/lib/api-client";
 import { isApiError, lazyContract, type ContractSource } from "@/lib/api-envelope";
 import { collaborationQueryKeys } from "@/lib/query-keys/collaboration";
@@ -63,15 +62,12 @@ const messagesPageContract = lazyContract(() =>
 );
 
 const messageContextContract = lazyContract(() =>
-  import("@/hooks/api/chat-schema").then((m) =>
-    m.chatMessageContextContract.extend({
-      messages: z.array(m.chatMessageContract.extend({ channelPosition: z.number() })),
-    }),
-  ),
+  import("@/hooks/api/chat-schema").then((m) => m.chatMessageContextContract),
 );
 
 const CHAT_MESSAGES_STALE_MS = 15_000;
 const CHAT_MESSAGES_GC_MS = 30 * 60_000;
+const CHAT_CONTEXT_GC_MS = 60_000;
 
 const pollPageContract = lazyContract(() =>
   import("@/hooks/api/chat-schema").then((m) => m.chatPollPageContract),
@@ -290,10 +286,6 @@ interface ChatContextPage {
   newerCursor: number | null;
 }
 
-type ChatContextWindow = Omit<ChatMessageContext, "messages"> & {
-  messages: Array<Message & { channelPosition: number }>;
-};
-
 const CONTEXT_WINDOW_PAGE: ChatContextPageParam = { kind: "context" };
 
 async function fetchChatContextPage(
@@ -324,7 +316,7 @@ async function fetchChatContextPage(
       newerCursor: page.hasMore ? page.nextCursor : null,
     };
   }
-  const context = await apiClient.get<ChatContextWindow>(
+  const context = await apiClient.get<ChatMessageContext>(
     `/chat/channels/${channelId}/messages/${messageId}/context`,
     undefined,
     signal,
@@ -334,7 +326,7 @@ async function fetchChatContextPage(
   return {
     messages: context.messages,
     olderCursor: context.olderCursor,
-    newerCursor: context.hasNewer && newest ? newest.channelPosition : null,
+    newerCursor: context.hasNewer ? (newest?.channelPosition ?? null) : null,
   };
 }
 
@@ -361,7 +353,7 @@ export function useChatMessageContext(
       newest.newerCursor === null ? undefined : { kind: "newer", cursor: newest.newerCursor },
     retry: retryUnlessGone,
     staleTime: Infinity,
-    gcTime: CHAT_MESSAGES_GC_MS,
+    gcTime: CHAT_CONTEXT_GC_MS,
     enabled: enabled && chatChannelReadEnabled(canRead, channelId),
   });
 }

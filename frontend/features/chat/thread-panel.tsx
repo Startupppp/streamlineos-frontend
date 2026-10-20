@@ -16,6 +16,8 @@ import { ThreadMessage } from "./thread-message";
 import { panelRevealLabel, usePanelRenderWindow } from "./panel-render-window";
 import { InfiniteScrollSentinel } from "@/components/ui/infinite-scroll-sentinel";
 
+const MAX_HIGHLIGHT_REPLY_PAGES = 10;
+
 export function ThreadPanel({
   channelId,
   parentMessageId,
@@ -121,6 +123,20 @@ export function ThreadPanel({
     [replies, windowStart],
   );
   const isHighlightedVisible = highlightedIndex >= 0;
+
+  const highlightLoadsRef = useRef<{ replyId: number | null; count: number }>({
+    replyId: null,
+    count: 0,
+  });
+  useEffect(() => {
+    if (highlightedReplyId === null || isLoading || isHighlightedVisible) return;
+    if (!hasNextPage || isFetchingNextPage) return;
+    const loads =
+      highlightLoadsRef.current.replyId === highlightedReplyId ? highlightLoadsRef.current.count : 0;
+    if (loads >= MAX_HIGHLIGHT_REPLY_PAGES) return;
+    highlightLoadsRef.current = { replyId: highlightedReplyId, count: loads + 1 };
+    void fetchNextPage();
+  }, [highlightedReplyId, isLoading, isHighlightedVisible, hasNextPage, isFetchingNextPage, fetchNextPage]);
 
   useEffect(() => {
     if (!isHighlightedVisible || highlightedReplyId === null) return;
