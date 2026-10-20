@@ -23,6 +23,7 @@ import {
   recordInboundChannelMessage,
 } from "@/hooks/api/chat-read-cache";
 import { findCachedMessage, patchChatMessage } from "@/hooks/api/chat-message-cache";
+import { findChannelRow } from "@/hooks/api/chat-channel-cache";
 import { messageDeletedPayloadSchema } from "@/hooks/api/chat-realtime-schema";
 import { collaborationQueryKeys } from "@/lib/query-keys/collaboration";
 
@@ -48,6 +49,18 @@ function readChatNotification(data: unknown): {
 }
 
 const SEEN_MESSAGE_LIMIT = 500;
+
+function rememberUnread(counted: Map<number, number>, messageId: number, channelId: number): void {
+  counted.set(messageId, channelId);
+  if (counted.size > SEEN_MESSAGE_LIMIT) {
+    const oldest = counted.keys().next().value;
+    if (oldest !== undefined) counted.delete(oldest);
+  }
+}
+
+function forgetChannelUnread(counted: Map<number, number>, channelId: number): void {
+  for (const [messageId, owner] of counted) if (owner === channelId) counted.delete(messageId);
+}
 
 function rememberMessage(seen: Set<number>, id: number): boolean {
   if (seen.has(id)) return false;
@@ -137,7 +150,7 @@ export function useChatGlobalNotifications(
           const channelDisplayName = current?.name;
 
           const countsAsUnread = !viewerIsReading(channelId, activeChannelIdRef.current);
-          if (countsAsUnread) countedUnread.set(payload.id, channelId);
+          if (countsAsUnread) rememberUnread(countedUnread, payload.id, channelId);
           recordInboundChannelMessage(queryClient, {
             channelId,
             content: payload.content,
@@ -216,6 +229,22 @@ export function useChatGlobalNotifications(
       }
     };
   }, [orgId, channelIdSignature, ably, queryClient, seen, countedUnread]);
+
+  useEffect(() => {
+    if (activeChannelId !== null) forgetChannelUnread(countedUnread, activeChannelId);
+  }, [activeChannelId, countedUnread]);
+
+  useEffect(
+    () =>
+      queryClient.getQueryCache().subscribe((event) => {
+        if (event.type !== "updated" || countedUnread.size === 0) return;
+        for (const channelId of new Set(countedUnread.values())) {
+          if (findChannelRow(queryClient, channelId)?.unreadCount === 0)
+            forgetChannelUnread(countedUnread, channelId);
+        }
+      }),
+    [queryClient, countedUnread],
+  );
 
   useEffect(() => {
     if (!orgId || !currentUserId) return;

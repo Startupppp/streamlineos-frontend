@@ -244,7 +244,7 @@ type InviteLink = { token: string; expiresAt: string | null; maxUses: number | n
 
 const INVITE_LINK_REFRESH_MS = 5 * 60_000;
 const MIN_REMINT_GAP_MS = 30_000;
-const echoedExpiries = new Set<string>();
+const echoedExpiries = new Map<number, string>();
 const MAX_TIMER_MS = 2_147_483_647;
 
 function inviteMintKey(channelId: number) {
@@ -266,7 +266,8 @@ function useMintChannelInviteLink(channelId: number) {
       const key = collaborationQueryKeys.chat.inviteLink(channelId);
       const previous = queryClient.getQueryData<InviteLink>(key);
       if (link.expiresAt !== null && previous?.expiresAt === link.expiresAt)
-        echoedExpiries.add(`${channelId}:${link.expiresAt}`);
+        echoedExpiries.set(channelId, link.expiresAt);
+      else echoedExpiries.delete(channelId);
       queryClient.setQueryData(key, link);
     },
   });
@@ -288,7 +289,7 @@ export function useChannelInviteLink(channelId: number, enabled: boolean) {
   const { dataUpdatedAt } = link;
   useEffect(() => {
     if (!active) return;
-    if (hasLink && expiresAt !== null && echoedExpiries.has(`${channelId}:${expiresAt}`)) return;
+    if (hasLink && expiresAt !== null && echoedExpiries.get(channelId) === expiresAt) return;
     const dueAt = !hasLink
       ? 0
       : Math.max(

@@ -321,6 +321,51 @@ describe("F7c — a deleted unread message in a background channel stops countin
   });
 });
 
+describe("F7d — a counted message that was read before it was deleted does not lower the badge", () => {
+  it("keeps the newer unread count when an older, already-read message is deleted", async () => {
+    const { useChatGlobalNotifications } = await import("@/hooks/api/chat-notifications");
+    const ably = ablyMock();
+    useAbly.mockReturnValue(ably);
+    const client = freshClient();
+    const row = {
+      id: 42, name: "random", type: "PUBLIC" as const, avatarUrl: null, isArchived: false, entityType: null,
+      entityId: null, members: [], memberCount: 2, membersTruncated: false, unreadCount: 0, lastMessage: null,
+    };
+    const listKey = collaborationQueryKeys.chat.myChannels();
+    const unreadTotal = collaborationQueryKeys.chat.unreadTotal();
+    client.setQueryData(listKey, { pages: [{ channels: [row], nextCursor: null }], pageParams: [null] });
+    client.setQueryData(unreadTotal, { total: 0 });
+    const { unmount } = renderHook(() => useChatGlobalNotifications([row], CHANNEL_ID, "user-1"), {
+      wrapper: wrapperFor(client),
+    });
+    await waitFor(() => expect(ably.handlers.get("message:deleted")?.length).toBe(1));
+    const deliver = (id: number) =>
+      ably.handlers.get("message")?.[0]?.({
+        data: { id, channelId: 42, senderId: "user-2", senderName: "Bo", content: "m", createdAt: "2026-10-01T10:00:00.000Z" },
+      });
+    act(() => {
+      deliver(900);
+    });
+    act(() => {
+      client.setQueryData(listKey, { pages: [{ channels: [{ ...row, unreadCount: 0 }], nextCursor: null }], pageParams: [null] });
+      client.setQueryData(unreadTotal, { total: 0 });
+    });
+    act(() => {
+      deliver(901);
+    });
+    expect(client.getQueryData(unreadTotal)).toEqual({ total: 1 });
+    act(() => {
+      ably.handlers.get("message:deleted")?.[0]?.({ data: { id: 900, channelId: 42 } });
+    });
+    expect(client.getQueryData(unreadTotal)).toEqual({ total: 1 });
+    act(() => {
+      ably.handlers.get("message:deleted")?.[0]?.({ data: { id: 901, channelId: 42 } });
+    });
+    expect(client.getQueryData(unreadTotal)).toEqual({ total: 0 });
+    unmount();
+  });
+});
+
 describe("F8 — server-authored events published by a browser are forged", () => {
   it("drops chat and huddle server events carrying a clientId", () => {
     for (const event of ["message", "message:updated", "reaction:updated", "huddle:ended", "huddle:user_joined"])
