@@ -11,7 +11,7 @@
 import { useState } from "react";
 import { render, screen, fireEvent } from "@testing-library/react";
 import { ChannelListEntry } from "./channel-list-entry";
-import type { Channel } from "./chat-types";
+import type { Channel } from "@/types/chat";
 
 let itemRenders = 0;
 

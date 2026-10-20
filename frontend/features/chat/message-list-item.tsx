@@ -1,7 +1,7 @@
 "use client";
 
 import { memo, useCallback } from "react";
-import type { Message } from "./chat-types";
+import type { Message } from "@/types/chat";
 import { ChatBubble } from "./chat-bubble";
 
 interface MessageItemProps {

@@ -1,7 +1,7 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { ChannelItem } from "./channel-item";
-import type { Channel } from "./chat-types";
+import type { Channel } from "@/types/chat";
 
 const mockPrefetch = jest.fn();
 

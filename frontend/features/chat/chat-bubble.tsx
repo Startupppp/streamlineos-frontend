@@ -12,7 +12,7 @@ import {
   formatMessageTimeFull,
   getForwardedDisplay,
 } from "./chat-helpers";
-import type { Message, TicketEntityRef, MessageMetadata } from "./chat-types";
+import type { Message, TicketEntityRef, MessageMetadata } from "@/types/chat";
 import { useCan } from "@/hooks/api/access";
 import { useEntityAction } from "./entity-actions-context";
 import { ChatOverlayFallback } from "./chat-lazy-fallbacks";

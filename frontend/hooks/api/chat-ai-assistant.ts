@@ -48,7 +48,7 @@ export interface AskAiHistoryPage {
 
 export type AiConversation = z.infer<typeof aiConversationContractDef>;
 
-export interface AiConversationListPage {
+interface AiConversationListPage {
   conversations: AiConversation[];
   nextCursor: number | null;
 }

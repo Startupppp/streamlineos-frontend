@@ -11,7 +11,7 @@ import {
   inboxStatusLabel,
   type ChatInboxFilter,
 } from "./chat-inbox-filter";
-import type { Channel } from "./chat-types";
+import type { Channel } from "@/types/chat";
 
 interface ChannelInboxSectionsProps {
   inboxFilter: ChatInboxFilter;

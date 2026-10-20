@@ -4,7 +4,7 @@ import dynamic from "next/dynamic";
 import { ChatAttachment } from "./chat-attachment";
 import { ChatInlineFallback } from "./chat-lazy-fallbacks";
 import { LinkedRecordPill } from "./chat-entity-pills";
-import type { Message, MessageMetadata } from "./chat-types";
+import type { Message, MessageMetadata } from "@/types/chat";
 
 const InternalLinkPreview = dynamic(
   () =>

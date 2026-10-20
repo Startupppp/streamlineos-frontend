@@ -47,7 +47,7 @@ export function useLinkPreview(url: string | null) {
   });
 }
 
-export interface CreateTaskFromMessageInput {
+interface CreateTaskFromMessageInput {
   channelId: number;
   messageId: number;
   projectId: number;
@@ -60,14 +60,14 @@ export interface EntityReferenceInput {
   id: string;
 }
 
-export interface SubmitEntityActionInput {
+interface SubmitEntityActionInput {
   channelId: number;
   reference: EntityReferenceInput;
   actionId: string;
   input?: Record<string, unknown>;
 }
 
-export type EntityActionInputKind = "text" | "date" | "user" | "choice";
+type EntityActionInputKind = "text" | "date" | "user" | "choice";
 
 export interface EntityActionInputSpec {
   name: string;
@@ -184,7 +184,7 @@ export function useCreateTaskFromMessage() {
   });
 }
 
-export interface EntityOption {
+interface EntityOption {
   value: string;
   label: string;
   imageUrl?: string | null;

@@ -17,7 +17,7 @@ import { formatFileSize, getInitials } from "@/lib/format-utils";
 import type { PendingAttachment } from "./message-input-types";
 import type { MentionCandidate } from "./use-chat-mentions";
 import type { MentionPrompt } from "./use-message-composer";
-import type { Message } from "./chat-types";
+import type { Message } from "@/types/chat";
 
 interface MentionItemProps {
   candidate: MentionCandidate;
@@ -63,7 +63,7 @@ interface PendingAttachmentItemProps {
   onRemove: (idx: number) => void;
 }
 
-export function PendingAttachmentItem({
+function PendingAttachmentItem({
   att,
   idx,
   onRemove,

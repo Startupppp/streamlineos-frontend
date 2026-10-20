@@ -1,7 +1,7 @@
 import { createRef, type ReactNode } from "react";
 import { act, render, screen } from "@testing-library/react";
 import { MessageList } from "./message-list";
-import type { Message } from "./chat-types";
+import type { Message } from "@/types/chat";
 
 jest.mock("./chat-bubble", () => ({
   ChatBubble: ({ message }: { message: { id: number; content: string } }) => (

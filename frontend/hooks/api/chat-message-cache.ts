@@ -103,10 +103,6 @@ export function patchItems<TData, TItem>(
   };
 }
 
-function messageContextsInChannel(channelId: number): QueryKey {
-  return collaborationQueryKeys.chat.messageContext(channelId, 0).slice(0, -1);
-}
-
 export function findCachedMessage(
   queryClient: QueryClient,
   channelId: number,
@@ -118,7 +114,7 @@ export function findCachedMessage(
     .find((message) => message.id === messageId);
   if (timeline) return timeline;
   for (const [, data] of queryClient.getQueriesData<InfiniteData<MessageListPage>>({
-    queryKey: messageContextsInChannel(channelId),
+    queryKey: collaborationQueryKeys.chat.messageContextsInChannel(channelId),
   })) {
     const found = data?.pages
       .flatMap((page) => page.messages)
@@ -141,15 +137,33 @@ export function findCachedMessageAnywhere(
   queryClient: QueryClient,
   messageId: number,
 ): Message | undefined {
-  for (const [, data] of queryClient.getQueriesData<InfiniteData<MessagesPage>>({
-    queryKey: collaborationQueryKeys.chat.messagesAll(),
-  })) {
-    const found = data?.pages
-      .flatMap((page) => page.messages)
-      .find((message) => message.id === messageId);
-    if (found) return found;
+  for (const queryKey of [
+    collaborationQueryKeys.chat.messagesAll(),
+    collaborationQueryKeys.chat.messageContextsAll(),
+  ]) {
+    for (const [, data] of queryClient.getQueriesData<InfiniteData<MessageListPage>>({ queryKey })) {
+      const found = data?.pages
+        .flatMap((page) => page.messages)
+        .find((message) => message.id === messageId);
+      if (found) return found;
+    }
   }
   return undefined;
+}
+
+export function contextWindowsHolding(
+  queryClient: QueryClient,
+  channelId: number,
+  messageId: number,
+): QueryKey[] {
+  return queryClient
+    .getQueriesData<InfiniteData<MessageListPage>>({
+      queryKey: collaborationQueryKeys.chat.messageContextsInChannel(channelId),
+    })
+    .filter(([, data]) =>
+      data?.pages.some((page) => page.messages.some((message) => message.id === messageId)),
+    )
+    .map(([key]) => key);
 }
 
 export async function cancelLoadedQueries(
@@ -173,7 +187,7 @@ export async function cancelChatMessageQueries(
 ): Promise<void> {
   await cancelLoadedQueries(queryClient, [
     collaborationQueryKeys.chat.messages(channelId),
-    messageContextsInChannel(channelId),
+    collaborationQueryKeys.chat.messageContextsInChannel(channelId),
     collaborationQueryKeys.chat.threadsInChannel(channelId),
     collaborationQueryKeys.chat.pins(channelId),
     collaborationQueryKeys.chat.savedMessages(),
@@ -199,7 +213,7 @@ export function patchChatMessage(
     ),
   );
   for (const [key] of queryClient.getQueriesData<InfiniteData<MessageListPage>>({
-    queryKey: messageContextsInChannel(channelId),
+    queryKey: collaborationQueryKeys.chat.messageContextsInChannel(channelId),
   })) {
     keep(
       patchItems<InfiniteData<MessageListPage>, Message>(

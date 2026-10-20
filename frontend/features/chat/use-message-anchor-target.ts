@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useMemo, useState } from "react";
-import type { Message } from "./chat-types";
+import type { Message } from "@/types/chat";
 
 interface ThreadChoice {
   channelId: number;

@@ -20,7 +20,7 @@ export function refreshRealtimeCapability(): void {
   void import("@/lib/ably").then((module) => module.reauthorizeAblyClients());
 }
 
-export interface ChatAttachmentUrl {
+interface ChatAttachmentUrl {
   url: string;
 }
 

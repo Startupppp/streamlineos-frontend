@@ -197,6 +197,17 @@ describe("/ record picker searches every linkable module", () => {
     expect(localStorage.getItem("chat:draft:7:links")).toContain("deal:5");
   });
 
+  it("shows the new draft's chips, not the previous draft's, as soon as the draft key changes", async () => {
+    const { hook } = harness();
+    await openRecordPickerWithResults(hook);
+    const [deal] = hook.result.current.recordPicker?.groups[0].items ?? [];
+    act(() => hook.result.current.selectRecord(deal));
+    hook.rerender({ draftKey: "chat:draft:8" });
+    expect(hook.result.current.linkedRecords).toEqual([]);
+    hook.rerender({ draftKey: "chat:draft:7" });
+    expect(hook.result.current.linkedRecords.map((r) => r.key)).toEqual(["deal:5"]);
+  });
+
   it("seeds the preview even when the send is queued offline", async () => {
     const { hook, client } = harness("PRIVATE", false, false);
     await openRecordPickerWithResults(hook);

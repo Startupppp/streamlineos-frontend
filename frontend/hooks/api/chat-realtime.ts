@@ -13,7 +13,11 @@ import {
   appendThreadReply,
   mergeInboundMessage,
 } from "@/features/chat/message-page-merge";
-import { findCachedMessage, patchChatMessage } from "@/hooks/api/chat-message-cache";
+import {
+  contextWindowsHolding,
+  findCachedMessage,
+  patchChatMessage,
+} from "@/hooks/api/chat-message-cache";
 import { patchChannelRow } from "@/hooks/api/chat-channel-cache";
 import { useAblyConnection } from "@/features/chat/use-ably-connection";
 import type { Message, MessagesPage, ThreadPage } from "@/types/chat";
@@ -136,11 +140,13 @@ export function useChatRealtime(channelId: number | null): {
     const messageUpdatedHandler = (msg: InboundMessage) => {
       const parsed = messageUpdatedPayloadSchema.safeParse(msg.data);
       if (!parsed.success) {
-        if (messageEntitiesUpdatedPayloadSchema.safeParse(msg.data).success)
-          void queryClient.invalidateQueries({
-            queryKey: collaborationQueryKeys.chat.messages(channelId),
-            exact: true,
-          });
+        const entities = messageEntitiesUpdatedPayloadSchema.safeParse(msg.data);
+        if (!entities.success) return;
+        for (const queryKey of [
+          collaborationQueryKeys.chat.messages(channelId),
+          ...contextWindowsHolding(queryClient, channelId, entities.data.id),
+        ])
+          void queryClient.invalidateQueries({ queryKey, exact: true });
         return;
       }
       const { id, content, updatedAt } = parsed.data;

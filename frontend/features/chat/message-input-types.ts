@@ -1,4 +1,4 @@
-import type { Message } from "./chat-types";
+import type { Message } from "@/types/chat";
 import type { MentionCandidate } from "./use-chat-mentions";
 import type { MentionPrompt, RecordPickerState } from "./use-message-composer";
 import type { LinkedRecordDraft } from "./composer-draft";

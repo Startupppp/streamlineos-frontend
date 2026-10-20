@@ -15,7 +15,7 @@ import { useAttachmentUrl } from "@/hooks/api/chat-shared";
 import { getFileColor, getFileExt, isImageMime } from "./chat-helpers";
 import { formatFileSize } from "@/lib/format-utils";
 
-export interface ChatAttachmentProps {
+interface ChatAttachmentProps {
   channelId: number;
   attachmentId: number;
   fileName: string;

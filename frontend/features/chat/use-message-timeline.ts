@@ -6,9 +6,8 @@ import { toast } from "sonner";
 import { useChatMessageContext } from "@/hooks/api/chat-core-read";
 import { isApiError } from "@/lib/api-envelope";
 import { getErrorMessage } from "@/lib/get-error-message";
-import type { ChannelMember, MessagesPage, SendMessageInput } from "@/types/chat";
+import type { ChannelMember, Message, MessagesPage, SendMessageInput } from "@/types/chat";
 import { getDateLabel } from "./chat-helpers";
-import type { Message } from "./chat-types";
 import { resolveFirstUnreadIndex } from "./chat-read-position";
 import { flattenMessagePages } from "./message-page-merge";
 import { resolveMessageWindowStart } from "./message-render-window";
@@ -112,6 +111,9 @@ export function useMessageTimeline({
       id: toastId,
       action: { label: "Try again", onClick: retryContext },
     });
+    return () => {
+      toast.dismiss(toastId);
+    };
   }, [contextEnabled, contextError, refetchContext, dropAnchor, channelId, anchorMessageId]);
 
   const [revealed, setRevealed] = useState({ channelId, pages: 1 });

@@ -17,6 +17,7 @@ import { panelRevealLabel, usePanelRenderWindow } from "./panel-render-window";
 import { InfiniteScrollSentinel } from "@/components/ui/infinite-scroll-sentinel";
 
 const MAX_HIGHLIGHT_REPLY_PAGES = 10;
+const HIGHLIGHT_NOT_FOUND_COPY = "That reply is further back in this thread. Scroll up to load older replies.";
 
 export function ThreadPanel({
   channelId,
@@ -124,17 +125,21 @@ export function ThreadPanel({
   );
   const isHighlightedVisible = highlightedIndex >= 0;
 
-  const highlightLoadsRef = useRef<{ replyId: number | null; count: number }>({
-    replyId: null,
-    count: 0,
-  });
+  const highlightLoadsRef = useRef(0);
+  useEffect(() => {
+    highlightLoadsRef.current = 0;
+  }, [highlightedReplyId]);
   useEffect(() => {
     if (highlightedReplyId === null || isLoading || isHighlightedVisible) return;
     if (!hasNextPage || isFetchingNextPage) return;
-    const loads =
-      highlightLoadsRef.current.replyId === highlightedReplyId ? highlightLoadsRef.current.count : 0;
-    if (loads >= MAX_HIGHLIGHT_REPLY_PAGES) return;
-    highlightLoadsRef.current = { replyId: highlightedReplyId, count: loads + 1 };
+    const loads = highlightLoadsRef.current;
+    if (loads >= MAX_HIGHLIGHT_REPLY_PAGES) {
+      if (loads === MAX_HIGHLIGHT_REPLY_PAGES)
+        toast(HIGHLIGHT_NOT_FOUND_COPY, { id: `chat-thread-highlight-${highlightedReplyId}` });
+      highlightLoadsRef.current = MAX_HIGHLIGHT_REPLY_PAGES + 1;
+      return;
+    }
+    highlightLoadsRef.current = loads + 1;
     void fetchNextPage();
   }, [highlightedReplyId, isLoading, isHighlightedVisible, hasNextPage, isFetchingNextPage, fetchNextPage]);
 

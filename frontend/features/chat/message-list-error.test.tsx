@@ -3,7 +3,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { render, screen } from "@testing-library/react";
 
 import { MessageList } from "./message-list";
-import type { Message } from "./chat-types";
+import type { Message } from "@/types/chat";
 
 jest.mock("@/lib/api-client", () => ({
   apiClient: { get: jest.fn(), post: jest.fn(), patch: jest.fn(), delete: jest.fn() },

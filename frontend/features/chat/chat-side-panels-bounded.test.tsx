@@ -8,6 +8,7 @@
  */
 import { act, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { toast } from "sonner";
 import { SharedFilesPanel } from "./shared-files-panel";
 import { SavedMessagesPanel } from "./saved-messages-panel";
 import { ThreadPanel } from "./thread-panel";
@@ -43,6 +44,10 @@ jest.mock("@/hooks/api/chat-core-read", () => ({
 
 jest.mock("./chat-attachment", () => ({
   ChatAttachment: ({ fileName }: { fileName: string }) => <span>{fileName}</span>,
+}));
+
+jest.mock("sonner", () => ({
+  toast: Object.assign(jest.fn(), { error: jest.fn(), success: jest.fn(), dismiss: jest.fn() }),
 }));
 
 const mockPush = jest.fn();
@@ -443,6 +448,53 @@ describe("ThreadPanel — a ?message reply is highlighted and scrolled to inside
     }
     expect(fetchNextPage.mock.calls.length).toBeGreaterThan(1);
     expect(fetchNextPage.mock.calls.length).toBeLessThanOrEqual(10);
+  });
+
+  function pageUntilExhausted(highlightedReplyId: number | null) {
+    useThreadReplies.mockReturnValue(
+      infiniteResult(
+        [{ parentMessage: makeMessage(0), replies: [makeMessage(90), makeMessage(91)], nextCursor: 89 }],
+        true,
+      ),
+    );
+    const view = render(
+      <ThreadPanel channelId={1} parentMessageId={7} currentUserId="user-1" onClose={noop} highlightedReplyId={highlightedReplyId} />,
+    );
+    const cycle = (replyId: number | null) => {
+      for (let page = 0; page < 20; page += 1) {
+        const pages = [
+          { parentMessage: makeMessage(0), replies: [makeMessage(89 - page), makeMessage(90), makeMessage(91)], nextCursor: 1 },
+        ];
+        useThreadReplies.mockReturnValue({ ...infiniteResult(pages, true), isFetchingNextPage: true });
+        view.rerender(
+          <ThreadPanel channelId={1} parentMessageId={7} currentUserId="user-1" onClose={noop} highlightedReplyId={replyId} />,
+        );
+        useThreadReplies.mockReturnValue(infiniteResult(pages, true));
+        view.rerender(
+          <ThreadPanel channelId={1} parentMessageId={7} currentUserId="user-1" onClose={noop} highlightedReplyId={replyId} />,
+        );
+      }
+    };
+    cycle(highlightedReplyId);
+    return { ...view, cycle };
+  }
+
+  it("tells the reader once, without blocking, when the paging budget runs out before the anchored reply arrives", () => {
+    fetchNextPage.mockClear();
+    jest.mocked(toast).mockClear();
+    pageUntilExhausted(5);
+    expect(toast).toHaveBeenCalledTimes(1);
+    expect(jest.mocked(toast).mock.calls[0]?.[0]).toMatch(/reply/i);
+  });
+
+  it("gives a fresh paging budget when the anchor moves away and comes back to the same reply", () => {
+    fetchNextPage.mockClear();
+    const { cycle } = pageUntilExhausted(5);
+    const spent = fetchNextPage.mock.calls.length;
+    cycle(null);
+    expect(fetchNextPage.mock.calls.length).toBe(spent);
+    cycle(5);
+    expect(fetchNextPage.mock.calls.length).toBeGreaterThan(spent);
   });
 
   it("marks nothing when no reply is anchored", () => {

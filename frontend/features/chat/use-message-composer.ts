@@ -14,8 +14,7 @@ import {
   CHAT_ATTACHMENT_SUMMARY,
   isAllowedChatAttachment,
 } from "./chat-attachment-types";
-import type { Message, MessageMetadata } from "./chat-types";
-import type { AttachmentInput, EditMessageInput, EntityRef, SendMessageInput } from "@/types/chat";
+import type { AttachmentInput, EditMessageInput, EntityRef, Message, MessageMetadata, SendMessageInput } from "@/types/chat";
 import type { ChatChannelDetailWire } from "@/hooks/api/chat-extra-schema";
 import { seedLinkedRecordPreview } from "@/hooks/api/chat-reference-cards";
 import { GLOBAL_SEARCH_MIN_LENGTH, useGlobalSearch } from "@/components/command-palette/hooks/use-global-search";
@@ -145,7 +144,10 @@ export function useMessageComposer({
     [pendingPrompt, messageInput],
   );
 
-  const linkedRecords = linkState.records;
+  const linkedRecords = useMemo(
+    () => (linkState.draftKey === draftKey ? linkState.records : readDraftLinks(draftKey)),
+    [linkState, draftKey],
+  );
   const setLinkedRecords = useCallback((next: SetStateAction<LinkedRecordDraft[]>) => {
     setLinkState((prev) => {
       const base = prev.draftKey === draftKey ? prev.records : readDraftLinks(draftKey);

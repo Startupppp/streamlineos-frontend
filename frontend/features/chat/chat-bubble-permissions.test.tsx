@@ -1,7 +1,7 @@
 import React from "react";
 import { render, screen } from "@testing-library/react";
 import { ChatBubble } from "./chat-bubble";
-import type { Message } from "./chat-types";
+import type { Message } from "@/types/chat";
 
 const mockGranted = new Set<string>();
 

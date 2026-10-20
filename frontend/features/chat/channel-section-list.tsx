@@ -4,7 +4,7 @@ import { useCallback, useState } from "react";
 import { cn } from "@/lib/utils";
 import { InfiniteScrollSentinel } from "@/components/ui/infinite-scroll-sentinel";
 import { ChannelListEntry } from "./channel-list-entry";
-import type { Channel } from "./chat-types";
+import type { Channel } from "@/types/chat";
 
 export const CHANNEL_SECTION_PAGE_SIZE = 30;
 

@@ -3,9 +3,8 @@ import {
   getUserDisplayName,
   type NamedUser,
 } from "@/lib/person-display";
-import { isStorageObjectKey } from "@/lib/utils";
 
-export type ChatOrgUser = {
+type ChatOrgUser = {
   id: string;
   name?: string | null;
   email?: string | null;
@@ -97,7 +96,7 @@ export function getDateLabel(date: Date | string | null) {
   return format(d, "EEEE, MMMM d");
 }
 
-export function getForwardLabel(forwardCount: number | undefined): string | null {
+function getForwardLabel(forwardCount: number | undefined): string | null {
   if (!forwardCount || forwardCount < 1) return null;
   return forwardCount > 3 ? "Forwarded multiple times" : "Forwarded";
 }

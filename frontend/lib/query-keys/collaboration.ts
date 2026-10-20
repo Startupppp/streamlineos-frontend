@@ -13,8 +13,15 @@ export const collaborationQueryKeys = {
       cursor === undefined
         ? ([...base, "chat", "messages", channelId] as const)
         : ([...base, "chat", "messages", channelId, cursor] as const),
+    messageContextsAll: () => [...base, "chat", "messageContext"] as const,
+    messageContextsInChannel: (channelId: number) =>
+      [...base, "chat", "messageContext", channelId] as const,
     messageContext: (channelId: number, messageId: number) =>
       [...base, "chat", "messageContext", channelId, messageId] as const,
+    referenceCard: (channelId: number, type: string, id: string) =>
+      [...base, "chat", "referenceCard", channelId, type, id] as const,
+    linkedRecordPreview: (type: string, id: string) =>
+      [...base, "chat", "linkedRecordPreview", type, id] as const,
     poll: (channelId: number, since: string) =>
       [...base, "chat", "poll", channelId, since] as const,
     entityActions: (channelId: number, referenceKeys: string) =>

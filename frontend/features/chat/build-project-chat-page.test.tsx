@@ -57,14 +57,21 @@ jest.mock("@/components/ui/sheet", () => ({
 }));
 
 const mockMessagePanel = jest.fn();
+const mockMessagePanelMounts = jest.fn();
 const mockChannelInfoPanel = jest.fn();
 
-jest.mock("./message-panel", () => ({
-  MessagePanel: (...args: unknown[]) => {
-    mockMessagePanel(...args);
-    return <div data-testid="message-panel" />;
-  },
-}));
+jest.mock("./message-panel", () => {
+  const { useEffect } = jest.requireActual<typeof import("react")>("react");
+  return {
+    MessagePanel: (...args: unknown[]) => {
+      mockMessagePanel(...args);
+      useEffect(() => {
+        mockMessagePanelMounts();
+      }, []);
+      return <div data-testid="message-panel" />;
+    },
+  };
+});
 
 jest.mock("./channel-info-panel", () => ({
   ChannelInfoPanel: (...args: unknown[]) => {
@@ -264,6 +271,16 @@ describe("BuildProjectChatPage — ready state", () => {
       expect.objectContaining({ currentUserId: "user-1" }),
       undefined,
     );
+  });
+
+  it("remounts the MessagePanel when the project's channel changes, so no composer or scroll state leaks between channels", () => {
+    mockUsePageState.mockReturnValue({ kind: "ready" });
+    mockUseEntityChannel.mockReturnValue(baseChannelResult({ data: { id: 1 } }));
+    const { rerender } = render(<BuildProjectChatPage projectId="1" />);
+    expect(mockMessagePanelMounts).toHaveBeenCalledTimes(1);
+    mockUseEntityChannel.mockReturnValue(baseChannelResult({ data: { id: 2 } }));
+    rerender(<BuildProjectChatPage projectId="2" />);
+    expect(mockMessagePanelMounts).toHaveBeenCalledTimes(2);
   });
 
   it("does not render the empty state or error state when the channel is present", () => {

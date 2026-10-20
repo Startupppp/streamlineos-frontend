@@ -30,7 +30,7 @@ import type { ChatChannelDetailWire } from "@/hooks/api/chat-extra-schema";
 import type { ChatMessageContext } from "@/hooks/api/chat-schema/message-schema";
 import { NO_ID_CURSOR_YET, NULL_CURSOR_YET } from "@/hooks/api/cursor-page-param";
 
-export interface ChannelListResult<TChannel> {
+interface ChannelListResult<TChannel> {
   channels: TChannel[];
   hasMore: boolean;
   isTruncated: boolean;
@@ -358,7 +358,7 @@ export function useChatMessageContext(
   });
 }
 
-export type PollPage = {
+type PollPage = {
   messages: Message[];
   nextCursor: number | null;
   hasMore: boolean;
@@ -369,7 +369,7 @@ export type ChatPollPosition =
   | { kind: "since"; since: string }
   | { kind: "cursor"; cursor: number };
 
-export function chatPollPositionKey(position: ChatPollPosition): string {
+function chatPollPositionKey(position: ChatPollPosition): string {
   return position.kind === "since"
     ? `since:${position.since}`
     : `cursor:${position.cursor}`;
@@ -454,7 +454,7 @@ export function usePresenceMap(enabled = true): ReadonlyMap<string, PresenceStat
   }, [result.data]);
 }
 
-export interface PresenceCustomStatus {
+interface PresenceCustomStatus {
   statusMessage: string | null;
   statusExpiresAt: string | null;
 }

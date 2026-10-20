@@ -39,7 +39,7 @@ import {
   useUnmuteChannel,
 } from "@/hooks/api/chat-personal-b";
 import { AddChannelMembersDialog } from "./add-channel-members-dialog";
-import type { Channel } from "./chat-types";
+import type { Channel } from "@/types/chat";
 import {
   CHAT_NOTIFICATION_OPTIONS,
   isChatNotificationPreference,

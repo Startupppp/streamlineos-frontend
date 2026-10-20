@@ -10,7 +10,8 @@ import {
   useSendMessage,
   useToggleReaction,
 } from "@/hooks/api/chat-core-mutations-a";
-import type { Message, MessagesPage } from "@/types/chat";
+import { useSaveMessage } from "@/hooks/api/chat-personal-a";
+import type { Message, MessagesPage, SavedMessagesPage } from "@/types/chat";
 
 jest.mock("next-auth/react", () => ({
   useSession: jest.fn().mockReturnValue({
@@ -153,6 +154,25 @@ describe("chat message cache — a context-window message is patched like any ot
         .find((m) => m.content === "answering");
       expect(sent?.replyTo?.id).toBe(42);
       expect(sent?.replyTo?.content).toBe("message 42");
+    });
+  });
+});
+
+describe("saving a message that only exists in a context window", () => {
+  it("adds it to Saved at once, because the optimistic lookup searches context windows as well as timelines", async () => {
+    const savedKey = collaborationQueryKeys.chat.savedMessages();
+    client.setQueryData<InfiniteData<SavedMessagesPage>>(savedKey, {
+      pages: [{ items: [], nextCursor: null }],
+      pageParams: [undefined],
+    });
+    mockedPost.mockReturnValue(new Promise(() => undefined));
+    const { result } = renderHook(() => useSaveMessage(), { wrapper: Wrapper });
+    act(() => {
+      result.current.mutate(TARGET_ID);
+    });
+    await waitFor(() => {
+      const items = client.getQueryData<InfiniteData<SavedMessagesPage>>(savedKey)?.pages[0]?.items;
+      expect(items?.map((item) => item.messageId)).toEqual([TARGET_ID]);
     });
   });
 });

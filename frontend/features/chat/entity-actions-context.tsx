@@ -7,7 +7,7 @@ import {
   type EntityAction,
   type EntityReferenceInput,
 } from "@/hooks/api/chat-entities";
-import type { Message } from "./chat-types";
+import type { Message } from "@/types/chat";
 
 interface EntityActionsValue {
   actionsByReference: Map<string, EntityAction[]>;
@@ -57,7 +57,7 @@ export function EntityActionsProvider({
 }
 
 // What the server says this actor may do here - never a permission key the client guessed.
-export function useAvailableActions(
+function useAvailableActions(
   reference: EntityReferenceInput,
 ): EntityAction[] {
   const { actionsByReference } = useContext(EntityActionsContext);

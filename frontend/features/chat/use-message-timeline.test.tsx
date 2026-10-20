@@ -28,7 +28,9 @@ jest.mock("@/hooks/api/access", () => ({
   useModuleEnabled: jest.fn().mockReturnValue(true),
 }));
 
-jest.mock("sonner", () => ({ toast: Object.assign(jest.fn(), { error: jest.fn(), success: jest.fn() }) }));
+jest.mock("sonner", () => ({
+  toast: Object.assign(jest.fn(), { error: jest.fn(), success: jest.fn(), dismiss: jest.fn() }),
+}));
 
 const CHANNEL_ID = 7;
 const messagesKey = collaborationQueryKeys.chat.messages(CHANNEL_ID);
@@ -324,5 +326,25 @@ describe("useMessageTimeline — only a gone or forbidden message drops ?message
         action.onClick(new MouseEvent("click") as unknown as React.MouseEvent<HTMLButtonElement>);
     });
     await waitFor(() => expect(ids(result)).toEqual([41]));
+  });
+
+  it("a transient failure's retry toast is dismissed once the main page turns out to hold the target", async () => {
+    let releaseMain: (page: unknown) => void = () => undefined;
+    mockedGet.mockImplementation((path: string, params?: unknown) => {
+      if (path.endsWith("/messages") && !(params && typeof params === "object" && "cursor" in params))
+        return new Promise((resolve) => {
+          releaseMain = resolve;
+        });
+      return routeGet(path, params);
+    });
+    contextResult = () => Promise.reject(new ApiError("Server error", 500));
+    const { result } = renderHook(() => useHarness(41), { wrapper: Wrapper });
+    await waitFor(() => expect(toast.error).toHaveBeenCalled());
+    expect(toast.dismiss).not.toHaveBeenCalled();
+    await act(async () => {
+      releaseMain({ messages: [message(40), message(41), message(42)], nextCursor: null });
+    });
+    await waitFor(() => expect(ids(result)).toEqual([40, 41, 42]));
+    expect(toast.dismiss).toHaveBeenCalledWith(`chat-message-context-${CHANNEL_ID}-41`);
   });
 });

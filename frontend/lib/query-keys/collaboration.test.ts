@@ -26,3 +26,20 @@ describe("the Ask OS conversation list key is not a prefix of a conversation's m
     expect(isPrefixOf(history, collaborationQueryKeys.aiChat.conversationMessages(42))).toBe(false);
   });
 });
+
+describe("chat message-context keys nest so a channel sweep reaches every jump window", () => {
+  it("makes the per-channel and all-channel context keys prefixes of a window key, without reaching another channel's windows", () => {
+    const window = collaborationQueryKeys.chat.messageContext(7, 41);
+
+    expect(isPrefixOf(collaborationQueryKeys.chat.messageContextsInChannel(7), window)).toBe(true);
+    expect(isPrefixOf(collaborationQueryKeys.chat.messageContextsAll(), window)).toBe(true);
+    expect(isPrefixOf(collaborationQueryKeys.chat.messageContextsInChannel(8), window)).toBe(false);
+  });
+
+  it("keeps reference-card and linked-record-preview keys outside the message-context sweep", () => {
+    const sweep = collaborationQueryKeys.chat.messageContextsAll();
+
+    expect(isPrefixOf(sweep, collaborationQueryKeys.chat.referenceCard(7, "ticket", "9"))).toBe(false);
+    expect(isPrefixOf(sweep, collaborationQueryKeys.chat.linkedRecordPreview("ticket", "9"))).toBe(false);
+  });
+});

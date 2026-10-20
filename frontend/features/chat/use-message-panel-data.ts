@@ -19,7 +19,7 @@ import { useStartHuddle, useJoinHuddle, useActiveHuddle } from "@/hooks/api/chat
 import { useHuddleRealtime } from "./huddle-realtime";
 import { useAblyConnection } from "./use-ably-connection";
 import { buildChatUserMap, resolveChatUserName } from "./chat-helpers";
-import type { Message } from "./chat-types";
+import type { Message } from "@/types/chat";
 import type { AiAction } from "@/components/ai";
 import { useChatSummarize } from "@/hooks/api/chat-summarize";
 import { useCan } from "@/hooks/api/access";

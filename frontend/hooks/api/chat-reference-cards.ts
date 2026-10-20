@@ -14,12 +14,8 @@ const chatResolvedReferencesContract = lazyContract(() =>
   import("@/hooks/api/chat-schema/message-schema").then((m) => m.chatResolvedReferencesContract),
 );
 
-function linkedRecordPreviewKey(reference: EntityReferenceInput) {
-  return [...collaborationQueryKeys.chat.all, "linkedRecordPreview", reference.type, reference.id] as const;
-}
-
 export function seedLinkedRecordPreview(queryClient: QueryClient, card: EntityCard): void {
-  queryClient.setQueryData(linkedRecordPreviewKey(card), card);
+  queryClient.setQueryData(collaborationQueryKeys.chat.linkedRecordPreview(card.type, card.id), card);
 }
 
 type ResolvedReferences = z.infer<typeof ResolvedReferencesContract>;
@@ -104,7 +100,7 @@ export function useResolvedReferenceCard(
   const canRead = useCan("chat:messages:read");
   const { type, id } = reference;
   return useQuery<EntityCard | null>({
-    queryKey: [...collaborationQueryKeys.chat.all, "referenceCard", channelId, type, id] as const,
+    queryKey: collaborationQueryKeys.chat.referenceCard(channelId, type, id),
     queryFn: ({ signal }) => resolveReferenceBatched(channelId, { type, id }, signal),
     staleTime: 60_000,
     enabled: enabled && canRead && channelId > 0,
@@ -113,7 +109,7 @@ export function useResolvedReferenceCard(
 
 export function useLinkedRecordPreview(reference: EntityReferenceInput): EntityCard | undefined {
   return useQuery<EntityCard>({
-    queryKey: linkedRecordPreviewKey(reference),
+    queryKey: collaborationQueryKeys.chat.linkedRecordPreview(reference.type, reference.id),
     queryFn: skipToken,
     staleTime: Infinity,
   }).data;

@@ -10,7 +10,7 @@ import {
   ChannelSectionList,
   CHANNEL_SECTION_PAGE_SIZE,
 } from "./channel-section-list";
-import type { Channel } from "./chat-types";
+import type { Channel } from "@/types/chat";
 
 jest.mock("./channel-item", () => ({
   ChannelItem: ({ channel }: { channel: { id: number; name: string } }) => (

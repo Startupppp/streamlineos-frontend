@@ -1,6 +1,6 @@
 import { act, renderHook } from "@testing-library/react";
 import { useMessageAnchorTarget } from "./use-message-anchor-target";
-import type { Message } from "./chat-types";
+import type { Message } from "@/types/chat";
 
 function message(id: number, replyToId: number | null = null): Message {
   return {

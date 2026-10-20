@@ -113,6 +113,7 @@ export function BuildProjectChatPage({ projectId }: ProjectChatPageProps) {
                 <div className="flex min-h-0 min-w-0 flex-1">
                   <div className="flex min-h-0 min-w-0 flex-1 flex-col">
                     <MessagePanel
+                      key={channel.id}
                       channelId={channel.id}
                       currentUserId={currentUserId}
                       onBack={noop}

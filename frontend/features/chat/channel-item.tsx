@@ -9,7 +9,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { formatChannelTime } from "./chat-helpers";
-import type { Channel } from "./chat-types";
+import type { Channel } from "@/types/chat";
 import { ChannelAvatar } from "./channel-avatar";
 import { resolveDirectPartner } from "./channel-member-lookup";
 import dynamic from "next/dynamic";

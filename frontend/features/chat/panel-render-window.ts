@@ -4,7 +4,7 @@ import { useCallback, useState } from "react";
 
 export const PANEL_RENDER_PAGE_SIZE = 25;
 
-export interface PanelRenderWindow {
+interface PanelRenderWindow {
   visibleCount: number;
   heldCount: number;
   windowStart: number;

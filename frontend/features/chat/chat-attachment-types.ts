@@ -7,7 +7,7 @@
  * what would have been allowed. The `title` on the attach control advertised only the
  * size limit (CHAT-S06). One list, read by the picker, the guard and the copy.
  */
-export const CHAT_ATTACHMENT_MIME_TYPES = [
+const CHAT_ATTACHMENT_MIME_TYPES = [
   "image/jpeg",
   "image/png",
   "image/gif",

@@ -11,7 +11,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Send, ArrowDown } from "lucide-react";
 import React from "react";
 import { cn } from "@/lib/utils";
-import type { Message } from "./chat-types";
+import type { Message } from "@/types/chat";
 import { MessageItem } from "./message-list-item";
 import { useOlderHistoryLoader } from "./use-chat-scroll";
 import { ErrorState } from "@/components/shared/error-state";

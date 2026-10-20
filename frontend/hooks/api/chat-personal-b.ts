@@ -166,7 +166,7 @@ export function useEntityChannel(
   });
 }
 
-export interface CreateEntityChannelInput {
+interface CreateEntityChannelInput {
   entityType: string;
   entityId: string;
 }
@@ -310,7 +310,7 @@ export function useChannelInviteLink(channelId: number, enabled: boolean) {
   };
 }
 
-export interface RegenerateInviteLinkInput {
+interface RegenerateInviteLinkInput {
   channelId: number;
   ttlSeconds?: number;
   maxUses?: number;
