@@ -23,6 +23,7 @@ function makeMsg(id: number, createdAt: string): Message {
     messageType: "text",
     metadata: null,
     actionStatus: null,
+    reactions: {},
     createdAt,
     updatedAt: createdAt,
     sender: { id: "u1", name: "Alice", image: null },

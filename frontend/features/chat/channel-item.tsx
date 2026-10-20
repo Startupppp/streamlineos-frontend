@@ -1,6 +1,8 @@
 "use client";
 
+import { useCallback } from "react";
 import { cn } from "@/lib/utils";
+import { usePrefetchChatChannel } from "@/hooks/api/chat-core-read";
 import {
   Tooltip,
   TooltipContent,
@@ -53,6 +55,12 @@ export function ChannelItem({
       ? onlineUserIds.has(otherMember.id)
       : false;
 
+  const prefetchChannel = usePrefetchChatChannel();
+  const channelId = channel.id;
+  const handlePrefetch = useCallback(() => {
+    if (!isActive) prefetchChannel(channelId);
+  }, [isActive, prefetchChannel, channelId]);
+
   const hasUnread = channel.unreadCount > 0 && !isActive;
   const preview = conversationPreview(channel);
   const rowLabel = conversationRowLabel(displayName, preview, channel.unreadCount, isActive, isOnline);
@@ -67,6 +75,8 @@ export function ChannelItem({
               data-conversation-row="true"
               tabIndex={tabIndex}
               onClick={onClick}
+              onPointerEnter={handlePrefetch}
+              onFocus={handlePrefetch}
               aria-current={isActive ? "true" : undefined}
               aria-label={rowLabel}
               className={cn(
@@ -112,6 +122,8 @@ export function ChannelItem({
         data-conversation-row="true"
         tabIndex={tabIndex}
         onClick={onClick}
+        onPointerEnter={handlePrefetch}
+        onFocus={handlePrefetch}
         aria-current={isActive ? "true" : undefined}
         aria-label={rowLabel}
         className={cn(

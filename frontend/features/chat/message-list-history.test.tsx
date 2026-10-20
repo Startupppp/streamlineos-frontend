@@ -1,6 +1,8 @@
-import { createRef, type ReactNode } from "react";
-import { act, render, screen } from "@testing-library/react";
+import { createRef, type ReactElement, type ReactNode } from "react";
+import { act, render as rtlRender, screen } from "@testing-library/react";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { toast } from "sonner";
+import { ensureChatMessageLoaded } from "@/hooks/api/chat-core-read";
 import { MessageList } from "./message-list";
 import type { Message } from "./chat-types";
 
@@ -18,15 +20,41 @@ jest.mock("sonner", () => ({
   toast: { error: jest.fn(), success: jest.fn() },
 }));
 
+jest.mock("@/hooks/api/chat-core-read", () => ({
+  ensureChatMessageLoaded: jest.fn(),
+}));
+
+const mockEnsureLoaded = jest.mocked(ensureChatMessageLoaded);
+
+let queryClient: QueryClient;
+
+function Providers({ children }: { children: ReactNode }) {
+  return <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>;
+}
+
+function render(ui: ReactElement) {
+  return rtlRender(ui, { wrapper: Providers });
+}
+
 function chatMessage(id: number): Message {
   return {
     id,
     channelId: 7,
     senderId: "user-2",
+    sender: { id: "user-2", name: "Bo", image: null },
     content: `message ${id}`,
-    createdAt: "2026-10-20T09:00:00.000Z",
+    replyToId: null,
+    isEdited: false,
     isDeleted: false,
-  } as unknown as Message;
+    messageType: "text",
+    metadata: null,
+    actionStatus: null,
+    reactions: {},
+    createdAt: "2026-10-20T09:00:00.000Z",
+    updatedAt: "2026-10-20T09:00:00.000Z",
+    attachments: [],
+    replyTo: null,
+  };
 }
 
 function grouped(ids: number[]) {
@@ -111,6 +139,8 @@ beforeAll(() => {
 
 beforeEach(() => {
   jest.clearAllMocks();
+  queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+  mockEnsureLoaded.mockResolvedValue(true);
   jest.useFakeTimers();
   layout.scrollHeight = 2000;
   layout.clientHeight = 600;
@@ -310,8 +340,39 @@ describe("MessageList — the older-history guards key on content, not array ide
   });
 });
 
-describe("MessageList — ?message lands on the exact message", () => {
-  it("scrolls to and highlights a message that is already loaded, without fetching", () => {
+describe("MessageList — the older-history keyboard fallback keeps focus when it unmounts", () => {
+  it("moves focus to the conversation's scroll viewport before the fetch removes the button", () => {
+    const scrollContainerRef = createRef<HTMLDivElement>();
+    const fetchNextPage = jest.fn();
+    const { rerender } = render(
+      <MessageList {...props({ showScrollBtn: true, fetchNextPage, scrollContainerRef })} />,
+    );
+    const fallback = screen.getByRole("button", { name: "Load older messages" });
+    act(() => {
+      fallback.focus();
+      fallback.click();
+    });
+    expect(fetchNextPage).toHaveBeenCalledTimes(1);
+    expect(document.activeElement).toBe(scrollContainerRef.current);
+
+    rerender(
+      <MessageList
+        {...props({ showScrollBtn: true, fetchNextPage, scrollContainerRef, isFetchingNextPage: true })}
+      />,
+    );
+    expect(screen.queryByRole("button", { name: "Load older messages" })).toBeNull();
+    expect(document.activeElement).toBe(scrollContainerRef.current);
+  });
+});
+
+async function flushAnchor() {
+  await act(async () => {
+    await Promise.resolve();
+  });
+}
+
+describe("MessageList — ?message lands on the exact message through the context endpoint", () => {
+  it("scrolls to and highlights a message that is already rendered, without asking the server", () => {
     const fetchNextPage = jest.fn();
     const { container } = render(
       <MessageList {...props({ scrollToMessageId: 11, fetchNextPage })} />,
@@ -319,60 +380,43 @@ describe("MessageList — ?message lands on the exact message", () => {
     act(() => {
       jest.runAllTimers();
     });
+    expect(mockEnsureLoaded).not.toHaveBeenCalled();
     expect(fetchNextPage).not.toHaveBeenCalled();
     expect(scrollIntoView).toHaveBeenCalled();
     expect(container.querySelector('[data-anchored="true"] #message-11')).not.toBeNull();
   });
 
-  it("fetches older pages until the target message is present, then scrolls to it", () => {
+  it("hydrates a message outside the loaded pages from its context window instead of paging history", async () => {
     const fetchNextPage = jest.fn();
     const { rerender, container } = render(
       <MessageList {...props({ scrollToMessageId: 3, fetchNextPage })} />,
     );
-    expect(fetchNextPage).toHaveBeenCalledTimes(1);
+    await flushAnchor();
+    expect(mockEnsureLoaded).toHaveBeenCalledTimes(1);
+    expect(mockEnsureLoaded).toHaveBeenCalledWith(queryClient, 7, 3);
+    expect(fetchNextPage).not.toHaveBeenCalled();
 
     rerender(
       <MessageList
-        {...props({ scrollToMessageId: 3, fetchNextPage, isFetchingNextPage: true })}
-      />,
-    );
-    expect(fetchNextPage).toHaveBeenCalledTimes(1);
-
-    rerender(
-      <MessageList
-        {...props({
-          scrollToMessageId: 3,
-          fetchNextPage,
-          groupedMessages: grouped([5, 6, 10, 11, 12]),
-        })}
-      />,
-    );
-    expect(fetchNextPage).toHaveBeenCalledTimes(2);
-
-    rerender(
-      <MessageList
-        {...props({
-          scrollToMessageId: 3,
-          fetchNextPage,
-          groupedMessages: grouped([2, 3, 5, 6, 10, 11, 12]),
-        })}
+        {...props({ scrollToMessageId: 3, fetchNextPage, groupedMessages: grouped([2, 3, 4]) })}
       />,
     );
     act(() => {
       jest.runAllTimers();
     });
-    expect(fetchNextPage).toHaveBeenCalledTimes(2);
+    expect(mockEnsureLoaded).toHaveBeenCalledTimes(1);
+    expect(fetchNextPage).not.toHaveBeenCalled();
     expect(scrollIntoView).toHaveBeenCalled();
     expect(container.querySelector('[data-anchored="true"] #message-3')).not.toBeNull();
     expect(toast.error).not.toHaveBeenCalled();
   });
 
-  it("when history runs out without the message, says it is no longer available and asks the page to drop ?message", () => {
+  it("when the server says the message is gone or forbidden, says it is no longer available and asks the page to drop ?message", async () => {
+    mockEnsureLoaded.mockResolvedValue(false);
     const listener = jest.fn();
     window.addEventListener("chat:message-unavailable", listener);
-    render(
-      <MessageList {...props({ scrollToMessageId: 3, hasNextPage: false })} />,
-    );
+    render(<MessageList {...props({ scrollToMessageId: 3 })} />);
+    await flushAnchor();
     window.removeEventListener("chat:message-unavailable", listener);
 
     expect(toast.error).toHaveBeenCalledWith("That message is no longer available");
@@ -381,31 +425,41 @@ describe("MessageList — ?message lands on the exact message", () => {
     expect(event instanceof CustomEvent ? event.detail : null).toBe(3);
   });
 
-  it("stops after a bounded number of older pages even when the server keeps offering more", () => {
-    const fetchNextPage = jest.fn();
-    const { rerender } = render(
-      <MessageList {...props({ scrollToMessageId: 3, fetchNextPage })} />,
-    );
-    for (let page = 0; page < 40; page += 1) {
-      const ids = Array.from({ length: page + 4 }, (_, i) => 1000 + page * 10 + i);
-      rerender(
-        <MessageList
-          {...props({ scrollToMessageId: 3, fetchNextPage, groupedMessages: grouped(ids) })}
-        />,
-      );
-    }
-    expect(fetchNextPage.mock.calls.length).toBeLessThanOrEqual(25);
-    expect(toast.error).toHaveBeenCalledWith("That message is no longer available");
+  it("a failed context read is reported with its own message and still drops ?message", async () => {
+    mockEnsureLoaded.mockRejectedValue(new Error("Network unreachable"));
+    const listener = jest.fn();
+    window.addEventListener("chat:message-unavailable", listener);
+    render(<MessageList {...props({ scrollToMessageId: 3 })} />);
+    await flushAnchor();
+    window.removeEventListener("chat:message-unavailable", listener);
+
+    expect(toast.error).toHaveBeenCalledTimes(1);
+    expect(toast.error).not.toHaveBeenCalledWith("That message is no longer available");
+    expect(listener).toHaveBeenCalledTimes(1);
   });
 
-  it("waits for the first page before deciding anything", () => {
-    const fetchNextPage = jest.fn();
-    render(
-      <MessageList
-        {...props({ scrollToMessageId: 3, fetchNextPage, isLoading: true, hasNextPage: undefined })}
-      />,
+  it("ignores a context answer that arrives after the reader moved on", async () => {
+    let settle: (found: boolean) => void = () => undefined;
+    mockEnsureLoaded.mockReturnValue(
+      new Promise<boolean>((resolve) => {
+        settle = resolve;
+      }),
     );
-    expect(fetchNextPage).not.toHaveBeenCalled();
+    const { rerender } = render(<MessageList {...props({ scrollToMessageId: 3 })} />);
+    rerender(<MessageList {...props({ scrollToMessageId: null })} />);
+    await act(async () => {
+      settle(false);
+      await Promise.resolve();
+    });
+    expect(toast.error).not.toHaveBeenCalled();
+  });
+
+  it("waits for the first page before deciding anything", async () => {
+    render(
+      <MessageList {...props({ scrollToMessageId: 3, isLoading: true, hasNextPage: undefined })} />,
+    );
+    await flushAnchor();
+    expect(mockEnsureLoaded).not.toHaveBeenCalled();
     expect(toast.error).not.toHaveBeenCalled();
   });
 });

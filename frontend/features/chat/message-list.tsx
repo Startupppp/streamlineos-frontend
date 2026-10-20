@@ -5,10 +5,12 @@ import {
   useCallback,
   useEffect,
   useMemo,
-  useRef,
 } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
+import { ensureChatMessageLoaded } from "@/hooks/api/chat-core-read";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Send, ArrowDown } from "lucide-react";
 import React from "react";
@@ -19,7 +21,6 @@ import { useOlderHistoryLoader } from "./use-chat-scroll";
 import { ErrorState } from "@/components/shared/error-state";
 import { EntityActionsProvider } from "./entity-actions-context";
 
-const MAX_ANCHOR_HISTORY_LOADS = 25;
 const MESSAGE_UNAVAILABLE_COPY = "That message is no longer available";
 
 interface GroupedMessages {
@@ -57,7 +58,7 @@ interface MessageListProps {
   onCancelEdit: () => void;
   onSaveEdit: (messageId: number) => void;
   onReply: (msg: Message) => void;
-  onOpenThread: (msg: Message) => void;
+  onOpenThread: (messageId: number) => void;
   onDelete: (messageId: number) => void;
   onReact: (messageId: number, emoji: string) => void;
   onPin: (messageId: number) => void;
@@ -78,22 +79,26 @@ interface MessageListProps {
 }
 
 interface MessageAnchorOptions {
+  channelId: number;
   messageId: number | null | undefined;
   groupedMessages: GroupedMessages[];
   isLoading: boolean;
-  hasNextPage: boolean | undefined;
-  isFetchingNextPage: boolean;
-  fetchNextPage: () => void;
+}
+
+function reportMessageUnavailable(messageId: number, copy: string) {
+  toast.error(copy);
+  window.dispatchEvent(
+    new CustomEvent("chat:message-unavailable", { detail: messageId }),
+  );
 }
 
 function useMessageAnchor({
+  channelId,
   messageId,
   groupedMessages,
   isLoading,
-  hasNextPage,
-  isFetchingNextPage,
-  fetchNextPage,
 }: MessageAnchorOptions): number | null {
+  const queryClient = useQueryClient();
   const isPresent = useMemo(
     () =>
       messageId != null &&
@@ -102,36 +107,24 @@ function useMessageAnchor({
       ),
     [groupedMessages, messageId],
   );
-  const loadsRef = useRef<{ messageId: number | null; count: number }>({
-    messageId: null,
-    count: 0,
-  });
-  const reportedRef = useRef<number | null>(null);
 
   useEffect(() => {
-    if (!messageId || isLoading || isPresent || isFetchingNextPage) return;
-    const loads =
-      loadsRef.current.messageId === messageId ? loadsRef.current.count : 0;
-    if (hasNextPage && loads < MAX_ANCHOR_HISTORY_LOADS) {
-      loadsRef.current = { messageId, count: loads + 1 };
-      fetchNextPage();
-      return;
-    }
-    if (reportedRef.current === messageId) return;
-    reportedRef.current = messageId;
-    toast.error(MESSAGE_UNAVAILABLE_COPY);
-    window.dispatchEvent(
-      new CustomEvent("chat:message-unavailable", { detail: messageId }),
+    if (!messageId || isLoading || isPresent) return;
+    let cancelled = false;
+    ensureChatMessageLoaded(queryClient, channelId, messageId).then(
+      (found) => {
+        if (!cancelled && !found)
+          reportMessageUnavailable(messageId, MESSAGE_UNAVAILABLE_COPY);
+      },
+      (error: unknown) => {
+        if (!cancelled)
+          reportMessageUnavailable(messageId, getErrorMessage(error));
+      },
     );
-  }, [
-    messageId,
-    groupedMessages,
-    isLoading,
-    isPresent,
-    isFetchingNextPage,
-    hasNextPage,
-    fetchNextPage,
-  ]);
+    return () => {
+      cancelled = true;
+    };
+  }, [queryClient, channelId, messageId, isLoading, isPresent]);
 
   useEffect(() => {
     if (!messageId || !isPresent) return;
@@ -211,12 +204,10 @@ export function MessageList({
     [scrollToBottom],
   );
   const highlightedMessageId = useMessageAnchor({
+    channelId,
     messageId: scrollToMessageId,
     groupedMessages,
     isLoading,
-    hasNextPage,
-    isFetchingNextPage,
-    fetchNextPage,
   });
   const firstMessageId = groupedMessages[0]?.messages[0]?.id ?? null;
   const renderedMessageCount = useMemo(
@@ -234,6 +225,10 @@ export function MessageList({
       isFetchingNextPage,
       fetchNextPage,
     });
+  const handleOlderFallbackClick = useCallback(() => {
+    scrollContainerRef.current?.focus({ preventScroll: true });
+    handleLoadOlder();
+  }, [scrollContainerRef, handleLoadOlder]);
 
   /*
    * Before the empty layout, and before the entity-action provider mounts a
@@ -314,7 +309,7 @@ export function MessageList({
                   {hasNextPage && !isFetchingNextPage ? (
                     <button
                       type="button"
-                      onClick={handleLoadOlder}
+                      onClick={handleOlderFallbackClick}
                       className="sr-only focus:not-sr-only focus:mb-2 focus:rounded-md focus:border focus:border-border focus:bg-card focus:px-3 focus:py-1.5 focus:text-sm focus:text-foreground"
                     >
                       Load older messages

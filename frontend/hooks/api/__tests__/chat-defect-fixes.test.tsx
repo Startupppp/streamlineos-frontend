@@ -67,6 +67,7 @@ function message(over: Partial<Message> = {}): Message {
     messageType: "text",
     metadata: null,
     actionStatus: null,
+    reactions: {},
     createdAt: "2026-09-30T10:00:00.000Z",
     updatedAt: "2026-09-30T10:00:00.000Z",
     sender: { id: "user-2", name: "Bo", image: null },
@@ -111,10 +112,9 @@ function ablyMock() {
 beforeEach(() => jest.clearAllMocks());
 
 describe("F1 — the message contract keeps reactions", () => {
-  const wire = {
-    ...message(),
-    metadata: null,
-  };
+  const wire = Object.fromEntries(
+    Object.entries({ ...message(), metadata: null }).filter(([key]) => key !== "reactions"),
+  );
 
   it("keeps the reactions map the backend sends", () => {
     const parsed = chatMessageContract.parse({ ...wire, reactions: { "👍": ["user-1"] } });
@@ -259,6 +259,30 @@ describe("F7 — a DM or mention in an unloaded channel still moves the badges",
       });
     });
     expect(spy).not.toHaveBeenCalled();
+    unmount();
+  });
+});
+
+describe("F7b — a message and its mention count once", () => {
+  it("adds one to the unread total when notification:message and notification:mention name the same message", async () => {
+    const { useChatGlobalNotifications } = await import("@/hooks/api/chat-notifications");
+    const ably = ablyMock();
+    useAbly.mockReturnValue(ably);
+    const client = freshClient();
+    client.setQueryData(collaborationQueryKeys.chat.unreadTotal(), { total: 2 });
+    const { unmount } = renderHook(() => useChatGlobalNotifications([], null, "user-1"), {
+      wrapper: wrapperFor(client),
+    });
+    await waitFor(() => expect(ably.handlers.get("notification:mention")?.length).toBe(1));
+    act(() => {
+      ably.handlers.get("notification:message")?.[0]?.({
+        data: { channelId: 99, messageId: 7, senderId: "user-2", senderName: "Bo", channelType: "GROUP" },
+      });
+      ably.handlers.get("notification:mention")?.[0]?.({
+        data: { channelId: 99, messageId: 7, senderId: "user-2", senderName: "Bo" },
+      });
+    });
+    expect(client.getQueryData(collaborationQueryKeys.chat.unreadTotal())).toEqual({ total: 3 });
     unmount();
   });
 });

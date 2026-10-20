@@ -36,6 +36,7 @@ import { resolveFirstUnreadIndex } from "./chat-read-position";
 import { useChatReadMarker } from "./use-chat-read-marker";
 import { useChatOfflineQueue } from "./use-chat-offline-queue";
 import { useHuddleAutoStart } from "./use-huddle-auto-start";
+import { useMessageAnchorTarget } from "./use-message-anchor-target";
 
 export interface MessagePanelProps {
   channelId: number;
@@ -45,8 +46,6 @@ export interface MessagePanelProps {
   showInfoPanel: boolean;
   autoStartCall?: "huddle" | null;
   onAutoStartHandled?: () => void;
-  isSidebarCollapsed?: boolean;
-  onToggleSidebar?: () => void;
   scrollToMessageId?: number | null;
 }
 
@@ -123,8 +122,6 @@ export function useMessagePanelData({
   );
   const typingText = useChatTypingText(typingUsers);
 
-  const [threadMessageId, setThreadMessageId] = useState<number | null>(null);
-
   useHuddleAutoStart({
     channelId,
     autoStartCall,
@@ -182,6 +179,16 @@ export function useMessagePanelData({
     () => flattenMessagePages(messagesData),
     [messagesData],
   );
+  const {
+    anchorIndex,
+    threadMessageId,
+    openThread: handleOpenThread,
+    closeThread: handleCloseThread,
+  } = useMessageAnchorTarget({
+    channelId,
+    anchorMessageId: scrollToMessageId ?? null,
+    messages,
+  });
 
   const [renderPages, setRenderPages] = useState(1);
   useEffect(() => {
@@ -222,9 +229,6 @@ export function useMessagePanelData({
     channelId,
     messageCount: messages.length,
     isLoading,
-    hasNextPage,
-    isFetchingNextPage,
-    fetchNextPage,
   });
   scrollToBottomRef.current = scrollToBottom;
 
@@ -238,7 +242,6 @@ export function useMessagePanelData({
     setShowTicketPicker(false);
     setTicketQuery("");
     pendingEntitiesRef.current = [];
-    setThreadMessageId(null);
     inputRef.current?.focus();
   }, [channelId]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -251,13 +254,13 @@ export function useMessagePanelData({
         return;
       }
       if (e.key === "Escape") {
-        if (threadMessageId !== null) { setThreadMessageId(null); return; }
+        if (threadMessageId !== null) { handleCloseThread(); return; }
         if (showSavedPanel) setShowSavedPanel(false);
       }
     };
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
-  }, [threadMessageId, showSavedPanel]);
+  }, [threadMessageId, showSavedPanel, handleCloseThread]);
 
   const pinnedMessageIds = useMemo(() => new Set((pins ?? []).map((p) => p.messageId)), [pins]);
 
@@ -325,8 +328,6 @@ export function useMessagePanelData({
     return map;
   }, [messages]);
 
-  const handleOpenThread = useCallback((msg: Message) => { setThreadMessageId(msg.id); }, []);
-  const handleCloseThread = useCallback(() => { setThreadMessageId(null); }, []);
   const handleToggleSaved = useCallback(() => { setShowSavedPanel((p) => !p); }, []);
   const handleHuddle = useCallback(() => {
     if (activeHuddle) { joinHuddle.mutate({ huddleId: activeHuddle.id, channelId }); return; }
@@ -341,10 +342,14 @@ export function useMessagePanelData({
   const firstUnreadMessageId =
     firstUnreadIndex >= 0 ? messages[firstUnreadIndex]?.id : undefined;
 
+  const keepVisibleIndex =
+    firstUnreadIndex < 0 || anchorIndex < 0
+      ? Math.max(firstUnreadIndex, anchorIndex)
+      : Math.min(firstUnreadIndex, anchorIndex);
   const windowStart = resolveMessageWindowStart(
     messages.length,
     renderPages,
-    firstUnreadIndex,
+    keepVisibleIndex,
   );
   const renderedMessages = useMemo(
     () => (windowStart === 0 ? messages : messages.slice(windowStart)),

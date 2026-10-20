@@ -52,6 +52,7 @@ const source: Message = {
   messageType: "text",
   metadata: null,
   actionStatus: null,
+  reactions: {},
   createdAt: "2026-09-30T10:00:00.000Z",
   updatedAt: "2026-09-30T10:00:00.000Z",
   sender: { id: "user-2", name: "Bo", image: null },
@@ -84,7 +85,7 @@ describe("message:updated carrying a converted ticket", () => {
       });
     });
 
-    expect(invalidate).toHaveBeenCalledWith({ queryKey: messagesKey });
+    expect(invalidate).toHaveBeenCalledWith({ queryKey: messagesKey, exact: true });
     const after = client.getQueryData<InfiniteData<MessagesPage>>(messagesKey);
     expect(after?.pages[0]?.messages[0]).toMatchObject({ content: "the login page 500s", isEdited: false });
     unmount();

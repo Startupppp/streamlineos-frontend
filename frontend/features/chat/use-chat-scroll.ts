@@ -18,9 +18,6 @@ interface UseChatScrollOptions {
   channelId: number;
   messageCount: number;
   isLoading: boolean;
-  hasNextPage?: boolean;
-  isFetchingNextPage: boolean;
-  fetchNextPage: () => void;
 }
 
 export function useChatScroll({

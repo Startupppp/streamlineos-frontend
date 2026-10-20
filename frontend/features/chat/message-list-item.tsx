@@ -19,7 +19,7 @@ interface MessageItemProps {
   onCancelEdit: () => void;
   onSaveEdit: (messageId: number) => void;
   onReply: (msg: Message) => void;
-  onOpenThread: (msg: Message) => void;
+  onOpenThread: (messageId: number) => void;
   onDelete: (messageId: number) => void;
   onReact: (messageId: number, emoji: string) => void;
   onPin: (messageId: number) => void;
@@ -68,8 +68,8 @@ export const MessageItem = memo(function MessageItem({
   );
   const handleReply = useCallback(() => onReply(msg), [msg, onReply]);
   const handleOpenThread = useCallback(
-    () => onOpenThread(msg),
-    [msg, onOpenThread],
+    () => onOpenThread(msg.id),
+    [msg.id, onOpenThread],
   );
   const handleDelete = useCallback(() => onDelete(msg.id), [msg.id, onDelete]);
   const handleReact = useCallback(

@@ -287,8 +287,6 @@ export function ChatHomePage() {
             : null
         }
         onAutoStartHandled={handleAutoStartHandled}
-        isSidebarCollapsed={sidebarCollapsed}
-        onToggleSidebar={handleToggleSidebar}
         scrollToMessageId={messageId}
       />
     ) : (

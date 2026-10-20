@@ -141,17 +141,17 @@ export const SEND_LABEL = "Send";
 export const ATTACH_LABEL = "Attach file";
 export const FILE_INPUT_LABEL = "Upload file";
 export const LOAD_OLDER_LABEL = "Load older messages";
-export const NEW_DM_LABEL = "New Direct Message";
+export const DEFERRED_DIALOG_LABEL = "Search messages, channels and people";
 export const OPEN_THREAD_LABEL = "Reply in thread";
 export const CLOSE_THREAD_LABEL = "Close thread";
-export const CHAT_NAV_LABEL = "Chat navigation";
 export const SETTINGS_SAVE_LABEL = "Save settings";
 export const RETRY_LABEL = "Try again";
 
 export const EMPTY_CHANNEL_TITLE = `Welcome to #${CHANNEL_NAME}`;
 export const EMPTY_CHANNEL_BODY = "Send a message to get things started.";
 export const TIMELINE_ERROR_TITLE = "Couldn't load this conversation";
-export const SIDEBAR_ERROR_TITLE = "Couldn't load your conversations";
+export const PAGE_ERROR_TITLE = "Something went wrong";
+export const CHAT_EMPTY_TITLE = "Choose a conversation";
 export const SIDEBAR_EMPTY_TITLE = "No conversations yet";
 export const DENIED_TITLE = "Access Restricted";
 export const UPLOAD_FAILURE_PREFIX = "Failed:";
@@ -162,11 +162,8 @@ export const COMPOSER_DRAFT = "Acceptance composer draft";
 export const CHAT_DENY_PREFIXES = ["chat:"];
 
 export const SIDEBAR_LIST_LABELS = [
+  "Starred",
   "Conversations",
-  "Favorites",
-  "Public channels",
-  "Groups",
-  "Direct messages",
   "Archived conversations",
 ];
 
@@ -563,8 +560,10 @@ export function chatSurfaceExpression() {
     ${CLEAN}
     const composer = document.querySelector('textarea[placeholder^="Message "]');
     const send = document.querySelector('button[aria-label="Send"]');
-    const navs = Array.from(document.querySelectorAll('nav[aria-label="${CHAT_NAV_LABEL}"]'))
-      .filter((n) => n.getClientRects().length > 0).length;
+    const listLabels = ${JSON.stringify(SIDEBAR_LIST_LABELS)};
+    const conversationLists = Array.from(document.querySelectorAll('[role="list"]'))
+      .filter((l) => listLabels.indexOf(l.getAttribute("aria-label")) !== -1).length;
+    const olderSentinel = Boolean(document.querySelector("[data-older-history-sentinel]"));
     const statusTexts = Array.from(document.querySelectorAll('[role="status"]'))
       .filter((el) => el.getClientRects().length > 0 || el.className.indexOf("sr-only") !== -1)
       .map((el) => clean(el.innerText || el.textContent))
@@ -587,6 +586,13 @@ export function chatSurfaceExpression() {
       .filter((b) => b.getClientRects().length > 0)
       .map((b) => clean(b.textContent))
       .filter((t) => t.length > 0);
+    const visibleTexts = Array.from(document.querySelectorAll("button"))
+      .filter((b) => {
+        const r = b.getBoundingClientRect();
+        return r.width > 1 && r.height > 1;
+      })
+      .map((b) => clean(b.textContent))
+      .filter((t) => t.length > 0);
     return {
       url: location.href,
       pathname: location.pathname,
@@ -599,7 +605,8 @@ export function chatSurfaceExpression() {
       composerTag: composer ? composer.tagName.toLowerCase() : null,
       sendDisabled: send ? send.disabled === true : null,
       sendHasSpinner: send ? Boolean(send.querySelector(".animate-spin")) : null,
-      chatNavCount: navs,
+      conversationLists: conversationLists,
+      olderSentinel: olderSentinel,
       openDialogs: dialogs,
       openDialogTitles: dialogTitles,
       statusTexts: statusTexts,
@@ -607,6 +614,7 @@ export function chatSurfaceExpression() {
       lazyFallbacks: lazyFallbacks,
       buttonLabels: named,
       buttonTexts: texts,
+      visibleButtonTexts: visibleTexts,
       bodyText: clean(document.body ? document.body.innerText : "").slice(0, 6000),
       mainText: (() => { const m = document.querySelector("main"); return m ? clean(m.innerText).slice(0, 4000) : ""; })(),
       onLine: navigator.onLine,
@@ -633,6 +641,16 @@ export function sidebarRowsExpression() {
         });
       }
     return { found: lists.length > 0, lists: lists.map((l) => l.getAttribute("aria-label")), rows: rows };
+  })()`;
+}
+
+export function scrollTimelineToTopExpression() {
+  return `(() => {
+    const sentinel = document.querySelector("[data-older-history-sentinel]");
+    const viewport = sentinel ? sentinel.closest('[data-slot="scroll-area-viewport"]') : null;
+    if (!viewport) return false;
+    viewport.scrollTop = 0;
+    return true;
   })()`;
 }
 
@@ -675,7 +693,8 @@ export function attachmentChipsExpression() {
 
 export function ownershipVerdict({ chatSurface, settingsSurface }) {
   const problems = [];
-  if (!(chatSurface?.chatNavCount > 0)) problems.push(`/chat exposes no nav labelled "${CHAT_NAV_LABEL}"`);
+  if (!(chatSurface?.conversationLists > 0))
+    problems.push(`/chat renders no conversation list labelled ${SIDEBAR_LIST_LABELS.join(" / ")}`);
   if (chatSurface?.hasComposer !== true) problems.push("/chat mounted no conversation composer");
   if ((chatSurface?.buttonTexts ?? []).includes(SETTINGS_SAVE_LABEL))
     problems.push(`/chat renders the settings control "${SETTINGS_SAVE_LABEL}" — settings leaked into the conversation surface`);
@@ -796,26 +815,21 @@ export function uploadErrorVerdict({ toastTexts, attachmentChips }) {
   return { ok: true, reason: null };
 }
 
-/**
- * `controlOffered` is separate from `clicks` because reaching the control means
- * scrolling to the top of the timeline, and `useChatScroll` auto-loads there. A
- * page that arrived from that scroll rather than from the press still has to
- * render, and the control still has to disappear when the history is exhausted —
- * so the press count is recorded, and the three outcomes are what is asserted.
- */
-export function paginationVerdict({ controlOffered, clicks, networkRequests, olderVisible, controlGone }) {
-  if (controlOffered !== true)
-    return { ok: false, reason: `no "${LOAD_OLDER_LABEL}" control was offered for a page with an older cursor` };
+export function paginationVerdict({ sentinelMounted, visibleControl, scrolls, networkRequests, olderVisible, fallbackGone }) {
+  if (sentinelMounted !== true)
+    return { ok: false, reason: "no older-history sentinel was mounted for a page with an older cursor" };
+  if (visibleControl === true)
+    return { ok: false, reason: `a visible "${LOAD_OLDER_LABEL}" button is rendered — older history must load by scrolling, not by a button` };
   const cursored = (networkRequests ?? []).filter((r) => r.cursor !== null && r.cursor !== undefined);
   if (cursored.length === 0)
     return {
       ok: false,
-      reason: `${clicks} press(es) of "${LOAD_OLDER_LABEL}" issued no cursored GET /chat/channels/:id/messages — older history is unreachable`,
+      reason: `${scrolls} scroll(s) to the top of the timeline issued no cursored GET /chat/channels/:id/messages — older history is unreachable`,
     };
   if (olderVisible !== true)
     return { ok: false, reason: "the older page was fetched but its messages never rendered" };
-  if (controlGone !== true)
-    return { ok: false, reason: `"${LOAD_OLDER_LABEL}" is still offered after the last page was delivered` };
+  if (fallbackGone !== true)
+    return { ok: false, reason: `the keyboard fallback "${LOAD_OLDER_LABEL}" is still offered after the last page was delivered` };
   return { ok: true, reason: null };
 }
 
@@ -835,7 +849,7 @@ export function deniedChatVerdict({ statusTexts, bodyText, strippedKeys }) {
 }
 
 export function timelineErrorVerdict({ alertTexts, buttonTexts }) {
-  const alert = (alertTexts ?? []).find((t) => t.includes(TIMELINE_ERROR_TITLE) || t.includes(SIDEBAR_ERROR_TITLE));
+  const alert = (alertTexts ?? []).find((t) => t.includes(TIMELINE_ERROR_TITLE));
   if (!alert)
     return { ok: false, reason: `a 500 on the chat reads rendered no "${TIMELINE_ERROR_TITLE}" alert` };
   if (!(buttonTexts ?? []).includes(RETRY_LABEL))
@@ -1019,35 +1033,42 @@ function runSelfTest() {
     TIMELINE_ERROR_TITLE === "Couldn't load this conversation" && !TIMELINE_ERROR_TITLE.includes("’"),
   );
   assert(
-    "the sidebar error title is the literal channel-sidebar.tsx renders",
-    SIDEBAR_ERROR_TITLE === "Couldn't load your conversations" && !SIDEBAR_ERROR_TITLE.includes("’"),
+    "the page gate's generic error is not accepted as the timeline's own error",
+    timelineErrorVerdict({ alertTexts: [PAGE_ERROR_TITLE], buttonTexts: [RETRY_LABEL] }).ok === false,
   );
 
   assert(
     "a surface owning nav, composer and no settings control passes ownership",
     ownershipVerdict({
-      chatSurface: { chatNavCount: 1, hasComposer: true, buttonTexts: ["Send"] },
+      chatSurface: { conversationLists: 1, hasComposer: true, buttonTexts: ["Send"] },
       settingsSurface: { hasComposer: true, pathname: "/chat", buttonTexts: ["Send"] },
     }).ok === true,
   );
   assert(
     "a settings control on /chat fails ownership",
     ownershipVerdict({
-      chatSurface: { chatNavCount: 1, hasComposer: true, buttonTexts: [SETTINGS_SAVE_LABEL] },
+      chatSurface: { conversationLists: 1, hasComposer: true, buttonTexts: [SETTINGS_SAVE_LABEL] },
       settingsSurface: { hasComposer: true, pathname: "/chat", buttonTexts: [] },
     }).reason.includes("settings leaked"),
   );
   assert(
     "a surviving settings form fails ownership",
     ownershipVerdict({
-      chatSurface: { chatNavCount: 1, hasComposer: true, buttonTexts: [] },
+      chatSurface: { conversationLists: 1, hasComposer: true, buttonTexts: [] },
       settingsSurface: { hasComposer: false, pathname: "/chat", buttonTexts: [SETTINGS_SAVE_LABEL] },
     }).reason.includes("retired settings form"),
   );
   assert(
+    "a /chat with no conversation list fails ownership",
+    ownershipVerdict({
+      chatSurface: { conversationLists: 0, hasComposer: true, buttonTexts: [] },
+      settingsSurface: { hasComposer: false, pathname: "/chat", buttonTexts: [] },
+    }).reason.includes("no conversation list"),
+  );
+  assert(
     "a non-redirecting /chat/settings fails ownership",
     ownershipVerdict({
-      chatSurface: { chatNavCount: 1, hasComposer: true, buttonTexts: [] },
+      chatSurface: { conversationLists: 1, hasComposer: true, buttonTexts: [] },
       settingsSurface: { hasComposer: false, pathname: "/chat/settings", buttonTexts: [] },
     }).ok === false,
   );
@@ -1099,23 +1120,23 @@ function runSelfTest() {
 
   assert(
     "a dialog that mounts only on its trigger passes",
-    deferredVerdict({ before: { openDialogs: 0 }, after: { openDialogs: 1 }, label: NEW_DM_LABEL }).ok === true,
+    deferredVerdict({ before: { openDialogs: 0 }, after: { openDialogs: 1 }, label: DEFERRED_DIALOG_LABEL }).ok === true,
   );
   assert(
     "a dialog already mounted before its trigger fails",
-    deferredVerdict({ before: { openDialogs: 1 }, after: { openDialogs: 1 }, label: NEW_DM_LABEL }).reason.includes("already mounted"),
+    deferredVerdict({ before: { openDialogs: 1 }, after: { openDialogs: 1 }, label: DEFERRED_DIALOG_LABEL }).reason.includes("already mounted"),
   );
   assert(
     "the already-mounted dialog is NAMED, so the failure is attributable to whoever owns it",
     deferredVerdict({
       before: { openDialogs: 1, openDialogTitles: ["Getting Started 2/5"] },
       after: { openDialogs: 1 },
-      label: NEW_DM_LABEL,
+      label: DEFERRED_DIALOG_LABEL,
     }).reason.includes("Getting Started"),
   );
   assert(
     "a trigger that opened nothing fails",
-    deferredVerdict({ before: { openDialogs: 0 }, after: { openDialogs: 0 }, label: NEW_DM_LABEL }).ok === false,
+    deferredVerdict({ before: { openDialogs: 0 }, after: { openDialogs: 0 }, label: DEFERRED_DIALOG_LABEL }).ok === false,
   );
   assert(
     "a thread panel that mounts on demand passes",
@@ -1202,34 +1223,30 @@ function runSelfTest() {
   );
 
   assert(
-    "a cursored older page that rendered and exhausted passes",
-    paginationVerdict({ controlOffered: true, clicks: 2, networkRequests: [{ cursor: null }, { cursor: "800000" }], olderVisible: true, controlGone: true }).ok === true,
+    "a scroll-loaded older page that rendered and exhausted passes",
+    paginationVerdict({ sentinelMounted: true, visibleControl: false, scrolls: 1, networkRequests: [{ cursor: null }, { cursor: "800000" }], olderVisible: true, fallbackGone: true }).ok === true,
   );
   assert(
-    "no control at all fails",
-    paginationVerdict({ controlOffered: false, clicks: 0, networkRequests: [], olderVisible: false, controlGone: false }).ok === false,
+    "no older-history sentinel fails",
+    paginationVerdict({ sentinelMounted: false, visibleControl: false, scrolls: 0, networkRequests: [], olderVisible: false, fallbackGone: false }).ok === false,
   );
   assert(
-    "a page the scroll-to-top auto-load fetched still has to render and exhaust the control",
-    paginationVerdict({ controlOffered: true, clicks: 0, networkRequests: [{ cursor: null }, { cursor: "800000" }], olderVisible: true, controlGone: true }).ok === true,
+    "a visible load-older button fails even when the page loaded",
+    paginationVerdict({ sentinelMounted: true, visibleControl: true, scrolls: 0, networkRequests: [{ cursor: "800000" }], olderVisible: true, fallbackGone: true }).reason.includes("by scrolling"),
   );
   assert(
-    "a page the auto-load fetched but never rendered still fails",
-    paginationVerdict({ controlOffered: true, clicks: 0, networkRequests: [{ cursor: "800000" }], olderVisible: false, controlGone: true }).ok === false,
-  );
-  assert(
-    "clicks that never reached the network fail",
-    paginationVerdict({ controlOffered: true, clicks: 3, networkRequests: [{ cursor: null }], olderVisible: false, controlGone: false }).reason.includes(
+    "scrolls that never reached the network fail",
+    paginationVerdict({ sentinelMounted: true, visibleControl: false, scrolls: 3, networkRequests: [{ cursor: null }], olderVisible: false, fallbackGone: false }).reason.includes(
       "older history is unreachable",
     ),
   );
   assert(
     "a fetched page that never rendered fails",
-    paginationVerdict({ controlOffered: true, clicks: 1, networkRequests: [{ cursor: "1" }], olderVisible: false, controlGone: true }).ok === false,
+    paginationVerdict({ sentinelMounted: true, visibleControl: false, scrolls: 1, networkRequests: [{ cursor: "1" }], olderVisible: false, fallbackGone: true }).ok === false,
   );
   assert(
-    "a control still offered after the last page fails",
-    paginationVerdict({ controlOffered: true, clicks: 1, networkRequests: [{ cursor: "1" }], olderVisible: true, controlGone: false }).ok === false,
+    "a keyboard fallback still offered after the last page fails",
+    paginationVerdict({ sentinelMounted: true, visibleControl: false, scrolls: 1, networkRequests: [{ cursor: "1" }], olderVisible: true, fallbackGone: false }).ok === false,
   );
 
   assert(
@@ -1370,7 +1387,7 @@ async function openChatHome(ctx) {
   await navigate(cdp, "/chat", settleMs);
   for (let i = 0; i < 15; i += 1) {
     const surface = await evaluate(cdp, chatSurfaceExpression());
-    if (surface?.chatNavCount > 0 || String(surface?.bodyText ?? "").includes("Welcome to Chat")) return surface;
+    if (surface?.conversationLists > 0 || String(surface?.bodyText ?? "").includes(CHAT_EMPTY_TITLE)) return surface;
     await sleep(400);
   }
   return evaluate(cdp, chatSurfaceExpression());
@@ -1616,19 +1633,19 @@ async function runDeferredDialogsAndThreads(ctx) {
 
     const chunksBefore = scenario.chunkRequests.length;
     const dmReach = obstructionVerdict(
-      await evaluate(cdp, pointerObstructionExpression(NEW_DM_LABEL)),
-      NEW_DM_LABEL,
+      await evaluate(cdp, pointerObstructionExpression(DEFERRED_DIALOG_LABEL)),
+      DEFERRED_DIALOG_LABEL,
       viewport.label,
     );
     const openedDm =
       dmReach.ok &&
-      ((await realClick(cdp, evaluate, NEW_DM_LABEL)) ||
-        (await evaluate(cdp, clickByAccessibleNameExpression(NEW_DM_LABEL))) === true);
+      ((await realClick(cdp, evaluate, DEFERRED_DIALOG_LABEL)) ||
+        (await evaluate(cdp, clickByAccessibleNameExpression(DEFERRED_DIALOG_LABEL))) === true);
     if (!openedDm) {
       checks.push(
         unreached(
           "deferred dialog",
-          dmReach.reason ?? `no "${NEW_DM_LABEL}" trigger could be operated at ${viewport.label}`,
+          dmReach.reason ?? `no "${DEFERRED_DIALOG_LABEL}" trigger could be operated at ${viewport.label}`,
         ),
       );
     } else {
@@ -1636,8 +1653,8 @@ async function runDeferredDialogsAndThreads(ctx) {
       const after = await evaluate(cdp, chatSurfaceExpression());
       chunksForDialog = scenario.chunkRequests.length - chunksBefore;
       shots.push(await screenshot(cdp, state, viewport.key, "dialog"));
-      const verdict = deferredVerdict({ before, after, label: NEW_DM_LABEL });
-      if (verdict.ok) checks.push(passed(`"${NEW_DM_LABEL}" mounts its dialog only when operated`));
+      const verdict = deferredVerdict({ before, after, label: DEFERRED_DIALOG_LABEL });
+      if (verdict.ok) checks.push(passed(`"${DEFERRED_DIALOG_LABEL}" mounts its dialog only when operated`));
       else checks.push(failed("deferred dialog", verdict.reason));
       const dialog = await evaluate(cdp, dialogExpression());
       if (dialog?.open === true) {
@@ -1950,9 +1967,9 @@ async function runLongChannelPagination(ctx) {
   const shots = [];
   const checks = [];
   let axe = null;
-  let clicks = 0;
-  let obstruction = null;
-  let controlOffered = false;
+  let scrolls = 0;
+  let sentinelMounted = false;
+  let visibleControl = false;
   try {
     seedHealthyChat(ctx, messagePageFixture(now, FIRST_PAGE_MESSAGE_COUNT, MESSAGE_PREFIX, 930000, OLDER_CURSOR));
     scenario.olderPage = messagePageFixture(now, OLDER_PAGE_MESSAGE_COUNT, OLDER_MESSAGE_PREFIX, 920000, null);
@@ -1960,48 +1977,33 @@ async function runLongChannelPagination(ctx) {
     await openChannel(ctx);
     await sleep(1200);
     shots.push(await screenshot(cdp, state, viewport.key, "first-page"));
+    const first = await evaluate(cdp, chatSurfaceExpression());
+    sentinelMounted = first?.olderSentinel === true;
+    visibleControl = (first?.visibleButtonTexts ?? []).includes(LOAD_OLDER_LABEL);
 
-    for (let attempt = 0; attempt < 4; attempt += 1) {
-      const surface = await evaluate(cdp, chatSurfaceExpression());
-      if (!(surface?.buttonTexts ?? []).includes(LOAD_OLDER_LABEL)) break;
-      controlOffered = true;
-      const probe = await evaluate(cdp, pointerObstructionExpression(LOAD_OLDER_LABEL));
-      const reach = obstructionVerdict(probe, LOAD_OLDER_LABEL, viewport.label);
-      if (reach.obstructed) {
-        obstruction = reach.reason;
-        break;
-      }
-      const clicked =
-        (await realClick(cdp, evaluate, LOAD_OLDER_LABEL)) ||
-        (await evaluate(cdp, clickByAccessibleNameExpression(LOAD_OLDER_LABEL))) === true;
-      if (!clicked) break;
-      clicks += 1;
+    for (let attempt = 0; attempt < 6 && sentinelMounted; attempt += 1) {
+      if ((await evaluate(cdp, scrollTimelineToTopExpression())) !== true) break;
+      scrolls += 1;
       await sleep(Math.max(1500, settleMs));
-      const here = String(await evaluate(cdp, "location.pathname"));
-      if (!here.startsWith("/chat")) {
-        obstruction = `pressing "${LOAD_OLDER_LABEL}" at ${viewport.label} left /chat for ${here} — the press reached some other control`;
-        break;
-      }
       if (scenario.messageRequests.some((r) => r.cursor !== null && r.cursor !== undefined)) break;
     }
     await sleep(1200);
     const after = await evaluate(cdp, chatSurfaceExpression());
     shots.push(await screenshot(cdp, state, viewport.key, "older-page"));
     const olderVisible = String(after?.bodyText ?? "").includes(OLDER_MESSAGE_PREFIX);
-    const controlGone = !(after?.buttonTexts ?? []).includes(LOAD_OLDER_LABEL);
+    const fallbackGone = !(after?.buttonTexts ?? []).includes(LOAD_OLDER_LABEL);
+    visibleControl = visibleControl || (after?.visibleButtonTexts ?? []).includes(LOAD_OLDER_LABEL);
 
     const verdict = paginationVerdict({
-      controlOffered,
-      clicks,
+      sentinelMounted,
+      visibleControl,
+      scrolls,
       networkRequests: scenario.messageRequests,
       olderVisible,
-      controlGone,
+      fallbackGone,
     });
     if (verdict.ok)
-      checks.push(
-        passed(`"${LOAD_OLDER_LABEL}" reached the server cursor after ${clicks} press(es) and rendered the older page`),
-      );
-    else if (obstruction !== null) checks.push(unreached("pagination", obstruction));
+      checks.push(passed(`scrolling to the top reached the server cursor after ${scrolls} scroll(s) and rendered the older page`));
     else checks.push(failed("pagination", verdict.reason));
 
     const overflow = overflowVerdict((await evaluate(cdp, overflowExpression())) ?? {});
@@ -2016,11 +2018,10 @@ async function runLongChannelPagination(ctx) {
     ctx.scenario.olderPage = null;
   }
   const cellResult = cellFromChecks(state, viewport.key, checks, shots, axe);
-  cellResult.loadOlderPressesBeforeNetwork = clicks;
-  cellResult.pointerObstruction = obstruction;
+  cellResult.scrollsBeforeNetwork = scrolls;
   cellResult.messageRequests = ctx.scenario.messageRequests.slice(0, 10);
   cellResult.unobservable =
-    "`hasNextPage` passed to the message list is `hasNextPage || hasOlderHeld` and the first presses widen a purely client-side render window (MESSAGE_RENDER_PAGE_SIZE = 60) before any network page is requested, so the press count before the cursored request is recorded rather than asserted.";
+    "Older history loads when the top sentinel intersects the timeline viewport, and the first scrolls may only widen the client-side render window (MESSAGE_RENDER_PAGE_SIZE = 60) before a network page is requested, so the scroll count before the cursored request is recorded rather than asserted.";
   return cellResult;
 }
 
@@ -2151,7 +2152,7 @@ async function main() {
     await navigate(cdp, "/chat");
     const pollSurface = async (attempts) => {
       let seen = await evaluate(cdp, chatSurfaceExpression());
-      for (let i = 0; i < attempts && !(seen?.chatNavCount > 0); i += 1) {
+      for (let i = 0; i < attempts && !(seen?.conversationLists > 0); i += 1) {
         await sleep(1000);
         seen = await evaluate(cdp, chatSurfaceExpression());
       }
@@ -2159,7 +2160,7 @@ async function main() {
     };
     const live = await pollSurface(25);
     const livePreflight = {
-      rendered: live?.chatNavCount > 0,
+      rendered: live?.conversationLists > 0,
       screenshot: await screenshot(cdp, "preflight", "live", null),
       mainExcerpt: String(live?.bodyText ?? "").slice(0, 400),
     };
