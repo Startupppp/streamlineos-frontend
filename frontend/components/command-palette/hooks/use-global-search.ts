@@ -39,7 +39,7 @@ export function useGlobalSearch<T extends GlobalSearchType = LegacySearchType>(
   const typesParam = types?.join(",");
 
   const { data, isFetching, isError, error, refetch } = useQuery({
-    queryKey: [...platformCoreQueryKeys.globalSearch.query(trimmed), typesParam ?? "legacy"] as const,
+    queryKey: platformCoreQueryKeys.globalSearch.query(trimmed, typesParam),
     queryFn: ({ signal }) =>
       apiClient.get<GlobalSearchResponse>(
         "/search",

@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback } from "react";
+import { useCallback, useId } from "react";
 import dynamic from "next/dynamic";
 import { motion, AnimatePresence } from "framer-motion";
 import { AtSign, Loader2, Paperclip, Send, Smile } from "lucide-react";
@@ -105,6 +105,7 @@ export function MessageInput({
   onInputChange,
   onFilesSelected,
 }: MessageInputProps) {
+  const recordListboxId = useId();
   const formatSelection = useCallback(
     (marker: string) => {
       const el = inputRef.current;
@@ -216,6 +217,7 @@ export function MessageInput({
         <div className="max-w-[900px] mx-auto">
           <ChatMentionSuggestionsOverlay
             showMentions={showMentions}
+            flagNonMembers={channelType !== "PUBLIC"}
             filteredMentions={filteredMentions}
             mentionIndex={mentionIndex}
             insertMention={insertMention}
@@ -224,6 +226,7 @@ export function MessageInput({
           {recordPicker && (
             <RecordLinkPicker
               picker={recordPicker}
+              listboxId={recordListboxId}
               onSelect={onSelectRecord}
               className="left-3 sm:left-6"
             />
@@ -288,9 +291,10 @@ export function MessageInput({
               onKeyDown={handleComposerKeyDown}
               onPaste={handlePaste}
               aria-label={`Message ${displayName}`}
+              aria-controls={recordPicker ? recordListboxId : undefined}
               aria-activedescendant={
                 recordPicker && recordPicker.activeIndex >= 0
-                  ? recordOptionId(recordPicker.activeIndex)
+                  ? recordOptionId(recordListboxId, recordPicker.activeIndex)
                   : undefined
               }
               aria-keyshortcuts="Control+B Control+I Control+E Meta+B Meta+I Meta+E"

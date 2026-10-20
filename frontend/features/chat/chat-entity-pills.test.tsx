@@ -48,6 +48,15 @@ describe("LinkedRecordPill renders every linked type from the server card", () =
     expect(push).toHaveBeenCalledWith(href);
   });
 
+  it("renders the card subtitle for every type, not only tickets", () => {
+    renderPill({
+      type: "employee",
+      id: "u1",
+      card: { type: "employee", id: "u1", title: "Asha Rao", subtitle: "asha@acme.test", status: null, href: "/hr/employees/u1" },
+    });
+    expect(screen.getByText("asha@acme.test")).toBeInTheDocument();
+  });
+
   it("renders a card the reader cannot resolve as a neutral restricted pill that names nothing", () => {
     const { container } = renderPill({ type: "doc_page", id: "3", card: null });
     expect(screen.getByText("Restricted record")).toBeInTheDocument();
@@ -103,10 +112,9 @@ describe("ticket pills keep their status action, gated by the server's action li
     expect(screen.getByText("Todo")).toBeInTheDocument();
   });
 
-  it("falls back to the legacy snapshot fields for a ticket stored by the old composer", async () => {
-    renderPill({ type: "ticket", id: "5", projectId: 2, projectKey: "AP", ticketNumber: 3, title: "Legacy" });
-    await userEvent.click(screen.getByRole("button", { name: /Legacy/ }));
-    expect(push).toHaveBeenCalledWith("/build/2/issues?ticket=5");
-    expect(screen.getByText("AP-3")).toBeInTheDocument();
+  it("never renders a title or link for a ticket the reader has no card or own preview for", () => {
+    const { container } = renderPill({ type: "ticket", id: "5" });
+    expect(container.textContent).toBe("Ticket");
+    expect(screen.queryByRole("button")).not.toBeInTheDocument();
   });
 });

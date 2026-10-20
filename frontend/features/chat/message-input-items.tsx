@@ -22,10 +22,11 @@ import type { Message } from "./chat-types";
 interface MentionItemProps {
   candidate: MentionCandidate;
   isActive: boolean;
+  flagNonMember: boolean;
   onInsert: (candidate: MentionCandidate) => void;
 }
 
-const MentionItem = memo(function MentionItem({ candidate, isActive, onInsert }: MentionItemProps) {
+const MentionItem = memo(function MentionItem({ candidate, isActive, flagNonMember, onInsert }: MentionItemProps) {
   const handleClick = useCallback(() => onInsert(candidate), [candidate, onInsert]);
   const handleMouseDown = useCallback((event: React.MouseEvent) => event.preventDefault(), []);
   return (
@@ -47,7 +48,7 @@ const MentionItem = memo(function MentionItem({ candidate, isActive, onInsert }:
         </AvatarFallback>
       </Avatar>
       <span className="text-label font-medium">{candidate.name}</span>
-      {!candidate.isMember && (
+      {flagNonMember && !candidate.isMember && (
         <span className="text-dense text-muted-foreground ml-auto">
           Not in conversation
         </span>
@@ -160,6 +161,7 @@ export function ChatReplyPreview({ replyTo, onCancel }: ChatReplyPreviewProps) {
 
 interface ChatMentionSuggestionsOverlayProps {
   showMentions: boolean;
+  flagNonMembers: boolean;
   filteredMentions: MentionCandidate[];
   mentionIndex: number;
   insertMention: (candidate: MentionCandidate) => void;
@@ -167,6 +169,7 @@ interface ChatMentionSuggestionsOverlayProps {
 
 export function ChatMentionSuggestionsOverlay({
   showMentions,
+  flagNonMembers,
   filteredMentions,
   mentionIndex,
   insertMention,
@@ -191,6 +194,7 @@ export function ChatMentionSuggestionsOverlay({
                     key={candidate.id}
                     candidate={candidate}
                     isActive={idx === mentionIndex}
+                    flagNonMember={flagNonMembers}
                     onInsert={insertMention}
                   />
                 ))}

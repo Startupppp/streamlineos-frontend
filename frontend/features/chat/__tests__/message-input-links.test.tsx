@@ -123,6 +123,7 @@ describe("/ record picker", () => {
     render(<MessageInput {...props({ recordPicker: picker({ groups: [] }) })} />);
     expect(screen.getByText(/No records match/)).toBeInTheDocument();
     expect(screen.getByText(/Only records you can open are shown/)).toBeInTheDocument();
+    expect(screen.queryByRole("listbox")).not.toBeInTheDocument();
   });
 
   it("offers a retry when the search fails", async () => {
@@ -190,5 +191,18 @@ describe("mentioning someone outside a private conversation", () => {
     );
     expect(screen.getByRole("option", { name: /Arjun Mehta/ })).toHaveTextContent("Not in conversation");
     expect(screen.getByRole("option", { name: /Aditi Shah/ })).not.toHaveTextContent("Not in conversation");
+  });
+
+  it("does not warn about membership in a public conversation, where mentions notify anyone in the org", () => {
+    render(
+      <MessageInput
+        {...props({
+          channelType: "PUBLIC",
+          showMentions: true,
+          filteredMentions: [{ id: "u_arjun", name: "Arjun Mehta", image: null, isMember: false }],
+        })}
+      />,
+    );
+    expect(screen.getByRole("option", { name: /Arjun Mehta/ })).not.toHaveTextContent("Not in conversation");
   });
 });

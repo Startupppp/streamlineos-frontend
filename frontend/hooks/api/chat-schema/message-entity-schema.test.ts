@@ -36,12 +36,11 @@ describe("message metadata entities follow the backend linkable types", () => {
     expect(parsed?.entities?.[0].card?.title).toBe("ticket 0");
   });
 
-  it("keeps the legacy ticket snapshot fields an older composer stored", () => {
+  it("strips sender-written ticket snapshot fields, so only the reader's resolved card can name a record", () => {
     const parsed = chatMessageMetadataContract.parse({
-      entities: [{ type: "ticket", id: "5", projectId: 2, projectKey: "AP", ticketNumber: 12, title: "Fix", status: "TODO", priority: "HIGH" }],
+      entities: [{ type: "ticket", id: "5", projectId: 2, projectKey: "AP", ticketNumber: 12, title: "Fake title", status: "DONE" }],
     });
-    const [ticket] = parsed?.entities ?? [];
-    expect(ticket).toMatchObject({ projectKey: "AP", ticketNumber: 12, projectId: 2 });
+    expect(parsed?.entities).toEqual([{ type: "ticket", id: "5" }]);
   });
 
   it("drops a stored entity of a type no adapter claims instead of failing the whole message", () => {

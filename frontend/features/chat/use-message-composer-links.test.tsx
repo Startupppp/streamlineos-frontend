@@ -135,11 +135,15 @@ describe("/ record picker searches every linkable module", () => {
     expect(hook.result.current.linkedRecords.map((r) => r.key)).toEqual(["deal:5"]);
   });
 
-  it("seeds the picked title so the optimistic message shows its pill before the server card arrives", async () => {
+  it("seeds the picked title at send so the optimistic message shows its pill before the server card arrives", async () => {
     const { hook, client } = harness();
     await openRecordPickerWithResults(hook);
     const [deal] = hook.result.current.recordPicker?.groups[0].items ?? [];
     act(() => hook.result.current.selectRecord(deal));
+    act(() => hook.result.current.setMessageInput("see this"));
+    await act(async () => {
+      await hook.result.current.handleSend();
+    });
     const seeded = client.getQueryCache().findAll().map((q) => q.state.data);
     expect(seeded).toContainEqual({
       type: "deal",
@@ -149,6 +153,57 @@ describe("/ record picker searches every linkable module", () => {
       status: null,
       href: "/crm/deals/5",
     });
+  });
+
+  it("swallows Enter while the picker is open and results have not arrived, so the half-typed /query is never sent", () => {
+    const { hook, sendMessage } = harness();
+    change(hook, "see /acme");
+    const preventDefault = press(hook, "Enter");
+    expect(preventDefault).toHaveBeenCalled();
+    expect(sendMessage.mutateAsync).not.toHaveBeenCalled();
+    expect(hook.result.current.recordPicker).not.toBeNull();
+  });
+
+  it("hides results once the query drops below two characters instead of keeping stale ones selectable", async () => {
+    const { hook, sendMessage } = harness();
+    await openRecordPickerWithResults(hook);
+    change(hook, "see /a");
+    expect(hook.result.current.recordPicker?.groups).toEqual([]);
+    expect(hook.result.current.recordPicker?.activeIndex).toBe(-1);
+    press(hook, "Enter");
+    expect(hook.result.current.linkedRecords).toEqual([]);
+    expect(sendMessage.mutateAsync).not.toHaveBeenCalled();
+  });
+
+  it("keeps linked records in the draft and restores text and links on the next mount", async () => {
+    const first = harness();
+    await openRecordPickerWithResults(first.hook);
+    const [deal] = first.hook.result.current.recordPicker?.groups[0].items ?? [];
+    act(() => first.hook.result.current.selectRecord(deal));
+    localStorage.setItem("chat:draft:7", "half written");
+    first.hook.unmount();
+    const second = harness();
+    expect(second.hook.result.current.messageInput).toBe("half written");
+    expect(second.hook.result.current.linkedRecords.map((r) => r.key)).toEqual(["deal:5"]);
+  });
+
+  it("ignores a tampered links draft instead of rendering it", () => {
+    localStorage.setItem("chat:draft:7:links", JSON.stringify([{ key: "x", type: "invoice", id: "1" }]));
+    const { hook } = harness();
+    expect(hook.result.current.linkedRecords).toEqual([]);
+  });
+
+  it("clears the links draft after a successful send", async () => {
+    const { hook } = harness();
+    await openRecordPickerWithResults(hook);
+    const [deal] = hook.result.current.recordPicker?.groups[0].items ?? [];
+    act(() => hook.result.current.selectRecord(deal));
+    expect(localStorage.getItem("chat:draft:7:links")).not.toBeNull();
+    act(() => hook.result.current.setMessageInput("go"));
+    await act(async () => {
+      await hook.result.current.handleSend();
+    });
+    expect(localStorage.getItem("chat:draft:7:links")).toBeNull();
   });
 });
 
@@ -173,6 +228,22 @@ describe("@ mentions reach anyone in the org, members first", () => {
     act(() => hook.result.current.insertMention(hook.result.current.filteredMentions[0]));
     expect(hook.result.current.mentionPrompt).toEqual({ userId: "u_arjun", name: "Arjun Mehta" });
     act(() => hook.result.current.dismissMentionPrompt());
+    expect(hook.result.current.mentionPrompt).toBeNull();
+  });
+
+  it("drops the prompt when the mention text is deleted, and after the message is sent", async () => {
+    const { hook } = harness("PRIVATE");
+    change(hook, "hi @ar");
+    await waitFor(() => expect(hook.result.current.filteredMentions).toHaveLength(1));
+    act(() => hook.result.current.insertMention(hook.result.current.filteredMentions[0]));
+    expect(hook.result.current.mentionPrompt).not.toBeNull();
+    act(() => hook.result.current.setMessageInput("hi "));
+    expect(hook.result.current.mentionPrompt).toBeNull();
+    act(() => hook.result.current.setMessageInput("hi @Arjun Mehta "));
+    expect(hook.result.current.mentionPrompt).not.toBeNull();
+    await act(async () => {
+      await hook.result.current.handleSend();
+    });
     expect(hook.result.current.mentionPrompt).toBeNull();
   });
 

@@ -12,7 +12,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { TruncatedText } from "@/components/ui/truncated-text";
-import type { EntityCard, EntityRef } from "@/types/chat";
+import type { EntityRef } from "@/types/chat";
 import { isApiError } from "@/lib/api-envelope";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useEntityAction } from "./entity-actions-context";
@@ -36,35 +36,6 @@ const TICKET_STATUS_DISPLAY: Record<string, string> = {
 
 const PILL_CLASS =
   "inline-flex max-w-full items-center gap-1.5 rounded-lg border border-border bg-muted/50 px-2.5 py-1.5 my-1 text-dense";
-
-interface PillDisplay {
-  title: string | null;
-  subtitle: string | null;
-  href: string | null;
-  status: string | null;
-}
-
-function describeEntity(entity: EntityRef, preview: EntityCard | undefined): PillDisplay {
-  const card = entity.card ?? preview;
-  if (entity.type !== "ticket")
-    return {
-      title: card?.title ?? null,
-      subtitle: card?.subtitle ?? null,
-      href: card?.href ?? null,
-      status: card?.status ?? null,
-    };
-  const legacyKey =
-    entity.projectKey && entity.ticketNumber ? `${entity.projectKey}-${entity.ticketNumber}` : null;
-  const legacyHref = entity.projectId
-    ? `/build/${entity.projectId}/issues?ticket=${entity.id}`
-    : null;
-  return {
-    title: card?.title ?? entity.title ?? null,
-    subtitle: card?.subtitle ?? legacyKey,
-    href: card?.href ?? legacyHref,
-    status: card?.status ?? entity.status ?? null,
-  };
-}
 
 function statusChangeError(error: unknown): string {
   const code = isApiError(error) ? error.code : undefined;
@@ -158,9 +129,9 @@ interface LinkedRecordPillProps {
 export function LinkedRecordPill({ entity, channelId }: LinkedRecordPillProps) {
   const router = useRouter();
   const preview = useLinkedRecordPreview(entity);
-  const display = describeEntity(entity, preview);
+  const card = entity.card ?? preview;
   const meta = LINKED_RECORD_META[entity.type];
-  const href = display.href;
+  const href = card?.href ?? null;
   const reference = useMemo(() => ({ type: entity.type, id: entity.id }), [entity.type, entity.id]);
 
   const handleOpen = useCallback(() => {
@@ -176,12 +147,14 @@ export function LinkedRecordPill({ entity, channelId }: LinkedRecordPillProps) {
     );
 
   const Icon = meta.icon;
-  const label = display.title ?? meta.label;
+  const label = card?.title ?? meta.label;
   const body = (
     <>
       <Icon className="h-3 w-3 shrink-0 text-muted-foreground" aria-hidden />
-      {display.subtitle && entity.type === "ticket" && (
-        <span className="font-mono text-muted-foreground shrink-0">{display.subtitle}</span>
+      {card?.subtitle && (
+        <span className={cn("shrink-0 text-muted-foreground", entity.type === "ticket" && "font-mono")}>
+          {card.subtitle}
+        </span>
       )}
       <TruncatedText text={label} className="min-w-0 max-w-[200px] text-foreground/80" />
     </>
@@ -201,8 +174,8 @@ export function LinkedRecordPill({ entity, channelId }: LinkedRecordPillProps) {
       ) : (
         <span className="flex min-w-0 items-center gap-1.5 text-muted-foreground">{body}</span>
       )}
-      {entity.type === "ticket" && display.status && (
-        <TicketStatusControl reference={reference} channelId={channelId} status={display.status} />
+      {entity.type === "ticket" && card?.status && (
+        <TicketStatusControl reference={reference} channelId={channelId} status={card.status} />
       )}
     </span>
   );

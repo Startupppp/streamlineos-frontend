@@ -7,20 +7,21 @@ import { Button } from "@/components/ui/button";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { GLOBAL_SEARCH_MIN_LENGTH } from "@/components/command-palette/hooks/use-global-search";
 import { LINKED_RECORD_META, type RecordSearchResult } from "./linked-record-meta";
-import type { LinkedRecordDraft, RecordPickerState } from "./use-message-composer";
+import type { RecordPickerState } from "./use-message-composer";
+import type { LinkedRecordDraft } from "./composer-draft";
 
-export function recordOptionId(index: number): string {
-  return `chat-record-option-${index}`;
+export function recordOptionId(listboxId: string, index: number): string {
+  return `${listboxId}-option-${index}`;
 }
 
 interface RecordOptionProps {
   record: RecordSearchResult;
-  index: number;
+  optionId: string;
   isActive: boolean;
   onSelect: (record: RecordSearchResult) => void;
 }
 
-const RecordOption = memo(function RecordOption({ record, index, isActive, onSelect }: RecordOptionProps) {
+const RecordOption = memo(function RecordOption({ record, optionId, isActive, onSelect }: RecordOptionProps) {
   const handleClick = useCallback(() => onSelect(record), [onSelect, record]);
   const handleMouseDown = useCallback((event: React.MouseEvent) => event.preventDefault(), []);
   const Icon = LINKED_RECORD_META[record.type].icon;
@@ -28,7 +29,7 @@ const RecordOption = memo(function RecordOption({ record, index, isActive, onSel
     <button
       type="button"
       role="option"
-      id={recordOptionId(index)}
+      id={optionId}
       aria-selected={isActive}
       onMouseDown={handleMouseDown}
       onClick={handleClick}
@@ -47,16 +48,21 @@ const RecordOption = memo(function RecordOption({ record, index, isActive, onSel
 });
 
 function PickerMessage({ children }: { children: React.ReactNode }) {
-  return <div className="flex flex-col items-center gap-1 px-3 py-4 text-center text-xs text-muted-foreground">{children}</div>;
+  return (
+    <div role="status" className="flex flex-col items-center gap-1 px-3 py-4 text-center text-xs text-muted-foreground">
+      {children}
+    </div>
+  );
 }
 
 interface RecordLinkPickerProps {
   picker: RecordPickerState;
+  listboxId: string;
   onSelect: (record: RecordSearchResult) => void;
   className?: string;
 }
 
-export function RecordLinkPicker({ picker, onSelect, className }: RecordLinkPickerProps) {
+export function RecordLinkPicker({ picker, listboxId, onSelect, className }: RecordLinkPickerProps) {
   const query = picker.query.trim();
   const hasResults = picker.groups.length > 0;
   const groupStarts = picker.groups.reduce<number[]>(
@@ -78,52 +84,57 @@ export function RecordLinkPicker({ picker, onSelect, className }: RecordLinkPick
           <span className="ml-auto text-micro">Searching…</span>
         )}
       </div>
-      <div role="listbox" aria-label="Link a record" className="max-h-64 overflow-y-auto">
-        {query.length < GLOBAL_SEARCH_MIN_LENGTH ? (
-          <PickerMessage>
-            <Search className="h-4 w-4" aria-hidden />
-            Type at least 2 characters to search CRM, Build, HR, Docs, Calendar and Support.
-          </PickerMessage>
-        ) : picker.isError ? (
-          <PickerMessage>
-            Can&apos;t search records right now.
-            <Button type="button" variant="ghost" size="sm" onClick={picker.retry}>
-              Try again
-            </Button>
-          </PickerMessage>
-        ) : !hasResults ? (
-          picker.isSearching ? (
-            <PickerMessage>Searching records…</PickerMessage>
+      {query.length < GLOBAL_SEARCH_MIN_LENGTH ? (
+        <PickerMessage>
+          <Search className="h-4 w-4" aria-hidden />
+          Type at least 2 characters to search CRM, Build, HR, Docs, Calendar and Support.
+        </PickerMessage>
+      ) : picker.isError ? (
+        <PickerMessage>
+          Can&apos;t search records right now.
+          <Button type="button" variant="ghost" size="sm" onClick={picker.retry}>
+            Try again
+          </Button>
+        </PickerMessage>
+      ) : !hasResults ? (
+        <PickerMessage>
+          {picker.isSearching ? (
+            "Searching records…"
           ) : (
-            <PickerMessage>
+            <>
               <span>No records match &ldquo;{query}&rdquo;.</span>
               <span>Only records you can open are shown.</span>
-            </PickerMessage>
-          )
-        ) : (
-          picker.groups.map((group, groupIndex) => {
+            </>
+          )}
+        </PickerMessage>
+      ) : (
+        <div id={listboxId} role="listbox" aria-label="Link a record" className="max-h-64 overflow-y-auto">
+          {picker.groups.map((group, groupIndex) => {
             const start = groupStarts[groupIndex];
             const ModuleIcon = group.icon;
             return (
               <div key={group.module} role="group" aria-label={group.label}>
-                <p className="flex items-center gap-1.5 px-3 pt-2 pb-1 text-micro font-semibold uppercase tracking-wider text-muted-foreground">
-                  <ModuleIcon className="h-3 w-3" aria-hidden />
+                <p
+                  aria-hidden
+                  className="flex items-center gap-1.5 px-3 pt-2 pb-1 text-micro font-semibold uppercase tracking-wider text-muted-foreground"
+                >
+                  <ModuleIcon className="h-3 w-3" />
                   {group.label}
                 </p>
                 {group.items.map((record, itemIndex) => (
                   <RecordOption
                     key={`${record.type}:${record.id}`}
                     record={record}
-                    index={start + itemIndex}
+                    optionId={recordOptionId(listboxId, start + itemIndex)}
                     isActive={start + itemIndex === picker.activeIndex}
                     onSelect={onSelect}
                   />
                 ))}
               </div>
             );
-          })
-        )}
-      </div>
+          })}
+        </div>
+      )}
     </div>
   );
 }

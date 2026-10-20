@@ -1,6 +1,7 @@
 import type { Message } from "./chat-types";
 import type { MentionCandidate } from "./use-chat-mentions";
-import type { LinkedRecordDraft, MentionPrompt, RecordPickerState } from "./use-message-composer";
+import type { MentionPrompt, RecordPickerState } from "./use-message-composer";
+import type { LinkedRecordDraft } from "./composer-draft";
 import type { RecordSearchResult } from "./linked-record-meta";
 
 export type PendingAttachment = {

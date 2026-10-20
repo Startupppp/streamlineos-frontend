@@ -14,12 +14,6 @@ const chatEntityRefContract = z.discriminatedUnion("type", [
     type: z.literal("ticket"),
     id: z.string(),
     card: chatEntityCardContract.nullable().optional(),
-    projectId: z.number().optional(),
-    ticketNumber: z.number().optional(),
-    projectKey: z.string().optional(),
-    title: z.string().optional(),
-    status: z.string().optional(),
-    priority: z.string().optional(),
   }),
   z.object({
     type: z.enum([
@@ -85,6 +79,7 @@ const chatMessageCore = {
   actionStatus: z.string().nullable(),
   reactions: z.record(z.string(), z.array(z.string())).default({}),
   clientKey: z.string().nullable().optional(),
+  channelPosition: z.number().optional(),
   createdAt: z.string(),
   updatedAt: z.string(),
 };

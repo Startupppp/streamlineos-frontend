@@ -15,7 +15,6 @@ jest.mock("@/lib/api-client", () => ({
   apiClient: { post: jest.fn(), get: jest.fn() },
 }));
 
-
 jest.mock("@/hooks/api/access", () => ({
   ...jest.requireActual("@/hooks/api/access"),
   useCan: () => true,

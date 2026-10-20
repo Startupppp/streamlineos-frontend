@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type React from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -18,22 +18,14 @@ import type { Message, MessageMetadata } from "./chat-types";
 import type { AttachmentInput, EditMessageInput, EntityRef, SendMessageInput } from "@/types/chat";
 import type { ChatChannelDetailWire } from "@/hooks/api/chat-extra-schema";
 import { seedLinkedRecordPreview } from "@/hooks/api/chat-entities";
-import { useGlobalSearch } from "@/components/command-palette/hooks/use-global-search";
+import { GLOBAL_SEARCH_MIN_LENGTH, useGlobalSearch } from "@/components/command-palette/hooks/use-global-search";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import { useChatMentions, type MentionCandidate } from "./use-chat-mentions";
+import { LINKED_RECORD_LIMIT, linksKeyFor, readDraftLinks, readDraftText, type LinkedRecordDraft } from "./composer-draft";
 import { RECORD_SEARCH_TYPES, groupRecordResults, type RecordGroup, type RecordSearchResult } from "./linked-record-meta";
 
 type Attachment = AttachmentInput;
 type QueuedMessage = { content: string; replyToId?: number; metadata?: MessageMetadata; attachments?: Attachment[]; mentionedUserIds?: string[]; clientKey: string };
-
-export interface LinkedRecordDraft {
-  key: string;
-  type: RecordSearchResult["type"];
-  id: string;
-  title: string;
-  subtitle: string;
-  href: string;
-}
 
 export interface RecordPickerState {
   query: string;
@@ -49,7 +41,10 @@ export interface MentionPrompt {
   name: string;
 }
 
-const LINKED_RECORD_LIMIT = 10;
+interface PendingMentionPrompt extends MentionPrompt {
+  token: string;
+}
+
 const RECORD_TRIGGER = /(?:^|\s)\/([^\s/]*)$/;
 const MENTION_TRIGGER = /(?:^|\s)@([^\s@]*)$/;
 
@@ -85,7 +80,7 @@ export function useMessageComposer({
   channel: ChatChannelDetailWire | undefined; currentUserId: string;
 }) {
   const queryClient = useQueryClient();
-  const [messageInput, setMessageInput] = useState("");
+  const [messageInput, setMessageInput] = useState(() => readDraftText(draftKey));
   const [replyTo, setReplyTo] = useState<Message | null>(null);
   const [editingMessage, setEditingMessage] = useState<Message | null>(null);
   const [editInput, setEditInput] = useState("");
@@ -95,10 +90,10 @@ export function useMessageComposer({
   const [showMentions, setShowMentions] = useState(false);
   const [mentionQuery, setMentionQuery] = useState("");
   const [mentionIndex, setMentionIndex] = useState(0);
-  const [mentionPrompt, setMentionPrompt] = useState<MentionPrompt | null>(null);
+  const [pendingPrompt, setMentionPrompt] = useState<PendingMentionPrompt | null>(null);
   const [recordQuery, setRecordQuery] = useState<string | null>(null);
   const [recordIndex, setRecordIndex] = useState(0);
-  const [linkedRecords, setLinkedRecords] = useState<LinkedRecordDraft[]>([]);
+  const [linkedRecords, setLinkedRecords] = useState<LinkedRecordDraft[]>(() => readDraftLinks(draftKey));
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const emojiRef = useRef<HTMLDivElement>(null);
@@ -120,7 +115,11 @@ export function useMessageComposer({
 
   const debouncedRecordQuery = useDebouncedValue(recordQuery ?? "", 300);
   const recordSearch = useGlobalSearch(recordQuery === null ? "" : debouncedRecordQuery, RECORD_SEARCH_TYPES);
-  const recordGroups = useMemo(() => groupRecordResults(recordSearch.results), [recordSearch.results]);
+  const recordQueryReady = recordQuery !== null && recordQuery.trim().length >= GLOBAL_SEARCH_MIN_LENGTH;
+  const recordGroups = useMemo(
+    () => (recordQueryReady ? groupRecordResults(recordSearch.results) : []),
+    [recordQueryReady, recordSearch.results],
+  );
   const recordOptions = useMemo(() => recordGroups.flatMap((group) => group.items), [recordGroups]);
   const activeRecordIndex = recordOptions.length > 0 ? Math.min(recordIndex, recordOptions.length - 1) : -1;
   const recordPicker = useMemo<RecordPickerState | null>(
@@ -137,6 +136,20 @@ export function useMessageComposer({
           },
     [recordQuery, recordGroups, activeRecordIndex, recordSearch.isSearching, recordSearch.isError, recordSearch.retry, debouncedRecordQuery],
   );
+
+  const mentionPrompt = useMemo<MentionPrompt | null>(
+    () =>
+      pendingPrompt && messageInput.includes(pendingPrompt.token)
+        ? { userId: pendingPrompt.userId, name: pendingPrompt.name }
+        : null,
+    [pendingPrompt, messageInput],
+  );
+
+  useEffect(() => {
+    const key = linksKeyFor(draftKey);
+    if (linkedRecords.length) localStorage.setItem(key, JSON.stringify(linkedRecords));
+    else localStorage.removeItem(key);
+  }, [draftKey, linkedRecords]);
 
   const uploadFiles = useCallback(async (files: File[]) => {
     setUploading(true);
@@ -172,7 +185,7 @@ export function useMessageComposer({
     if (name) pendingMentionsRef.current.set(name, candidate.id); const el = inputRef.current;
     const cursor = el?.selectionStart ?? messageInput.length; const at = messageInput.slice(0, cursor).lastIndexOf("@"); if (at < 0) return;
     const value = messageInput.slice(0, at) + `@${name} ` + messageInput.slice(cursor); setMessageInput(value); setShowMentions(false); setMentionQuery("");
-    if (!candidate.isMember && asksBeforeMentioning(channel?.type)) setMentionPrompt({ userId: candidate.id, name: name || "This person" });
+    if (!candidate.isMember && asksBeforeMentioning(channel?.type)) setMentionPrompt({ userId: candidate.id, name: name || "This person", token: `@${name}` });
     setTimeout(() => { el?.focus(); const pos = at + name.length + 2; el?.setSelectionRange(pos, pos); }, 0);
   }, [messageInput, channel?.type]);
   const dismissMentionPrompt = useCallback(() => setMentionPrompt(null), []);
@@ -186,10 +199,9 @@ export function useMessageComposer({
     closeRecordPicker();
     const draft: LinkedRecordDraft = { key: `${result.type}:${result.id}`, type: result.type, id: String(result.id), title: result.title, subtitle: result.subtitle, href: result.href };
     if (linkedRecords.length >= LINKED_RECORD_LIMIT && !linkedRecords.some((r) => r.key === draft.key)) toast.info(`A message can link up to ${LINKED_RECORD_LIMIT} records.`);
-    seedLinkedRecordPreview(queryClient, { type: draft.type, id: draft.id, title: draft.title, subtitle: draft.subtitle, status: result.status ?? null, href: draft.href });
     setLinkedRecords((prev) => (prev.some((r) => r.key === draft.key) || prev.length >= LINKED_RECORD_LIMIT ? prev : [...prev, draft]));
     setTimeout(() => { el?.focus(); el?.setSelectionRange(caret, caret); }, 0);
-  }, [messageInput, linkedRecords, closeRecordPicker, queryClient]);
+  }, [messageInput, linkedRecords, closeRecordPicker]);
   const removeLinkedRecord = useCallback((key: string) => {
     setLinkedRecords((prev) => prev.filter((r) => r.key !== key));
   }, []);
@@ -220,6 +232,7 @@ export function useMessageComposer({
     const clientKey = pendingSendRef.current?.signature === signature ? pendingSendRef.current.clientKey : crypto.randomUUID();
     pendingSendRef.current = { signature, clientKey };
     if (!isOnline) { messageQueue.current.push({ content, replyToId, attachments: attachments.length ? attachments : undefined, metadata, mentionedUserIds: mentionedUserIds.length ? mentionedUserIds : undefined, clientKey }); pendingSendRef.current = null; toast.info("You're offline — message will be sent when you reconnect"); return; }
+    for (const record of records) seedLinkedRecordPreview(queryClient, { type: record.type, id: record.id, title: record.title, subtitle: record.subtitle, status: null, href: record.href });
     try {
       await sendMessage.mutateAsync({ channelId, clientKey, content: content || undefined, replyToId, attachments: attachments.length ? attachments : undefined, metadata, mentionedUserIds: mentionedUserIds.length ? mentionedUserIds : undefined });
       pendingSendRef.current = null;
@@ -227,6 +240,7 @@ export function useMessageComposer({
       setPendingAttachments([]);
       setReplyTo(null);
       setLinkedRecords([]);
+      setMentionPrompt(null);
       pendingMentionsRef.current.clear();
       localStorage.removeItem(draftKey);
       markRead.mutate({ channelId });
@@ -236,7 +250,7 @@ export function useMessageComposer({
       setMessageInput(content); setPendingAttachments(attachments); setReplyTo(replyToMessage); setLinkedRecords(records); pendingMentionsRef.current = mentions;
       toast.error(getErrorMessage(error));
     }
-  }, [messageInput, pendingAttachments, linkedRecords, replyTo, draftKey, isOnline, sendMessage, channelId, markRead, scrollToBottom]);
+  }, [messageInput, pendingAttachments, linkedRecords, replyTo, draftKey, isOnline, sendMessage, channelId, markRead, scrollToBottom, queryClient]);
   const handleEdit = useCallback(async (messageId: number) => { const content = editInput.trim(); if (!content) return; try { await editMessage.mutateAsync({ channelId, messageId, content }); setEditingMessage(null); setEditInput(""); } catch (error) { toast.error(getErrorMessage(error)); } }, [editInput, editMessage, channelId]);
   const handleInputChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const value = e.target.value; setMessageInput(value); e.target.style.height = "auto"; e.target.style.height = `${Math.min(e.target.scrollHeight, 160)}px`;
@@ -252,12 +266,13 @@ export function useMessageComposer({
       const count = recordOptions.length;
       if (e.key === "ArrowDown" || e.key === "ArrowUp") { e.preventDefault(); if (count) setRecordIndex((activeRecordIndex + (e.key === "ArrowDown" ? 1 : -1) + count) % count); return; }
       if (e.key === "Escape") { e.preventDefault(); closeRecordPicker(); return; }
-      if (((e.key === "Enter" && !e.shiftKey) || e.key === "Tab") && activeRecordIndex >= 0) { e.preventDefault(); selectRecord(recordOptions[activeRecordIndex]); return; }
+      if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); if (count) selectRecord(recordOptions[Math.max(activeRecordIndex, 0)]); return; }
+      if (e.key === "Tab" && count) { e.preventDefault(); selectRecord(recordOptions[Math.max(activeRecordIndex, 0)]); return; }
     }
     const mentions = filteredMentions;
     if (showMentions && mentions.length) { if (e.key === "ArrowDown" || e.key === "ArrowUp") { e.preventDefault(); setMentionIndex((activeMentionIndex + (e.key === "ArrowDown" ? 1 : -1) + mentions.length) % mentions.length); return; } if (e.key === "Enter" || e.key === "Tab") { e.preventDefault(); insertMention(mentions[activeMentionIndex]); return; } if (e.key === "Escape") { setShowMentions(false); return; } }
     if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); void handleSend(); }
   }, [recordPicker, recordOptions, activeRecordIndex, closeRecordPicker, selectRecord, filteredMentions, showMentions, activeMentionIndex, insertMention, handleSend]);
 
-  return { messageInput, setMessageInput, replyTo, setReplyTo, editingMessage, setEditingMessage, editInput, setEditInput, pendingAttachments, setPendingAttachments, uploading, showEmojiPicker, setShowEmojiPicker, showMentions, setShowMentions, mentionIndex: activeMentionIndex, filteredMentions, mentionPrompt, dismissMentionPrompt, recordPicker, closeRecordPicker, selectRecord, linkedRecords, setLinkedRecords, removeLinkedRecord, inputRef, fileInputRef, emojiRef, messageQueue, pendingMentionsRef, handleFileSelect, handlePastedFiles, insertEmoji, insertMention, handleSend, handleEdit, handleInputChange, handleKeyDown, flushMessageQueue };
+  return { messageInput, setMessageInput, replyTo, setReplyTo, editingMessage, setEditingMessage, editInput, setEditInput, pendingAttachments, setPendingAttachments, uploading, showEmojiPicker, setShowEmojiPicker, showMentions, setShowMentions, mentionIndex: activeMentionIndex, filteredMentions, mentionPrompt, dismissMentionPrompt, recordPicker, selectRecord, linkedRecords, removeLinkedRecord, inputRef, fileInputRef, emojiRef, messageQueue, handleFileSelect, handlePastedFiles, insertEmoji, insertMention, handleSend, handleEdit, handleInputChange, handleKeyDown, flushMessageQueue };
 }
