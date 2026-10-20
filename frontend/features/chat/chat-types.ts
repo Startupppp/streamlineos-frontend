@@ -1,6 +1,6 @@
 import type { useChatChannels } from "@/hooks/api/chat-core-read";
-import type { TicketEntityRef, CommentEntityRef, MessageMetadata } from "@/types/chat";
-export type { TicketEntityRef, CommentEntityRef, MessageMetadata };
+import type { TicketEntityRef, MessageMetadata } from "@/types/chat";
+export type { TicketEntityRef, MessageMetadata };
 
 type ChannelRaw = ReturnType<typeof useChatChannels>["channels"][number];
 export type Channel = Omit<ChannelRaw, "lastMessage"> & {

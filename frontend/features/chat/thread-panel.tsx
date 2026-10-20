@@ -21,11 +21,13 @@ export function ThreadPanel({
   parentMessageId,
   currentUserId,
   onClose,
+  highlightedReplyId = null,
 }: {
   channelId: number;
   parentMessageId: number;
   currentUserId: string;
   onClose: () => void;
+  highlightedReplyId?: number | null;
 }) {
   const [input, setInput] = useState("");
   const inputRef = useRef<HTMLTextAreaElement>(null);
@@ -103,10 +105,38 @@ export function ThreadPanel({
     fetchNextPage,
     parentMessageId,
   );
-  const visibleReplies = useMemo(
-    () => replies.slice(renderWindow.windowStart),
-    [replies, renderWindow.windowStart],
+  const highlightedIndex = useMemo(
+    () =>
+      highlightedReplyId === null
+        ? -1
+        : replies.findIndex((reply) => reply.id === highlightedReplyId),
+    [replies, highlightedReplyId],
   );
+  const windowStart =
+    highlightedIndex >= 0
+      ? Math.min(renderWindow.windowStart, highlightedIndex)
+      : renderWindow.windowStart;
+  const visibleReplies = useMemo(
+    () => replies.slice(windowStart),
+    [replies, windowStart],
+  );
+  const isHighlightedVisible = highlightedIndex >= 0;
+
+  useEffect(() => {
+    if (!isHighlightedVisible || highlightedReplyId === null) return;
+    let innerFrame = 0;
+    const outerFrame = requestAnimationFrame(() => {
+      innerFrame = requestAnimationFrame(() => {
+        document
+          .getElementById(`thread-reply-${highlightedReplyId}`)
+          ?.scrollIntoView({ behavior: "smooth", block: "center" });
+      });
+    });
+    return () => {
+      cancelAnimationFrame(outerFrame);
+      cancelAnimationFrame(innerFrame);
+    };
+  }, [isHighlightedVisible, highlightedReplyId]);
 
   return (
     <div className="flex flex-col h-full w-80 border-l border-border/40 bg-card/50">
@@ -176,8 +206,14 @@ export function ThreadPanel({
               {visibleReplies.map((reply, index) => (
                 <div
                   key={reply.id}
+                  id={`thread-reply-${reply.id}`}
                   role="listitem"
-                  aria-posinset={renderWindow.windowStart + index + 1}
+                  data-anchored={reply.id === highlightedReplyId || undefined}
+                  className={cn(
+                    reply.id === highlightedReplyId &&
+                      "rounded-lg bg-primary/5 ring-1 ring-primary/30",
+                  )}
+                  aria-posinset={windowStart + index + 1}
                   aria-setsize={hasNextPage ? -1 : total}
                 >
                   <ThreadMessage

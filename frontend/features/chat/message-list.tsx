@@ -7,10 +7,6 @@ import {
   useMemo,
 } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { useQueryClient } from "@tanstack/react-query";
-import { toast } from "sonner";
-import { ensureChatMessageLoaded } from "@/hooks/api/chat-core-read";
-import { getErrorMessage } from "@/lib/get-error-message";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Send, ArrowDown } from "lucide-react";
 import React from "react";
@@ -21,7 +17,6 @@ import { useOlderHistoryLoader } from "./use-chat-scroll";
 import { ErrorState } from "@/components/shared/error-state";
 import { EntityActionsProvider } from "./entity-actions-context";
 
-const MESSAGE_UNAVAILABLE_COPY = "That message is no longer available";
 
 interface GroupedMessages {
   date: string;
@@ -71,6 +66,7 @@ interface MessageListProps {
     embedded?: { name?: string | null; email?: string | null } | null,
   ) => string;
   showScrollBtn: boolean;
+  latestLabel?: string;
   scrollToBottom: () => void;
   messagesEndRef: React.RefObject<HTMLDivElement | null>;
   scrollContainerRef: React.RefObject<HTMLDivElement | null>;
@@ -78,27 +74,10 @@ interface MessageListProps {
   scrollToMessageId?: number | null;
 }
 
-interface MessageAnchorOptions {
-  channelId: number;
-  messageId: number | null | undefined;
-  groupedMessages: GroupedMessages[];
-  isLoading: boolean;
-}
-
-function reportMessageUnavailable(messageId: number, copy: string) {
-  toast.error(copy);
-  window.dispatchEvent(
-    new CustomEvent("chat:message-unavailable", { detail: messageId }),
-  );
-}
-
-function useMessageAnchor({
-  channelId,
-  messageId,
-  groupedMessages,
-  isLoading,
-}: MessageAnchorOptions): number | null {
-  const queryClient = useQueryClient();
+function useMessageAnchor(
+  messageId: number | null | undefined,
+  groupedMessages: GroupedMessages[],
+): number | null {
   const isPresent = useMemo(
     () =>
       messageId != null &&
@@ -107,24 +86,6 @@ function useMessageAnchor({
       ),
     [groupedMessages, messageId],
   );
-
-  useEffect(() => {
-    if (!messageId || isLoading || isPresent) return;
-    let cancelled = false;
-    ensureChatMessageLoaded(queryClient, channelId, messageId).then(
-      (found) => {
-        if (!cancelled && !found)
-          reportMessageUnavailable(messageId, MESSAGE_UNAVAILABLE_COPY);
-      },
-      (error: unknown) => {
-        if (!cancelled)
-          reportMessageUnavailable(messageId, getErrorMessage(error));
-      },
-    );
-    return () => {
-      cancelled = true;
-    };
-  }, [queryClient, channelId, messageId, isLoading, isPresent]);
 
   useEffect(() => {
     if (!messageId || !isPresent) return;
@@ -192,6 +153,7 @@ export function MessageList({
   onForward,
   resolveUserName,
   showScrollBtn,
+  latestLabel = "New messages",
   scrollToBottom,
   messagesEndRef,
   scrollContainerRef,
@@ -203,12 +165,7 @@ export function MessageList({
     () => scrollToBottom(),
     [scrollToBottom],
   );
-  const highlightedMessageId = useMessageAnchor({
-    channelId,
-    messageId: scrollToMessageId,
-    groupedMessages,
-    isLoading,
-  });
+  const highlightedMessageId = useMessageAnchor(scrollToMessageId, groupedMessages);
   const firstMessageId = groupedMessages[0]?.messages[0]?.id ?? null;
   const renderedMessageCount = useMemo(
     () => groupedMessages.reduce((sum, group) => sum + group.messages.length, 0),
@@ -444,7 +401,7 @@ export function MessageList({
                 onClick={handleScrollToBottom}
                 className="pointer-events-auto h-8 rounded-full bg-background border border-border/60 shadow-lg flex items-center gap-1.5 px-3 hover:bg-muted transition-colors"
               >
-                <span className="text-dense font-medium">New messages</span>
+                <span className="text-dense font-medium">{latestLabel}</span>
               </ScrollToBottomButton>
             </motion.div>
           )}

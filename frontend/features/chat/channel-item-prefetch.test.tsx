@@ -9,15 +9,20 @@ jest.mock("@/hooks/api/chat-core-read", () => ({
   usePrefetchChatChannel: () => mockPrefetch,
 }));
 
-const channel = {
+const channel: Channel = {
   id: 42,
   name: "design",
   type: "PUBLIC",
-  unreadCount: 0,
-  members: [],
-  lastMessage: null,
   avatarUrl: null,
-} as unknown as Channel;
+  isArchived: false,
+  entityType: null,
+  entityId: null,
+  members: [],
+  memberCount: 0,
+  membersTruncated: false,
+  unreadCount: 0,
+  lastMessage: null,
+};
 
 function renderRow(isActive: boolean, compact = false) {
   render(

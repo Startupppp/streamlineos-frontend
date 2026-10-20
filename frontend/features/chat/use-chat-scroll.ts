@@ -18,12 +18,14 @@ interface UseChatScrollOptions {
   channelId: number;
   messageCount: number;
   isLoading: boolean;
+  followLatest: boolean;
 }
 
 export function useChatScroll({
   channelId,
   messageCount,
   isLoading,
+  followLatest,
 }: UseChatScrollOptions) {
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -50,21 +52,22 @@ export function useChatScroll({
 
   // Open channel at the latest message.
   useEffect(() => {
+    if (!followLatest) return;
     isAtBottomRef.current = true;
     const raf = requestAnimationFrame(() => {
       if (!isLoading) scrollToBottom("auto");
       setShowScrollBtn(false);
     });
     return () => cancelAnimationFrame(raf);
-  }, [channelId, isLoading, scrollToBottom]);
+  }, [channelId, isLoading, followLatest, scrollToBottom]);
 
   // Stick to bottom for new messages only when already near bottom.
   useEffect(() => {
-    if (isLoading) return;
+    if (isLoading || !followLatest) return;
     if (!isAtBottomRef.current) return;
     const raf = requestAnimationFrame(() => scrollToBottom("auto"));
     return () => cancelAnimationFrame(raf);
-  }, [messageCount, isLoading, scrollToBottom]);
+  }, [messageCount, isLoading, followLatest, scrollToBottom]);
 
   return {
     scrollContainerRef,

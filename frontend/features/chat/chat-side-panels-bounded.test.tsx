@@ -6,7 +6,7 @@
  * that the bound keeps list semantics, and that revealing held rows does not
  * fire a second cursor request.
  */
-import { render, screen } from "@testing-library/react";
+import { act, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { SharedFilesPanel } from "./shared-files-panel";
 import { SavedMessagesPanel } from "./saved-messages-panel";
@@ -373,5 +373,51 @@ describe("ThreadPanel — the reply window is a tail and is bounded", () => {
   it("still counts the whole thread in its reply summary", () => {
     renderPanel(500);
     expect(screen.getByText("500 replies")).toBeInTheDocument();
+  });
+});
+
+describe("ThreadPanel — a ?message reply is highlighted and scrolled to inside its thread", () => {
+  function renderThread(highlightedReplyId: number | null) {
+    useThreadReplies.mockReturnValue(
+      infiniteResult(
+        [
+          {
+            parentMessage: makeMessage(0),
+            replies: Array.from({ length: 100 }, (_, i) => makeMessage(i + 1)),
+            nextCursor: undefined,
+          },
+        ],
+        false,
+      ),
+    );
+    return render(
+      <ThreadPanel
+        channelId={1}
+        parentMessageId={7}
+        currentUserId="user-1"
+        onClose={noop}
+        highlightedReplyId={highlightedReplyId}
+      />,
+    );
+  }
+
+  it("keeps an old anchored reply mounted, marks it and scrolls it into view", () => {
+    jest.useFakeTimers();
+    const scrollIntoView = jest.fn();
+    Element.prototype.scrollIntoView = scrollIntoView;
+    const { container } = renderThread(10);
+    act(() => {
+      jest.runAllTimers();
+    });
+    jest.useRealTimers();
+    const anchored = container.querySelector('[data-anchored="true"]');
+    expect(anchored?.id).toBe("thread-reply-10");
+    expect(screen.getByText("reply-100")).toBeInTheDocument();
+    expect(scrollIntoView).toHaveBeenCalled();
+  });
+
+  it("marks nothing when no reply is anchored", () => {
+    const { container } = renderThread(null);
+    expect(container.querySelector('[data-anchored="true"]')).toBeNull();
   });
 });

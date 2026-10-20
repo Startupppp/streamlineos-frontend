@@ -248,34 +248,28 @@ export function ChatHomePage() {
         event instanceof CustomEvent ? readChatSearchScope(event.detail) : null;
       handleSearchScopeChange(requested ?? "messages");
     }
-    function handleMessageUnavailable(event: Event) {
-      if (!(event instanceof CustomEvent) || event.detail !== messageId) return;
-      writeUrl("replace", (next) => next.delete("message"));
-    }
     window.addEventListener("chat:open-new-dm", handleOpenNewDM);
     window.addEventListener("chat:open-new-channel", handleOpenNewChannel);
     window.addEventListener("chat:open-search", handleOpenSearchEvent);
-    window.addEventListener("chat:message-unavailable", handleMessageUnavailable);
     return () => {
       window.removeEventListener("chat:open-new-dm", handleOpenNewDM);
       window.removeEventListener("chat:open-new-channel", handleOpenNewChannel);
       window.removeEventListener("chat:open-search", handleOpenSearchEvent);
-      window.removeEventListener(
-        "chat:message-unavailable",
-        handleMessageUnavailable,
-      );
     };
   }, [
     handleOpenNewDM,
     handleOpenNewChannel,
     handleSearchScopeChange,
-    messageId,
-    writeUrl,
   ]);
+
+  const handleLeaveMessage = useCallback(() => {
+    writeUrl("replace", (next) => next.delete("message"));
+  }, [writeUrl]);
 
   const panelChildren =
     activeChannelId && currentUserId ? (
       <MessagePanel
+        key={activeChannelId}
         channelId={activeChannelId}
         currentUserId={currentUserId}
         onBack={handleBack}
@@ -288,6 +282,7 @@ export function ChatHomePage() {
         }
         onAutoStartHandled={handleAutoStartHandled}
         scrollToMessageId={messageId}
+        onLeaveMessage={handleLeaveMessage}
       />
     ) : (
       <EmptyChatState

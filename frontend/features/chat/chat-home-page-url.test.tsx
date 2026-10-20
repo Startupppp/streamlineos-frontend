@@ -114,15 +114,18 @@ jest.mock("@/features/chat/message-panel", () => ({
     channelId,
     scrollToMessageId,
     onBack,
+    onLeaveMessage,
   }: {
     channelId: number;
     scrollToMessageId?: number | null;
     onBack: () => void;
+    onLeaveMessage?: () => void;
   }) => (
     <div data-testid="message-panel">
       <span data-testid="panel-channel">{channelId}</span>
       <span data-testid="panel-message">{scrollToMessageId ?? "none"}</span>
       <button onClick={onBack}>mobile back</button>
+      <button onClick={onLeaveMessage}>leave message</button>
     </div>
   ),
 }));
@@ -263,13 +266,11 @@ describe("ChatHomePage — the URL is the only source of the selected conversati
     expect(params.get("inbox")).toBe("direct");
   });
 
-  it("drops ?message when the list reports the anchored message is no longer available", async () => {
+  it("drops ?message by replace when the panel leaves the anchored message (unavailable, jump to latest, send)", async () => {
     mockSearchParams = new URLSearchParams("channel=5&message=99");
     render(<ChatHomePage />);
     await act(async () => {});
-    act(() => {
-      window.dispatchEvent(new CustomEvent("chat:message-unavailable", { detail: 99 }));
-    });
+    fireEvent.click(screen.getByText("leave message"));
     const params = lastUrl(mockReplace);
     expect(params.get("channel")).toBe("5");
     expect(params.has("message")).toBe(false);

@@ -59,6 +59,7 @@ interface PanelHeaderProps {
 
 interface ThreadProps {
   messageId: number | null;
+  highlightedReplyId?: number | null;
   channelId: number;
   currentUserId: string;
   onClose: () => void;
@@ -306,6 +307,7 @@ export function MessagePanelView({
               parentMessageId={thread.messageId}
               currentUserId={thread.currentUserId}
               onClose={thread.onClose}
+              highlightedReplyId={thread.highlightedReplyId}
             />
           </motion.div>
         )}
@@ -321,6 +323,7 @@ export function MessagePanelView({
                 parentMessageId={thread.messageId}
                 currentUserId={thread.currentUserId}
                 onClose={thread.onClose}
+                highlightedReplyId={thread.highlightedReplyId}
               />
             )}
           </SheetContent>

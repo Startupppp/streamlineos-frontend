@@ -1,8 +1,5 @@
-import { createRef, type ReactElement, type ReactNode } from "react";
-import { act, render as rtlRender, screen } from "@testing-library/react";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { toast } from "sonner";
-import { ensureChatMessageLoaded } from "@/hooks/api/chat-core-read";
+import { createRef, type ReactNode } from "react";
+import { act, render, screen } from "@testing-library/react";
 import { MessageList } from "./message-list";
 import type { Message } from "./chat-types";
 
@@ -16,25 +13,6 @@ jest.mock("./entity-actions-context", () => ({
   EntityActionsProvider: ({ children }: { children: ReactNode }) => <>{children}</>,
 }));
 
-jest.mock("sonner", () => ({
-  toast: { error: jest.fn(), success: jest.fn() },
-}));
-
-jest.mock("@/hooks/api/chat-core-read", () => ({
-  ensureChatMessageLoaded: jest.fn(),
-}));
-
-const mockEnsureLoaded = jest.mocked(ensureChatMessageLoaded);
-
-let queryClient: QueryClient;
-
-function Providers({ children }: { children: ReactNode }) {
-  return <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>;
-}
-
-function render(ui: ReactElement) {
-  return rtlRender(ui, { wrapper: Providers });
-}
 
 function chatMessage(id: number): Message {
   return {
@@ -139,8 +117,6 @@ beforeAll(() => {
 
 beforeEach(() => {
   jest.clearAllMocks();
-  queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
-  mockEnsureLoaded.mockResolvedValue(true);
   jest.useFakeTimers();
   layout.scrollHeight = 2000;
   layout.clientHeight = 600;
@@ -365,14 +341,8 @@ describe("MessageList — the older-history keyboard fallback keeps focus when i
   });
 });
 
-async function flushAnchor() {
-  await act(async () => {
-    await Promise.resolve();
-  });
-}
-
-describe("MessageList — ?message lands on the exact message through the context endpoint", () => {
-  it("scrolls to and highlights a message that is already rendered, without asking the server", () => {
+describe("MessageList — ?message lands on the exact message", () => {
+  it("scrolls to and highlights the target once it is rendered", () => {
     const fetchNextPage = jest.fn();
     const { container } = render(
       <MessageList {...props({ scrollToMessageId: 11, fetchNextPage })} />,
@@ -380,86 +350,34 @@ describe("MessageList — ?message lands on the exact message through the contex
     act(() => {
       jest.runAllTimers();
     });
-    expect(mockEnsureLoaded).not.toHaveBeenCalled();
     expect(fetchNextPage).not.toHaveBeenCalled();
     expect(scrollIntoView).toHaveBeenCalled();
     expect(container.querySelector('[data-anchored="true"] #message-11')).not.toBeNull();
   });
 
-  it("hydrates a message outside the loaded pages from its context window instead of paging history", async () => {
+  it("never pages history looking for a target that is not rendered; the timeline hook owns hydration", () => {
     const fetchNextPage = jest.fn();
     const { rerender, container } = render(
       <MessageList {...props({ scrollToMessageId: 3, fetchNextPage })} />,
     );
-    await flushAnchor();
-    expect(mockEnsureLoaded).toHaveBeenCalledTimes(1);
-    expect(mockEnsureLoaded).toHaveBeenCalledWith(queryClient, 7, 3);
+    act(() => {
+      jest.runAllTimers();
+    });
     expect(fetchNextPage).not.toHaveBeenCalled();
+    expect(scrollIntoView).not.toHaveBeenCalled();
 
     rerender(
-      <MessageList
-        {...props({ scrollToMessageId: 3, fetchNextPage, groupedMessages: grouped([2, 3, 4]) })}
-      />,
+      <MessageList {...props({ scrollToMessageId: 3, fetchNextPage, groupedMessages: grouped([2, 3, 4]) })} />,
     );
     act(() => {
       jest.runAllTimers();
     });
-    expect(mockEnsureLoaded).toHaveBeenCalledTimes(1);
-    expect(fetchNextPage).not.toHaveBeenCalled();
     expect(scrollIntoView).toHaveBeenCalled();
     expect(container.querySelector('[data-anchored="true"] #message-3')).not.toBeNull();
-    expect(toast.error).not.toHaveBeenCalled();
   });
 
-  it("when the server says the message is gone or forbidden, says it is no longer available and asks the page to drop ?message", async () => {
-    mockEnsureLoaded.mockResolvedValue(false);
-    const listener = jest.fn();
-    window.addEventListener("chat:message-unavailable", listener);
-    render(<MessageList {...props({ scrollToMessageId: 3 })} />);
-    await flushAnchor();
-    window.removeEventListener("chat:message-unavailable", listener);
-
-    expect(toast.error).toHaveBeenCalledWith("That message is no longer available");
-    expect(listener).toHaveBeenCalledTimes(1);
-    const event = listener.mock.calls[0][0];
-    expect(event instanceof CustomEvent ? event.detail : null).toBe(3);
-  });
-
-  it("a failed context read is reported with its own message and still drops ?message", async () => {
-    mockEnsureLoaded.mockRejectedValue(new Error("Network unreachable"));
-    const listener = jest.fn();
-    window.addEventListener("chat:message-unavailable", listener);
-    render(<MessageList {...props({ scrollToMessageId: 3 })} />);
-    await flushAnchor();
-    window.removeEventListener("chat:message-unavailable", listener);
-
-    expect(toast.error).toHaveBeenCalledTimes(1);
-    expect(toast.error).not.toHaveBeenCalledWith("That message is no longer available");
-    expect(listener).toHaveBeenCalledTimes(1);
-  });
-
-  it("ignores a context answer that arrives after the reader moved on", async () => {
-    let settle: (found: boolean) => void = () => undefined;
-    mockEnsureLoaded.mockReturnValue(
-      new Promise<boolean>((resolve) => {
-        settle = resolve;
-      }),
-    );
-    const { rerender } = render(<MessageList {...props({ scrollToMessageId: 3 })} />);
-    rerender(<MessageList {...props({ scrollToMessageId: null })} />);
-    await act(async () => {
-      settle(false);
-      await Promise.resolve();
-    });
-    expect(toast.error).not.toHaveBeenCalled();
-  });
-
-  it("waits for the first page before deciding anything", async () => {
-    render(
-      <MessageList {...props({ scrollToMessageId: 3, isLoading: true, hasNextPage: undefined })} />,
-    );
-    await flushAnchor();
-    expect(mockEnsureLoaded).not.toHaveBeenCalled();
-    expect(toast.error).not.toHaveBeenCalled();
+  it("labels the latest control with the label it is given", () => {
+    render(<MessageList {...props({ showScrollBtn: true, latestLabel: "Jump to latest" })} />);
+    expect(screen.getByRole("button", { name: /Jump to latest/ })).toBeInTheDocument();
   });
 });

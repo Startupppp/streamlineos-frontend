@@ -7,10 +7,9 @@ import {
   useInfiniteQuery,
   useQuery,
   useQueryClient,
-  type InfiniteData,
-  type QueryClient,
 } from "@tanstack/react-query";
 import { useSession } from "next-auth/react";
+import { z } from "zod";
 import { apiClient } from "@/lib/api-client";
 import { isApiError, lazyContract, type ContractSource } from "@/lib/api-envelope";
 import { collaborationQueryKeys } from "@/lib/query-keys/collaboration";
@@ -64,7 +63,11 @@ const messagesPageContract = lazyContract(() =>
 );
 
 const messageContextContract = lazyContract(() =>
-  import("@/hooks/api/chat-schema").then((m) => m.chatMessageContextContract),
+  import("@/hooks/api/chat-schema").then((m) =>
+    m.chatMessageContextContract.extend({
+      messages: z.array(m.chatMessageContract.extend({ channelPosition: z.number() })),
+    }),
+  ),
 );
 
 const CHAT_MESSAGES_STALE_MS = 15_000;
@@ -276,38 +279,91 @@ export function usePrefetchChatChannel(): (channelId: number) => void {
   );
 }
 
-export async function ensureChatMessageLoaded(
-  queryClient: QueryClient,
+type ChatContextPageParam =
+  | { kind: "context" }
+  | { kind: "older"; cursor: number }
+  | { kind: "newer"; cursor: number };
+
+interface ChatContextPage {
+  messages: Message[];
+  olderCursor: number | null;
+  newerCursor: number | null;
+}
+
+type ChatContextWindow = Omit<ChatMessageContext, "messages"> & {
+  messages: Array<Message & { channelPosition: number }>;
+};
+
+const CONTEXT_WINDOW_PAGE: ChatContextPageParam = { kind: "context" };
+
+async function fetchChatContextPage(
   channelId: number,
   messageId: number,
-): Promise<boolean> {
-  const messagesKey = collaborationQueryKeys.chat.messages(channelId);
-  const loaded = queryClient
-    .getQueryData<InfiniteData<MessagesPage>>(messagesKey)
-    ?.pages.some((page) => page.messages.some((message) => message.id === messageId));
-  if (loaded) return true;
-  try {
-    const context = await queryClient.fetchQuery({
-      queryKey: collaborationQueryKeys.chat.messageContext(channelId, messageId),
-      queryFn: ({ signal }) =>
-        apiClient.get<ChatMessageContext>(
-          `/chat/channels/${channelId}/messages/${messageId}/context`,
-          undefined,
-          signal,
-          messageContextContract,
-        ),
-      staleTime: CHAT_MESSAGES_STALE_MS,
-    });
-    if (!context.messages.some((message) => message.id === context.targetMessageId)) return false;
-    queryClient.setQueryData<InfiniteData<MessagesPage>>(messagesKey, {
-      pages: [{ messages: context.messages, nextCursor: context.olderCursor }],
-      pageParams: [NO_ID_CURSOR_YET],
-    });
-    return true;
-  } catch (error) {
-    if (isApiError(error) && (error.status === 403 || error.status === 404)) return false;
-    throw error;
+  pageParam: ChatContextPageParam,
+  signal: AbortSignal,
+): Promise<ChatContextPage> {
+  if (pageParam.kind === "older") {
+    const page = await apiClient.get<MessagesPage>(
+      `/chat/channels/${channelId}/messages`,
+      { cursor: pageParam.cursor },
+      signal,
+      messagesPageContract,
+    );
+    return { messages: page.messages, olderCursor: page.nextCursor, newerCursor: null };
   }
+  if (pageParam.kind === "newer") {
+    const page = await apiClient.get<PollPage>(
+      `/chat/channels/${channelId}/messages/poll`,
+      { cursor: pageParam.cursor },
+      signal,
+      pollPageContract,
+    );
+    return {
+      messages: page.messages,
+      olderCursor: null,
+      newerCursor: page.hasMore ? page.nextCursor : null,
+    };
+  }
+  const context = await apiClient.get<ChatContextWindow>(
+    `/chat/channels/${channelId}/messages/${messageId}/context`,
+    undefined,
+    signal,
+    messageContextContract,
+  );
+  const newest = context.messages.at(-1);
+  return {
+    messages: context.messages,
+    olderCursor: context.olderCursor,
+    newerCursor: context.hasNewer && newest ? newest.channelPosition : null,
+  };
+}
+
+function retryUnlessGone(failureCount: number, error: Error): boolean {
+  if (isApiError(error) && (error.status === 403 || error.status === 404)) return false;
+  return failureCount < 2;
+}
+
+export function useChatMessageContext(
+  channelId: number,
+  messageId: number,
+  enabled: boolean,
+) {
+  const canRead = useCan("chat:messages:read");
+  return useInfiniteQuery({
+    ...INLINE_READ_ERROR,
+    queryKey: collaborationQueryKeys.chat.messageContext(channelId, messageId),
+    queryFn: ({ pageParam, signal }) =>
+      fetchChatContextPage(channelId, messageId, pageParam, signal),
+    initialPageParam: CONTEXT_WINDOW_PAGE,
+    getNextPageParam: (oldest: ChatContextPage): ChatContextPageParam | undefined =>
+      oldest.olderCursor === null ? undefined : { kind: "older", cursor: oldest.olderCursor },
+    getPreviousPageParam: (newest: ChatContextPage): ChatContextPageParam | undefined =>
+      newest.newerCursor === null ? undefined : { kind: "newer", cursor: newest.newerCursor },
+    retry: retryUnlessGone,
+    staleTime: Infinity,
+    gcTime: CHAT_MESSAGES_GC_MS,
+    enabled: enabled && chatChannelReadEnabled(canRead, channelId),
+  });
 }
 
 export type PollPage = {

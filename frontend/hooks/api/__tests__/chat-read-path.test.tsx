@@ -108,40 +108,39 @@ describe("usePrefetchChatChannel — instant channel switching", () => {
   });
 });
 
-describe("ensureChatMessageLoaded — exact-message hydration", () => {
-  it("seeds the timeline with the context window, whose next page is the older cursor", async () => {
-    const { ensureChatMessageLoaded } = await import("@/hooks/api/chat-core-read");
+describe("useChatMessageContext — exact-message window in its own cache entry", () => {
+  it("reads the context window into messageContext and never writes the main timeline", async () => {
+    const { useChatMessageContext } = await import("@/hooks/api/chat-core-read");
     const client = freshClient();
     mockedGet.mockResolvedValue({
-      messages: [message({ id: 40 }), message({ id: 41 }), message({ id: 42 })],
+      messages: [40, 41, 42].map((id) => ({ ...message({ id }), channelPosition: id })),
       targetMessageId: 41,
-      olderCursor: 39,
+      olderCursor: 40,
       hasNewer: true,
     });
-    await expect(ensureChatMessageLoaded(client, CHANNEL_ID, 41)).resolves.toBe(true);
+    const { result } = renderHook(() => useChatMessageContext(CHANNEL_ID, 41, true), { wrapper: wrapperFor(client) });
+    await waitFor(() => expect(result.current.data?.pages[0]?.messages.map((m) => m.id)).toEqual([40, 41, 42]));
     expect(mockedGet.mock.calls[0][0]).toBe(`/chat/channels/${CHANNEL_ID}/messages/41/context`);
-    const data = client.getQueryData<InfiniteData<MessagesPage>>(messagesKey);
-    expect(data?.pages).toHaveLength(1);
-    expect(data?.pages[0].nextCursor).toBe(39);
-    expect(timelineIds(client)).toEqual([40, 41, 42]);
+    expect(result.current.data?.pages[0]).toMatchObject({ olderCursor: 40, newerCursor: 42 });
+    expect(result.current.hasNextPage).toBe(true);
+    expect(result.current.hasPreviousPage).toBe(true);
+    expect(client.getQueryData(messagesKey)).toBeUndefined();
   });
 
-  it("does not fetch when the message is already in the timeline", async () => {
-    const { ensureChatMessageLoaded } = await import("@/hooks/api/chat-core-read");
-    const client = freshClient();
-    client.setQueryData<InfiniteData<MessagesPage>>(messagesKey, {
-      pages: [{ messages: [message({ id: 41 })], nextCursor: null }],
-      pageParams: [undefined],
-    });
-    await expect(ensureChatMessageLoaded(client, CHANNEL_ID, 41)).resolves.toBe(true);
+  it("reads nothing while disabled, so a target already in the timeline costs no request", async () => {
+    const { useChatMessageContext } = await import("@/hooks/api/chat-core-read");
+    renderHook(() => useChatMessageContext(CHANNEL_ID, 41, false), { wrapper: wrapperFor(freshClient()) });
+    await act(async () => {});
     expect(mockedGet).not.toHaveBeenCalled();
   });
 
-  it("answers false for a message the viewer cannot see, leaving the timeline alone", async () => {
-    const { ensureChatMessageLoaded } = await import("@/hooks/api/chat-core-read");
+  it("does not retry a message the viewer cannot see", async () => {
+    const { useChatMessageContext } = await import("@/hooks/api/chat-core-read");
     const client = freshClient();
     mockedGet.mockRejectedValue(new ApiError("Not found", 404));
-    await expect(ensureChatMessageLoaded(client, CHANNEL_ID, 41)).resolves.toBe(false);
+    const { result } = renderHook(() => useChatMessageContext(CHANNEL_ID, 41, true), { wrapper: wrapperFor(client) });
+    await waitFor(() => expect(result.current.isError).toBe(true));
+    expect(mockedGet).toHaveBeenCalledTimes(1);
     expect(client.getQueryData(messagesKey)).toBeUndefined();
   });
 });

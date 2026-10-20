@@ -48,5 +48,10 @@ export function useMessageAnchorTarget({
     [channelId, anchorMessageId],
   );
 
-  return { anchorIndex, threadMessageId, openThread, closeThread };
+  const highlightedReplyId =
+    anchorParentId !== null && threadMessageId === anchorParentId
+      ? anchorMessageId
+      : null;
+
+  return { anchorIndex, threadMessageId, highlightedReplyId, openThread, closeThread };
 }

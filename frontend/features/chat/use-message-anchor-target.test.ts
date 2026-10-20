@@ -93,6 +93,24 @@ describe("useMessageAnchorTarget — a ?message target that is a thread reply op
   });
 });
 
+describe("useMessageAnchorTarget — the anchored reply is highlighted inside its thread", () => {
+  it("names the anchored reply while its parent's thread is the one open", () => {
+    const { result } = setup({
+      channelId: 7,
+      anchorMessageId: 12,
+      messages: [message(10), message(11), message(12, 10)],
+    });
+    expect(result.current.highlightedReplyId).toBe(12);
+    act(() => result.current.openThread(11));
+    expect(result.current.highlightedReplyId).toBeNull();
+  });
+
+  it("highlights nothing in a thread when the anchor is a top-level message", () => {
+    const { result } = setup({ channelId: 7, anchorMessageId: 10, messages: [message(10)] });
+    expect(result.current.highlightedReplyId).toBeNull();
+  });
+});
+
 describe("useMessageAnchorTarget — the anchored message's position, so the render window can keep it", () => {
   it("reports the anchored message's index in the loaded messages", () => {
     const { result } = setup({
