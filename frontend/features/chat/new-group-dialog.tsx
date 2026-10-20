@@ -30,6 +30,14 @@ import { ChatDialogHeader } from "./chat-dialog-header";
 
 type ChannelKind = "GROUP" | "PUBLIC" | "PRIVATE";
 
+/**
+ * The name field slugifies as you type, so "what it contains" and "what you typed"
+ * are different questions. Three spaces slugified to `-`, which is non-empty, so
+ * `name.trim()` was truthy and "Next: Add Members" enabled on a name with no
+ * meaningful characters (CHAT-005). A name is valid once it holds at least one
+ * alphanumeric character; a trailing hyphen is left alone because it is what
+ * mid-word typing looks like ("design-" on the way to "design-team").
+ */
 function toChannelSlug(value: string): string {
   return value
     .toLowerCase()

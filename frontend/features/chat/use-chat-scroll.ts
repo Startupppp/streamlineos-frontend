@@ -81,7 +81,8 @@ export function useChatScroll({
 
 interface OlderHistoryLoaderOptions {
   scrollContainerRef: React.RefObject<HTMLDivElement | null>;
-  contentKey: unknown;
+  firstMessageId: number | null;
+  messageCount: number;
   isLoading: boolean;
   isAwayFromLatest: boolean;
   hasNextPage: boolean | undefined;
@@ -89,34 +90,39 @@ interface OlderHistoryLoaderOptions {
   fetchNextPage: () => void;
 }
 
+interface PendingPrepend {
+  fromBottom: number;
+  firstMessageId: number | null;
+  messageCount: number;
+  sawFetch: boolean;
+}
+
 export function useOlderHistoryLoader({
   scrollContainerRef,
-  contentKey,
+  firstMessageId,
+  messageCount,
   isLoading,
   isAwayFromLatest,
   hasNextPage,
   isFetchingNextPage,
   fetchNextPage,
-}: OlderHistoryLoaderOptions): React.RefObject<HTMLDivElement | null> {
+}: OlderHistoryLoaderOptions) {
   const sentinelRef = useRef<HTMLDivElement>(null);
-  const pendingRef = useRef<{
-    fromBottom: number;
-    height: number;
-    sawFetch: boolean;
-  } | null>(null);
-  const autoLoadedForRef = useRef<unknown>(null);
+  const pendingRef = useRef<PendingPrepend | null>(null);
+  const autoLoadedForRef = useRef<string | null>(null);
 
   const loadOlder = useCallback(() => {
     const el = scrollContainerRef.current;
     pendingRef.current = el
       ? {
           fromBottom: el.scrollHeight - el.scrollTop,
-          height: el.scrollHeight,
+          firstMessageId,
+          messageCount,
           sawFetch: false,
         }
       : null;
     fetchNextPage();
-  }, [fetchNextPage, scrollContainerRef]);
+  }, [fetchNextPage, firstMessageId, messageCount, scrollContainerRef]);
 
   useLayoutEffect(() => {
     const el = scrollContainerRef.current;
@@ -126,13 +132,17 @@ export function useOlderHistoryLoader({
       pending.sawFetch = true;
       return;
     }
-    if (el.scrollHeight === pending.height) {
-      if (pending.sawFetch || !hasNextPage) pendingRef.current = null;
+    if (firstMessageId !== pending.firstMessageId) {
+      el.scrollTop = el.scrollHeight - pending.fromBottom;
+      pendingRef.current = null;
       return;
     }
-    el.scrollTop = el.scrollHeight - pending.fromBottom;
-    pendingRef.current = null;
-  }, [contentKey, hasNextPage, isFetchingNextPage, scrollContainerRef]);
+    if (pending.sawFetch || messageCount !== pending.messageCount || !hasNextPage) {
+      pendingRef.current = null;
+    }
+  }, [firstMessageId, messageCount, hasNextPage, isFetchingNextPage, scrollContainerRef]);
+
+  const contentKey = `${firstMessageId ?? "none"}:${messageCount}`;
 
   useEffect(() => {
     const root = scrollContainerRef.current;
@@ -164,5 +174,5 @@ export function useOlderHistoryLoader({
     loadOlder,
   ]);
 
-  return sentinelRef;
+  return { sentinelRef, loadOlder };
 }

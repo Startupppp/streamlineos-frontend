@@ -139,8 +139,20 @@ function fireIntersection() {
 }
 
 describe("MessageList — older history loads by infinite scroll, never a button", () => {
-  it("renders no 'Load older messages' button", () => {
-    render(<MessageList {...props({ showScrollBtn: true })} />);
+  it("shows no visible 'Load older' button; the only control is the sentinel's keyboard fallback", () => {
+    const fetchNextPage = jest.fn();
+    render(<MessageList {...props({ showScrollBtn: true, fetchNextPage })} />);
+    const fallback = screen.getByRole("button", { name: "Load older messages" });
+    expect(fallback).toHaveClass("sr-only");
+    expect(fallback.closest("[aria-hidden]")).toBeNull();
+    act(() => {
+      fallback.click();
+    });
+    expect(fetchNextPage).toHaveBeenCalledTimes(1);
+  });
+
+  it("drops the keyboard fallback once history is exhausted", () => {
+    render(<MessageList {...props({ showScrollBtn: true, hasNextPage: false })} />);
     expect(screen.queryByRole("button", { name: /older/i })).toBeNull();
   });
 
@@ -239,6 +251,59 @@ describe("MessageList — a failed older-page fetch leaves no stale scroll resto
     rerender(
       <MessageList
         {...props({ showScrollBtn: true, fetchNextPage, scrollContainerRef, groupedMessages: grouped([10, 11, 12, 13]) })}
+      />,
+    );
+    expect(viewport.scrollTop).toBe(100);
+  });
+});
+
+describe("MessageList — the older-history guards key on content, not array identity", () => {
+  it("does not auto-fetch again when the same messages re-render as a new array after a failed fetch", () => {
+    layout.scrollHeight = 400;
+    const fetchNextPage = jest.fn();
+    const { rerender } = render(<MessageList {...props({ fetchNextPage })} />);
+    expect(fetchNextPage).toHaveBeenCalledTimes(1);
+    rerender(<MessageList {...props({ fetchNextPage, isFetchingNextPage: true })} />);
+    rerender(<MessageList {...props({ fetchNextPage, groupedMessages: grouped([10, 11, 12]) })} />);
+    rerender(<MessageList {...props({ fetchNextPage, groupedMessages: grouped([10, 11, 12]) })} />);
+    expect(fetchNextPage).toHaveBeenCalledTimes(1);
+  });
+
+  it("a fetch that adds no older page never restores scroll later, even while more history is advertised", () => {
+    const fetchNextPage = jest.fn();
+    const scrollContainerRef = createRef<HTMLDivElement>();
+    const { rerender } = render(
+      <MessageList {...props({ showScrollBtn: true, fetchNextPage, scrollContainerRef })} />,
+    );
+    const viewport = scrollContainerRef.current;
+    if (!viewport) throw new Error("no viewport");
+    viewport.scrollTop = 100;
+    fireIntersection();
+
+    layout.scrollHeight = 2100;
+    rerender(
+      <MessageList
+        {...props({
+          showScrollBtn: true,
+          fetchNextPage,
+          scrollContainerRef,
+          hasNextPage: true,
+          groupedMessages: grouped([10, 11, 12, 13]),
+        })}
+      />,
+    );
+    expect(viewport.scrollTop).toBe(100);
+
+    layout.scrollHeight = 2700;
+    rerender(
+      <MessageList
+        {...props({
+          showScrollBtn: true,
+          fetchNextPage,
+          scrollContainerRef,
+          hasNextPage: true,
+          groupedMessages: grouped([4, 5, 10, 11, 12, 13]),
+        })}
       />,
     );
     expect(viewport.scrollTop).toBe(100);

@@ -218,15 +218,22 @@ export function MessageList({
     isFetchingNextPage,
     fetchNextPage,
   });
-  const olderHistorySentinelRef = useOlderHistoryLoader({
-    scrollContainerRef,
-    contentKey: groupedMessages,
-    isLoading,
-    isAwayFromLatest: showScrollBtn,
-    hasNextPage,
-    isFetchingNextPage,
-    fetchNextPage,
-  });
+  const firstMessageId = groupedMessages[0]?.messages[0]?.id ?? null;
+  const renderedMessageCount = useMemo(
+    () => groupedMessages.reduce((sum, group) => sum + group.messages.length, 0),
+    [groupedMessages],
+  );
+  const { sentinelRef: olderHistorySentinelRef, loadOlder: handleLoadOlder } =
+    useOlderHistoryLoader({
+      scrollContainerRef,
+      firstMessageId,
+      messageCount: renderedMessageCount,
+      isLoading,
+      isAwayFromLatest: showScrollBtn,
+      hasNextPage,
+      isFetchingNextPage,
+      fetchNextPage,
+    });
 
   /*
    * Before the empty layout, and before the entity-action provider mounts a
@@ -302,9 +309,18 @@ export function MessageList({
                 <div
                   ref={olderHistorySentinelRef}
                   data-older-history-sentinel
-                  aria-hidden="true"
-                  className="h-px shrink-0"
-                />
+                  className="flex shrink-0 justify-center"
+                >
+                  {hasNextPage && !isFetchingNextPage ? (
+                    <button
+                      type="button"
+                      onClick={handleLoadOlder}
+                      className="sr-only focus:not-sr-only focus:mb-2 focus:rounded-md focus:border focus:border-border focus:bg-card focus:px-3 focus:py-1.5 focus:text-sm focus:text-foreground"
+                    >
+                      Load older messages
+                    </button>
+                  ) : null}
+                </div>
                 {isFetchingNextPage && (
                   <p
                     role="status"
