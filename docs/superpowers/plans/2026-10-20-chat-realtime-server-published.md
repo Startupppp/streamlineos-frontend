@@ -784,7 +784,7 @@ git commit -m "feat(chat): remove client-published huddle chat; Meet/Teams own m
 - Modify: `frontend/hooks/api/chat-realtime.ts` (`payloadToMessage` sender)
 - Test: `frontend/hooks/api/__tests__/chat-realtime-schema-parity.test.ts`
 
-- [ ] **Step 1: Write the failing parity test**
+- [x] **Step 1: Write the failing parity test**
 
 `frontend/hooks/api/__tests__/chat-realtime-schema-parity.test.ts`:
 
@@ -849,18 +849,18 @@ describe("frontend realtime schemas accept everything the backend emits", () => 
 Run: `cd frontend && npx jest hooks/api/__tests__/chat-realtime-schema-parity.test.ts`
 Expected: FAIL on `message.created` field `senderId` (nullable). Requires Task 1 merged in the sibling backend checkout.
 
-- [ ] **Step 2: Make `senderId` nullable and map it**
+- [x] **Step 2: Make `senderId` nullable and map it**
 
 `chat-realtime-schema.ts` line 30: `senderId: z.string().nullable(),`.
 
 In `chat-realtime.ts` `payloadToMessage`, `senderId: payload.senderId` already matches `Message.senderId: string | null`. Set `sender: { id: payload.senderId, name: payload.senderName ?? null, image: payload.senderImage ?? null }`; `Message.sender.id` is `string | null` (`types/chat.ts:171`).
 
-- [ ] **Step 3: Run tests and the frontend typecheck**
+- [x] **Step 3: Run tests and the frontend typecheck**
 
 Run: `cd frontend && npx jest hooks/api/__tests__ && npx tsc --noEmit -p tsconfig.json`
 Expected: PASS, no type errors.
 
-- [ ] **Step 4: Commit (root repo)**
+- [x] **Step 4: Commit (root repo)**
 
 ```bash
 git add frontend/hooks/api/chat-realtime-schema.ts frontend/hooks/api/chat-realtime.ts frontend/hooks/api/__tests__/chat-realtime-schema-parity.test.ts
