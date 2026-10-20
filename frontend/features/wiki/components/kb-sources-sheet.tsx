@@ -177,6 +177,9 @@ function KbSourcesManageSheet({
             Note
           </Button>
         </div>
+        <p className="text-xs text-muted-foreground">
+          PDF, DOCX, XLSX, TXT, MD, or CSV — up to 25 MB.
+        </p>
 
         {sourceError && sources.length === 0 ? (
           <SourceReadError error={sourceError} onRetry={onSourceRetry} />

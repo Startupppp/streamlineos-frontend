@@ -16,11 +16,15 @@ Customers do not need “more documents.” They need reliable answers and durab
 | Share safely | The correct people get the intended access and revoked users lose it quickly | Grant success, revocation propagation, zero-leak tests |
 | Recover from mistakes | Edits, deletion, imports, and automation are reversible | Restore success, conflict recovery, purge exceptions |
 | Publish externally | Customers can expose selected help content without exposing internal context | Public-page availability, deflection, no private metadata leaks |
+| Work with business files | A user can upload, organize, preview, search, share, and export common office files without losing access control | File task success, preview success, search recall, version recovery |
+| Analyze operating data | An operator can use a bounded Sheet or pivot over authorized StreamlineOS records without repeated CSV copy/paste | Connected-sheet use, refresh success, fewer manual exports, decision time |
 
 ## Personas
 
 - **Reader:** searches, asks, follows citations, and needs fast trustworthy answers.
 - **Contributor:** creates and updates pages during daily work.
+- **File collaborator:** organizes folders, uploads office files, shares them, and recovers versions.
+- **Operator or analyst:** imports XLSX/CSV, uses formulas or pivots, and needs refreshable permission-aware business data.
 - **Knowledge owner:** verifies, reviews, organizes, and responds to gaps.
 - **Space manager:** controls membership, structure, archive, and templates for a domain.
 - **Organization administrator:** sets retention, audits access, handles export/purge, and monitors health.
@@ -38,6 +42,7 @@ Each page must serve one primary persona. Admin controls may coexist only when t
 6. **Human accountability for AI.** AI can draft and explain; a named human owns publishing and verification.
 7. **Progressive disclosure.** Readers get a quiet page. Editors and admins reveal tools when needed.
 8. **Measure value, not activity.** Page count and AI message count are not success metrics.
+9. **Compatibility before cloning.** Make common office files safe and useful first; build native editing only for workflows where StreamlineOS data creates a clear advantage.
 
 ## North-star and guardrail metrics
 
@@ -79,6 +84,9 @@ Each page must serve one primary persona. Admin controls may coexist only when t
 - Mobile Wiki navigation and page metadata/comments access.
 - Visible owner, freshness, verification, and access state on result and page surfaces.
 - Honest error/denied/empty states with request ids and retry.
+- Drive-style Home, My Drive, Shared with me, Recent, and Trash.
+- First-class files and folders with upload, download, move, rename, share, version, restore, and search.
+- XLSX/CSV upload and content indexing under the same tenant and source permissions as other files.
 
 ### P1 — Governance and quality loop
 
@@ -89,6 +97,9 @@ Each page must serve one primary persona. Admin controls may coexist only when t
 - Permission-safe analytics for search, Ask, reuse, gaps, freshness, and public deflection.
 - Research briefs with durable citations and a review owner.
 - Notifications for direct shares, review assignments, mentions, and ownership only; avoid noisy activity feeds.
+- Safe previews for XLSX/CSV and other supported office files.
+- Export current views and reports to XLSX without reimplementing export logic in each module.
+- Bounded native Sheets with core formulas, sort/filter, import/export, comments, version history, and templates.
 
 ### P2 — Differentiated intelligence with measured demand
 
@@ -98,6 +109,7 @@ Each page must serve one primary persona. Admin controls may coexist only when t
 4. **Freshness Budgets:** different knowledge classes carry different review expectations. A runbook may require 30-day review; a principle may allow 365 days. Budgets are policy plus alerts, not an opaque AI score.
 5. **Contradiction Queue:** retrieval detects materially conflicting claims across current pages and presents both with owners and versions for human resolution. It never auto-rewrites either page.
 6. **Change Impact Preview:** before archiving, moving, or restricting a page, show affected backlinks, Ask citations, public links, packets, and automations.
+7. **Connected Sheets:** permission-aware CRM, HR, Finance, Inventory, Support, and Build datasets can feed a pivot or chart, refresh without CSV copy/paste, and preserve a frozen audit snapshot.
 
 These features are “ahead” because they close the trust-and-maintenance loop inside the operating system. They are not P0 because they depend on correct ownership, versioning, links, ACLs, and telemetry.
 
@@ -105,7 +117,8 @@ These features are “ahead” because they close the trust-and-maintenance loop
 
 | Feature | Reason |
 |---|---|
-| Arbitrary relational databases inside pages | High complexity, duplicates Build/CRM data, weakens a clear page model |
+| Arbitrary relational databases or app builders inside pages | High complexity, duplicates Build/CRM data, weakens a clear page model; bounded Sheets are not an app builder |
+| Excel-complete parity, macros, or VBA | Unbounded compatibility and security cost; support a deliberate formula set and XLSX import/export instead |
 | Board/calendar/timeline views of pages | No strong knowledge job; filters and health presets cover current needs |
 | Template marketplace | Starters and organization templates solve the job without moderation/billing/discovery overhead |
 | Autonomous AI publishing or access changes | Unsafe, hard to audit, and removes human ownership |

@@ -1,13 +1,26 @@
 "use client";
 
-import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { useSession } from "next-auth/react";
 import { usePathname, useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { motion, useReducedMotion } from "framer-motion";
 import { type InfiniteData, useQueryClient } from "@tanstack/react-query";
 import { BookOpenTextIcon } from "@animateicons/react/lucide";
-import { ChevronUp, Loader2, MessageSquare, Send, SlidersHorizontal } from "lucide-react";
+import {
+  ChevronUp,
+  Loader2,
+  MessageSquare,
+  Send,
+  SlidersHorizontal,
+} from "lucide-react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
@@ -77,7 +90,10 @@ interface Pending {
   quotaMessage?: string;
 }
 
-type SourcesSheetState = { kind: "closed" } | { kind: "manage" } | { kind: "scope" };
+type SourcesSheetState =
+  | { kind: "closed" }
+  | { kind: "manage" }
+  | { kind: "scope" };
 
 export default function KnowledgeBasePage() {
   const router = useRouter();
@@ -89,9 +105,13 @@ export default function KnowledgeBasePage() {
   const [pending, setPending] = useState<Pending | null>(null);
   const [conversationsOpen, setConversationsOpen] = useState(false);
   const [conversationsSearch, setConversationsSearch] = useState("");
-  const [activeConversationId, setActiveConversationId] = useState<number | null>(null);
+  const [activeConversationId, setActiveConversationId] = useState<
+    number | null
+  >(null);
 
-  const [sourcesSheet, setSourcesSheet] = useState<SourcesSheetState>({ kind: "closed" });
+  const [sourcesSheet, setSourcesSheet] = useState<SourcesSheetState>({
+    kind: "closed",
+  });
   const [scopeSourceIds, setScopeSourceIds] = useState<number[]>([]);
   const [pendingScopeIds, setPendingScopeIds] = useState<number[]>([]);
   const [scopeVerifiedOnly, setScopeVerifiedOnly] = useState(false);
@@ -125,8 +145,12 @@ export default function KnowledgeBasePage() {
   const currentUserId = session?.user?.id;
 
   const ask = useKbAsk();
-  const conversationMessages = useKbConversationMessages(activeConversationId, true);
-  const { hasNextPage, isFetchingNextPage, fetchNextPage, isLoading } = conversationMessages;
+  const conversationMessages = useKbConversationMessages(
+    activeConversationId,
+    true,
+  );
+  const { hasNextPage, isFetchingNextPage, fetchNextPage, isLoading } =
+    conversationMessages;
 
   const conversationsQuery = useKbConversations(conversationsOpen);
   const renameConversation = useRenameKbConversation();
@@ -136,16 +160,23 @@ export default function KnowledgeBasePage() {
   const uploadSource = useUploadKbSource();
   const deleteSource = useDeleteKbSource();
 
-  const [scopeKindFilter, setScopeKindFilter] = useState<SourceKindFilter>("all");
+  const [scopeKindFilter, setScopeKindFilter] =
+    useState<SourceKindFilter>("all");
   const [scopeOwnerFilter, setScopeOwnerFilter] = useState<OwnerFilter>("all");
 
   const scopeFilters: KbSourcesParams = {
     kind: scopeKindFilter !== "all" ? scopeKindFilter : undefined,
-    createdById: scopeOwnerFilter === "mine" && currentUserId ? currentUserId : undefined,
+    createdById:
+      scopeOwnerFilter === "mine" && currentUserId ? currentUserId : undefined,
   };
-  const hasScopeFilters = scopeFilters.kind !== undefined || scopeFilters.createdById !== undefined;
-  const scopeSourcesQuery = useKbSources(hasScopeFilters ? scopeFilters : undefined);
-  const scopeSources = (scopeSourcesQuery.data?.pages ?? []).flatMap((page) => page.data);
+  const hasScopeFilters =
+    scopeFilters.kind !== undefined || scopeFilters.createdById !== undefined;
+  const scopeSourcesQuery = useKbSources(
+    hasScopeFilters ? scopeFilters : undefined,
+  );
+  const scopeSources = (scopeSourcesQuery.data?.pages ?? []).flatMap(
+    (page) => page.data,
+  );
 
   const spacesQuery = useKbSpaces();
   const kbSpaces = spacesQuery.data?.data ?? [];
@@ -156,7 +187,9 @@ export default function KnowledgeBasePage() {
     pendingOwnerMembershipId ?? undefined,
     sourcesSheet.kind === "scope",
   );
-  const scopeOwners = (ownersQuery.data?.pages ?? []).flatMap((page) => page.data);
+  const scopeOwners = (ownersQuery.data?.pages ?? []).flatMap(
+    (page) => page.data,
+  );
   const selectedScopeOwner = ownersQuery.data?.pages[0]?.selected ?? null;
 
   function handleOwnersLoadMore() {
@@ -167,13 +200,17 @@ export default function KnowledgeBasePage() {
     void ownersQuery.refetch();
   }
 
-  const debouncedPageSearchQuery = useDebouncedValue(pageSearchQuery.trim(), 300);
+  const debouncedPageSearchQuery = useDebouncedValue(
+    pageSearchQuery.trim(),
+    300,
+  );
   const pageSearchResult = useKbPagesSearch(debouncedPageSearchQuery);
   const pageSearchResults = pageSearchResult.data?.items ?? [];
   const pageSearchIsLoading = pageSearchResult.isLoading;
 
   const allConversations = useMemo(
-    () => (conversationsQuery.data?.pages ?? []).flatMap((p) => p.conversations),
+    () =>
+      (conversationsQuery.data?.pages ?? []).flatMap((p) => p.conversations),
     [conversationsQuery.data],
   );
 
@@ -194,11 +231,15 @@ export default function KnowledgeBasePage() {
   );
 
   const rows = useMemo(() => buildKbHistoryRows(persisted), [persisted]);
-  const questionByAssistantId = useMemo(() => questionForAssistantId(persisted), [persisted]);
+  const questionByAssistantId = useMemo(
+    () => questionForAssistantId(persisted),
+    [persisted],
+  );
 
   const loadOlder = useCallback(() => {
     const el = scrollRef.current;
-    if (!el || loadingOlderRef.current || !hasNextPage || isFetchingNextPage) return;
+    if (!el || loadingOlderRef.current || !hasNextPage || isFetchingNextPage)
+      return;
     prevScrollHeightRef.current = el.scrollHeight;
     loadingOlderRef.current = true;
     void fetchNextPage();
@@ -209,7 +250,9 @@ export default function KnowledgeBasePage() {
     const root = scrollRef.current;
     if (!sentinel || !root || !hasNextPage) return;
     const observer = new IntersectionObserver(
-      (entries) => { if (entries[0]?.isIntersecting) loadOlder(); },
+      (entries) => {
+        if (entries[0]?.isIntersecting) loadOlder();
+      },
       { root, threshold: 0.1 },
     );
     observer.observe(sentinel);
@@ -237,7 +280,8 @@ export default function KnowledgeBasePage() {
   function handleScroll() {
     const el = scrollRef.current;
     if (!el) return;
-    isNearBottomRef.current = el.scrollHeight - el.scrollTop - el.clientHeight < 120;
+    isNearBottomRef.current =
+      el.scrollHeight - el.scrollTop - el.clientHeight < 120;
   }
 
   const setConversation = useCallback(
@@ -269,11 +313,18 @@ export default function KnowledgeBasePage() {
     sendingRef.current = true;
     setInput("");
     isNearBottomRef.current = true;
-    setPending({ question: trimmed, ...(scopeSpaceId !== null ? { spaceId: scopeSpaceId } : {}) });
+    setPending({
+      question: trimmed,
+      ...(scopeSpaceId !== null ? { spaceId: scopeSpaceId } : {}),
+    });
     const generation = ++generationRef.current;
     function handleToken(token: string) {
       if (generationRef.current === generation)
-        setPending((current) => current ? { ...current, answer: (current.answer ?? "") + token } : current);
+        setPending((current) =>
+          current
+            ? { ...current, answer: (current.answer ?? "") + token }
+            : current,
+        );
     }
     const scopePayload = {
       ...(scopeSourceIds.length > 0 ? { sourceIds: scopeSourceIds } : {}),
@@ -286,27 +337,84 @@ export default function KnowledgeBasePage() {
       ...(scopeStatus !== null ? { status: scopeStatus } : {}),
     };
     ask.mutate(
-      { question: trimmed, conversationId: activeConversationId ?? undefined, onToken: handleToken, ...scopePayload },
+      {
+        question: trimmed,
+        conversationId: activeConversationId ?? undefined,
+        onToken: handleToken,
+        ...scopePayload,
+      },
       {
         onSuccess: (data) => {
           sendingRef.current = false;
           if (generationRef.current !== generation) return;
           const convId = activeConversationId ?? data.conversationId;
           const now = new Date().toISOString();
-          const userMsg: KbChatHistoryMessage = { id: (tempIdRef.current -= 1), role: "user", content: trimmed, citations: null, createdAt: now };
-          const assistantMsg: KbChatHistoryMessage = { id: (tempIdRef.current -= 1), role: "assistant", content: data.answer, citations: data.citations ?? null, createdAt: now };
-          qc.setQueryData<InfiniteData<KbChatHistoryPage>>(knowledgeAndSurveysQueryKeys.kb.chatConversationMessages(convId), (old) => {
-            if (!old || old.pages.length === 0) {
-              return { pages: [{ messages: [assistantMsg, userMsg], nextCursor: null }], pageParams: [undefined] };
-            }
-            return { ...old, pages: old.pages.map((page, i) => i === 0 ? { ...page, messages: [assistantMsg, userMsg, ...page.messages] } : page) };
+          const userMsg: KbChatHistoryMessage = {
+            id: (tempIdRef.current -= 1),
+            role: "user",
+            content: trimmed,
+            citations: null,
+            createdAt: now,
+          };
+          const assistantMsg: KbChatHistoryMessage = {
+            id: (tempIdRef.current -= 1),
+            role: "assistant",
+            content: data.answer,
+            citations: data.citations ?? null,
+            createdAt: now,
+          };
+          qc.setQueryData<InfiniteData<KbChatHistoryPage>>(
+            knowledgeAndSurveysQueryKeys.kb.chatConversationMessages(convId),
+            (old) => {
+              if (!old || old.pages.length === 0) {
+                return {
+                  pages: [
+                    { messages: [assistantMsg, userMsg], nextCursor: null },
+                  ],
+                  pageParams: [undefined],
+                };
+              }
+              return {
+                ...old,
+                pages: old.pages.map((page, i) =>
+                  i === 0
+                    ? {
+                        ...page,
+                        messages: [assistantMsg, userMsg, ...page.messages],
+                      }
+                    : page,
+                ),
+              };
+            },
+          );
+          if (activeConversationId === null)
+            setConversation(data.conversationId);
+          void qc.invalidateQueries({
+            queryKey: knowledgeAndSurveysQueryKeys.kb.chatConversations(),
           });
-          if (activeConversationId === null) setConversation(data.conversationId);
-          void qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.kb.chatConversations() });
           if (!data.hasContext) {
-            setPending((prev) => prev ? { ...prev, answer: undefined, hasContext: false, citations: data.citations } : prev);
+            setPending((prev) =>
+              prev
+                ? {
+                    ...prev,
+                    answer: undefined,
+                    hasContext: false,
+                    citations: data.citations,
+                  }
+                : prev,
+            );
           } else if (data.disagreement) {
-            setPending((prev) => prev ? { ...prev, answer: undefined, hasContext: true, disagreement: data.disagreement, citations: data.citations } : prev);
+            setPending((prev) =>
+              prev
+                ? {
+                    ...prev,
+                    answer: undefined,
+                    hasContext: true,
+                    disagreement: data.disagreement,
+                    citations: data.citations,
+                  }
+                : prev,
+            );
           } else {
             setPending(null);
           }
@@ -315,11 +423,26 @@ export default function KnowledgeBasePage() {
           sendingRef.current = false;
           if (generationRef.current !== generation) return;
           if (isAiStreamAbort(error)) {
-            setPending((current) => current ? { ...current, error: "Generation stopped. This answer is incomplete." } : current);
+            setPending((current) =>
+              current
+                ? {
+                    ...current,
+                    error: "Generation stopped. This answer is incomplete.",
+                  }
+                : current,
+            );
             return;
           }
           if (isApiError(error) && error.status === 402) {
-            setPending((current) => current ? { ...current, isQuotaError: true, quotaMessage: error.message } : current);
+            setPending((current) =>
+              current
+                ? {
+                    ...current,
+                    isQuotaError: true,
+                    quotaMessage: error.message,
+                  }
+                : current,
+            );
             return;
           }
           const message = getErrorMessage(error);
@@ -330,10 +453,21 @@ export default function KnowledgeBasePage() {
     );
   }
 
-  function handleInputChange(e: React.ChangeEvent<HTMLInputElement>) { setInput(e.target.value); }
-  function handleKeyDown(e: React.KeyboardEvent<HTMLInputElement>) { if (e.key === "Enter") { e.preventDefault(); sendMessage(input); } }
-  function handleSend() { sendMessage(input); }
-  function handleSuggestion(e: React.MouseEvent<HTMLButtonElement>) { sendMessage(e.currentTarget.dataset.suggestion ?? ""); }
+  function handleInputChange(e: React.ChangeEvent<HTMLInputElement>) {
+    setInput(e.target.value);
+  }
+  function handleKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      sendMessage(input);
+    }
+  }
+  function handleSend() {
+    sendMessage(input);
+  }
+  function handleSuggestion(e: React.MouseEvent<HTMLButtonElement>) {
+    sendMessage(e.currentTarget.dataset.suggestion ?? "");
+  }
   function handleCitationClick(e: React.MouseEvent<HTMLButtonElement>) {
     const pageId = Number(e.currentTarget.dataset.pageId);
     if (pageId) router.push(pageHref(pageId));
@@ -342,27 +476,53 @@ export default function KnowledgeBasePage() {
   }
 
   function handleToggleConversations() {
-    setConversationsOpen((prev) => { if (prev) setConversationsSearch(""); return !prev; });
+    setConversationsOpen((prev) => {
+      if (prev) setConversationsSearch("");
+      return !prev;
+    });
   }
-  function handleConversationsSearchChange(v: string) { setConversationsSearch(v); }
-  function handleStop() { ask.stop(); }
+  function handleConversationsSearchChange(v: string) {
+    setConversationsSearch(v);
+  }
+  function handleStop() {
+    ask.stop();
+  }
   function handleRegenerate() {
     if (!pending || ask.isPending) return;
     ask.resetAttempt();
     setPending(null);
     sendMessage(pending.question);
   }
-  function handleSelectConversation(id: number) { generationRef.current += 1; ask.stop(); setPending(null); setConversation(id); setConversationsOpen(false); }
-  function handleNewChat() { generationRef.current += 1; ask.stop(); setConversation(null); setConversationsOpen(false); setPending(null); }
-  function handleLoadMoreConversations() { void conversationsQuery.fetchNextPage(); }
+  function handleSelectConversation(id: number) {
+    generationRef.current += 1;
+    ask.stop();
+    setPending(null);
+    setConversation(id);
+    setConversationsOpen(false);
+  }
+  function handleNewChat() {
+    generationRef.current += 1;
+    ask.stop();
+    setConversation(null);
+    setConversationsOpen(false);
+    setPending(null);
+  }
+  function handleLoadMoreConversations() {
+    void conversationsQuery.fetchNextPage();
+  }
 
   function handleDeleteConversation(id: number) {
     deleteConversation.mutate(id, {
       onSuccess: () => {
         if (id === activeConversationId) setConversation(null);
-        void qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.kb.chatConversations() });
+        void qc.invalidateQueries({
+          queryKey: knowledgeAndSurveysQueryKeys.kb.chatConversations(),
+        });
       },
-      onError: (error) => toast.error("Couldn't delete conversation", { description: getErrorMessage(error) }),
+      onError: (error) =>
+        toast.error("Couldn't delete conversation", {
+          description: getErrorMessage(error),
+        }),
     });
   }
 
@@ -370,14 +530,17 @@ export default function KnowledgeBasePage() {
     renameConversation.mutate({ conversationId, title });
   }
 
-  function handleUploadClick() { fileInputRef.current?.click(); }
+  function handleUploadClick() {
+    fileInputRef.current?.click();
+  }
   function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
     e.target.value = "";
     uploadSource.mutate(file, {
       onSuccess: () => toast.success("File uploaded and queued for processing"),
-      onError: (error) => toast.error("Upload failed", { description: getErrorMessage(error) }),
+      onError: (error) =>
+        toast.error("Upload failed", { description: getErrorMessage(error) }),
     });
   }
   function handleManageSourcesClick() {
@@ -396,10 +559,17 @@ export default function KnowledgeBasePage() {
   function handleSourcesSheetOpenChange(open: boolean) {
     if (!open) setSourcesSheet({ kind: "closed" });
   }
-  function handleAddNoteClick() { setSourcesSheet({ kind: "closed" }); setNoteOpen(true); }
+  function handleAddNoteClick() {
+    setSourcesSheet({ kind: "closed" });
+    setNoteOpen(true);
+  }
 
-  function handleScopeSelectionChange(ids: number[]) { setPendingScopeIds(ids); }
-  function handleScopeVerifiedOnlyChange(v: boolean) { setPendingVerifiedOnly(v); }
+  function handleScopeSelectionChange(ids: number[]) {
+    setPendingScopeIds(ids);
+  }
+  function handleScopeVerifiedOnlyChange(v: boolean) {
+    setPendingVerifiedOnly(v);
+  }
   function handleScopeConfirm() {
     setScopeSourceIds(pendingScopeIds);
     setScopeVerifiedOnly(pendingVerifiedOnly);
@@ -422,12 +592,15 @@ export default function KnowledgeBasePage() {
     return function handleDeleteSource() {
       deleteSource.mutate(id, {
         onSuccess: () => toast.success("Source removed"),
-        onError: (error) => toast.error("Delete failed", { description: getErrorMessage(error) }),
+        onError: (error) =>
+          toast.error("Delete failed", { description: getErrorMessage(error) }),
       });
     };
   }
 
-  function handleDismissPending() { setPending(null); }
+  function handleDismissPending() {
+    setPending(null);
+  }
 
   const sources = (sourcesQuery.data?.pages ?? []).flatMap((page) => page.data);
   const readyCount = sources.filter((s) => s.status === "ready").length;
@@ -439,12 +612,18 @@ export default function KnowledgeBasePage() {
     scopeOwnerMembershipId !== null ||
     scopeStatus !== null;
   const scopeItemCount = scopeSourceIds.length + scopePageIds.length;
-  const scopeSummary = scopeItemCount > 0
-    ? `${scopeItemCount} item${scopeItemCount === 1 ? "" : "s"}`
-    : "Filtered";
+  const scopeSummary =
+    scopeItemCount > 0
+      ? `${scopeItemCount} item${scopeItemCount === 1 ? "" : "s"}`
+      : "Filtered";
   const clientFilteredSources = sources.filter((source) => {
-    if (scopeFilters.kind !== undefined && source.kind !== scopeFilters.kind) return false;
-    if (scopeFilters.createdById !== undefined && source.createdById !== scopeFilters.createdById) return false;
+    if (scopeFilters.kind !== undefined && source.kind !== scopeFilters.kind)
+      return false;
+    if (
+      scopeFilters.createdById !== undefined &&
+      source.createdById !== scopeFilters.createdById
+    )
+      return false;
     return true;
   });
   const baseDisplaySources = !hasScopeFilters
@@ -452,10 +631,13 @@ export default function KnowledgeBasePage() {
     : scopeSourcesQuery.isError
       ? clientFilteredSources
       : scopeSources;
-  const scopeDisplaySources = pendingSpaceId !== null
-    ? baseDisplaySources.filter((s) => s.spaceId === pendingSpaceId)
-    : baseDisplaySources;
-  const activeScopeSourcesQuery = hasScopeFilters ? scopeSourcesQuery : sourcesQuery;
+  const scopeDisplaySources =
+    pendingSpaceId !== null
+      ? baseDisplaySources.filter((s) => s.spaceId === pendingSpaceId)
+      : baseDisplaySources;
+  const activeScopeSourcesQuery = hasScopeFilters
+    ? scopeSourcesQuery
+    : sourcesQuery;
 
   return (
     <PageWrapper
@@ -465,7 +647,13 @@ export default function KnowledgeBasePage() {
       contentClassName="flex min-h-0 min-w-0 flex-col px-4 sm:px-6"
       actions={
         <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm" className="gap-1.5" onClick={handleToggleConversations} aria-pressed={conversationsOpen}>
+          <Button
+            variant="outline"
+            size="sm"
+            className="gap-1.5"
+            onClick={handleToggleConversations}
+            aria-pressed={conversationsOpen}
+          >
             <MessageSquare className="h-4 w-4" />
             Conversations
           </Button>
@@ -474,19 +662,35 @@ export default function KnowledgeBasePage() {
             size="sm"
             className="gap-1.5"
             onClick={handleScopeClick}
-            aria-label={scopeActive ? `Searching ${scopeSummary}` : "Choose sources to search"}
+            aria-label={
+              scopeActive
+                ? `Searching ${scopeSummary}`
+                : "Choose sources to search"
+            }
           >
             <SlidersHorizontal className="h-4 w-4" />
             {scopeActive ? scopeSummary : "Scope"}
           </Button>
-          <LoadingButton variant="outline" size="sm" className="gap-1.5" isPending={uploadSource.isPending} onClick={handleManageSourcesClick}>
+          <LoadingButton
+            variant="outline"
+            size="sm"
+            className="gap-1.5"
+            isPending={uploadSource.isPending}
+            onClick={handleManageSourcesClick}
+          >
             {!uploadSource.isPending && <BookOpenTextIcon size={16} />}
             Sources
           </LoadingButton>
         </div>
       }
     >
-      <input ref={fileInputRef} type="file" accept=".pdf,.docx,.txt,.md,.csv" className="hidden" onChange={handleFileChange} />
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept=".pdf,.docx,.xlsx,.txt,.md,.csv"
+        className="hidden"
+        onChange={handleFileChange}
+      />
 
       <div className="flex w-full flex-1 min-h-0 flex-col">
         <div className="flex w-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden rounded-xl border border-border bg-card shadow-sm">
@@ -514,109 +718,220 @@ export default function KnowledgeBasePage() {
                 onViewportScroll={handleScroll}
               >
                 <div className="overscroll-contain space-y-4 p-4">
-                {isLoading ? (
-                  <div className="flex h-full items-center justify-center">
-                    <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
-                  </div>
-                ) : rows.length === 0 && !pending ? (
-                  <EmptyChat onSuggestion={handleSuggestion} />
-                ) : (
-                  <>
-                    {hasNextPage ? (
-                      <div ref={topSentinelRef} className="flex justify-center pb-1">
-                        {isFetchingNextPage ? (
-                          <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
-                        ) : (
-                          <button type="button" onClick={loadOlder} className="flex items-center gap-1 rounded-full border border-border bg-background px-3 py-1 text-dense font-medium text-muted-foreground transition-colors hover:bg-muted">
-                            <ChevronUp className="h-3 w-3" />Load older messages
-                          </button>
-                        )}
-                      </div>
-                    ) : (
-                      persisted.length > 0 && (
-                        <p className="pb-1 text-center text-micro text-muted-foreground">Beginning of your conversation</p>
-                      )
-                    )}
-                    {rows.map((row) =>
-                      row.type === "sep" ? (
-                        <DaySeparator key={row.id} label={row.label} />
+                  {isLoading ? (
+                    <div className="flex h-full items-center justify-center">
+                      <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+                    </div>
+                  ) : rows.length === 0 && !pending ? (
+                    <EmptyChat onSuggestion={handleSuggestion} />
+                  ) : (
+                    <>
+                      {hasNextPage ? (
+                        <div
+                          ref={topSentinelRef}
+                          className="flex justify-center pb-1"
+                        >
+                          {isFetchingNextPage ? (
+                            <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+                          ) : (
+                            <button
+                              type="button"
+                              onClick={loadOlder}
+                              className="flex items-center gap-1 rounded-full border border-border bg-background px-3 py-1 text-dense font-medium text-muted-foreground transition-colors hover:bg-muted"
+                            >
+                              <ChevronUp className="h-3 w-3" />
+                              Load older messages
+                            </button>
+                          )}
+                        </div>
                       ) : (
+                        persisted.length > 0 && (
+                          <p className="pb-1 text-center text-micro text-muted-foreground">
+                            Beginning of your conversation
+                          </p>
+                        )
+                      )}
+                      {rows.map((row) =>
+                        row.type === "sep" ? (
+                          <DaySeparator key={row.id} label={row.label} />
+                        ) : (
+                          <ChatBubble
+                            key={row.message.id}
+                            message={row.message}
+                            onCitation={handleCitationClick}
+                            reduce={Boolean(reduce)}
+                            evidence={
+                              row.message.role === "assistant" &&
+                              row.message.citations?.length ? (
+                                <CitationEvidenceList
+                                  citations={row.message.citations}
+                                />
+                              ) : undefined
+                            }
+                            actions={
+                              row.message.role === "assistant" &&
+                              questionByAssistantId.has(row.message.id) ? (
+                                <>
+                                  <CopyAnswerButton
+                                    text={row.message.content}
+                                  />
+                                  <AnswerFeedbackBar
+                                    question={
+                                      questionByAssistantId.get(
+                                        row.message.id,
+                                      ) ?? ""
+                                    }
+                                  />
+                                </>
+                              ) : undefined
+                            }
+                          />
+                        ),
+                      )}
+                      {pending &&
+                        (ask.isPending ||
+                          pending.error ||
+                          pending.isQuotaError) && (
+                          <ChatBubble
+                            key="pending-user"
+                            message={{
+                              id: "pending-user",
+                              role: "user",
+                              content: pending.question,
+                            }}
+                            onCitation={handleCitationClick}
+                            reduce={Boolean(reduce)}
+                          />
+                        )}
+                      {pending?.isQuotaError && (
+                        <OverQuotaBanner
+                          limit={
+                            pending.quotaMessage ?? "AI credit limit reached"
+                          }
+                        />
+                      )}
+                      {pending?.error && !pending.isQuotaError && (
                         <ChatBubble
-                          key={row.message.id}
-                          message={row.message}
+                          key="pending-error"
+                          message={{
+                            id: "pending-error",
+                            role: "assistant",
+                            content: pending.error,
+                            isError: true,
+                          }}
+                          onCitation={handleCitationClick}
+                          reduce={Boolean(reduce)}
+                        />
+                      )}
+                      {pending?.error &&
+                        !pending.isQuotaError &&
+                        !ask.isPending && (
+                          <Button variant="outline" onClick={handleRegenerate}>
+                            Generate a new answer
+                          </Button>
+                        )}
+                      {pending?.answer && pending.error && (
+                        <p
+                          role="status"
+                          className="text-xs text-muted-foreground"
+                        >
+                          Partial answer — generation did not complete.
+                        </p>
+                      )}
+                      {pending?.hasContext === false && (
+                        <InsufficientEvidenceBanner
+                          question={pending.question}
+                          spaceId={pending.spaceId}
+                        />
+                      )}
+                      {pending?.disagreement && (
+                        <DisagreementBanner
+                          summary={pending.disagreement.summary}
+                        />
+                      )}
+                      {pending?.answer && (
+                        <ChatBubble
+                          message={{
+                            id: "pending-answer",
+                            role: "assistant",
+                            content: pending.answer,
+                            citations: pending.citations,
+                          }}
                           onCitation={handleCitationClick}
                           reduce={Boolean(reduce)}
                           evidence={
-                            row.message.role === "assistant" && row.message.citations?.length ? (
-                              <CitationEvidenceList citations={row.message.citations} />
+                            pending.citations?.length ? (
+                              <CitationEvidenceList
+                                citations={pending.citations}
+                              />
                             ) : undefined
                           }
                           actions={
-                            row.message.role === "assistant" && questionByAssistantId.has(row.message.id) ? (
+                            !ask.isPending &&
+                            !pending.error &&
+                            !pending.isQuotaError ? (
                               <>
-                                <CopyAnswerButton text={row.message.content} />
-                                <AnswerFeedbackBar question={questionByAssistantId.get(row.message.id) ?? ""} />
+                                <CopyAnswerButton text={pending.answer} />
+                                <AnswerFeedbackBar
+                                  question={pending.question}
+                                />
                               </>
                             ) : undefined
                           }
                         />
-                      ),
-                    )}
-                    {pending && (ask.isPending || pending.error || pending.isQuotaError) && (
-                      <ChatBubble key="pending-user" message={{ id: "pending-user", role: "user", content: pending.question }} onCitation={handleCitationClick} reduce={Boolean(reduce)} />
-                    )}
-                    {pending?.isQuotaError && (
-                      <OverQuotaBanner limit={pending.quotaMessage ?? "AI credit limit reached"} />
-                    )}
-                    {pending?.error && !pending.isQuotaError && (
-                      <ChatBubble key="pending-error" message={{ id: "pending-error", role: "assistant", content: pending.error, isError: true }} onCitation={handleCitationClick} reduce={Boolean(reduce)} />
-                    )}
-                    {pending?.error && !pending.isQuotaError && !ask.isPending && <Button variant="outline" onClick={handleRegenerate}>Generate a new answer</Button>}
-                    {pending?.answer && pending.error && (
-                      <p role="status" className="text-xs text-muted-foreground">Partial answer — generation did not complete.</p>
-                    )}
-                    {pending?.hasContext === false && (
-                      <InsufficientEvidenceBanner question={pending.question} spaceId={pending.spaceId} />
-                    )}
-                    {pending?.disagreement && (
-                      <DisagreementBanner summary={pending.disagreement.summary} />
-                    )}
-                    {pending?.answer && (
-                      <ChatBubble
-                        message={{ id: "pending-answer", role: "assistant", content: pending.answer, citations: pending.citations }}
-                        onCitation={handleCitationClick}
-                        reduce={Boolean(reduce)}
-                        evidence={
-                          pending.citations?.length ? <CitationEvidenceList citations={pending.citations} /> : undefined
-                        }
-                        actions={
-                          !ask.isPending && !pending.error && !pending.isQuotaError ? (
-                            <>
-                              <CopyAnswerButton text={pending.answer} />
-                              <AnswerFeedbackBar question={pending.question} />
-                            </>
-                          ) : undefined
-                        }
-                      />
-                    )}
-                    {ask.isPending && !pending?.answer && <TypingBubble reduce={Boolean(reduce)} />}
-                    {(pending?.hasContext === false || pending?.disagreement) && !ask.isPending && (
-                      <div className="flex gap-2">
-                        <Button variant="outline" size="sm" onClick={handleDismissPending}>Dismiss</Button>
-                        <Button variant="outline" size="sm" onClick={handleRegenerate}>Try again</Button>
-                      </div>
-                    )}
-                  </>
-                )}
+                      )}
+                      {ask.isPending && !pending?.answer && (
+                        <TypingBubble reduce={Boolean(reduce)} />
+                      )}
+                      {(pending?.hasContext === false ||
+                        pending?.disagreement) &&
+                        !ask.isPending && (
+                          <div className="flex gap-2">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={handleDismissPending}
+                            >
+                              Dismiss
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={handleRegenerate}
+                            >
+                              Try again
+                            </Button>
+                          </div>
+                        )}
+                    </>
+                  )}
                 </div>
               </ScrollArea>
 
               <div className="shrink-0 border-t border-border bg-background/60 p-3">
                 <div className="flex items-center gap-2">
-                  <Input value={input} onChange={handleInputChange} onKeyDown={handleKeyDown} placeholder="Ask anything about your files, notes and wiki…" className="h-9 min-w-0 flex-1 rounded-xl text-sm" autoFocus />
-                  {ask.isPending && <Button variant="outline" onClick={handleStop}>Stop</Button>}
-                  <Button onClick={handleSend} disabled={ask.isPending || !input.trim()} className="h-9 w-9 shrink-0 rounded-xl p-0" aria-label="Send">
-                    <motion.span whileTap={reduce ? undefined : { scale: 0.85 }}>
+                  <Input
+                    value={input}
+                    onChange={handleInputChange}
+                    onKeyDown={handleKeyDown}
+                    placeholder="Ask anything about your files, notes and wiki…"
+                    className="h-9 min-w-0 flex-1 rounded-xl text-sm"
+                    autoFocus
+                  />
+                  {ask.isPending && (
+                    <Button variant="outline" onClick={handleStop}>
+                      Stop
+                    </Button>
+                  )}
+                  <Button
+                    onClick={handleSend}
+                    disabled={ask.isPending || !input.trim()}
+                    className="h-9 w-9 shrink-0 rounded-xl p-0"
+                    aria-label="Send"
+                  >
+                    <motion.span
+                      whileTap={reduce ? undefined : { scale: 0.85 }}
+                    >
                       <Send className="h-4 w-4" />
                     </motion.span>
                   </Button>
@@ -627,9 +942,24 @@ export default function KnowledgeBasePage() {
                       ? `Searching ${scopeItemCount} selected item${scopeItemCount === 1 ? "" : "s"}.`
                       : "Searching with selected filters."
                     : "Searching all accessible knowledge."}{" "}
-                  <button type="button" onClick={handleScopeClick} className="underline hover:text-foreground">Edit</button>
+                  <button
+                    type="button"
+                    onClick={handleScopeClick}
+                    className="underline hover:text-foreground"
+                  >
+                    Edit
+                  </button>
                   {scopeActive && (
-                    <>{" · "}<button type="button" onClick={handleClearScope} className="underline hover:text-foreground">Clear</button></>
+                    <>
+                      {" · "}
+                      <button
+                        type="button"
+                        onClick={handleClearScope}
+                        className="underline hover:text-foreground"
+                      >
+                        Clear
+                      </button>
+                    </>
                   )}
                 </p>
               </div>
@@ -648,8 +978,12 @@ export default function KnowledgeBasePage() {
           sourceError={sourcesQuery.isError ? sourcesQuery.error : null}
           sourceHasMore={sourcesQuery.hasNextPage}
           sourceIsFetchingMore={sourcesQuery.isFetchingNextPage}
-          onSourceLoadMore={() => { void sourcesQuery.fetchNextPage(); }}
-          onSourceRetry={() => { void sourcesQuery.refetch(); }}
+          onSourceLoadMore={() => {
+            void sourcesQuery.fetchNextPage();
+          }}
+          onSourceRetry={() => {
+            void sourcesQuery.refetch();
+          }}
           readyCount={readyCount}
           onUploadClick={handleUploadClick}
           uploadPending={uploadSource.isPending}
@@ -666,12 +1000,24 @@ export default function KnowledgeBasePage() {
           open
           onOpenChange={handleSourcesSheetOpenChange}
           sources={scopeDisplaySources}
-          isLoading={hasScopeFilters ? scopeSourcesQuery.isLoading : sourcesQuery.isLoading}
-          sourceError={activeScopeSourcesQuery.isError ? activeScopeSourcesQuery.error : null}
+          isLoading={
+            hasScopeFilters
+              ? scopeSourcesQuery.isLoading
+              : sourcesQuery.isLoading
+          }
+          sourceError={
+            activeScopeSourcesQuery.isError
+              ? activeScopeSourcesQuery.error
+              : null
+          }
           sourceHasMore={activeScopeSourcesQuery.hasNextPage}
           sourceIsFetchingMore={activeScopeSourcesQuery.isFetchingNextPage}
-          onSourceLoadMore={() => { void activeScopeSourcesQuery.fetchNextPage(); }}
-          onSourceRetry={() => { void activeScopeSourcesQuery.refetch(); }}
+          onSourceLoadMore={() => {
+            void activeScopeSourcesQuery.fetchNextPage();
+          }}
+          onSourceRetry={() => {
+            void activeScopeSourcesQuery.refetch();
+          }}
           selectedIds={pendingScopeIds}
           onSelectionChange={handleScopeSelectionChange}
           verifiedOnly={pendingVerifiedOnly}

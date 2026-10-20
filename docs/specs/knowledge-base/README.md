@@ -2,7 +2,7 @@
 
 **Status:** combined planning pack; [OPEN-TASKS.md](OPEN-TASKS.md) is the only actionable checklist
 
-**Latest architecture/completion audit:** 2026-09-27. Original product/browser audit: 2026-09-23.
+**Latest product-direction update:** 2026-10-20. Latest architecture/completion audit: 2026-09-27. Original product/browser audit: 2026-09-23.
 
 Start with [the consolidated open-task queue](OPEN-TASKS.md). It carries forward every unchecked child requirement from the former Knowledge Base and Documents Module trackers, while completed entries and duplicate parent/workstream boxes are omitted. Checklist percentages are not release-readiness or million-user capacity measurements.
 
@@ -41,19 +41,23 @@ Use [`MASTER-IMPLEMENTATION-PROMPT.md`](MASTER-IMPLEMENTATION-PROMPT.md) when ha
 | 1 | [`01-product-strategy.md`](01-product-strategy.md) | Customer needs, principles, metrics, feature priority |
 | 2 | [`02-page-component-spec.md`](02-page-component-spec.md) | Page-by-page components, actions, states, and removals |
 | 3 | [`03-information-architecture-and-design-system.md`](03-information-architecture-and-design-system.md) | Navigation, shared modules, accessibility, interaction rules |
-| 4 | [`competitor-research.md`](competitor-research.md) | Primary-source market evidence |
+| 4 | [`competitor-research.md`](competitor-research.md) | Original knowledge-product market evidence |
 | 5 | [`04-backend-scale-architecture.md`](04-backend-scale-architecture.md) | Low-cost million-user target architecture |
 | 6 | [`05-data-api-search-security.md`](05-data-api-search-security.md) | Data, interface, search, ACL, cache, and retention contracts |
 | 7 | [`06-code-removal-and-reuse.md`](06-code-removal-and-reuse.md) | Deletion, consolidation, and reuse plan |
 | 8 | [`OPEN-TASKS.md`](OPEN-TASKS.md) | Consolidated incomplete requirements, release gates, architecture corrections, provenance, and proof fields |
+| Direction | [`2026-10-20-drive-first-docs-competitor-analysis.md`](2026-10-20-drive-first-docs-competitor-analysis.md) | Drive-first Documents IA and file-type strategy |
+| Suite | [`2026-10-20-streamlineos-suite-competitor-analysis.md`](2026-10-20-streamlineos-suite-competitor-analysis.md) | Suite competitors, personas, feature tiers, Sheets strategy, and Calendar simplification |
 
 ## Product thesis
 
-StreamlineOS Knowledge should be the trusted memory of work, not a generic document editor. Its defensible advantage is that pages, projects, support conversations, decisions, people, and operational records already share one tenant and permission model. The product wins when a user can:
+StreamlineOS Documents should be the trusted memory and working-file layer of the suite, not a generic editor or an Excel clone. Its defensible advantage is that files, pages, sheets, projects, support conversations, decisions, people, and operational records share one tenant and permission model. The product wins when a user can:
 
+- organize and share durable files and folders;
 - find a trustworthy answer quickly;
 - see why the answer is trustworthy and what evidence supports it;
 - turn a gap or conversation into governed knowledge without copying data;
+- open an uploaded spreadsheet to search its content and, in later phases, create a bounded Sheet connected to live StreamlineOS records;
 - know who owns a page and when it must be reviewed;
 - safely share knowledge without leaking a title, snippet, attachment, or citation;
 - recover from mistakes through history, conflict handling, archive, and trash.
@@ -69,14 +73,15 @@ StreamlineOS Knowledge should be the trusted memory of work, not a generic docum
 7. Indexing, imports, exports, AI, notifications, and analytics are asynchronous. Page reads and writes never wait for them.
 8. Start with a modular monolith plus workers. Introduce tenant cells only when measured load or fault isolation requires them. Do not begin with microservices.
 9. AI may suggest, summarize, classify, and answer. It may not silently publish, change access, approve a review, or overwrite a human edit.
-10. No arbitrary databases, marketplace, or decorative view types until search, ownership, sharing, mobile, accessibility, and governance are complete.
+10. First-class files, folders, and bounded Sheets are in scope. Arbitrary relational app builders, Excel-complete parity, a marketplace, and decorative view types are not.
+11. Spreadsheet delivery is phased: XLSX/CSV upload and indexing first; safe preview and export next; native formulas and live permission-aware OS data only after the file foundation is reliable.
 
 ## Release order
 
-- **P0 — trustworthy core:** correct ownership/shares/ACL, full search, bounded lists, page actions, mobile navigation, honest states, restore/history, and production evidence.
+- **P0 — trustworthy core:** drive-style Home/My Drive/Shared/Recent/Trash, files and folders, correct ownership/shares/ACL, XLSX/CSV upload and search indexing, full search, bounded lists, page actions, mobile navigation, honest states, restore/history, and production evidence.
 - **P1 — governance loop:** health inventory, owners and review policies, Ask gap workflow, space membership, bulk repairs, and usage analytics.
 - **P2 — differentiated intelligence:** evidence trails, answer-to-fix loop, workflow-aware knowledge capture, multilingual delivery, and optional collaboration enhancements after measured demand.
-- **Rejected for now:** arbitrary page databases, board/calendar/timeline views of pages, autonomous publishing, duplicate wiki implementations, and feature-specific infrastructure that a shared module already provides.
+- **Rejected for now:** Excel-complete parity, arbitrary page databases/app builders, board/calendar/timeline views of pages, autonomous publishing, duplicate wiki implementations, and feature-specific infrastructure that a shared module already provides.
 
 ## Definition of done
 
