@@ -171295,6 +171295,50 @@
                           "exclusiveMinimum": 0,
                           "maximum": 9007199254740991
                         },
+                        "quietHoursStart": {
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "quietHoursEnd": {
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "quietHoursTimezone": {
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "quietHoursBehavior": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "enum": [
+                                "delay",
+                                "skip"
+                              ]
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
                         "updatedAt": {
                           "anyOf": [
                             {
@@ -171315,6 +171359,10 @@
                         "maxRules",
                         "maxEffectsPerEvent",
                         "maxEffectsPerDay",
+                        "quietHoursStart",
+                        "quietHoursEnd",
+                        "quietHoursTimezone",
+                        "quietHoursBehavior",
                         "updatedAt"
                       ]
                     }
@@ -171410,6 +171458,50 @@
                           "exclusiveMinimum": 0,
                           "maximum": 9007199254740991
                         },
+                        "quietHoursStart": {
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "quietHoursEnd": {
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "quietHoursTimezone": {
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "quietHoursBehavior": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "enum": [
+                                "delay",
+                                "skip"
+                              ]
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
                         "updatedAt": {
                           "anyOf": [
                             {
@@ -171430,6 +171522,10 @@
                         "maxRules",
                         "maxEffectsPerEvent",
                         "maxEffectsPerDay",
+                        "quietHoursStart",
+                        "quietHoursEnd",
+                        "quietHoursTimezone",
+                        "quietHoursBehavior",
                         "updatedAt"
                       ]
                     }
@@ -171518,6 +171614,54 @@
                     "type": "integer",
                     "minimum": 1,
                     "maximum": 100000
+                  },
+                  "quietHoursStart": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "pattern": "^([01]\\d|2[0-3]):[0-5]\\d$"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "quietHoursEnd": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "pattern": "^([01]\\d|2[0-3]):[0-5]\\d$"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "quietHoursTimezone": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 100
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "quietHoursBehavior": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "enum": [
+                          "delay",
+                          "skip"
+                        ]
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
                   }
                 },
                 "required": [
@@ -181047,6 +181191,71 @@
                               "availableUnits",
                               "state",
                               "reasons"
+                            ]
+                          }
+                        },
+                        "allocations": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "id": {
+                                "type": "string",
+                                "format": "uuid",
+                                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                              },
+                              "bookingId": {
+                                "type": "string",
+                                "format": "uuid",
+                                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                              },
+                              "start": {
+                                "type": "string",
+                                "format": "date-time"
+                              },
+                              "end": {
+                                "type": "string",
+                                "format": "date-time"
+                              },
+                              "units": {
+                                "type": "integer",
+                                "exclusiveMinimum": 0,
+                                "maximum": 9007199254740991
+                              },
+                              "state": {
+                                "type": "string",
+                                "enum": [
+                                  "confirmed",
+                                  "tentative"
+                                ]
+                              },
+                              "version": {
+                                "type": "string"
+                              },
+                              "sourceKey": {
+                                "anyOf": [
+                                  {
+                                    "type": "string"
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              },
+                              "bookingLifecycleVersion": {
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "id",
+                              "bookingId",
+                              "start",
+                              "end",
+                              "units",
+                              "state",
+                              "version",
+                              "sourceKey",
+                              "bookingLifecycleVersion"
                             ]
                           }
                         }
@@ -208246,6 +208455,20 @@
                                 }
                               ]
                             },
+                            "meetingProvider": {
+                              "anyOf": [
+                                {
+                                  "type": "string",
+                                  "enum": [
+                                    "google_meet",
+                                    "microsoft_teams"
+                                  ]
+                                },
+                                {
+                                  "type": "null"
+                                }
+                              ]
+                            },
                             "startedAt": {
                               "anyOf": [
                                 {
@@ -208405,6 +208628,7 @@
                             "status",
                             "calendarEventId",
                             "meetingUrl",
+                            "meetingProvider",
                             "startedAt",
                             "endedAt",
                             "startedBy",
@@ -208477,7 +208701,7 @@
         ],
         "responses": {
           "201": {
-            "description": "Huddle started",
+            "description": "Huddle started, or the channel's active huddle joined",
             "content": {
               "application/json": {
                 "schema": {
@@ -208522,6 +208746,20 @@
                             {
                               "type": "string",
                               "format": "uri"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "meetingProvider": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "enum": [
+                                "google_meet",
+                                "microsoft_teams"
+                              ]
                             },
                             {
                               "type": "null"
@@ -208687,6 +208925,7 @@
                         "status",
                         "calendarEventId",
                         "meetingUrl",
+                        "meetingProvider",
                         "startedAt",
                         "endedAt",
                         "startedBy",
@@ -208710,6 +208949,9 @@
           "401": {
             "$ref": "#/components/responses/Unauthorized"
           },
+          "402": {
+            "description": "The organization's plan allows huddles only in direct messages."
+          },
           "403": {
             "$ref": "#/components/responses/Forbidden"
           },
@@ -208720,7 +208962,7 @@
             "$ref": "#/components/responses/Conflict"
           },
           "412": {
-            "description": "Precondition, never a retry: no usable Google Calendar connection — the starter connects their own in Calendar, or an admin connects or reconnects a shared one."
+            "description": "Precondition, never a retry: no usable calendar connection, a connection that needs reconnecting, or a Microsoft calendar that cannot create Teams meetings. The starter connects their own in Calendar, or an admin connects or reconnects a shared one."
           },
           "422": {
             "$ref": "#/components/responses/UnprocessableEntity"
@@ -208729,7 +208971,7 @@
             "description": "Rate limited"
           },
           "503": {
-            "description": "Transient or server-side: Composio is unconfigured for this deployment, Google refused or timed out, or Google returned no join link. Nothing was started."
+            "description": "Transient or server-side: the integration is unconfigured for this deployment, the meeting provider refused or timed out, or it returned no join link. Nothing was started."
           }
         },
         "security": [
@@ -208737,7 +208979,7 @@
             "bearer": []
           }
         ],
-        "summary": "Start a huddle in a channel and mint its Google Meet link",
+        "summary": "Start a huddle in a channel, or join the one already running, and return its external meeting link",
         "tags": [
           "Chat Huddles & Video"
         ],
@@ -210609,7 +210851,9 @@
                                   "const": "ticket"
                                 },
                                 "id": {
-                                  "type": "string"
+                                  "type": "string",
+                                  "minLength": 1,
+                                  "maxLength": 128
                                 },
                                 "projectId": {
                                   "type": "integer",
@@ -210636,37 +210880,41 @@
                               },
                               "required": [
                                 "type",
-                                "id",
-                                "projectId"
-                              ]
+                                "id"
+                              ],
+                              "additionalProperties": false
                             },
                             {
                               "type": "object",
                               "properties": {
                                 "type": {
                                   "type": "string",
-                                  "const": "comment"
+                                  "enum": [
+                                    "task",
+                                    "project",
+                                    "cycle",
+                                    "release",
+                                    "incident",
+                                    "client",
+                                    "deal",
+                                    "lead",
+                                    "employee",
+                                    "doc_page",
+                                    "calendar_event",
+                                    "support_ticket"
+                                  ]
                                 },
                                 "id": {
-                                  "type": "string"
-                                },
-                                "ticketId": {
-                                  "type": "integer",
-                                  "exclusiveMinimum": 0,
-                                  "maximum": 9007199254740991
-                                },
-                                "projectId": {
-                                  "type": "integer",
-                                  "exclusiveMinimum": 0,
-                                  "maximum": 9007199254740991
+                                  "type": "string",
+                                  "minLength": 1,
+                                  "maxLength": 128
                                 }
                               },
                               "required": [
                                 "type",
-                                "id",
-                                "ticketId",
-                                "projectId"
-                              ]
+                                "id"
+                              ],
+                              "additionalProperties": false
                             }
                           ]
                         }
@@ -210903,6 +211151,453 @@
         "x-exposure": "permissioned",
         "x-permission": "chat:messages:write",
         "description": "Exposure: permission — chat:messages:write"
+      }
+    },
+    "/chat/channels/{channelId}/messages/{messageId}/context": {
+      "get": {
+        "operationId": "ChatMessagesController_context",
+        "parameters": [
+          {
+            "name": "channelId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
+            }
+          },
+          {
+            "name": "messageId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "messages": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "id": {
+                                "type": "integer",
+                                "minimum": -9007199254740991,
+                                "maximum": 9007199254740991
+                              },
+                              "orgId": {
+                                "type": "string"
+                              },
+                              "channelId": {
+                                "type": "integer",
+                                "minimum": -9007199254740991,
+                                "maximum": 9007199254740991
+                              },
+                              "senderMembershipId": {
+                                "anyOf": [
+                                  {
+                                    "type": "integer",
+                                    "minimum": -9007199254740991,
+                                    "maximum": 9007199254740991
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              },
+                              "content": {
+                                "anyOf": [
+                                  {
+                                    "type": "string"
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              },
+                              "replyToId": {
+                                "anyOf": [
+                                  {
+                                    "type": "integer",
+                                    "minimum": -9007199254740991,
+                                    "maximum": 9007199254740991
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              },
+                              "isEdited": {
+                                "type": "boolean"
+                              },
+                              "isDeleted": {
+                                "type": "boolean"
+                              },
+                              "messageType": {
+                                "type": "string"
+                              },
+                              "metadata": {
+                                "anyOf": [
+                                  {
+                                    "type": "object",
+                                    "propertyNames": {
+                                      "type": "string"
+                                    },
+                                    "additionalProperties": {}
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              },
+                              "actionStatus": {
+                                "anyOf": [
+                                  {
+                                    "type": "string"
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              },
+                              "clientKey": {
+                                "anyOf": [
+                                  {
+                                    "type": "string"
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              },
+                              "channelPosition": {
+                                "type": "integer",
+                                "minimum": -9007199254740991,
+                                "maximum": 9007199254740991
+                              },
+                              "createdAt": {
+                                "type": "string",
+                                "format": "date-time"
+                              },
+                              "updatedAt": {
+                                "type": "string",
+                                "format": "date-time"
+                              },
+                              "senderId": {
+                                "anyOf": [
+                                  {
+                                    "type": "string"
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              },
+                              "sender": {
+                                "anyOf": [
+                                  {
+                                    "type": "object",
+                                    "properties": {
+                                      "id": {
+                                        "anyOf": [
+                                          {
+                                            "type": "string"
+                                          },
+                                          {
+                                            "type": "null"
+                                          }
+                                        ]
+                                      },
+                                      "name": {
+                                        "anyOf": [
+                                          {
+                                            "type": "string"
+                                          },
+                                          {
+                                            "type": "null"
+                                          }
+                                        ]
+                                      },
+                                      "image": {
+                                        "anyOf": [
+                                          {
+                                            "type": "string"
+                                          },
+                                          {
+                                            "type": "null"
+                                          }
+                                        ]
+                                      }
+                                    },
+                                    "required": [
+                                      "id",
+                                      "name",
+                                      "image"
+                                    ]
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              },
+                              "reactions": {
+                                "type": "object",
+                                "propertyNames": {
+                                  "type": "string"
+                                },
+                                "additionalProperties": {
+                                  "type": "array",
+                                  "items": {
+                                    "type": "string"
+                                  }
+                                }
+                              },
+                              "attachments": {
+                                "type": "array",
+                                "items": {
+                                  "type": "object",
+                                  "properties": {
+                                    "id": {
+                                      "type": "integer",
+                                      "minimum": -9007199254740991,
+                                      "maximum": 9007199254740991
+                                    },
+                                    "messageId": {
+                                      "type": "integer",
+                                      "minimum": -9007199254740991,
+                                      "maximum": 9007199254740991
+                                    },
+                                    "fileName": {
+                                      "type": "string"
+                                    },
+                                    "fileUrl": {
+                                      "type": "string"
+                                    },
+                                    "fileKey": {
+                                      "type": "string"
+                                    },
+                                    "fileSize": {
+                                      "type": "integer",
+                                      "minimum": -9007199254740991,
+                                      "maximum": 9007199254740991
+                                    },
+                                    "mimeType": {
+                                      "type": "string"
+                                    },
+                                    "createdAt": {
+                                      "type": "string",
+                                      "format": "date-time"
+                                    }
+                                  },
+                                  "required": [
+                                    "id",
+                                    "messageId",
+                                    "fileName",
+                                    "fileUrl",
+                                    "fileKey",
+                                    "fileSize",
+                                    "mimeType",
+                                    "createdAt"
+                                  ]
+                                }
+                              },
+                              "replyTo": {
+                                "anyOf": [
+                                  {
+                                    "type": "object",
+                                    "properties": {
+                                      "id": {
+                                        "type": "integer",
+                                        "minimum": -9007199254740991,
+                                        "maximum": 9007199254740991
+                                      },
+                                      "content": {
+                                        "anyOf": [
+                                          {
+                                            "type": "string"
+                                          },
+                                          {
+                                            "type": "null"
+                                          }
+                                        ]
+                                      },
+                                      "senderId": {
+                                        "anyOf": [
+                                          {
+                                            "type": "string"
+                                          },
+                                          {
+                                            "type": "null"
+                                          }
+                                        ]
+                                      },
+                                      "sender": {
+                                        "type": "object",
+                                        "properties": {
+                                          "id": {
+                                            "anyOf": [
+                                              {
+                                                "type": "string"
+                                              },
+                                              {
+                                                "type": "null"
+                                              }
+                                            ]
+                                          },
+                                          "name": {
+                                            "anyOf": [
+                                              {
+                                                "type": "string"
+                                              },
+                                              {
+                                                "type": "null"
+                                              }
+                                            ]
+                                          },
+                                          "image": {
+                                            "anyOf": [
+                                              {
+                                                "type": "string"
+                                              },
+                                              {
+                                                "type": "null"
+                                              }
+                                            ]
+                                          }
+                                        },
+                                        "required": [
+                                          "id",
+                                          "name",
+                                          "image"
+                                        ]
+                                      }
+                                    },
+                                    "required": [
+                                      "id",
+                                      "content",
+                                      "senderId",
+                                      "sender"
+                                    ],
+                                    "additionalProperties": false
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              }
+                            },
+                            "required": [
+                              "id",
+                              "orgId",
+                              "channelId",
+                              "senderMembershipId",
+                              "content",
+                              "replyToId",
+                              "isEdited",
+                              "isDeleted",
+                              "messageType",
+                              "metadata",
+                              "actionStatus",
+                              "clientKey",
+                              "channelPosition",
+                              "createdAt",
+                              "updatedAt",
+                              "senderId",
+                              "sender",
+                              "reactions",
+                              "attachments"
+                            ]
+                          }
+                        },
+                        "targetMessageId": {
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        },
+                        "olderCursor": {
+                          "anyOf": [
+                            {
+                              "type": "integer",
+                              "minimum": -9007199254740991,
+                              "maximum": 9007199254740991
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "hasNewer": {
+                          "type": "boolean"
+                        }
+                      },
+                      "required": [
+                        "messages",
+                        "targetMessageId",
+                        "olderCursor",
+                        "hasNewer"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "success",
+                    "data"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          },
+          "503": {
+            "$ref": "#/components/responses/ServiceUnavailable"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Load a bounded window of channel messages around one message (deep link)",
+        "tags": [
+          "Chat Messages"
+        ],
+        "x-exposure": "permissioned",
+        "x-permission": "chat:messages:read",
+        "description": "Exposure: permission — chat:messages:read"
       }
     },
     "/chat/channels/{channelId}/messages/{messageId}/reactions": {
@@ -212224,7 +212919,9 @@
                                   "const": "ticket"
                                 },
                                 "id": {
-                                  "type": "string"
+                                  "type": "string",
+                                  "minLength": 1,
+                                  "maxLength": 128
                                 },
                                 "projectId": {
                                   "type": "integer",
@@ -212251,37 +212948,41 @@
                               },
                               "required": [
                                 "type",
-                                "id",
-                                "projectId"
-                              ]
+                                "id"
+                              ],
+                              "additionalProperties": false
                             },
                             {
                               "type": "object",
                               "properties": {
                                 "type": {
                                   "type": "string",
-                                  "const": "comment"
+                                  "enum": [
+                                    "task",
+                                    "project",
+                                    "cycle",
+                                    "release",
+                                    "incident",
+                                    "client",
+                                    "deal",
+                                    "lead",
+                                    "employee",
+                                    "doc_page",
+                                    "calendar_event",
+                                    "support_ticket"
+                                  ]
                                 },
                                 "id": {
-                                  "type": "string"
-                                },
-                                "ticketId": {
-                                  "type": "integer",
-                                  "exclusiveMinimum": 0,
-                                  "maximum": 9007199254740991
-                                },
-                                "projectId": {
-                                  "type": "integer",
-                                  "exclusiveMinimum": 0,
-                                  "maximum": 9007199254740991
+                                  "type": "string",
+                                  "minLength": 1,
+                                  "maxLength": 128
                                 }
                               },
                               "required": [
                                 "type",
-                                "id",
-                                "ticketId",
-                                "projectId"
-                              ]
+                                "id"
+                              ],
+                              "additionalProperties": false
                             }
                           ]
                         }
@@ -213850,185 +214551,6 @@
         "x-idempotency-command": "chat.summarize",
         "x-idempotent": true,
         "x-bodyless": true
-      }
-    },
-    "/chat/channels/{channelId}/typing": {
-      "post": {
-        "operationId": "ChatChannelsController_setTyping",
-        "parameters": [
-          {
-            "name": "channelId",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "integer",
-              "exclusiveMinimum": 0,
-              "maximum": 9007199254740991
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "success": {
-                      "type": "boolean",
-                      "enum": [
-                        true
-                      ]
-                    },
-                    "data": {
-                      "type": "object",
-                      "properties": {
-                        "ok": {
-                          "type": "boolean",
-                          "const": true
-                        }
-                      },
-                      "required": [
-                        "ok"
-                      ]
-                    }
-                  },
-                  "required": [
-                    "success",
-                    "data"
-                  ],
-                  "additionalProperties": false
-                }
-              }
-            }
-          },
-          "400": {
-            "$ref": "#/components/responses/BadRequest"
-          },
-          "401": {
-            "$ref": "#/components/responses/Unauthorized"
-          },
-          "403": {
-            "$ref": "#/components/responses/Forbidden"
-          },
-          "404": {
-            "$ref": "#/components/responses/NotFound"
-          },
-          "409": {
-            "$ref": "#/components/responses/Conflict"
-          },
-          "422": {
-            "$ref": "#/components/responses/UnprocessableEntity"
-          },
-          "429": {
-            "$ref": "#/components/responses/TooManyRequests"
-          },
-          "503": {
-            "$ref": "#/components/responses/ServiceUnavailable"
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "summary": "Set current user as typing in a channel",
-        "tags": [
-          "Chat Channels"
-        ],
-        "x-exposure": "permissioned",
-        "x-permission": "chat:messages:write",
-        "description": "Exposure: permission — chat:messages:write",
-        "x-bodyless": true
-      },
-      "get": {
-        "operationId": "ChatChannelsController_getTyping",
-        "parameters": [
-          {
-            "name": "channelId",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "integer",
-              "exclusiveMinimum": 0,
-              "maximum": 9007199254740991
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "success": {
-                      "type": "boolean",
-                      "enum": [
-                        true
-                      ]
-                    },
-                    "data": {
-                      "type": "array",
-                      "items": {
-                        "type": "object",
-                        "properties": {
-                          "userId": {
-                            "type": "string"
-                          },
-                          "name": {
-                            "type": "string"
-                          }
-                        },
-                        "required": [
-                          "userId",
-                          "name"
-                        ]
-                      }
-                    }
-                  },
-                  "required": [
-                    "success",
-                    "data"
-                  ],
-                  "additionalProperties": false
-                }
-              }
-            }
-          },
-          "400": {
-            "$ref": "#/components/responses/BadRequest"
-          },
-          "401": {
-            "$ref": "#/components/responses/Unauthorized"
-          },
-          "403": {
-            "$ref": "#/components/responses/Forbidden"
-          },
-          "404": {
-            "$ref": "#/components/responses/NotFound"
-          },
-          "429": {
-            "$ref": "#/components/responses/TooManyRequests"
-          },
-          "503": {
-            "$ref": "#/components/responses/ServiceUnavailable"
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "summary": "Get users currently typing in a channel",
-        "tags": [
-          "Chat Channels"
-        ],
-        "x-exposure": "permissioned",
-        "x-permission": "chat:messages:read",
-        "description": "Exposure: permission — chat:messages:read"
       }
     },
     "/chat/channels/{channelId}/unarchive": {
@@ -216864,10 +217386,10 @@
             "$ref": "#/components/responses/Forbidden"
           },
           "404": {
-            "$ref": "#/components/responses/NotFound"
+            "description": "Huddle not found or already ended"
           },
           "409": {
-            "$ref": "#/components/responses/Conflict"
+            "description": "The caller has no open participant row in this huddle"
           },
           "422": {
             "$ref": "#/components/responses/UnprocessableEntity"
@@ -216954,6 +217476,9 @@
           "401": {
             "$ref": "#/components/responses/Unauthorized"
           },
+          "402": {
+            "description": "The organization's plan allows huddles only in direct messages."
+          },
           "403": {
             "$ref": "#/components/responses/Forbidden"
           },
@@ -216964,7 +217489,7 @@
             "$ref": "#/components/responses/Conflict"
           },
           "422": {
-            "$ref": "#/components/responses/UnprocessableEntity"
+            "description": "An invitee is not an active member of the channel"
           },
           "429": {
             "$ref": "#/components/responses/TooManyRequests"
@@ -217103,116 +217628,6 @@
         "x-permission": "chat:channels:write",
         "description": "Exposure: permission — chat:channels:write",
         "x-bodyless": true
-      }
-    },
-    "/chat/huddles/{huddleId}/kick": {
-      "post": {
-        "operationId": "ChatHuddlesController_kickParticipant",
-        "parameters": [
-          {
-            "name": "huddleId",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "integer",
-              "exclusiveMinimum": 0,
-              "maximum": 9007199254740991
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "success": {
-                      "type": "boolean",
-                      "enum": [
-                        true
-                      ]
-                    },
-                    "data": {
-                      "type": "object",
-                      "properties": {
-                        "ok": {
-                          "type": "boolean",
-                          "const": true
-                        }
-                      },
-                      "required": [
-                        "ok"
-                      ]
-                    }
-                  },
-                  "required": [
-                    "success",
-                    "data"
-                  ],
-                  "additionalProperties": false
-                }
-              }
-            }
-          },
-          "400": {
-            "$ref": "#/components/responses/BadRequest"
-          },
-          "401": {
-            "$ref": "#/components/responses/Unauthorized"
-          },
-          "403": {
-            "$ref": "#/components/responses/Forbidden"
-          },
-          "404": {
-            "$ref": "#/components/responses/NotFound"
-          },
-          "409": {
-            "$ref": "#/components/responses/Conflict"
-          },
-          "422": {
-            "$ref": "#/components/responses/UnprocessableEntity"
-          },
-          "429": {
-            "$ref": "#/components/responses/TooManyRequests"
-          },
-          "503": {
-            "$ref": "#/components/responses/ServiceUnavailable"
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "summary": "Kick a participant from a huddle",
-        "tags": [
-          "Chat Huddles & Video"
-        ],
-        "x-exposure": "permissioned",
-        "x-permission": "chat:huddles:moderate",
-        "description": "Exposure: permission — chat:huddles:moderate",
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "targetUserId": {
-                    "type": "string",
-                    "minLength": 1
-                  }
-                },
-                "required": [
-                  "targetUserId"
-                ],
-                "additionalProperties": false
-              }
-            }
-          }
-        }
       }
     },
     "/chat/huddles/{huddleId}/leave": {
@@ -1159207,6 +1159622,34 @@
                         },
                         "canEdit": {
                           "type": "boolean"
+                        },
+                        "can": {
+                          "type": "object",
+                          "properties": {
+                            "view": {
+                              "type": "boolean"
+                            },
+                            "comment": {
+                              "type": "boolean"
+                            },
+                            "edit": {
+                              "type": "boolean"
+                            },
+                            "manage": {
+                              "type": "boolean"
+                            },
+                            "restore": {
+                              "type": "boolean"
+                            }
+                          },
+                          "required": [
+                            "view",
+                            "comment",
+                            "edit",
+                            "manage",
+                            "restore"
+                          ],
+                          "additionalProperties": false
                         }
                       },
                       "required": [
@@ -1159249,7 +1159692,8 @@
                         "legalHoldReason",
                         "ancestors",
                         "isFavorite",
-                        "canEdit"
+                        "canEdit",
+                        "can"
                       ]
                     }
                   },
@@ -1310614,6 +1311058,30 @@
               "minimum": 1,
               "maximum": 100
             }
+          },
+          {
+            "name": "types",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "minItems": 1,
+              "maxItems": 9,
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": [
+                  "lead",
+                  "deal",
+                  "contact",
+                  "client",
+                  "ticket",
+                  "employee",
+                  "doc_page",
+                  "calendar_event",
+                  "support_ticket"
+                ]
+              }
+            }
           }
         ],
         "responses": {
@@ -1310639,9 +1311107,16 @@
                             "type": "object",
                             "properties": {
                               "id": {
-                                "type": "integer",
-                                "minimum": -9007199254740991,
-                                "maximum": 9007199254740991
+                                "anyOf": [
+                                  {
+                                    "type": "integer",
+                                    "minimum": -9007199254740991,
+                                    "maximum": 9007199254740991
+                                  },
+                                  {
+                                    "type": "string"
+                                  }
+                                ]
                               },
                               "type": {
                                 "type": "string",
@@ -1310650,7 +1311125,11 @@
                                   "deal",
                                   "contact",
                                   "client",
-                                  "ticket"
+                                  "ticket",
+                                  "employee",
+                                  "doc_page",
+                                  "calendar_event",
+                                  "support_ticket"
                                 ]
                               },
                               "title": {
