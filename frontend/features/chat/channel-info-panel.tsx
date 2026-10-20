@@ -21,6 +21,7 @@ import { formatDistanceToNow } from "date-fns";
 import { useChatChannel, useChatOnlineUsers } from "@/hooks/api/chat-core-read";
 import { useChatPins, useUnpinMessage } from "@/hooks/api/chat-search";
 import { useArchiveChannel, useUnarchiveChannel } from "@/hooks/api/chat-personal-b";
+import { useCan } from "@/hooks/api/access";
 import { resolveImageUrl } from "@/lib/utils";
 import { ChannelInfoPanelProfile } from "./channel-info-panel-profile";
 import { ChannelMembersSection } from "./channel-members-section";
@@ -53,6 +54,7 @@ export function ChannelInfoPanel({
   const unpinMessage = useUnpinMessage();
   const archiveChannel = useArchiveChannel();
   const unarchiveChannel = useUnarchiveChannel();
+  const canPin = useCan("chat:messages:pin");
   const [editing, setEditing] = useState(false);
   const [confirmArchiveOpen, setConfirmArchiveOpen] = useState(false);
   const [unpinMessageId, setUnpinMessageId] = useState<number | null>(null);
@@ -191,16 +193,18 @@ export function ChannelInfoPanel({
                                 : "")}
                           </p>
                         </div>
-                        <AnimatedIconButton
-                          type="button"
-                          icon={XIcon}
-                          iconSize={12}
-                          variant="ghost"
-                          onClick={requestUnpinHandler(pin.messageId)}
-                          className="size-7 shrink-0 rounded p-0 text-muted-foreground hover:text-foreground"
-                          title="Unpin"
-                          aria-label="Unpin message"
-                        />
+                        {canPin ? (
+                          <AnimatedIconButton
+                            type="button"
+                            icon={XIcon}
+                            iconSize={12}
+                            variant="ghost"
+                            onClick={requestUnpinHandler(pin.messageId)}
+                            className="size-7 shrink-0 rounded p-0 text-muted-foreground hover:text-foreground"
+                            title="Unpin"
+                            aria-label="Unpin message"
+                          />
+                        ) : null}
                       </div>
                     ))}
                   </div>

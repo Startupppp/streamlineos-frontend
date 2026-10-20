@@ -12,18 +12,12 @@ import {
   formatMessageTimeFull,
   getForwardedDisplay,
 } from "./chat-helpers";
-import { ChatAttachment } from "./chat-attachment";
-import type {
-  Message,
-  TicketEntityRef,
-  CommentEntityRef,
-  MessageMetadata,
-} from "./chat-types";
+import type { Message, TicketEntityRef, MessageMetadata } from "./chat-types";
 import { useCan } from "@/hooks/api/access";
 import { useEntityAction } from "./entity-actions-context";
-import { ChatInlineFallback, ChatOverlayFallback } from "./chat-lazy-fallbacks";
+import { ChatOverlayFallback } from "./chat-lazy-fallbacks";
+import { ChatBubbleAttachments } from "./chat-bubble-attachments";
 import { renderFormattedContent } from "./formatted-message-content";
-import { TicketPill, CommentPill } from "./chat-entity-pills";
 import { getInitials } from "@/lib/format-utils";
 const MessageActions = dynamic(
   () =>
@@ -52,17 +46,6 @@ const EntityActionDialog = dynamic(
   {
     ssr: false,
     loading: () => <ChatOverlayFallback label="Loading ticket action" />,
-  },
-);
-
-const InternalLinkPreview = dynamic(
-  () =>
-    import("./internal-link-preview").then((m) => ({
-      default: m.InternalLinkPreview,
-    })),
-  {
-    ssr: false,
-    loading: () => <ChatInlineFallback label="Loading link preview" />,
   },
 );
 
@@ -132,6 +115,7 @@ export function ChatBubble({
   const canConvertToTask = useCan("build:tickets:create");
   const canWriteMessages = useCan("chat:messages:write");
   const canChangeMessage = isOwn && canWriteMessages;
+  const canPin = useCan("chat:messages:pin");
   const assignAction = useEntityAction(ticketReference, "assign");
   const canAssignTicket = Boolean(assignAction);
   const senderName = resolveUserName
@@ -187,11 +171,6 @@ export function ChatBubble({
     navigator.clipboard.writeText(url.toString());
     toast.success("Link copied");
   }, [message.id]);
-  const handlePinToggle = useCallback(() => {
-    if (isPinned) onUnpin();
-    else onPin();
-  }, [isPinned, onPin, onUnpin]);
-
   const meta = bubbleMeta;
   const { label: forwardLabel, content: displayContent } = getForwardedDisplay(
     message.content,
@@ -345,52 +324,11 @@ export function ChatBubble({
               </div>
             )}
 
-            {message.content && /https?:\/\//.test(message.content) && (
-              <InternalLinkPreview content={message.content} isOwn={isOwn} />
-            )}
-
-            {(() => {
-              const meta = message.metadata as MessageMetadata | null;
-              const entities = meta?.entities ?? [];
-              const ticketEntities = entities.filter(
-                (e): e is TicketEntityRef => e.type === "ticket",
-              );
-              const commentEntities = entities.filter(
-                (e): e is CommentEntityRef => e.type === "comment",
-              );
-              if (ticketEntities.length === 0 && commentEntities.length === 0)
-                return null;
-              return (
-                <div className="flex flex-wrap gap-1 mt-1.5">
-                  {ticketEntities.map((entity) => (
-                    <TicketPill
-                      key={entity.id}
-                      entity={entity}
-                      channelId={message.channelId}
-                    />
-                  ))}
-                  {commentEntities.map((entity) => (
-                    <CommentPill key={entity.id} entity={entity} />
-                  ))}
-                </div>
-              );
-            })()}
-
-            {message.attachments.length > 0 && (
-              <div className="mt-1.5 space-y-1.5">
-                {message.attachments.map((att) => (
-                  <ChatAttachment
-                    key={att.id}
-                    channelId={message.channelId}
-                    attachmentId={att.id}
-                    fileName={att.fileName}
-                    mimeType={att.mimeType}
-                    fileSize={att.fileSize}
-                    isOwn={isOwn}
-                  />
-                ))}
-              </div>
-            )}
+            <ChatBubbleAttachments
+              message={message}
+              metadata={bubbleMeta}
+              isOwn={isOwn}
+            />
 
             <div
               className={cn(
@@ -519,11 +457,14 @@ export function ChatBubble({
             hasContent={Boolean(message.content)}
             canEdit={canChangeMessage}
             canDelete={canChangeMessage}
+            canWrite={canWriteMessages}
+            canPin={canPin}
             onOpenThread={onOpenThread}
             onQuoteReply={onReply}
             onSave={onSave}
             onUnsave={onUnsaveMsg}
-            onPinToggle={handlePinToggle}
+            onPin={onPin}
+            onUnpin={onUnpin}
             onReact={onReact}
             onCopy={handleCopy}
             onCopyLink={handleCopyLink}

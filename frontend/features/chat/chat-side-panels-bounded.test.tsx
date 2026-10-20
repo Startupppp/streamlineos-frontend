@@ -289,6 +289,30 @@ describe("ThreadPanel — older replies load by scrolling, not by a visible butt
   });
 });
 
+describe("ThreadPanel — a thread opens at its newest reply", () => {
+  it("scrolls the thread viewport to the bottom once the replies load", () => {
+    const scrollHeight = jest
+      .spyOn(HTMLElement.prototype, "scrollHeight", "get")
+      .mockReturnValue(900);
+    const scrollTop = jest.spyOn(Element.prototype, "scrollTop", "set");
+    useThreadReplies.mockReturnValue(
+      infiniteResult(
+        [{ parentMessage: makeMessage(0), replies: [makeMessage(1), makeMessage(2)], nextCursor: undefined }],
+        false,
+      ),
+    );
+    const { container } = render(
+      <ThreadPanel channelId={1} parentMessageId={7} currentUserId="user-1" onClose={noop} />,
+    );
+    const viewport = container.querySelector('[data-slot="scroll-area-viewport"]');
+    expect(viewport).not.toBeNull();
+    expect(scrollTop).toHaveBeenCalledWith(900);
+    expect(scrollTop.mock.contexts).toContain(viewport);
+    scrollHeight.mockRestore();
+    scrollTop.mockRestore();
+  });
+});
+
 describe("ThreadPanel — the reply window is a tail and is bounded", () => {
   function renderPanel(total: number, hasNextPage = false) {
     useThreadReplies.mockReturnValue(

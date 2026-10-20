@@ -129,6 +129,28 @@ describe("MessagePanelView header — one details entry plus one overflow", () =
     expect(await screen.findByText("Three decisions were made.")).toBeInTheDocument();
   });
 
+  it("explains why the summary is unavailable instead of failing silently", async () => {
+    const user = userEvent.setup();
+    const run = jest.fn();
+    render(
+      <MessagePanelView
+        {...makeProps({
+          summarizeAction: {
+            key: "summarize",
+            label: "Summarize conversation",
+            run,
+            disabledReason: "AI credits are used up for this month",
+          },
+        })}
+      />,
+    );
+    const menu = await openOverflow(user);
+    const item = within(menu).getByRole("menuitem", { name: /Summarize conversation/ });
+    expect(item).toHaveAttribute("aria-disabled", "true");
+    expect(within(item).getByText("AI credits are used up for this month")).toBeInTheDocument();
+    expect(run).not.toHaveBeenCalled();
+  });
+
   it("offers no summary to a user without AI access", async () => {
     const user = userEvent.setup();
     render(<MessagePanelView {...makeProps({ canUseAi: false })} />);

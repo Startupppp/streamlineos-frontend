@@ -71,7 +71,14 @@ export function ConversationOverflowMenu({
               disabled={summary.isPending || Boolean(summarizeAction.disabledReason)}
             >
               <Sparkles className="text-primary" />
-              {summarizeAction.label}
+              <span className="flex min-w-0 flex-col">
+                <span>{summarizeAction.label}</span>
+                {summarizeAction.disabledReason ? (
+                  <span className="text-dense text-muted-foreground">
+                    {summarizeAction.disabledReason}
+                  </span>
+                ) : null}
+              </span>
             </DropdownMenuItem>
           ) : null}
         </DropdownMenuContent>

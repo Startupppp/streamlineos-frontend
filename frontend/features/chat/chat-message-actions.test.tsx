@@ -27,11 +27,14 @@ function makeProps(overrides: Partial<Props> = {}): Props {
     hasContent: true,
     canEdit: true,
     canDelete: true,
+    canWrite: true,
+    canPin: true,
     onOpenThread: jest.fn(),
     onQuoteReply: jest.fn(),
     onSave: jest.fn(),
     onUnsave: jest.fn(),
-    onPinToggle: jest.fn(),
+    onPin: jest.fn(),
+    onUnpin: jest.fn(),
     onReact: jest.fn(),
     onCopy: jest.fn(),
     onCopyLink: jest.fn(),
@@ -111,7 +114,9 @@ describe("MessageActions — reachable without a mouse", () => {
     const props = makeProps();
     render(<MessageActions {...props} />);
     await openMoreWithKeyboard(user);
-    await user.click(screen.getByRole("menuitem", { name: "Copy link" }));
+    const item = screen.getByRole("menuitem", { name: "Copy link" });
+    item.focus();
+    await user.keyboard("{Enter}");
     expect(props.onCopyLink).toHaveBeenCalledTimes(1);
   });
 
@@ -178,7 +183,58 @@ describe("MessageActions — entity actions follow permission", () => {
     const props = makeProps({ canConvertToTask: true, canAssignTicket: true, canSetDueDate: true });
     render(<MessageActions {...props} />);
     await openMoreWithKeyboard(user);
+    expect(screen.getByRole("menuitem", { name: "Assign ticket" })).toBeInTheDocument();
+    expect(screen.getByRole("menuitem", { name: "Set due date" })).toBeInTheDocument();
     await user.click(screen.getByRole("menuitem", { name: "Convert to task" }));
     expect(props.onConvertToTask).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe("MessageActions — pin follows chat:messages:pin and unpin is confirmed", () => {
+  it("pins an unpinned message in one step", async () => {
+    const user = userEvent.setup();
+    const props = makeProps();
+    render(<MessageActions {...props} />);
+    await openMoreWithKeyboard(user);
+    await user.click(screen.getByRole("menuitem", { name: "Pin message" }));
+    expect(props.onPin).toHaveBeenCalledTimes(1);
+    expect(screen.queryByRole("alertdialog")).toBeNull();
+  });
+
+  it("asks before unpinning, matching the Details panel", async () => {
+    const user = userEvent.setup();
+    const props = makeProps({ isPinned: true });
+    render(<MessageActions {...props} />);
+    await openMoreWithKeyboard(user);
+    await user.click(screen.getByRole("menuitem", { name: "Unpin message" }));
+    const dialog = await screen.findByRole("alertdialog");
+    expect(props.onUnpin).not.toHaveBeenCalled();
+    await user.click(within(dialog).getByRole("button", { name: "Unpin" }));
+    await waitFor(() => expect(props.onUnpin).toHaveBeenCalledTimes(1));
+  });
+
+  it("offers no Pin or Unpin without the pin permission", async () => {
+    const user = userEvent.setup();
+    render(<MessageActions {...makeProps({ canPin: false, isPinned: true })} />);
+    await openMoreWithKeyboard(user);
+    expect(screen.queryByRole("menuitem", { name: /pin message/i })).toBeNull();
+  });
+});
+
+describe("MessageActions — forward and quote need write access", () => {
+  it("shows Forward and Quote reply to a user who can write", async () => {
+    const user = userEvent.setup();
+    render(<MessageActions {...makeProps()} />);
+    await openMoreWithKeyboard(user);
+    expect(screen.getByRole("menuitem", { name: "Forward" })).toBeInTheDocument();
+    expect(screen.getByRole("menuitem", { name: "Quote reply" })).toBeInTheDocument();
+  });
+
+  it("hides Forward and Quote reply from a read-only user", async () => {
+    const user = userEvent.setup();
+    render(<MessageActions {...makeProps({ canWrite: false })} />);
+    await openMoreWithKeyboard(user);
+    expect(screen.queryByRole("menuitem", { name: "Forward" })).toBeNull();
+    expect(screen.queryByRole("menuitem", { name: "Quote reply" })).toBeNull();
   });
 });

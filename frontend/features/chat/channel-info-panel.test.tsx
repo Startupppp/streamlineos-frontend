@@ -7,6 +7,11 @@ const mockArchive = jest.fn();
 const mockUnarchive = jest.fn();
 const mockUnpin = jest.fn();
 const mockChannel = jest.fn();
+const mockCanPin = jest.fn(() => true);
+
+jest.mock("@/hooks/api/access", () => ({
+  useCan: (key: string) => key === "chat:messages:pin" && mockCanPin(),
+}));
 
 jest.mock("@/hooks/api/chat-core-read", () => ({
   useChatChannel: () => ({ data: mockChannel() }),
@@ -93,6 +98,7 @@ beforeEach(() => {
   mockArchive.mockReset().mockResolvedValue(undefined);
   mockUnarchive.mockReset().mockResolvedValue(undefined);
   mockUnpin.mockReset();
+  mockCanPin.mockReturnValue(true);
 });
 
 describe("ChannelInfoPanel — one details surface owns the conversation scope", () => {
@@ -153,5 +159,19 @@ describe("ChannelInfoPanel — lifecycle actions are confirmed", () => {
     renderPanel("2026-02-01T00:00:00.000Z");
     await user.click(screen.getByRole("button", { name: "Unarchive chat" }));
     await waitFor(() => expect(mockUnarchive).toHaveBeenCalledWith(9));
+  });
+});
+
+describe("ChannelInfoPanel — unpin follows chat:messages:pin", () => {
+  it("offers Unpin to a user who holds the pin permission", () => {
+    renderPanel();
+    expect(screen.getByRole("button", { name: "Unpin message" })).toBeInTheDocument();
+  });
+
+  it("still lists pins but offers no Unpin without the pin permission", () => {
+    mockCanPin.mockReturnValue(false);
+    renderPanel();
+    expect(screen.getByText("Ship it Friday")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Unpin message" })).toBeNull();
   });
 });

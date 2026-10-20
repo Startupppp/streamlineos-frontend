@@ -35,11 +35,14 @@ export function MessageActions({
   hasContent,
   canEdit,
   canDelete,
+  canWrite,
+  canPin,
   onOpenThread,
   onQuoteReply,
   onSave,
   onUnsave,
-  onPinToggle,
+  onPin,
+  onUnpin,
   onReact,
   onCopy,
   onCopyLink,
@@ -59,11 +62,14 @@ export function MessageActions({
   hasContent: boolean;
   canEdit: boolean;
   canDelete: boolean;
+  canWrite: boolean;
+  canPin: boolean;
   onOpenThread: () => void;
   onQuoteReply: () => void;
   onSave?: () => void;
   onUnsave?: () => void;
-  onPinToggle: () => void;
+  onPin: () => void;
+  onUnpin: () => void;
   onReact: (emoji: string) => void;
   onCopy: () => void;
   onCopyLink: () => void;
@@ -80,7 +86,8 @@ export function MessageActions({
   const [menuOpen, setMenuOpen] = useState(false);
   const [reactionsOpen, setReactionsOpen] = useState(false);
   const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
-  const isPinnedOpen = menuOpen || reactionsOpen || confirmDeleteOpen;
+  const [confirmUnpinOpen, setConfirmUnpinOpen] = useState(false);
+  const keepVisible = menuOpen || reactionsOpen || confirmDeleteOpen || confirmUnpinOpen;
   const hasEntityActions = canConvertToTask || canAssignTicket || canSetDueDate;
   const saveHandler = isSaved ? onUnsave : onSave;
 
@@ -95,12 +102,16 @@ export function MessageActions({
     setConfirmDeleteOpen(true);
   }
 
+  function handleRequestUnpin() {
+    setConfirmUnpinOpen(true);
+  }
+
   return (
     <div
       className={cn(
         "absolute -top-3 z-50 opacity-0 pointer-events-none transition-opacity group-hover:opacity-100 group-hover:pointer-events-auto focus-within:opacity-100 focus-within:pointer-events-auto [@media(hover:none)]:static [@media(hover:none)]:mt-1 [@media(hover:none)]:opacity-100 [@media(hover:none)]:pointer-events-auto",
         isOwn ? "right-0" : "left-0",
-        isPinnedOpen && "opacity-100 pointer-events-auto",
+        keepVisible && "opacity-100 pointer-events-auto",
       )}
     >
       <div
@@ -160,10 +171,12 @@ export function MessageActions({
                 {isSaved ? "Remove from saved" : "Save message"}
               </DropdownMenuItem>
             ) : null}
-            <DropdownMenuItem onSelect={onPinToggle}>
-              <Pin />
-              {isPinned ? "Unpin message" : "Pin message"}
-            </DropdownMenuItem>
+            {canPin ? (
+              <DropdownMenuItem onSelect={isPinned ? handleRequestUnpin : onPin}>
+                <Pin />
+                {isPinned ? "Unpin message" : "Pin message"}
+              </DropdownMenuItem>
+            ) : null}
             {hasContent ? (
               <DropdownMenuItem onSelect={onCopy}>
                 <CopyIcon size={16} />
@@ -174,16 +187,18 @@ export function MessageActions({
               <Link />
               Copy link
             </DropdownMenuItem>
-            {onForward ? (
+            {canWrite && onForward ? (
               <DropdownMenuItem onSelect={onForward}>
                 <Forward />
                 Forward
               </DropdownMenuItem>
             ) : null}
-            <DropdownMenuItem onSelect={onQuoteReply}>
-              <Quote />
-              Quote reply
-            </DropdownMenuItem>
+            {canWrite ? (
+              <DropdownMenuItem onSelect={onQuoteReply}>
+                <Quote />
+                Quote reply
+              </DropdownMenuItem>
+            ) : null}
             {hasEntityActions ? <DropdownMenuSeparator /> : null}
             {canConvertToTask ? (
               <DropdownMenuItem onSelect={onConvertToTask}>
@@ -219,6 +234,17 @@ export function MessageActions({
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
+      {canPin && isPinned ? (
+        <ConfirmDialog
+          open={confirmUnpinOpen}
+          onOpenChange={setConfirmUnpinOpen}
+          title="Unpin this message?"
+          description="It is removed from the pinned list for everyone in the conversation."
+          confirmLabel="Unpin"
+          destructive
+          onConfirm={onUnpin}
+        />
+      ) : null}
       {canDelete ? (
         <ConfirmDialog
           open={confirmDeleteOpen}
