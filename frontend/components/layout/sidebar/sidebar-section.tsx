@@ -46,6 +46,7 @@ interface SidebarSectionProps {
   showLabel?: boolean;
   isGroupCollapsed?: boolean;
   onToggleGroup?: () => void;
+  onOpenGroup?: () => void;
   pendingLeaves: number;
   inboxCount: number;
   onNavigate?: () => void;
@@ -68,6 +69,7 @@ export function SidebarSection({
   showLabel,
   isGroupCollapsed,
   onToggleGroup,
+  onOpenGroup,
   pendingLeaves,
   inboxCount,
   onNavigate,
@@ -77,12 +79,16 @@ export function SidebarSection({
   const showItems = isCollapsed || !isGroupCollapsed;
 
   return (
-    <div className={cn(groupIndex > 0 && "mt-2")}>
+    <div
+      className={cn(groupIndex > 0 && "mt-2")}
+      onMouseEnter={onOpenGroup}
+    >
       {!isCollapsed && showLabel && (
         onToggleGroup ? (
           <button
             type="button"
             onClick={onToggleGroup}
+            aria-expanded={!isGroupCollapsed}
             className="w-full flex items-center justify-between px-2 py-1 mb-0.5 group/header rounded-md hover:bg-sidebar-accent transition-colors motion-reduce:transition-none"
           >
             <span className="text-micro font-semibold uppercase tracking-[0.08em] text-sidebar-foreground/65 select-none transition-colors motion-reduce:transition-none">

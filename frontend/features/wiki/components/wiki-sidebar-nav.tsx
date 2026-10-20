@@ -2,7 +2,8 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useMemo } from "react";
+import { useSourceOverride } from "@/hooks/common/use-source-override";
 import {
   KbBarChart2Icon,
   KbBookOpenTextIcon,
@@ -192,25 +193,38 @@ function isNavItemActive(
   return pathname === href || pathname.startsWith(`${href}/`);
 }
 
-function readStoredOpenGroups(): string[] | null {
+function readStoredOpenGroup(): string | null {
   if (typeof window === "undefined") return null;
   try {
     const stored = localStorage.getItem(WIKI_NAV_GROUPS_KEY);
     if (!stored) return null;
     const parsed: unknown = JSON.parse(stored);
-    if (!Array.isArray(parsed)) return null;
-    return parsed.filter((value): value is string => typeof value === "string");
+    if (typeof parsed === "string" && parsed.length > 0) return parsed;
+    if (Array.isArray(parsed)) {
+      const ids = parsed.filter((value): value is string => typeof value === "string");
+      return ids[ids.length - 1] ?? null;
+    }
+    return null;
   } catch {
     return null;
   }
 }
 
-function resolveInitialOpenGroups(groupIds: string[]): string[] {
-  const stored = readStoredOpenGroups();
-  if (!stored) return groupIds;
-  const allowed = new Set(groupIds);
-  const filtered = stored.filter((groupId) => allowed.has(groupId));
-  return filtered.length > 0 ? filtered : groupIds;
+function resolvePreferredOpenGroup(
+  groups: WikiNavGroup[],
+  pathname: string,
+): string {
+  const activeGroup = groups.find((group) =>
+    group.items.some((item) =>
+      isNavItemActive(pathname, item.href, item.exact),
+    ),
+  );
+  if (activeGroup) return activeGroup.id;
+
+  const stored = readStoredOpenGroup();
+  if (stored && groups.some((group) => group.id === stored)) return stored;
+
+  return groups[0]?.id ?? "";
 }
 
 function WikiNavLink({
@@ -405,17 +419,26 @@ export default function WikiSidebarNav({
     () => groups.flatMap((group) => group.items),
     [groups],
   );
-  const groupIds = useMemo(() => groups.map((group) => group.id), [groups]);
-  const [openGroups, setOpenGroups] = useState(groupIds);
+  const preferredOpenGroup = useMemo(
+    () => resolvePreferredOpenGroup(groups, pathname),
+    [groups, pathname],
+  );
+  const [openGroup, setOpenGroup] = useSourceOverride(
+    preferredOpenGroup,
+    preferredOpenGroup,
+  );
 
-  useEffect(() => {
-    setOpenGroups(resolveInitialOpenGroups(groupIds));
-  }, [groupIds]);
+  function handleOpenGroupChange(next: string) {
+    setOpenGroup(next);
+    try {
+      localStorage.setItem(WIKI_NAV_GROUPS_KEY, JSON.stringify(next));
+    } catch {}
+  }
 
-  const handleOpenGroupsChange = useCallback((next: string[]) => {
-    setOpenGroups(next);
-    localStorage.setItem(WIKI_NAV_GROUPS_KEY, JSON.stringify(next));
-  }, []);
+  function handleGroupHover(groupId: string) {
+    if (openGroup === groupId) return;
+    handleOpenGroupChange(groupId);
+  }
 
   if (isCollapsed) {
     return (
@@ -465,9 +488,10 @@ export default function WikiSidebarNav({
         ))}
       </div>
       <Accordion
-        type="multiple"
-        value={openGroups}
-        onValueChange={handleOpenGroupsChange}
+        type="single"
+        collapsible
+        value={openGroup}
+        onValueChange={handleOpenGroupChange}
         className="mt-1 space-y-0.5"
       >
         {groups.map((group) => (
@@ -475,6 +499,7 @@ export default function WikiSidebarNav({
             key={group.id}
             value={group.id}
             className="border-none"
+            onMouseEnter={() => handleGroupHover(group.id)}
           >
             <AccordionTrigger className="items-center gap-2 px-2 py-1.5 text-dense font-semibold uppercase tracking-wider text-muted-foreground hover:bg-muted/60 hover:text-foreground hover:no-underline [&>svg]:size-3">
               {group.label}

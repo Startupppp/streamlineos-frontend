@@ -67,6 +67,7 @@ function renderNav(showAdvanced = false) {
       isCollapsed={false}
       collapsedGroups={{}}
       onToggleGroup={jest.fn()}
+      onOpenGroup={jest.fn()}
       pendingLeaves={0}
       inboxCount={0}
       accent={{ text: "", bg: "", indicator: "", border: "" }}

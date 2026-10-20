@@ -31,6 +31,10 @@ interface ChannelInboxSectionsProps {
   onTogglePublic: () => void;
   onToggleGroups: () => void;
   onToggleDMs: () => void;
+  onOpenFavorites: () => void;
+  onOpenPublic: () => void;
+  onOpenGroups: () => void;
+  onOpenDMs: () => void;
   archivedChannels: Channel[];
   archivedUnreadCount: number;
   isArchivedLoading: boolean;
@@ -74,6 +78,10 @@ export function ChannelInboxSections({
   onTogglePublic,
   onToggleGroups,
   onToggleDMs,
+  onOpenFavorites,
+  onOpenPublic,
+  onOpenGroups,
+  onOpenDMs,
   archivedChannels,
   archivedUnreadCount,
   isArchivedLoading,
@@ -145,6 +153,7 @@ export function ChannelInboxSections({
               count={unreadIn(favorites)}
               collapsed={favoritesCollapsed}
               onToggle={onToggleFavorites}
+              onOpen={onOpenFavorites}
               icon={<Star className="h-3 w-3 fill-amber-400 text-status-warning-ink" />}
             >
               <ChannelSectionList channels={favorites} label="Favorites" {...listProps} />
@@ -175,6 +184,7 @@ export function ChannelInboxSections({
               count={unreadIn(publicChannels)}
               collapsed={publicCollapsed}
               onToggle={onTogglePublic}
+              onOpen={onOpenPublic}
             >
               <ChannelSectionList
                 channels={publicChannels}
@@ -190,6 +200,7 @@ export function ChannelInboxSections({
               count={unreadIn(groups)}
               collapsed={groupsCollapsed}
               onToggle={onToggleGroups}
+              onOpen={onOpenGroups}
             >
               <ChannelSectionList channels={groups} label="Groups" {...listProps} />
             </ChannelSidebarSection>
@@ -201,6 +212,7 @@ export function ChannelInboxSections({
               count={unreadIn(dms)}
               collapsed={dmsCollapsed}
               onToggle={onToggleDMs}
+              onOpen={onOpenDMs}
             >
               <ChannelSectionList channels={dms} label="Direct messages" {...listProps} />
             </ChannelSidebarSection>

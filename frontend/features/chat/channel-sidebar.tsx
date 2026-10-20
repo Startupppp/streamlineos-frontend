@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo, useRef, useEffect, useCallback } from "react";
+import { useSourceOverride } from "@/hooks/common/use-source-override";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ErrorState } from "@/components/shared/error-state";
@@ -120,10 +121,6 @@ export function ChannelSidebar({
   const [chatSearchOpen, setChatSearchOpen] = useState(false);
   const [searchScope, setSearchScope] = useState<ChatSearchScope>("messages");
   const [searchFocused, setSearchFocused] = useState(false);
-  const [dmsCollapsed, setDmsCollapsed] = useState(false);
-  const [groupsCollapsed, setGroupsCollapsed] = useState(false);
-  const [publicCollapsed, setPublicCollapsed] = useState(false);
-  const [favoritesCollapsed, setFavoritesCollapsed] = useState(false);
   const searchInputRef = useRef<HTMLInputElement>(null);
 
   const handleSearchChange = useCallback(
@@ -169,19 +166,6 @@ export function ChannelSidebar({
    * before `isError` can turn true, and the skeleton says nothing in the meantime.
    */
   const channelsStalled = useStalledAfter(isLoading, PANEL_STALLED_AFTER_MS);
-  const handleToggleGroups = useCallback(
-    () => setGroupsCollapsed((p) => !p),
-    [],
-  );
-  const handleToggleDMs = useCallback(() => setDmsCollapsed((p) => !p), []);
-  const handleTogglePublic = useCallback(
-    () => setPublicCollapsed((p) => !p),
-    [],
-  );
-  const handleToggleFavorites = useCallback(
-    () => setFavoritesCollapsed((p) => !p),
-    [],
-  );
   const handleOpenArchived = useCallback(() => setShowArchived(true), []);
   const handleCloseArchived = useCallback(() => {
     setShowArchived(false);
@@ -330,6 +314,59 @@ export function ChannelSidebar({
     [favorites, publicChannels, groups, dms],
   );
 
+  const sectionForActiveChannel = useMemo(() => {
+    if (activeChannelId == null) return "favorites" as const;
+    if (favorites.some((channel) => channel.id === activeChannelId)) {
+      return "favorites" as const;
+    }
+    if (publicChannels.some((channel) => channel.id === activeChannelId)) {
+      return "public" as const;
+    }
+    if (groups.some((channel) => channel.id === activeChannelId)) {
+      return "groups" as const;
+    }
+    if (dms.some((channel) => channel.id === activeChannelId)) {
+      return "dms" as const;
+    }
+    return "favorites" as const;
+  }, [activeChannelId, favorites, publicChannels, groups, dms]);
+
+  const [openChatSection, setOpenChatSection] = useSourceOverride<
+    number | null,
+    "favorites" | "public" | "groups" | "dms" | null
+  >(activeChannelId, sectionForActiveChannel);
+  const favoritesCollapsed = openChatSection !== "favorites";
+  const publicCollapsed = openChatSection !== "public";
+  const groupsCollapsed = openChatSection !== "groups";
+  const dmsCollapsed = openChatSection !== "dms";
+
+  function handleToggleFavorites() {
+    setOpenChatSection((current) =>
+      current === "favorites" ? null : "favorites",
+    );
+  }
+  function handleTogglePublic() {
+    setOpenChatSection((current) => (current === "public" ? null : "public"));
+  }
+  function handleToggleGroups() {
+    setOpenChatSection((current) => (current === "groups" ? null : "groups"));
+  }
+  function handleToggleDMs() {
+    setOpenChatSection((current) => (current === "dms" ? null : "dms"));
+  }
+  function handleOpenFavorites() {
+    setOpenChatSection("favorites");
+  }
+  function handleOpenPublic() {
+    setOpenChatSection("public");
+  }
+  function handleOpenGroups() {
+    setOpenChatSection("groups");
+  }
+  function handleOpenDMs() {
+    setOpenChatSection("dms");
+  }
+
   return (
     <TooltipProvider>
       <div className="relative flex h-full flex-col overflow-visible">
@@ -465,6 +502,10 @@ export function ChannelSidebar({
                   onTogglePublic={handleTogglePublic}
                   onToggleGroups={handleToggleGroups}
                   onToggleDMs={handleToggleDMs}
+                  onOpenFavorites={handleOpenFavorites}
+                  onOpenPublic={handleOpenPublic}
+                  onOpenGroups={handleOpenGroups}
+                  onOpenDMs={handleOpenDMs}
                   archivedChannels={filteredArchivedChannels}
                   archivedUnreadCount={archivedUnreadCount}
                   isArchivedLoading={isArchivedLoading}

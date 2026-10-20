@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useCallback, useEffect, useState } from "react";
+import { useMemo, useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
@@ -28,9 +28,26 @@ import { WorkspaceSwitcher } from "./header/org-switcher";
 
 import { useAccess, useCan } from "@/hooks/api/access";
 import { useHrSettingsMode } from "@/hooks/common/use-hr-settings-mode";
+import { useSourceOverride } from "@/hooks/common/use-source-override";
 import { applyHrWeekOneNav } from "./sidebar/hr-week-one-nav";
 import { useEnabledModules } from "@/hooks/api/access/org-modules";
 import { useEntitlements } from "@/hooks/api/entitlements";
+import {
+  exclusiveCollapsedGroups,
+  isSidebarGroupOpen,
+  resolveExclusiveOpenLabel,
+} from "./sidebar/sidebar-exclusive-groups";
+
+function readStoredOpenGroupLabel(): string | null {
+  try {
+    const stored = localStorage.getItem("sidebar-groups");
+    if (!stored) return null;
+    const map = JSON.parse(stored) as Record<string, boolean>;
+    return resolveExclusiveOpenLabel(Object.keys(map), map, null);
+  } catch {
+    return null;
+  }
+}
 
 interface AppSidebarProps {
   isCollapsed?: boolean;
@@ -101,9 +118,6 @@ export function AppSidebar({
   const accent: ModuleAccent = MODULE_ACCENTS[activeProduct];
   const isBuildProduct = activeProduct === "build";
 
-  const [collapsedGroups, setCollapsedGroups] = useState<
-    Record<string, boolean>
-  >({});
   const scopes = access?.scopes;
   const canApproveLeaves = useCan("hr:leaves:approve");
   const canReadChat = useCan("chat:channels:read");
@@ -160,49 +174,60 @@ export function AppSidebar({
     return null;
   }, [navGroups, pathname]);
 
-  useEffect(() => {
+  const groupLabels = useMemo(
+    () => navGroups.map((group) => group.label),
+    [navGroups],
+  );
+
+  const [storedOpenLabel] = useState(readStoredOpenGroupLabel);
+
+  const fallbackOpenLabel = useMemo(() => {
+    if (activeGroupLabel) return activeGroupLabel;
+    if (storedOpenLabel && groupLabels.includes(storedOpenLabel)) {
+      return storedOpenLabel;
+    }
+    return (
+      navGroups.find((group) => !group.defaultCollapsed)?.label ??
+      groupLabels[0] ??
+      ""
+    );
+  }, [activeGroupLabel, storedOpenLabel, groupLabels, navGroups]);
+
+  const [openGroupLabel, setOpenGroupLabel] = useSourceOverride(
+    pathname,
+    fallbackOpenLabel,
+  );
+
+  const collapsedGroups = useMemo(
+    () =>
+      exclusiveCollapsedGroups(
+        groupLabels,
+        openGroupLabel === "" ? null : openGroupLabel,
+      ),
+    [groupLabels, openGroupLabel],
+  );
+
+  function persistOpenLabel(label: string) {
+    const next = exclusiveCollapsedGroups(
+      groupLabels,
+      label === "" ? null : label,
+    );
     try {
-      const stored = localStorage.getItem("sidebar-groups");
-      if (stored)
-        setCollapsedGroups(JSON.parse(stored) as Record<string, boolean>);
+      localStorage.setItem("sidebar-groups", JSON.stringify(next));
     } catch {}
-  }, []);
+  }
 
-  useEffect(() => {
-    setCollapsedGroups((prev) => {
-      let changed = false;
-      const next = { ...prev };
-      for (const group of navGroups) {
-        if (group.defaultCollapsed && !(group.label in next)) {
-          next[group.label] = true;
-          changed = true;
-        }
-      }
-      return changed ? next : prev;
-    });
-  }, [navGroups]);
+  function openGroup(label: string) {
+    if (openGroupLabel === label) return;
+    setOpenGroupLabel(label);
+    persistOpenLabel(label);
+  }
 
-  useEffect(() => {
-    if (!activeGroupLabel) return;
-    setCollapsedGroups((prev) => {
-      if (prev[activeGroupLabel] === false) return prev;
-      const next = { ...prev, [activeGroupLabel]: false };
-      try {
-        localStorage.setItem("sidebar-groups", JSON.stringify(next));
-      } catch {}
-      return next;
-    });
-  }, [activeGroupLabel]);
-
-  const toggleGroup = useCallback((label: string) => {
-    setCollapsedGroups((prev) => {
-      const next = { ...prev, [label]: !prev[label] };
-      try {
-        localStorage.setItem("sidebar-groups", JSON.stringify(next));
-      } catch {}
-      return next;
-    });
-  }, []);
+  function toggleGroup(label: string) {
+    const next = openGroupLabel === label ? "" : label;
+    setOpenGroupLabel(next);
+    persistOpenLabel(next);
+  }
 
   const { data: pendingApprovalsData } = usePendingApprovals({
     enabled: canApproveLeaves && isHrModuleEnabled && !!session?.user,
@@ -274,6 +299,7 @@ export function AppSidebar({
             isCollapsed={effectiveCollapsed}
             collapsedGroups={collapsedGroups}
             onToggleGroup={toggleGroup}
+            onOpenGroup={openGroup}
             pendingLeaves={pendingLeaves}
             inboxCount={unreadInboxCount}
             onNavigate={onNavigate}
@@ -303,11 +329,14 @@ export function AppSidebar({
                       showLabel={multiGroup}
                       isGroupCollapsed={
                         multiGroup
-                          ? (collapsedGroups[group.label] ?? false)
+                          ? !isSidebarGroupOpen(collapsedGroups, group.label)
                           : false
                       }
                       onToggleGroup={
                         multiGroup ? () => toggleGroup(group.label) : undefined
+                      }
+                      onOpenGroup={
+                        multiGroup ? () => openGroup(group.label) : undefined
                       }
                       pendingLeaves={pendingLeaves}
                       inboxCount={unreadInboxCount}

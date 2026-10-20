@@ -1,10 +1,19 @@
 import { screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { renderWithProviders } from "@/test-utils/render";
 import WikiSidebarNav from "./wiki-sidebar-nav";
 
 jest.mock("next/navigation", () => ({
   usePathname: () => "/knowledge/wiki",
 }));
+
+beforeEach(() => {
+  localStorage.clear();
+});
+
+async function openAccordionGroup(label: string) {
+  await userEvent.hover(screen.getByRole("button", { name: label }));
+}
 
 describe("WikiSidebarNav — company documents", () => {
   it("does not list company documents unless HR documents are switched on", () => {
@@ -44,7 +53,7 @@ describe("WikiSidebarNav — wiki hides the Documents product sidebar", () => {
     expect(screen.queryByRole("navigation", { name: "Documents" })).toBeNull();
   });
 
-  it("mounts wiki accordion groups without looping", () => {
+  it("mounts wiki accordion groups without looping", async () => {
     renderWithProviders(
       <WikiSidebarNav
         canViewAnalytics={false}
@@ -54,10 +63,46 @@ describe("WikiSidebarNav — wiki hides the Documents product sidebar", () => {
     );
 
     expect(screen.getByRole("link", { name: "My files" })).toBeInTheDocument();
+    await openAccordionGroup("Manage");
     expect(screen.getByRole("link", { name: "Templates" })).toBeInTheDocument();
     expect(screen.queryByRole("link", { name: "Settings" })).toBeNull();
     expect(screen.queryByRole("link", { name: "Recent" })).toBeNull();
     expect(screen.queryByRole("link", { name: "Favorites" })).toBeNull();
+  });
+
+  it("keeps only one accordion group open and opens a group on hover", async () => {
+    renderWithProviders(
+      <WikiSidebarNav
+        canViewAnalytics={false}
+        canViewReviews={false}
+        canManageContent={false}
+        canManageTemplates
+        canImportPages={false}
+        canViewSpaces={false}
+      />,
+    );
+
+    expect(screen.getByRole("button", { name: "Library" })).toHaveAttribute(
+      "aria-expanded",
+      "true",
+    );
+    expect(screen.getByRole("button", { name: "Manage" })).toHaveAttribute(
+      "aria-expanded",
+      "false",
+    );
+
+    await openAccordionGroup("Manage");
+
+    expect(screen.getByRole("button", { name: "Manage" })).toHaveAttribute(
+      "aria-expanded",
+      "true",
+    );
+    expect(screen.getByRole("button", { name: "Library" })).toHaveAttribute(
+      "aria-expanded",
+      "false",
+    );
+    expect(screen.getByRole("link", { name: "Templates" })).toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: "My files" })).toBeNull();
   });
 
   it("keeps Ask KB in the collapsed wiki rail", () => {
@@ -88,7 +133,7 @@ describe("WikiSidebarNav — wiki hides the Documents product sidebar", () => {
     expect(screen.queryByRole("link", { name: "Content Health" })).toBeNull();
   });
 
-  it("links Content Health to /knowledge/wiki/manage when the actor can manage pages", () => {
+  it("links Content Health to /knowledge/wiki/manage when the actor can manage pages", async () => {
     renderWithProviders(
       <WikiSidebarNav
         canViewAnalytics={false}
@@ -99,6 +144,8 @@ describe("WikiSidebarNav — wiki hides the Documents product sidebar", () => {
         canViewSpaces={false}
       />,
     );
+
+    await openAccordionGroup("Manage");
 
     expect(
       screen.getByRole("link", { name: "Content Health" }),
@@ -126,7 +173,7 @@ describe("WikiSidebarNav — management links follow the route permission keys",
     expect(screen.getByRole("link", { name: "My files" })).toBeInTheDocument();
   });
 
-  it("shows Templates, Import & Export and Spaces when the actor holds their keys", () => {
+  it("shows Templates, Import & Export and Spaces when the actor holds their keys", async () => {
     renderWithProviders(
       <WikiSidebarNav
         canViewAnalytics={false}
@@ -138,8 +185,20 @@ describe("WikiSidebarNav — management links follow the route permission keys",
       />,
     );
 
-    expect(screen.getByRole("link", { name: "Templates" })).toHaveAttribute("href", "/knowledge/wiki/templates");
-    expect(screen.getByRole("link", { name: "Import & Export" })).toHaveAttribute("href", "/knowledge/wiki/import");
-    expect(screen.getByRole("link", { name: "Team folders" })).toHaveAttribute("href", "/knowledge/wiki/spaces");
+    expect(screen.getByRole("link", { name: "Team folders" })).toHaveAttribute(
+      "href",
+      "/knowledge/wiki/spaces",
+    );
+
+    await openAccordionGroup("Manage");
+
+    expect(screen.getByRole("link", { name: "Templates" })).toHaveAttribute(
+      "href",
+      "/knowledge/wiki/templates",
+    );
+    expect(screen.getByRole("link", { name: "Import & Export" })).toHaveAttribute(
+      "href",
+      "/knowledge/wiki/import",
+    );
   });
 });

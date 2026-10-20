@@ -16,6 +16,7 @@ interface HrSidebarNavProps {
   isCollapsed: boolean;
   collapsedGroups: Record<string, boolean>;
   onToggleGroup: (label: string) => void;
+  onOpenGroup: (label: string) => void;
   pendingLeaves: number;
   inboxCount: number;
   onNavigate?: () => void;
@@ -29,6 +30,7 @@ export function HrSidebarNav({
   isCollapsed,
   collapsedGroups,
   onToggleGroup,
+  onOpenGroup,
   pendingLeaves,
   inboxCount,
   onNavigate,
@@ -132,6 +134,7 @@ export function HrSidebarNav({
                   groups.length > 1 && !filtering && (collapsedGroups[group.label] ?? false)
                 }
                 onToggleGroup={onToggleGroup}
+                onOpenGroup={onOpenGroup}
                 pendingLeaves={pendingLeaves}
                 inboxCount={inboxCount}
                 onNavigate={onNavigate}
@@ -183,6 +186,7 @@ interface HrSidebarGroupProps {
   showLabel: boolean;
   isGroupCollapsed: boolean;
   onToggleGroup: (label: string) => void;
+  onOpenGroup: (label: string) => void;
   pendingLeaves: number;
   inboxCount: number;
   onNavigate?: () => void;
@@ -198,6 +202,7 @@ function HrSidebarGroup({
   showLabel,
   isGroupCollapsed,
   onToggleGroup,
+  onOpenGroup,
   pendingLeaves,
   inboxCount,
   onNavigate,
@@ -208,10 +213,20 @@ function HrSidebarGroup({
     onToggleGroup(group.label);
   }
 
+  function handleGroupHover() {
+    if (forceExpanded || isCollapsed) return;
+    onOpenGroup(group.label);
+  }
+
   const showItems = isCollapsed || !isGroupCollapsed;
 
   return (
-    <div className={cn(index > 0 && (isCollapsed ? "mt-1.5" : "mt-4"))}>
+    <div
+      className={cn(index > 0 && (isCollapsed ? "mt-1.5" : "mt-4"))}
+      onMouseEnter={
+        forceExpanded || isCollapsed ? undefined : handleGroupHover
+      }
+    >
       {!isCollapsed && showLabel &&
         (forceExpanded ? (
           <div className="mb-0.5 flex min-h-8 items-center px-2">

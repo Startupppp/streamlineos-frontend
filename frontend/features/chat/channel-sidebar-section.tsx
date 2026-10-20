@@ -27,6 +27,7 @@ export function ChannelSidebarSection({
   count,
   collapsed,
   onToggle,
+  onOpen,
   children,
   icon,
 }: {
@@ -34,12 +35,13 @@ export function ChannelSidebarSection({
   count: number;
   collapsed: boolean;
   onToggle: () => void;
+  onOpen?: () => void;
   children: React.ReactNode;
   icon?: React.ReactNode;
 }) {
   const reduceMotion = useReducedMotion();
   return (
-    <div className="mb-1">
+    <div className="mb-1" onMouseEnter={onOpen}>
       <SectionToggleButton
         collapsed={collapsed}
         onClick={onToggle}
