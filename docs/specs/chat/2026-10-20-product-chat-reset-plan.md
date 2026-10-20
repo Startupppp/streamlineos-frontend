@@ -7,7 +7,7 @@ todos:
     status: completed
   - id: provider-huddles
     content: Implement deterministic Composio-backed Google Meet/Microsoft Teams selection, provider identity persistence, and lifecycle reconciliation.
-    status: pending
+    status: completed
   - id: repair-chat-navigation
     content: Unify Chat URL state, exact-message context loading, search, DM/channel joining, dialog ownership, and shell layout.
     status: pending
@@ -16,7 +16,7 @@ todos:
     status: pending
   - id: secure-huddles
     content: Remove spoofable Huddle chat/client publish rights and misleading provider-roster, moderation, and participant-cap claims.
-    status: pending
+    status: completed
   - id: platform-cross-module
     content: Preserve one permission-safe Chat graph across CRM, HR, Build, Support, Docs, Calendar, Finance, and Inventory without module-local chat clones.
     status: pending
@@ -235,10 +235,10 @@ Deferred behind adoption evidence:
 - [x] **CHAT-002** — Add provider/event/connection fields, active-Huddle uniqueness, migration journal, rollback, and legacy-null handling.
 - [x] **CHAT-003** — Implement deterministic cross-toolkit Composio selection.
 - [x] **CHAT-004** — Mint Google Meet and Teams-for-Business links with correct 412/503/pending behavior.
-- [ ] **CHAT-005** — Make Huddle start idempotent and reconcile concurrent orphan provider events.
-- [ ] **CHAT-006** — Link provider and internal calendar lifecycle; move fan-out after commit.
-- [ ] **CHAT-007** — Extend backend/OpenAPI/frontend contracts additively and regenerate parity artifacts.
-- [ ] **CHAT-008** — Validate Huddle invites/heartbeats/lifecycle/entitlements/audits server-side.
+- [x] **CHAT-005** — Make Huddle start idempotent and reconcile concurrent orphan provider events.
+- [x] **CHAT-006** — Link provider and internal calendar lifecycle; move fan-out after commit.
+- [x] **CHAT-007** — Extend backend/OpenAPI/frontend contracts additively and regenerate parity artifacts.
+- [x] **CHAT-008** — Validate Huddle invites/heartbeats/lifecycle/entitlements/audits server-side.
 - [ ] **CHAT-009** — Close send/offline/realtime/read-marker/unread reliability gaps.
 - [x] **CHAT-010** — Implement the complete URL/history/mobile-Back contract.
 - [ ] **CHAT-011** — Add bounded, authorized exact-message context loading.
@@ -251,7 +251,7 @@ Deferred behind adoption evidence:
 - [x] **CHAT-018** — Fix composer labels, formatting chrome, and infinite history loading.
 - [ ] **CHAT-019** — Consolidate conversation Details and user-global Saved scope.
 - [x] **CHAT-020** — Remove ephemeral Huddle chat and client Huddle publish capability.
-- [ ] **CHAT-021** — Remove misleading provider roster/kick/cap/end claims; add provider-aware UI.
+- [x] **CHAT-021** — Remove misleading provider roster/kick/cap/end claims; add provider-aware UI.
 - [ ] **CHAT-022** — Enforce cross-module permission intersections and product boundaries.
 - [ ] **CHAT-023** — Add backend/frontend contract, security, concurrency, accessibility, and regression tests.
 - [ ] **CHAT-024** — Run all nested-backend and frontend quality gates plus browser journeys.
