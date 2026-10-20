@@ -18,6 +18,18 @@ Docs
 
 Ask is launched from Docs or a selected file/folder. Reviews, analytics, content health, retention, storage, share reports, and import/export are contextual or permission-gated administration. Linked company/project/support documents appear through record-linked collections rather than separate library destinations. History remains a document child.
 
+### Current-to-target navigation delta
+
+As rechecked on 2026-10-20, the current shell still exposes Docs and Ask documents as primary items; My files, Shared with me, and Team folders under Library; Templates, Reviews, Import & Export, Analytics, and Content Health under Manage when permitted; and Quick find/Trash in the shell footer. Docs home also retains a linked Company Documents strip.
+
+The target is not complete until:
+
+- `/knowledge`, the product switcher, route tests, and deployment agree on Docs home as the default;
+- Ask launches contextually instead of competing with the daily library;
+- Templates moves to the daily tier;
+- administration remains discoverable for authorized operators without occupying ordinary-user daily navigation;
+- linked company documents render through record-linked collections rather than a standalone home strip or library destination.
+
 ## Navigation rules
 
 - Daily destinations are visible to every active member who can use Docs; management destinations appear only when the actor can use at least one relevant action.

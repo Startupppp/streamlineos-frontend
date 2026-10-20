@@ -2,17 +2,12 @@
 
 import { useState, useRef, useCallback, useMemo } from "react";
 import Image from "next/image";
-import {
-  Dialog,
-  DialogContent,
-  DialogTrigger,
-  DialogBody,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogBody } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Camera, Globe, Hash, Lock, Loader2, Users } from "lucide-react";
-import { ChevronRightIcon, UsersIcon } from "@animateicons/react/lucide";
+import { ChevronRightIcon } from "@animateicons/react/lucide";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
@@ -35,14 +30,6 @@ import { ChatDialogHeader } from "./chat-dialog-header";
 
 type ChannelKind = "GROUP" | "PUBLIC" | "PRIVATE";
 
-/**
- * The name field slugifies as you type, so "what it contains" and "what you typed"
- * are different questions. Three spaces slugified to `-`, which is non-empty, so
- * `name.trim()` was truthy and "Next: Add Members" enabled on a name with no
- * meaningful characters (CHAT-005). A name is valid once it holds at least one
- * alphanumeric character; a trailing hyphen is left alone because it is what
- * mid-word typing looks like ("design-" on the way to "design-team").
- */
 function toChannelSlug(value: string): string {
   return value
     .toLowerCase()
@@ -90,7 +77,10 @@ function ChannelKindOption({
   selected: boolean;
   onSelect: (kind: ChannelKind) => void;
 }) {
-  const handleSelect = useCallback(() => onSelect(kind.value), [kind.value, onSelect]);
+  const handleSelect = useCallback(
+    () => onSelect(kind.value),
+    [kind.value, onSelect],
+  );
   return (
     <button
       type="button"
@@ -107,32 +97,25 @@ function ChannelKindOption({
     >
       {kind.icon}
       <span className="text-xs font-semibold">{kind.label}</span>
-      <span className="text-micro leading-tight opacity-70">{kind.description}</span>
+      <span className="text-micro leading-tight opacity-70">
+        {kind.description}
+      </span>
     </button>
   );
 }
 
 export function NewGroupDialog({
-  open,
   onOpenChange,
   onCreated,
-  hideTrigger,
 }: {
-  open: boolean;
   onOpenChange: (open: boolean) => void;
   onCreated: (channelId: number) => void;
-  hideTrigger?: boolean;
 }) {
   const createGroup = useCreateGroupChannel();
   const createPublic = useCreatePublicChannel();
   const createPrivate = useCreatePrivateChannel();
   const [channelKind, setChannelKind] = useState<ChannelKind>("GROUP");
   const [name, setName] = useState("");
-  /**
-   * The slugifier drops everything it cannot use, so typing only spaces or
-   * punctuation leaves the field exactly as empty as it started and nothing on screen
-   * says why. This remembers that the last keystroke was rejected, so the hint can.
-   */
   const [nameRejected, setNameRejected] = useState(false);
   const [description, setDescription] = useState("");
   const [avatarUrl, setAvatarUrl] = useState("");
@@ -228,49 +211,15 @@ export function NewGroupDialog({
       } else {
         channel = await createGroup.mutateAsync(payload);
       }
-      onCreated(channel.id);
-      onOpenChange(false);
       toast.success("Channel created");
-      setName("");
-      setNameRejected(false);
-      setDescription("");
-      setAvatarUrl("");
-      setSelectedIds([]);
-      setStep("info");
-      setChannelKind("GROUP");
+      onCreated(channel.id);
     } catch (error) {
       toast.error(getErrorMessage(error));
     }
   };
 
-  const resetAndClose = (nextOpen: boolean) => {
-    if (!nextOpen) {
-      setStep("info");
-      setName("");
-      setNameRejected(false);
-      setDescription("");
-      setAvatarUrl("");
-      setSelectedIds([]);
-      setChannelKind("GROUP");
-    }
-    onOpenChange(nextOpen);
-  };
-
   return (
-    <Dialog open={open} onOpenChange={resetAndClose}>
-      {!hideTrigger && (
-        <DialogTrigger asChild>
-          <AnimatedIconButton
-            icon={UsersIcon}
-            iconSize={14}
-            variant="ghost"
-            size="icon"
-            className="w-7 rounded-lg"
-            title="New Channel"
-            aria-label="New Channel"
-          />
-        </DialogTrigger>
-      )}
+    <Dialog open onOpenChange={onOpenChange}>
       <DialogContent className="flex max-h-[90dvh] flex-col gap-0 overflow-hidden p-0 sm:max-w-md">
         <ChatDialogHeader
           title={step === "info" ? "Create channel" : "Add members"}
@@ -349,7 +298,8 @@ export function NewGroupDialog({
               </div>
               {(nameRejected || (name !== "" && !isNamedChannel(name))) && (
                 <p className="mt-1 text-xs text-destructive">
-                  Use letters or numbers — spaces and punctuation alone are not a name
+                  Use letters or numbers — spaces and punctuation alone are not
+                  a name
                 </p>
               )}
             </div>
@@ -395,13 +345,18 @@ export function NewGroupDialog({
                   values={selectedIds}
                   onToggle={handleToggleMember}
                   disabled={chatUsers.isLoading}
-                  placeholder={chatUsers.isLoading ? "Loading members…" : "Search and add people…"}
+                  placeholder={
+                    chatUsers.isLoading
+                      ? "Loading members…"
+                      : "Search and add people…"
+                  }
                 />
               )}
               {selectedIds.length === 0 && (
                 <p className="text-micro text-muted-foreground">
-                  A channel needs at least one other person besides you. If nobody is
-                  listed, invite a teammate first under Settings → Users.
+                  A channel needs at least one other person besides you. If
+                  nobody is listed, invite a teammate first under Settings →
+                  Users.
                 </p>
               )}
             </DialogBody>

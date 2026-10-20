@@ -1,8 +1,8 @@
 # StreamlineOS Docs: Product Decision
 
-**Decision date:** 2026-10-20  
-**Status:** Authoritative product scope and release contract  
-**Scope:** Document and knowledge-base module only  
+**Decision date:** 2026-10-20
+**Status:** Authoritative product scope and release contract
+**Scope:** Document and knowledge-base module only
 **Source policy:** First-party product, support, and documentation sources only. Sources were accessed on 2026-10-20.
 
 ## 1. Executive decision
@@ -129,6 +129,13 @@ Dropbox supplies owner/editor/viewer sharing, team folders, recovery/version his
 
 ## 6. Capability priority
 
+The tiers are intentionally different:
+
+- **Must-have** blocks a Drive-first launch or a claim that Docs is safe.
+- **Basic** is expected before broad general availability, although a controlled pilot may start without every convenience.
+- **Good-to-have** follows measured demand after the foundation is reliable.
+- **WOW** differentiates StreamlineOS and ships only with explicit adoption, safety, and outcome evidence.
+
 ### 6.1 Release-blocking must-haves
 
 StreamlineOS must not market the Drive-first Docs module until all of the following work end to end:
@@ -183,11 +190,13 @@ StreamlineOS must not market the Drive-first Docs module until all of the follow
 
 These are commodity expectations for the first mature Docs release, but they need not all block the earliest controlled pilot:
 
-- List/grid views, breadcrumbs, bulk actions, drag/move, sort/filter, favorites, recents, and clear owner/location/type metadata.
+- List/grid views, breadcrumbs, bulk actions, keyboard-accessible move, sort/filter, favorites, recents, thumbnails where safe, and clear owner/location/type metadata.
 - Document suggestions/track-changes equivalent, resolved comments, action assignments, page/document status, templates, and reliable PDF/DOCX export.
-- Access requests and notifications, user-visible activity, link management, and ownership transfer where policy allows.
+- Access requests, mentions and actionable notifications, user-visible activity, link management, and ownership transfer where policy allows.
+- Common preview coverage for PDF, DOCX, XLSX, CSV, text, and images, with explicit unsupported, encrypted, quarantined, and processing states.
+- Idempotent import/export with duplicate handling, progress, per-item errors, retry, cancellation before processing, and expiring download artifacts.
 - Template gallery for SOPs, policies, proposals, meeting notes, project plans, onboarding, budgets, and operating reports.
-- Mobile-responsive viewing/commenting and honest degraded/offline states.
+- Mobile-responsive viewing/commenting, keyboard and screen-reader parity, localization-safe metadata, and honest degraded/offline states.
 
 ### 6.3 Good-to-have
 
@@ -199,6 +208,7 @@ These are commodity expectations for the first mature Docs release, but they nee
 - Microsoft Office co-authoring, then Google Workspace integration if measured demand justifies a second provider/ACL adapter.
 - Team-folder analytics, content usage, stale/orphaned content reports, and external collaboration reports.
 - Workflow actions such as request review, send to Sign, create project task, or archive—typed and audited, not arbitrary user code.
+- Email-to-folder or file-request intake, desktop sync/open-in-app helpers, and a second office provider only when target-user demand justifies their lifecycle and support cost.
 
 ### 6.4 WOW / differentiating capabilities
 
@@ -209,6 +219,47 @@ These are commodity expectations for the first mature Docs release, but they nee
 5. **Document trust and health** — named owner, approval state, effective/review dates, source links, stale-content alerts, and remediation queues.
 6. **Smart filing with provenance** — suggest destination, classification, related records, and retention while leaving the final access-affecting action to an authorized user.
 7. **Semantic collections** — permission-safe saved views such as externally shared contracts, expiring policies, missing onboarding evidence, or project files awaiting approval without duplicating content.
+8. **Outcome packets** — assemble a permission-safe, live bundle of decisions, files, source records, owners, and next actions for a customer, project, incident, onboarding, or audit without copying the underlying content.
+
+### 6.5 Release edge-case checklist
+
+Every applicable case below requires an explicit success, denied, unsupported, quarantined, conflict, or retry state. A generic empty state is not acceptable.
+
+1. **Identity and authorization**
+   - Removed, suspended, deactivated, or role-changed members; expired guests; group removal; tenant disablement; public-token revoke/rotation; stale sessions; and concurrent ACL changes.
+   - No metadata leakage through titles, counts, paths, thumbnails, notifications, activities, exports, citations, error text, timing, or cache keys.
+2. **Folders, ownership, and references**
+   - Same-name items, Unicode/case normalization, reserved names, long names/paths, move cycles, shortcuts to deleted or inaccessible targets, cross-Team-folder moves, orphan prevention after member removal, and root-folder deletion.
+   - Moving or copying never widens access silently; organization-owned content survives creator departure.
+3. **Upload, preview, and download**
+   - Empty, corrupt, mislabeled, oversized, interrupted, duplicate, encrypted/password-protected, macro-enabled, nested-archive/zip-bomb, parser-timeout, quota-exceeded, malware-positive, and scanner-unavailable files.
+   - Chunked/retried upload finalizes once; quarantined originals cannot be previewed, indexed, downloaded, or sent to AI.
+4. **Editing, versions, and offline**
+   - Simultaneous edits, stale revisions, reconnect after offline edits, provider callback replay/out-of-order delivery, autosave failure, binary replacement, conversion loss, restore-after-move, and edit permission revoked mid-session.
+   - The user can always identify the saved version and recover both sides of a conflict.
+5. **Sharing and public delivery**
+   - Forwarded invitations, identity/email mismatch, domain allow/deny policy, guest reauthentication, expiry during an open session, download/print restrictions, link enumeration, access requests, and source-owner revocation.
+   - CDN, browser, search, notification, and AI caches stop disclosure after revoke; public pages control indexing and never expose sibling paths.
+6. **Search, extraction, and Ask**
+   - Index lag, parser/OCR failure, unsupported language, stale or restored versions, deleted sources, access changes during streaming, duplicate passages, insufficient evidence, provider outage/quota, and document prompt injection.
+   - Citations bind to an authorized source revision and degrade to deterministic search when AI is unavailable.
+7. **Spreadsheet and office-provider fidelity**
+   - Hidden sheets/rows, formulas and cached values, dates/time zones/locales, currencies, merged cells, pivots/charts, external links, macros, protected/encrypted workbooks, very large sheets, malformed CSV encodings, and CSV formula injection.
+   - Unsupported features are reported before save; originals remain recoverable; callbacks are authenticated, idempotent, and revision-ordered.
+8. **Live Data Blocks**
+   - Row- and field-level authorization, aggregate inference, two viewers seeing different totals, source deletion/rename/schema drift, partial refresh, stale cache, rate limit, currency/time-zone semantics, and export during refresh.
+   - Fail closed without source access; snapshots state creator, filters, row scope, and data time.
+9. **Lifecycle, compliance, and tenant exit**
+   - Non-empty folder trash/restore, retention expiry, legal hold, partial purge, object/index/cache backup exceptions, export before tenant deletion, data-residency policy, and restore after an interrupted migration.
+   - Purge is idempotent and is not reported complete until every required store has acknowledged it or recorded a policy exception.
+10. **Cross-module links and workflows**
+    - Missing/deleted source records, independent record/file permissions, one file linked to many records, duplicate action delivery, downstream rejection, and rollback after a partial workflow.
+    - Links never copy bytes or grant access; every mutation uses the owning module's validation and audit path.
+11. **Accessibility, localization, and responsive use**
+    - Keyboard alternatives for drag/drop, focus restoration, screen-reader names and announcements, 200% text/zoom, reduced motion, high contrast, RTL, long translated labels, mobile sheets, and locale-safe date/number display.
+12. **Reliability and scale**
+    - Database, cache, object store, scanner, converter, office provider, search, AI, notification, and worker degradation; request retry/replay; queue backlog; hot tenants; quota races; and large collections.
+    - Reads and writes remain bounded, idempotent where retried, observable, and honest about freshness.
 
 ## 7. Odoo live-data spreadsheet decision
 
@@ -272,6 +323,21 @@ This sequence delivers the Odoo advantage—live operational context—without f
 
 ## 9. Delivery plan and closed decisions
 
+### Current implementation baseline
+
+Source and focused-test evidence already shows an existing `kb_pages` rich-document foundation with page trees, grants/public links, My/Shared collections, favorites, templates, comments, versions, search, imports/exports, trash, attachment controls, retrieval, and audit behavior. XLSX files can be accepted as supported sources and their bounded cell text can be extracted for search/Ask. Current navigation work removes Research Briefs and duplicate library links from normal navigation, but the Docs-default redirect contract still requires source/test/deployment reconciliation.
+
+This foundation is **not** evidence of a complete Drive product. The following remain pending until implemented and proven:
+
+- first-class file, folder, shortcut, workspace, binary-version, inherited-access, and organization-owned Team-folder contracts;
+- consistent `/knowledge` → Docs home behavior across source, route tests, telemetry, and deployment, with Ask kept contextual;
+- complete upload/preview/download/version/move/copy/restore behavior across the edge-case checklist;
+- named-guest administration, public-link policy, share inventory, retention/hold, and full purge evidence;
+- Microsoft 365 editor integration, consent/callback/revocation handling, and workbook-corpus round-trip proof;
+- read-only viewer-authorized Live Data Blocks, labeled snapshots, and aggregate non-leakage tests;
+- compatibility migration/rollback evidence for existing pages, grants, versions, comments, links, routes, and deep links;
+- production-like authorization, browser, accessibility, load, recovery, deployment, and operational evidence in [`OPEN-TASKS.md`](OPEN-TASKS.md).
+
 ### Phase 0 — Focus the existing product
 
 - Make Docs home the default.
@@ -317,11 +383,14 @@ This sequence delivers the Odoo advantage—live operational context—without f
 
 - **Authorization:** zero unauthorized title, count, snippet, thumbnail, file, version, activity, citation, export, notification, or live-block disclosure in adversarial tests.
 - **Revocation:** authoritative opens fail immediately; search, AI, and live-block derivatives meet the existing hard propagation bound of 60 seconds or less.
+- **Signed media:** future URL issuance fails immediately after revoke; each preview/download/public-media surface publishes and tests its maximum pre-issued URL exposure window rather than hiding it behind the general cache SLO.
+- **Async file jobs:** import, export, conversion, preview, extraction, and purge workers recheck current authorization/policy at execution and finalization; retries cannot duplicate records or leave untracked objects.
 - **Recovery:** upload, overwrite, edit, move, trash, and restore scenarios preserve a recoverable version and audit lineage.
 - **Spreadsheet fidelity:** 100% original-byte preservation; at least 99% supported-cell equivalence on the approved corpus; zero silent unsupported-feature loss.
 - **External sharing:** every external grant appears in admin inventory with actor, recipient/link, access, expiry, download policy, item, and last activity.
 - **Live data:** tests prove viewer-specific row security, aggregate non-leakage, stale-cache denial, frozen export labeling, and schema-change failure handling.
 - **Migration:** every migrated page/file has stable identity, permissions, versions, comments, links, and rollback evidence before old paths can be retired.
+- **Search quality:** exact identifiers, permission revocation, stale/deleted exclusion, citation correctness, and minority-tenant lexical/vector recall meet a versioned evaluation set.
 - **Usability:** a new contributor can create/upload, place, share, find, edit/open, and restore a file without administrator help.
 
 ## 11. First-party source register

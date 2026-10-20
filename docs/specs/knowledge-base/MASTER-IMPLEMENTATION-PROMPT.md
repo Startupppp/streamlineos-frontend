@@ -19,6 +19,8 @@ Deliver the Docs product defined by:
 
 The numbered documents are supporting specifications. If they conflict with the product decision, follow the product decision and reconcile the affected checklist item before implementation. The former Documents Module acceptance details have been consolidated into `OPEN-TASKS.md`; do not create a parallel tracker.
 
+The current repository is a mature `kb_pages` wiki plus Ask/source indexing foundation, not a completed Drive product. Do not claim Drive-first release readiness until the authority's canonical Drive objects, unified page/file lifecycle, Team-folder inheritance, spreadsheet editor contract, external collaboration controls, and migration gates are implemented and proven. Do not advance post-drive Good/WOW work merely because the legacy ledger contains related wiki features.
+
 Implement every required P0 and P1 outcome, every route marked KEEP/ADD/MOVE that is necessary for the finished product, all required database migrations, all canonical authorization and search behavior, all reusable frontend modules, all lifecycle/background work, all tests, and all release evidence. Implement differentiated features only where the knowledge-base pack marks them as required for the completed product. Do not implement items explicitly marked rejected, unnecessary, deferred pending measured demand, or conditional scale stages whose trigger has not been reached.
 
 EXECUTION CONTRACT

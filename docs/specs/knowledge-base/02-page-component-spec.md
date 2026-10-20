@@ -14,7 +14,7 @@ Every retained or added page uses the same state model:
 - **Denied:** no record-existence leak; route-level denial explains the missing capability.
 - **Offline/conflict:** only where drafting or editing is possible; never claim a save that the server has not accepted.
 
-Every collection uses cursor pagination unless it is explicitly bounded: recents 20, favorites 50, Quick find 20. Response-shaping filters live in the URL. Selection, draft text, menus, and dialogs do not.
+Every collection uses a stable cursor contract unless it is explicitly bounded: recents 20, favorites 50, Quick find 20. Paginated screens expose explicit Previous/Next or equivalent accessible controls; cursor presence does not justify unbounded tree loads or automatic infinite loading. Response-shaping filters live in the URL. Selection, draft text, menus, and dialogs do not.
 
 ## 1. Contextual Ask Docs — `/knowledge/chat` (compatibility route)
 
@@ -60,21 +60,31 @@ Every collection uses cursor pagination unless it is explicitly bounded: recents
 
 **Customer job:** find documents and files the current member owns.
 
-**Add:** server filter `ownerMembershipId=me`, search, status/folder filters, list/card view, cursor, file actions, owner-transfer action where allowed.
+**Current:** native pages use the server-side owner filter. Uploaded `kb_sources` are a separate ingestion/indexing collection and do not yet appear as first-class owned files.
 
-**Remove:** browser filtering by `visibility=private` and copy that teaches users to change access just to make a document appear here.
+**Add:** one page/file collection using `ownerMembershipId=me`, search, status/folder/type filters, list/card view, cursor, file actions, and owner-transfer action where allowed.
 
-**Acceptance:** ownership transfer changes this list without altering visibility; private pages owned by another authorized administrator do not appear as “mine.”
+**Acceptance:** ownership transfer changes this list without altering visibility; private pages owned by another authorized administrator do not appear as “mine”; an owned uploaded file appears once with its canonical identity and lifecycle.
 
 ## 4. Shared With Me — `/knowledge/wiki/shared`
 
-**Customer job:** find pages explicitly shared with the current membership or one of its groups.
+**Customer job:** find documents and files explicitly shared with the current member or one of their roles/groups.
 
-**Add:** explicit grants; columns/cards for shared by, shared at, access level, source group, expiry when introduced; search; status/access filters; cursor; revoke/access-lost state.
+**Current:** native pages use explicit membership/role grants. Uploaded sources do not yet share the same file-list and grant lifecycle.
 
-**Remove:** `createdById !== myId` inference. Organization-visible pages are not “shared with me.”
+**Add:** page/file parity; columns/cards for shared by display identity, shared at, access level, access reason, source role/group, expiry, and location; search; status/access filters; cursor; revoke/access-lost state.
 
-**Acceptance:** creating, changing, or revoking a grant updates list, detail, search, Ask, citations, and cache state within the revocation budget.
+**Acceptance:** creating, changing, expiring, or revoking a grant updates list, detail, preview/download, search, Ask, citations, notifications, and cache state within the revocation budget. Organization-visible items are not misclassified as explicit shares.
+
+## Target Drive object contract — no dedicated route yet
+
+The collection must represent native documents, uploaded files, folders, spreadsheet assets, and shortcuts through one canonical identity/location/access model. A source uploaded only for Ask is not automatically a library file.
+
+**Required states:** uploading, scanning, processing, ready, unsupported, quarantined, failed, trashed, held, and purging.
+
+**Required actions:** create/upload, preview/open, rename, move/copy, shortcut, replace/new version, share/revoke, link to record, download/export, trash, restore, and retention-aware purge.
+
+**Acceptance:** originals are immutable and recoverable; retries finalize once; cross-folder moves recalculate access atomically; a shortcut never grants target access; page/file/search/Ask/public/export surfaces use the same authorization result.
 
 ## 5. Team Folders — `/knowledge/wiki/spaces` (compatibility route)
 

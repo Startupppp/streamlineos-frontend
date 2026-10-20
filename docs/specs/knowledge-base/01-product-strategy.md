@@ -73,61 +73,7 @@ Each page must serve one primary persona. Admin controls may coexist only when t
 
 ## Feature priority
 
-### P0 — Trustworthy core
-
-- Correct My files and Shared with me.
-- Canonical page/space/project/share authorization on every read and mutation.
-- Full search with snippets, facets, URL state, cursor paging, and Quick find handoff.
-- Bounded page/space/review/template/trash/source/job collections.
-- Page card/row action consistency.
-- Space archive/restore and members visibility.
-- Searchable trash with bulk restore/purge.
-- Reliable page history, conflict resolution, and offline-safe drafts.
-- Mobile Docs navigation and document metadata/comments access.
-- Visible owner, freshness, verification, and access state on result and page surfaces.
-- Honest error/denied/empty states with request ids and retry.
-- Docs home, My files, Shared with me, organization-owned Team folders, Templates, Quick find, and Trash; recents and favorites live on Home.
-- First-class files and folders with upload, download, move, rename, share, version, restore, and search.
-- XLSX/CSV upload and content indexing under the same tenant and source permissions as other files.
-
-### P1 — Governance and quality loop
-
-- Permission-gated Content Health workflow with presets: stale, unowned, unverified, empty, broken links, overexposed, overdue review.
-- Assignable Ask gaps: unanswered query → owner → draft/update → verification → resolved.
-- Bulk owner, review, verify, archive, move, and access repair.
-- Space roles and review policies.
-- Permission-safe analytics for search, Ask, reuse, gaps, freshness, and public deflection.
-- Notifications for direct shares, review assignments, mentions, and ownership only; avoid noisy activity feeds.
-- Safe previews for XLSX/CSV and other supported office files.
-- Export current views and reports to XLSX without reimplementing export logic in each module.
-- Microsoft 365 open/edit integration for supported XLSX files, with explicit fidelity and desktop-fallback behavior.
-
-### P2 — Differentiated intelligence with measured demand
-
-1. **Evidence Trail:** every important claim in an AI answer can expand to the exact page version, source passage, owner, verification state, and access-safe change history. This improves trust rather than adding an AI gimmick.
-2. **Answer-to-Fix Loop:** when Ask cannot support an answer, the user can create a gap. The system proposes the smallest page change, routes it to the owner, preserves the original query, and measures whether the fix later resolves similar questions.
-3. **Knowledge Packets:** an incident, launch, onboarding, customer escalation, or decision can expose a curated, live packet of linked records and pages. The packet references source records rather than copying them.
-4. **Freshness Budgets:** different knowledge classes carry different review expectations. A runbook may require 30-day review; a principle may allow 365 days. Budgets are policy plus alerts, not an opaque AI score.
-5. **Contradiction Queue:** retrieval detects materially conflicting claims across current pages and presents both with owners and versions for human resolution. It never auto-rewrites either page.
-6. **Change Impact Preview:** before archiving, moving, or restricting a page, show affected backlinks, Ask citations, public links, packets, and automations.
-7. **Live Data Blocks:** permission-aware CRM, HR, Finance, Inventory, Support, and Build datasets can feed a read-only list, pivot, chart, or metric, refresh without CSV copy/paste, and preserve a frozen audit snapshot.
-
-These features are “ahead” because they close the trust-and-maintenance loop inside the operating system. They are not P0 because they depend on correct ownership, versioning, links, ACLs, and telemetry.
-
-## Features deliberately not built now
-
-| Feature | Reason |
-|---|---|
-| Arbitrary relational databases or app builders inside pages | High complexity, duplicates Build/CRM data, and weakens a clear document model |
-| Excel-complete parity, macros, or VBA | Unbounded compatibility and security cost; preserve XLSX/CSV and integrate Microsoft 365 instead |
-| Board/calendar/timeline views of pages | No strong knowledge job; filters and health presets cover current needs |
-| Template marketplace | Starters and organization templates solve the job without moderation/billing/discovery overhead |
-| Autonomous AI publishing or access changes | Unsafe, hard to audit, and removes human ownership |
-| Separate project-wiki backend | Duplicates content, search, ACL, history, and indexing |
-| Always-on multiplayer cursors | Costly and not required for the current autosave/conflict job; revisit from measured concurrent-edit demand |
-| Social reactions, follower counts, or gamification | Activity is not knowledge quality |
-| A second generic dashboard | Content Health and Analytics must drive actions, not display vanity totals |
-| Per-feature search infrastructure | One retrieval/indexing module should serve Wiki, Ask, public help, and contextual lookup through projections |
+The complete Must/Basic/Good/WOW classification, exclusions, edge-case checklist, current implementation baseline, and phased release order live only in [`2026-10-20-document-module-product-decision.md`](2026-10-20-document-module-product-decision.md). This strategy file owns customer jobs, personas, principles, metrics, content requirements, and the decision test below; it does not maintain a second roadmap.
 
 ## Content design requirements
 

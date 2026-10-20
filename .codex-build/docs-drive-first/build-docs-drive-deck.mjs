@@ -321,7 +321,7 @@ function buildDeck() {
     });
     notes(slide, [
       "Decision deck based on current StreamlineOS source audit and first-party competitor documentation.",
-      "Full research record: docs/specs/knowledge-base/2026-10-20-drive-first-docs-competitor-analysis.md",
+      "Current product authority: docs/specs/knowledge-base/2026-10-20-document-module-product-decision.md",
     ]);
   }
 
@@ -692,7 +692,7 @@ function buildDeck() {
     });
     addText(slide, {
       name: "next-decision",
-      text: "Next product decision: choose the spreadsheet editor path — provider integration or a bounded native grid.",
+      text: "Spreadsheet decision: validate Microsoft 365 first; defer a native grid until measured demand justifies it.",
       left: 72,
       top: 610,
       width: 1020,
@@ -704,7 +704,7 @@ function buildDeck() {
     notes(slide, [
       "This delivery sequence is a product recommendation informed by the competitor research and current-source audit.",
       "No implementation completion, production readiness, or deletion is claimed by this deck.",
-      "Detailed requirements and evidence are in docs/specs/knowledge-base/2026-10-20-drive-first-docs-competitor-analysis.md.",
+      "Detailed requirements and evidence are in docs/specs/knowledge-base/2026-10-20-document-module-product-decision.md.",
     ]);
   }
 

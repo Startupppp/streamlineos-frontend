@@ -14,6 +14,7 @@ import {
 import { EllipsisIcon } from "@animateicons/react/lucide";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { toast } from "sonner";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { getErrorMessage } from "@/lib/get-error-message";
 import {
   DropdownMenu,
@@ -66,6 +67,7 @@ export function ChannelItemMenu({
   onOpenSettings?: (channelId: number) => void;
 }) {
   const [inviteOpen, setInviteOpen] = useState(false);
+  const [confirmHideOpen, setConfirmHideOpen] = useState(false);
   const favoriteChannel = useFavoriteChannel();
   const unfavoriteChannel = useUnfavoriteChannel();
   const muteChannel = useMuteChannel();
@@ -94,10 +96,10 @@ export function ChannelItemMenu({
       try {
         if (isFavorite) {
           await unfavoriteChannel.mutateAsync(channel.id);
-          toast.success("Removed from favorites");
+          toast.success("Removed from Starred");
         } else {
           await favoriteChannel.mutateAsync(channel.id);
-          toast.success("Added to favorites");
+          toast.success("Added to Starred");
         }
       } catch (error) {
         toast.error(getErrorMessage(error));
@@ -146,18 +148,20 @@ export function ChannelItemMenu({
     [setNotificationPreference, channel.id],
   );
 
-  const handleHideUntilUnread = useCallback(
-    async (event: Event) => {
-      event.preventDefault();
-      try {
-        await archiveChannel.mutateAsync(channel.id);
-        toast.success("Hidden until the next message");
-      } catch (error) {
-        toast.error(getErrorMessage(error));
-      }
-    },
-    [archiveChannel, channel.id],
-  );
+  const handleRequestHide = useCallback((event: Event) => {
+    event.preventDefault();
+    setConfirmHideOpen(true);
+  }, []);
+
+  const handleHideUntilUnread = useCallback(async () => {
+    try {
+      await archiveChannel.mutateAsync(channel.id);
+      toast.success("Hidden until the next message");
+      setConfirmHideOpen(false);
+    } catch (error) {
+      toast.error(getErrorMessage(error));
+    }
+  }, [archiveChannel, channel.id]);
 
   const handleMarkUnread = useCallback(
     async (event: Event) => {
@@ -227,7 +231,7 @@ export function ChannelItemMenu({
           </DropdownMenuItem>
           <DropdownMenuItem onSelect={handleToggleFavorite}>
             <Star className={isFavorite ? "h-4 w-4 fill-amber-400 text-status-warning-ink" : "h-4 w-4"} />
-            {isFavorite ? "Remove from Favorites" : "Add to Favorites"}
+            {isFavorite ? "Remove from Starred" : "Add to Starred"}
           </DropdownMenuItem>
           <DropdownMenuSub>
             <DropdownMenuSubTrigger>
@@ -275,12 +279,24 @@ export function ChannelItemMenu({
             <Settings className="h-4 w-4" />
             Advanced Settings
           </DropdownMenuItem>
-          <DropdownMenuItem onSelect={handleHideUntilUnread}>
+          <DropdownMenuItem onSelect={handleRequestHide}>
             <EyeOff className="h-4 w-4" />
             Hide Until New Message
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
+
+      <ConfirmDialog
+        open={confirmHideOpen}
+        onOpenChange={setConfirmHideOpen}
+        title="Hide this conversation?"
+        description="It moves to Archived and comes back when someone sends a new message."
+        confirmLabel="Hide conversation"
+        destructive
+        keepOpenOnConfirm
+        isPending={archiveChannel.isPending}
+        onConfirm={handleHideUntilUnread}
+      />
 
       <AddChannelMembersDialog
         open={inviteOpen}

@@ -1,4 +1,4 @@
-# Knowledge Base Competitor Research and Product Direction
+# Docs Competitor Research Evidence
 
 > **Historical evidence:** This research remains useful for knowledge authoring, trust, and retrieval. [`2026-10-20-document-module-product-decision.md`](2026-10-20-document-module-product-decision.md) owns current Docs scope and priority.
 
@@ -219,6 +219,8 @@ AI answer service: query policy -> retrieval -> ACL recheck -> rerank -> answer/
 - Precompute popular public pages and aggregate analytics; never run full raw-event scans on interactive requests.
 
 ## Recommended delivery order
+
+> **Historical sequence:** This knowledge-first roadmap is research evidence, not the current Docs delivery order. The product decision's Drive-first phases supersede it.
 
 ### Phase 0 — Foundations
 

@@ -1,16 +1,28 @@
 "use client";
 
-import { Fragment, useCallback, memo, useEffect } from "react";
+import {
+  Fragment,
+  useCallback,
+  memo,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+} from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Loader2, Send, ArrowDown } from "lucide-react";
+import { InfiniteScrollSentinel } from "@/components/ui/infinite-scroll-sentinel";
+import { Send, ArrowDown } from "lucide-react";
 import React from "react";
 import { cn } from "@/lib/utils";
 import type { Message } from "./chat-types";
 import { ChatBubble } from "./chat-bubble";
 import { ErrorState } from "@/components/shared/error-state";
 import { EntityActionsProvider } from "./entity-actions-context";
+
+const MAX_ANCHOR_HISTORY_LOADS = 25;
+const MESSAGE_UNAVAILABLE_COPY = "That message is no longer available";
 
 interface GroupedMessages {
   date: string;
@@ -71,16 +83,31 @@ const MessageItem = memo(function MessageItem({
   onForward,
   resolveUserName,
 }: MessageItemProps) {
-  const handleStartEdit = useCallback(() => onStartEdit(msg), [msg, onStartEdit]);
-  const handleSaveEdit = useCallback(() => onSaveEdit(msg.id), [msg.id, onSaveEdit]);
+  const handleStartEdit = useCallback(
+    () => onStartEdit(msg),
+    [msg, onStartEdit],
+  );
+  const handleSaveEdit = useCallback(
+    () => onSaveEdit(msg.id),
+    [msg.id, onSaveEdit],
+  );
   const handleReply = useCallback(() => onReply(msg), [msg, onReply]);
-  const handleOpenThread = useCallback(() => onOpenThread(msg), [msg, onOpenThread]);
+  const handleOpenThread = useCallback(
+    () => onOpenThread(msg),
+    [msg, onOpenThread],
+  );
   const handleDelete = useCallback(() => onDelete(msg.id), [msg.id, onDelete]);
-  const handleReact = useCallback((emoji: string) => onReact(msg.id, emoji), [msg.id, onReact]);
+  const handleReact = useCallback(
+    (emoji: string) => onReact(msg.id, emoji),
+    [msg.id, onReact],
+  );
   const handlePin = useCallback(() => onPin(msg.id), [msg.id, onPin]);
   const handleUnpin = useCallback(() => onUnpin(msg.id), [msg.id, onUnpin]);
   const handleSave = useCallback(() => onSave(msg.id), [msg.id, onSave]);
-  const handleUnsaveMsg = useCallback(() => onUnsaveMsg(msg.id), [msg.id, onUnsaveMsg]);
+  const handleUnsaveMsg = useCallback(
+    () => onUnsaveMsg(msg.id),
+    [msg.id, onUnsaveMsg],
+  );
   const handleForward = useCallback(() => onForward(msg), [msg, onForward]);
   return (
     <ChatBubble
@@ -161,6 +188,123 @@ interface MessageListProps {
   scrollToMessageId?: number | null;
 }
 
+interface MessageAnchorOptions {
+  messageId: number | null | undefined;
+  groupedMessages: GroupedMessages[];
+  isLoading: boolean;
+  hasNextPage: boolean | undefined;
+  isFetchingNextPage: boolean;
+  fetchNextPage: () => void;
+}
+
+function useMessageAnchor({
+  messageId,
+  groupedMessages,
+  isLoading,
+  hasNextPage,
+  isFetchingNextPage,
+  fetchNextPage,
+}: MessageAnchorOptions): number | null {
+  const isPresent = useMemo(
+    () =>
+      messageId != null &&
+      groupedMessages.some((group) =>
+        group.messages.some((message) => message.id === messageId),
+      ),
+    [groupedMessages, messageId],
+  );
+  const loadsRef = useRef<{ messageId: number | null; count: number }>({
+    messageId: null,
+    count: 0,
+  });
+  const reportedRef = useRef<number | null>(null);
+
+  useEffect(() => {
+    if (!messageId || isLoading || isPresent || isFetchingNextPage) return;
+    const loads =
+      loadsRef.current.messageId === messageId ? loadsRef.current.count : 0;
+    if (hasNextPage && loads < MAX_ANCHOR_HISTORY_LOADS) {
+      loadsRef.current = { messageId, count: loads + 1 };
+      fetchNextPage();
+      return;
+    }
+    if (reportedRef.current === messageId) return;
+    reportedRef.current = messageId;
+    toast.error(MESSAGE_UNAVAILABLE_COPY);
+    window.dispatchEvent(
+      new CustomEvent("chat:message-unavailable", { detail: messageId }),
+    );
+  }, [
+    messageId,
+    groupedMessages,
+    isLoading,
+    isPresent,
+    isFetchingNextPage,
+    hasNextPage,
+    fetchNextPage,
+  ]);
+
+  useEffect(() => {
+    if (!messageId || !isPresent) return;
+    let innerFrame = 0;
+    const outerFrame = requestAnimationFrame(() => {
+      innerFrame = requestAnimationFrame(() => {
+        document
+          .getElementById(`message-${messageId}`)
+          ?.scrollIntoView({ behavior: "smooth", block: "center" });
+      });
+    });
+    return () => {
+      cancelAnimationFrame(outerFrame);
+      cancelAnimationFrame(innerFrame);
+    };
+  }, [messageId, isPresent]);
+
+  return isPresent && messageId ? messageId : null;
+}
+
+interface PrependScrollKeeperOptions {
+  scrollContainerRef: React.RefObject<HTMLDivElement | null>;
+  groupedMessages: GroupedMessages[];
+  hasNextPage: boolean | undefined;
+  isFetchingNextPage: boolean;
+  fetchNextPage: () => void;
+}
+
+function usePrependScrollKeeper({
+  scrollContainerRef,
+  groupedMessages,
+  hasNextPage,
+  isFetchingNextPage,
+  fetchNextPage,
+}: PrependScrollKeeperOptions): () => void {
+  const pendingRef = useRef<{ fromBottom: number; height: number } | null>(
+    null,
+  );
+
+  const loadOlder = useCallback(() => {
+    const el = scrollContainerRef.current;
+    pendingRef.current = el
+      ? { fromBottom: el.scrollHeight - el.scrollTop, height: el.scrollHeight }
+      : null;
+    fetchNextPage();
+  }, [fetchNextPage, scrollContainerRef]);
+
+  useLayoutEffect(() => {
+    const el = scrollContainerRef.current;
+    const pending = pendingRef.current;
+    if (!el || !pending || isFetchingNextPage) return;
+    if (el.scrollHeight === pending.height) {
+      if (!hasNextPage) pendingRef.current = null;
+      return;
+    }
+    el.scrollTop = el.scrollHeight - pending.fromBottom;
+    pendingRef.current = null;
+  }, [groupedMessages, hasNextPage, isFetchingNextPage, scrollContainerRef]);
+
+  return loadOlder;
+}
+
 const ScrollToBottomButton = React.forwardRef<
   HTMLButtonElement,
   React.ButtonHTMLAttributes<HTMLButtonElement>
@@ -214,24 +358,27 @@ export function MessageList({
   onScroll,
   scrollToMessageId,
 }: MessageListProps) {
-  const handleFetchNextPage = useCallback(() => fetchNextPage(), [fetchNextPage]);
   const handleRetry = useCallback(() => onRetry?.(), [onRetry]);
+  const handleScrollToBottom = useCallback(
+    () => scrollToBottom(),
+    [scrollToBottom],
+  );
+  const highlightedMessageId = useMessageAnchor({
+    messageId: scrollToMessageId,
+    groupedMessages,
+    isLoading,
+    hasNextPage,
+    isFetchingNextPage,
+    fetchNextPage,
+  });
+  const handleLoadOlder = usePrependScrollKeeper({
+    scrollContainerRef,
+    groupedMessages,
+    hasNextPage,
+    isFetchingNextPage,
+    fetchNextPage,
+  });
 
-  useEffect(() => {
-    if (!scrollToMessageId) return;
-    document
-      .getElementById(`message-${scrollToMessageId}`)
-      ?.scrollIntoView({ behavior: "smooth", block: "center" });
-  }, [scrollToMessageId]);
-
-  /*
-   * Before the empty layout, and before the entity-action provider mounts a
-   * query of its own: a channel whose history could not be read has nothing to
-   * resolve references against. The four sibling chat surfaces
-   * (channel-sidebar, channels-discovery-page, saved-messages-panel,
-   * shared-files-panel) already branch here; the timeline was the one that
-   * rendered a failure as an ordinary empty conversation.
-   */
   if (isError) {
     return (
       <div className="flex-1 min-h-0 min-w-0 flex flex-col justify-center p-4">
@@ -239,7 +386,8 @@ export function MessageList({
           compact
           title="Couldn't load this conversation"
           description={
-            errorMessage ?? "The message history could not be read. Please try again."
+            errorMessage ??
+            "The message history could not be read. Please try again."
           }
           onRetry={handleRetry}
         />
@@ -249,166 +397,187 @@ export function MessageList({
 
   return (
     <EntityActionsProvider channelId={channelId} messages={messages}>
-    <div className="flex-1 min-h-0 min-w-0 relative flex flex-col overflow-hidden">
-      <ScrollArea
-        hideScrollbar
-        className="flex-1 min-h-0 min-w-0"
-        viewportRef={scrollContainerRef}
-        onViewportScroll={onScroll}
-        viewportClassName="overscroll-contain"
-      >
-        <div
-          className="min-h-full"
-          style={{
-            backgroundImage:
-              "radial-gradient(circle at 50% 50%, color-mix(in srgb, var(--muted) 30%, transparent) 0%, transparent 70%)",
-          }}
+      <div className="flex-1 min-h-0 min-w-0 relative flex flex-col overflow-hidden">
+        <ScrollArea
+          hideScrollbar
+          className="flex-1 min-h-0 min-w-0"
+          viewportRef={scrollContainerRef}
+          onViewportScroll={onScroll}
+          viewportClassName="overscroll-contain"
         >
-        {isLoading ? (
-          <div className="py-4 px-3 sm:px-5 max-w-[900px] mx-auto w-full min-w-0 space-y-5" aria-busy="true">
-            <span role="status" className="sr-only">Loading messages…</span>
-            {Array.from({ length: 6 }).map((_, i) => (
-              <div key={i} className={`flex items-start gap-3 ${i % 3 === 2 ? "flex-row-reverse" : ""}`}>
-                <div className="w-8 rounded-full bg-muted animate-pulse shrink-0" />
-                <div className="space-y-1.5 max-w-[60%]">
-                  <div className="h-3 w-20 rounded bg-muted animate-pulse" />
-                  <div className={`h-10 rounded-xl bg-muted animate-pulse ${i % 3 === 2 ? "w-40" : "w-56"}`} />
-                </div>
-              </div>
-            ))}
-          </div>
-        ) : (
           <div
-            className={cn(
-              "min-h-full flex flex-col py-2 px-3 sm:px-5 max-w-[900px] mx-auto w-full min-w-0 pb-14 sm:pb-2",
-              messages.length > 0 ? "justify-end" : "justify-center",
-            )}
+            className="min-h-full"
+            style={{
+              backgroundImage:
+                "radial-gradient(circle at 50% 50%, color-mix(in srgb, var(--muted) 30%, transparent) 0%, transparent 70%)",
+            }}
           >
-            {hasNextPage && (
-              <div className="flex justify-center pb-3 shrink-0">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleFetchNextPage}
-                  disabled={isFetchingNextPage}
-                  className="text-xs rounded-full px-4"
-                >
-                  {isFetchingNextPage ? (
-                    <>
-                      <Loader2 className="h-3 w-3 animate-spin mr-1.5" />
-                      Loading...
-                    </>
-                  ) : (
-                    "Load older messages"
-                  )}
-                </Button>
-              </div>
-            )}
-
-            {groupedMessages.map((group) => (
-            <Fragment key={group.date}>
-              <div className="flex items-center gap-3 my-3">
-                <div className="flex-1 h-px bg-border/40" />
-                <span className="text-micro font-semibold text-muted-foreground bg-background px-2.5 py-0.5 rounded-full border border-border/30">
-                  {group.date}
+            {isLoading ? (
+              <div
+                className="py-4 px-3 sm:px-5 max-w-[900px] mx-auto w-full min-w-0 space-y-5"
+                aria-busy="true"
+              >
+                <span role="status" className="sr-only">
+                  Loading messages…
                 </span>
-                <div className="flex-1 h-px bg-border/40" />
+                {Array.from({ length: 6 }).map((_, i) => (
+                  <div
+                    key={i}
+                    className={`flex items-start gap-3 ${i % 3 === 2 ? "flex-row-reverse" : ""}`}
+                  >
+                    <div className="w-8 rounded-full bg-muted animate-pulse shrink-0" />
+                    <div className="space-y-1.5 max-w-[60%]">
+                      <div className="h-3 w-20 rounded bg-muted animate-pulse" />
+                      <div
+                        className={`h-10 rounded-xl bg-muted animate-pulse ${i % 3 === 2 ? "w-40" : "w-56"}`}
+                      />
+                    </div>
+                  </div>
+                ))}
               </div>
+            ) : (
+              <div
+                className={cn(
+                  "min-h-full flex flex-col py-2 px-3 sm:px-5 max-w-[900px] mx-auto w-full min-w-0 pb-14 sm:pb-2",
+                  messages.length > 0 ? "justify-end" : "justify-center",
+                )}
+              >
+                {showScrollBtn && (
+                  <InfiniteScrollSentinel
+                    hasNextPage={Boolean(hasNextPage)}
+                    isFetchingNextPage={isFetchingNextPage}
+                    onLoadMore={handleLoadOlder}
+                    label="Load older messages"
+                    pending="Loading older messages…"
+                    rootMargin="300px 0px 0px 0px"
+                    className="shrink-0 pt-0 pb-3"
+                  />
+                )}
 
-              {group.messages.map((msg, idx) => {
-                const isOwn = msg.senderId === currentUserId;
-                const prevMsg = idx > 0 ? group.messages[idx - 1] : null;
-                const isSameSender =
-                  prevMsg?.senderId === msg.senderId && !prevMsg?.isDeleted;
-                const timeDiff =
-                  prevMsg?.createdAt && msg.createdAt
-                    ? new Date(msg.createdAt).getTime() -
-                      new Date(prevMsg.createdAt).getTime()
-                    : 0;
-                const showHeader = !isSameSender || timeDiff > 2 * 60 * 1000;
-                const showUnreadDivider = firstUnreadMessageId !== undefined && msg.id === firstUnreadMessageId;
+                {groupedMessages.map((group) => (
+                  <Fragment key={group.date}>
+                    <div className="flex items-center gap-3 my-3">
+                      <div className="flex-1 h-px bg-border/40" />
+                      <span className="text-micro font-semibold text-muted-foreground bg-background px-2.5 py-0.5 rounded-full border border-border/30">
+                        {group.date}
+                      </span>
+                      <div className="flex-1 h-px bg-border/40" />
+                    </div>
 
-                return (
-                  <Fragment key={msg.id}>
-                    {showUnreadDivider && (
-                      <div className="flex items-center gap-3 my-2 px-2">
-                        <div className="flex-1 h-px bg-status-danger-surface" />
-                        <span className="text-micro font-bold text-status-danger-ink whitespace-nowrap px-2">New Messages</span>
-                        <div className="flex-1 h-px bg-status-danger-surface" />
-                      </div>
-                    )}
-                    <MessageItem
-                      msg={msg}
-                      isOwn={isOwn}
-                      showHeader={showHeader}
-                      currentUserId={currentUserId}
-                      editingMessageId={editingMessage?.id}
-                      editInput={editInput}
-                      pinnedMessageIds={pinnedMessageIds}
-                      savedMessageIds={savedMessageIds}
-                      replyCountMap={replyCountMap}
-                      onEditInputChange={onEditInputChange}
-                      onStartEdit={onStartEdit}
-                      onCancelEdit={onCancelEdit}
-                      onSaveEdit={onSaveEdit}
-                      onReply={onReply}
-                      onOpenThread={onOpenThread}
-                      onDelete={onDelete}
-                      onReact={onReact}
-                      onPin={onPin}
-                      onUnpin={onUnpin}
-                      onSave={onSave}
-                      onUnsaveMsg={onUnsaveMsg}
-                      onForward={onForward}
-                      resolveUserName={resolveUserName}
-                    />
+                    {group.messages.map((msg, idx) => {
+                      const isOwn = msg.senderId === currentUserId;
+                      const prevMsg = idx > 0 ? group.messages[idx - 1] : null;
+                      const isSameSender =
+                        prevMsg?.senderId === msg.senderId &&
+                        !prevMsg?.isDeleted;
+                      const timeDiff =
+                        prevMsg?.createdAt && msg.createdAt
+                          ? new Date(msg.createdAt).getTime() -
+                            new Date(prevMsg.createdAt).getTime()
+                          : 0;
+                      const showHeader =
+                        !isSameSender || timeDiff > 2 * 60 * 1000;
+                      const showUnreadDivider =
+                        firstUnreadMessageId !== undefined &&
+                        msg.id === firstUnreadMessageId;
+
+                      return (
+                        <Fragment key={msg.id}>
+                          {showUnreadDivider && (
+                            <div className="flex items-center gap-3 my-2 px-2">
+                              <div className="flex-1 h-px bg-status-danger-surface" />
+                              <span className="text-micro font-bold text-status-danger-ink whitespace-nowrap px-2">
+                                New Messages
+                              </span>
+                              <div className="flex-1 h-px bg-status-danger-surface" />
+                            </div>
+                          )}
+                          <div
+                            data-anchored={
+                              msg.id === highlightedMessageId || undefined
+                            }
+                            className={cn(
+                              msg.id === highlightedMessageId &&
+                                "rounded-lg bg-primary/5 ring-1 ring-primary/30",
+                            )}
+                          >
+                            <MessageItem
+                              msg={msg}
+                              isOwn={isOwn}
+                              showHeader={showHeader}
+                              currentUserId={currentUserId}
+                              editingMessageId={editingMessage?.id}
+                              editInput={editInput}
+                              pinnedMessageIds={pinnedMessageIds}
+                              savedMessageIds={savedMessageIds}
+                              replyCountMap={replyCountMap}
+                              onEditInputChange={onEditInputChange}
+                              onStartEdit={onStartEdit}
+                              onCancelEdit={onCancelEdit}
+                              onSaveEdit={onSaveEdit}
+                              onReply={onReply}
+                              onOpenThread={onOpenThread}
+                              onDelete={onDelete}
+                              onReact={onReact}
+                              onPin={onPin}
+                              onUnpin={onUnpin}
+                              onSave={onSave}
+                              onUnsaveMsg={onUnsaveMsg}
+                              onForward={onForward}
+                              resolveUserName={resolveUserName}
+                            />
+                          </div>
+                        </Fragment>
+                      );
+                    })}
                   </Fragment>
-                );
-              })}
-            </Fragment>
-          ))}
+                ))}
 
-          {messages.length === 0 && (
-            <div className="flex flex-col items-center justify-center py-10">
-              <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-gradient-info-wash-from to-gradient-info-wash-to flex items-center justify-center mb-3">
-                <Send className="h-5 w-5 text-status-info-ink" />
+                {messages.length === 0 && (
+                  <div className="flex flex-col items-center justify-center py-10">
+                    <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-gradient-info-wash-from to-gradient-info-wash-to flex items-center justify-center mb-3">
+                      <Send className="h-5 w-5 text-status-info-ink" />
+                    </div>
+                    <h4 className="text-sm font-semibold mb-0.5">
+                      {channelType === "DIRECT"
+                        ? `Start a conversation with ${displayName}`
+                        : `Welcome to #${displayName}`}
+                    </h4>
+                    <p className="text-xs text-muted-foreground max-w-xs text-center">
+                      Send a message to get things started.
+                    </p>
+                  </div>
+                )}
+
+                <div
+                  ref={messagesEndRef}
+                  className="h-px shrink-0"
+                  aria-hidden="true"
+                />
               </div>
-              <h4 className="text-sm font-semibold mb-0.5">
-                {channelType === "DIRECT"
-                  ? `Start a conversation with ${displayName}`
-                  : `Welcome to #${displayName}`}
-              </h4>
-              <p className="text-xs text-muted-foreground max-w-xs text-center">
-                Send a message to get things started.
-              </p>
-            </div>
-          )}
+            )}
+          </div>
+        </ScrollArea>
 
-          <div ref={messagesEndRef} className="h-px shrink-0" aria-hidden="true" />
-        </div>
-      )}
-        </div>
-      </ScrollArea>
-
-      <AnimatePresence>
-        {showScrollBtn && (
-          <motion.div
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 8 }}
-            className="absolute bottom-3 left-1/2 -translate-x-1/2 z-10 pointer-events-none"
-          >
-            <ScrollToBottomButton
-              type="button"
-              onClick={() => scrollToBottom()}
-              className="pointer-events-auto h-8 rounded-full bg-background border border-border/60 shadow-lg flex items-center gap-1.5 px-3 hover:bg-muted transition-colors"
+        <AnimatePresence>
+          {showScrollBtn && (
+            <motion.div
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 8 }}
+              className="absolute bottom-3 left-1/2 -translate-x-1/2 z-10 pointer-events-none"
             >
-              <span className="text-dense font-medium">New messages</span>
-            </ScrollToBottomButton>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </div>
+              <ScrollToBottomButton
+                type="button"
+                onClick={handleScrollToBottom}
+                className="pointer-events-auto h-8 rounded-full bg-background border border-border/60 shadow-lg flex items-center gap-1.5 px-3 hover:bg-muted transition-colors"
+              >
+                <span className="text-dense font-medium">New messages</span>
+              </ScrollToBottomButton>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
     </EntityActionsProvider>
   );
 }
