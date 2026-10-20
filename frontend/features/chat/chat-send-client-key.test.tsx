@@ -1,4 +1,6 @@
 import { act, renderHook } from "@testing-library/react";
+import type { ReactNode } from "react";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { z } from "zod";
 
 import { useMessageComposer } from "./use-message-composer";
@@ -11,6 +13,16 @@ jest.mock("sonner", () => ({
 jest.mock("@/lib/api-client", () => ({
   apiClient: { get: jest.fn(), post: jest.fn(), patch: jest.fn(), delete: jest.fn() },
 }));
+
+
+jest.mock("@/hooks/api/access", () => ({
+  ...jest.requireActual("@/hooks/api/access"),
+  useCan: () => true,
+}));
+
+function QueryWrapper({ children }: { children: ReactNode }) {
+  return <QueryClientProvider client={new QueryClient()}>{children}</QueryClientProvider>;
+}
 
 /**
  * The backend built `clientKey` end to end — the column, the partial unique
@@ -68,8 +80,10 @@ function harness(over: { failFirst?: boolean; isOnline?: boolean } = {}) {
       markRead: { mutate: jest.fn() },
       scrollToBottom: () => undefined,
       publishTyping: () => undefined,
-      filteredMentions: [],
+      channel: undefined,
+      currentUserId: "me",
     }),
+    { wrapper: QueryWrapper },
   );
   return { hook, sent, sendMessage };
 }

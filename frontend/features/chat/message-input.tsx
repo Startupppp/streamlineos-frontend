@@ -14,20 +14,11 @@ import { getChatMobileComposerInsetClassName } from "@/components/layout/mobile/
 import type { MessageInputProps } from "./message-input-types";
 import {
   ChatAttachmentsRow,
+  ChatMentionMembershipPrompt,
   ChatMentionSuggestionsOverlay,
   ChatReplyPreview,
 } from "./message-input-items";
-
-const TicketMentionPicker = dynamic(
-  () =>
-    import("./ticket-mention-picker").then((m) => ({
-      default: m.TicketMentionPicker,
-    })),
-  {
-    ssr: false,
-    loading: () => <ChatPopoverFallback label="Loading ticket picker" />,
-  },
-);
+import { ChatLinkedRecordsRow, RecordLinkPicker, recordOptionId } from "./record-link-picker";
 
 const EmojiGrid = dynamic(
   () => import("./emoji-grid").then((m) => ({ default: m.EmojiGrid })),
@@ -95,15 +86,18 @@ export function MessageInput({
   setShowEmojiPicker,
   emojiRef,
   insertEmoji,
+  channelId,
   showMentions,
   setShowMentions,
   mentionIndex,
   filteredMentions,
   insertMention,
-  showTicketPicker,
-  ticketQuery,
-  ticketSelectedIndex,
-  onTicketSelect,
+  mentionPrompt,
+  onDismissMentionPrompt,
+  recordPicker,
+  onSelectRecord,
+  linkedRecords,
+  onRemoveLinkedRecord,
   typingText,
   sendMessage,
   onSend,
@@ -227,14 +221,27 @@ export function MessageInput({
             insertMention={insertMention}
           />
 
-          {showTicketPicker && (
-            <TicketMentionPicker
-              query={ticketQuery}
-              onSelect={onTicketSelect}
-              selectedIndex={ticketSelectedIndex}
+          {recordPicker && (
+            <RecordLinkPicker
+              picker={recordPicker}
+              onSelect={onSelectRecord}
               className="left-3 sm:left-6"
             />
           )}
+
+          {mentionPrompt && (
+            <ChatMentionMembershipPrompt
+              channelId={channelId}
+              prompt={mentionPrompt}
+              onDismiss={onDismissMentionPrompt}
+            />
+          )}
+
+          <ChatLinkedRecordsRow
+            records={linkedRecords}
+            onRemove={onRemoveLinkedRecord}
+            needsText={!messageInput.trim() && pendingAttachments.length === 0}
+          />
 
           <AnimatePresence>
             {showEmojiPicker && (
@@ -281,6 +288,11 @@ export function MessageInput({
               onKeyDown={handleComposerKeyDown}
               onPaste={handlePaste}
               aria-label={`Message ${displayName}`}
+              aria-activedescendant={
+                recordPicker && recordPicker.activeIndex >= 0
+                  ? recordOptionId(recordPicker.activeIndex)
+                  : undefined
+              }
               aria-keyshortcuts="Control+B Control+I Control+E Meta+B Meta+I Meta+E"
               placeholder={`Message ${channelType === "DIRECT" ? displayName : "#" + displayName}...`}
               rows={1}
@@ -329,7 +341,7 @@ export function MessageInput({
               </div>
               <div className="flex items-center gap-2">
                 <span className="text-micro text-muted-foreground hidden sm:inline">
-                  Shift+Enter for new line · Ctrl+B, I, E to format
+                  @ mention · / link a record · Shift+Enter new line · Ctrl+B, I, E format
                 </span>
                 <button
                   type="button"

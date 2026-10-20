@@ -1,16 +1,10 @@
 "use client";
 
-import { useMemo } from "react";
 import dynamic from "next/dynamic";
 import { ChatAttachment } from "./chat-attachment";
 import { ChatInlineFallback } from "./chat-lazy-fallbacks";
-import { TicketPill, CommentPill } from "./chat-entity-pills";
-import type {
-  Message,
-  MessageMetadata,
-  TicketEntityRef,
-  CommentEntityRef,
-} from "./chat-types";
+import { LinkedRecordPill } from "./chat-entity-pills";
+import type { Message, MessageMetadata } from "./chat-types";
 
 const InternalLinkPreview = dynamic(
   () =>
@@ -36,17 +30,7 @@ export function ChatBubbleAttachments({
   metadata,
   isOwn,
 }: ChatBubbleAttachmentsProps) {
-  const { ticketEntities, commentEntities } = useMemo(() => {
-    const entities = metadata?.entities ?? [];
-    return {
-      ticketEntities: entities.filter(
-        (e): e is TicketEntityRef => e.type === "ticket",
-      ),
-      commentEntities: entities.filter(
-        (e): e is CommentEntityRef => e.type === "comment",
-      ),
-    };
-  }, [metadata]);
+  const entities = metadata?.entities ?? [];
 
   return (
     <>
@@ -54,17 +38,14 @@ export function ChatBubbleAttachments({
         <InternalLinkPreview content={message.content} isOwn={isOwn} />
       )}
 
-      {ticketEntities.length + commentEntities.length > 0 && (
+      {entities.length > 0 && (
         <div className="flex flex-wrap gap-1 mt-1.5">
-          {ticketEntities.map((entity) => (
-            <TicketPill
-              key={entity.id}
+          {entities.map((entity) => (
+            <LinkedRecordPill
+              key={`${entity.type}:${entity.id}`}
               entity={entity}
               channelId={message.channelId}
             />
-          ))}
-          {commentEntities.map((entity) => (
-            <CommentPill key={entity.id} entity={entity} />
           ))}
         </div>
       )}

@@ -91,6 +91,12 @@ function isTicketPriority(v: string): v is SupportTicketPriority {
   return TICKET_PRIORITIES.some((candidate) => candidate === v);
 }
 
+function ticketIdFromParam(value: string | null): number | null {
+  if (!value || !/^\d+$/.test(value)) return null;
+  const id = Number(value);
+  return Number.isSafeInteger(id) && id > 0 ? id : null;
+}
+
 function InboxContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -98,7 +104,6 @@ function InboxContent() {
   const [, startTransition] = useTransition();
   const shellVariant = useShellVariant();
   const isDesktopShell = shellVariant === "desktop";
-  const [selectedTicketId, setSelectedTicketId] = useState<number | null>(null);
   const [page, setPage] = useState(1);
   const { open: createOpen, onOpenChange: setCreateOpen, setOpen: openCreate } = useQueryParamOpen("create");
 
@@ -108,6 +113,18 @@ function InboxContent() {
   const assigneeIdFilter = searchParams.get("assigneeId");
   const channelFilter = searchParams.get("channel");
   const snoozedFilter = searchParams.get("snoozed") === "true";
+  const selectedTicketId = ticketIdFromParam(searchParams.get("ticket"));
+
+  const selectTicket = useCallback(
+    (ticketId: number | null) => {
+      const params = new URLSearchParams(searchParams.toString());
+      if (ticketId === null) params.delete("ticket");
+      else params.set("ticket", String(ticketId));
+      const query = params.toString();
+      window.history.replaceState(null, "", query ? `${pathname}?${query}` : pathname);
+    },
+    [searchParams, pathname],
+  );
 
   const updateFilter = useCallback(
     (key: string, value: string) => {
@@ -144,7 +161,7 @@ function InboxContent() {
   useInboxShortcuts({
     tickets,
     selectedTicketId,
-    onSelect: setSelectedTicketId,
+    onSelect: selectTicket,
     onCreateNew: handleOpenCreate,
   });
   const handleStatusFilter = useCallback(
@@ -155,12 +172,12 @@ function InboxContent() {
     (v: string) => updateFilter("priority", v),
     [updateFilter]
   );
-  const handleBackFromTicket = useCallback(() => setSelectedTicketId(null), []);
+  const handleBackFromTicket = useCallback(() => selectTicket(null), [selectTicket]);
 
   const handlePageChange = useCallback((nextPage: number) => {
-    setSelectedTicketId(null);
+    selectTicket(null);
     setPage(nextPage);
-  }, []);
+  }, [selectTicket]);
 
   const handleToggleSnoozed = useCallback(
     () => updateFilter("snoozed", snoozedFilter ? "all" : "true"),
@@ -291,7 +308,7 @@ function InboxContent() {
             tickets={deferredTickets}
             isLoading={isLoading}
             selectedTicketId={selectedTicketId}
-            onSelect={setSelectedTicketId}
+            onSelect={selectTicket}
             page={page}
             pageSize={TICKET_PAGE_SIZE}
             total={ticketsData?.total ?? 0}

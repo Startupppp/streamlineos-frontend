@@ -22,17 +22,36 @@ const chatEntityRefContract = z.discriminatedUnion("type", [
     priority: z.string().optional(),
   }),
   z.object({
-    type: z.literal("comment"),
+    type: z.enum([
+      "task",
+      "project",
+      "cycle",
+      "release",
+      "incident",
+      "client",
+      "deal",
+      "lead",
+      "employee",
+      "doc_page",
+      "calendar_event",
+      "support_ticket",
+    ]),
     id: z.string(),
-    ticketId: z.number(),
-    projectId: z.number(),
+    card: chatEntityCardContract.nullable().optional(),
   }),
 ]);
+
+const chatEntityRefsContract = z.array(z.unknown()).transform((entries) =>
+  entries.flatMap((entry) => {
+    const parsed = chatEntityRefContract.safeParse(entry);
+    return parsed.success ? [parsed.data] : [];
+  }),
+);
 
 /** `metadata` is free-form jsonb; only the two keys the client reads are modelled. */
 export const chatMessageMetadataContract = z
   .object({
-    entities: z.array(chatEntityRefContract).optional(),
+    entities: chatEntityRefsContract.optional(),
     forwardCount: z.number().optional(),
   })
   .nullable();

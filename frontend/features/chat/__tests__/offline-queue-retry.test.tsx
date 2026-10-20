@@ -1,4 +1,6 @@
 import { act, renderHook } from "@testing-library/react";
+import type { ReactNode } from "react";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useMessageComposer } from "../use-message-composer";
 
 jest.mock("sonner", () => ({
@@ -12,6 +14,16 @@ jest.mock("sonner", () => ({
 jest.mock("@/lib/api-client", () => ({
   apiClient: { post: jest.fn(), get: jest.fn() },
 }));
+
+
+jest.mock("@/hooks/api/access", () => ({
+  ...jest.requireActual("@/hooks/api/access"),
+  useCan: () => true,
+}));
+
+function QueryWrapper({ children }: { children: ReactNode }) {
+  return <QueryClientProvider client={new QueryClient()}>{children}</QueryClientProvider>;
+}
 
 const { toast } = jest.requireMock("sonner") as {
   toast: { error: jest.Mock; info: jest.Mock; success: jest.Mock };
@@ -35,8 +47,10 @@ function mountComposer(options: {
       markRead: { mutate: jest.fn() },
       scrollToBottom: jest.fn(),
       publishTyping: jest.fn(),
-      filteredMentions: [],
+      channel: undefined,
+      currentUserId: "me",
     }),
+    { wrapper: QueryWrapper },
   );
   return result;
 }

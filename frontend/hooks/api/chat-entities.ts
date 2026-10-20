@@ -1,12 +1,13 @@
 "use client";
 
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { skipToken, useQuery, useQueryClient, type QueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
 import { collaborationQueryKeys } from "@/lib/query-keys/collaboration";
 import { useCan } from "@/hooks/api/access";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { useIdempotentOperation } from "@/hooks/common/use-idempotent-operation";
+import type { EntityCard } from "@/types/chat";
 
 const chatLinkPreviewContract = lazyContract(() =>
   import("@/hooks/api/chat-schema").then((m) => m.chatLinkPreviewContract),
@@ -90,6 +91,22 @@ interface EntityActionsResponse {
 
 export function entityReferenceKey(reference: EntityReferenceInput): string {
   return `${reference.type}:${reference.id}`;
+}
+
+function linkedRecordPreviewKey(reference: EntityReferenceInput) {
+  return [...collaborationQueryKeys.chat.all, "linkedRecordPreview", reference.type, reference.id] as const;
+}
+
+export function seedLinkedRecordPreview(queryClient: QueryClient, card: EntityCard): void {
+  queryClient.setQueryData(linkedRecordPreviewKey(card), card);
+}
+
+export function useLinkedRecordPreview(reference: EntityReferenceInput): EntityCard | undefined {
+  return useQuery<EntityCard>({
+    queryKey: linkedRecordPreviewKey(reference),
+    queryFn: skipToken,
+    staleTime: Infinity,
+  }).data;
 }
 
 // One batched ask per visible set of references; per bubble would be a request per record.

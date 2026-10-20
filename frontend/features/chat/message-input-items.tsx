@@ -1,55 +1,60 @@
 "use client";
 
-import { useCallback } from "react";
+import { memo, useCallback } from "react";
 import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
+import { toast } from "sonner";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { FileText, Loader2, Reply, X } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
+import { FileText, Loader2, Reply, UserPlus, X } from "lucide-react";
 import { cn, resolveImageUrl } from "@/lib/utils";
+import { getErrorMessage } from "@/lib/get-error-message";
+import { useCan } from "@/hooks/api/access";
+import { useAddChannelMember } from "@/hooks/api/chat-core-mutations-b";
 import { getFileColor, getFileExt } from "./chat-helpers";
 import { formatFileSize, getInitials } from "@/lib/format-utils";
-import type { PendingAttachment, OrgUser } from "./message-input-types";
+import type { PendingAttachment } from "./message-input-types";
+import type { MentionCandidate } from "./use-chat-mentions";
+import type { MentionPrompt } from "./use-message-composer";
 import type { Message } from "./chat-types";
 
 interface MentionItemProps {
-  user: OrgUser;
-  idx: number;
-  mentionIndex: number;
-  onInsert: (name: string, userId: string) => void;
+  candidate: MentionCandidate;
+  isActive: boolean;
+  onInsert: (candidate: MentionCandidate) => void;
 }
 
-export function MentionItem({
-  user,
-  idx,
-  mentionIndex,
-  onInsert,
-}: MentionItemProps) {
-  const handleClick = useCallback(
-    () => onInsert(user.name ?? "", user.id),
-    [user.name, user.id, onInsert],
-  );
+const MentionItem = memo(function MentionItem({ candidate, isActive, onInsert }: MentionItemProps) {
+  const handleClick = useCallback(() => onInsert(candidate), [candidate, onInsert]);
+  const handleMouseDown = useCallback((event: React.MouseEvent) => event.preventDefault(), []);
   return (
     <button
       type="button"
+      role="option"
+      aria-selected={isActive}
+      onMouseDown={handleMouseDown}
       onClick={handleClick}
       className={cn(
         "w-full flex items-center gap-2.5 px-3 py-2 text-left hover:bg-muted/40 transition-colors",
-        idx === mentionIndex && "bg-status-info-surface",
+        isActive && "bg-status-info-surface",
       )}
     >
       <Avatar className="h-6 w-6">
-        <AvatarImage src={resolveImageUrl(user.image)} />
+        <AvatarImage src={resolveImageUrl(candidate.image)} />
         <AvatarFallback className="text-micro">
-          {getInitials(user.name)}
+          {getInitials(candidate.name)}
         </AvatarFallback>
       </Avatar>
-      <span className="text-label font-medium">{user.name}</span>
-      <span className="text-dense text-muted-foreground ml-auto">
-        {user.role}
-      </span>
+      <span className="text-label font-medium">{candidate.name}</span>
+      {!candidate.isMember && (
+        <span className="text-dense text-muted-foreground ml-auto">
+          Not in conversation
+        </span>
+      )}
     </button>
   );
-}
+});
 
 interface PendingAttachmentItemProps {
   att: PendingAttachment;
@@ -155,9 +160,9 @@ export function ChatReplyPreview({ replyTo, onCancel }: ChatReplyPreviewProps) {
 
 interface ChatMentionSuggestionsOverlayProps {
   showMentions: boolean;
-  filteredMentions: OrgUser[];
+  filteredMentions: MentionCandidate[];
   mentionIndex: number;
-  insertMention: (name: string, userId: string) => void;
+  insertMention: (candidate: MentionCandidate) => void;
 }
 
 export function ChatMentionSuggestionsOverlay({
@@ -178,17 +183,18 @@ export function ChatMentionSuggestionsOverlay({
           <div className="max-w-[800px] mx-auto">
             <div className="bg-background border border-border/60 rounded-xl shadow-lg overflow-hidden max-h-[200px] overflow-y-auto">
               <div className="px-3 py-1.5 text-micro font-semibold text-muted-foreground uppercase tracking-wider border-b border-border/30">
-                Members
+                People
               </div>
-              {filteredMentions.slice(0, 8).map((user, idx) => (
-                <MentionItem
-                  key={user.id}
-                  user={user}
-                  idx={idx}
-                  mentionIndex={mentionIndex}
-                  onInsert={insertMention}
-                />
-              ))}
+              <div role="listbox" aria-label="People">
+                {filteredMentions.map((candidate, idx) => (
+                  <MentionItem
+                    key={candidate.id}
+                    candidate={candidate}
+                    isActive={idx === mentionIndex}
+                    onInsert={insertMention}
+                  />
+                ))}
+              </div>
             </div>
           </div>
         </motion.div>
@@ -225,6 +231,48 @@ export function ChatAttachmentsRow({
           <span className="text-dense text-muted-foreground">Uploading...</span>
         </div>
       )}
+    </div>
+  );
+}
+
+interface ChatMentionMembershipPromptProps {
+  channelId: number;
+  prompt: MentionPrompt;
+  onDismiss: () => void;
+}
+
+export function ChatMentionMembershipPrompt({ channelId, prompt, onDismiss }: ChatMentionMembershipPromptProps) {
+  const canAdd = useCan("chat:channels:write");
+  const addMember = useAddChannelMember();
+  const { mutate } = addMember;
+  const handleAdd = useCallback(() => {
+    mutate(
+      { channelId, userId: prompt.userId },
+      {
+        onSuccess: () => {
+          toast.success(`Added ${prompt.name} to the conversation`);
+          onDismiss();
+        },
+        onError: (error) => toast.error(getErrorMessage(error)),
+      },
+    );
+  }, [mutate, channelId, prompt.userId, prompt.name, onDismiss]);
+
+  return (
+    <div
+      role="status"
+      className="mb-2 flex flex-wrap items-center gap-2 rounded-xl border border-border bg-muted px-3 py-2 text-xs"
+    >
+      <UserPlus className="h-3.5 w-3.5 shrink-0 text-muted-foreground" aria-hidden />
+      <span className="min-w-0 flex-1 text-foreground">{prompt.name} isn&apos;t in this conversation</span>
+      {canAdd && (
+        <LoadingButton type="button" size="sm" variant="outline" isPending={addMember.isPending} onClick={handleAdd}>
+          Add them
+        </LoadingButton>
+      )}
+      <Button type="button" size="sm" variant="ghost" onClick={onDismiss}>
+        Mention anyway
+      </Button>
     </div>
   );
 }

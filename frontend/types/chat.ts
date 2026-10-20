@@ -16,15 +16,16 @@ import type {
   chatSearchUsersContract,
   chatThreadPageContract,
 } from "@/hooks/api/chat-schema";
+import type { chatMessageAttachmentContract } from "@/hooks/api/chat-schema/message-schema";
 
 export type Message = z.infer<typeof chatMessageContract>;
 export type MessagesPage = z.infer<typeof chatMessagesPageContract>;
 export type ThreadPage = z.infer<typeof chatThreadPageContract>;
 
 export type MessageMetadata = NonNullable<Message["metadata"]>;
-type EntityRef = NonNullable<MessageMetadata["entities"]>[number];
+export type EntityRef = NonNullable<MessageMetadata["entities"]>[number];
+export type EntityCard = NonNullable<EntityRef["card"]>;
 export type TicketEntityRef = Extract<EntityRef, { type: "ticket" }>;
-export type CommentEntityRef = Extract<EntityRef, { type: "comment" }>;
 
 type ChannelMemberPreviewWire = z.infer<
   typeof chatChannelMemberPreviewContract
@@ -99,13 +100,7 @@ export interface UpdateChannelInput {
   avatarUrl?: string;
 }
 
-export interface AttachmentInput {
-  fileName: string;
-  fileUrl: string;
-  fileKey: string;
-  fileSize: number;
-  mimeType: string;
-}
+export type AttachmentInput = Omit<z.infer<typeof chatMessageAttachmentContract>, "id">;
 
 export interface SendMessageInput {
   mentionedUserIds?: string[];

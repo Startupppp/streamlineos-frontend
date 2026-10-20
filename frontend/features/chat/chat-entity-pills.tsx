@@ -1,8 +1,8 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { memo, useCallback, useMemo } from "react";
 import { useRouter } from "next/navigation";
-import { Loader2, Lock, MessageSquare, Ticket } from "lucide-react";
+import { Loader2, Lock } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import {
@@ -12,14 +12,20 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { TruncatedText } from "@/components/ui/truncated-text";
-import type { TicketEntityRef, CommentEntityRef } from "./chat-types";
-import { useCan } from "@/hooks/api/access";
-import { isApiError } from "@/lib/api-client";
+import type { EntityCard, EntityRef } from "@/types/chat";
+import { isApiError } from "@/lib/api-envelope";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { useEntityAction } from "./entity-actions-context";
-import { useSubmitEntityAction } from "@/hooks/api/chat-entities";
-import { useTicketPermalink } from "@/hooks/api/chat-previews";
+import {
+  useLinkedRecordPreview,
+  useSubmitEntityAction,
+  type EntityReferenceInput,
+} from "@/hooks/api/chat-entities";
 import { getStatusBadgeClass } from "@/components/shared/ticket-status-badge";
-import { formatTicketKey } from "@/components/shared/format-ticket-key";
+import { useSourceOverride } from "@/hooks/common/use-source-override";
+import { LINKED_RECORD_META } from "./linked-record-meta";
+
+const TICKET_STATUSES = ["TODO", "IN_PROGRESS", "IN_REVIEW", "DONE"] as const;
 
 const TICKET_STATUS_DISPLAY: Record<string, string> = {
   TODO: "Todo",
@@ -28,202 +34,176 @@ const TICKET_STATUS_DISPLAY: Record<string, string> = {
   DONE: "Done",
 };
 
-/**
- * The reader could not resolve the record — it is gone, or it was never theirs
- * to see. Both look the same on purpose, so scrollback leaks neither.
- */
-function UnresolvedPill({ label }: { label: string }) {
-  return (
-    <span className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-muted/30 px-2.5 py-1.5 my-1 text-dense text-muted-foreground">
-      <Lock className="h-3 w-3 shrink-0 text-muted-foreground" />
-      {label}
-    </span>
-  );
+const PILL_CLASS =
+  "inline-flex max-w-full items-center gap-1.5 rounded-lg border border-border bg-muted/50 px-2.5 py-1.5 my-1 text-dense";
+
+interface PillDisplay {
+  title: string | null;
+  subtitle: string | null;
+  href: string | null;
+  status: string | null;
 }
 
-export function TicketPill({
-  entity,
-  channelId,
-}: {
-  entity: TicketEntityRef;
+function describeEntity(entity: EntityRef, preview: EntityCard | undefined): PillDisplay {
+  const card = entity.card ?? preview;
+  if (entity.type !== "ticket")
+    return {
+      title: card?.title ?? null,
+      subtitle: card?.subtitle ?? null,
+      href: card?.href ?? null,
+      status: card?.status ?? null,
+    };
+  const legacyKey =
+    entity.projectKey && entity.ticketNumber ? `${entity.projectKey}-${entity.ticketNumber}` : null;
+  const legacyHref = entity.projectId
+    ? `/build/${entity.projectId}/issues?ticket=${entity.id}`
+    : null;
+  return {
+    title: card?.title ?? entity.title ?? null,
+    subtitle: card?.subtitle ?? legacyKey,
+    href: card?.href ?? legacyHref,
+    status: card?.status ?? entity.status ?? null,
+  };
+}
+
+function statusChangeError(error: unknown): string {
+  const code = isApiError(error) ? error.code : undefined;
+  if (code === "CHAT_ACTION_FORBIDDEN") return "You don't have permission to change this ticket's status.";
+  if (code === "PROJECTS_TICKET_NOT_FOUND") return "This ticket no longer exists.";
+  if (code === "CHAT_ACTION_TICKET_STATUS_FAILED") return "This status change isn't allowed.";
+  return getErrorMessage(error);
+}
+
+interface StatusMenuItemProps {
+  status: (typeof TICKET_STATUSES)[number];
+  isCurrent: boolean;
+  onPick: (status: string) => void;
+}
+
+const StatusMenuItem = memo(function StatusMenuItem({ status, isCurrent, onPick }: StatusMenuItemProps) {
+  const handleSelect = useCallback(() => onPick(status), [onPick, status]);
+  return (
+    <DropdownMenuItem onSelect={handleSelect} className={cn(isCurrent && "font-semibold")}>
+      {TICKET_STATUS_DISPLAY[status]}
+    </DropdownMenuItem>
+  );
+});
+
+interface TicketStatusControlProps {
+  reference: EntityReferenceInput;
   channelId: number;
-}) {
-  const router = useRouter();
-  const [currentStatus, setCurrentStatus] = useState(
-    entity.card?.status ?? entity.status ?? "TODO",
-  );
-  const [isChangingStatus, setIsChangingStatus] = useState(false);
+  status: string;
+}
+
+function TicketStatusControl({ reference, channelId, status }: TicketStatusControlProps) {
+  const canUpdate = Boolean(useEntityAction(reference, "status"));
   const submitEntityAction = useSubmitEntityAction();
-  const canUpdate = Boolean(
-    useEntityAction({ type: "ticket", id: String(entity.id) }, "status"),
-  );
-
-  const card = entity.card;
-  const ticketKey =
-    card?.subtitle ??
-    (entity.projectKey && entity.ticketNumber
-      ? `${entity.projectKey}-${entity.ticketNumber}`
-      : `Ticket #${entity.id}`);
-  const hasFullInfo =
-    Boolean(card?.subtitle) ||
-    Boolean(entity.projectKey && entity.ticketNumber);
-  const ticketTitle = card?.title ?? entity.title;
-
-  const handlePillClick = useCallback(() => {
-    if (card?.href) {
-      router.push(card.href);
-      return;
-    }
-    if (entity.projectId)
-      router.push(`/build/${entity.projectId}/issues?ticket=${entity.id}`);
-  }, [router, card?.href, entity.projectId, entity.id]);
+  const [current, setCurrent] = useSourceOverride(status, status);
+  const isPending = Boolean(submitEntityAction.isPending);
+  const { mutateAsync } = submitEntityAction;
 
   const handleStatusChange = useCallback(
-    async (nextStatus: string) => {
-      const prev = currentStatus;
-      setCurrentStatus(nextStatus);
-      setIsChangingStatus(true);
+    async (next: string) => {
+      const previous = current;
+      setCurrent(next);
       try {
-        await submitEntityAction.mutateAsync({
-          channelId,
-          reference: { type: "ticket", id: String(entity.id) },
-          actionId: "status",
-          input: { status: nextStatus },
-        });
-      } catch (err) {
-        setCurrentStatus(prev);
-        const code = isApiError(err) ? err.code : undefined;
-        if (code === "CHAT_ACTION_FORBIDDEN")
-          toast.error(
-            "You don't have permission to change this ticket's status.",
-          );
-        else if (code === "PROJECTS_TICKET_NOT_FOUND")
-          toast.error("This ticket no longer exists.");
-        else if (code === "CHAT_ACTION_TICKET_STATUS_FAILED")
-          toast.error("This status change isn't allowed.");
-        else toast.error("Failed to update ticket status");
-      } finally {
-        setIsChangingStatus(false);
+        await mutateAsync({ channelId, reference, actionId: "status", input: { status: next } });
+      } catch (error) {
+        setCurrent(previous);
+        toast.error(statusChangeError(error));
       }
     },
-    [currentStatus, channelId, entity],
+    [current, setCurrent, mutateAsync, channelId, reference],
   );
 
-  if (entity.card === null)
-    return <UnresolvedPill label="A ticket you can't see" />;
+  const label = TICKET_STATUS_DISPLAY[current] ?? current;
+  const badgeClass = cn(
+    "inline-flex items-center rounded px-1.5 py-px text-micro font-medium",
+    getStatusBadgeClass(current),
+  );
 
-  if (!hasFullInfo) {
-    return (
-      <div className="inline-flex items-center rounded-lg border border-border bg-muted/50 px-2.5 py-1.5 hover:border-border/80 transition-all duration-150 ease-out motion-reduce:transition-none my-1">
-        <button
-          type="button"
-          onClick={handlePillClick}
-          className="flex items-center gap-1.5 font-mono text-dense text-muted-foreground hover:text-foreground"
-          aria-label={`Open ${ticketKey}`}
-        >
-          <Ticket className="h-3 w-3 shrink-0 text-muted-foreground" />
-          {ticketKey}
-        </button>
-      </div>
-    );
-  }
+  if (!canUpdate) return <span className={badgeClass}>{label}</span>;
 
   return (
-    <div className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-muted/50 px-2.5 py-1.5 hover:border-border/80 transition-all duration-150 ease-out motion-reduce:transition-none my-1">
-      <button
-        type="button"
-        onClick={handlePillClick}
-        className="flex items-center gap-1 font-mono text-dense text-muted-foreground hover:text-foreground shrink-0"
-        aria-label={`Open ticket ${ticketKey}`}
-      >
-        <Ticket className="h-3 w-3 shrink-0 text-muted-foreground" />
-        {ticketKey}
-      </button>
-      {ticketTitle && (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
         <button
           type="button"
-          onClick={handlePillClick}
-          className="text-xs text-foreground/80 hover:underline max-w-[160px] min-w-0"
+          disabled={isPending}
+          className={cn(badgeClass, "cursor-pointer hover:opacity-80 transition-opacity duration-150 ease-out motion-reduce:transition-none")}
+          aria-label="Change ticket status"
         >
-          <TruncatedText text={ticketTitle} />
+          {isPending ? <Loader2 className="h-3 w-3 animate-spin" /> : label}
         </button>
-      )}
-      {canUpdate ? (
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <button
-              type="button"
-              disabled={isChangingStatus}
-              className={cn(
-                "inline-flex items-center rounded px-1.5 py-px text-micro font-medium cursor-pointer hover:opacity-80 transition-opacity duration-150 ease-out motion-reduce:transition-none",
-                getStatusBadgeClass(currentStatus),
-              )}
-              aria-label="Change ticket status"
-            >
-              {isChangingStatus ? (
-                <Loader2 className="h-3 w-3 animate-spin" />
-              ) : (
-                (TICKET_STATUS_DISPLAY[currentStatus] ?? currentStatus)
-              )}
-            </button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-36">
-            {(["TODO", "IN_PROGRESS", "IN_REVIEW", "DONE"] as const).map(
-              (s) => (
-                <DropdownMenuItem
-                  key={s}
-                  onClick={() => handleStatusChange(s)}
-                  className={cn(s === currentStatus && "font-semibold")}
-                >
-                  {TICKET_STATUS_DISPLAY[s]}
-                </DropdownMenuItem>
-              ),
-            )}
-          </DropdownMenuContent>
-        </DropdownMenu>
-      ) : (
-        <span
-          className={cn(
-            "inline-flex items-center rounded px-1.5 py-px text-micro font-medium",
-            getStatusBadgeClass(currentStatus),
-          )}
-        >
-          {TICKET_STATUS_DISPLAY[currentStatus] ?? currentStatus}
-        </span>
-      )}
-    </div>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="w-36">
+        {TICKET_STATUSES.map((option) => (
+          <StatusMenuItem
+            key={option}
+            status={option}
+            isCurrent={option === current}
+            onPick={handleStatusChange}
+          />
+        ))}
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 }
 
-export function CommentPill({ entity }: { entity: CommentEntityRef }) {
+interface LinkedRecordPillProps {
+  entity: EntityRef;
+  channelId: number;
+}
+
+export function LinkedRecordPill({ entity, channelId }: LinkedRecordPillProps) {
   const router = useRouter();
-  const canViewTickets = useCan("build:tickets:view");
-  const { data: ticket } = useTicketPermalink(
-    entity.projectId,
-    entity.ticketId,
-    {
-      enabled: canViewTickets,
-    },
-  );
+  const preview = useLinkedRecordPreview(entity);
+  const display = describeEntity(entity, preview);
+  const meta = LINKED_RECORD_META[entity.type];
+  const href = display.href;
+  const reference = useMemo(() => ({ type: entity.type, id: entity.id }), [entity.type, entity.id]);
 
-  const href = `/build/${entity.projectId}/issues?ticket=${entity.ticketId}&comment=${entity.id}`;
-  const label = ticket
-    ? `Comment on ${formatTicketKey(ticket.projectKey, ticket.ticketNumber)}`
-    : "Comment";
-
-  const handleClick = useCallback(() => {
-    router.push(href);
+  const handleOpen = useCallback(() => {
+    if (href) router.push(href);
   }, [router, href]);
 
+  if (entity.card === null)
+    return (
+      <span className={cn(PILL_CLASS, "bg-muted/30 text-muted-foreground")}>
+        <Lock className="h-3 w-3 shrink-0" aria-hidden />
+        Restricted record
+      </span>
+    );
+
+  const Icon = meta.icon;
+  const label = display.title ?? meta.label;
+  const body = (
+    <>
+      <Icon className="h-3 w-3 shrink-0 text-muted-foreground" aria-hidden />
+      {display.subtitle && entity.type === "ticket" && (
+        <span className="font-mono text-muted-foreground shrink-0">{display.subtitle}</span>
+      )}
+      <TruncatedText text={label} className="min-w-0 max-w-[200px] text-foreground/80" />
+    </>
+  );
+
   return (
-    <button
-      type="button"
-      onClick={handleClick}
-      className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-background/80 px-2 py-1 shadow-sm hover:shadow-md transition-all duration-150 ease-out motion-reduce:transition-none text-dense text-muted-foreground hover:text-foreground my-1"
-      aria-label={label}
-    >
-      <MessageSquare className="h-3 w-3 shrink-0 text-primary" />
-      {label}
-    </button>
+    <span className={PILL_CLASS}>
+      {href ? (
+        <button
+          type="button"
+          onClick={handleOpen}
+          aria-label={`Open ${meta.label.toLowerCase()} ${label}`}
+          className="flex min-w-0 items-center gap-1.5 hover:text-foreground hover:underline"
+        >
+          {body}
+        </button>
+      ) : (
+        <span className="flex min-w-0 items-center gap-1.5 text-muted-foreground">{body}</span>
+      )}
+      {entity.type === "ticket" && display.status && (
+        <TicketStatusControl reference={reference} channelId={channelId} status={display.status} />
+      )}
+    </span>
   );
 }

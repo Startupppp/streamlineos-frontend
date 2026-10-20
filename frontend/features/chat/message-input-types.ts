@@ -1,5 +1,7 @@
 import type { Message } from "./chat-types";
-import type { TicketSearchResult } from "@/types/projects";
+import type { MentionCandidate } from "./use-chat-mentions";
+import type { LinkedRecordDraft, MentionPrompt, RecordPickerState } from "./use-message-composer";
+import type { RecordSearchResult } from "./linked-record-meta";
 
 export type PendingAttachment = {
   fileName: string;
@@ -7,13 +9,6 @@ export type PendingAttachment = {
   fileKey: string;
   fileSize: number;
   mimeType: string;
-};
-
-export type OrgUser = {
-  id: string;
-  name?: string | null;
-  image?: string | null;
-  role?: string | null;
 };
 
 export interface MessageInputProps {
@@ -41,16 +36,16 @@ export interface MessageInputProps {
 
   showMentions: boolean;
   setShowMentions: React.Dispatch<React.SetStateAction<boolean>>;
-  mentionQuery: string;
   mentionIndex: number;
-  setMentionIndex: React.Dispatch<React.SetStateAction<number>>;
-  filteredMentions: OrgUser[];
-  insertMention: (name: string, userId: string) => void;
+  filteredMentions: MentionCandidate[];
+  insertMention: (candidate: MentionCandidate) => void;
+  mentionPrompt: MentionPrompt | null;
+  onDismissMentionPrompt: () => void;
 
-  showTicketPicker: boolean;
-  ticketQuery: string;
-  ticketSelectedIndex: number;
-  onTicketSelect: (ticket: TicketSearchResult) => void;
+  recordPicker: RecordPickerState | null;
+  onSelectRecord: (record: RecordSearchResult) => void;
+  linkedRecords: LinkedRecordDraft[];
+  onRemoveLinkedRecord: (key: string) => void;
 
   typingText: string | null;
 
