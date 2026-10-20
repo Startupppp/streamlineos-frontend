@@ -1,11 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { toast } from "sonner";
-import { getErrorMessage } from "@/lib/get-error-message";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { UserCombobox } from "@/components/ui/user-combobox";
 import { useInviteToHuddle } from "@/hooks/api/chat-huddles";
+import { describeHuddleInviteError } from "@/hooks/api/chat-huddle-errors";
+import { useMemberDirectory } from "@/hooks/api/members/use-member-directory";
 import type { Huddle } from "@/types/chat";
 
 interface HuddleInviteSectionProps {
@@ -23,6 +24,11 @@ export function HuddleInviteSection({
 }: HuddleInviteSectionProps) {
   const [inviteUserId, setInviteUserId] = useState("");
   const inviteToHuddle = useInviteToHuddle();
+  const selectedIds = useMemo(() => (inviteUserId ? [inviteUserId] : []), [inviteUserId]);
+  const { selectedMembers } = useMemberDirectory(
+    { kind: "org" },
+    { selectedIds, enabled: show && Boolean(inviteUserId) },
+  );
 
   if (!show) return null;
 
@@ -38,7 +44,10 @@ export function HuddleInviteSection({
           toast.success("Invited to the huddle");
           setInviteUserId("");
         },
-        onError: (error) => toast.error(getErrorMessage(error)),
+        onError: (error) =>
+          toast.error(
+            describeHuddleInviteError(error, (userId) => selectedMembers.find((m) => m.id === userId)?.name ?? undefined),
+          ),
       },
     );
   };

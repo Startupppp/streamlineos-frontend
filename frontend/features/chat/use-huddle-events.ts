@@ -6,7 +6,7 @@ import type { InboundMessage } from "ably";
 import { useSession } from "next-auth/react";
 import { toast } from "sonner";
 import { isForgedServerFrame, safeSubscribe, safeUnsubscribe } from "@/lib/ably-safe-subscribe";
-import { huddleChannelName, notificationsChannelName } from "@/lib/ably-channels";
+import { huddleChannelName } from "@/lib/ably-channels";
 import type { HuddleParticipant } from "@/types/chat";
 import { useAblyConnection } from "./use-ably-connection";
 
@@ -14,14 +14,12 @@ interface UseHuddleEventsOptions {
   channelId: number;
   currentUserId: string;
   participants: HuddleParticipant[];
-  onKicked: () => void;
 }
 
 export function useHuddleEvents({
   channelId,
   currentUserId,
   participants,
-  onKicked,
 }: UseHuddleEventsOptions): void {
   const ably = useAbly();
   const { data: session, status: sessionStatus } = useSession();
@@ -32,10 +30,8 @@ export function useHuddleEvents({
     if (!orgId || sessionStatus !== "authenticated" || !isAblyConnected) return;
 
     const ch = ably.channels.get(huddleChannelName(orgId, channelId));
-    const userCh = ably.channels.get(notificationsChannelName(orgId, currentUserId));
     let cancelled = false;
     const subscribedHuddle: Array<"huddle:user_joined" | "huddle:user_left"> = [];
-    let kickedSubscribed = false;
 
     const nameFor = (userId: string): string => {
       const participant = participants.find((p) => p.userId === userId);
@@ -56,12 +52,6 @@ export function useHuddleEvents({
       toast(`${nameFor(data.userId)} left the huddle`);
     };
 
-    const handleKicked = (msg: InboundMessage) => {
-      if (isForgedServerFrame("huddle:kicked", msg.clientId)) return;
-      toast.error("You were removed from the huddle");
-      onKicked();
-    };
-
     async function setup() {
       try {
         if (ably.connection.state !== "connected") {
@@ -79,14 +69,6 @@ export function useHuddleEvents({
           }
           if (ok) subscribedHuddle.push(event);
         }
-
-        if (cancelled) return;
-        const kickedOk = await safeSubscribe(userCh, "huddle:kicked", handleKicked);
-        if (cancelled) {
-          if (kickedOk) safeUnsubscribe(userCh, "huddle:kicked", handleKicked);
-          return;
-        }
-        if (kickedOk) kickedSubscribed = true;
       } catch {
         return;
       }
@@ -103,9 +85,6 @@ export function useHuddleEvents({
           event === "huddle:user_joined" ? handleJoined : handleLeft,
         );
       }
-      if (kickedSubscribed) {
-        safeUnsubscribe(userCh, "huddle:kicked", handleKicked);
-      }
     };
-  }, [ably, orgId, channelId, currentUserId, participants, onKicked, isAblyConnected, sessionStatus]);
+  }, [ably, orgId, channelId, currentUserId, participants, isAblyConnected, sessionStatus]);
 }

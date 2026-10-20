@@ -1,15 +1,17 @@
 "use client";
 
-import { PhoneOff, Video } from "lucide-react";
+import { PhoneOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { resolveImageUrl } from "@/lib/utils";
 import type { Huddle } from "@/types/chat";
 import { getInitials } from "@/lib/format-utils";
+import { huddleProviderPresentation } from "./huddle-provider";
 
 interface HuddleMiniBarProps {
   participants: Huddle["participants"];
   meetingUrl: string | null;
+  meetingProvider: Huddle["meetingProvider"];
   onLeave: () => void;
   isLeavePending: boolean;
 }
@@ -17,9 +19,11 @@ interface HuddleMiniBarProps {
 export function HuddleMiniBar({
   participants,
   meetingUrl,
+  meetingProvider,
   onLeave,
   isLeavePending,
 }: HuddleMiniBarProps) {
+  const { joinLabel, Icon: ProviderIcon } = huddleProviderPresentation(meetingProvider);
   return (
     <div className="px-4 pb-2 flex items-center gap-2">
       <div className="flex -space-x-1.5">
@@ -38,9 +42,10 @@ export function HuddleMiniBar({
             href={meetingUrl}
             target="_blank"
             rel="noopener noreferrer"
+            aria-label={joinLabel}
             className="inline-flex items-center gap-1 rounded-md bg-primary px-2 py-1 text-micro font-medium text-primary-foreground transition-colors hover:bg-primary/90"
           >
-            <Video className="h-3 w-3 shrink-0" />
+            <ProviderIcon className="h-3 w-3 shrink-0" />
             Join
           </a>
         ) : (

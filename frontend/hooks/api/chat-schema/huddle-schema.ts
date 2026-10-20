@@ -35,6 +35,7 @@ export const chatHuddleContract = z
     channelId: z.number(),
     status: z.enum(["active", "ended"]),
     calendarEventId: z.number().nullable(),
+    meetingProvider: z.enum(["google_meet", "microsoft_teams"]).nullable(),
     meetingUrl: z.string().url().nullable(),
     startedAt: z.string(),
     endedAt: z.string().nullable(),

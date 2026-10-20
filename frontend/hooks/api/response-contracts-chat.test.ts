@@ -272,6 +272,7 @@ const HUDDLE = {
   channelId: 7,
   status: "active",
   calendarEventId: null,
+  meetingProvider: "google_meet",
   meetingUrl: "https://meet.google.com/abc-defg-hij",
   startedAt: "2026-09-02T12:00:00.000Z",
   endedAt: null,

@@ -13,6 +13,7 @@ import { HuddleParticipantCard } from "./huddle-participant-card";
 import { useElapsedTime } from "./use-elapsed-time";
 import { HuddleInviteSection } from "./huddle-invite-section";
 import { HuddleMiniBar } from "./huddle-mini-bar";
+import { huddleProviderPresentation } from "./huddle-provider";
 
 interface HuddlePanelProps {
   huddle: Huddle;
@@ -25,10 +26,12 @@ export function HuddlePanel({ huddle, channelId, currentUserId }: HuddlePanelPro
   const [showInviteDialog, setShowInviteDialog] = useState(false);
 
   const leaveHuddle = useLeaveHuddle();
-  useHuddleHeartbeat(huddle.id);
+  useHuddleHeartbeat(huddle.id, channelId);
   const elapsed = useElapsedTime(huddle.startedAt);
 
   const meetingUrl = huddle.meetingUrl;
+  const { joinLabel, Icon: ProviderIcon } = huddleProviderPresentation(huddle.meetingProvider);
+  const starterName = huddle.startedByUser?.name ?? null;
   const participantCount = huddle.participants.length;
 
   const handleLeave = useCallback(() => {
@@ -39,7 +42,6 @@ export function HuddlePanel({ huddle, channelId, currentUserId }: HuddlePanelPro
     channelId,
     currentUserId,
     participants: huddle.participants,
-    onKicked: handleLeave,
   });
 
   const handleToggleExpanded = useCallback(() => {
@@ -78,6 +80,9 @@ export function HuddlePanel({ huddle, channelId, currentUserId }: HuddlePanelPro
 
       {expanded && (
         <div className="px-4 pb-3">
+          {starterName ? (
+            <p className="mb-2 text-dense text-muted-foreground">Started by {starterName}</p>
+          ) : null}
           {meetingUrl ? (
             <a
               href={meetingUrl}
@@ -85,8 +90,8 @@ export function HuddlePanel({ huddle, channelId, currentUserId }: HuddlePanelPro
               rel="noopener noreferrer"
               className="mb-3 flex h-9 w-full items-center justify-center gap-2 rounded-md bg-primary px-3 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
             >
-              <Video className="h-4 w-4 shrink-0" />
-              Join meeting
+              <ProviderIcon className="h-4 w-4 shrink-0" />
+              {joinLabel}
             </a>
           ) : (
             <div className="mb-3 flex items-start gap-2 rounded-lg bg-status-warning-surface px-3 py-2 text-dense text-status-warning-ink">
@@ -150,6 +155,7 @@ export function HuddlePanel({ huddle, channelId, currentUserId }: HuddlePanelPro
         <HuddleMiniBar
           participants={huddle.participants}
           meetingUrl={meetingUrl}
+          meetingProvider={huddle.meetingProvider}
           onLeave={handleLeave}
           isLeavePending={leaveHuddle.isPending}
         />
