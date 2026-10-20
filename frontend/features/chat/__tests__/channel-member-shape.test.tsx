@@ -28,7 +28,7 @@ const DETAIL_MEMBER: ChannelMember = {
   userId: OTHER,
   role: "MEMBER",
   lastReadAt: null,
-  joinedAt: null,
+  joinedAt: "2026-01-01T00:00:00.000Z",
   mutedUntil: null,
   archivedAt: null,
   isFavorite: false,

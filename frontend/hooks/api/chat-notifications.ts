@@ -12,6 +12,13 @@ import { reauthorizeAblyClients } from "@/lib/ably";
 import type { Channel } from "@/types/chat";
 import { isRecord } from "@/lib/is-record";
 import {
+  forgetChannelUnread,
+  readChatNotification,
+  rememberMessage,
+  rememberUnread,
+  viewerIsReading,
+} from "@/hooks/api/chat-notification-tracking";
+import {
   chatAlertDecision,
   chatAlertIsRaised,
   viewerChannelState,
@@ -26,59 +33,6 @@ import { findCachedMessage, patchChatMessage } from "@/hooks/api/chat-message-ca
 import { findChannelRow } from "@/hooks/api/chat-channel-cache";
 import { messageDeletedPayloadSchema } from "@/hooks/api/chat-realtime-schema";
 import { collaborationQueryKeys } from "@/lib/query-keys/collaboration";
-
-/**
- * An Ably message body is `any`, so asserting it into a payload interface
- * checked nothing. Read the four fields the handler uses and verify each.
- */
-function readChatNotification(data: unknown): {
-  id: number;
-  senderId: unknown;
-  senderName: string | null;
-  content: string | null;
-  createdAt: string;
-} | null {
-  if (!isRecord(data) || typeof data.id !== "number" || !data.id) return null;
-  return {
-    id: data.id,
-    senderId: data.senderId,
-    senderName: typeof data.senderName === "string" ? data.senderName : null,
-    content: typeof data.content === "string" ? data.content : null,
-    createdAt: typeof data.createdAt === "string" ? data.createdAt : new Date().toISOString(),
-  };
-}
-
-const SEEN_MESSAGE_LIMIT = 500;
-
-function rememberUnread(counted: Map<number, number>, messageId: number, channelId: number): void {
-  counted.set(messageId, channelId);
-  if (counted.size > SEEN_MESSAGE_LIMIT) {
-    const oldest = counted.keys().next().value;
-    if (oldest !== undefined) counted.delete(oldest);
-  }
-}
-
-function forgetChannelUnread(counted: Map<number, number>, channelId: number): void {
-  for (const [messageId, owner] of counted) if (owner === channelId) counted.delete(messageId);
-}
-
-function rememberMessage(seen: Set<number>, id: number): boolean {
-  if (seen.has(id)) return false;
-  seen.add(id);
-  if (seen.size > SEEN_MESSAGE_LIMIT) {
-    const oldest = seen.values().next().value;
-    if (oldest !== undefined) seen.delete(oldest);
-  }
-  return true;
-}
-
-function viewerIsReading(channelId: number, activeChannelId: number | null): boolean {
-  return (
-    channelId === activeChannelId &&
-    typeof document !== "undefined" &&
-    document.visibilityState === "visible"
-  );
-}
 
 export function useChatGlobalNotifications(
   channels: Channel[] | undefined,

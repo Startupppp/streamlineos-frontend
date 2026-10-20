@@ -1,15 +1,21 @@
-import { useCallback, useState, type ReactNode, type UIEvent } from "react";
+import type { ReactNode, UIEvent } from "react";
 import { QueryClient, QueryClientProvider, type InfiniteData } from "@tanstack/react-query";
 import { act, renderHook, waitFor } from "@testing-library/react";
 import { toast } from "sonner";
 import { apiClient } from "@/lib/api-client";
 import { ApiError } from "@/lib/api-envelope";
 import { collaborationQueryKeys } from "@/lib/query-keys/collaboration";
-import { useChatMessages } from "@/hooks/api/chat-core-read";
-import { useSendMessage } from "@/hooks/api/chat-core-mutations-a";
-import type { Message, MessagesPage } from "@/types/chat";
+import type { MessagesPage } from "@/types/chat";
 import { mergeInboundMessage } from "./message-page-merge";
-import { useMessageTimeline } from "./use-message-timeline";
+import {
+  CHANNEL_ID,
+  message,
+  positioned,
+  getCalls,
+  leaveSpy,
+  useHarness,
+  ids,
+} from "./use-message-timeline-test-harness";
 
 jest.mock("next-auth/react", () => ({
   useSession: jest.fn().mockReturnValue({
@@ -32,36 +38,9 @@ jest.mock("sonner", () => ({
   toast: Object.assign(jest.fn(), { error: jest.fn(), success: jest.fn(), dismiss: jest.fn() }),
 }));
 
-const CHANNEL_ID = 7;
 const messagesKey = collaborationQueryKeys.chat.messages(CHANNEL_ID);
 const mockedGet = jest.mocked(apiClient.get);
 const mockedPost = jest.mocked(apiClient.post);
-
-function message(id: number, over: Partial<Message> = {}): Message {
-  return {
-    id,
-    channelId: CHANNEL_ID,
-    senderId: "user-2",
-    sender: { id: "user-2", name: "Bo", image: null },
-    content: `message ${id}`,
-    replyToId: null,
-    isEdited: false,
-    isDeleted: false,
-    messageType: "text",
-    metadata: null,
-    actionStatus: null,
-    reactions: {},
-    createdAt: "2026-10-20T09:00:00.000Z",
-    updatedAt: "2026-10-20T09:00:00.000Z",
-    attachments: [],
-    replyTo: null,
-    ...over,
-  };
-}
-
-function positioned(id: number) {
-  return { ...message(id), channelPosition: id };
-}
 
 let contextResult: () => Promise<unknown>;
 
@@ -77,40 +56,10 @@ function routeGet(path: string, params?: unknown): Promise<unknown> {
   return Promise.reject(new Error(`unexpected GET ${path}`));
 }
 
-function getCalls(suffix: string) {
-  return mockedGet.mock.calls.filter(([path]) => String(path).endsWith(suffix));
-}
-
-const leaveSpy = jest.fn();
-
-function useHarness(initialAnchor: number | null) {
-  const [anchor, setAnchor] = useState<number | null>(initialAnchor);
-  const handleLeave = useCallback(() => {
-    leaveSpy();
-    setAnchor(null);
-  }, []);
-  const history = useChatMessages(CHANNEL_ID);
-  const send = useSendMessage();
-  const timeline = useMessageTimeline({
-    channelId: CHANNEL_ID,
-    currentUserId: "user-1",
-    members: undefined,
-    anchorMessageId: anchor,
-    onLeaveAnchor: handleLeave,
-    history,
-    send,
-  });
-  return { anchor, timeline };
-}
-
 let client: QueryClient;
 
 function Wrapper({ children }: { children: ReactNode }) {
   return <QueryClientProvider client={client}>{children}</QueryClientProvider>;
-}
-
-function ids(result: { current: ReturnType<typeof useHarness> }) {
-  return result.current.timeline.messages.map((m) => m.id);
 }
 
 function mainIds() {

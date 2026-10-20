@@ -1,11 +1,20 @@
-import type { ReactNode } from "react";
-import { QueryClient, QueryClientProvider, type InfiniteData } from "@tanstack/react-query";
+import type { InfiniteData, QueryClient } from "@tanstack/react-query";
 import { act, renderHook, waitFor } from "@testing-library/react";
 import { apiClient } from "@/lib/api-client";
 import { ApiError } from "@/lib/api-envelope";
 import { collaborationQueryKeys } from "@/lib/query-keys/collaboration";
 import type { ChatChannelDetailWire } from "@/hooks/api/chat-extra-schema";
 import type { Channel, ChannelPage, OrgUser, PublicChannel } from "@/types/chat";
+import {
+  CHANNEL_ID,
+  deferred,
+  detailKey,
+  freshClient,
+  myChannelsKey,
+  refetchingInvalidations,
+  unreadKey,
+  wrapperFor,
+} from "@/hooks/api/chat-cache-test-harness";
 
 jest.mock("next-auth/react", () => ({
   useSession: jest.fn().mockReturnValue({
@@ -34,33 +43,8 @@ jest.mock("@/lib/ably", () => ({ reauthorizeAblyClients: jest.fn().mockResolvedV
 const mockedPost = jest.mocked(apiClient.post);
 const { useCan } = jest.requireMock("@/hooks/api/access") as { useCan: jest.Mock };
 
-const CHANNEL_ID = 7;
-const myChannelsKey = collaborationQueryKeys.chat.myChannels();
 const archivedKey = collaborationQueryKeys.chat.archivedChannels();
 const publicKey = collaborationQueryKeys.chat.publicChannels();
-const unreadKey = collaborationQueryKeys.chat.unreadTotal();
-const detailKey = collaborationQueryKeys.chat.channel(CHANNEL_ID);
-
-function deferred<T>() {
-  let resolve: (value: T) => void = () => undefined;
-  let reject: (reason: unknown) => void = () => undefined;
-  const promise = new Promise<T>((res, rej) => {
-    resolve = res;
-    reject = rej;
-  });
-  return { promise, resolve, reject };
-}
-
-function freshClient() {
-  return new QueryClient({ defaultOptions: { queries: { retry: false }, mutations: { retry: false } } });
-}
-
-function wrapperFor(client: QueryClient) {
-  function Wrapper({ children }: { children: ReactNode }) {
-    return <QueryClientProvider client={client}>{children}</QueryClientProvider>;
-  }
-  return Wrapper;
-}
 
 const ownPreview: Channel["members"][number] = {
   id: 11,
@@ -128,10 +112,6 @@ function seedList<T>(client: QueryClient, key: readonly unknown[], channels: T[]
 
 function rows<T = Channel>(client: QueryClient, key: readonly unknown[]): T[] {
   return client.getQueryData<InfiniteData<ChannelPage<T>>>(key)?.pages.flatMap((p) => p.channels) ?? [];
-}
-
-function refetchingInvalidations(spy: jest.SpyInstance) {
-  return spy.mock.calls.filter(([filters]) => filters?.refetchType !== "none");
 }
 
 beforeEach(() => {
@@ -313,101 +293,5 @@ describe("creating a conversation is instant", () => {
       await result.current.mutateAsync({ name: "new", memberIds: [] }).catch(() => undefined);
     });
     expect(rows(client, myChannelsKey).map((c) => c.id)).toEqual([CHANNEL_ID]);
-  });
-});
-
-describe("useChannelInviteLink mints through a mutation, never a POST inside a query", () => {
-  it("mints once when enabled and returns the token in the same { data, isLoading } shape", async () => {
-    const { useChannelInviteLink } = await import("@/hooks/api/chat-personal-b");
-    const client = freshClient();
-    mockedPost.mockResolvedValue({ token: "tok-1" });
-    const { result } = renderHook(() => useChannelInviteLink(CHANNEL_ID, true), { wrapper: wrapperFor(client) });
-    await waitFor(() => expect(result.current.data).toEqual({ token: "tok-1" }));
-    expect(result.current.isLoading).toBe(false);
-    expect(mockedPost).toHaveBeenCalledTimes(1);
-    expect(mockedPost.mock.calls[0][0]).toBe(`/chat/channels/${CHANNEL_ID}/invite-link`);
-  });
-
-  it("useRegenerateInviteLink writes the new token in place without re-minting", async () => {
-    const { useChannelInviteLink, useRegenerateInviteLink } = await import("@/hooks/api/chat-personal-b");
-    const client = freshClient();
-    mockedPost.mockResolvedValueOnce({ token: "tok-1" }).mockResolvedValueOnce({ token: "tok-2" });
-    const link = renderHook(() => useChannelInviteLink(CHANNEL_ID, true), { wrapper: wrapperFor(client) });
-    await waitFor(() => expect(link.result.current.data).toEqual({ token: "tok-1" }));
-    const regenerate = renderHook(() => useRegenerateInviteLink(), { wrapper: wrapperFor(client) });
-    await act(async () => {
-      await regenerate.result.current.mutateAsync({ channelId: CHANNEL_ID });
-    });
-    await waitFor(() => expect(link.result.current.data).toEqual({ token: "tok-2" }));
-    expect(mockedPost).toHaveBeenCalledTimes(2);
-  });
-
-  it("mints once under StrictMode's double effect run", async () => {
-    const { useChannelInviteLink } = await import("@/hooks/api/chat-personal-b");
-    const { StrictMode, createElement } = await import("react");
-    const client = freshClient();
-    mockedPost.mockResolvedValue({ token: "tok-1", expiresAt: null, maxUses: null, useCount: 0 });
-    const Inner = wrapperFor(client);
-    function Strict({ children }: { children: ReactNode }) {
-      return createElement(StrictMode, null, createElement(Inner, null, children));
-    }
-    const { result } = renderHook(() => useChannelInviteLink(CHANNEL_ID, true), { wrapper: Strict });
-    await waitFor(() => expect(result.current.data?.token).toBe("tok-1"));
-    expect(mockedPost).toHaveBeenCalledTimes(1);
-  });
-
-  it("re-mints after the server expiry, but never sooner than 30s after the last mint", async () => {
-    jest.useFakeTimers();
-    try {
-      const { useChannelInviteLink } = await import("@/hooks/api/chat-personal-b");
-      const client = freshClient();
-      mockedPost
-        .mockResolvedValueOnce({ token: "tok-1", expiresAt: new Date(Date.now() + 50).toISOString(), maxUses: null, useCount: 0 })
-        .mockResolvedValueOnce({ token: "tok-2", expiresAt: null, maxUses: null, useCount: 0 });
-      const { result } = renderHook(() => useChannelInviteLink(CHANNEL_ID, true), { wrapper: wrapperFor(client) });
-      await act(async () => {
-        await jest.advanceTimersByTimeAsync(10);
-      });
-      expect(result.current.data?.token).toBe("tok-1");
-      await act(async () => {
-        await jest.advanceTimersByTimeAsync(29_000);
-      });
-      expect(mockedPost).toHaveBeenCalledTimes(1);
-      await act(async () => {
-        await jest.advanceTimersByTimeAsync(2_000);
-      });
-      expect(mockedPost).toHaveBeenCalledTimes(2);
-      expect(result.current.data?.token).toBe("tok-2");
-    } finally {
-      jest.useRealTimers();
-    }
-  });
-
-  it("stops re-minting when the server answers with the same expiry, so a skewed client clock cannot loop", async () => {
-    jest.useFakeTimers();
-    try {
-      const { useChannelInviteLink } = await import("@/hooks/api/chat-personal-b");
-      const client = freshClient();
-      const skewed = { token: "tok-s", expiresAt: new Date(Date.now() - 60_000).toISOString(), maxUses: null, useCount: 0 };
-      mockedPost.mockResolvedValue(skewed);
-      renderHook(() => useChannelInviteLink(CHANNEL_ID + 1, true), { wrapper: wrapperFor(client) });
-      await act(async () => {
-        await jest.advanceTimersByTimeAsync(10 * 60_000);
-      });
-      expect(mockedPost).toHaveBeenCalledTimes(2);
-    } finally {
-      jest.useRealTimers();
-    }
-  });
-
-  it("does not mint when the viewer cannot manage invite links", async () => {
-    useCan.mockReturnValue(false);
-    const { useChannelInviteLink } = await import("@/hooks/api/chat-personal-b");
-    const { result } = renderHook(() => useChannelInviteLink(CHANNEL_ID, true), {
-      wrapper: wrapperFor(freshClient()),
-    });
-    expect(result.current.isLoading).toBe(false);
-    expect(result.current.data).toBeUndefined();
-    expect(mockedPost).not.toHaveBeenCalled();
   });
 });

@@ -7,9 +7,8 @@ import {
   useChatChannel, useChatMessages, useChatOnlineUsers, useChatOrgUsers,
 } from "@/hooks/api/chat-core-read";
 import {
-  useSendMessage, useDeleteMessage, useEditMessage, useMarkChannelRead,
+  useSendMessage, useDeleteMessage, useEditMessage, useMarkChannelRead, useToggleReaction,
 } from "@/hooks/api/chat-core-mutations-a";
-import { useToggleReaction } from "@/hooks/api/chat-core-mutations-b";
 import { useChatPins, usePinMessage, useUnpinMessage } from "@/hooks/api/chat-search";
 import { useSavedMessages, useSaveMessage, useUnsaveMessage } from "@/hooks/api/chat-personal-a";
 import { useChatPollReconciliation } from "./use-chat-poll-reconciliation";

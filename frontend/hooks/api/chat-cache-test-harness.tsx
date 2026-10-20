@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
-import { QueryClient, QueryClientProvider, type InfiniteData } from "@tanstack/react-query";
+import { QueryClientProvider, type InfiniteData, type QueryClient } from "@tanstack/react-query";
+import { makeQueryClient } from "@/test-utils/render";
 import { collaborationQueryKeys } from "@/lib/query-keys/collaboration";
 import type { ChatChannelDetailWire } from "@/hooks/api/chat-extra-schema";
 import type { Channel, ChannelPage, Message, MessagesPage, ThreadPage } from "@/types/chat";
@@ -24,7 +25,9 @@ export function deferred<T>() {
 }
 
 export function freshClient() {
-  return new QueryClient({ defaultOptions: { queries: { retry: false }, mutations: { retry: false } } });
+  const client = makeQueryClient();
+  client.setDefaultOptions({ queries: { retry: false }, mutations: { retry: false } });
+  return client;
 }
 
 export function wrapperFor(client: QueryClient) {
@@ -153,4 +156,27 @@ export function installRandomUuid(): void {
   afterAll(() => {
     if (original) Object.defineProperty(globalThis, "crypto", original);
   });
+}
+
+export function ablyMock() {
+  const handlers = new Map<string, Array<(msg: unknown) => void>>();
+  const channel = {
+    subscribe: jest.fn((event: string, handler: (msg: unknown) => void) => {
+      handlers.set(event, [...(handlers.get(event) ?? []), handler]);
+      return Promise.resolve(undefined);
+    }),
+    unsubscribe: jest.fn(),
+    publish: jest.fn().mockResolvedValue(undefined),
+    presence: {
+      subscribe: jest.fn().mockResolvedValue(undefined),
+      unsubscribe: jest.fn(),
+      update: jest.fn().mockResolvedValue(undefined),
+      leave: jest.fn().mockResolvedValue(undefined),
+    },
+  };
+  return {
+    handlers,
+    channels: { get: jest.fn().mockReturnValue(channel) },
+    connection: { state: "connected", on: jest.fn(), off: jest.fn() },
+  };
 }

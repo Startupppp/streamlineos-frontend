@@ -1,7 +1,7 @@
-import type React from "react";
-import type { ReactNode } from "react";
-import { act, renderHook, waitFor } from "@testing-library/react";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import type { ChangeEvent, KeyboardEvent, ReactNode } from "react";
+import { fireEvent, render, renderHook, waitFor, within } from "@testing-library/react";
+import { QueryClientProvider } from "@tanstack/react-query";
+import { makeQueryClient } from "@/test-utils/render";
 
 import { useMessageComposer } from "./use-message-composer";
 import type { ChatChannelDetailWire } from "@/hooks/api/chat-extra-schema";
@@ -68,7 +68,7 @@ export function harness(type: ChannelType = "PRIVATE", fail = false, isOnline = 
       return { id: 1 };
     }),
   };
-  const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+  const client = makeQueryClient();
   function Wrapper({ children }: { children: ReactNode }) {
     return <QueryClientProvider client={client}>{children}</QueryClientProvider>;
   }
@@ -88,30 +88,42 @@ export function harness(type: ChannelType = "PRIVATE", fail = false, isOnline = 
       }),
     { wrapper: Wrapper, initialProps: { draftKey: "chat:draft:7" } },
   );
+  mountComposerField(hook);
   return { hook, sendMessage, sent, client };
 }
 
 export type Hook = ReturnType<typeof harness>["hook"];
 
+const composerFields = new WeakMap<object, { textarea: HTMLElement; preventDefault: jest.Mock }>();
+
+function mountComposerField(hook: { result: { current: ReturnType<typeof useMessageComposer> } }) {
+  const preventDefault = jest.fn();
+  function handleChange(event: ChangeEvent<HTMLTextAreaElement>) {
+    hook.result.current.handleInputChange(event);
+  }
+  function handleKeyDown(event: KeyboardEvent<HTMLTextAreaElement>) {
+    jest.spyOn(event, "preventDefault").mockImplementation(preventDefault);
+    hook.result.current.handleKeyDown(event);
+  }
+  const view = render(<textarea aria-label="Message" onChange={handleChange} onKeyDown={handleKeyDown} />);
+  composerFields.set(hook, { textarea: within(view.container).getByRole("textbox"), preventDefault });
+}
+
+function composerField(hook: Hook) {
+  const field = composerFields.get(hook);
+  if (!field) throw new Error("composer field was not mounted by harness()");
+  return field;
+}
+
 export function change(hook: Hook, value: string) {
-  const target = { value, selectionStart: value.length, style: {}, scrollHeight: 0 };
-  act(() => {
-    hook.result.current.handleInputChange({ target } as unknown as React.ChangeEvent<HTMLTextAreaElement>);
-  });
+  fireEvent.change(composerField(hook).textarea, { target: { value } });
 }
 
 export function press(hook: Hook, key: string, isComposing = false) {
-  const preventDefault = jest.fn();
-  act(() => {
-    hook.result.current.handleKeyDown({
-      key,
-      shiftKey: false,
-      keyCode: isComposing ? 229 : 13,
-      nativeEvent: { isComposing },
-      preventDefault,
-    } as unknown as React.KeyboardEvent<HTMLTextAreaElement>);
-  });
-  return preventDefault;
+  const field = composerField(hook);
+  field.preventDefault.mockClear();
+  fireEvent.keyDown(field.textarea, { key, shiftKey: false, keyCode: isComposing ? 229 : 13, isComposing });
+  return field.preventDefault;
 }
 
 export async function openRecordPickerWithResults(hook: Hook, text = "see /acme") {

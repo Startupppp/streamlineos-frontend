@@ -162,7 +162,7 @@ describe("saving a message that only exists in a context window", () => {
   it("adds it to Saved at once, because the optimistic lookup searches context windows as well as timelines", async () => {
     const savedKey = collaborationQueryKeys.chat.savedMessages();
     client.setQueryData<InfiniteData<SavedMessagesPage>>(savedKey, {
-      pages: [{ items: [], nextCursor: null }],
+      pages: [{ items: [], nextCursor: undefined }],
       pageParams: [undefined],
     });
     mockedPost.mockReturnValue(new Promise(() => undefined));

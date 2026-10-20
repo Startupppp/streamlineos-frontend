@@ -100,7 +100,7 @@ function member(overrides: Partial<ChannelMember>): ChannelMember {
 }
 
 function channelWith(options: {
-  mutedUntil?: Date | string | null;
+  mutedUntil?: string | null;
   notificationPreference?: ChatNotificationPreference;
 }): Channel {
   return {
@@ -117,6 +117,8 @@ function channelWith(options: {
         notificationPreference: options.notificationPreference ?? "DEFAULT",
       }),
     ],
+    memberCount: 1,
+    membersTruncated: false,
     unreadCount: 0,
     lastMessage: null,
   };

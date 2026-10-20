@@ -61,7 +61,7 @@ function makeMembers(count: number): ChannelMember[] {
     userId: `user-${i + 1}`,
     role: "MEMBER" as const,
     lastReadAt: null,
-    joinedAt: null,
+    joinedAt: "2026-01-01T00:00:00.000Z",
     mutedUntil: null,
     archivedAt: null,
     isFavorite: false,

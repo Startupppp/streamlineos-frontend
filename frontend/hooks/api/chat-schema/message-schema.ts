@@ -132,11 +132,19 @@ export const chatMessagesPageContract = z.object({
 });
 
 export const chatMessageContextContract = z.object({
-  messages: z.array(chatMessageContract),
+  messages: z.array(
+    chatMessageContract.extend({
+      sender: chatMessageSenderContract
+        .nullable()
+        .transform((sender) => sender ?? { id: null, name: null, image: null }),
+    }),
+  ),
   targetMessageId: z.number(),
   olderCursor: z.number().nullable(),
   hasNewer: z.boolean(),
 });
+
+export type ChatMessageContext = z.infer<typeof chatMessageContextContract>;
 
 export const chatPollPageContract = z.object({
   messages: z.array(chatMessageContract),

@@ -270,10 +270,6 @@
       "nonNull": 0
     },
     "features/chat/chat-bubble.tsx": {
-      "as": 2,
-      "nonNull": 0
-    },
-    "features/chat/huddle-chat-panel.tsx": {
       "as": 1,
       "nonNull": 0
     },
