@@ -122,7 +122,7 @@ export default function PageSharePopover({ page }: PageSharePopoverProps) {
           variant="outline"
           size="sm"
           className="h-9 w-9 px-0"
-          aria-label="Share page"
+          aria-label="Share file"
         >
           <KbShare2Icon className="h-4 w-4" />
         </Button>

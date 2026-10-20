@@ -270,7 +270,7 @@ export default function SpacesPage() {
   const emptyNode = hasActiveFilters ? (
     <EmptyState
       illustration={<KbLayoutGridIcon className="w-8 text-muted-foreground" />}
-      title="No spaces match your filters"
+      title="No team folders match your filters"
       description="Try adjusting your search or filters."
       action={{ label: "Clear filters", onClick: handleClearFilters }}
       className={CONTENT_FILL_PANEL}
@@ -278,11 +278,11 @@ export default function SpacesPage() {
   ) : (
     <EmptyState
       illustration={<KbLayoutGridIcon className="w-8 text-muted-foreground" />}
-      title="No spaces yet"
-      description="Create a space to organize your wiki pages."
+      title="No team folders yet"
+      description="Create a team folder to organize your docs."
       action={
         canManage
-          ? { label: "Create space", onClick: handleCreate }
+          ? { label: "Create team folder", onClick: handleCreate }
           : undefined
       }
       className={CONTENT_FILL_PANEL}
@@ -291,13 +291,13 @@ export default function SpacesPage() {
 
   return (
     <PageWrapper
-      title="Spaces"
-      subtitle="Organize your wiki pages into spaces"
+      title="Team folders"
+      subtitle="Organize your docs into team folders"
       actions={
         canManage ? (
           <Button size="sm" onClick={handleCreate}>
             <KbPlusIcon className="h-4 w-4 mr-1.5" />
-            New space
+            New team folder
           </Button>
         ) : undefined
       }
@@ -307,7 +307,7 @@ export default function SpacesPage() {
           <SearchInput
             value={rawSearch}
             onValueChange={handleSearchChange}
-            placeholder="Search spaces…"
+            placeholder="Search team folders…"
             className="h-9 w-48"
           />
           <Select value={audienceFilter} onValueChange={handleAudienceChange}>

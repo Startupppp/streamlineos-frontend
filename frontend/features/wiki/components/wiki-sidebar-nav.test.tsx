@@ -17,13 +17,13 @@ describe("WikiSidebarNav — company documents", () => {
     renderWithProviders(<WikiSidebarNav canViewAnalytics={false} canViewReviews={false} canManageContent={false} canManageTemplates={false} canImportPages={false} canViewSpaces={false} showCompanyDocuments />);
 
     expect(screen.getByRole("link", { name: "Company documents" })).toHaveAttribute("href", "/knowledge/wiki/company-documents");
-    expect(screen.getByRole("link", { name: "My pages" })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "My files" })).toBeInTheDocument();
   });
 
-  it("labels the owned-pages destination My pages, matching the heading that route renders, not the retired Private wording", () => {
+  it("labels the owned-pages destination My files, matching the heading that route renders, not the retired Private wording", () => {
     renderWithProviders(<WikiSidebarNav canViewAnalytics={false} canViewReviews={false} canManageContent={false} canManageTemplates={false} canImportPages={false} canViewSpaces={false} />);
 
-    expect(screen.getByRole("link", { name: "My pages" })).toHaveAttribute("href", "/knowledge/wiki/private");
+    expect(screen.getByRole("link", { name: "My files" })).toHaveAttribute("href", "/knowledge/wiki/private");
     expect(screen.queryByRole("link", { name: "Private" })).toBeNull();
   });
 });
@@ -53,7 +53,7 @@ describe("WikiSidebarNav — wiki hides the Documents product sidebar", () => {
       />,
     );
 
-    expect(screen.getByRole("link", { name: "My pages" })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "My files" })).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Templates" })).toBeInTheDocument();
     expect(screen.queryByRole("link", { name: "Settings" })).toBeNull();
     expect(screen.queryByRole("link", { name: "Recent" })).toBeNull();
@@ -121,9 +121,9 @@ describe("WikiSidebarNav — management links follow the route permission keys",
 
     expect(screen.queryByRole("link", { name: "Templates" })).toBeNull();
     expect(screen.queryByRole("link", { name: "Import & Export" })).toBeNull();
-    expect(screen.queryByRole("link", { name: "Spaces" })).toBeNull();
+    expect(screen.queryByRole("link", { name: "Team folders" })).toBeNull();
     expect(screen.queryByText("Manage")).toBeNull();
-    expect(screen.getByRole("link", { name: "My pages" })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "My files" })).toBeInTheDocument();
   });
 
   it("shows Templates, Import & Export and Spaces when the actor holds their keys", () => {
@@ -140,6 +140,6 @@ describe("WikiSidebarNav — management links follow the route permission keys",
 
     expect(screen.getByRole("link", { name: "Templates" })).toHaveAttribute("href", "/knowledge/wiki/templates");
     expect(screen.getByRole("link", { name: "Import & Export" })).toHaveAttribute("href", "/knowledge/wiki/import");
-    expect(screen.getByRole("link", { name: "Spaces" })).toHaveAttribute("href", "/knowledge/wiki/spaces");
+    expect(screen.getByRole("link", { name: "Team folders" })).toHaveAttribute("href", "/knowledge/wiki/spaces");
   });
 });

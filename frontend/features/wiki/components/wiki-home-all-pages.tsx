@@ -585,11 +585,11 @@ export function WikiHomeAllPages({ projectId, onItemCountChange, onRowsChange }:
 
         {spaces && spaces.length > 0 && (
           <Select value={spaceValue} onValueChange={handleSpaceChange}>
-            <SelectTrigger className="h-9 w-40 shrink-0">
-              <SelectValue placeholder="Space" />
+            <SelectTrigger className="h-9 w-40 shrink-0" aria-label="Team folder">
+              <SelectValue placeholder="Team folder" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">All spaces</SelectItem>
+              <SelectItem value="all">All team folders</SelectItem>
               {spaces.map((space) => (
                 <SelectItem key={space.id} value={String(space.id)}>
                   {space.name}
@@ -605,7 +605,7 @@ export function WikiHomeAllPages({ projectId, onItemCountChange, onRowsChange }:
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All owners</SelectItem>
-            <SelectItem value="me">My pages</SelectItem>
+            <SelectItem value="me">My files</SelectItem>
           </SelectContent>
         </Select>
 

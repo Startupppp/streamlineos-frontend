@@ -102,11 +102,11 @@ export function KbResearchBriefForm({ basePath }: KbResearchBriefFormProps) {
                 >
                   <FormControl>
                     <SelectTrigger className="h-9 text-label">
-                      <SelectValue placeholder="All spaces" />
+                      <SelectValue placeholder="All team folders" />
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    <SelectItem value="all">All spaces</SelectItem>
+                    <SelectItem value="all">All team folders</SelectItem>
                     {spaces.map((s) => (
                       <SelectItem key={s.id} value={String(s.id)}>
                         {s.name}

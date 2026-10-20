@@ -46,7 +46,7 @@ describe("PageSharePopover — the privileged share controls live behind the Sha
   it("keeps the visibility options and Manage access out of the document until the Share trigger is opened, so the absence assertions in the toolbar gate tests are about the gate and not about a control that never renders", () => {
     renderPopover();
 
-    expect(screen.getByRole("button", { name: "Share page" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Share file" })).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /manage access/i })).toBeNull();
     expect(screen.queryByRole("radio", { name: /private/i })).toBeNull();
   });
@@ -55,7 +55,7 @@ describe("PageSharePopover — the privileged share controls live behind the Sha
     const user = userEvent.setup();
     renderPopover();
 
-    await user.click(screen.getByRole("button", { name: "Share page" }));
+    await user.click(screen.getByRole("button", { name: "Share file" }));
 
     expect(screen.getByText("Manage access")).toBeInTheDocument();
     expect(screen.getByText("Private")).toBeInTheDocument();
@@ -67,7 +67,7 @@ describe("PageSharePopover — the privileged share controls live behind the Sha
     const user = userEvent.setup();
     renderPopover();
 
-    await user.click(screen.getByRole("button", { name: "Share page" }));
+    await user.click(screen.getByRole("button", { name: "Share file" }));
     expect(screen.queryByTestId("page-grants-sheet")).toBeNull();
 
     await user.click(screen.getByText("Manage access"));
@@ -79,7 +79,7 @@ describe("PageSharePopover — the privileged share controls live behind the Sha
     const user = userEvent.setup();
     renderPopover();
 
-    await user.click(screen.getByRole("button", { name: "Share page" }));
+    await user.click(screen.getByRole("button", { name: "Share file" }));
     await user.click(screen.getByText("Public"));
 
     expect(setVisibilityMutate).toHaveBeenCalledTimes(1);
@@ -94,7 +94,7 @@ describe("PageSharePopover — the privileged share controls live behind the Sha
     const user = userEvent.setup();
     renderPopover();
 
-    await user.click(screen.getByRole("button", { name: "Share page" }));
+    await user.click(screen.getByRole("button", { name: "Share file" }));
     await user.click(screen.getByText("Public"));
     setVisibilityMutate.mock.calls[0]?.[1].onError(new ApiError("Stale", 409, "STALE_REVISION"));
 
@@ -106,7 +106,7 @@ describe("PageSharePopover — the privileged share controls live behind the Sha
     const user = userEvent.setup();
     renderPopover({ visibility: "org" });
 
-    await user.click(screen.getByRole("button", { name: "Share page" }));
+    await user.click(screen.getByRole("button", { name: "Share file" }));
     await user.click(screen.getByText("Team"));
 
     expect(setVisibilityMutate).not.toHaveBeenCalled();
@@ -118,7 +118,7 @@ describe("PageSharePopover — the public link appears only once the page is pub
     const user = userEvent.setup();
     renderPopover({ visibility: "org", publicToken: "tok-abc" });
 
-    await user.click(screen.getByRole("button", { name: "Share page" }));
+    await user.click(screen.getByRole("button", { name: "Share file" }));
 
     expect(screen.queryByRole("button", { name: "Copy link" })).toBeNull();
   });
@@ -127,7 +127,7 @@ describe("PageSharePopover — the public link appears only once the page is pub
     const user = userEvent.setup();
     renderPopover({ visibility: "public", publicToken: null });
 
-    await user.click(screen.getByRole("button", { name: "Share page" }));
+    await user.click(screen.getByRole("button", { name: "Share file" }));
 
     expect(screen.queryByRole("button", { name: "Copy link" })).toBeNull();
   });
@@ -136,7 +136,7 @@ describe("PageSharePopover — the public link appears only once the page is pub
     const user = userEvent.setup();
     renderPopover({ visibility: "public", publicToken: "tok-abc" });
 
-    await user.click(screen.getByRole("button", { name: "Share page" }));
+    await user.click(screen.getByRole("button", { name: "Share file" }));
 
     expect(screen.getByRole("button", { name: "Copy link" })).toBeInTheDocument();
   });
@@ -150,7 +150,7 @@ describe("PageSharePopover — the public link appears only once the page is pub
     });
     renderPopover({ visibility: "public", publicToken: "tok-abc" });
 
-    await user.click(screen.getByRole("button", { name: "Share page" }));
+    await user.click(screen.getByRole("button", { name: "Share file" }));
     await user.click(screen.getByRole("button", { name: "Copy link" }));
 
     expect(writeText).toHaveBeenCalledWith(`${window.location.origin}/wiki/tok-abc`);
@@ -162,7 +162,7 @@ describe("PageSharePopover — the options say which visibility is current", () 
     const user = userEvent.setup();
     renderPopover({ visibility: "public", publicToken: "tok-abc" });
 
-    await user.click(screen.getByRole("button", { name: "Share page" }));
+    await user.click(screen.getByRole("button", { name: "Share file" }));
 
     expect(screen.getByRole("radio", { name: /public/i })).toHaveAttribute("aria-checked", "true");
     expect(screen.getByRole("radio", { name: /public/i })).toHaveAttribute("tabindex", "0");
@@ -174,7 +174,7 @@ describe("PageSharePopover — the options say which visibility is current", () 
     const user = userEvent.setup();
     renderPopover({ visibility: "private" });
 
-    await user.click(screen.getByRole("button", { name: "Share page" }));
+    await user.click(screen.getByRole("button", { name: "Share file" }));
     screen.getByRole("radio", { name: /private/i }).focus();
     await user.keyboard("{ArrowDown}");
 
@@ -187,7 +187,7 @@ describe("PageSharePopover — a public draft says its link is not live yet", ()
     const user = userEvent.setup();
     renderPopover({ visibility: "public", publicToken: "tok-abc", status: "draft" });
 
-    await user.click(screen.getByRole("button", { name: "Share page" }));
+    await user.click(screen.getByRole("button", { name: "Share file" }));
 
     expect(screen.getByText("The public link works once this page is published.")).toBeInTheDocument();
   });
@@ -196,7 +196,7 @@ describe("PageSharePopover — a public draft says its link is not live yet", ()
     const user = userEvent.setup();
     renderPopover({ visibility: "public", publicToken: "tok-abc", status: "published" });
 
-    await user.click(screen.getByRole("button", { name: "Share page" }));
+    await user.click(screen.getByRole("button", { name: "Share file" }));
 
     expect(screen.queryByText("The public link works once this page is published.")).toBeNull();
   });

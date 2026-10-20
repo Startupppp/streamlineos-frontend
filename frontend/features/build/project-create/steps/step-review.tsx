@@ -72,7 +72,7 @@ export function StepReview({ draft, keyConflictMessage, onGoToBasics }: StepRevi
       .filter(([, enabled]) => enabled)
       .flatMap(([key]) => FEATURE_LABELS[key] ? [FEATURE_LABELS[key]] : []);
     if (draft.modules.epics && !draft.features.epics) labels.push("Epics");
-    if (draft.modules.wiki && !draft.features.docs) labels.push("Wiki");
+    if (draft.modules.wiki && !draft.features.docs) labels.push("Docs");
     return labels;
   }, [draft.features, draft.modules]);
 

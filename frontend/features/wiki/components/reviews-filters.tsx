@@ -46,7 +46,7 @@ export function ReviewsFilters({ values, onChange }: ReviewsFiltersProps) {
     Number.isSafeInteger(selectedSpaceId) && selectedSpaceId > 0 ? selectedSpaceId : 0,
   );
   const spaceOptions = [
-    { value: REVIEWS_ALL_VALUE, label: "All spaces" },
+    { value: REVIEWS_ALL_VALUE, label: "All team folders" },
     ...spaces.map((space) => ({ value: String(space.id), label: space.name })),
   ];
   if (selectedSpace && !spaces.some((space) => space.id === selectedSpace.id)) {
@@ -158,9 +158,9 @@ export function ReviewsFilters({ values, onChange }: ReviewsFiltersProps) {
               onChange={handleSpaceChange}
               onSearchChange={setSpaceSearchDraft}
               options={spaceOptions}
-              aria-label="Space"
-              placeholder="All spaces"
-              searchPlaceholder="Search spaces…"
+              aria-label="Team folder"
+              placeholder="All team folders"
+              searchPlaceholder="Search team folders…"
               emptyText="No matching spaces"
             />
           </div>

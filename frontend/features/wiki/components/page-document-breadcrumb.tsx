@@ -35,11 +35,11 @@ export function SpaceBreadcrumb({ spaceName }: SpaceBreadcrumbProps) {
   return (
     <nav className="flex min-w-0 flex-1 items-center gap-1 text-sm text-muted-foreground">
       <Link href={KNOWLEDGE_BASE} className="shrink-0 transition-colors hover:text-foreground">
-        Wiki
+        Docs
       </Link>
       <KbChevronRightIcon className="h-3 w-3 shrink-0" />
       <Link href={KB_SPACES} className="shrink-0 transition-colors hover:text-foreground">
-        Spaces
+        Team folders
       </Link>
       <KbChevronRightIcon className="h-3 w-3 shrink-0" />
       <span className="min-w-0 truncate font-medium text-foreground">{spaceName}</span>
@@ -62,7 +62,7 @@ export function PageDocumentBreadcrumb({
   const ancestors = page.ancestors ?? [];
   const isProjectScoped = projectId !== undefined && projectId > 0;
   // A space crumb only when the space read succeeds; a viewer without
-  // kb:spaces:view still gets Wiki › ancestors.
+  // kb:spaces:view still gets Docs › ancestors.
   const { data: space } = useKbSpace(isProjectScoped ? 0 : page.spaceId ?? 0);
   const wikiHref = isProjectScoped ? `/build/${projectId}/wiki` : KNOWLEDGE_BASE;
 
@@ -90,7 +90,7 @@ export function PageDocumentBreadcrumb({
           href={wikiHref}
           className="shrink-0 transition-colors hover:text-foreground"
         >
-          Wiki
+          Docs
         </Link>
         {space ? (
           <span className="flex min-w-0 items-center gap-1">

@@ -279,7 +279,7 @@ describe("TemplatesPage — Starters / Saved tabs", () => {
       "active",
     );
     expect(screen.getByText("Meeting notes")).toBeInTheDocument();
-    expect(screen.getByText("Templates created from your wiki pages")).toBeInTheDocument();
+    expect(screen.getByText("Templates created from your docs")).toBeInTheDocument();
   });
 
   it("writes tab=saved into the URL when Saved is selected", async () => {

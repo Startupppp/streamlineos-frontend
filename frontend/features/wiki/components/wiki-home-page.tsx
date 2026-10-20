@@ -161,7 +161,7 @@ export default function WikiHomePage({ projectId }: WikiHomePageProps) {
   return (
     <>
       <PageWrapper
-        title="Wiki"
+        title="Docs"
         subtitle={
           isProjectScoped
             ? "Docs and decisions for this project"
@@ -179,7 +179,7 @@ export default function WikiHomePage({ projectId }: WikiHomePageProps) {
               placeholder={
                 isProjectScoped
                   ? "Filter this project's pages…"
-                  : "Search wiki pages…"
+                  : "Search docs…"
               }
               fill
             />
@@ -262,7 +262,7 @@ export default function WikiHomePage({ projectId }: WikiHomePageProps) {
             {isProjectScoped && (
               <aside
                 className="hidden w-[200px] shrink-0 flex-col overflow-y-auto rounded-lg border border-border/60 bg-card/50 p-3 md:flex"
-                aria-label="Page tree"
+                aria-label="Folder tree"
               >
                 <PageTree projectId={projectId} baseHref={baseHref} />
               </aside>

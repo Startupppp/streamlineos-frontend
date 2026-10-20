@@ -572,7 +572,7 @@ describe("WikiPageCollectionTable — owner filter", () => {
   });
 });
 
-describe("WikiPageCollectionTable — My pages six states (S02 evidence)", () => {
+describe("WikiPageCollectionTable — My files six states (S02 evidence)", () => {
   it("loading: renders the data table skeleton while the server call is in-flight", () => {
     useKbPageCollection.mockReturnValue({
       data: undefined,
@@ -630,7 +630,7 @@ describe("WikiPageCollectionTable — My pages six states (S02 evidence)", () =>
       <WikiPageCollectionTable
         fixedParams={{ owner: "me" }}
         emptyTitle="No pages yet"
-        emptyDescription="Pages you own will appear here."
+        emptyDescription="Files you own will appear here."
       />,
     );
 
@@ -740,7 +740,7 @@ describe("WikiPageCollectionTable — space filter", () => {
 
     render(<WikiPageCollectionTable fixedParams={{}} emptyTitle="No pages yet" />);
 
-    const trigger = screen.getByRole("combobox", { name: "Space" });
+    const trigger = screen.getByRole("combobox", { name: "Team folder" });
     expect(trigger).toHaveTextContent("Product");
   });
 
@@ -750,6 +750,6 @@ describe("WikiPageCollectionTable — space filter", () => {
 
     render(<WikiPageCollectionTable fixedParams={{}} emptyTitle="No pages yet" />);
 
-    expect(screen.queryByRole("combobox", { name: "Space" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("combobox", { name: "Team folder" })).not.toBeInTheDocument();
   });
 });

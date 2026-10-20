@@ -55,14 +55,14 @@ export default function ProjectWikiPageDocument({ projectId, pageId }: ProjectWi
           <Button variant="ghost" size="sm" className="h-7 gap-1.5 text-muted-foreground" asChild>
             <Link href={baseHref}>
               <ChevronLeft className="h-3.5 w-3.5" />
-              Wiki
+              Docs
             </Link>
           </Button>
         </div>
         <div className="flex min-h-0 flex-1 overflow-hidden">
           <aside
             className="hidden w-[220px] shrink-0 flex-col overflow-y-auto border-r border-border/60 px-2 py-3 md:flex"
-            aria-label="Page tree"
+            aria-label="Folder tree"
           >
             <PageTree projectId={projectId} baseHref={baseHref} />
           </aside>

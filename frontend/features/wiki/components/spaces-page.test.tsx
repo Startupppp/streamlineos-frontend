@@ -130,7 +130,7 @@ describe("SpacesPage", () => {
 
     renderPage();
 
-    expect(screen.queryByText("No spaces yet")).not.toBeInTheDocument();
+    expect(screen.queryByText("No team folders yet")).not.toBeInTheDocument();
     expect(screen.queryByText("Engineering")).not.toBeInTheDocument();
   });
 
@@ -139,8 +139,8 @@ describe("SpacesPage", () => {
 
     renderPage();
 
-    expect(screen.getByText("No spaces yet")).toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: "New space" })).not.toBeInTheDocument();
+    expect(screen.getByText("No team folders yet")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "New team folder" })).not.toBeInTheDocument();
   });
 
   it("shows the empty state with a create button for a manager when the list is empty", () => {
@@ -149,8 +149,8 @@ describe("SpacesPage", () => {
 
     renderPage();
 
-    expect(screen.getByText("No spaces yet")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Create space" })).toBeInTheDocument();
+    expect(screen.getByText("No team folders yet")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Create team folder" })).toBeInTheDocument();
   });
 
   it("shows the error state and offers a retry when the request fails", () => {
@@ -165,7 +165,7 @@ describe("SpacesPage", () => {
     renderPage();
 
     expect(screen.getByText("Something went wrong")).toBeInTheDocument();
-    expect(screen.queryByText("No spaces yet")).not.toBeInTheDocument();
+    expect(screen.queryByText("No team folders yet")).not.toBeInTheDocument();
   });
 
   it("shows the filtered empty state with a clear-filters button when search produces no results", async () => {
@@ -174,22 +174,22 @@ describe("SpacesPage", () => {
 
     renderPage();
 
-    expect(screen.getByText("No spaces match your filters")).toBeInTheDocument();
+    expect(screen.getByText("No team folders match your filters")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Clear filters" })).toBeInTheDocument();
   });
 
-  it("shows the New space button only when the user can manage spaces", () => {
+  it("shows the New team folder button only when the user can manage spaces", () => {
     mockCan.mockImplementation((key) => key === "kb:spaces:manage");
 
     renderPage();
 
-    expect(screen.getByRole("button", { name: /New space/i })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /New team folder/i })).toBeInTheDocument();
   });
 
-  it("does not show the New space button when the user cannot manage spaces", () => {
+  it("does not show the New team folder button when the user cannot manage spaces", () => {
     renderPage();
 
-    expect(screen.queryByRole("button", { name: /New space/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /New team folder/i })).not.toBeInTheDocument();
   });
 
   it("shows Edit, Members and Archive buttons on each card for a manager", () => {
@@ -240,7 +240,7 @@ describe("SpacesPage", () => {
     await user.click(screen.getByRole("button", { name: "Delete permanently" }));
     const dialog = screen.getByRole("alertdialog");
     expect(within(dialog).getByText(/4 pages will move to Trash/)).toBeInTheDocument();
-    expect(within(dialog).getByText(/restored from Trash to the Wiki root/)).toBeInTheDocument();
+    expect(within(dialog).getByText(/restored from Trash to the Docs root/)).toBeInTheDocument();
 
     await user.click(within(dialog).getByRole("button", { name: "Delete permanently" }));
 
@@ -290,7 +290,7 @@ describe("SpacesPage", () => {
   it("KB-B-029: Edit seeds the sheet with the clicked space, after a create was opened first", async () => {
     mockCan.mockReturnValue(true);
     renderPage();
-    await userEvent.click(screen.getByRole("button", { name: /New space/i }));
+    await userEvent.click(screen.getByRole("button", { name: /New team folder/i }));
     await userEvent.click(screen.getByRole("button", { name: "Cancel" }));
     await userEvent.click(screen.getByRole("button", { name: "Edit" }));
     expect(screen.getByLabelText("Name")).toHaveValue("Engineering");
@@ -302,7 +302,7 @@ describe("SpacesPage", () => {
     const create = mutation();
     mockCreate.mockReturnValue(create);
     renderPage();
-    await userEvent.click(screen.getByRole("button", { name: /New space/i }));
+    await userEvent.click(screen.getByRole("button", { name: /New team folder/i }));
     await userEvent.type(screen.getByLabelText("Name"), "Ops");
     await userEvent.click(screen.getByRole("button", { name: "Create" }));
     expect(create.mutate).toHaveBeenCalledWith(
@@ -414,7 +414,7 @@ describe("SpacesPage", () => {
       expect.objectContaining({ cursor: "c2" }),
     );
 
-    await userEvent.type(screen.getByPlaceholderText("Search spaces…"), "eng");
+    await userEvent.type(screen.getByPlaceholderText("Search team folders…"), "eng");
     const filteredUrl = new URL(mockReplace.mock.lastCall?.[0], "http://localhost");
     expect(filteredUrl.searchParams.get("cursor")).toBeNull();
     expect(filteredUrl.searchParams.get("cursorTrail")).toBeNull();

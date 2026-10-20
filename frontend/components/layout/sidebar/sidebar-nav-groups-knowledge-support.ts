@@ -179,7 +179,7 @@ export const KNOWLEDGE_SUPPORT_NAV_GROUPS: NavGroup[] = [
         href: "/knowledge/chat",
       },
       {
-        label: "Wiki",
+        label: "Docs",
         icon: NotebookPen,
         href: "/knowledge/wiki",
       },

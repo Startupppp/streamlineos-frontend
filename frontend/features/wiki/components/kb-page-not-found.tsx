@@ -90,7 +90,7 @@ export function KbPageNotFound({ error, onRetry }: KbPageNotFoundProps) {
           <Button asChild variant="ghost" className="gap-2 text-muted-foreground">
             <Link href={KB_SPACES}>
               <Search className="h-4 w-4" />
-              Browse spaces
+              Browse team folders
             </Link>
           </Button>
         )}

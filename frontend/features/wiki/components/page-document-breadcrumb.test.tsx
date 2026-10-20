@@ -49,7 +49,7 @@ describe("PageDocumentBreadcrumb — global wiki context", () => {
       />,
     );
 
-    const wikiLink = screen.getByRole("link", { name: "Wiki" });
+    const wikiLink = screen.getByRole("link", { name: "Docs" });
     expect(wikiLink).toHaveAttribute("href", "/knowledge/wiki");
     expect(screen.queryByRole("link", { name: "Project" })).toBeNull();
   });
@@ -81,7 +81,7 @@ describe("PageDocumentBreadcrumb — project wiki context", () => {
       "href",
       "/build/7",
     );
-    expect(screen.getByRole("link", { name: "Wiki" })).toHaveAttribute(
+    expect(screen.getByRole("link", { name: "Docs" })).toHaveAttribute(
       "href",
       "/build/7/wiki",
     );

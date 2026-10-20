@@ -193,7 +193,7 @@ export function buildProjectCatalog(basePath: string): BuildScopeCatalog {
       },
       {
         id: "project-wiki",
-        label: "Wiki",
+        label: "Docs",
         href: `${basePath}/wiki`,
         icon: BookOpenText,
         requiredPermission: "kb:pages:view",

@@ -35,7 +35,7 @@ jest.mock("@/components/ui/scroll-area", () => ({
 
 jest.mock("./page-tree", () => ({
   __esModule: true,
-  default: () => <div>Page tree</div>,
+  default: () => <div>Folder tree</div>,
 }));
 
 jest.mock("./quick-find-dialog", () => ({

@@ -95,7 +95,7 @@ export function EmptyChat({
       <div>
         <p className="text-sm font-semibold text-foreground">Ask your knowledge base</p>
         <p className="mx-auto mt-1 max-w-xs text-xs text-muted-foreground">
-          Answers are grounded in your uploaded files, notes and wiki pages.
+          Answers are grounded in your uploaded files, notes and docs.
         </p>
       </div>
       <div className="flex w-full max-w-full flex-wrap justify-center gap-2 px-2">

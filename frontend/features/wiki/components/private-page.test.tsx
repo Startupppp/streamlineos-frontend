@@ -96,7 +96,7 @@ function makeItem(overrides: Partial<Record<string, unknown>> = {}) {
   };
 }
 
-describe("PrivatePage — My pages", () => {
+describe("PrivatePage — My files", () => {
   it("uses owner=me filter so a page owned by another admin does not appear", () => {
     useKbPageCollection.mockReturnValue({
       data: { data: [], pagination: { limit: 50, hasMore: false, nextCursor: null }, facets: null },
@@ -147,7 +147,7 @@ describe("PrivatePage — My pages", () => {
 
     render(<PrivatePage />);
 
-    expect(screen.queryByText("No pages yet")).not.toBeInTheDocument();
+    expect(screen.queryByText("No files yet")).not.toBeInTheDocument();
     expect(screen.getByTestId("table-rows")).toBeInTheDocument();
   });
 
@@ -163,10 +163,10 @@ describe("PrivatePage — My pages", () => {
 
     render(<PrivatePage />);
 
-    expect(screen.getByText("No pages yet")).toBeInTheDocument();
+    expect(screen.getByText("No files yet")).toBeInTheDocument();
   });
 
-  it("uses My pages as the page title — not Private pages", () => {
+  it("uses My files as the page title — not Private pages", () => {
     useKbPageCollection.mockReturnValue({
       data: { data: [], pagination: { limit: 50, hasMore: false, nextCursor: null }, facets: null },
       isLoading: false,
@@ -178,7 +178,7 @@ describe("PrivatePage — My pages", () => {
 
     render(<PrivatePage />);
 
-    expect(screen.getByText("My pages")).toBeInTheDocument();
+    expect(screen.getByText("My files")).toBeInTheDocument();
     expect(screen.queryByText("Private pages")).not.toBeInTheDocument();
   });
 });

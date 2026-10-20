@@ -144,7 +144,7 @@ jest.mock("./kb-page-ai-actions", () => ({
 
 jest.mock("./page-share-popover", () => ({
   __esModule: true,
-  default: () => <button type="button" aria-label="Share page" />,
+  default: () => <button type="button" aria-label="Share file" />,
 }));
 
 jest.mock("@/hooks/api/kb/export-page", () => ({

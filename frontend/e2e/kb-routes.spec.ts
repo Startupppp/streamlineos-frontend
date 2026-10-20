@@ -286,7 +286,7 @@ test.describe("KB routes — authenticated org owner", () => {
 
   // ── /knowledge/wiki (home) ──────────────────────────────────────────────────
 
-  test("/knowledge/wiki renders the wiki home with 'Wiki' heading", async ({
+  test("/knowledge/wiki renders the wiki home with 'Docs' heading", async ({
     page,
   }) => {
     await page.goto("/knowledge/wiki");
@@ -302,16 +302,16 @@ test.describe("KB routes — authenticated org owner", () => {
     if (!isErrorState) {
       const heading = page.locator("main h1").first();
       const text = await heading.textContent();
-      expect(text?.trim(), "wiki home h1 must be 'Wiki'").toBe("Wiki");
+      expect(text?.trim(), "wiki home h1 must be 'Docs'").toBe("Docs");
 
       const searchForm = page.getByRole("search");
       await expect(searchForm).toBeVisible({ timeout: SETTLE_MS });
     }
   });
 
-  // ── /knowledge/wiki/private ("My pages") ───────────────────────────────────
+  // ── /knowledge/wiki/private ("My files") ───────────────────────────────────
 
-  test("/knowledge/wiki/private renders 'My pages'", async ({ page }) => {
+  test("/knowledge/wiki/private renders 'My files'", async ({ page }) => {
     await page.goto("/knowledge/wiki/private");
 
     // Same /kb/spaces contract defect as wiki home — uses the bifurcated helper.
@@ -321,7 +321,7 @@ test.describe("KB routes — authenticated org owner", () => {
     if (!isErrorState) {
       const heading = page.locator("main h1").first();
       const text = await heading.textContent();
-      expect(text?.trim(), "private h1 must be 'My pages'").toBe("My pages");
+      expect(text?.trim(), "private h1 must be 'My files'").toBe("My files");
     }
   });
 
@@ -334,7 +334,7 @@ test.describe("KB routes — authenticated org owner", () => {
 
   // ── /knowledge/wiki/spaces ─────────────────────────────────────────────────
 
-  test("/knowledge/wiki/spaces renders 'Spaces' with filter controls", async ({
+  test("/knowledge/wiki/spaces renders 'Team folders' with filter controls", async ({
     page,
   }) => {
     await page.goto("/knowledge/wiki/spaces");
@@ -342,10 +342,10 @@ test.describe("KB routes — authenticated org owner", () => {
 
     const heading = page.locator("main h1").first();
     const text = await heading.textContent();
-    expect(text?.trim(), "spaces h1 must be 'Spaces'").toBe("Spaces");
+    expect(text?.trim(), "spaces h1 must be 'Team folders'").toBe("Team folders");
 
     // Filter controls are always rendered on Spaces
-    const searchInput = page.getByPlaceholder("Search spaces…");
+    const searchInput = page.getByPlaceholder("Search team folders…");
     await expect(searchInput).toBeVisible({ timeout: SETTLE_MS });
   });
 
@@ -366,7 +366,7 @@ test.describe("KB routes — authenticated org owner", () => {
     // there is a race: the helper may pass on main h1 (before the error boundary
     // fires), then the error boundary fires while we wait for the empty text.
     const emptyIndicator = page.getByText(
-      /No spaces match your filters|No spaces yet/i,
+      /No team folders match your filters|No team folders yet/i,
     );
     const errorBoundaryFinal = page.getByRole("heading", { name: "Something went wrong" });
     await expect(emptyIndicator.or(errorBoundaryFinal).first()).toBeVisible({ timeout: SETTLE_MS });
@@ -551,7 +551,7 @@ test.describe("KB routes — authenticated org owner", () => {
   }) => {
     await page.goto(`/knowledge/wiki/doc/${REAL_PAGE_ID_FOR_HISTORY}/history`);
 
-    // History page uses PageWrapper with "Page history" or similar title
+    // History page uses PageWrapper with "File history" or similar title
     const heading = page.locator("h1, h2").filter({ hasText: /history/i }).first();
     await expect(heading, "history page must have a heading containing 'history'").toBeVisible({
       timeout: HEADING_MS,

@@ -33,7 +33,7 @@ export function SpaceDeleteDialog({ space, onOpenChange, onDeleted }: SpaceDelet
   }
 
   const description = space
-    ? `${pagesSentence(impact.data?.pageCount)}. They can be restored from Trash to the Wiki root until Trash retention removes them. "${space.name}" itself is deleted and cannot be restored.`
+    ? `${pagesSentence(impact.data?.pageCount)}. They can be restored from Trash to the Docs root until Trash retention removes them. "${space.name}" itself is deleted and cannot be restored.`
     : "";
 
   return (

@@ -138,9 +138,9 @@ export default function PageCommentsSheet({ pageId, open, onOpenChange, content 
         <SheetHeader className="shrink-0 px-6 py-4 border-b">
           <SheetTitle className="flex items-center gap-2">
             <KbMessageSquareIcon className="h-4 w-4" />
-            Comments
+            File comments
           </SheetTitle>
-          <SheetDescription>Discuss this page and resolve feedback with your team.</SheetDescription>
+          <SheetDescription>Discuss this file and resolve feedback with your team.</SheetDescription>
         </SheetHeader>
         <ScrollArea className="flex-1 min-h-0">
           <div className="px-6 py-4">

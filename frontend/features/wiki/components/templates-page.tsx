@@ -271,7 +271,7 @@ export default function TemplatesPage() {
 
   const subtitle =
     activeTab === "saved"
-      ? "Templates created from your wiki pages"
+      ? "Templates created from your docs"
       : "Built-in skeletons ready to use";
 
   return (

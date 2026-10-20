@@ -22,6 +22,7 @@ import {
 } from "./sidebar/sidebar-nav-items";
 import type { BuildSidebarSlotProps } from "./sidebar/build-sidebar-slot";
 import { SidebarSection } from "./sidebar/sidebar-section";
+import { HrSidebarNav } from "./sidebar/hr-sidebar-nav";
 import { ProductSwitcherMenu } from "./header/product-switcher-menu";
 import { WorkspaceSwitcher } from "./header/org-switcher";
 
@@ -128,7 +129,7 @@ export function AppSidebar({
   const { data: entitlements } = useEntitlements();
   const lockedModules = entitlements?.lockedModules ?? [];
 
-  const [showAdvancedHr] = useHrSettingsMode();
+  const [showAdvancedHr, setShowAdvancedHr] = useHrSettingsMode();
   const navGroups = useMemo(() => {
     if (isBuildProduct) return [];
     const groups = getNavGroupsForProduct(
@@ -267,43 +268,58 @@ export function AppSidebar({
           </div>
         )}
 
-        <ScrollArea className="flex-1 min-h-0">
-          {isBuildProduct ? (
-            <nav aria-label="Build navigation">
-              {buildSidebarSlot?.({
-                isCollapsed: effectiveCollapsed,
-                onNavigate: onNavigate ?? noop,
-              })}
-            </nav>
-          ) : (
-            <nav className={cn("py-2", effectiveCollapsed ? "px-1" : "px-2.5")}>
-              {navGroups.map((group, i) => {
-                const multiGroup = navGroups.length > 1;
-                return (
-                  <SidebarSection
-                    key={group.label}
-                    group={group}
-                    groupIndex={i}
-                    isCollapsed={effectiveCollapsed}
-                    showLabel={multiGroup}
-                    isGroupCollapsed={
-                      multiGroup
-                        ? (collapsedGroups[group.label] ?? false)
-                        : false
-                    }
-                    onToggleGroup={
-                      multiGroup ? () => toggleGroup(group.label) : undefined
-                    }
-                    pendingLeaves={pendingLeaves}
-                    inboxCount={unreadInboxCount}
-                    onNavigate={onNavigate}
-                    accent={accent}
-                  />
-                );
-              })}
-            </nav>
-          )}
-        </ScrollArea>
+        {activeProduct === "hrms" ? (
+          <HrSidebarNav
+            groups={navGroups}
+            isCollapsed={effectiveCollapsed}
+            collapsedGroups={collapsedGroups}
+            onToggleGroup={toggleGroup}
+            pendingLeaves={pendingLeaves}
+            inboxCount={unreadInboxCount}
+            onNavigate={onNavigate}
+            accent={accent}
+            showAdvanced={showAdvancedHr}
+            onShowAdvancedChange={setShowAdvancedHr}
+          />
+        ) : (
+          <ScrollArea className="flex-1 min-h-0">
+            {isBuildProduct ? (
+              <nav aria-label="Build navigation">
+                {buildSidebarSlot?.({
+                  isCollapsed: effectiveCollapsed,
+                  onNavigate: onNavigate ?? noop,
+                })}
+              </nav>
+            ) : (
+              <nav className={cn("py-2", effectiveCollapsed ? "px-1" : "px-2.5")}>
+                {navGroups.map((group, i) => {
+                  const multiGroup = navGroups.length > 1;
+                  return (
+                    <SidebarSection
+                      key={group.label}
+                      group={group}
+                      groupIndex={i}
+                      isCollapsed={effectiveCollapsed}
+                      showLabel={multiGroup}
+                      isGroupCollapsed={
+                        multiGroup
+                          ? (collapsedGroups[group.label] ?? false)
+                          : false
+                      }
+                      onToggleGroup={
+                        multiGroup ? () => toggleGroup(group.label) : undefined
+                      }
+                      pendingLeaves={pendingLeaves}
+                      inboxCount={unreadInboxCount}
+                      onNavigate={onNavigate}
+                      accent={accent}
+                    />
+                  );
+                })}
+              </nav>
+            )}
+          </ScrollArea>
+        )}
       </div>
     </TooltipProvider>
   );

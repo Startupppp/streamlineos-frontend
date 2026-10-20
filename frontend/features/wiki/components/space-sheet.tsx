@@ -121,7 +121,7 @@ export function SpaceSheet({
       <SheetContent side="right" className="sm:max-w-md p-0 flex flex-col">
         <SheetHeader className="px-6 py-4 border-b shrink-0">
           <SheetTitle>
-            {editingSpace ? "Edit space" : "Create space"}
+            {editingSpace ? "Edit team folder" : "Create team folder"}
           </SheetTitle>
           <SheetDescription className="text-xs mt-0.5">
             Name, audience and appearance of this space.

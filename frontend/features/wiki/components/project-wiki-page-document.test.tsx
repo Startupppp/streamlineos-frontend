@@ -52,10 +52,10 @@ describe("ProjectWikiPageDocument — renders and propagates props", () => {
     expect(screen.getByTestId("page-document")).toHaveAttribute("data-project-id", "7");
   });
 
-  it("shows Wiki back link pointing at the project wiki", () => {
+  it("shows Docs back link pointing at the project wiki", () => {
     render(<ProjectWikiPageDocument projectId={7} pageId={42} />);
 
-    const wikiLink = screen.getByRole("link", { name: /wiki/i });
+    const wikiLink = screen.getByRole("link", { name: /docs/i });
     expect(wikiLink).toHaveAttribute("href", "/build/7/wiki");
   });
 });

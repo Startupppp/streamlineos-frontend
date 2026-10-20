@@ -34,7 +34,7 @@ jest.mock("@/components/ui/combobox", () => ({
       <button type="button" role="combobox" aria-label={ariaLabel} aria-expanded="false" aria-controls="review-space-options">
         {options.find((option) => option.value === value)?.label ?? "Unknown space"}
       </button>
-      <input aria-label="Search spaces" onChange={(event) => onSearchChange(event.target.value)} />
+      <input aria-label="Search team folders" onChange={(event) => onSearchChange(event.target.value)} />
       <div id="review-space-options">
         {options.map((option) => (
           <button key={option.value} type="button" onClick={() => onChange(option.value)}>
@@ -145,10 +145,10 @@ describe("ReviewsPage — space filter discovery", () => {
 
     try {
       const { rerender } = render(<ReviewsPage />);
-      expect(screen.getByRole("combobox", { name: "Space" })).toBeInTheDocument();
+      expect(screen.getByRole("combobox", { name: "Team folder" })).toBeInTheDocument();
       expect(screen.queryByRole("button", { name: "Choose Deep Research" })).toBeNull();
 
-      fireEvent.change(screen.getByRole("textbox", { name: "Search spaces" }), {
+      fireEvent.change(screen.getByRole("textbox", { name: "Search team folders" }), {
         target: { value: "Deep" },
       });
       act(() => jest.advanceTimersByTime(300));
@@ -170,7 +170,7 @@ describe("ReviewsPage — space filter discovery", () => {
     render(<ReviewsPage />);
 
     expect(useKbSpace).toHaveBeenCalledWith(200);
-    expect(screen.getByRole("combobox", { name: "Space" })).toHaveTextContent("Deep Research");
+    expect(screen.getByRole("combobox", { name: "Team folder" })).toHaveTextContent("Deep Research");
   });
 });
 

@@ -99,7 +99,7 @@ export default function PageHistorySheet({ pageId, open, onOpenChange, projectId
           <div className="flex items-center justify-between">
             <SheetTitle className="flex items-center gap-2">
               <KbHistoryIcon className="h-4 w-4" />
-              {selectedVersion ? `Version ${selectedVersion}` : "Page history"}
+              {selectedVersion ? `Version ${selectedVersion}` : "File history"}
             </SheetTitle>
             {selectedVersion && (
               <Button variant="ghost" size="sm" onClick={handleBackToList} className="text-xs h-7">

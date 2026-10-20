@@ -443,13 +443,13 @@ describe("trash page space filter", () => {
   it("renders a space select, so the backend spaceId param has a frontend writer", () => {
     render(<TrashPage />);
     expect(
-      screen.getByRole("combobox", { name: /space/i }),
+      screen.getByRole("combobox", { name: /team folder/i }),
     ).toBeInTheDocument();
   });
 
   it("space select shows space names so raw IDs are never visible on screen", () => {
     render(<TrashPage />);
-    expect(screen.getByText("All spaces")).toBeInTheDocument();
+    expect(screen.getByText("All team folders")).toBeInTheDocument();
   });
 
   it("passes spaceId from the URL to the trash hook when the param is present", () => {

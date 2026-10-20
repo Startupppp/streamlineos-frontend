@@ -144,7 +144,7 @@ describe("ImportPage — Import / Export tabs", () => {
 
     await user.click(screen.getByRole("button", { name: /paste text/i }));
 
-    for (const name of ["Target space", "Parent page", "Default visibility", "Duplicate items"]) {
+    for (const name of ["Target team folder", "Parent page", "Default visibility", "Duplicate items"]) {
       expect(screen.getByRole("combobox", { name })).toBeInTheDocument();
     }
     expect(screen.getByRole("combobox", { name: "Parent page" })).toBeDisabled();

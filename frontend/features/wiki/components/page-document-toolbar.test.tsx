@@ -27,7 +27,7 @@ jest.mock("./page-share-popover", () => ({
   __esModule: true,
   default: () => (
     <>
-      <button type="button" aria-label="Share page" />
+      <button type="button" aria-label="Share file" />
       <button type="button">Manage access</button>
     </>
   ),
@@ -79,7 +79,7 @@ describe("PageDocumentToolbar", () => {
     renderToolbar();
 
     expect(screen.getByRole("button", { name: "AI" })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Share page" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Share file" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "More options" })).toBeInTheDocument();
   });
 
@@ -210,7 +210,7 @@ describe("PageDocumentToolbar", () => {
     renderToolbar({ canEdit: false }, noop, false);
 
     expect(screen.getByRole("button", { name: /copy link/i })).toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: /share page/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /share file/i })).not.toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: "More options" }));
     expect(screen.queryByRole("menuitem", { name: /^move$/i })).not.toBeInTheDocument();
   });
@@ -237,20 +237,20 @@ describe("PageDocumentToolbar", () => {
 });
 
 describe("PageDocumentToolbar — copy link for read-only viewers (task L)", () => {
-  it("shows the Share page button when the user has kb:pages:update", () => {
+  it("shows the Share file button when the user has kb:pages:update", () => {
     mockUseCan.mockReturnValue(true);
     renderToolbar();
 
-    expect(screen.getByRole("button", { name: /share page/i })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /share file/i })).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /copy link/i })).not.toBeInTheDocument();
   });
 
-  it("shows the Copy link button instead of Share page when the user lacks kb:pages:update so view-only users can share the URL", () => {
+  it("shows the Copy link button instead of Share file when the user lacks kb:pages:update so view-only users can share the URL", () => {
     mockUseCan.mockImplementation((key: string) => key !== "kb:pages:update");
     renderToolbar();
 
     expect(screen.getByRole("button", { name: /copy link/i })).toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: /share page/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /share file/i })).not.toBeInTheDocument();
   });
 
   it("copy link button writes window.location.href to the clipboard when clicked", async () => {
@@ -300,7 +300,7 @@ describe("PageDocumentToolbar — copy link for read-only viewers (task L)", () 
     renderToolbar();
 
     expect(screen.getByRole("button", { name: /copy link/i })).toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: /share page/i })).toBeNull();
+    expect(screen.queryByRole("button", { name: /share file/i })).toBeNull();
     expect(screen.queryByText("Manage access")).toBeNull();
 
     await user.click(screen.getByRole("button", { name: "More options" }));
@@ -313,7 +313,7 @@ describe("PageDocumentToolbar — copy link for read-only viewers (task L)", () 
     mockUseCan.mockImplementation((key: string) => key === "kb:pages:update");
     renderToolbar();
 
-    expect(screen.getByRole("button", { name: /share page/i })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /share file/i })).toBeInTheDocument();
     expect(screen.getByText("Manage access")).toBeInTheDocument();
   });
 
@@ -322,7 +322,7 @@ describe("PageDocumentToolbar — copy link for read-only viewers (task L)", () 
     renderToolbar();
 
     expect(screen.getByRole("button", { name: /copy link/i })).toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: /share page/i })).toBeNull();
+    expect(screen.queryByRole("button", { name: /share file/i })).toBeNull();
     expect(screen.queryByText("Manage access")).toBeNull();
   });
 });

@@ -49,13 +49,13 @@ export function ImportFormControls({
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
       <div className="space-y-1">
-        <Label className="text-xs">Target space</Label>
+        <Label className="text-xs">Target team folder</Label>
         <Select value={targetSpaceId} onValueChange={onSpaceChange}>
-          <SelectTrigger className="text-sm" aria-label="Target space">
-            <SelectValue placeholder="No space" />
+          <SelectTrigger className="text-sm" aria-label="Target team folder">
+            <SelectValue placeholder="No team folder" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="none">No space</SelectItem>
+            <SelectItem value="none">No team folder</SelectItem>
             {spaces.map((s) => (
               <SelectItem key={s.id} value={String(s.id)}>
                 {s.icon ? `${s.icon} ` : ""}

@@ -91,7 +91,7 @@ function buildAskKbItem(): WikiNavItem {
 function buildPrimaryItems(): WikiNavItem[] {
   return [
     {
-      label: "Wiki",
+      label: "Docs",
       href: KNOWLEDGE_BASE,
       icon: KbBookOpenTextIcon,
       exact: true,
@@ -156,10 +156,10 @@ function buildNavGroups({
       id: "library",
       label: "Library",
       items: [
-        { label: "My pages", href: KB_PRIVATE, icon: KbLockIcon },
+        { label: "My files", href: KB_PRIVATE, icon: KbLockIcon },
         { label: "Shared with me", href: KB_SHARED, icon: KbUsersIcon },
         ...(canViewSpaces
-          ? [{ label: "Spaces", href: KB_SPACES, icon: KbLayoutGridIcon }]
+          ? [{ label: "Team folders", href: KB_SPACES, icon: KbLayoutGridIcon }]
           : []),
         ...(showCompanyDocuments === true
           ? [

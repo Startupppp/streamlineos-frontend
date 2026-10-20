@@ -184,7 +184,7 @@ export default function PageHistoryPage({
 
   if (pageLoading) {
     return (
-      <PageWrapper title="Page history" backHref={backHref}>
+      <PageWrapper title="File history" backHref={backHref}>
         <div className="space-y-3">
           {Array.from({ length: 10 }).map((_, i) => (
             <Skeleton key={i} className="h-14 w-full rounded-lg" />
@@ -196,7 +196,7 @@ export default function PageHistoryPage({
 
   if (pageError || !currentPage) {
     return (
-      <PageWrapper title="Page history" backHref={backHref}>
+      <PageWrapper title="File history" backHref={backHref}>
         <div className="flex flex-col items-center justify-center flex-1 min-h-[40dvh] gap-3">
           <p className="text-sm text-muted-foreground">Failed to load page.</p>
           <Button variant="outline" size="sm" onClick={() => router.refresh()}>
@@ -214,7 +214,7 @@ export default function PageHistoryPage({
   return (
     <>
       <PageWrapper
-        title="Page history"
+        title="File history"
         subtitle={currentPage.title || "Untitled"}
         backHref={documentHref}
         noInternalScroll

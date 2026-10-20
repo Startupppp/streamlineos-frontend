@@ -113,7 +113,7 @@ export default function PageMetadataSheet({
       {
         onSuccess: () => {
           setPendingScope((pending) => pending?.pageId === pageId && pending.field === change.field ? null : pending);
-          toast.success(`${change.field === "spaceId" ? "Space" : "Owner"} updated`);
+          toast.success(`${change.field === "spaceId" ? "Team folder" : "Owner"} updated`);
         },
         onError: (error) => {
           if (isApiError(error) && error.status === 409) {
@@ -122,7 +122,7 @@ export default function PageMetadataSheet({
             toast.error("Page changed before this setting was saved");
             return;
           }
-          toast.error(`Failed to update ${change.field === "spaceId" ? "space" : "owner"}`);
+          toast.error(`Failed to update ${change.field === "spaceId" ? "team folder" : "owner"}`);
         },
       },
     );
@@ -168,7 +168,7 @@ export default function PageMetadataSheet({
         expectedContentRevision: latest.data.contentRevision,
       });
       setPendingScope(null);
-      toast.success(`${pending.field === "spaceId" ? "Space" : "Owner"} updated`);
+      toast.success(`${pending.field === "spaceId" ? "Team folder" : "Owner"} updated`);
     } catch {
       toast.error("Could not retry the setting change. Your choice is still available.");
     } finally {
@@ -266,27 +266,27 @@ export default function PageMetadataSheet({
           <div className="min-h-full px-5 py-4 space-y-5 bg-muted">
             {pendingScope?.pageId === pageId && (
               <div role="alert" className="space-y-2 rounded-lg border border-status-warning-rule bg-status-warning-surface p-3 text-sm text-status-warning-ink">
-                <p>The page changed before your {pendingScope.field === "spaceId" ? "space" : "owner"} choice was saved. Your choice is ready to retry.</p>
+                <p>The page changed before your {pendingScope.field === "spaceId" ? "team folder" : "owner"} choice was saved. Your choice is ready to retry.</p>
                 <div className="flex flex-wrap gap-2">
                   <Button size="sm" onClick={retryScopeChange} disabled={isRetryingScope || !isEditable || (pendingScope.field === "ownerUserId" && !canChangeOwner)}>
-                    {isRetryingScope ? "Retrying…" : `Retry ${pendingScope.field === "spaceId" ? "space" : "owner"} change`}
+                    {isRetryingScope ? "Retrying…" : `Retry ${pendingScope.field === "spaceId" ? "team folder" : "owner"} change`}
                   </Button>
                   <Button size="sm" variant="outline" onClick={() => setPendingScope(null)} disabled={isRetryingScope}>Discard choice</Button>
                 </div>
               </div>
             )}
             <div className="space-y-2">
-              <p className="text-label font-medium text-foreground">Space</p>
+              <p className="text-label font-medium text-foreground">Team folder</p>
               <Select
                 value={page.spaceId != null ? String(page.spaceId) : "none"}
                 onValueChange={handleSpaceChange}
                 disabled={!isEditable}
               >
-                <SelectTrigger className={FIELD_CLASS} aria-label="Space">
-                  <SelectValue placeholder="No space" />
+                <SelectTrigger className={FIELD_CLASS} aria-label="Team folder">
+                  <SelectValue placeholder="No team folder" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="none" className="text-label">No space</SelectItem>
+                  <SelectItem value="none" className="text-label">No team folder</SelectItem>
                   {spaces.map((s) => (
                     <SelectItem key={s.id} value={String(s.id)} className="text-label">
                       {s.icon ? `${s.icon} ` : ""}{s.name}

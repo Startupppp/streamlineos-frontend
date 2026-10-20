@@ -135,7 +135,7 @@ export default function SpaceDetailPage({ spaceId }: SpaceDetailPageProps) {
   function handleConfirmArchive() {
     archiveSpace.mutate(spaceId, {
       onSuccess: () => {
-        toast.success(`"${space?.name ?? "Space"}" archived`);
+        toast.success(`"${space?.name ?? "Team folder"}" archived`);
         setArchiveConfirmOpen(false);
       },
       onError: (err) => toast.error(getErrorMessage(err)),
@@ -144,7 +144,7 @@ export default function SpaceDetailPage({ spaceId }: SpaceDetailPageProps) {
 
   function handleRestore() {
     restoreSpace.mutate(spaceId, {
-      onSuccess: () => toast.success(`"${space?.name ?? "Space"}" restored`),
+      onSuccess: () => toast.success(`"${space?.name ?? "Team folder"}" restored`),
       onError: (err) => toast.error(getErrorMessage(err)),
     });
   }
@@ -199,9 +199,9 @@ export default function SpaceDetailPage({ spaceId }: SpaceDetailPageProps) {
 
   return (
     <PageWrapper
-      title={headerSpace?.name ?? "Space"}
+      title={headerSpace?.name ?? "Team folder"}
       subtitle={headerSpace?.description ?? undefined}
-      leading={<SpaceBreadcrumb spaceName={headerSpace?.name ?? "Space"} />}
+      leading={<SpaceBreadcrumb spaceName={headerSpace?.name ?? "Team folder"} />}
       actions={headerActions}
     >
       <PageState
@@ -218,16 +218,16 @@ export default function SpaceDetailPage({ spaceId }: SpaceDetailPageProps) {
             illustration={
               <KbLayoutGridIcon className="w-8 text-muted-foreground" />
             }
-            title="Space not found"
-            description="This space may have been deleted or you may not have access."
+            title="Team folder not found"
+            description="This team folder may have been deleted or you may not have access."
             className={CONTENT_FILL_PANEL}
           />
         }
         empty={
           <EmptyState
             illustration={<KbLayoutGridIcon className="w-8 text-muted-foreground" />}
-            title="Space unavailable"
-            description="Refresh to try loading this space again."
+            title="Team folder unavailable"
+            description="Refresh to try loading this team folder again."
             action={{ label: "Refresh", onClick: handleRetry }}
             className={CONTENT_FILL_PANEL}
           />

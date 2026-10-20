@@ -329,11 +329,11 @@ export default function TrashPage() {
               value={spaceId !== undefined ? String(spaceId) : ALL_SPACES_VALUE}
               onValueChange={handleSpaceChange}
             >
-              <SelectTrigger className="w-52" aria-label="Space">
-                <SelectValue placeholder="All spaces" />
+              <SelectTrigger className="w-52" aria-label="Team folder">
+                <SelectValue placeholder="All team folders" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value={ALL_SPACES_VALUE}>All spaces</SelectItem>
+                <SelectItem value={ALL_SPACES_VALUE}>All team folders</SelectItem>
                 {spaces.map((space) => (
                   <SelectItem key={space.id} value={String(space.id)}>
                     {space.name}

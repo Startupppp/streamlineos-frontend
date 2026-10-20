@@ -82,7 +82,7 @@ it("sends the current content revision when moving a page into a space", async (
   useUpdateKbPage.mockReturnValue({ mutate, mutateAsync: jest.fn(), isPending: false });
   renderSheet(page({ contentRevision: 7 }));
 
-  fireEvent.keyDown(screen.getByRole("combobox", { name: "Space" }), { key: "ArrowDown" });
+  fireEvent.keyDown(screen.getByRole("combobox", { name: "Team folder" }), { key: "ArrowDown" });
   fireEvent.click(screen.getByRole("option", { name: "Team space" }));
 
   expect(mutate).toHaveBeenCalledWith(
@@ -128,7 +128,7 @@ it("keeps Owner unavailable to an editor without page manage permission while Sp
   renderSheet(page());
 
   expect(screen.getByRole("button", { name: "Owner" })).toBeDisabled();
-  expect(screen.getByRole("combobox", { name: "Space" })).toBeEnabled();
+  expect(screen.getByRole("combobox", { name: "Team folder" })).toBeEnabled();
   await userEvent.setup().click(screen.getByRole("button", { name: "Owner" }));
   expect(mutate).not.toHaveBeenCalled();
 });
@@ -159,7 +159,7 @@ it("shows named metadata controls and allows an editor to publish", () => {
   expect(screen.getByRole("button", { name: "Publish" })).toBeInTheDocument();
   expect(screen.getByRole("button", { name: "Archive" })).toBeInTheDocument();
   expect(screen.getByRole("button", { name: "Verify" })).toBeInTheDocument();
-  expect(screen.getByRole("combobox", { name: "Space" })).not.toBeDisabled();
+  expect(screen.getByRole("combobox", { name: "Team folder" })).not.toBeDisabled();
   expect(screen.getByRole("combobox", { name: "Status" })).not.toBeDisabled();
   expect(screen.getByRole("combobox", { name: "Content type" })).not.toBeDisabled();
   expect(screen.getByRole("button", { name: "Owner" })).not.toBeDisabled();

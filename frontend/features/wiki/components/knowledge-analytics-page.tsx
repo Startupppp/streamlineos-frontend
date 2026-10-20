@@ -282,11 +282,11 @@ export default function KnowledgeAnalyticsPage() {
             value={spaceId === undefined ? ALL_SPACES_VALUE : String(spaceId)}
             onValueChange={handleSpaceChange}
           >
-            <SelectTrigger className="w-52" aria-label="Space">
+            <SelectTrigger className="w-52" aria-label="Team folder">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value={ALL_SPACES_VALUE}>All spaces</SelectItem>
+              <SelectItem value={ALL_SPACES_VALUE}>All team folders</SelectItem>
               {spaces.map((space) => (
                 <SelectItem key={space.id} value={String(space.id)}>
                   {space.name}
@@ -359,7 +359,7 @@ export default function KnowledgeAnalyticsPage() {
 
         {spaceId !== undefined && overview && !overview.searchScopeComplete ? (
           <p role="status" className="mb-4 text-sm text-muted-foreground">
-            Space-scoped search and Ask history is incomplete for this date range. Choose a newer range or All spaces to see complete activity metrics.
+            Team-folder-scoped search and Ask history is incomplete for this date range. Choose a newer range or All team folders to see complete activity metrics.
           </p>
         ) : null}
 

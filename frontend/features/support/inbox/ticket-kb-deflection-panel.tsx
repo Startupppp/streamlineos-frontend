@@ -103,7 +103,7 @@ export function KbDeflectionPanel({ ticketId, ticketTitle }: KbDeflectionPanelPr
               disabled={!spaces?.length}
             >
               <SelectTrigger className="h-9 text-sm flex-1 min-w-0">
-                <SelectValue placeholder="Select space" />
+                <SelectValue placeholder="Select team folder" />
               </SelectTrigger>
               <SelectContent>
                 {(spaces ?? []).map((space) => (

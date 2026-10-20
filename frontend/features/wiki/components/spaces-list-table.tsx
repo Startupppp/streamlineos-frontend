@@ -122,7 +122,7 @@ function buildColumns(
   const columns: DataTableColumn<KbSpaceListItem>[] = [
     {
       key: "name",
-      header: "Space",
+      header: "Team folder",
       cell: (row) => (
         <div className="flex min-w-0 items-center gap-2">
           <span className="shrink-0">{row.icon || "📚"}</span>

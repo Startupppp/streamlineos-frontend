@@ -353,7 +353,7 @@ describe("KnowledgeAnalyticsPage — the reader can narrow the figures to one sp
   it("offers a space control", () => {
     render(<KnowledgeAnalyticsPage />);
 
-    expect(screen.getByLabelText("Space")).toBeInTheDocument();
+    expect(screen.getByLabelText("Team folder")).toBeInTheDocument();
   });
 
   it("scopes the page drill-down and the overview to the selected space", () => {
@@ -404,7 +404,7 @@ describe("KnowledgeAnalyticsPage — the reader can narrow the figures to one sp
 
     render(<KnowledgeAnalyticsPage />);
 
-    expect(screen.getByText(/Space-scoped search and Ask history is incomplete/i)).toBeInTheDocument();
+    expect(screen.getByText(/Team-folder-scoped search and Ask history is incomplete/i)).toBeInTheDocument();
     expect(screen.getByText(/Zero-result searches for this space are unavailable/i)).toBeInTheDocument();
     expect(screen.getByText(/Knowledge gaps for this space are unavailable/i)).toBeInTheDocument();
     expect(screen.queryByText("No zero-result searches")).not.toBeInTheDocument();

@@ -3,7 +3,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 export default function KnowledgeBaseLoading() {
   return (
-    <PageWrapper title="Wiki" subtitle="Your team knowledge base">
+    <PageWrapper title="Docs" subtitle="Your team knowledge base">
       <div className="space-y-6">
         <section>
           <div className="flex items-center gap-2 mb-3">
