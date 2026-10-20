@@ -27,11 +27,15 @@ import {
 } from "@/hooks/api/chat-channel-cache";
 import { applyOptimisticRead, reconcileUnreadAfterRead } from "@/hooks/api/chat-read-cache";
 import {
+  beginReaction,
   chatSendRetry,
   enqueueReaction,
+  isLatestReaction,
   optimisticMessage,
+  reactionKey,
   reconcileSentMessage,
   sendClientKey,
+  settleReaction,
 } from "@/hooks/api/chat-send-policy";
 import type {
   EditMessageInput,
@@ -248,7 +252,7 @@ export function useToggleReaction(channelId: number) {
       mutationFn: (variables) => {
         const { messageId, emoji } = variables;
         const remove = reactionRemovals.get(variables) ?? viewerReacted(messageId, emoji);
-        return enqueueReaction(`${channelId}:${messageId}:${emoji}`, () =>
+        return enqueueReaction(reactionKey(channelId, messageId, emoji), () =>
           remove
             ? apiClient.delete<ReactionsResponse>(
                 `/chat/channels/${channelId}/messages/${messageId}/reactions/${encodeURIComponent(emoji)}`,
@@ -266,6 +270,7 @@ export function useToggleReaction(channelId: number) {
       },
       onMutate: async (variables) => {
         const { messageId, emoji } = variables;
+        beginReaction(reactionKey(channelId, messageId, emoji));
         const remove = viewerReacted(messageId, emoji);
         reactionRemovals.set(variables, remove);
         await cancelChatMessageQueries(queryClient, channelId);
@@ -278,9 +283,15 @@ export function useToggleReaction(channelId: number) {
         );
         return { rollback: patchChatMessage(queryClient, channelId, messageId, { reactions }) };
       },
-      onError: (_error, _variables, context) => context?.rollback(),
-      onSuccess: ({ reactions }, { messageId }) => {
-        patchChatMessage(queryClient, channelId, messageId, { reactions });
+      onError: (_error, { messageId, emoji }, context) => {
+        if (isLatestReaction(reactionKey(channelId, messageId, emoji))) context?.rollback();
+      },
+      onSuccess: ({ reactions }, { messageId, emoji }) => {
+        if (isLatestReaction(reactionKey(channelId, messageId, emoji)))
+          patchChatMessage(queryClient, channelId, messageId, { reactions });
+      },
+      onSettled: (_data, _error, { messageId, emoji }) => {
+        settleReaction(reactionKey(channelId, messageId, emoji));
       },
     },
   );

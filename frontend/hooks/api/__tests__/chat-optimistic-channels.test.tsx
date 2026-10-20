@@ -356,16 +356,48 @@ describe("useChannelInviteLink mints through a mutation, never a POST inside a q
     expect(mockedPost).toHaveBeenCalledTimes(1);
   });
 
-  it("re-mints when the link's server expiry passes", async () => {
-    const { useChannelInviteLink } = await import("@/hooks/api/chat-personal-b");
-    const client = freshClient();
-    mockedPost
-      .mockResolvedValueOnce({ token: "tok-1", expiresAt: new Date(Date.now() + 50).toISOString(), maxUses: null, useCount: 0 })
-      .mockResolvedValueOnce({ token: "tok-2", expiresAt: null, maxUses: null, useCount: 0 });
-    const { result } = renderHook(() => useChannelInviteLink(CHANNEL_ID, true), { wrapper: wrapperFor(client) });
-    await waitFor(() => expect(result.current.data?.token).toBe("tok-1"));
-    await waitFor(() => expect(result.current.data?.token).toBe("tok-2"));
-    expect(mockedPost).toHaveBeenCalledTimes(2);
+  it("re-mints after the server expiry, but never sooner than 30s after the last mint", async () => {
+    jest.useFakeTimers();
+    try {
+      const { useChannelInviteLink } = await import("@/hooks/api/chat-personal-b");
+      const client = freshClient();
+      mockedPost
+        .mockResolvedValueOnce({ token: "tok-1", expiresAt: new Date(Date.now() + 50).toISOString(), maxUses: null, useCount: 0 })
+        .mockResolvedValueOnce({ token: "tok-2", expiresAt: null, maxUses: null, useCount: 0 });
+      const { result } = renderHook(() => useChannelInviteLink(CHANNEL_ID, true), { wrapper: wrapperFor(client) });
+      await act(async () => {
+        await jest.advanceTimersByTimeAsync(10);
+      });
+      expect(result.current.data?.token).toBe("tok-1");
+      await act(async () => {
+        await jest.advanceTimersByTimeAsync(29_000);
+      });
+      expect(mockedPost).toHaveBeenCalledTimes(1);
+      await act(async () => {
+        await jest.advanceTimersByTimeAsync(2_000);
+      });
+      expect(mockedPost).toHaveBeenCalledTimes(2);
+      expect(result.current.data?.token).toBe("tok-2");
+    } finally {
+      jest.useRealTimers();
+    }
+  });
+
+  it("stops re-minting when the server answers with the same expiry, so a skewed client clock cannot loop", async () => {
+    jest.useFakeTimers();
+    try {
+      const { useChannelInviteLink } = await import("@/hooks/api/chat-personal-b");
+      const client = freshClient();
+      const skewed = { token: "tok-s", expiresAt: new Date(Date.now() - 60_000).toISOString(), maxUses: null, useCount: 0 };
+      mockedPost.mockResolvedValue(skewed);
+      renderHook(() => useChannelInviteLink(CHANNEL_ID + 1, true), { wrapper: wrapperFor(client) });
+      await act(async () => {
+        await jest.advanceTimersByTimeAsync(10 * 60_000);
+      });
+      expect(mockedPost).toHaveBeenCalledTimes(2);
+    } finally {
+      jest.useRealTimers();
+    }
   });
 
   it("does not mint when the viewer cannot manage invite links", async () => {

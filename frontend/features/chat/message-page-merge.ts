@@ -24,7 +24,7 @@ export function mergeInboundMessage(
   const existing = old.pages.flatMap((page) => page.messages);
   const known = existing.find((message) => message.id === incoming.id);
   if (known) {
-    if (known.attachments.length > 0 || incoming.attachments.length === 0) return old;
+    if (!needsServerAttachments(known, incoming)) return old;
     return mapPages(old, (page) =>
       page.messages.includes(known)
         ? {
@@ -71,6 +71,13 @@ export function appendTimelineMessage(
   };
 }
 
+function needsServerAttachments(known: Message, incoming: Message): boolean {
+  return (
+    incoming.attachments.length > 0 &&
+    (known.attachments.length === 0 || known.attachments.some((attachment) => attachment.id < 0))
+  );
+}
+
 function sameSend(message: Message, clientKey: string | null | undefined): boolean {
   return message.id < 0 && clientKey != null && clientKey !== "" && message.clientKey === clientKey;
 }
@@ -81,7 +88,20 @@ export function appendThreadReply(
 ): InfiniteData<ThreadPage> | undefined {
   if (!data || data.pages.length === 0) return data;
   const replies = data.pages.flatMap((page) => page.replies);
-  if (replies.some((message) => message.id === reply.id)) return data;
+  const known = replies.find((message) => message.id === reply.id);
+  if (known) {
+    if (!needsServerAttachments(known, reply)) return data;
+    return mapPages(data, (page) =>
+      page.replies.includes(known)
+        ? {
+            ...page,
+            replies: page.replies.map((message) =>
+              message === known ? { ...message, attachments: reply.attachments } : message,
+            ),
+          }
+        : page,
+    );
+  }
   if (replies.some((message) => sameSend(message, reply.clientKey)))
     return reconcileThreadReply(data, reply.clientKey ?? "", () => reply);
   return {

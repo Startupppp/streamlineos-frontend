@@ -126,7 +126,11 @@ export function applyDeletedUnread(
   if (!own) return;
   const unread =
     own.lastReadAt === null || Date.parse(deleted.createdAt) > Date.parse(own.lastReadAt);
-  if (!unread) return;
+  if (unread) decrementChannelUnread(queryClient, channelId);
+}
+
+export function decrementChannelUnread(queryClient: QueryClient, channelId: number): void {
+  if ((findChannelRow(queryClient, channelId)?.unreadCount ?? 0) === 0) return;
   patchChannelRow(queryClient, channelId, (channel) => ({
     ...channel,
     unreadCount: Math.max(0, channel.unreadCount - 1),

@@ -2,7 +2,7 @@ import { act, renderHook, waitFor } from "@testing-library/react";
 import { apiClient } from "@/lib/api-client";
 import { ApiError } from "@/lib/api-envelope";
 import type { InfiniteData } from "@tanstack/react-query";
-import type { PinnedMessage, ThreadPage } from "@/types/chat";
+import type { MessagesPage, PinnedMessage, ThreadPage } from "@/types/chat";
 import {
   CHANNEL_ID,
   channelRow,
@@ -11,6 +11,7 @@ import {
   freshClient,
   installRandomUuid,
   message,
+  messagesKey,
   myChannelsKey,
   pinsKey,
   refetchingInvalidations,
@@ -189,6 +190,50 @@ describe("useSendMessage — attachments and sidebar ordering", () => {
   });
 });
 
+describe("a sent attachment gets its server id from the realtime echo", () => {
+  const file = { fileName: "a.png", fileUrl: "u", fileKey: "k", fileSize: 3, mimeType: "image/png" };
+  const echoed = [{ id: 77, ...file }];
+
+  it("replaces the temporary attachment ids in the timeline, so the attachment URL query can run", async () => {
+    const { useSendMessage } = await import("@/hooks/api/chat-core-mutations-a");
+    const { mergeInboundMessage } = await import("@/features/chat/message-page-merge");
+    const { useAttachmentUrl } = await import("@/hooks/api/chat-shared");
+    const client = freshClient();
+    seedTimeline(client, []);
+    mockedPost.mockResolvedValue({
+      id: 501, orgId: "org-1", channelId: CHANNEL_ID, senderMembershipId: 11, content: "pic", replyToId: null,
+      isEdited: false, isDeleted: false, messageType: "text", metadata: null, actionStatus: null, clientKey: "ck-f",
+      channelPosition: 9, createdAt: "2026-09-30T11:00:00.000Z", updatedAt: "2026-09-30T11:00:00.000Z",
+    });
+    const send = renderHook(() => useSendMessage(), { wrapper: wrapperFor(client) });
+    await act(async () => {
+      await send.result.current.mutateAsync({ channelId: CHANNEL_ID, content: "pic", clientKey: "ck-f", attachments: [file] });
+    });
+    expect(timeline(client)[0].attachments[0].id).toBeLessThan(0);
+    client.setQueryData<InfiniteData<MessagesPage>>(messagesKey, (old) =>
+      old && mergeInboundMessage(old, message({ id: 501, attachments: echoed }), "ck-f"),
+    );
+    expect(timeline(client)[0].attachments).toEqual(echoed);
+    const mockedGet = jest.mocked(apiClient.get);
+    mockedGet.mockResolvedValue({ url: "https://files/a.png" });
+    const url = renderHook(() => useAttachmentUrl(CHANNEL_ID, timeline(client)[0].attachments[0].id), {
+      wrapper: wrapperFor(client),
+    });
+    await waitFor(() => expect(url.result.current.data).toEqual({ url: "https://files/a.png" }));
+  });
+
+  it("replaces them in an open thread too", async () => {
+    const { appendThreadReply } = await import("@/features/chat/message-page-merge");
+    const reconciled = message({ id: 600, replyToId: 1, attachments: [{ id: -5, ...file }] });
+    const thread: InfiniteData<ThreadPage> = {
+      pages: [{ parentMessage: message(), replies: [reconciled], nextCursor: null }],
+      pageParams: [undefined],
+    };
+    const merged = appendThreadReply(thread, { ...reconciled, attachments: echoed });
+    expect(merged?.pages[0].replies[0].attachments).toEqual(echoed);
+  });
+});
+
 describe("useEditMessage — optimistic edit", () => {
   it("patches the timeline, the open thread and the pin before the server answers", async () => {
     const { useEditMessage } = await import("@/hooks/api/chat-core-mutations-a");
@@ -332,6 +377,30 @@ describe("useToggleReaction — optimistic toggle", () => {
     expect(mockedDelete).not.toHaveBeenCalled();
     await act(async () => first.resolve({ reactions: { "👍": ["user-1"] } }));
     await waitFor(() => expect(mockedDelete).toHaveBeenCalledTimes(1));
+  });
+
+  it("does not let an earlier toggle's answer overwrite a newer optimistic state", async () => {
+    const { useToggleReaction } = await import("@/hooks/api/chat-core-mutations-a");
+    const client = freshClient();
+    seedTimeline(client, [message()]);
+    const first = deferred<{ reactions: Record<string, string[]> }>();
+    const second = deferred<{ reactions: Record<string, string[]> }>();
+    mockedPost.mockReturnValue(first.promise);
+    mockedDelete.mockReturnValue(second.promise);
+    const { result } = renderHook(() => useToggleReaction(CHANNEL_ID), { wrapper: wrapperFor(client) });
+    act(() => {
+      result.current.mutate({ messageId: 1, emoji: "🎉" });
+    });
+    await waitFor(() => expect(mockedPost).toHaveBeenCalledTimes(1));
+    act(() => {
+      result.current.mutate({ messageId: 1, emoji: "🎉" });
+    });
+    await waitFor(() => expect(timeline(client)[0].reactions).toEqual({}));
+    await act(async () => first.resolve({ reactions: { "🎉": ["user-1"] } }));
+    expect(timeline(client)[0].reactions).toEqual({});
+    await act(async () => second.resolve({ reactions: {} }));
+    await waitFor(() => expect(mockedDelete).toHaveBeenCalledTimes(1));
+    expect(timeline(client)[0].reactions).toEqual({});
   });
 
   it("rolls the reaction back when the server refuses", async () => {

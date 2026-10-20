@@ -16,7 +16,14 @@ import {
   chatAlertIsRaised,
   viewerChannelState,
 } from "@/lib/chat-alert-policy";
-import { patchUnreadTotal, recordInboundChannelMessage } from "@/hooks/api/chat-read-cache";
+import {
+  applyDeletedUnread,
+  decrementChannelUnread,
+  patchUnreadTotal,
+  recordInboundChannelMessage,
+} from "@/hooks/api/chat-read-cache";
+import { findCachedMessage, patchChatMessage } from "@/hooks/api/chat-message-cache";
+import { messageDeletedPayloadSchema } from "@/hooks/api/chat-realtime-schema";
 import { collaborationQueryKeys } from "@/lib/query-keys/collaboration";
 
 /**
@@ -83,6 +90,7 @@ export function useChatGlobalNotifications(
   channelsRef.current = channels;
 
   const [seen] = useState(() => new Set<number>());
+  const [countedUnread] = useState(() => new Map<number, number>());
 
   const channelIdSignature = useMemo(
     () =>
@@ -108,6 +116,7 @@ export function useChatGlobalNotifications(
     let cancelled = false;
     const subs: Array<{
       ch: ReturnType<typeof ably.channels.get>;
+      event: "message" | "message:deleted";
       h: (msg: InboundMessage) => void;
     }> = [];
 
@@ -127,12 +136,14 @@ export function useChatGlobalNotifications(
           const channelType = current?.type;
           const channelDisplayName = current?.name;
 
+          const countsAsUnread = !viewerIsReading(channelId, activeChannelIdRef.current);
+          if (countsAsUnread) countedUnread.set(payload.id, channelId);
           recordInboundChannelMessage(queryClient, {
             channelId,
             content: payload.content,
             senderName: payload.senderName,
             createdAt: payload.createdAt,
-            countsAsUnread: !viewerIsReading(channelId, activeChannelIdRef.current),
+            countsAsUnread,
           });
 
           const decision = chatAlertDecision({
@@ -163,12 +174,36 @@ export function useChatGlobalNotifications(
           }
         };
 
-        const ok = await safeSubscribe(ablyChannel, "message", handler);
-        if (cancelled) {
-          if (ok) safeUnsubscribe(ablyChannel, "message", handler);
-          return;
+        const deletedHandler = (msg: InboundMessage) => {
+          if (isForgedServerFrame("message:deleted", msg.clientId)) return;
+          if (channelId === activeChannelIdRef.current) return;
+          const parsed = messageDeletedPayloadSchema.safeParse(msg.data);
+          if (!parsed.success) return;
+          const messageId = parsed.data.id;
+          if (countedUnread.get(messageId) === channelId) {
+            countedUnread.delete(messageId);
+            decrementChannelUnread(queryClient, channelId);
+          } else {
+            applyDeletedUnread(
+              queryClient,
+              findCachedMessage(queryClient, channelId, messageId),
+              currentUserIdRef.current,
+            );
+          }
+          patchChatMessage(queryClient, channelId, messageId, { isDeleted: true, content: null });
+        };
+
+        for (const [event, h] of [
+          ["message", handler],
+          ["message:deleted", deletedHandler],
+        ] as const) {
+          const ok = await safeSubscribe(ablyChannel, event, h);
+          if (cancelled) {
+            if (ok) safeUnsubscribe(ablyChannel, event, h);
+            return;
+          }
+          if (ok) subs.push({ ch: ablyChannel, event, h });
         }
-        if (ok) subs.push({ ch: ablyChannel, h: handler });
       }
     }
 
@@ -176,11 +211,11 @@ export function useChatGlobalNotifications(
 
     return () => {
       cancelled = true;
-      for (const { ch, h } of subs) {
-        safeUnsubscribe(ch, "message", h);
+      for (const { ch, event, h } of subs) {
+        safeUnsubscribe(ch, event, h);
       }
     };
-  }, [orgId, channelIdSignature, ably, queryClient, seen]);
+  }, [orgId, channelIdSignature, ably, queryClient, seen, countedUnread]);
 
   useEffect(() => {
     if (!orgId || !currentUserId) return;

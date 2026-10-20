@@ -99,3 +99,23 @@ export function enqueueReaction<T>(key: string, run: () => Promise<T>): Promise<
     });
   return next;
 }
+
+const pendingReactions = new Map<string, number>();
+
+export function reactionKey(channelId: number, messageId: number, emoji: string): string {
+  return `${channelId}:${messageId}:${emoji}`;
+}
+
+export function beginReaction(key: string): void {
+  pendingReactions.set(key, (pendingReactions.get(key) ?? 0) + 1);
+}
+
+export function settleReaction(key: string): void {
+  const remaining = (pendingReactions.get(key) ?? 1) - 1;
+  if (remaining > 0) pendingReactions.set(key, remaining);
+  else pendingReactions.delete(key);
+}
+
+export function isLatestReaction(key: string): boolean {
+  return (pendingReactions.get(key) ?? 0) <= 1;
+}
