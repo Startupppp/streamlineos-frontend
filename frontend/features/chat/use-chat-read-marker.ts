@@ -40,7 +40,8 @@ export function useChatReadMarker({
     }
     const mark = () => {
       if (document.visibilityState !== "visible") return;
-      if (markedNewestRef.current?.messageId === newestMessageId) return;
+      const markedId = markedNewestRef.current?.messageId;
+      if (markedId !== undefined && newestMessageId <= markedId) return;
       markedNewestRef.current = { channelId, messageId: newestMessageId };
       markRead.mutate({ channelId });
     };

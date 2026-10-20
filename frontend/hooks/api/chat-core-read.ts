@@ -1,10 +1,18 @@
 "use client";
 
 import { useCallback, useMemo } from "react";
-import { useQuery, useInfiniteQuery } from "@tanstack/react-query";
+import {
+  infiniteQueryOptions,
+  queryOptions,
+  useInfiniteQuery,
+  useQuery,
+  useQueryClient,
+  type InfiniteData,
+  type QueryClient,
+} from "@tanstack/react-query";
 import { useSession } from "next-auth/react";
 import { apiClient } from "@/lib/api-client";
-import { lazyContract, type ContractSource } from "@/lib/api-envelope";
+import { isApiError, lazyContract, type ContractSource } from "@/lib/api-envelope";
 import { collaborationQueryKeys } from "@/lib/query-keys/collaboration";
 import { reportError } from "@/lib/observability/error-reporter";
 import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
@@ -21,6 +29,7 @@ import type {
 } from "@/types/chat";
 import type { ChatOnlineUser } from "@/hooks/api/chat-schema/presence-schema";
 import type { ChatChannelDetailWire } from "@/hooks/api/chat-extra-schema";
+import type { ChatMessageContext } from "@/hooks/api/chat-schema/message-schema";
 import { NO_ID_CURSOR_YET, NULL_CURSOR_YET } from "@/hooks/api/cursor-page-param";
 
 export interface ChannelListResult<TChannel> {
@@ -53,6 +62,13 @@ const publicChannelsContract = lazyContract(() =>
 const messagesPageContract = lazyContract(() =>
   import("@/hooks/api/chat-schema").then((m) => m.chatMessagesPageContract),
 );
+
+const messageContextContract = lazyContract(() =>
+  import("@/hooks/api/chat-schema").then((m) => m.chatMessageContextContract),
+);
+
+const CHAT_MESSAGES_STALE_MS = 15_000;
+const CHAT_MESSAGES_GC_MS = 30 * 60_000;
 
 const pollPageContract = lazyContract(() =>
   import("@/hooks/api/chat-schema").then((m) => m.chatPollPageContract),
@@ -202,20 +218,17 @@ export function usePublicChannels(enabled = true): ChannelListResult<PublicChann
   });
 }
 
-export function useChatChannel(channelId: number) {
-  const canRead = useCan("chat:channels:read");
-  return useQuery({
+function chatChannelQueryOptions(channelId: number) {
+  return queryOptions({
     ...INLINE_READ_ERROR,
     queryKey: collaborationQueryKeys.chat.channel(channelId),
     queryFn: ({ signal }) => apiClient.get<ChatChannelDetailWire>(`/chat/channels/${channelId}`, undefined, signal, channelDetailContract),
     staleTime: 2 * 60_000,
-    enabled: chatChannelReadEnabled(canRead, channelId),
   });
 }
 
-export function useChatMessages(channelId: number) {
-  const canRead = useCan("chat:messages:read");
-  return useInfiniteQuery({
+function chatMessagesQueryOptions(channelId: number) {
+  return infiniteQueryOptions({
     ...INLINE_READ_ERROR,
     queryKey: collaborationQueryKeys.chat.messages(channelId),
     queryFn: ({ pageParam, signal }) =>
@@ -225,10 +238,76 @@ export function useChatMessages(channelId: number) {
         signal,
         messagesPageContract,
       ),
-    getNextPageParam: (lastPage) => lastPage.nextCursor,
+    getNextPageParam: (lastPage: MessagesPage) => lastPage.nextCursor,
     initialPageParam: NO_ID_CURSOR_YET,
+    staleTime: CHAT_MESSAGES_STALE_MS,
+    gcTime: CHAT_MESSAGES_GC_MS,
+  });
+}
+
+export function useChatChannel(channelId: number) {
+  const canRead = useCan("chat:channels:read");
+  return useQuery({
+    ...chatChannelQueryOptions(channelId),
     enabled: chatChannelReadEnabled(canRead, channelId),
   });
+}
+
+export function useChatMessages(channelId: number) {
+  const canRead = useCan("chat:messages:read");
+  return useInfiniteQuery({
+    ...chatMessagesQueryOptions(channelId),
+    enabled: chatChannelReadEnabled(canRead, channelId),
+  });
+}
+
+export function usePrefetchChatChannel(): (channelId: number) => void {
+  const queryClient = useQueryClient();
+  const canReadChannels = useCan("chat:channels:read");
+  const canReadMessages = useCan("chat:messages:read");
+  return useCallback(
+    (channelId: number) => {
+      if (chatChannelReadEnabled(canReadMessages, channelId))
+        void queryClient.prefetchInfiniteQuery(chatMessagesQueryOptions(channelId));
+      if (chatChannelReadEnabled(canReadChannels, channelId))
+        void queryClient.prefetchQuery(chatChannelQueryOptions(channelId));
+    },
+    [queryClient, canReadChannels, canReadMessages],
+  );
+}
+
+export async function ensureChatMessageLoaded(
+  queryClient: QueryClient,
+  channelId: number,
+  messageId: number,
+): Promise<boolean> {
+  const messagesKey = collaborationQueryKeys.chat.messages(channelId);
+  const loaded = queryClient
+    .getQueryData<InfiniteData<MessagesPage>>(messagesKey)
+    ?.pages.some((page) => page.messages.some((message) => message.id === messageId));
+  if (loaded) return true;
+  try {
+    const context = await queryClient.fetchQuery({
+      queryKey: collaborationQueryKeys.chat.messageContext(channelId, messageId),
+      queryFn: ({ signal }) =>
+        apiClient.get<ChatMessageContext>(
+          `/chat/channels/${channelId}/messages/${messageId}/context`,
+          undefined,
+          signal,
+          messageContextContract,
+        ),
+      staleTime: CHAT_MESSAGES_STALE_MS,
+    });
+    if (!context.messages.some((message) => message.id === context.targetMessageId)) return false;
+    queryClient.setQueryData<InfiniteData<MessagesPage>>(messagesKey, {
+      pages: [{ messages: context.messages, nextCursor: context.olderCursor }],
+      pageParams: [NO_ID_CURSOR_YET],
+    });
+    return true;
+  } catch (error) {
+    if (isApiError(error) && (error.status === 403 || error.status === 404)) return false;
+    throw error;
+  }
 }
 
 export type PollPage = {

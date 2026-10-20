@@ -149,7 +149,7 @@ describe("F2 — a thread reply parses the raw row the endpoint answers", () => 
 
 describe("F3 — a reaction toggle removes what the viewer already added", () => {
   it("DELETEs (URL-encoded) when the viewer already reacted, then writes the answered map", async () => {
-    const { useToggleReaction } = await import("@/hooks/api/chat-core-mutations-b");
+    const { useToggleReaction } = await import("@/hooks/api/chat-core-mutations-a");
     const client = freshClient();
     seed(client, [message({ reactions: { "👍": ["user-1"] } })]);
     mockedDelete.mockResolvedValue({ reactions: {} });
@@ -165,7 +165,7 @@ describe("F3 — a reaction toggle removes what the viewer already added", () =>
   });
 
   it("POSTs when the viewer has not reacted with that emoji", async () => {
-    const { useToggleReaction } = await import("@/hooks/api/chat-core-mutations-b");
+    const { useToggleReaction } = await import("@/hooks/api/chat-core-mutations-a");
     const client = freshClient();
     seed(client, [message({ reactions: { "👍": ["user-2"] } })]);
     mockedPost.mockResolvedValue({ reactions: { "👍": ["user-2", "user-1"] } });
@@ -182,17 +182,28 @@ describe("F3 — a reaction toggle removes what the viewer already added", () =>
   });
 });
 
-describe("F4 — marking read refreshes the channel detail", () => {
-  it("invalidates chat.channel(id), which carries lastReadAt", async () => {
+describe("F4 — marking read moves the read marker in the channel detail without refetching it", () => {
+  it("patches the viewer's lastReadAt in chat.channel(id) to the newest visible message", async () => {
     const { useMarkChannelRead } = await import("@/hooks/api/chat-core-mutations-a");
     const client = freshClient();
+    seed(client, [message({ createdAt: "2026-09-30T10:00:00.000Z" })]);
+    client.setQueryData(collaborationQueryKeys.chat.channel(CHANNEL_ID), {
+      id: CHANNEL_ID,
+      members: [{ userId: "user-1", lastReadAt: "2026-09-29T10:00:00.000Z" }],
+    });
     const spy = jest.spyOn(client, "invalidateQueries");
     mockedPost.mockResolvedValue({ ok: true });
     const { result } = renderHook(() => useMarkChannelRead(), { wrapper: wrapperFor(client) });
     await act(async () => {
       await result.current.mutateAsync({ channelId: CHANNEL_ID });
     });
-    expect(spy).toHaveBeenCalledWith({ queryKey: collaborationQueryKeys.chat.channel(CHANNEL_ID) });
+    expect(
+      client.getQueryData<{ members: Array<{ lastReadAt: string }> }>(collaborationQueryKeys.chat.channel(CHANNEL_ID))
+        ?.members[0].lastReadAt,
+    ).toBe("2026-09-30T10:00:00.000Z");
+    expect(spy).not.toHaveBeenCalledWith(
+      expect.objectContaining({ queryKey: collaborationQueryKeys.chat.channel(CHANNEL_ID) }),
+    );
   });
 });
 
@@ -219,11 +230,12 @@ describe("F5 — the realtime echo of our own send replaces the optimistic copy"
 });
 
 describe("F7 — a DM or mention in an unloaded channel still moves the badges", () => {
-  it("invalidates unread and toasts from the per-user notifications channel", async () => {
+  it("patches the unread total, refetches the list that lacks the row, and toasts from the per-user notifications channel", async () => {
     const { useChatGlobalNotifications } = await import("@/hooks/api/chat-notifications");
     const ably = ablyMock();
     useAbly.mockReturnValue(ably);
     const client = freshClient();
+    client.setQueryData(collaborationQueryKeys.chat.unreadTotal(), { total: 2 });
     const spy = jest.spyOn(client, "invalidateQueries");
     const { unmount } = renderHook(() => useChatGlobalNotifications([], null, "user-1"), {
       wrapper: wrapperFor(client),
@@ -234,7 +246,9 @@ describe("F7 — a DM or mention in an unloaded channel still moves the badges",
         data: { channelId: 99, messageId: 1, senderId: "user-2", senderName: "Bo", channelType: "DIRECT" },
       });
     });
-    expect(spy).toHaveBeenCalledWith({ queryKey: collaborationQueryKeys.chat.unreadTotal(), exact: true });
+    expect(client.getQueryData(collaborationQueryKeys.chat.unreadTotal())).toEqual({ total: 3 });
+    expect(spy).toHaveBeenCalledWith({ queryKey: collaborationQueryKeys.chat.myChannels(), exact: true });
+    expect(spy).not.toHaveBeenCalledWith(expect.objectContaining({ queryKey: collaborationQueryKeys.chat.unreadTotal() }));
     expect(toast).toHaveBeenCalledWith("Bo", expect.anything());
 
     spy.mockClear();

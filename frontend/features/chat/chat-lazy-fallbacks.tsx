@@ -52,14 +52,6 @@ export function ChatPopoverFallback({ label }: { label: string }) {
   );
 }
 
-export function ChatTriggerFallback({ label }: { label: string }) {
-  return (
-    <div role="status" aria-live="polite" aria-label={label} className="shrink-0">
-      <Skeleton className="h-8 w-14 rounded-lg" />
-    </div>
-  );
-}
-
 export function ChatInlineFallback({ label }: { label: string }) {
   return (
     <div

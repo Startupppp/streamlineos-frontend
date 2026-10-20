@@ -3,6 +3,7 @@ import { collaborationQueryKeys } from "@/lib/query-keys/collaboration";
 import type { Channel, ChannelPage, PublicChannel } from "@/types/chat";
 import type { ChatChannelDetailWire } from "@/hooks/api/chat-extra-schema";
 import {
+  cancelLoadedQueries,
   mapPages,
   patchItems,
   runRollbacks,
@@ -10,14 +11,6 @@ import {
 } from "@/hooks/api/chat-message-cache";
 
 type ChannelList<TChannel> = InfiniteData<ChannelPage<TChannel>>;
-type ChannelDetailMember = ChatChannelDetailWire["members"][number];
-type ListMemberPatch = Partial<
-  Pick<Channel["members"][number], "mutedUntil" | "isFavorite" | "notificationPreference">
->;
-type DetailMemberPatch = ListMemberPatch &
-  Partial<Pick<ChannelDetailMember, "lastReadAt" | "archivedAt">>;
-
-const UNREAD_TOTAL_CAP = 100;
 
 function memberListKeys(): QueryKey[] {
   return [
@@ -30,22 +23,11 @@ export async function cancelChatChannelQueries(
   queryClient: QueryClient,
   channelId: number,
 ): Promise<void> {
-  await Promise.all([
-    ...memberListKeys().map((queryKey) =>
-      queryClient.cancelQueries({ queryKey, exact: true }),
-    ),
-    queryClient.cancelQueries({
-      queryKey: collaborationQueryKeys.chat.publicChannels(),
-      exact: true,
-    }),
-    queryClient.cancelQueries({
-      queryKey: collaborationQueryKeys.chat.unreadTotal(),
-      exact: true,
-    }),
-    queryClient.cancelQueries({
-      queryKey: collaborationQueryKeys.chat.channel(channelId),
-      exact: true,
-    }),
+  await cancelLoadedQueries(queryClient, [
+    ...memberListKeys(),
+    collaborationQueryKeys.chat.publicChannels(),
+    collaborationQueryKeys.chat.unreadTotal(),
+    collaborationQueryKeys.chat.channel(channelId),
   ]);
 }
 
@@ -159,14 +141,14 @@ export function removeChannelRow(
   return { removed, rollback };
 }
 
-export function insertChannelRow(
+export function insertChannelRow<TChannel extends { id: number }>(
   queryClient: QueryClient,
   queryKey: QueryKey,
-  channel: Channel,
+  channel: TChannel,
 ): ChatCacheRollback {
-  const data = queryClient.getQueryData<ChannelList<Channel>>(queryKey);
+  const data = queryClient.getQueryData<ChannelList<TChannel>>(queryKey);
   if (!data || data.pages.length === 0) return () => undefined;
-  queryClient.setQueryData<ChannelList<Channel>>(queryKey, (current) =>
+  queryClient.setQueryData<ChannelList<TChannel>>(queryKey, (current) =>
     current && {
       ...current,
       pages: current.pages.map((page, index) => {
@@ -176,16 +158,26 @@ export function insertChannelRow(
     },
   );
   return () => {
-    queryClient.setQueryData<ChannelList<Channel>>(queryKey, (current) =>
+    queryClient.setQueryData<ChannelList<TChannel>>(queryKey, (current) =>
       current && {
         ...current,
         pages: current.pages.map((page) => ({
           ...page,
-          channels: page.channels.filter((c) => c !== channel),
+          channels: page.channels.filter((c) => c.id !== channel.id),
         })),
       },
     );
   };
+}
+
+export function findPublicChannel(
+  queryClient: QueryClient,
+  channelId: number,
+): PublicChannel | undefined {
+  return queryClient
+    .getQueryData<ChannelList<PublicChannel>>(collaborationQueryKeys.chat.publicChannels())
+    ?.pages.flatMap((page) => page.channels)
+    .find((channel) => channel.id === channelId);
 }
 
 export function replaceChannelRow(
@@ -226,57 +218,10 @@ export function patchChannelDetail(
   const key = collaborationQueryKeys.chat.channel(channelId);
   const previous = queryClient.getQueryData<ChatChannelDetailWire>(key);
   if (!previous) return () => undefined;
-  const next = fn(previous);
-  queryClient.setQueryData<ChatChannelDetailWire>(key, next);
+  const stored = queryClient.setQueryData<ChatChannelDetailWire>(key, fn(previous));
   return () => {
     queryClient.setQueryData<ChatChannelDetailWire>(key, (current) =>
-      current === next ? previous : current,
-    );
-  };
-}
-
-export function patchOwnMember(
-  queryClient: QueryClient,
-  channelId: number,
-  userId: string | undefined,
-  patch: DetailMemberPatch,
-): ChatCacheRollback {
-  if (!userId) return () => undefined;
-  const { lastReadAt, archivedAt, ...listPatch } = patch;
-  const detailExtra = {
-    ...(lastReadAt !== undefined && { lastReadAt }),
-    ...(archivedAt !== undefined && { archivedAt }),
-  };
-  const rollbacks = [
-    patchChannelRow(queryClient, channelId, (channel) => ({
-      ...channel,
-      members: channel.members.map((member) =>
-        member.userId === userId ? { ...member, ...listPatch } : member,
-      ),
-    })),
-    patchChannelDetail(queryClient, channelId, (detail) => ({
-      ...detail,
-      members: detail.members.map((member) =>
-        member.userId === userId ? { ...member, ...listPatch, ...detailExtra } : member,
-      ),
-    })),
-  ];
-  return () => runRollbacks(rollbacks);
-}
-
-export function patchUnreadTotal(
-  queryClient: QueryClient,
-  fn: (total: number) => number,
-): ChatCacheRollback {
-  const key = collaborationQueryKeys.chat.unreadTotal();
-  const previous = queryClient.getQueryData<{ total: number }>(key);
-  if (!previous) return () => undefined;
-  const next = { total: Math.min(UNREAD_TOTAL_CAP, Math.max(0, fn(previous.total))) };
-  if (next.total === previous.total) return () => undefined;
-  queryClient.setQueryData<{ total: number }>(key, next);
-  return () => {
-    queryClient.setQueryData<{ total: number }>(key, (current) =>
-      current === next ? previous : current,
+      current === stored ? previous : current,
     );
   };
 }

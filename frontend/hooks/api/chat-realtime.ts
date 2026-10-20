@@ -8,11 +8,13 @@ import { useSession } from "next-auth/react";
 import { collaborationQueryKeys } from "@/lib/query-keys/collaboration";
 import { isForgedServerFrame, safeSubscribe, safeUnsubscribe } from "@/lib/ably-safe-subscribe";
 import { chatChannelName } from "@/lib/ably-channels";
+import { invalidateChatReconnect } from "@/lib/chat-read-state";
 import {
-  invalidateChatInboundMessage,
-  invalidateChatReconnect,
-} from "@/lib/chat-read-state";
-import { mergeInboundMessage } from "@/features/chat/message-page-merge";
+  appendThreadReply,
+  mergeInboundMessage,
+} from "@/features/chat/message-page-merge";
+import { patchChatMessage } from "@/hooks/api/chat-message-cache";
+import { patchChannelRow } from "@/hooks/api/chat-channel-cache";
 import { useAblyConnection } from "@/features/chat/use-ably-connection";
 import type { Message, MessagesPage, ThreadPage } from "@/types/chat";
 import type { InfiniteData } from "@tanstack/react-query";
@@ -42,6 +44,7 @@ export function reconnectShouldResync(
 }
 
 function payloadToMessage(payload: MessagePayload): Message {
+  const createdAt = payload.createdAt ?? new Date().toISOString();
   return {
     id: payload.id,
     channelId: payload.channelId,
@@ -53,8 +56,10 @@ function payloadToMessage(payload: MessagePayload): Message {
     messageType: payload.messageType ?? "text",
     metadata: payload.metadata ?? null,
     actionStatus: null,
-    createdAt: payload.createdAt,
-    updatedAt: payload.createdAt,
+    reactions: {},
+    clientKey: payload.clientKey ?? null,
+    createdAt,
+    updatedAt: createdAt,
     sender: {
       id: payload.senderId,
       name: payload.senderName ?? null,
@@ -63,30 +68,6 @@ function payloadToMessage(payload: MessagePayload): Message {
     attachments: payload.attachments ?? [],
     replyTo: null,
   };
-}
-
-function patchMessagesCache(
-  queryClient: ReturnType<typeof useQueryClient>,
-  cacheKey: readonly unknown[],
-  patcher: (msg: Message) => Message,
-): void {
-  queryClient.setQueryData<InfiniteData<MessagesPage>>(cacheKey, (old) => {
-    if (!old) return old;
-    let anyChanged = false;
-    const pages = old.pages.map((page) => {
-      let pageChanged = false;
-      const messages = page.messages.map((m) => {
-        const patched = patcher(m);
-        if (patched === m) return m;
-        pageChanged = true;
-        return patched;
-      });
-      if (!pageChanged) return page;
-      anyChanged = true;
-      return { ...page, messages };
-    });
-    return anyChanged ? { ...old, pages } : old;
-  });
 }
 
 export function useChatRealtime(channelId: number | null): {
@@ -131,92 +112,51 @@ export function useChatRealtime(channelId: number | null): {
       const parsed = messagePayloadSchema.safeParse(msg.data);
       if (!parsed.success) return;
       const payload = parsed.data;
+      const incoming = payloadToMessage(payload);
 
-      const cacheKey = collaborationQueryKeys.chat.messages(channelId);
-
-      queryClient.setQueryData<InfiniteData<MessagesPage>>(cacheKey, (old) => {
-        if (!old) return old;
-        return mergeInboundMessage(
-          old,
-          payloadToMessage(payload),
-          payload.clientKey,
-        );
-      });
-
-      invalidateChatInboundMessage(
-        queryClient,
-        channelId,
-        payload.replyToId ?? null,
+      queryClient.setQueryData<InfiniteData<MessagesPage>>(
+        collaborationQueryKeys.chat.messages(channelId),
+        (old) => old && mergeInboundMessage(old, incoming, payload.clientKey),
       );
+      if (payload.replyToId !== null)
+        queryClient.setQueryData<InfiniteData<ThreadPage>>(
+          collaborationQueryKeys.chat.thread(channelId, payload.replyToId),
+          (old) => appendThreadReply(old, incoming),
+        );
+      patchChannelRow(queryClient, channelId, (channel) => ({
+        ...channel,
+        lastMessage: {
+          content: incoming.content,
+          senderName: incoming.sender.name,
+          createdAt: incoming.createdAt,
+        },
+      }));
     };
 
     const messageUpdatedHandler = (msg: InboundMessage) => {
-      const cacheKey = collaborationQueryKeys.chat.messages(channelId);
       const parsed = messageUpdatedPayloadSchema.safeParse(msg.data);
       if (!parsed.success) {
         if (messageEntitiesUpdatedPayloadSchema.safeParse(msg.data).success)
-          void queryClient.invalidateQueries({ queryKey: cacheKey });
+          void queryClient.invalidateQueries({
+            queryKey: collaborationQueryKeys.chat.messages(channelId),
+          });
         return;
       }
-      const payload = parsed.data;
-
-      patchMessagesCache(queryClient, cacheKey, (m) => {
-        if (m.id !== payload.id) return m;
-        return {
-          ...m,
-          content: payload.content,
-          isEdited: true,
-          updatedAt: payload.updatedAt,
-        };
-      });
+      const { id, content, updatedAt } = parsed.data;
+      patchChatMessage(queryClient, channelId, id, { content, isEdited: true, updatedAt });
     };
 
     const messageDeletedHandler = (msg: InboundMessage) => {
       const parsed = messageDeletedPayloadSchema.safeParse(msg.data);
       if (!parsed.success) return;
-      const payload = parsed.data;
-
-      const cacheKey = collaborationQueryKeys.chat.messages(channelId);
-      patchMessagesCache(queryClient, cacheKey, (m) => {
-        if (m.id !== payload.id) return m;
-        return { ...m, isDeleted: true, content: null };
-      });
+      patchChatMessage(queryClient, channelId, parsed.data.id, { isDeleted: true, content: null });
     };
 
     const reactionUpdatedHandler = (msg: InboundMessage) => {
       const parsed = reactionUpdatedPayloadSchema.safeParse(msg.data);
       if (!parsed.success) return;
-      const payload = parsed.data;
-
-      const cacheKey = collaborationQueryKeys.chat.messages(channelId);
-      patchMessagesCache(queryClient, cacheKey, (m) => {
-        if (m.id !== payload.messageId) return m;
-        return { ...m, reactions: payload.reactions };
-      });
-
-      queryClient.setQueryData<InfiniteData<ThreadPage>>(
-        collaborationQueryKeys.chat.thread(channelId, payload.messageId),
-        (old) => {
-          if (!old) return old;
-          let changed = false;
-          const pages = old.pages.map((page) => {
-            const replies = page.replies.map((r) => {
-              if (r.id !== payload.messageId) return r;
-              changed = true;
-              return { ...r, reactions: payload.reactions };
-            });
-            const parentMessage =
-              page.parentMessage?.id === payload.messageId
-                ? { ...page.parentMessage, reactions: payload.reactions }
-                : page.parentMessage;
-            const parentChanged = parentMessage !== page.parentMessage;
-            if (!changed && !parentChanged) return page;
-            changed = true;
-            return { ...page, replies, parentMessage };
-          });
-          return changed ? { ...old, pages } : old;
-        },
-      );
+      const { messageId, reactions } = parsed.data;
+      patchChatMessage(queryClient, channelId, messageId, { reactions });
     };
 
     const handlers: Record<ChatEvent, (msg: InboundMessage) => void> = {

@@ -61,8 +61,9 @@ export function useChatPollReconciliation({
     void (async () => {
       const result = await refetchHistory();
       if (cancelled || result.isError) return;
-      queryClient.invalidateQueries({
+      void queryClient.invalidateQueries({
         queryKey: collaborationQueryKeys.chat.myChannels(),
+        exact: true,
       });
       if (nextPosition !== null)
         setPositionState({

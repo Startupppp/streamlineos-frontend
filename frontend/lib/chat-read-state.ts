@@ -1,107 +1,157 @@
-import type { QueryClient } from "@tanstack/react-query";
+import type { InfiniteData, QueryClient } from "@tanstack/react-query";
 import { collaborationQueryKeys } from "@/lib/query-keys/collaboration";
+import {
+  findChannelRow,
+  moveChannelRowToTop,
+  patchChannelDetail,
+  patchChannelRow,
+} from "@/hooks/api/chat-channel-cache";
+import { runRollbacks, type ChatCacheRollback } from "@/hooks/api/chat-message-cache";
+import type { Channel, MessagesPage } from "@/types/chat";
 
-export function invalidateChatUnreadState(queryClient: QueryClient): void {
-  queryClient.invalidateQueries({
-    queryKey: collaborationQueryKeys.chat.myChannels(),
-    exact: true,
-  });
-  queryClient.invalidateQueries({
-    queryKey: collaborationQueryKeys.chat.unreadTotal(),
-    exact: true,
-  });
+const UNREAD_TOTAL_CAP = 100;
+
+type OwnMemberPatch = Partial<
+  Pick<Channel["members"][number], "mutedUntil" | "isFavorite" | "notificationPreference">
+> & { archivedAt?: string | null };
+
+export function patchUnreadTotal(
+  queryClient: QueryClient,
+  fn: (total: number) => number,
+): ChatCacheRollback {
+  const key = collaborationQueryKeys.chat.unreadTotal();
+  const previous = queryClient.getQueryData<{ total: number }>(key);
+  if (!previous) return () => undefined;
+  const next = { total: Math.min(UNREAD_TOTAL_CAP, Math.max(0, fn(previous.total))) };
+  if (next.total === previous.total) return () => undefined;
+  const stored = queryClient.setQueryData<{ total: number }>(key, next);
+  return () => {
+    queryClient.setQueryData<{ total: number }>(key, (current) =>
+      current === stored ? previous : current,
+    );
+  };
 }
 
-export function invalidateChatChannelMessages(
+export function patchOwnMember(
   queryClient: QueryClient,
   channelId: number,
-): void {
-  queryClient.invalidateQueries({
-    queryKey: collaborationQueryKeys.chat.messages(channelId),
-    exact: false,
-  });
+  userId: string | undefined,
+  patch: OwnMemberPatch,
+): ChatCacheRollback {
+  if (!userId) return () => undefined;
+  const { archivedAt, ...listPatch } = patch;
+  const rollbacks = [
+    patchChannelRow(queryClient, channelId, (channel) => ({
+      ...channel,
+      members: channel.members.map((member) =>
+        member.userId === userId ? { ...member, ...listPatch } : member,
+      ),
+    })),
+    patchChannelDetail(queryClient, channelId, (detail) => ({
+      ...detail,
+      members: detail.members.map((member) =>
+        member.userId === userId
+          ? { ...member, ...listPatch, ...(archivedAt !== undefined && { archivedAt }) }
+          : member,
+      ),
+    })),
+  ];
+  return () => runRollbacks(rollbacks);
 }
 
-export function invalidateChatMessageSent(
-  queryClient: QueryClient,
-  channelId: number,
-  hasAttachments: boolean,
-): void {
-  invalidateChatChannelMessages(queryClient, channelId);
-  queryClient.invalidateQueries({
-    queryKey: collaborationQueryKeys.chat.myChannels(),
-    exact: true,
-  });
-  if (hasAttachments)
-    queryClient.invalidateQueries({
-      queryKey: collaborationQueryKeys.chat.channelFiles(channelId),
-    });
+function newestPersistedAt(queryClient: QueryClient, channelId: number): string | null {
+  const pages = queryClient.getQueryData<InfiniteData<MessagesPage>>(
+    collaborationQueryKeys.chat.messages(channelId),
+  )?.pages;
+  let newest: string | null = null;
+  for (const message of pages?.flatMap((page) => page.messages) ?? []) {
+    if (message.id < 0) continue;
+    if (newest === null || Date.parse(message.createdAt) > Date.parse(newest)) newest = message.createdAt;
+  }
+  return newest;
 }
 
-function invalidateChatMessageBodyChanged(
+export function applyOptimisticRead(
   queryClient: QueryClient,
   channelId: number,
-): void {
-  invalidateChatChannelMessages(queryClient, channelId);
-  queryClient.invalidateQueries({
-    queryKey: collaborationQueryKeys.chat.threadsInChannel(channelId),
-    exact: false,
-  });
-  queryClient.invalidateQueries({
-    queryKey: collaborationQueryKeys.chat.pins(channelId),
-    exact: true,
-  });
-  queryClient.invalidateQueries({
-    queryKey: collaborationQueryKeys.chat.savedMessages(),
-    exact: true,
-  });
-  queryClient.invalidateQueries({
-    queryKey: collaborationQueryKeys.chat.myChannels(),
-    exact: true,
-  });
+  userId: string | undefined,
+): ChatCacheRollback {
+  const unread = findChannelRow(queryClient, channelId)?.unreadCount ?? 0;
+  const readAt = newestPersistedAt(queryClient, channelId);
+  const rollbacks: ChatCacheRollback[] = [];
+  if (unread > 0)
+    rollbacks.push(
+      patchChannelRow(queryClient, channelId, (channel) => ({ ...channel, unreadCount: 0 })),
+      patchUnreadTotal(queryClient, (total) => total - unread),
+    );
+  if (readAt !== null && userId)
+    rollbacks.push(
+      patchChannelDetail(queryClient, channelId, (detail) => ({
+        ...detail,
+        members: detail.members.map((member) =>
+          member.userId === userId &&
+          (member.lastReadAt === null || Date.parse(readAt) > Date.parse(member.lastReadAt))
+            ? { ...member, lastReadAt: readAt }
+            : member,
+        ),
+      })),
+    );
+  return () => runRollbacks(rollbacks);
 }
 
-export function invalidateChatMessageEdited(
+export function applyOptimisticUnread(
   queryClient: QueryClient,
   channelId: number,
-): void {
-  invalidateChatMessageBodyChanged(queryClient, channelId);
+): ChatCacheRollback {
+  const row = findChannelRow(queryClient, channelId);
+  if (!row?.lastMessage || row.unreadCount > 0) return () => undefined;
+  const rollbacks = [
+    patchChannelRow(queryClient, channelId, (channel) => ({ ...channel, unreadCount: 1 })),
+    patchUnreadTotal(queryClient, (total) => total + 1),
+  ];
+  return () => runRollbacks(rollbacks);
 }
 
-export function invalidateChatMessageDeleted(
-  queryClient: QueryClient,
-  channelId: number,
-): void {
-  invalidateChatMessageBodyChanged(queryClient, channelId);
+interface InboundChannelMessage {
+  channelId: number;
+  content: string | null;
+  senderName: string | null;
+  createdAt: string;
+  countsAsUnread: boolean;
 }
 
-export function invalidateChatChannelRead(
+export function recordInboundChannelMessage(
   queryClient: QueryClient,
-  channelId: number,
+  inbound: InboundChannelMessage,
 ): void {
-  invalidateChatUnreadState(queryClient);
-  queryClient.invalidateQueries({
-    queryKey: collaborationQueryKeys.chat.channel(channelId),
-  });
-}
-
-export function invalidateChatInboundMessage(
-  queryClient: QueryClient,
-  channelId: number,
-  replyToId: number | null,
-): void {
-  invalidateChatUnreadState(queryClient);
-  if (replyToId !== null)
-    queryClient.invalidateQueries({
-      queryKey: collaborationQueryKeys.chat.thread(channelId, replyToId),
-      exact: true,
-    });
+  moveChannelRowToTop(queryClient, inbound.channelId, (channel) => ({
+    ...channel,
+    lastMessage: {
+      content: inbound.content,
+      senderName: inbound.senderName,
+      createdAt: inbound.createdAt,
+    },
+    unreadCount: inbound.countsAsUnread ? channel.unreadCount + 1 : channel.unreadCount,
+  }));
+  if (inbound.countsAsUnread) patchUnreadTotal(queryClient, (total) => total + 1);
 }
 
 export function invalidateChatReconnect(
   queryClient: QueryClient,
   channelId: number,
 ): void {
-  invalidateChatChannelMessages(queryClient, channelId);
-  invalidateChatUnreadState(queryClient);
+  void queryClient.invalidateQueries({
+    queryKey: collaborationQueryKeys.chat.messages(channelId),
+  });
+  void queryClient.invalidateQueries({
+    queryKey: collaborationQueryKeys.chat.threadsInChannel(channelId),
+  });
+  void queryClient.invalidateQueries({
+    queryKey: collaborationQueryKeys.chat.myChannels(),
+    exact: true,
+  });
+  void queryClient.invalidateQueries({
+    queryKey: collaborationQueryKeys.chat.unreadTotal(),
+    exact: true,
+  });
 }

@@ -1,28 +1,32 @@
 "use client";
 
-import { useEffect, useState, type RefObject } from "react";
+import { useEffect, useSyncExternalStore, type RefObject } from "react";
+
+function subscribeToConnectivity(onChange: () => void): () => void {
+  window.addEventListener("online", onChange);
+  window.addEventListener("offline", onChange);
+  return () => {
+    window.removeEventListener("online", onChange);
+    window.removeEventListener("offline", onChange);
+  };
+}
+
+function readOnline(): boolean {
+  return navigator.onLine;
+}
+
+function assumeOnline(): boolean {
+  return true;
+}
 
 export function useChatOfflineQueue(
   flushRef: RefObject<() => Promise<void>>,
 ): { isOnline: boolean } {
-  const [isOnline, setIsOnline] = useState(true);
+  const isOnline = useSyncExternalStore(subscribeToConnectivity, readOnline, assumeOnline);
 
   useEffect(() => {
-    const goOnline = () => {
-      setIsOnline(true);
-      void flushRef.current();
-    };
-    const goOffline = () => setIsOnline(false);
-
-    window.addEventListener("online", goOnline);
-    window.addEventListener("offline", goOffline);
-    setIsOnline(navigator.onLine);
-
-    return () => {
-      window.removeEventListener("online", goOnline);
-      window.removeEventListener("offline", goOffline);
-    };
-  }, [flushRef]);
+    if (isOnline) void flushRef.current();
+  }, [isOnline, flushRef]);
 
   return { isOnline };
 }

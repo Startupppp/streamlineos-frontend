@@ -11,7 +11,14 @@ import type {
 
 export type ChatCacheRollback = () => void;
 
-export type ChatMessagePatch = Partial<
+let lastTempId = 0;
+
+export function nextChatTempId(): number {
+  lastTempId -= 1;
+  return lastTempId;
+}
+
+type ChatMessagePatch = Partial<
   Pick<Message, "content" | "isEdited" | "isDeleted" | "reactions" | "updatedAt">
 >;
 
@@ -131,15 +138,30 @@ export function findCachedMessageAnywhere(
   return undefined;
 }
 
+export async function cancelLoadedQueries(
+  queryClient: QueryClient,
+  queryKeys: readonly QueryKey[],
+): Promise<void> {
+  const loaded = queryKeys.flatMap((queryKey) =>
+    queryClient
+      .getQueriesData({ queryKey })
+      .filter(([, data]) => data !== undefined)
+      .map(([key]) => key),
+  );
+  await Promise.all(
+    loaded.map((queryKey) => queryClient.cancelQueries({ queryKey, exact: true })),
+  );
+}
+
 export async function cancelChatMessageQueries(
   queryClient: QueryClient,
   channelId: number,
 ): Promise<void> {
-  await Promise.all([
-    queryClient.cancelQueries({ queryKey: collaborationQueryKeys.chat.messages(channelId) }),
-    queryClient.cancelQueries({ queryKey: collaborationQueryKeys.chat.threadsInChannel(channelId) }),
-    queryClient.cancelQueries({ queryKey: collaborationQueryKeys.chat.pins(channelId), exact: true }),
-    queryClient.cancelQueries({ queryKey: collaborationQueryKeys.chat.savedMessages(), exact: true }),
+  await cancelLoadedQueries(queryClient, [
+    collaborationQueryKeys.chat.messages(channelId),
+    collaborationQueryKeys.chat.threadsInChannel(channelId),
+    collaborationQueryKeys.chat.pins(channelId),
+    collaborationQueryKeys.chat.savedMessages(),
   ]);
 }
 
@@ -198,78 +220,4 @@ export function patchChatMessage(
     ),
   );
   return () => runRollbacks(rollbacks);
-}
-
-export function appendTimelineMessage(
-  data: InfiniteData<MessagesPage> | undefined,
-  message: Message,
-): InfiniteData<MessagesPage> | undefined {
-  if (!data || data.pages.length === 0) return data;
-  return {
-    ...data,
-    pages: data.pages.map((page, index) =>
-      index === 0 ? { ...page, messages: [...page.messages, message] } : page,
-    ),
-  };
-}
-
-export function appendThreadReply(
-  data: InfiniteData<ThreadPage> | undefined,
-  reply: Message,
-): InfiniteData<ThreadPage> | undefined {
-  if (!data || data.pages.length === 0) return data;
-  const exists = data.pages.some((page) =>
-    page.replies.some(
-      (message) =>
-        message.id === reply.id ||
-        (reply.clientKey != null && reply.clientKey !== "" && message.clientKey === reply.clientKey),
-    ),
-  );
-  if (exists)
-    return mapPages(data, (page) => ({
-      ...page,
-      replies: page.replies.map((message) =>
-        message.id < 0 && reply.clientKey != null && message.clientKey === reply.clientKey
-          ? reply
-          : message,
-      ),
-    }));
-  return {
-    ...data,
-    pages: data.pages.map((page, index) =>
-      index === 0 ? { ...page, replies: [...page.replies, reply] } : page,
-    ),
-  };
-}
-
-export function replaceOptimisticMessage(
-  data: InfiniteData<MessagesPage> | undefined,
-  clientKey: string,
-  fn: (optimistic: Message) => Message,
-): InfiniteData<MessagesPage> | undefined {
-  return mapPages(data, (page) => {
-    if (!page.messages.some((m) => m.id < 0 && m.clientKey === clientKey)) return page;
-    const reconciled = page.messages.map((m) =>
-      m.id < 0 && m.clientKey === clientKey ? fn(m) : m,
-    );
-    const seen = new Set<number>();
-    return {
-      ...page,
-      messages: reconciled.filter((m) => {
-        if (seen.has(m.id)) return false;
-        seen.add(m.id);
-        return true;
-      }),
-    };
-  });
-}
-
-export function removeOptimisticMessage(
-  data: InfiniteData<MessagesPage> | undefined,
-  clientKey: string,
-): InfiniteData<MessagesPage> | undefined {
-  return mapPages(data, (page) => {
-    const messages = page.messages.filter((m) => !(m.id < 0 && m.clientKey === clientKey));
-    return messages.length === page.messages.length ? page : { ...page, messages };
-  });
 }

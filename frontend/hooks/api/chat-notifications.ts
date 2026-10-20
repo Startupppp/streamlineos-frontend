@@ -16,7 +16,8 @@ import {
   chatAlertIsRaised,
   viewerChannelState,
 } from "@/lib/chat-alert-policy";
-import { invalidateChatUnreadState } from "@/lib/chat-read-state";
+import { patchUnreadTotal, recordInboundChannelMessage } from "@/lib/chat-read-state";
+import { collaborationQueryKeys } from "@/lib/query-keys/collaboration";
 
 /**
  * An Ably message body is `any`, so asserting it into a payload interface
@@ -27,6 +28,7 @@ function readChatNotification(data: unknown): {
   senderId: unknown;
   senderName: string | null;
   content: string | null;
+  createdAt: string;
 } | null {
   if (!isRecord(data) || typeof data.id !== "number" || !data.id) return null;
   return {
@@ -34,7 +36,28 @@ function readChatNotification(data: unknown): {
     senderId: data.senderId,
     senderName: typeof data.senderName === "string" ? data.senderName : null,
     content: typeof data.content === "string" ? data.content : null,
+    createdAt: typeof data.createdAt === "string" ? data.createdAt : new Date().toISOString(),
   };
+}
+
+const SEEN_MESSAGE_LIMIT = 500;
+
+function rememberMessage(seen: Set<number>, id: number): boolean {
+  if (seen.has(id)) return false;
+  seen.add(id);
+  if (seen.size > SEEN_MESSAGE_LIMIT) {
+    const oldest = seen.values().next().value;
+    if (oldest !== undefined) seen.delete(oldest);
+  }
+  return true;
+}
+
+function viewerIsReading(channelId: number, activeChannelId: number | null): boolean {
+  return (
+    channelId === activeChannelId &&
+    typeof document !== "undefined" &&
+    document.visibilityState === "visible"
+  );
 }
 
 export function useChatGlobalNotifications(
@@ -80,6 +103,7 @@ export function useChatGlobalNotifications(
     // `setup` declaration below, and the channel name builder takes a string.
     const org = orgId;
     const channelIds = channelIdSignature.split(",").map(Number);
+    const seen = new Set<number>();
     let cancelled = false;
     const subs: Array<{
       ch: ReturnType<typeof ably.channels.get>;
@@ -96,12 +120,19 @@ export function useChatGlobalNotifications(
           if (isForgedServerFrame("message", msg.clientId)) return;
           const payload = readChatNotification(msg.data);
           if (!payload || payload.senderId === currentUserIdRef.current) return;
+          if (!rememberMessage(seen, payload.id)) return;
 
           const current = channelsRef.current?.find((c) => c.id === channelId);
           const channelType = current?.type;
           const channelDisplayName = current?.name;
 
-          invalidateChatUnreadState(queryClient);
+          recordInboundChannelMessage(queryClient, {
+            channelId,
+            content: payload.content,
+            senderName: payload.senderName,
+            createdAt: payload.createdAt,
+            countsAsUnread: !viewerIsReading(channelId, activeChannelIdRef.current),
+          });
 
           const decision = chatAlertDecision({
             kind: "message",
@@ -171,7 +202,11 @@ export function useChatGlobalNotifications(
       const channelId = data.channelId;
       const loaded = channelsRef.current?.find((c) => c.id === channelId);
       if (loaded !== undefined) return;
-      invalidateChatUnreadState(queryClient);
+      patchUnreadTotal(queryClient, (total) => total + 1);
+      void queryClient.invalidateQueries({
+        queryKey: collaborationQueryKeys.chat.myChannels(),
+        exact: true,
+      });
       const decision = chatAlertDecision({
         kind: event === "notification:mention" ? "mention" : "message",
         channelId,

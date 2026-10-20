@@ -52,8 +52,7 @@ export interface MessagePanelProps {
 
 export function useMessagePanelData({
   channelId, currentUserId, onBack, onToggleInfo, showInfoPanel,
-  autoStartCall, onAutoStartHandled, isSidebarCollapsed, onToggleSidebar,
-  scrollToMessageId,
+  autoStartCall, onAutoStartHandled, scrollToMessageId,
 }: MessagePanelProps) {
   const scope = useOrgStorageScope();
   const draftKey = orgScopedStorageKey(`chat:draft:${channelId}`, scope);
@@ -86,7 +85,6 @@ export function useMessagePanelData({
   const saveMessage = useSaveMessage();
   const unsaveMessage = useUnsaveMessage();
   const { data: onlineUsers } = useChatOnlineUsers();
-  const lastTypingSent = useRef(0);
   const { isConnected: ablyConnected, typingUserIds, publishTyping } = useChatRealtime(channelId);
   const { isConnected: ablySocketConnected } = useAblyConnection();
 
@@ -138,7 +136,6 @@ export function useMessagePanelData({
   });
 
   const [showSavedPanel, setShowSavedPanel] = useState(false);
-  const [showFilesPanel, setShowFilesPanel] = useState(false);
   const [forwardMessage, setForwardMessage] = useState<ForwardableMessage | null>(null);
   const flushQueueRef = useRef<() => Promise<void>>(async () => undefined);
   const { isOnline } = useChatOfflineQueue(flushQueueRef);
@@ -151,7 +148,7 @@ export function useMessagePanelData({
     [chatUserMap],
   );
   const scrollToBottomRef = useRef<(behavior?: ScrollBehavior) => void>(() => undefined);
-  const { messageInput, setMessageInput, replyTo, setReplyTo, editingMessage, setEditingMessage, editInput, setEditInput, pendingAttachments, setPendingAttachments, uploading, showEmojiPicker, setShowEmojiPicker, showMentions, setShowMentions, mentionQuery, setMentionQuery, mentionIndex, setMentionIndex, showTicketPicker, setShowTicketPicker, ticketQuery, setTicketQuery, ticketSelectedIndex, setTicketSelectedIndex, inputRef, fileInputRef, emojiRef, pendingEntitiesRef, pendingMentionsRef, setFilteredMentions, handleFileSelect, handlePastedFiles, insertEmoji, insertMention, insertTicket, handleSend, handleEdit, handleInputChange, handleKeyDown, flushMessageQueue } = useMessageComposer({ channelId, draftKey, isOnline, sendMessage, editMessage, markRead, scrollToBottom: (behavior) => scrollToBottomRef.current(behavior), publishTyping, filteredMentions: [] });
+  const { messageInput, setMessageInput, replyTo, setReplyTo, editingMessage, setEditingMessage, editInput, setEditInput, pendingAttachments, setPendingAttachments, uploading, showEmojiPicker, setShowEmojiPicker, showMentions, setShowMentions, mentionQuery, mentionIndex, setMentionIndex, showTicketPicker, setShowTicketPicker, ticketQuery, setTicketQuery, ticketSelectedIndex, inputRef, fileInputRef, emojiRef, pendingEntitiesRef, setFilteredMentions, handleFileSelect, handlePastedFiles, insertEmoji, insertMention, insertTicket, handleSend, handleEdit, handleInputChange, handleKeyDown, flushMessageQueue } = useMessageComposer({ channelId, draftKey, isOnline, sendMessage, editMessage, markRead, scrollToBottom: (behavior) => scrollToBottomRef.current(behavior), publishTyping, filteredMentions: [] });
   useEffect(() => {
     flushQueueRef.current = flushMessageQueue;
   }, [flushMessageQueue]);
@@ -242,7 +239,6 @@ export function useMessagePanelData({
     setTicketQuery("");
     pendingEntitiesRef.current = [];
     setThreadMessageId(null);
-    setShowFilesPanel(false);
     inputRef.current?.focus();
   }, [channelId]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -256,13 +252,12 @@ export function useMessagePanelData({
       }
       if (e.key === "Escape") {
         if (threadMessageId !== null) { setThreadMessageId(null); return; }
-        if (showSavedPanel) { setShowSavedPanel(false); return; }
-        if (showFilesPanel) setShowFilesPanel(false);
+        if (showSavedPanel) setShowSavedPanel(false);
       }
     };
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
-  }, [threadMessageId, showSavedPanel, showFilesPanel]);
+  }, [threadMessageId, showSavedPanel]);
 
   const pinnedMessageIds = useMemo(() => new Set((pins ?? []).map((p) => p.messageId)), [pins]);
 
@@ -332,8 +327,7 @@ export function useMessagePanelData({
 
   const handleOpenThread = useCallback((msg: Message) => { setThreadMessageId(msg.id); }, []);
   const handleCloseThread = useCallback(() => { setThreadMessageId(null); }, []);
-  const handleToggleFiles = useCallback(() => { setShowFilesPanel((p) => !p); setShowSavedPanel(false); }, []);
-  const handleToggleSaved = useCallback(() => { setShowSavedPanel((p) => !p); setShowFilesPanel(false); }, []);
+  const handleToggleSaved = useCallback(() => { setShowSavedPanel((p) => !p); }, []);
   const handleHuddle = useCallback(() => {
     if (activeHuddle) { joinHuddle.mutate({ huddleId: activeHuddle.id, channelId }); return; }
     startHuddle.mutate(channelId);
@@ -410,14 +404,14 @@ export function useMessagePanelData({
   }, [refetchMessages]);
 
   return {
-    header: { onBack, displayName, channel, otherMember, isOtherOnline, memberCount, activeHuddle, isInHuddle, onHuddle: handleHuddle, huddleStartPending: startHuddle.isPending, huddleJoinPending: joinHuddle.isPending, canUseAi, summarizeAction, channelId, onToggleFiles: handleToggleFiles, onToggleSaved: handleToggleSaved, showFilesPanel, showSavedPanel, onToggleInfo, showInfoPanel, isSidebarCollapsed, onToggleSidebar },
+    header: { onBack, displayName, channel, otherMember, isOtherOnline, memberCount, activeHuddle, isInHuddle, onHuddle: handleHuddle, huddleStartPending: startHuddle.isPending, huddleJoinPending: joinHuddle.isPending, canUseAi, summarizeAction, onToggleSaved: handleToggleSaved, onToggleInfo, showInfoPanel },
     workspace: {
       messageList: { groupedMessages, messages, isLoading, isError: messagesError, errorMessage: messagesError ? getErrorMessage(messagesErrorValue) : undefined, onRetry: handleRetryMessages, hasNextPage: hasNextPage || hasOlderHeld, isFetchingNextPage, fetchNextPage: handleLoadOlder, currentUserId, channelId, displayName, channelType: channel?.type, editingMessage, editInput, pinnedMessageIds, savedMessageIds, replyCountMap, firstUnreadMessageId, onEditInputChange: setEditInput, onStartEdit: handleStartEdit, onCancelEdit: handleCancelEdit, onSaveEdit: handleEdit, onReply: handleReply, onOpenThread: handleOpenThread, onDelete: handleDelete, onReact: handleReact, onPin: handlePin, onUnpin: handleUnpin, onSave: handleSave, onUnsaveMsg: handleUnsaveMsg, onForward: handleForward, resolveUserName, showScrollBtn, scrollToBottom: handleScrollToBottom, messagesEndRef, scrollContainerRef, onScroll: handleScroll, scrollToMessageId },
       messageInput: { channelId, displayName, channelType: channel?.type, messageInput, setMessageInput, inputRef, fileInputRef, replyTo, setReplyTo, pendingAttachments, setPendingAttachments, uploading, onFileSelect: handleFileSelect, showEmojiPicker, setShowEmojiPicker, emojiRef, insertEmoji, showMentions, setShowMentions, mentionQuery, mentionIndex, setMentionIndex, filteredMentions, insertMention, showTicketPicker, ticketQuery, ticketSelectedIndex, onTicketSelect: insertTicket, typingText, sendMessage, onSend: handleSend, onKeyDown: handleKeyDown, onInputChange: handleInputChange, onFilesSelected: handlePastedFiles },
       huddle: activeHuddle && isInHuddle ? { huddle: activeHuddle, channelId, currentUserId } : undefined,
     },
     thread: { messageId: threadMessageId, channelId, currentUserId, onClose: handleCloseThread },
-    sidePanels: { channelId, isPanelNarrow, showSavedPanel, setShowSavedPanel, showFilesPanel, setShowFilesPanel, forwardMessage, setForwardMessage },
+    sidePanels: { isPanelNarrow, showSavedPanel, setShowSavedPanel, forwardMessage, setForwardMessage },
     isOnline,
     isReconnecting: isOnline && !ablySocketConnected,
   };

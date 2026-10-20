@@ -22,7 +22,7 @@ export type MessagesPage = z.infer<typeof chatMessagesPageContract>;
 export type ThreadPage = z.infer<typeof chatThreadPageContract>;
 
 export type MessageMetadata = NonNullable<Message["metadata"]>;
-export type EntityRef = NonNullable<MessageMetadata["entities"]>[number];
+type EntityRef = NonNullable<MessageMetadata["entities"]>[number];
 export type TicketEntityRef = Extract<EntityRef, { type: "ticket" }>;
 export type CommentEntityRef = Extract<EntityRef, { type: "comment" }>;
 

@@ -176,6 +176,20 @@ function refetchingInvalidations(spy: jest.SpyInstance) {
   return spy.mock.calls.filter(([filters]) => filters?.refetchType !== "none");
 }
 
+let nextUuid = 0;
+
+beforeAll(() => {
+  if (typeof globalThis.crypto?.randomUUID !== "function")
+    Object.defineProperty(globalThis, "crypto", {
+      writable: true,
+      configurable: true,
+      value: {
+        ...globalThis.crypto,
+        randomUUID: () => `00000000-0000-4000-8000-${String(++nextUuid).padStart(12, "0")}`,
+      },
+    });
+});
+
 beforeEach(() => jest.clearAllMocks());
 
 describe("useSendMessage — instant send with in-place reconciliation", () => {
