@@ -87,7 +87,7 @@ export function useMessagePanelData({
   const unsaveMessage = useUnsaveMessage();
   const { data: onlineUsers } = useChatOnlineUsers();
   const lastTypingSent = useRef(0);
-  const { isConnected: ablyConnected, typingUsers, publishTyping } = useChatRealtime(channelId);
+  const { isConnected: ablyConnected, typingUserIds, publishTyping } = useChatRealtime(channelId);
   const { isConnected: ablySocketConnected } = useAblyConnection();
 
   useHuddleRealtime(channelId);
@@ -115,6 +115,14 @@ export function useMessagePanelData({
     [onlineUsers],
   );
 
+  const typingUsers = useMemo(
+    () =>
+      typingUserIds.map((userId) => ({
+        userId,
+        name: channel?.members.find((member) => member.userId === userId)?.user?.name ?? "Someone",
+      })),
+    [typingUserIds, channel?.members],
+  );
   const typingText = useChatTypingText(typingUsers);
 
   const [threadMessageId, setThreadMessageId] = useState<number | null>(null);

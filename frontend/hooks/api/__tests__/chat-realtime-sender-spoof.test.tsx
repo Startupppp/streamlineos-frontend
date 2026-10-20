@@ -13,9 +13,8 @@ import {
  * A member of a channel can PUBLISH on it, so an inbound frame is not evidence of anything.
  *
  * The chat token grants every channel the caller belongs to
- * `["subscribe", "publish", "history"]` — `publish` is load-bearing, the typing indicator is
- * published from the browser — so any member can also publish a `message` frame onto the
- * channel. This hook took `payload.senderId` and `payload.senderName` from that frame and
+ * `subscribe` + `presence` (typing is presence), and a token that still carried `publish`
+ * would let any member publish a `message` frame onto the channel. This hook took `payload.senderId` and `payload.senderName` from that frame and
  * wrote them into the message cache and into a desktop Notification, unverified. One member
  * could therefore make a message appear in every open window of the channel, attributed to a
  * colleague, saying whatever they chose. Nothing is persisted, which is what makes it quiet.
@@ -53,6 +52,12 @@ function makeAblyMock() {
     }),
     unsubscribe: jest.fn(),
     publish: jest.fn().mockResolvedValue(undefined),
+    presence: {
+      subscribe: jest.fn().mockResolvedValue(undefined),
+      unsubscribe: jest.fn(),
+      update: jest.fn().mockResolvedValue(undefined),
+      leave: jest.fn().mockResolvedValue(undefined),
+    },
   };
 
   return {
@@ -114,10 +119,10 @@ beforeEach(() => {
 
 describe("isTrustedChatFrame", () => {
   it("accepts a server frame, which carries no clientId", () => {
-    expect(isTrustedChatFrame("message", undefined, "user-2")).toBe(true);
-    expect(isTrustedChatFrame("message:updated", undefined, undefined)).toBe(true);
-    expect(isTrustedChatFrame("message:deleted", undefined, undefined)).toBe(true);
-    expect(isTrustedChatFrame("reaction:updated", undefined, undefined)).toBe(true);
+    expect(isTrustedChatFrame("message", undefined)).toBe(true);
+    expect(isTrustedChatFrame("message:updated", undefined)).toBe(true);
+    expect(isTrustedChatFrame("message:deleted", undefined)).toBe(true);
+    expect(isTrustedChatFrame("reaction:updated", undefined)).toBe(true);
   });
 
   it("rejects a browser-published frame on every server-authored event", () => {
@@ -127,17 +132,12 @@ describe("isTrustedChatFrame", () => {
       "message:deleted",
       "reaction:updated",
     ] as const)
-      expect(isTrustedChatFrame(event, "user-2", "user-2")).toBe(false);
+      expect(isTrustedChatFrame(event, "user-2")).toBe(false);
   });
 
   it("rejects a browser frame even when it names ITS OWN publisher", () => {
     // The rule is not "do not lie about who you are", it is "you are not the server".
-    expect(isTrustedChatFrame("message", "user-1", "user-1")).toBe(false);
-  });
-
-  it("lets a typing frame speak only for its own publisher", () => {
-    expect(isTrustedChatFrame("typing", "user-2", "user-2")).toBe(true);
-    expect(isTrustedChatFrame("typing", "user-2", "user-victim")).toBe(false);
+    expect(isTrustedChatFrame("message", "user-1")).toBe(false);
   });
 });
 

@@ -1,15 +1,13 @@
 "use client";
 
 import { useCallback, useState } from "react";
-import { MessageSquare, PhoneOff, Video, VideoOff } from "lucide-react";
+import { PhoneOff, Video, VideoOff } from "lucide-react";
 import { ChevronDownIcon, ChevronUpIcon, UserPlusIcon } from "@animateicons/react/lucide";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
-import { useLeaveHuddle, useKickParticipant, useHuddleHeartbeat } from "@/hooks/api/chat-huddles";
+import { useLeaveHuddle, useHuddleHeartbeat } from "@/hooks/api/chat-huddles";
 import { useEntitlements } from "@/hooks/api/entitlements";
 import type { Huddle } from "@/types/chat";
-import { HuddleChatPanel } from "./huddle-chat-panel";
 import { useHuddleEvents } from "./use-huddle-events";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { HuddleParticipantCard } from "./huddle-participant-card";
@@ -27,15 +25,12 @@ interface HuddlePanelProps {
 
 export function HuddlePanel({ huddle, channelId, currentUserId }: HuddlePanelProps) {
   const [expanded, setExpanded] = useState(false);
-  const [showHuddleChat, setShowHuddleChat] = useState(false);
   const [showInviteDialog, setShowInviteDialog] = useState(false);
 
   const leaveHuddle = useLeaveHuddle();
-  const kickParticipant = useKickParticipant();
   useHuddleHeartbeat(huddle.id);
   const elapsed = useElapsedTime(huddle.startedAt);
 
-  const isHost = huddle.startedBy === currentUserId;
   const meetingUrl = huddle.meetingUrl;
   const participantCount = huddle.participants.length;
 
@@ -58,24 +53,9 @@ export function HuddlePanel({ huddle, channelId, currentUserId }: HuddlePanelPro
     setExpanded((prev) => !prev);
   }, []);
 
-  const handleToggleHuddleChat = useCallback(() => {
-    setShowHuddleChat((prev) => !prev);
-  }, []);
-
-  const handleCloseHuddleChat = useCallback(() => {
-    setShowHuddleChat(false);
-  }, []);
-
   const handleToggleInvite = useCallback(() => {
     setShowInviteDialog((prev) => !prev);
   }, []);
-
-  const handleKick = useCallback(
-    (targetUserId: string) => {
-      kickParticipant.mutate({ huddleId: huddle.id, channelId, targetUserId });
-    },
-    [kickParticipant, huddle.id, channelId],
-  );
 
   return (
     <div className="border-t border-border/40 bg-card/90">
@@ -91,7 +71,7 @@ export function HuddlePanel({ huddle, channelId, currentUserId }: HuddlePanelPro
           </div>
           <TruncatedText text={`Huddle · ${elapsed}`} className="text-sm font-medium text-status-success-ink" />
           <span className="text-xs text-muted-foreground">
-            {participantCount} {participantCount === 1 ? "participant" : "participants"}
+            {participantCount} joined through StreamlineOS
           </span>
         </div>
         <div className="flex items-center gap-1 shrink-0">
@@ -126,32 +106,18 @@ export function HuddlePanel({ huddle, channelId, currentUserId }: HuddlePanelPro
 
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mb-3">
             {huddle.participants.map((participant) => {
-              const participantUserId = participant.userId;
-              const isSelf = participantUserId !== null && participantUserId === currentUserId;
-              const canKick = isHost && participantUserId !== null && !isSelf;
+              const isSelf = participant.userId !== null && participant.userId === currentUserId;
               return (
                 <HuddleParticipantCard
                   key={participant.id}
                   participant={participant}
                   isCurrentUser={isSelf}
-                  isHost={isHost}
-                  onKick={canKick ? () => handleKick(participantUserId) : undefined}
                 />
               );
             })}
           </div>
 
           <div className="flex items-center justify-center gap-2">
-            <Button
-              variant="ghost"
-              size="sm"
-              className={cn("h-9 w-9 rounded-full p-0", showHuddleChat && "bg-muted/60")}
-              onClick={handleToggleHuddleChat}
-              aria-label="Huddle chat"
-            >
-              <MessageSquare className="h-4 w-4" />
-            </Button>
-
             <AnimatedIconButton
               icon={UserPlusIcon}
               iconSize={16}
@@ -181,16 +147,6 @@ export function HuddlePanel({ huddle, channelId, currentUserId }: HuddlePanelPro
             huddleId={huddle.id}
             participants={huddle.participants}
           />
-
-          {showHuddleChat && (
-            <div className="mt-3 border-t border-border/40 pt-3">
-              <HuddleChatPanel
-                channelId={channelId}
-                currentUserId={currentUserId}
-                onClose={handleCloseHuddleChat}
-              />
-            </div>
-          )}
         </div>
       )}
 

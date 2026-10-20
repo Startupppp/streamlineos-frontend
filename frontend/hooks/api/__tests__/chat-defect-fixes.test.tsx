@@ -94,6 +94,12 @@ function ablyMock() {
     }),
     unsubscribe: jest.fn(),
     publish: jest.fn().mockResolvedValue(undefined),
+    presence: {
+      subscribe: jest.fn().mockResolvedValue(undefined),
+      unsubscribe: jest.fn(),
+      update: jest.fn().mockResolvedValue(undefined),
+      leave: jest.fn().mockResolvedValue(undefined),
+    },
   };
   return {
     handlers,

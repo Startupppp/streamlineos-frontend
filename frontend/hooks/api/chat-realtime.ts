@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback, useRef } from "react";
 import { useAbly } from "ably/react";
-import type { InboundMessage, ConnectionState } from "ably";
+import type { InboundMessage, ConnectionState, PresenceMessage } from "ably";
 import { useQueryClient } from "@tanstack/react-query";
 import { useSession } from "next-auth/react";
 import { collaborationQueryKeys } from "@/lib/query-keys/collaboration";
@@ -14,12 +14,7 @@ import {
 } from "@/lib/chat-read-state";
 import { mergeInboundMessage } from "@/features/chat/message-page-merge";
 import { useAblyConnection } from "@/features/chat/use-ably-connection";
-import type {
-  Message,
-  MessagesPage,
-  ThreadPage,
-  TypingIndicator,
-} from "@/types/chat";
+import type { Message, MessagesPage, ThreadPage } from "@/types/chat";
 import type { InfiniteData } from "@tanstack/react-query";
 import {
   messagePayloadSchema,
@@ -27,27 +22,16 @@ import {
   messageEntitiesUpdatedPayloadSchema,
   messageDeletedPayloadSchema,
   reactionUpdatedPayloadSchema,
-  typingPayloadSchema,
   type MessagePayload,
 } from "./chat-realtime-schema";
 
 const TYPING_TIMEOUT_MS = 5_000;
 
-const CHAT_EVENTS = ["message", "typing", "message:updated", "message:deleted", "reaction:updated"] as const;
+const CHAT_EVENTS = ["message", "message:updated", "message:deleted", "reaction:updated"] as const;
 type ChatEvent = (typeof CHAT_EVENTS)[number];
 
-/**
- * Server-authored events (see `isForgedServerFrame`) are dropped when a browser
- * published them. `typing` is genuinely browser-published, so it may only speak
- * for its own publisher.
- */
-export function isTrustedChatFrame(
-  event: ChatEvent,
-  clientId: string | undefined,
-  declaredSenderId: string | undefined,
-): boolean {
-  if (event !== "typing") return !isForgedServerFrame(event, clientId);
-  return clientId === undefined || clientId === null || clientId === declaredSenderId;
+export function isTrustedChatFrame(event: ChatEvent, clientId: string | undefined): boolean {
+  return !isForgedServerFrame(event, clientId);
 }
 
 export function reconnectShouldResync(
@@ -106,7 +90,7 @@ function patchMessagesCache(
 
 export function useChatRealtime(channelId: number | null): {
   isConnected: boolean;
-  typingUsers: TypingIndicator[];
+  typingUserIds: string[];
   publishTyping: () => void;
 } {
   const queryClient = useQueryClient();
@@ -122,10 +106,8 @@ export function useChatRealtime(channelId: number | null): {
   // The verdict is the subscribe's own return value.
   const [channelAttached, setChannelAttached] = useState(false);
   const isConnected = socketConnected && channelAttached;
-  const [typingUsers, setTypingUsers] = useState<TypingIndicator[]>([]);
-  const typingTimers = useRef<Map<string, ReturnType<typeof setTimeout>>>(
-    new Map(),
-  );
+  const [typingUserIds, setTypingUserIds] = useState<string[]>([]);
+  const typingTimers = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map());
   const resyncedAtRef = useRef(reconnectCount);
 
   useEffect(() => {
@@ -235,32 +217,8 @@ export function useChatRealtime(channelId: number | null): {
       );
     };
 
-    const typingHandler = (msg: InboundMessage) => {
-      const parsed = typingPayloadSchema.safeParse(msg.data);
-      if (!parsed.success) return;
-      const payload = parsed.data;
-      if (payload.userId === currentUserId) return;
-
-      setTypingUsers((prev) => {
-        const exists = prev.some((t) => t.userId === payload.userId);
-        if (exists) return prev;
-        return [...prev, { userId: payload.userId, name: payload.name }];
-      });
-
-      const existing = typingTimers.current.get(payload.userId);
-      if (existing) clearTimeout(existing);
-      const timer = setTimeout(() => {
-        setTypingUsers((prev) =>
-          prev.filter((t) => t.userId !== payload.userId),
-        );
-        typingTimers.current.delete(payload.userId);
-      }, TYPING_TIMEOUT_MS);
-      typingTimers.current.set(payload.userId, timer);
-    };
-
     const handlers: Record<ChatEvent, (msg: InboundMessage) => void> = {
       message: messageHandler,
-      typing: typingHandler,
       "message:updated": messageUpdatedHandler,
       "message:deleted": messageDeletedHandler,
       "reaction:updated": reactionUpdatedHandler,
@@ -274,19 +232,7 @@ export function useChatRealtime(channelId: number | null): {
       const existing = guardedHandlers.get(event);
       if (existing !== undefined) return existing;
       const wrapped = (msg: InboundMessage): void => {
-        const data: unknown = msg.data;
-        const declared: unknown =
-          data !== null && typeof data === "object" && "userId" in data
-            ? data.userId
-            : undefined;
-        if (
-          !isTrustedChatFrame(
-            event,
-            msg.clientId ?? undefined,
-            typeof declared === "string" ? declared : undefined,
-          )
-        )
-          return;
+        if (!isTrustedChatFrame(event, msg.clientId ?? undefined)) return;
         handler(msg);
       };
       guardedHandlers.set(event, wrapped);
@@ -319,31 +265,48 @@ export function useChatRealtime(channelId: number | null): {
   }, [ably, channelId, orgId, queryClient, currentUserId]);
 
   useEffect(() => {
+    if (!orgId || !channelId || channelId <= 0) return;
+    const channel = ably.channels.get(chatChannelName(orgId, channelId));
     const timers = typingTimers.current;
-    return () => {
-      timers.forEach((t) => clearTimeout(t));
-      timers.clear();
+    const stop = (userId: string): void => {
+      const timer = timers.get(userId);
+      if (timer) clearTimeout(timer);
+      timers.delete(userId);
+      setTypingUserIds((prev) => prev.filter((id) => id !== userId));
     };
-  }, []);
+    const listener = (member: PresenceMessage): void => {
+      const userId = member.clientId;
+      if (!userId || userId === currentUserId) return;
+      const typing =
+        member.action !== "leave" &&
+        member.action !== "absent" &&
+        typeof member.data === "object" &&
+        member.data !== null &&
+        "typing" in member.data &&
+        member.data.typing === true;
+      if (!typing) return stop(userId);
+      setTypingUserIds((prev) => (prev.includes(userId) ? prev : [...prev, userId]));
+      const existing = timers.get(userId);
+      if (existing) clearTimeout(existing);
+      timers.set(userId, setTimeout(() => stop(userId), TYPING_TIMEOUT_MS));
+    };
+    void channel.presence.subscribe(listener).catch(() => {});
+    return () => {
+      channel.presence.unsubscribe(listener);
+      void channel.presence.leave().catch(() => {});
+      timers.forEach((timer) => clearTimeout(timer));
+      timers.clear();
+      setTypingUserIds([]);
+    };
+  }, [ably, channelId, orgId, currentUserId]);
 
   const publishTyping = useCallback(() => {
-    if (
-      !orgId ||
-      !channelId ||
-      channelId <= 0 ||
-      !currentUserId ||
-      !isConnected
-    )
-      return;
-    const channelName = chatChannelName(orgId, channelId);
-    const channel = ably.channels.get(channelName);
-    channel
-      .publish("typing", {
-        userId: currentUserId,
-        name: session?.user?.name ?? "Someone",
-      })
+    if (!orgId || !channelId || channelId <= 0 || !currentUserId || !isConnected) return;
+    void ably.channels
+      .get(chatChannelName(orgId, channelId))
+      .presence.update({ typing: true })
       .catch(() => {});
-  }, [ably, channelId, orgId, currentUserId, isConnected, session?.user?.name]);
+  }, [ably, channelId, orgId, currentUserId, isConnected]);
 
-  return { isConnected, typingUsers, publishTyping };
+  return { isConnected, typingUserIds, publishTyping };
 }

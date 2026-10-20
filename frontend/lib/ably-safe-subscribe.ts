@@ -14,10 +14,9 @@ function isCapabilityError(error: unknown): boolean {
 }
 
 /**
- * Events only the SERVER may author. A chat token grants `publish` on the caller's
- * chat and huddle channels (the browser publishes `typing` and `huddle:chat`), so any
- * member could otherwise publish a forged `message`, `reaction:updated` or huddle
- * frame. The backend publishes over REST with the API key and no `clientId`; Ably
+ * Events only the SERVER may author. Typing rides presence and the browser publishes
+ * nothing, but a token that still carries `publish` would let any member forge a
+ * `message`, `reaction:updated` or huddle frame. The backend publishes over REST with the API key and no `clientId`; Ably
  * stamps every browser publish with the token's `clientId`, which cannot be forged.
  */
 const SERVER_AUTHORED_EVENTS: ReadonlySet<string> = new Set([

@@ -176,11 +176,6 @@ export interface Message {
   clientKey?: string | null;
 }
 
-export interface TypingIndicator {
-  userId: string;
-  name: string;
-}
-
 export interface OrgUser {
   id: string;
   name: string | null;

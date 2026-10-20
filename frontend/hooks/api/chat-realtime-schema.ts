@@ -70,9 +70,4 @@ export const reactionUpdatedPayloadSchema = z.object({
   reactions: z.record(z.string(), z.array(z.string())),
 });
 
-export const typingPayloadSchema = z.object({
-  userId: z.string(),
-  name: z.string(),
-});
-
 export type MessagePayload = z.infer<typeof messagePayloadSchema>;
