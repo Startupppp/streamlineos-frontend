@@ -253,7 +253,7 @@ Deferred behind adoption evidence:
 - [x] **CHAT-020** — Remove ephemeral Huddle chat and client Huddle publish capability.
 - [x] **CHAT-021** — Remove misleading provider roster/kick/cap/end claims; add provider-aware UI.
 - [x] **CHAT-022** — Enforce cross-module permission intersections and product boundaries.
-- [ ] **CHAT-023** — Add backend/frontend contract, security, concurrency, accessibility, and regression tests.
+- [x] **CHAT-023** — Add backend/frontend contract, security, concurrency, accessibility, and regression tests.
 - [ ] **CHAT-024** — Run all nested-backend and frontend quality gates plus browser journeys.
 - [ ] **CHAT-025** — Execute cohort rollout, verify metrics, document support/rollback, then mark GA.
 
