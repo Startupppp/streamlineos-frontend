@@ -87,7 +87,7 @@ Frontend (`frontend/`):
 **Interfaces:**
 - Produces: `ChatEvents.emit(event: ChatEvent): void`, `ChatEvents.deliver(event: ChatEvent): Promise<void>`, `ChatEvent`, `ChatEventKind`, `chatEventSchemas`, `CHAT_EVENT_WIRE`, `CHAT_EVENT_SINK`, `ChatEventSink`, `InMemoryChatEventSink`, `AblyService.publish(channel, name, data)`, `AblyService.huddleChannelName(orgId, channelId)`, `AblyService.userChannelName(orgId, userId)`.
 
-- [ ] **Step 1: Write the failing `ChatEvents` spec**
+- [x] **Step 1: Write the failing `ChatEvents` spec**
 
 `backend/src/modules/chat/events/chat-events.spec.ts`:
 
@@ -167,12 +167,12 @@ describe("ChatEvents", () => {
 });
 ```
 
-- [ ] **Step 2: Run it and confirm it fails**
+- [x] **Step 2: Run it and confirm it fails**
 
 Run: `cd backend && npx jest src/modules/chat/events/chat-events.spec.ts`
 Expected: FAIL, `Cannot find module './chat-events'`.
 
-- [ ] **Step 3: Write the schemas**
+- [x] **Step 3: Write the schemas**
 
 `backend/src/modules/realtime/dto/realtime.schemas.ts` line 40: change `senderId: z.string(),` to `senderId: z.string().nullable(),`.
 
@@ -259,7 +259,7 @@ export type ChatEvent = {
 }[ChatEventKind];
 ```
 
-- [ ] **Step 4: Write the sink seam and in-memory adapter**
+- [x] **Step 4: Write the sink seam and in-memory adapter**
 
 `backend/src/modules/chat/events/chat-event-sink.ts`:
 
@@ -290,7 +290,7 @@ export class InMemoryChatEventSink implements ChatEventSink {
 }
 ```
 
-- [ ] **Step 5: Write `ChatEvents`**
+- [x] **Step 5: Write `ChatEvents`**
 
 `backend/src/modules/chat/events/chat-events.ts`:
 
@@ -329,12 +329,12 @@ export class ChatEvents {
 }
 ```
 
-- [ ] **Step 6: Run the `ChatEvents` spec**
+- [x] **Step 6: Run the `ChatEvents` spec**
 
 Run: `cd backend && npx jest src/modules/chat/events/chat-events.spec.ts`
 Expected: PASS (6 tests). If `registerAfterCommit`'s parameter type rejects `() => Promise<void>`, read its signature in `backend/src/common/tenant/tenant-context.ts` and match it. Do not cast.
 
-- [ ] **Step 7: Write the failing Ably adapter spec**
+- [x] **Step 7: Write the failing Ably adapter spec**
 
 `backend/src/modules/chat/events/ably-chat-event-sink.spec.ts`:
 
@@ -385,7 +385,7 @@ describe("AblyChatEventSink", () => {
 Run: `cd backend && npx jest src/modules/chat/events/ably-chat-event-sink.spec.ts`
 Expected: FAIL, module not found.
 
-- [ ] **Step 8: Add the AblyService methods and the adapter**
+- [x] **Step 8: Add the AblyService methods and the adapter**
 
 In `backend/src/modules/realtime/ably.service.ts`, add after `presenceChannelName`:
 
@@ -433,7 +433,7 @@ export class AblyChatEventSink implements ChatEventSink {
 Run: `cd backend && npx jest src/modules/chat/events/ably-chat-event-sink.spec.ts`
 Expected: PASS.
 
-- [ ] **Step 9: Register providers**
+- [x] **Step 9: Register providers**
 
 In `backend/src/modules/chat/chat.module.ts`, import `ChatEvents`, `AblyChatEventSink`, `CHAT_EVENT_SINK` and add to `providers`:
 
@@ -442,7 +442,7 @@ In `backend/src/modules/chat/chat.module.ts`, import `ChatEvents`, `AblyChatEven
     { provide: CHAT_EVENT_SINK, useClass: AblyChatEventSink },
 ```
 
-- [ ] **Step 10: Write the schema snapshot spec**
+- [x] **Step 10: Write the schema snapshot spec**
 
 `backend/src/modules/chat/events/chat-event-schemas.spec.ts`:
 
@@ -478,13 +478,13 @@ describe("chat event schema snapshot", () => {
 });
 ```
 
-- [ ] **Step 11: Generate the snapshot, then verify it**
+- [x] **Step 11: Generate the snapshot, then verify it**
 
 Run: `cd backend && UPDATE_CHAT_EVENT_SNAPSHOT=1 npx jest src/modules/chat/events/chat-event-schemas.spec.ts`
 Then: `cd backend && npx jest src/modules/chat/events`
 Expected: PASS, and `chat-event-schemas.snapshot.json` exists with 15 keys.
 
-- [ ] **Step 12: Commit (backend repo)**
+- [x] **Step 12: Commit (backend repo)**
 
 ```bash
 cd backend
@@ -502,7 +502,7 @@ The `senderId` nullability change in `realtime.schemas.ts` widens the type, so c
 - Modify: `backend/src/modules/realtime/ably.service.ts:69-77`
 - Test: `backend/src/modules/realtime/ably.service.spec.ts:41-43`
 
-- [ ] **Step 1: Update the spec expectation**
+- [x] **Step 1: Update the spec expectation**
 
 In `ably.service.spec.ts`, change lines 41-42 to:
 
@@ -514,14 +514,14 @@ In `ably.service.spec.ts`, change lines 41-42 to:
 Run: `cd backend && npx jest src/modules/realtime/ably.service.spec.ts`
 Expected: FAIL on those two lines.
 
-- [ ] **Step 2: Add `presence`**
+- [x] **Step 2: Add `presence`**
 
 In `createChatTokenRequest`, the chat channel entry becomes `["subscribe", "publish", "presence", "history"]`.
 
 Run: `cd backend && npx jest src/modules/realtime/ably.service.spec.ts`
 Expected: PASS.
 
-- [ ] **Step 3: Typecheck and commit (backend repo)**
+- [x] **Step 3: Typecheck and commit (backend repo)**
 
 Run: `cd backend && node --max-old-space-size=8192 node_modules/typescript/bin/tsc --noEmit -p tsconfig.json`
 Expected: no errors.
@@ -547,7 +547,7 @@ git commit -m "feat(realtime): grant presence on chat channels for presence-base
 **Interfaces:**
 - Produces: `useChatRealtime(channelId)` returns `{ isConnected: boolean; typingUserIds: string[]; publishTyping: () => void }`.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 `frontend/hooks/api/__tests__/chat-realtime-presence-typing.test.tsx`:
 
@@ -629,7 +629,7 @@ describe("useChatRealtime typing over presence", () => {
 Run: `cd frontend && npx jest hooks/api/__tests__/chat-realtime-presence-typing.test.tsx`
 Expected: FAIL (`presence.update` not called; `typingUserIds` undefined).
 
-- [ ] **Step 2: Implement presence typing in `chat-realtime.ts`**
+- [x] **Step 2: Implement presence typing in `chat-realtime.ts`**
 
 Make these changes:
 1. `CHAT_EVENTS` becomes `["message", "message:updated", "message:deleted", "reaction:updated"] as const`.
@@ -696,7 +696,7 @@ Make these changes:
 
 Import `PresenceMessage` from `"ably"` alongside `InboundMessage`. Update the return type annotation to `typingUserIds: string[]`. Remove the old typing-timer cleanup effect.
 
-- [ ] **Step 3: Map ids to names in the panel**
+- [x] **Step 3: Map ids to names in the panel**
 
 In `frontend/features/chat/use-message-panel-data.ts`, line 90 destructures `typingUsers`. Change to `typingUserIds`, and before line 118 build names from the channel members already loaded in this hook:
 
@@ -713,20 +713,20 @@ In `frontend/features/chat/use-message-panel-data.ts`, line 90 destructures `typ
 
 Read the `channel.members` element type in `frontend/types/chat.ts` first. If the id field is not `userId` or the name field is nullable, use the real field names and `?? "Someone"`. `useMemo` must come before line 118's `useChatTypingText(typingUsers)`.
 
-- [ ] **Step 4: Delete `typingPayloadSchema`**
+- [x] **Step 4: Delete `typingPayloadSchema`**
 
 Remove lines 73-76 of `frontend/hooks/api/chat-realtime-schema.ts`. Then grep `frontend` for `typingPayloadSchema` and for `"typing"` in `lib/ably-safe-subscribe.ts`, and remove any remaining reference.
 
-- [ ] **Step 5: Fix the spoof test for the new signature**
+- [x] **Step 5: Fix the spoof test for the new signature**
 
 In `frontend/hooks/api/__tests__/chat-realtime-sender-spoof.test.tsx`, update every `isTrustedChatFrame(event, clientId, declared)` call to `isTrustedChatFrame(event, clientId)`. Delete cases that asserted typing-specific behaviour. Update the header doc block: tokens grant `subscribe` + `presence`, and typing is presence.
 
-- [ ] **Step 6: Run the chat realtime tests**
+- [x] **Step 6: Run the chat realtime tests**
 
 Run: `cd frontend && npx jest hooks/api/__tests__ features/chat`
 Expected: PASS. Fix any test still reading `typingUsers` from `useChatRealtime`.
 
-- [ ] **Step 7: Commit (root repo)**
+- [x] **Step 7: Commit (root repo)**
 
 ```bash
 git add frontend/hooks/api/chat-realtime.ts frontend/hooks/api/chat-realtime-schema.ts frontend/features/chat/use-message-panel-data.ts frontend/hooks/api/__tests__/chat-realtime-presence-typing.test.tsx frontend/hooks/api/__tests__/chat-realtime-sender-spoof.test.tsx
@@ -741,7 +741,7 @@ git commit -m "feat(chat): typing indicator over Ably presence instead of client
 - Delete: `frontend/features/chat/huddle-chat-panel.tsx`
 - Modify: `frontend/features/chat/huddle-panel.tsx:12,30,61-67,145-152,185-192`
 
-- [ ] **Step 1: Write the failing assertion**
+- [x] **Step 1: Write the failing assertion**
 
 Add to the existing huddle panel test if one exists (`grep -rl "HuddlePanel" frontend --include=*.test.tsx`), otherwise create `frontend/features/chat/huddle-panel-no-chat.test.ts`:
 
@@ -761,11 +761,11 @@ describe("huddle has no in-app chat", () => {
 Run: `cd frontend && npx jest features/chat/huddle-panel-no-chat.test.ts`
 Expected: FAIL.
 
-- [ ] **Step 2: Remove the panel**
+- [x] **Step 2: Remove the panel**
 
 Delete `huddle-chat-panel.tsx`. In `huddle-panel.tsx`, remove the `HuddleChatPanel` import, the `showHuddleChat` state, `handleToggleHuddleChat`, `handleCloseHuddleChat`, the toggle button (around line 145-152) and the `{showHuddleChat && …}` block. Remove imports that become unused.
 
-- [ ] **Step 3: Run tests, lint, commit**
+- [x] **Step 3: Run tests, lint, commit**
 
 Run: `cd frontend && npx jest features/chat && npx eslint features/chat/huddle-panel.tsx`
 Expected: PASS, no lint errors.
@@ -879,7 +879,7 @@ git commit -m "test(chat): realtime schema parity with backend chat event snapsh
 - Modify: `backend/src/modules/chat/chat-messages.service.ts:416-422` (`attachEntity`)
 - Test: the existing specs for these services
 
-- [ ] **Step 1: Point the specs at the in-memory sink**
+- [x] **Step 1: Point the specs at the in-memory sink**
 
 In each existing spec that constructs these services (find with `grep -ln "ChatMessageModerationService\|ChatReactionsService\|attachEntity" backend/src/modules/chat/*.spec.ts`), replace the `AblyService` mock with:
 
@@ -900,7 +900,7 @@ For delete: `events.ofKind("message.deleted")`. For reactions: `events.ofKind("r
 
 Run those specs. Expected: FAIL, because the constructors still take `AblyService`.
 
-- [ ] **Step 2: Swap the dependency and calls**
+- [x] **Step 2: Swap the dependency and calls**
 
 In each service, replace the `AblyService` constructor parameter with `private readonly events: ChatEvents`. Replace each publish:
 
@@ -927,7 +927,7 @@ this.events.emit({ kind: "reaction.updated", orgId, channelId, payload: { messag
 this.events.emit({ kind: "message.entities-updated", orgId, channelId, payload: { id: messageId, channelId, entities: [entity] } });
 ```
 
-- [ ] **Step 3: Run specs and commit (backend repo)**
+- [x] **Step 3: Run specs and commit (backend repo)**
 
 Run: `cd backend && npx jest src/modules/chat/chat-message-moderation src/modules/chat/chat-reactions src/modules/chat/chat-messages.service.spec.ts`
 Expected: PASS.
@@ -950,7 +950,7 @@ Stage only the spec files you edited, not the `*.spec.ts` glob, if other specs a
 - Modify: `backend/src/modules/chat/chat-notifications.service.ts:113-143,212-242`
 - Test: `backend/src/modules/chat/chat-messages.service.spec.ts`, `chat-message-fanout-interface.spec.ts`, `chat-notifications.service.spec.ts`
 
-- [ ] **Step 1: Write the failing system-message test**
+- [x] **Step 1: Write the failing system-message test**
 
 In `chat-messages.service.spec.ts`, add a case using the spec's existing DB stub conventions:
 
@@ -972,7 +972,7 @@ If the spec does not already mock `run-in-tenant-transaction`, add `jest.mock(".
 
 Run it. Expected: FAIL.
 
-- [ ] **Step 2: Rewrite `sendSystemMessage`**
+- [x] **Step 2: Rewrite `sendSystemMessage`**
 
 Change `this.db.transaction(async (tx) => {` to `runInTenantTransaction(this.db, async (tx) => {` and close with `}, { orgId });`. Inside the transaction, after the insert, emit (it registers after-commit):
 
@@ -1001,7 +1001,7 @@ Delete the `void this.ably.publishChatMessage(...)` block after the transaction,
 
 The outbox backstop is deliberately not added for system messages. The existing fanout consumer also sends web push and inbox notifications, which join/leave messages must not trigger. Reconnect refetch covers a lost publish.
 
-- [ ] **Step 3: Route durable fanout through `deliver`**
+- [x] **Step 3: Route durable fanout through `deliver`**
 
 In `ChatMessageFanoutService`, replace the `AblyService` dependency with `ChatEvents`, and `send` with:
 
@@ -1049,7 +1049,7 @@ this.events.deliver({
 
 Use the same shape without `channelType` and with `kind: "user.mention-notification"` for mentions. Drop `idempotencyKey` in the non-ledger branches. `deliver` throws, so the ledger and `boundedMap` failure reporting keep working.
 
-- [ ] **Step 4: Update fanout/notification specs to the in-memory sink, run, commit**
+- [x] **Step 4: Update fanout/notification specs to the in-memory sink, run, commit**
 
 Replace `publishChatMessage`/`publishToUser` mock assertions with `events.ofKind("message.created")`, `events.ofKind("user.message-notification")` and `events.ofKind("user.mention-notification")`. For "Ably not configured must throw" cases, construct `new ChatEvents(new InMemoryChatEventSink("skipped"))`.
 
@@ -1072,7 +1072,7 @@ git commit -m "fix(chat): system messages in tenant txn; durable sends and notif
 - Modify: `backend/src/modules/chat/chat-huddle-start.ts:150-157` and its `deps` type
 - Test: `backend/src/modules/chat/chat-huddles.service.spec.ts`
 
-- [ ] **Step 1: Write the failing invite tests**
+- [x] **Step 1: Write the failing invite tests**
 
 In `chat-huddles.service.spec.ts`, using its existing setup and an in-memory sink:
 
@@ -1098,7 +1098,7 @@ Seed `user-2` as an active member of channel 7 and `outsider` as not, following 
 Run: `cd backend && npx jest src/modules/chat/chat-huddles.service.spec.ts`
 Expected: FAIL.
 
-- [ ] **Step 2: Validate invite targets**
+- [x] **Step 2: Validate invite targets**
 
 In `inviteToHuddle`, after `assertHuddleInviteCapacity`:
 
@@ -1145,7 +1145,7 @@ Add the private helper:
 
 Check the column names against `backend/src/db/schema/chat/chat-channel-tables.ts` (member FK column) and the `organizationMembers` schema (status enum value for active). Match `assertChannelMember`'s definition of "active member" in `chat-channel-authorization.ts`. If it uses a different predicate, copy it, because Phase 7 unifies these. Import `UnprocessableEntityException` from `@nestjs/common`. Confirm the controller's DTO caps `targetUserIds` at `HUDDLE_INVITE_MAX_TARGETS`.
 
-- [ ] **Step 3: Replace the remaining huddle publishes**
+- [x] **Step 3: Replace the remaining huddle publishes**
 
 | Site | Replacement |
 |---|---|
@@ -1159,7 +1159,7 @@ Check the column names against `backend/src/db/schema/chat/chat-channel-tables.t
 
 Change the `ably: AblyService` parameter of `transferHuddleHost`/`endHuddle` to `events: ChatEvents`, and the `ably` field in `chat-huddle-start.ts`'s `deps` type to `events: ChatEvents`. Update every caller (`grep -n "endHuddle\|transferHuddleHost\|ably:" backend/src/modules/chat/chat-huddle*.ts`). If `chat-huddle-signals.service.ts` or other huddle files still reference `this.ably.publish*`, convert them the same way.
 
-- [ ] **Step 4: Run huddle specs and commit (backend repo)**
+- [x] **Step 4: Run huddle specs and commit (backend repo)**
 
 Run: `cd backend && npx jest src/modules/chat/chat-huddle`
 Expected: PASS. Update other huddle specs from Ably mocks to `events.ofKind(...)` as in Task 6.
@@ -1183,7 +1183,7 @@ Add any other huddle files and specs you edited to `git add` by path.
 - Modify: `backend/src/modules/chat/chat.module.ts:29,78`
 - Delete: `backend/src/modules/chat/chat-typing.service.ts`, `chat-typing.service.spec.ts`, `chat-typing.isolation.spec.ts`
 
-- [ ] **Step 1: Update capability expectations**
+- [x] **Step 1: Update capability expectations**
 
 In `ably.service.spec.ts`:
 
@@ -1207,19 +1207,19 @@ Apply the same change at line 73. Add:
 
 Match the existing `capabilityFor` call style in the file for the third argument. Run: `cd backend && npx jest src/modules/realtime/ably.service.spec.ts`. Expected: FAIL.
 
-- [ ] **Step 2: Shrink the capability**
+- [x] **Step 2: Shrink the capability**
 
 Chat channel: `["subscribe", "presence"]`. Huddle channel: `["subscribe"]`. Run the spec. Expected: PASS.
 
-- [ ] **Step 3: Delete the old publish methods**
+- [x] **Step 3: Delete the old publish methods**
 
 Run `grep -rn "publishChatMessage\|publishChatEvent\|publishHuddleEvent\|publishToUser" backend/src --include=*.ts`. Delete each method from `AblyService` that has no remaining non-spec caller. Keep `publishToUser` if a non-chat module (support, notifications) uses it. Delete spec cases that only exercised deleted methods.
 
-- [ ] **Step 4: Delete the typing endpoints**
+- [x] **Step 4: Delete the typing endpoints**
 
 Remove the two `typing` handlers (lines ~421-448), the `ChatTypingService` import and the constructor parameter from `chat-channels.controller.ts`. Remove `ChatTypingService` from `chat.module.ts`. Delete the three typing files. Run `cd frontend && grep -rn "/typing" --include=*.ts --include=*.tsx hooks features lib` and expect no hits. Regenerate the OpenAPI output (`cd backend && pnpm openapi:gen`, which needs no DB) and commit its diff alongside.
 
-- [ ] **Step 5: Commit (backend repo)**
+- [x] **Step 5: Commit (backend repo)**
 
 ```bash
 cd backend
@@ -1236,7 +1236,7 @@ Add the regenerated OpenAPI file(s) by path.
 **Files:**
 - Create: `backend/src/modules/chat/chat-no-direct-ably.spec.ts`
 
-- [ ] **Step 1: Write the guard spec**
+- [x] **Step 1: Write the guard spec**
 
 ```ts
 import fs from "node:fs";
@@ -1266,12 +1266,12 @@ describe("chat realtime seam", () => {
 });
 ```
 
-- [ ] **Step 2: Run it and fix offenders**
+- [x] **Step 2: Run it and fix offenders**
 
 Run: `cd backend && npx jest src/modules/chat/chat-no-direct-ably.spec.ts`
 Expected: PASS. If a file is listed, convert its publish to `ChatEvents` as in Tasks 6-8. A file that only uses `ably.configured` or a channel-name helper (for example `chat-message-fanout.service.ts` or presence) should get that value through `ChatEvents` or be added to `ALLOWED` with the user's agreement.
 
-- [ ] **Step 3: Full verification**
+- [x] **Step 3: Full verification**
 
 Run, one at a time:
 1. `cd backend && npx jest src/modules/chat src/modules/realtime`
@@ -1282,7 +1282,7 @@ Run, one at a time:
 
 Expected: all green. Report any failure verbatim, and say which are pre-existing (compare with the same command on the pre-session commit; do not use git stash).
 
-- [ ] **Step 4: Commit (backend repo)**
+- [x] **Step 4: Commit (backend repo)**
 
 ```bash
 cd backend

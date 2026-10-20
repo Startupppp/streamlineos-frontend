@@ -4,7 +4,7 @@ overview: Position native Chat as StreamlineOS’s universal, record-aware colla
 todos:
   - id: document-contract
     content: Add the Chat product contract with platform role, native-chat rationale, feature tiers, removals, release scope, and measurable acceptance gates.
-    status: pending
+    status: completed
   - id: provider-huddles
     content: Implement deterministic Composio-backed Google Meet/Microsoft Teams selection, provider identity persistence, and lifecycle reconciliation.
     status: pending
@@ -232,25 +232,25 @@ Deferred behind adoption evidence:
 ## Todo checklist
 
 - [ ] **CHAT-001** — Write and approve the Chat product contract and baseline telemetry.
-- [ ] **CHAT-002** — Add provider/event/connection fields, active-Huddle uniqueness, migration journal, rollback, and legacy-null handling.
-- [ ] **CHAT-003** — Implement deterministic cross-toolkit Composio selection.
-- [ ] **CHAT-004** — Mint Google Meet and Teams-for-Business links with correct 412/503/pending behavior.
+- [x] **CHAT-002** — Add provider/event/connection fields, active-Huddle uniqueness, migration journal, rollback, and legacy-null handling.
+- [x] **CHAT-003** — Implement deterministic cross-toolkit Composio selection.
+- [x] **CHAT-004** — Mint Google Meet and Teams-for-Business links with correct 412/503/pending behavior.
 - [ ] **CHAT-005** — Make Huddle start idempotent and reconcile concurrent orphan provider events.
 - [ ] **CHAT-006** — Link provider and internal calendar lifecycle; move fan-out after commit.
 - [ ] **CHAT-007** — Extend backend/OpenAPI/frontend contracts additively and regenerate parity artifacts.
 - [ ] **CHAT-008** — Validate Huddle invites/heartbeats/lifecycle/entitlements/audits server-side.
 - [ ] **CHAT-009** — Close send/offline/realtime/read-marker/unread reliability gaps.
-- [ ] **CHAT-010** — Implement the complete URL/history/mobile-Back contract.
+- [x] **CHAT-010** — Implement the complete URL/history/mobile-Back contract.
 - [ ] **CHAT-011** — Add bounded, authorized exact-message context loading.
-- [ ] **CHAT-012** — Unify search; join public channels and open/create DMs correctly.
-- [ ] **CHAT-013** — Consolidate New dialogs and simplify sidebar to Starred + Conversations + filters.
-- [ ] **CHAT-014** — Unify ChatShell and preserve `/chat/channels` through redirect/deprecation.
-- [ ] **CHAT-015** — Gate `/chat` with PageState and correct loading/denied/error/empty states.
-- [ ] **CHAT-016** — Reduce message actions to Reply/React/More with permission-gated overflow.
-- [ ] **CHAT-017** — Add consistent ConfirmDialog lifecycle protection.
-- [ ] **CHAT-018** — Fix composer labels, formatting chrome, and infinite history loading.
+- [x] **CHAT-012** — Unify search; join public channels and open/create DMs correctly.
+- [x] **CHAT-013** — Consolidate New dialogs and simplify sidebar to Starred + Conversations + filters.
+- [x] **CHAT-014** — Unify ChatShell and preserve `/chat/channels` through redirect/deprecation.
+- [x] **CHAT-015** — Gate `/chat` with PageState and correct loading/denied/error/empty states.
+- [x] **CHAT-016** — Reduce message actions to Reply/React/More with permission-gated overflow.
+- [x] **CHAT-017** — Add consistent ConfirmDialog lifecycle protection.
+- [x] **CHAT-018** — Fix composer labels, formatting chrome, and infinite history loading.
 - [ ] **CHAT-019** — Consolidate conversation Details and user-global Saved scope.
-- [ ] **CHAT-020** — Remove ephemeral Huddle chat and client Huddle publish capability.
+- [x] **CHAT-020** — Remove ephemeral Huddle chat and client Huddle publish capability.
 - [ ] **CHAT-021** — Remove misleading provider roster/kick/cap/end claims; add provider-aware UI.
 - [ ] **CHAT-022** — Enforce cross-module permission intersections and product boundaries.
 - [ ] **CHAT-023** — Add backend/frontend contract, security, concurrency, accessibility, and regression tests.
