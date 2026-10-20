@@ -10,10 +10,10 @@ todos:
     status: completed
   - id: repair-chat-navigation
     content: Unify Chat URL state, exact-message context loading, search, DM/channel joining, dialog ownership, and shell layout.
-    status: pending
+    status: completed
   - id: simplify-chat-ui
     content: Simplify sidebar, details, composer, and message actions; secure lifecycle actions; meet keyboard, touch, and screen-reader requirements.
-    status: pending
+    status: completed
   - id: secure-huddles
     content: Remove spoofable Huddle chat/client publish rights and misleading provider-roster, moderation, and participant-cap claims.
     status: completed
@@ -241,7 +241,7 @@ Deferred behind adoption evidence:
 - [x] **CHAT-008** — Validate Huddle invites/heartbeats/lifecycle/entitlements/audits server-side.
 - [x] **CHAT-009** — Close send/offline/realtime/read-marker/unread reliability gaps.
 - [x] **CHAT-010** — Implement the complete URL/history/mobile-Back contract.
-- [ ] **CHAT-011** — Add bounded, authorized exact-message context loading.
+- [x] **CHAT-011** — Add bounded, authorized exact-message context loading.
 - [x] **CHAT-012** — Unify search; join public channels and open/create DMs correctly.
 - [x] **CHAT-013** — Consolidate New dialogs and simplify sidebar to Starred + Conversations + filters.
 - [x] **CHAT-014** — Unify ChatShell and preserve `/chat/channels` through redirect/deprecation.
@@ -249,7 +249,7 @@ Deferred behind adoption evidence:
 - [x] **CHAT-016** — Reduce message actions to Reply/React/More with permission-gated overflow.
 - [x] **CHAT-017** — Add consistent ConfirmDialog lifecycle protection.
 - [x] **CHAT-018** — Fix composer labels, formatting chrome, and infinite history loading.
-- [ ] **CHAT-019** — Consolidate conversation Details and user-global Saved scope.
+- [x] **CHAT-019** — Consolidate conversation Details and user-global Saved scope.
 - [x] **CHAT-020** — Remove ephemeral Huddle chat and client Huddle publish capability.
 - [x] **CHAT-021** — Remove misleading provider roster/kick/cap/end claims; add provider-aware UI.
 - [ ] **CHAT-022** — Enforce cross-module permission intersections and product boundaries.
