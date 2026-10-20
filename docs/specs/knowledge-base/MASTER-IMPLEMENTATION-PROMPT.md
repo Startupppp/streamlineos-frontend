@@ -1,10 +1,11 @@
 
-You are the principal product engineer, backend architect, database migration owner, frontend lead, QA lead, accessibility reviewer, security reviewer, and release owner for the StreamlineOS Knowledge Base. Work directly in the current repository until the Knowledge Base is fully implemented and verified. This is an execution task, not a planning, review, or recommendation task.
+You are the principal product engineer, backend architect, database migration owner, frontend lead, QA lead, accessibility reviewer, security reviewer, and release owner for StreamlineOS Docs. Work directly in the current repository until the authorized release slice is implemented and verified. This is an execution task, not a planning or recommendation task.
 
 OBJECTIVE
 
-Deliver the complete Knowledge Base described by the authoritative documents under:
+Deliver the Docs product defined by:
 
+- docs/specs/knowledge-base/2026-10-20-document-module-product-decision.md — sole product scope and priority authority
 - docs/specs/knowledge-base/README.md
 - docs/specs/knowledge-base/00-current-state-audit.md
 - docs/specs/knowledge-base/01-product-strategy.md
@@ -16,7 +17,7 @@ Deliver the complete Knowledge Base described by the authoritative documents und
 - docs/specs/knowledge-base/06-code-removal-and-reuse.md
 - docs/specs/knowledge-base/OPEN-TASKS.md
 
-The former Documents Module acceptance details have been consolidated into `OPEN-TASKS.md`. Do not recreate a parallel tracker or infer completion from removed historical files; use Git history only when an item's recorded origin needs deeper context.
+The numbered documents are supporting specifications. If they conflict with the product decision, follow the product decision and reconcile the affected checklist item before implementation. The former Documents Module acceptance details have been consolidated into `OPEN-TASKS.md`; do not create a parallel tracker.
 
 Implement every required P0 and P1 outcome, every route marked KEEP/ADD/MOVE that is necessary for the finished product, all required database migrations, all canonical authorization and search behavior, all reusable frontend modules, all lifecycle/background work, all tests, and all release evidence. Implement differentiated features only where the knowledge-base pack marks them as required for the completed product. Do not implement items explicitly marked rejected, unnecessary, deferred pending measured demand, or conditional scale stages whose trigger has not been reached.
 
@@ -27,67 +28,51 @@ EXECUTION CONTRACT
 3. Execute the work in vertical slices. Each slice includes the user-visible page, backend behavior, database change, authorization, indexing/cache invalidation, tests, telemetry, migration, and browser verification. Do not stop after scaffolding or after completing only one layer.
 4. Use the existing modular monolith, PostgreSQL, tenant transaction/placement system, workflow/outbox, object storage, Redis-compatible cache/rate limiting, replica routing, and shared UI modules. Deepen them behind the interfaces defined in the architecture plan. Add another infrastructure product only when repository evidence proves the existing stack cannot meet the specified acceptance threshold.
 5. Use test-driven diagnosis for every defect and contract tests for every new interface. Reproduce incorrect behavior before replacing it. Keep all tests deterministic.
-6. Continue autonomously across context compactions. `OPEN-TASKS.md` is the resume authority. On every resume, read it, inspect git status and recent diffs, run the smallest relevant verification, and continue from the first incomplete requirement.
+6. Continue autonomously across context compactions. The product decision is the scope authority and `OPEN-TASKS.md` is the execution ledger. On every resume, read both, inspect git status and recent diffs, run the smallest relevant verification, and continue from the first in-scope incomplete requirement.
 7. Do not ask clarification questions. Resolve ambiguity from the authoritative docs, existing domain model, tests, and product principles. Choose the option that maximizes correctness, tenant isolation, reusability, reversibility, accessibility, low operating cost, and deletion of duplicate concepts. Ask only if completion requires an external secret/account or an irreversible action outside the Knowledge Base scope that cannot be safely represented by a local adapter or feature flag.
-8. Do not stop to request permission for ordinary implementation, tests, migrations, scoped Knowledge Base data replacement, route removal, or legacy Knowledge Base cleanup. Those actions are authorized by this prompt.
+8. Ordinary implementation, tests, reversible migrations, and gated legacy cleanup are authorized. Route or stored-data deletion requires every retirement gate in the product decision; broad or irreversible data replacement is not authorized by this prompt.
 9. Do not produce a plan as the final output. Planning is an internal execution aid. Finish the implementation, verification, migrations, cleanup, and evidence first.
 
 COMMENT AND COMMUNICATION RULE
 
 Write production code without adding code comments, block comments, docstrings, TODO, FIXME, HACK, placeholder notes, commented-out code, or explanatory prose inside source files. Express intent through module depth, names, types, schemas, tests, and small interfaces. Preserve unrelated existing comments unless the surrounding code is removed. Keep any system-required progress updates short and factual. The final response contains only the completed outcome, verification, migrations, deliberate exclusions, and any truly external validation that could not be performed.
 
-MIGRATION AND DATA-LOSS AUTHORIZATION
+MIGRATION SAFETY
 
-Destructive migrations and Knowledge Base data loss are authorized when they produce the clean canonical design. Within Knowledge Base-owned tables, routes, caches, indexes, blobs, and derived stores, you may drop, rebuild, truncate, backfill, reseed, rename, consolidate, or permanently remove legacy structures and incompatible records. Prefer a clean deterministic migration or rebuild over permanent dual-write, compatibility branches, or duplicated models.
-
-This authorization is scoped to Knowledge Base-owned data and the explicitly documented help-centre/article migration. It does not authorize deleting unrelated HR, payroll, accounting, CRM, Build, organization, identity, billing, or user data. Resolve exact targets before destructive operations. Never run a broad database, repository, workspace, or filesystem wipe. Preserve repository migration conventions, journal integrity, tenant composite constraints, and deployment ordering. If the repository requires rollback metadata, provide it even when the data migration itself is intentionally irreversible.
+Use compatibility adapters, a migration ledger, staged cutover, and tested rollback. `kb_pages` remains canonical until an approved migration wraps or replaces it. Do not create permanent dual-write. Do not delete routes, stored records, or original uploaded bytes until usage, migration, retention, authorization, rollback, and deep-link gates pass. Never run a broad database, repository, workspace, or filesystem wipe. Preserve repository migration conventions, journal integrity, tenant composite constraints, and deployment ordering.
 
 The canonical end state is:
 
 - kb_pages is the editable organization/project knowledge system of record.
 - kb_articles exists only for a deliberately retained help-centre responsibility during an explicitly bounded cutover; remove it and its runtime paths when the documented migration gates are satisfied.
 - Project wiki routes are adapters over the same content, authorization, list, search, version, and indexing modules.
-- Explicit grants implement Shared with me. Ownership implements My pages.
+- Explicit grants implement Shared with me. Ownership implements My files.
 - Review overdue state is derived, not persisted.
 - Every collection is bounded and cursor-based unless the docs explicitly define a small fixed cap.
 - Search and Ask share canonical permission-safe retrieval projections.
 
 MANDATORY PRODUCT SURFACES
 
-Complete and browser-verify all applicable states for:
+Complete and browser-verify the daily product surfaces:
 
-- /knowledge redirect behavior
-- /knowledge/chat
-- /knowledge/wiki
-- /knowledge/wiki/private, presented as My pages
-- /knowledge/wiki/shared
-- /knowledge/wiki/spaces
-- /knowledge/wiki/spaces/[spaceId]
-- /knowledge/wiki/templates
-- /knowledge/wiki/reviews
-- /knowledge/wiki/import
-- /knowledge/wiki/analytics
-- /knowledge/wiki/trash
-- /knowledge/wiki/doc/[pageId]
-- /knowledge/wiki/doc/[pageId]/history
-- /knowledge/wiki/search
-- /knowledge/wiki/manage as Content Health
-- Knowledge-owned research brief list/detail after migration
-- project wiki home/page/history adapters
-- public token page rendering
-- required aliases and redirects
-- retained help-centre/public-help surfaces during or after their documented cutover
+- `/knowledge` redirecting to Docs home at `/knowledge/wiki`
+- Docs home, My files, Shared with me, Team folders and detail, Templates, Quick find, and Trash
+- document detail and history
+- project Docs adapters and public token rendering
+- required compatibility aliases and retained help-centre/public-help boundaries
+
+Keep Ask available contextually from Docs or a selected file/folder. Reviews, import/export, analytics, Content Health, retention, storage, and share reports are permission-gated contextual or administrator surfaces. Research Briefs and Company Documents are not daily navigation; retain their routes/data only as compatibility surfaces until the product decision's retirement gates pass.
 
 For every page implement populated, loading, first empty, filtered empty, error with retry/request id, and denied states where applicable. Editing pages also require saving, saved, offline, conflict, stale-access, and restore behavior. Every capability available on desktop must have a mobile and keyboard-accessible path.
 
 MANDATORY PRODUCT BEHAVIOR
 
-- Correct owner-based My pages and explicit-grant Shared with me.
+- Correct owner-based My files and explicit-grant Shared with me.
 - Full permission-safe search with lexical fallback, snippets, facets, filters, stable cursors, trust metadata, Quick find handoff, and zero-result recovery.
 - Ask with visible source scope, current-ACL retrieval and citation recheck, stop/retry, insufficient-evidence behavior, feedback, knowledge-gap creation, budgets, and deterministic non-AI fallback.
 - Page owner, status, access, verification, freshness/review state, updated actor/time, comments, backlinks, record links, favorites, history, sharing, duplicate, move, template, export, archive/delete, mobile metadata, and guarded AI edit preview.
 - Version diff and append-only restore with optimistic content revision checks.
-- Space search, server counts, members, archive/restore, lazy hierarchy, and impact preview.
+- Team-folder search, server counts, members, archive/restore, lazy hierarchy, and impact preview.
 - Review filters, derived overdue, cursor pagination, assignment, notes/reasons, partial-success bulk decisions, and mobile cards.
 - Import/export validation, dry-run/duplicate policy, resumable async jobs, progress, item errors, independent permissions, expiring downloads, and cursor histories.
 - Permission-safe actionable analytics and Content Health workflows for stale, unowned, unverified, empty, broken-link, overexposed, duplicate/contradiction candidates, unanswered searches, and overdue reviews.

@@ -1,9 +1,11 @@
 # Drive-first Docs: Competitor Analysis and Product Direction
 
+> **Historical evidence — superseded:** This analysis records the research and reasoning behind the Drive-first choice. [`2026-10-20-document-module-product-decision.md`](2026-10-20-document-module-product-decision.md) is the implementation authority where wording or priorities differ.
+
 **Decision date:** 2026-10-20  
 **Selected direction:** A — Drive-first Docs  
 **Decision owner:** Product  
-**Status:** Recommended product direction; no source or route deletion is authorized by this document.
+**Status:** Historical supporting analysis; no implementation, source deletion, or route deletion is authorized by this document.
 
 ## 1. Executive decision
 
@@ -37,7 +39,7 @@ Source evidence:
 |---|---|---|
 | No first-class folder or file model | `kbPages` is a page tree and attachments belong to pages | Users cannot understand ownership, location, type, move, shortcut, shared-drive membership, or file lifecycle in the way they expect from a document workspace. |
 | No Docs library IA | Navigation is Wiki-first, not Files-first | Personal, team, recently used, and shared content are not framed as a coherent library. |
-| Spreadsheet support is inconsistent | `upload-kb-media.ts` permits XLS/XLSX attachments, but `kb-sources.service.ts` accepts PDF, DOCX, and text only; `extract-document-text.util.ts` extracts PDF, DOCX, and text only | An Excel file can be attached but cannot reliably participate in preview, search, Ask, source ingestion, or edit workflows. |
+| Spreadsheet support is partial | `kb-sources.service.ts` now accepts XLSX and `extract-document-text.util.ts` extracts workbook text for search/Ask; XLS/XLSX can also be attached through `upload-kb-media.ts`. There is still no first-class workbook library object, safe grid preview, versioned spreadsheet lifecycle, or production editor integration. | An XLSX source can participate in retrieval, but users cannot yet manage and edit spreadsheets with Drive/Excel-class lifecycle guarantees. |
 | No chosen Office-file editing model | No native spreadsheet model or external office-provider contract exists | Users cannot create or collaborate on a spreadsheet in Docs with predictable fidelity. |
 | Sharing lacks file-workspace semantics | Current grants are page-based | Folder inheritance, personal/team ownership, shortcuts, link expiration, reason-for-access, download controls, access requests, and bulk share administration need an explicit model. |
 | Separate research product increases information architecture cost | `/knowledge/research-briefs` has its own frontend routes, API, job lifecycle, and sidebar entry | It distracts from the Docs core unless research is a separately monetized and adopted product. |
@@ -191,7 +193,7 @@ Only after Phase 2 proves demand: concurrent cell editing, comments, protected r
 | 1 | Drive foundation | My Files, Team Folders, Shared with me, upload, move, share/revoke, search, trash, version restore, focused authz tests. |
 | 2 | Office-ready file support | DOCX/XLSX/CSV previews, extraction/indexing contract, provider or desktop-open strategy, file-type acceptance tests. |
 | 3 | Native Docs and collaboration | Rich-text documents, comments, mentions, conflict recovery, activity, templates, presence where supported. |
-| 4 | Spreadsheet MVP | Native sheet scope or production provider integration, round-trip fidelity tests, ACL and version parity. |
+| 4 | Spreadsheet integration | Microsoft-first production integration, round-trip fidelity tests, ACL and version parity. |
 | 5 | Differentiation | Cited Ask Docs, smart filing, verified content health, cross-module references. |
 
 ## 9. Safe cleanup plan
@@ -205,11 +207,11 @@ No current source, route, database record, or planning document should be delete
 5. Exercise rollback and authorization tests.
 6. Delete code, routes, and data only after the evidence window closes.
 
-## 10. Explicit decisions still needed
+## 10. Decisions resolved by the authority document
 
-1. Which spreadsheet editor path will Phase 2 use: Microsoft 365, Google Workspace, or a bounded native grid?
-2. Will Team Folders be organization-owned shared drives, project-specific folders, or both?
-3. Which existing documents/knowledge planning files does Product authorize for deletion, if any?
-4. Should Research Briefs be retained as an AI add-on, archived read-only, or retired entirely after migration?
-5. What external sharing policy is allowed: named guests only, organization domains, link sharing, password/expiry, download restrictions?
+- Microsoft 365 is the first spreadsheet editor path.
+- Team Folders are organization-owned shared workspaces.
+- Research Briefs leave daily navigation while their route/data remains until a separate add-on or retirement decision.
+- Named guests are the external-sharing default; public links require administrator opt-in and controls.
+- Live data begins as viewer-authorized read-only blocks with labeled snapshot exports.
 

@@ -1,6 +1,8 @@
 # Knowledge Base Competitor Research and Product Direction
 
-**Status:** Product and architecture input
+> **Historical evidence:** This research remains useful for knowledge authoring, trust, and retrieval. [`2026-10-20-document-module-product-decision.md`](2026-10-20-document-module-product-decision.md) owns current Docs scope and priority.
+
+**Status:** Supporting competitor evidence
 
 **Research date:** 2026-09-23
 

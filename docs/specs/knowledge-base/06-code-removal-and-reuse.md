@@ -1,5 +1,7 @@
 # Step 6 — Code Removal, Consolidation, and Reuse Plan
 
+> **Supporting cleanup plan:** [`2026-10-20-document-module-product-decision.md`](2026-10-20-document-module-product-decision.md) owns current removals. No route or stored data is deleted until its migration, retention, authorization, deep-link, usage, and rollback gates pass.
+
 ## September 27 review disposition
 
 R1's historical count of 54 routes without frontend callers is a candidate list, not deletion approval or a current count. The AV-08/09/10 items in [OPEN-TASKS.md](OPEN-TASKS.md) govern cleanup:

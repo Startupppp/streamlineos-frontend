@@ -1,5 +1,7 @@
 # Step 0 — Current-State Page and Backend Audit
 
+> **Historical audit:** Observations describe the audited revision. [`2026-10-20-document-module-product-decision.md`](2026-10-20-document-module-product-decision.md) owns current dispositions, navigation, and priorities.
+
 ## Audit method
 
 The audit combined three views:
@@ -14,13 +16,13 @@ No destructive action or content mutation was used. Dynamic routes without a val
 
 | Route | Disposition | Evidence | Current good | Missing or incorrect | Priority |
 |---|---|---|---|---|---:|
-| `/knowledge` | KEEP redirect | Source | Single entry point | Verify redirect, telemetry, and entitlement behavior | P0 |
-| `/knowledge/chat` | KEEP | Observed | Clear Ask value proposition, prompts, Conversations and Sources entry points | Conversation search, source filters, answer confidence/provenance, feedback, retry/cancel, no-answer recovery, stable citations, permission-expiry handling | P0/P1 |
-| `/knowledge/wiki` | KEEP | Observed + Source | Wiki shell and New page exist; source has recents, favorites, roots | Live page was visually sparse; add search/filter/view controls, page menus, trust badges, bounded All pages, first-run guidance | P0 |
-| `/knowledge/wiki/private` | KEEP, rename “My pages” | Observed + Source | Dedicated personal library surface | Current source filters `visibility=private`; target is server-side ownership. Add search, status/space filters, cursor paging, page actions | P0 |
+| `/knowledge` | KEEP redirect to Docs home | Source | Single entry point | Verify redirect, telemetry, and entitlement behavior | P0 |
+| `/knowledge/chat` | KEEP contextual compatibility route | Observed | Clear Ask value proposition, prompts, Conversations and Sources entry points | Launch from Docs/file/folder context; add source filters, provenance, feedback, retry/cancel, no-answer recovery, stable citations, permission-expiry handling | P1 |
+| `/knowledge/wiki` | KEEP as Docs home | Observed + Source | Existing shell; source has recents, favorites, roots | Add Quick find, page menus, trust badges, bounded collection, and first-run guidance | P0 |
+| `/knowledge/wiki/private` | KEEP compatibility route, present as “My files” | Observed + Source | Dedicated personal library surface | Current source filters `visibility=private`; target is server-side ownership. Add search, status/folder filters, cursor paging, file actions | P0 |
 | `/knowledge/wiki/shared` | KEEP | Observed + Source | Dedicated inbound-share surface | Current source treats “created by someone else” as shared. Add explicit grants, sharer/date/access fields, search/filter, retry/error state, cursor paging | P0 |
-| `/knowledge/wiki/spaces` | KEEP | Observed + Source | Create/edit cards and empty state | Current source loads full page tree for counts and hard-deletes spaces. Add server counts, search, audience filter, cursor paging, members, archive/restore | P0 |
-| `/knowledge/wiki/spaces/[spaceId]` | KEEP | Source | Page tree and audience badge | Add in-space search, status filter, create-in-space, members, archive, inaccessible/not-found distinction, lazy tree | P0/P1 |
+| `/knowledge/wiki/spaces` | KEEP compatibility route, present as “Team folders” | Observed + Source | Create/edit cards and empty state | Current source loads full page tree for counts and hard-deletes spaces. Add server counts, search, audience filter, cursor paging, members, archive/restore | P0 |
+| `/knowledge/wiki/spaces/[spaceId]` | KEEP as Team folder detail | Source | Page tree and audience badge | Add in-folder search, status filter, create-in-folder, members, archive, inaccessible/not-found distinction, lazy tree | P0/P1 |
 | `/knowledge/wiki/templates` | KEEP | Observed | Useful starter set; Starters/Saved split | Add `q`, category/use-case filters, saved-template pagination, preview, permission split, last-used/owner for saved templates; do not add a marketplace | P1 |
 | `/knowledge/wiki/reviews` | KEEP | Observed + Source | Queue table and Status/Type controls | Live surface remained in “Loading results…” during audit. Add retry/error, URL filters, `q`, overdue derivation, cursor paging, bulk approve/reject, decision reason, SLA/freshness context | P0/P1 |
 | `/knowledge/wiki/import` | KEEP | Observed | Paste and file import, export, recent jobs | Add required title/target/duplicate policy, format/size validation, job progress/errors, retry, cursor jobs, independent import/export permissions | P0 |
@@ -31,8 +33,8 @@ No destructive action or content mutation was used. Dynamic routes without a val
 | `/knowledge/wiki/pages/[pageId]`, `/knowledge/wiki/pages/[pageId]/history` | KEEP redirect aliases | Source 2026-10-16 | `next.config.ts` redirects to canonical document and history routes | Verify parameters and links preserve the intended page and version | P0 |
 | `/knowledge/wiki/search` | ADDED — now exists | Source 2026-09-27 | Route shipped since this row was written | Row said “Observed 404”; re-audit the shipped surface against its page contract | P0 |
 | `/knowledge/wiki/manage` | ADDED — now exists | Source 2026-09-27 | Route shipped since this row was written | Row said “Observed 404”; re-audit the shipped surface against its page contract | P1 |
-| `/knowledge/research-briefs`, `/knowledge/research-briefs/[briefId]` | KEEP at shipped path | Source 2026-10-16 | List and detail shipped under Knowledge; page contract in Step 2 | Confirm citation lifecycle and remove a former Support route only after caller proof | P1 |
-| `/knowledge/wiki/company-documents`, `/knowledge/wiki/company-documents/[linkedDocumentId]` | KEEP | Source 2026-10-16 | Linked-document list and detail exist; page contracts in Step 2 | Authorization, bounded collection, and browser state evidence remain | P1 |
+| `/knowledge/research-briefs`, `/knowledge/research-briefs/[briefId]` | RETAIN route/data, remove from daily navigation | Source 2026-10-16 | List and detail shipped under Knowledge | Treat as compatibility/add-on surface until a separate retention or retirement decision | Deferred |
+| `/knowledge/wiki/company-documents`, `/knowledge/wiki/company-documents/[linkedDocumentId]` | RETAIN route/data, remove as separate library destination | Source 2026-10-16 | Linked-document list and detail exist | Surface company documents through permission-safe linked-record collections; retire routes only after migration gates | Deferred |
 | `/support/knowledge-gaps` | KEEP | Source 2026-10-16 | Support-owned triage surface exists; page contract in Step 2 | Verify detection, draft, dismissal, and browser state through current routes | P1 |
 | `/build/[projectId]/wiki` | KEEP adapter | Source | Reuses wiki home | Scope every list/search/create/read by project; project back path; no duplicate data or editor | P0 |
 | `/build/[projectId]/wiki/[pageId]` | KEEP adapter | Source | Reuses document surface | Enforce project membership on every path; add history adapter | P0 |
@@ -45,7 +47,7 @@ No destructive action or content mutation was used. Dynamic routes without a val
 
 ## What already works well
 
-- A coherent Wiki shell with Library, Manage, Quick find, and Trash.
+- A reusable document shell with library, management, Quick find, and Trash foundations.
 - A mature document editor with autosave, formatting, page decoration, AI, share, and edit history infrastructure.
 - Version rows, optimistic concurrency, idempotency support, outbox infrastructure, queues/workflows, replica routing, rate limiting, Redis-compatible caching, and tenant-aware tests already exist in the broader backend.
 - Retrieval already combines keyword and vector candidates and degrades to keyword search when embeddings fail.
@@ -59,7 +61,7 @@ These are assets to deepen, not reasons to add another platform.
 ### Product correctness
 
 1. Ownership and sharing semantics are wrong in the browser and lack a first-class page share-grant model.
-2. A full search results page is absent; Quick find cannot carry discovery, filtering, and bulk actions.
+2. The shipped search route still needs verification as the single Quick find/full-results path.
 3. Important list pages derive from the full tree, which is both semantically wrong and unbounded.
 4. Several pages render generic empty states for network or authorization failures, making recovery and support difficult.
 5. Content trust metadata exists in pieces but is not consistently visible at decision points: search, cards, Ask citations, and page headers.
@@ -89,7 +91,7 @@ These are assets to deepen, not reasons to add another platform.
 | Shared/My pages semantics | Users can see the wrong collection and may infer access incorrectly | First-class grant schema, server filters, cross-tenant and revocation tests |
 | Canonical ACL parity | Search/Ask/analytics can expose metadata even if detail is protected | One authorization module used by every read projection; leak tests for title/snippet/citation/count |
 | Unbounded or silent-capped collections | Data disappears or latency grows with tenant size | Cursor response with `hasMore`, indexes, 10k/100k-record test data |
-| Missing full search | Core “find knowledge” job cannot be completed | Search route, facets, snippets, keyboard access, zero/partial/error states |
+| Unverified Quick find/full search | Core “find documents” behavior is not release-proven | Facets, snippets, keyboard access, zero/partial/error states |
 | Space hard-delete | Destructive behavior conflicts with recoverability | Archive/restore default; asynchronous purge after retention |
 | Incomplete live states | Blank/indefinite pages look broken and hide errors | Browser evidence for loading, ready, empty, filtered-empty, error, denied, offline/conflict where applicable |
 

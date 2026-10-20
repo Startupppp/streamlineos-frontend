@@ -1,9 +1,11 @@
 # StreamlineOS 2026 Suite Competitor Analysis
 
+> **Archived and out of scope:** This suite-wide CRM, HR, operations, finance, and productivity analysis is not product authority for the Docs module. Use [`2026-10-20-document-module-product-decision.md`](2026-10-20-document-module-product-decision.md) for all document-module decisions.
+
 **Research date:** 2026-10-20  
 **Source policy:** Primary first-party product, documentation, support, and Microsoft Learn pages only. All sources were accessed on 2026-10-20.  
 **Scope:** Odoo, Zoho One, Microsoft 365/Dynamics 365/Power Platform, Google Workspace, monday.com, ClickUp, Notion, HubSpot, Rippling, and Atlassian/Jira/Confluence.  
-**Decision status:** Product strategy input. This document does not authorize deletion, migration, or a claim that an unverified module is production-ready.
+**Decision status:** Archived suite research. This document does not authorize document-module implementation, deletion, migration, or a claim that an unverified module is production-ready.
 
 ## Executive conclusion
 

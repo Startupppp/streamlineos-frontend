@@ -1,5 +1,7 @@
 # Step 1 — Product Strategy and Customer Needs
 
+> **Supporting specification:** [`2026-10-20-document-module-product-decision.md`](2026-10-20-document-module-product-decision.md) owns scope and priority. This file supplies detailed jobs and metrics only.
+
 ## The customer problem
 
 Customers do not need “more documents.” They need reliable answers and durable decisions without searching across tools, asking the same people again, or trusting stale content. The product must reduce the cost of creating, finding, validating, and maintaining knowledge.
@@ -17,14 +19,14 @@ Customers do not need “more documents.” They need reliable answers and durab
 | Recover from mistakes | Edits, deletion, imports, and automation are reversible | Restore success, conflict recovery, purge exceptions |
 | Publish externally | Customers can expose selected help content without exposing internal context | Public-page availability, deflection, no private metadata leaks |
 | Work with business files | A user can upload, organize, preview, search, share, and export common office files without losing access control | File task success, preview success, search recall, version recovery |
-| Analyze operating data | An operator can use a bounded Sheet or pivot over authorized StreamlineOS records without repeated CSV copy/paste | Connected-sheet use, refresh success, fewer manual exports, decision time |
+| Analyze operating data | An operator can use a read-only list, pivot, chart, or metric over authorized StreamlineOS records without repeated CSV copy/paste | Live-block use, refresh success, fewer manual exports, decision time |
 
 ## Personas
 
 - **Reader:** searches, asks, follows citations, and needs fast trustworthy answers.
 - **Contributor:** creates and updates pages during daily work.
 - **File collaborator:** organizes folders, uploads office files, shares them, and recovers versions.
-- **Operator or analyst:** imports XLSX/CSV, uses formulas or pivots, and needs refreshable permission-aware business data.
+- **Operator or analyst:** imports XLSX/CSV and consumes refreshable, permission-aware business data.
 - **Knowledge owner:** verifies, reviews, organizes, and responds to gaps.
 - **Space manager:** controls membership, structure, archive, and templates for a domain.
 - **Organization administrator:** sets retention, audits access, handles export/purge, and monitors health.
@@ -73,7 +75,7 @@ Each page must serve one primary persona. Admin controls may coexist only when t
 
 ### P0 — Trustworthy core
 
-- Correct My pages and Shared with me.
+- Correct My files and Shared with me.
 - Canonical page/space/project/share authorization on every read and mutation.
 - Full search with snippets, facets, URL state, cursor paging, and Quick find handoff.
 - Bounded page/space/review/template/trash/source/job collections.
@@ -81,25 +83,24 @@ Each page must serve one primary persona. Admin controls may coexist only when t
 - Space archive/restore and members visibility.
 - Searchable trash with bulk restore/purge.
 - Reliable page history, conflict resolution, and offline-safe drafts.
-- Mobile Wiki navigation and page metadata/comments access.
+- Mobile Docs navigation and document metadata/comments access.
 - Visible owner, freshness, verification, and access state on result and page surfaces.
 - Honest error/denied/empty states with request ids and retry.
-- Drive-style Home, My Drive, Shared with me, Recent, and Trash.
+- Docs home, My files, Shared with me, organization-owned Team folders, Templates, Quick find, and Trash; recents and favorites live on Home.
 - First-class files and folders with upload, download, move, rename, share, version, restore, and search.
 - XLSX/CSV upload and content indexing under the same tenant and source permissions as other files.
 
 ### P1 — Governance and quality loop
 
-- Content Health page with presets: stale, unowned, unverified, empty, broken links, overexposed, overdue review.
+- Permission-gated Content Health workflow with presets: stale, unowned, unverified, empty, broken links, overexposed, overdue review.
 - Assignable Ask gaps: unanswered query → owner → draft/update → verification → resolved.
 - Bulk owner, review, verify, archive, move, and access repair.
 - Space roles and review policies.
 - Permission-safe analytics for search, Ask, reuse, gaps, freshness, and public deflection.
-- Research briefs with durable citations and a review owner.
 - Notifications for direct shares, review assignments, mentions, and ownership only; avoid noisy activity feeds.
 - Safe previews for XLSX/CSV and other supported office files.
 - Export current views and reports to XLSX without reimplementing export logic in each module.
-- Bounded native Sheets with core formulas, sort/filter, import/export, comments, version history, and templates.
+- Microsoft 365 open/edit integration for supported XLSX files, with explicit fidelity and desktop-fallback behavior.
 
 ### P2 — Differentiated intelligence with measured demand
 
@@ -109,7 +110,7 @@ Each page must serve one primary persona. Admin controls may coexist only when t
 4. **Freshness Budgets:** different knowledge classes carry different review expectations. A runbook may require 30-day review; a principle may allow 365 days. Budgets are policy plus alerts, not an opaque AI score.
 5. **Contradiction Queue:** retrieval detects materially conflicting claims across current pages and presents both with owners and versions for human resolution. It never auto-rewrites either page.
 6. **Change Impact Preview:** before archiving, moving, or restricting a page, show affected backlinks, Ask citations, public links, packets, and automations.
-7. **Connected Sheets:** permission-aware CRM, HR, Finance, Inventory, Support, and Build datasets can feed a pivot or chart, refresh without CSV copy/paste, and preserve a frozen audit snapshot.
+7. **Live Data Blocks:** permission-aware CRM, HR, Finance, Inventory, Support, and Build datasets can feed a read-only list, pivot, chart, or metric, refresh without CSV copy/paste, and preserve a frozen audit snapshot.
 
 These features are “ahead” because they close the trust-and-maintenance loop inside the operating system. They are not P0 because they depend on correct ownership, versioning, links, ACLs, and telemetry.
 
@@ -117,8 +118,8 @@ These features are “ahead” because they close the trust-and-maintenance loop
 
 | Feature | Reason |
 |---|---|
-| Arbitrary relational databases or app builders inside pages | High complexity, duplicates Build/CRM data, weakens a clear page model; bounded Sheets are not an app builder |
-| Excel-complete parity, macros, or VBA | Unbounded compatibility and security cost; support a deliberate formula set and XLSX import/export instead |
+| Arbitrary relational databases or app builders inside pages | High complexity, duplicates Build/CRM data, and weakens a clear document model |
+| Excel-complete parity, macros, or VBA | Unbounded compatibility and security cost; preserve XLSX/CSV and integrate Microsoft 365 instead |
 | Board/calendar/timeline views of pages | No strong knowledge job; filters and health presets cover current needs |
 | Template marketplace | Starters and organization templates solve the job without moderation/billing/discovery overhead |
 | Autonomous AI publishing or access changes | Unsafe, hard to audit, and removes human ownership |

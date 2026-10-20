@@ -1,6 +1,8 @@
 # Knowledge Base — Open Tasks
 
-**Status:** canonical incomplete-work queue
+**Status:** implementation/evidence ledger subordinate to [`2026-10-20-document-module-product-decision.md`](2026-10-20-document-module-product-decision.md)
+
+**Scope rule:** Work only on items required by the current Docs product decision. Research Briefs, Company Documents as a separate destination, duplicate Search/Favorites navigation, and governance destinations for ordinary users are not release work. Retained-route safety or migration evidence may remain open, but does not restore those surfaces to daily navigation.
 
 **Re-audited:** 2026-10-09 against the current frontend, backend, focused tests, type checks, and available localhost browser evidence.
 
@@ -16,7 +18,7 @@
 
 ## Completion rule
 
-- An unchecked item is an unverified requirement, not proof that implementation is absent. Measure before building.
+- An unchecked item is an unverified historical or current requirement, not proof that implementation is absent or still in scope. Reconcile it with the product decision before building.
 - Close an item only when its entire claim has the required source, focused-test, browser, database, role/tenant, deployment, and operational evidence.
 - Keep compound requirements open until every clause is proven. Record evidence directly below the item before checking it.
 - `BLOCKED` and `NEEDS-DECISION` items remain pending because their required evidence or authority is genuinely unavailable.
