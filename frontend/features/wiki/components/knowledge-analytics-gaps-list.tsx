@@ -28,6 +28,7 @@ export interface KnowledgeAnalyticsGapsListProps {
   handleCreateGapFix: (query: string) => void;
   createGapFixPending: boolean;
   canCreatePage: boolean;
+  canManageAnalytics: boolean;
   relatedPages: KbGapRelatedPageRow[];
   relatedPagesLoading: boolean;
   relatedPagesError: boolean;
@@ -44,7 +45,7 @@ export function KnowledgeAnalyticsGapsList({
   gaps, gapsScopeComplete, gapsLoading, hasNextGaps, isFetchingNextGaps,
   handleLoadMoreGaps, selectedGapQuery, handleCreatePageFromGap, createPagePending,
   handleGapRowSelect, handleAssignGap, assignGapPending, handleDismissGap,
-  dismissGapPending, handleCreateGapFix, createGapFixPending, canCreatePage,
+  dismissGapPending, handleCreateGapFix, createGapFixPending, canCreatePage, canManageAnalytics,
   relatedPages, relatedPagesLoading, relatedPagesError, relatedPagesReadError,
   handleRetryRelatedPages, hasNextRelated, isFetchingNextRelated,
   handleLoadMoreRelated, spaceId, isFiltered,
@@ -119,6 +120,7 @@ export function KnowledgeAnalyticsGapsList({
                       onCreateFix={handleCreateGapFix}
                       isCreatingFix={createGapFixPending}
                       canCreatePage={canCreatePage}
+                      canManageAnalytics={canManageAnalytics}
                     />
                     {selectedGapQuery === row.query && (
                       <div className="px-3 py-2 bg-muted/30 border-t border-border/40">

@@ -20,6 +20,8 @@ export type KbPageGrant = {
   grantedByMembershipId: number | null;
   createdAt: string;
   revokedAt: string | null;
+  expiresAt: string | null;
+  isExpired: boolean;
   granteeName: string | null;
   granteeEmail: string | null;
   granteeImage: string | null;
@@ -47,8 +49,8 @@ export type KbPageGrantCandidatesPage = {
 };
 
 export type CreateKbPageGrantInput =
-  | { membershipId: number; role?: never; access: KbPageGrant["access"] }
-  | { role: string; membershipId?: never; access: KbPageGrant["access"] };
+  | { membershipId: number; role?: never; access: KbPageGrant["access"]; expiresAt?: string }
+  | { role: string; membershipId?: never; access: KbPageGrant["access"]; expiresAt?: string };
 
 const kbPageGrantListContract = lazyContract(() =>
   import("@/hooks/api/kb/kb-page-grants-schema").then((m) => m.kbPageGrantListContract),

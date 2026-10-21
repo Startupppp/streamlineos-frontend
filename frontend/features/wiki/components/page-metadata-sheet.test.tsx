@@ -41,6 +41,7 @@ function page(overrides: Partial<KbPageDetail> = {}): KbPageDetail {
     isLocked: false,
     canEdit: true,
     can: { view: true, comment: true, edit: true, manage: false, restore: false },
+    access: { via: "organization", grantExpiresAt: null },
     contentRevision: 3,
     nextReviewAt: null,
     verifiedUntil: null,

@@ -48,11 +48,22 @@ export type KbPageCapabilities = {
   restore: boolean;
 };
 
+export type KbAccessRoute =
+  | "owner"
+  | "admin"
+  | "creator"
+  | "organization"
+  | "public"
+  | "space"
+  | "project"
+  | "grant";
+
 export type KbPageDetail = KbPage & {
   ancestors: Array<{ id: number; title: string }>;
   isFavorite: boolean;
   canEdit?: boolean;
   can: KbPageCapabilities;
+  access: { via: KbAccessRoute; grantExpiresAt: string | null };
 };
 
 export type KbPageTreeNode = {

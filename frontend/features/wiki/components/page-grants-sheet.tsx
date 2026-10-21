@@ -12,6 +12,7 @@ import {
   SheetTitle,
   SheetDescription,
 } from "@/components/ui/sheet";
+import { DatePicker } from "@/components/ui/date-picker";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -116,9 +117,17 @@ function GrantRow({ grant, displayName, canRevoke, onRevokeRequest }: GrantRowPr
         {displayName}
       </span>
       <AccessBadge access={grant.access} />
-      <span className="text-micro text-muted-foreground hidden sm:block">
-        {kbFormatDate(grant.createdAt)}
-      </span>
+      {grant.isExpired ? (
+        <Badge variant="destructive" className="text-micro shrink-0">Expired</Badge>
+      ) : grant.expiresAt !== null ? (
+        <span className="text-micro text-muted-foreground hidden sm:block shrink-0">
+          Exp {kbFormatDate(grant.expiresAt)}
+        </span>
+      ) : (
+        <span className="text-micro text-muted-foreground hidden sm:block">
+          {kbFormatDate(grant.createdAt)}
+        </span>
+      )}
       {canRevoke && (
         <button
           type="button"
@@ -168,6 +177,7 @@ export default function PageGrantsSheet({
   const [selectedMember, setSelectedMember] = useState<KbPageGrantCandidate | null>(null);
   const [selectedRole, setSelectedRole] = useState<string>("");
   const [selectedAccess, setSelectedAccess] = useState<"view" | "comment" | "edit">("view");
+  const [expiresAt, setExpiresAt] = useState<string>("");
   const [revokeTarget, setRevokeTarget] = useState<KbPageGrant | null>(null);
   const [memberPickerOpen, setMemberPickerOpen] = useState(false);
 
@@ -179,6 +189,10 @@ export default function PageGrantsSheet({
     if (grant.role !== null) return formatRoleLabel(grant.role);
     if (grant.granteeName != null) return grant.granteeName;
     return "Team member";
+  }
+
+  function handleExpiresAtChange(value: string) {
+    setExpiresAt(value);
   }
 
   function handleModeChange(mode: GrantMode) {
@@ -233,27 +247,30 @@ export default function PageGrantsSheet({
 
   function handleSubmitGrant() {
     if (!canSubmit) return;
+    const expiresAtIso = expiresAt !== "" ? new Date(expiresAt).toISOString() : undefined;
     if (grantMode === "member" && selectedMember !== null) {
       createGrant.mutate(
-        { pageId, membershipId: selectedMember.membershipId, access: selectedAccess },
+        { pageId, membershipId: selectedMember.membershipId, access: selectedAccess, expiresAt: expiresAtIso },
         {
           onSuccess: () => {
             toast.success("Access granted");
             setSelectedMember(null);
             setMemberSearch("");
             setSelectedAccess("view");
+            setExpiresAt("");
           },
           onError: (err) => toast.error(getErrorMessage(err)),
         },
       );
     } else if (grantMode === "role" && selectedRole !== "") {
       createGrant.mutate(
-        { pageId, role: selectedRole, access: selectedAccess },
+        { pageId, role: selectedRole, access: selectedAccess, expiresAt: expiresAtIso },
         {
           onSuccess: () => {
             toast.success("Access granted");
             setSelectedRole("");
             setSelectedAccess("view");
+            setExpiresAt("");
           },
           onError: (err) => toast.error(getErrorMessage(err)),
         },
@@ -487,6 +504,14 @@ export default function PageGrantsSheet({
                     ))}
                   </SelectContent>
                 </Select>
+                <DatePicker
+                  value={expiresAt}
+                  onChange={handleExpiresAtChange}
+                  placeholder="No expiry"
+                  disablePast
+                  clearable
+                  className="h-9 flex-1"
+                />
                 <LoadingButton
                   onClick={handleSubmitGrant}
                   disabled={!canSubmit}

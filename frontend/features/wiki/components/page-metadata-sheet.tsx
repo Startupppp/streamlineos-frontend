@@ -39,7 +39,7 @@ import {
 import { PageRecordLinks } from "./page-record-links";
 import { RequestReviewDialog } from "./reviews-decision-dialogs";
 import { kbFormatDate } from "@/features/wiki/lib/kb-date-utils";
-import type { KbPageDetail } from "@/hooks/api/kb/page-types";
+import type { KbPageDetail, KbAccessRoute } from "@/hooks/api/kb/page-types";
 
 const STATUS_OPTIONS: Array<{ value: "draft" | "in_review" | "published" | "archived"; label: string }> = [
   { value: "draft", label: "Draft" },
@@ -53,6 +53,29 @@ const ACTION_BTN_BASE = "h-9 w-full text-label";
 const ACTION_BTN_NEUTRAL = `${ACTION_BTN_BASE} bg-card border border-input shadow-xs hover:bg-muted/50`;
 const ACTION_BTN_DANGER = `${ACTION_BTN_BASE} text-destructive border-destructive/30 hover:bg-destructive/10 hover:text-destructive`;
 const ACTION_BTN_WARNING = `${ACTION_BTN_BASE} text-status-warning-ink border-status-warning-rule hover:bg-status-warning-surface hover:text-status-warning-ink`;
+
+const ACCESS_ROUTE_LABELS: Record<KbAccessRoute, string> = {
+  owner: "You own this page",
+  admin: "You have access as an org admin",
+  creator: "You created this page",
+  organization: "All org members can access this page",
+  public: "This page is publicly accessible",
+  space: "You have access through the team folder",
+  project: "You have access through the project",
+  grant: "You have direct access",
+};
+
+function AccessReasonBanner({ access }: { access: KbPageDetail["access"] }) {
+  const label = ACCESS_ROUTE_LABELS[access.via];
+  return (
+    <p className="text-xs text-muted-foreground">
+      {label}
+      {access.via === "grant" && access.grantExpiresAt !== null
+        ? ` · Expires ${kbFormatDate(access.grantExpiresAt)}`
+        : null}
+    </p>
+  );
+}
 
 const CONTENT_TYPE_OPTIONS: Array<{ value: string; label: string }> = [
   { value: "note", label: "Note" },
@@ -264,6 +287,7 @@ export default function PageMetadataSheet({
 
         <ScrollArea className="flex-1 min-h-0">
           <div className="min-h-full px-5 py-4 space-y-5 bg-muted">
+            <AccessReasonBanner access={page.access} />
             {pendingScope?.pageId === pageId && (
               <div role="alert" className="space-y-2 rounded-lg border border-status-warning-rule bg-status-warning-surface p-3 text-sm text-status-warning-ink">
                 <p>The page changed before your {pendingScope.field === "spaceId" ? "team folder" : "owner"} choice was saved. Your choice is ready to retry.</p>

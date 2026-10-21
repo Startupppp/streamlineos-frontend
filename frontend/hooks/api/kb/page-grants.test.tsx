@@ -35,6 +35,8 @@ const grant = {
   grantedByMembershipId: 2,
   createdAt: "2026-10-16T00:00:00.000Z",
   revokedAt: null,
+  expiresAt: null,
+  isExpired: false,
   granteeName: "Ada",
   granteeEmail: "ada@example.com",
   granteeImage: null,

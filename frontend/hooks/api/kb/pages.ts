@@ -443,6 +443,7 @@ export function useCreateKbPage() {
           isFavorite: false,
           canEdit: true,
           can: { view: true, comment: true, edit: true, manage: true, restore: false },
+          access: { via: "creator", grantExpiresAt: null },
         },
         { updatedAt: 0 },
       );

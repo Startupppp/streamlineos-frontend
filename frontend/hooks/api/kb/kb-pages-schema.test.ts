@@ -51,6 +51,7 @@ const WIRE_FIXTURE = {
   isFavorite: false,
   canEdit: true,
   can: { view: true, comment: true, edit: true, manage: false, restore: false },
+  access: { via: "organization", grantExpiresAt: null },
 };
 
 describe("kbPageWithAncestorsContract — server/client schema parity for wiki page detail (FE-28)", () => {

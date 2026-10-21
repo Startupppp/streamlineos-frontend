@@ -220321,6 +220321,99 @@
         }
       }
     },
+    "/chat/telemetry": {
+      "post": {
+        "operationId": "ChatTelemetryController_record",
+        "parameters": [],
+        "responses": {
+          "204": {
+            "description": "No Content",
+            "x-no-content": true
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          },
+          "422": {
+            "$ref": "#/components/responses/UnprocessableEntity"
+          },
+          "429": {
+            "description": "Rate limited"
+          },
+          "503": {
+            "$ref": "#/components/responses/ServiceUnavailable"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Record a batch of client-side chat delivery samples",
+        "tags": [
+          "Chat Telemetry"
+        ],
+        "x-exposure": "permissioned",
+        "x-permission": "chat:messages:read",
+        "description": "Exposure: permission — chat:messages:read",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "samples": {
+                    "minItems": 1,
+                    "maxItems": 20,
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "metric": {
+                          "type": "string",
+                          "enum": [
+                            "send_to_visible",
+                            "reconnect_gap",
+                            "duplicate_dropped"
+                          ]
+                        },
+                        "value": {
+                          "type": "integer",
+                          "minimum": 0,
+                          "maximum": 120000
+                        },
+                        "realtime": {
+                          "type": "boolean"
+                        }
+                      },
+                      "required": [
+                        "metric",
+                        "value",
+                        "realtime"
+                      ],
+                      "additionalProperties": false
+                    }
+                  }
+                },
+                "required": [
+                  "samples"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        }
+      }
+    },
     "/chat/unread": {
       "get": {
         "operationId": "ChatPresenceController_unread",
@@ -1148823,8 +1148916,8 @@
           "KbAnalytics"
         ],
         "x-exposure": "permissioned",
-        "x-permission": "kb:analytics:view",
-        "description": "Exposure: permission — kb:analytics:view",
+        "x-permission": "kb:analytics:manage",
+        "description": "Exposure: permission — kb:analytics:manage",
         "requestBody": {
           "required": true,
           "content": {
@@ -1148839,7 +1148932,8 @@
                   },
                   "assigneeUserId": {
                     "type": "string",
-                    "minLength": 1
+                    "format": "uuid",
+                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
                   }
                 },
                 "required": [
@@ -1148979,8 +1149073,8 @@
           "KbAnalytics"
         ],
         "x-exposure": "permissioned",
-        "x-permission": "kb:analytics:view",
-        "description": "Exposure: permission — kb:analytics:view",
+        "x-permission": "kb:analytics:manage",
+        "description": "Exposure: permission — kb:analytics:manage",
         "requestBody": {
           "required": true,
           "content": {
@@ -1149133,8 +1149227,8 @@
           "KbAnalytics"
         ],
         "x-exposure": "permissioned",
-        "x-permission": "kb:analytics:view",
-        "description": "Exposure: permission — kb:analytics:view",
+        "x-permission": "kb:analytics:manage",
+        "description": "Exposure: permission — kb:analytics:manage",
         "requestBody": {
           "required": true,
           "content": {
@@ -1159817,6 +1159911,39 @@
                             "restore"
                           ],
                           "additionalProperties": false
+                        },
+                        "access": {
+                          "type": "object",
+                          "properties": {
+                            "via": {
+                              "type": "string",
+                              "enum": [
+                                "owner",
+                                "admin",
+                                "creator",
+                                "organization",
+                                "public",
+                                "space",
+                                "project",
+                                "grant"
+                              ]
+                            },
+                            "grantExpiresAt": {
+                              "anyOf": [
+                                {
+                                  "type": "string"
+                                },
+                                {
+                                  "type": "null"
+                                }
+                              ]
+                            }
+                          },
+                          "required": [
+                            "via",
+                            "grantExpiresAt"
+                          ],
+                          "additionalProperties": false
                         }
                       },
                       "required": [
@@ -1159860,7 +1159987,8 @@
                         "ancestors",
                         "isFavorite",
                         "canEdit",
-                        "can"
+                        "can",
+                        "access"
                       ]
                     }
                   },
@@ -1163504,6 +1163632,20 @@
                                   }
                                 ]
                               },
+                              "expiresAt": {
+                                "anyOf": [
+                                  {
+                                    "type": "string",
+                                    "format": "date-time"
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              },
+                              "isExpired": {
+                                "type": "boolean"
+                              },
                               "granteeName": {
                                 "anyOf": [
                                   {
@@ -1163544,6 +1163686,8 @@
                               "grantedByMembershipId",
                               "createdAt",
                               "revokedAt",
+                              "expiresAt",
+                              "isExpired",
                               "granteeName",
                               "granteeEmail",
                               "granteeImage"
@@ -1163713,6 +1163857,20 @@
                             }
                           ]
                         },
+                        "expiresAt": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "format": "date-time"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "isExpired": {
+                          "type": "boolean"
+                        },
                         "granteeName": {
                           "anyOf": [
                             {
@@ -1163753,6 +1163911,8 @@
                         "grantedByMembershipId",
                         "createdAt",
                         "revokedAt",
+                        "expiresAt",
+                        "isExpired",
                         "granteeName",
                         "granteeEmail",
                         "granteeImage"
@@ -1163824,6 +1163984,11 @@
                       "edit",
                       "manage"
                     ]
+                  },
+                  "expiresAt": {
+                    "type": "string",
+                    "format": "date-time",
+                    "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
                   }
                 },
                 "required": [

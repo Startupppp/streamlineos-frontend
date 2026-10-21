@@ -75,6 +75,10 @@ export const kbPageWithAncestorsContract = kbPageBaseContract.extend({
     manage: z.boolean(),
     restore: z.boolean(),
   }),
+  access: z.object({
+    via: z.enum(["owner", "admin", "creator", "organization", "public", "space", "project", "grant"]),
+    grantExpiresAt: z.string().nullable(),
+  }),
 });
 
 export const kbPageSearchResponseContract = z.object({
