@@ -110,4 +110,11 @@ describe("uploadKbMedia — duplicate drops and rejected types", () => {
     );
     expect(upload).not.toHaveBeenCalled();
   });
+
+  it("KB-B-008: accepts text/csv within the 25 MB limit — not rejected before reaching the API", async () => {
+    upload.mockResolvedValueOnce({ key: "k", name: "data.csv" });
+    const csv = new File(["col1,col2\nval1,val2"], "data.csv", { type: "text/csv" });
+    await uploadKbMedia(csv, 12);
+    expect(upload).toHaveBeenCalledTimes(1);
+  });
 });
