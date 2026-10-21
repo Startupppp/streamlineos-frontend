@@ -27,6 +27,7 @@ import {
 } from "@/features/wiki/lib/kb-spreadsheet-file";
 import {
   KbFileTextIcon,
+  KbFileDownIcon,
   KbFolderOpenIcon,
   KbLayoutTemplateIcon,
   KbPlusIcon,
@@ -34,6 +35,7 @@ import {
   KbUploadIcon,
 } from "@/features/wiki/lib/kb-icons";
 import { SpaceSheet } from "./space-sheet";
+import { useUploadKbFile } from "@/hooks/api/kb/files";
 import type { KbPage } from "@/hooks/api/kb/page-types";
 
 export interface KbNewMenuScope {
@@ -56,7 +58,9 @@ export function KbNewMenu({ scope, allowFolder, onCreated, trigger, baseHref }: 
   const canManageSpaces = useCan("kb:spaces:manage");
   const canImport = useCan("kb:pages:import");
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const fileUploadInputRef = useRef<HTMLInputElement>(null);
   const [folderSheetOpen, setFolderSheetOpen] = useState(false);
+  const uploadFile = useUploadKbFile();
 
   const createPage = useGuardedCreateKbPage((page) => {
     const href = baseHref
@@ -69,6 +73,30 @@ export function KbNewMenu({ scope, allowFolder, onCreated, trigger, baseHref }: 
   });
 
   if (!canCreate) return null;
+
+  function handleUploadFileClick() {
+    fileUploadInputRef.current?.click();
+  }
+
+  function handleUploadFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    e.target.value = "";
+    uploadFile.mutate(
+      { file, ...scope },
+      {
+        onError: (err: unknown) => toast.error(getErrorMessage(err)),
+        onSuccess: (data) => {
+          const href = baseHref
+            ? `${baseHref}/${data.page.id}`
+            : scope.projectId != null
+              ? projectPageHref(scope.projectId, data.page.id)
+              : pageHref(data.page.id);
+          router.push(href);
+        },
+      },
+    );
+  }
 
   function handleDocument() {
     void createPage.submit({ ...scope, kind: "document" });
@@ -128,6 +156,10 @@ export function KbNewMenu({ scope, allowFolder, onCreated, trigger, baseHref }: 
             <KbSpreadsheetIcon className="h-4 w-4" />
             Spreadsheet
           </DropdownMenuItem>
+          <DropdownMenuItem onSelect={handleUploadFileClick}>
+            <KbFileDownIcon className="h-4 w-4" />
+            Upload file
+          </DropdownMenuItem>
           {allowFolder && canManageSpaces && (
             <DropdownMenuItem onSelect={handleOpenFolder}>
               <KbFolderOpenIcon className="h-4 w-4" />
@@ -162,6 +194,14 @@ export function KbNewMenu({ scope, allowFolder, onCreated, trigger, baseHref }: 
         className="sr-only"
         tabIndex={-1}
         onChange={handleFileChange}
+        aria-hidden="true"
+      />
+      <input
+        ref={fileUploadInputRef}
+        type="file"
+        className="sr-only"
+        tabIndex={-1}
+        onChange={handleUploadFileChange}
         aria-hidden="true"
       />
       {allowFolder && canManageSpaces && (

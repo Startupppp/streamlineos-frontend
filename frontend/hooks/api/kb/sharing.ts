@@ -9,6 +9,7 @@ import type {
   inventoryPageContract as InventoryPageC,
   bulkRevokeResultContract as BulkRevokeResultC,
   guestGrantResponseContract as GuestGrantResponseC,
+  externalSharingModeContract as ExternalSharingModeC,
 } from "@/hooks/api/kb/kb-sharing-schema";
 import { useQuery, useQueryClient, useInfiniteQuery, type InfiniteData } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
@@ -21,15 +22,15 @@ import { NO_CURSOR_YET } from "@/hooks/api/cursor-page-param";
 import { selectFlatPages } from "@/lib/api/select-flat-pages";
 
 export type SharingSettings = z.infer<typeof SharingSettingsC>;
-export type SpaceSharingPolicy = z.infer<typeof SpaceSharingPolicyC>;
-export type ShareLinkList = z.infer<typeof ShareLinkListC>;
-export type ShareLinkCreated = z.infer<typeof ShareLinkCreatedC>;
+type SpaceSharingPolicy = z.infer<typeof SpaceSharingPolicyC>;
+type ShareLinkList = z.infer<typeof ShareLinkListC>;
+type ShareLinkCreated = z.infer<typeof ShareLinkCreatedC>;
 export type ShareLinkItem = z.infer<typeof ShareLinkItemC>;
 export type InventoryPage = z.infer<typeof InventoryPageC>;
-export type BulkRevokeResult = z.infer<typeof BulkRevokeResultC>;
-export type GuestGrantResponse = z.infer<typeof GuestGrantResponseC>;
+type BulkRevokeResult = z.infer<typeof BulkRevokeResultC>;
+type GuestGrantResponse = z.infer<typeof GuestGrantResponseC>;
 
-export type ExternalSharingMode = "disabled" | "guests" | "guests_and_links";
+type ExternalSharingMode = z.infer<typeof ExternalSharingModeC>;
 
 const sharingSettingsC = lazyContract(() =>
   import("@/hooks/api/kb/kb-sharing-schema").then((m) => m.sharingSettingsContract),
@@ -153,18 +154,15 @@ export function useCreateKbShareLink() {
         undefined,
         shareLinkCreatedC,
       ),
-    onSuccess: (created, variables) => {
-      const key = knowledgeAndSurveysQueryKeys.kb.pageShareLinks(variables.pageId);
-      qc.setQueryData<InfiniteData<ShareLinkList>>(key, (old) => {
-        if (!old) return old;
-        const { token: _token, ...linkItem } = created;
-        const first = old.pages[0];
-        if (!first) return old;
-        return {
-          ...old,
-          pages: [{ ...first, data: [linkItem, ...first.data] }, ...old.pages.slice(1)],
-        };
-      });
+    onSuccess: (created, { pageId }) => {
+      const { token: _t, ...item } = created;
+      qc.setQueryData<InfiniteData<ShareLinkList>>(
+        knowledgeAndSurveysQueryKeys.kb.pageShareLinks(pageId),
+        (old) => {
+          if (!old?.pages[0]) return old;
+          return { ...old, pages: [{ ...old.pages[0], data: [item, ...old.pages[0].data] }, ...old.pages.slice(1)] };
+        },
+      );
     },
   });
 }
@@ -174,24 +172,12 @@ export function useRevokeKbShareLink() {
   return useAuthorizedMutation("kb:pages:update", {
     mutationKey: ["kb", "shareLinks", "revoke"],
     mutationFn: ({ pageId, linkId }: { pageId: number; linkId: number }) =>
-      apiClient.delete<void>(
-        `/kb/pages/${pageId}/share-links/${linkId}`,
-        undefined,
-        undefined,
-        noContentC,
-      ),
-    onSuccess: (_, variables) => {
-      const key = knowledgeAndSurveysQueryKeys.kb.pageShareLinks(variables.pageId);
-      qc.setQueryData<InfiniteData<ShareLinkList>>(key, (old) => {
-        if (!old) return old;
-        return {
-          ...old,
-          pages: old.pages.map((page) => ({
-            ...page,
-            data: page.data.filter((item) => item.id !== variables.linkId),
-          })),
-        };
-      });
+      apiClient.delete<void>(`/kb/pages/${pageId}/share-links/${linkId}`, undefined, undefined, noContentC),
+    onSuccess: (_, { pageId, linkId }) => {
+      qc.setQueryData<InfiniteData<ShareLinkList>>(
+        knowledgeAndSurveysQueryKeys.kb.pageShareLinks(pageId),
+        (old) => old ? { ...old, pages: old.pages.map((pg) => ({ ...pg, data: pg.data.filter((it) => it.id !== linkId) })) } : old,
+      );
     },
   });
 }
@@ -201,27 +187,13 @@ export function useRotateKbShareLink() {
   return useAuthorizedMutation("kb:pages:update", {
     mutationKey: ["kb", "shareLinks", "rotate"],
     mutationFn: ({ pageId, linkId }: { pageId: number; linkId: number }) =>
-      apiClient.post<ShareLinkCreated>(
-        `/kb/pages/${pageId}/share-links/${linkId}/rotate`,
-        {},
-        undefined,
-        shareLinkCreatedC,
-      ),
-    onSuccess: (rotated, variables) => {
-      const key = knowledgeAndSurveysQueryKeys.kb.pageShareLinks(variables.pageId);
-      qc.setQueryData<InfiniteData<ShareLinkList>>(key, (old) => {
-        if (!old) return old;
-        const { token: _token, ...linkItem } = rotated;
-        return {
-          ...old,
-          pages: old.pages.map((page) => ({
-            ...page,
-            data: page.data.map((item) =>
-              item.id === variables.linkId ? { ...item, ...linkItem } : item,
-            ),
-          })),
-        };
-      });
+      apiClient.post<ShareLinkCreated>(`/kb/pages/${pageId}/share-links/${linkId}/rotate`, {}, undefined, shareLinkCreatedC),
+    onSuccess: (rotated, { pageId, linkId }) => {
+      const { token: _t, ...item } = rotated;
+      qc.setQueryData<InfiniteData<ShareLinkList>>(
+        knowledgeAndSurveysQueryKeys.kb.pageShareLinks(pageId),
+        (old) => old ? { ...old, pages: old.pages.map((pg) => ({ ...pg, data: pg.data.map((it) => it.id === linkId ? { ...it, ...item } : it) })) } : old,
+      );
     },
   });
 }
@@ -255,52 +227,24 @@ export type SharingInventoryQuery = {
   status?: "active" | "expired" | "policy_blocked";
 };
 
-export function useKbSharingInventoryPage(
-  query: SharingInventoryQuery = {},
-  cursor?: string,
-) {
+function buildInventoryParams(q: SharingInventoryQuery): Record<string, string | number> {
+  const p: Record<string, string | number> = {};
+  if (q.type !== undefined) p.type = q.type;
+  if (q.spaceId !== undefined) p.spaceId = q.spaceId;
+  if (q.status !== undefined) p.status = q.status;
+  return p;
+}
+
+export function useKbSharingInventoryPage(query: SharingInventoryQuery = {}, cursor?: string) {
   const canManage = useCan("kb:settings:manage");
-  const params: Record<string, string | number> = {};
-  if (query.type !== undefined) params.type = query.type;
-  if (query.spaceId !== undefined) params.spaceId = query.spaceId;
-  if (query.status !== undefined) params.status = query.status;
+  const params = buildInventoryParams(query);
   const queryParams = Object.keys(params).length > 0 ? params : undefined;
   return useQuery({
     ...INLINE_READ_ERROR,
     queryKey: knowledgeAndSurveysQueryKeys.kb.sharingInventoryPage(queryParams, cursor),
     queryFn: ({ signal }) =>
-      apiClient.get<InventoryPage>(
-        "/kb/sharing/inventory",
-        { ...params, limit: 50, ...(cursor !== undefined ? { cursor } : {}) },
-        signal,
-        inventoryPageC,
-      ),
-    staleTime: 30_000,
-    enabled: canManage,
-  });
-}
-
-export function useKbSharingInventory(query: SharingInventoryQuery = {}) {
-  const canManage = useCan("kb:settings:manage");
-  const params: Record<string, string | number> = {};
-  if (query.type !== undefined) params.type = query.type;
-  if (query.spaceId !== undefined) params.spaceId = query.spaceId;
-  if (query.status !== undefined) params.status = query.status;
-  return useInfiniteQuery({
-    ...INLINE_READ_ERROR,
-    queryKey: knowledgeAndSurveysQueryKeys.kb.sharingInventory(
-      Object.keys(params).length > 0 ? params : undefined,
-    ),
-    initialPageParam: NO_CURSOR_YET,
-    queryFn: ({ signal, pageParam }) =>
-      apiClient.get<InventoryPage>(
-        "/kb/sharing/inventory",
-        { ...params, limit: 50, ...(pageParam !== undefined ? { cursor: pageParam } : {}) },
-        signal,
-        inventoryPageC,
-      ),
-    getNextPageParam: (last) => last.pagination.nextCursor ?? undefined,
-    select: selectFlatPages,
+      apiClient.get<InventoryPage>("/kb/sharing/inventory",
+        { ...params, limit: 50, ...(cursor !== undefined ? { cursor } : {}) }, signal, inventoryPageC),
     staleTime: 30_000,
     enabled: canManage,
   });

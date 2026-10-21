@@ -36,10 +36,12 @@ jest.mock("@/components/ui/user-combobox", () => ({
 const mockKbSpaceMembers = jest.fn();
 const mockAddMember = jest.fn();
 const mockRemoveMember = jest.fn();
+const mockUpdateMemberRole = jest.fn();
 jest.mock("@/hooks/api/kb/spaces", () => ({
   useKbSpaceMembers: (...args: unknown[]) => mockKbSpaceMembers(...args),
   useAddKbSpaceMember: () => mockAddMember(),
   useRemoveKbSpaceMember: () => mockRemoveMember(),
+  useUpdateKbSpaceMemberRole: () => mockUpdateMemberRole(),
 }));
 
 function member(over: Record<string, unknown> = {}) {
@@ -102,6 +104,7 @@ beforeEach(() => {
   mockKbSpaceMembers.mockReturnValue(membersQuery());
   mockAddMember.mockReturnValue(mutation());
   mockRemoveMember.mockReturnValue(mutation());
+  mockUpdateMemberRole.mockReturnValue(mutation());
 });
 
 describe("SpaceMembersSheet — accessible name and description", () => {

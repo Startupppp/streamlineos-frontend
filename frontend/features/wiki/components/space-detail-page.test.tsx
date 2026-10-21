@@ -47,6 +47,13 @@ jest.mock("@/hooks/api/kb", () => ({
   useCreateKbPage: () => mockCreatePage(),
 }));
 
+const mockSpacePolicy = jest.fn();
+const mockUpdateSharingPolicy = jest.fn();
+jest.mock("@/hooks/api/kb/sharing", () => ({
+  useKbSpaceSharingPolicy: (spaceId: number) => mockSpacePolicy(spaceId),
+  useUpdateKbSpaceSharingPolicy: (spaceId: number) => mockUpdateSharingPolicy(spaceId),
+}));
+
 const mockPageCollection = jest.fn();
 jest.mock("./wiki-page-collection-table", () => ({
   WikiPageCollectionTable: (props: unknown) => {
@@ -123,6 +130,8 @@ beforeEach(() => {
   mockCreatePage.mockReturnValue(mutation());
   mockPageCollection.mockImplementation(() => undefined);
   mockKbNewMenu.mockReturnValue(null);
+  mockSpacePolicy.mockReturnValue({ data: undefined });
+  mockUpdateSharingPolicy.mockReturnValue(mutation());
 });
 
 describe("SpaceDetailPage", () => {
@@ -392,6 +401,27 @@ describe("SpaceDetailPage", () => {
 
     expect(mockKbTimeAgo).toHaveBeenCalledWith("2026-09-25T12:00:00.000Z");
     expect(screen.getByText(/Updated 1d ago/i)).toBeInTheDocument();
+  });
+
+  it("shows the external sharing policy select to a manager when spacePolicy data is available", () => {
+    mockCan.mockImplementation((key) => key === "kb:spaces:manage");
+    mockSpacePolicy.mockReturnValue({
+      data: { externalSharing: null, effective: "disabled" },
+    });
+
+    render(<SpaceDetailPage spaceId={5} />);
+
+    expect(screen.getByText("External sharing:")).toBeInTheDocument();
+    expect(screen.getByRole("combobox")).toBeInTheDocument();
+  });
+
+  it("hides the external sharing policy select when the space policy data is unavailable", () => {
+    mockCan.mockImplementation((key) => key === "kb:spaces:manage");
+    mockSpacePolicy.mockReturnValue({ data: undefined });
+
+    render(<SpaceDetailPage spaceId={5} />);
+
+    expect(screen.queryByText("External sharing:")).not.toBeInTheDocument();
   });
 
   it("BITE: shows manager health stat cards to a manager with review policy pages (CONTROL: absent when permission is denied)", () => {

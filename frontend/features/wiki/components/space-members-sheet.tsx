@@ -44,6 +44,7 @@ import {
   useKbSpaceMembers,
   useAddKbSpaceMember,
   useRemoveKbSpaceMember,
+  useUpdateKbSpaceMemberRole,
 } from "@/hooks/api/kb/spaces";
 import type { KbSpaceMember } from "@/hooks/api/kb/spaces";
 import { useCan } from "@/hooks/api/access";
@@ -70,6 +71,8 @@ interface MemberRowProps {
   spaceId: number;
 }
 
+const ROLE_VALUES = ["viewer", "commenter", "editor", "publisher", "admin"] as const;
+
 function MemberRow({ member, canManage, spaceId }: MemberRowProps) {
   const name = getUserDisplayName({
     name: member.userName,
@@ -80,10 +83,20 @@ function MemberRow({ member, canManage, spaceId }: MemberRowProps) {
     email: member.userEmail,
   });
   const remove = useRemoveKbSpaceMember();
+  const updateRole = useUpdateKbSpaceMemberRole();
 
   function handleRemove() {
     remove.mutate(
       { spaceId, memberId: member.id },
+      { onError: (e) => toast.error(getErrorMessage(e)) },
+    );
+  }
+
+  function handleRoleChange(value: string) {
+    const spaceRole = ROLE_VALUES.find((r) => r === value);
+    if (!spaceRole) return;
+    updateRole.mutate(
+      { spaceId, memberId: member.id, spaceRole },
       { onError: (e) => toast.error(getErrorMessage(e)) },
     );
   }
@@ -102,9 +115,24 @@ function MemberRow({ member, canManage, spaceId }: MemberRowProps) {
           </p>
         )}
       </div>
-      <Badge variant="outline" className="text-micro h-5 px-2 shrink-0">
-        {ROLE_LABEL[member.spaceRole] ?? member.spaceRole}
-      </Badge>
+      {canManage ? (
+        <Select value={member.spaceRole} onValueChange={handleRoleChange} disabled={updateRole.isPending}>
+          <SelectTrigger className="h-7 w-28 text-xs shrink-0">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {ROLE_VALUES.map((r) => (
+              <SelectItem key={r} value={r} className="text-xs">
+                {ROLE_LABEL[r] ?? r}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      ) : (
+        <Badge variant="outline" className="text-micro h-5 px-2 shrink-0">
+          {ROLE_LABEL[member.spaceRole] ?? member.spaceRole}
+        </Badge>
+      )}
       {canManage && (
         <LoadingButton
           type="button"

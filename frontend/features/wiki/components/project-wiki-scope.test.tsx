@@ -17,6 +17,10 @@ jest.mock("@/hooks/api/access", () => ({
   useCan: () => true,
 }));
 
+jest.mock("@/hooks/api/kb/files", () => ({
+  useUploadKbFile: () => ({ mutate: jest.fn(), isPending: false }),
+}));
+
 const duplicateMutate = jest.fn();
 const createPageMutate = jest.fn();
 const updatePageMutate = jest.fn();

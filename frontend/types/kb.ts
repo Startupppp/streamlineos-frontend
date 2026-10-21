@@ -28,6 +28,10 @@ export interface KbSpace {
   pagesOverdueForReview?: number;
   pagesWithReviewPolicy?: number;
   viewerSpaceRole?: KbSpaceRole | null;
+  viewerAccess?: {
+    level: "view" | "comment" | "edit" | "manage";
+    via: "admin" | "team_folder" | "team_folder_admin" | "organization";
+  } | null;
 }
 
 export interface CreateSpaceInput {

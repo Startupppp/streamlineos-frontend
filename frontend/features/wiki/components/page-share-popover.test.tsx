@@ -16,10 +16,37 @@ jest.mock("@/hooks/api/kb/pages", () => ({
   }),
 }));
 
+jest.mock("@/hooks/api/kb/sharing", () => ({
+  useKbSharingSettings: () => ({ data: { externalSharing: "guests_and_links" } }),
+  useKbSpaceSharingPolicy: () => ({ data: undefined }),
+  useKbPageShareLinks: () => ({
+    data: [],
+    hasNextPage: false,
+    isFetchingNextPage: false,
+    fetchNextPage: jest.fn(),
+  }),
+  useCreateKbShareLink: () => ({ mutate: jest.fn(), isPending: false }),
+  useRevokeKbShareLink: () => ({ mutate: jest.fn(), isPending: false }),
+  useRotateKbShareLink: () => ({ mutate: jest.fn(), isPending: false }),
+  useCreateKbGuestGrant: () => ({ mutate: jest.fn(), isPending: false }),
+}));
+
 jest.mock("./page-grants-sheet", () => ({
   __esModule: true,
   default: ({ open }: { open: boolean }) =>
     open ? <div data-testid="page-grants-sheet" /> : null,
+}));
+
+jest.mock("./sharing/page-share-guests", () => ({
+  PageShareGuests: ({ externalSharingEnabled }: { externalSharingEnabled: boolean }) => (
+    <div data-testid="page-share-guests" data-enabled={String(externalSharingEnabled)} />
+  ),
+}));
+
+jest.mock("./sharing/page-share-links", () => ({
+  PageShareLinks: ({ externalSharingEnabled }: { externalSharingEnabled: boolean }) => (
+    <div data-testid="page-share-links" data-enabled={String(externalSharingEnabled)} />
+  ),
 }));
 
 const page = {
@@ -32,6 +59,8 @@ const page = {
   publicToken: null,
   contentRevision: 7,
   status: "published",
+  spaceId: 10,
+  can: { view: true, comment: true, edit: true, manage: true, restore: true },
 } as KbPageDetail;
 
 function renderPopover(overrides: Partial<KbPageDetail> = {}) {
@@ -51,7 +80,7 @@ describe("PageSharePopover — the privileged share controls live behind the Sha
     expect(screen.queryByRole("radio", { name: /private/i })).toBeNull();
   });
 
-  it("exposes Manage access and the three visibility options once the Share trigger is opened, proving the permission controls the toolbar gates on kb:pages:update are exactly these", async () => {
+  it("exposes Manage access and two visibility options (Private and Team) once the Share trigger is opened", async () => {
     const user = userEvent.setup();
     renderPopover();
 
@@ -60,7 +89,15 @@ describe("PageSharePopover — the privileged share controls live behind the Sha
     expect(screen.getByText("Manage access")).toBeInTheDocument();
     expect(screen.getByText("Private")).toBeInTheDocument();
     expect(screen.getByText("Team")).toBeInTheDocument();
-    expect(screen.getByText("Public")).toBeInTheDocument();
+  });
+
+  it("does not include a Public visibility option, because backend rejects public as an input", async () => {
+    const user = userEvent.setup();
+    renderPopover();
+
+    await user.click(screen.getByRole("button", { name: "Share file" }));
+
+    expect(screen.queryByText("Public")).toBeNull();
   });
 
   it("opens the page grants sheet from Manage access, so Manage access is the entry point to the per-page permission editor", async () => {
@@ -75,27 +112,37 @@ describe("PageSharePopover — the privileged share controls live behind the Sha
     expect(screen.getByTestId("page-grants-sheet")).toBeInTheDocument();
   });
 
-  it("changes visibility through the mutation when a different option is chosen", async () => {
+  it("changes visibility through the mutation when the other option is chosen", async () => {
     const user = userEvent.setup();
-    renderPopover();
+    renderPopover({ visibility: "org" });
 
     await user.click(screen.getByRole("button", { name: "Share file" }));
-    await user.click(screen.getByText("Public"));
+    await user.click(screen.getByText("Private"));
 
     expect(setVisibilityMutate).toHaveBeenCalledTimes(1);
     expect(setVisibilityMutate.mock.calls[0]?.[0]).toEqual({
       pageId: 5,
-      visibility: "public",
+      visibility: "private",
       expectedContentRevision: 7,
     });
   });
 
-  it("reports a stale visibility conflict without retrying against another revision", async () => {
+  it("treats a legacy public visibility page as org (team) for the radio group", async () => {
     const user = userEvent.setup();
-    renderPopover();
+    renderPopover({ visibility: "public" });
 
     await user.click(screen.getByRole("button", { name: "Share file" }));
-    await user.click(screen.getByText("Public"));
+
+    expect(screen.getByRole("radio", { name: /team/i })).toHaveAttribute("aria-checked", "true");
+    expect(screen.getByRole("radio", { name: /private/i })).toHaveAttribute("aria-checked", "false");
+  });
+
+  it("reports a stale visibility conflict without retrying against another revision", async () => {
+    const user = userEvent.setup();
+    renderPopover({ visibility: "org" });
+
+    await user.click(screen.getByRole("button", { name: "Share file" }));
+    await user.click(screen.getByText("Private"));
     setVisibilityMutate.mock.calls[0]?.[1].onError(new ApiError("Stale", 409, "STALE_REVISION"));
 
     expect(toast.error).toHaveBeenCalledWith("File changed before visibility was saved. Refresh before trying again.");
@@ -113,61 +160,17 @@ describe("PageSharePopover — the privileged share controls live behind the Sha
   });
 });
 
-describe("PageSharePopover — the public link appears only once the page is public and has a token", () => {
-  it("offers no public link row for an org-visibility page", async () => {
-    const user = userEvent.setup();
-    renderPopover({ visibility: "org", publicToken: "tok-abc" });
-
-    await user.click(screen.getByRole("button", { name: "Share file" }));
-
-    expect(screen.queryByRole("button", { name: "Copy link" })).toBeNull();
-  });
-
-  it("offers no public link row for a public page that has no token yet", async () => {
-    const user = userEvent.setup();
-    renderPopover({ visibility: "public", publicToken: null });
-
-    await user.click(screen.getByRole("button", { name: "Share file" }));
-
-    expect(screen.queryByRole("button", { name: "Copy link" })).toBeNull();
-  });
-
-  it("offers the public link row for a public page with a token, so the two absences above are conditions and not a missing control", async () => {
-    const user = userEvent.setup();
-    renderPopover({ visibility: "public", publicToken: "tok-abc" });
-
-    await user.click(screen.getByRole("button", { name: "Share file" }));
-
-    expect(screen.getByRole("button", { name: "Copy link" })).toBeInTheDocument();
-  });
-
-  it("copies the public wiki URL rather than the current authenticated page URL", async () => {
-    const user = userEvent.setup();
-    const writeText = jest.fn().mockResolvedValue(undefined);
-    Object.defineProperty(navigator, "clipboard", {
-      value: { writeText },
-      configurable: true,
-    });
-    renderPopover({ visibility: "public", publicToken: "tok-abc" });
-
-    await user.click(screen.getByRole("button", { name: "Share file" }));
-    await user.click(screen.getByRole("button", { name: "Copy link" }));
-
-    expect(writeText).toHaveBeenCalledWith(`${window.location.origin}/wiki/tok-abc`);
-  });
-});
-
 describe("PageSharePopover — the options say which visibility is current", () => {
-  it("marks only the page's visibility as checked and makes it the focus target, so a Public page never reads as Private", async () => {
+  it("marks only the page's visibility as checked and makes it the focus target", async () => {
     const user = userEvent.setup();
-    renderPopover({ visibility: "public", publicToken: "tok-abc" });
+    renderPopover({ visibility: "private" });
 
     await user.click(screen.getByRole("button", { name: "Share file" }));
 
-    expect(screen.getByRole("radio", { name: /public/i })).toHaveAttribute("aria-checked", "true");
-    expect(screen.getByRole("radio", { name: /public/i })).toHaveAttribute("tabindex", "0");
-    expect(screen.getByRole("radio", { name: /private/i })).toHaveAttribute("aria-checked", "false");
-    expect(screen.getByRole("radio", { name: /private/i })).toHaveAttribute("tabindex", "-1");
+    expect(screen.getByRole("radio", { name: /private/i })).toHaveAttribute("aria-checked", "true");
+    expect(screen.getByRole("radio", { name: /private/i })).toHaveAttribute("tabindex", "0");
+    expect(screen.getByRole("radio", { name: /team/i })).toHaveAttribute("aria-checked", "false");
+    expect(screen.getByRole("radio", { name: /team/i })).toHaveAttribute("tabindex", "-1");
   });
 
   it("moves between options with the arrow keys", async () => {
@@ -182,22 +185,24 @@ describe("PageSharePopover — the options say which visibility is current", () 
   });
 });
 
-describe("PageSharePopover — a public draft says its link is not live yet", () => {
-  it("tells the author the public link works only after publishing, because the public route serves published pages only", async () => {
+describe("PageSharePopover — external sharing sections visible for managers", () => {
+  it("shows guest and link sections when page.can.manage is true", async () => {
     const user = userEvent.setup();
-    renderPopover({ visibility: "public", publicToken: "tok-abc", status: "draft" });
+    renderPopover({ can: { view: true, comment: true, edit: true, manage: true, restore: true } });
 
     await user.click(screen.getByRole("button", { name: "Share file" }));
 
-    expect(screen.getByText("The public link works once this file is published.")).toBeInTheDocument();
+    expect(screen.getByTestId("page-share-guests")).toBeInTheDocument();
+    expect(screen.getByTestId("page-share-links")).toBeInTheDocument();
   });
 
-  it("shows no such hint for a published public page", async () => {
+  it("hides guest and link sections when page.can.manage is false", async () => {
     const user = userEvent.setup();
-    renderPopover({ visibility: "public", publicToken: "tok-abc", status: "published" });
+    renderPopover({ can: { view: true, comment: true, edit: true, manage: false, restore: true } });
 
     await user.click(screen.getByRole("button", { name: "Share file" }));
 
-    expect(screen.queryByText("The public link works once this file is published.")).toBeNull();
+    expect(screen.queryByTestId("page-share-guests")).toBeNull();
+    expect(screen.queryByTestId("page-share-links")).toBeNull();
   });
 });

@@ -215,6 +215,31 @@ export function useAddKbSpaceMember() {
   });
 }
 
+export interface UpdateKbSpaceMemberInput {
+  spaceId: number;
+  memberId: number;
+  spaceRole: "viewer" | "commenter" | "editor" | "publisher" | "admin";
+}
+
+export function useUpdateKbSpaceMemberRole() {
+  const qc = useQueryClient();
+  return useAuthorizedMutation("kb:spaces:manage", {
+    mutationKey: ["kb", "spaces", "members", "update"],
+    mutationFn: ({ spaceId, memberId, spaceRole }: UpdateKbSpaceMemberInput) =>
+      apiClient.patch(
+        `/kb/spaces/${spaceId}/members/${memberId}`,
+        { spaceRole },
+        undefined,
+        kbSpaceMemberContract,
+      ),
+    onSuccess: (_data, { spaceId }) => {
+      void qc.invalidateQueries({
+        queryKey: [...knowledgeAndSurveysQueryKeys.kb.space(spaceId), "members"],
+      });
+    },
+  });
+}
+
 export function useRemoveKbSpaceMember() {
   const qc = useQueryClient();
   return useAuthorizedMutation("kb:spaces:manage", {

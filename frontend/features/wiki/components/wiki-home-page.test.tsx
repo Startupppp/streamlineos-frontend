@@ -64,6 +64,10 @@ jest.mock("@/hooks/api/kb/page-collection", () => ({
   useKbPageCollection: jest.fn(),
 }));
 
+jest.mock("@/hooks/api/kb/shortcuts", () => ({
+  useCreateKbShortcut: jest.fn(() => ({ mutate: jest.fn(), isPending: false })),
+}));
+
 let mockCan: (key: string) => boolean = () => true;
 jest.mock("@/hooks/api/access", () => ({
   useCan: (key: string) => mockCan(key),

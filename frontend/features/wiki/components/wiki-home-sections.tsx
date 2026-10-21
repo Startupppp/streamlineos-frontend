@@ -20,6 +20,7 @@ import {
   KB_CHAT,
   KB_IMPORT,
   KB_MANAGE,
+  KB_MANAGE_SHARING,
   KB_REVIEWS,
   pageHref,
 } from "@/lib/knowledge-routes";
@@ -44,8 +45,13 @@ export function WikiHomeHeaderActions({
   const canViewReviews = useCan("kb:reviews:view");
   const canManageContent = useCan("kb:pages:manage");
   const canImportPages = useCan("kb:pages:import");
+  const canManageSharingSettings = useCan("kb:settings:manage");
   const hasManageAccess =
-    canViewAnalytics || canViewReviews || canManageContent || canImportPages;
+    canViewAnalytics ||
+    canViewReviews ||
+    canManageContent ||
+    canImportPages ||
+    canManageSharingSettings;
 
   return (
     <div className="flex items-center gap-2">
@@ -86,6 +92,11 @@ export function WikiHomeHeaderActions({
             {canManageContent && (
               <DropdownMenuItem asChild>
                 <Link href={KB_MANAGE}>Content health</Link>
+              </DropdownMenuItem>
+            )}
+            {canManageSharingSettings && (
+              <DropdownMenuItem asChild>
+                <Link href={KB_MANAGE_SHARING}>External sharing</Link>
               </DropdownMenuItem>
             )}
           </DropdownMenuContent>

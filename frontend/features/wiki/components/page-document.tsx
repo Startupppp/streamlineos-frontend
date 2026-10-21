@@ -49,6 +49,7 @@ import {
   plainTextToPlateValue,
   prependPlateValue,
 } from "@/components/editor/plate/plate-value-convert";
+import { KbFileViewer } from "./files";
 import "../wiki-document.css";
 
 const PageSpreadsheet = dynamic(() => import("./page-spreadsheet"), {
@@ -328,11 +329,7 @@ export default function PageDocument({ pageId, onNavigateToPage, projectId }: Pa
   }
 
   if (page.kind === "file") {
-    return (
-      <div className="flex flex-1 items-center justify-center p-8 text-muted-foreground text-sm">
-        File attachments are not yet available in this version.
-      </div>
-    );
+    return <KbFileViewer pageId={pageId} />;
   }
 
   const isEditable = canUpdate && page.can.edit === true && (!page.isLocked || canManage);

@@ -710,7 +710,7 @@ export function useSetKbPageVisibility() {
       expectedContentRevision,
     }: {
       pageId: number;
-      visibility: "private" | "org" | "public";
+      visibility: "private" | "org";
       expectedContentRevision: number;
     }) =>
       apiClient.patch<KbPage>(

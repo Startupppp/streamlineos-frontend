@@ -171,6 +171,18 @@ export const knowledgeAndSurveysQueryKeys = {
       params === undefined
         ? ([...base, "kb", "pages", pageId, "activity"] as const)
         : ([...base, "kb", "pages", pageId, "activity", params] as const),
+    sharingSettings: () => [...base, "kb", "sharing", "settings"] as const,
+    spaceSharingPolicy: (spaceId: number) =>
+      [...base, "kb", "spaces", spaceId, "sharing-policy"] as const,
+    pageShareLinks: (pageId: number) =>
+      [...base, "kb", "pages", pageId, "share-links"] as const,
+    sharingInventory: () => [...base, "kb", "sharing", "inventory"] as const,
+    sharingInventoryPage: (params: QueryKeyParams | undefined, cursor: string | undefined) =>
+      [...base, "kb", "sharing", "inventory", { ...params, cursor: cursor ?? null }] as const,
+    fileDetail: (pageId: number) =>
+      [...base, "kb", "files", pageId, "detail"] as const,
+    fileVersions: (pageId: number) =>
+      [...base, "kb", "files", pageId, "versions"] as const,
   },
 
   roadmap: {

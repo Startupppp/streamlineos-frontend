@@ -13,6 +13,18 @@ import {
   useArchiveKbSpace,
   useRestoreKbSpace,
 } from "@/hooks/api/kb/spaces";
+import {
+  useKbSpaceSharingPolicy,
+  useUpdateKbSpaceSharingPolicy,
+} from "@/hooks/api/kb/sharing";
+import { externalSharingModeContract } from "@/hooks/api/kb/kb-sharing-schema";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { getUserDisplayName } from "@/lib/person-display";
 import { kbTimeAgo } from "@/features/wiki/lib/kb-date-utils";
@@ -50,6 +62,20 @@ const AUDIENCE_LABELS: Record<KbAudience, string> = {
   mixed: "Mixed",
 };
 
+const VIEWER_ACCESS_VIA_LABELS: Record<string, string> = {
+  admin: "org admin",
+  team_folder: "team folder membership",
+  team_folder_admin: "team folder admin role",
+  organization: "org-wide access",
+};
+
+const VIEWER_ACCESS_LEVEL_LABELS: Record<string, string> = {
+  view: "Viewer",
+  comment: "Commenter",
+  edit: "Editor",
+  manage: "Manager",
+};
+
 const AUDIENCE_BADGE_CLASS: Record<KbAudience, string> = {
   internal: "bg-muted text-muted-foreground border-border",
   public:
@@ -80,6 +106,8 @@ export default function SpaceDetailPage({ spaceId }: SpaceDetailPageProps) {
   const canManage = useCan("kb:spaces:manage");
   const archiveSpace = useArchiveKbSpace();
   const restoreSpace = useRestoreKbSpace();
+  const { data: spacePolicy } = useKbSpaceSharingPolicy(spaceId);
+  const updateSharingPolicy = useUpdateKbSpaceSharingPolicy(spaceId);
   const [membersOpen, setMembersOpen] = useState(false);
   const [archiveConfirmOpen, setArchiveConfirmOpen] = useState(false);
   const [hierarchyOpen, setHierarchyOpen] = useState(false);
@@ -137,6 +165,16 @@ export default function SpaceDetailPage({ spaceId }: SpaceDetailPageProps) {
       onSuccess: () => toast.success(`"${space?.name ?? "Team folder"}" restored`),
       onError: (err) => toast.error(getErrorMessage(err)),
     });
+  }
+
+  function handleSharingPolicyChange(value: string) {
+    const parsed = externalSharingModeContract.safeParse(value);
+    if (value !== "inherit" && !parsed.success) return;
+    const externalSharing = parsed.success ? parsed.data : null;
+    updateSharingPolicy.mutate(
+      { externalSharing },
+      { onError: (err) => toast.error(getErrorMessage(err)) },
+    );
   }
 
   const audience: KbAudience = space?.audience ?? "internal";
@@ -252,8 +290,30 @@ export default function SpaceDetailPage({ spaceId }: SpaceDetailPageProps) {
                   {space.description}
                 </p>
               )}
+              {canManage && spacePolicy !== undefined && (
+                <div className="mt-2 flex items-center gap-2">
+                  <span className="text-xs text-muted-foreground">External sharing:</span>
+                  <Select
+                    value={spacePolicy.externalSharing ?? "inherit"}
+                    onValueChange={handleSharingPolicyChange}
+                    disabled={updateSharingPolicy.isPending}
+                  >
+                    <SelectTrigger className="h-7 w-44 text-xs">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="inherit">
+                        Inherit ({spacePolicy.effective})
+                      </SelectItem>
+                      <SelectItem value="disabled">Disabled</SelectItem>
+                      <SelectItem value="guests">Guests only</SelectItem>
+                      <SelectItem value="guests_and_links">Guests and links</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
               <div
-                className="mt-1.5 flex items-center gap-3 text-xs text-muted-foreground"
+                className="mt-1.5 flex items-center gap-3 text-xs text-muted-foreground flex-wrap"
                 suppressHydrationWarning
               >
                 {space?.ownerName != null && (
@@ -263,6 +323,14 @@ export default function SpaceDetailPage({ spaceId }: SpaceDetailPageProps) {
                 )}
                 {space?.updatedAt && (
                   <span>Updated {kbTimeAgo(space.updatedAt)}</span>
+                )}
+                {space?.viewerAccess != null && (
+                  <span>
+                    Your access:{" "}
+                    {VIEWER_ACCESS_LEVEL_LABELS[space.viewerAccess.level] ?? space.viewerAccess.level}
+                    {" via "}
+                    {VIEWER_ACCESS_VIA_LABELS[space.viewerAccess.via] ?? space.viewerAccess.via}
+                  </span>
                 )}
               </div>
             </div>

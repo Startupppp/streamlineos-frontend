@@ -61,7 +61,10 @@ export type KbAccessRoute =
   | "public"
   | "space"
   | "project"
-  | "grant";
+  | "grant"
+  | "team_folder"
+  | "team_folder_admin"
+  | "inherited_grant";
 
 export type KbPageDetail = KbPage & {
   ancestors: Array<{ id: number; title: string }>;
@@ -181,6 +184,7 @@ export type MoveKbPageInput = {
   parentPageId: number | null;
   spaceId?: number | null;
   index: number;
+  confirmAccessChange?: boolean;
 };
 
 export interface KbPageSearchPage {

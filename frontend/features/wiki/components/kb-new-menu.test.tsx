@@ -8,6 +8,14 @@ jest.mock("next/navigation", () => ({
   usePathname: () => "/knowledge/wiki",
 }));
 
+const mockUploadMutate = jest.fn();
+jest.mock("@/hooks/api/kb/files", () => ({
+  useUploadKbFile: () => ({
+    mutate: mockUploadMutate,
+    isPending: false,
+  }),
+}));
+
 const mockMutate = jest.fn();
 jest.mock("@/hooks/api/kb", () => ({
   useCreateKbPage: () => ({

@@ -6,14 +6,11 @@ import type { AnimatedNavIconComponent } from "@/components/layout/sidebar/sideb
 import {
   KbBuilding2Icon,
   KbCheckIcon,
-  KbCopyIcon,
-  KbGlobeIcon,
   KbLockIcon,
   KbShare2Icon,
   KbUsersIcon,
 } from "@/features/wiki/lib/kb-icons";
 import { Button } from "@/components/ui/button";
-import { TruncatedText } from "@/components/ui/truncated-text";
 import {
   ResponsivePopover,
   ResponsivePopoverTrigger,
@@ -22,12 +19,15 @@ import {
 import { toast } from "sonner";
 import { isApiError } from "@/lib/api-envelope";
 import { useSetKbPageVisibility } from "@/hooks/api/kb/pages";
+import { useKbSharingSettings, useKbSpaceSharingPolicy } from "@/hooks/api/kb/sharing";
 import type { KbPageDetail } from "@/hooks/api/kb/page-types";
 import { cn } from "@/lib/utils";
+import { PageShareGuests } from "./sharing/page-share-guests";
+import { PageShareLinks } from "./sharing/page-share-links";
 
 const PageGrantsSheet = dynamic(() => import("./page-grants-sheet"));
 
-type Visibility = "private" | "org" | "public";
+type Visibility = "private" | "org";
 
 const VISIBILITY_OPTIONS: Array<{
   value: Visibility;
@@ -47,12 +47,6 @@ const VISIBILITY_OPTIONS: Array<{
     label: "Team",
     description: "Org members",
   },
-  {
-    value: "public",
-    icon: KbGlobeIcon,
-    label: "Public",
-    description: "Anyone with link",
-  },
 ];
 
 interface PageSharePopoverProps {
@@ -63,8 +57,18 @@ export default function PageSharePopover({ page }: PageSharePopoverProps) {
   const [open, setOpen] = useState(false);
   const [grantsOpen, setGrantsOpen] = useState(false);
   const setVisibility = useSetKbPageVisibility();
+  const { data: sharingSettings } = useKbSharingSettings();
+  const spaceId = page.spaceId ?? 0;
+  const { data: spacePolicy } = useKbSpaceSharingPolicy(spaceId);
 
-  const currentVisibility: Visibility = page.visibility ?? "private";
+  const rawVisibility = page.visibility;
+  const currentVisibility: Visibility =
+    rawVisibility === "private" ? "private" : "org";
+
+  const effectiveMode =
+    spacePolicy?.effective ?? sharingSettings?.externalSharing ?? "disabled";
+  const linksEnabled = effectiveMode === "guests_and_links";
+  const guestsEnabled = effectiveMode === "guests" || effectiveMode === "guests_and_links";
 
   function handleVisibilitySelect(e: React.MouseEvent<HTMLButtonElement>) {
     const selectedVisibility = e.currentTarget.dataset.visibility;
@@ -97,22 +101,6 @@ export default function PageSharePopover({ page }: PageSharePopoverProps) {
     setGrantsOpen(true);
   }
 
-  function handleCopyLink() {
-    const origin = typeof window !== "undefined" ? window.location.origin : "";
-    const url = `${origin}/wiki/${page.publicToken ?? ""}`;
-    navigator.clipboard.writeText(url).then(
-      () => toast.success("Link copied"),
-      () => toast.error("Failed to copy"),
-    );
-  }
-
-  const origin = typeof window !== "undefined" ? window.location.origin : "";
-  const publicUrl = `${origin}/wiki/${page.publicToken ?? ""}`;
-  const showPublicLink =
-    currentVisibility === "public" && Boolean(page.publicToken);
-  const publicLinkWaitsForPublish =
-    currentVisibility === "public" && page.status !== "published";
-
   return (
     <>
     <ResponsivePopover open={open} onOpenChange={setOpen}>
@@ -131,7 +119,7 @@ export default function PageSharePopover({ page }: PageSharePopoverProps) {
         align="end"
         sideOffset={6}
         title="Share"
-        className="w-56 max-w-[85vw] gap-0 p-1.5"
+        className="w-64 max-w-[90vw] gap-0 p-1.5"
       >
         <div
           role="radiogroup"
@@ -178,31 +166,6 @@ export default function PageSharePopover({ page }: PageSharePopoverProps) {
           )}
         </div>
 
-        {publicLinkWaitsForPublish ? (
-          <p className="mt-1 border-t border-border px-2 pt-1.5 text-micro text-muted-foreground">
-            The public link works once this file is published.
-          </p>
-        ) : null}
-
-        {showPublicLink ? (
-          <div className="mt-1 flex items-center gap-1 border-t border-border pt-1.5">
-            <TruncatedText
-              text={publicUrl}
-              className="min-w-0 flex-1 px-1 text-micro text-muted-foreground"
-            />
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon"
-              className="h-7 w-7 shrink-0"
-              onClick={handleCopyLink}
-              aria-label="Copy link"
-            >
-              <KbCopyIcon className="h-3.5 w-3.5" />
-            </Button>
-          </div>
-        ) : null}
-
         <div className="mt-1 border-t border-border pt-1">
           <button
             type="button"
@@ -213,6 +176,21 @@ export default function PageSharePopover({ page }: PageSharePopoverProps) {
             <span className="text-xs font-medium text-foreground">Manage access</span>
           </button>
         </div>
+
+        {page.can.manage && (
+          <>
+            <div className="mt-1 border-t border-border px-2 pt-2 pb-1">
+              <p className="text-xs font-medium text-foreground mb-1.5">Guest access</p>
+              <PageShareGuests pageId={page.id} externalSharingEnabled={guestsEnabled} />
+            </div>
+            {linksEnabled && (
+              <div className="border-t border-border px-2 pt-2 pb-1">
+                <p className="text-xs font-medium text-foreground mb-1.5">Share links</p>
+                <PageShareLinks pageId={page.id} externalSharingEnabled={linksEnabled} />
+              </div>
+            )}
+          </>
+        )}
       </ResponsivePopoverContent>
     </ResponsivePopover>
 
