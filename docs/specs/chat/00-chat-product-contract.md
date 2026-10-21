@@ -287,7 +287,7 @@ Rollback order is frontend first, then backend; migrations 2490/2495/2500 are ad
 
 - [ ] Backend: focused Jest, typecheck, lint, OpenAPI, migration, contract, tenant, idempotency and Ably gates pass.
 - [ ] Frontend: focused Jest, type-check, lint, response-contract, permission, PageState, dead-code, file-size and route-bundle gates pass.
-- [ ] Browser journeys pass at 375, 768 and 1280 widths, including offline/reconnect.
+- [x] Browser journeys pass at 375, 768 and 1280 widths, including offline/reconnect.
 
 ### CHAT-025 Rollout
 
