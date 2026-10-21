@@ -3,12 +3,14 @@ import * as z from "zod";
 export const invitationAcceptSchema = z.object({
   firstName: z
     .string()
-    .max(100, "First name must be 100 characters or fewer")
-    .optional(),
+    .trim()
+    .min(1, "Enter your first name")
+    .max(100, "First name must be 100 characters or fewer"),
   lastName: z
     .string()
-    .max(100, "Last name must be 100 characters or fewer")
-    .optional(),
+    .trim()
+    .min(1, "Enter your last name")
+    .max(100, "Last name must be 100 characters or fewer"),
 });
 
 export type InvitationAcceptFormValues = z.infer<typeof invitationAcceptSchema>;

@@ -24,7 +24,7 @@ import {
 } from "@/components/auth/invitation-card";
 import { useMotionVariants } from "@/lib/motion-variants";
 
-type NameValues = { firstName?: string; lastName?: string };
+type NameValues = { firstName: string; lastName: string };
 
 interface InvitationNewUserStepProps {
   organizationName: string;

@@ -189,6 +189,10 @@ async function submitNewJoinerForm() {
     screen.getByRole("textbox", { name: /first name/i }),
     "Priya",
   );
+  await user.type(
+    screen.getByRole("textbox", { name: /last name/i }),
+    "Sharma",
+  );
   await user.click(screen.getByRole("button", { name: /continue/i }));
   await enterEmailCode();
 }
@@ -240,7 +244,7 @@ describe("InvitationPage — accepting as a new joiner", () => {
     );
     expect(acceptMutate).toHaveBeenCalledTimes(1);
     expect(acceptMutate).toHaveBeenCalledWith(
-      { token: "invite-token-1", firstName: "Priya", lastName: undefined, emailOtp: EMAIL_OTP },
+      { token: "invite-token-1", firstName: "Priya", lastName: "Sharma", emailOtp: EMAIL_OTP },
       expect.anything(),
     );
     expect(signInWithMagicToken).toHaveBeenCalledTimes(1);
