@@ -325,12 +325,12 @@ This sequence delivers the Odoo advantage—live operational context—without f
 
 ### Current implementation baseline
 
-Source and focused-test evidence already shows an existing `kb_pages` rich-document foundation with page trees, grants/public links, My/Shared collections, favorites, templates, comments, versions, search, imports/exports, trash, attachment controls, retrieval, and audit behavior. XLSX files can be accepted as supported sources and their bounded cell text can be extracted for search/Ask. Current navigation work removes Research Briefs and duplicate library links from normal navigation, but the Docs-default redirect contract still requires source/test/deployment reconciliation.
+Source and focused-test evidence already shows an existing `kb_pages` rich-document foundation with page trees, grants/public links, My/Shared collections, favorites, templates, comments, versions, search, imports/exports, trash, attachment controls, retrieval, and audit behavior. XLSX files can be accepted as supported sources and their bounded cell text can be extracted for search/Ask. Current navigation work removes Research Briefs and duplicate library links from normal navigation; as of 2026-10-21 `/knowledge` redirects to Docs home with telemetry in source and tests, and Ask is a contextual action on Docs home. Deployment evidence remains open.
 
 This foundation is **not** evidence of a complete Drive product. The following remain pending until implemented and proven:
 
 - first-class file, folder, shortcut, workspace, binary-version, inherited-access, and organization-owned Team-folder contracts;
-- consistent `/knowledge` → Docs home behavior across source, route tests, telemetry, and deployment, with Ask kept contextual;
+- deployed `/knowledge` → Docs home behavior and telemetry observation (source and route tests done 2026-10-21);
 - complete upload/preview/download/version/move/copy/restore behavior across the edge-case checklist;
 - named-guest administration, public-link policy, share inventory, retention/hold, and full purge evidence;
 - Microsoft 365 editor integration, consent/callback/revocation handling, and workbook-corpus round-trip proof;
