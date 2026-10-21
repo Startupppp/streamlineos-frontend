@@ -106,7 +106,7 @@ describe("Wiki page body must not reach Web Storage", () => {
   });
 
   const STORAGE_ACCESS_PATTERN =
-    /(?:localStorage|sessionStorage)\s*\.\s*(?:setItem|getItem|removeItem)\s*\(\s*([A-Za-z_$][\w$]*|['"`][^'"`]*['"`])/g;
+    /(?:(?:localStorage|sessionStorage)\s*\.\s*(?:setItem|getItem|removeItem)|useStoredFlag)\s*\(\s*([A-Za-z_$][\w$]*|['"`][^'"`]*['"`])/g;
   const ALLOWED_STORAGE_KEYS = ["wiki-right-panel-collapsed"];
 
   function collectStorageKeys(): string[] {

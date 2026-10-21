@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
+import { useStoredFlag } from "@/hooks/common/use-stored-flag";
 import {
   KbFileTextIcon,
   KbPanelRightCloseIcon,
@@ -372,7 +373,7 @@ export default function PageRightPanel({
   mobileOpen,
   onMobileOpenChange,
 }: PageRightPanelProps) {
-  const [collapsed, setCollapsed] = useState(false);
+  const [collapsed, setCollapsed] = useStoredFlag(STORAGE_KEY);
   const [uncontrolledMobileOpen, setUncontrolledMobileOpen] = useState(false);
   const title = page.title || "Untitled";
   const isMobileControlled = onMobileOpenChange !== undefined;
@@ -380,16 +381,8 @@ export default function PageRightPanel({
     ? Boolean(mobileOpen)
     : uncontrolledMobileOpen;
 
-  useEffect(() => {
-    setCollapsed(localStorage.getItem(STORAGE_KEY) === "true");
-  }, []);
-
   function handleToggle() {
-    setCollapsed((prev) => {
-      const next = !prev;
-      localStorage.setItem(STORAGE_KEY, String(next));
-      return next;
-    });
+    setCollapsed(!collapsed);
   }
 
   function handleMobileSheetChange(open: boolean) {
