@@ -327,6 +327,14 @@ export default function PageDocument({ pageId, onNavigateToPage, projectId }: Pa
     );
   }
 
+  if (page.kind === "file") {
+    return (
+      <div className="flex flex-1 items-center justify-center p-8 text-muted-foreground text-sm">
+        File attachments are not yet available in this version.
+      </div>
+    );
+  }
+
   const isEditable = canUpdate && page.can.edit === true && (!page.isLocked || canManage);
   const wordCount = (page.contentText ?? "")
     .split(/\s+/)

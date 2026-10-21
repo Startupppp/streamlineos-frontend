@@ -16,7 +16,7 @@ interface WikiPageCardProps {
   icon: string | null;
   coverImage: string | null;
   subtitle: string;
-  kind?: "document" | "spreadsheet";
+  kind?: "document" | "spreadsheet" | "file";
   children?: ReactNode;
   menu?: ReactNode;
 }

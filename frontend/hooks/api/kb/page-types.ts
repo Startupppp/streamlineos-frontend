@@ -1,6 +1,6 @@
 import type { KbWorkbookCell } from "./kb-pages-schema";
 
-export type KbPageKind = "document" | "spreadsheet";
+export type KbPageKind = "document" | "spreadsheet" | "file";
 
 export type KbPage = {
   id: number;

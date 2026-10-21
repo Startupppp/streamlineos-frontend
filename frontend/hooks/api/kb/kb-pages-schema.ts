@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { cursorPageContract } from "@/hooks/api/cursor-page-schema";
 
-export const kbPageKindSchema = z.enum(["document", "spreadsheet"]);
+export const kbPageKindSchema = z.enum(["document", "spreadsheet", "file"]);
 
 const kbPageBaseContract = z.object({
   id: z.number().int(),
