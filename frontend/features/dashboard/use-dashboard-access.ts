@@ -27,6 +27,8 @@ export interface DashboardAccess {
   canViewCrmReports: boolean;
   canViewTickets: boolean;
   canViewPayrollSelf: boolean;
+  canRunPayroll: boolean;
+  canViewPayslips: boolean;
   canViewSignEnvelopes: boolean;
 }
 
@@ -71,6 +73,8 @@ export function useDashboardAccess(): DashboardAccess {
       canViewCrmReports: can("crm:reports:view"),
       canViewTickets: canSection("recent-activity"),
       canViewPayrollSelf: can("self:payroll"),
+      canRunPayroll: can("payroll:runs:view"),
+      canViewPayslips: can("payroll:payslips:view"),
       canViewSignEnvelopes: can("sign:envelope:view"),
     };
   }, [data, isLoading, refetch, enabledModules]);

@@ -85,7 +85,7 @@ function access(): DashboardAccess {
     canViewCrmLeads: false,
     canViewCrmReports: false,
     canViewTickets: true,
-    canViewPayrollSelf: false,
+    canViewPayrollSelf: false, canRunPayroll: false, canViewPayslips: false,
     canViewSignEnvelopes: false,
   };
 }

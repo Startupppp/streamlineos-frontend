@@ -64,7 +64,7 @@ const baseAccess: DashboardAccess = {
   canViewAttendance: false, canSelfAttendance: false,
   canViewLeaves: false, canApproveLeaves: true,
   canViewExecutive: false, canViewCrmLeads: false, canViewCrmReports: false,
-  canViewTickets: true, canViewPayrollSelf: false, canViewSignEnvelopes: false,
+  canViewTickets: true, canViewPayrollSelf: false, canRunPayroll: false, canViewPayslips: false, canViewSignEnvelopes: false,
 };
 
 const emptyData = {
