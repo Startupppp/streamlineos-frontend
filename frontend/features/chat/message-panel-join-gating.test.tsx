@@ -70,5 +70,6 @@ describe("a non-member deep link reads the timeline once and nothing else channe
     await waitFor(() => expect(result.current.workspace.messageList.joinRequired).toEqual({ channelName: "general" }));
     await new Promise((resolve) => setTimeout(resolve, 20));
     expect(channelScopedReads()).toEqual([`${channelPrefix}/messages`]);
+    expect(jest.mocked(apiClient.post).mock.calls.map(([path]) => String(path)).filter((path) => path.startsWith(channelPrefix))).toEqual([]);
   });
 });

@@ -306,3 +306,62 @@ describe("chat poll reconciliation — the bounded offline sweep", () => {
     expect(pollParams()).toHaveLength(pollsAtReconnect);
   });
 });
+
+describe("chat poll reconciliation — the arrival signal", () => {
+  async function renderWithArrival(client: QueryClient, refetchHistory: () => Promise<{ isError: boolean }>) {
+    const { useChatPollReconciliation } = await import("@/features/chat/use-chat-poll-reconciliation");
+    const { useChatArrivalAt, clearChatArrival } = await import("@/features/chat/chat-arrivals");
+    clearChatArrival(1);
+    return renderHook(
+      () => {
+        useChatPollReconciliation({
+          channelId: 1,
+          newestLoadedAt: null,
+          isRealtimeConnected: false,
+          isHistoryLoading: false,
+          canReadChannel: true,
+          refetchHistory,
+        });
+        return useChatArrivalAt(1);
+      },
+      { wrapper: makeWrapper(client) },
+    );
+  }
+
+  function pages(ids: number[]) {
+    return { pages: [{ messages: ids.map(message), nextCursor: null }], pageParams: [undefined] };
+  }
+
+  it("a first load that fills an empty history is not an arrival", async () => {
+    mockedGet.mockResolvedValueOnce(pollPage({ messages: [message(5)], latestPosition: 5 })).mockResolvedValue(pollPage());
+    const client = freshClient();
+    const { collaborationQueryKeys } = await import("@/lib/query-keys/collaboration");
+    const refetchHistory = jest.fn(async () => {
+      client.setQueryData(collaborationQueryKeys.chat.messages(1), pages([4, 5]));
+      return { isError: false };
+    });
+
+    const { result } = await renderWithArrival(client, refetchHistory);
+
+    await waitFor(() => expect(refetchHistory).toHaveBeenCalled());
+    await act(async () => {
+      await Promise.resolve();
+    });
+    expect(result.current).toBe(0);
+  });
+
+  it("a refetch that raises the newest loaded id is an arrival", async () => {
+    mockedGet.mockResolvedValueOnce(pollPage({ messages: [message(6)], latestPosition: 6 })).mockResolvedValue(pollPage());
+    const client = freshClient();
+    const { collaborationQueryKeys } = await import("@/lib/query-keys/collaboration");
+    client.setQueryData(collaborationQueryKeys.chat.messages(1), pages([4, 5]));
+    const refetchHistory = jest.fn(async () => {
+      client.setQueryData(collaborationQueryKeys.chat.messages(1), pages([4, 5, 6]));
+      return { isError: false };
+    });
+
+    const { result } = await renderWithArrival(client, refetchHistory);
+
+    await waitFor(() => expect(result.current).toBeGreaterThan(0));
+  });
+});

@@ -177,13 +177,21 @@ function isMessagePages(value: unknown): value is InfiniteData<MessagesPage> {
   );
 }
 
+export function newestConfirmedMessageId(data: unknown): number {
+  if (!isMessagePages(data)) return 0;
+  return data.pages.reduce(
+    (max, page) => page.messages.reduce((top, message) => Math.max(top, message.id), max),
+    0,
+  );
+}
+
 function withConfirmedRows(
   previous: InfiniteData<MessagesPage>,
   next: InfiniteData<MessagesPage>,
 ): InfiniteData<MessagesPage> {
   const incoming = next.pages.flatMap((page) => page.messages);
   const known = new Set(incoming.map((message) => message.id));
-  const newest = incoming.reduce((max, message) => Math.max(max, message.id), 0);
+  const newest = newestConfirmedMessageId(next);
   const carried = previous.pages
     .flatMap((page) => page.messages)
     .filter((message) => message.id > newest && !known.has(message.id))

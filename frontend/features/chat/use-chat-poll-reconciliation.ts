@@ -5,6 +5,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { collaborationQueryKeys } from "@/lib/query-keys/collaboration";
 import { useChatPoll, type ChatPollPosition } from "@/hooks/api/chat-message-windows";
 import { recordChatArrival } from "./chat-arrivals";
+import { newestConfirmedMessageId } from "./message-page-merge";
 
 const EPOCH_POLL_SINCE = new Date(0).toISOString();
 const OFFLINE_HISTORY_RECONCILE_INTERVAL_MS = 120_000;
@@ -62,9 +63,12 @@ export function useChatPollReconciliation({
     let cancelled = false;
 
     void (async () => {
+      const messagesKey = collaborationQueryKeys.chat.messages(channelId);
+      const newestBefore = newestConfirmedMessageId(queryClient.getQueryData(messagesKey));
       const result = await refetchHistory();
       if (cancelled || result.isError) return;
-      recordChatArrival(channelId);
+      const newestAfter = newestConfirmedMessageId(queryClient.getQueryData(messagesKey));
+      if (newestBefore > 0 && newestAfter > newestBefore) recordChatArrival(channelId);
       void queryClient.invalidateQueries({
         queryKey: collaborationQueryKeys.chat.myChannels(),
         exact: true,

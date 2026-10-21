@@ -95,7 +95,7 @@ export function MessagePanelView({
   const isPanelNarrow = useIsChatPanelNarrow();
   const searchButton = (
     <button type="button" aria-label="Search messages, channels and people"
-      className="inline-flex size-11 shrink-0 items-center justify-center rounded-lg text-muted-foreground hover:bg-muted/50 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring md:hidden"
+      className="inline-flex size-11 shrink-0 items-center justify-center rounded-lg text-muted-foreground hover:bg-muted/50 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
       onClick={() => window.dispatchEvent(new CustomEvent("chat:open-search"))}>
       <Search className="size-5" /></button>
   );
