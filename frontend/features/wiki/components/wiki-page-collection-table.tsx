@@ -30,17 +30,11 @@ import {
 import { SearchInput } from "@/components/ui/search-input";
 import { useUrlFilters, parseEnum } from "@/lib/url-state/use-url-filters";
 import { pageHref, projectPageHref } from "@/lib/knowledge-routes";
-import { kbTimeAgo } from "@/features/wiki/lib/kb-date-utils";
-import {
-  WikiPageCard,
-  WIKI_PAGE_CARD_GRID_CLASS,
-} from "@/features/wiki/components/wiki-page-card";
+import { WIKI_PAGE_CARD_GRID_CLASS } from "@/features/wiki/components/wiki-page-card";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import { getUserDisplayName } from "@/lib/person-display";
-import { TrustBadge, StatusBadge, OwnerMissingBadge } from "./kb-collection-badges";
-import { CollectionItemMenu } from "./wiki-page-collection-item-menu";
 import { KbAlertCircleIcon } from "@/features/wiki/lib/kb-icons";
-import { buildColumns } from "./wiki-page-collection-columns";
+import { buildColumns, buildMobileCard } from "./wiki-page-collection-columns";
 
 export const KB_PAGE_CURSOR_PARAM = "cursor";
 
@@ -55,6 +49,11 @@ const STATUS_OPTIONS = [
   { value: "in_review", label: "In review" },
   { value: "published", label: "Published" },
   { value: "archived", label: "Archived" },
+] as const;
+
+const KIND_OPTIONS = [
+  { value: "document", label: "Document" },
+  { value: "spreadsheet", label: "Spreadsheet" },
 ] as const;
 
 const PAGE_LIMIT = 50;
@@ -116,6 +115,9 @@ export function WikiPageCollectionTable({
   const view = parseEnum(searchParams.get("view"), VIEW_VALUES, "list");
   const ownerParam = searchParams.get("owner") ?? "";
   const owner = fixedParams.owner ?? (ownerParam === "me" ? "me" : undefined);
+  const rawKind = searchParams.get("kind") ?? "";
+  const kind: "document" | "spreadsheet" | undefined =
+    rawKind === "document" || rawKind === "spreadsheet" ? rawKind : undefined;
   const urlCursor = searchParams.get(KB_PAGE_CURSOR_PARAM) ?? "";
 
   const debouncedSearch = useDebouncedValue(rawSearch, 300);
@@ -123,7 +125,7 @@ export function WikiPageCollectionTable({
   const { data: spacesPage } = useKbSpaces();
   const spaces = spacesPage?.data;
 
-  const filterKey = `${debouncedSearch}|${sort}|${status}|${spaceParam}|${owner ?? ""}`;
+  const filterKey = `${debouncedSearch}|${sort}|${status}|${spaceParam}|${owner ?? ""}|${kind ?? ""}`;
 
   const handleCursorChange = useCallback(
     (nextCursor: string | undefined) => {
@@ -145,6 +147,7 @@ export function WikiPageCollectionTable({
     status: status || undefined,
     spaceId,
     owner,
+    kind,
     cursor: pager.cursor,
     limit: PAGE_LIMIT,
   };
@@ -182,6 +185,7 @@ export function WikiPageCollectionTable({
     debouncedSearch !== "" ||
     status !== "" ||
     spaceParam !== "" ||
+    kind !== undefined ||
     (fixedParams.owner === undefined && ownerParam !== "") ||
     sort !== "updated_desc";
 
@@ -214,7 +218,7 @@ export function WikiPageCollectionTable({
   );
 
   function handleClearFilters() {
-    update({ q: null, status: null, sort: null, space: null, owner: null });
+    update({ q: null, status: null, sort: null, space: null, owner: null, kind: null });
   }
 
   function handleSearchChange(value: string) {
@@ -235,6 +239,10 @@ export function WikiPageCollectionTable({
 
   function handleOwnerChange(value: string) {
     update({ owner: value === "me" ? "me" : null });
+  }
+
+  function handleKindChange(value: string) {
+    update({ kind: value === "all" ? null : value });
   }
 
   function handleViewList() {
@@ -266,45 +274,8 @@ export function WikiPageCollectionTable({
   );
 
   const renderMobileCard = useCallback(
-    (row: KbPageCollectionItem) => {
-      function handleContextMenu(e: React.MouseEvent) {
-        e.preventDefault();
-        setContextRowId(row.id);
-      }
-      function handleMenuOpenChange(open: boolean) {
-        setContextRowId(open ? row.id : null);
-      }
-      return (
-        <div onContextMenu={handleContextMenu}>
-          <WikiPageCard
-            href={resolveHref(row.id)}
-            title={row.title}
-            icon={row.icon}
-            coverImage={row.coverImage}
-            subtitle={kbTimeAgo(row.updatedAt)}
-            kind={row.kind}
-            menu={
-              <CollectionItemMenu
-                page={row}
-                resolveHref={resolveHref}
-                open={contextRowId === row.id}
-                onOpenChange={handleMenuOpenChange}
-              />
-            }
-          >
-            <StatusBadge status={row.status} />
-            <TrustBadge trustState={row.trustState} />
-            {row.ownerUserId ? (
-              <span className="text-xs text-muted-foreground">
-                {ownerNames.get(row.ownerUserId) ?? "—"}
-              </span>
-            ) : (
-              <OwnerMissingBadge ownerMembershipId={row.ownerMembershipId} />
-            )}
-          </WikiPageCard>
-        </div>
-      );
-    },
+    (row: KbPageCollectionItem) =>
+      buildMobileCard(row, resolveHref, ownerNames, contextRowId, setContextRowId),
     [resolveHref, ownerNames, contextRowId],
   );
 
@@ -366,6 +337,19 @@ export function WikiPageCollectionTable({
           <SelectContent>
             <SelectItem value="all">All statuses</SelectItem>
             {STATUS_OPTIONS.map((opt) => (
+              <SelectItem key={opt.value} value={opt.value}>
+                {opt.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <Select value={kind ?? "all"} onValueChange={handleKindChange}>
+          <SelectTrigger className="h-9 w-36 shrink-0">
+            <SelectValue placeholder="Type" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All types</SelectItem>
+            {KIND_OPTIONS.map((opt) => (
               <SelectItem key={opt.value} value={opt.value}>
                 {opt.label}
               </SelectItem>

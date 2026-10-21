@@ -30,6 +30,7 @@ export const kbPageCollectionItemSchema = z.object({
   sharedBy: z
     .object({
       membershipId: z.number().int().nullable(),
+      userId: z.string().nullable(),
       at: z.string(),
       access: z.enum(["view", "comment", "edit", "manage"]),
       expiresAt: z.string().nullable(),

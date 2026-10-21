@@ -65,6 +65,55 @@ describe("kbPageCollectionItemSchema — the owner identity the Owner column ren
   });
 });
 
+describe("kbPageCollectionItemSchema — sharedBy.userId", () => {
+  it("parses sharedBy.userId as a string when the granting member is known", () => {
+    const parsed = kbPageCollectionItemSchema.parse(
+      wireItem({
+        sharedBy: {
+          membershipId: 88,
+          userId: "user-granter",
+          at: "2026-09-11T00:00:00.000Z",
+          access: "edit",
+          expiresAt: null,
+        },
+      }),
+    );
+
+    expect(parsed.sharedBy?.userId).toBe("user-granter");
+  });
+
+  it("parses sharedBy.userId as null when no granting member could be resolved", () => {
+    const parsed = kbPageCollectionItemSchema.parse(
+      wireItem({
+        sharedBy: {
+          membershipId: null,
+          userId: null,
+          at: "2026-09-11T00:00:00.000Z",
+          access: "view",
+          expiresAt: null,
+        },
+      }),
+    );
+
+    expect(parsed.sharedBy?.userId).toBeNull();
+  });
+
+  it("rejects a sharedBy object missing the userId field, so the contract keeps both repos in step", () => {
+    expect(() =>
+      kbPageCollectionItemSchema.parse(
+        wireItem({
+          sharedBy: {
+            membershipId: 88,
+            at: "2026-09-11T00:00:00.000Z",
+            access: "edit",
+            expiresAt: null,
+          },
+        }),
+      ),
+    ).toThrow(ZodError);
+  });
+});
+
 describe("kbPageCollectionResponseSchema — the cursor envelope the URL-backed pager depends on", () => {
   it("retains pagination.nextCursor so the advanced cursor can be written into the URL", () => {
     const parsed = kbPageCollectionResponseSchema.parse({

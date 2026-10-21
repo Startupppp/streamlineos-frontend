@@ -156,6 +156,7 @@ function makeItem(id: number, extra: Record<string, unknown> = {}) {
     title: `Page ${id}`,
     icon: null,
     coverImage: null,
+    kind: "document" as const,
     spaceId: null,
     projectId: null,
     parentPageId: null,
@@ -590,6 +591,56 @@ describe("WikiPageCollectionTable — owner filter", () => {
     );
 
     expect(screen.queryByText("Anyone")).not.toBeInTheDocument();
+  });
+});
+
+describe("WikiPageCollectionTable — kind filter", () => {
+  it("passes kind: \"document\" to the collection query when the URL carries kind=document", () => {
+    mockSearchParams = new URLSearchParams("kind=document");
+
+    render(<WikiPageCollectionTable fixedParams={{}} emptyTitle="No pages" />);
+
+    expect(useKbPageCollection).toHaveBeenLastCalledWith(
+      expect.objectContaining({ kind: "document" }),
+    );
+  });
+
+  it("passes kind: \"spreadsheet\" to the collection query when the URL carries kind=spreadsheet", () => {
+    mockSearchParams = new URLSearchParams("kind=spreadsheet");
+
+    render(<WikiPageCollectionTable fixedParams={{}} emptyTitle="No pages" />);
+
+    expect(useKbPageCollection).toHaveBeenLastCalledWith(
+      expect.objectContaining({ kind: "spreadsheet" }),
+    );
+  });
+
+  it("passes kind: undefined when the URL carries no kind param, so unfiltered lists include both types", () => {
+    mockSearchParams = new URLSearchParams();
+
+    render(<WikiPageCollectionTable fixedParams={{}} emptyTitle="No pages" />);
+
+    expect(useKbPageCollection).toHaveBeenLastCalledWith(
+      expect.objectContaining({ kind: undefined }),
+    );
+  });
+
+  it("renders the Type selector so the user can choose between document and spreadsheet", () => {
+    mockSearchParams = new URLSearchParams();
+
+    render(<WikiPageCollectionTable fixedParams={{}} emptyTitle="No pages" />);
+
+    expect(screen.getByRole("combobox", { name: /type/i })).toBeInTheDocument();
+  });
+
+  it("reflects the active kind in the Type selector when kind=spreadsheet is in the URL", () => {
+    mockSearchParams = new URLSearchParams("kind=spreadsheet");
+
+    render(<WikiPageCollectionTable fixedParams={{}} emptyTitle="No pages" />);
+
+    const trigger = screen.getByRole("combobox", { name: /type/i });
+    expect(trigger).toBeInTheDocument();
+    expect(trigger.textContent).toMatch(/spreadsheet/i);
   });
 });
 

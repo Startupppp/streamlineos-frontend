@@ -1,12 +1,13 @@
 "use client";
 
-import { useCallback } from "react";
+import { useCallback, type MouseEvent } from "react";
 import type { DataTableColumn } from "@/components/ui/data-table.types";
 import type { KbPageCollectionItem } from "@/hooks/api/kb/page-collection";
 import { kbTimeAgo } from "@/features/wiki/lib/kb-date-utils";
 import { TrustBadge, StatusBadge, OwnerMissingBadge } from "./kb-collection-badges";
 import { CollectionItemMenu } from "./wiki-page-collection-item-menu";
 import { KbTable2Icon } from "@/features/wiki/lib/kb-icons";
+import { WikiPageCard } from "@/features/wiki/components/wiki-page-card";
 
 interface CollectionRowMenuProps {
   page: KbPageCollectionItem;
@@ -109,4 +110,50 @@ export function buildColumns(
       ),
     },
   ];
+}
+
+export function buildMobileCard(
+  row: KbPageCollectionItem,
+  resolveHref: (id: number) => string,
+  ownerNames: Map<string, string>,
+  contextRowId: number | null,
+  onContextRowChange: (id: number | null) => void,
+) {
+  function handleContextMenu(e: MouseEvent) {
+    e.preventDefault();
+    onContextRowChange(row.id);
+  }
+  function handleMenuOpenChange(open: boolean) {
+    onContextRowChange(open ? row.id : null);
+  }
+  return (
+    <div onContextMenu={handleContextMenu}>
+      <WikiPageCard
+        href={resolveHref(row.id)}
+        title={row.title}
+        icon={row.icon}
+        coverImage={row.coverImage}
+        subtitle={kbTimeAgo(row.updatedAt)}
+        kind={row.kind}
+        menu={
+          <CollectionItemMenu
+            page={row}
+            resolveHref={resolveHref}
+            open={contextRowId === row.id}
+            onOpenChange={handleMenuOpenChange}
+          />
+        }
+      >
+        <StatusBadge status={row.status} />
+        <TrustBadge trustState={row.trustState} />
+        {row.ownerUserId ? (
+          <span className="text-xs text-muted-foreground">
+            {ownerNames.get(row.ownerUserId) ?? "—"}
+          </span>
+        ) : (
+          <OwnerMissingBadge ownerMembershipId={row.ownerMembershipId} />
+        )}
+      </WikiPageCard>
+    </div>
+  );
 }

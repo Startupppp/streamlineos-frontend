@@ -172,7 +172,7 @@ export function WikiHomeSharedUpdatesSection() {
       [
         ...new Set(
           items
-            .map((i) => i.lastEditedById)
+            .map((i) => i.sharedBy?.userId ?? null)
             .filter((id): id is string => id !== null),
         ),
       ],

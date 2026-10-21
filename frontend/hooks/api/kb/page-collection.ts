@@ -21,6 +21,7 @@ export const KB_PAGE_COLLECTION_QUERY_FIELDS = [
   "status",
   "verified",
   "deleted",
+  "kind",
   "sort",
   "cursor",
   "limit",
@@ -37,6 +38,7 @@ export interface KbPageCollectionParams {
   status?: string;
   verified?: boolean;
   deleted?: boolean;
+  kind?: "document" | "spreadsheet";
   sort?: "updated_desc" | "created_desc" | "title_asc";
   cursor?: string;
   limit?: number;
@@ -63,6 +65,7 @@ export function buildKbPageCollectionQueryParams(
   if (params.status) queryParams.status = params.status;
   if (params.verified !== undefined) queryParams.verified = params.verified;
   if (params.deleted !== undefined) queryParams.deleted = params.deleted;
+  if (params.kind !== undefined) queryParams.kind = params.kind;
   if (params.sort) queryParams.sort = params.sort;
   if (params.cursor) queryParams.cursor = params.cursor;
   if (params.limit !== undefined) queryParams.limit = params.limit;
