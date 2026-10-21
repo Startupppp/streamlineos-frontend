@@ -29,3 +29,14 @@
 **Owner**: the member who controls a page's sharing and visibility through manage access. Ownership can transfer; today the creator still holds manage access alongside the owner.
 
 **Deleter**: the member who moved a page to Trash; may restore it alongside anyone with manage.
+
+**File**: what a person sees in Docs — a page of kind `document` (rich text) or `spreadsheet` (workbook). Code still calls it a page.
+
+**Spreadsheet**: a page of kind `spreadsheet`. Its content is a **workbook** of ordered **sheets**, each a sparse set of **cells** stored one row per cell, not a JSON blob on the page.
+
+**Workbook operation**: one change a save sends — add, rename, move or delete a sheet, set its config, set or clear cells. Every operation names a sheet of the page being saved; a save is all operations at one expected content revision.
+
+**Team folder**: what the UI calls a space. Folders do not nest; the **folder tree** is the page tree inside one team folder.
+
+**New menu**: the single create menu (document, spreadsheet, team folder, upload, import, template) used everywhere Docs offers creation.
+
