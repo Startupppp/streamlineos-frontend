@@ -1,7 +1,13 @@
 import { act, renderHook } from "@testing-library/react";
 import type { ReactNode } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { ApiError } from "@/lib/api-envelope";
 import { useMessageComposer } from "../use-message-composer";
+import { readOutbox } from "../composer-draft";
+
+jest.mock("next-auth/react", () => ({
+  useSession: () => ({ data: { user: { id: "me", name: "Me", image: null } }, status: "authenticated" }),
+}));
 
 jest.mock("sonner", () => ({
   toast: {
@@ -30,17 +36,19 @@ const { toast } = jest.requireMock("sonner") as {
 
 const CHANNEL_ID = 7;
 
+const DRAFT_KEY = `chat:draft:${CHANNEL_ID}`;
+
 type ComposerResult = ReturnType<typeof useMessageComposer>;
 
 function mountComposer(options: {
   isOnline: boolean;
   send: jest.Mock;
-}): { current: ComposerResult } {
-  const { result } = renderHook(() =>
+}): { current: ComposerResult; reconnect: () => void } {
+  const { result, rerender } = renderHook(({ isOnline }: { isOnline: boolean }) =>
     useMessageComposer({
       channelId: CHANNEL_ID,
-      draftKey: `chat:draft:${CHANNEL_ID}`,
-      isOnline: options.isOnline,
+      draftKey: DRAFT_KEY,
+      isOnline,
       sendMessage: { mutateAsync: options.send },
       editMessage: { mutateAsync: jest.fn() },
       markRead: { mutate: jest.fn() },
@@ -49,9 +57,18 @@ function mountComposer(options: {
       channel: undefined,
       currentUserId: "me",
     }),
-    { wrapper: QueryWrapper },
+    { wrapper: QueryWrapper, initialProps: { isOnline: options.isOnline } },
   );
-  return result;
+  return {
+    get current() {
+      return result.current;
+    },
+    reconnect: () => act(() => rerender({ isOnline: true })),
+  };
+}
+
+function stillOffline(): ApiError {
+  return new ApiError("Network error", undefined, "NETWORK_ERROR");
 }
 
 async function queueOneOfflineMessage(
@@ -99,7 +116,21 @@ describe("the composer owns its offline queue", () => {
     await queueOneOfflineMessage(result, "written on a train");
 
     expect(send).not.toHaveBeenCalled();
-    expect(result.current.messageQueue.current).toHaveLength(1);
+    expect(readOutbox(DRAFT_KEY).map((entry) => entry.content)).toEqual(["written on a train"]);
+    expect(result.current.messageInput).toBe("");
+  });
+
+  it("makes no network attempt on an explicit drain while still offline", async () => {
+    const send = jest.fn();
+    const result = mountComposer({ isOnline: false, send });
+
+    await queueOneOfflineMessage(result, "written on a train");
+    await act(async () => {
+      await result.current.flushMessageQueue();
+    });
+
+    expect(send).not.toHaveBeenCalled();
+    expect(readOutbox(DRAFT_KEY)).toHaveLength(1);
   });
 });
 
@@ -107,26 +138,26 @@ describe("draining the offline queue on reconnect", () => {
   it("keeps a message that fails to send, so a failed reconnect cannot discard what the user wrote", async () => {
     const send = jest
       .fn()
-      .mockRejectedValueOnce(new Error("still offline"));
+      .mockRejectedValueOnce(stillOffline());
     const result = mountComposer({ isOnline: false, send });
 
     await queueOneOfflineMessage(result, "written on a train");
+    result.reconnect();
 
     await act(async () => {
       await result.current.flushMessageQueue();
     });
 
-    expect(result.current.messageQueue.current).toHaveLength(1);
-    expect(result.current.messageQueue.current[0]?.content).toBe(
-      "written on a train",
-    );
+    expect(send).toHaveBeenCalledTimes(1);
+    expect(readOutbox(DRAFT_KEY).map((entry) => entry.content)).toEqual(["written on a train"]);
   });
 
   it("tells the user when a queued message could not be sent", async () => {
-    const send = jest.fn().mockRejectedValueOnce(new Error("still offline"));
+    const send = jest.fn().mockRejectedValueOnce(stillOffline());
     const result = mountComposer({ isOnline: false, send });
 
     await queueOneOfflineMessage(result, "written on a train");
+    result.reconnect();
 
     await act(async () => {
       await result.current.flushMessageQueue();
@@ -140,13 +171,14 @@ describe("draining the offline queue on reconnect", () => {
     const result = mountComposer({ isOnline: false, send });
 
     await queueOneOfflineMessage(result, "written on a train");
+    result.reconnect();
 
     await act(async () => {
       await result.current.flushMessageQueue();
     });
 
     expect(send).toHaveBeenCalledTimes(1);
-    expect(result.current.messageQueue.current).toHaveLength(0);
+    expect(readOutbox(DRAFT_KEY)).toHaveLength(0);
     expect(toast.error).not.toHaveBeenCalled();
   });
 
@@ -155,7 +187,9 @@ describe("draining the offline queue on reconnect", () => {
     const result = mountComposer({ isOnline: false, send });
 
     await queueOneOfflineMessage(result, "written on a train");
-    const queuedKey = result.current.messageQueue.current[0]?.clientKey;
+    const queuedKey = readOutbox(DRAFT_KEY)[0]?.clientKey;
+    expect(queuedKey).toEqual(expect.any(String));
+    result.reconnect();
 
     await act(async () => {
       await result.current.flushMessageQueue();

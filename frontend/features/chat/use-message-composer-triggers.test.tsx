@@ -4,6 +4,10 @@ import { act, renderHook } from "@testing-library/react";
 import { apiClient } from "@/lib/api-client";
 import { change, composerApiResponse, harness, press } from "./composer-test-harness";
 
+jest.mock("next-auth/react", () => ({
+  useSession: () => ({ data: { user: { id: "me", name: "Me", image: null } }, status: "authenticated" }),
+}));
+
 jest.mock("sonner", () => ({
   toast: { success: jest.fn(), error: jest.fn(), info: jest.fn(), warning: jest.fn() },
 }));

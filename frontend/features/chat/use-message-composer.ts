@@ -14,17 +14,17 @@ import {
   CHAT_ATTACHMENT_SUMMARY,
   isAllowedChatAttachment,
 } from "./chat-attachment-types";
-import type { AttachmentInput, EditMessageInput, EntityRef, Message, MessageMetadata, SendMessageInput } from "@/types/chat";
+import type { AttachmentInput, EditMessageInput, EntityRef, Message, SendMessageInput } from "@/types/chat";
 import type { ChatChannelDetailWire } from "@/hooks/api/chat-extra-schema";
 import { seedLinkedRecordPreview } from "@/hooks/api/chat-reference-cards";
 import { GLOBAL_SEARCH_MIN_LENGTH, useGlobalSearch } from "@/components/command-palette/hooks/use-global-search";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import { useChatMentions, type MentionCandidate } from "./use-chat-mentions";
+import { useChatOutbox } from "./use-chat-offline-queue";
 import { LINKED_RECORD_LIMIT, linksKeyFor, readDraftLinks, readDraftText, type LinkedRecordDraft } from "./composer-draft";
 import { RECORD_SEARCH_TYPES, groupRecordResults, type RecordGroup, type RecordSearchResult } from "./linked-record-meta";
 
 type Attachment = AttachmentInput;
-type QueuedMessage = { content: string; replyToId?: number; metadata?: MessageMetadata; attachments?: Attachment[]; mentionedUserIds?: string[]; clientKey: string };
 
 export interface RecordPickerState {
   query: string;
@@ -97,7 +97,6 @@ export function useMessageComposer({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const emojiRef = useRef<HTMLDivElement>(null);
   const lastTypingSent = useRef(0);
-  const messageQueue = useRef<QueuedMessage[]>([]);
   /**
    * The in-flight send's idempotency key, held past a failure. The composer
    * restores the draft when a send throws, so pressing send again on the
@@ -108,6 +107,7 @@ export function useMessageComposer({
    */
   const pendingSendRef = useRef<{ signature: string; clientKey: string } | null>(null);
   const pendingMentionsRef = useRef<Map<string, string>>(new Map());
+  const outbox = useChatOutbox({ channelId, draftKey, isOnline, mutateAsync: sendMessage.mutateAsync });
 
   const filteredMentions = useChatMentions({ channel, currentUserId, query: mentionQuery, enabled: showMentions });
   const activeMentionIndex = Math.max(0, Math.min(mentionIndex, filteredMentions.length - 1));
@@ -216,21 +216,6 @@ export function useMessageComposer({
     setLinkedRecords((prev) => prev.filter((r) => r.key !== key));
   }, [setLinkedRecords]);
 
-  const flushMessageQueue = useCallback(async () => {
-    const queued = messageQueue.current;
-    if (!queued.length) return;
-    messageQueue.current = [];
-    const failed: QueuedMessage[] = [];
-    for (const msg of queued) {
-      try {
-        await sendMessage.mutateAsync({ channelId, clientKey: msg.clientKey, content: msg.content || undefined, replyToId: msg.replyToId, attachments: msg.attachments, metadata: msg.metadata, mentionedUserIds: msg.mentionedUserIds });
-      } catch { failed.push(msg); }
-    }
-    if (!failed.length) return;
-    messageQueue.current = [...failed, ...messageQueue.current];
-    toast.error(failed.length === 1 ? "A message you wrote offline could not be sent. It will be retried on the next reconnect." : `${failed.length} messages you wrote offline could not be sent. They will be retried on the next reconnect.`);
-  }, [channelId, sendMessage]);
-
   const handleSend = useCallback(async () => {
     const content = messageInput.trim(); if (!content && !pendingAttachments.length && !linkedRecords.length) return;
     const attachments = [...pendingAttachments], records = [...linkedRecords]; const replyToMessage = replyTo; const replyToId = replyTo?.id;
@@ -240,27 +225,25 @@ export function useMessageComposer({
     const mentionedUserIds = [...new Set([...mentions].filter(([name]) => content.includes(`@${name}`)).map(([, id]) => id))];
     const signature = sendSignature(content, replyToId, attachments, records);
     const clientKey = pendingSendRef.current?.signature === signature ? pendingSendRef.current.clientKey : crypto.randomUUID();
-    pendingSendRef.current = { signature, clientKey };
+    pendingSendRef.current = null;
     for (const record of records) seedLinkedRecordPreview(queryClient, { type: record.type, id: record.id, title: record.title, subtitle: record.subtitle, status: null, href: record.href });
-    if (!isOnline) { messageQueue.current.push({ content, replyToId, attachments: attachments.length ? attachments : undefined, metadata, mentionedUserIds: mentionedUserIds.length ? mentionedUserIds : undefined, clientKey }); pendingSendRef.current = null; toast.info("You're offline — message will be sent when you reconnect"); return; }
-    try {
-      await sendMessage.mutateAsync({ channelId, clientKey, content: content || undefined, replyToId, attachments: attachments.length ? attachments : undefined, metadata, mentionedUserIds: mentionedUserIds.length ? mentionedUserIds : undefined });
-      pendingSendRef.current = null;
-      setMessageInput("");
-      setPendingAttachments([]);
-      setReplyTo(null);
-      setLinkedRecords([]);
-      setMentionPrompt(null);
-      pendingMentionsRef.current.clear();
-      localStorage.removeItem(draftKey);
-      markRead.mutate({ channelId });
-      scrollToBottom("smooth");
-    }
-    catch (error) {
-      setMessageInput(content); setPendingAttachments(attachments); setReplyTo(replyToMessage); setLinkedRecords(records); pendingMentionsRef.current = mentions;
-      toast.error(getErrorMessage(error));
-    }
-  }, [messageInput, pendingAttachments, linkedRecords, replyTo, draftKey, isOnline, sendMessage, channelId, markRead, scrollToBottom, queryClient, setLinkedRecords]);
+    const entry = { content, replyToId, attachments: attachments.length ? attachments : undefined, metadata, mentionedUserIds: mentionedUserIds.length ? mentionedUserIds : undefined, clientKey };
+    setMessageInput(""); setPendingAttachments([]); setReplyTo(null); setLinkedRecords([]); setMentionPrompt(null);
+    pendingMentionsRef.current = new Map();
+    localStorage.removeItem(draftKey);
+    if (!isOnline) toast.info("You're offline — message will be sent when you reconnect");
+    else scrollToBottom("smooth");
+    const outcome = await outbox.enqueue(entry);
+    if (outcome.status === "delivered") markRead.mutate({ channelId });
+    if (outcome.status !== "failed") return;
+    setMessageInput((current) => (current.trim() ? current : content));
+    setPendingAttachments((current) => (current.length ? current : attachments));
+    setLinkedRecords((current) => (current.length ? current : records));
+    setReplyTo((current) => current ?? replyToMessage);
+    for (const [name, id] of mentions) if (!pendingMentionsRef.current.has(name)) pendingMentionsRef.current.set(name, id);
+    pendingSendRef.current = { signature, clientKey };
+    toast.error(getErrorMessage(outcome.error), { duration: Infinity, action: { label: "Retry", onClick: () => outbox.resend(entry) } });
+  }, [messageInput, pendingAttachments, linkedRecords, replyTo, draftKey, isOnline, outbox, channelId, markRead, scrollToBottom, queryClient, setLinkedRecords]);
   const handleEdit = useCallback(async (messageId: number) => { const content = editInput.trim(); if (!content) return; try { await editMessage.mutateAsync({ channelId, messageId, content }); setEditingMessage(null); setEditInput(""); } catch (error) { toast.error(getErrorMessage(error)); } }, [editInput, editMessage, channelId]);
   const handleInputChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const value = e.target.value; setMessageInput(value); e.target.style.height = "auto"; e.target.style.height = `${Math.min(e.target.scrollHeight, 160)}px`;
@@ -284,5 +267,5 @@ export function useMessageComposer({
     if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); void handleSend(); }
   }, [recordPicker, recordOptions, activeRecordIndex, closeRecordPicker, selectRecord, filteredMentions, showMentions, activeMentionIndex, insertMention, handleSend]);
 
-  return { messageInput, setMessageInput, replyTo, setReplyTo, editingMessage, setEditingMessage, editInput, setEditInput, pendingAttachments, setPendingAttachments, uploading, showEmojiPicker, setShowEmojiPicker, showMentions, setShowMentions, mentionIndex: activeMentionIndex, filteredMentions, mentionPrompt, dismissMentionPrompt, recordPicker, selectRecord, linkedRecords, removeLinkedRecord, inputRef, fileInputRef, emojiRef, messageQueue, handleFileSelect, handlePastedFiles, insertEmoji, insertMention, handleSend, handleEdit, handleInputChange, handleKeyDown, flushMessageQueue };
+  return { messageInput, setMessageInput, replyTo, setReplyTo, editingMessage, setEditingMessage, editInput, setEditInput, pendingAttachments, setPendingAttachments, uploading, showEmojiPicker, setShowEmojiPicker, showMentions, setShowMentions, mentionIndex: activeMentionIndex, filteredMentions, mentionPrompt, dismissMentionPrompt, recordPicker, selectRecord, linkedRecords, removeLinkedRecord, inputRef, fileInputRef, emojiRef, handleFileSelect, handlePastedFiles, insertEmoji, insertMention, handleSend, handleEdit, handleInputChange, handleKeyDown, flushMessageQueue: outbox.flush };
 }

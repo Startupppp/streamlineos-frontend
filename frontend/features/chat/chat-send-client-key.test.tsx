@@ -4,7 +4,12 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { z } from "zod";
 
 import { useMessageComposer } from "./use-message-composer";
+import { readOutbox } from "./composer-draft";
 import type { SendMessageInput } from "@/types/chat";
+
+jest.mock("next-auth/react", () => ({
+  useSession: () => ({ data: { user: { id: "me", name: "Me", image: null } }, status: "authenticated" }),
+}));
 
 jest.mock("sonner", () => ({
   toast: { success: jest.fn(), error: jest.fn(), info: jest.fn(), warning: jest.fn() },
@@ -58,13 +63,16 @@ beforeAll(() => {
   });
 });
 
-function harness(over: { failFirst?: boolean; isOnline?: boolean } = {}) {
+afterEach(() => localStorage.clear());
+
+function harness(over: { failFirst?: boolean; isOnline?: boolean; hang?: boolean } = {}) {
   const sent: SendMessageInput[] = [];
   let calls = 0;
   const sendMessage = {
     mutateAsync: jest.fn(async (input: SendMessageInput) => {
       sent.push(input);
       calls += 1;
+      if (over.hang) return new Promise<never>(() => undefined);
       if (over.failFirst && calls === 1) throw new Error("network timeout");
       return { id: calls };
     }),
@@ -153,13 +161,13 @@ describe("chat send idempotency key", () => {
   });
 
   it("carries the key into the offline queue so a replay cannot duplicate", async () => {
-    const { hook } = harness({ isOnline: false });
+    const { hook } = harness({ isOnline: false, hang: true });
     await type(hook, "queued while offline");
     await act(async () => {
-      await hook.result.current.handleSend();
+      void hook.result.current.handleSend();
     });
 
-    const queued = hook.result.current.messageQueue.current;
+    const queued = readOutbox("chat:draft:7");
     expect(queued).toHaveLength(1);
     expect(typeof queued[0]!.clientKey).toBe("string");
     expect(queued[0]!.clientKey!.length).toBeGreaterThan(0);

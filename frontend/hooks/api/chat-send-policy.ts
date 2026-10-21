@@ -1,10 +1,18 @@
 import { isApiError } from "@/lib/api-envelope";
-import { nextChatTempId } from "@/hooks/api/chat-message-cache";
-import type { AttachmentInput, Message, MessageMetadata } from "@/types/chat";
+import { queryRetryDelay } from "@/lib/query-error-policy";
+import type { InfiniteData, QueryClient } from "@tanstack/react-query";
+import { findCachedMessage, nextChatTempId } from "@/hooks/api/chat-message-cache";
+import { appendTimelineMessage } from "@/features/chat/message-page-merge";
+import type {
+  AttachmentInput,
+  Message,
+  MessageMetadata,
+  MessagesPage,
+  SendMessageInput,
+} from "@/types/chat";
 import type { ChatSendResponse } from "@/hooks/api/chat-schema";
 
-const SEND_RETRY_LIMIT = 3;
-const SEND_RETRY_MAX_DELAY_MS = 8_000;
+export const CHAT_SEND_MUTATION_KEY = ["chat", "messages", "send"];
 
 const mintedClientKeys = new WeakMap<object, string>();
 
@@ -20,20 +28,89 @@ export function sendClientKey(variables: { clientKey?: string }): string {
   return minted;
 }
 
-function isTransientSendError(error: unknown): boolean {
+export function isTransientSendError(error: unknown): boolean {
   if (!isApiError(error)) return false;
   if (error.code === "NETWORK_ERROR" || error.code === "TIMEOUT") return true;
   const status = error.status;
-  return status !== undefined && (status >= 500 || status === 429 || status === 408);
+  return (
+    status !== undefined && (status >= 500 || status === 429 || status === 408)
+  );
 }
 
 export const chatSendRetry = {
-  retry: (failureCount: number, error: unknown) =>
-    failureCount < SEND_RETRY_LIMIT && isTransientSendError(error),
-  retryDelay: (attempt: number) => Math.min(1_000 * 2 ** attempt, SEND_RETRY_MAX_DELAY_MS),
+  retry: (failureCount: number, error: unknown) => isTransientSendError(error),
+  retryDelay: queryRetryDelay,
 };
 
-export function reconcileSentMessage(optimistic: Message, row: ChatSendResponse): Message {
+const channelSendTails = new WeakMap<object, Map<number, Promise<void>>>();
+const sendTurns = new Map<
+  string,
+  { ready: Promise<void>; release: () => void }
+>();
+
+export function claimSendTurn(
+  owner: object,
+  channelId: number,
+  clientKey: string,
+): void {
+  const tails = channelSendTails.get(owner) ?? new Map<number, Promise<void>>();
+  channelSendTails.set(owner, tails);
+  const ready = tails.get(channelId) ?? Promise.resolve();
+  let finish: () => void = () => undefined;
+  const done = new Promise<void>((resolve) => {
+    finish = resolve;
+  });
+  const tail = ready.then(() => done);
+  tails.set(channelId, tail);
+  sendTurns.set(clientKey, {
+    ready,
+    release: () => {
+      finish();
+      sendTurns.delete(clientKey);
+      if (tails.get(channelId) === tail) tails.delete(channelId);
+    },
+  });
+}
+
+export function awaitSendTurn(clientKey: string): Promise<void> {
+  return sendTurns.get(clientKey)?.ready ?? Promise.resolve();
+}
+
+export function releaseSendTurn(clientKey: string): void {
+  sendTurns.get(clientKey)?.release();
+}
+
+export function pendingSendMessage(
+  queryClient: QueryClient,
+  author: OptimisticMessageInput["author"],
+  variables: SendMessageInput,
+  clientKey: string,
+): Message {
+  return optimisticMessage({
+    ...variables,
+    clientKey,
+    author,
+    replyTo:
+      variables.replyToId !== undefined
+        ? findCachedMessage(queryClient, variables.channelId, variables.replyToId)
+        : undefined,
+  });
+}
+
+export function appendPendingSend(
+  data: InfiniteData<MessagesPage> | undefined,
+  message: Message,
+): InfiniteData<MessagesPage> | undefined {
+  const held = data?.pages.some((page) =>
+    page.messages.some((existing) => existing.id < 0 && existing.clientKey === message.clientKey),
+  );
+  return held ? data : appendTimelineMessage(data, message);
+}
+
+export function reconcileSentMessage(
+  optimistic: Message,
+  row: ChatSendResponse,
+): Message {
   return {
     ...optimistic,
     id: row.id,
@@ -53,7 +130,9 @@ export function reconcileSentMessage(optimistic: Message, row: ChatSendResponse)
 interface OptimisticMessageInput {
   channelId: number;
   clientKey: string;
-  author: { id?: string | null; name?: string | null; image?: string | null } | undefined;
+  author:
+    | { id?: string | null; name?: string | null; image?: string | null }
+    | undefined;
   content?: string;
   replyToId?: number | null;
   metadata?: MessageMetadata | null;
@@ -80,15 +159,27 @@ export function optimisticMessage(input: OptimisticMessageInput): Message {
     clientKey: input.clientKey,
     createdAt: now,
     updatedAt: now,
-    sender: { id: authorId, name: input.author?.name ?? null, image: input.author?.image ?? null },
-    attachments: (input.attachments ?? []).map((attachment) => ({ ...attachment, id: nextChatTempId() })),
-    replyTo: replyTo ? { id: replyTo.id, content: replyTo.content, sender: replyTo.sender } : null,
+    sender: {
+      id: authorId,
+      name: input.author?.name ?? null,
+      image: input.author?.image ?? null,
+    },
+    attachments: (input.attachments ?? []).map((attachment) => ({
+      ...attachment,
+      id: nextChatTempId(),
+    })),
+    replyTo: replyTo
+      ? { id: replyTo.id, content: replyTo.content, sender: replyTo.sender }
+      : null,
   };
 }
 
 const reactionQueues = new Map<string, Promise<unknown>>();
 
-export function enqueueReaction<T>(key: string, run: () => Promise<T>): Promise<T> {
+export function enqueueReaction<T>(
+  key: string,
+  run: () => Promise<T>,
+): Promise<T> {
   const previous = reactionQueues.get(key) ?? Promise.resolve();
   const next = previous.catch(() => undefined).then(run);
   reactionQueues.set(key, next);
@@ -102,7 +193,11 @@ export function enqueueReaction<T>(key: string, run: () => Promise<T>): Promise<
 
 const pendingReactions = new Map<string, number>();
 
-export function reactionKey(channelId: number, messageId: number, emoji: string): string {
+export function reactionKey(
+  channelId: number,
+  messageId: number,
+  emoji: string,
+): string {
   return `${channelId}:${messageId}:${emoji}`;
 }
 
