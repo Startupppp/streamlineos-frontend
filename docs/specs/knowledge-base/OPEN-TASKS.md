@@ -344,7 +344,7 @@ Bounded items for the product-decision gaps the preamble says no legacy row clos
   - Open: browser pass (create, edit, add/rename/delete sheet, reload persistence, two-tab conflict, xlsx/csv import and export, read-only role), deploy backend before frontend.
 - [ ] **KB-OPEN-099** **One New menu and the Docs information architecture (M).** One `KbNewMenu` (Document, Spreadsheet, Team folder, Upload Excel or CSV, Import documents, From template) on Docs home, My files, Team folder pages and the folder tree; sidebar is Home, My files, Shared with me, Team folders, Templates, Search, Trash with admin pages in one gated Manage menu and ⌘K quick find kept. Code complete 2026-10-21; browser verification open.
 - [ ] **KB-OPEN-100** **Docs copy rename (S).** Wiki → Docs, My pages → My files, Spaces → Team folders, Page tree → Folder tree, page history/comments/share → file history/comments/share. In progress 2026-10-21.
-- [ ] **KB-OPEN-101** **Type filter and sharer on shared updates (S).** `kind` filter on the page collection with a Type filter in the table; `sharedBy` carries the sharer so Home's Shared updates can name them. In progress 2026-10-21.
+- [ ] **KB-OPEN-101** **Type filter and sharer on shared updates (S).** `kind` filter on the page collection with a Type filter in the table; `sharedBy` carries the sharer so Home's Shared updates can name them. Code complete 2026-10-21 (backend `842247d91`, frontend `48f9b7267`/`31353ec7b`); the cursor binds `kind`. Browser verification open.
 
 ## Strict acceptance and environment evidence
 
