@@ -1,6 +1,6 @@
 {
   "capturedAgainst": "(file)",
-  "capturedAt": "2026-10-18T02:28:10.301Z",
+  "capturedAt": "2026-10-21T04:40:04.267Z",
   "missing": [
     "get /access/user-module-access/{userId} [].core",
     "get /clients/{clientId}/timeline events[].id",
@@ -476,11 +476,6 @@
     "get /billing/ai-credits recentTransactions[].costUsd",
     "get /billing/ai-credits/transactions data[].costUsd",
     "get /broadcasts nextCursor",
-    "get /chat/channels/{channelId}/huddle startedAt",
-    "get /chat/channels/{channelId}/messages messages[].sender",
-    "get /chat/channels/{channelId}/messages/poll messages[].sender",
-    "get /chat/channels/{channelId}/messages/{messageId}/thread parentMessage.sender",
-    "get /chat/channels/{channelId}/messages/{messageId}/thread replies[].sender",
     "get /chat/saved items[].message.sender.id",
     "get /clients accounts[].branchId",
     "get /clients/{clientId} branchId",
@@ -546,7 +541,6 @@
     "post /ai/crm/leads/{leadId}/summary-with-citations citations[].id",
     "post /ai/crm/summarize-notes sentiment",
     "post /calendar/events/{eventId}/sync-retry requeued",
-    "post /chat/channels/{channelId}/huddle/start startedAt",
     "post /deals/{dealId}/activities userId",
     "post /deals/{dealId}/stakeholders contact.name",
     "post /directory/people lastName",

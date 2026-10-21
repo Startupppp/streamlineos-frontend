@@ -43,10 +43,9 @@ import type {
   SendMessageInput,
 } from "@/types/chat";
 import type { ChatSendResponse } from "@/hooks/api/chat-schema";
+import { abandonChatSend, beginChatSend, chatSendVisible } from "@/hooks/api/chat-telemetry";
 
-const chatOkContract = lazyContract(() =>
-  import("@/hooks/api/chat-schema").then((m) => m.chatOkContract),
-);
+const chatOkContract = lazyContract(() => import("@/hooks/api/chat-schema").then((m) => m.chatOkContract));
 
 const chatSendResponseContract = lazyContract(() =>
   import("@/hooks/api/chat-schema").then((m) => m.chatSendResponseContract),
@@ -89,6 +88,7 @@ export function useSendMessage() {
           cancelChatMessageQueries(queryClient, channelId),
           cancelLoadedQueries(queryClient, [collaborationQueryKeys.chat.myChannels()]),
         ]);
+        beginChatSend(clientKey);
         const optimistic = optimisticMessage({
           ...variables,
           clientKey,
@@ -113,6 +113,7 @@ export function useSendMessage() {
         return { rollback: undoRow };
       },
       onError: (_error, variables, context) => {
+        abandonChatSend(sendClientKey(variables));
         queryClient.setQueryData<InfiniteData<MessagesPage>>(
           collaborationQueryKeys.chat.messages(variables.channelId),
           (old) => removeOptimisticMessage(old, sendClientKey(variables)),
@@ -127,6 +128,7 @@ export function useSendMessage() {
               reconcileSentMessage(optimistic, row),
             ),
         );
+        chatSendVisible(sendClientKey(variables));
         if ((variables.attachments?.length ?? 0) > 0)
           void queryClient.invalidateQueries({
             queryKey: collaborationQueryKeys.chat.channelFiles(variables.channelId),

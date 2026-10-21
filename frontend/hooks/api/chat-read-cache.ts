@@ -210,8 +210,8 @@ export function refreshJoinedChannel(queryClient: QueryClient, channelId: number
 export function invalidateChatReconnect(
   queryClient: QueryClient,
   channelId: number,
-): void {
-  void queryClient.invalidateQueries({
+): Promise<void> {
+  const messagesRefetched = queryClient.invalidateQueries({
     queryKey: collaborationQueryKeys.chat.messages(channelId),
   });
   void queryClient.invalidateQueries({
@@ -225,4 +225,5 @@ export function invalidateChatReconnect(
     queryKey: collaborationQueryKeys.chat.unreadTotal(),
     exact: true,
   });
+  return messagesRefetched;
 }

@@ -53,6 +53,7 @@ import {
   reconcileSentMessage,
   sendClientKey,
 } from "@/hooks/api/chat-send-policy";
+import { abandonChatSend, beginChatSend, chatSendVisible } from "@/hooks/api/chat-telemetry";
 import type {
   AttachmentInput,
   PinnedMessage,
@@ -215,6 +216,7 @@ export function useSendThreadReply(channelId: number, parentMessageId: number) {
       ),
     onMutate: async (body) => {
       await cancelLoadedQueries(queryClient, [threadKey]);
+      beginChatSend(sendClientKey(body));
       const optimistic = optimisticMessage({
         ...body,
         channelId,
@@ -230,11 +232,15 @@ export function useSendThreadReply(channelId: number, parentMessageId: number) {
           ),
       };
     },
-    onError: (_error, _body, context) => context?.rollback(),
+    onError: (_error, body, context) => {
+      abandonChatSend(sendClientKey(body));
+      context?.rollback();
+    },
     onSuccess: (row, body) => {
       queryClient.setQueryData<InfiniteData<ThreadPage>>(threadKey, (old) =>
         reconcileThreadReply(old, sendClientKey(body), (optimistic) => reconcileSentMessage(optimistic, row)),
       );
+      chatSendVisible(sendClientKey(body));
     },
   });
 }

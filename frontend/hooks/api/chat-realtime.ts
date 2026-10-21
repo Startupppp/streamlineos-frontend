@@ -11,6 +11,7 @@ import { chatChannelName } from "@/lib/ably-channels";
 import { applyDeletedUnread, invalidateChatReconnect } from "@/hooks/api/chat-read-cache";
 import {
   appendThreadReply,
+  flattenMessagePages,
   mergeInboundMessage,
 } from "@/features/chat/message-page-merge";
 import {
@@ -20,6 +21,13 @@ import {
 } from "@/hooks/api/chat-message-cache";
 import { patchChannelRow } from "@/hooks/api/chat-channel-cache";
 import { useAblyConnection } from "@/features/chat/use-ably-connection";
+import {
+  chatSendVisible,
+  noteChatDuplicateDropped,
+  recordChatReconnectGap,
+  setChatTelemetryRealtime,
+  useChatTelemetryFlush,
+} from "@/hooks/api/chat-telemetry";
 import type { Message, MessagesPage, ThreadPage } from "@/types/chat";
 import type { InfiniteData } from "@tanstack/react-query";
 import {
@@ -64,6 +72,18 @@ function payloadToMessage(payload: MessagePayload, parent: Message | undefined):
   };
 }
 
+function messagesAddedByResync(
+  before: InfiniteData<MessagesPage>,
+  after: InfiniteData<MessagesPage>,
+): number {
+  const known = flattenMessagePages(before);
+  const ids = new Set(known.map((message) => message.id));
+  const clientKeys = new Set(known.flatMap((message) => (message.clientKey ? [message.clientKey] : [])));
+  return flattenMessagePages(after).filter(
+    (message) => !ids.has(message.id) && !(message.clientKey && clientKeys.has(message.clientKey)),
+  ).length;
+}
+
 export function useChatRealtime(
   channelId: number | null,
   joinRequired = false,
@@ -90,11 +110,22 @@ export function useChatRealtime(
   const idleTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const resyncedAtRef = useRef(reconnectCount);
 
+  useChatTelemetryFlush();
+
+  useEffect(() => {
+    setChatTelemetryRealtime(isConnected);
+  }, [isConnected]);
+
   useEffect(() => {
     if (resyncedAtRef.current === reconnectCount) return;
     resyncedAtRef.current = reconnectCount;
-    if (channelId && channelId > 0)
-      invalidateChatReconnect(queryClient, channelId);
+    if (!channelId || channelId <= 0) return;
+    const messagesKey = collaborationQueryKeys.chat.messages(channelId);
+    const before = queryClient.getQueryData<InfiniteData<MessagesPage>>(messagesKey);
+    void invalidateChatReconnect(queryClient, channelId).then(() => {
+      const after = queryClient.getQueryData<InfiniteData<MessagesPage>>(messagesKey);
+      if (before && after) recordChatReconnectGap(messagesAddedByResync(before, after));
+    });
   }, [reconnectCount, channelId, queryClient]);
 
   useEffect(() => {
@@ -113,15 +144,19 @@ export function useChatRealtime(
         payload.replyToId != null ? findCachedMessage(queryClient, channelId, payload.replyToId) : undefined;
       const incoming = payloadToMessage(payload, parent);
 
-      queryClient.setQueryData<InfiniteData<MessagesPage>>(
-        collaborationQueryKeys.chat.messages(channelId),
-        (old) => old && mergeInboundMessage(old, incoming, payload.clientKey),
-      );
+      const messagesKey = collaborationQueryKeys.chat.messages(channelId);
+      const cached = queryClient.getQueryData<InfiniteData<MessagesPage>>(messagesKey);
+      if (cached) {
+        const merged = mergeInboundMessage(cached, incoming, payload.clientKey);
+        if (merged !== cached) queryClient.setQueryData<InfiniteData<MessagesPage>>(messagesKey, merged);
+        else if (payload.senderId !== currentUserId) noteChatDuplicateDropped(payload.clientKey);
+      }
       if (payload.replyToId != null)
         queryClient.setQueryData<InfiniteData<ThreadPage>>(
           collaborationQueryKeys.chat.thread(channelId, payload.replyToId),
           (old) => appendThreadReply(old, incoming),
         );
+      chatSendVisible(payload.clientKey);
       patchChannelRow(queryClient, channelId, (channel) => ({
         ...channel,
         lastMessage: {
