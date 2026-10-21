@@ -2,8 +2,8 @@
 
 import dynamicImport from "next/dynamic";
 
-const PublicPageContent = dynamicImport(
-  () => import("@/features/wiki/components/public-page-content"),
+const KbContentRenderer = dynamicImport(
+  () => import("@/components/shared/kb-content-renderer"),
   { ssr: false },
 );
 
@@ -12,5 +12,5 @@ interface PublicPageContentLoaderProps {
 }
 
 export function PublicPageContentLoader({ content }: PublicPageContentLoaderProps) {
-  return <PublicPageContent content={content} />;
+  return <KbContentRenderer content={content} />;
 }

@@ -45,7 +45,7 @@ const NOT_A_STORAGE_KEY: Readonly<Record<string, string>> = {
     "recruiter-supplied external resume URL, never a /storage/upload result",
   "features/recruitment/kanban/candidate-sheet.tsx":
     "recruiter-supplied external resume URL, never a /storage/upload result",
-  "features/wiki/components/public-page-content.tsx":
+  "components/shared/kb-content-renderer.tsx":
     "public KB renderer; /storage/image is Bearer-only so it needs a public read path (ticket 29)",
 };
 

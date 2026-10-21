@@ -821,7 +821,7 @@
       "as": 3,
       "nonNull": 0
     },
-    "features/wiki/components/public-page-content.tsx": {
+    "components/shared/kb-content-renderer.tsx": {
       "as": 7,
       "nonNull": 0
     },

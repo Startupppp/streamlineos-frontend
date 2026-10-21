@@ -377,7 +377,7 @@ function renderSlateNode(node: unknown, idx: number): React.ReactNode {
   }
 }
 
-interface PublicPageContentProps {
+interface KbContentRendererProps {
   content: Record<string, unknown> | Record<string, unknown>[] | null;
 }
 
@@ -427,7 +427,7 @@ function SpreadsheetPreview({ sheets }: { sheets: Record<string, unknown>[] }) {
   );
 }
 
-export default function PublicPageContent({ content }: PublicPageContentProps) {
+export default function KbContentRenderer({ content }: KbContentRendererProps) {
   if (!content) {
     return <p className="text-sm text-muted-foreground">No content.</p>;
   }
