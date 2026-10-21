@@ -112,7 +112,13 @@ export function PayrollReadinessPage() {
               stage={<CloseStepBody stepKey={openKey} month={month} close={close} onRunCreated={handleRunCreated} />}
             />
           </div>
-        ) : null}
+        ) : (
+          <EmptyState
+            illustrationPreset="calendar"
+            title="Nothing to check yet"
+            description="Readiness appears once payroll is enabled and a month has been selected."
+          />
+        )}
       </PageState>
     </PageWrapper>
   );

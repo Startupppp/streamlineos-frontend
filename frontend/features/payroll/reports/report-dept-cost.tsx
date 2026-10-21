@@ -49,7 +49,7 @@ const COLUMNS: DataTableColumn<DeptCostRow>[] = [
   },
   {
     key: "employerCostTotal",
-    header: "Employer Cost",
+    header: "Employer contributions",
     className: "text-right",
     cell: (row) => (
       <span className="font-mono text-dense tabular-nums text-right">{formatMoney(row.employerCostTotal)}</span>
@@ -83,7 +83,7 @@ export function ReportDeptCost({ month, department, workerType }: ReportDeptCost
     <span className="text-dense text-muted-foreground">
       Totals — Gross:{" "}
       <span className="font-mono">{formatMoney(totals.gross)}</span> · Net:{" "}
-      <span className="font-mono">{formatMoney(totals.net)}</span> · Employer Cost:{" "}
+      <span className="font-mono">{formatMoney(totals.net)}</span> · Employer contributions:{" "}
       <span className="font-mono">{formatMoney(totals.employer)}</span>
     </span>
   ) : undefined;

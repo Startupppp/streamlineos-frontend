@@ -172,7 +172,7 @@ export function RunActionsSlot({ run }: RunActionsSlotProps) {
         <>
           {recalcButton}
           {discardButton}
-          <SubmitApprovalAction runId={run.id} status={run.status} openBlockers={run.exceptionCount ?? 0} />
+          <SubmitApprovalAction runId={run.id} status={run.status} />
         </>
       );
 

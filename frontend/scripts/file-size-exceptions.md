@@ -27,7 +27,7 @@ rules.
 
 | Path | Lines | Category | Owner | Public interface | Cohesion argument | Alternatives considered | Review date | Removal trigger |
 |---|---|---|---|---|---|---|---|---|
-| `app/(auth)/invitation/invitation-page.test.tsx` | 501 | pre-existing debt (test) | Platform | unchanged — registered as-is, not reviewed | not argued: already over 500 lines before check:file-sizes was wired to block | split at a real seam (not done in this pass) | 2026-11-03 | split below 501 lines, then delete this row |
+| `app/(auth)/invitation/invitation-page.test.tsx` | 512 | pre-existing debt (test) | Platform | unchanged — registered as-is, not reviewed | not argued: already over 500 lines before check:file-sizes was wired to block | split at a real seam (not done in this pass) | 2026-11-03 | split below 501 lines, then delete this row |
 | `components/assistant/global-ask-os.tsx` | 588 | pre-existing debt (source) | Platform | unchanged — registered as-is, not reviewed | not argued: already over 500 lines on origin/main when check:file-sizes was first wired to block | split at a real seam (not done in this pass) | 2026-11-03 | split below 501 lines, then delete this row |
 | `components/ui/data-table.tsx` | 602 | pre-existing debt (source) | Platform | unchanged — registered as-is, not reviewed | not argued: already over 500 lines on origin/main when check:file-sizes was first wired to block | split at a real seam (not done in this pass) | 2026-11-03 | split below 501 lines, then delete this row |
 | `e2e/build-list-responsive.spec.ts` | 510 | pre-existing debt (test) | e2e suite | unchanged — registered as-is, not reviewed | not argued: already over 500 lines on origin/main when check:file-sizes was first wired to block | split at a real seam (not done in this pass) | 2026-11-03 | split below 501 lines, then delete this row |
@@ -80,7 +80,7 @@ rules.
 | `hooks/api/response-contracts-chat.test.ts` | 566 | pre-existing debt (test) | Chat | unchanged — registered as-is, not reviewed | not argued: already over 500 lines on origin/main when check:file-sizes was first wired to block | split at a real seam (not done in this pass) | 2026-11-03 | split below 501 lines, then delete this row |
 | `lib/api-client.ts` | 647 | pre-existing debt (source) | Platform | unchanged — registered as-is, not reviewed | not argued: already over 500 lines on origin/main when check:file-sizes was first wired to block | split at a real seam (not done in this pass) | 2026-11-03 | split below 501 lines, then delete this row |
 | `lib/wizard-gate.test.ts` | 599 | pre-existing debt (test) | Platform | unchanged — registered as-is, not reviewed | not argued: already over 500 lines on origin/main when check:file-sizes was first wired to block | split at a real seam (not done in this pass) | 2026-11-03 | split below 501 lines, then delete this row |
-| `next.config.ts` | 517 | pre-existing debt (source) | Platform | unchanged — registered as-is, not reviewed | not argued: already over 500 lines before check:file-sizes was wired to block | split at a real seam (not done in this pass) | 2026-11-03 | split below 501 lines, then delete this row |
+| `next.config.ts` | 580 | pre-existing debt (source) | Platform | unchanged — registered as-is, not reviewed | not argued: already over 500 lines before check:file-sizes was wired to block | split at a real seam (not done in this pass) | 2026-11-03 | split below 501 lines, then delete this row |
 
 ---
 

@@ -9,6 +9,7 @@ import { statusToneClasses } from "@/lib/design-tokens";
 import { cn } from "@/lib/utils";
 import type { PayrollReadiness } from "@/hooks/api/payroll/readiness-schema";
 import type { BlockerSeverity, ReadinessBlockerRow } from "./readiness-blockers";
+import { exceptionCodeLabel } from "./readiness-categories";
 
 export type ReadinessExport = PayrollReadiness["exports"][number];
 
@@ -40,7 +41,7 @@ export function ReasonCell({ row }: { row: ReadinessBlockerRow }) {
     <div className="min-w-0 space-y-1">
       <p className="text-dense leading-snug text-foreground">{row.reason}</p>
       <p className="text-micro text-muted-foreground">
-        {SEVERITY_LABEL[row.severity]} · {row.code}
+        {SEVERITY_LABEL[row.severity]} · {exceptionCodeLabel(row.code)}
       </p>
       {row.isWaived ? (
         <span className="inline-flex items-center gap-1.5">

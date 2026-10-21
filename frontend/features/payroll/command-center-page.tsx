@@ -162,11 +162,10 @@ export function PayrollCommandCenterPage() {
   const runId = data?.header.runId ?? undefined;
   const header = data?.header;
   const excCount = header ? header.exceptionCounts.BLOCKER + header.exceptionCounts.WARNING : 0;
-  const setupKnown = !canViewPolicies || !policy.isLoading;
-  const startGate = !setupKnown || isLoading
+  const startGate = isLoading
     ? null
     : payrollRunStartGate({
-        policyReady: canViewPolicies ? Boolean(policy.data?.policy) : true,
+        policyReady: canViewPolicies ? policy.isLoading || Boolean(policy.data?.policy) : true,
       });
 
   const isPreSetup = viewGate.allowed && !isLoading && !isError && !data;

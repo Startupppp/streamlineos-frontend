@@ -237,7 +237,7 @@ export function PublicationsTab({ canManage }: PublicationsTabProps) {
           disabled={runsLoading || eligibleRuns.length === 0}
         >
           <SelectTrigger className={cn(FILTER_SELECT_TRIGGER, "w-64")}>
-            <SelectValue placeholder="Select a payroll run" />
+            <SelectValue placeholder={!runsLoading && eligibleRuns.length === 0 ? "No run is ready for payslips yet" : "Select a payroll run"} />
           </SelectTrigger>
           <SelectContent>
             {eligibleRuns.map((r) => (
