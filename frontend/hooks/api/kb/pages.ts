@@ -432,8 +432,13 @@ export function useCreateKbPage() {
   const qc = useQueryClient();
   return useAuthorizedMutation("kb:pages:create", {
     mutationKey: ["kb", "pages", "create"],
-    mutationFn: (input: CreateKbPageInput) =>
-      apiClient.post<KbPage>("/kb/pages", input, undefined, kbPageContract),
+    mutationFn: ({ kind, ...input }: CreateKbPageInput) =>
+      apiClient.post<KbPage>(
+        "/kb/pages",
+        kind === "spreadsheet" ? { ...input, kind } : input,
+        undefined,
+        kbPageContract,
+      ),
     onSuccess: (created, variables) => {
       qc.setQueryData<KbPageDetail>(
         knowledgeAndSurveysQueryKeys.kb.page(created.id),
