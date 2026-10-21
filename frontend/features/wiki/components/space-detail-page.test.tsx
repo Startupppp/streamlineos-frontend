@@ -156,9 +156,9 @@ describe("SpaceDetailPage", () => {
 
     render(<SpaceDetailPage spaceId={5} />);
 
-    expect(screen.getByText("Space not found")).toBeInTheDocument();
+    expect(screen.getByText("Team folder not found")).toBeInTheDocument();
     expect(screen.queryByText("Something went wrong")).not.toBeInTheDocument();
-    expect(screen.queryByText("Space unavailable")).not.toBeInTheDocument();
+    expect(screen.queryByText("Team folder unavailable")).not.toBeInTheDocument();
   });
 
   it("keeps an unexpected empty success distinct from a missing space and offers refresh", async () => {
@@ -167,8 +167,8 @@ describe("SpaceDetailPage", () => {
 
     render(<SpaceDetailPage spaceId={5} />);
 
-    expect(screen.getByText("Space unavailable")).toBeInTheDocument();
-    expect(screen.queryByText("Space not found")).not.toBeInTheDocument();
+    expect(screen.getByText("Team folder unavailable")).toBeInTheDocument();
+    expect(screen.queryByText("Team folder not found")).not.toBeInTheDocument();
     await userEvent.click(screen.getByRole("button", { name: "Refresh" }));
     expect(refetch).toHaveBeenCalledTimes(1);
   });
@@ -250,11 +250,11 @@ describe("SpaceDetailPage", () => {
   it("offers a route back to the spaces list, which the breadcrumb serves rather than a bare back link, so the header also states where this space sits", () => {
     render(<SpaceDetailPage spaceId={5} />);
 
-    expect(screen.getByRole("link", { name: /^spaces$/i })).toHaveAttribute(
+    expect(screen.getByRole("link", { name: /^team folders$/i })).toHaveAttribute(
       "href",
       KB_SPACES,
     );
-    expect(screen.getByRole("link", { name: /^wiki$/i })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /^docs$/i })).toBeInTheDocument();
   });
 
   it("renders a badge for a public space with the public audience indicator", () => {

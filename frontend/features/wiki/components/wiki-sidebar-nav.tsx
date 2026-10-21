@@ -11,7 +11,6 @@ import {
   KbLayoutGridIcon,
   KbLayoutTemplateIcon,
   KbLockIcon,
-  KbMessageSquareIcon,
   KbSearchIcon,
   KbTrash2Icon,
   KbTriangleAlertIcon,
@@ -40,7 +39,6 @@ import {
 import {
   KNOWLEDGE_BASE,
   KB_ANALYTICS,
-  KB_CHAT,
   KB_IMPORT,
   KB_PRIVATE,
   KB_MANAGE,
@@ -71,7 +69,6 @@ interface WikiSidebarNavProps {
   canViewAnalytics: boolean;
   canViewReviews: boolean;
   canManageContent: boolean;
-  canManageTemplates: boolean;
   canImportPages: boolean;
   canViewSpaces: boolean;
 }
@@ -79,10 +76,6 @@ interface WikiSidebarNavProps {
 interface WikiSidebarFooterProps {
   isCollapsed?: boolean;
   onQuickFind: () => void;
-}
-
-function buildAskKbItem(): WikiNavItem {
-  return { label: "Ask documents", href: KB_CHAT, icon: KbMessageSquareIcon };
 }
 
 function buildPrimaryItems(): WikiNavItem[] {
@@ -93,7 +86,6 @@ function buildPrimaryItems(): WikiNavItem[] {
       icon: KbBookOpenTextIcon,
       exact: true,
     },
-    buildAskKbItem(),
   ];
 }
 
@@ -101,19 +93,10 @@ function buildNavGroups({
   canViewAnalytics,
   canViewReviews,
   canManageContent,
-  canManageTemplates,
   canImportPages,
   canViewSpaces,
 }: Omit<WikiSidebarNavProps, "isCollapsed">): WikiNavGroup[] {
   const manageItems: WikiNavItem[] = [];
-
-  if (canManageTemplates) {
-    manageItems.push({
-      label: "Templates",
-      href: KB_TEMPLATES,
-      icon: KbLayoutTemplateIcon,
-    });
-  }
 
   if (canViewReviews) {
     manageItems.push({
@@ -157,6 +140,7 @@ function buildNavGroups({
         ...(canViewSpaces
           ? [{ label: "Team folders", href: KB_SPACES, icon: KbLayoutGridIcon }]
           : []),
+        { label: "Templates", href: KB_TEMPLATES, icon: KbLayoutTemplateIcon },
       ],
     },
     {
@@ -372,7 +356,6 @@ export default function WikiSidebarNav({
   canViewAnalytics,
   canViewReviews,
   canManageContent,
-  canManageTemplates,
   canImportPages,
   canViewSpaces,
 }: WikiSidebarNavProps) {
@@ -384,7 +367,6 @@ export default function WikiSidebarNav({
         canViewAnalytics,
         canViewReviews,
         canManageContent,
-        canManageTemplates,
         canImportPages,
         canViewSpaces,
       }),
@@ -392,7 +374,6 @@ export default function WikiSidebarNav({
       canViewAnalytics,
       canViewReviews,
       canManageContent,
-      canManageTemplates,
       canImportPages,
       canViewSpaces,
     ],

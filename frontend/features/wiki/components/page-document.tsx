@@ -316,7 +316,7 @@ export default function PageDocument({ pageId, onNavigateToPage, projectId }: Pa
     return <KbPageNotFound error={error} onRetry={refetch} />;
   }
 
-  const isEditable = canUpdate && page.canEdit === true && (!page.isLocked || canManage);
+  const isEditable = canUpdate && page.can.edit === true && (!page.isLocked || canManage);
   const wordCount = (page.contentText ?? "")
     .split(/\s+/)
     .filter(Boolean).length;

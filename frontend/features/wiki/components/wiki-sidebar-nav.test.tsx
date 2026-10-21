@@ -17,14 +17,14 @@ async function openAccordionGroup(label: string) {
 
 describe("WikiSidebarNav — focused document library", () => {
   it("keeps linked company documents out of the primary library navigation", () => {
-    renderWithProviders(<WikiSidebarNav canViewAnalytics={false} canViewReviews={false} canManageContent={false} canManageTemplates={false} canImportPages={false} canViewSpaces={false} />);
+    renderWithProviders(<WikiSidebarNav canViewAnalytics={false} canViewReviews={false} canManageContent={false} canImportPages={false} canViewSpaces={false} />);
 
     expect(screen.queryByRole("link", { name: "Company documents" })).toBeNull();
     expect(screen.getByRole("link", { name: "My files" })).toBeInTheDocument();
   });
 
   it("labels the owned-pages destination My files, matching the heading that route renders, not the retired Private wording", () => {
-    renderWithProviders(<WikiSidebarNav canViewAnalytics={false} canViewReviews={false} canManageContent={false} canManageTemplates={false} canImportPages={false} canViewSpaces={false} />);
+    renderWithProviders(<WikiSidebarNav canViewAnalytics={false} canViewReviews={false} canManageContent={false} canImportPages={false} canViewSpaces={false} />);
 
     expect(screen.getByRole("link", { name: "My files" })).toHaveAttribute("href", "/knowledge/wiki/private");
     expect(screen.queryByRole("link", { name: "Private" })).toBeNull();
@@ -37,16 +37,12 @@ describe("WikiSidebarNav — wiki hides the Documents product sidebar", () => {
       <WikiSidebarNav
         canViewAnalytics={false}
         canViewReviews={false}
-        canManageContent={false} canManageTemplates={false} canImportPages={false} canViewSpaces={false}
+        canManageContent={false} canImportPages={false} canViewSpaces={false}
       />,
     );
 
-    const links = screen.getAllByRole("link");
-    const docs = screen.getByRole("link", { name: "Docs" });
-    const askKb = screen.getByRole("link", { name: "Ask documents" });
-    expect(askKb).toHaveAttribute("href", "/knowledge/chat");
-    expect(askKb).not.toHaveAttribute("aria-current");
-    expect(links.indexOf(docs)).toBeLessThan(links.indexOf(askKb));
+    expect(screen.getByRole("link", { name: "Docs" })).toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: "Ask documents" })).toBeNull();
     expect(screen.queryByRole("link", { name: "Search" })).toBeNull();
     expect(screen.queryByRole("navigation", { name: "Documents" })).toBeNull();
   });
@@ -56,12 +52,11 @@ describe("WikiSidebarNav — wiki hides the Documents product sidebar", () => {
       <WikiSidebarNav
         canViewAnalytics={false}
         canViewReviews={false}
-        canManageContent={false} canManageTemplates canImportPages={false} canViewSpaces={false}
+        canManageContent={false} canImportPages={false} canViewSpaces={false}
       />,
     );
 
     expect(screen.getByRole("link", { name: "My files" })).toBeInTheDocument();
-    await openAccordionGroup("Manage");
     expect(screen.getByRole("link", { name: "Templates" })).toBeInTheDocument();
     expect(screen.queryByRole("link", { name: "Settings" })).toBeNull();
     expect(screen.queryByRole("link", { name: "Recent" })).toBeNull();
@@ -74,8 +69,7 @@ describe("WikiSidebarNav — wiki hides the Documents product sidebar", () => {
         canViewAnalytics={false}
         canViewReviews={false}
         canManageContent={false}
-        canManageTemplates
-        canImportPages={false}
+        canImportPages
         canViewSpaces={false}
       />,
     );
@@ -99,24 +93,8 @@ describe("WikiSidebarNav — wiki hides the Documents product sidebar", () => {
       "aria-expanded",
       "false",
     );
-    expect(screen.getByRole("link", { name: "Templates" })).toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: "Templates" })).toBeNull();
     expect(screen.queryByRole("link", { name: "My files" })).toBeNull();
-  });
-
-  it("keeps Ask documents in the collapsed wiki rail", () => {
-    renderWithProviders(
-      <WikiSidebarNav
-        isCollapsed
-        canViewAnalytics={false}
-        canViewReviews={false}
-        canManageContent={false} canManageTemplates={false} canImportPages={false} canViewSpaces={false}
-      />,
-    );
-
-    expect(screen.getByRole("link", { name: "Ask documents" })).toHaveAttribute(
-      "href",
-      "/knowledge/chat",
-    );
   });
 
   it("omits Content Health when the actor cannot manage pages", () => {
@@ -124,7 +102,7 @@ describe("WikiSidebarNav — wiki hides the Documents product sidebar", () => {
       <WikiSidebarNav
         canViewAnalytics={false}
         canViewReviews={false}
-        canManageContent={false} canManageTemplates={false} canImportPages={false} canViewSpaces={false}
+        canManageContent={false} canImportPages={false} canViewSpaces={false}
       />,
     );
 
@@ -137,7 +115,6 @@ describe("WikiSidebarNav — wiki hides the Documents product sidebar", () => {
         canViewAnalytics={false}
         canViewReviews={false}
         canManageContent
-        canManageTemplates={false}
         canImportPages={false}
         canViewSpaces={false}
       />,
@@ -152,32 +129,30 @@ describe("WikiSidebarNav — wiki hides the Documents product sidebar", () => {
 });
 
 describe("WikiSidebarNav — management links follow the route permission keys", () => {
-  it("hides Templates, Import & Export and Spaces when the actor holds none of their keys", () => {
+  it("shows Templates in Library for all actors and hides Import & Export and Spaces without their keys", () => {
     renderWithProviders(
       <WikiSidebarNav
         canViewAnalytics={false}
         canViewReviews={false}
         canManageContent={false}
-        canManageTemplates={false}
         canImportPages={false}
         canViewSpaces={false}
       />,
     );
 
-    expect(screen.queryByRole("link", { name: "Templates" })).toBeNull();
+    expect(screen.getByRole("link", { name: "Templates" })).toBeInTheDocument();
     expect(screen.queryByRole("link", { name: "Import & Export" })).toBeNull();
     expect(screen.queryByRole("link", { name: "Team folders" })).toBeNull();
     expect(screen.queryByText("Manage")).toBeNull();
     expect(screen.getByRole("link", { name: "My files" })).toBeInTheDocument();
   });
 
-  it("shows Templates, Import & Export and Spaces when the actor holds their keys", async () => {
+  it("shows Import & Export and Spaces when the actor holds their keys", async () => {
     renderWithProviders(
       <WikiSidebarNav
         canViewAnalytics={false}
         canViewReviews={false}
         canManageContent={false}
-        canManageTemplates
         canImportPages
         canViewSpaces
       />,
@@ -187,13 +162,13 @@ describe("WikiSidebarNav — management links follow the route permission keys",
       "href",
       "/knowledge/wiki/spaces",
     );
-
-    await openAccordionGroup("Manage");
-
     expect(screen.getByRole("link", { name: "Templates" })).toHaveAttribute(
       "href",
       "/knowledge/wiki/templates",
     );
+
+    await openAccordionGroup("Manage");
+
     expect(screen.getByRole("link", { name: "Import & Export" })).toHaveAttribute(
       "href",
       "/knowledge/wiki/import",

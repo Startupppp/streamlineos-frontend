@@ -92,6 +92,7 @@ function makePage(): KbPageDetail {
     visibility: "org",
     isFavorite: false,
     canEdit: true,
+    can: { view: true, comment: true, edit: true, manage: false, restore: false },
     isLocked: false,
     ancestors: [],
     contentRevision: 1,
@@ -326,7 +327,7 @@ describe("PageDocument — the access snapshot loading window", () => {
 describe("PageDocument — the title is interactive only when inline rename is authorized", () => {
   it("renders the title read-only when the record denies editing, so an unauthorized reader cannot start a rename", () => {
     mockUseKbPage.mockReturnValue({
-      data: { ...makePage(), canEdit: false },
+      data: { ...makePage(), can: { view: true, comment: true, edit: false, manage: false, restore: false } },
       isLoading: false,
       isError: false,
       error: undefined,
@@ -355,10 +356,9 @@ describe("PageDocument — edit mode requires role and record permission", () =>
     expect(screen.getByTestId("plate-editor")).toHaveAttribute("data-editable", "false");
   });
 
-  it("keeps legacy page responses without canEdit in read mode", () => {
-    const { canEdit: _canEdit, ...pageWithoutEditDecision } = makePage();
+  it("keeps a page with can.edit false in read mode", () => {
     mockUseKbPage.mockReturnValue({
-      data: pageWithoutEditDecision,
+      data: { ...makePage(), can: { view: true, comment: true, edit: false, manage: false, restore: false } },
       isLoading: false,
       isError: false,
       error: undefined,

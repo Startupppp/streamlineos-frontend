@@ -25,15 +25,6 @@ const STATUS_VARIANT: Record<
   archived: "secondary",
 };
 
-const TRUST_VARIANT: Record<
-  string,
-  "default" | "secondary" | "destructive" | "outline"
-> = {
-  unverified: "outline",
-  verified: "default",
-  verification_expired: "destructive",
-};
-
 const NoResultsRow = memo(function NoResultsRow({
   row,
   rank,
@@ -60,7 +51,7 @@ const PageAnalyticsTableRow = memo(function PageAnalyticsTableRow({
   row: KbPageAnalyticsRow;
 }) {
   return (
-    <div className="grid grid-cols-[1fr_3rem_3rem_3rem_auto_auto_5rem] items-center gap-3 px-3 py-2 hover:bg-muted/40 transition-colors">
+    <div className="grid grid-cols-[1fr_3rem_3rem_3rem_auto_5rem] items-center gap-3 px-3 py-2 hover:bg-muted/40 transition-colors">
       <Link
         href={pageHref(row.id)}
         className="text-sm truncate hover:underline text-foreground"
@@ -81,12 +72,6 @@ const PageAnalyticsTableRow = memo(function PageAnalyticsTableRow({
         className="text-xs capitalize"
       >
         {row.status.replace("_", " ")}
-      </Badge>
-      <Badge
-        variant={TRUST_VARIANT[row.trustState] ?? "outline"}
-        className="text-xs capitalize"
-      >
-        {row.trustState.replace("_", " ")}
       </Badge>
       <span className="text-xs text-muted-foreground text-right">
         {new Date(row.updatedAt).toLocaleDateString("en", {
@@ -243,7 +228,7 @@ export function KnowledgeAnalyticsLists({
               />
             ) : (
               <div className="rounded-lg border border-border bg-card divide-y divide-border/60">
-                <div className="grid grid-cols-[1fr_3rem_3rem_3rem_auto_auto_5rem] items-center gap-3 px-3 py-2 border-b border-border">
+                <div className="grid grid-cols-[1fr_3rem_3rem_3rem_auto_5rem] items-center gap-3 px-3 py-2 border-b border-border">
                   <span className="text-xs font-medium text-muted-foreground">
                     Title
                   </span>
@@ -258,9 +243,6 @@ export function KnowledgeAnalyticsLists({
                   </span>
                   <span className="text-xs font-medium text-muted-foreground">
                     Status
-                  </span>
-                  <span className="text-xs font-medium text-muted-foreground">
-                    Trust
                   </span>
                   <span className="text-xs font-medium text-muted-foreground text-right">
                     Updated

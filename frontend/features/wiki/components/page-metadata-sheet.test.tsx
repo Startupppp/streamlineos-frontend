@@ -40,6 +40,7 @@ function page(overrides: Partial<KbPageDetail> = {}): KbPageDetail {
     ownerUserId: null,
     isLocked: false,
     canEdit: true,
+    can: { view: true, comment: true, edit: true, manage: false, restore: false },
     contentRevision: 3,
     nextReviewAt: null,
     verifiedUntil: null,
@@ -191,7 +192,7 @@ it("reports stale publish conflicts without retrying against newer content", () 
 });
 
 it("keeps metadata controls read-only when page edit access is denied", () => {
-  renderSheet(page({ canEdit: false }));
+  renderSheet(page({ can: { view: true, comment: true, edit: false, manage: false, restore: false } }));
   expect(screen.queryByRole("button", { name: "Publish" })).not.toBeInTheDocument();
   expect(screen.queryByRole("button", { name: "Archive" })).not.toBeInTheDocument();
   expect(screen.queryByRole("button", { name: "Verify" })).not.toBeInTheDocument();

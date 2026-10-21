@@ -87,7 +87,7 @@ export default function PageMetadataSheet({
   const canUpdate = useCan("kb:pages:update");
   const canManage = useCan("kb:pages:manage");
   const canManageReviews = useCan("kb:reviews:manage");
-  const isEditable = canUpdate && page.canEdit === true && (!page.isLocked || canManage);
+  const isEditable = canUpdate && page.can.edit === true && (!page.isLocked || canManage);
   const canChangeOwner = isEditable && canManage;
   const [intervalDays, setIntervalDays] = useState<string>("");
   const [verifyFormOpen, setVerifyFormOpen] = useState(false);
@@ -158,7 +158,7 @@ export default function PageMetadataSheet({
     setIsRetryingScope(true);
     try {
       const latest = await refetch();
-      if (!latest.isSuccess || !latest.data || latest.data.canEdit !== true ||
+      if (!latest.isSuccess || !latest.data || latest.data.can?.edit !== true ||
         (latest.data.isLocked && !canManage) ||
         (pending.minimumRevision !== null && latest.data.contentRevision < pending.minimumRevision))
         throw new Error("Current page version is unavailable");

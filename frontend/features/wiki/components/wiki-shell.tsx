@@ -25,7 +25,6 @@ export default function WikiShell({ children }: { children: React.ReactNode }) {
   const canViewAnalytics = useCan("kb:analytics:view");
   const canViewReviews = useCan("kb:reviews:view");
   const canManageContent = useCan("kb:pages:manage");
-  const canManageTemplates = useCan("kb:templates:manage");
   const canImportPages = useCan("kb:pages:import");
   const canViewSpaces = useCan("kb:spaces:view");
   const [quickFindOpen, setQuickFindOpen] = useState(false);
@@ -81,7 +80,6 @@ export default function WikiShell({ children }: { children: React.ReactNode }) {
     canViewAnalytics,
     canViewReviews,
     canManageContent,
-    canManageTemplates,
     canImportPages,
     canViewSpaces,
   };

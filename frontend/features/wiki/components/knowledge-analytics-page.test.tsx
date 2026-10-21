@@ -277,7 +277,7 @@ describe("KnowledgeAnalyticsPage — activity counts are not success metrics", (
     render(<KnowledgeAnalyticsPage />);
 
     expect(screen.getByText("Organization search success")).toBeInTheDocument();
-    expect(screen.getByText("Tickets deflected")).toBeInTheDocument();
+    expect(screen.queryByText("Tickets deflected")).toBeNull();
   });
 
   it("shows suppressed metrics separately from zero and names the tenant search scope", () => {
