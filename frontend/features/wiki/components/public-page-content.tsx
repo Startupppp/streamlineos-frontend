@@ -381,12 +381,59 @@ interface PublicPageContentProps {
   content: Record<string, unknown> | Record<string, unknown>[] | null;
 }
 
+function isSpreadsheetSheets(value: Record<string, unknown>[]): boolean {
+  const first = value[0];
+  return (
+    typeof first === "object" &&
+    first !== null &&
+    ("celldata" in first || "name" in first) &&
+    !("type" in first) &&
+    !("children" in first)
+  );
+}
+
+type CellData = { r: number; c: number; v: Record<string, unknown> };
+
+function SpreadsheetPreview({ sheets }: { sheets: Record<string, unknown>[] }) {
+  const first = sheets[0] ?? {};
+  const cells = Array.isArray(first.celldata) ? (first.celldata as CellData[]) : [];
+  let maxRow = 0;
+  let maxCol = 0;
+  const map = new Map<string, string>();
+  for (const cell of cells) {
+    const display = String(cell.v?.m ?? cell.v?.v ?? "");
+    if (display) map.set(`${cell.r}_${cell.c}`, display);
+    if (cell.r > maxRow) maxRow = cell.r;
+    if (cell.c > maxCol) maxCol = cell.c;
+  }
+  const rows = Array.from({ length: Math.min(maxRow + 1, 200) }, (_, r) => r);
+  const cols = Array.from({ length: Math.min(maxCol + 1, 50) }, (_, c) => c);
+  return (
+    <div className="overflow-x-auto rounded-lg border border-border">
+      <table className="text-xs border-collapse w-full">
+        <tbody>
+          {rows.map((r) => (
+            <tr key={r} className="border-b border-border last:border-0">
+              {cols.map((c) => (
+                <td key={c} className="px-2 py-1 border-r border-border last:border-0 whitespace-nowrap max-w-[200px] truncate">
+                  {map.get(`${r}_${c}`) ?? ""}
+                </td>
+              ))}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
 export default function PublicPageContent({ content }: PublicPageContentProps) {
   if (!content) {
     return <p className="text-sm text-muted-foreground">No content.</p>;
   }
 
   if (Array.isArray(content)) {
+    if (isSpreadsheetSheets(content)) return <SpreadsheetPreview sheets={content} />;
     return <div>{renderSlateBlocks(content)}</div>;
   }
 

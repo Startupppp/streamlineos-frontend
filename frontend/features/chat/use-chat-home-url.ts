@@ -40,6 +40,7 @@ export function useChatHomeUrl() {
     activeChannelId === null ? null : readPositiveIntParam(searchParams, "message");
   const searchScope = readChatSearchScope(searchParams.get("search"));
   const dmRequested = searchParams.get("dm") === "1";
+  const joinHuddleRequested = searchParams.get("joinHuddle") === "1";
 
   const writeUrl = useCallback(
     (mode: UrlWrite, update: (next: URLSearchParams) => void) => {
@@ -86,6 +87,10 @@ export function useChatHomeUrl() {
     writeUrl("replace", (next) => next.delete("dm"));
   }, [writeUrl]);
 
+  const clearJoinHuddleParam = useCallback(() => {
+    writeUrl("replace", (next) => next.delete("joinHuddle"));
+  }, [writeUrl]);
+
   const closeConversation = useCallback(
     (mode: UrlWrite) => writeUrl(mode, dropConversationParams),
     [writeUrl],
@@ -100,9 +105,11 @@ export function useChatHomeUrl() {
     messageId,
     searchScope,
     dmRequested,
+    joinHuddleRequested,
     navigateToConversation,
     setSearchScope,
     clearDmParam,
+    clearJoinHuddleParam,
     closeConversation,
     leaveMessage,
   };

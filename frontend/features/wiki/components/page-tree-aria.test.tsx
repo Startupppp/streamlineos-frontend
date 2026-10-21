@@ -6,6 +6,10 @@ jest.mock("next/navigation", () => ({
   usePathname: () => "/knowledge/wiki",
 }));
 
+jest.mock("./kb-new-menu", () => ({
+  KbNewMenu: () => null,
+}));
+
 jest.mock("@/hooks/api/kb", () => ({
   useKbPageTreeInfinite: jest.fn(),
   useCreateKbPage: () => ({ mutate: jest.fn(), isPending: false }),
@@ -32,6 +36,7 @@ function makeNode(id: number, title: string, hasChildren = false) {
     id,
     title,
     icon: null,
+    kind: "document" as const,
     hasChildren,
     spaceId: null,
     projectId: null,

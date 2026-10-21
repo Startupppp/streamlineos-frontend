@@ -190,7 +190,7 @@ describe("MessagePanelView header huddle button is provider aware", () => {
   it.each([
     ["google_meet" as const, "Join Google Meet"],
     ["microsoft_teams" as const, "Join Microsoft Teams"],
-    [null, "Join meeting"],
+    [null, "Join external meeting"],
   ])("labels the %s huddle button %s and keeps the joined count in its accessible name", (meetingProvider, label) => {
     render(<MessagePanelView {...makeProps({ activeHuddle: { ...joined, meetingProvider } })} />);
     const button = screen.getByRole("button", { name: `${label}, 2 joined through StreamlineOS` });

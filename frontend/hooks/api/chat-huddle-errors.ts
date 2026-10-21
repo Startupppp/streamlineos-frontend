@@ -2,6 +2,8 @@ import { toast } from "sonner";
 import { isApiError } from "@/lib/api-envelope";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { isRecord } from "@/lib/is-record";
+import { huddleConnectCopy } from "@/features/chat/huddle-provider";
+import type { Huddle } from "@/types/chat";
 
 const DEFAULT_CONNECT_PATH = "/calendar?accounts=1";
 const FREE_PLAN_COPY =
@@ -35,19 +37,21 @@ function connectAction(label: string, error: unknown): HuddleToastAction {
   return navigateAction(label, appPath(detailString(error, "connectPath")) ?? DEFAULT_CONNECT_PATH);
 }
 
+function detailProvider(error: unknown): Huddle["meetingProvider"] {
+  const value = detailString(error, "provider");
+  return value === "google_meet" || value === "microsoft_teams" ? value : null;
+}
+
 export function reportHuddleStartError(error: unknown, retry: () => void): void {
   const code = huddleErrorCode(error);
-  if (code === "HUDDLE_NO_CONNECTION") {
-    toast.error(
-      "Huddles run on Google Meet or Microsoft Teams. Connect a calendar account to start one.",
-      { duration: Number.POSITIVE_INFINITY, action: connectAction("Connect a calendar account", error) },
+  if (code === "HUDDLE_NO_CONNECTION" || code === "HUDDLE_RECONNECT") {
+    const copy = huddleConnectCopy(
+      code === "HUDDLE_NO_CONNECTION" ? "connect" : "reconnect",
+      detailProvider(error),
     );
-    return;
-  }
-  if (code === "HUDDLE_RECONNECT") {
-    toast.error("Your calendar connection has expired. Reconnect it to start a huddle.", {
+    toast.error(copy.message, {
       duration: Number.POSITIVE_INFINITY,
-      action: connectAction("Reconnect your calendar", error),
+      action: connectAction(copy.actionLabel, error),
     });
     return;
   }

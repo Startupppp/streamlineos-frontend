@@ -1,7 +1,6 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useMemo, useState } from "react";
 import { toast } from "sonner";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Badge } from "@/components/ui/badge";
@@ -15,17 +14,15 @@ import {
   useRestoreKbSpace,
 } from "@/hooks/api/kb/spaces";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { pageHref } from "@/lib/knowledge-routes";
-import { useGuardedCreateKbPage } from "@/features/wiki/hooks/use-guarded-create-kb-page";
 import { getUserDisplayName } from "@/lib/person-display";
 import { kbTimeAgo } from "@/features/wiki/lib/kb-date-utils";
 import {
   KbArchiveIcon,
   KbLayoutGridIcon,
-  KbPlusIcon,
   KbRotateCcwIcon,
   KbUsersIcon,
 } from "@/features/wiki/lib/kb-icons";
+import { KbNewMenu } from "./kb-new-menu";
 import { EmptyState } from "@/components/ui/empty-state";
 import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
 import { Button } from "@/components/ui/button";
@@ -73,7 +70,6 @@ interface SpaceDetailPageProps {
 }
 
 export default function SpaceDetailPage({ spaceId }: SpaceDetailPageProps) {
-  const router = useRouter();
   const {
     data: space,
     isLoading,
@@ -81,9 +77,7 @@ export default function SpaceDetailPage({ spaceId }: SpaceDetailPageProps) {
     error,
     refetch,
   } = useKbSpace(spaceId);
-  const canCreatePage = useCan("kb:pages:create");
   const canManage = useCan("kb:spaces:manage");
-  const createPage = useGuardedCreateKbPage((page) => router.push(pageHref(page.id)));
   const archiveSpace = useArchiveKbSpace();
   const restoreSpace = useRestoreKbSpace();
   const [membersOpen, setMembersOpen] = useState(false);
@@ -102,10 +96,6 @@ export default function SpaceDetailPage({ spaceId }: SpaceDetailPageProps) {
 
   function handleRetry() {
     void refetch();
-  }
-
-  function handleNewPage() {
-    void createPage.submit({ spaceId });
   }
 
   function handleMembersOpenChange(open: boolean) {
@@ -155,18 +145,11 @@ export default function SpaceDetailPage({ spaceId }: SpaceDetailPageProps) {
   const pagesOverdueForReview = space?.pagesOverdueForReview ?? 0;
   const pagesWithReviewPolicy = space?.pagesWithReviewPolicy ?? 0;
 
+  const spaceScope = useMemo(() => ({ spaceId }), [spaceId]);
+
   const headerActions = visibleSpace ? (
     <div className="flex items-center gap-1.5">
-      {canCreatePage && (
-        <Button
-          size="sm"
-          onClick={handleNewPage}
-          disabled={createPage.isSubmitting}
-        >
-          <KbPlusIcon className="h-4 w-4 mr-1.5" />
-          New page
-        </Button>
-      )}
+      <KbNewMenu scope={spaceScope} allowFolder={false} />
       {canManage && (
         <Button variant="outline" size="sm" onClick={handleOpenMembers}>
           <KbUsersIcon className="h-4 w-4 mr-1.5" />

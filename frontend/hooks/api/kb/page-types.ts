@@ -115,6 +115,52 @@ export type KbPageVersion = {
   createdAt: string;
 };
 
+export type KbWorkbookCellType = "string" | "number" | "boolean" | "error" | "empty";
+
+export type KbWorkbookCell = {
+  r: number;
+  c: number;
+  t: KbWorkbookCellType;
+  v: string | number | boolean | null;
+  f?: string | null;
+  m?: string | null;
+  s?: Record<string, unknown> | null;
+};
+
+export type KbWorkbookSheet = {
+  id: string;
+  name: string;
+  position: number;
+  rowCount: number;
+  columnCount: number;
+  config: Record<string, unknown>;
+  cells: KbWorkbookCell[];
+};
+
+export type KbWorkbook = {
+  pageId: number;
+  contentRevision: number;
+  sheets: KbWorkbookSheet[];
+};
+
+export type KbWorkbookSheetInput = {
+  name: string;
+  position: number;
+  config: Record<string, unknown>;
+  cells: KbWorkbookCell[];
+};
+
+export type KbWorkbookInput = { sheets: KbWorkbookSheetInput[] };
+
+export type KbWorkbookOp =
+  | { type: "addSheet"; sheetId: string; name: string; position: number }
+  | { type: "renameSheet"; sheetId: string; name: string }
+  | { type: "moveSheet"; sheetId: string; position: number }
+  | { type: "deleteSheet"; sheetId: string }
+  | { type: "setSheetConfig"; sheetId: string; config: Record<string, unknown> }
+  | { type: "setCells"; sheetId: string; cells: KbWorkbookCell[] }
+  | { type: "clearCells"; sheetId: string; cells: Array<{ r: number; c: number }> };
+
 export type CreateKbPageInput = {
   parentPageId?: number | null;
   spaceId?: number | null;
@@ -122,7 +168,7 @@ export type CreateKbPageInput = {
   templateId?: number | null;
   projectId?: number | null;
   kind?: KbPageKind;
-  content?: Record<string, unknown>[];
+  workbook?: KbWorkbookInput;
 };
 
 type KbPageMetadataPatch = {

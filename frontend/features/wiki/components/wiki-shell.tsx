@@ -4,14 +4,13 @@ import { useGuardedCreateKbPage } from "@/features/wiki/hooks/use-guarded-create
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Separator } from "@/components/ui/separator";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { useCan } from "@/hooks/api/access";
 import { useShellSidebarCollapse } from "@/components/layout/shell-sidebar-collapse-context";
 import PageTree from "./page-tree";
 import QuickFindDialog from "./quick-find-dialog";
-import WikiSidebarNav, { WikiSidebarFooter } from "./wiki-sidebar-nav";
+import WikiSidebarNav from "./wiki-sidebar-nav";
 import { WikiCollapsedSidebarChrome } from "./wiki-sidebar-chrome";
 import {
   KNOWLEDGE_BASE,
@@ -22,25 +21,28 @@ export default function WikiShell({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const createPage = useGuardedCreateKbPage((page) => router.push(pageHref(page.id)));
-  const canViewAnalytics = useCan("kb:analytics:view");
-  const canViewReviews = useCan("kb:reviews:view");
-  const canManageContent = useCan("kb:pages:manage");
-  const canImportPages = useCan("kb:pages:import");
   const canViewSpaces = useCan("kb:spaces:view");
   const [quickFindOpen, setQuickFindOpen] = useState(false);
   const createParamConsumedRef = useRef(false);
   const { isCollapsed: collapsed } = useShellSidebarCollapse();
   const [createConfirmOpen, setCreateConfirmOpen] = useState(false);
+  const [createKind, setCreateKind] = useState<"document" | "spreadsheet">("document");
 
   const submitNewPage = createPage.submit;
-  const handleNewPage = useCallback(() => {
-    void submitNewPage({});
-  }, [submitNewPage]);
+  const handleNewPage = useCallback(
+    (kind: "document" | "spreadsheet") => {
+      void submitNewPage({ kind });
+    },
+    [submitNewPage],
+  );
+  const handleNewDocument = useCallback(() => {
+    handleNewPage("document");
+  }, [handleNewPage]);
 
   const handleCreateConfirm = useCallback(() => {
     setCreateConfirmOpen(false);
-    handleNewPage();
-  }, [handleNewPage]);
+    handleNewPage(createKind);
+  }, [handleNewPage, createKind]);
 
   const handleCreateConfirmOpenChange = useCallback((open: boolean) => {
     setCreateConfirmOpen(open);
@@ -48,17 +50,15 @@ export default function WikiShell({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     if (createParamConsumedRef.current) return;
-    if (searchParams.get("create") !== "1") return;
+    const createParam = searchParams.get("create");
+    if (createParam !== "1" && createParam !== "spreadsheet") return;
     createParamConsumedRef.current = true;
     const next = new URLSearchParams(searchParams.toString());
     next.delete("create");
     router.replace(`${KNOWLEDGE_BASE}${next.size > 0 ? `?${next.toString()}` : ""}`);
+    setCreateKind(createParam === "spreadsheet" ? "spreadsheet" : "document");
     setCreateConfirmOpen(true);
   }, [searchParams, router]);
-
-  const handleOpenQuickFind = useCallback(() => {
-    setQuickFindOpen(true);
-  }, []);
 
   const handleQuickFindOpenChange = useCallback((open: boolean) => {
     setQuickFindOpen(open);
@@ -76,14 +76,6 @@ export default function WikiShell({ children }: { children: React.ReactNode }) {
     return () => document.removeEventListener("keydown", handleKeyDown);
   }, []);
 
-  const navProps = {
-    canViewAnalytics,
-    canViewReviews,
-    canManageContent,
-    canImportPages,
-    canViewSpaces,
-  };
-
   const sidebarInner = () => {
     const isCollapsedView = collapsed;
 
@@ -91,7 +83,7 @@ export default function WikiShell({ children }: { children: React.ReactNode }) {
       <>
         <ScrollArea className="flex-1 min-h-0 min-w-0">
           <div className={isCollapsedView ? "min-w-0 overflow-hidden pb-2" : "min-w-0 overflow-hidden px-0 pb-2"}>
-            <WikiSidebarNav isCollapsed={isCollapsedView} {...navProps} />
+            <WikiSidebarNav isCollapsed={isCollapsedView} canViewSpaces={canViewSpaces} />
             {!isCollapsedView && (
               <div className="min-w-0 overflow-hidden pr-2 pl-0">
                 <PageTree onCloseMobile={undefined} />
@@ -99,10 +91,6 @@ export default function WikiShell({ children }: { children: React.ReactNode }) {
             )}
           </div>
         </ScrollArea>
-        <div className={isCollapsedView ? "shrink-0" : "shrink-0 border-t border-border/40"}>
-          {isCollapsedView && <Separator className="mx-auto my-1 w-6" />}
-          <WikiSidebarFooter isCollapsed={isCollapsedView} onQuickFind={handleOpenQuickFind} />
-        </div>
       </>
     );
   };
@@ -119,7 +107,7 @@ export default function WikiShell({ children }: { children: React.ReactNode }) {
             {collapsed ? (
               <WikiCollapsedSidebarChrome
                 createPending={createPage.isSubmitting}
-                onNewPage={handleNewPage}
+                onNewPage={handleNewDocument}
               />
             ) : null}
             {sidebarInner()}
@@ -138,8 +126,8 @@ export default function WikiShell({ children }: { children: React.ReactNode }) {
         <ConfirmDialog
           open={createConfirmOpen}
           onOpenChange={handleCreateConfirmOpenChange}
-          title="Create a new document?"
-          description="A new blank document will be created and opened."
+          title={createKind === "spreadsheet" ? "Create a new spreadsheet?" : "Create a new document?"}
+          description={createKind === "spreadsheet" ? "A new blank spreadsheet will be created and opened." : "A new blank document will be created and opened."}
           confirmLabel="Create"
           onConfirm={handleCreateConfirm}
         />

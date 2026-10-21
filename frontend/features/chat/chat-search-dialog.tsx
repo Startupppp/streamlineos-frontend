@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useId } from "react";
 import { toast } from "sonner";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
@@ -49,6 +49,7 @@ export function ChatSearchDialog({
   onSelectChannel,
   onOpenMessage,
 }: ChatSearchDialogProps) {
+  const resultsId = useId();
   const [query, setQuery] = useState("");
   const handleCloseAutoFocus = useDialogReturnFocus("search");
   const debouncedQuery = useDebouncedValue(query, 300);
@@ -220,14 +221,14 @@ export function ChatSearchDialog({
         <Tabs value={scope} onValueChange={handleTabChange} className="mt-3 gap-0 px-4">
           <TabsList aria-label="Search in">
             {CHAT_SEARCH_SCOPES.map((option) => (
-              <TabsTrigger key={option} value={option}>
+              <TabsTrigger key={option} value={option} aria-controls={resultsId}>
                 {chatSearchScopeLabel(option)}
               </TabsTrigger>
             ))}
           </TabsList>
         </Tabs>
 
-        <div className="max-h-[400px] overflow-y-auto py-2" aria-busy={isOpening}>
+        <div id={resultsId} className="max-h-[400px] overflow-y-auto py-2" aria-busy={isOpening}>
           {body}
         </div>
       </DialogContent>

@@ -18,7 +18,8 @@ export const knowledgeAndSurveysQueryKeys = {
       parentId?: number;
       spaceId?: number;
       projectId?: number;
-    }) => [...base, "kb", "pages", "tree", "level", params, "infinite"] as const,
+    }) =>
+      [...base, "kb", "pages", "tree", "level", params, "infinite"] as const,
     pagesRecent: () => [...base, "kb", "pages", "recent"] as const,
     pagesFavorites: () => [...base, "kb", "pages", "favorites"] as const,
     pagesTrash: (params?: QueryKeyParams) =>
@@ -26,11 +27,33 @@ export const knowledgeAndSurveysQueryKeys = {
         ? ([...base, "kb", "pages", "trash"] as const)
         : ([...base, "kb", "pages", "trash", params] as const),
     pagesTrashDeleters: (search: string, selectedMembershipId?: number) =>
-      [...base, "kb", "pages", "trash", "deleters", search, selectedMembershipId] as const,
+      [
+        ...base,
+        "kb",
+        "pages",
+        "trash",
+        "deleters",
+        search,
+        selectedMembershipId,
+      ] as const,
     askPageOwners: (search: string, selectedMembershipId?: number) =>
-      [...base, "kb", "ask", "pageOwners", search, selectedMembershipId] as const,
+      [
+        ...base,
+        "kb",
+        "ask",
+        "pageOwners",
+        search,
+        selectedMembershipId,
+      ] as const,
     pagesTrashPurgeImpact: (pageIds: number[]) =>
-      [...base, "kb", "pages", "trash", "purge-impact", [...pageIds].sort((a, b) => a - b)] as const,
+      [
+        ...base,
+        "kb",
+        "pages",
+        "trash",
+        "purge-impact",
+        [...pageIds].sort((a, b) => a - b),
+      ] as const,
     pagesSearch: (searchQuery: string, aclVersion: string) =>
       [...base, "kb", "pages", "search", searchQuery, aclVersion] as const,
     page: (pageId: number) => [...base, "kb", "pages", pageId] as const,
@@ -85,10 +108,13 @@ export const knowledgeAndSurveysQueryKeys = {
         : ([...base, "kb", "pages", pageId, "grants", params] as const),
     pageGrantCandidates: (pageId: number, search: string) =>
       [...base, "kb", "pages", pageId, "grant-candidates", search] as const,
+    pageWorkbook: (pageId: number) =>
+      [...base, "kb", "pages", pageId, "workbook"] as const,
     pageRecordLinks: (pageId: number) =>
       [...base, "kb", "pages", pageId, "record-links"] as const,
     importJobs: () => [...base, "kb", "import-jobs"] as const,
-    importJob: (jobId: number) => [...base, "kb", "import-jobs", jobId] as const,
+    importJob: (jobId: number) =>
+      [...base, "kb", "import-jobs", jobId] as const,
     exportJobs: () => [...base, "kb", "export-jobs"] as const,
     pageAnalytics: (params?: QueryKeyParams) =>
       params === undefined
@@ -133,10 +159,8 @@ export const knowledgeAndSurveysQueryKeys = {
       params === undefined
         ? ([...base, "kb", "contentHealthSignals"] as const)
         : ([...base, "kb", "contentHealthSignals", params] as const),
-    contentHealthCounts: () =>
-      [...base, "kb", "contentHealthCounts"] as const,
-    contentHealthTrend: () =>
-      [...base, "kb", "contentHealthTrend"] as const,
+    contentHealthCounts: () => [...base, "kb", "contentHealthCounts"] as const,
+    contentHealthTrend: () => [...base, "kb", "contentHealthTrend"] as const,
     contentHealthEvidence: (pageId: number | null, kind: string | null) =>
       [...base, "kb", "contentHealthEvidence", pageId, kind] as const,
   },
@@ -163,7 +187,13 @@ export const knowledgeAndSurveysQueryKeys = {
     publicBoard: (orgId: string | undefined, managedProductId?: number) =>
       managedProductId === undefined
         ? ([...base, "roadmap", "publicBoard", orgId] as const)
-        : ([...base, "roadmap", "publicBoard", orgId, managedProductId] as const),
+        : ([
+            ...base,
+            "roadmap",
+            "publicBoard",
+            orgId,
+            managedProductId,
+          ] as const),
     publication: [...base, "roadmap", "publication"] as const,
     byToken: (shareToken: string) =>
       [...base, "roadmap", "byToken", shareToken] as const,

@@ -24,6 +24,9 @@ jest.mock("@/hooks/api/kb", () => ({
   useDuplicateKbPage: jest.fn(() => ({ mutate: jest.fn(), isPending: false })),
   useToggleFavoriteKbPage: jest.fn(() => ({ mutate: jest.fn(), isPending: false })),
   useKbPageBacklinks: jest.fn(() => ({ data: [] })),
+  useArchiveKbPage: jest.fn(() => ({ mutate: jest.fn(), isPending: false })),
+  useUnarchiveKbPage: jest.fn(() => ({ mutate: jest.fn(), isPending: false })),
+  useUpdateKbPage: jest.fn(() => ({ mutate: jest.fn(), isPending: false })),
 }));
 
 jest.mock("@/hooks/api/kb/record-links", () => ({
@@ -58,12 +61,22 @@ jest.mock("@/hooks/api/access", () => ({
   useCan: (key: string) => mockCan(key),
 }));
 
-jest.mock("@/hooks/api/kb/hr-link-config", () => ({
-  useHrKbLinkFlags: () => ({ link: false, search: false, ai: false }),
-}));
-
-jest.mock("@/hooks/api/kb/linked-documents", () => ({
-  useLinkedDocuments: () => ({ data: undefined }),
+jest.mock("./wiki-home-sections", () => ({
+  WikiHomeHeaderActions: ({
+    canCreate,
+    isProjectScoped,
+  }: {
+    canCreate: boolean;
+    isProjectScoped: boolean;
+    projectId?: number;
+  }) => (
+    <div>
+      {!isProjectScoped && <a href="/knowledge/chat">Ask documents</a>}
+      {canCreate && <button type="button">New document</button>}
+    </div>
+  ),
+  WikiHomeActivitySection: () => null,
+  WikiHomeSharedUpdatesSection: () => null,
 }));
 
 type BuildListKeyboardOptions = Record<string, unknown>;

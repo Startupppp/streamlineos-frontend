@@ -219,4 +219,26 @@ describe("ChatHomePage — gated through PageState", () => {
     expect(screen.getByText("Access Restricted")).toBeInTheDocument();
     expect(screen.queryByTestId("empty-chat")).toBeNull();
   });
+
+  it("?joinHuddle=1 reaches the panel and is consumed by one replace that keeps the other params", async () => {
+    mockNav.searchParams = new URLSearchParams("channel=5&joinHuddle=1&inbox=unread");
+    render(<ChatHomePage />);
+    await act(async () => {});
+    expect(screen.getByTestId("panel-join-huddle")).toHaveTextContent("true");
+    expect(mockNav.replace).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByText("handle join huddle"));
+    expect(mockNav.replace).toHaveBeenCalledTimes(1);
+    expect(mockNav.push).not.toHaveBeenCalled();
+    const params = lastUrl(mockNav.replace);
+    expect(params.has("joinHuddle")).toBe(false);
+    expect(params.get("channel")).toBe("5");
+    expect(params.get("inbox")).toBe("unread");
+  });
+
+  it("without ?joinHuddle the panel is not asked to join", async () => {
+    mockNav.searchParams = new URLSearchParams("channel=5");
+    render(<ChatHomePage />);
+    await act(async () => {});
+    expect(screen.getByTestId("panel-join-huddle")).toHaveTextContent("false");
+  });
 });

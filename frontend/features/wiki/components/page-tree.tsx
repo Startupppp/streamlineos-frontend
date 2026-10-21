@@ -1,17 +1,15 @@
 "use client";
 
-import { useGuardedCreateKbPage } from "@/features/wiki/hooks/use-guarded-create-kb-page";
-import { useRouter } from "next/navigation";
+import { useMemo } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
-import { LoadingButton } from "@/components/ui/loading-button";
+import { Button } from "@/components/ui/button";
 import { ErrorState } from "@/components/shared/error-state";
 import { InfiniteScrollSentinel } from "@/components/ui/infinite-scroll-sentinel";
-import { useCan } from "@/hooks/api/access";
 import { useKbPageTreeInfinite } from "@/hooks/api/kb";
-import { pageHref } from "@/lib/knowledge-routes";
 import { KbPlusIcon } from "@/features/wiki/lib/kb-icons";
+import { KbNewMenu } from "./kb-new-menu";
 import PageTreeItem from "./page-tree-item";
-import type { KbPageTreeNode } from "@/hooks/api/kb/page-types";
+import type { KbPage, KbPageTreeNode } from "@/hooks/api/kb/page-types";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { isApiError } from "@/lib/api-envelope";
 
@@ -28,12 +26,10 @@ export default function PageTree({
   projectId,
   baseHref,
 }: PageTreeProps) {
-  const router = useRouter();
-  const createPage = useGuardedCreateKbPage((page) => {
-    router.push(baseHref ? `${baseHref}/${page.id}` : pageHref(page.id));
-    onCloseMobile?.();
-  });
-  const canCreate = useCan("kb:pages:create");
+  const treeScope = useMemo(
+    () => ({ spaceId, projectId }),
+    [spaceId, projectId],
+  );
 
   const {
     data,
@@ -50,9 +46,8 @@ export default function PageTree({
   const rootNodes: KbPageTreeNode[] = data?.pages.flatMap((p) => p.data) ?? [];
   const accessLost = isApiError(error) && (error.status === 401 || error.status === 403 || error.status === 404);
 
-  function handleNewPage() {
-    if (!canCreate) return;
-    void createPage.submit({ spaceId, projectId });
+  function handleCreated(_page: KbPage) {
+    onCloseMobile?.();
   }
 
   function handleRetry() {
@@ -93,19 +88,17 @@ export default function PageTree({
     return (
       <div className="pr-2 pl-0 py-4 flex flex-col items-center gap-2">
         <p className="text-xs text-muted-foreground text-center">No pages yet</p>
-        {canCreate && (
-          <LoadingButton
-            size="sm"
-            variant="outline"
-            className="h-7 text-xs"
-            onClick={handleNewPage}
-            isPending={createPage.isSubmitting}
-            loadingText="Creating…"
-          >
-            <KbPlusIcon className="h-3.5 w-3.5" />
-            New page
-          </LoadingButton>
-        )}
+        <KbNewMenu
+          scope={treeScope}
+          allowFolder={false}
+          onCreated={handleCreated}
+          trigger={
+            <Button size="sm" variant="outline" className="h-7 text-xs">
+              <KbPlusIcon className="h-3.5 w-3.5" />
+              New
+            </Button>
+          }
+        />
       </div>
     );
   }

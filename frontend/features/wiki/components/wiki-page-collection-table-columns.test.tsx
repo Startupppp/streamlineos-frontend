@@ -175,6 +175,7 @@ function makeItem(id: number, extra: Record<string, unknown> = {}) {
     status: "published",
     visibility: "org",
     contentType: "rich-text",
+    kind: "document",
     trustState: "verified",
     ownerMembershipId: 1,
     ownerUserId: "user-1",
@@ -402,5 +403,39 @@ describe("WikiPageCollectionTable — onItemCountChange callback", () => {
     );
 
     expect(handleItemCountChange).toHaveBeenCalledWith(3);
+  });
+});
+
+describe("WikiPageCollectionTable — kind indicator", () => {
+  it("shows a spreadsheet icon in the title cell for a spreadsheet page", () => {
+    const row = makeItem(99, { kind: "spreadsheet", title: "Budget sheet" });
+    useKbPageCollection.mockReturnValue({
+      data: makeResponse([row]),
+      isLoading: false,
+      isError: false,
+      error: undefined,
+      refetch: jest.fn(),
+    });
+
+    render(<WikiPageCollectionTable fixedParams={{}} emptyTitle="No pages" />);
+    const cell = renderListCell("title", row);
+
+    expect(cell.getByLabelText("Spreadsheet")).toBeInTheDocument();
+  });
+
+  it("shows no spreadsheet icon for a document page", () => {
+    const row = makeItem(98, { kind: "document", title: "Policy doc" });
+    useKbPageCollection.mockReturnValue({
+      data: makeResponse([row]),
+      isLoading: false,
+      isError: false,
+      error: undefined,
+      refetch: jest.fn(),
+    });
+
+    render(<WikiPageCollectionTable fixedParams={{}} emptyTitle="No pages" />);
+    const cell = renderListCell("title", row);
+
+    expect(cell.queryByLabelText("Spreadsheet")).not.toBeInTheDocument();
   });
 });

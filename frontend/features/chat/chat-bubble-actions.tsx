@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import type { Message, TicketEntityRef } from "@/types/chat";
 import { useCan } from "@/hooks/api/access";
 import { useEntityAction } from "./entity-actions-context";
+import { messageDeleteTitle } from "./message-delete-title";
 import { ChatOverlayFallback } from "./chat-lazy-fallbacks";
 
 const MessageActions = dynamic(
@@ -40,6 +41,7 @@ const EntityActionDialog = dynamic(
 
 interface ChatBubbleActionsProps {
   message: Message;
+  senderName: string;
   isOwn: boolean;
   isPinned?: boolean;
   isSaved?: boolean;
@@ -58,6 +60,7 @@ interface ChatBubbleActionsProps {
 
 export function ChatBubbleActions({
   message,
+  senderName,
   isOwn,
   isPinned,
   isSaved,
@@ -170,6 +173,7 @@ export function ChatBubbleActions({
           onSetDueDate={handleOpenDueDateDialog}
           onStartEdit={onStartEdit}
           onDelete={onDelete}
+          deleteTitle={messageDeleteTitle(senderName, message.content)}
         />
       )}
     </>

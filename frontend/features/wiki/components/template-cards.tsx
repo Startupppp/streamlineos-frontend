@@ -72,9 +72,12 @@ export function TemplateCard({
   return (
     <>
       <div className="flex items-start gap-3 p-3 rounded-lg border border-border bg-card hover:bg-muted/30 transition-colors">
-        <span className="text-xl shrink-0 mt-0.5">{template.icon ?? "📄"}</span>
+        <span className="text-xl shrink-0 mt-0.5">{template.icon ?? (template.kind === "spreadsheet" ? "📊" : "📄")}</span>
         <div className="flex-1 min-w-0">
           <TruncatedText text={template.name} className="text-label font-medium" />
+          {template.kind === "spreadsheet" && (
+            <span className="inline-block text-xs text-muted-foreground bg-muted rounded px-1 py-0.5 mt-0.5">Spreadsheet</span>
+          )}
           {template.description && (
             <TruncatedText text={template.description} lines={2} className="text-xs text-muted-foreground mt-0.5" />
           )}

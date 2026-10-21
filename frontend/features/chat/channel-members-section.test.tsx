@@ -83,6 +83,7 @@ function renderSection(count: number, onlineIds: Set<string> = new Set()) {
       members={makeMembers(count)}
       isAdmin={false}
       isMultiMemberChannel
+      conversationName="#design"
       onlineUserIds={onlineIds}
       onClose={noop}
     />,
@@ -166,8 +167,10 @@ describe("ChannelMembersSection — removing and leaving are confirmed", () => {
     renderSection(3);
     await user.click(screen.getByRole("button", { name: "Leave channel" }));
     const dialog = await screen.findByRole("alertdialog");
+    expect(within(dialog).getByText("Leave #design?")).toBeInTheDocument();
     await user.click(within(dialog).getByRole("button", { name: "Leave channel" }));
-    await waitFor(() => expect(mockLeaveChannel).toHaveBeenCalledWith(1));
+    await waitFor(() => expect(mockLeaveChannel).toHaveBeenCalledTimes(1));
+    expect(mockLeaveChannel).toHaveBeenCalledWith(1);
     expect(mockRemoveMember).not.toHaveBeenCalled();
   });
 

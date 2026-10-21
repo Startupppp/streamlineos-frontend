@@ -8,31 +8,36 @@ import { LoadingButton } from "@/components/ui/loading-button";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import {
-  Archive,
-  ArchiveRestore,
-  Bookmark,
-  Pencil,
-} from "lucide-react";
+import { Archive, ArchiveRestore, Bookmark, Pencil } from "lucide-react";
 import { XIcon } from "@animateicons/react/lucide";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { formatDistanceToNow } from "date-fns";
 import { useChatChannel, useChatOnlineUsers } from "@/hooks/api/chat-core-read";
 import { useChatPins, useUnpinMessage } from "@/hooks/api/chat-search";
-import { useArchiveChannel, useUnarchiveChannel } from "@/hooks/api/chat-personal-b";
+import {
+  useArchiveChannel,
+  useUnarchiveChannel,
+} from "@/hooks/api/chat-personal-b";
 import { useCan } from "@/hooks/api/access";
 import { resolveImageUrl } from "@/lib/utils";
 import { ChannelInfoPanelProfile } from "./channel-info-panel-profile";
 import { ChannelMembersSection } from "./channel-members-section";
+import { conversationConfirmName } from "./channel-member-lookup";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { getInitials } from "@/lib/format-utils";
 import { ConversationNotificationSettings } from "./conversation-notification-settings";
 import { ChatPanelFallback } from "./chat-lazy-fallbacks";
 
 const SharedFilesPanel = dynamic(
-  () => import("./shared-files-panel").then((m) => ({ default: m.SharedFilesPanel })),
-  { ssr: false, loading: () => <ChatPanelFallback label="Loading shared files" /> },
+  () =>
+    import("./shared-files-panel").then((m) => ({
+      default: m.SharedFilesPanel,
+    })),
+  {
+    ssr: false,
+    loading: () => <ChatPanelFallback label="Loading shared files" />,
+  },
 );
 
 export function ChannelInfoPanel({
@@ -101,9 +106,8 @@ export function ChannelInfoPanel({
     };
   }
 
-  function handleUnpinOpenChange(open: boolean) {
-    if (!open) setUnpinMessageId(null);
-  }
+  const handleUnpinOpenChange = (open: boolean) =>
+    open || setUnpinMessageId(null);
 
   function handleConfirmUnpin() {
     if (unpinMessageId === null) return;
@@ -111,10 +115,9 @@ export function ChannelInfoPanel({
     setUnpinMessageId(null);
   }
 
-  const isAdmin = channel?.members?.some(
-    (m) => m.user?.id === currentUserId && m.role === "ADMIN",
-  );
+  const isAdmin = myMember?.role === "ADMIN";
   const isMultiMemberChannel = channel?.type !== "DIRECT";
+  const confirmName = conversationConfirmName(channel, currentUserId);
 
   return (
     <div className="flex h-full w-80 min-w-0 flex-col overflow-hidden">
@@ -152,7 +155,10 @@ export function ChannelInfoPanel({
           </TabsList>
         </div>
 
-        <TabsContent value="about" className="mt-0 flex min-h-0 flex-1 flex-col">
+        <TabsContent
+          value="about"
+          className="mt-0 flex min-h-0 flex-1 flex-col"
+        >
           <ScrollArea className="min-w-0 flex-1">
             <div className="min-w-0 w-full max-w-full overflow-x-hidden p-4">
               <ChannelInfoPanelProfile
@@ -185,7 +191,10 @@ export function ChannelInfoPanel({
                           </AvatarFallback>
                         </Avatar>
                         <div className="flex-1 min-w-0">
-                          <TruncatedText text={pin.message.sender?.name ?? ""} className="text-dense font-semibold" />
+                          <TruncatedText
+                            text={pin.message.sender?.name ?? ""}
+                            className="text-dense font-semibold"
+                          />
                           <p className="text-xs text-muted-foreground line-clamp-2 break-words">
                             {pin.message.content ??
                               (pin.message.attachments.length > 0
@@ -217,6 +226,7 @@ export function ChannelInfoPanel({
                 members={channel?.members ?? []}
                 isAdmin={Boolean(isAdmin)}
                 isMultiMemberChannel={isMultiMemberChannel}
+                conversationName={confirmName}
                 onlineUserIds={onlineUserIds}
                 onLeftChannel={onLeftChannel}
                 onClose={onClose}
@@ -249,7 +259,9 @@ export function ChannelInfoPanel({
                     onClick={handleUnarchive}
                     isPending={unarchiveChannel.isPending}
                   >
-                    {!unarchiveChannel.isPending && <ArchiveRestore className="h-3.5 w-3.5 mr-1.5" />}
+                    {!unarchiveChannel.isPending && (
+                      <ArchiveRestore className="h-3.5 w-3.5 mr-1.5" />
+                    )}
                     Unarchive chat
                   </LoadingButton>
                 ) : (
@@ -260,7 +272,9 @@ export function ChannelInfoPanel({
                     onClick={handleRequestArchive}
                     isPending={archiveChannel.isPending}
                   >
-                    {!archiveChannel.isPending && <Archive className="h-3.5 w-3.5 mr-1.5" />}
+                    {!archiveChannel.isPending && (
+                      <Archive className="h-3.5 w-3.5 mr-1.5" />
+                    )}
                     Archive chat
                   </LoadingButton>
                 )}
@@ -269,7 +283,10 @@ export function ChannelInfoPanel({
           </ScrollArea>
         </TabsContent>
 
-        <TabsContent value="files" className="mt-0 flex min-h-0 flex-1 flex-col">
+        <TabsContent
+          value="files"
+          className="mt-0 flex min-h-0 flex-1 flex-col"
+        >
           <SharedFilesPanel channelId={channelId} />
         </TabsContent>
       </Tabs>
@@ -277,7 +294,7 @@ export function ChannelInfoPanel({
       <ConfirmDialog
         open={confirmArchiveOpen}
         onOpenChange={setConfirmArchiveOpen}
-        title="Archive this chat?"
+        title={`Archive ${confirmName}?`}
         description="It moves out of your conversation list into Archive. You can unarchive it from there at any time."
         confirmLabel="Archive"
         destructive

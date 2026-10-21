@@ -68,9 +68,11 @@ export function ChatHomePage() {
     messageId,
     searchScope,
     dmRequested,
+    joinHuddleRequested,
     navigateToConversation,
     setSearchScope: handleSearchScopeChange,
     clearDmParam,
+    clearJoinHuddleParam,
     closeConversation,
     leaveMessage,
   } = useChatHomeUrl();
@@ -217,6 +219,8 @@ export function ChatHomePage() {
         onAutoStartHandled={handleAutoStartHandled}
         scrollToMessageId={messageId}
         onLeaveMessage={leaveMessage}
+        joinHuddleRequested={joinHuddleRequested}
+        onJoinHuddleHandled={clearJoinHuddleParam}
       />
     ) : (
       <EmptyChatState

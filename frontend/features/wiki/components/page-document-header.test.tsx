@@ -27,7 +27,7 @@ jest.mock("./page-document-toolbar", () => ({
   ),
 }));
 
-const page = { id: 1, title: "Runbook", parentPageId: null, content: null } as unknown as KbPageDetail;
+const page = { id: 1, title: "Runbook", kind: "document", parentPageId: null, content: null } as unknown as KbPageDetail;
 
 function saveTemplate() {
   render(

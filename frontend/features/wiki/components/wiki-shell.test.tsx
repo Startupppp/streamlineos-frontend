@@ -40,7 +40,6 @@ jest.mock("./quick-find-dialog", () => ({
 jest.mock("./wiki-sidebar-nav", () => ({
   __esModule: true,
   default: () => <div>Wiki navigation</div>,
-  WikiSidebarFooter: () => null,
 }));
 
 jest.mock("./wiki-sidebar-chrome", () => ({
@@ -101,5 +100,54 @@ describe("WikiShell — ?create=1 confirmation guard", () => {
   it("does not show a confirmation dialog when ?create=1 is absent", () => {
     render(<WikiShell><div>body</div></WikiShell>);
     expect(screen.queryByText("Create a new document?")).not.toBeInTheDocument();
+  });
+
+  it("calls createPage.mutate with kind: document when ?create=1 is confirmed", () => {
+    mockSearchParams = new URLSearchParams("create=1");
+    render(<WikiShell><div>body</div></WikiShell>);
+    const confirmButton = screen.getByRole("button", { name: /create/i });
+    fireEvent.click(confirmButton);
+    expect(mockMutate).toHaveBeenCalledWith(
+      expect.objectContaining({ kind: "document" }),
+      expect.anything(),
+    );
+  });
+});
+
+describe("WikiShell — ?create=spreadsheet confirmation guard", () => {
+  it("does not call createPage.mutate immediately when ?create=spreadsheet is present", () => {
+    mockSearchParams = new URLSearchParams("create=spreadsheet");
+    render(<WikiShell><div>body</div></WikiShell>);
+    expect(mockMutate).not.toHaveBeenCalled();
+  });
+
+  it("shows the spreadsheet confirmation dialog when ?create=spreadsheet is in the URL", () => {
+    mockSearchParams = new URLSearchParams("create=spreadsheet");
+    render(<WikiShell><div>body</div></WikiShell>);
+    expect(screen.getByText("Create a new spreadsheet?")).toBeInTheDocument();
+  });
+
+  it("strips ?create=spreadsheet from the URL when the confirm dialog is shown", () => {
+    mockSearchParams = new URLSearchParams("create=spreadsheet");
+    render(<WikiShell><div>body</div></WikiShell>);
+    expect(mockReplace).toHaveBeenCalledWith(
+      expect.not.stringContaining("create=spreadsheet"),
+    );
+  });
+
+  it("calls createPage.mutate with kind: spreadsheet when confirmed", () => {
+    mockSearchParams = new URLSearchParams("create=spreadsheet");
+    render(<WikiShell><div>body</div></WikiShell>);
+    const confirmButton = screen.getByRole("button", { name: /create/i });
+    fireEvent.click(confirmButton);
+    expect(mockMutate).toHaveBeenCalledWith(
+      expect.objectContaining({ kind: "spreadsheet" }),
+      expect.anything(),
+    );
+  });
+
+  it("does not show the spreadsheet dialog when ?create=spreadsheet is absent", () => {
+    render(<WikiShell><div>body</div></WikiShell>);
+    expect(screen.queryByText("Create a new spreadsheet?")).not.toBeInTheDocument();
   });
 });

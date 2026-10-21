@@ -6,6 +6,7 @@ import type { KbPageCollectionItem } from "@/hooks/api/kb/page-collection";
 import { kbTimeAgo } from "@/features/wiki/lib/kb-date-utils";
 import { TrustBadge, StatusBadge, OwnerMissingBadge } from "./kb-collection-badges";
 import { CollectionItemMenu } from "./wiki-page-collection-item-menu";
+import { KbTable2Icon } from "@/features/wiki/lib/kb-icons";
 
 interface CollectionRowMenuProps {
   page: KbPageCollectionItem;
@@ -45,12 +46,19 @@ export function buildColumns(
       key: "title",
       header: "Title",
       cell: (row) => (
-        <a
-          href={resolveHref(row.id)}
-          className="font-medium text-foreground hover:underline"
-        >
-          {row.title || "Untitled"}
-        </a>
+        <div className="flex items-center gap-1.5 min-w-0">
+          <a
+            href={resolveHref(row.id)}
+            className="font-medium text-foreground hover:underline truncate"
+          >
+            {row.title || "Untitled"}
+          </a>
+          {row.kind === "spreadsheet" && (
+            <span role="img" aria-label="Spreadsheet">
+              <KbTable2Icon className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+            </span>
+          )}
+        </div>
       ),
     },
     {

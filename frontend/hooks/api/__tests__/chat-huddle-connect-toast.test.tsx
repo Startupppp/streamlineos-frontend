@@ -47,19 +47,26 @@ async function failStart(error: ApiError) {
 const CONNECT_DETAILS = { connectPath: "/calendar?accounts=1" };
 
 describe("useStartHuddle error handling by backend code", () => {
-  it("offers a provider-neutral connect action for HUDDLE_NO_CONNECTION that navigates to details.connectPath", async () => {
+  it("shows the connect copy for HUDDLE_NO_CONNECTION and navigates to details.connectPath", async () => {
     const { message, options } = await failStart(
       new ApiError("No calendar", 412, "HUDDLE_NO_CONNECTION", CONNECT_DETAILS),
     );
-    expect(options?.action?.label).toBe("Connect a calendar account");
-    expect(message).not.toMatch(/Google Calendar/);
+    expect(options?.action?.label).toBe("Connect calendar");
+    expect(message).toBe("Connect Google or Microsoft calendar to start a meeting");
     options?.action?.onClick();
     expect(assign).toHaveBeenCalledWith("/calendar?accounts=1");
   });
 
-  it("offers Reconnect your calendar for HUDDLE_RECONNECT", async () => {
-    const { options } = await failStart(new ApiError("Expired", 412, "HUDDLE_RECONNECT", CONNECT_DETAILS));
-    expect(options?.action?.label).toBe("Reconnect your calendar");
+  it.each([
+    ["google_meet", "Reconnect Google to start a meeting", "Reconnect Google"],
+    ["microsoft_teams", "Reconnect Microsoft to start a meeting", "Reconnect Microsoft"],
+    [undefined, "Reconnect your calendar to start a meeting", "Reconnect calendar"],
+  ])("shows provider-aware reconnect copy for HUDDLE_RECONNECT with provider %s", async (provider, text, label) => {
+    const { message, options } = await failStart(
+      new ApiError("Expired", 412, "HUDDLE_RECONNECT", { ...CONNECT_DETAILS, provider }),
+    );
+    expect(message).toBe(text);
+    expect(options?.action?.label).toBe(label);
     options?.action?.onClick();
     expect(assign).toHaveBeenCalledWith("/calendar?accounts=1");
   });

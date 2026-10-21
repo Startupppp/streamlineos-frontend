@@ -282,6 +282,7 @@ export function WikiPageCollectionTable({
             icon={row.icon}
             coverImage={row.coverImage}
             subtitle={kbTimeAgo(row.updatedAt)}
+            kind={row.kind}
             menu={
               <CollectionItemMenu
                 page={row}

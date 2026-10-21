@@ -25,10 +25,20 @@ jest.mock("@/hooks/api/kb", () => ({
   useDuplicateKbPage: jest.fn(() => ({ mutate: jest.fn(), isPending: false })),
   useToggleFavoriteKbPage: jest.fn(() => ({ mutate: jest.fn(), isPending: false })),
   useKbPageBacklinks: jest.fn(() => ({ data: [] })),
+  useArchiveKbPage: jest.fn(() => ({ mutate: jest.fn(), isPending: false })),
+  useUnarchiveKbPage: jest.fn(() => ({ mutate: jest.fn(), isPending: false })),
+  useUpdateKbPage: jest.fn(() => ({ mutate: jest.fn(), isPending: false })),
 }));
 
 jest.mock("@/hooks/api/kb/record-links", () => ({
   useKbPageRecordLinks: jest.fn(() => ({ data: [] })),
+}));
+
+jest.mock("@/hooks/api/kb/page-grants", () => ({
+  useKbPageGrants: jest.fn(() => ({ data: undefined, isLoading: false, hasNextPage: false, fetchNextPage: jest.fn(), isFetchingNextPage: false })),
+  useCreateKbPageGrant: jest.fn(() => ({ mutate: jest.fn(), isPending: false })),
+  useRevokeKbPageGrant: jest.fn(() => ({ mutate: jest.fn(), isPending: false })),
+  useKbPageGrantCandidates: jest.fn(() => ({ data: undefined, isLoading: false })),
 }));
 
 jest.mock("@/hooks/api/kb/export-page", () => ({
@@ -59,12 +69,22 @@ jest.mock("@/hooks/api/access", () => ({
   useCan: (key: string) => mockCan(key),
 }));
 
-jest.mock("@/hooks/api/kb/hr-link-config", () => ({
-  useHrKbLinkFlags: () => ({ link: false, search: false, ai: false }),
-}));
-
-jest.mock("@/hooks/api/kb/linked-documents", () => ({
-  useLinkedDocuments: () => ({ data: undefined }),
+jest.mock("./wiki-home-sections", () => ({
+  WikiHomeHeaderActions: ({
+    canCreate,
+    isProjectScoped,
+  }: {
+    canCreate: boolean;
+    isProjectScoped: boolean;
+    projectId?: number;
+  }) => (
+    <div>
+      {!isProjectScoped && <a href="/knowledge/chat">Ask documents</a>}
+      {canCreate && <button type="button">New document</button>}
+    </div>
+  ),
+  WikiHomeActivitySection: () => null,
+  WikiHomeSharedUpdatesSection: () => null,
 }));
 
 type BuildListKeyboardOptions = Record<string, unknown>;
@@ -280,7 +300,7 @@ describe("WikiHomePage — favorites pagination", () => {
 
     render(<WikiHomePage />);
 
-    expect(screen.getByRole("heading", { name: "Favorites" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Starred" })).toBeInTheDocument();
     expect(screen.getByRole("alert")).toHaveTextContent("Could not load favorites");
     expect(screen.getByText("favorites-req-1")).toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: "Try again" }));
@@ -363,7 +383,7 @@ describe("WikiHomePage — favorites pagination", () => {
 
     render(<WikiHomePage projectId={7} />);
 
-    expect(screen.queryByText("Favorites")).not.toBeInTheDocument();
+    expect(screen.queryByText("Starred")).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Load more favorites" })).not.toBeInTheDocument();
   });
 });
@@ -751,5 +771,33 @@ describe("WikiHomePage — the create control fails closed on kb:pages:create", 
     render(<WikiHomePage />);
     const options = lastKeyboardOptions();
     expect(options.onCreate).toBeUndefined();
+  });
+});
+
+describe("WikiHomePage — Manage dropdown gating", () => {
+  it("passes canCreate=true to the header actions when kb:pages:create is granted", () => {
+    render(<WikiHomePage />);
+    expect(screen.getByRole("button", { name: /new document/i })).toBeInTheDocument();
+  });
+
+  it("passes canCreate=false to the header actions when kb:pages:create is denied so the New action is hidden", () => {
+    mockCan = (key) => key !== "kb:pages:create";
+    render(<WikiHomePage />);
+    expect(screen.queryByRole("button", { name: /new document/i })).toBeNull();
+  });
+
+  it("renders the Starred section heading when starred pages exist", () => {
+    useKbPagesFavorites.mockReturnValue({
+      data: [makeItem(3)],
+      hasNextPage: false,
+      isFetchingNextPage: false,
+      fetchNextPage: jest.fn(),
+      isError: false,
+      error: undefined,
+      refetch: jest.fn(),
+      isFetchNextPageError: false,
+    });
+    render(<WikiHomePage />);
+    expect(screen.getByRole("heading", { name: "Starred" })).toBeInTheDocument();
   });
 });

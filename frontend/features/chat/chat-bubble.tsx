@@ -275,6 +275,7 @@ export function ChatBubble({
         {message.id > 0 && (
           <ChatBubbleActions
             message={message}
+            senderName={senderName}
             isOwn={isOwn}
             isPinned={isPinned}
             isSaved={isSaved}

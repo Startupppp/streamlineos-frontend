@@ -1,6 +1,10 @@
 import { render, screen } from "@testing-library/react";
 import PrivatePage from "./private-page";
 
+jest.mock("./kb-new-menu", () => ({
+  KbNewMenu: () => null,
+}));
+
 jest.mock("next/navigation", () => ({
   useRouter: () => ({ push: jest.fn(), replace: jest.fn() }),
   usePathname: () => "/knowledge/wiki/private",
@@ -83,6 +87,7 @@ function makeItem(overrides: Partial<Record<string, unknown>> = {}) {
     projectId: null,
     parentPageId: null,
     status: "draft",
+    kind: "document",
     visibility: "private",
     contentType: "rich-text",
     trustState: "unverified",

@@ -23,16 +23,10 @@ function fireIntersection() {
 }
 
 describe("MessageList — older history loads by infinite scroll, never a button", () => {
-  it("shows no visible 'Load older' button; the only control is the sentinel's keyboard fallback", () => {
-    const fetchNextPage = jest.fn();
-    render(<MessageList {...props({ showScrollBtn: true, fetchNextPage })} />);
-    const fallback = screen.getByRole("button", { name: "Load older messages" });
-    expect(fallback).toHaveClass("sr-only");
-    expect(fallback.closest("[aria-hidden]")).toBeNull();
-    act(() => {
-      fallback.click();
-    });
-    expect(fetchNextPage).toHaveBeenCalledTimes(1);
+  it("renders no older-history button while more history exists", () => {
+    render(<MessageList {...props({ showScrollBtn: true })} />);
+    expect(screen.queryByRole("button", { name: /older/i })).toBeNull();
+    expect(document.querySelector("[data-older-history-sentinel]")).not.toBeNull();
   });
 
   it("drops the keyboard fallback once history is exhausted", () => {
@@ -191,31 +185,6 @@ describe("MessageList — the older-history guards key on content, not array ide
       />,
     );
     expect(viewport.scrollTop).toBe(100);
-  });
-});
-
-describe("MessageList — the older-history keyboard fallback keeps focus when it unmounts", () => {
-  it("moves focus to the conversation's scroll viewport before the fetch removes the button", () => {
-    const scrollContainerRef = createRef<HTMLDivElement>();
-    const fetchNextPage = jest.fn();
-    const { rerender } = render(
-      <MessageList {...props({ showScrollBtn: true, fetchNextPage, scrollContainerRef })} />,
-    );
-    const fallback = screen.getByRole("button", { name: "Load older messages" });
-    act(() => {
-      fallback.focus();
-      fallback.click();
-    });
-    expect(fetchNextPage).toHaveBeenCalledTimes(1);
-    expect(document.activeElement).toBe(scrollContainerRef.current);
-
-    rerender(
-      <MessageList
-        {...props({ showScrollBtn: true, fetchNextPage, scrollContainerRef, isFetchingNextPage: true })}
-      />,
-    );
-    expect(screen.queryByRole("button", { name: "Load older messages" })).toBeNull();
-    expect(document.activeElement).toBe(scrollContainerRef.current);
   });
 });
 

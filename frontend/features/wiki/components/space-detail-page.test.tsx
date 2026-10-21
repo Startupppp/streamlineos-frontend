@@ -4,6 +4,11 @@ import { ApiError } from "@/lib/api-envelope";
 import { KB_SPACES } from "@/lib/knowledge-routes";
 import SpaceDetailPage from "./space-detail-page";
 
+const mockKbNewMenu = jest.fn<React.ReactElement | null, [Record<string, unknown>]>(() => null);
+jest.mock("./kb-new-menu", () => ({
+  KbNewMenu: (props: Record<string, unknown>) => mockKbNewMenu(props),
+}));
+
 jest.mock("next/navigation", () => ({
   useRouter: () => ({ push: jest.fn(), replace: jest.fn() }),
   usePathname: () => "/knowledge/wiki/spaces/1",
@@ -117,6 +122,7 @@ beforeEach(() => {
   mockRestore.mockReturnValue(mutation());
   mockCreatePage.mockReturnValue(mutation());
   mockPageCollection.mockImplementation(() => undefined);
+  mockKbNewMenu.mockReturnValue(null);
 });
 
 describe("SpaceDetailPage", () => {
@@ -142,7 +148,7 @@ describe("SpaceDetailPage", () => {
     render(<SpaceDetailPage spaceId={5} />);
 
     expect(screen.getAllByText("Engineering Hub").length).toBeGreaterThan(0);
-    expect(screen.queryByRole("button", { name: /New page/i })).not.toBeInTheDocument();
+    expect(mockKbNewMenu).not.toHaveBeenCalled();
   });
 
   it("renders the not-found recovery state for a 404 response, not a generic error", () => {
@@ -198,7 +204,7 @@ describe("SpaceDetailPage", () => {
     expect(screen.getByText("Access Restricted")).toBeInTheDocument();
     expect(screen.queryByText("Engineering Hub")).not.toBeInTheDocument();
     expect(screen.queryByText("Where engineers live")).not.toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: /New page/i })).not.toBeInTheDocument();
+    expect(mockKbNewMenu).not.toHaveBeenCalled();
     expect(screen.queryByRole("button", { name: /Members/i })).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /Archive/i })).not.toBeInTheDocument();
   });
@@ -284,24 +290,23 @@ describe("SpaceDetailPage", () => {
     expect(screen.queryByRole("dialog", { name: "Hierarchy" })).not.toBeInTheDocument();
   });
 
-  it("BITE: shows a New page button that creates a page scoped to this space when the actor can create pages", async () => {
-    mockCan.mockImplementation((key) => key === "kb:pages:create");
-    const createMutate = jest.fn();
-    mockCreatePage.mockReturnValue(mutation({ mutate: createMutate }));
-
+  it("BITE: renders KbNewMenu scoped to this space with allowFolder=false", () => {
     render(<SpaceDetailPage spaceId={5} />);
-    await userEvent.click(screen.getByRole("button", { name: /New page/i }));
 
-    expect(createMutate).toHaveBeenCalledWith(
-      { spaceId: 5 },
-      expect.objectContaining({ onSuccess: expect.any(Function), onError: expect.any(Function) }),
+    expect(mockKbNewMenu).toHaveBeenCalledWith(
+      expect.objectContaining({
+        scope: expect.objectContaining({ spaceId: 5 }),
+        allowFolder: false,
+      }),
     );
   });
 
-  it("hides the New page button when the actor cannot create pages", () => {
+  it("does not render KbNewMenu in the header while loading (space not yet ready)", () => {
+    mockKbSpace.mockReturnValue(spaceQuery({ isLoading: true, data: undefined }));
+
     render(<SpaceDetailPage spaceId={5} />);
 
-    expect(screen.queryByRole("button", { name: /New page/i })).not.toBeInTheDocument();
+    expect(mockKbNewMenu).not.toHaveBeenCalled();
   });
 
   it("BITE: shows Members and Archive actions to a space manager, and opens the members sheet", async () => {

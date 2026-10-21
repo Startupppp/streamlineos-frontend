@@ -147,6 +147,37 @@ export const kbPageVersionListContract = z.object({
 
 export const kbPageVersionContract = kbPageVersionItemContract;
 
+const kbWorkbookCellContract = z.object({
+  r: z.number().int(),
+  c: z.number().int(),
+  t: z.enum(["string", "number", "boolean", "error", "empty"]),
+  v: z.union([z.string(), z.number(), z.boolean(), z.null()]),
+  f: z.string().nullable().optional(),
+  m: z.string().nullable().optional(),
+  s: z.record(z.unknown()).nullable().optional(),
+});
+
+const kbWorkbookSheetContract = z.object({
+  id: z.string(),
+  name: z.string(),
+  position: z.number().int(),
+  rowCount: z.number().int(),
+  columnCount: z.number().int(),
+  config: z.record(z.unknown()),
+  cells: z.array(kbWorkbookCellContract),
+});
+
+export const kbWorkbookContract = z.object({
+  pageId: z.number().int(),
+  contentRevision: z.number().int(),
+  sheets: z.array(kbWorkbookSheetContract),
+});
+
+export const kbWorkbookUpdateContract = z.object({
+  contentRevision: z.number().int(),
+  updatedAt: z.string(),
+});
+
 export const kbTrashPageListContract = z.object({
   data: z.array(kbPageListItemContract),
   pagination: z.object({

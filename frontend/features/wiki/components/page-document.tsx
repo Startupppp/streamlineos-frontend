@@ -51,6 +51,11 @@ import {
 } from "@/components/editor/plate/plate-value-convert";
 import "../wiki-document.css";
 
+const PageSpreadsheet = dynamic(() => import("./page-spreadsheet"), {
+  ssr: false,
+  loading: () => <Skeleton className="h-full w-full" />,
+});
+
 /** Centered reading column — wider than a narrow article, not full-bleed. */
 const WIKI_DOCUMENT_COLUMN =
   "mx-auto w-full min-w-0 max-w-4xl px-4 sm:px-8";
@@ -314,6 +319,12 @@ export default function PageDocument({ pageId, onNavigateToPage, projectId }: Pa
 
   if (isError || !page) {
     return <KbPageNotFound error={error} onRetry={refetch} />;
+  }
+
+  if (page.kind === "spreadsheet") {
+    return (
+      <PageSpreadsheet pageId={pageId} onNavigateToPage={onNavigateToPage} projectId={projectId} />
+    );
   }
 
   const isEditable = canUpdate && page.can.edit === true && (!page.isLocked || canManage);

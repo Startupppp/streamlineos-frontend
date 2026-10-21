@@ -129,9 +129,11 @@ describe("ChannelInfoPanel — lifecycle actions are confirmed", () => {
     const { onArchived } = renderPanel();
     await user.click(screen.getByRole("button", { name: "Archive chat" }));
     const dialog = await screen.findByRole("alertdialog");
+    expect(within(dialog).getByText("Archive #launch?")).toBeInTheDocument();
     expect(mockArchive).not.toHaveBeenCalled();
     await user.click(within(dialog).getByRole("button", { name: "Archive" }));
-    await waitFor(() => expect(mockArchive).toHaveBeenCalledWith(9));
+    await waitFor(() => expect(mockArchive).toHaveBeenCalledTimes(1));
+    expect(mockArchive).toHaveBeenCalledWith(9);
     await waitFor(() => expect(onArchived).toHaveBeenCalled());
   });
 

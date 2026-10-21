@@ -33,6 +33,7 @@ interface ChannelMembersSectionProps {
   members: ChannelMember[];
   isAdmin: boolean;
   isMultiMemberChannel: boolean;
+  conversationName: string;
   onlineUserIds: Set<string>;
   onLeftChannel?: () => void;
   onClose: () => void;
@@ -44,6 +45,7 @@ export function ChannelMembersSection({
   members,
   isAdmin,
   isMultiMemberChannel,
+  conversationName,
   onlineUserIds,
   onLeftChannel,
   onClose,
@@ -262,7 +264,7 @@ export function ChannelMembersSection({
         onOpenChange={handleRemovalOpenChange}
         title={
           pendingRemoval?.isYou
-            ? "Leave this channel?"
+            ? `Leave ${conversationName}?`
             : `Remove ${removalName}?`
         }
         description={

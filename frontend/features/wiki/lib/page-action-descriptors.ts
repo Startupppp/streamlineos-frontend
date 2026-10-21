@@ -1,5 +1,6 @@
 import type { AnimatedNavIconComponent } from "@/components/layout/sidebar/sidebar-animated-nav";
 import {
+  KbArchiveIcon,
   KbClipboardIcon,
   KbCopyIcon,
   KbFileDownIcon,
@@ -10,7 +11,9 @@ import {
   KbLockIcon,
   KbMessageSquareIcon,
   KbMoveRightIcon,
+  KbRotateCcwIcon,
   KbSaveIcon,
+  KbShare2Icon,
   KbStarIcon,
   KbTrash2Icon,
   KbUnlockIcon,
@@ -43,6 +46,8 @@ export type KbPageActionId =
   | "export"
   | "backlinks"
   | "copyLink"
+  | "share"
+  | "archive"
   | "delete";
 
 export type KbPageActionGroup = "view" | "organize" | "danger";
@@ -51,6 +56,7 @@ export interface KbPageActionSubject {
   isFavorite: boolean;
   isLocked: boolean;
   hasCover: boolean;
+  isArchived: boolean;
 }
 
 export interface KbPageActionCapabilities {
@@ -74,6 +80,7 @@ interface KbPageActionDefinition {
   toggledIcon?: AnimatedNavIconComponent;
   isToggled?: (subject: KbPageActionSubject) => boolean;
   isPermitted: (capabilities: KbPageActionCapabilities) => boolean;
+  collectionOnly?: boolean;
 }
 
 export interface ResolvedKbPageAction {
@@ -128,6 +135,18 @@ function permitsExport(capabilities: KbPageActionCapabilities): boolean {
 
 function permitsDelete(capabilities: KbPageActionCapabilities): boolean {
   return capabilities.canDelete;
+}
+
+function permitsShare(capabilities: KbPageActionCapabilities): boolean {
+  return capabilities.canManage;
+}
+
+function permitsArchive(capabilities: KbPageActionCapabilities): boolean {
+  return capabilities.canUpdate;
+}
+
+function pageIsArchived(subject: KbPageActionSubject): boolean {
+  return subject.isArchived;
 }
 
 const KB_PAGE_ACTION_DEFINITIONS: readonly KbPageActionDefinition[] = [
@@ -256,6 +275,29 @@ const KB_PAGE_ACTION_DEFINITIONS: readonly KbPageActionDefinition[] = [
     isPermitted: alwaysPermitted,
   },
   {
+    id: "share",
+    group: "organize",
+    permission: KB_PAGE_ACTION_PERMISSIONS.manage,
+    destructive: false,
+    label: "Share",
+    icon: KbShare2Icon,
+    isPermitted: permitsShare,
+    collectionOnly: true,
+  },
+  {
+    id: "archive",
+    group: "danger",
+    permission: KB_PAGE_ACTION_PERMISSIONS.update,
+    destructive: false,
+    label: "Archive",
+    icon: KbArchiveIcon,
+    toggledLabel: "Unarchive",
+    toggledIcon: KbRotateCcwIcon,
+    isToggled: pageIsArchived,
+    isPermitted: permitsArchive,
+    collectionOnly: true,
+  },
+  {
     id: "delete",
     group: "danger",
     permission: KB_PAGE_ACTION_PERMISSIONS.delete,
@@ -298,9 +340,13 @@ function resolveAction(
 export function resolveKbPageActions(
   subject: KbPageActionSubject,
   capabilities: KbPageActionCapabilities,
+  opts?: { collection?: boolean },
 ): ResolvedKbPageAction[] {
-  return KB_PAGE_ACTION_DEFINITIONS.filter((definition) =>
-    definition.isPermitted(capabilities),
+  const collection = opts?.collection ?? false;
+  return KB_PAGE_ACTION_DEFINITIONS.filter(
+    (definition) =>
+      definition.isPermitted(capabilities) &&
+      (!definition.collectionOnly || collection),
   ).map((definition) => resolveAction(definition, subject));
 }
 

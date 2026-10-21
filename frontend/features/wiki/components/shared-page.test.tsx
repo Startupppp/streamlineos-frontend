@@ -22,6 +22,19 @@ jest.mock("@/hooks/api/kb", () => ({
   useToggleFavoriteKbPage: jest.fn(() => ({ mutate: jest.fn(), isPending: false })),
   useDuplicateKbPage: jest.fn(() => ({ mutate: jest.fn(), isPending: false })),
   useDeleteKbPage: jest.fn(() => ({ mutate: jest.fn(), isPending: false })),
+  useArchiveKbPage: jest.fn(() => ({ mutate: jest.fn(), isPending: false })),
+  useUnarchiveKbPage: jest.fn(() => ({ mutate: jest.fn(), isPending: false })),
+  useUpdateKbPage: jest.fn(() => ({ mutate: jest.fn(), isPending: false })),
+}));
+
+jest.mock("@/hooks/api/kb/spaces", () => ({
+  useKbSpaces: jest.fn(() =>
+    jest
+      .requireActual<typeof import("@/test-utils/kb-spaces-fixture")>(
+        "@/test-utils/kb-spaces-fixture",
+      )
+      .kbSpacesQueryStub(),
+  ),
 }));
 
 jest.mock("@/hooks/api/organization", () => ({
@@ -45,6 +58,11 @@ jest.mock("@/hooks/api/organization", () => ({
 
 jest.mock("@/hooks/api/kb/export-page", () => ({
   useExportKbPage: jest.fn(() => ({ mutate: jest.fn(), isPending: false })),
+}));
+
+jest.mock("./page-grants-sheet", () => ({
+  __esModule: true,
+  default: () => null,
 }));
 
 jest.mock("@/hooks/api/access", () => ({
@@ -131,6 +149,7 @@ function makeSharedItem(overrides: Record<string, unknown> = {}) {
     status: "published",
     visibility: "org",
     contentType: "rich-text",
+    kind: "document",
     trustState: "verified",
     ownerMembershipId: 5,
     ownerUserId: "user-5",
@@ -149,6 +168,7 @@ function makeSharedItem(overrides: Record<string, unknown> = {}) {
       membershipId: 5,
       at: "2026-08-01T00:00:00Z",
       access: "edit",
+      expiresAt: null,
     },
     ...overrides,
   };
@@ -327,5 +347,69 @@ describe("SharedPage — flash fix and server-side filtering", () => {
 
     expect(screen.getByText("Your access may have changed")).toBeInTheDocument();
     expect(screen.queryByText("Nothing shared with you")).not.toBeInTheDocument();
+  });
+
+  it("expires column shows Never when expiresAt is null", () => {
+    useKbPageCollection.mockReturnValue({
+      data: { data: [makeSharedItem()], pagination: { limit: 50, hasMore: false, nextCursor: null }, facets: null },
+      isLoading: false,
+      isError: false,
+      error: undefined,
+      refetch: jest.fn(),
+    });
+    usePageState.mockReturnValue({ kind: "ready" });
+
+    render(<SharedPage />);
+
+    expect(screen.getByText("Never")).toBeInTheDocument();
+  });
+
+  it("expires column shows the expiry date when expiresAt is set", () => {
+    useKbPageCollection.mockReturnValue({
+      data: {
+        data: [makeSharedItem({ sharedBy: { membershipId: 5, at: "2026-08-01T00:00:00Z", access: "edit", expiresAt: "2026-12-31T00:00:00Z" } })],
+        pagination: { limit: 50, hasMore: false, nextCursor: null },
+        facets: null,
+      },
+      isLoading: false,
+      isError: false,
+      error: undefined,
+      refetch: jest.fn(),
+    });
+    usePageState.mockReturnValue({ kind: "ready" });
+
+    render(<SharedPage />);
+
+    expect(screen.queryByText("Never")).not.toBeInTheDocument();
+  });
+
+  it("location column shows My files when spaceId is null", () => {
+    useKbPageCollection.mockReturnValue({
+      data: { data: [makeSharedItem({ spaceId: null })], pagination: { limit: 50, hasMore: false, nextCursor: null }, facets: null },
+      isLoading: false,
+      isError: false,
+      error: undefined,
+      refetch: jest.fn(),
+    });
+    usePageState.mockReturnValue({ kind: "ready" });
+
+    render(<SharedPage />);
+
+    expect(screen.getByText("My files")).toBeInTheDocument();
+  });
+
+  it("location column resolves the space name via useKbSpaces when spaceId matches", () => {
+    useKbPageCollection.mockReturnValue({
+      data: { data: [makeSharedItem({ spaceId: 1 })], pagination: { limit: 50, hasMore: false, nextCursor: null }, facets: null },
+      isLoading: false,
+      isError: false,
+      error: undefined,
+      refetch: jest.fn(),
+    });
+    usePageState.mockReturnValue({ kind: "ready" });
+
+    render(<SharedPage />);
+
+    expect(screen.getByText("Engineering")).toBeInTheDocument();
   });
 });

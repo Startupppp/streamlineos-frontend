@@ -42,6 +42,7 @@ jest.mock("@/hooks/api/kb/export-page", () => ({
 const page = {
   id: 5,
   title: "signos",
+  kind: "document",
   isFavorite: false,
   isLocked: false,
   coverImage: null,

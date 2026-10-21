@@ -83,10 +83,11 @@ describe("HuddlePanel provider awareness", () => {
     expect(screen.getByRole("link", { name: /Join Microsoft Teams/ })).toBeInTheDocument();
   });
 
-  it("keeps Join meeting for a legacy huddle without a provider", () => {
+  it("labels Join external meeting for a legacy huddle without a provider", () => {
     renderPanel(makeHuddle({ meetingProvider: null }));
     expand();
-    expect(screen.getByRole("link", { name: /Join meeting/ })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /Join external meeting/ })).toBeInTheDocument();
+    expect(screen.getByText("External meeting")).toBeInTheDocument();
   });
 
   it("names the starter and counts people who joined through StreamlineOS", () => {

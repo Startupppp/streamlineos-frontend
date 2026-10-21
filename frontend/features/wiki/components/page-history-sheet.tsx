@@ -213,11 +213,17 @@ export default function PageHistorySheet({ pageId, open, onOpenChange, projectId
             <SheetBody className="px-6 py-4">
               <PageState resolution={detailState} compact onRetry={listAccessLost ? handleRetryList : handleRetryDetail} loading={<Skeleton className="h-64 w-full" />}>
                 {hasContent && versionDetail ? (
-                  <PlateDocumentEditor
-                    value={versionDetail.content}
-                    contentKey={`${pageId}-v${selectedVersion}`}
-                    editable={false}
-                  />
+                  Array.isArray(versionDetail.content) &&
+                  versionDetail.content.length > 0 &&
+                  typeof (versionDetail.content[0] as Record<string, unknown>).celldata !== "undefined" ? (
+                    <p className="text-xs text-muted-foreground">Spreadsheet version preview available on the full history page.</p>
+                  ) : (
+                    <PlateDocumentEditor
+                      value={versionDetail.content}
+                      contentKey={`${pageId}-v${selectedVersion}`}
+                      editable={false}
+                    />
+                  )
                 ) : (
                   <EmptyState
                     title="Empty version"

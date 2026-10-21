@@ -43,11 +43,14 @@ export interface MessagePanelProps {
   onAutoStartHandled?: () => void;
   scrollToMessageId?: number | null;
   onLeaveMessage?: () => void;
+  joinHuddleRequested?: boolean;
+  onJoinHuddleHandled?: () => void;
 }
 
 export function useMessagePanelData({
   channelId, currentUserId, onBack, onToggleInfo, showInfoPanel,
   autoStartCall, onAutoStartHandled, scrollToMessageId, onLeaveMessage,
+  joinHuddleRequested = false, onJoinHuddleHandled,
 }: MessagePanelProps) {
   const scope = useOrgStorageScope();
   const draftKey = chatDraftKey(channelId, scope);
@@ -81,7 +84,7 @@ export function useMessagePanelData({
   const { isConnected: ablySocketConnected } = useAblyConnection();
 
   useHuddleRealtime(canReadChannel ? channelId : null);
-  const { data: activeHuddle } = useActiveHuddle(channelId, canReadChannel);
+  const { data: activeHuddle, isPending: huddlePending } = useActiveHuddle(channelId, canReadChannel);
   const startHuddle = useStartHuddle();
   const joinHuddle = useJoinHuddle();
   const summarize = useChatSummarize();
@@ -124,6 +127,9 @@ export function useMessagePanelData({
     isInHuddle,
     startHuddle,
     joinHuddle,
+    joinHuddleRequested,
+    huddleSettled: !huddlePending,
+    onJoinHuddleHandled,
   });
 
   const { showSavedPanel, setShowSavedPanel, forwardMessage, setForwardMessage, handleToggleSaved } =

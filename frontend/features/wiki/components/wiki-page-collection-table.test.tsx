@@ -33,6 +33,14 @@ jest.mock("@/hooks/api/kb", () => ({
   useDeleteKbPage: jest.fn(() => ({ mutate: jest.fn(), isPending: false })),
   useDuplicateKbPage: jest.fn(() => ({ mutate: jest.fn(), isPending: false })),
   useToggleFavoriteKbPage: jest.fn(() => ({ mutate: jest.fn(), isPending: false })),
+  useArchiveKbPage: jest.fn(() => ({ mutate: jest.fn(), isPending: false })),
+  useUnarchiveKbPage: jest.fn(() => ({ mutate: jest.fn(), isPending: false })),
+  useUpdateKbPage: jest.fn(() => ({ mutate: jest.fn(), isPending: false })),
+}));
+
+jest.mock("./page-grants-sheet", () => ({
+  __esModule: true,
+  default: () => null,
 }));
 
 jest.mock("@/hooks/api/access", () => ({

@@ -435,14 +435,19 @@ export default function PageHistoryPage({
                     ) : (
                       <div className="px-6 py-4 space-y-4">
                         {versionADetail && (
-                          <BlockDiffView
-                            heading="Block diff vs current"
-                            identicalLabel="Identical to the current page."
-                            beforeContent={versionADetail.content}
-                            afterContent={currentPage.content}
-                            beforeTitle={versionADetail.title}
-                            afterTitle={currentPage.title}
-                          />
+                          Array.isArray(versionADetail.content) &&
+                          typeof (versionADetail.content[0] as Record<string, unknown> | undefined)?.celldata !== "undefined" ? (
+                            <p className="text-sm text-muted-foreground px-1">Spreadsheet — block diff not available. Restore to view the full content.</p>
+                          ) : (
+                            <BlockDiffView
+                              heading="Block diff vs current"
+                              identicalLabel="Identical to the current page."
+                              beforeContent={versionADetail.content}
+                              afterContent={currentPage.content}
+                              beforeTitle={versionADetail.title}
+                              afterTitle={currentPage.title}
+                            />
+                          )
                         )}
                       </div>
                     )}

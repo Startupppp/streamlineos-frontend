@@ -174,5 +174,5 @@ export function useOlderHistoryLoader({
     loadOlder,
   ]);
 
-  return { sentinelRef, loadOlder };
+  return { sentinelRef };
 }

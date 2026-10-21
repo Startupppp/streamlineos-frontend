@@ -30,6 +30,7 @@ import {
 import { AddChannelMembersDialog } from "./add-channel-members-dialog";
 import type { Channel } from "@/types/chat";
 import { ChannelNotificationSubmenu } from "./channel-notification-submenu";
+import { conversationConfirmName } from "./channel-member-lookup";
 
 export function ChannelItemMenu({
   channel,
@@ -185,7 +186,7 @@ export function ChannelItemMenu({
       <ConfirmDialog
         open={confirmHideOpen}
         onOpenChange={setConfirmHideOpen}
-        title="Hide this conversation?"
+        title={`Hide ${conversationConfirmName(channel, currentUserId)}?`}
         description="It moves to Archived and comes back when someone sends a new message."
         confirmLabel="Hide conversation"
         destructive

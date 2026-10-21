@@ -47,6 +47,7 @@ function makeProps(overrides: Partial<Props> = {}): Props {
     onSetDueDate: jest.fn(),
     onStartEdit: jest.fn(),
     onDelete: jest.fn(),
+    deleteTitle: 'Delete message from Ada: "hello"?',
     ...overrides,
   };
 }
@@ -137,6 +138,7 @@ describe("MessageActions — delete is confirmed and permission-gated", () => {
     await openMoreWithKeyboard(user);
     await user.click(screen.getByRole("menuitem", { name: "Delete" }));
     const dialog = await screen.findByRole("alertdialog");
+    expect(within(dialog).getByText('Delete message from Ada: "hello"?')).toBeInTheDocument();
     expect(props.onDelete).not.toHaveBeenCalled();
     await user.click(within(dialog).getByRole("button", { name: "Delete message" }));
     await waitFor(() => expect(props.onDelete).toHaveBeenCalledTimes(1));

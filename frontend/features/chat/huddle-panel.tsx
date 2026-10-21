@@ -13,7 +13,7 @@ import { HuddleParticipantCard } from "./huddle-participant-card";
 import { useElapsedTime } from "./use-elapsed-time";
 import { HuddleInviteSection } from "./huddle-invite-section";
 import { HuddleMiniBar } from "./huddle-mini-bar";
-import { huddleProviderPresentation } from "./huddle-provider";
+import { EXTERNAL_MEETING_LABEL, huddleProviderPresentation } from "./huddle-provider";
 
 interface HuddlePanelProps {
   huddle: Huddle;
@@ -83,6 +83,9 @@ export function HuddlePanel({ huddle, channelId, currentUserId }: HuddlePanelPro
         <div className="px-4 pb-3">
           {starterName ? (
             <p className="mb-2 text-dense text-muted-foreground">Started by {starterName}</p>
+          ) : null}
+          {meetingUrl && huddle.meetingProvider === null ? (
+            <p className="mb-2 text-dense text-muted-foreground">{EXTERNAL_MEETING_LABEL}</p>
           ) : null}
           {meetingUrl ? (
             <a

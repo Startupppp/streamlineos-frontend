@@ -1,7 +1,6 @@
 "use client";
 
-import { useGuardedCreateKbPage } from "@/features/wiki/hooks/use-guarded-create-kb-page";
-import { Fragment, memo, useRef, useState } from "react";
+import { Fragment, memo, useCallback, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
 import { toast } from "sonner";
@@ -30,7 +29,7 @@ import {
   useUpdateKbPage,
 } from "@/hooks/api/kb";
 import { useCan } from "@/hooks/api/access";
-import type { KbPageTreeNode } from "@/hooks/api/kb/page-types";
+import type { KbPage, KbPageTreeNode } from "@/hooks/api/kb/page-types";
 import { KNOWLEDGE_BASE, pageHref } from "@/lib/knowledge-routes";
 import {
   resolveKbPageActions,
@@ -42,10 +41,12 @@ import {
 import {
   KbChevronRightIcon,
   KbChevronDownIcon,
-  KbPlusIcon,
-  KbMoreHorizontalIcon,
   KbFileTextIcon,
+  KbMoreHorizontalIcon,
+  KbPlusIcon,
+  KbSpreadsheetIcon,
 } from "@/features/wiki/lib/kb-icons";
+import { KbNewMenu } from "./kb-new-menu";
 import { cn } from "@/lib/utils";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { isApiError } from "@/lib/api-envelope";
@@ -113,10 +114,17 @@ const PageTreeItem = memo(function PageTreeItemInner({
     (a) => TREE_ITEM_ACTION_IDS.has(a.id),
   );
   const treeActionGroups = groupKbPageActions(treeActions);
-  const createPage = useGuardedCreateKbPage((page) => {
+  const childScope = useMemo(
+    () => ({
+      parentPageId: node.id,
+      ...(node.spaceId !== null ? { spaceId: node.spaceId } : {}),
+      ...(node.projectId !== null ? { projectId: node.projectId } : {}),
+    }),
+    [node.id, node.spaceId, node.projectId],
+  );
+  const handleChildCreated = useCallback((_page: KbPage) => {
     setExpanded(true);
-    router.push(baseHref ? `${baseHref}/${page.id}` : pageHref(page.id));
-  });
+  }, []);
   const deletePage = useDeleteKbPage();
   const duplicatePage = useDuplicateKbPage();
   const toggleFavorite = useToggleFavoriteKbPage();
@@ -161,14 +169,8 @@ const PageTreeItem = memo(function PageTreeItemInner({
     setExpanded((prev) => !prev);
   }
 
-  function handleAddChild(e: React.MouseEvent) {
+  function handlePlusStopPropagation(e: React.MouseEvent) {
     e.stopPropagation();
-    if (!canCreate) return;
-    void createPage.submit({
-      parentPageId: node.id,
-      ...(node.spaceId !== null ? { spaceId: node.spaceId } : {}),
-      ...(node.projectId !== null ? { projectId: node.projectId } : {}),
-    });
   }
 
   function handleMenuSelect(event: Event) {
@@ -310,7 +312,7 @@ const PageTreeItem = memo(function PageTreeItemInner({
                   node.icon
                 ) : (
                   <SidebarAnimatedNavIcon
-                    icon={KbFileTextIcon}
+                    icon={node.kind === "spreadsheet" ? KbSpreadsheetIcon : KbFileTextIcon}
                     iconRef={iconRef}
                     className="h-3.5 w-3.5 text-muted-foreground"
                   />
@@ -338,7 +340,7 @@ const PageTreeItem = memo(function PageTreeItemInner({
                   node.icon
                 ) : (
                   <SidebarAnimatedNavIcon
-                    icon={KbFileTextIcon}
+                    icon={node.kind === "spreadsheet" ? KbSpreadsheetIcon : KbFileTextIcon}
                     iconRef={iconRef}
                     className="h-3.5 w-3.5 text-muted-foreground"
                   />
@@ -352,16 +354,21 @@ const PageTreeItem = memo(function PageTreeItemInner({
             <span
               className={`${menuOpen ? "flex" : "flex lg:hidden lg:group-hover:flex lg:group-focus-within:flex"} items-center gap-0.5 shrink-0`}
             >
-              {canCreate && (
-                <button
-                  type="button"
-                  className="h-8 w-8 lg:h-6 lg:w-6 flex items-center justify-center rounded text-muted-foreground hover:text-foreground hover:bg-muted"
-                  onClick={handleAddChild}
-                  aria-label="Add child page"
-                >
-                  <KbPlusIcon className="h-3 w-3" />
-                </button>
-              )}
+              <KbNewMenu
+                scope={childScope}
+                allowFolder={false}
+                onCreated={handleChildCreated}
+                trigger={
+                  <button
+                    type="button"
+                    className="h-8 w-8 lg:h-6 lg:w-6 flex items-center justify-center rounded text-muted-foreground hover:text-foreground hover:bg-muted"
+                    aria-label="Add child page"
+                    onClick={handlePlusStopPropagation}
+                  >
+                    <KbPlusIcon className="h-3 w-3" />
+                  </button>
+                }
+              />
               <DropdownMenu open={menuOpen} onOpenChange={setMenuOpen}>
                 <DropdownMenuTrigger asChild>
                   <button

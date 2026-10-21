@@ -1,11 +1,6 @@
 "use client";
 
-import {
-  Fragment,
-  useCallback,
-  useEffect,
-  useMemo,
-} from "react";
+import { Fragment, useCallback, useEffect, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Send, ArrowDown } from "lucide-react";
@@ -19,7 +14,6 @@ import { EntityActionsProvider } from "./entity-actions-context";
 import { ChannelJoinState } from "./channel-join-state";
 import type { ChannelJoinRequired } from "./chat-helpers";
 
-
 interface GroupedMessages {
   date: string;
   messages: Message[];
@@ -29,11 +23,6 @@ interface MessageListProps {
   groupedMessages: GroupedMessages[];
   messages: Message[];
   isLoading: boolean;
-  /**
-   * The history read failed. Without this the list fell through to its empty
-   * layout, so a 500 or a 403 on `GET /chat/channels/:id/messages` was
-   * indistinguishable from a channel nobody has written in yet.
-   */
   isError?: boolean;
   errorMessage?: string;
   onRetry?: () => void;
@@ -169,38 +158,34 @@ export function MessageList({
     () => scrollToBottom(),
     [scrollToBottom],
   );
-  const highlightedMessageId = useMessageAnchor(scrollToMessageId, groupedMessages);
+  const highlightedMessageId = useMessageAnchor(
+    scrollToMessageId,
+    groupedMessages,
+  );
   const firstMessageId = groupedMessages[0]?.messages[0]?.id ?? null;
   const renderedMessageCount = useMemo(
-    () => groupedMessages.reduce((sum, group) => sum + group.messages.length, 0),
+    () =>
+      groupedMessages.reduce((sum, group) => sum + group.messages.length, 0),
     [groupedMessages],
   );
-  const { sentinelRef: olderHistorySentinelRef, loadOlder: handleLoadOlder } =
-    useOlderHistoryLoader({
-      scrollContainerRef,
-      firstMessageId,
-      messageCount: renderedMessageCount,
-      isLoading,
-      isAwayFromLatest: showScrollBtn,
-      hasNextPage,
-      isFetchingNextPage,
-      fetchNextPage,
-    });
-  const handleOlderFallbackClick = useCallback(() => {
-    scrollContainerRef.current?.focus({ preventScroll: true });
-    handleLoadOlder();
-  }, [scrollContainerRef, handleLoadOlder]);
+  const { sentinelRef: olderHistorySentinelRef } = useOlderHistoryLoader({
+    scrollContainerRef,
+    firstMessageId,
+    messageCount: renderedMessageCount,
+    isLoading,
+    isAwayFromLatest: showScrollBtn,
+    hasNextPage,
+    isFetchingNextPage,
+    fetchNextPage,
+  });
+  if (joinRequired)
+    return (
+      <ChannelJoinState
+        channelId={channelId}
+        channelName={joinRequired.channelName}
+      />
+    );
 
-  if (joinRequired) return <ChannelJoinState channelId={channelId} channelName={joinRequired.channelName} />;
-
-  /*
-   * Before the empty layout, and before the entity-action provider mounts a
-   * query of its own: a channel whose history could not be read has nothing to
-   * resolve references against. The four sibling chat surfaces
-   * (channel-sidebar, channels-discovery-page, saved-messages-panel,
-   * shared-files-panel) already branch here; the timeline was the one that
-   * rendered a failure as an ordinary empty conversation.
-   */
   if (isError) {
     return (
       <div className="flex-1 min-h-0 min-w-0 flex flex-col justify-center p-4">
@@ -267,18 +252,8 @@ export function MessageList({
                 <div
                   ref={olderHistorySentinelRef}
                   data-older-history-sentinel
-                  className="flex shrink-0 justify-center"
-                >
-                  {hasNextPage && !isFetchingNextPage ? (
-                    <button
-                      type="button"
-                      onClick={handleOlderFallbackClick}
-                      className="sr-only focus:not-sr-only focus:mb-2 focus:rounded-md focus:border focus:border-border focus:bg-card focus:px-3 focus:py-1.5 focus:text-sm focus:text-foreground"
-                    >
-                      Load older messages
-                    </button>
-                  ) : null}
-                </div>
+                  className="h-px shrink-0"
+                />
                 {isFetchingNextPage && (
                   <p
                     role="status"

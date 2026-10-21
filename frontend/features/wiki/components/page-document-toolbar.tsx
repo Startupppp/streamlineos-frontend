@@ -55,6 +55,7 @@ interface PageDocumentToolbarProps {
   onNavigate: (pageId: number) => void;
   /** Opens the mobile details sheet (below xl). */
   onOpenDetailsPanel?: () => void;
+  onSpreadsheetExport?: (format: "xlsx" | "csv") => void;
 }
 
 export function PageDocumentToolbar({
@@ -74,6 +75,7 @@ export function PageDocumentToolbar({
   onDelete,
   onNavigate,
   onOpenDetailsPanel,
+  onSpreadsheetExport,
 }: PageDocumentToolbarProps) {
   const canCreate = useCan("kb:pages:create");
   const canUpdate = useCan("kb:pages:update");
@@ -139,18 +141,10 @@ export function PageDocumentToolbar({
   function handleExport() {
     if (!canExport || exportPage.isPending || exportInFlightRef.current) return;
     exportInFlightRef.current = true;
-    exportPage.mutate(
-      { pageId, format: "html" },
-      {
-        onSuccess: () => {
-          exportInFlightRef.current = false;
-        },
-        onError: (error) => {
-          exportInFlightRef.current = false;
-          toast.error(getErrorMessage(error));
-        },
-      },
-    );
+    exportPage.mutate({ pageId, format: "html" }, {
+      onSuccess: () => { exportInFlightRef.current = false; },
+      onError: (error) => { exportInFlightRef.current = false; toast.error(getErrorMessage(error)); },
+    });
   }
 
   function handleBacklinkSelect(event: Event) {
@@ -184,9 +178,10 @@ export function PageDocumentToolbar({
     }
   }
 
+  function handleExportXlsx() { void onSpreadsheetExport?.("xlsx"); }
+  function handleExportCsv() { void onSpreadsheetExport?.("csv"); }
   function handleCopyLink() {
-    const url = typeof window !== "undefined" ? window.location.href : "";
-    navigator.clipboard.writeText(url).then(
+    navigator.clipboard.writeText(window.location.href).then(
       () => toast.success("Link copied"),
       () => toast.error("Failed to copy"),
     );
@@ -206,12 +201,14 @@ export function PageDocumentToolbar({
           <KbInfoIcon className="h-4 w-4" />
         </Button>
       ) : null}
-      <KbPageAiActions
-        pageId={pageId}
-        currentContent={currentContent}
-        onApplyImprovement={isEditable && canUpdate ? onApplyImprovement : undefined}
-        onInsertSummary={isEditable && canUpdate ? onInsertSummary : undefined}
-      />
+      {page.kind !== "spreadsheet" && (
+        <KbPageAiActions
+          pageId={pageId}
+          currentContent={currentContent}
+          onApplyImprovement={isEditable && canUpdate ? onApplyImprovement : undefined}
+          onInsertSummary={isEditable && canUpdate ? onInsertSummary : undefined}
+        />
+      )}
       {canUpdate && isEditable ? (
         <PageSharePopover page={page} />
       ) : (
@@ -272,6 +269,15 @@ export function PageDocumentToolbar({
                   );
                 }
                 const Icon = action.icon;
+                if (action.id === "export" && onSpreadsheetExport) return (
+                  <DropdownMenuSub key="export">
+                    <DropdownMenuSubTrigger><Icon className="mr-2 h-4 w-4" />{action.label}</DropdownMenuSubTrigger>
+                    <DropdownMenuSubContent>
+                      <DropdownMenuItem onSelect={handleExportXlsx}>Excel (.xlsx)</DropdownMenuItem>
+                      <DropdownMenuItem onSelect={handleExportCsv}>CSV</DropdownMenuItem>
+                    </DropdownMenuSubContent>
+                  </DropdownMenuSub>
+                );
                 return (
                   <DropdownMenuItem
                     key={action.id}

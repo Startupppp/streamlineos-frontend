@@ -9,11 +9,13 @@ import { kbFormatDate } from "@/features/wiki/lib/kb-date-utils";
 import { KB_ACCESS_LABELS } from "./kb-collection-badges";
 import { useOrgMembersByIds } from "@/hooks/api/organization";
 import { getUserDisplayName } from "@/lib/person-display";
+import { useKbSpaces } from "@/hooks/api/kb/spaces";
 
 const SHARED_WITH_ME_PARAMS = { sharedWithMe: "1" as const };
 
 function buildSharedColumns(
   membershipToName: Map<number, string>,
+  spaceNameById: Map<number, string>,
 ): DataTableColumn<KbPageCollectionItem>[] {
   return [
     {
@@ -37,6 +39,25 @@ function buildSharedColumns(
       ),
     },
     {
+      key: "expires",
+      header: "Expires",
+      cell: (row) => (
+        <span className="tabular-nums text-muted-foreground text-sm">
+          {row.sharedBy?.expiresAt != null ? kbFormatDate(row.sharedBy.expiresAt) : "Never"}
+        </span>
+      ),
+    },
+    {
+      key: "location",
+      header: "Location",
+      cell: (row) => {
+        if (row.spaceId !== null) {
+          return spaceNameById.get(row.spaceId) ?? "Team folder";
+        }
+        return "My files";
+      },
+    },
+    {
       key: "access_level",
       header: "Access",
       cell: (row) =>
@@ -57,6 +78,7 @@ export default function SharedPage() {
   );
 
   const { data: ownersPage } = useOrgMembersByIds(ownerUserIds);
+  const { data: spacesPage } = useKbSpaces();
 
   const membershipToName = useMemo(() => {
     const map = new Map<number, string>();
@@ -66,9 +88,17 @@ export default function SharedPage() {
     return map;
   }, [ownersPage]);
 
+  const spaceNameById = useMemo(() => {
+    const map = new Map<number, string>();
+    for (const space of spacesPage?.data ?? []) {
+      map.set(space.id, space.name);
+    }
+    return map;
+  }, [spacesPage]);
+
   const sharedColumns = useMemo(
-    () => buildSharedColumns(membershipToName),
-    [membershipToName],
+    () => buildSharedColumns(membershipToName, spaceNameById),
+    [membershipToName, spaceNameById],
   );
 
   const handleRowsChange = useCallback((nextRows: readonly KbPageCollectionItem[]) => {

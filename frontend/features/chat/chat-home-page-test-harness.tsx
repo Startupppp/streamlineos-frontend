@@ -116,17 +116,23 @@ jest.mock("@/features/chat/message-panel", () => ({
     scrollToMessageId,
     onBack,
     onLeaveMessage,
+    joinHuddleRequested,
+    onJoinHuddleHandled,
   }: {
     channelId: number;
     scrollToMessageId?: number | null;
     onBack: () => void;
     onLeaveMessage?: () => void;
+    joinHuddleRequested?: boolean;
+    onJoinHuddleHandled?: () => void;
   }) => (
     <div data-testid="message-panel">
       <span data-testid="panel-channel">{channelId}</span>
       <span data-testid="panel-message">{scrollToMessageId ?? "none"}</span>
       <button onClick={onBack}>mobile back</button>
       <button onClick={onLeaveMessage}>leave message</button>
+      <span data-testid="panel-join-huddle">{String(joinHuddleRequested)}</span>
+      <button onClick={onJoinHuddleHandled}>handle join huddle</button>
     </div>
   ),
 }));

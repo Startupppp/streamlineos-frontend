@@ -1,5 +1,4 @@
 import { screen } from "@testing-library/react";
-import userEvent from "@testing-library/user-event";
 import { renderWithProviders } from "@/test-utils/render";
 import WikiSidebarNav from "./wiki-sidebar-nav";
 
@@ -11,149 +10,119 @@ beforeEach(() => {
   localStorage.clear();
 });
 
-async function openAccordionGroup(label: string) {
-  await userEvent.hover(screen.getByRole("button", { name: label }));
-}
-
 describe("WikiSidebarNav — focused document library", () => {
   it("keeps linked company documents out of the primary library navigation", () => {
-    renderWithProviders(<WikiSidebarNav canViewAnalytics={false} canViewReviews={false} canManageContent={false} canImportPages={false} canViewSpaces={false} />);
+    renderWithProviders(<WikiSidebarNav canViewSpaces={false} />);
 
     expect(screen.queryByRole("link", { name: "Company documents" })).toBeNull();
     expect(screen.getByRole("link", { name: "My files" })).toBeInTheDocument();
   });
 
   it("labels the owned-pages destination My files, matching the heading that route renders, not the retired Private wording", () => {
-    renderWithProviders(<WikiSidebarNav canViewAnalytics={false} canViewReviews={false} canManageContent={false} canImportPages={false} canViewSpaces={false} />);
+    renderWithProviders(<WikiSidebarNav canViewSpaces={false} />);
 
     expect(screen.getByRole("link", { name: "My files" })).toHaveAttribute("href", "/knowledge/wiki/private");
     expect(screen.queryByRole("link", { name: "Private" })).toBeNull();
   });
 });
 
-describe("WikiSidebarNav — wiki hides the Documents product sidebar", () => {
-  it("leads with Docs, keeps Ask contextual, and removes the duplicate Search destination", () => {
+describe("WikiSidebarNav — approved IA: exactly 7 destinations, no Manage group", () => {
+  it("shows all 7 approved destinations when canViewSpaces is true", () => {
     renderWithProviders(
       <WikiSidebarNav
-        canViewAnalytics={false}
-        canViewReviews={false}
-        canManageContent={false} canImportPages={false} canViewSpaces={false}
+        canViewSpaces
       />,
     );
 
     expect(screen.getByRole("link", { name: "Docs" })).toBeInTheDocument();
-    expect(screen.queryByRole("link", { name: "Ask documents" })).toBeNull();
-    expect(screen.queryByRole("link", { name: "Search" })).toBeNull();
-    expect(screen.queryByRole("navigation", { name: "Documents" })).toBeNull();
-  });
-
-  it("mounts wiki accordion groups without looping", async () => {
-    renderWithProviders(
-      <WikiSidebarNav
-        canViewAnalytics={false}
-        canViewReviews={false}
-        canManageContent={false} canImportPages={false} canViewSpaces={false}
-      />,
-    );
-
     expect(screen.getByRole("link", { name: "My files" })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Shared with me" })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Team folders" })).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Templates" })).toBeInTheDocument();
-    expect(screen.queryByRole("link", { name: "Settings" })).toBeNull();
-    expect(screen.queryByRole("link", { name: "Recent" })).toBeNull();
-    expect(screen.queryByRole("link", { name: "Favorites" })).toBeNull();
+    expect(screen.getByRole("link", { name: "Search" })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Trash" })).toBeInTheDocument();
   });
 
-  it("keeps only one accordion group open and opens a group on hover", async () => {
+  it("shows 6 destinations when canViewSpaces is false, omitting Team folders", () => {
     renderWithProviders(
       <WikiSidebarNav
-        canViewAnalytics={false}
-        canViewReviews={false}
-        canManageContent={false}
-        canImportPages
         canViewSpaces={false}
       />,
     );
 
-    expect(screen.getByRole("button", { name: "Library" })).toHaveAttribute(
-      "aria-expanded",
-      "true",
-    );
-    expect(screen.getByRole("button", { name: "Manage" })).toHaveAttribute(
-      "aria-expanded",
-      "false",
-    );
-
-    await openAccordionGroup("Manage");
-
-    expect(screen.getByRole("button", { name: "Manage" })).toHaveAttribute(
-      "aria-expanded",
-      "true",
-    );
-    expect(screen.getByRole("button", { name: "Library" })).toHaveAttribute(
-      "aria-expanded",
-      "false",
-    );
-    expect(screen.queryByRole("link", { name: "Templates" })).toBeNull();
-    expect(screen.queryByRole("link", { name: "My files" })).toBeNull();
+    expect(screen.getByRole("link", { name: "Docs" })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "My files" })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Shared with me" })).toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: "Team folders" })).toBeNull();
+    expect(screen.getByRole("link", { name: "Templates" })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Search" })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Trash" })).toBeInTheDocument();
   });
 
-  it("omits Content Health when the actor cannot manage pages", () => {
+  it("contains no Manage accordion group — reviews, analytics, import and content health are gone from the sidebar", () => {
     renderWithProviders(
       <WikiSidebarNav
-        canViewAnalytics={false}
-        canViewReviews={false}
-        canManageContent={false} canImportPages={false} canViewSpaces={false}
+        canViewSpaces={false}
       />,
     );
 
+    expect(screen.queryByRole("button", { name: "Manage" })).toBeNull();
+    expect(screen.queryByRole("link", { name: "Reviews" })).toBeNull();
+    expect(screen.queryByRole("link", { name: "Import & Export" })).toBeNull();
+    expect(screen.queryByRole("link", { name: "Analytics" })).toBeNull();
     expect(screen.queryByRole("link", { name: "Content Health" })).toBeNull();
   });
 
-  it("links Content Health to /knowledge/wiki/manage when the actor can manage pages", async () => {
+  it("contains no Library accordion group either — the flat nav replaces both accordion groups", () => {
     renderWithProviders(
       <WikiSidebarNav
-        canViewAnalytics={false}
-        canViewReviews={false}
-        canManageContent
-        canImportPages={false}
         canViewSpaces={false}
       />,
     );
 
-    await openAccordionGroup("Manage");
-
-    expect(
-      screen.getByRole("link", { name: "Content Health" }),
-    ).toHaveAttribute("href", "/knowledge/wiki/manage");
+    expect(screen.queryByRole("button", { name: "Library" })).toBeNull();
   });
-});
 
-describe("WikiSidebarNav — management links follow the route permission keys", () => {
-  it("shows Templates in Library for all actors and hides Import & Export and Spaces without their keys", () => {
+  it("no Quick find button is rendered in the footer — it stays registered only via the ⌘K keyboard shortcut in the shell", () => {
     renderWithProviders(
       <WikiSidebarNav
-        canViewAnalytics={false}
-        canViewReviews={false}
-        canManageContent={false}
-        canImportPages={false}
         canViewSpaces={false}
       />,
     );
 
-    expect(screen.getByRole("link", { name: "Templates" })).toBeInTheDocument();
-    expect(screen.queryByRole("link", { name: "Import & Export" })).toBeNull();
-    expect(screen.queryByRole("link", { name: "Team folders" })).toBeNull();
-    expect(screen.queryByText("Manage")).toBeNull();
-    expect(screen.getByRole("link", { name: "My files" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Quick find" })).toBeNull();
+    expect(screen.queryByText("Quick find")).toBeNull();
   });
 
-  it("shows Import & Export and Spaces when the actor holds their keys", async () => {
+  it("Trash is a nav link, not a footer-only item", () => {
     renderWithProviders(
       <WikiSidebarNav
-        canViewAnalytics={false}
-        canViewReviews={false}
-        canManageContent={false}
-        canImportPages
+        canViewSpaces={false}
+      />,
+    );
+
+    expect(screen.getByRole("link", { name: "Trash" })).toHaveAttribute(
+      "href",
+      "/knowledge/wiki/trash",
+    );
+  });
+
+  it("Search links to the KB search route", () => {
+    renderWithProviders(
+      <WikiSidebarNav
+        canViewSpaces={false}
+      />,
+    );
+
+    expect(screen.getByRole("link", { name: "Search" })).toHaveAttribute(
+      "href",
+      "/knowledge/wiki/search",
+    );
+  });
+
+  it("Team folders links to the spaces route when canViewSpaces is granted", () => {
+    renderWithProviders(
+      <WikiSidebarNav
         canViewSpaces
       />,
     );
@@ -161,17 +130,6 @@ describe("WikiSidebarNav — management links follow the route permission keys",
     expect(screen.getByRole("link", { name: "Team folders" })).toHaveAttribute(
       "href",
       "/knowledge/wiki/spaces",
-    );
-    expect(screen.getByRole("link", { name: "Templates" })).toHaveAttribute(
-      "href",
-      "/knowledge/wiki/templates",
-    );
-
-    await openAccordionGroup("Manage");
-
-    expect(screen.getByRole("link", { name: "Import & Export" })).toHaveAttribute(
-      "href",
-      "/knowledge/wiki/import",
     );
   });
 });

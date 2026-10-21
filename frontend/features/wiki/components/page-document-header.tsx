@@ -50,6 +50,7 @@ interface PageDocumentHeaderProps {
   onInsertSummary?: (text: string) => void;
   onOpenCover: () => void;
   onOpenDetailsPanel?: () => void;
+  onSpreadsheetExport?: (format: "xlsx" | "csv") => void;
   projectId?: number;
 }
 
@@ -67,6 +68,7 @@ export default function PageDocumentHeader({
   onInsertSummary,
   onOpenCover,
   onOpenDetailsPanel,
+  onSpreadsheetExport,
   projectId,
 }: PageDocumentHeaderProps) {
   const router = useRouter();
@@ -194,6 +196,7 @@ export default function PageDocumentHeader({
           onDelete={handleDelete}
           onNavigate={onNavigate}
           onOpenDetailsPanel={onOpenDetailsPanel}
+          onSpreadsheetExport={onSpreadsheetExport}
         />
       </div>
 

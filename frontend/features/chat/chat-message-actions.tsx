@@ -72,6 +72,7 @@ export function MessageActions({
   onSetDueDate,
   onStartEdit,
   onDelete,
+  deleteTitle,
 }: {
   isOwn: boolean;
   isPinned?: boolean;
@@ -99,6 +100,7 @@ export function MessageActions({
   onSetDueDate: () => void;
   onStartEdit: () => void;
   onDelete: () => void;
+  deleteTitle: string;
 }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [reactionsOpen, setReactionsOpen] = useState(false);
@@ -269,7 +271,7 @@ export function MessageActions({
         <ConfirmDialog
           open={confirmDeleteOpen}
           onOpenChange={setConfirmDeleteOpen}
-          title="Delete this message?"
+          title={deleteTitle}
           description="It is removed for everyone in the conversation. This cannot be undone."
           confirmLabel="Delete message"
           destructive
