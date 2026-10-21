@@ -360,6 +360,18 @@ describe("WikiHomePage — favorites pagination", () => {
   });
 });
 
+describe("WikiHomePage — contextual Ask entry", () => {
+  it("offers Ask documents from Docs home now that Ask is not a sidebar destination", () => {
+    render(<WikiHomePage />);
+    expect(screen.getByRole("link", { name: "Ask documents" })).toHaveAttribute("href", "/knowledge/chat");
+  });
+
+  it("does not offer organization-wide Ask inside a project-scoped wiki", () => {
+    render(<WikiHomePage projectId={7} />);
+    expect(screen.queryByRole("link", { name: "Ask documents" })).toBeNull();
+  });
+});
+
 describe("WikiHomePage — page tree mounting", () => {
   it("does not mount the page tree for the non-project-scoped wiki", () => {
     render(<WikiHomePage />);

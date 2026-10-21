@@ -15,7 +15,9 @@ import {
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { ErrorState } from "@/components/shared/error-state";
-import { KB_SEARCH, pageHref, projectPageHref } from "@/lib/knowledge-routes";
+import { KB_CHAT, KB_SEARCH, pageHref, projectPageHref } from "@/lib/knowledge-routes";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
 import { kbTimeAgo } from "@/features/wiki/lib/kb-date-utils";
 import {
   KbClockIcon,
@@ -141,6 +143,12 @@ export default function WikiHomePage({ projectId }: WikiHomePageProps) {
     searchInputRef: searchInputRef,
   });
 
+  const askAction = isProjectScoped ? null : (
+    <Button asChild variant="outline" size="sm">
+      <Link href={KB_CHAT}>Ask documents</Link>
+    </Button>
+  );
+
   const newPageAction = canCreate ? (
     <AnimatedIconButton
       type="button"
@@ -154,7 +162,14 @@ export default function WikiHomePage({ projectId }: WikiHomePageProps) {
     >
       New document
     </AnimatedIconButton>
-  ) : undefined;
+  ) : null;
+
+  const headerActions = askAction === null && newPageAction === null ? undefined : (
+    <div className="flex items-center gap-2">
+      {askAction}
+      {newPageAction}
+    </div>
+  );
 
   const baseHref = isProjectScoped ? `/build/${projectId}/wiki` : undefined;
 
@@ -167,7 +182,7 @@ export default function WikiHomePage({ projectId }: WikiHomePageProps) {
             ? "Docs and decisions for this project"
             : "Files, documents and decisions for your team"
         }
-        actions={newPageAction}
+        actions={headerActions}
       >
         <div className="flex min-h-0 flex-1 flex-col gap-6">
           <form onSubmit={handleSearchFormSubmit} role="search">
