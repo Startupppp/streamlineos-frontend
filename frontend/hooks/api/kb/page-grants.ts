@@ -9,6 +9,7 @@ import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { NO_CURSOR_YET } from "@/hooks/api/cursor-page-param";
 import { selectFlatPages } from "@/lib/api/select-flat-pages";
 import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
+import { invalidateKbPageChange } from "./page-invalidation";
 
 export type KbPageGrant = {
   id: number;
@@ -118,9 +119,7 @@ export function useCreateKbPageGrant() {
         kbPageGrantContract,
       ),
     onSuccess: (_, variables) => {
-      qc.invalidateQueries({
-        queryKey: knowledgeAndSurveysQueryKeys.kb.pageGrants(variables.pageId),
-      });
+      invalidateKbPageChange(qc, "acl-changed", variables.pageId);
     },
   });
 }
@@ -137,9 +136,7 @@ export function useRevokeKbPageGrant() {
         noContentC,
       ),
     onSuccess: (_, variables) => {
-      qc.invalidateQueries({
-        queryKey: knowledgeAndSurveysQueryKeys.kb.pageGrants(variables.pageId),
-      });
+      invalidateKbPageChange(qc, "acl-changed", variables.pageId);
     },
   });
 }

@@ -9,6 +9,7 @@ import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
 import type { KbSpace, CreateSpaceInput, UpdateSpaceInput } from "@/types/kb";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { useIdempotentOperation } from "@/hooks/common/use-idempotent-operation";
+import { NO_CURSOR_YET } from "@/hooks/api/cursor-page-param";
 import type {
   KbSpaceListPage,
   KbSpaceArchiveImpact,
@@ -66,7 +67,7 @@ export function useKbSpaces(params?: KbSpacesListParams) {
 
   return useQuery({
     ...INLINE_READ_ERROR,
-    queryKey: [...knowledgeAndSurveysQueryKeys.kb.spaces(), params],
+    queryKey: knowledgeAndSurveysQueryKeys.kb.spacesList(queryParams),
     queryFn: ({ signal }) =>
       apiClient.get<KbSpaceListPage>("/kb/spaces", queryParams, signal, kbSpaceListPageContract),
     staleTime: 60_000,
@@ -248,8 +249,8 @@ export function useKbSpaceMembers(
         signal,
         kbSpaceMemberListContract,
       ),
-    initialPageParam: null as string | null,
-    getNextPageParam: (lastPage) => lastPage.pagination.nextCursor,
+    initialPageParam: NO_CURSOR_YET,
+    getNextPageParam: (lastPage) => lastPage.pagination.nextCursor ?? undefined,
     select: (data) => data.pages.flatMap((page) => page.data),
     enabled: canManage && Number.isFinite(spaceId) && spaceId > 0 && (options?.enabled ?? true),
     staleTime: 60_000,

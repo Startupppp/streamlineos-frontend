@@ -40,10 +40,19 @@ export type KbPage = {
 
 export type KbPageListItem = Omit<KbPage, "content" | "contentText">;
 
+export type KbPageCapabilities = {
+  view: boolean;
+  comment: boolean;
+  edit: boolean;
+  manage: boolean;
+  restore: boolean;
+};
+
 export type KbPageDetail = KbPage & {
   ancestors: Array<{ id: number; title: string }>;
   isFavorite: boolean;
   canEdit?: boolean;
+  can: KbPageCapabilities;
 };
 
 export type KbPageTreeNode = {

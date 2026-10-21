@@ -106,7 +106,7 @@ export interface AssignHealthItemParams {
 
 const assignHealthItemContract = lazyContract(() =>
   import("@/hooks/api/kb/content-health-schema").then(
-    (m) => m.dismissHealthItemContract,
+    (m) => m.assignHealthItemContract,
   ),
 );
 

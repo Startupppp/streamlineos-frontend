@@ -50,6 +50,7 @@ const WIRE_FIXTURE = {
   ancestors: [{ id: 9, title: "Handbook" }],
   isFavorite: false,
   canEdit: true,
+  can: { view: true, comment: true, edit: true, manage: false, restore: false },
 };
 
 describe("kbPageWithAncestorsContract — server/client schema parity for wiki page detail (FE-28)", () => {
@@ -95,6 +96,16 @@ describe("kbPageWithAncestorsContract — server/client schema parity for wiki p
     const { canEdit: _canEdit, ...withoutCanEdit } = WIRE_FIXTURE;
     const parsed = kbPageWithAncestorsContract.safeParse(withoutCanEdit);
     expect(parsed.success).toBe(true);
+  });
+
+  it("parses the can capabilities object so the toolbar can show the correct action set without a second request", () => {
+    const parsed = kbPageWithAncestorsContract.parse(WIRE_FIXTURE);
+    expect(parsed.can).toEqual({ view: true, comment: true, edit: true, manage: false, restore: false });
+  });
+
+  it("rejects a payload missing can so a backend regression that omits the capabilities block is caught at the contract boundary", () => {
+    const { can: _can, ...withoutCan } = WIRE_FIXTURE;
+    expect(kbPageWithAncestorsContract.safeParse(withoutCan).success).toBe(false);
   });
 
   it("accepts array-shaped content from a template-created page so pages created from block-array templates render without a contract error", () => {

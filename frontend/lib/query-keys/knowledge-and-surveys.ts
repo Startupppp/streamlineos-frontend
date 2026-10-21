@@ -47,6 +47,16 @@ export const knowledgeAndSurveysQueryKeys = {
         ? ([...base, "kb", "page-templates"] as const)
         : ([...base, "kb", "page-templates", { q }] as const),
     spaces: () => [...base, "kb", "spaces"] as const,
+    spacesList: (params?: QueryKeyParams) => {
+      const hasParams =
+        params !== undefined &&
+        Object.values(params as Record<string, unknown>).some(
+          (v) => v !== undefined,
+        );
+      return hasParams
+        ? ([...base, "kb", "spaces", params] as const)
+        : ([...base, "kb", "spaces"] as const);
+    },
     space: (spaceId: number) => [...base, "kb", "spaces", spaceId] as const,
     search: (params?: QueryKeyParams) =>
       params === undefined

@@ -7,6 +7,7 @@ import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
 import { knowledgeAndSurveysQueryKeys } from "@/lib/query-keys/knowledge-and-surveys";
 import { useCan } from "@/hooks/api/access";
+import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 export type KbSettings = z.infer<typeof kbSettingsContractDef>;
@@ -18,6 +19,7 @@ const kbSettingsContract = lazyContract(() =>
 export function useKbSettings() {
   const canManageSettings = useCan("kb:settings:manage");
   return useQuery({
+    ...INLINE_READ_ERROR,
     queryKey: knowledgeAndSurveysQueryKeys.kb.settings(),
     queryFn: ({ signal }) => apiClient.get<KbSettings>("/kb/settings", undefined, signal, kbSettingsContract),
     staleTime: 300_000,

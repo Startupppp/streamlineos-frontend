@@ -2,7 +2,8 @@ import { renderHook, act, waitFor } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import type { ReactNode } from "react";
 import { IDEMPOTENCY_HEADER } from "@/lib/idempotency-key";
-import { apiClient, clearBackendTokenCache, resetOutageCircuit, seedBackendToken } from "@/lib/api-client";
+import { apiClient, clearBackendTokenCache, seedBackendToken } from "@/lib/api-client";
+import { resetOutageCircuit } from "@/lib/api-outage-circuit";
 import { ApiContractError } from "@/lib/api-envelope";
 import { installAbortSignalPolyfill } from "@/test-utils/abort-signal-polyfill";
 

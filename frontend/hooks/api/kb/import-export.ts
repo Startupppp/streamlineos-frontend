@@ -126,6 +126,22 @@ export function useImportKbPages() {
 
 const TERMINAL_IMPORT_STATUSES = new Set(["completed", "failed", "cancelled"]);
 
+const _settledByClient = new WeakMap<object, Set<number>>();
+
+function hasSettledFired(qc: object, jobId: number): boolean {
+  const s = _settledByClient.get(qc);
+  return s !== undefined && s.has(jobId);
+}
+
+function recordSettled(qc: object, jobId: number): void {
+  let s = _settledByClient.get(qc);
+  if (s === undefined) {
+    s = new Set();
+    _settledByClient.set(qc, s);
+  }
+  s.add(jobId);
+}
+
 export function useKbImportJob(jobId: number | null) {
   const canImport = useCan("kb:pages:import");
   const qc = useQueryClient();
@@ -145,11 +161,10 @@ export function useKbImportJob(jobId: number | null) {
       return status === "pending" || status === "processing" ? 1500 : false;
     },
   });
-  // A finished job changed the history list and created pages the wiki lists
-  // do not know about yet; neither is computable client-side.
   const settled = query.data !== undefined && TERMINAL_IMPORT_STATUSES.has(query.data.status);
   useEffect(() => {
-    if (!settled) return;
+    if (!settled || jobId === null || hasSettledFired(qc, jobId)) return;
+    recordSettled(qc, jobId);
     qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.kb.importJobs(), exact: true });
     qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.kb.pagesTree() });
     qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.kb.pagesRecent() });

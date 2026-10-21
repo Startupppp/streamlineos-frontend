@@ -68,6 +68,13 @@ export const kbPageWithAncestorsContract = kbPageBaseContract.extend({
   ancestors: z.array(z.object({ id: z.number().int(), title: z.string() })),
   isFavorite: z.boolean(),
   canEdit: z.boolean().optional(),
+  can: z.object({
+    view: z.boolean(),
+    comment: z.boolean(),
+    edit: z.boolean(),
+    manage: z.boolean(),
+    restore: z.boolean(),
+  }),
 });
 
 export const kbPageSearchResponseContract = z.object({

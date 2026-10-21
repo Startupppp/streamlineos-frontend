@@ -52,7 +52,7 @@ const repairActionSchema = z.enum([
   "mark_needs_content",
 ]);
 
-export const dismissHealthItemContract = z.object({
+const healthSignalItemSchema = z.object({
   id: z.number().int(),
   orgId: z.string(),
   pageId: z.number().int(),
@@ -71,6 +71,9 @@ export const dismissHealthItemContract = z.object({
   createdAt: z.string(),
   updatedAt: z.string(),
 });
+
+export const dismissHealthItemContract = healthSignalItemSchema;
+export const assignHealthItemContract = healthSignalItemSchema;
 
 export type DismissHealthItemResult = z.infer<typeof dismissHealthItemContract>;
 
