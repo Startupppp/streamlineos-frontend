@@ -1,6 +1,6 @@
 # Chat product contract (CHAT-001)
 
-Date: 2026-10-20 · Status: draft for approval
+Date: 2026-10-20 · Status: approved 2026-10-21 (baseline taken after release, accepted)
 
 Sources: [reset plan](2026-10-20-product-chat-reset-plan.md), [ADR-0001](../../adr/0001-chat-realtime-is-server-published.md), [CONTEXT.md](../../../CONTEXT.md), [suite competitor analysis](../knowledge-base/2026-10-20-streamlineos-suite-competitor-analysis.md) (Slack/Teams/Meet/Google rows: integrate conferencing, own record-aware messaging). Competitor detail lives there, not here.
 
@@ -132,7 +132,7 @@ Rollback order is frontend first, then backend; migrations 2490/2495/2500 are ad
 
 ### CHAT-001 Contract and baseline
 
-- [ ] This file is approved and linked from the reset plan.
+- [x] This file is approved and linked from the reset plan.
 - [ ] Baseline values for every release-gate metric are recorded before any behaviour change.
 
 ### CHAT-002 Huddle data model

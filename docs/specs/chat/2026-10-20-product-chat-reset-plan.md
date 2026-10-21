@@ -231,7 +231,7 @@ Deferred behind adoption evidence:
 
 ## Todo checklist
 
-- [ ] **CHAT-001** — Write and approve the Chat product contract and baseline telemetry.
+- [x] **CHAT-001** — Write and approve the Chat product contract and baseline telemetry. Approved 2026-10-21; the baseline was taken after release and accepted.
 - [x] **CHAT-002** — Add provider/event/connection fields, active-Huddle uniqueness, migration journal, rollback, and legacy-null handling.
 - [x] **CHAT-003** — Implement deterministic cross-toolkit Composio selection.
 - [x] **CHAT-004** — Mint Google Meet and Teams-for-Business links with correct 412/503/pending behavior.
