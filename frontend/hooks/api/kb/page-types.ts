@@ -1,3 +1,5 @@
+export type KbPageKind = "document" | "spreadsheet";
+
 export type KbPage = {
   id: number;
   orgId: string;
@@ -10,6 +12,7 @@ export type KbPage = {
   coverImage: string | null;
   status: "draft" | "in_review" | "published" | "archived";
   contentType: string;
+  kind: KbPageKind;
   trustState: "unverified" | "verified" | "verification_expired";
   visibility: "private" | "org" | "public";
   publicToken: string | null;
@@ -73,6 +76,7 @@ export type KbPageTreeNode = {
   spaceId: number | null;
   projectId: number | null;
   title: string;
+  kind: KbPageKind;
   icon: string | null;
   coverImage?: string | null;
   sortOrder: number | null;
@@ -117,6 +121,8 @@ export type CreateKbPageInput = {
   title?: string;
   templateId?: number | null;
   projectId?: number | null;
+  kind?: KbPageKind;
+  content?: Record<string, unknown>[];
 };
 
 type KbPageMetadataPatch = {

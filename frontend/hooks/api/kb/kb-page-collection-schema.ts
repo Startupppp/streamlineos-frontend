@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { kbPageKindSchema } from "./kb-pages-schema";
 
 export const kbPageCollectionItemSchema = z.object({
   id: z.number().int(),
@@ -11,6 +12,7 @@ export const kbPageCollectionItemSchema = z.object({
   status: z.enum(["draft", "in_review", "published", "archived"]),
   visibility: z.enum(["private", "org", "public"]),
   contentType: z.string(),
+  kind: kbPageKindSchema,
   trustState: z.enum(["unverified", "verified", "verification_expired"]),
   ownerMembershipId: z.number().int().nullable(),
   ownerUserId: z.string().nullable(),
@@ -30,6 +32,7 @@ export const kbPageCollectionItemSchema = z.object({
       membershipId: z.number().int().nullable(),
       at: z.string(),
       access: z.enum(["view", "comment", "edit", "manage"]),
+      expiresAt: z.string().nullable(),
     })
     .nullable(),
 });

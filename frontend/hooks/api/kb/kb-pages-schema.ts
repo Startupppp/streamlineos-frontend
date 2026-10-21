@@ -1,6 +1,8 @@
 import { z } from "zod";
 import { cursorPageContract } from "@/hooks/api/cursor-page-schema";
 
+export const kbPageKindSchema = z.enum(["document", "spreadsheet"]);
+
 const kbPageBaseContract = z.object({
   id: z.number().int(),
   orgId: z.string(),
@@ -13,6 +15,7 @@ const kbPageBaseContract = z.object({
   coverImage: z.string().nullable(),
   status: z.enum(["draft", "in_review", "published", "archived"]),
   contentType: z.string(),
+  kind: kbPageKindSchema,
   trustState: z.enum(["unverified", "verified", "verification_expired"]),
   visibility: z.enum(["private", "org", "public"]),
   publicToken: z.string().nullable(),

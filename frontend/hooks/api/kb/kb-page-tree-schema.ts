@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { kbPageKindSchema } from "./kb-pages-schema";
 
 const kbPageTreeItemSchema = z.object({
   id: z.number().int(),
@@ -7,6 +8,7 @@ const kbPageTreeItemSchema = z.object({
   spaceId: z.number().int().nullable(),
   projectId: z.number().int().nullable(),
   title: z.string(),
+  kind: kbPageKindSchema,
   icon: z.string().nullable(),
   coverImage: z.string().nullable().optional(),
   sortOrder: z.number().int().nullable(),

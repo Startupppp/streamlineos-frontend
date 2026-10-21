@@ -14,6 +14,7 @@ import { knowledgeAndSurveysQueryKeys } from "@/lib/query-keys/knowledge-and-sur
 import { useCan } from "@/hooks/api/access";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { useIdempotentOperation } from "@/hooks/common/use-idempotent-operation";
+import type { KbPageKind } from "./page-types";
 
 export type KbPageTemplate = {
   id: number;
@@ -21,6 +22,7 @@ export type KbPageTemplate = {
   name: string;
   icon: string | null;
   description: string | null;
+  kind: KbPageKind;
   content: Record<string, unknown> | Record<string, unknown>[] | null;
   createdById: string | null;
   createdByName: string | null;
