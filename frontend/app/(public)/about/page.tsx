@@ -39,7 +39,7 @@ const values = [
 const numbers = [
   { value: "2026", label: "Founded" },
   { value: "30+", label: "Modules shipped" },
-  { value: "₹0", label: "Below 10 seats" },
+  { value: "\u20B90", label: "Up to 5 seats" },
   { value: "100%", label: "Founder-owned" },
 ];
 

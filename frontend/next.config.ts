@@ -164,6 +164,11 @@ const nextConfig: NextConfig = {
       permanent: false,
     },
     {
+      source: "/me/leave",
+      destination: "/me/time-off",
+      permanent: false,
+    },
+    {
       source: "/expenses",
       destination: "/me/expenses",
       permanent: false,
