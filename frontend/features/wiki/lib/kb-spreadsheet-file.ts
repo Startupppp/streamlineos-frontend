@@ -1,4 +1,7 @@
-import type { KbWorkbookCell, KbWorkbookCellType, KbWorkbookInput, KbWorkbookSheetInput } from "@/hooks/api/kb/page-types";
+import type { KbWorkbookCell } from "@/hooks/api/kb/kb-pages-schema";
+import type { KbWorkbookInput, KbWorkbookSheetInput } from "@/hooks/api/kb/page-types";
+import type { FortuneSheet } from "./kb-workbook-convert";
+import type { Font } from "exceljs";
 
 export const KB_SPREADSHEET_ACCEPT =
   ".xlsx,.csv,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
@@ -7,9 +10,24 @@ const MAX_SHEETS = 50;
 const MAX_CELLS = 200_000;
 const MAX_JSON_BYTES = 5 * 1024 * 1024;
 
-type SheetRecord = Record<string, unknown>;
-type FortuneCellV = Record<string, unknown>;
-type FortuneCellData = { r: number; c: number; v?: FortuneCellV };
+type KbWorkbookCellType = NonNullable<KbWorkbookCell["t"]>;
+type FortuneCellEntry = { r: number; c: number; v: NonNullable<NonNullable<FortuneSheet["celldata"]>[number]["v"]> };
+
+function sheetEntries(sheet: FortuneSheet): FortuneCellEntry[] {
+  const entries: FortuneCellEntry[] = [];
+  if (sheet.data) {
+    sheet.data.forEach((row, r) => {
+      row.forEach((cell, c) => {
+        if (cell) entries.push({ r, c, v: cell });
+      });
+    });
+    return entries;
+  }
+  for (const entry of sheet.celldata ?? []) {
+    if (entry.v) entries.push({ r: entry.r, c: entry.c, v: entry.v });
+  }
+  return entries;
+}
 
 function triggerBlobDownload(blob: Blob, filename: string): void {
   const url = URL.createObjectURL(blob);
@@ -62,7 +80,7 @@ function toFormulaCell(r: number, c: number, formula: string, result: unknown): 
   const v: KbWorkbookCell["v"] = result !== null && result !== undefined
     ? (typeof result === "number" || typeof result === "boolean" ? result : String(result))
     : null;
-  return { r, c, t, v, f: formula, m: v !== null ? String(v) : undefined };
+  return { r, c, t, v, f: formula.startsWith("=") ? formula : `=${formula}`, m: v !== null ? String(v) : undefined };
 }
 
 function colLetterToIndex(letters: string): number {
@@ -88,13 +106,8 @@ async function readXlsx(file: File): Promise<KbWorkbookSheetInput[]> {
       row.eachCell({ includeEmpty: false }, (cell, colNumber) => {
         const r = rowNumber - 1;
         const c = colNumber - 1;
-        if (cell.type === 6) {
-          const sv = cell.value as { sharedFormula?: string; formula?: string; result?: unknown };
-          const f = sv.formula ?? sv.sharedFormula ?? "";
-          if (f) cells.push(toFormulaCell(r, c, f, sv.result));
-        } else if (cell.type === 4 && typeof cell.value === "object" && cell.value !== null && "formula" in cell.value) {
-          const fv = cell.value as { formula: string; result?: unknown };
-          cells.push(toFormulaCell(r, c, fv.formula, fv.result));
+        if (cell.formula) {
+          cells.push(toFormulaCell(r, c, cell.formula, cell.result));
         } else if (cell.value !== null && cell.value !== undefined) {
           const bc = toCell(r, c, cell.value);
           const font = cell.style?.font;
@@ -110,7 +123,7 @@ async function readXlsx(file: File): Promise<KbWorkbookSheetInput[]> {
       if (col.width !== undefined) columnlen[String(idx)] = Math.round(col.width * 7);
     });
 
-    ws.mergeCells.forEach?.((range: string) => {
+    ws.model.merges.forEach((range) => {
       const match = /^([A-Z]+)(\d+):([A-Z]+)(\d+)$/.exec(range);
       if (!match) return;
       const c0 = colLetterToIndex(match[1]);
@@ -189,15 +202,13 @@ function safeForCsv(value: string): string {
   return value;
 }
 
-function sheetToCsvString(sheet: SheetRecord): string {
-  const celldata = Array.isArray(sheet.celldata)
-    ? (sheet.celldata as FortuneCellData[])
-    : [];
+function sheetToCsvString(sheet: FortuneSheet): string {
+  const celldata = sheetEntries(sheet);
   let maxRow = 0;
   let maxCol = 0;
   const map = new Map<string, string>();
   for (const cell of celldata) {
-    const cv = cell.v ?? {};
+    const cv = cell.v;
     const display = String(cv.m ?? cv.v ?? "");
     if (display) map.set(`${cell.r}_${cell.c}`, display);
     if (cell.r > maxRow) maxRow = cell.r;
@@ -220,30 +231,28 @@ function sheetToCsvString(sheet: SheetRecord): string {
   return rows.join("\r\n");
 }
 
-async function sheetsToXlsxBuffer(sheets: SheetRecord[], title: string): Promise<ArrayBuffer> {
+async function sheetsToXlsxBuffer(sheets: FortuneSheet[], title: string): Promise<ArrayBuffer> {
   const ExcelJS = (await import("exceljs")).default;
   const wb = new ExcelJS.Workbook();
   wb.title = title;
   for (const sheet of sheets) {
-    const ws = wb.addWorksheet(typeof sheet.name === "string" ? sheet.name : "Sheet");
-    const celldata = Array.isArray(sheet.celldata) ? (sheet.celldata as FortuneCellData[]) : [];
-    const config = (sheet.config ?? {}) as Record<string, unknown>;
-    const columnlen = (config.columnlen ?? {}) as Record<string, number>;
-    for (const cell of celldata) {
-      const cv = cell.v ?? {};
+    const ws = wb.addWorksheet(sheet.name || "Sheet");
+    const config = sheet.config ?? {};
+    const columnlen = config.columnlen ?? {};
+    for (const cell of sheetEntries(sheet)) {
+      const cv = cell.v;
       const exCell = ws.getCell(cell.r + 1, cell.c + 1);
       if (cv.f) {
-        exCell.value = { formula: String(cv.f), result: cv.v } as ExcelJS.CellFormulaValue;
+        exCell.value = { formula: cv.f.replace(/^=/, ""), result: cv.v };
       } else if (cv.v !== undefined && cv.v !== null) {
-        exCell.value = cv.v as ExcelJS.CellValue;
+        exCell.value = cv.v;
       }
-      const font: Partial<ExcelJS.Font> = {};
+      const font: Partial<Font> = {};
       if (cv.bl) font.bold = true;
       if (cv.it) font.italic = true;
       if (Object.keys(font).length > 0) exCell.font = font;
     }
-    const merge = (config.merge ?? {}) as Record<string, { r: number; c: number; rs: number; cs: number }>;
-    for (const m of Object.values(merge)) {
+    for (const m of Object.values(config.merge ?? {})) {
       ws.mergeCells(m.r + 1, m.c + 1, m.r + m.rs, m.c + m.cs);
     }
     for (const [colIdx, width] of Object.entries(columnlen)) {
@@ -254,7 +263,7 @@ async function sheetsToXlsxBuffer(sheets: SheetRecord[], title: string): Promise
 }
 
 export async function exportSpreadsheet(
-  sheets: SheetRecord[],
+  sheets: FortuneSheet[],
   title: string,
   format: "xlsx" | "csv",
 ): Promise<void> {

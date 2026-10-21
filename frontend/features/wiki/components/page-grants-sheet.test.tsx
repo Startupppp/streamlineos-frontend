@@ -193,6 +193,8 @@ function makeGrant(overrides: Partial<KbPageGrant> = {}): KbPageGrant {
     grantedByMembershipId: 1,
     createdAt: "2026-01-01T00:00:00Z",
     revokedAt: null,
+    expiresAt: null,
+    isExpired: false,
     granteeName: null,
     granteeEmail: null,
     granteeImage: null,

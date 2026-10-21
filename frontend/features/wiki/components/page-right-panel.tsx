@@ -52,9 +52,8 @@ const VISIBILITY_LABELS: Record<string, string> = {
 interface PageRightPanelProps {
   pageId: number;
   page: KbPageDetail;
-  wordCount: number;
+  wordCount?: number;
   onNavigate: (pageId: number) => void;
-  /** When set with onMobileOpenChange, the mobile sheet is controlled by the parent (header trigger). */
   mobileOpen?: boolean;
   onMobileOpenChange?: (open: boolean) => void;
 }
@@ -62,7 +61,7 @@ interface PageRightPanelProps {
 interface PanelContentProps {
   pageId: number;
   page: KbPageDetail;
-  wordCount: number;
+  wordCount?: number;
   onNavigate: (pageId: number) => void;
 }
 
@@ -216,7 +215,9 @@ function PanelContent({
           </div>
         </div>
         <Stat label="Visibility" value={visibilityValue} />
-        <Stat label="Words" value={wordCount.toLocaleString()} />
+        {wordCount === undefined ? null : (
+          <Stat label="Words" value={wordCount.toLocaleString()} />
+        )}
         <Stat
           label="Created"
           value={kbTimeAgo(page.createdAt)}

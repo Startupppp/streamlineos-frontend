@@ -76,6 +76,7 @@ const TREE_ITEM_SUBJECT: KbPageActionSubject = {
   isFavorite: false,
   isLocked: false,
   hasCover: false,
+  isArchived: false,
 };
 
 const PageTreeItem = memo(function PageTreeItemInner({
@@ -137,14 +138,14 @@ const PageTreeItem = memo(function PageTreeItemInner({
 
   const {
     data: childrenData,
-    isLoading: childrenLoading,
     isError: childrenError,
-    isFetchNextPageError: childrenFetchNextPageError,
     error: childrenReadError,
     refetch: refetchChildren,
+    isLoading: childrenLoading,
     hasNextPage: childrenHasNextPage,
-    isFetchingNextPage: childrenFetchingNext,
     fetchNextPage: fetchChildrenNextPage,
+    isFetchingNextPage: childrenFetchingNext,
+    isFetchNextPageError: childrenFetchNextPageError,
   } = useKbPageChildrenLevel(node.id, isExpanded, spaceId, projectId);
 
   const children: KbPageTreeNode[] =

@@ -33,6 +33,7 @@ const WIRE_FIXTURE = {
       status: "published",
       visibility: "org",
       contentType: "rich-text",
+      kind: "document",
       trustState: "verified",
       ownerMembershipId: 1,
       ownerUserId: "user-1",
@@ -70,7 +71,7 @@ describe("KB page collection — response contract parity (FE-28)", () => {
     const item = parsed.data[0];
     const backendProjectedFields = [
       "id", "title", "icon", "coverImage", "spaceId", "projectId",
-      "parentPageId", "status", "visibility", "contentType", "trustState",
+      "parentPageId", "status", "visibility", "contentType", "kind", "trustState",
       "ownerMembershipId", "ownerUserId", "createdById", "createdByMembershipId",
       "lastEditedById", "lastEditedByMembershipId", "createdAt", "updatedAt",
       "deletedAt", "nextReviewAt", "verifiedUntil", "contentRevision", "aclRevision",

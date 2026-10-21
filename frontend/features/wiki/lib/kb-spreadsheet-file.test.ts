@@ -25,11 +25,11 @@ const mockWorksheet = {
     cb({ eachCell: jest.fn((__: unknown, cellCb: (cell: unknown, cn: number) => void) => {
       cellCb({ type: 2, value: "Hello", style: { font: { bold: true } } }, 1);
       cellCb({ type: 2, value: 42, style: {} }, 2);
-      cellCb({ type: 4, value: { formula: "A1+B1", result: 43 }, style: {} }, 3);
+      cellCb({ type: 6, value: { formula: "A1+B1", result: 43 }, formula: "A1+B1", result: 43, style: {} }, 3);
     }) }, 1);
   }),
   columns: [{ width: 10 }, { width: 15 }],
-  mergeCells: { forEach: jest.fn() },
+  model: { merges: [] },
 };
 
 const mockWorkbook = {
@@ -113,7 +113,7 @@ describe("readSpreadsheetFile — XLSX", () => {
     const sheet = workbook.sheets[0];
     expect(Array.isArray(sheet.cells)).toBe(true);
     expect(sheet.cells.some((c) => c.s !== undefined && c.s !== null)).toBe(true);
-    expect(sheet.cells.some((c) => c.f === "A1+B1")).toBe(true);
+    expect(sheet.cells.some((c) => c.f === "=A1+B1")).toBe(true);
   });
 });
 

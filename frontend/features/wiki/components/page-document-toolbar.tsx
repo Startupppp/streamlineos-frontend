@@ -95,7 +95,7 @@ export function PageDocumentToolbar({
     {
       isFavorite: page.isFavorite,
       isLocked: page.isLocked,
-      hasCover: page.coverImage !== null,
+      hasCover: page.coverImage !== null, isArchived: page.status === "archived",
     },
     {
       canCreate,

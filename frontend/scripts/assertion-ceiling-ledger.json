@@ -813,10 +813,6 @@
       "as": 1,
       "nonNull": 0
     },
-    "features/wiki/components/import-page.tsx": {
-      "as": 1,
-      "nonNull": 0
-    },
     "features/wiki/components/page-metadata-sheet.tsx": {
       "as": 1,
       "nonNull": 0
@@ -830,10 +826,6 @@
       "nonNull": 0
     },
     "features/wiki/components/space-sheet.tsx": {
-      "as": 1,
-      "nonNull": 0
-    },
-    "features/wiki/components/templates-page.tsx": {
       "as": 1,
       "nonNull": 0
     },

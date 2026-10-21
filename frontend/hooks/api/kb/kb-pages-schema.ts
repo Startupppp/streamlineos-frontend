@@ -150,20 +150,20 @@ export const kbPageVersionContract = kbPageVersionItemContract;
 const kbWorkbookCellContract = z.object({
   r: z.number().int(),
   c: z.number().int(),
-  t: z.enum(["string", "number", "boolean", "error", "empty"]),
-  v: z.union([z.string(), z.number(), z.boolean(), z.null()]),
-  f: z.string().nullable().optional(),
-  m: z.string().nullable().optional(),
-  s: z.record(z.unknown()).nullable().optional(),
+  t: z.enum(["string", "number", "boolean", "error", "empty"]).optional(),
+  v: z.union([z.string(), z.number(), z.boolean(), z.null()]).optional(),
+  f: z.string().optional(),
+  m: z.string().optional(),
+  s: z.record(z.string(), z.unknown()).nullable().optional(),
 });
 
 const kbWorkbookSheetContract = z.object({
-  id: z.string(),
+  id: z.string().uuid(),
   name: z.string(),
   position: z.number().int(),
   rowCount: z.number().int(),
   columnCount: z.number().int(),
-  config: z.record(z.unknown()),
+  config: z.record(z.string(), z.unknown()),
   cells: z.array(kbWorkbookCellContract),
 });
 
@@ -173,7 +173,11 @@ export const kbWorkbookContract = z.object({
   sheets: z.array(kbWorkbookSheetContract),
 });
 
-export const kbWorkbookUpdateContract = z.object({
+export type KbWorkbookCell = z.infer<typeof kbWorkbookCellContract>;
+export type KbWorkbookSheet = z.infer<typeof kbWorkbookSheetContract>;
+export type KbWorkbook = z.infer<typeof kbWorkbookContract>;
+
+export const kbWorkbookSaveContract = z.object({
   contentRevision: z.number().int(),
   updatedAt: z.string(),
 });

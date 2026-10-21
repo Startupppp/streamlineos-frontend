@@ -1,8 +1,6 @@
 "use client";
 
-import "@fortune-sheet/react/dist/index.css";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import dynamic from "next/dynamic";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -10,11 +8,12 @@ import { Button } from "@/components/ui/button";
 import { KbAlertCircleIcon } from "@/features/wiki/lib/kb-icons";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { cn } from "@/lib/utils";
-import { useKbPage, useUpdateKbPage, useRecordKbPageVisit, useKbWorkbook, useUpdateKbWorkbook } from "@/hooks/api/kb";
+import { useKbPage, useUpdateKbPage, useRecordKbPageVisit, useKbWorkbook } from "@/hooks/api/kb";
+import { ErrorState } from "@/components/shared/error-state";
 import { useCan, useCanState } from "@/hooks/api/access";
 import { NoPermissionState } from "@/components/shared/no-permission-state";
 import { pageHref } from "@/lib/knowledge-routes";
-import { backendSheetsToFortuneSheets, diffWorkbookOps } from "@/features/wiki/lib/kb-workbook-convert";
+import { toFortuneSheets, type FortuneSheet } from "@/features/wiki/lib/kb-workbook-convert";
 import { exportSpreadsheet } from "@/features/wiki/lib/kb-spreadsheet-file";
 import { KbPageNotFound } from "./kb-page-not-found";
 import PageCover from "./page-cover";
@@ -24,18 +23,12 @@ import PageIconPicker from "./page-icon-picker";
 import { PageDocumentPropertyActions } from "./page-document-property-actions";
 import PageRightPanel from "./page-right-panel";
 import PageEditConflict from "./page-edit-conflict";
+import PageSpreadsheetGrid from "./page-spreadsheet-grid";
 import { usePageAutosave, type PageAutosavePatch } from "./use-page-autosave";
 import { usePagePresentationUpdate } from "./use-page-presentation-update";
 import type { KbPageEditConflict } from "@/features/wiki/lib/wiki-schema";
-import type { KbWorkbookSheet } from "@/hooks/api/kb/page-types";
 
 const WIKI_DOCUMENT_COLUMN = "mx-auto w-full min-w-0 max-w-4xl px-4 sm:px-8";
-const WORKBOOK_SAVE_DELAY = 1500;
-
-const FortuneWorkbook = dynamic(
-  () => import("@fortune-sheet/react").then((m) => m.Workbook),
-  { ssr: false, loading: () => <Skeleton className="h-full min-h-[400px] w-full rounded-lg" /> },
-);
 
 interface PageSpreadsheetProps {
   pageId: number;
@@ -50,9 +43,10 @@ function nextReload(current: number): number {
 export default function PageSpreadsheet({ pageId, onNavigateToPage, projectId }: PageSpreadsheetProps) {
   const router = useRouter();
   const { data: page, isLoading, isError, error, refetch } = useKbPage(pageId);
-  const { data: workbook } = useKbWorkbook(pageId);
+  const workbookQuery = useKbWorkbook(pageId);
+  const workbook = workbookQuery.data;
+  const refetchWorkbook = workbookQuery.refetch;
   const updatePage = useUpdateKbPage();
-  const updateWorkbook = useUpdateKbWorkbook();
   const recordVisit = useRecordKbPageVisit();
   const canUpdate = useCan("kb:pages:update");
   const canManage = useCan("kb:pages:manage");
@@ -65,28 +59,7 @@ export default function PageSpreadsheet({ pageId, onNavigateToPage, projectId }:
   const [detailsMobileOpen, setDetailsMobileOpen] = useState(false);
   const visitedRef = useRef<number | null>(null);
   const titleRef = useRef<HTMLTextAreaElement>(null);
-  const sheetsRef = useRef<Record<string, unknown>[] | null>(null);
-  const savedSheetsRef = useRef<KbWorkbookSheet[]>([]);
-  const workbookRevisionRef = useRef(0);
-  const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  const fortuneSheets = useMemo(
-    () => (workbook?.sheets ? backendSheetsToFortuneSheets(workbook.sheets) : [{ name: "Sheet1", order: 0, celldata: [], config: {} }]),
-    [workbook?.pageId, reloadNonce],
-  );
-
-  useEffect(() => {
-    if (workbook) {
-      savedSheetsRef.current = workbook.sheets;
-      workbookRevisionRef.current = workbook.contentRevision;
-    }
-  }, [workbook]);
-
-  useEffect(() => {
-    return () => {
-      if (saveTimerRef.current !== null) clearTimeout(saveTimerRef.current);
-    };
-  }, []);
+  const sheetsRef = useRef<FortuneSheet[] | null>(null);
 
   const handleSavePage = useCallback(
     (payload: PageAutosavePatch & { pageId: number; expectedContentRevision: number }) =>
@@ -108,7 +81,7 @@ export default function PageSpreadsheet({ pageId, onNavigateToPage, projectId }:
     usePageAutosave({ pageId, contentRevision: page?.contentRevision, save: handleSavePage, onConflict: handleConflict, onSaveError: handleSaveFailure });
 
   const { pendingPresentation, isRetryingPresentation, handleCoverChange, handleIconChange, handleRetryPresentation, discardPresentation } =
-    usePagePresentationUpdate({ pageId, page: page ?? null, canManage, updatePage, refetch });
+    usePagePresentationUpdate({ pageId, page, canManage, updatePage, refetch });
 
   useEffect(() => {
     if (visitedRef.current === pageId) return;
@@ -118,7 +91,7 @@ export default function PageSpreadsheet({ pageId, onNavigateToPage, projectId }:
 
   useEffect(() => {
     sheetsRef.current = null;
-  }, [pageId]);
+  }, [pageId, reloadNonce]);
 
   const localTitle = titleDraft?.pageId === pageId ? titleDraft.value : (page?.title ?? "");
 
@@ -140,7 +113,6 @@ export default function PageSpreadsheet({ pageId, onNavigateToPage, projectId }:
           }
           discardLocalEdits();
           setTitleDraft(null);
-          sheetsRef.current = null;
           setReloadNonce(nextReload);
         },
         () => { toast.error("Couldn't load the latest page version. Your edits are still here."); },
@@ -148,38 +120,46 @@ export default function PageSpreadsheet({ pageId, onNavigateToPage, projectId }:
       .finally(() => setIsReloading(false));
   }, [conflict?.currentContentRevision, discardLocalEdits, refetch]);
 
-  const handleSheetsChange = useCallback(
-    (data: Record<string, unknown>[]) => {
-      sheetsRef.current = data;
-      if (saveTimerRef.current !== null) clearTimeout(saveTimerRef.current);
-      saveTimerRef.current = setTimeout(() => {
-        saveTimerRef.current = null;
-        const ops = diffWorkbookOps(savedSheetsRef.current, data as Parameters<typeof diffWorkbookOps>[1]);
-        if (ops === "full-replace" || ops.length === 0) return;
-        void updateWorkbook.mutateAsync({
-          pageId,
-          expectedContentRevision: workbookRevisionRef.current,
-          operations: ops,
-        }).then((res) => {
-          workbookRevisionRef.current = res.contentRevision;
-        }).catch((err: unknown) => {
-          toast.error("Spreadsheet save failed", { description: getErrorMessage(err) });
-        });
-      }, WORKBOOK_SAVE_DELAY);
-    },
-    [pageId, updateWorkbook],
+  const handleReloadWorkbook = useCallback(() => {
+    setIsReloading(true);
+    void refetchWorkbook()
+      .then(
+        (result) => {
+          if (!result.isSuccess) {
+            toast.error("Couldn't load the latest spreadsheet version. Your edits are still here.");
+            return;
+          }
+          setReloadNonce(nextReload);
+        },
+        () => { toast.error("Couldn't load the latest spreadsheet version. Your edits are still here."); },
+      )
+      .finally(() => setIsReloading(false));
+  }, [refetchWorkbook]);
+
+  const handleRefetchRevision = useCallback(
+    () => refetchWorkbook().then((result) => (result.isSuccess ? result.data.contentRevision : null)),
+    [refetchWorkbook],
+  );
+
+  const handleRetryWorkbook = useCallback(() => {
+    void refetchWorkbook();
+  }, [refetchWorkbook]);
+
+  const handleCompareTitle = useCallback(
+    () => Promise.resolve({ title: page?.title ?? "", body: "" }),
+    [page?.title],
   );
 
   const handleExportSpreadsheet = useCallback(
     async (format: "xlsx" | "csv") => {
-      const sheets = sheetsRef.current ?? fortuneSheets;
+      const sheets = sheetsRef.current ?? (workbook ? toFortuneSheets(workbook.sheets) : []);
       try {
-        await exportSpreadsheet(sheets as Parameters<typeof exportSpreadsheet>[0], page?.title ?? "spreadsheet", format);
+        await exportSpreadsheet(sheets, page?.title ?? "spreadsheet", format);
       } catch (err) {
         toast.error(getErrorMessage(err));
       }
     },
-    [fortuneSheets, page?.title],
+    [workbook, page?.title],
   );
 
   function handleTitleChange(e: React.ChangeEvent<HTMLTextAreaElement>) {
@@ -237,7 +217,7 @@ export default function PageSpreadsheet({ pageId, onNavigateToPage, projectId }:
                 <PageEditConflict
                   key={`${pageId}:${conflict.currentContentRevision}`} conflict={conflict} isReloading={isReloading}
                   pendingFields={pendingFields} localTitle={localTitle} localBody="" onKeepMine={keepLocalEdits}
-                  onDiscardMine={handleDiscardMine} onCompare={async () => ({ title: page.title, body: "" })}
+                  onDiscardMine={handleDiscardMine} onCompare={handleCompareTitle}
                 />
               </div>
             ) : null}
@@ -257,17 +237,32 @@ export default function PageSpreadsheet({ pageId, onNavigateToPage, projectId }:
               />
               <PageDocumentPropertyActions icon={page.icon} hasCover={Boolean(page.coverImage)} isEditable={isEditable} onIconChange={handleIconChange} onOpenCover={handleOpenCover} />
             </div>
-            <div className="relative flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl border border-border">
-              <FortuneWorkbook
-                data={fortuneSheets as Parameters<typeof FortuneWorkbook>[0]["data"]}
+            {workbook ? (
+              <PageSpreadsheetGrid
                 key={`${pageId}:${reloadNonce}`}
-                onChange={handleSheetsChange as Parameters<typeof FortuneWorkbook>[0]["onChange"]}
-                allowEdit={isEditable} showToolbar={isEditable} showFormulaBar={isEditable} showSheetTabs
+                pageId={pageId}
+                pageTitle={page.title}
+                workbook={workbook}
+                contentRevision={page.contentRevision}
+                isEditable={isEditable}
+                sheetsRef={sheetsRef}
+                isReloading={isReloading}
+                onReload={handleReloadWorkbook}
+                onRefetchRevision={handleRefetchRevision}
               />
-            </div>
+            ) : workbookQuery.isError ? (
+              <ErrorState
+                title="Couldn't load this spreadsheet"
+                description={getErrorMessage(workbookQuery.error)}
+                error={workbookQuery.error}
+                onRetry={handleRetryWorkbook}
+              />
+            ) : (
+              <Skeleton className="min-h-[400px] w-full flex-1 rounded-xl" />
+            )}
           </div>
         </div>
-        <PageRightPanel pageId={pageId} page={page} wordCount={0} onNavigate={handleNavigateToPage} mobileOpen={detailsMobileOpen} onMobileOpenChange={handleDetailsMobileOpenChange} />
+        <PageRightPanel pageId={pageId} page={page} onNavigate={handleNavigateToPage} mobileOpen={detailsMobileOpen} onMobileOpenChange={handleDetailsMobileOpenChange} />
       </div>
     </div>
   );

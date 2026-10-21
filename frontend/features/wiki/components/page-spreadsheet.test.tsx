@@ -34,12 +34,12 @@ jest.mock("@/hooks/api/kb", () => ({
   useKbWorkbook: (id: number) => mockKbWorkbook(id),
   useUpdateKbPage: () => ({ mutateAsync: jest.fn() }),
   useUpdateKbWorkbook: () => ({ mutateAsync: jest.fn() }),
+  useReplaceKbWorkbook: () => ({ mutateAsync: jest.fn() }),
   useRecordKbPageVisit: () => ({ mutate: jest.fn() }),
 }));
 
-jest.mock("@/features/wiki/lib/kb-workbook-convert", () => ({
-  backendSheetsToFortuneSheets: () => [{ name: "Sheet1", order: 0, celldata: [], config: {} }],
-  diffWorkbookOps: () => [],
+jest.mock("@/components/shared/error-state", () => ({
+  ErrorState: ({ title }: { title: string }) => <div>{title}</div>,
 }));
 
 jest.mock("./use-page-autosave", () => ({
@@ -169,7 +169,7 @@ describe("PageSpreadsheet", () => {
     jest.clearAllMocks();
     mockCanState.mockReturnValue("allowed");
     mockUseCan.mockReturnValue(true);
-    mockKbWorkbook.mockReturnValue({ data: baseWorkbook, isLoading: false, isError: false });
+    mockKbWorkbook.mockReturnValue({ data: baseWorkbook, isLoading: false, isError: false, error: null, refetch: jest.fn() });
   });
 
   it("renders the fortune workbook when page loads", () => {
@@ -215,5 +215,21 @@ describe("PageSpreadsheet", () => {
     mockCanState.mockReturnValue("denied");
     render(<PageSpreadsheet pageId={42} />);
     expect(screen.getByText("No permission")).toBeInTheDocument();
+  });
+
+  it("shows a skeleton instead of an empty grid while the workbook is loading", () => {
+    mockKbPage.mockReturnValue({ data: basePage(), isLoading: false, isError: false, error: null, refetch: mockRefetch });
+    mockKbWorkbook.mockReturnValue({ data: undefined, isLoading: true, isError: false, error: null, refetch: jest.fn() });
+    render(<PageSpreadsheet pageId={42} />);
+    expect(screen.queryByTestId("fortune-workbook")).toBeNull();
+    expect(screen.queryByText("Couldn't load this spreadsheet")).toBeNull();
+  });
+
+  it("shows an inline error instead of an empty grid when the workbook read fails", () => {
+    mockKbPage.mockReturnValue({ data: basePage(), isLoading: false, isError: false, error: null, refetch: mockRefetch });
+    mockKbWorkbook.mockReturnValue({ data: undefined, isLoading: false, isError: true, error: new Error("boom"), refetch: jest.fn() });
+    render(<PageSpreadsheet pageId={42} />);
+    expect(screen.queryByTestId("fortune-workbook")).toBeNull();
+    expect(screen.getByText("Couldn't load this spreadsheet")).toBeInTheDocument();
   });
 });

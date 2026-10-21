@@ -34,6 +34,7 @@ const ROOT_NODE: KbPageTreeNode = {
   visibility: "org",
   createdById: null,
   status: "published",
+  kind: "document",
 };
 
 const CHILD_NODE: KbPageTreeNode = {

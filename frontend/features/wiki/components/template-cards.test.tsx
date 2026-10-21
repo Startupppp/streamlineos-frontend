@@ -25,6 +25,7 @@ function makeTemplate(over: Partial<KbPageTemplate> = {}): KbPageTemplate {
     name: "Runbook",
     icon: null,
     description: null,
+    kind: "document",
     content: null,
     createdById: "u-1",
     createdByName: "Ada Lovelace",

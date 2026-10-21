@@ -16,6 +16,7 @@ function wireItem(overrides: Record<string, unknown> = {}) {
     status: "published",
     visibility: "org",
     contentType: "rich-text",
+    kind: "document",
     trustState: "verified",
     ownerMembershipId: 42,
     ownerUserId: "11111111-2222-3333-4444-555555555555",

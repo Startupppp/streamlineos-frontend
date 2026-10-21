@@ -1,3 +1,5 @@
+import type { KbWorkbookCell } from "./kb-pages-schema";
+
 export type KbPageKind = "document" | "spreadsheet";
 
 export type KbPage = {
@@ -115,35 +117,8 @@ export type KbPageVersion = {
   createdAt: string;
 };
 
-export type KbWorkbookCellType = "string" | "number" | "boolean" | "error" | "empty";
-
-export type KbWorkbookCell = {
-  r: number;
-  c: number;
-  t: KbWorkbookCellType;
-  v: string | number | boolean | null;
-  f?: string | null;
-  m?: string | null;
-  s?: Record<string, unknown> | null;
-};
-
-export type KbWorkbookSheet = {
-  id: string;
-  name: string;
-  position: number;
-  rowCount: number;
-  columnCount: number;
-  config: Record<string, unknown>;
-  cells: KbWorkbookCell[];
-};
-
-export type KbWorkbook = {
-  pageId: number;
-  contentRevision: number;
-  sheets: KbWorkbookSheet[];
-};
-
 export type KbWorkbookSheetInput = {
+  id?: string;
   name: string;
   position: number;
   config: Record<string, unknown>;
@@ -153,13 +128,13 @@ export type KbWorkbookSheetInput = {
 export type KbWorkbookInput = { sheets: KbWorkbookSheetInput[] };
 
 export type KbWorkbookOp =
-  | { type: "addSheet"; sheetId: string; name: string; position: number }
-  | { type: "renameSheet"; sheetId: string; name: string }
-  | { type: "moveSheet"; sheetId: string; position: number }
-  | { type: "deleteSheet"; sheetId: string }
-  | { type: "setSheetConfig"; sheetId: string; config: Record<string, unknown> }
-  | { type: "setCells"; sheetId: string; cells: KbWorkbookCell[] }
-  | { type: "clearCells"; sheetId: string; cells: Array<{ r: number; c: number }> };
+  | { op: "addSheet"; sheetId: string; name: string; position: number }
+  | { op: "renameSheet"; sheetId: string; name: string }
+  | { op: "moveSheet"; sheetId: string; position: number }
+  | { op: "deleteSheet"; sheetId: string }
+  | { op: "setSheetConfig"; sheetId: string; config: Record<string, unknown> }
+  | { op: "setCells"; sheetId: string; cells: KbWorkbookCell[] }
+  | { op: "clearCells"; sheetId: string; cells: Array<{ r: number; c: number }> };
 
 export type CreateKbPageInput = {
   parentPageId?: number | null;
