@@ -8,7 +8,7 @@ import { toSearchParams, type RouteSearchParams } from "@/lib/route-search-param
 import { prefetchSettingsUsers } from "@/lib/prefetch/settings-admin";
 
 export const metadata: Metadata = {
-  title: "Members & Access | StreamlineOS",
+  title: "Team members",
 };
 
 export default async function MembersAndAccessRoute({
@@ -16,7 +16,7 @@ export default async function MembersAndAccessRoute({
 }: {
   searchParams: Promise<RouteSearchParams>;
 }) {
-  await requirePermission("settings:view");
+  await requirePermission("settings:organization:manage");
   const params = toSearchParams(await searchParams);
   const state = await prefetchSettingsUsers(readUsersListState(params));
   return (

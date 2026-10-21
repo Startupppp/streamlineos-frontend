@@ -85,11 +85,11 @@ export const ADMINISTRATION_NAV_GROUPS: NavGroup[] = [
         requiredPermission: "directory:access:view",
       },
       {
-        label: "Members & Access",
+        label: "Team members",
         icon: UserCog,
         href: "/settings/users",
         exact: true,
-        requiredPermission: "settings:view",
+        requiredPermission: "settings:organization:manage",
       },
     ],
   },
