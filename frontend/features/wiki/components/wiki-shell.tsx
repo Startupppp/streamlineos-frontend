@@ -6,6 +6,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { useCan } from "@/hooks/api/access";
 import { useShellSidebarCollapse } from "@/components/layout/shell-sidebar-collapse-context";
 import PageTree from "./page-tree";
@@ -30,11 +31,21 @@ export default function WikiShell({ children }: { children: React.ReactNode }) {
   const [quickFindOpen, setQuickFindOpen] = useState(false);
   const createParamConsumedRef = useRef(false);
   const { isCollapsed: collapsed } = useShellSidebarCollapse();
+  const [createConfirmOpen, setCreateConfirmOpen] = useState(false);
 
   const submitNewPage = createPage.submit;
   const handleNewPage = useCallback(() => {
     void submitNewPage({});
   }, [submitNewPage]);
+
+  const handleCreateConfirm = useCallback(() => {
+    setCreateConfirmOpen(false);
+    handleNewPage();
+  }, [handleNewPage]);
+
+  const handleCreateConfirmOpenChange = useCallback((open: boolean) => {
+    setCreateConfirmOpen(open);
+  }, []);
 
   useEffect(() => {
     if (createParamConsumedRef.current) return;
@@ -43,8 +54,8 @@ export default function WikiShell({ children }: { children: React.ReactNode }) {
     const next = new URLSearchParams(searchParams.toString());
     next.delete("create");
     router.replace(`${KNOWLEDGE_BASE}${next.size > 0 ? `?${next.toString()}` : ""}`);
-    handleNewPage();
-  }, [searchParams, router, handleNewPage]);
+    setCreateConfirmOpen(true);
+  }, [searchParams, router]);
 
   const handleOpenQuickFind = useCallback(() => {
     setQuickFindOpen(true);
@@ -126,6 +137,14 @@ export default function WikiShell({ children }: { children: React.ReactNode }) {
         </div>
 
         <QuickFindDialog open={quickFindOpen} onOpenChange={handleQuickFindOpenChange} />
+        <ConfirmDialog
+          open={createConfirmOpen}
+          onOpenChange={handleCreateConfirmOpenChange}
+          title="Create a new document?"
+          description="A new blank document will be created and opened."
+          confirmLabel="Create"
+          onConfirm={handleCreateConfirm}
+        />
       </div>
     </TooltipProvider>
   );

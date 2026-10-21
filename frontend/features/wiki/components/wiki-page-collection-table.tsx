@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { LayoutList, LayoutGrid } from "lucide-react";
 import { useKbPageCollection } from "@/hooks/api/kb/page-collection";
@@ -101,6 +101,7 @@ export interface WikiPageCollectionTableProps {
   emptyDescription?: string;
   accessLostTitle?: string;
   accessLostDescription?: string;
+  onRowsChange?: (rows: readonly KbPageCollectionItem[]) => void;
 }
 
 function MobilePageCard(row: KbPageCollectionItem) {
@@ -125,6 +126,7 @@ export function WikiPageCollectionTable({
   emptyDescription,
   accessLostTitle,
   accessLostDescription,
+  onRowsChange,
 }: WikiPageCollectionTableProps) {
   const searchParams = useSearchParams();
   const { update } = useUrlFilters();
@@ -234,8 +236,12 @@ export function WikiPageCollectionTable({
     void refetch();
   }, [refetch]);
 
-  const columns = [...BASE_COLUMNS, ...additionalColumns];
-  const rows = data?.data ?? [];
+  const columns = useMemo(() => [...BASE_COLUMNS, ...additionalColumns], [additionalColumns]);
+  const rows = useMemo(() => data?.data ?? [], [data?.data]);
+
+  useEffect(() => {
+    onRowsChange?.(rows);
+  }, [rows, onRowsChange]);
 
   const emptyNode = pager.hasPrevious ? (
     <EmptyState

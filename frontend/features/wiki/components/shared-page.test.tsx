@@ -24,6 +24,25 @@ jest.mock("@/hooks/api/kb", () => ({
   useDeleteKbPage: jest.fn(() => ({ mutate: jest.fn(), isPending: false })),
 }));
 
+jest.mock("@/hooks/api/organization", () => ({
+  useOrgMembersByIds: jest.fn(() => ({
+    data: {
+      data: [
+        {
+          membershipId: 5,
+          userId: "user-5",
+          name: "Alice",
+          email: "alice@example.com",
+          role: "member",
+          joinedAt: "2026-01-01T00:00:00Z",
+          image: null,
+          totpEnabled: false,
+        },
+      ],
+    },
+  })),
+}));
+
 jest.mock("@/hooks/api/kb/export-page", () => ({
   useExportKbPage: jest.fn(() => ({ mutate: jest.fn(), isPending: false })),
 }));
@@ -218,7 +237,7 @@ describe("SharedPage — flash fix and server-side filtering", () => {
     expect(screen.getByText("Handbook")).toBeInTheDocument();
   });
 
-  it("sharedBy column renders the member identifier", () => {
+  it("sharedBy column resolves the member display name via useOrgMembersByIds", () => {
     useKbPageCollection.mockReturnValue({
       data: {
         data: [makeSharedItem()],
@@ -234,7 +253,8 @@ describe("SharedPage — flash fix and server-side filtering", () => {
 
     render(<SharedPage />);
 
-    expect(screen.getByText("Member #5")).toBeInTheDocument();
+    expect(screen.getByText("Alice")).toBeInTheDocument();
+    expect(screen.queryByText("Member #5")).not.toBeInTheDocument();
   });
 
   it("access column renders the human-readable access label", () => {

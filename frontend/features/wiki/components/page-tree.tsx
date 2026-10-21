@@ -111,12 +111,14 @@ export default function PageTree({
   }
 
   return (
-    <div className="min-w-0 overflow-hidden space-y-0.5">
-      {rootNodes.map((node) => (
+    <div role="tree" aria-label="Page tree" className="min-w-0 overflow-hidden space-y-0.5">
+      {rootNodes.map((node, index) => (
         <PageTreeItem
           key={node.id}
           node={node}
           depth={0}
+          ariaSetSize={rootNodes.length}
+          ariaPosInSet={index + 1}
           onCloseMobile={onCloseMobile}
           spaceId={spaceId}
           projectId={projectId}

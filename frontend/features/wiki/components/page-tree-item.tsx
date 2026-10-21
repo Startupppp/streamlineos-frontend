@@ -1,7 +1,7 @@
 "use client";
 
 import { useGuardedCreateKbPage } from "@/features/wiki/hooks/use-guarded-create-kb-page";
-import { memo, useRef, useState } from "react";
+import { Fragment, memo, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
 import { toast } from "sonner";
@@ -33,6 +33,13 @@ import { useCan } from "@/hooks/api/access";
 import type { KbPageTreeNode } from "@/hooks/api/kb/page-types";
 import { KNOWLEDGE_BASE, pageHref } from "@/lib/knowledge-routes";
 import {
+  resolveKbPageActions,
+  groupKbPageActions,
+  toKbPageActionId,
+  type KbPageActionCapabilities,
+  type KbPageActionSubject,
+} from "@/features/wiki/lib/page-action-descriptors";
+import {
   KbChevronRightIcon,
   KbChevronDownIcon,
   KbPlusIcon,
@@ -47,6 +54,8 @@ import { TruncatedText } from "@/components/ui/truncated-text";
 interface PageTreeItemProps {
   node: KbPageTreeNode;
   depth: number;
+  ariaSetSize?: number;
+  ariaPosInSet?: number;
   onCloseMobile?: () => void;
   spaceId?: number;
   projectId?: number;
@@ -60,9 +69,19 @@ export function resolvePageTreeExpanded(
   return manuallyExpanded || hasActiveDescendant;
 }
 
+const TREE_ITEM_ACTION_IDS = new Set(["favorite", "duplicate", "delete"]);
+
+const TREE_ITEM_SUBJECT: KbPageActionSubject = {
+  isFavorite: false,
+  isLocked: false,
+  hasCover: false,
+};
+
 const PageTreeItem = memo(function PageTreeItemInner({
   node,
   depth,
+  ariaSetSize,
+  ariaPosInSet,
   onCloseMobile,
   spaceId,
   projectId,
@@ -80,6 +99,20 @@ const PageTreeItem = memo(function PageTreeItemInner({
   const isActive = pathname === nodeHref || pathname.startsWith(`${nodeHref}/`);
   const canCreate = useCan("kb:pages:create");
   const canDelete = useCan("kb:pages:delete");
+
+  const treeCapabilities: KbPageActionCapabilities = {
+    canCreate,
+    canUpdate: false,
+    canManage: false,
+    canDelete,
+    canExport: false,
+    canManageTemplates: false,
+    isEditable: false,
+  };
+  const treeActions = resolveKbPageActions(TREE_ITEM_SUBJECT, treeCapabilities).filter(
+    (a) => TREE_ITEM_ACTION_IDS.has(a.id),
+  );
+  const treeActionGroups = groupKbPageActions(treeActions);
   const createPage = useGuardedCreateKbPage((page) => {
     setExpanded(true);
     router.push(baseHref ? `${baseHref}/${page.id}` : pageHref(page.id));
@@ -138,25 +171,25 @@ const PageTreeItem = memo(function PageTreeItemInner({
     });
   }
 
-  function handleDuplicate() {
-    duplicatePage.mutate(node.id, {
-      onSuccess: () => toast.success("Page duplicated"),
-      onError: () => toast.error("Failed to duplicate page"),
-    });
-  }
-
-  function handleAddToFavorites() {
-    toggleFavorite.mutate(
-      { pageId: node.id, isFavorite: false },
-      {
-        onError: () => toast.error("Failed to add to favorites"),
-      }
-    );
-  }
-
-  function handleDeleteClick() {
-    setMenuOpen(false);
-    setDeleteDialogOpen(true);
+  function handleMenuSelect(event: Event) {
+    const target = event.currentTarget;
+    if (!(target instanceof HTMLElement)) return;
+    const actionId = toKbPageActionId(target.dataset.actionId);
+    if (!actionId) return;
+    if (actionId === "duplicate") {
+      duplicatePage.mutate(node.id, {
+        onSuccess: () => toast.success("Page duplicated"),
+        onError: () => toast.error("Failed to duplicate page"),
+      });
+    } else if (actionId === "favorite") {
+      toggleFavorite.mutate(
+        { pageId: node.id, isFavorite: false },
+        { onError: () => toast.error("Failed to add to favorites") },
+      );
+    } else if (actionId === "delete") {
+      setMenuOpen(false);
+      setDeleteDialogOpen(true);
+    }
   }
 
   function handleConfirmDelete() {
@@ -228,6 +261,12 @@ const PageTreeItem = memo(function PageTreeItemInner({
     <>
       <div className="min-w-0 overflow-hidden">
         <div
+          role="treeitem"
+          aria-level={depth + 1}
+          aria-expanded={showChevron ? isExpanded : undefined}
+          aria-selected={isActive}
+          aria-setsize={ariaSetSize}
+          aria-posinset={ariaPosInSet}
           className={cn(
             "group relative flex min-w-0 items-center gap-1 overflow-hidden py-1 rounded-md text-sm transition-colors select-none",
             isActive
@@ -336,20 +375,22 @@ const PageTreeItem = memo(function PageTreeItemInner({
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="start" side="right">
                   <DropdownMenuItem onSelect={handleStartRename}>Rename</DropdownMenuItem>
-                  {canCreate && (
-                    <DropdownMenuItem onSelect={handleDuplicate}>Duplicate</DropdownMenuItem>
-                  )}
-                  <DropdownMenuItem onSelect={handleAddToFavorites}>
-                    Add to favorites
-                  </DropdownMenuItem>
-                  {canDelete && (
-                    <>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem variant="destructive" onSelect={handleDeleteClick}>
-                        Delete
-                      </DropdownMenuItem>
-                    </>
-                  )}
+                  {treeActionGroups.map((group) => (
+                    <Fragment key={group[0]?.group}>
+                      {group[0]?.group === "danger" ? <DropdownMenuSeparator /> : null}
+                      {group.map((action) => (
+                        <DropdownMenuItem
+                          key={action.id}
+                          data-action-id={action.id}
+                          variant={action.destructive ? "destructive" : "default"}
+                          onSelect={handleMenuSelect}
+                        >
+                          <action.icon className="h-3.5 w-3.5" />
+                          {action.label}
+                        </DropdownMenuItem>
+                      ))}
+                    </Fragment>
+                  ))}
                 </DropdownMenuContent>
               </DropdownMenu>
             </span>
@@ -359,6 +400,7 @@ const PageTreeItem = memo(function PageTreeItemInner({
         <AnimatePresence initial={false}>
           {isExpanded && (visibleChildren.length > 0 || childrenHasNextPage || childrenLoading || childrenError) && (
             <motion.div
+              role="group"
               className="min-w-0 overflow-hidden"
               initial={{ opacity: 0, y: shouldReduceMotion ? 0 : -4 }}
               animate={{ opacity: 1, y: 0 }}
@@ -377,11 +419,13 @@ const PageTreeItem = memo(function PageTreeItemInner({
                   <Button type="button" size="sm" variant="outline" onClick={handleRetryChildren}>Retry child pages</Button>
                 </div>
               )}
-              {visibleChildren.map((child) => (
+              {visibleChildren.map((child, index) => (
                 <PageTreeItem
                   key={child.id}
                   node={child}
                   depth={depth + 1}
+                  ariaSetSize={visibleChildren.length}
+                  ariaPosInSet={index + 1}
                   onCloseMobile={onCloseMobile}
                   spaceId={spaceId}
                   projectId={projectId}

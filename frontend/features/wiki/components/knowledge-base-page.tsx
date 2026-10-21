@@ -1,60 +1,31 @@
 "use client";
 
-import {
-  useCallback,
-  useEffect,
-  useLayoutEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useSession } from "next-auth/react";
 import { usePathname, useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { motion, useReducedMotion } from "framer-motion";
-import { type InfiniteData, useQueryClient } from "@tanstack/react-query";
+import { useQueryClient } from "@tanstack/react-query";
 import { BookOpenTextIcon } from "@animateicons/react/lucide";
-import {
-  ChevronUp,
-  Loader2,
-  MessageSquare,
-  Send,
-  SlidersHorizontal,
-} from "lucide-react";
+import { ChevronUp, Loader2, MessageSquare, Send, SlidersHorizontal } from "lucide-react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Input } from "@/components/ui/input";
-import { useKbAsk, useKbAskPageOwners } from "@/hooks/api/kb/ask";
-import { isAiStreamAbort } from "@/hooks/api/ai-text-stream";
-import { isApiError } from "@/lib/api-envelope";
 import {
   useKbConversations,
   useRenameKbConversation,
   useDeleteKbConversation,
   useKbConversationMessages,
-  type KbChatHistoryMessage,
-  type KbChatHistoryPage,
 } from "@/hooks/api/kb/chat-history";
 import {
   useKbSources,
   useUploadKbSource,
   useDeleteKbSource,
-  type KbSourcesParams,
 } from "@/hooks/api/kb/sources";
-import { useKbPagesSearch } from "@/hooks/api/kb/pages";
-import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import { companyDocumentHref, pageHref } from "@/lib/knowledge-routes";
-import {
-  KbSourcesSheet,
-  type SourceKindFilter,
-  type OwnerFilter,
-  type SpaceIdFilter,
-  type OwnerMembershipFilter,
-  type StatusScopeFilter,
-} from "@/features/wiki/components/kb-sources-sheet";
-import { useKbSpaces } from "@/hooks/api/kb/spaces";
+import { KbSourcesSheet } from "@/features/wiki/components/kb-sources-sheet";
 import { KbNoteSheet } from "@/features/wiki/components/kb-note-sheet";
 import { KbConversationList } from "@/features/wiki/components/kb-conversation-list";
 import {
@@ -74,21 +45,11 @@ import {
   buildKbHistoryRows,
   questionForAssistantId,
 } from "@/features/wiki/components/kb-chat-parts";
-import type { KbAskCitation } from "@/types/kb";
 import { knowledgeAndSurveysQueryKeys } from "@/lib/query-keys/knowledge-and-surveys";
 import { getErrorMessage } from "@/lib/get-error-message";
-
-interface Pending {
-  question: string;
-  spaceId?: number;
-  answer?: string;
-  error?: string;
-  citations?: KbAskCitation[];
-  hasContext?: boolean;
-  disagreement?: { summary: string };
-  isQuotaError?: boolean;
-  quotaMessage?: string;
-}
+import { useKbScopeFilter } from "@/features/wiki/hooks/use-kb-scope-filter";
+import { useKbChatScroll } from "@/features/wiki/hooks/use-kb-chat-scroll";
+import { useKbChatPending } from "@/features/wiki/hooks/use-kb-chat-pending";
 
 type SourcesSheetState =
   | { kind: "closed" }
@@ -102,55 +63,20 @@ export default function KnowledgeBasePage() {
   const pathname = usePathname();
 
   const [input, setInput] = useState("");
-  const [pending, setPending] = useState<Pending | null>(null);
   const [conversationsOpen, setConversationsOpen] = useState(false);
   const [conversationsSearch, setConversationsSearch] = useState("");
-  const [activeConversationId, setActiveConversationId] = useState<
-    number | null
-  >(null);
-
-  const [sourcesSheet, setSourcesSheet] = useState<SourcesSheetState>({
-    kind: "closed",
-  });
-  const [scopeSourceIds, setScopeSourceIds] = useState<number[]>([]);
-  const [pendingScopeIds, setPendingScopeIds] = useState<number[]>([]);
-  const [scopeVerifiedOnly, setScopeVerifiedOnly] = useState(false);
-  const [pendingVerifiedOnly, setPendingVerifiedOnly] = useState(false);
-  const [scopePageIds, setScopePageIds] = useState<number[]>([]);
-  const [pendingPageIds, setPendingPageIds] = useState<number[]>([]);
-  const [scopeSpaceId, setScopeSpaceId] = useState<SpaceIdFilter>(null);
-  const [pendingSpaceId, setPendingSpaceId] = useState<SpaceIdFilter>(null);
-  const [scopeOwnerMembershipId, setScopeOwnerMembershipId] =
-    useState<OwnerMembershipFilter>(null);
-  const [pendingOwnerMembershipId, setPendingOwnerMembershipId] =
-    useState<OwnerMembershipFilter>(null);
-  const [scopeStatus, setScopeStatus] = useState<StatusScopeFilter>(null);
-  const [pendingStatus, setPendingStatus] = useState<StatusScopeFilter>(null);
-  const [ownerSearch, setOwnerSearch] = useState("");
-  const [pageSearchQuery, setPageSearchQuery] = useState("");
+  const [activeConversationId, setActiveConversationId] = useState<number | null>(null);
+  const [sourcesSheet, setSourcesSheet] = useState<SourcesSheetState>({ kind: "closed" });
   const [noteOpen, setNoteOpen] = useState(false);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const scrollRef = useRef<HTMLDivElement>(null);
-  const topSentinelRef = useRef<HTMLDivElement>(null);
-  const prevScrollHeightRef = useRef(0);
-  const loadingOlderRef = useRef(false);
-  const isNearBottomRef = useRef(true);
-  const tempIdRef = useRef(0);
-  const generationRef = useRef(0);
   const initializedRef = useRef(false);
-  const sendingRef = useRef(false);
 
   const { data: session } = useSession();
   const currentUserId = session?.user?.id;
 
-  const ask = useKbAsk();
-  const conversationMessages = useKbConversationMessages(
-    activeConversationId,
-    true,
-  );
-  const { hasNextPage, isFetchingNextPage, fetchNextPage, isLoading } =
-    conversationMessages;
+  const conversationMessages = useKbConversationMessages(activeConversationId, true);
+  const { hasNextPage, isFetchingNextPage, fetchNextPage, isLoading } = conversationMessages;
 
   const conversationsQuery = useKbConversations(conversationsOpen);
   const renameConversation = useRenameKbConversation();
@@ -160,129 +86,10 @@ export default function KnowledgeBasePage() {
   const uploadSource = useUploadKbSource();
   const deleteSource = useDeleteKbSource();
 
-  const [scopeKindFilter, setScopeKindFilter] =
-    useState<SourceKindFilter>("all");
-  const [scopeOwnerFilter, setScopeOwnerFilter] = useState<OwnerFilter>("all");
-
-  const scopeFilters: KbSourcesParams = {
-    kind: scopeKindFilter !== "all" ? scopeKindFilter : undefined,
-    createdById:
-      scopeOwnerFilter === "mine" && currentUserId ? currentUserId : undefined,
-  };
-  const hasScopeFilters =
-    scopeFilters.kind !== undefined || scopeFilters.createdById !== undefined;
-  const scopeSourcesQuery = useKbSources(
-    hasScopeFilters ? scopeFilters : undefined,
-  );
-  const scopeSources = (scopeSourcesQuery.data?.pages ?? []).flatMap(
-    (page) => page.data,
-  );
-
-  const spacesQuery = useKbSpaces();
-  const kbSpaces = spacesQuery.data?.data ?? [];
-
-  const debouncedOwnerSearch = useDebouncedValue(ownerSearch.trim(), 300);
-  const ownersQuery = useKbAskPageOwners(
-    debouncedOwnerSearch,
-    pendingOwnerMembershipId ?? undefined,
-    sourcesSheet.kind === "scope",
-  );
-  const scopeOwners = (ownersQuery.data?.pages ?? []).flatMap(
-    (page) => page.data,
-  );
-  const selectedScopeOwner = ownersQuery.data?.pages[0]?.selected ?? null;
-
-  function handleOwnersLoadMore() {
-    void ownersQuery.fetchNextPage();
-  }
-
-  function handleOwnersRetry() {
-    void ownersQuery.refetch();
-  }
-
-  const debouncedPageSearchQuery = useDebouncedValue(
-    pageSearchQuery.trim(),
-    300,
-  );
-  const pageSearchResult = useKbPagesSearch(debouncedPageSearchQuery);
-  const pageSearchResults = pageSearchResult.data?.items ?? [];
-  const pageSearchIsLoading = pageSearchResult.isLoading;
-
-  const allConversations = useMemo(
-    () =>
-      (conversationsQuery.data?.pages ?? []).flatMap((p) => p.conversations),
-    [conversationsQuery.data],
-  );
-
-  const persisted = useMemo<ChatMessage[]>(
-    () =>
-      (conversationMessages.data?.pages ?? [])
-        .flatMap((page) => page.messages)
-        .slice()
-        .reverse()
-        .map((m) => ({
-          id: String(m.id),
-          role: m.role,
-          content: m.content,
-          citations: m.citations ?? undefined,
-          createdAt: m.createdAt,
-        })),
-    [conversationMessages.data],
-  );
-
-  const rows = useMemo(() => buildKbHistoryRows(persisted), [persisted]);
-  const questionByAssistantId = useMemo(
-    () => questionForAssistantId(persisted),
-    [persisted],
-  );
-
-  const loadOlder = useCallback(() => {
-    const el = scrollRef.current;
-    if (!el || loadingOlderRef.current || !hasNextPage || isFetchingNextPage)
-      return;
-    prevScrollHeightRef.current = el.scrollHeight;
-    loadingOlderRef.current = true;
-    void fetchNextPage();
-  }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
-
-  useEffect(() => {
-    const sentinel = topSentinelRef.current;
-    const root = scrollRef.current;
-    if (!sentinel || !root || !hasNextPage) return;
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries[0]?.isIntersecting) loadOlder();
-      },
-      { root, threshold: 0.1 },
-    );
-    observer.observe(sentinel);
-    return () => observer.disconnect();
-  }, [hasNextPage, loadOlder]);
-
-  useLayoutEffect(() => {
-    const el = scrollRef.current;
-    if (!el) return;
-    if (loadingOlderRef.current) {
-      el.scrollTop += el.scrollHeight - prevScrollHeightRef.current;
-      loadingOlderRef.current = false;
-    } else {
-      el.scrollTop = el.scrollHeight;
-      isNearBottomRef.current = true;
-    }
-  }, [persisted.length]);
-
-  useEffect(() => {
-    const el = scrollRef.current;
-    if (!el || !isNearBottomRef.current) return;
-    el.scrollTop = el.scrollHeight;
-  }, [pending, ask.isPending]);
-
-  function handleScroll() {
-    const el = scrollRef.current;
-    if (!el) return;
-    isNearBottomRef.current =
-      el.scrollHeight - el.scrollTop - el.clientHeight < 120;
-  }
+  const scope = useKbScopeFilter({
+    currentUserId,
+    scopeSheetOpen: sourcesSheet.kind === "scope",
+  });
 
   const setConversation = useCallback(
     (id: number | null) => {
@@ -307,151 +114,67 @@ export default function KnowledgeBasePage() {
     if (Number.isFinite(id) && id > 0) setActiveConversationId(id);
   }, []);
 
-  function sendMessage(text: string) {
-    const trimmed = text.trim();
-    if (!trimmed || ask.isPending || sendingRef.current) return;
-    sendingRef.current = true;
-    setInput("");
-    isNearBottomRef.current = true;
-    setPending({
-      question: trimmed,
-      ...(scopeSpaceId !== null ? { spaceId: scopeSpaceId } : {}),
-    });
-    const generation = ++generationRef.current;
-    function handleToken(token: string) {
-      if (generationRef.current === generation)
-        setPending((current) =>
-          current
-            ? { ...current, answer: (current.answer ?? "") + token }
-            : current,
-        );
-    }
-    const scopePayload = {
-      ...(scopeSourceIds.length > 0 ? { sourceIds: scopeSourceIds } : {}),
-      ...(scopePageIds.length > 0 ? { pageIds: scopePageIds } : {}),
-      ...(scopeVerifiedOnly ? { verifiedOnly: true } : {}),
-      ...(scopeSpaceId !== null ? { spaceId: scopeSpaceId } : {}),
-      ...(scopeOwnerMembershipId !== null
-        ? { ownerMembershipId: scopeOwnerMembershipId }
-        : {}),
-      ...(scopeStatus !== null ? { status: scopeStatus } : {}),
-    };
-    ask.mutate(
-      {
-        question: trimmed,
-        conversationId: activeConversationId ?? undefined,
-        onToken: handleToken,
-        ...scopePayload,
-      },
-      {
-        onSuccess: (data) => {
-          sendingRef.current = false;
-          if (generationRef.current !== generation) return;
-          const convId = activeConversationId ?? data.conversationId;
-          const now = new Date().toISOString();
-          const userMsg: KbChatHistoryMessage = {
-            id: (tempIdRef.current -= 1),
-            role: "user",
-            content: trimmed,
-            citations: null,
-            createdAt: now,
-          };
-          const assistantMsg: KbChatHistoryMessage = {
-            id: (tempIdRef.current -= 1),
-            role: "assistant",
-            content: data.answer,
-            citations: data.citations ?? null,
-            createdAt: now,
-          };
-          qc.setQueryData<InfiniteData<KbChatHistoryPage>>(
-            knowledgeAndSurveysQueryKeys.kb.chatConversationMessages(convId),
-            (old) => {
-              if (!old || old.pages.length === 0) {
-                return {
-                  pages: [
-                    { messages: [assistantMsg, userMsg], nextCursor: null },
-                  ],
-                  pageParams: [undefined],
-                };
-              }
-              return {
-                ...old,
-                pages: old.pages.map((page, i) =>
-                  i === 0
-                    ? {
-                        ...page,
-                        messages: [assistantMsg, userMsg, ...page.messages],
-                      }
-                    : page,
-                ),
-              };
-            },
-          );
-          if (activeConversationId === null)
-            setConversation(data.conversationId);
-          void qc.invalidateQueries({
-            queryKey: knowledgeAndSurveysQueryKeys.kb.chatConversations(),
-          });
-          if (!data.hasContext) {
-            setPending((prev) =>
-              prev
-                ? {
-                    ...prev,
-                    answer: undefined,
-                    hasContext: false,
-                    citations: data.citations,
-                  }
-                : prev,
-            );
-          } else if (data.disagreement) {
-            setPending((prev) =>
-              prev
-                ? {
-                    ...prev,
-                    answer: undefined,
-                    hasContext: true,
-                    disagreement: data.disagreement,
-                    citations: data.citations,
-                  }
-                : prev,
-            );
-          } else {
-            setPending(null);
-          }
-        },
-        onError: (error) => {
-          sendingRef.current = false;
-          if (generationRef.current !== generation) return;
-          if (isAiStreamAbort(error)) {
-            setPending((current) =>
-              current
-                ? {
-                    ...current,
-                    error: "Generation stopped. This answer is incomplete.",
-                  }
-                : current,
-            );
-            return;
-          }
-          if (isApiError(error) && error.status === 402) {
-            setPending((current) =>
-              current
-                ? {
-                    ...current,
-                    isQuotaError: true,
-                    quotaMessage: error.message,
-                  }
-                : current,
-            );
-            return;
-          }
-          const message = getErrorMessage(error);
-          setPending((prev) => (prev ? { ...prev, error: message } : prev));
-          toast.error("Couldn't get an answer", { description: message });
-        },
-      },
-    );
-  }
+  const persisted = useMemo<ChatMessage[]>(
+    () =>
+      (conversationMessages.data?.pages ?? [])
+        .flatMap((page) => page.messages)
+        .slice()
+        .reverse()
+        .map((m) => ({
+          id: String(m.id),
+          role: m.role,
+          content: m.content,
+          citations: m.citations ?? undefined,
+          createdAt: m.createdAt,
+        })),
+    [conversationMessages.data],
+  );
+
+  const rows = useMemo(() => buildKbHistoryRows(persisted), [persisted]);
+  const questionByAssistantId = useMemo(
+    () => questionForAssistantId(persisted),
+    [persisted],
+  );
+
+  const {
+    scrollRef,
+    topSentinelRef,
+    handleScroll,
+    loadOlder,
+    markNearBottom,
+    scrollToBottomIfNear,
+  } = useKbChatScroll({
+    hasNextPage,
+    isFetchingNextPage,
+    fetchNextPage,
+    persistedLength: persisted.length,
+  });
+
+  const chatPending = useKbChatPending({
+    activeConversationId,
+    setConversation,
+    scopePayload: scope.scopePayload,
+    scopeSpaceId: scope.scopeSpaceId,
+    markNearBottom,
+  });
+
+  const { pending, ask, sendMessage, handleStop, handleRegenerate, handleDismissPending, cancelGeneration } =
+    chatPending;
+
+  useEffect(() => {
+    scrollToBottomIfNear();
+  }, [pending, ask.isPending, scrollToBottomIfNear]);
+
+  const sources = useMemo(
+    () => (sourcesQuery.data?.pages ?? []).flatMap((page) => page.data),
+    [sourcesQuery.data],
+  );
+  const readyCount = sources.filter((s) => s.status === "ready").length;
+
+  const allConversations = useMemo(
+    () => (conversationsQuery.data?.pages ?? []).flatMap((p) => p.conversations),
+    [conversationsQuery.data],
+  );
 
   function handleInputChange(e: React.ChangeEvent<HTMLInputElement>) {
     setInput(e.target.value);
@@ -459,11 +182,11 @@ export default function KnowledgeBasePage() {
   function handleKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
     if (e.key === "Enter") {
       e.preventDefault();
-      sendMessage(input);
+      if (sendMessage(input)) setInput("");
     }
   }
   function handleSend() {
-    sendMessage(input);
+    if (sendMessage(input)) setInput("");
   }
   function handleSuggestion(e: React.MouseEvent<HTMLButtonElement>) {
     sendMessage(e.currentTarget.dataset.suggestion ?? "");
@@ -484,33 +207,19 @@ export default function KnowledgeBasePage() {
   function handleConversationsSearchChange(v: string) {
     setConversationsSearch(v);
   }
-  function handleStop() {
-    ask.stop();
-  }
-  function handleRegenerate() {
-    if (!pending || ask.isPending) return;
-    ask.resetAttempt();
-    setPending(null);
-    sendMessage(pending.question);
-  }
   function handleSelectConversation(id: number) {
-    generationRef.current += 1;
-    ask.stop();
-    setPending(null);
+    cancelGeneration();
     setConversation(id);
     setConversationsOpen(false);
   }
   function handleNewChat() {
-    generationRef.current += 1;
-    ask.stop();
+    cancelGeneration();
     setConversation(null);
     setConversationsOpen(false);
-    setPending(null);
   }
   function handleLoadMoreConversations() {
     void conversationsQuery.fetchNextPage();
   }
-
   function handleDeleteConversation(id: number) {
     deleteConversation.mutate(id, {
       onSuccess: () => {
@@ -525,7 +234,6 @@ export default function KnowledgeBasePage() {
         }),
     });
   }
-
   function handleRenameConversation(conversationId: number, title: string) {
     renameConversation.mutate({ conversationId, title });
   }
@@ -547,13 +255,7 @@ export default function KnowledgeBasePage() {
     setSourcesSheet({ kind: "manage" });
   }
   function handleScopeClick() {
-    setPendingScopeIds(scopeSourceIds);
-    setPendingVerifiedOnly(scopeVerifiedOnly);
-    setPendingPageIds(scopePageIds);
-    setPendingSpaceId(scopeSpaceId);
-    setPendingOwnerMembershipId(scopeOwnerMembershipId);
-    setPendingStatus(scopeStatus);
-    setPageSearchQuery("");
+    scope.onScopeSheetOpen();
     setSourcesSheet({ kind: "scope" });
   }
   function handleSourcesSheetOpenChange(open: boolean) {
@@ -563,31 +265,10 @@ export default function KnowledgeBasePage() {
     setSourcesSheet({ kind: "closed" });
     setNoteOpen(true);
   }
-
-  function handleScopeSelectionChange(ids: number[]) {
-    setPendingScopeIds(ids);
-  }
-  function handleScopeVerifiedOnlyChange(v: boolean) {
-    setPendingVerifiedOnly(v);
-  }
   function handleScopeConfirm() {
-    setScopeSourceIds(pendingScopeIds);
-    setScopeVerifiedOnly(pendingVerifiedOnly);
-    setScopePageIds(pendingPageIds);
-    setScopeSpaceId(pendingSpaceId);
-    setScopeOwnerMembershipId(pendingOwnerMembershipId);
-    setScopeStatus(pendingStatus);
+    scope.applyScopePending();
     setSourcesSheet({ kind: "closed" });
   }
-  function handleClearScope() {
-    setScopeSourceIds([]);
-    setScopeVerifiedOnly(false);
-    setScopePageIds([]);
-    setScopeSpaceId(null);
-    setScopeOwnerMembershipId(null);
-    setScopeStatus(null);
-  }
-
   function makeDeleteHandler(id: number) {
     return function handleDeleteSource() {
       deleteSource.mutate(id, {
@@ -597,47 +278,6 @@ export default function KnowledgeBasePage() {
       });
     };
   }
-
-  function handleDismissPending() {
-    setPending(null);
-  }
-
-  const sources = (sourcesQuery.data?.pages ?? []).flatMap((page) => page.data);
-  const readyCount = sources.filter((s) => s.status === "ready").length;
-  const scopeActive =
-    scopeSourceIds.length > 0 ||
-    scopeVerifiedOnly ||
-    scopePageIds.length > 0 ||
-    scopeSpaceId !== null ||
-    scopeOwnerMembershipId !== null ||
-    scopeStatus !== null;
-  const scopeItemCount = scopeSourceIds.length + scopePageIds.length;
-  const scopeSummary =
-    scopeItemCount > 0
-      ? `${scopeItemCount} item${scopeItemCount === 1 ? "" : "s"}`
-      : "Filtered";
-  const clientFilteredSources = sources.filter((source) => {
-    if (scopeFilters.kind !== undefined && source.kind !== scopeFilters.kind)
-      return false;
-    if (
-      scopeFilters.createdById !== undefined &&
-      source.createdById !== scopeFilters.createdById
-    )
-      return false;
-    return true;
-  });
-  const baseDisplaySources = !hasScopeFilters
-    ? sources
-    : scopeSourcesQuery.isError
-      ? clientFilteredSources
-      : scopeSources;
-  const scopeDisplaySources =
-    pendingSpaceId !== null
-      ? baseDisplaySources.filter((s) => s.spaceId === pendingSpaceId)
-      : baseDisplaySources;
-  const activeScopeSourcesQuery = hasScopeFilters
-    ? scopeSourcesQuery
-    : sourcesQuery;
 
   return (
     <PageWrapper
@@ -658,18 +298,18 @@ export default function KnowledgeBasePage() {
             Conversations
           </Button>
           <Button
-            variant={scopeActive ? "default" : "outline"}
+            variant={scope.scopeActive ? "default" : "outline"}
             size="sm"
             className="gap-1.5"
             onClick={handleScopeClick}
             aria-label={
-              scopeActive
-                ? `Searching ${scopeSummary}`
+              scope.scopeActive
+                ? `Searching ${scope.scopeSummary}`
                 : "Choose sources to search"
             }
           >
             <SlidersHorizontal className="h-4 w-4" />
-            {scopeActive ? scopeSummary : "Scope"}
+            {scope.scopeActive ? scope.scopeSummary : "Scope"}
           </Button>
           <LoadingButton
             variant="outline"
@@ -727,10 +367,7 @@ export default function KnowledgeBasePage() {
                   ) : (
                     <>
                       {hasNextPage ? (
-                        <div
-                          ref={topSentinelRef}
-                          className="flex justify-center pb-1"
-                        >
+                        <div ref={topSentinelRef} className="flex justify-center pb-1">
                           {isFetchingNextPage ? (
                             <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
                           ) : (
@@ -763,24 +400,16 @@ export default function KnowledgeBasePage() {
                             evidence={
                               row.message.role === "assistant" &&
                               row.message.citations?.length ? (
-                                <CitationEvidenceList
-                                  citations={row.message.citations}
-                                />
+                                <CitationEvidenceList citations={row.message.citations} />
                               ) : undefined
                             }
                             actions={
                               row.message.role === "assistant" &&
                               questionByAssistantId.has(row.message.id) ? (
                                 <>
-                                  <CopyAnswerButton
-                                    text={row.message.content}
-                                  />
+                                  <CopyAnswerButton text={row.message.content} />
                                   <AnswerFeedbackBar
-                                    question={
-                                      questionByAssistantId.get(
-                                        row.message.id,
-                                      ) ?? ""
-                                    }
+                                    question={questionByAssistantId.get(row.message.id) ?? ""}
                                   />
                                 </>
                               ) : undefined
@@ -831,10 +460,7 @@ export default function KnowledgeBasePage() {
                           </Button>
                         )}
                       {pending?.answer && pending.error && (
-                        <p
-                          role="status"
-                          className="text-xs text-muted-foreground"
-                        >
+                        <p role="status" className="text-xs text-muted-foreground">
                           Partial answer — generation did not complete.
                         </p>
                       )}
@@ -861,9 +487,7 @@ export default function KnowledgeBasePage() {
                           reduce={Boolean(reduce)}
                           evidence={
                             pending.citations?.length ? (
-                              <CitationEvidenceList
-                                citations={pending.citations}
-                              />
+                              <CitationEvidenceList citations={pending.citations} />
                             ) : undefined
                           }
                           actions={
@@ -872,9 +496,7 @@ export default function KnowledgeBasePage() {
                             !pending.isQuotaError ? (
                               <>
                                 <CopyAnswerButton text={pending.answer} />
-                                <AnswerFeedbackBar
-                                  question={pending.question}
-                                />
+                                <AnswerFeedbackBar question={pending.question} />
                               </>
                             ) : undefined
                           }
@@ -929,17 +551,15 @@ export default function KnowledgeBasePage() {
                     className="h-9 w-9 shrink-0 rounded-xl p-0"
                     aria-label="Send"
                   >
-                    <motion.span
-                      whileTap={reduce ? undefined : { scale: 0.85 }}
-                    >
+                    <motion.span whileTap={reduce ? undefined : { scale: 0.85 }}>
                       <Send className="h-4 w-4" />
                     </motion.span>
                   </Button>
                 </div>
                 <p className="mt-1.5 text-micro text-muted-foreground">
-                  {scopeActive
-                    ? scopeItemCount > 0
-                      ? `Searching ${scopeItemCount} selected item${scopeItemCount === 1 ? "" : "s"}.`
+                  {scope.scopeActive
+                    ? scope.scopeItemCount > 0
+                      ? `Searching ${scope.scopeItemCount} selected item${scope.scopeItemCount === 1 ? "" : "s"}.`
                       : "Searching with selected filters."
                     : "Searching all accessible knowledge."}{" "}
                   <button
@@ -949,12 +569,12 @@ export default function KnowledgeBasePage() {
                   >
                     Edit
                   </button>
-                  {scopeActive && (
+                  {scope.scopeActive && (
                     <>
                       {" · "}
                       <button
                         type="button"
-                        onClick={handleClearScope}
+                        onClick={scope.clearScope}
                         className="underline hover:text-foreground"
                       >
                         Clear
@@ -999,57 +619,55 @@ export default function KnowledgeBasePage() {
           mode="scope"
           open
           onOpenChange={handleSourcesSheetOpenChange}
-          sources={scopeDisplaySources}
+          sources={scope.scopeDisplaySources}
           isLoading={
-            hasScopeFilters
-              ? scopeSourcesQuery.isLoading
-              : sourcesQuery.isLoading
+            scope.activeScopeSourcesQuery.isLoading
           }
           sourceError={
-            activeScopeSourcesQuery.isError
-              ? activeScopeSourcesQuery.error
+            scope.activeScopeSourcesQuery.isError
+              ? scope.activeScopeSourcesQuery.error
               : null
           }
-          sourceHasMore={activeScopeSourcesQuery.hasNextPage}
-          sourceIsFetchingMore={activeScopeSourcesQuery.isFetchingNextPage}
+          sourceHasMore={scope.activeScopeSourcesQuery.hasNextPage}
+          sourceIsFetchingMore={scope.activeScopeSourcesQuery.isFetchingNextPage}
           onSourceLoadMore={() => {
-            void activeScopeSourcesQuery.fetchNextPage();
+            void scope.activeScopeSourcesQuery.fetchNextPage();
           }}
           onSourceRetry={() => {
-            void activeScopeSourcesQuery.refetch();
+            void scope.activeScopeSourcesQuery.refetch();
           }}
-          selectedIds={pendingScopeIds}
-          onSelectionChange={handleScopeSelectionChange}
-          verifiedOnly={pendingVerifiedOnly}
-          onVerifiedOnlyChange={handleScopeVerifiedOnlyChange}
+          selectedIds={scope.pendingScopeIds}
+          onSelectionChange={scope.handleScopeSelectionChange}
+          verifiedOnly={scope.pendingVerifiedOnly}
+          onVerifiedOnlyChange={scope.handleScopeVerifiedOnlyChange}
           currentUserId={currentUserId ?? undefined}
-          kindFilter={scopeKindFilter}
-          onKindFilterChange={setScopeKindFilter}
-          ownerFilter={scopeOwnerFilter}
-          onOwnerFilterChange={setScopeOwnerFilter}
-          spaceIdFilter={pendingSpaceId}
-          onSpaceIdFilterChange={setPendingSpaceId}
-          spaces={kbSpaces}
-          ownerMembershipId={pendingOwnerMembershipId}
-          onOwnerMembershipIdChange={setPendingOwnerMembershipId}
-          owners={scopeOwners}
-          selectedOwner={selectedScopeOwner}
-          onOwnerSearchChange={setOwnerSearch}
-          ownersAreLoading={ownersQuery.isLoading}
-          ownersHasMore={ownersQuery.hasNextPage}
-          ownersAreFetchingMore={ownersQuery.isFetchingNextPage}
-          onOwnersLoadMore={handleOwnersLoadMore}
-          ownersError={ownersQuery.error}
-          onOwnersRetry={handleOwnersRetry}
-          statusScope={pendingStatus}
-          onStatusScopeChange={setPendingStatus}
+          kindFilter={scope.scopeKindFilter}
+          onKindFilterChange={scope.setScopeKindFilter}
+          ownerFilter={scope.scopeOwnerFilter}
+          onOwnerFilterChange={scope.setScopeOwnerFilter}
+          spaceIdFilter={scope.pendingSpaceId}
+          onSpaceIdFilterChange={scope.setPendingSpaceId}
+          spaces={scope.kbSpaces}
+          ownerMembershipId={scope.pendingOwnerMembershipId}
+          onOwnerMembershipIdChange={scope.setPendingOwnerMembershipId}
+          owners={scope.scopeOwners}
+          selectedOwner={scope.selectedScopeOwner}
+          onOwnerSearchChange={scope.setOwnerSearch}
+          ownersAreLoading={scope.ownersQuery.isLoading}
+          ownersHasMore={scope.ownersQuery.hasNextPage}
+          ownersAreFetchingMore={scope.ownersQuery.isFetchingNextPage}
+          onOwnersLoadMore={scope.handleOwnersLoadMore}
+          ownersError={scope.ownersQuery.error}
+          onOwnersRetry={scope.handleOwnersRetry}
+          statusScope={scope.pendingStatus}
+          onStatusScopeChange={scope.setPendingStatus}
           onConfirm={handleScopeConfirm}
-          pageSearchQuery={pageSearchQuery}
-          onPageSearchQueryChange={setPageSearchQuery}
-          pageSearchResults={pageSearchResults}
-          pageSearchIsLoading={pageSearchIsLoading}
-          selectedPageIds={pendingPageIds}
-          onPageSelectionChange={setPendingPageIds}
+          pageSearchQuery={scope.pageSearchQuery}
+          onPageSearchQueryChange={scope.setPageSearchQuery}
+          pageSearchResults={scope.pageSearchResults}
+          pageSearchIsLoading={scope.pageSearchIsLoading}
+          selectedPageIds={scope.pendingPageIds}
+          onPageSelectionChange={scope.setPendingPageIds}
         />
       )}
 
