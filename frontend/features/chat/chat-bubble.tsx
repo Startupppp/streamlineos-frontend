@@ -1,55 +1,18 @@
 "use client";
 
-import React, { useCallback, useState } from "react";
-import dynamic from "next/dynamic";
-import { CheckCheck, Forward, MessageSquare, Pin, Trash2 } from "lucide-react";
-import { toast } from "sonner";
+import { Forward, MessageSquare, Trash2 } from "lucide-react";
 import { cn, resolveImageUrl } from "@/lib/utils";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { TruncatedText } from "@/components/ui/truncated-text";
-import {
-  formatMessageTime,
-  formatMessageTimeFull,
-  getForwardedDisplay,
-} from "./chat-helpers";
-import type { Message, TicketEntityRef } from "@/types/chat";
-import { useCan } from "@/hooks/api/access";
-import { useEntityAction } from "./entity-actions-context";
-import { ChatOverlayFallback } from "./chat-lazy-fallbacks";
+import { getForwardedDisplay } from "./chat-helpers";
+import type { Message } from "@/types/chat";
 import { ChatBubbleAttachments } from "./chat-bubble-attachments";
+import { ChatBubbleActions } from "./chat-bubble-actions";
 import { ChatBubbleEditForm } from "./chat-bubble-edit-form";
 import { ChatBubbleFailedSend, useFailedSend } from "./chat-bubble-failed-send";
+import { ChatBubbleMeta } from "./chat-bubble-meta";
 import { renderFormattedContent } from "./formatted-message-content";
 import { getInitials } from "@/lib/format-utils";
-const MessageActions = dynamic(
-  () =>
-    import("./chat-message-actions").then((m) => ({
-      default: m.MessageActions,
-    })),
-  { ssr: false, loading: () => null },
-);
-
-const ConvertToTaskDialog = dynamic(
-  () =>
-    import("./convert-to-task-dialog").then((m) => ({
-      default: m.ConvertToTaskDialog,
-    })),
-  {
-    ssr: false,
-    loading: () => <ChatOverlayFallback label="Loading convert to task" />,
-  },
-);
-
-const EntityActionDialog = dynamic(
-  () =>
-    import("./entity-action-dialog").then((m) => ({
-      default: m.EntityActionDialog,
-    })),
-  {
-    ssr: false,
-    loading: () => <ChatOverlayFallback label="Loading ticket action" />,
-  },
-);
 
 export function ChatBubble({
   message,
@@ -103,23 +66,7 @@ export function ChatBubble({
     embedded?: { name?: string | null; email?: string | null } | null,
   ) => string;
 }) {
-  const [convertDialogOpen, setConvertDialogOpen] = useState(false);
-  const [assignDialogOpen, setAssignDialogOpen] = useState(false);
-  const [dueDateDialogOpen, setDueDateDialogOpen] = useState(false);
   const bubbleMeta = message.metadata;
-  const ticketEntity = (bubbleMeta?.entities ?? []).find(
-    (e): e is TicketEntityRef => e.type === "ticket",
-  );
-  const ticketReference = {
-    type: "ticket",
-    id: ticketEntity ? String(ticketEntity.id) : "",
-  };
-  const canConvertToTask = useCan("build:tickets:create");
-  const canWriteMessages = useCan("chat:messages:write");
-  const canChangeMessage = isOwn && canWriteMessages;
-  const canPin = useCan("chat:messages:pin");
-  const assignAction = useEntityAction(ticketReference, "assign");
-  const canAssignTicket = Boolean(assignAction);
   const senderName = resolveUserName
     ? resolveUserName(message.senderId, message.sender)
     : (message.sender?.name ?? "Unknown");
@@ -131,38 +78,12 @@ export function ChatBubble({
         )
       : (message.replyTo.sender?.name ?? "Unknown")
     : null;
-  const dueDateAction = useEntityAction(ticketReference, "due-date");
-  const canSetDueDate = Boolean(dueDateAction);
   const isFailedSend = useFailedSend(message);
   const isPendingSend = message.id < 0 && !isFailedSend;
 
-  const handleOpenConvertDialog = useCallback(
-    () => setConvertDialogOpen(true),
-    [],
-  );
-  const handleOpenAssignDialog = useCallback(
-    () => setAssignDialogOpen(true),
-    [],
-  );
-  const handleOpenDueDateDialog = useCallback(
-    () => setDueDateDialogOpen(true),
-    [],
-  );
-
-  const handleCopy = useCallback(() => {
-    navigator.clipboard.writeText(message.content ?? "");
-    toast.success("Copied");
-  }, [message.content]);
-  const handleCopyLink = useCallback(() => {
-    const url = new URL(window.location.href);
-    url.searchParams.set("message", String(message.id));
-    navigator.clipboard.writeText(url.toString());
-    toast.success("Link copied");
-  }, [message.id]);
-  const meta = bubbleMeta;
   const { label: forwardLabel, content: displayContent } = getForwardedDisplay(
     message.content,
-    meta?.forwardCount,
+    bubbleMeta?.forwardCount,
   );
 
   if (message.isDeleted) {
@@ -294,51 +215,12 @@ export function ChatBubble({
               isOwn={isOwn}
             />
 
-            <div
-              className={cn(
-                "flex items-center gap-1.5 mt-1",
-                isOwn ? "justify-end" : "justify-start",
-              )}
-            >
-              <span
-                className={cn(
-                  "text-dense font-medium",
-                  isOwn
-                    ? "text-primary-foreground/80"
-                    : "text-muted-foreground",
-                )}
-                title={formatMessageTimeFull(message.createdAt)}
-              >
-                {formatMessageTime(message.createdAt)}
-              </span>
-              {message.isEdited && (
-                <span
-                  className={cn(
-                    "text-dense",
-                    isOwn
-                      ? "text-primary-foreground/60"
-                      : "text-muted-foreground",
-                  )}
-                >
-                  edited
-                </span>
-              )}
-              {isOwn && (
-                <CheckCheck className="h-3.5 w-3.5 text-primary-foreground/70" />
-              )}
-              {isPinned && (
-                <Pin
-                  className={cn(
-                    "h-3 w-3",
-                    isOwn
-                      ? "text-primary-foreground/70"
-                      : "text-muted-foreground",
-                  )}
-                  aria-label="Pinned message"
-                  role="img"
-                />
-              )}
-            </div>
+            <ChatBubbleMeta
+              message={message}
+              isOwn={isOwn}
+              isPinned={isPinned}
+              isPendingSend={isPendingSend}
+            />
           </div>
         )}
 
@@ -359,7 +241,7 @@ export function ChatBubble({
           </button>
         )}
 
-        {message.reactions && Object.keys(message.reactions).length > 0 && (
+        {message.id > 0 && message.reactions && Object.keys(message.reactions).length > 0 && (
           <div
             className={cn(
               "flex flex-wrap gap-1 mt-1 px-1",
@@ -390,61 +272,23 @@ export function ChatBubble({
           </div>
         )}
 
-        {canConvertToTask && convertDialogOpen && (
-          <ConvertToTaskDialog
-            open
-            onOpenChange={setConvertDialogOpen}
-            channelId={message.channelId}
-            messageId={message.id}
-            defaultTitle={(message.content ?? "").slice(0, 80)}
-          />
-        )}
-        {assignAction && assignDialogOpen && (
-          <EntityActionDialog
-            open
-            onOpenChange={setAssignDialogOpen}
-            channelId={message.channelId}
-            reference={ticketReference}
-            action={assignAction}
-          />
-        )}
-        {dueDateAction && dueDateDialogOpen && (
-          <EntityActionDialog
-            open
-            onOpenChange={setDueDateDialogOpen}
-            channelId={message.channelId}
-            reference={ticketReference}
-            action={dueDateAction}
-          />
-        )}
-        {!isEditing && (
-          <MessageActions
+        {message.id > 0 && (
+          <ChatBubbleActions
+            message={message}
             isOwn={isOwn}
             isPinned={isPinned}
             isSaved={isSaved}
-            hasContent={Boolean(message.content)}
-            canEdit={canChangeMessage}
-            canDelete={canChangeMessage}
-            canWrite={canWriteMessages}
-            canPin={canPin}
+            isEditing={isEditing}
+            onStartEdit={onStartEdit}
+            onReply={onReply}
             onOpenThread={onOpenThread}
-            onQuoteReply={onReply}
-            onSave={onSave}
-            onUnsave={onUnsaveMsg}
+            onDelete={onDelete}
+            onReact={onReact}
             onPin={onPin}
             onUnpin={onUnpin}
-            onReact={onReact}
-            onCopy={handleCopy}
-            onCopyLink={handleCopyLink}
+            onSave={onSave}
+            onUnsaveMsg={onUnsaveMsg}
             onForward={onForward}
-            canConvertToTask={canConvertToTask}
-            onConvertToTask={handleOpenConvertDialog}
-            canAssignTicket={canAssignTicket}
-            onAssignTicket={handleOpenAssignDialog}
-            canSetDueDate={canSetDueDate}
-            onSetDueDate={handleOpenDueDateDialog}
-            onStartEdit={onStartEdit}
-            onDelete={onDelete}
           />
         )}
       </div>

@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useRef, useMemo, useCallback } from "react";
-import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import {
   useChatChannel, useChatChannels, useChatMessages, useChatOnlineUsers, useChatOrgUsers,
@@ -11,7 +10,6 @@ import {
 } from "@/hooks/api/chat-core-mutations-a";
 import { useToggleReaction } from "@/hooks/api/chat-reaction-mutation";
 import { useChatPins, usePinMessage, useUnpinMessage } from "@/hooks/api/chat-search";
-import { useSavedMessages, useSaveMessage, useUnsaveMessage } from "@/hooks/api/chat-personal-a";
 import { useChatPollReconciliation } from "./use-chat-poll-reconciliation";
 import { useOrgStorageScope } from "@/lib/org-scoped-storage";
 import { useChatRealtime } from "@/hooks/api/chat-realtime";
@@ -33,6 +31,7 @@ import { useChatOfflineQueue } from "./use-chat-offline-queue";
 import { useHuddleAutoStart } from "./use-huddle-auto-start";
 import { useMessageTimeline } from "./use-message-timeline";
 import { useMessagePanelOverlays } from "./use-message-panel-overlays";
+import { useSavedMessageActions } from "./use-saved-message-actions";
 
 export interface MessagePanelProps {
   channelId: number;
@@ -77,9 +76,6 @@ export function useMessagePanelData({
   const pinMessage = usePinMessage();
   const unpinMessage = useUnpinMessage();
   const { data: pins } = useChatPins(channelId, canReadChannel);
-  const { data: savedData } = useSavedMessages();
-  const saveMessage = useSaveMessage();
-  const unsaveMessage = useUnsaveMessage();
   const { data: onlineUsers } = useChatOnlineUsers();
   const { isConnected: ablyConnected, typingUserIds, publishTyping } = useChatRealtime(channelId, !canReadChannel);
   const { isConnected: ablySocketConnected } = useAblyConnection();
@@ -193,34 +189,7 @@ export function useMessagePanelData({
 
   const pinnedMessageIds = useMemo(() => new Set((pins ?? []).map((p) => p.messageId)), [pins]);
 
-  const savedMessageIds = useMemo(
-    () => new Set(savedData?.pages.flatMap((p) => p.items.map((i) => i.messageId)) ?? []),
-    [savedData],
-  );
-
-  const handleSave = useCallback(
-    async (messageId: number) => {
-      try {
-        await saveMessage.mutateAsync(messageId);
-        toast.success("Message saved");
-      } catch (error) {
-        toast.error(getErrorMessage(error));
-      }
-    },
-    [saveMessage],
-  );
-
-  const handleUnsaveMsg = useCallback(
-    async (messageId: number) => {
-      try {
-        await unsaveMessage.mutateAsync(messageId);
-        toast.success("Message removed from saved");
-      } catch (error) {
-        toast.error(getErrorMessage(error));
-      }
-    },
-    [unsaveMessage],
-  );
+  const { savedMessageIds, handleSave, handleUnsaveMsg } = useSavedMessageActions();
 
   const handleForward = useCallback((msg: Message) => {
     setForwardMessage({ content: msg.content, metadata: msg.metadata, attachments: msg.attachments });

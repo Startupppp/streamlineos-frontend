@@ -2,10 +2,6 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { InfiniteData } from "@tanstack/react-query";
-import { toast } from "sonner";
-import { useChatMessageContext } from "@/hooks/api/chat-message-windows";
-import { isApiError } from "@/lib/api-envelope";
-import { getErrorMessage } from "@/lib/get-error-message";
 import type {
   ChannelMember,
   Message,
@@ -13,14 +9,13 @@ import type {
   SendMessageInput,
 } from "@/types/chat";
 import { useChatArrivalAt } from "./chat-arrivals";
-import { getDateLabel, readChannelJoinRequired } from "./chat-helpers";
+import { getDateLabel } from "./chat-helpers";
 import { resolveFirstUnreadIndex } from "./chat-read-position";
 import { flattenMessagePages } from "./message-page-merge";
 import { resolveMessageWindowStart } from "./message-render-window";
 import { useChatScroll } from "./use-chat-scroll";
 import { useMessageAnchorTarget } from "./use-message-anchor-target";
-
-const MESSAGE_UNAVAILABLE_COPY = "That message is no longer available";
+import { useMessageContextWindow } from "./use-message-context-window";
 const CONTEXT_END_THRESHOLD = 80;
 
 interface MessageTimelineOptions {
@@ -75,36 +70,6 @@ export function useMessageTimeline({
     () => flattenMessagePages(history.data),
     [history.data],
   );
-  const anchorInMain =
-    anchorMessageId !== null &&
-    mainMessages.some((message) => message.id === anchorMessageId);
-  const contextEnabled = anchorMessageId !== null && !anchorInMain;
-  const context = useChatMessageContext(
-    channelId,
-    anchorMessageId ?? 0,
-    contextEnabled && canReadChannel,
-  );
-  const showContext = contextEnabled && !history.isLoading;
-  const contextMessages = useMemo(
-    () =>
-      showContext && context.data
-        ? [...context.data.pages]
-            .reverse()
-            .flatMap((page) => page.messages)
-            .filter(
-              (message) => !message.isDeleted || message.id === anchorMessageId,
-            )
-        : null,
-    [showContext, context.data, anchorMessageId],
-  );
-  const inContext = contextMessages !== null;
-  const messages = contextMessages ?? mainMessages;
-
-  const anchor = useMessageAnchorTarget({
-    channelId,
-    anchorMessageId,
-    messages,
-  });
   const leftAnchorRef = useRef<number | null>(null);
   useEffect(() => {
     if (anchorMessageId === null) leftAnchorRef.current = null;
@@ -115,46 +80,27 @@ export function useMessageTimeline({
     leftAnchorRef.current = anchorMessageId;
     onLeaveAnchor?.();
   }, [anchorMessageId, onLeaveAnchor]);
+  const { context, contextEnabled, contextMessages } = useMessageContextWindow({
+    channelId,
+    anchorMessageId,
+    mainMessages,
+    canReadChannel,
+    historyLoading: history.isLoading,
+    dropAnchor,
+  });
+  const inContext = contextMessages !== null;
+  const messages = contextMessages ?? mainMessages;
+
+  const anchor = useMessageAnchorTarget({
+    channelId,
+    anchorMessageId,
+    messages,
+  });
   const { keepThreadOpen } = anchor;
   const leave = useCallback(() => {
     keepThreadOpen();
     dropAnchor();
   }, [keepThreadOpen, dropAnchor]);
-  const { error: contextError, refetch: refetchContext } = context;
-  useEffect(() => {
-    if (
-      !contextEnabled ||
-      !contextError ||
-      readChannelJoinRequired(contextError)
-    )
-      return;
-    const toastId = `chat-message-context-${channelId}-${anchorMessageId}`;
-    if (
-      isApiError(contextError) &&
-      (contextError.status === 403 || contextError.status === 404)
-    ) {
-      toast.error(MESSAGE_UNAVAILABLE_COPY, { id: toastId });
-      dropAnchor();
-      return;
-    }
-    function retryContext() {
-      void refetchContext();
-    }
-    toast.error(getErrorMessage(contextError), {
-      id: toastId,
-      action: { label: "Try again", onClick: retryContext },
-    });
-    return () => {
-      toast.dismiss(toastId);
-    };
-  }, [
-    contextEnabled,
-    contextError,
-    refetchContext,
-    dropAnchor,
-    channelId,
-    anchorMessageId,
-  ]);
 
   const [revealed, setRevealed] = useState({ channelId, pages: 1 });
 

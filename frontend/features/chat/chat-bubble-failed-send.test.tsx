@@ -15,14 +15,14 @@ jest.mock("./entity-actions-context", () => ({
 }));
 
 jest.mock("next/dynamic", () => () => function DynamicStub() {
-  return null;
+  return jest.requireActual("react").createElement("div", { "data-testid": "message-actions" });
 });
 
 const DRAFT_KEY = chatDraftKey(7, UNSCOPED);
 
-function pending(clientKey: string): Message {
+function pending(clientKey: string, id = -3): Message {
   return {
-    id: -3,
+    id,
     channelId: 7,
     senderId: "user-1",
     content: "hello",
@@ -111,5 +111,36 @@ describe("ChatBubble — a send that failed", () => {
     fireEvent.click(screen.getByRole("button", { name: "Discard" }));
 
     expect(readOutbox(DRAFT_KEY)).toEqual([]);
+  });
+});
+
+describe("ChatBubble — a message that has not reached the server", () => {
+  it("a Not sent row offers only Retry and Discard: no toolbar, no delivered tick", () => {
+    appendOutboxEntry(DRAFT_KEY, { content: "hello", clientKey: "k-1", failed: true });
+    renderBubble(pending("k-1"));
+
+    expect(screen.queryByTestId("message-actions")).toBeNull();
+    expect(screen.queryByRole("img", { name: "Delivered" })).toBeNull();
+    expect(screen.queryByText("Sending…")).toBeNull();
+    expect(screen.getAllByRole("button").map((button) => button.textContent)).toEqual(["Retry", "Discard"]);
+  });
+
+  it("a pending row shows Sending… with no toolbar and no delivered tick", () => {
+    appendOutboxEntry(DRAFT_KEY, { content: "hello", clientKey: "k-2" });
+    renderBubble(pending("k-2"));
+
+    expect(screen.getByText("Sending…")).toBeInTheDocument();
+    expect(screen.queryByTestId("message-actions")).toBeNull();
+    expect(screen.queryByRole("img", { name: "Delivered" })).toBeNull();
+    expect(screen.queryAllByRole("button")).toEqual([]);
+  });
+
+  it("positive control: a delivered row keeps its toolbar and delivered tick", () => {
+    renderBubble(pending("k-3", 42));
+
+    expect(screen.getByTestId("message-actions")).toBeInTheDocument();
+    expect(screen.getByRole("img", { name: "Delivered" })).toBeInTheDocument();
+    expect(screen.queryByText("Sending…")).toBeNull();
+    expect(screen.queryByText("Not sent")).toBeNull();
   });
 });

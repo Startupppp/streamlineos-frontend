@@ -38,6 +38,7 @@ export function isTransientSendError(error: unknown): boolean {
 }
 
 const MAX_TRANSIENT_SEND_ATTEMPTS = 8;
+const TRANSIENT_RETRY_AFTER_CEILING_MS = 30_000;
 
 function isRateLimited(error: unknown): boolean {
   return isApiError(error) && error.status === 429;
@@ -68,9 +69,9 @@ export const chatSendRetry = {
     (isTransientSendError(error) && transientAttempts(failureCount, error) < MAX_TRANSIENT_SEND_ATTEMPTS),
   retryDelay: (failureCount: number, error: unknown) => {
     const retryAfter = getRetryAfterSeconds(error);
-    return retryAfter === undefined
-      ? queryRetryDelay(failureCount, error)
-      : Math.max(1_000, retryAfter * 1_000);
+    if (retryAfter === undefined) return queryRetryDelay(failureCount, error);
+    const delay = Math.max(1_000, retryAfter * 1_000);
+    return isRateLimited(error) ? delay : Math.min(TRANSIENT_RETRY_AFTER_CEILING_MS, delay);
   },
 };
 

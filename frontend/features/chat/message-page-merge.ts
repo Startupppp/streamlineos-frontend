@@ -24,8 +24,11 @@ export function mergeInboundMessage(
   const existing = old.pages.flatMap((page) => page.messages);
   const known = existing.find((message) => message.id === incoming.id);
   if (known) {
-    if (!needsServerAttachments(known, incoming)) return old;
-    return mapPages(old, (page) =>
+    const settled = existing.some((message) => sameSend(message, clientKey))
+      ? (removeOptimisticMessage(old, clientKey ?? "") ?? old)
+      : old;
+    if (!needsServerAttachments(known, incoming)) return settled;
+    return mapPages(settled, (page) =>
       page.messages.includes(known)
         ? {
             ...page,
@@ -34,7 +37,7 @@ export function mergeInboundMessage(
             ),
           }
         : page,
-    ) ?? old;
+    ) ?? settled;
   }
 
   if (existing.some((message) => sameSend(message, clientKey)))
