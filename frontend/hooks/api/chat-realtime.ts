@@ -122,10 +122,12 @@ export function useChatRealtime(
     if (!channelId || channelId <= 0) return;
     const messagesKey = collaborationQueryKeys.chat.messages(channelId);
     const before = queryClient.getQueryData<InfiniteData<MessagesPage>>(messagesKey);
-    void invalidateChatReconnect(queryClient, channelId).then(() => {
-      const after = queryClient.getQueryData<InfiniteData<MessagesPage>>(messagesKey);
-      if (before && after) recordChatReconnectGap(messagesAddedByResync(before, after));
-    });
+    void invalidateChatReconnect(queryClient, channelId)
+      .then(() => {
+        const after = queryClient.getQueryData<InfiniteData<MessagesPage>>(messagesKey);
+        if (before && after) recordChatReconnectGap(messagesAddedByResync(before, after));
+      })
+      .catch(() => undefined);
   }, [reconnectCount, channelId, queryClient]);
 
   useEffect(() => {

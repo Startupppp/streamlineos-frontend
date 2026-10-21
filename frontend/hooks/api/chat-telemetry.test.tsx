@@ -162,6 +162,42 @@ describe("chat telemetry batching", () => {
     flushChatTelemetry();
     expect(sent("send_to_visible")).toHaveLength(1);
   });
+
+  it("drops a send_to_visible sample over 120000 ms instead of clamping it", () => {
+    const clock = jest.spyOn(performance, "now");
+    clock.mockReturnValue(1_000);
+    beginChatSend("ck-slow");
+    clock.mockReturnValue(1_000 + 120_001);
+    chatSendVisible("ck-slow");
+    clock.mockReturnValue(5_000);
+    beginChatSend("ck-edge");
+    clock.mockReturnValue(5_000 + 120_000);
+    chatSendVisible("ck-edge");
+    clock.mockRestore();
+    flushChatTelemetry();
+    expect(sent("send_to_visible").map((sample) => sample.value)).toEqual([120_000]);
+  });
+
+  it("drops a send that started while offline and keeps one that started online", () => {
+    const online = jest.spyOn(navigator, "onLine", "get");
+    online.mockReturnValue(false);
+    beginChatSend("ck-offline");
+    online.mockReturnValue(true);
+    beginChatSend("ck-online");
+    chatSendVisible("ck-offline");
+    chatSendVisible("ck-online");
+    online.mockRestore();
+    flushChatTelemetry();
+    expect(sent("send_to_visible")).toHaveLength(1);
+  });
+
+  it("bounds pending sends at 200, evicting the oldest", () => {
+    for (let index = 0; index < 201; index += 1) beginChatSend(`ck-bound-${index}`);
+    chatSendVisible("ck-bound-0");
+    chatSendVisible("ck-bound-200");
+    flushChatTelemetry();
+    expect(sent("send_to_visible")).toHaveLength(1);
+  });
 });
 
 describe("send_to_visible through the real send and realtime paths", () => {

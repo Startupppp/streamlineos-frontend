@@ -16,6 +16,7 @@ const FLUSH_INTERVAL_MS = 30_000;
 const FLUSH_AT_SAMPLES = 20;
 const MAX_SAMPLE_VALUE = 120_000;
 const SENT_KEYS_KEPT = 200;
+const PENDING_SENDS_KEPT = 200;
 
 const noContentContract = lazyContract(() =>
   import("@/hooks/api/cursor-page-schema").then((m) => m.noContentContract),
@@ -66,7 +67,13 @@ export function setChatTelemetryRealtime(connected: boolean): void {
 }
 
 export function beginChatSend(clientKey: string): void {
-  pendingSends.set(clientKey, { startedAt: now(), realtime: realtimeConnected });
+  if (typeof navigator === "undefined" || navigator.onLine) {
+    pendingSends.set(clientKey, { startedAt: now(), realtime: realtimeConnected });
+    if (pendingSends.size > PENDING_SENDS_KEPT) {
+      const oldestPending = pendingSends.keys().next().value;
+      if (oldestPending !== undefined) pendingSends.delete(oldestPending);
+    }
+  }
   sentClientKeys.add(clientKey);
   if (sentClientKeys.size > SENT_KEYS_KEPT) {
     const oldest = sentClientKeys.values().next().value;
@@ -83,9 +90,11 @@ export function chatSendVisible(clientKey: string | null | undefined): void {
   const pending = pendingSends.get(clientKey);
   if (!pending) return;
   pendingSends.delete(clientKey);
+  const elapsed = now() - pending.startedAt;
+  if (elapsed > MAX_SAMPLE_VALUE) return;
   recordChatTelemetry({
     metric: "send_to_visible",
-    value: now() - pending.startedAt,
+    value: elapsed,
     realtime: pending.realtime,
   });
 }
