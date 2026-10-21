@@ -277,3 +277,15 @@ describe("kbPageContract — server/client schema parity for the create and upda
     expect(kbPageContract.safeParse(templatePage).success).toBe(true);
   });
 });
+
+describe("kbPageWithAncestorsContract — kind during a frontend-first rollout", () => {
+  it("reads a page from a backend that predates kind as a document, so Docs keeps loading", () => {
+    const { kind: _omitted, ...withoutKind } = WIRE_FIXTURE;
+    expect(kbPageWithAncestorsContract.parse(withoutKind).kind).toBe("document");
+  });
+
+  it("keeps a spreadsheet kind the backend sends and rejects an unknown kind", () => {
+    expect(kbPageWithAncestorsContract.parse({ ...WIRE_FIXTURE, kind: "spreadsheet" }).kind).toBe("spreadsheet");
+    expect(kbPageWithAncestorsContract.safeParse({ ...WIRE_FIXTURE, kind: "slides" }).success).toBe(false);
+  });
+});

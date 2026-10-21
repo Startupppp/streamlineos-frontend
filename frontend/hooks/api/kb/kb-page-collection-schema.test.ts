@@ -98,16 +98,30 @@ describe("kbPageCollectionItemSchema — sharedBy.userId", () => {
     expect(parsed.sharedBy?.userId).toBeNull();
   });
 
-  it("rejects a sharedBy object missing the userId field, so the contract keeps both repos in step", () => {
+  it("reads a sharedBy object from a backend that predates userId as an unknown sharer, so Docs keeps loading while the frontend deploys ahead of the backend", () => {
+    const parsed = kbPageCollectionItemSchema.parse(
+      wireItem({
+        sharedBy: {
+          membershipId: 88,
+          at: "2026-09-11T00:00:00.000Z",
+          access: "edit",
+        },
+      }),
+    );
+    expect(parsed.sharedBy).toEqual({
+      membershipId: 88,
+      userId: null,
+      at: "2026-09-11T00:00:00.000Z",
+      access: "edit",
+      expiresAt: null,
+    });
+  });
+
+  it("still rejects a sharedBy object whose access is not a grant level", () => {
     expect(() =>
       kbPageCollectionItemSchema.parse(
         wireItem({
-          sharedBy: {
-            membershipId: 88,
-            at: "2026-09-11T00:00:00.000Z",
-            access: "edit",
-            expiresAt: null,
-          },
+          sharedBy: { membershipId: 88, userId: null, at: "2026-09-11T00:00:00.000Z", access: "owner", expiresAt: null },
         }),
       ),
     ).toThrow(ZodError);

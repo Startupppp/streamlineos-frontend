@@ -8,7 +8,7 @@ const kbPageTreeItemSchema = z.object({
   spaceId: z.number().int().nullable(),
   projectId: z.number().int().nullable(),
   title: z.string(),
-  kind: kbPageKindSchema,
+  kind: kbPageKindSchema.default("document"),
   icon: z.string().nullable(),
   coverImage: z.string().nullable().optional(),
   sortOrder: z.number().int().nullable(),

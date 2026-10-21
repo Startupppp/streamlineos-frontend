@@ -7,7 +7,7 @@ const kbPageTemplateContract = z.object({
   name: z.string(),
   icon: z.string().nullable(),
   description: z.string().nullable(),
-  kind: kbPageKindSchema,
+  kind: kbPageKindSchema.default("document"),
   content: z
     .union([
       z.array(z.record(z.string(), z.unknown())),

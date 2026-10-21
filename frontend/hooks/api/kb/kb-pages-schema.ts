@@ -15,7 +15,7 @@ const kbPageBaseContract = z.object({
   coverImage: z.string().nullable(),
   status: z.enum(["draft", "in_review", "published", "archived"]),
   contentType: z.string(),
-  kind: kbPageKindSchema,
+  kind: kbPageKindSchema.default("document"),
   trustState: z.enum(["unverified", "verified", "verification_expired"]),
   visibility: z.enum(["private", "org", "public"]),
   publicToken: z.string().nullable(),

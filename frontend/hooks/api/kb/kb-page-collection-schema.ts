@@ -12,7 +12,7 @@ export const kbPageCollectionItemSchema = z.object({
   status: z.enum(["draft", "in_review", "published", "archived"]),
   visibility: z.enum(["private", "org", "public"]),
   contentType: z.string(),
-  kind: kbPageKindSchema,
+  kind: kbPageKindSchema.default("document"),
   trustState: z.enum(["unverified", "verified", "verification_expired"]),
   ownerMembershipId: z.number().int().nullable(),
   ownerUserId: z.string().nullable(),
@@ -30,10 +30,10 @@ export const kbPageCollectionItemSchema = z.object({
   sharedBy: z
     .object({
       membershipId: z.number().int().nullable(),
-      userId: z.string().nullable(),
+      userId: z.string().nullable().default(null),
       at: z.string(),
       access: z.enum(["view", "comment", "edit", "manage"]),
-      expiresAt: z.string().nullable(),
+      expiresAt: z.string().nullable().default(null),
     })
     .nullable(),
 });
