@@ -18,6 +18,7 @@ import { useEntityAction } from "./entity-actions-context";
 import { ChatOverlayFallback } from "./chat-lazy-fallbacks";
 import { ChatBubbleAttachments } from "./chat-bubble-attachments";
 import { ChatBubbleEditForm } from "./chat-bubble-edit-form";
+import { ChatBubbleFailedSend, useFailedSend } from "./chat-bubble-failed-send";
 import { renderFormattedContent } from "./formatted-message-content";
 import { getInitials } from "@/lib/format-utils";
 const MessageActions = dynamic(
@@ -132,7 +133,8 @@ export function ChatBubble({
     : null;
   const dueDateAction = useEntityAction(ticketReference, "due-date");
   const canSetDueDate = Boolean(dueDateAction);
-  const isPendingSend = message.id < 0;
+  const isFailedSend = useFailedSend(message);
+  const isPendingSend = message.id < 0 && !isFailedSend;
 
   const handleOpenConvertDialog = useCallback(
     () => setConvertDialogOpen(true),
@@ -338,6 +340,10 @@ export function ChatBubble({
               )}
             </div>
           </div>
+        )}
+
+        {isFailedSend && message.clientKey && (
+          <ChatBubbleFailedSend channelId={message.channelId} clientKey={message.clientKey} />
         )}
 
         {replyCount !== undefined && replyCount > 0 && (

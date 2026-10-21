@@ -3,7 +3,7 @@
 import { useCallback, useId } from "react";
 import dynamic from "next/dynamic";
 import { motion, AnimatePresence } from "framer-motion";
-import { AtSign, Loader2, Paperclip, Send, Smile } from "lucide-react";
+import { AtSign, Paperclip, Send, Smile } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
   CHAT_ATTACHMENT_ACCEPT,
@@ -59,7 +59,6 @@ export function MessageInput({
   linkedRecords,
   onRemoveLinkedRecord,
   typingText,
-  sendMessage,
   onSend,
   onKeyDown,
   onInputChange,
@@ -265,10 +264,7 @@ export function MessageInput({
                 <button
                   type="button"
                   onClick={onSend}
-                  disabled={
-                    (!messageInput.trim() && pendingAttachments.length === 0 && linkedRecords.length === 0) ||
-                    sendMessage.isPending
-                  }
+                  disabled={!messageInput.trim() && pendingAttachments.length === 0 && linkedRecords.length === 0}
                   aria-label="Send"
                   className={cn(
                     "h-9 w-9 rounded-xl flex items-center justify-center transition-all",
@@ -277,11 +273,7 @@ export function MessageInput({
                       : "bg-muted/50 text-muted-foreground cursor-not-allowed",
                   )}
                 >
-                  {sendMessage.isPending ? (
-                    <Loader2 className="h-[18px] w-[18px] animate-spin" />
-                  ) : (
-                    <Send className="h-[18px] w-[18px]" />
-                  )}
+                  <Send className="h-[18px] w-[18px]" />
                 </button>
               </div>
             </div>

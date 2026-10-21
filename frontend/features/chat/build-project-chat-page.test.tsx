@@ -4,6 +4,7 @@ import {
   mockMessagePanel,
   mockMessagePanelMounts,
   mockUseCan,
+  mockUseChatOutboxDrain,
   mockUseCreateEntityChannel,
   mockUseEntityChannel,
   mockUsePageState,
@@ -16,6 +17,13 @@ beforeEach(() => {
   mockUseEntityChannel.mockReturnValue(baseChannelResult());
   mockUseCreateEntityChannel.mockReturnValue({ mutate: jest.fn(), isPending: false });
   mockUsePageState.mockReturnValue({ kind: "ready" });
+});
+
+describe("BuildProjectChatPage — outbox", () => {
+  it("drains the chat outbox, because this page has no chat suite to do it", () => {
+    render(<BuildProjectChatPage projectId="1" />);
+    expect(mockUseChatOutboxDrain).toHaveBeenCalled();
+  });
 });
 
 describe("BuildProjectChatPage — loading state", () => {

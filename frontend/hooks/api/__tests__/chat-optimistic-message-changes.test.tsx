@@ -135,7 +135,7 @@ describe("useDeleteMessage — optimistic delete", () => {
 
 describe("useToggleReaction — optimistic toggle", () => {
   it("adds the viewer's reaction before the server answers, then writes the server map", async () => {
-    const { useToggleReaction } = await import("@/hooks/api/chat-core-mutations-a");
+    const { useToggleReaction } = await import("@/hooks/api/chat-reaction-mutation");
     const client = freshClient();
     seedTimeline(client, [message()]);
     const pending = deferred<{ reactions: Record<string, string[]> }>();
@@ -156,7 +156,7 @@ describe("useToggleReaction — optimistic toggle", () => {
   });
 
   it("removes an existing reaction with the DELETE route, decided before the optimistic patch", async () => {
-    const { useToggleReaction } = await import("@/hooks/api/chat-core-mutations-a");
+    const { useToggleReaction } = await import("@/hooks/api/chat-reaction-mutation");
     const client = freshClient();
     seedTimeline(client, [message({ reactions: { "👍": ["user-1"] } })]);
     mockedDelete.mockResolvedValue({ reactions: {} });
@@ -175,7 +175,7 @@ describe("useToggleReaction — optimistic toggle", () => {
   });
 
   it("sends a second toggle on the same emoji only after the first has been answered", async () => {
-    const { useToggleReaction } = await import("@/hooks/api/chat-core-mutations-a");
+    const { useToggleReaction } = await import("@/hooks/api/chat-reaction-mutation");
     const client = freshClient();
     seedTimeline(client, [message()]);
     const first = deferred<{ reactions: Record<string, string[]> }>();
@@ -196,7 +196,7 @@ describe("useToggleReaction — optimistic toggle", () => {
   });
 
   it("does not let an earlier toggle's answer overwrite a newer optimistic state", async () => {
-    const { useToggleReaction } = await import("@/hooks/api/chat-core-mutations-a");
+    const { useToggleReaction } = await import("@/hooks/api/chat-reaction-mutation");
     const client = freshClient();
     seedTimeline(client, [message()]);
     const first = deferred<{ reactions: Record<string, string[]> }>();
@@ -220,7 +220,7 @@ describe("useToggleReaction — optimistic toggle", () => {
   });
 
   it("rolls the reaction back when the server refuses", async () => {
-    const { useToggleReaction } = await import("@/hooks/api/chat-core-mutations-a");
+    const { useToggleReaction } = await import("@/hooks/api/chat-reaction-mutation");
     const client = freshClient();
     seedTimeline(client, [message()]);
     mockedPost.mockRejectedValue(new ApiError("Forbidden", 403));

@@ -1,4 +1,4 @@
-import { isApiError } from "@/lib/api-envelope";
+import { getRetryAfterSeconds, isApiError } from "@/lib/api-envelope";
 import { queryRetryDelay } from "@/lib/query-error-policy";
 import type { InfiniteData, QueryClient } from "@tanstack/react-query";
 import { findCachedMessage, nextChatTempId } from "@/hooks/api/chat-message-cache";
@@ -37,10 +37,55 @@ export function isTransientSendError(error: unknown): boolean {
   );
 }
 
+const MAX_TRANSIENT_SEND_ATTEMPTS = 8;
+
+function isRateLimited(error: unknown): boolean {
+  return isApiError(error) && error.status === 429;
+}
+
+const transientFailures = new Map<string, number>();
+const transientAttemptByError = new WeakMap<object, number>();
+
+export function countTransientSendFailure(clientKey: string, error: unknown): void {
+  if (!isTransientSendError(error) || isRateLimited(error)) return;
+  const count = (transientFailures.get(clientKey) ?? 0) + 1;
+  transientFailures.set(clientKey, count);
+  if (typeof error === "object" && error !== null) transientAttemptByError.set(error, count);
+}
+
+export function clearTransientSendFailures(clientKey: string): void {
+  transientFailures.delete(clientKey);
+}
+
+function transientAttempts(failureCount: number, error: unknown): number {
+  const counted = typeof error === "object" && error !== null ? transientAttemptByError.get(error) : undefined;
+  return counted ?? failureCount + 1;
+}
+
 export const chatSendRetry = {
-  retry: (failureCount: number, error: unknown) => isTransientSendError(error),
-  retryDelay: queryRetryDelay,
+  retry: (failureCount: number, error: unknown) =>
+    isRateLimited(error) ||
+    (isTransientSendError(error) && transientAttempts(failureCount, error) < MAX_TRANSIENT_SEND_ATTEMPTS),
+  retryDelay: (failureCount: number, error: unknown) => {
+    const retryAfter = getRetryAfterSeconds(error);
+    return retryAfter === undefined
+      ? queryRetryDelay(failureCount, error)
+      : Math.max(1_000, retryAfter * 1_000);
+  },
 };
+
+const outboxSends = new Set<string>();
+
+export function holdFailedSendRow(clientKey: string): () => void {
+  outboxSends.add(clientKey);
+  return () => {
+    outboxSends.delete(clientKey);
+  };
+}
+
+export function keepsFailedSendRow(clientKey: string): boolean {
+  return outboxSends.has(clientKey);
+}
 
 const channelSendTails = new WeakMap<object, Map<number, Promise<void>>>();
 const sendTurns = new Map<

@@ -8,6 +8,7 @@ import {
   openRecordPickerWithResults,
   press,
 } from "./composer-test-harness";
+import { readOutbox } from "./composer-draft";
 
 jest.mock("next-auth/react", () => ({
   useSession: () => ({ data: { user: { id: "me", name: "Me", image: null } }, status: "authenticated" }),
@@ -127,7 +128,7 @@ describe("/ record picker searches every linkable module", () => {
     expect(sent[0].metadata).toBeUndefined();
   });
 
-  it("keeps the linked records when a send fails, so a retry carries them", async () => {
+  it("keeps the linked records on the failed message, so a retry carries them", async () => {
     const { hook } = harness("PRIVATE", true);
     await openRecordPickerWithResults(hook);
     const [deal] = hook.result.current.recordPicker?.groups[0].items ?? [];
@@ -136,7 +137,9 @@ describe("/ record picker searches every linkable module", () => {
     await act(async () => {
       await hook.result.current.handleSend();
     });
-    expect(hook.result.current.linkedRecords.map((r) => r.key)).toEqual(["deal:5"]);
+    const [failed] = readOutbox("chat:draft:7");
+    expect(failed?.failed).toBe(true);
+    expect(failed?.metadata?.entities).toEqual([{ type: "deal", id: "5" }]);
   });
 
   it("seeds the picked title at send so the optimistic message shows its pill before the server card arrives", async () => {

@@ -14,6 +14,7 @@ import { PageState } from "@/components/shared/page-state";
 import { usePageState } from "@/hooks/api/use-page-state";
 import { ChatAblyProvider } from "./ably-provider";
 import { MessagePanel } from "./message-panel";
+import { useChatOutboxDrain } from "./use-chat-offline-queue";
 import { ChannelInfoPanel } from "./channel-info-panel";
 import { useIsChatPanelNarrow } from "./use-chat-mobile";
 import { useMobilePanelBack } from "./use-mobile-panel-back";
@@ -29,6 +30,7 @@ const noop = () => {};
 export function BuildProjectChatPage({ projectId }: ProjectChatPageProps) {
   const { data: session } = useSession();
   const currentUserId = session?.user?.id ?? "";
+  useChatOutboxDrain();
   const { data: channel, error, isLoading, isError, refetch } = useEntityChannel(
     "project",
     projectId,

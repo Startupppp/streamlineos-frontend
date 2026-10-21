@@ -5,7 +5,7 @@ import { ApiError } from "@/lib/api-envelope";
 import { collaborationQueryKeys } from "@/lib/query-keys/collaboration";
 import { freshClient, installRandomUuid, seedTimeline, timeline, wrapperFor } from "@/hooks/api/chat-cache-test-harness";
 import { readOutbox } from "./composer-draft";
-import { DRAFT_KEY, delivered, isSendUrl, mockedPost, mount, readBody, sendCalls, serverRow, typeAndSend, useComposerOverRealSend } from "./chat-send-outbox-test-harness";
+import { DRAFT_KEY, delivered, isSendUrl, mockedPost, mount, readBody, sendCalls, serverRow, typeAndSend, useComposerOverRealSend, type SendBody } from "./chat-send-outbox-test-harness";
 
 jest.mock("next-auth/react", () => ({
   useSession: jest.fn().mockReturnValue({

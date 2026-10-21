@@ -5,6 +5,7 @@ import { ChatAblyProvider } from "./ably-provider";
 import { useChatPresence } from "./use-chat-presence";
 import { useChatChannels } from "@/hooks/api/chat-core-read";
 import { useChatGlobalNotifications } from "@/hooks/api/chat-notifications";
+import { useChatOutboxDrain } from "./use-chat-offline-queue";
 
 function PresenceManager() {
   useChatPresence();
@@ -34,6 +35,7 @@ export function ChatAblySuite({
   activeChannelId,
   currentUserId,
 }: ChatAblySuiteProps) {
+  useChatOutboxDrain();
   return (
     <ChatAblyProvider>
       <PresenceManager />

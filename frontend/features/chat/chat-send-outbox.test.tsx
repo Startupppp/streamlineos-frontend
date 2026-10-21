@@ -4,6 +4,7 @@ import { toast } from "sonner";
 import { ApiError } from "@/lib/api-envelope";
 import { deferred, freshClient, installRandomUuid, seedTimeline, timeline } from "@/hooks/api/chat-cache-test-harness";
 import { readOutbox } from "./composer-draft";
+import { retryFailedSend } from "./chat-outbox-delivery";
 import { DRAFT_KEY, delivered, isSendUrl, mockedPost, mount, readBody, sendCalls, serverRow, typeAndSend } from "./chat-send-outbox-test-harness";
 
 jest.mock("next-auth/react", () => ({
@@ -119,7 +120,7 @@ describe("a message handed to the send pipeline leaves the draft", () => {
     onlineManager.setOnline(true);
     const reloaded = freshClient();
     const landed = serverRow({ content: "landed before reload", clientKey: queued.clientKey });
-    seedTimeline(reloaded, [{ ...landed, sender: { id: "user-1", name: "Ada", image: null }, reactions: {}, attachments: [], replyTo: null }]);
+    seedTimeline(reloaded, [{ ...landed, senderId: "user-1", sender: { id: "user-1", name: "Ada", image: null }, reactions: {}, attachments: [], replyTo: null }]);
     mount(reloaded, true);
 
     await waitFor(() => expect(readOutbox(DRAFT_KEY)).toEqual([]));
@@ -128,7 +129,7 @@ describe("a message handed to the send pipeline leaves the draft", () => {
 });
 
 describe("a terminal rejection is surfaced, never dropped", () => {
-  it("restores the message to the empty composer and offers Retry, which resends under the same key", async () => {
+  it("keeps the message in the list as failed, leaves the composer empty, and Retry resends under the same key", async () => {
     let calls = 0;
     mockedPost.mockImplementation(async (url, body) => {
       if (!isSendUrl(String(url))) return undefined;
@@ -142,20 +143,72 @@ describe("a terminal rejection is surfaced, never dropped", () => {
     await typeAndSend(tab, "rejected once");
 
     await waitFor(() => expect(toast.error).toHaveBeenCalledTimes(1));
-    expect(tab.result.current.messageInput).toBe("rejected once");
-    expect(timeline(client)).toHaveLength(0);
-    expect(readOutbox(DRAFT_KEY)).toEqual([]);
+    expect(tab.result.current.messageInput).toBe("");
+    expect(timeline(client).map((m) => m.content)).toEqual(["rejected once"]);
+    expect(timeline(client)[0].id).toBeLessThan(0);
+    const [failed] = readOutbox(DRAFT_KEY);
+    expect(failed).toMatchObject({ content: "rejected once", failed: true });
 
-    const options = jest.mocked(toast.error).mock.calls[0][1];
-    const action = options?.action;
-    if (!action || !("onClick" in action)) throw new Error("the failure toast offers no Retry action");
-    expect(action.label).toBe("Retry");
     await act(async () => {
-      action.onClick(new MouseEvent("click"));
+      retryFailedSend(DRAFT_KEY, failed.clientKey);
     });
 
     await waitFor(() => expect(delivered(timeline(client))).toHaveLength(1));
+    expect(timeline(client)).toHaveLength(1);
     const [firstKey, retryKey] = sendCalls().map((call) => call.clientKey);
     expect(retryKey).toBe(firstKey);
+    expect(readOutbox(DRAFT_KEY)).toEqual([]);
+  });
+
+  it("clears the composer and its draft when a Retry delivers the text the composer still holds", async () => {
+    let calls = 0;
+    mockedPost.mockImplementation(async (url, body) => {
+      if (!isSendUrl(String(url))) return undefined;
+      calls += 1;
+      if (calls === 1) throw new ApiError("Conflict", 409, "CONFLICT");
+      return serverRow(readBody(body));
+    });
+    const client = freshClient();
+    seedTimeline(client, []);
+    const tab = mount(client, true);
+    await typeAndSend(tab, "same words");
+    await waitFor(() => expect(readOutbox(DRAFT_KEY)[0]?.failed).toBe(true));
+    await act(async () => {
+      tab.result.current.setMessageInput("same words");
+    });
+    expect(localStorage.getItem(DRAFT_KEY)).toBe("same words");
+
+    await act(async () => {
+      retryFailedSend(DRAFT_KEY, readOutbox(DRAFT_KEY)[0].clientKey);
+    });
+
+    await waitFor(() => expect(delivered(timeline(client))).toHaveLength(1));
+    expect(tab.result.current.messageInput).toBe("");
+    expect(localStorage.getItem(DRAFT_KEY)).toBeNull();
+  });
+
+  it("positive control: a Retry leaves a composer holding different text untouched", async () => {
+    let calls = 0;
+    mockedPost.mockImplementation(async (url, body) => {
+      if (!isSendUrl(String(url))) return undefined;
+      calls += 1;
+      if (calls === 1) throw new ApiError("Conflict", 409, "CONFLICT");
+      return serverRow(readBody(body));
+    });
+    const client = freshClient();
+    seedTimeline(client, []);
+    const tab = mount(client, true);
+    await typeAndSend(tab, "first words");
+    await waitFor(() => expect(readOutbox(DRAFT_KEY)[0]?.failed).toBe(true));
+    await act(async () => {
+      tab.result.current.setMessageInput("something else");
+    });
+
+    await act(async () => {
+      retryFailedSend(DRAFT_KEY, readOutbox(DRAFT_KEY)[0].clientKey);
+    });
+
+    await waitFor(() => expect(delivered(timeline(client))).toHaveLength(1));
+    expect(tab.result.current.messageInput).toBe("something else");
   });
 });

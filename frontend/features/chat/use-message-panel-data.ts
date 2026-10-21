@@ -7,12 +7,13 @@ import {
   useChatChannel, useChatChannels, useChatMessages, useChatOnlineUsers, useChatOrgUsers,
 } from "@/hooks/api/chat-core-read";
 import {
-  useSendMessage, useDeleteMessage, useEditMessage, useMarkChannelRead, useToggleReaction,
+  useSendMessage, useDeleteMessage, useEditMessage, useMarkChannelRead,
 } from "@/hooks/api/chat-core-mutations-a";
+import { useToggleReaction } from "@/hooks/api/chat-reaction-mutation";
 import { useChatPins, usePinMessage, useUnpinMessage } from "@/hooks/api/chat-search";
 import { useSavedMessages, useSaveMessage, useUnsaveMessage } from "@/hooks/api/chat-personal-a";
 import { useChatPollReconciliation } from "./use-chat-poll-reconciliation";
-import { orgScopedStorageKey, useOrgStorageScope } from "@/lib/org-scoped-storage";
+import { useOrgStorageScope } from "@/lib/org-scoped-storage";
 import { useChatRealtime } from "@/hooks/api/chat-realtime";
 import { useStartHuddle, useJoinHuddle, useActiveHuddle } from "@/hooks/api/chat-huddles";
 import { useHuddleRealtime } from "./huddle-realtime";
@@ -25,6 +26,7 @@ import { useCan } from "@/hooks/api/access";
 import { useIsChatPanelNarrow } from "./use-chat-mobile";
 import { useChatTypingText } from "./use-chat-typing-text";
 import { useMessageComposer } from "./use-message-composer";
+import { chatDraftKey } from "./composer-draft";
 import { resolveDirectPartner } from "./channel-member-lookup";
 import { useChatReadMarker } from "./use-chat-read-marker";
 import { useChatOfflineQueue } from "./use-chat-offline-queue";
@@ -49,7 +51,7 @@ export function useMessagePanelData({
   autoStartCall, onAutoStartHandled, scrollToMessageId, onLeaveMessage,
 }: MessagePanelProps) {
   const scope = useOrgStorageScope();
-  const draftKey = orgScopedStorageKey(`chat:draft:${channelId}`, scope);
+  const draftKey = chatDraftKey(channelId, scope);
   const draftKeyRef = useRef(draftKey);
   draftKeyRef.current = draftKey;
   const history = useChatMessages(channelId);
@@ -288,7 +290,7 @@ export function useMessagePanelData({
     header: { onBack, displayName, channel, otherMember, isOtherOnline, memberCount, activeHuddle, isInHuddle, onHuddle: handleHuddle, huddleStartPending: startHuddle.isPending, huddleJoinPending: joinHuddle.isPending, canUseAi, summarizeAction, onToggleSaved: handleToggleSaved, onToggleInfo, showInfoPanel },
     workspace: {
       messageList: { ...timelineList, isError: messagesError, errorMessage: messagesError ? getErrorMessage(messagesErrorValue) : undefined, onRetry: handleRetryMessages, joinRequired, currentUserId, channelId, displayName, channelType: channel?.type, editingMessage, editInput, pinnedMessageIds, savedMessageIds, replyCountMap, onEditInputChange: setEditInput, onStartEdit: handleStartEdit, onCancelEdit: handleCancelEdit, onSaveEdit: handleEdit, onReply: handleReply, onOpenThread: handleOpenThread, onDelete: handleDelete, onReact: handleReact, onPin: handlePin, onUnpin: handleUnpin, onSave: handleSave, onUnsaveMsg: handleUnsaveMsg, onForward: handleForward, resolveUserName, scrollToMessageId },
-      messageInput: { channelId, displayName, channelType: channel?.type, messageInput, setMessageInput, inputRef, fileInputRef, replyTo, setReplyTo, pendingAttachments, setPendingAttachments, uploading, onFileSelect: handleFileSelect, showEmojiPicker, setShowEmojiPicker, emojiRef, insertEmoji, showMentions, setShowMentions, mentionIndex, filteredMentions, insertMention, mentionPrompt, onDismissMentionPrompt: dismissMentionPrompt, recordPicker, onSelectRecord: selectRecord, linkedRecords, onRemoveLinkedRecord: removeLinkedRecord, typingText, sendMessage, onSend: handleSend, onKeyDown: handleKeyDown, onInputChange: handleInputChange, onFilesSelected: handlePastedFiles },
+      messageInput: { channelId, displayName, channelType: channel?.type, messageInput, setMessageInput, inputRef, fileInputRef, replyTo, setReplyTo, pendingAttachments, setPendingAttachments, uploading, onFileSelect: handleFileSelect, showEmojiPicker, setShowEmojiPicker, emojiRef, insertEmoji, showMentions, setShowMentions, mentionIndex, filteredMentions, insertMention, mentionPrompt, onDismissMentionPrompt: dismissMentionPrompt, recordPicker, onSelectRecord: selectRecord, linkedRecords, onRemoveLinkedRecord: removeLinkedRecord, typingText, onSend: handleSend, onKeyDown: handleKeyDown, onInputChange: handleInputChange, onFilesSelected: handlePastedFiles },
       huddle: activeHuddle && isInHuddle ? { huddle: activeHuddle, channelId, currentUserId } : undefined,
     },
     thread: { messageId: threadMessageId, highlightedReplyId, channelId, currentUserId, onClose: handleCloseThread },

@@ -11,7 +11,6 @@ import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import {
   cancelChatMessageQueries,
   cancelLoadedQueries,
-  findCachedMessage,
   patchChatMessage,
   type ChatCacheRollback,
 } from "@/hooks/api/chat-message-cache";
@@ -31,18 +30,16 @@ import {
 import {
   appendPendingSend,
   awaitSendTurn,
-  beginReaction,
   CHAT_SEND_MUTATION_KEY,
   claimSendTurn,
   chatSendRetry,
-  enqueueReaction,
-  isLatestReaction,
+  clearTransientSendFailures,
+  countTransientSendFailure,
+  keepsFailedSendRow,
   pendingSendMessage,
-  reactionKey,
   reconcileSentMessage,
   releaseSendTurn,
   sendClientKey,
-  settleReaction,
 } from "@/hooks/api/chat-send-policy";
 import type {
   EditMessageInput,
@@ -62,10 +59,6 @@ const chatOkContract = lazyContract(() =>
 
 const chatSendResponseContract = lazyContract(() =>
   import("@/hooks/api/chat-schema").then((m) => m.chatSendResponseContract),
-);
-
-const chatReactionsContract = lazyContract(() =>
-  import("@/hooks/api/chat-schema").then((m) => m.chatReactionsContract),
 );
 
 interface RollbackContext {
@@ -91,12 +84,17 @@ export function useSendMessage() {
     mutationFn: async (variables) => {
       const { channelId, ...body } = variables;
       await awaitSendTurn(sendClientKey(variables));
-      return apiClient.post<ChatSendResponse>(
-        `/chat/channels/${channelId}/messages`,
-        { ...body, clientKey: sendClientKey(variables) },
-        undefined,
-        chatSendResponseContract,
-      );
+      return apiClient
+        .post<ChatSendResponse>(
+          `/chat/channels/${channelId}/messages`,
+          { ...body, clientKey: sendClientKey(variables) },
+          undefined,
+          chatSendResponseContract,
+        )
+        .catch((error: unknown) => {
+          countTransientSendFailure(sendClientKey(variables), error);
+          throw error;
+        });
     },
     onMutate: async (variables) => {
       const clientKey = sendClientKey(variables);
@@ -135,10 +133,11 @@ export function useSendMessage() {
     },
     onError: (_error, variables, context) => {
       abandonChatSend(sendClientKey(variables));
-      queryClient.setQueryData<InfiniteData<MessagesPage>>(
-        collaborationQueryKeys.chat.messages(variables.channelId),
-        (old) => removeOptimisticMessage(old, sendClientKey(variables)),
-      );
+      if (!keepsFailedSendRow(sendClientKey(variables)))
+        queryClient.setQueryData<InfiniteData<MessagesPage>>(
+          collaborationQueryKeys.chat.messages(variables.channelId),
+          (old) => removeOptimisticMessage(old, sendClientKey(variables)),
+        );
       context?.rollback();
     },
     onSuccess: (row, variables) => {
@@ -161,7 +160,10 @@ export function useSendMessage() {
           refetchType: "none",
         });
     },
-    onSettled: (_data, _error, variables) => releaseSendTurn(sendClientKey(variables)),
+    onSettled: (_data, _error, variables) => {
+      clearTransientSendFailures(sendClientKey(variables));
+      releaseSendTurn(sendClientKey(variables));
+    },
   });
 }
 
@@ -268,84 +270,6 @@ export function useMarkChannelRead() {
     onError: (_error, _variables, context) => context?.rollback(),
     onSuccess: (_data, _variables, context) => {
       reconcileUnreadAfterRead(queryClient, context?.rowWasLoaded ?? false);
-    },
-  });
-}
-
-type ReactionsResponse = { reactions: Record<string, string[]> };
-
-const reactionRemovals = new WeakMap<object, boolean>();
-export function useToggleReaction(channelId: number) {
-  const queryClient = useQueryClient();
-  const { data: session } = useSession();
-  const userId = session?.user?.id;
-  const viewerReacted = (messageId: number, emoji: string) =>
-    userId !== undefined &&
-    (findCachedMessage(queryClient, channelId, messageId)?.reactions[
-      emoji
-    ]?.includes(userId) ??
-      false);
-  return useAuthorizedMutation<
-    ReactionsResponse,
-    Error,
-    { messageId: number; emoji: string },
-    RollbackContext
-  >("chat:messages:write", {
-    mutationKey: ["chat", "messages", "toggle-reaction"],
-    mutationFn: (variables) => {
-      const { messageId, emoji } = variables;
-      const remove =
-        reactionRemovals.get(variables) ?? viewerReacted(messageId, emoji);
-      return enqueueReaction(reactionKey(channelId, messageId, emoji), () =>
-        remove
-          ? apiClient.delete<ReactionsResponse>(
-              `/chat/channels/${channelId}/messages/${messageId}/reactions/${encodeURIComponent(emoji)}`,
-              undefined,
-              undefined,
-              chatReactionsContract,
-            )
-          : apiClient.post<ReactionsResponse>(
-              `/chat/channels/${channelId}/messages/${messageId}/reactions`,
-              { emoji },
-              undefined,
-              chatReactionsContract,
-            ),
-      );
-    },
-    onMutate: async (variables) => {
-      const { messageId, emoji } = variables;
-      beginReaction(reactionKey(channelId, messageId, emoji));
-      const remove = viewerReacted(messageId, emoji);
-      reactionRemovals.set(variables, remove);
-      await cancelChatMessageQueries(queryClient, channelId);
-      const current = findCachedMessage(queryClient, channelId, messageId);
-      if (!current || userId === undefined)
-        return { rollback: () => undefined };
-      const users = current.reactions[emoji] ?? [];
-      const nextUsers = remove
-        ? users.filter((id) => id !== userId)
-        : [...users, userId];
-      const reactions = Object.fromEntries(
-        Object.entries({ ...current.reactions, [emoji]: nextUsers }).filter(
-          ([, ids]) => ids.length > 0,
-        ),
-      );
-      return {
-        rollback: patchChatMessage(queryClient, channelId, messageId, {
-          reactions,
-        }),
-      };
-    },
-    onError: (_error, { messageId, emoji }, context) => {
-      if (isLatestReaction(reactionKey(channelId, messageId, emoji)))
-        context?.rollback();
-    },
-    onSuccess: ({ reactions }, { messageId, emoji }) => {
-      if (isLatestReaction(reactionKey(channelId, messageId, emoji)))
-        patchChatMessage(queryClient, channelId, messageId, { reactions });
-    },
-    onSettled: (_data, _error, { messageId, emoji }) => {
-      settleReaction(reactionKey(channelId, messageId, emoji));
     },
   });
 }

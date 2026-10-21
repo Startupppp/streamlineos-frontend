@@ -10,7 +10,7 @@ import { useMessageComposer } from "./use-message-composer";
 export const DRAFT_KEY = "chat:draft:7";
 export const mockedPost = jest.mocked(apiClient.post);
 
-interface SendBody {
+export interface SendBody {
   content?: string;
   clientKey?: string;
 }
@@ -86,9 +86,11 @@ export function mount(client: QueryClient, isOnline: boolean) {
   return renderHook(useComposerOverRealSend, { wrapper: wrapperFor(client), initialProps: { isOnline } });
 }
 
-type Mounted = ReturnType<typeof mount>;
+interface MountedComposer {
+  result: { current: { setMessageInput: (value: string) => void; handleSend: () => Promise<void> } };
+}
 
-export async function typeAndSend(hook: Mounted, text: string) {
+export async function typeAndSend(hook: MountedComposer, text: string) {
   await act(async () => {
     hook.result.current.setMessageInput(text);
   });

@@ -5,6 +5,7 @@ import { z } from "zod";
 
 import { useMessageComposer } from "./use-message-composer";
 import { readOutbox } from "./composer-draft";
+import { retryFailedSend } from "./chat-outbox-delivery";
 import type { SendMessageInput } from "@/types/chat";
 
 jest.mock("next-auth/react", () => ({
@@ -129,23 +130,23 @@ describe("chat send idempotency key", () => {
     expect(sent[0]!.clientKey).not.toBe(sent[1]!.clientKey);
   });
 
-  it("reuses the key when the SAME send is retried after a failure", async () => {
+  it("reuses the key when the failed send is retried", async () => {
     const { hook, sent } = harness({ failFirst: true });
     await type(hook, "did this go through?");
     await act(async () => {
       await hook.result.current.handleSend();
     });
-    // The composer restores the draft on failure; sending it again is the same
-    // logical message, and the row may already be committed on the server.
+    const [failed] = readOutbox("chat:draft:7");
+    expect(failed?.failed).toBe(true);
     await act(async () => {
-      await hook.result.current.handleSend();
+      retryFailedSend("chat:draft:7", failed!.clientKey);
     });
 
     expect(sent).toHaveLength(2);
     expect(sent[1]!.clientKey).toBe(sent[0]!.clientKey);
   });
 
-  it("mints a NEW key when the failed draft is edited before retrying", async () => {
+  it("mints a NEW key for a new message written after a failure", async () => {
     const { hook, sent } = harness({ failFirst: true });
     await type(hook, "did this go through?");
     await act(async () => {

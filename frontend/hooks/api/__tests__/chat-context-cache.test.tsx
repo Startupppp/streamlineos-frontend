@@ -8,8 +8,8 @@ import {
   useDeleteMessage,
   useEditMessage,
   useSendMessage,
-  useToggleReaction,
 } from "@/hooks/api/chat-core-mutations-a";
+import { useToggleReaction } from "@/hooks/api/chat-reaction-mutation";
 import { useSaveMessage } from "@/hooks/api/chat-personal-a";
 import type { Message, MessagesPage, SavedMessagesPage } from "@/types/chat";
 

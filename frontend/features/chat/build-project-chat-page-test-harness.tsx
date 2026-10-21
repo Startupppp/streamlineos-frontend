@@ -81,6 +81,12 @@ jest.mock("./ably-provider", () => ({
   ChatAblyProvider: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
 }));
 
+export const mockUseChatOutboxDrain = jest.fn();
+
+jest.mock("./use-chat-offline-queue", () => ({
+  useChatOutboxDrain: () => mockUseChatOutboxDrain(),
+}));
+
 jest.mock("./use-chat-mobile", () => ({
   useIsChatPanelNarrow: () => false,
 }));

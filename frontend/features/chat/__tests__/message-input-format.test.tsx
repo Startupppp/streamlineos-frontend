@@ -70,7 +70,6 @@ function makeProps(
     linkedRecords: [],
     onRemoveLinkedRecord: jest.fn(),
     typingText: null,
-    sendMessage: { isPending: false },
     onSend: jest.fn(),
     onKeyDown: jest.fn(),
     onInputChange: jest.fn(),

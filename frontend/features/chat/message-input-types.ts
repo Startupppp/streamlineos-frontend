@@ -50,7 +50,6 @@ export interface MessageInputProps {
 
   typingText: string | null;
 
-  sendMessage: { isPending: boolean };
   onSend: () => void;
   onKeyDown: (e: React.KeyboardEvent<HTMLTextAreaElement>) => void;
   onInputChange: (e: React.ChangeEvent<HTMLTextAreaElement>) => void;

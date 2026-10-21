@@ -86,7 +86,7 @@ describe("F2 — a thread reply parses the raw row the endpoint answers", () => 
 
 describe("F3 — a reaction toggle removes what the viewer already added", () => {
   it("DELETEs (URL-encoded) when the viewer already reacted, then writes the answered map", async () => {
-    const { useToggleReaction } = await import("@/hooks/api/chat-core-mutations-a");
+    const { useToggleReaction } = await import("@/hooks/api/chat-reaction-mutation");
     const client = freshClient();
     seedTimeline(client, [message({ reactions: { "👍": ["user-1"] } })]);
     mockedDelete.mockResolvedValue({ reactions: {} });
@@ -102,7 +102,7 @@ describe("F3 — a reaction toggle removes what the viewer already added", () =>
   });
 
   it("POSTs when the viewer has not reacted with that emoji", async () => {
-    const { useToggleReaction } = await import("@/hooks/api/chat-core-mutations-a");
+    const { useToggleReaction } = await import("@/hooks/api/chat-reaction-mutation");
     const client = freshClient();
     seedTimeline(client, [message({ reactions: { "👍": ["user-2"] } })]);
     mockedPost.mockResolvedValue({ reactions: { "👍": ["user-2", "user-1"] } });

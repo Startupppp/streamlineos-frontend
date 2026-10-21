@@ -21,6 +21,7 @@ import { GLOBAL_SEARCH_MIN_LENGTH, useGlobalSearch } from "@/components/command-
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import { useChatMentions, type MentionCandidate } from "./use-chat-mentions";
 import { useChatOutbox } from "./use-chat-offline-queue";
+import { onOutboxDelivered } from "./chat-outbox-delivery";
 import { LINKED_RECORD_LIMIT, linksKeyFor, readDraftLinks, readDraftText, type LinkedRecordDraft } from "./composer-draft";
 import { RECORD_SEARCH_TYPES, groupRecordResults, type RecordGroup, type RecordSearchResult } from "./linked-record-meta";
 
@@ -49,22 +50,6 @@ const MENTION_TRIGGER = /(?:^|\s)@([^\s@]*)$/;
 
 function asksBeforeMentioning(channelType: ChatChannelDetailWire["type"] | undefined): boolean {
   return channelType === "PRIVATE" || channelType === "GROUP";
-}
-
-/**
- * Identity of one logical send: the draft the user can still see and change.
- * Derived fields (mentions) are deliberately excluded — they
- * are restored verbatim when a send fails, so they cannot distinguish two
- * attempts at the same draft, and including them would only risk minting a
- * fresh key for an unchanged draft and reintroducing the duplicate.
- */
-function sendSignature(
-  content: string,
-  replyToId: number | undefined,
-  attachments: Attachment[],
-  linkedRecords: LinkedRecordDraft[],
-): string {
-  return JSON.stringify([content, replyToId ?? null, attachments.map((a) => a.fileKey), linkedRecords.map((r) => r.key)]);
 }
 
 export function useMessageComposer({
@@ -97,15 +82,6 @@ export function useMessageComposer({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const emojiRef = useRef<HTMLDivElement>(null);
   const lastTypingSent = useRef(0);
-  /**
-   * The in-flight send's idempotency key, held past a failure. The composer
-   * restores the draft when a send throws, so pressing send again on the
-   * unchanged draft is a RETRY of a request that may already have committed —
-   * the same key lets the server replay the winner instead of inserting a
-   * second row. Edit the draft and the signature changes, so a genuinely
-   * different message gets a genuinely different key.
-   */
-  const pendingSendRef = useRef<{ signature: string; clientKey: string } | null>(null);
   const pendingMentionsRef = useRef<Map<string, string>>(new Map());
   const outbox = useChatOutbox({ channelId, draftKey, isOnline, mutateAsync: sendMessage.mutateAsync });
 
@@ -218,14 +194,12 @@ export function useMessageComposer({
 
   const handleSend = useCallback(async () => {
     const content = messageInput.trim(); if (!content && !pendingAttachments.length && !linkedRecords.length) return;
-    const attachments = [...pendingAttachments], records = [...linkedRecords]; const replyToMessage = replyTo; const replyToId = replyTo?.id;
+    const attachments = [...pendingAttachments], records = [...linkedRecords]; const replyToId = replyTo?.id;
     const entities = records.map(({ type, id }): EntityRef => ({ type, id }));
     const metadata = entities.length ? { entities } : undefined;
     const mentions = new Map(pendingMentionsRef.current);
     const mentionedUserIds = [...new Set([...mentions].filter(([name]) => content.includes(`@${name}`)).map(([, id]) => id))];
-    const signature = sendSignature(content, replyToId, attachments, records);
-    const clientKey = pendingSendRef.current?.signature === signature ? pendingSendRef.current.clientKey : crypto.randomUUID();
-    pendingSendRef.current = null;
+    const clientKey = crypto.randomUUID();
     for (const record of records) seedLinkedRecordPreview(queryClient, { type: record.type, id: record.id, title: record.title, subtitle: record.subtitle, status: null, href: record.href });
     const entry = { content, replyToId, attachments: attachments.length ? attachments : undefined, metadata, mentionedUserIds: mentionedUserIds.length ? mentionedUserIds : undefined, clientKey };
     setMessageInput(""); setPendingAttachments([]); setReplyTo(null); setLinkedRecords([]); setMentionPrompt(null);
@@ -235,15 +209,12 @@ export function useMessageComposer({
     else scrollToBottom("smooth");
     const outcome = await outbox.enqueue(entry);
     if (outcome.status === "delivered") markRead.mutate({ channelId });
-    if (outcome.status !== "failed") return;
-    setMessageInput((current) => (current.trim() ? current : content));
-    setPendingAttachments((current) => (current.length ? current : attachments));
-    setLinkedRecords((current) => (current.length ? current : records));
-    setReplyTo((current) => current ?? replyToMessage);
-    for (const [name, id] of mentions) if (!pendingMentionsRef.current.has(name)) pendingMentionsRef.current.set(name, id);
-    pendingSendRef.current = { signature, clientKey };
-    toast.error(getErrorMessage(outcome.error), { duration: Infinity, action: { label: "Retry", onClick: () => outbox.resend(entry) } });
   }, [messageInput, pendingAttachments, linkedRecords, replyTo, draftKey, isOnline, outbox, channelId, markRead, scrollToBottom, queryClient, setLinkedRecords]);
+  useEffect(() => onOutboxDelivered((sentDraftKey, entry) => {
+    if (sentDraftKey !== draftKey || !entry.content) return;
+    if (readDraftText(draftKey).trim() === entry.content) localStorage.removeItem(draftKey);
+    setMessageInput((current) => (current.trim() === entry.content ? "" : current));
+  }), [draftKey]);
   const handleEdit = useCallback(async (messageId: number) => { const content = editInput.trim(); if (!content) return; try { await editMessage.mutateAsync({ channelId, messageId, content }); setEditingMessage(null); setEditInput(""); } catch (error) { toast.error(getErrorMessage(error)); } }, [editInput, editMessage, channelId]);
   const handleInputChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const value = e.target.value; setMessageInput(value); e.target.style.height = "auto"; e.target.style.height = `${Math.min(e.target.scrollHeight, 160)}px`;
