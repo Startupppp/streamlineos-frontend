@@ -25,9 +25,8 @@ import {
 } from "@/components/ui/sheet";
 import {
   useKbPageBacklinks,
-  useKbPageVersionsInfinite,
-  useKbPageComments,
 } from "@/hooks/api/kb";
+import { useKbPageActivity } from "@/hooks/api/kb/activity";
 import { useKbPageRecordLinks } from "@/hooks/api/kb/record-links";
 import { useOrgMembersByIds } from "@/hooks/api/organization";
 import type { KbPageDetail } from "@/hooks/api/kb/page-types";
@@ -99,12 +98,14 @@ function Stat({
   );
 }
 
-type ActivityEntry = {
-  at: string;
-  by: string | null;
-  summary: string | null;
-  kind: "edit" | "comment";
-};
+const GRANT_ACTION_PREFIX = "kb.page_grant.";
+
+function activityLabel(action: string): string {
+  const isGrant = action.startsWith(GRANT_ACTION_PREFIX);
+  const verb = action.slice(action.lastIndexOf(".") + 1).replaceAll("_", " ");
+  const label = isGrant ? `access ${verb}` : verb;
+  return label.charAt(0).toUpperCase() + label.slice(1);
+}
 
 function PanelContent({
   pageId,
@@ -122,36 +123,10 @@ function PanelContent({
   const { data: recordLinks = [], hasNextPage: hasMoreRecordLinks } =
     useKbPageRecordLinks(pageId);
   const {
-    data: versionsData,
-    isLoading: versionsLoading,
-    isError: versionsError,
-  } = useKbPageVersionsInfinite(pageId);
-  const {
-    data: commentsFlat = [],
-    isLoading: commentsLoading,
-    isError: commentsError,
-  } = useKbPageComments(pageId);
-  const firstVersions = versionsData?.pages[0]?.data ?? [];
-  const activityEntries: ActivityEntry[] = [
-    ...firstVersions.map(
-      (v): ActivityEntry => ({
-        at: v.createdAt,
-        by: v.authorName,
-        summary: v.changeSummary,
-        kind: "edit",
-      }),
-    ),
-    ...commentsFlat.map(
-      (c): ActivityEntry => ({
-        at: c.createdAt,
-        by: c.authorName,
-        summary: c.content.slice(0, 80),
-        kind: "comment",
-      }),
-    ),
-  ].sort((a, b) => (a.at < b.at ? 1 : a.at > b.at ? -1 : 0));
-  const activityLoading = versionsLoading || commentsLoading;
-  const activityError = versionsError || commentsError;
+    data: activityEntries = [],
+    isLoading: activityLoading,
+    isError: activityError,
+  } = useKbPageActivity(pageId);
 
   const backlinksAccessLost =
     isApiError(backlinksReadError) &&
@@ -339,20 +314,15 @@ function PanelContent({
           <p className="text-xs text-muted-foreground">No recent activity.</p>
         ) : (
           <ul className="flex flex-col gap-1.5">
-            {activityEntries.map((entry, i) => (
+            {activityEntries.map((entry) => (
               <li
-                key={`${entry.kind}-${entry.at}-${i}`}
-                className="flex flex-col gap-0.5 px-1.5 py-1 text-xs rounded-md hover:bg-muted"
+                key={entry.id}
+                className="flex flex-col gap-0.5 rounded-md px-1.5 py-1 text-xs hover:bg-muted"
               >
                 <span className="font-medium text-foreground">
-                  {entry.kind === "edit" ? "Edited" : "Commented"}
-                  {entry.by ? ` · ${entry.by}` : ""}
+                  {activityLabel(entry.action)}
+                  {entry.actor ? ` · ${entry.actor.name}` : ""}
                 </span>
-                {entry.summary ? (
-                  <span className="text-muted-foreground truncate">
-                    {entry.summary}
-                  </span>
-                ) : null}
                 <span className="tabular-nums text-muted-foreground">
                   {kbTimeAgo(entry.at)}
                 </span>

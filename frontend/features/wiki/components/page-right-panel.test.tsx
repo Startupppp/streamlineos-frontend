@@ -14,8 +14,10 @@ jest.mock("@/hooks/api/use-page-state", () => ({
 
 jest.mock("@/hooks/api/kb", () => ({
   useKbPageBacklinks: jest.fn(),
-  useKbPageVersionsInfinite: jest.fn(),
-  useKbPageComments: jest.fn(),
+}));
+
+jest.mock("@/hooks/api/kb/activity", () => ({
+  useKbPageActivity: jest.fn(),
 }));
 
 jest.mock("@/hooks/api/kb/record-links", () => ({
@@ -26,13 +28,13 @@ jest.mock("@/hooks/api/organization", () => ({
   useOrgMembersByIds: jest.fn(() => ({ data: undefined })),
 }));
 
-import { useKbPageBacklinks, useKbPageVersionsInfinite, useKbPageComments } from "@/hooks/api/kb";
+import { useKbPageBacklinks } from "@/hooks/api/kb";
+import { useKbPageActivity } from "@/hooks/api/kb/activity";
 import { useKbPageRecordLinks } from "@/hooks/api/kb/record-links";
 import { useOrgMembersByIds } from "@/hooks/api/organization";
 
 const mockUseKbPageBacklinks = useKbPageBacklinks as jest.Mock;
-const mockUseKbPageVersionsInfinite = useKbPageVersionsInfinite as jest.Mock;
-const mockUseKbPageComments = useKbPageComments as jest.Mock;
+const mockUseKbPageActivity = useKbPageActivity as jest.Mock;
 const mockUseKbPageRecordLinks = useKbPageRecordLinks as jest.Mock;
 const mockUseOrgMembersByIds = useOrgMembersByIds as jest.Mock;
 
@@ -40,8 +42,7 @@ beforeEach(() => {
   mockUseKbPageBacklinks.mockReturnValue({ data: [], isLoading: false, isError: false, error: null, refetch: jest.fn() });
   mockUseKbPageRecordLinks.mockReturnValue({ data: [] });
   mockUseOrgMembersByIds.mockReturnValue({ data: undefined });
-  mockUseKbPageVersionsInfinite.mockReturnValue({ data: undefined, isLoading: false, isError: false });
-  mockUseKbPageComments.mockReturnValue({ data: [], isLoading: false, isError: false });
+  mockUseKbPageActivity.mockReturnValue({ data: [], isLoading: false, isError: false });
 });
 
 const basePage = {
@@ -395,67 +396,42 @@ describe("PageRightPanel — owner fact visible so a future deletion fails inste
 });
 
 describe("PageRightPanel — Activity section", () => {
+  function activityEntry(overrides: Record<string, unknown> = {}) {
+    return { id: 1, action: "kb.page.updated", at: "2026-09-05T10:00:00Z", actorKind: "member", actor: { membershipId: 1, name: "Alice" }, metadata: null, ...overrides };
+  }
+
   it("shows the Activity heading inside the panel", async () => {
     renderPanel();
     const dialog = await openDetailsDialog();
     expect(within(dialog).getByText("Activity")).toBeInTheDocument();
   });
 
-  it("shows empty activity message when both versions and comments return nothing", async () => {
-    mockUseKbPageVersionsInfinite.mockReturnValue({ data: undefined, isLoading: false, isError: false });
-    mockUseKbPageComments.mockReturnValue({ data: [], isLoading: false, isError: false });
-
+  it("shows empty activity message when the page has no recorded activity", async () => {
     renderPanel();
     const dialog = await openDetailsDialog();
     expect(within(dialog).getByText("No recent activity.")).toBeInTheDocument();
   });
 
-  it("shows an edit entry from a version", async () => {
-    mockUseKbPageVersionsInfinite.mockReturnValue({
-      data: {
-        pages: [{
-          data: [{ id: 1, pageId: 1, versionNumber: 2, orgId: "org-1", title: "v2", content: null, contentText: null, changeSummary: "Updated intro", authorId: "u1", authorMembershipId: 1, authorName: "Alice", createdAt: "2026-09-05T10:00:00Z" }],
-          pagination: { limit: 20, hasMore: false, nextCursor: null },
-        }],
-      },
-      isLoading: false,
-      isError: false,
-    });
-    mockUseKbPageComments.mockReturnValue({ data: [], isLoading: false, isError: false });
+  it("names the audited action in words with the actor, not the raw audit key", async () => {
+    mockUseKbPageActivity.mockReturnValue({ data: [activityEntry({ action: "kb.page.version_restored" })], isLoading: false, isError: false });
 
     renderPanel();
     const dialog = await openDetailsDialog();
-    expect(within(dialog).getByText("Updated intro")).toBeInTheDocument();
-    expect(within(dialog).getByText(/Edited · Alice/)).toBeInTheDocument();
+    expect(within(dialog).getByText(/Version restored · Alice/)).toBeInTheDocument();
+    expect(within(dialog).queryByText(/kb\.page/)).not.toBeInTheDocument();
   });
 
-  it("shows a comment entry from comments", async () => {
-    mockUseKbPageVersionsInfinite.mockReturnValue({ data: undefined, isLoading: false, isError: false });
-    mockUseKbPageComments.mockReturnValue({
-      data: [{ id: 10, orgId: "org-1", pageId: 1, authorId: "u2", authorName: "Bob", parentId: null, content: "Good point here", anchorBlockIndex: null, anchorQuote: null, resolvedAt: null, createdAt: "2026-09-06T08:00:00Z", updatedAt: "2026-09-06T08:00:00Z" }],
-      isLoading: false,
-      isError: false,
-    });
+  it("labels a sharing change as an access change", async () => {
+    mockUseKbPageActivity.mockReturnValue({ data: [activityEntry({ action: "kb.page_grant.revoked", actor: null })], isLoading: false, isError: false });
 
     renderPanel();
     const dialog = await openDetailsDialog();
-    expect(within(dialog).getByText(/Commented/)).toBeInTheDocument();
-    expect(within(dialog).getByText("Good point here")).toBeInTheDocument();
+    expect(within(dialog).getByText("Access revoked")).toBeInTheDocument();
   });
 
-  it("merges versions and comments sorted newest first so the latest change is always visible first", async () => {
-    mockUseKbPageVersionsInfinite.mockReturnValue({
-      data: {
-        pages: [{
-          data: [{ id: 1, pageId: 1, versionNumber: 1, orgId: "org-1", title: "v1", content: null, contentText: null, changeSummary: "Old edit", authorId: "u1", authorMembershipId: 1, authorName: "Alice", createdAt: "2026-09-01T10:00:00Z" }],
-          pagination: { limit: 20, hasMore: false, nextCursor: null },
-        }],
-      },
-      isLoading: false,
-      isError: false,
-    });
-    mockUseKbPageComments.mockReturnValue({
-      data: [{ id: 11, orgId: "org-1", pageId: 1, authorId: "u2", authorName: "Bob", parentId: null, content: "Recent comment", anchorBlockIndex: null, anchorQuote: null, resolvedAt: null, createdAt: "2026-09-10T08:00:00Z", updatedAt: "2026-09-10T08:00:00Z" }],
+  it("keeps the server's newest-first order", async () => {
+    mockUseKbPageActivity.mockReturnValue({
+      data: [activityEntry({ id: 2, action: "kb.page.published" }), activityEntry({ id: 1, action: "kb.page.created" })],
       isLoading: false,
       isError: false,
     });
@@ -463,7 +439,6 @@ describe("PageRightPanel — Activity section", () => {
     renderPanel();
     const dialog = await openDetailsDialog();
     const items = within(dialog).getAllByRole("listitem").filter((el) => el.closest("ul") !== null);
-    const firstText = items[0]?.textContent ?? "";
-    expect(firstText).toContain("Recent comment");
+    expect(items[0]?.textContent ?? "").toContain("Published");
   });
 });

@@ -41,6 +41,7 @@ import {
   Archive,
   Building2,
   Clock,
+  File,
   FileDown,
   FileSpreadsheet,
   FolderOpen,
@@ -175,3 +176,4 @@ export const KbTable2Icon = createLucideIcon(Table2);
 export const KbSpreadsheetIcon = createLucideIcon(FileSpreadsheet);
 export const KbFolderOpenIcon = createLucideIcon(FolderOpen);
 export const KbPenLineIcon = createLucideIcon(PenLine);
+export const KbFileIcon = createLucideIcon(File);

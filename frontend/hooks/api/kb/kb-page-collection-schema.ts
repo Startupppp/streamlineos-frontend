@@ -1,6 +1,11 @@
 import { z } from "zod";
 import { kbPageKindSchema } from "./kb-pages-schema";
 
+const kbKindFacetItemSchema = z.object({
+  value: kbPageKindSchema,
+  count: z.number().int(),
+});
+
 export const kbPageCollectionItemSchema = z.object({
   id: z.number().int(),
   title: z.string(),
@@ -62,6 +67,7 @@ export const kbPageCollectionResponseSchema = z.object({
           count: z.number().int(),
         }),
       ),
+      kind: z.array(kbKindFacetItemSchema).default([]),
       isExact: z.boolean(),
     })
     .nullable(),

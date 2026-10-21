@@ -15,6 +15,10 @@ jest.mock("@/hooks/api/kb", () => ({
   useUpdateKbPage: jest.fn(() => ({ mutate: jest.fn(), isPending: false })),
 }));
 
+jest.mock("@/hooks/api/kb/shortcuts", () => ({
+  useCreateKbShortcut: jest.fn(() => ({ mutate: jest.fn(), isPending: false })),
+}));
+
 jest.mock("@/hooks/api/kb/export-page", () => ({
   useExportKbPage: jest.fn(() => ({ mutate: jest.fn(), isPending: false })),
 }));

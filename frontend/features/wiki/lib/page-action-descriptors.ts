@@ -17,6 +17,7 @@ import {
   KbStarIcon,
   KbTrash2Icon,
   KbUnlockIcon,
+  KbFileIcon,
 } from "@/features/wiki/lib/kb-icons";
 import type { PermissionKey } from "@/lib/rbac/permissions";
 
@@ -47,6 +48,7 @@ export type KbPageActionId =
   | "backlinks"
   | "copyLink"
   | "share"
+  | "addShortcut"
   | "archive"
   | "delete";
 
@@ -282,6 +284,16 @@ const KB_PAGE_ACTION_DEFINITIONS: readonly KbPageActionDefinition[] = [
     label: "Share",
     icon: KbShare2Icon,
     isPermitted: permitsShare,
+    collectionOnly: true,
+  },
+  {
+    id: "addShortcut",
+    group: "organize",
+    permission: null,
+    destructive: false,
+    label: "Add to My files",
+    icon: KbFileIcon,
+    isPermitted: alwaysPermitted,
     collectionOnly: true,
   },
   {

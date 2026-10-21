@@ -38,7 +38,7 @@ export interface KbPageCollectionParams {
   status?: string;
   verified?: boolean;
   deleted?: boolean;
-  kind?: "document" | "spreadsheet";
+  kind?: "document" | "spreadsheet" | "file";
   sort?: "updated_desc" | "created_desc" | "title_asc";
   cursor?: string;
   limit?: number;

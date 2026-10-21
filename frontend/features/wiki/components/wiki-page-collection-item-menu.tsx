@@ -32,6 +32,7 @@ import {
   useUpdateKbPage,
 } from "@/hooks/api/kb";
 import { useExportKbPage } from "@/hooks/api/kb/export-page";
+import { useCreateKbShortcut } from "@/hooks/api/kb/shortcuts";
 import { useCan } from "@/hooks/api/access";
 import type { KbPageCollectionItem } from "@/hooks/api/kb/page-collection";
 import { getErrorMessage } from "@/lib/get-error-message";
@@ -70,6 +71,7 @@ export function CollectionItemMenu({ page, resolveHref, open, onOpenChange }: Co
   const archivePage = useArchiveKbPage();
   const unarchivePage = useUnarchiveKbPage();
   const updatePage = useUpdateKbPage();
+  const createShortcut = useCreateKbShortcut();
   const exportInFlightRef = useRef(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [grantsOpen, setGrantsOpen] = useState(false);
@@ -182,7 +184,12 @@ export function CollectionItemMenu({ page, resolveHref, open, onOpenChange }: Co
     if (!(target instanceof HTMLElement)) return;
     const actionId = toKbPageActionId(target.dataset.actionId);
     if (!actionId) return;
-    if (actionId === "share") {
+    if (actionId === "addShortcut") {
+      createShortcut.mutate(page.id, {
+        onSuccess: () => toast.success("Added to My files"),
+        onError: (err) => toast.error(getErrorMessage(err)),
+      });
+    } else if (actionId === "share") {
       setGrantsOpen(true);
     } else if (actionId === "archive") {
       handleArchive();

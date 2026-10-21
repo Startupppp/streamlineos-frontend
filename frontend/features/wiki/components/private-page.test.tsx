@@ -1,6 +1,10 @@
 import { render, screen } from "@testing-library/react";
 import PrivatePage from "./private-page";
 
+jest.mock("./library/shortcuts-section", () => ({
+  ShortcutsSection: () => null,
+}));
+
 jest.mock("./kb-new-menu", () => ({
   KbNewMenu: () => null,
 }));

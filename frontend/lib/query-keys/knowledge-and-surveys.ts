@@ -163,6 +163,14 @@ export const knowledgeAndSurveysQueryKeys = {
     contentHealthTrend: () => [...base, "kb", "contentHealthTrend"] as const,
     contentHealthEvidence: (pageId: number | null, kind: string | null) =>
       [...base, "kb", "contentHealthEvidence", pageId, kind] as const,
+    shortcuts: (params?: QueryKeyParams) =>
+      params === undefined
+        ? ([...base, "kb", "shortcuts"] as const)
+        : ([...base, "kb", "shortcuts", params] as const),
+    pageActivity: (pageId: number, params?: QueryKeyParams) =>
+      params === undefined
+        ? ([...base, "kb", "pages", pageId, "activity"] as const)
+        : ([...base, "kb", "pages", pageId, "activity", params] as const),
   },
 
   roadmap: {
