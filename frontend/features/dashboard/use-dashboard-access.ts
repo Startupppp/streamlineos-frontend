@@ -73,7 +73,7 @@ export function useDashboardAccess(): DashboardAccess {
       canViewCrmReports: can("crm:reports:view"),
       canViewTickets: canSection("recent-activity"),
       canViewPayrollSelf: can("self:payroll"),
-      canRunPayroll: can("payroll:runs:view"),
+      canRunPayroll: can("payroll:runs:update"),
       canViewPayslips: can("payroll:payslips:view"),
       canViewSignEnvelopes: can("sign:envelope:view"),
     };

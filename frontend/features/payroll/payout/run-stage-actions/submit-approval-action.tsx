@@ -31,7 +31,8 @@ export function SubmitApprovalAction({ runId, status, openBlockers: openBlockers
   const canUpdate = useCan("payroll:runs:update");
   const [open, setOpen] = useState(false);
   const { mutate, isPending } = useSubmitApproval();
-  const { data: blockerPage } = useRunExceptions(runId, { severity: "BLOCKER", status: "OPEN" });
+  const { data: blockerPage, isPending: blockersPending } = useRunExceptions(runId, { severity: "BLOCKER", status: "OPEN" });
+  const blockersUnknown = openBlockersProp === undefined && blockersPending;
   const openBlockers = openBlockersProp ?? blockerPage?.data.length ?? 0;
 
   if (!SUBMIT_STATUSES.has(status)) return null;
@@ -65,8 +66,9 @@ export function SubmitApprovalAction({ runId, status, openBlockers: openBlockers
     );
   }
 
-  const blockedReason =
-    openBlockers > 0
+  const blockedReason = blockersUnknown
+    ? "Checking for open blockers"
+    : openBlockers > 0
       ? `Resolve ${openBlockers} open ${openBlockers === 1 ? "blocker" : "blockers"} before submitting`
       : null;
 
