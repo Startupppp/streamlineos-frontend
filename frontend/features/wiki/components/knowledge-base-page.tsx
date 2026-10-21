@@ -21,9 +21,9 @@ import {
 } from "@/hooks/api/kb/chat-history";
 import {
   useKbSources,
-  useUploadKbSource,
   useDeleteKbSource,
 } from "@/hooks/api/kb/sources";
+import { useUploadKbFile } from "@/hooks/api/kb/files";
 import { companyDocumentHref, pageHref } from "@/lib/knowledge-routes";
 import { KbSourcesSheet } from "@/features/wiki/components/kb-sources-sheet";
 import { KbNoteSheet } from "@/features/wiki/components/kb-note-sheet";
@@ -83,7 +83,7 @@ export default function KnowledgeBasePage() {
   const deleteConversation = useDeleteKbConversation();
 
   const sourcesQuery = useKbSources();
-  const uploadSource = useUploadKbSource();
+  const uploadFile = useUploadKbFile();
   const deleteSource = useDeleteKbSource();
 
   const scope = useKbScopeFilter({
@@ -245,8 +245,8 @@ export default function KnowledgeBasePage() {
     const file = e.target.files?.[0];
     if (!file) return;
     e.target.value = "";
-    uploadSource.mutate(file, {
-      onSuccess: () => toast.success("File uploaded and queued for processing"),
+    uploadFile.mutate({ file }, {
+      onSuccess: () => toast.success("File added to My files and indexed for Ask"),
       onError: (error) =>
         toast.error("Upload failed", { description: getErrorMessage(error) }),
     });
@@ -315,10 +315,10 @@ export default function KnowledgeBasePage() {
             variant="outline"
             size="sm"
             className="gap-1.5"
-            isPending={uploadSource.isPending}
+            isPending={uploadFile.isPending}
             onClick={handleManageSourcesClick}
           >
-            {!uploadSource.isPending && <BookOpenTextIcon size={16} />}
+            {!uploadFile.isPending && <BookOpenTextIcon size={16} />}
             Sources
           </LoadingButton>
         </div>
@@ -606,7 +606,7 @@ export default function KnowledgeBasePage() {
           }}
           readyCount={readyCount}
           onUploadClick={handleUploadClick}
-          uploadPending={uploadSource.isPending}
+          uploadPending={uploadFile.isPending}
           onAddNoteClick={handleAddNoteClick}
           makeDeleteHandler={makeDeleteHandler}
           deletingId={deleteSource.variables}

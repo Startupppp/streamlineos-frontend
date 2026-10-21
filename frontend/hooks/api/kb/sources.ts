@@ -94,28 +94,6 @@ export function useKbSources(filters?: KbSourcesParams) {
   });
 }
 
-export function useUploadKbSource() {
-  const qc = useQueryClient();
-  const operation = useIdempotentOperation();
-  return useAuthorizedMutation("kb:pages:create", {
-    mutationKey: ["kb", "sources", "upload"],
-    mutationFn: (file: File) => {
-      const fd = new FormData();
-      fd.append("file", file);
-      const config = operation.configFor({
-        name: file.name,
-        size: file.size,
-        lastModified: file.lastModified,
-      });
-      return apiClient.upload<KbSource>("/kb/sources", fd, kbSourceContract, config);
-    },
-    onSuccess: () => {
-      operation.settle();
-      return qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.kb.sources() });
-    },
-  });
-}
-
 export function useCreateKbSourceNote() {
   const qc = useQueryClient();
   const operation = useIdempotentOperation();

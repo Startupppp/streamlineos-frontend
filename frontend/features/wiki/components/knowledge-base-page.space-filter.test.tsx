@@ -86,9 +86,12 @@ jest.mock("@/hooks/api/kb/sources", () => ({
     },
     isLoading: false,
   }),
-  useUploadKbSource: () => ({ mutate: jest.fn(), isPending: false }),
   useDeleteKbSource: () => ({ mutate: jest.fn(), isPending: false, variables: undefined }),
   useCreateKbSourceNote: () => ({ mutate: jest.fn(), isPending: false }),
+}));
+
+jest.mock("@/hooks/api/kb/files", () => ({
+  useUploadKbFile: () => ({ mutate: jest.fn(), isPending: false }),
 }));
 
 jest.mock("@/hooks/api/kb/spaces", () => ({
