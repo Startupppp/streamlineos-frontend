@@ -84,6 +84,50 @@ Sources: [reset plan](2026-10-20-product-chat-reset-plan.md), [ADR-0001](../../a
 - WCAG 2.2 AA on core flows. Pilot task completion without help >= 90%.
 - Rollback a cohort on: cross-tenant or record leakage, message loss/duplication, broken legacy links, provider cleanup backlog past SLO, material task-completion regression.
 
+## Telemetry
+
+Server spans (log stream, `message === "SPAN"`, p95 from `latencyMs`):
+
+| Span | Gate it measures |
+|---|---|
+| `chat.message.send` (`outcome` ok/rejected/error) | Send success >= 99.9% (ok / (ok + error)) |
+| `chat.realtime.publish` (`outcome`) | Realtime health for the send-to-visible gate |
+| `chat.huddle.start` (`outcome`, `provider`) | Huddle creation >= 99%, p95 < 5s |
+| `chat.search` (`outcome` hit/miss) | Known-message search >= 95% |
+| `chat.client.send_to_visible` | p95 send-to-visible < 1s (`realtime=true`) |
+| `chat.client.reconnect_gap`, `chat.client.duplicate_dropped` | Zero loss/duplication on reconnect |
+
+Database snapshot: `pnpm chat:baseline` (`backend/src/scripts/chat-release-baseline.ts`, read only) — volume, huddles by provider, stale active huddles, chat outbox backlog older than 24h, duplicate messages.
+
+Baseline, 2026-10-21 (all orgs, last 7 days; taken right after release because no telemetry existed before it): 3 messages from 1 sender, 0 huddles, 0 stale active huddles, 0 chat outbox rows pending or failed past 24h, 0 duplicate messages. Volume is too low for percentage gates to mean anything; each window below also needs at least 1,000 sends and 50 Huddle starts before it can pass.
+
+## Rollout
+
+Released to every org on 2026-10-21 (backend `0afa6f0b8`, frontend `6175f8726`); no cohort flag exists, so stages run as observation windows on the whole population.
+
+| Window | Length | Hold | Roll back (revert the release commits, both repos) |
+|---|---|---|---|
+| Internal | 3 days | Every release gate | Any leak, loss/duplication, broken legacy link |
+| Agency/service pilots | 7 days | Every release gate; pilot task completion >= 90% | As above, or task completion drops > 10 points |
+| Staged release | 14 days | Every release gate | As above, or provider cleanup backlog > 24h |
+| GA | — | All gates held for the full staged window | — |
+
+Rollback order is frontend first, then backend; migrations 2490/2495/2500 are additive and stay.
+
+## Support notes for removed controls
+
+| Removed | Where it went |
+|---|---|
+| `/chat/channels` browse page | Redirects to the search dialog's Channels view; join from there. |
+| Huddle chat panel | Use the Meet/Teams meeting chat. Conversation messages stay in Chat. |
+| Huddle "kick" | Remove people inside Meet/Teams; StreamlineOS no longer claims meeting moderation. |
+| In-app participant cap / attendance | Roster shows only "Joined through StreamlineOS"; attendance lives in the provider. |
+| "Load older messages" button | History loads on scroll; a fallback button appears only if auto-load fails. |
+| `#` ticket picker | Type `/` to link any record (Build, CRM, HR, Docs, Calendar, Support). |
+| Ticket title snapshots in links | Link cards resolve per reader; no access shows "Restricted record". |
+| Sidebar search scopes, header chrome, markdown strip, hover delete submenu | Search dialog; actions in Reply / React / More; delete asks to confirm. |
+| Typing over HTTP | Typing is presence; nothing to do. |
+
 ## Acceptance criteria
 
 ### CHAT-001 Contract and baseline
