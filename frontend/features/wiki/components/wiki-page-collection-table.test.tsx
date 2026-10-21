@@ -478,7 +478,7 @@ describe("WikiPageCollectionTable — cursor pagination", () => {
       />,
     );
 
-    expect(screen.getByText("No pages on this page")).toBeInTheDocument();
+    expect(screen.getByText("No files on this page")).toBeInTheDocument();
     expect(screen.queryByText("Your access may have changed")).not.toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: "Previous page" }));
     expect(useKbPageCollection).toHaveBeenLastCalledWith(

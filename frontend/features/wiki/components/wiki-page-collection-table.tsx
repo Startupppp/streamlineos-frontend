@@ -81,7 +81,7 @@ export interface WikiPageCollectionTableProps {
 export function WikiPageCollectionTable({
   fixedParams,
   additionalColumns = [],
-  searchPlaceholder = "Search pages…",
+  searchPlaceholder = "Search files…",
   emptyTitle,
   emptyDescription,
   emptyAction,
@@ -282,7 +282,7 @@ export function WikiPageCollectionTable({
   const emptyNode = pager.hasPrevious ? (
     <EmptyState
       illustrationPreset="default"
-      title="No pages on this page"
+      title="No files on this page"
       description="The pages on this page may have changed. Go back to continue browsing."
       action={{ label: "Previous page", onClick: handlePrevious }}
       className={CONTENT_FILL_PANEL}
