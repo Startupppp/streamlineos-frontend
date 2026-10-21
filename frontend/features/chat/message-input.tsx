@@ -200,6 +200,7 @@ export function MessageInput({
             />
             <textarea
               ref={inputRef}
+              data-chat-composer
               value={messageInput}
               onChange={onInputChange}
               onKeyDown={handleComposerKeyDown}

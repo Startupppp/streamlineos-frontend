@@ -11,11 +11,7 @@ import { ChevronRightIcon } from "@animateicons/react/lucide";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
-import {
-  useCreateGroupChannel,
-  useCreatePublicChannel,
-  useCreatePrivateChannel,
-} from "@/hooks/api/chat-core-mutations-b";
+import { useCreateGroupChannel, useCreatePublicChannel, useCreatePrivateChannel } from "@/hooks/api/chat-core-mutations-b";
 import { useChatOrgUsers } from "@/hooks/api/chat-core-read";
 import { cn, resolveImageUrl } from "@/lib/utils";
 import { apiClient } from "@/lib/api-client";
@@ -27,6 +23,7 @@ const storageUploadContract = lazyContract(() =>
 import { MemberPicker } from "@/components/shared";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { ChatDialogHeader } from "./chat-dialog-header";
+import { useDialogReturnFocus } from "./use-dialog-return-focus";
 
 type ChannelKind = "GROUP" | "PUBLIC" | "PRIVATE";
 
@@ -119,6 +116,7 @@ export function NewGroupDialog({
   onOpenChange: (open: boolean) => void;
   onCreated: (channelId: number) => void;
 }) {
+  const handleCloseAutoFocus = useDialogReturnFocus("new");
   const createGroup = useCreateGroupChannel();
   const createPublic = useCreatePublicChannel();
   const createPrivate = useCreatePrivateChannel();
@@ -233,7 +231,7 @@ export function NewGroupDialog({
 
   return (
     <Dialog open onOpenChange={onOpenChange}>
-      <DialogContent className="flex max-h-[90dvh] flex-col gap-0 overflow-hidden p-0 sm:max-w-md">
+      <DialogContent className="flex max-h-[90dvh] flex-col gap-0 overflow-hidden p-0 sm:max-w-md" onCloseAutoFocus={handleCloseAutoFocus}>
         <ChatDialogHeader
           title={step === "info" ? "Create channel" : "Add members"}
           description="Create a focused space for a team or topic."
@@ -268,6 +266,7 @@ export function NewGroupDialog({
                 type="button"
                 onClick={handleOpenAvatarInput}
                 disabled={uploadingAvatar}
+                aria-label={avatarUrl ? "Change channel avatar" : "Upload channel avatar"}
                 className="group relative"
               >
                 {avatarUrl ? (

@@ -19,6 +19,7 @@ import { TruncatedText } from "@/components/ui/truncated-text";
 import { ChatUserVirtualList } from "./chat-user-virtual-list";
 import { getInitials } from "@/lib/format-utils";
 import { ChatDialogHeader } from "./chat-dialog-header";
+import { useDialogReturnFocus } from "./use-dialog-return-focus";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ErrorState } from "@/components/shared/error-state";
 
@@ -100,6 +101,7 @@ export function NewDMDialog({
   onOpenChange: (open: boolean) => void;
   onCreated: (channelId: number) => void;
 }) {
+  const handleCloseAutoFocus = useDialogReturnFocus("new");
   const {
     data: orgUsers,
     error: usersError,
@@ -168,7 +170,7 @@ export function NewDMDialog({
 
   return (
     <Dialog open onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md p-0 gap-0 overflow-hidden">
+      <DialogContent className="sm:max-w-md p-0 gap-0 overflow-hidden" onCloseAutoFocus={handleCloseAutoFocus}>
         <ChatDialogHeader
           title="New direct message"
           description="Search for a teammate and start a private conversation."

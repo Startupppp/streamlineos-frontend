@@ -5,10 +5,8 @@ import dynamic from "next/dynamic";
 import { ArrowLeft } from "lucide-react";
 import { InfoIcon, MicIcon } from "@animateicons/react/lucide";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
-import { AnimatePresence, motion } from "framer-motion";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { cn, resolveImageUrl } from "@/lib/utils";
-import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import type { AiAction } from "@/components/ai";
 import { useIsChatPanelNarrow } from "./use-chat-mobile";
@@ -18,17 +16,13 @@ import { MessageInput } from "./message-input";
 import type { HuddlePanel as HuddlePanelType } from "./huddle-panel";
 import { ChatNarrowThreadActions } from "./chat-narrow-thread-actions";
 import { MessagePanelSidePanels } from "./message-panel-side-panels";
+import { MessagePanelThread } from "./message-panel-thread";
 import { ConversationOverflowMenu } from "./message-panel-actions";
 import { ChatPanelFallback } from "./chat-lazy-fallbacks";
 import type { ChannelMember, Huddle } from "@/types/chat";
 import type { ChatChannelDetailWire } from "@/hooks/api/chat-extra-schema";
 import { getInitials } from "@/lib/format-utils";
 import { huddleProviderPresentation } from "./huddle-provider";
-
-const ThreadPanel = dynamic(
-  () => import("./thread-panel").then((m) => ({ default: m.ThreadPanel })),
-  { ssr: false, loading: () => <ChatPanelFallback label="Loading thread" /> },
-);
 
 const HuddlePanel = dynamic(
   () => import("./huddle-panel").then((m) => ({ default: m.HuddlePanel })),
@@ -57,14 +51,6 @@ interface PanelHeaderProps {
   showInfoPanel: boolean;
 }
 
-interface ThreadProps {
-  messageId: number | null;
-  highlightedReplyId?: number | null;
-  channelId: number;
-  currentUserId: string;
-  onClose: () => void;
-}
-
 interface WorkspaceProps {
   messageList: React.ComponentProps<typeof MessageList>;
   messageInput: React.ComponentProps<typeof MessageInput>;
@@ -74,7 +60,7 @@ interface WorkspaceProps {
 interface MessagePanelViewProps {
   header: PanelHeaderProps;
   workspace: WorkspaceProps;
-  thread: ThreadProps;
+  thread: React.ComponentProps<typeof MessagePanelThread>["thread"];
   sidePanels: React.ComponentProps<typeof MessagePanelSidePanels>;
   isOnline: boolean;
   isReconnecting: boolean;
@@ -108,16 +94,23 @@ export function MessagePanelView({
   } = header;
 
   const isPanelNarrow = useIsChatPanelNarrow();
-  const isThreadOpen = thread.messageId !== null;
   const dropdownTriggerRef = React.useRef<HTMLButtonElement>(null);
-
-  function handleThreadOpenChange(open: boolean) {
-    if (!open) thread.onClose();
+  function handleSkipToComposer(event: React.MouseEvent<HTMLButtonElement>) {
+    event.currentTarget.parentElement?.querySelector<HTMLElement>("[data-chat-composer]")?.focus();
   }
 
   return (
     <div className="flex flex-1 min-w-0 overflow-hidden">
-      <div className="flex flex-col flex-1 min-w-0 overflow-hidden">
+      <div className="relative flex flex-col flex-1 min-w-0 overflow-hidden">
+        {workspace.messageList.joinRequired ? null : (
+          <button
+            type="button"
+            onClick={handleSkipToComposer}
+            className="sr-only focus:not-sr-only focus:absolute focus:left-3 focus:top-3 focus:z-30 focus:rounded-md focus:bg-background focus:px-3 focus:py-2 focus:text-sm focus:font-medium focus:shadow-md focus:ring-2 focus:ring-ring focus:outline-none"
+          >
+            Skip to message composer
+          </button>
+        )}
         {isPanelNarrow && (
         <div className="flex min-h-14 shrink-0 items-center gap-2 border-b border-border/40 bg-card/80 px-3">
           <button
@@ -293,42 +286,7 @@ export function MessagePanelView({
         {workspace.huddle ? <HuddlePanel {...workspace.huddle} /> : null}
       </div>
 
-      <AnimatePresence>
-        {thread.messageId !== null && !isPanelNarrow && (
-          <motion.div
-            initial={{ width: 0, opacity: 0 }}
-            animate={{ width: 320, opacity: 1 }}
-            exit={{ width: 0, opacity: 0 }}
-            transition={{ duration: 0.2, ease: "easeInOut" }}
-            className="hidden lg:flex flex-col overflow-hidden shrink-0"
-          >
-            <ThreadPanel
-              channelId={thread.channelId}
-              parentMessageId={thread.messageId}
-              currentUserId={thread.currentUserId}
-              onClose={thread.onClose}
-              highlightedReplyId={thread.highlightedReplyId}
-            />
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {isPanelNarrow && (
-        <Sheet open={isThreadOpen} onOpenChange={handleThreadOpenChange}>
-          <SheetContent className="flex w-full flex-col gap-0 overflow-hidden p-0 sm:max-w-md lg:hidden">
-            <SheetTitle className="sr-only">Thread</SheetTitle>
-            {thread.messageId !== null && (
-              <ThreadPanel
-                channelId={thread.channelId}
-                parentMessageId={thread.messageId}
-                currentUserId={thread.currentUserId}
-                onClose={thread.onClose}
-                highlightedReplyId={thread.highlightedReplyId}
-              />
-            )}
-          </SheetContent>
-        </Sheet>
-      )}
+      <MessagePanelThread thread={thread} isPanelNarrow={isPanelNarrow} />
 
       <MessagePanelSidePanels {...sidePanels} dropdownTriggerRef={dropdownTriggerRef} />
     </div>

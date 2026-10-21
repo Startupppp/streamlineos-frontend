@@ -1,10 +1,10 @@
 "use client";
 
-import { useState, useEffect, useRef, useMemo, useCallback } from "react";
+import { useEffect, useRef, useMemo, useCallback } from "react";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import {
-  useChatChannel, useChatMessages, useChatOnlineUsers, useChatOrgUsers,
+  useChatChannel, useChatChannels, useChatMessages, useChatOnlineUsers, useChatOrgUsers,
 } from "@/hooks/api/chat-core-read";
 import {
   useSendMessage, useDeleteMessage, useEditMessage, useMarkChannelRead, useToggleReaction,
@@ -23,7 +23,6 @@ import type { AiAction } from "@/components/ai";
 import { useChatSummarize } from "@/hooks/api/chat-summarize";
 import { useCan } from "@/hooks/api/access";
 import { useIsChatPanelNarrow } from "./use-chat-mobile";
-import type { ForwardableMessage } from "./forward-message-dialog";
 import { useChatTypingText } from "./use-chat-typing-text";
 import { useMessageComposer } from "./use-message-composer";
 import { resolveDirectPartner } from "./channel-member-lookup";
@@ -31,6 +30,7 @@ import { useChatReadMarker } from "./use-chat-read-marker";
 import { useChatOfflineQueue } from "./use-chat-offline-queue";
 import { useHuddleAutoStart } from "./use-huddle-auto-start";
 import { useMessageTimeline } from "./use-message-timeline";
+import { useMessagePanelOverlays } from "./use-message-panel-overlays";
 
 export interface MessagePanelProps {
   channelId: number;
@@ -52,8 +52,11 @@ export function useMessagePanelData({
   const draftKey = orgScopedStorageKey(`chat:draft:${channelId}`, scope);
   const draftKeyRef = useRef(draftKey);
   draftKeyRef.current = draftKey;
-  const { data: channel } = useChatChannel(channelId);
   const history = useChatMessages(channelId);
+  const { channels: myChannels } = useChatChannels();
+  const canReadChannel = history.isSuccess || myChannels.some((row) => row.id === channelId);
+  const memberChannelId = canReadChannel ? channelId : 0;
+  const { data: channel } = useChatChannel(channelId, canReadChannel);
   const {
     isLoading,
     // A 500 or a 403 on the history read used to reach the list as `isLoading
@@ -72,16 +75,16 @@ export function useMessagePanelData({
   const toggleReaction = useToggleReaction(channelId);
   const pinMessage = usePinMessage();
   const unpinMessage = useUnpinMessage();
-  const { data: pins } = useChatPins(channelId);
+  const { data: pins } = useChatPins(memberChannelId);
   const { data: savedData } = useSavedMessages();
   const saveMessage = useSaveMessage();
   const unsaveMessage = useUnsaveMessage();
   const { data: onlineUsers } = useChatOnlineUsers();
-  const { isConnected: ablyConnected, typingUserIds, publishTyping } = useChatRealtime(channelId, joinRequired !== null);
+  const { isConnected: ablyConnected, typingUserIds, publishTyping } = useChatRealtime(channelId, !canReadChannel);
   const { isConnected: ablySocketConnected } = useAblyConnection();
 
-  useHuddleRealtime(channelId);
-  const { data: activeHuddle } = useActiveHuddle(channelId);
+  useHuddleRealtime(memberChannelId);
+  const { data: activeHuddle } = useActiveHuddle(memberChannelId);
   const startHuddle = useStartHuddle();
   const joinHuddle = useJoinHuddle();
   const summarize = useChatSummarize();
@@ -114,7 +117,7 @@ export function useMessagePanelData({
     [typingUserIds, channel?.members],
   );
   const typingText = useChatTypingText(typingUsers);
-  const { mainMessages, messages, list: timelineList, scrollToBottom, sendMessage, threadMessageId, highlightedReplyId, openThread: handleOpenThread, closeThread: handleCloseThread } = useMessageTimeline({ channelId, currentUserId, members: channel?.members, anchorMessageId: scrollToMessageId ?? null, onLeaveAnchor: onLeaveMessage, history, send: sendMutation });
+  const { mainMessages, messages, list: timelineList, scrollToBottom, sendMessage, threadMessageId, highlightedReplyId, openThread: handleOpenThread, closeThread: handleCloseThread } = useMessageTimeline({ channelId, currentUserId, members: channel?.members, anchorMessageId: scrollToMessageId ?? null, onLeaveAnchor: onLeaveMessage, canReadChannel, history, send: sendMutation });
 
   useHuddleAutoStart({
     channelId,
@@ -126,8 +129,8 @@ export function useMessagePanelData({
     joinHuddle,
   });
 
-  const [showSavedPanel, setShowSavedPanel] = useState(false);
-  const [forwardMessage, setForwardMessage] = useState<ForwardableMessage | null>(null);
+  const { showSavedPanel, setShowSavedPanel, forwardMessage, setForwardMessage, handleToggleSaved } =
+    useMessagePanelOverlays({ threadMessageId, closeThread: handleCloseThread });
   const flushQueueRef = useRef<() => Promise<void>>(async () => undefined);
   const { isOnline } = useChatOfflineQueue(flushQueueRef);
 
@@ -157,7 +160,6 @@ export function useMessagePanelData({
     }
   }, [messageInput]);
 
-
   useEffect(() => {
     const handler = (e: MouseEvent) => {
       if (
@@ -176,6 +178,7 @@ export function useMessagePanelData({
     newestLoadedAt: mainMessages.at(-1)?.createdAt ?? null,
     isRealtimeConnected: ablyConnected,
     isHistoryLoading: isLoading,
+    canReadChannel,
     refetchHistory: refetchMessages,
   });
 
@@ -186,23 +189,6 @@ export function useMessagePanelData({
   });
 
   scrollToBottomRef.current = scrollToBottom;
-
-  useEffect(() => {
-    const handler = (e: KeyboardEvent) => {
-      const meta = e.metaKey || e.ctrlKey;
-      if (meta && e.key === "k") {
-        e.preventDefault();
-        window.dispatchEvent(new CustomEvent("chat:open-search"));
-        return;
-      }
-      if (e.key === "Escape") {
-        if (threadMessageId !== null) { handleCloseThread(); return; }
-        if (showSavedPanel) setShowSavedPanel(false);
-      }
-    };
-    window.addEventListener("keydown", handler);
-    return () => window.removeEventListener("keydown", handler);
-  }, [threadMessageId, showSavedPanel, handleCloseThread]);
 
   const pinnedMessageIds = useMemo(() => new Set((pins ?? []).map((p) => p.messageId)), [pins]);
 
@@ -237,7 +223,7 @@ export function useMessagePanelData({
 
   const handleForward = useCallback((msg: Message) => {
     setForwardMessage({ content: msg.content, metadata: msg.metadata, attachments: msg.attachments });
-  }, []);
+  }, [setForwardMessage]);
 
   const handleReact = useCallback(
     (messageId: number, emoji: string) => { toggleReaction.mutate({ messageId, emoji }); },
@@ -270,7 +256,6 @@ export function useMessagePanelData({
     return map;
   }, [messages]);
 
-  const handleToggleSaved = useCallback(() => { setShowSavedPanel((p) => !p); }, []);
   const handleHuddle = useCallback(() => {
     if (activeHuddle) { joinHuddle.mutate({ huddleId: activeHuddle.id, channelId }); return; }
     startHuddle.mutate(channelId);

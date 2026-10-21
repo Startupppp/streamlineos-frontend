@@ -53,6 +53,7 @@ export function useHarness(initialAnchor: number | null) {
     members: undefined,
     anchorMessageId: anchor,
     onLeaveAnchor: handleLeave,
+    canReadChannel: true,
     history,
     send,
   });

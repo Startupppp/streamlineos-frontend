@@ -32,7 +32,7 @@ const TICKET_STATUS_DISPLAY: Record<string, string> = {
 };
 
 const PILL_CLASS =
-  "inline-flex max-w-full items-center gap-1.5 rounded-lg border border-border bg-muted/50 px-2.5 py-1.5 my-1 text-dense";
+  "inline-flex max-w-full items-center gap-1.5 rounded-lg border border-border bg-muted text-foreground px-2.5 py-1.5 my-1 text-dense";
 
 function statusChangeError(error: unknown): string {
   const code = isApiError(error) ? error.code : undefined;
@@ -138,7 +138,7 @@ export function LinkedRecordPill({ entity, channelId }: LinkedRecordPillProps) {
 
   if (card === null)
     return (
-      <span className={cn(PILL_CLASS, "bg-muted/30 text-muted-foreground")}>
+      <span className={cn(PILL_CLASS, "text-muted-foreground")}>
         <Lock className="h-3 w-3 shrink-0" aria-hidden />
         Restricted record
       </span>

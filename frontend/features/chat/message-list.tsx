@@ -401,6 +401,7 @@ export function MessageList({
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: 8 }}
               className="absolute bottom-3 left-1/2 -translate-x-1/2 z-10 pointer-events-none"
+              aria-live="polite"
             >
               <ScrollToBottomButton
                 type="button"

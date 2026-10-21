@@ -233,11 +233,11 @@ function chatMessagesQueryOptions(channelId: number) {
   });
 }
 
-export function useChatChannel(channelId: number) {
+export function useChatChannel(channelId: number, enabled = true) {
   const canRead = useCan("chat:channels:read");
   return useQuery({
     ...chatChannelQueryOptions(channelId),
-    enabled: chatChannelReadEnabled(canRead, channelId),
+    enabled: enabled && chatChannelReadEnabled(canRead, channelId),
   });
 }
 

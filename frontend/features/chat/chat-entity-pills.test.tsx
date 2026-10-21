@@ -124,3 +124,18 @@ describe("ticket pills keep their status action, gated by the server's action li
     expect(screen.queryByRole("button")).not.toBeInTheDocument();
   });
 });
+
+describe("LinkedRecordPill on an own (primary) bubble", () => {
+  it("sits on an opaque muted surface with its own text colour, so the ticket key never blends into the bubble", () => {
+    renderPill({
+      type: "ticket",
+      id: "7",
+      card: { type: "ticket", id: "7", title: "Fix login", subtitle: "QA-101", status: null, href: "/build/p/tickets/7" },
+    });
+    const key = screen.getByText("QA-101");
+    expect(key).toHaveClass("text-muted-foreground");
+    const pill = key.closest("button")?.parentElement;
+    expect(pill).toHaveClass("bg-muted", "text-foreground");
+    expect(pill?.className).not.toMatch(/bg-muted\/\d+/);
+  });
+});

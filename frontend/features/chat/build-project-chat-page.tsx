@@ -16,6 +16,7 @@ import { ChatAblyProvider } from "./ably-provider";
 import { MessagePanel } from "./message-panel";
 import { ChannelInfoPanel } from "./channel-info-panel";
 import { useIsChatPanelNarrow } from "./use-chat-mobile";
+import { useMobilePanelBack } from "./use-mobile-panel-back";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { PM_PANEL_SOLID, PmPageShell } from "@/components/pm-chrome";
 
@@ -52,6 +53,7 @@ export function BuildProjectChatPage({ projectId }: ProjectChatPageProps) {
   const handleCloseInfo = useCallback(() => {
     setShowInfoPanel(false);
   }, []);
+  useMobilePanelBack(showInfoPanel, handleCloseInfo);
 
   const handleRetry = useCallback(() => {
     void refetch();
@@ -142,7 +144,7 @@ export function BuildProjectChatPage({ projectId }: ProjectChatPageProps) {
                   </AnimatePresence>
                   {isPanelNarrow && (
                     <Sheet open={showInfoPanel} onOpenChange={setShowInfoPanel}>
-                      <SheetContent className="flex w-full flex-col gap-0 overflow-hidden p-0">
+                      <SheetContent showCloseButton={false} className="flex w-full flex-col gap-0 overflow-hidden p-0">
                         <ChannelInfoPanel
                           channelId={channel.id}
                           currentUserId={currentUserId}

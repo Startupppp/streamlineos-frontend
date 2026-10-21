@@ -19,6 +19,7 @@ import {
   useJoinChannel,
 } from "@/hooks/api/chat-core-mutations-b";
 import { ChatDialogHeader } from "./chat-dialog-header";
+import { useDialogReturnFocus } from "./use-dialog-return-focus";
 import {
   ChannelResultRow,
   MessageResultRow,
@@ -49,6 +50,7 @@ export function ChatSearchDialog({
   onOpenMessage,
 }: ChatSearchDialogProps) {
   const [query, setQuery] = useState("");
+  const handleCloseAutoFocus = useDialogReturnFocus("search");
   const debouncedQuery = useDebouncedValue(query, 300);
   const trimmedQuery = debouncedQuery.trim();
   const browsingChannels = scope === "channels" && trimmedQuery.length === 0;
@@ -185,7 +187,7 @@ export function ChatSearchDialog({
 
   return (
     <Dialog open onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[580px] p-0 gap-0">
+      <DialogContent className="sm:max-w-[580px] p-0 gap-0" onCloseAutoFocus={handleCloseAutoFocus}>
         <ChatDialogHeader
           title="Search chat"
           description="Search messages, channels, and people."

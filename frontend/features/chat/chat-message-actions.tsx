@@ -28,6 +28,23 @@ const QUICK_REACTIONS = ["👍", "❤️", "😂", "😮", "😢", "🔥"];
 
 const ACTION_BUTTON_CLASS = "size-8 rounded-md p-0 text-muted-foreground hover:text-foreground";
 
+const ROVING_KEYS: Record<string, (index: number, count: number) => number> = {
+  ArrowRight: (index, count) => (index + 1) % count,
+  ArrowLeft: (index, count) => (index - 1 + count) % count,
+  Home: () => 0,
+  End: (_index, count) => count - 1,
+};
+
+function handleToolbarKeyDown(event: React.KeyboardEvent<HTMLDivElement>) {
+  const move = ROVING_KEYS[event.key];
+  if (!move) return;
+  const buttons = Array.from(event.currentTarget.querySelectorAll<HTMLButtonElement>(":scope > button"));
+  const index = buttons.findIndex((button) => button === document.activeElement);
+  if (index < 0) return;
+  event.preventDefault();
+  buttons[move(index, buttons.length)]?.focus();
+}
+
 export function MessageActions({
   isOwn,
   isPinned,
@@ -117,6 +134,7 @@ export function MessageActions({
       <div
         role="toolbar"
         aria-label="Message actions"
+        onKeyDown={handleToolbarKeyDown}
         className="flex items-center gap-0.5 rounded-lg border border-border/60 bg-background p-0.5 shadow-md"
       >
         <AnimatedIconButton
@@ -134,6 +152,7 @@ export function MessageActions({
               type="button"
               variant="ghost"
               className={cn(ACTION_BUTTON_CLASS, reactionsOpen && "bg-muted text-foreground")}
+              tabIndex={-1}
               aria-label="Add reaction"
             >
               <SmilePlus className="size-3.5" />
@@ -161,6 +180,7 @@ export function MessageActions({
               iconSize={14}
               variant="ghost"
               className={cn(ACTION_BUTTON_CLASS, menuOpen && "bg-muted text-foreground")}
+              tabIndex={-1}
               aria-label="More message actions"
             />
           </DropdownMenuTrigger>

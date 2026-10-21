@@ -75,7 +75,7 @@ export function MessagePanelSidePanels({
 
       {isPanelNarrow && (
         <Sheet open={showSavedPanel} onOpenChange={setShowSavedPanel}>
-          <SheetContent className="flex w-full flex-col gap-0 overflow-hidden p-0" onCloseAutoFocus={handleCloseAutoFocus}>
+          <SheetContent showCloseButton={false} className="flex w-full flex-col gap-0 overflow-hidden p-0" onCloseAutoFocus={handleCloseAutoFocus}>
             <SheetTitle className="sr-only">Saved messages</SheetTitle>
             <SavedMessagesPanel
               onClose={handleCloseSaved}

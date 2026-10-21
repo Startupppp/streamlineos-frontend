@@ -3,6 +3,9 @@ import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { setViewport } from "@/test-utils/viewport";
 
+let mockPathname = "/home";
+jest.mock("next/navigation", () => ({ usePathname: () => mockPathname }));
+
 jest.mock("next-auth/react", () => ({
   useSession: () => ({ data: { orgId: "org-1" } }),
 }));
@@ -93,6 +96,7 @@ function mobileChrome(): HTMLElement {
 let restoreViewport: () => void = () => {};
 
 beforeEach(() => {
+  mockPathname = "/home";
   localStorage.clear();
   mockUseWorkspaceChecklistProgress.mockClear();
   mountMobileHeaderSlot();
@@ -166,5 +170,32 @@ describe("SuccessChecklist at md and above", () => {
     expect(mockUseWorkspaceChecklistProgress).toHaveBeenLastCalledWith(true);
     await user.click(screen.getAllByRole("button", { name: "Collapse checklist" })[0]);
     expect(screen.queryAllByText("Getting Started")).toEqual([]);
+  });
+});
+
+describe("SuccessChecklist launcher next to a chat composer", () => {
+  beforeEach(() => {
+    restoreViewport = setViewport(1280);
+  });
+
+  function launcherDock(): HTMLElement | null {
+    const fab = screen
+      .getAllByRole("button", { name: "Open getting started checklist" })
+      .find((button) => button.closest(".fixed") !== null);
+    return fab?.closest<HTMLElement>(".fixed") ?? null;
+  }
+
+  it.each(["/chat", "/build/42/chat"])("docks bottom-left on %s, away from the composer's Send button", (path) => {
+    mockPathname = path;
+    render(<SuccessChecklist />);
+    expect(launcherDock()).toHaveClass("left-4");
+    expect(launcherDock()).not.toHaveClass("right-4");
+  });
+
+  it.each(["/home", "/chatbots", "/build/42/board"])("keeps the bottom-right dock on %s", (path) => {
+    mockPathname = path;
+    render(<SuccessChecklist />);
+    expect(launcherDock()).toHaveClass("right-4");
+    expect(launcherDock()).not.toHaveClass("left-4");
   });
 });

@@ -53,8 +53,7 @@ function makeProps(overrides: Partial<Props> = {}): Props {
 
 async function openMoreWithKeyboard(user: ReturnType<typeof userEvent.setup>) {
   await user.tab();
-  await user.tab();
-  await user.tab();
+  await user.keyboard("{ArrowRight}{ArrowRight}");
   expect(screen.getByRole("button", { name: "More message actions" })).toHaveFocus();
   await user.keyboard("{Enter}");
   return screen.findByRole("menu");
@@ -236,5 +235,30 @@ describe("MessageActions — forward and quote need write access", () => {
     await openMoreWithKeyboard(user);
     expect(screen.queryByRole("menuitem", { name: "Forward" })).toBeNull();
     expect(screen.queryByRole("menuitem", { name: "Quote reply" })).toBeNull();
+  });
+});
+
+describe("MessageActions — one tab stop per message, arrows inside the toolbar", () => {
+  it("puts only Reply in the tab order and reaches React and More with the arrow keys", async () => {
+    const user = userEvent.setup();
+    render(
+      <>
+        <MessageActions {...makeProps()} />
+        <button type="button">after</button>
+      </>,
+    );
+    await user.tab();
+    expect(screen.getByRole("button", { name: "Reply in thread" })).toHaveFocus();
+    await user.keyboard("{ArrowRight}");
+    expect(screen.getByRole("button", { name: "Add reaction" })).toHaveFocus();
+    await user.keyboard("{End}");
+    expect(screen.getByRole("button", { name: "More message actions" })).toHaveFocus();
+    await user.keyboard("{ArrowRight}");
+    expect(screen.getByRole("button", { name: "Reply in thread" })).toHaveFocus();
+    await user.keyboard("{ArrowLeft}");
+    expect(screen.getByRole("button", { name: "More message actions" })).toHaveFocus();
+    await user.keyboard("{Home}");
+    await user.tab();
+    expect(screen.getByRole("button", { name: "after" })).toHaveFocus();
   });
 });

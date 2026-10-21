@@ -63,7 +63,7 @@ export function ChannelSidebarHeader({
         </div>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <AnimatedIconButton icon={PlusIcon} iconSize={16} size="sm">
+            <AnimatedIconButton icon={PlusIcon} iconSize={16} size="sm" data-chat-opener="new">
               New
             </AnimatedIconButton>
           </DropdownMenuTrigger>
@@ -77,6 +77,7 @@ export function ChannelSidebarHeader({
       <button
         type="button"
         onClick={onOpenSearch}
+        data-chat-opener="search"
         aria-label="Search messages, channels and people"
         className="flex h-9 w-full items-center gap-2 rounded-lg border border-border/30 bg-muted/30 px-3 text-sm text-muted-foreground transition-colors hover:bg-muted/50 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
       >

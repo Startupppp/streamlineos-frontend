@@ -6,7 +6,13 @@ import { toast } from "sonner";
 import { useChatMessageContext } from "@/hooks/api/chat-message-windows";
 import { isApiError } from "@/lib/api-envelope";
 import { getErrorMessage } from "@/lib/get-error-message";
-import type { ChannelMember, Message, MessagesPage, SendMessageInput } from "@/types/chat";
+import type {
+  ChannelMember,
+  Message,
+  MessagesPage,
+  SendMessageInput,
+} from "@/types/chat";
+import { useChatArrivalAt } from "./chat-arrivals";
 import { getDateLabel, readChannelJoinRequired } from "./chat-helpers";
 import { resolveFirstUnreadIndex } from "./chat-read-position";
 import { flattenMessagePages } from "./message-page-merge";
@@ -23,6 +29,7 @@ interface MessageTimelineOptions {
   members: ChannelMember[] | undefined;
   anchorMessageId: number | null;
   onLeaveAnchor: (() => void) | undefined;
+  canReadChannel: boolean;
   history: {
     data: InfiniteData<MessagesPage> | undefined;
     isLoading: boolean;
@@ -40,7 +47,9 @@ function groupByDate(messages: Message[]) {
   const groups: { date: string; messages: Message[] }[] = [];
   let currentDate = "";
   for (const msg of messages) {
-    const dateStr = getDateLabel(msg.createdAt ? new Date(msg.createdAt) : new Date());
+    const dateStr = getDateLabel(
+      msg.createdAt ? new Date(msg.createdAt) : new Date(),
+    );
     let group = groups[groups.length - 1];
     if (!group || dateStr !== currentDate) {
       currentDate = dateStr;
@@ -58,14 +67,23 @@ export function useMessageTimeline({
   members,
   anchorMessageId,
   onLeaveAnchor,
+  canReadChannel,
   history,
   send,
 }: MessageTimelineOptions) {
-  const mainMessages = useMemo(() => flattenMessagePages(history.data), [history.data]);
+  const mainMessages = useMemo(
+    () => flattenMessagePages(history.data),
+    [history.data],
+  );
   const anchorInMain =
-    anchorMessageId !== null && mainMessages.some((message) => message.id === anchorMessageId);
+    anchorMessageId !== null &&
+    mainMessages.some((message) => message.id === anchorMessageId);
   const contextEnabled = anchorMessageId !== null && !anchorInMain;
-  const context = useChatMessageContext(channelId, anchorMessageId ?? 0, contextEnabled);
+  const context = useChatMessageContext(
+    channelId,
+    anchorMessageId ?? 0,
+    contextEnabled && canReadChannel,
+  );
   const showContext = contextEnabled && !history.isLoading;
   const contextMessages = useMemo(
     () =>
@@ -73,20 +91,27 @@ export function useMessageTimeline({
         ? [...context.data.pages]
             .reverse()
             .flatMap((page) => page.messages)
-            .filter((message) => !message.isDeleted || message.id === anchorMessageId)
+            .filter(
+              (message) => !message.isDeleted || message.id === anchorMessageId,
+            )
         : null,
     [showContext, context.data, anchorMessageId],
   );
   const inContext = contextMessages !== null;
   const messages = contextMessages ?? mainMessages;
 
-  const anchor = useMessageAnchorTarget({ channelId, anchorMessageId, messages });
+  const anchor = useMessageAnchorTarget({
+    channelId,
+    anchorMessageId,
+    messages,
+  });
   const leftAnchorRef = useRef<number | null>(null);
   useEffect(() => {
     if (anchorMessageId === null) leftAnchorRef.current = null;
   }, [anchorMessageId]);
   const dropAnchor = useCallback(() => {
-    if (anchorMessageId === null || leftAnchorRef.current === anchorMessageId) return;
+    if (anchorMessageId === null || leftAnchorRef.current === anchorMessageId)
+      return;
     leftAnchorRef.current = anchorMessageId;
     onLeaveAnchor?.();
   }, [anchorMessageId, onLeaveAnchor]);
@@ -97,9 +122,17 @@ export function useMessageTimeline({
   }, [keepThreadOpen, dropAnchor]);
   const { error: contextError, refetch: refetchContext } = context;
   useEffect(() => {
-    if (!contextEnabled || !contextError || readChannelJoinRequired(contextError)) return;
+    if (
+      !contextEnabled ||
+      !contextError ||
+      readChannelJoinRequired(contextError)
+    )
+      return;
     const toastId = `chat-message-context-${channelId}-${anchorMessageId}`;
-    if (isApiError(contextError) && (contextError.status === 403 || contextError.status === 404)) {
+    if (
+      isApiError(contextError) &&
+      (contextError.status === 403 || contextError.status === 404)
+    ) {
       toast.error(MESSAGE_UNAVAILABLE_COPY, { id: toastId });
       dropAnchor();
       return;
@@ -114,7 +147,14 @@ export function useMessageTimeline({
     return () => {
       toast.dismiss(toastId);
     };
-  }, [contextEnabled, contextError, refetchContext, dropAnchor, channelId, anchorMessageId]);
+  }, [
+    contextEnabled,
+    contextError,
+    refetchContext,
+    dropAnchor,
+    channelId,
+    anchorMessageId,
+  ]);
 
   const [revealed, setRevealed] = useState({ channelId, pages: 1 });
 
@@ -145,12 +185,18 @@ export function useMessageTimeline({
     ? 0
     : resolveMessageWindowStart(messages.length, renderPages, keepVisibleIndex);
   const groupedMessages = useMemo(
-    () => groupByDate(windowStart === 0 ? messages : messages.slice(windowStart)),
+    () =>
+      groupByDate(windowStart === 0 ? messages : messages.slice(windowStart)),
     [messages, windowStart],
   );
   const hasOlderHeld = windowStart > 0;
 
-  const { fetchNextPage: fetchOlderContext, fetchPreviousPage, hasPreviousPage, isFetchingPreviousPage } = context;
+  const {
+    fetchNextPage: fetchOlderContext,
+    fetchPreviousPage,
+    hasPreviousPage,
+    isFetchingPreviousPage,
+  } = context;
   const { fetchNextPage: fetchOlderHistory } = history;
   const handleLoadOlder = useCallback(() => {
     if (inContext) {
@@ -162,25 +208,53 @@ export function useMessageTimeline({
       return;
     }
     void fetchOlderHistory();
-  }, [inContext, hasOlderHeld, channelId, renderPages, fetchOlderContext, fetchOlderHistory]);
+  }, [
+    inContext,
+    hasOlderHeld,
+    channelId,
+    renderPages,
+    fetchOlderContext,
+    fetchOlderHistory,
+  ]);
 
   const isLoading = history.isLoading || (contextEnabled && context.isLoading);
-  const { scrollContainerRef, messagesEndRef, showScrollBtn, scrollToBottom, handleScroll } =
-    useChatScroll({ channelId, messageCount: messages.length, isLoading, followLatest: !inContext });
+  const {
+    scrollContainerRef,
+    messagesEndRef,
+    showScrollBtn,
+    scrollToBottom,
+    handleScroll,
+  } = useChatScroll({
+    channelId,
+    messageCount: messages.length,
+    isLoading,
+    followLatest: !inContext,
+  });
 
   const handleTimelineScroll = useCallback(
     (event: React.UIEvent<HTMLDivElement>) => {
       handleScroll(event);
       if (!inContext) return;
       const el = event.currentTarget;
-      if (el.scrollHeight - el.scrollTop - el.clientHeight > CONTEXT_END_THRESHOLD) return;
+      if (
+        el.scrollHeight - el.scrollTop - el.clientHeight >
+        CONTEXT_END_THRESHOLD
+      )
+        return;
       if (hasPreviousPage) {
         if (!isFetchingPreviousPage) void fetchPreviousPage();
         return;
       }
       leave();
     },
-    [handleScroll, inContext, hasPreviousPage, isFetchingPreviousPage, fetchPreviousPage, leave],
+    [
+      handleScroll,
+      inContext,
+      hasPreviousPage,
+      isFetchingPreviousPage,
+      fetchPreviousPage,
+      leave,
+    ],
   );
   const handleLatest = useCallback(() => {
     if (inContext) leave();
@@ -199,7 +273,10 @@ export function useMessageTimeline({
     [sendPending, sendAsync, inContext, leave],
   );
 
-  const firstUnreadMessageId = firstUnreadIndex >= 0 ? messages[firstUnreadIndex]?.id : undefined;
+  const arrivedAt = useChatArrivalAt(channelId);
+  const arrivedSinceContext = inContext && arrivedAt > context.dataUpdatedAt;
+  const firstUnreadMessageId =
+    firstUnreadIndex >= 0 ? messages[firstUnreadIndex]?.id : undefined;
   const contextHasOlder = context.hasNextPage;
   const contextFetchingOlder = context.isFetchingNextPage;
   const list = useMemo(
@@ -207,21 +284,42 @@ export function useMessageTimeline({
       groupedMessages,
       messages,
       isLoading,
-      hasNextPage: inContext ? contextHasOlder : history.hasNextPage || hasOlderHeld,
-      isFetchingNextPage: inContext ? contextFetchingOlder : history.isFetchingNextPage,
+      hasNextPage: inContext
+        ? contextHasOlder
+        : history.hasNextPage || hasOlderHeld,
+      isFetchingNextPage: inContext
+        ? contextFetchingOlder
+        : history.isFetchingNextPage,
       fetchNextPage: handleLoadOlder,
       firstUnreadMessageId,
       showScrollBtn: inContext || showScrollBtn,
-      latestLabel: inContext ? "Jump to latest" : "New messages",
+      latestLabel: inContext
+        ? arrivedSinceContext
+          ? "New messages — Jump to latest"
+          : "Jump to latest"
+        : "New messages",
       scrollToBottom: handleLatest,
       messagesEndRef,
       scrollContainerRef,
       onScroll: handleTimelineScroll,
     }),
     [
-      groupedMessages, messages, isLoading, inContext, contextHasOlder, history.hasNextPage,
-      hasOlderHeld, contextFetchingOlder, history.isFetchingNextPage, handleLoadOlder,
-      firstUnreadMessageId, showScrollBtn, handleLatest, messagesEndRef, scrollContainerRef,
+      groupedMessages,
+      messages,
+      isLoading,
+      inContext,
+      arrivedSinceContext,
+      contextHasOlder,
+      history.hasNextPage,
+      hasOlderHeld,
+      contextFetchingOlder,
+      history.isFetchingNextPage,
+      handleLoadOlder,
+      firstUnreadMessageId,
+      showScrollBtn,
+      handleLatest,
+      messagesEndRef,
+      scrollContainerRef,
       handleTimelineScroll,
     ],
   );

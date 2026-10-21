@@ -28,6 +28,7 @@ import {
   useStalledAfter,
 } from "@/hooks/common/use-stalled-after";
 import { useIsChatPanelNarrow } from "@/features/chat/use-chat-mobile";
+import { useMobilePanelBack } from "@/features/chat/use-mobile-panel-back";
 
 const ChatAblySuite = dynamic(
   () =>
@@ -152,12 +153,10 @@ export function ChatHomePage() {
     [handleSelectChannel],
   );
 
-  const handleAutoStartHandled = useCallback(
-    () => setPendingCallAction(null),
-    [],
-  );
+  const handleAutoStartHandled = useCallback(() => setPendingCallAction(null), []);
   const handleToggleInfo = useCallback(() => setShowInfoPanel((p) => !p), []);
   const handleCloseInfo = useCallback(() => setShowInfoPanel(false), []);
+  useMobilePanelBack(showInfoPanel && activeChannelId !== null, handleCloseInfo);
   const handleOpenNewDM = useCallback(() => setCreateDialogOverride("dm"), []);
   const handleOpenNewChannel = useCallback(
     () => setCreateDialogOverride("channel"),
@@ -250,7 +249,7 @@ export function ChatHomePage() {
       </AnimatePresence>
       {isPanelNarrow && (
         <Sheet open={showInfoPanel} onOpenChange={setShowInfoPanel}>
-          <SheetContent className="flex w-full flex-col gap-0 overflow-hidden p-0">
+          <SheetContent showCloseButton={false} className="flex w-full flex-col gap-0 overflow-hidden p-0">
             <SheetTitle className="sr-only">Channel info</SheetTitle>
             <ChannelInfoPanel
               channelId={activeChannelId}

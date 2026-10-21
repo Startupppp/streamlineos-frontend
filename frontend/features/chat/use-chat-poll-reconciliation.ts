@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { collaborationQueryKeys } from "@/lib/query-keys/collaboration";
 import { useChatPoll, type ChatPollPosition } from "@/hooks/api/chat-message-windows";
+import { recordChatArrival } from "./chat-arrivals";
 
 const EPOCH_POLL_SINCE = new Date(0).toISOString();
 const OFFLINE_HISTORY_RECONCILE_INTERVAL_MS = 120_000;
@@ -24,6 +25,7 @@ interface ChatPollReconciliationOptions {
   newestLoadedAt: Date | string | null;
   isRealtimeConnected: boolean;
   isHistoryLoading: boolean;
+  canReadChannel: boolean;
   refetchHistory: () => Promise<{ isError: boolean }>;
 }
 
@@ -32,6 +34,7 @@ export function useChatPollReconciliation({
   newestLoadedAt,
   isRealtimeConnected,
   isHistoryLoading,
+  canReadChannel,
   refetchHistory,
 }: ChatPollReconciliationOptions): {
   position: ChatPollPosition;
@@ -50,7 +53,7 @@ export function useChatPollReconciliation({
   const { data: pollResult } = useChatPoll(
     channelId,
     effectivePosition,
-    !isRealtimeConnected && !isHistoryLoading,
+    canReadChannel && !isRealtimeConnected && !isHistoryLoading,
   );
 
   useEffect(() => {
@@ -61,6 +64,7 @@ export function useChatPollReconciliation({
     void (async () => {
       const result = await refetchHistory();
       if (cancelled || result.isError) return;
+      recordChatArrival(channelId);
       void queryClient.invalidateQueries({
         queryKey: collaborationQueryKeys.chat.myChannels(),
         exact: true,
@@ -78,12 +82,12 @@ export function useChatPollReconciliation({
   }, [channelId, pollResult, queryClient, refetchHistory]);
 
   useEffect(() => {
-    if (isRealtimeConnected || channelId <= 0) return;
+    if (!canReadChannel || isRealtimeConnected || channelId <= 0) return;
     const timer = setInterval(() => {
       void refetchHistory();
     }, OFFLINE_HISTORY_RECONCILE_INTERVAL_MS);
     return () => clearInterval(timer);
-  }, [isRealtimeConnected, channelId, refetchHistory]);
+  }, [canReadChannel, isRealtimeConnected, channelId, refetchHistory]);
 
   return { position: effectivePosition };
 }

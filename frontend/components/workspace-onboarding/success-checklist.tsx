@@ -3,6 +3,7 @@
 import { useState, useCallback, useEffect, useSyncExternalStore } from "react";
 import { createPortal } from "react-dom";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useSession } from "next-auth/react";
 import type { LucideIcon } from "lucide-react";
 import {
@@ -29,6 +30,7 @@ import { cn } from "@/lib/utils";
 import { ChecklistErrorBoundary } from "./checklist-error-boundary";
 
 const MOBILE_HEADER_SLOT_ID = "mobile-header-checklist-slot";
+const COMPOSER_ROUTE = /^\/chat(\/|$)|^\/build\/[^/]+\/chat(\/|$)/;
 
 function dismissedKey(orgId: string): string {
   return `ws_checklist_dismissed_${orgId}`;
@@ -307,6 +309,8 @@ function FabProgressRing({ progressFraction }: FabProgressRingProps) {
 function SuccessChecklistInner() {
   const { data: session } = useSession();
   const { data: access } = useAccess();
+  const pathname = usePathname();
+  const dockLeft = COMPOSER_ROUTE.test(pathname ?? "");
   const orgId = session?.orgId;
   const canSetUpWorkspace =
     access?.isOrgOwner === true;
@@ -405,7 +409,7 @@ function SuccessChecklistInner() {
   return (
     <>
       {mobileHeaderUi}
-      <div className="fixed z-50 bottom-4 right-4 hidden md:block">
+      <div className={cn("fixed z-50 bottom-4 hidden md:block", dockLeft ? "left-4" : "right-4")}>
         <AnimatePresence mode="wait">
           {collapsed ? (
             <motion.div
@@ -446,7 +450,7 @@ function SuccessChecklistInner() {
           ) : (
             <motion.div
               key="checklist-panel"
-              className="w-72 origin-bottom-right"
+              className={cn("w-72", dockLeft ? "origin-bottom-left" : "origin-bottom-right")}
               {...panelTransition}
             >
               <ChecklistPanel {...panelProps} />

@@ -17,7 +17,9 @@ jest.mock("next/dynamic", () => () => {
 });
 
 jest.mock("./message-list", () => ({ MessageList: () => <div>message list</div> }));
-jest.mock("./message-input", () => ({ MessageInput: () => <div>message input</div> }));
+jest.mock("./message-input", () => ({
+  MessageInput: () => <textarea data-chat-composer aria-label="Message composer" />,
+}));
 jest.mock("./message-panel-side-panels", () => ({ MessagePanelSidePanels: () => null }));
 jest.mock("./channel-avatar", () => ({ ChannelAvatar: () => null }));
 
@@ -198,5 +200,17 @@ describe("MessagePanelView header huddle button is provider aware", () => {
   it("keeps Start huddle when nothing is active", () => {
     render(<MessagePanelView {...makeProps()} />);
     expect(screen.getByRole("button", { name: "Start huddle" })).toBeInTheDocument();
+  });
+});
+
+describe("MessagePanelView skip link", () => {
+  it("is the first tab stop and moves focus to the composer", async () => {
+    const user = userEvent.setup();
+    render(<MessagePanelView {...makeProps()} />);
+    await user.tab();
+    const skip = screen.getByRole("button", { name: "Skip to message composer" });
+    expect(skip).toHaveFocus();
+    await user.keyboard("{Enter}");
+    expect(screen.getByRole("textbox", { name: "Message composer" })).toHaveFocus();
   });
 });

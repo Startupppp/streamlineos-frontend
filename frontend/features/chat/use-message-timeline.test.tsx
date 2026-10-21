@@ -6,6 +6,7 @@ import { apiClient } from "@/lib/api-client";
 import { ApiError } from "@/lib/api-envelope";
 import { collaborationQueryKeys } from "@/lib/query-keys/collaboration";
 import type { MessagesPage } from "@/types/chat";
+import { recordChatArrival } from "./chat-arrivals";
 import { mergeInboundMessage } from "./message-page-merge";
 import {
   CHANNEL_ID,
@@ -225,6 +226,23 @@ describe("useMessageTimeline — an old ?message renders its own context window,
     expect(ids(result)).toEqual([40, 41, 42]);
     expect(mainIds()).toEqual([100, 101, 102, 103]);
     act(() => result.current.timeline.list.scrollToBottom());
+    expect(ids(result)).toEqual([100, 101, 102, 103]);
+  });
+
+  it("announces a live arrival while the reader sits on the context window", async () => {
+    const { result } = await landOnOldMessage();
+    expect(result.current.timeline.list.latestLabel).toBe("Jump to latest");
+    await new Promise((resolve) => setTimeout(resolve, 2));
+    act(() => {
+      client.setQueryData<InfiniteData<MessagesPage>>(messagesKey, (old) =>
+        old ? mergeInboundMessage(old, message(103), null) : old,
+      );
+      recordChatArrival(CHANNEL_ID);
+    });
+    expect(result.current.timeline.list.latestLabel).toBe("New messages — Jump to latest");
+    expect(ids(result)).toEqual([40, 41, 42]);
+    act(() => result.current.timeline.list.scrollToBottom());
+    expect(result.current.timeline.list.latestLabel).toBe("New messages");
     expect(ids(result)).toEqual([100, 101, 102, 103]);
   });
 
