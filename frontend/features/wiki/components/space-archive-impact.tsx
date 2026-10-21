@@ -27,7 +27,7 @@ export function SpaceArchiveImpact({ spaceId }: SpaceArchiveImpactProps) {
   }
 
   const parts = data ? [
-    `${data.pageCount} ${data.pageCount === 1 ? "page" : "pages"}`,
+    `${data.pageCount} ${data.pageCount === 1 ? "file" : "files"}`,
     `${data.publicLinkCount} public ${data.publicLinkCount === 1 ? "link" : "links"}`,
     `${data.recordLinkCount} record ${data.recordLinkCount === 1 ? "link" : "links"}`,
   ] : [];

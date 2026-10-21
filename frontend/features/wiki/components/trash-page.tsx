@@ -153,13 +153,13 @@ export default function TrashPage() {
   if (!canPurge) {
     purgeImpactDescription = "You no longer have permission to permanently delete these pages.";
   } else if (purgeImpactLoading) {
-    purgeImpactDescription = "Checking child pages and dependent data before permanent deletion.";
+    purgeImpactDescription = "Checking child files and dependent data before permanent deletion.";
   } else if (purgeImpactError) {
     purgeImpactDescription = "Could not verify the impact of permanently deleting these pages. Retry the check before continuing.";
   } else if (!purgeImpact) {
     purgeImpactDescription = "Deletion impact is unavailable. Retry the check before continuing.";
   } else if (purgeImpact.descendantCount > 0) {
-    purgeImpactDescription = `This cannot be undone. ${purgeImpact.descendantCount} child page${purgeImpact.descendantCount === 1 ? "" : "s"} nested under the selection will also be permanently removed, along with history, attachments, and index entries.`;
+    purgeImpactDescription = `This cannot be undone. ${purgeImpact.descendantCount} child file${purgeImpact.descendantCount === 1 ? "" : "s"} nested under the selection will also be permanently removed, along with history, attachments, and index entries.`;
   }
 
   function handleRetryPurgeImpact() {
@@ -368,8 +368,8 @@ export default function TrashPage() {
               cursorState.hasPrevious ? (
                 <EmptyState
                   illustration={<KbTrash2Icon className="h-8 w-8 text-muted-foreground" />}
-                  title="No deleted pages on this page"
-                  description="The deleted pages on this page may have changed. Go back to continue browsing."
+                  title="No deleted files on this page"
+                  description="The deleted files on this page may have changed. Go back to continue browsing."
                   action={{ label: "Previous page", onClick: cursorState.goPrevious }}
                 />
               ) : (
@@ -384,7 +384,7 @@ export default function TrashPage() {
                       : "Deleted pages will appear here and can be restored or permanently removed."
                   }
                   filtersActive={filtersActive}
-                  filteredTitle="No deleted pages match your filters."
+                  filteredTitle="No deleted files match your filters."
                   onClearFilters={handleClearFilters}
                 />
               )

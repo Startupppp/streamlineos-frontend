@@ -319,8 +319,8 @@ export default function PageGrantsSheet({
             <SheetTitle className="text-base font-semibold">Manage access</SheetTitle>
             <SheetDescription className="text-xs mt-0.5">
               {canUpdate
-                ? "Control who can view, comment on, or edit this page."
-                : "People and roles with direct access to this page."}
+                ? "Control who can view, comment on, or edit this file."
+                : "People and roles with direct access to this file."}
             </SheetDescription>
           </SheetHeader>
 
@@ -334,7 +334,7 @@ export default function PageGrantsSheet({
                 empty={
                   <EmptyState
                     title="No shared access"
-                    description="This page has not been shared with specific people or roles yet."
+                    description="This file has not been shared with specific people or roles yet."
                     compact
                   />
                 }
@@ -533,7 +533,7 @@ export default function PageGrantsSheet({
         title="Revoke access?"
         description={
           revokeTarget
-            ? `Remove ${resolveGrantLabel(revokeTarget)}'s access to this page.`
+            ? `Remove ${resolveGrantLabel(revokeTarget)}'s access to this file.`
             : ""
         }
         destructive

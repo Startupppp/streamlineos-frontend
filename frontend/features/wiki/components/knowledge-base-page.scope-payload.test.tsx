@@ -107,11 +107,11 @@ async function sentBody(): Promise<Record<string, unknown>> {
 
 async function openScopeSheet(user: ReturnType<typeof userEvent.setup>) {
   await user.click(screen.getByRole("button", { name: /choose sources to search/i }));
-  await screen.findByRole("button", { name: /search all sources and pages|^Search \d+ item/i });
+  await screen.findByRole("button", { name: /search all sources and files|^Search \d+ item/i });
 }
 
 async function confirmAndAsk(user: ReturnType<typeof userEvent.setup>) {
-  await user.click(screen.getByRole("button", { name: /search all sources and pages|apply page scope|^Search \d+ (item|page)/i }));
+  await user.click(screen.getByRole("button", { name: /search all sources and files|apply file scope|^Search \d+ (item|file)/i }));
   await user.type(screen.getByPlaceholderText(/ask anything/i), "What is the policy?");
   await user.click(screen.getByRole("button", { name: "Send" }));
 }
@@ -153,7 +153,7 @@ describe("KnowledgeBasePage — every scope dimension the sheet edits reaches th
     const user = renderPage();
     await openScopeSheet(user);
 
-    await user.click(screen.getByRole("combobox", { name: /restrict answer to pages owned by a member/i }));
+    await user.click(screen.getByRole("combobox", { name: /restrict answer to files owned by a member/i }));
     await user.click(await screen.findByText("Grace Hopper"));
     await confirmAndAsk(user);
 
@@ -259,10 +259,10 @@ describe("KnowledgeBasePage — every scope dimension the sheet edits reaches th
     await user.click(screen.getByRole("button", { name: "Draft" }));
 
     expect(screen.getByText(/selected files and notes are excluded/i)).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Search 0 pages" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Search 0 files" })).toBeDisabled();
 
     await user.click(screen.getByRole("checkbox", { name: /include onboarding guide in search/i }));
-    expect(screen.getByRole("button", { name: "Search 1 page" })).toBeEnabled();
+    expect(screen.getByRole("button", { name: "Search 1 file" })).toBeEnabled();
   });
 
   it("carries all six dimensions together in one request, so no dimension overwrites another on the way to the body", async () => {
@@ -274,10 +274,10 @@ describe("KnowledgeBasePage — every scope dimension the sheet edits reaches th
     await user.click(screen.getByRole("switch", { name: /verified pages and articles only/i }));
     await user.click(screen.getByRole("checkbox", { name: /include engineering spec in search/i }));
     await user.click(screen.getByRole("checkbox", { name: /include onboarding guide in search/i }));
-    await user.click(screen.getByRole("combobox", { name: /restrict answer to pages owned by a member/i }));
+    await user.click(screen.getByRole("combobox", { name: /restrict answer to files owned by a member/i }));
     await user.click(await screen.findByText("Ada Lovelace"));
     expect(screen.getByText(/selected files and notes are excluded/i)).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Search 1 page" })).toBeEnabled();
+    expect(screen.getByRole("button", { name: "Search 1 file" })).toBeEnabled();
     await confirmAndAsk(user);
 
     expect(await sentBody()).toMatchObject({

@@ -108,15 +108,15 @@ export default function SharedPage() {
   return (
     <PageWrapper
       title="Shared with me"
-      subtitle="Pages explicitly shared with you"
+      subtitle="Files explicitly shared with you"
     >
       <WikiPageCollectionTable
         fixedParams={SHARED_WITH_ME_PARAMS}
         additionalColumns={sharedColumns}
         emptyTitle="Nothing shared with you"
-        emptyDescription="Pages explicitly shared with your account will appear here."
+        emptyDescription="Files explicitly shared with your account will appear here."
         accessLostTitle="Your access may have changed"
-        accessLostDescription="Some pages you had access to may no longer be shared with you."
+        accessLostDescription="Some files you had access to may no longer be shared with you."
         onRowsChange={handleRowsChange}
       />
     </PageWrapper>

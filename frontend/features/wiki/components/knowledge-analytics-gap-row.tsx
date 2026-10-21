@@ -143,7 +143,7 @@ export const GapTableRow = memo(function GapTableRow({
               onClick={handleCreateFixClick}
               disabled={isCreatingFix || !row.query}
               type="button"
-              aria-label="Create fix page for gap"
+              aria-label="Create fix file for gap"
             >
               <KbPlusIcon className="h-3 w-3" />
               Fix

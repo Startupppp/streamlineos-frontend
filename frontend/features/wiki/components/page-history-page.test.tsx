@@ -330,7 +330,7 @@ describe("PageHistoryPage — page states", () => {
 
     render(<PageHistoryPage pageId={1} />);
 
-    expect(screen.getByText("Failed to load page.")).toBeInTheDocument();
+    expect(screen.getByText("Failed to load file.")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Retry" })).toBeInTheDocument();
   });
 
@@ -566,7 +566,7 @@ describe("PageHistoryPage — restore preview", () => {
     expect(screen.queryByRole("alertdialog")).not.toBeInTheDocument();
     expect(
       screen.queryByText(
-        "Preview: how this page changes when version 1 is restored",
+        "Preview: how this file changes when version 1 is restored",
       ),
     ).not.toBeInTheDocument();
   });
@@ -604,7 +604,7 @@ describe("PageHistoryPage — restore preview", () => {
     ).toBeInTheDocument();
     expect(
       within(dialog).getByText(
-        "Preview: how this page changes when version 1 is restored",
+        "Preview: how this file changes when version 1 is restored",
       ),
     ).toBeInTheDocument();
   });

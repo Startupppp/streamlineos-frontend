@@ -108,14 +108,14 @@ export default function PageSpreadsheet({ pageId, onNavigateToPage, projectId }:
       .then(
         (result) => {
           if (!result.isSuccess || !result.data || (conflict?.currentContentRevision !== null && conflict?.currentContentRevision !== undefined && result.data.contentRevision < conflict.currentContentRevision)) {
-            toast.error("Couldn't load the latest page version. Your edits are still here.");
+            toast.error("Couldn't load the latest file version. Your edits are still here.");
             return;
           }
           discardLocalEdits();
           setTitleDraft(null);
           setReloadNonce(nextReload);
         },
-        () => { toast.error("Couldn't load the latest page version. Your edits are still here."); },
+        () => { toast.error("Couldn't load the latest file version. Your edits are still here."); },
       )
       .finally(() => setIsReloading(false));
   }, [conflict?.currentContentRevision, discardLocalEdits, refetch]);

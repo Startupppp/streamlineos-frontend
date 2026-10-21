@@ -198,7 +198,7 @@ export default function PageHistoryPage({
     return (
       <PageWrapper title="File history" backHref={backHref}>
         <div className="flex flex-col items-center justify-center flex-1 min-h-[40dvh] gap-3">
-          <p className="text-sm text-muted-foreground">Failed to load page.</p>
+          <p className="text-sm text-muted-foreground">Failed to load file.</p>
           <Button variant="outline" size="sm" onClick={() => router.refresh()}>
             Retry
           </Button>
@@ -474,7 +474,7 @@ export default function PageHistoryPage({
         content={
           versionADetail ? (
             <BlockDiffView
-              heading={`Preview: how this page changes when version ${selectedA} is restored`}
+              heading={`Preview: how this file changes when version ${selectedA} is restored`}
               identicalLabel="Restoring changes nothing — this version matches the current page."
               beforeContent={currentPage.content}
               afterContent={versionADetail.content}

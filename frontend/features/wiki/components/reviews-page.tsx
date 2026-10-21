@@ -184,7 +184,7 @@ export default function ReviewsPage() {
       }
       const failuresWithTitle: BulkFailureWithTitle[] = failures.map((f) => ({
         ...f,
-        pageTitle: reviews.find((r) => r.id === f.id)?.pageTitle ?? "Unknown page",
+        pageTitle: reviews.find((r) => r.id === f.id)?.pageTitle ?? "Unknown file",
       }));
       setBulkState({
         kind: "results",
@@ -337,8 +337,8 @@ export default function ReviewsPage() {
   const emptyNode = cursorTrail.length > 0 ? (
     <EmptyState
       illustrationPreset="default"
-      title="No reviews on this page."
-      description="The reviews on this page may have changed. Go back to continue browsing."
+      title="No reviews on this file."
+      description="The reviews on this file may have changed. Go back to continue browsing."
       action={{ label: "Previous page", onClick: handleGoPrevious }}
       compact
     />
@@ -354,7 +354,7 @@ export default function ReviewsPage() {
   ) : (
     <EmptyState
       illustrationPreset="default"
-      title="No pages under review."
+      title="No files under review."
       description="Assign reviews to keep your knowledge base current."
       compact
     />

@@ -82,7 +82,7 @@ export function SpaceSheet({
         },
         {
           onSuccess: () => {
-            toast.success("Space updated");
+            toast.success("Team folder updated");
             form.reset();
             onSuccess();
           },
@@ -99,7 +99,7 @@ export function SpaceSheet({
         },
         {
           onSuccess: () => {
-            toast.success("Space created");
+            toast.success("Team folder created");
             form.reset();
             onSuccess();
           },
@@ -140,7 +140,7 @@ export function SpaceSheet({
                   <FormItem>
                     <FormLabel>Name</FormLabel>
                     <FormControl>
-                      <Input {...field} placeholder="Space name" />
+                      <Input {...field} placeholder="Team folder name" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>

@@ -323,7 +323,7 @@ describe("trash bulk purge impact confirmation", () => {
 
     expect(toast.success).not.toHaveBeenCalled();
     expect(toast.error).toHaveBeenCalledWith("1 page could not be permanently deleted", {
-      description: "1: is on legal hold, has a subpage outside Trash, or changed since you selected it. They are still selected so you can try again.",
+      description: "1: is on legal hold, has a child file outside Trash, or changed since you selected it. They are still selected so you can try again.",
     });
     expect((DataTable as jest.Mock).mock.calls.at(-1)?.[0].selection.selected).toEqual(new Set(["9"]));
   });
@@ -359,7 +359,7 @@ describe("trash bulk purge impact confirmation", () => {
     const view = openPurgeConfirmation();
 
     expect(purgeDialog().hideConfirm).toBe(true);
-    expect(purgeDialog().description).toContain("Checking child pages");
+    expect(purgeDialog().description).toContain("Checking child files");
     act(() => purgeDialog().onConfirm());
     expect(mutate).not.toHaveBeenCalled();
 
@@ -385,7 +385,7 @@ describe("trash bulk purge impact confirmation", () => {
     view.rerender(<TrashPage />);
 
     expect(purgeDialog().hideConfirm).toBe(false);
-    expect(purgeDialog().description).toContain("2 child pages");
+    expect(purgeDialog().description).toContain("2 child files");
     act(() => purgeDialog().onConfirm());
     expect(mutate).toHaveBeenCalledWith([9], expect.anything());
   });
@@ -815,7 +815,7 @@ describe("trash page first-empty is not the same claim as filtered-empty", () =>
 
     render(<TrashPage />);
 
-    expect(screen.getByText("No deleted pages on this page")).toBeInTheDocument();
+    expect(screen.getByText("No deleted files on this page")).toBeInTheDocument();
     expect(screen.queryByText("Trash is empty")).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "Previous page" }));
     expect(goPrevious).toHaveBeenCalledTimes(1);
@@ -838,7 +838,7 @@ describe("trash page first-empty is not the same claim as filtered-empty", () =>
     render(<TrashPage />);
 
     expect(
-      screen.getByText("No deleted pages match your filters."),
+      screen.getByText("No deleted files match your filters."),
     ).toBeInTheDocument();
     expect(screen.queryByText("Trash is empty")).not.toBeInTheDocument();
   });
@@ -857,7 +857,7 @@ describe("trash page first-empty is not the same claim as filtered-empty", () =>
       const { unmount } = render(<TrashPage />);
 
       expect(
-        screen.getByText("No deleted pages match your filters."),
+        screen.getByText("No deleted files match your filters."),
       ).toBeInTheDocument();
       expect(screen.queryByText("Trash is empty")).not.toBeInTheDocument();
 

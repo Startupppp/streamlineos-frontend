@@ -66,13 +66,13 @@ export function ImportFormControls({
         </Select>
       </div>
       <div className="space-y-1">
-        <Label className="text-xs">Parent page</Label>
+        <Label className="text-xs">Parent file</Label>
         <Select
           value={targetParentPageId}
           onValueChange={onParentPageChange}
           disabled={targetSpaceId === "none"}
         >
-          <SelectTrigger className="text-sm" aria-label="Parent page">
+          <SelectTrigger className="text-sm" aria-label="Parent file">
             <SelectValue placeholder="Top level" />
           </SelectTrigger>
           <SelectContent>

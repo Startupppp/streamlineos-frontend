@@ -248,7 +248,7 @@ function PanelContent({
           onRetry={handleRetryBacklinks}
           loading={<Skeleton className="h-12 w-full" />}
           empty={
-            <p className="text-xs text-muted-foreground">No pages link here.</p>
+            <p className="text-xs text-muted-foreground">No files link here.</p>
           }
         >
           <>

@@ -250,7 +250,7 @@ export function PageDocumentToolbar({
                       <DropdownMenuSubContent className="w-56">
                         {backlinks.length === 0 ? (
                           <div className="px-2 py-1.5 text-xs text-muted-foreground">
-                            No pages link here yet.
+                            No files link here yet.
                           </div>
                         ) : (
                           backlinks.map((bl) => (

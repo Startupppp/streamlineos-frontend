@@ -165,7 +165,7 @@ export default function WikiHomePage({ projectId }: WikiHomePageProps) {
               onSubmitSearch={handleSearchSubmit}
               placeholder={
                 isProjectScoped
-                  ? "Filter this project's pages…"
+                  ? "Filter this project's files…"
                   : "Search documents…"
               }
               fill

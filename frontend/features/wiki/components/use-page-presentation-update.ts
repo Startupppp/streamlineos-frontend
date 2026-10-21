@@ -101,7 +101,7 @@ export function usePagePresentationUpdate({
       if (isApiError(error) && error.status === 409) {
         handleError(active.field, active.value, error);
       } else {
-        toast.error("Could not retry the page change. Your choice is still available.");
+        toast.error("Could not retry the file change. Your choice is still available.");
       }
     } finally {
       setIsRetrying(false);

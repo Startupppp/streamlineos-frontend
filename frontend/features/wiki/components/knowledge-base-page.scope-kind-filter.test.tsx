@@ -182,11 +182,11 @@ describe("KnowledgeBasePage — kind filter with empty results does not send an 
     const user = renderWithNotesOnly();
 
     await user.click(screen.getByRole("button", { name: /choose sources to search/i }));
-    await screen.findByRole("button", { name: /search all sources and pages/i });
+    await screen.findByRole("button", { name: /search all sources and files/i });
 
     await user.click(screen.getByRole("button", { name: "Files" }));
 
-    await user.click(screen.getByRole("button", { name: /search all sources and pages/i }));
+    await user.click(screen.getByRole("button", { name: /search all sources and files/i }));
 
     await user.type(
       screen.getByPlaceholderText(/ask anything/i),
@@ -203,11 +203,11 @@ describe("KnowledgeBasePage — kind filter with empty results does not send an 
     const user = renderWithFilesOnly();
 
     await user.click(screen.getByRole("button", { name: /choose sources to search/i }));
-    await screen.findByRole("button", { name: /search all sources and pages/i });
+    await screen.findByRole("button", { name: /search all sources and files/i });
 
     await user.click(screen.getByRole("button", { name: "Notes" }));
 
-    await user.click(screen.getByRole("button", { name: /search all sources and pages/i }));
+    await user.click(screen.getByRole("button", { name: /search all sources and files/i }));
 
     await user.type(
       screen.getByPlaceholderText(/ask anything/i),
@@ -224,7 +224,7 @@ describe("KnowledgeBasePage — kind filter with empty results does not send an 
     const user = renderWithFilesOnly();
 
     await user.click(screen.getByRole("button", { name: /choose sources to search/i }));
-    await screen.findByRole("button", { name: /search all sources and pages/i });
+    await screen.findByRole("button", { name: /search all sources and files/i });
 
     await user.click(screen.getByRole("button", { name: "Files" }));
 

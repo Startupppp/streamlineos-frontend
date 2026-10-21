@@ -168,7 +168,7 @@ export function ApproveDialog({ review, onClose }: ApproveDialogProps) {
         <DialogHeader>
           <DialogTitle>Approve review</DialogTitle>
           <DialogDescription>
-            Approving marks this page as reviewed. You can leave an optional
+            Approving marks this file as reviewed. You can leave an optional
             note for the requester.
           </DialogDescription>
         </DialogHeader>
@@ -244,7 +244,7 @@ export function RejectDialog({ review, onClose }: RejectDialogProps) {
         <DialogHeader>
           <DialogTitle>Reject review</DialogTitle>
           <DialogDescription>
-            Rejecting sends this page back to its author. Explain what needs to
+            Rejecting sends this file back to its author. Explain what needs to
             change.
           </DialogDescription>
         </DialogHeader>

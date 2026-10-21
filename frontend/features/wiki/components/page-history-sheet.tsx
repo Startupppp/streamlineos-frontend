@@ -108,7 +108,7 @@ export default function PageHistorySheet({ pageId, open, onOpenChange, projectId
             )}
           </div>
           <SheetDescription className="text-xs mt-0.5">
-            Earlier saved versions of this page, newest first.
+            Earlier saved versions of this file, newest first.
           </SheetDescription>
         </SheetHeader>
 

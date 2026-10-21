@@ -73,7 +73,7 @@ export default function PageTree({
     return (
       <ErrorState
         compact
-        title="Couldn't load pages"
+        title="Couldn't load files"
         description={getErrorMessage(error)}
         error={error}
         onRetry={handleRetry}
@@ -84,7 +84,7 @@ export default function PageTree({
   if (rootNodes.length === 0 && !hasNextPage) {
     return (
       <div className="pr-2 pl-0 py-4 flex flex-col items-center gap-2">
-        <p className="text-xs text-muted-foreground text-center">No pages yet</p>
+        <p className="text-xs text-muted-foreground text-center">No files yet</p>
         <KbNewMenu
           scope={treeScope}
           allowFolder={false}
@@ -102,7 +102,7 @@ export default function PageTree({
   }
 
   return (
-    <div role="tree" aria-label="Page tree" className="min-w-0 overflow-hidden space-y-0.5">
+    <div role="tree" aria-label="Folder tree" className="min-w-0 overflow-hidden space-y-0.5">
       {rootNodes.map((node, index) => (
         <PageTreeItem
           key={node.id}
@@ -119,7 +119,7 @@ export default function PageTree({
       {isError ? (
         <ErrorState
           compact
-          title={isFetchNextPageError ? "Couldn't load more pages" : "Couldn't refresh pages"}
+          title={isFetchNextPageError ? "Couldn't load more files" : "Couldn't refresh files"}
           description={getErrorMessage(error)}
           error={error}
           onRetry={handleRetry}
@@ -129,7 +129,7 @@ export default function PageTree({
           hasNextPage={hasNextPage}
           isFetchingNextPage={isFetchingNextPage}
           onLoadMore={fetchNextPage}
-          label="Load more pages"
+          label="Load more files"
         />
       )}
     </div>

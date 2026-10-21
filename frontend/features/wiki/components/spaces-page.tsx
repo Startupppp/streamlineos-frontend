@@ -431,11 +431,11 @@ export default function SpacesPage() {
         onOpenChange={(open) => {
           if (!open) setArchiveTarget(null);
         }}
-        title="Archive space?"
+        title="Archive team folder?"
         description={
           archiveTarget ? (
             <>
-              {`Archiving "${archiveTarget.name}" will hide it from users. Pages and content are preserved and can be restored.`}
+              {`Archiving "${archiveTarget.name}" will hide it from users. Files and content are preserved and can be restored.`}
               <SpaceArchiveImpact spaceId={archiveTarget.id} />
             </>
           ) : (
@@ -453,7 +453,7 @@ export default function SpacesPage() {
         onOpenChange={(open) => {
           if (!open) setRestoreTarget(null);
         }}
-        title="Restore space?"
+        title="Restore team folder?"
         description={
           restoreTarget
             ? `Restore "${restoreTarget.name}" to make it accessible again?`

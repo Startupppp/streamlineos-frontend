@@ -359,9 +359,9 @@ describe("project wiki page tree links stay inside the project", () => {
 
     render(<PageTree projectId={7} baseHref="/build/7/wiki" />);
 
-    expect(screen.getByText("Couldn't load pages")).toBeInTheDocument();
+    expect(screen.getByText("Couldn't load files")).toBeInTheDocument();
     expect(screen.getByText("root-tree-first")).toBeInTheDocument();
-    expect(screen.queryByText("No pages yet")).not.toBeInTheDocument();
+    expect(screen.queryByText("No files yet")).not.toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: "Try again" }));
     expect(refetch).toHaveBeenCalledTimes(1);
   });
@@ -383,9 +383,9 @@ describe("project wiki page tree links stay inside the project", () => {
     render(<PageTree projectId={7} baseHref="/build/7/wiki" />);
 
     expect(screen.getByRole("link", { name: /deployment runbook/i })).toBeInTheDocument();
-    expect(screen.getByText("Couldn't load more pages")).toBeInTheDocument();
+    expect(screen.getByText("Couldn't load more files")).toBeInTheDocument();
     expect(screen.getByText("root-tree-later")).toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: "Load more pages" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Load more files" })).not.toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: "Try again" }));
     expect(fetchNextPage).toHaveBeenCalledTimes(1);
     expect(refetch).not.toHaveBeenCalled();
@@ -425,7 +425,7 @@ describe("project wiki page tree links stay inside the project", () => {
 
     await user.click(screen.getByRole("button", { name: "Expand" }));
 
-    expect(screen.getByRole("status")).toHaveTextContent("Loading child pages");
+    expect(screen.getByRole("status")).toHaveTextContent("Loading child files");
   });
 
   it("keeps a failed child level visible with its reference and retry", async () => {
@@ -445,7 +445,7 @@ describe("project wiki page tree links stay inside the project", () => {
 
     expect(screen.getByRole("alert")).toHaveTextContent("Read failed");
     expect(screen.getByText("tree-request-1")).toBeInTheDocument();
-    await user.click(screen.getByRole("button", { name: "Retry child pages" }));
+    await user.click(screen.getByRole("button", { name: "Retry child files" }));
     expect(refetch).toHaveBeenCalledTimes(1);
   });
 
@@ -469,8 +469,8 @@ describe("project wiki page tree links stay inside the project", () => {
 
     expect(screen.getByRole("link", { name: "Rollback steps" })).toBeInTheDocument();
     expect(screen.getByText("child-tree-later")).toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: "Load more child pages" })).not.toBeInTheDocument();
-    await user.click(screen.getByRole("button", { name: "Retry child pages" }));
+    expect(screen.queryByRole("button", { name: "Load more child files" })).not.toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Retry child files" }));
     expect(fetchNextPage).toHaveBeenCalledTimes(1);
     expect(refetch).not.toHaveBeenCalled();
   });
@@ -489,7 +489,7 @@ describe("project wiki page tree links stay inside the project", () => {
     await user.click(screen.getByRole("button", { name: "Expand" }));
 
     expect(screen.queryByRole("link", { name: "Rollback steps" })).not.toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: "Load more child pages" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Load more child files" })).not.toBeInTheDocument();
     expect(screen.getByText(`child-tree-${status}`)).toBeInTheDocument();
   });
 
@@ -498,8 +498,8 @@ describe("project wiki page tree links stay inside the project", () => {
     const user = userEvent.setup();
     render(<PageTree spaceId={5} />);
 
-    const addChild = screen.getByRole("button", { name: "Add child page" });
-    const pageOptions = screen.getByRole("button", { name: "Page options" });
+    const addChild = screen.getByRole("button", { name: "Add child file" });
+    const pageOptions = screen.getByRole("button", { name: "File options" });
     expect(addChild).toHaveClass("h-8", "w-8");
     expect(pageOptions).toHaveClass("h-8", "w-8");
     expect(pageOptions.parentElement).toHaveClass("flex", "lg:hidden", "lg:group-focus-within:flex");
@@ -518,7 +518,7 @@ describe("project wiki page tree links stay inside the project", () => {
     const user = userEvent.setup();
     render(<PageTree projectId={7} baseHref="/build/7/wiki" />);
 
-    await user.click(screen.getByRole("button", { name: "Add child page" }));
+    await user.click(screen.getByRole("button", { name: "Add child file" }));
     await user.click(await screen.findByRole("menuitem", { name: "Document" }));
 
     expect(createPageMutate).toHaveBeenCalledWith(
@@ -532,7 +532,7 @@ describe("project wiki page tree links stay inside the project", () => {
     render(<PageTree projectId={7} baseHref="/build/7/wiki" />);
 
     await user.click(screen.getByRole("button", { name: "Expand" }));
-    await user.click(screen.getAllByRole("button", { name: "Add child page" })[1]);
+    await user.click(screen.getAllByRole("button", { name: "Add child file" })[1]);
     await user.click(await screen.findByRole("menuitem", { name: "Document" }));
 
     expect(createPageMutate).toHaveBeenCalledWith(
@@ -546,7 +546,7 @@ describe("project wiki page tree links stay inside the project", () => {
     const user = userEvent.setup();
     render(<PageTree spaceId={5} />);
 
-    await user.click(screen.getByRole("button", { name: "Add child page" }));
+    await user.click(screen.getByRole("button", { name: "Add child file" }));
     await user.click(await screen.findByRole("menuitem", { name: "Document" }));
 
     expect(createPageMutate).toHaveBeenCalledWith(
@@ -560,7 +560,7 @@ describe("project wiki page tree links stay inside the project", () => {
     const user = userEvent.setup();
     render(<PageTree />);
 
-    await user.click(screen.getByRole("button", { name: "Add child page" }));
+    await user.click(screen.getByRole("button", { name: "Add child file" }));
     await user.click(await screen.findByRole("menuitem", { name: "Document" }));
 
     expect(createPageMutate).toHaveBeenCalledWith(
@@ -573,7 +573,7 @@ describe("project wiki page tree links stay inside the project", () => {
     const user = userEvent.setup();
     render(<PageTree projectId={7} baseHref="/build/7/wiki" />);
 
-    await user.click(screen.getByRole("button", { name: "Page options" }));
+    await user.click(screen.getByRole("button", { name: "File options" }));
     await user.click(screen.getByRole("menuitem", { name: "Rename" }));
     const input = screen.getByRole("textbox");
     await user.clear(input);
@@ -627,7 +627,7 @@ describe("project wiki page tree links stay inside the project", () => {
     const user = userEvent.setup();
     render(<PageTree projectId={7} baseHref="/build/7/wiki" />);
 
-    await user.click(screen.getByRole("button", { name: "Add child page" }));
+    await user.click(screen.getByRole("button", { name: "Add child file" }));
     await user.click(await screen.findByRole("menuitem", { name: "Document" }));
 
     const handlers = createPageMutate.mock.calls[0]?.[1] as {
@@ -642,7 +642,7 @@ describe("project wiki page tree links stay inside the project", () => {
     const user = userEvent.setup();
     render(<PageTree />);
 
-    await user.click(screen.getByRole("button", { name: "Add child page" }));
+    await user.click(screen.getByRole("button", { name: "Add child file" }));
     await user.click(await screen.findByRole("menuitem", { name: "Document" }));
 
     const handlers = createPageMutate.mock.calls[0]?.[1] as {

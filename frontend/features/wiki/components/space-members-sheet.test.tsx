@@ -113,7 +113,7 @@ describe("SpaceMembersSheet — accessible name and description", () => {
 
     expect(describedBy).toBeTruthy();
     expect(document.getElementById(describedBy ?? "")).toHaveTextContent(
-      /read or edit pages in this space/i,
+      /read or edit files in this team folder/i,
     );
   });
 });

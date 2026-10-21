@@ -207,7 +207,7 @@ function AddMemberForm({ spaceId }: AddMemberFormProps) {
           name="spaceRole"
           render={({ field }) => (
             <FormItem>
-              <FormLabel className="text-xs">Space role</FormLabel>
+              <FormLabel className="text-xs">Team folder role</FormLabel>
               <FormControl>
                 <Select value={field.value} onValueChange={field.onChange}>
                   <SelectTrigger className="h-9 text-sm">
@@ -328,7 +328,7 @@ function MembersRead({
           <EmptyState
             illustration={<KbUsersIcon className="w-8 text-muted-foreground" />}
             title="No members yet"
-            description="Add members to this space to control who can access it."
+            description="Add members to this team folder to control who can access it."
           />
         }
       >
@@ -367,7 +367,7 @@ export function SpaceMembersSheet({
         <SheetHeader className="px-6 py-4 border-b shrink-0">
           <SheetTitle>Members — {spaceName}</SheetTitle>
           <SheetDescription className="text-xs mt-0.5">
-            People who can read or edit pages in this space.
+            People who can read or edit files in this team folder.
           </SheetDescription>
         </SheetHeader>
         <SheetBody className="px-6 py-4 flex-1 overflow-y-auto space-y-4">

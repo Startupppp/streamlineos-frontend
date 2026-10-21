@@ -21,7 +21,7 @@ export function WikiCollapsedSidebarChrome({
         className="size-7"
         onClick={onNewPage}
         disabled={createPending}
-        aria-label="New page"
+        aria-label="New document"
       />
     </div>
   );

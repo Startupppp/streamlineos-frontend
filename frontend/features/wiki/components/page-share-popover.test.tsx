@@ -98,7 +98,7 @@ describe("PageSharePopover — the privileged share controls live behind the Sha
     await user.click(screen.getByText("Public"));
     setVisibilityMutate.mock.calls[0]?.[1].onError(new ApiError("Stale", 409, "STALE_REVISION"));
 
-    expect(toast.error).toHaveBeenCalledWith("Page changed before visibility was saved. Refresh before trying again.");
+    expect(toast.error).toHaveBeenCalledWith("File changed before visibility was saved. Refresh before trying again.");
     expect(setVisibilityMutate).toHaveBeenCalledTimes(1);
   });
 
@@ -189,7 +189,7 @@ describe("PageSharePopover — a public draft says its link is not live yet", ()
 
     await user.click(screen.getByRole("button", { name: "Share file" }));
 
-    expect(screen.getByText("The public link works once this page is published.")).toBeInTheDocument();
+    expect(screen.getByText("The public link works once this file is published.")).toBeInTheDocument();
   });
 
   it("shows no such hint for a published public page", async () => {
@@ -198,6 +198,6 @@ describe("PageSharePopover — a public draft says its link is not live yet", ()
 
     await user.click(screen.getByRole("button", { name: "Share file" }));
 
-    expect(screen.queryByText("The public link works once this page is published.")).toBeNull();
+    expect(screen.queryByText("The public link works once this file is published.")).toBeNull();
   });
 });

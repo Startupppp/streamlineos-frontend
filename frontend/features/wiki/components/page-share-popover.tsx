@@ -77,7 +77,7 @@ export default function PageSharePopover({ page }: PageSharePopoverProps) {
       {
         onSuccess: () => toast.success("Visibility updated"),
         onError: (error) => toast.error(isApiError(error) && error.status === 409
-          ? "Page changed before visibility was saved. Refresh before trying again."
+          ? "File changed before visibility was saved. Refresh before trying again."
           : "Failed to update visibility"),
       },
     );
@@ -135,7 +135,7 @@ export default function PageSharePopover({ page }: PageSharePopoverProps) {
       >
         <div
           role="radiogroup"
-          aria-label="Page visibility"
+          aria-label="File visibility"
           className="flex flex-col gap-0.5"
           onKeyDown={handleVisibilityKeyDown}
         >
@@ -180,7 +180,7 @@ export default function PageSharePopover({ page }: PageSharePopoverProps) {
 
         {publicLinkWaitsForPublish ? (
           <p className="mt-1 border-t border-border px-2 pt-1.5 text-micro text-muted-foreground">
-            The public link works once this page is published.
+            The public link works once this file is published.
           </p>
         ) : null}
 

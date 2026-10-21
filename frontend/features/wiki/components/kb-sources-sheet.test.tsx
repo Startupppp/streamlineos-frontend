@@ -167,14 +167,14 @@ describe("KbSourcesSheet scope mode — all six scope dimensions are present and
     render(<KbSourcesSheet {...SCOPE_PROPS} />);
 
     expect(
-      screen.getByRole("combobox", { name: /restrict answer to pages owned by a member/i }),
+      screen.getByRole("combobox", { name: /restrict answer to files owned by a member/i }),
     ).toBeInTheDocument();
   });
 
   it("retains a selected owner's label when that owner is outside the current search page", () => {
     render(<KbSourcesSheet {...SCOPE_PROPS} ownerMembershipId={88} selectedOwner={{ membershipId: 88, name: "Grace Hopper" }} owners={[]} />);
 
-    expect(screen.getByRole("combobox", { name: /restrict answer to pages owned by a member/i })).toHaveTextContent("Grace Hopper");
+    expect(screen.getByRole("combobox", { name: /restrict answer to files owned by a member/i })).toHaveTextContent("Grace Hopper");
   });
 
   it("loads another owner page from the keyboard accessible picker action", async () => {
@@ -182,7 +182,7 @@ describe("KbSourcesSheet scope mode — all six scope dimensions are present and
     const user = userEvent.setup({ pointerEventsCheck: 0 });
     render(<KbSourcesSheet {...SCOPE_PROPS} ownersHasMore onOwnersLoadMore={loadMore} />);
 
-    await user.click(screen.getByRole("combobox", { name: /restrict answer to pages owned by a member/i }));
+    await user.click(screen.getByRole("combobox", { name: /restrict answer to files owned by a member/i }));
     await user.click(screen.getByRole("button", { name: "Load more members" }));
 
     expect(loadMore).toHaveBeenCalledTimes(1);
@@ -193,7 +193,7 @@ describe("KbSourcesSheet scope mode — all six scope dimensions are present and
     const user = userEvent.setup({ pointerEventsCheck: 0 });
     render(<KbSourcesSheet {...SCOPE_PROPS} owners={[]} ownersError={new Error("read failed")} onOwnersRetry={retry} />);
 
-    await user.click(screen.getByRole("combobox", { name: /restrict answer to pages owned by a member/i }));
+    await user.click(screen.getByRole("combobox", { name: /restrict answer to files owned by a member/i }));
     expect(screen.getByRole("alert")).toHaveTextContent("Could not load members.");
     await user.click(screen.getByRole("button", { name: "Retry members" }));
     expect(retry).toHaveBeenCalledTimes(1);

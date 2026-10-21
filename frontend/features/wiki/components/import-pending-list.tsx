@@ -78,7 +78,7 @@ export function ImportPendingList({
     <div className="space-y-2">
       <div className="flex items-center justify-between">
         <p className="text-xs font-medium text-muted-foreground">
-          {items.length} page{items.length === 1 ? "" : "s"} to import
+          {items.length} file{items.length === 1 ? "" : "s"} to import
         </p>
         <Button
           size="sm"
@@ -118,7 +118,7 @@ export function ImportPendingList({
         className="gap-1.5"
       >
         <KbUploadIcon className="h-3.5 w-3.5" />
-        Import {items.length} page{items.length === 1 ? "" : "s"}
+        Import {items.length} file{items.length === 1 ? "" : "s"}
       </LoadingButton>
     </div>
   );

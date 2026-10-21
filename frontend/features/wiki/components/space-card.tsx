@@ -103,7 +103,7 @@ export function SpaceCard({
           <TruncatedText text={space.description} className="text-sm text-muted-foreground" />
         )}
         <p className="text-xs text-muted-foreground tabular-nums">
-          {pageCount} {pageCount === 1 ? "page" : "pages"} · {space.memberCount}{" "}
+          {pageCount} {pageCount === 1 ? "file" : "files"} · {space.memberCount}{" "}
           {space.memberCount === 1 ? "member" : "members"}
         </p>
         <p className="text-xs text-muted-foreground" suppressHydrationWarning>
@@ -117,7 +117,7 @@ export function SpaceCard({
           >
             <KbTriangleAlertIcon className="h-3 w-3 mr-1" />
             {space.pagesOverdueForReview}{" "}
-            {space.pagesOverdueForReview === 1 ? "page" : "pages"} overdue for review
+            {space.pagesOverdueForReview === 1 ? "file" : "files"} overdue for review
           </Badge>
         )}
       </Link>

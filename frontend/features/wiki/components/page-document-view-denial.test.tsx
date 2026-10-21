@@ -132,8 +132,8 @@ describe("PageDocument — conflict reload", () => {
 
   async function typeLocalDraft() {
     const user = userEvent.setup();
-    await user.clear(screen.getByLabelText("Page title"));
-    await user.type(screen.getByLabelText("Page title"), "My title");
+    await user.clear(screen.getByLabelText("File title"));
+    await user.type(screen.getByLabelText("File title"), "My title");
     await user.click(screen.getByRole("button", { name: "Type body" }));
     return user;
   }
@@ -151,7 +151,7 @@ describe("PageDocument — conflict reload", () => {
 
     await waitFor(() => expect(refetch).toHaveBeenCalledTimes(1));
     expect(mockDiscardLocalEdits).not.toHaveBeenCalled();
-    expect(screen.getByLabelText("Page title")).toHaveValue("My title");
+    expect(screen.getByLabelText("File title")).toHaveValue("My title");
     expect(screen.getByTestId("plate-editor")).toHaveAttribute("data-content", JSON.stringify([{ type: "p", children: [{ text: "My body" }] }]));
     expect(screen.getByRole("button", { name: "Load their version" })).toBeInTheDocument();
   });
@@ -170,7 +170,7 @@ describe("PageDocument — conflict reload", () => {
     await user.click(screen.getByRole("button", { name: "Load their version" }));
 
     await waitFor(() => expect(mockDiscardLocalEdits).toHaveBeenCalledTimes(1));
-    expect(screen.getByLabelText("Page title")).toHaveValue("Their title");
+    expect(screen.getByLabelText("File title")).toHaveValue("Their title");
     expect(screen.getByTestId("plate-editor")).toHaveAttribute("data-content", JSON.stringify(freshPage.content));
   });
 
@@ -187,7 +187,7 @@ describe("PageDocument — conflict reload", () => {
     await waitFor(() => expect(mockCompareFailed).toHaveBeenCalledTimes(1));
     expect(mockCompared).not.toHaveBeenCalled();
     expect(mockDiscardLocalEdits).not.toHaveBeenCalled();
-    expect(screen.getByLabelText("Page title")).toHaveValue("My title");
+    expect(screen.getByLabelText("File title")).toHaveValue("My title");
 
     await user.click(screen.getByRole("button", { name: "Compare versions" }));
     await waitFor(() => expect(mockCompared).toHaveBeenCalledWith({ title: "Their title", body: "" }));
@@ -275,13 +275,13 @@ describe("PageDocument — kb:pages:view denial is not a retryable error", () =>
     render(<PageDocument pageId={42} projectId={7} />);
 
     expect(screen.queryByRole("button", { name: /try again/i })).toBeNull();
-    expect(screen.queryByText("Couldn't load this page")).toBeNull();
+    expect(screen.queryByText("Couldn't load this file")).toBeNull();
   });
 
   it("renders the document title and editor when kb:pages:view is granted — paired positive control for the two denial tests above", () => {
     render(<PageDocument pageId={42} projectId={7} />);
 
-    expect(screen.getByLabelText("Page title")).toHaveValue("Deployment runbook");
+    expect(screen.getByLabelText("File title")).toHaveValue("Deployment runbook");
     expect(screen.getByTestId("plate-editor")).toBeInTheDocument();
     expect(screen.queryByText("Access Restricted")).toBeNull();
   });
@@ -319,8 +319,8 @@ describe("PageDocument — the access snapshot loading window", () => {
 
     expect(container.querySelectorAll(".skeleton-shimmer").length).toBeGreaterThan(0);
     expect(screen.queryByText("Access Restricted")).toBeNull();
-    expect(screen.queryByText("Couldn't load this page")).toBeNull();
-    expect(screen.queryByText("Page not found")).toBeNull();
+    expect(screen.queryByText("Couldn't load this file")).toBeNull();
+    expect(screen.queryByText("File not found")).toBeNull();
   });
 });
 
@@ -336,13 +336,13 @@ describe("PageDocument — the title is interactive only when inline rename is a
 
     render(<PageDocument pageId={42} projectId={7} />);
 
-    expect(screen.getByLabelText("Page title")).toHaveAttribute("readonly");
+    expect(screen.getByLabelText("File title")).toHaveAttribute("readonly");
   });
 
   it("renders the title editable when the record allows editing — paired positive control for the read-only test above", () => {
     render(<PageDocument pageId={42} projectId={7} />);
 
-    expect(screen.getByLabelText("Page title")).not.toHaveAttribute("readonly");
+    expect(screen.getByLabelText("File title")).not.toHaveAttribute("readonly");
   });
 });
 
@@ -352,7 +352,7 @@ describe("PageDocument — edit mode requires role and record permission", () =>
 
     render(<PageDocument pageId={42} projectId={7} />);
 
-    expect(screen.getByLabelText("Page title")).toHaveAttribute("readonly");
+    expect(screen.getByLabelText("File title")).toHaveAttribute("readonly");
     expect(screen.getByTestId("plate-editor")).toHaveAttribute("data-editable", "false");
   });
 
@@ -367,7 +367,7 @@ describe("PageDocument — edit mode requires role and record permission", () =>
 
     render(<PageDocument pageId={42} projectId={7} />);
 
-    expect(screen.getByLabelText("Page title")).toHaveAttribute("readonly");
+    expect(screen.getByLabelText("File title")).toHaveAttribute("readonly");
     expect(screen.getByTestId("plate-editor")).toHaveAttribute("data-editable", "false");
   });
 });
@@ -383,7 +383,7 @@ describe("PageDocument — record-level misses stay indistinguishable 404s", () 
 
     render(<PageDocument pageId={42} projectId={7} />);
 
-    expect(screen.getByText("Page not found")).toBeInTheDocument();
+    expect(screen.getByText("File not found")).toBeInTheDocument();
     expect(screen.queryByText("Access Restricted")).toBeNull();
   });
 

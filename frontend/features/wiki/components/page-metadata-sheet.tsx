@@ -55,11 +55,11 @@ const ACTION_BTN_DANGER = `${ACTION_BTN_BASE} text-destructive border-destructiv
 const ACTION_BTN_WARNING = `${ACTION_BTN_BASE} text-status-warning-ink border-status-warning-rule hover:bg-status-warning-surface hover:text-status-warning-ink`;
 
 const ACCESS_ROUTE_LABELS: Record<KbAccessRoute, string> = {
-  owner: "You own this page",
+  owner: "You own this file",
   admin: "You have access as an org admin",
-  creator: "You created this page",
-  organization: "All org members can access this page",
-  public: "This page is publicly accessible",
+  creator: "You created this file",
+  organization: "All org members can access this file",
+  public: "This file is publicly accessible",
   space: "You have access through the team folder",
   project: "You have access through the project",
   grant: "You have direct access",
@@ -142,7 +142,7 @@ export default function PageMetadataSheet({
           if (isApiError(error) && error.status === 409) {
             const details = kbPageEditConflictContract.safeParse(error.details);
             setPendingScope({ ...change, pageId, minimumRevision: details.success ? details.data.currentContentRevision : null });
-            toast.error("Page changed before this setting was saved");
+            toast.error("File changed before this setting was saved");
             return;
           }
           toast.error(`Failed to update ${change.field === "spaceId" ? "team folder" : "owner"}`);
@@ -202,24 +202,24 @@ export default function PageMetadataSheet({
   function handlePublish() {
     if (!isEditable) return;
     publishPage.mutate({ pageId, expectedContentRevision: page.contentRevision }, {
-      onSuccess: () => toast.success("Page published"),
-      onError: (error) => toast.error(isApiError(error) && error.status === 409 ? "Page changed before publication. Refresh before trying again." : "Failed to publish page"),
+      onSuccess: () => toast.success("File published"),
+      onError: (error) => toast.error(isApiError(error) && error.status === 409 ? "File changed before publication. Refresh before trying again." : "Failed to publish file"),
     });
   }
 
   function handleArchive() {
     if (!isEditable) return;
     archivePage.mutate({ pageId, expectedContentRevision: page.contentRevision }, {
-      onSuccess: () => toast.success("Page archived"),
-      onError: (error) => toast.error(isApiError(error) && error.status === 409 ? "Page changed before archiving. Refresh before trying again." : "Failed to archive page"),
+      onSuccess: () => toast.success("File archived"),
+      onError: (error) => toast.error(isApiError(error) && error.status === 409 ? "File changed before archiving. Refresh before trying again." : "Failed to archive file"),
     });
   }
 
   function handleUnarchive() {
     if (!isEditable) return;
     unarchivePage.mutate({ pageId, expectedContentRevision: page.contentRevision }, {
-      onSuccess: () => toast.success("Page unarchived"),
-      onError: (error) => toast.error(isApiError(error) && error.status === 409 ? "Page changed before unarchiving. Refresh before trying again." : "Failed to unarchive page"),
+      onSuccess: () => toast.success("File unarchived"),
+      onError: (error) => toast.error(isApiError(error) && error.status === 409 ? "File changed before unarchiving. Refresh before trying again." : "Failed to unarchive file"),
     });
   }
 
@@ -239,11 +239,11 @@ export default function PageMetadataSheet({
       { pageId, intervalDays: days },
       {
         onSuccess: () => {
-          toast.success("Page verified");
+          toast.success("File verified");
           setVerifyFormOpen(false);
           setIntervalDays("");
         },
-        onError: () => toast.error("Failed to verify page"),
+        onError: () => toast.error("Failed to verify file"),
       }
     );
   }
@@ -251,8 +251,8 @@ export default function PageMetadataSheet({
   function handleMarkStale() {
     if (!isEditable) return;
     markStalePage.mutate(pageId, {
-      onSuccess: () => toast.success("Page marked as stale"),
-      onError: () => toast.error("Failed to mark page as stale"),
+      onSuccess: () => toast.success("File marked as stale"),
+      onError: () => toast.error("Failed to mark file as stale"),
     });
   }
 
@@ -279,9 +279,9 @@ export default function PageMetadataSheet({
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent side="right" className="gap-0 sm:max-w-md p-0 flex flex-col bg-background">
         <SheetHeader className="px-5 py-4 border-b shrink-0 bg-background">
-          <SheetTitle className="text-sm">Page settings</SheetTitle>
+          <SheetTitle className="text-sm">File settings</SheetTitle>
           <SheetDescription className="text-xs mt-0.5">
-            Visibility, review schedule and other properties of this page.
+            Visibility, review schedule and other properties of this file.
           </SheetDescription>
         </SheetHeader>
 

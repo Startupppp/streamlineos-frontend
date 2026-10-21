@@ -188,7 +188,7 @@ it("reports stale publish conflicts without retrying against newer content", () 
   renderSheet(page());
   fireEvent.click(screen.getByRole("button", { name: "Publish" }));
   mutate.mock.calls[0]?.[1].onError(new ApiError("Stale", 409, "STALE_REVISION"));
-  expect(toast.error).toHaveBeenCalledWith("Page changed before publication. Refresh before trying again.");
+  expect(toast.error).toHaveBeenCalledWith("File changed before publication. Refresh before trying again.");
   expect(mutate).toHaveBeenCalledTimes(1);
 });
 

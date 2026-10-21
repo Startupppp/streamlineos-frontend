@@ -141,7 +141,7 @@ export function KnowledgeAnalyticsLists({
             </div>
             {spaceId !== undefined && noResultsScopeComplete === false ? (
               <p role="status" className="text-sm text-muted-foreground">
-                Zero-result searches for this space are unavailable because older events lack space information.
+                Zero-result searches for this team folder are unavailable because older events lack team folder information.
               </p>
             ) : noResults.length === 0 ? (
               <EmptyState
@@ -216,13 +216,13 @@ export function KnowledgeAnalyticsLists({
                 }
                 title={
                   isFiltered
-                    ? "No pages match these filters"
-                    : "No page data yet"
+                    ? "No files match these filters"
+                    : "No file data yet"
                 }
                 description={
                   isFiltered
-                    ? "Widen the window, pick another space, or clear the filters."
-                    : "Page view data will appear here once users start reading pages."
+                    ? "Widen the window, pick another team folder, or clear the filters."
+                    : "File view data will appear here once users start reading files."
                 }
                 compact
               />
@@ -255,7 +255,7 @@ export function KnowledgeAnalyticsLists({
                   hasNextPage={!!hasNextPage}
                   isFetchingNextPage={isFetchingNextPage}
                   onLoadMore={handleLoadMorePages}
-                  label="Load more pages"
+                  label="Load more files"
                 />
               </div>
             )}

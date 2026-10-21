@@ -233,7 +233,7 @@ export function CollectionItemMenu({ page, resolveHref, open, onOpenChange }: Co
         <DialogContent className="sm:max-w-sm">
           <DialogHeader>
             <DialogTitle>Transfer ownership</DialogTitle>
-            <DialogDescription>Choose a new owner for this page.</DialogDescription>
+            <DialogDescription>Choose a new owner for this file.</DialogDescription>
           </DialogHeader>
           <UserCombobox
             id="kb-collection-transfer-owner"

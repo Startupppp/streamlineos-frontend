@@ -115,7 +115,7 @@ describe("TemplatePreviewDialog", () => {
           icon: "📝",
           description: "Capture meeting outcomes",
           category: "Meetings & Decisions",
-          expectedOutput: "A page with Decisions and Action Items sections.",
+          expectedOutput: "A file with Decisions and Action Items sections.",
           content: {
             type: "doc",
             children: [{ type: "h2", children: [{ text: "Decisions" }] }],
@@ -129,7 +129,7 @@ describe("TemplatePreviewDialog", () => {
     );
 
     expect(screen.getByRole("heading", { name: "Expected output" })).toBeInTheDocument();
-    expect(screen.getByText("A page with Decisions and Action Items sections.")).toBeInTheDocument();
+    expect(screen.getByText("A file with Decisions and Action Items sections.")).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "Preview" })).toBeInTheDocument();
     expect(screen.getByText("Decisions")).toBeInTheDocument();
   });

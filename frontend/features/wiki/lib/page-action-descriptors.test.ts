@@ -130,8 +130,8 @@ describe("kb page action descriptors", () => {
 
     expect(labelOf(off, "favorite")).toBe("Add to favorites");
     expect(labelOf(on, "favorite")).toBe("Remove from favorites");
-    expect(labelOf(off, "lock")).toBe("Lock page");
-    expect(labelOf(on, "lock")).toBe("Unlock page");
+    expect(labelOf(off, "lock")).toBe("Lock file");
+    expect(labelOf(on, "lock")).toBe("Unlock file");
     expect(labelOf(off, "cover")).toBe("Add cover");
     expect(labelOf(on, "cover")).toBe("Change cover");
     expect(labelOf(off, "archive")).toBe("Archive");

@@ -157,7 +157,7 @@ describe("PageRightPanel — backlinks section", () => {
     await user.click(screen.getByRole("button", { name: "Open details panel" }));
 
     const dialog = screen.getByRole("dialog");
-    expect(within(dialog).queryByText("No pages link here.")).not.toBeInTheDocument();
+    expect(within(dialog).queryByText("No files link here.")).not.toBeInTheDocument();
   });
 
   it("shows a first-read failure with retry rather than no backlinks", async () => {
@@ -168,7 +168,7 @@ describe("PageRightPanel — backlinks section", () => {
     await user.click(screen.getByRole("button", { name: "Open details panel" }));
 
     const dialog = screen.getByRole("dialog");
-    expect(within(dialog).queryByText("No pages link here.")).not.toBeInTheDocument();
+    expect(within(dialog).queryByText("No files link here.")).not.toBeInTheDocument();
     expect(within(dialog).getByText("kb-backlinks-1")).toBeInTheDocument();
     await user.click(within(dialog).getByRole("button", { name: "Try again" }));
     expect(refetch).toHaveBeenCalledTimes(1);
@@ -195,7 +195,7 @@ describe("PageRightPanel — backlinks section", () => {
 
     const dialog = screen.getByRole("dialog");
     expect(within(dialog).queryByRole("button", { name: /Private runbook/ })).not.toBeInTheDocument();
-    expect(within(dialog).queryByText("No pages link here.")).not.toBeInTheDocument();
+    expect(within(dialog).queryByText("No files link here.")).not.toBeInTheDocument();
   });
 
   it("shows backlinks section heading inside the sheet", async () => {
@@ -215,7 +215,7 @@ describe("PageRightPanel — backlinks section", () => {
     await user.click(screen.getByRole("button", { name: "Open details panel" }));
 
     const dialog = screen.getByRole("dialog");
-    expect(within(dialog).getByText("No pages link here.")).toBeInTheDocument();
+    expect(within(dialog).getByText("No files link here.")).toBeInTheDocument();
   });
 });
 

@@ -59,7 +59,7 @@ export default function MovePageDialog({
       { pageId, ...target, index: 0 },
       {
         onSuccess: () => {
-          toast.success("Page moved");
+          toast.success("File moved");
           onOpenChange(false);
         },
         onError: (error) => toast.error(getErrorMessage(error)),
@@ -101,16 +101,16 @@ export default function MovePageDialog({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <KbMoveRightIcon className="h-4 w-4" />
-            Move page
+            Move file
           </DialogTitle>
           <DialogDescription className="text-xs">
-            Choose a space to move the page to its top level, or search for the page that should become the new parent.
+            Choose a team folder to move the file to its top level, or search for the file that should become the new parent.
           </DialogDescription>
         </DialogHeader>
         <div className="relative">
           <KbSearchIcon className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
           <Input
-            placeholder="Search pages…"
+            placeholder="Search files…"
             value={searchQuery}
             onChange={handleSearchChange}
             className="pl-8 text-sm"
@@ -154,7 +154,7 @@ export default function MovePageDialog({
             )}
             {!searching && searchError && searchQuery.length > 0 && (
               <ErrorState
-                title="Couldn't search pages"
+                title="Couldn't search files"
                 description={getErrorMessage(error)}
                 error={error}
                 onRetry={handleRetrySearch}
@@ -163,7 +163,7 @@ export default function MovePageDialog({
             )}
             {!searching && !searchError && searchQuery.length > 0 && results.length === 0 && (
               <div className="px-3 py-2 text-sm text-muted-foreground">
-                No pages found
+                No files found
               </div>
             )}
             {!searching && !searchError &&

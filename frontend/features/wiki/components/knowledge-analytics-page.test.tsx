@@ -227,7 +227,7 @@ describe("KnowledgeAnalyticsPage — a read that never landed is not an empty pa
 
     render(<KnowledgeAnalyticsPage />);
 
-    expect(screen.queryByText(/no page data yet/i)).toBeNull();
+    expect(screen.queryByText(/no file data yet/i)).toBeNull();
   });
 });
 
@@ -405,8 +405,8 @@ describe("KnowledgeAnalyticsPage — the reader can narrow the figures to one sp
     render(<KnowledgeAnalyticsPage />);
 
     expect(screen.getByText(/Team-folder-scoped search and Ask history is incomplete/i)).toBeInTheDocument();
-    expect(screen.getByText(/Zero-result searches for this space are unavailable/i)).toBeInTheDocument();
-    expect(screen.getByText(/Knowledge gaps for this space are unavailable/i)).toBeInTheDocument();
+    expect(screen.getByText(/Zero-result searches for this team folder are unavailable/i)).toBeInTheDocument();
+    expect(screen.getByText(/Knowledge gaps for this team folder are unavailable/i)).toBeInTheDocument();
     expect(screen.queryByText("No zero-result searches")).not.toBeInTheDocument();
     expect(useKbNoResults).toHaveBeenCalledWith(expect.objectContaining({ spaceId: 42 }));
     expect(useKnowledgeGaps).toHaveBeenCalledWith(expect.objectContaining({ spaceId: 42 }));
@@ -435,14 +435,14 @@ describe("KnowledgeAnalyticsPage — a filtered zero result is not first-run emp
 
     render(<KnowledgeAnalyticsPage />);
 
-    expect(screen.queryByText(/No page data yet/i)).toBeNull();
-    expect(screen.getByText(/No pages match these filters/i)).toBeInTheDocument();
+    expect(screen.queryByText(/No file data yet/i)).toBeNull();
+    expect(screen.getByText(/No files match these filters/i)).toBeInTheDocument();
   });
 
   it("still explains genuine first-run emptiness when nothing is filtered", () => {
     render(<KnowledgeAnalyticsPage />);
 
-    expect(screen.getByText(/No page data yet/i)).toBeInTheDocument();
+    expect(screen.getByText(/No file data yet/i)).toBeInTheDocument();
   });
 });
 
@@ -506,7 +506,7 @@ describe("KnowledgeAnalyticsPage — gap rows render without crashing and suppor
 
     expect(screen.getByRole("button", { name: /assign gap owner/i })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /dismiss gap/i })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /create fix page/i })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /create fix file/i })).toBeInTheDocument();
   });
 
   it("keeps page-creation actions hidden from analytics viewers without page-create permission", () => {
@@ -518,7 +518,7 @@ describe("KnowledgeAnalyticsPage — gap rows render without crashing and suppor
     render(<KnowledgeAnalyticsPage />);
 
     expect(screen.getByText("export report")).toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: /create fix page/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /create fix file/i })).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Page" })).not.toBeInTheDocument();
   });
 

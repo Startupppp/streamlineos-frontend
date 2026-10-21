@@ -70,7 +70,7 @@ export function KnowledgeAnalyticsGapsList({
             </div>
             {spaceId !== undefined && !gapsScopeComplete && !gapsLoading ? (
               <p role="status" className="text-sm text-muted-foreground">
-                Knowledge gaps for this space are unavailable because older events lack space information.
+                Knowledge gaps for this team folder are unavailable because older events lack team folder information.
               </p>
             ) : gaps.length === 0 ? (
               <EmptyState

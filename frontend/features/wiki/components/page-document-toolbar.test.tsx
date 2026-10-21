@@ -133,7 +133,7 @@ describe("PageDocumentToolbar", () => {
     await user.click(screen.getByRole("button", { name: "More options" }));
 
     expect(
-      screen.getByRole("menuitem", { name: /unlock page/i }),
+      screen.getByRole("menuitem", { name: /unlock file/i }),
     ).toBeInTheDocument();
   });
 

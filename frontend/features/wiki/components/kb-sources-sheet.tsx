@@ -413,7 +413,7 @@ function OwnerMembershipSelect({
         searchPlaceholder="Search members…"
         emptyText={ownersAreLoading ? "Loading members…" : ownersError ? "Use Retry members below." : "No members found."}
         onSearchChange={onOwnerSearchChange}
-        aria-label="Restrict answer to pages owned by a member"
+        aria-label="Restrict answer to files owned by a member"
         footer={ownersError ? (
           <div className="p-2 text-center text-sm" role="alert">
             <span>Could not load members.</span>
@@ -491,7 +491,7 @@ function KbSourcesScopeSheet({
   }
 
   const description = sourceSelectionConflicts
-    ? "Selected files and notes are excluded by page owner, page status or verification. Deselect them or choose pages to search."
+    ? "Selected files and notes are excluded by file owner, file status or verification. Deselect them or choose files to search."
     : noneSelected
       ? pageOnlyScope
         ? "Only eligible pages and articles will be searched. Files and notes are excluded."
@@ -666,13 +666,13 @@ function KbSourcesScopeSheet({
         />
 
         <div className="space-y-2">
-          <p className="text-xs font-medium text-muted-foreground">Pages</p>
+          <p className="text-xs font-medium text-muted-foreground">Files</p>
           <Input
             value={pageSearchQuery}
             onChange={(e) => onPageSearchQueryChange(e.target.value)}
-            placeholder="Search pages…"
+            placeholder="Search files…"
             className="h-8 text-xs"
-            aria-label="Search pages"
+            aria-label="Search files"
           />
           {pageSearchIsLoading ? (
             <div className="space-y-1">
@@ -692,9 +692,9 @@ function KbSourcesScopeSheet({
               ))}
             </ul>
           ) : pageSearchQuery.length > 0 ? (
-            <p className="text-xs text-muted-foreground">No pages found</p>
+            <p className="text-xs text-muted-foreground">No files found</p>
           ) : (
-            <p className="text-xs text-muted-foreground">Type to search pages</p>
+            <p className="text-xs text-muted-foreground">Type to search files</p>
           )}
         </div>
 
@@ -705,9 +705,9 @@ function KbSourcesScopeSheet({
         >
           <Check className="h-4 w-4" />
           {sourceSelectionConflicts
-            ? `Search ${selectedPageIds.length} page${selectedPageIds.length === 1 ? "" : "s"}`
+            ? `Search ${selectedPageIds.length} file${selectedPageIds.length === 1 ? "" : "s"}`
             : noneSelected
-              ? pageOnlyScope ? "Apply page scope" : "Search all sources and pages"
+              ? pageOnlyScope ? "Apply file scope" : "Search all sources and files"
               : `Search ${totalSelected} item${totalSelected === 1 ? "" : "s"}`}
         </Button>
       </div>

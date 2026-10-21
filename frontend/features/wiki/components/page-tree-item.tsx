@@ -180,8 +180,8 @@ const PageTreeItem = memo(function PageTreeItemInner({
     if (!actionId) return;
     if (actionId === "duplicate") {
       duplicatePage.mutate(node.id, {
-        onSuccess: () => toast.success("Page duplicated"),
-        onError: () => toast.error("Failed to duplicate page"),
+        onSuccess: () => toast.success("File duplicated"),
+        onError: () => toast.error("Failed to duplicate file"),
       });
     } else if (actionId === "favorite") {
       toggleFavorite.mutate(
@@ -197,10 +197,10 @@ const PageTreeItem = memo(function PageTreeItemInner({
   function handleConfirmDelete() {
     deletePage.mutate(node.id, {
       onSuccess: () => {
-        toast.success("Page moved to trash");
+        toast.success("File moved to trash");
         if (isActive) router.push(baseHref ?? KNOWLEDGE_BASE);
       },
-      onError: () => toast.error("Failed to delete page"),
+      onError: () => toast.error("Failed to delete file"),
     });
   }
 
@@ -230,7 +230,7 @@ const PageTreeItem = memo(function PageTreeItemInner({
       {
         onSuccess: () => setRenaming(false),
         onError: () => {
-          toast.error("Failed to rename page");
+          toast.error("Failed to rename file");
           setRenaming(false);
         },
       },
@@ -369,7 +369,7 @@ const PageTreeItem = memo(function PageTreeItemInner({
                   <button
                     type="button"
                     className="h-8 w-8 lg:h-6 lg:w-6 flex items-center justify-center rounded text-muted-foreground hover:text-foreground hover:bg-muted"
-                    aria-label="Add child page"
+                    aria-label="Add child file"
                   >
                     <KbPlusIcon className="h-3 w-3" />
                   </button>
@@ -380,7 +380,7 @@ const PageTreeItem = memo(function PageTreeItemInner({
                   <button
                     type="button"
                     className="h-8 w-8 lg:h-6 lg:w-6 flex items-center justify-center rounded text-muted-foreground hover:text-foreground hover:bg-muted"
-                    aria-label="Page options"
+                    aria-label="File options"
                   >
                     <KbMoreHorizontalIcon className="h-3 w-3" />
                   </button>
@@ -438,7 +438,7 @@ const PageTreeItem = memo(function PageTreeItemInner({
                     className="px-2 py-2 text-xs text-muted-foreground"
                     style={{ paddingLeft: (depth + 1) * 16 }}
                   >
-                    Loading child pages…
+                    Loading child files…
                   </p>
                 )}
                 {childrenError && (
@@ -460,7 +460,7 @@ const PageTreeItem = memo(function PageTreeItemInner({
                       variant="outline"
                       onClick={handleRetryChildren}
                     >
-                      Retry child pages
+                      Retry child files
                     </Button>
                   </div>
                 )}
@@ -481,7 +481,7 @@ const PageTreeItem = memo(function PageTreeItemInner({
                   hasNextPage={Boolean(childrenHasNextPage) && !childrenError}
                   isFetchingNextPage={childrenFetchingNext}
                   onLoadMore={fetchChildrenNextPage}
-                  label="Load more child pages"
+                  label="Load more child files"
                 />
               </motion.div>
             )}
@@ -491,7 +491,7 @@ const PageTreeItem = memo(function PageTreeItemInner({
       <ConfirmDialog
         open={deleteDialogOpen}
         onOpenChange={handleDeleteDialogOpenChange}
-        title="Move page to trash?"
+        title="Move file to trash?"
         description={`“${node.title || "Untitled"}” will be moved to the Recycle Bin. You can restore it from the Recycle Bin.`}
         destructive
         confirmLabel="Move to trash"

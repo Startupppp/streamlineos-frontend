@@ -90,7 +90,7 @@ export default function PageEditConflict({
         <KbAlertCircleIcon className="h-4 w-4 shrink-0 text-status-danger-ink" />
         <div className="flex-1 min-w-0 text-sm text-status-danger-ink space-y-0.5">
           <span>
-            {editor} saved a newer version of this page
+            {editor} saved a newer version of this file
             {when ? (
               <>
                 {" "}

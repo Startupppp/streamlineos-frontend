@@ -295,8 +295,8 @@ export default function SpaceDetailPage({ spaceId }: SpaceDetailPageProps) {
             <div className="flex min-h-0 flex-1 flex-col">
               <WikiPageCollectionTable
                 fixedParams={{ spaceId }}
-                emptyTitle="No pages in this space yet"
-                emptyDescription="Move or create pages inside this space to see them here."
+                emptyTitle="No files in this team folder yet"
+                emptyDescription="Move or create files inside this team folder to see them here."
               />
             </div>
           </div>
@@ -314,7 +314,7 @@ export default function SpaceDetailPage({ spaceId }: SpaceDetailPageProps) {
         <SheetContent side="left" className="gap-0 p-0 sm:max-w-sm">
           <SheetHeader className="border-b border-border px-4 py-3">
             <SheetTitle>Hierarchy</SheetTitle>
-            <SheetDescription>Pages in {visibleSpace?.name ?? "this space"}</SheetDescription>
+            <SheetDescription>Files in {visibleSpace?.name ?? "this team folder"}</SheetDescription>
           </SheetHeader>
           <SheetBody className="p-3">
             {hierarchyOpen && visibleSpace && (
@@ -327,10 +327,10 @@ export default function SpaceDetailPage({ spaceId }: SpaceDetailPageProps) {
       <ConfirmDialog
         open={archiveConfirmOpen && Boolean(visibleSpace)}
         onOpenChange={handleArchiveConfirmOpenChange}
-        title="Archive space?"
+        title="Archive team folder?"
         description={
           <>
-            {`Archiving "${visibleSpace?.name ?? "this space"}" will hide it from users. Pages and content are preserved and can be restored.`}
+            {`Archiving "${visibleSpace?.name ?? "this team folder"}" will hide it from users. Files and content are preserved and can be restored.`}
             {archiveConfirmOpen && visibleSpace && <SpaceArchiveImpact spaceId={spaceId} />}
           </>
         }

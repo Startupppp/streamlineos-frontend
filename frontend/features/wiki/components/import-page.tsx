@@ -129,7 +129,7 @@ export default function ImportPage() {
         activeJob.failedItems > 0 ? `${activeJob.failedItems} failed` : null,
       ].filter((count): count is string => count !== null);
       toast.success(
-        `Imported ${activeJob.succeededItems} page${activeJob.succeededItems === 1 ? "" : "s"}${partialCounts.length > 0 ? ` (${partialCounts.join(", ")})` : ""}`,
+        `Imported ${activeJob.succeededItems} file${activeJob.succeededItems === 1 ? "" : "s"}${partialCounts.length > 0 ? ` (${partialCounts.join(", ")})` : ""}`,
         {
           action: {
             label: "View wiki",
@@ -149,7 +149,7 @@ export default function ImportPage() {
         needsReconciliation
           ? activeJob.errorReport?.reason ?? "Import progress needs manual reconciliation."
           : failedItems.length > 0
-          ? `Import failed — ${failedItems.length} page${failedItems.length === 1 ? "" : "s"} could not be imported`
+          ? `Import failed — ${failedItems.length} file${failedItems.length === 1 ? "" : "s"} could not be imported`
           : "Import failed",
       );
       setActiveJobId(null);
@@ -236,7 +236,7 @@ export default function ImportPage() {
           const result = ev.target?.result;
           const text = typeof result === "string" ? result : "";
           if (text.length > MAX_CONTENT_LENGTH) {
-            toast.error(`${file.name} exceeds the 50,000-character page limit and was skipped`);
+            toast.error(`${file.name} exceeds the 50,000-character file limit and was skipped`);
           } else if (text.includes("\0")) {
             toast.error(`${file.name} contains binary content and was skipped`);
           } else {
@@ -283,7 +283,7 @@ export default function ImportPage() {
       return;
     }
     if (pasteText.length > MAX_CONTENT_LENGTH) {
-      toast.error("Content exceeds the 50,000-character page limit");
+      toast.error("Content exceeds the 50,000-character file limit");
       return;
     }
     if (pasteText.includes("\0")) {
@@ -436,7 +436,7 @@ export default function ImportPage() {
       subtitle={
         isImportTab
           ? `${items.length}/100 files loaded`
-          : "Per-page export lives on each wiki page's menu"
+          : "Per-file export lives on each file's menu"
       }
       actionsInline
       contentClassName="flex min-h-0 flex-1 flex-col"
@@ -556,7 +556,7 @@ export default function ImportPage() {
             ) : null}
 
             {showPaste || items.length > 0 ? (
-              <PageSection title="Import Pages">
+              <PageSection title="Import Files">
                 <div className="space-y-4">
                   {showPaste ? (
                     <div className="space-y-2">
@@ -568,7 +568,7 @@ export default function ImportPage() {
                           id="import-paste-title"
                           value={pasteTitle}
                           onChange={handlePasteTitleChange}
-                          placeholder="Untitled page"
+                          placeholder="Untitled file"
                           className="text-sm"
                           maxLength={500}
                         />
