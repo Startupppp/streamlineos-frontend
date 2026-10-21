@@ -237,6 +237,11 @@ export async function proxy(req: NextRequest) {
     return redirectTo(req, "/build" + rest, req.nextUrl.search);
   }
 
+  if (pathname === "/knowledge") {
+    recordLegacyRedirect("/knowledge", "/knowledge/wiki");
+    return redirectTo(req, "/knowledge/wiki", req.nextUrl.search);
+  }
+
   if (matchesRoute(pathname, "/onboarding"))
     return redirectTo(req, "/employee-onboarding");
 
