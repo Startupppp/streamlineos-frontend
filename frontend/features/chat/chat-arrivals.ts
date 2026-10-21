@@ -10,6 +10,11 @@ export function recordChatArrival(channelId: number): void {
   for (const listener of listeners) listener();
 }
 
+export function clearChatArrival(channelId: number): void {
+  if (!arrivals.delete(channelId)) return;
+  for (const listener of listeners) listener();
+}
+
 function subscribe(listener: () => void): () => void {
   listeners.add(listener);
   return () => {

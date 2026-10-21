@@ -9,7 +9,9 @@ let mockObjectUrl = "";
 let revokeCount = 0;
 
 beforeEach(() => {
-  jest.resetAllMocks();
+  jest.clearAllMocks();
+  mockObjectUrl = "";
+  revokeCount = 0;
   global.URL.createObjectURL = jest.fn(() => { mockObjectUrl = "blob:test"; return mockObjectUrl; });
   global.URL.revokeObjectURL = jest.fn(() => { revokeCount++; });
   const anchor = { href: "", download: "", rel: "", click: mockAnchorClick, remove: jest.fn() };

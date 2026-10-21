@@ -12,10 +12,12 @@ export function useChatReadMarker({
   channelId,
   newestMessageId,
   markRead,
+  enabled = true,
 }: {
   channelId: number;
   newestMessageId: number | undefined;
   markRead: ReadMarker;
+  enabled?: boolean;
 }): void {
   const openedChannelRef = useRef<number | null>(null);
   const markedNewestRef = useRef<{
@@ -24,14 +26,14 @@ export function useChatReadMarker({
   } | null>(null);
 
   useEffect(() => {
-    if (channelId > 0 && openedChannelRef.current !== channelId) {
+    if (enabled && channelId > 0 && openedChannelRef.current !== channelId) {
       openedChannelRef.current = channelId;
       markRead.mutate({ channelId });
     }
-  }, [channelId, markRead]);
+  }, [channelId, markRead, enabled]);
 
   useEffect(() => {
-    if (channelId <= 0 || newestMessageId === undefined || newestMessageId < 0)
+    if (!enabled || channelId <= 0 || newestMessageId === undefined || newestMessageId < 0)
       return;
     const marked = markedNewestRef.current;
     if (marked?.channelId !== channelId) {
@@ -51,5 +53,5 @@ export function useChatReadMarker({
       clearTimeout(timer);
       document.removeEventListener("visibilitychange", mark);
     };
-  }, [channelId, newestMessageId, markRead]);
+  }, [channelId, newestMessageId, markRead, enabled]);
 }

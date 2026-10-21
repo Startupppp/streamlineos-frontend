@@ -189,6 +189,7 @@ export function useMessagePanelData({
     channelId,
     newestMessageId: mainMessages.at(-1)?.id,
     markRead,
+    enabled: !joinRequired,
   });
 
   scrollToBottomRef.current = scrollToBottom;

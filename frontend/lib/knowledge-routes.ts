@@ -2,8 +2,10 @@ export const KNOWLEDGE_ROOT = "/knowledge";
 export const KB_CHAT = `${KNOWLEDGE_ROOT}/chat`;
 export const KNOWLEDGE_BASE = `${KNOWLEDGE_ROOT}/wiki`;
 
+export const KB_DOC_BASE = `${KNOWLEDGE_BASE}/doc`;
+
 export function pageHref(id: number): string {
-  return `${KNOWLEDGE_BASE}/doc/${id}`;
+  return `${KB_DOC_BASE}/${id}`;
 }
 
 export function projectPageHref(projectId: number, pageId: number): string {

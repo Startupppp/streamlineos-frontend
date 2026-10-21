@@ -8,7 +8,7 @@ import type {
   MessagesPage,
   SendMessageInput,
 } from "@/types/chat";
-import { useChatArrivalAt } from "./chat-arrivals";
+import { clearChatArrival, useChatArrivalAt } from "./chat-arrivals";
 import { getDateLabel } from "./chat-helpers";
 import { resolveFirstUnreadIndex } from "./chat-read-position";
 import { flattenMessagePages } from "./message-page-merge";
@@ -220,7 +220,12 @@ export function useMessageTimeline({
   );
 
   const arrivedAt = useChatArrivalAt(channelId);
-  const arrivedSinceContext = inContext && arrivedAt > context.dataUpdatedAt;
+  const anchored = anchorMessageId !== null;
+  useEffect(() => {
+    if (anchorMessageId !== null) clearChatArrival(channelId);
+  }, [channelId, anchorMessageId]);
+  const arrivalBaseline = inContext ? context.dataUpdatedAt : 0;
+  const arrivedSinceAnchor = anchored && arrivedAt > arrivalBaseline;
   const firstUnreadMessageId =
     firstUnreadIndex >= 0 ? messages[firstUnreadIndex]?.id : undefined;
   const contextHasOlder = context.hasNextPage;
@@ -239,9 +244,9 @@ export function useMessageTimeline({
       fetchNextPage: handleLoadOlder,
       firstUnreadMessageId,
       showScrollBtn: inContext || showScrollBtn,
-      latestLabel: inContext
-        ? arrivedSinceContext
-          ? "New messages — Jump to latest"
+      latestLabel: anchored
+        ? arrivedSinceAnchor
+          ? "New messages"
           : "Jump to latest"
         : "New messages",
       scrollToBottom: handleLatest,
@@ -254,7 +259,8 @@ export function useMessageTimeline({
       messages,
       isLoading,
       inContext,
-      arrivedSinceContext,
+      anchored,
+      arrivedSinceAnchor,
       contextHasOlder,
       history.hasNextPage,
       hasOlderHeld,

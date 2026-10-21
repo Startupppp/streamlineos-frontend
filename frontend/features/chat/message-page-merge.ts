@@ -1,4 +1,5 @@
-import type { InfiniteData } from "@tanstack/react-query";
+import { replaceEqualDeep, type InfiniteData } from "@tanstack/react-query";
+import { isRecord } from "@/lib/is-record";
 import { mapPages } from "@/hooks/api/chat-message-cache";
 import type { Message, MessagesPage, ThreadPage } from "@/types/chat";
 
@@ -166,4 +167,46 @@ export function removeOptimisticMessage(
     const messages = page.messages.filter((m) => !sameSend(m, clientKey));
     return messages.length === page.messages.length ? page : { ...page, messages };
   });
+}
+
+function isMessagePages(value: unknown): value is InfiniteData<MessagesPage> {
+  return (
+    isRecord(value) &&
+    Array.isArray(value.pages) &&
+    value.pages.every((page) => isRecord(page) && Array.isArray(page.messages))
+  );
+}
+
+function withConfirmedRows(
+  previous: InfiniteData<MessagesPage>,
+  next: InfiniteData<MessagesPage>,
+): InfiniteData<MessagesPage> {
+  const incoming = next.pages.flatMap((page) => page.messages);
+  const known = new Set(incoming.map((message) => message.id));
+  const newest = incoming.reduce((max, message) => Math.max(max, message.id), 0);
+  const carried = previous.pages
+    .flatMap((page) => page.messages)
+    .filter((message) => message.id > newest && !known.has(message.id))
+    .sort((a, b) => a.id - b.id);
+  if (carried.length === 0 || next.pages.length === 0) return next;
+  return {
+    ...next,
+    pages: next.pages.map((page, index) =>
+      index === 0
+        ? {
+            ...page,
+            messages: [
+              ...page.messages.filter((message) => message.id > 0),
+              ...carried,
+              ...page.messages.filter((message) => message.id < 0),
+            ],
+          }
+        : page,
+    ),
+  };
+}
+
+export function keepConfirmedMessages(previous: unknown, next: unknown): unknown {
+  if (!isMessagePages(previous) || !isMessagePages(next)) return replaceEqualDeep(previous, next);
+  return replaceEqualDeep(previous, withConfirmedRows(previous, next));
 }

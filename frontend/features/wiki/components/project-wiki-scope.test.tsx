@@ -518,9 +518,10 @@ describe("project wiki page tree links stay inside the project", () => {
     render(<PageTree projectId={7} baseHref="/build/7/wiki" />);
 
     await user.click(screen.getByRole("button", { name: "Add child page" }));
+    await user.click(await screen.findByRole("menuitem", { name: "Document" }));
 
     expect(createPageMutate).toHaveBeenCalledWith(
-      { parentPageId: 42, projectId: 7 },
+      { parentPageId: 42, projectId: 7, kind: "document" },
       expect.any(Object),
     );
   });
@@ -531,9 +532,10 @@ describe("project wiki page tree links stay inside the project", () => {
 
     await user.click(screen.getByRole("button", { name: "Expand" }));
     await user.click(screen.getAllByRole("button", { name: "Add child page" })[1]);
+    await user.click(await screen.findByRole("menuitem", { name: "Document" }));
 
     expect(createPageMutate).toHaveBeenCalledWith(
-      { parentPageId: 108, projectId: 7 },
+      { parentPageId: 108, projectId: 7, kind: "document" },
       expect.any(Object),
     );
   });
@@ -544,9 +546,10 @@ describe("project wiki page tree links stay inside the project", () => {
     render(<PageTree spaceId={5} />);
 
     await user.click(screen.getByRole("button", { name: "Add child page" }));
+    await user.click(await screen.findByRole("menuitem", { name: "Document" }));
 
     expect(createPageMutate).toHaveBeenCalledWith(
-      { parentPageId: 42, spaceId: 5 },
+      { parentPageId: 42, spaceId: 5, kind: "document" },
       expect.any(Object),
     );
   });
@@ -557,9 +560,10 @@ describe("project wiki page tree links stay inside the project", () => {
     render(<PageTree />);
 
     await user.click(screen.getByRole("button", { name: "Add child page" }));
+    await user.click(await screen.findByRole("menuitem", { name: "Document" }));
 
     expect(createPageMutate).toHaveBeenCalledWith(
-      { parentPageId: 42 },
+      { parentPageId: 42, kind: "document" },
       expect.any(Object),
     );
   });
@@ -623,6 +627,7 @@ describe("project wiki page tree links stay inside the project", () => {
     render(<PageTree projectId={7} baseHref="/build/7/wiki" />);
 
     await user.click(screen.getByRole("button", { name: "Add child page" }));
+    await user.click(await screen.findByRole("menuitem", { name: "Document" }));
 
     const handlers = createPageMutate.mock.calls[0]?.[1] as {
       onSuccess: (created: { id: number }) => void;
@@ -637,6 +642,7 @@ describe("project wiki page tree links stay inside the project", () => {
     render(<PageTree />);
 
     await user.click(screen.getByRole("button", { name: "Add child page" }));
+    await user.click(await screen.findByRole("menuitem", { name: "Document" }));
 
     const handlers = createPageMutate.mock.calls[0]?.[1] as {
       onSuccess: (created: { id: number }) => void;

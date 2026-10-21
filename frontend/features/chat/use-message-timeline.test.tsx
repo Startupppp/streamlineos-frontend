@@ -116,6 +116,9 @@ describe("useMessageTimeline — an old ?message renders its own context window,
     const { result } = renderHook(() => useHarness(101), { wrapper: Wrapper });
     await waitFor(() => expect(ids(result)).toEqual([100, 101, 102]));
     expect(getCalls("/context")).toHaveLength(0);
+    expect(result.current.timeline.list.latestLabel).toBe("Jump to latest");
+    await new Promise((resolve) => setTimeout(resolve, 2));
+    act(() => recordChatArrival(CHANNEL_ID));
     expect(result.current.timeline.list.latestLabel).toBe("New messages");
   });
 
@@ -140,7 +143,7 @@ describe("useMessageTimeline — an old ?message renders its own context window,
   it("renders the main page, not the context window, when the first page turns out to hold the target", async () => {
     const { result } = renderHook(() => useHarness(101), { wrapper: Wrapper });
     await waitFor(() => expect(ids(result)).toEqual([100, 101, 102]));
-    expect(result.current.timeline.list.latestLabel).toBe("New messages");
+    expect(result.current.timeline.list.latestLabel).toBe("Jump to latest");
   });
 
   it("hides tombstones in the context window, except the anchored message itself", async () => {
@@ -239,7 +242,7 @@ describe("useMessageTimeline — an old ?message renders its own context window,
       );
       recordChatArrival(CHANNEL_ID);
     });
-    expect(result.current.timeline.list.latestLabel).toBe("New messages — Jump to latest");
+    expect(result.current.timeline.list.latestLabel).toBe("New messages");
     expect(ids(result)).toEqual([40, 41, 42]);
     act(() => result.current.timeline.list.scrollToBottom());
     expect(result.current.timeline.list.latestLabel).toBe("New messages");

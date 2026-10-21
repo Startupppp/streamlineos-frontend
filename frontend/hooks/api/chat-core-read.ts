@@ -17,6 +17,7 @@ import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
 import { useCan, useModuleEnabled } from "@/hooks/api/access";
 import { isPresenceStatus, type PresenceStatus } from "@/lib/presence";
 import { chatChannelReadEnabled } from "@/features/chat/chat-read-position";
+import { keepConfirmedMessages } from "@/features/chat/message-page-merge";
 import type {
   Channel,
   ChannelPage,
@@ -230,6 +231,7 @@ function chatMessagesQueryOptions(channelId: number) {
     initialPageParam: NO_ID_CURSOR_YET,
     staleTime: CHAT_MESSAGES_STALE_MS,
     gcTime: CHAT_MESSAGES_GC_MS,
+    structuralSharing: keepConfirmedMessages,
   });
 }
 

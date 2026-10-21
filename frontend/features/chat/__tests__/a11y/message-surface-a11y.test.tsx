@@ -39,6 +39,7 @@ type ActionProps = React.ComponentProps<typeof MessageActions>;
 function actionProps(overrides: Partial<ActionProps> = {}): ActionProps {
   return {
     isOwn: true,
+    deleteTitle: "Delete message?",
     isPinned: false,
     isSaved: false,
     hasContent: true,

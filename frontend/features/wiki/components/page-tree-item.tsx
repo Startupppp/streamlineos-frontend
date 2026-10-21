@@ -29,8 +29,8 @@ import {
   useUpdateKbPage,
 } from "@/hooks/api/kb";
 import { useCan } from "@/hooks/api/access";
-import type { KbPage, KbPageTreeNode } from "@/hooks/api/kb/page-types";
-import { KNOWLEDGE_BASE, pageHref } from "@/lib/knowledge-routes";
+import type { KbPageTreeNode } from "@/hooks/api/kb/page-types";
+import { KB_DOC_BASE, KNOWLEDGE_BASE, pageHref } from "@/lib/knowledge-routes";
 import {
   resolveKbPageActions,
   groupKbPageActions,
@@ -110,9 +110,10 @@ const PageTreeItem = memo(function PageTreeItemInner({
     canManageTemplates: false,
     isEditable: false,
   };
-  const treeActions = resolveKbPageActions(TREE_ITEM_SUBJECT, treeCapabilities).filter(
-    (a) => TREE_ITEM_ACTION_IDS.has(a.id),
-  );
+  const treeActions = resolveKbPageActions(
+    TREE_ITEM_SUBJECT,
+    treeCapabilities,
+  ).filter((a) => TREE_ITEM_ACTION_IDS.has(a.id));
   const treeActionGroups = groupKbPageActions(treeActions);
   const childScope = useMemo(
     () => ({
@@ -122,7 +123,7 @@ const PageTreeItem = memo(function PageTreeItemInner({
     }),
     [node.id, node.spaceId, node.projectId],
   );
-  const handleChildCreated = useCallback((_page: KbPage) => {
+  const handleChildCreated = useCallback(() => {
     setExpanded(true);
   }, []);
   const deletePage = useDeleteKbPage();
@@ -146,15 +147,17 @@ const PageTreeItem = memo(function PageTreeItemInner({
     fetchNextPage: fetchChildrenNextPage,
   } = useKbPageChildrenLevel(node.id, isExpanded, spaceId, projectId);
 
-  const children: KbPageTreeNode[] = childrenData?.pages.flatMap((p) => p.data) ?? [];
-  const childrenAccessLost = childrenError && isApiError(childrenReadError) && (childrenReadError.status === 401 || childrenReadError.status === 403 || childrenReadError.status === 404);
+  const children: KbPageTreeNode[] =
+    childrenData?.pages.flatMap((p) => p.data) ?? [];
+  const childrenAccessLost =
+    childrenError &&
+    isApiError(childrenReadError) &&
+    (childrenReadError.status === 401 ||
+      childrenReadError.status === 403 ||
+      childrenReadError.status === 404);
   const visibleChildren = childrenAccessLost ? [] : children;
 
   const showChevron = node.hasChildren || visibleChildren.length > 0;
-
-  function handleNavigate() {
-    onCloseMobile?.();
-  }
 
   function handleRetryChildren() {
     if (childrenFetchNextPageError && !childrenAccessLost) {
@@ -167,10 +170,6 @@ const PageTreeItem = memo(function PageTreeItemInner({
   function handleToggleExpand(e: React.MouseEvent) {
     e.stopPropagation();
     setExpanded((prev) => !prev);
-  }
-
-  function handlePlusStopPropagation(e: React.MouseEvent) {
-    e.stopPropagation();
   }
 
   function handleMenuSelect(event: Event) {
@@ -208,10 +207,6 @@ const PageTreeItem = memo(function PageTreeItemInner({
     setDeleteDialogOpen(open);
   }
 
-  function handleMoreClick(e: React.MouseEvent) {
-    e.stopPropagation();
-  }
-
   function handleStartRename() {
     setRenameValue(node.title || "");
     setRenaming(true);
@@ -226,14 +221,18 @@ const PageTreeItem = memo(function PageTreeItemInner({
       return;
     }
     updatePage.mutate(
-      { pageId: node.id, title: trimmed, expectedContentRevision: node.contentRevision },
+      {
+        pageId: node.id,
+        title: trimmed,
+        expectedContentRevision: node.contentRevision,
+      },
       {
         onSuccess: () => setRenaming(false),
         onError: () => {
           toast.error("Failed to rename page");
           setRenaming(false);
         },
-      }
+      },
     );
   }
 
@@ -253,10 +252,6 @@ const PageTreeItem = memo(function PageTreeItemInner({
 
   function handleRenameInputChange(e: React.ChangeEvent<HTMLInputElement>) {
     setRenameValue(e.target.value);
-  }
-
-  function handleRenameInputClick(e: React.MouseEvent) {
-    e.stopPropagation();
   }
 
   return (
@@ -312,7 +307,11 @@ const PageTreeItem = memo(function PageTreeItemInner({
                   node.icon
                 ) : (
                   <SidebarAnimatedNavIcon
-                    icon={node.kind === "spreadsheet" ? KbSpreadsheetIcon : KbFileTextIcon}
+                    icon={
+                      node.kind === "spreadsheet"
+                        ? KbSpreadsheetIcon
+                        : KbFileTextIcon
+                    }
                     iconRef={iconRef}
                     className="h-3.5 w-3.5 text-muted-foreground"
                   />
@@ -324,7 +323,6 @@ const PageTreeItem = memo(function PageTreeItemInner({
                 onChange={handleRenameInputChange}
                 onKeyDown={handleRenameKeyDown}
                 onBlur={handleRenameCommit}
-                onClick={handleRenameInputClick}
                 className="flex-1 h-6 text-sm py-0 px-1 min-w-0"
               />
             </>
@@ -333,20 +331,27 @@ const PageTreeItem = memo(function PageTreeItemInner({
               href={nodeHref}
               aria-current={isActive ? "page" : undefined}
               className="flex min-w-0 flex-1 items-center gap-1 cursor-pointer text-left"
-              onClick={handleNavigate}
+              onClick={onCloseMobile}
             >
               <span className="shrink-0 text-base leading-none">
                 {node.icon ? (
                   node.icon
                 ) : (
                   <SidebarAnimatedNavIcon
-                    icon={node.kind === "spreadsheet" ? KbSpreadsheetIcon : KbFileTextIcon}
+                    icon={
+                      node.kind === "spreadsheet"
+                        ? KbSpreadsheetIcon
+                        : KbFileTextIcon
+                    }
                     iconRef={iconRef}
                     className="h-3.5 w-3.5 text-muted-foreground"
                   />
                 )}
               </span>
-              <TruncatedText text={node.title || "Untitled"} className="flex-1" />
+              <TruncatedText
+                text={node.title || "Untitled"}
+                className="flex-1"
+              />
             </Link>
           )}
 
@@ -358,12 +363,12 @@ const PageTreeItem = memo(function PageTreeItemInner({
                 scope={childScope}
                 allowFolder={false}
                 onCreated={handleChildCreated}
+                baseHref={baseHref ?? KB_DOC_BASE}
                 trigger={
                   <button
                     type="button"
                     className="h-8 w-8 lg:h-6 lg:w-6 flex items-center justify-center rounded text-muted-foreground hover:text-foreground hover:bg-muted"
                     aria-label="Add child page"
-                    onClick={handlePlusStopPropagation}
                   >
                     <KbPlusIcon className="h-3 w-3" />
                   </button>
@@ -374,22 +379,27 @@ const PageTreeItem = memo(function PageTreeItemInner({
                   <button
                     type="button"
                     className="h-8 w-8 lg:h-6 lg:w-6 flex items-center justify-center rounded text-muted-foreground hover:text-foreground hover:bg-muted"
-                    onClick={handleMoreClick}
                     aria-label="Page options"
                   >
                     <KbMoreHorizontalIcon className="h-3 w-3" />
                   </button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="start" side="right">
-                  <DropdownMenuItem onSelect={handleStartRename}>Rename</DropdownMenuItem>
+                  <DropdownMenuItem onSelect={handleStartRename}>
+                    Rename
+                  </DropdownMenuItem>
                   {treeActionGroups.map((group) => (
                     <Fragment key={group[0]?.group}>
-                      {group[0]?.group === "danger" ? <DropdownMenuSeparator /> : null}
+                      {group[0]?.group === "danger" ? (
+                        <DropdownMenuSeparator />
+                      ) : null}
                       {group.map((action) => (
                         <DropdownMenuItem
                           key={action.id}
                           data-action-id={action.id}
-                          variant={action.destructive ? "destructive" : "default"}
+                          variant={
+                            action.destructive ? "destructive" : "default"
+                          }
                           onSelect={handleMenuSelect}
                         >
                           <action.icon className="h-3.5 w-3.5" />
@@ -405,48 +415,75 @@ const PageTreeItem = memo(function PageTreeItemInner({
         </div>
 
         <AnimatePresence initial={false}>
-          {isExpanded && (visibleChildren.length > 0 || childrenHasNextPage || childrenLoading || childrenError) && (
-            <motion.div
-              role="group"
-              className="min-w-0 overflow-hidden"
-              initial={{ opacity: 0, y: shouldReduceMotion ? 0 : -4 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: shouldReduceMotion ? 0 : -4 }}
-              transition={{ duration: shouldReduceMotion ? 0 : 0.15, ease: "easeOut" }}
-            >
-              {childrenLoading && visibleChildren.length === 0 && (
-                <p role="status" className="px-2 py-2 text-xs text-muted-foreground" style={{ paddingLeft: (depth + 1) * 16 }}>
-                  Loading child pages…
-                </p>
-              )}
-              {childrenError && (
-                <div role="alert" className="space-y-2 px-2 py-2 text-xs" style={{ paddingLeft: (depth + 1) * 16 }}>
-                  <p className="text-muted-foreground">{getErrorMessage(childrenReadError)}</p>
-                  <ErrorReference error={childrenReadError} className="justify-start" />
-                  <Button type="button" size="sm" variant="outline" onClick={handleRetryChildren}>Retry child pages</Button>
-                </div>
-              )}
-              {visibleChildren.map((child, index) => (
-                <PageTreeItem
-                  key={child.id}
-                  node={child}
-                  depth={depth + 1}
-                  ariaSetSize={visibleChildren.length}
-                  ariaPosInSet={index + 1}
-                  onCloseMobile={onCloseMobile}
-                  spaceId={spaceId}
-                  projectId={projectId}
-                  baseHref={baseHref}
+          {isExpanded &&
+            (visibleChildren.length > 0 ||
+              childrenHasNextPage ||
+              childrenLoading ||
+              childrenError) && (
+              <motion.div
+                role="group"
+                className="min-w-0 overflow-hidden"
+                initial={{ opacity: 0, y: shouldReduceMotion ? 0 : -4 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: shouldReduceMotion ? 0 : -4 }}
+                transition={{
+                  duration: shouldReduceMotion ? 0 : 0.15,
+                  ease: "easeOut",
+                }}
+              >
+                {childrenLoading && visibleChildren.length === 0 && (
+                  <p
+                    role="status"
+                    className="px-2 py-2 text-xs text-muted-foreground"
+                    style={{ paddingLeft: (depth + 1) * 16 }}
+                  >
+                    Loading child pages…
+                  </p>
+                )}
+                {childrenError && (
+                  <div
+                    role="alert"
+                    className="space-y-2 px-2 py-2 text-xs"
+                    style={{ paddingLeft: (depth + 1) * 16 }}
+                  >
+                    <p className="text-muted-foreground">
+                      {getErrorMessage(childrenReadError)}
+                    </p>
+                    <ErrorReference
+                      error={childrenReadError}
+                      className="justify-start"
+                    />
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      onClick={handleRetryChildren}
+                    >
+                      Retry child pages
+                    </Button>
+                  </div>
+                )}
+                {visibleChildren.map((child, index) => (
+                  <PageTreeItem
+                    key={child.id}
+                    node={child}
+                    depth={depth + 1}
+                    ariaSetSize={visibleChildren.length}
+                    ariaPosInSet={index + 1}
+                    onCloseMobile={onCloseMobile}
+                    spaceId={spaceId}
+                    projectId={projectId}
+                    baseHref={baseHref}
+                  />
+                ))}
+                <InfiniteScrollSentinel
+                  hasNextPage={Boolean(childrenHasNextPage) && !childrenError}
+                  isFetchingNextPage={childrenFetchingNext}
+                  onLoadMore={fetchChildrenNextPage}
+                  label="Load more child pages"
                 />
-              ))}
-              <InfiniteScrollSentinel
-                hasNextPage={Boolean(childrenHasNextPage) && !childrenError}
-                isFetchingNextPage={childrenFetchingNext}
-                onLoadMore={fetchChildrenNextPage}
-                label="Load more child pages"
-              />
-            </motion.div>
-          )}
+              </motion.div>
+            )}
         </AnimatePresence>
       </div>
 

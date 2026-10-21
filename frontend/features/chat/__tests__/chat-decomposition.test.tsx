@@ -90,6 +90,7 @@ describe("ChannelMembersSection (ITEM: channel-info-panel split)", () => {
     isMultiMemberChannel: true,
     onlineUserIds: new Set<string>(),
     onClose: jest.fn(),
+    conversationName: "#general",
   };
 
   it("renders 'Members (0)' when empty", () => {

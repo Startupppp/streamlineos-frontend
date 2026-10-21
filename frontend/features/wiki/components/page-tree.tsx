@@ -7,9 +7,10 @@ import { ErrorState } from "@/components/shared/error-state";
 import { InfiniteScrollSentinel } from "@/components/ui/infinite-scroll-sentinel";
 import { useKbPageTreeInfinite } from "@/hooks/api/kb";
 import { KbPlusIcon } from "@/features/wiki/lib/kb-icons";
+import { KB_DOC_BASE } from "@/lib/knowledge-routes";
 import { KbNewMenu } from "./kb-new-menu";
 import PageTreeItem from "./page-tree-item";
-import type { KbPage, KbPageTreeNode } from "@/hooks/api/kb/page-types";
+import type { KbPageTreeNode } from "@/hooks/api/kb/page-types";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { isApiError } from "@/lib/api-envelope";
 
@@ -45,10 +46,6 @@ export default function PageTree({
 
   const rootNodes: KbPageTreeNode[] = data?.pages.flatMap((p) => p.data) ?? [];
   const accessLost = isApiError(error) && (error.status === 401 || error.status === 403 || error.status === 404);
-
-  function handleCreated(_page: KbPage) {
-    onCloseMobile?.();
-  }
 
   function handleRetry() {
     if (isFetchNextPageError) {
@@ -91,7 +88,8 @@ export default function PageTree({
         <KbNewMenu
           scope={treeScope}
           allowFolder={false}
-          onCreated={handleCreated}
+          onCreated={onCloseMobile}
+          baseHref={baseHref ?? KB_DOC_BASE}
           trigger={
             <Button size="sm" variant="outline" className="h-7 text-xs">
               <KbPlusIcon className="h-3.5 w-3.5" />

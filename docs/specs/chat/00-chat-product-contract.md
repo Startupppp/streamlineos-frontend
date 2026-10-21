@@ -162,13 +162,13 @@ Rollback order is frontend first, then backend; migrations 2490/2495/2500 are ad
 
 - [x] Two concurrent starts on one channel yield one active Huddle and the same response.
 - [x] The race loser's provider event is deleted or queued for reconciliation; a test asserts one of the two.
-- [ ] Retrying a start after a network failure creates no second provider event.
+- [x] Retrying a start after a network failure creates no second provider event.
 
 ### CHAT-006 Lifecycle and fan-out
 
 - [x] The internal calendar event stores the provider identity.
 - [ ] End and cancel update the provider event where supported; UI claims "ended" only on provider confirmation.
-- [ ] Ably publish and notifications run after commit; a test shows no publish on rollback.
+- [x] Ably publish and notifications run after commit; a test shows no publish on rollback.
 - [x] No provider call runs inside a tenant transaction.
 
 ### CHAT-007 Contracts
@@ -181,7 +181,7 @@ Rollback order is frontend first, then backend; migrations 2490/2495/2500 are ad
 
 - [x] Invite rejects users who are not active in the organization or channel.
 - [x] Heartbeat rejects when no active Huddle, no active membership, or no open participant row.
-- [ ] Join, leave and end enforce tenant and membership; each writes an audit entry with no token or join URL.
+- [x] Join, leave and end enforce tenant and membership; each writes an audit entry with no token or join URL.
 - [x] One backend entitlement source gates Huddle creation and group invites.
 
 ### CHAT-009 Message reliability
@@ -193,9 +193,9 @@ Rollback order is frontend first, then backend; migrations 2490/2495/2500 are ad
 
 ### CHAT-010 URL and history
 
-- [ ] `channel`, `message`, `inbox`, `dm=1`, `joinHuddle=1` follow the plan's URL contract.
+- [x] `channel`, `message`, `inbox`, `dm=1`, `joinHuddle=1` follow the plan's URL contract.
 - [x] `message` is ignored without its channel and cleared on channel change.
-- [ ] Action params are consumed once and removed without losing other params.
+- [x] Action params are consumed once and removed without losing other params.
 - [x] Selecting a conversation pushes history; filter and panel changes replace it.
 - [x] Browser back/forward and mobile Back restore the prior conversation or the list.
 - [x] No effect mirrors URL state into component state.
@@ -243,13 +243,13 @@ Rollback order is frontend first, then backend; migrations 2490/2495/2500 are ad
 
 - [x] Delete message, leave, archive, hide and member removal use `ConfirmDialog destructive`.
 - [x] Cancel performs no mutation; confirm performs exactly one.
-- [ ] Confirm copy names the target.
+- [x] Confirm copy names the target.
 
 ### CHAT-018 Composer and history
 
 - [x] Composer has an accessible label; no exposed markdown button strip.
-- [ ] Older messages load on scroll with no "Load more" or "load older" control.
-- [ ] Thread replies load the same way.
+- [x] Older messages load on scroll with no "Load more" or "load older" control.
+- [x] Thread replies load the same way.
 
 ### CHAT-019 Details and Saved
 
@@ -265,7 +265,7 @@ Rollback order is frontend first, then backend; migrations 2490/2495/2500 are ad
 
 ### CHAT-021 Provider-aware UI
 
-- [ ] UI shows Google Meet or Teams join, connect, or reconnect states from the provider field; null shows "External meeting".
+- [x] UI shows Google Meet or Teams join, connect, or reconnect states from the provider field; null shows "External meeting".
 - [x] No kick, end-meeting, provider attendance or two-person cap claims remain.
 - [x] Any in-app roster is labelled "Joined through StreamlineOS".
 
@@ -279,8 +279,8 @@ Rollback order is frontend first, then backend; migrations 2490/2495/2500 are ad
 ### CHAT-023 Tests
 
 - [x] Backend specs cover the CHAT-002..008 matrix, tenant isolation, wire parity and Ably capability.
-- [ ] Frontend specs cover URL, search, dialog ownership, redirect, PageState, confirmations, actions, provider copy, removed UI.
-- [ ] Accessibility checks cover keyboard, focus, screen reader and touch on core flows.
+- [x] Frontend specs cover URL, search, dialog ownership, redirect, PageState, confirmations, actions, provider copy, removed UI.
+- [x] Accessibility checks cover keyboard, focus, screen reader and touch on core flows.
 - [x] Mocked-provider tests are mandatory; live Meet/Teams smoke runs only with approved credentials.
 
 ### CHAT-024 Quality gates

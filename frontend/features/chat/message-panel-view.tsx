@@ -2,7 +2,7 @@
 
 import React from "react";
 import dynamic from "next/dynamic";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Search } from "lucide-react";
 import { InfoIcon, MicIcon } from "@animateicons/react/lucide";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -92,8 +92,13 @@ export function MessagePanelView({
     onToggleInfo,
     showInfoPanel,
   } = header;
-
   const isPanelNarrow = useIsChatPanelNarrow();
+  const searchButton = (
+    <button type="button" aria-label="Search messages, channels and people"
+      className="inline-flex size-11 shrink-0 items-center justify-center rounded-lg text-muted-foreground hover:bg-muted/50 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring md:hidden"
+      onClick={() => window.dispatchEvent(new CustomEvent("chat:open-search"))}>
+      <Search className="size-5" /></button>
+  );
   const dropdownTriggerRef = React.useRef<HTMLButtonElement>(null);
   function handleSkipToComposer(event: React.MouseEvent<HTMLButtonElement>) {
     event.currentTarget.parentElement?.querySelector<HTMLElement>("[data-chat-composer]")?.focus();
@@ -127,9 +132,9 @@ export function MessagePanelView({
               className="text-sm font-semibold"
             />
           </div>
+          {searchButton}
         </div>
         )}
-
         {!isPanelNarrow && (
         <div className="flex h-14 shrink-0 items-center gap-3 border-b border-border/40 bg-card/80 px-4 sticky top-0 z-20">
           <button
@@ -178,6 +183,7 @@ export function MessagePanelView({
           </div>
 
           <div className="flex items-center gap-1">
+          {searchButton}
             {channel?.type === "GROUP" && (
               <div className="hidden sm:flex -space-x-1.5 mr-2">
                 {channel.members?.slice(0, 3).map((m: ChannelMember) => (

@@ -47,9 +47,10 @@ interface KbNewMenuProps {
   allowFolder: boolean;
   onCreated?: (page: KbPage) => void;
   trigger?: React.ReactNode;
+  baseHref?: string;
 }
 
-export function KbNewMenu({ scope, allowFolder, onCreated, trigger }: KbNewMenuProps) {
+export function KbNewMenu({ scope, allowFolder, onCreated, trigger, baseHref }: KbNewMenuProps) {
   const router = useRouter();
   const canCreate = useCan("kb:pages:create");
   const canManageSpaces = useCan("kb:spaces:manage");
@@ -58,8 +59,9 @@ export function KbNewMenu({ scope, allowFolder, onCreated, trigger }: KbNewMenuP
   const [folderSheetOpen, setFolderSheetOpen] = useState(false);
 
   const createPage = useGuardedCreateKbPage((page) => {
-    const href =
-      scope.projectId != null
+    const href = baseHref
+      ? `${baseHref}/${page.id}`
+      : scope.projectId != null
         ? projectPageHref(scope.projectId, page.id)
         : pageHref(page.id);
     router.push(href);
@@ -158,6 +160,7 @@ export function KbNewMenu({ scope, allowFolder, onCreated, trigger }: KbNewMenuP
         type="file"
         accept={KB_SPREADSHEET_ACCEPT}
         className="sr-only"
+        tabIndex={-1}
         onChange={handleFileChange}
         aria-hidden="true"
       />

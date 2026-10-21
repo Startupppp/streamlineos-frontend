@@ -170,6 +170,19 @@ describe("MessagePanelView header — one details entry plus one overflow", () =
   });
 });
 
+describe("MessagePanelView header search", () => {
+  it.each([false, true])("opens the single chat search via chat:open-search (narrow=%s)", async (narrow) => {
+    mockNarrow.mockReturnValue(narrow);
+    const user = userEvent.setup();
+    const opened = jest.fn();
+    window.addEventListener("chat:open-search", opened);
+    render(<MessagePanelView {...makeProps()} />);
+    await user.click(screen.getByRole("button", { name: "Search messages, channels and people" }));
+    window.removeEventListener("chat:open-search", opened);
+    expect(opened).toHaveBeenCalledTimes(1);
+  });
+});
+
 describe("MessagePanelView header huddle button is provider aware", () => {
   const joined = {
     id: 3,

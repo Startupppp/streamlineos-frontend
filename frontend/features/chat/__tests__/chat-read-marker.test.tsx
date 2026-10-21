@@ -66,6 +66,24 @@ describe("opening a channel", () => {
   });
 });
 
+describe("a channel that needs joining", () => {
+  it("never marks it read, then marks once the join lifts the gate", () => {
+    const markRead = { mutate: jest.fn() };
+    const { rerender } = renderHook(
+      ({ enabled, newestMessageId }: { enabled: boolean; newestMessageId: number | undefined }) =>
+        useChatReadMarker({ channelId: CHANNEL_ID, newestMessageId, markRead, enabled }),
+      { initialProps: { enabled: false, newestMessageId: undefined as number | undefined } },
+    );
+    rerender({ enabled: false, newestMessageId: 5 });
+    act(() => {
+      jest.advanceTimersByTime(5_000);
+    });
+    expect(markRead.mutate).not.toHaveBeenCalled();
+    rerender({ enabled: true, newestMessageId: 5 });
+    expect(markRead.mutate).toHaveBeenCalledTimes(1);
+  });
+});
+
 describe("a message arriving while the reader is looking at the channel", () => {
   it("re-marks read after the debounce, so messages read on screen do not stay unread", () => {
     const markRead = { mutate: jest.fn() };
