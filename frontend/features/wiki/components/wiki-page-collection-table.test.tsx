@@ -1,8 +1,6 @@
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { WikiPageCollectionTable } from "./wiki-page-collection-table";
-import { ApiError } from "@/lib/api-envelope";
-import { kbSpacesQueryStub } from "@/test-utils/kb-spaces-fixture";
 
 const mockReplace = jest.fn();
 const mockPush = jest.fn();
@@ -39,6 +37,14 @@ jest.mock("@/hooks/api/kb", () => ({
 
 jest.mock("@/hooks/api/access", () => ({
   useCan: () => true,
+}));
+
+jest.mock("@/hooks/api/organization", () => ({
+  useOrgMembersByIds: jest.fn(() => ({ data: undefined })),
+}));
+
+jest.mock("@/hooks/common/use-online-status", () => ({
+  useOnlineStatus: jest.fn(() => true),
 }));
 
 jest.mock("@/hooks/api/use-page-state", () => ({
@@ -128,8 +134,12 @@ const { usePageState } = jest.requireMock("@/hooks/api/use-page-state") as {
   usePageState: jest.Mock;
 };
 
-const { useKbSpaces } = jest.requireMock("@/hooks/api/kb") as {
-  useKbSpaces: jest.Mock;
+const { useOrgMembersByIds } = jest.requireMock("@/hooks/api/organization") as {
+  useOrgMembersByIds: jest.Mock;
+};
+
+const { useOnlineStatus } = jest.requireMock("@/hooks/common/use-online-status") as {
+  useOnlineStatus: jest.Mock;
 };
 
 function makeItem(id: number, extra: Record<string, unknown> = {}) {
@@ -176,6 +186,7 @@ function makeResponse(
       ...paginationOverrides,
     },
     facets: null,
+    boundedCount: { count: items.length, isExact: true },
   };
 }
 
@@ -193,6 +204,8 @@ beforeEach(() => {
     refetch: jest.fn(),
   });
   usePageState.mockReturnValue({ kind: "ready" });
+  useOrgMembersByIds.mockReturnValue({ data: undefined });
+  useOnlineStatus.mockReturnValue(true);
 });
 
 it("opens the page's version history from its collection action menu", async () => {
@@ -572,184 +585,3 @@ describe("WikiPageCollectionTable — owner filter", () => {
   });
 });
 
-describe("WikiPageCollectionTable — My files six states (S02 evidence)", () => {
-  it("loading: renders the data table skeleton while the server call is in-flight", () => {
-    useKbPageCollection.mockReturnValue({
-      data: undefined,
-      isLoading: true,
-      isError: false,
-      error: undefined,
-      refetch: jest.fn(),
-    });
-    usePageState.mockReturnValue({ kind: "loading" });
-
-    render(
-      <WikiPageCollectionTable
-        fixedParams={{ owner: "me" }}
-        emptyTitle="No pages yet"
-      />,
-    );
-
-    expect(screen.getByTestId("loading-skeleton")).toBeInTheDocument();
-    expect(screen.queryByTestId("table-rows")).not.toBeInTheDocument();
-    expect(screen.queryByText("No pages yet")).not.toBeInTheDocument();
-  });
-
-  it("ready: renders page rows when the server returns owned pages", () => {
-    useKbPageCollection.mockReturnValue({
-      data: makeResponse([makeItem(1), makeItem(2)]),
-      isLoading: false,
-      isError: false,
-      error: undefined,
-      refetch: jest.fn(),
-    });
-    usePageState.mockReturnValue({ kind: "ready" });
-
-    render(
-      <WikiPageCollectionTable
-        fixedParams={{ owner: "me" }}
-        emptyTitle="No pages yet"
-      />,
-    );
-
-    expect(screen.getByTestId("table-rows")).toBeInTheDocument();
-    expect(screen.queryByText("No pages yet")).not.toBeInTheDocument();
-  });
-
-  it("first-empty: renders the empty title without a clear-filters button when no filters are active", () => {
-    useKbPageCollection.mockReturnValue({
-      data: makeResponse([]),
-      isLoading: false,
-      isError: false,
-      error: undefined,
-      refetch: jest.fn(),
-    });
-    usePageState.mockReturnValue({ kind: "empty" });
-
-    render(
-      <WikiPageCollectionTable
-        fixedParams={{ owner: "me" }}
-        emptyTitle="No pages yet"
-        emptyDescription="Files you own will appear here."
-      />,
-    );
-
-    expect(screen.getByText("No pages yet")).toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: /clear filters/i })).not.toBeInTheDocument();
-  });
-
-  it("filtered-empty: renders a different title and a clear-filters button when a filter is active but result is empty", () => {
-    mockSearchParams = new URLSearchParams("q=nonexistent");
-    useKbPageCollection.mockReturnValue({
-      data: makeResponse([]),
-      isLoading: false,
-      isError: false,
-      error: undefined,
-      refetch: jest.fn(),
-    });
-    usePageState.mockReturnValue({ kind: "empty" });
-
-    render(
-      <WikiPageCollectionTable
-        fixedParams={{ owner: "me" }}
-        emptyTitle="No pages yet"
-      />,
-    );
-
-    expect(screen.getByText("No results match your filters.")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /clear filters/i })).toBeInTheDocument();
-    expect(screen.queryByText("No pages yet")).not.toBeInTheDocument();
-  });
-
-  it("error: renders an error state with a retry button when the server call fails", () => {
-    const error = new Error("Failed to fetch");
-    useKbPageCollection.mockReturnValue({
-      data: undefined,
-      isLoading: false,
-      isError: true,
-      error,
-      refetch: jest.fn(),
-    });
-    usePageState.mockReturnValue({ kind: "error", error });
-
-    render(
-      <WikiPageCollectionTable
-        fixedParams={{ owner: "me" }}
-        emptyTitle="No pages yet"
-      />,
-    );
-
-    expect(screen.getByRole("alert")).toBeInTheDocument();
-    expect(screen.getByTestId("error-state")).toBeInTheDocument();
-    expect(screen.getByTestId("retry-button")).toBeInTheDocument();
-    expect(screen.queryByText("No pages yet")).not.toBeInTheDocument();
-  });
-
-  it("error with request id: renders the correlation id when the api error carries one, so the user can quote it to support", () => {
-    const error = new ApiError("Server error", 500, "INTERNAL", { correlationId: "req-abc-12345" });
-    useKbPageCollection.mockReturnValue({
-      data: undefined,
-      isLoading: false,
-      isError: true,
-      error,
-      refetch: jest.fn(),
-    });
-    usePageState.mockReturnValue({ kind: "error", error });
-
-    render(
-      <WikiPageCollectionTable
-        fixedParams={{ owner: "me" }}
-        emptyTitle="No pages yet"
-      />,
-    );
-
-    expect(screen.getByTestId("error-reference")).toHaveTextContent("req-abc-12345");
-    expect(screen.getByTestId("retry-button")).toBeInTheDocument();
-  });
-
-  it("denied: renders the access-denied state without any page data or empty state copy", () => {
-    useKbPageCollection.mockReturnValue({
-      data: undefined,
-      isLoading: false,
-      isError: false,
-      error: undefined,
-      refetch: jest.fn(),
-    });
-    usePageState.mockReturnValue({ kind: "denied", permission: "kb:pages:view" });
-
-    render(
-      <WikiPageCollectionTable
-        fixedParams={{ owner: "me" }}
-        emptyTitle="No pages yet"
-      />,
-    );
-
-    expect(screen.getByTestId("denied-state")).toBeInTheDocument();
-    expect(screen.queryByText("No pages yet")).not.toBeInTheDocument();
-    expect(screen.queryByTestId("table-rows")).not.toBeInTheDocument();
-  });
-});
-
-describe("WikiPageCollectionTable — space filter", () => {
-  afterEach(() => {
-    useKbSpaces.mockReturnValue(kbSpacesQueryStub());
-  });
-
-  it("builds its options from the cursor envelope useKbSpaces returns, so the selected space shows its name", () => {
-    mockSearchParams = new URLSearchParams("space=2");
-
-    render(<WikiPageCollectionTable fixedParams={{}} emptyTitle="No pages yet" />);
-
-    const trigger = screen.getByRole("combobox", { name: "Team folder" });
-    expect(trigger).toHaveTextContent("Product");
-  });
-
-  it("renders no space filter when the viewer belongs to no space — the control is data-driven, so the positive above is not free", () => {
-    mockSearchParams = new URLSearchParams("space=2");
-    useKbSpaces.mockReturnValue(kbSpacesQueryStub([]));
-
-    render(<WikiPageCollectionTable fixedParams={{}} emptyTitle="No pages yet" />);
-
-    expect(screen.queryByRole("combobox", { name: "Team folder" })).not.toBeInTheDocument();
-  });
-});

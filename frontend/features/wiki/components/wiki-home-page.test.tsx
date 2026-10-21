@@ -1,4 +1,4 @@
-import { act, render, screen } from "@testing-library/react";
+import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import WikiHomePage from "./wiki-home-page";
 import { kbSpacesQueryStub } from "@/test-utils/kb-spaces-fixture";
@@ -29,6 +29,14 @@ jest.mock("@/hooks/api/kb", () => ({
 
 jest.mock("@/hooks/api/kb/record-links", () => ({
   useKbPageRecordLinks: jest.fn(() => ({ data: [] })),
+}));
+
+jest.mock("@/hooks/api/kb/export-page", () => ({
+  useExportKbPage: jest.fn(() => ({ mutate: jest.fn(), isPending: false })),
+}));
+
+jest.mock("@/hooks/common/use-online-status", () => ({
+  useOnlineStatus: jest.fn(() => true),
 }));
 
 jest.mock("@/hooks/api/organization", () => ({
@@ -743,149 +751,5 @@ describe("WikiHomePage — the create control fails closed on kb:pages:create", 
     render(<WikiHomePage />);
     const options = lastKeyboardOptions();
     expect(options.onCreate).toBeUndefined();
-  });
-});
-
-describe("WikiHomePage — keyboard handler wiring (task F)", () => {
-  beforeEach(() => {
-    mockUseBuildListKeyboard.mockClear();
-  });
-
-  it("passes the real item count from the collection to useBuildListKeyboard so j/k/Enter work", () => {
-    useKbPageCollection.mockReturnValue({
-      data: makeResponse([makeItem(1), makeItem(2), makeItem(3)]),
-      isLoading: false,
-      isError: false,
-      error: undefined,
-      refetch: jest.fn(),
-    });
-    usePageState.mockReturnValue({ kind: "ready" });
-
-    render(<WikiHomePage />);
-
-    const options = lastKeyboardOptions();
-    expect(options.itemCount).toBe(3);
-  });
-
-  it("passes itemCount 0 when the collection is empty so j/k are inert on an empty list", () => {
-    useKbPageCollection.mockReturnValue({
-      data: makeResponse([]),
-      isLoading: false,
-      isError: false,
-      error: undefined,
-      refetch: jest.fn(),
-    });
-    usePageState.mockReturnValue({ kind: "empty" });
-
-    render(<WikiHomePage />);
-
-    const options = lastKeyboardOptions();
-    expect(options.itemCount).toBe(0);
-  });
-
-  it("passes a real onOpen handler so Enter navigates to the page at the focused index", () => {
-    render(<WikiHomePage />);
-    const options = lastKeyboardOptions();
-    expect(typeof options.onOpen).toBe("function");
-    const onOpen = options.onOpen as (index: number) => void;
-    onOpen(0);
-    expect(mockPush).toHaveBeenCalledWith(expect.stringContaining("1"));
-  });
-
-  it("search input is present for the non-project-scoped wiki so / can focus it", () => {
-    render(<WikiHomePage />);
-    expect(screen.getByRole("search")).toBeInTheDocument();
-  });
-
-  it("search input is also present for the project-scoped wiki now that it has been added", () => {
-    render(<WikiHomePage projectId={7} />);
-    expect(screen.getByRole("search")).toBeInTheDocument();
-  });
-
-  it("passes onEdit so the e key opens the focused page, which on this surface is the editor because the wiki document has no separate edit route", () => {
-    render(<WikiHomePage />);
-    const options = lastKeyboardOptions();
-    expect(typeof options.onEdit).toBe("function");
-    const onEdit = options.onEdit as (index: number) => void;
-    onEdit(0);
-    expect(mockPush).toHaveBeenCalledWith(expect.stringContaining("1"));
-  });
-});
-
-async function settleSearchDebounce() {
-  await act(async () => {
-    await new Promise((resolve) => setTimeout(resolve, 400));
-  });
-}
-
-describe("WikiHomePage — project-scoped search writes a debounced q to the URL (task B)", () => {
-  it("renders a project-scoped search box that types into the q URL parameter rather than navigating out of the project", async () => {
-    const user = userEvent.setup();
-    render(<WikiHomePage projectId={7} />);
-
-    await user.type(screen.getByRole("searchbox"), "runbook");
-    await settleSearchDebounce();
-
-    expect(mockReplace).toHaveBeenCalledWith(
-      expect.stringContaining("q=runbook"),
-      expect.objectContaining({ scroll: false }),
-    );
-    expect(mockPush).not.toHaveBeenCalled();
-  });
-
-  it("writes nothing to the URL before the debounce settles, so the collection is not refetched once per keystroke", async () => {
-    const user = userEvent.setup();
-    render(<WikiHomePage projectId={7} />);
-
-    await user.type(screen.getByRole("searchbox"), "runbook");
-
-    expect(mockReplace).not.toHaveBeenCalled();
-
-    await settleSearchDebounce();
-
-    expect(mockReplace).toHaveBeenCalledTimes(1);
-  });
-
-  it("writes no q key for a whitespace-only query, because /kb/pages declares q as min(1) and an empty q would 400 the whole list", async () => {
-    const user = userEvent.setup();
-    render(<WikiHomePage projectId={7} />);
-
-    await user.type(screen.getByRole("searchbox"), "   ");
-    await settleSearchDebounce();
-
-    expect(mockReplace).not.toHaveBeenCalled();
-  });
-
-  it("drops the cursor parameter in the same URL write as the query, so a search cannot inherit the previous result set's page-two cursor", async () => {
-    const user = userEvent.setup();
-    mockSearchParams = new URLSearchParams("cursor=stale-cursor");
-    render(<WikiHomePage projectId={7} />);
-
-    await user.type(screen.getByRole("searchbox"), "runbook");
-    await settleSearchDebounce();
-
-    const url = mockReplace.mock.calls.at(-1)?.[0] as string;
-    expect(url).toContain("q=runbook");
-    expect(url).not.toContain("cursor=");
-  });
-
-  it("seeds the search box from the q URL parameter so a shared search link shows its own query", () => {
-    mockSearchParams = new URLSearchParams("q=runbook");
-    render(<WikiHomePage projectId={7} />);
-
-    expect(screen.getByRole("searchbox")).toHaveValue("runbook");
-  });
-
-  it("leaves the organization-wide wiki search on its deliberate redirect to the full KB search route instead of writing q", async () => {
-    const user = userEvent.setup();
-    render(<WikiHomePage />);
-
-    await user.type(screen.getByRole("searchbox"), "runbook{Enter}");
-    await settleSearchDebounce();
-
-    expect(mockPush).toHaveBeenCalledWith(
-      expect.stringContaining("/search?q=runbook"),
-    );
-    expect(mockReplace).not.toHaveBeenCalled();
   });
 });

@@ -29,9 +29,13 @@ import { KbMoreHorizontalIcon } from "@/features/wiki/lib/kb-icons";
 
 interface CollectionItemMenuProps {
   page: KbPageCollectionItem;
+  resolveHref?: (id: number) => string;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }
 
-export function CollectionItemMenu({ page }: CollectionItemMenuProps) {
+export function CollectionItemMenu({ page, resolveHref, open, onOpenChange }: CollectionItemMenuProps) {
+  const href = resolveHref ?? pageHref;
   const router = useRouter();
   const canCreate = useCan("kb:pages:create");
   const canUpdate = useCan("kb:pages:update");
@@ -78,7 +82,7 @@ export function CollectionItemMenu({ page }: CollectionItemMenuProps) {
   }
 
   function handleCopyLink() {
-    const url = new URL(pageHref(page.id), window.location.origin).toString();
+    const url = new URL(href(page.id), window.location.origin).toString();
     navigator.clipboard.writeText(url).then(
       () => toast.success("Link copied"),
       () => toast.error("Failed to copy"),
@@ -114,7 +118,7 @@ export function CollectionItemMenu({ page }: CollectionItemMenuProps) {
       duplicatePage.mutate(page.id, {
         onSuccess: (dup) => {
           toast.success("Page duplicated");
-          router.push(pageHref(dup.id));
+          router.push(href(dup.id));
         },
         onError: (err) => toast.error(getErrorMessage(err)),
       });
@@ -127,7 +131,7 @@ export function CollectionItemMenu({ page }: CollectionItemMenuProps) {
     } else if (actionId === "export") {
       handleExport();
     } else {
-      router.push(pageHref(page.id));
+      router.push(href(page.id));
     }
   }
 
@@ -143,7 +147,7 @@ export function CollectionItemMenu({ page }: CollectionItemMenuProps) {
         onOpenChange={handleDeleteOpenChange}
         onConfirm={handleDeleteConfirm}
       />
-      <DropdownMenu>
+      <DropdownMenu open={open} onOpenChange={onOpenChange}>
         <DropdownMenuTrigger asChild>
           <Button type="button" variant="ghost" size="icon" className="h-7 w-7 shrink-0" aria-label="Page actions">
             <KbMoreHorizontalIcon className="h-4 w-4" />

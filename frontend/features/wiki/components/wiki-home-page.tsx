@@ -15,7 +15,7 @@ import {
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { ErrorState } from "@/components/shared/error-state";
-import { KB_CHAT, KB_SEARCH, pageHref, projectPageHref } from "@/lib/knowledge-routes";
+import { KB_CHAT, KB_IMPORT, KB_SEARCH, KB_TEMPLATES, pageHref, projectPageHref } from "@/lib/knowledge-routes";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { kbTimeAgo } from "@/features/wiki/lib/kb-date-utils";
@@ -28,7 +28,7 @@ import {
   WikiPageCard,
   WIKI_PAGE_CARD_GRID_CLASS,
 } from "@/features/wiki/components/wiki-page-card";
-import { WikiHomeAllPages, KB_PAGE_CURSOR_PARAM } from "./wiki-home-all-pages";
+import { WikiPageCollectionTable, KB_PAGE_CURSOR_PARAM } from "./wiki-page-collection-table";
 import { WikiCompanyDocumentsStrip } from "./wiki-company-documents-strip";
 import { useBuildListKeyboard } from "@/hooks/common/use-build-list-keyboard";
 import { ShortcutHelpDialog } from "@/components/shared/shortcut-help-dialog";
@@ -71,6 +71,7 @@ export default function WikiHomePage({ projectId }: WikiHomePageProps) {
   const favoritesQuery = useKbPagesFavorites();
   const favoritePages = favoritesQuery.data ?? [];
   const canCreate = useCan("kb:pages:create");
+  const canImport = useCan("kb:pages:import");
 
   const resolveHref = useCallback(
     (pageId: number): string =>
@@ -288,8 +289,14 @@ export default function WikiHomePage({ projectId }: WikiHomePageProps) {
                   All documents
                 </h2>
               )}
-              <WikiHomeAllPages
-                projectId={isProjectScoped ? projectId : undefined}
+              <WikiPageCollectionTable
+                fixedParams={{ projectId: isProjectScoped ? projectId : undefined }}
+                searchPlaceholder={null}
+                emptyTitle="Your Docs workspace starts here"
+                emptyDescription="Create your first document to give your team one place for current knowledge."
+                emptyAction={canCreate ? { label: "Create a document", onClick: handleNewPage } : undefined}
+                emptySecondaryAction={{ label: "Browse templates", href: KB_TEMPLATES }}
+                emptyTertiaryAction={canImport ? { label: "Import documents", href: KB_IMPORT } : undefined}
                 onItemCountChange={handleItemCountChange}
                 onRowsChange={handleRowsChange}
               />

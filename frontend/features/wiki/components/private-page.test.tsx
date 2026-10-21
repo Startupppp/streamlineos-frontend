@@ -25,6 +25,14 @@ jest.mock("@/hooks/api/access", () => ({
   useCan: () => true,
 }));
 
+jest.mock("@/hooks/api/organization", () => ({
+  useOrgMembersByIds: jest.fn(() => ({ data: undefined })),
+}));
+
+jest.mock("@/hooks/common/use-online-status", () => ({
+  useOnlineStatus: jest.fn(() => true),
+}));
+
 jest.mock("@/hooks/api/use-page-state", () => ({
   usePageState: jest.fn(),
 }));

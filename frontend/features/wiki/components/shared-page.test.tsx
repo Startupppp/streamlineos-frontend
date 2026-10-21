@@ -51,6 +51,10 @@ jest.mock("@/hooks/api/access", () => ({
   useCan: () => true,
 }));
 
+jest.mock("@/hooks/common/use-online-status", () => ({
+  useOnlineStatus: jest.fn(() => true),
+}));
+
 jest.mock("@/hooks/api/use-page-state", () => ({
   usePageState: jest.fn(),
 }));
@@ -253,7 +257,7 @@ describe("SharedPage — flash fix and server-side filtering", () => {
 
     render(<SharedPage />);
 
-    expect(screen.getByText("Alice")).toBeInTheDocument();
+    expect(screen.getAllByText("Alice").length).toBeGreaterThan(0);
     expect(screen.queryByText("Member #5")).not.toBeInTheDocument();
   });
 

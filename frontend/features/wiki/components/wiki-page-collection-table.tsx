@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState, Fragment } from "react";
 import { useSearchParams } from "next/navigation";
 import { LayoutList, LayoutGrid } from "lucide-react";
 import { useKbPageCollection } from "@/hooks/api/kb/page-collection";
@@ -9,6 +9,8 @@ import type {
   KbPageCollectionParams,
 } from "@/hooks/api/kb/page-collection";
 import { useKbSpaces } from "@/hooks/api/kb";
+import { useOrgMembersByIds } from "@/hooks/api/organization";
+import { useOnlineStatus } from "@/hooks/common/use-online-status";
 import { usePageState } from "@/hooks/api/use-page-state";
 import { PageState } from "@/components/shared/page-state";
 import { DataTable } from "@/components/ui/data-table";
@@ -27,15 +29,20 @@ import {
 } from "@/components/ui/select";
 import { SearchInput } from "@/components/ui/search-input";
 import { useUrlFilters, parseEnum } from "@/lib/url-state/use-url-filters";
-import { pageHref } from "@/lib/knowledge-routes";
+import { pageHref, projectPageHref } from "@/lib/knowledge-routes";
 import { kbTimeAgo } from "@/features/wiki/lib/kb-date-utils";
 import {
   WikiPageCard,
   WIKI_PAGE_CARD_GRID_CLASS,
 } from "@/features/wiki/components/wiki-page-card";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
-import { TrustBadge, StatusBadge } from "./kb-collection-badges";
+import { getUserDisplayName } from "@/lib/person-display";
+import { TrustBadge, StatusBadge, OwnerMissingBadge } from "./kb-collection-badges";
 import { CollectionItemMenu } from "./wiki-page-collection-item-menu";
+import { KbAlertCircleIcon } from "@/features/wiki/lib/kb-icons";
+import { buildColumns } from "./wiki-page-collection-columns";
+
+export const KB_PAGE_CURSOR_PARAM = "cursor";
 
 const SORT_OPTIONS = [
   { value: "updated_desc", label: "Last updated" },
@@ -51,95 +58,65 @@ const STATUS_OPTIONS = [
 ] as const;
 
 const PAGE_LIMIT = 50;
-
 const SORT_VALUES = ["updated_desc", "created_desc", "title_asc"] as const;
 const VIEW_VALUES = ["list", "card"] as const;
 
-const BASE_COLUMNS: DataTableColumn<KbPageCollectionItem>[] = [
-  {
-    key: "title",
-    header: "Title",
-    cell: (row) => (
-      <a
-        href={pageHref(row.id)}
-        className="font-medium text-foreground hover:underline"
-      >
-        {row.title}
-      </a>
-    ),
-  },
-  {
-    key: "status",
-    header: "Status",
-    cell: (row) => <StatusBadge status={row.status} />,
-  },
-  {
-    key: "trustState",
-    header: "Trust",
-    cell: (row) => <TrustBadge trustState={row.trustState} />,
-  },
-  {
-    key: "updatedAt",
-    header: "Updated",
-    cell: (row) => (
-      <span className="tabular-nums text-muted-foreground text-sm">
-        {kbTimeAgo(row.updatedAt)}
-      </span>
-    ),
-  },
-  {
-    key: "actions",
-    header: "",
-    cell: (row) => <CollectionItemMenu page={row} />,
-  },
-];
-
 export interface WikiPageCollectionTableProps {
-  fixedParams: Pick<KbPageCollectionParams, "owner" | "sharedWithMe" | "spaceId">;
+  fixedParams: Pick<
+    KbPageCollectionParams,
+    "owner" | "sharedWithMe" | "spaceId" | "projectId"
+  >;
   additionalColumns?: DataTableColumn<KbPageCollectionItem>[];
+  searchPlaceholder?: string | null;
   emptyTitle: string;
   emptyDescription?: string;
+  emptyAction?: { label: string; onClick: () => void };
+  emptySecondaryAction?: { label: string; href: string };
+  emptyTertiaryAction?: { label: string; href: string };
   accessLostTitle?: string;
   accessLostDescription?: string;
   onRowsChange?: (rows: readonly KbPageCollectionItem[]) => void;
-}
-
-function MobilePageCard(row: KbPageCollectionItem) {
-  return (
-    <WikiPageCard
-      href={pageHref(row.id)}
-      title={row.title}
-      icon={row.icon}
-      coverImage={row.coverImage}
-      subtitle={kbTimeAgo(row.updatedAt)}
-      menu={<CollectionItemMenu page={row} />}
-    >
-      <StatusBadge status={row.status} />
-    </WikiPageCard>
-  );
+  onItemCountChange?: (count: number) => void;
 }
 
 export function WikiPageCollectionTable({
   fixedParams,
   additionalColumns = [],
+  searchPlaceholder = "Search pages…",
   emptyTitle,
   emptyDescription,
+  emptyAction,
+  emptySecondaryAction,
+  emptyTertiaryAction,
   accessLostTitle,
   accessLostDescription,
   onRowsChange,
+  onItemCountChange,
 }: WikiPageCollectionTableProps) {
   const searchParams = useSearchParams();
-  const { update } = useUrlFilters();
+  const { update } = useUrlFilters({ pageParam: KB_PAGE_CURSOR_PARAM });
+  const isOffline = !useOnlineStatus();
+
+  const projectId = fixedParams.projectId;
+  const resolveHref = useCallback(
+    (pageId: number) =>
+      projectId !== undefined && projectId > 0
+        ? projectPageHref(projectId, pageId)
+        : pageHref(pageId),
+    [projectId],
+  );
 
   const rawSearch = searchParams.get("q") ?? "";
   const sort = parseEnum(searchParams.get("sort"), SORT_VALUES, "updated_desc");
   const status = searchParams.get("status") ?? "";
   const spaceParam = searchParams.get("space") ?? "";
-  const urlSpaceId = spaceParam !== "" ? Number(spaceParam) : undefined;
+  const rawSpaceId = spaceParam !== "" ? Number(spaceParam) : NaN;
+  const urlSpaceId = Number.isInteger(rawSpaceId) && rawSpaceId > 0 ? rawSpaceId : undefined;
   const spaceId = fixedParams.spaceId ?? urlSpaceId;
   const view = parseEnum(searchParams.get("view"), VIEW_VALUES, "list");
   const ownerParam = searchParams.get("owner") ?? "";
   const owner = fixedParams.owner ?? (ownerParam === "me" ? "me" : undefined);
+  const urlCursor = searchParams.get(KB_PAGE_CURSOR_PARAM) ?? "";
 
   const debouncedSearch = useDebouncedValue(rawSearch, 300);
 
@@ -147,7 +124,19 @@ export function WikiPageCollectionTable({
   const spaces = spacesPage?.data;
 
   const filterKey = `${debouncedSearch}|${sort}|${status}|${spaceParam}|${owner ?? ""}`;
-  const pager = useCursorPager(filterKey);
+
+  const handleCursorChange = useCallback(
+    (nextCursor: string | undefined) => {
+      if ((nextCursor ?? "") === urlCursor) return;
+      update({ [KB_PAGE_CURSOR_PARAM]: nextCursor ? nextCursor : null });
+    },
+    [update, urlCursor],
+  );
+
+  const pager = useCursorPager(filterKey, {
+    initialCursor: urlCursor === "" ? undefined : urlCursor,
+    onCursorChange: handleCursorChange,
+  });
 
   const queryParams: KbPageCollectionParams = {
     ...fixedParams,
@@ -163,11 +152,27 @@ export function WikiPageCollectionTable({
   const { data, isLoading, isError, error, refetch } =
     useKbPageCollection(queryParams);
 
+  const rows = useMemo(() => data?.data ?? [], [data?.data]);
+
+  const ownerUserIds = useMemo(
+    () =>
+      [...new Set(rows.map((r) => r.ownerUserId).filter((id): id is string => id !== null))],
+    [rows],
+  );
+  const { data: ownersPage } = useOrgMembersByIds(ownerUserIds);
+  const ownerNames = useMemo(() => {
+    const map = new Map<string, string>();
+    for (const member of ownersPage?.data ?? []) {
+      map.set(member.userId, getUserDisplayName({ name: member.name, email: member.email }));
+    }
+    return map;
+  }, [ownersPage]);
+
+  const [contextRowId, setContextRowId] = useState<number | null>(null);
+
   const [hadData, setHadData] = useState(false);
   useEffect(() => {
     if (data && data.data.length > 0 && !hadData) {
-      // Query history is external state: remember a successful non-empty result
-      // so a later empty response can be distinguished from first-use emptiness.
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setHadData(true);
     }
@@ -191,6 +196,22 @@ export function WikiPageCollectionTable({
     error,
     isEmpty,
   });
+
+  useEffect(() => {
+    onRowsChange?.(rows);
+  }, [rows, onRowsChange]);
+
+  useEffect(() => {
+    onItemCountChange?.(rows.length);
+  }, [rows.length, onItemCountChange]);
+
+  const columns = useMemo(
+    () => [
+      ...buildColumns(resolveHref, ownerNames, contextRowId, setContextRowId),
+      ...additionalColumns,
+    ],
+    [resolveHref, ownerNames, contextRowId, additionalColumns],
+  );
 
   function handleClearFilters() {
     update({ q: null, status: null, sort: null, space: null, owner: null });
@@ -236,12 +257,55 @@ export function WikiPageCollectionTable({
     void refetch();
   }, [refetch]);
 
-  const columns = useMemo(() => [...BASE_COLUMNS, ...additionalColumns], [additionalColumns]);
-  const rows = useMemo(() => data?.data ?? [], [data?.data]);
+  const handleRowContextMenu = useCallback(
+    (row: KbPageCollectionItem, event: React.MouseEvent) => {
+      event.preventDefault();
+      setContextRowId(row.id);
+    },
+    [],
+  );
 
-  useEffect(() => {
-    onRowsChange?.(rows);
-  }, [rows, onRowsChange]);
+  const renderMobileCard = useCallback(
+    (row: KbPageCollectionItem) => {
+      function handleContextMenu(e: React.MouseEvent) {
+        e.preventDefault();
+        setContextRowId(row.id);
+      }
+      function handleMenuOpenChange(open: boolean) {
+        setContextRowId(open ? row.id : null);
+      }
+      return (
+        <div onContextMenu={handleContextMenu}>
+          <WikiPageCard
+            href={resolveHref(row.id)}
+            title={row.title}
+            icon={row.icon}
+            coverImage={row.coverImage}
+            subtitle={kbTimeAgo(row.updatedAt)}
+            menu={
+              <CollectionItemMenu
+                page={row}
+                resolveHref={resolveHref}
+                open={contextRowId === row.id}
+                onOpenChange={handleMenuOpenChange}
+              />
+            }
+          >
+            <StatusBadge status={row.status} />
+            <TrustBadge trustState={row.trustState} />
+            {row.ownerUserId ? (
+              <span className="text-xs text-muted-foreground">
+                {ownerNames.get(row.ownerUserId) ?? "—"}
+              </span>
+            ) : (
+              <OwnerMissingBadge ownerMembershipId={row.ownerMembershipId} />
+            )}
+          </WikiPageCard>
+        </div>
+      );
+    },
+    [resolveHref, ownerNames, contextRowId],
+  );
 
   const emptyNode = pager.hasPrevious ? (
     <EmptyState
@@ -267,19 +331,33 @@ export function WikiPageCollectionTable({
       filtersActive={filtersActive}
       filteredTitle="No results match your filters."
       onClearFilters={handleClearFilters}
+      action={emptyAction}
+      secondaryAction={emptySecondaryAction}
+      tertiaryAction={emptyTertiaryAction}
       className={CONTENT_FILL_PANEL}
     />
   );
 
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-3">
+      {isOffline && (
+        <span
+          className="flex items-center gap-1 text-xs text-status-warning-ink"
+          data-testid="offline-indicator"
+        >
+          <KbAlertCircleIcon className="h-3 w-3" />
+          Offline — data may be stale
+        </span>
+      )}
       <div className="flex flex-wrap items-center gap-2">
-        <SearchInput
-          value={rawSearch}
-          onValueChange={handleSearchChange}
-          placeholder="Search pages…"
-          className="h-9 w-48 shrink-0"
-        />
+        {searchPlaceholder !== null && (
+          <SearchInput
+            value={rawSearch}
+            onValueChange={handleSearchChange}
+            placeholder={searchPlaceholder}
+            className="h-9 w-48 shrink-0"
+          />
+        )}
         <Select value={status || "all"} onValueChange={handleStatusChange}>
           <SelectTrigger className="h-9 w-36 shrink-0">
             <SelectValue placeholder="Status" />
@@ -331,29 +409,38 @@ export function WikiPageCollectionTable({
             ))}
           </SelectContent>
         </Select>
-        <div className="ml-auto flex items-center gap-1">
-          <Button
-            type="button"
-            variant={view === "list" ? "secondary" : "ghost"}
-            size="icon"
-            className="h-9 w-9"
-            aria-label="List view"
-            aria-pressed={view === "list"}
-            onClick={handleViewList}
-          >
-            <LayoutList className="h-4 w-4" />
-          </Button>
-          <Button
-            type="button"
-            variant={view === "card" ? "secondary" : "ghost"}
-            size="icon"
-            className="h-9 w-9"
-            aria-label="Card view"
-            aria-pressed={view === "card"}
-            onClick={handleViewCard}
-          >
-            <LayoutGrid className="h-4 w-4" />
-          </Button>
+        <div className="ml-auto flex items-center gap-2">
+          {data?.boundedCount !== undefined && (
+            <span className="text-sm text-muted-foreground tabular-nums">
+              {data.boundedCount.isExact
+                ? `${data.boundedCount.count} ${data.boundedCount.count === 1 ? "document" : "documents"}`
+                : `${data.boundedCount.count}+ documents`}
+            </span>
+          )}
+          <div className="flex items-center gap-1">
+            <Button
+              type="button"
+              variant={view === "list" ? "secondary" : "ghost"}
+              size="icon"
+              className="h-9 w-9"
+              aria-label="List view"
+              aria-pressed={view === "list"}
+              onClick={handleViewList}
+            >
+              <LayoutList className="h-4 w-4" />
+            </Button>
+            <Button
+              type="button"
+              variant={view === "card" ? "secondary" : "ghost"}
+              size="icon"
+              className="h-9 w-9"
+              aria-label="Card view"
+              aria-pressed={view === "card"}
+              onClick={handleViewCard}
+            >
+              <LayoutGrid className="h-4 w-4" />
+            </Button>
+          </div>
         </div>
       </div>
       <PageState
@@ -370,7 +457,7 @@ export function WikiPageCollectionTable({
             <div className="flex flex-col gap-3">
               <div className={WIKI_PAGE_CARD_GRID_CLASS}>
                 {rows.map((row) => (
-                  <MobilePageCard key={row.id} {...row} />
+                  <Fragment key={row.id}>{renderMobileCard(row)}</Fragment>
                 ))}
               </div>
               <TablePagination
@@ -388,8 +475,9 @@ export function WikiPageCollectionTable({
             data={rows}
             columns={columns}
             getRowKey={(row) => row.id}
+            onRowContextMenu={handleRowContextMenu}
             emptyState={emptyNode}
-            mobileCard={MobilePageCard}
+            mobileCard={renderMobileCard}
             pagination={{
               mode: "cursor",
               pageSize: PAGE_LIMIT,
