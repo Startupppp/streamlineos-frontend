@@ -3,8 +3,8 @@ import { render, screen } from "@testing-library/react";
 import { EmployeesDirectoryStats } from "./employees-directory-stats";
 
 jest.mock("@/components/ui/stat-card", () => ({
-  StatCard: ({ label, value, hint, href }: { label: string; value: number; hint?: string; href?: string }) => (
-    <div data-testid={`stat-${label.toLowerCase()}`} data-href={href}>
+  StatCard: ({ label, value, hint }: { label: string; value: number; hint?: string }) => (
+    <div data-testid={`stat-${label.toLowerCase()}`}>
       {label}: {value} ({hint})
     </div>
   ),
@@ -16,8 +16,6 @@ const mockUseHrEmployeeCounts = jest.fn();
 jest.mock("@/hooks/api/hr/employee-list", () => ({
   useHrEmployeeCounts: (...args: unknown[]) => mockUseHrEmployeeCounts(...args),
 }));
-
-const statusHref = (status: "active" | "pending" | "inactive") => `/hr/employees?dept=eng&status=${status}`;
 
 beforeEach(() => {
   jest.clearAllMocks();
@@ -33,7 +31,6 @@ describe("EmployeesDirectoryStats — the summary is the filtered list's own cou
         hasMore={false}
         statusFilter="active"
         filters={{ search: "ada", departmentId: "eng", role: undefined }}
-        statusHref={statusHref}
       />,
     );
 
@@ -49,7 +46,6 @@ describe("EmployeesDirectoryStats — the summary is the filtered list's own cou
         hasMore
         statusFilter="active"
         filters={{}}
-        statusHref={statusHref}
       />,
     );
 
@@ -59,7 +55,7 @@ describe("EmployeesDirectoryStats — the summary is the filtered list's own cou
     expect(screen.queryByText(/Org-wide/)).not.toBeInTheDocument();
   });
 
-  it("All statuses: the loaded hint counts active + inactive and both status cards keep the other filters in their links", () => {
+  it("All statuses: the loaded hint counts active + inactive and both status cards stay on the page", () => {
     mockUseHrEmployeeCounts.mockReturnValue({ isLoading: false, data: { active: 3, inactive: 2 } });
 
     render(
@@ -68,13 +64,13 @@ describe("EmployeesDirectoryStats — the summary is the filtered list's own cou
         hasMore={false}
         statusFilter="all"
         filters={{ departmentId: "eng" }}
-        statusHref={statusHref}
       />,
     );
 
     expect(screen.getByTestId("stat-showing")).toHaveTextContent("Showing: 5 (of 5 matching)");
-    expect(screen.getByTestId("stat-active")).toHaveAttribute("data-href", "/hr/employees?dept=eng&status=active");
-    expect(screen.getByTestId("stat-inactive")).toHaveAttribute("data-href", "/hr/employees?dept=eng&status=inactive");
+    expect(screen.getByTestId("stat-active")).toHaveTextContent("Active: 3 (Current filters)");
+    expect(screen.getByTestId("stat-inactive")).toHaveTextContent("Inactive: 2 (Current filters)");
+    expect(screen.queryByRole("link")).not.toBeInTheDocument();
   });
 
   it("empty Active set: reads zero, not a blank card", () => {
@@ -86,7 +82,6 @@ describe("EmployeesDirectoryStats — the summary is the filtered list's own cou
         hasMore={false}
         statusFilter="active"
         filters={{ search: "nobody" }}
-        statusHref={statusHref}
       />,
     );
 
@@ -103,7 +98,6 @@ describe("EmployeesDirectoryStats — the summary is the filtered list's own cou
         hasMore={false}
         statusFilter="all"
         filters={{}}
-        statusHref={statusHref}
       />,
     );
 
@@ -120,7 +114,6 @@ describe("EmployeesDirectoryStats — the summary is the filtered list's own cou
         hasMore
         statusFilter="all"
         filters={{}}
-        statusHref={statusHref}
       />,
     );
 

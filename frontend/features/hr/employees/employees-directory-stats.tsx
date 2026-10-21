@@ -14,7 +14,6 @@ interface EmployeesDirectoryStatsProps {
   hasMore: boolean;
   statusFilter: EmployeeStatusFilter;
   filters: HrEmployeeCountsParams;
-  statusHref: (status: Exclude<EmployeeStatusFilter, "all">) => string;
 }
 
 const FILTERED_HINT = "Current filters";
@@ -24,7 +23,6 @@ export function EmployeesDirectoryStats({
   hasMore,
   statusFilter,
   filters,
-  statusHref,
 }: EmployeesDirectoryStatsProps) {
   const counts = useHrEmployeeCounts(filters);
 
@@ -63,7 +61,6 @@ export function EmployeesDirectoryStats({
           icon={UserCheck}
           tone="emerald"
           hint={FILTERED_HINT}
-          href={statusHref("active")}
         />
       ) : null}
       {counts.data && (statusFilter === "pending" || ((counts.data.pending ?? 0) > 0 && statusFilter === "all")) ? (
@@ -77,7 +74,6 @@ export function EmployeesDirectoryStats({
           // a two-person org report two active employees when one had never
           // opened the invitation.
           hint="Invited, not yet accepted"
-          href={statusHref("pending")}
         />
       ) : null}
       {counts.data && (statusFilter === "all" || statusFilter === "inactive") ? (
@@ -87,7 +83,6 @@ export function EmployeesDirectoryStats({
           icon={UserX}
           tone={counts.data.inactive > 0 ? "amber" : "default"}
           hint={FILTERED_HINT}
-          href={statusHref("inactive")}
         />
       ) : null}
     </StatCardGrid>

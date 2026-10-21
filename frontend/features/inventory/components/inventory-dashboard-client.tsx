@@ -16,11 +16,21 @@ import {
 import { PlusIcon } from "@animateicons/react/lucide";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { PageWrapper } from "@/components/ui/page-wrapper";
-import { StatCard, StatCardGrid, StatCardGridSkeleton } from "@/components/ui/stat-card";
+import {
+  StatCard,
+  StatCardGrid,
+  StatCardGridSkeleton,
+} from "@/components/ui/stat-card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { InventoryEmptyState } from "@/features/inventory/components/inventory-empty-state";
-import { Card, CardHeader, CardTitle, CardContent, CardAction } from "@/components/ui/card";
+import {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardContent,
+  CardAction,
+} from "@/components/ui/card";
 import { ErrorState, NoPermissionState } from "@/components/shared";
 import { EmptyProductsIllustration } from "@/components/illustrations";
 import {
@@ -51,14 +61,6 @@ function AddProductLink() {
   );
 }
 
-/**
- * Stock value comes from the API as `SUM(on_hand × average_cost)` — **rupees**,
- * the currency every cost on this catalogue is held in. It was rendered as
- * `$${value / 100}`, which was wrong twice over: a hundredfold understatement of
- * a figure somebody reconciles against their accounts, in the wrong currency.
- * There are no minor units anywhere in this number's path, so there is nothing
- * to divide by.
- */
 function formatStockValue(stockValue: number): string {
   return formatMoneyRounded(stockValue, DEFAULT_MONEY_DISPLAY, 0);
 }
@@ -67,9 +69,21 @@ const URGENCY_CONFIG: Record<
   ReorderReportRow["urgency"],
   { label: string; className: string; dotClass: string }
 > = {
-  critical: { label: "Critical", className: "bg-status-danger-surface border-status-danger-rule", dotClass: "bg-status-danger-fill" },
-  high: { label: "High", className: "bg-status-warning-surface border-status-warning-rule", dotClass: "bg-status-warning-fill" },
-  medium: { label: "Medium", className: "bg-status-info-surface border-status-info-rule", dotClass: "bg-status-info-fill" },
+  critical: {
+    label: "Critical",
+    className: "bg-status-danger-surface border-status-danger-rule",
+    dotClass: "bg-status-danger-fill",
+  },
+  high: {
+    label: "High",
+    className: "bg-status-warning-surface border-status-warning-rule",
+    dotClass: "bg-status-warning-fill",
+  },
+  medium: {
+    label: "Medium",
+    className: "bg-status-info-surface border-status-info-rule",
+    dotClass: "bg-status-info-fill",
+  },
 };
 
 function KpiSkeletons() {
@@ -80,7 +94,10 @@ function LowStockSkeleton() {
   return (
     <div className="space-y-2">
       {Array.from({ length: 4 }).map((_, i) => (
-        <div key={i} className="flex items-center gap-3 rounded-lg border border-border p-3">
+        <div
+          key={i}
+          className="flex items-center gap-3 rounded-lg border border-border p-3"
+        >
           <Skeleton className="h-2 w-2 rounded-full shrink-0" />
           <div className="flex-1 space-y-1.5">
             <Skeleton className="h-3.5 w-36" />
@@ -150,18 +167,27 @@ function LowStockAlertSection({ canReadReports }: { canReadReports: boolean }) {
             key={`${item.productId}-${item.variantSku}-${item.locationId}`}
             className={`flex items-center gap-3 rounded-lg border p-3 ${urgency.className}`}
           >
-            <div className={`h-2 w-2 rounded-full shrink-0 ${urgency.dotClass}`} />
+            <div
+              className={`h-2 w-2 rounded-full shrink-0 ${urgency.dotClass}`}
+            />
             <div className="flex-1 min-w-0">
-              <TruncatedText text={item.productName} className="text-dense font-semibold text-foreground" />
+              <TruncatedText
+                text={item.productName}
+                className="text-dense font-semibold text-foreground"
+              />
               <p className="text-dense text-muted-foreground">
                 <span className="font-mono">{item.variantSku}</span>
-                {item.warehouseName ? <span> · {item.warehouseName}</span> : null}
+                {item.warehouseName ? (
+                  <span> · {item.warehouseName}</span>
+                ) : null}
               </p>
             </div>
             <div className="text-right shrink-0">
               <p className="text-dense text-muted-foreground">
                 On hand:{" "}
-                <span className="font-semibold tabular-nums text-foreground">{item.onHand}</span>
+                <span className="font-semibold tabular-nums text-foreground">
+                  {item.onHand}
+                </span>
               </p>
               <p className="text-dense text-muted-foreground">
                 Reorder at{" "}
@@ -169,7 +195,10 @@ function LowStockAlertSection({ canReadReports }: { canReadReports: boolean }) {
                 <span className="tabular-nums">{item.deficit}</span> more
               </p>
             </div>
-            <Badge variant="outline" className="text-micro h-4 px-1.5 py-0 shrink-0">
+            <Badge
+              variant="outline"
+              className="text-micro h-4 px-1.5 py-0 shrink-0"
+            >
               {urgency.label}
             </Badge>
           </div>
@@ -184,7 +213,10 @@ function ExpiryAlertsCard({ count }: { count: number }) {
     <Card>
       <CardHeader className="border-b border-border/60 pb-3">
         <CardTitle className="text-sm font-semibold text-foreground flex items-center gap-2">
-          <Calendar className="h-3.5 w-3.5 text-status-warning-ink" aria-hidden="true" />
+          <Calendar
+            className="h-3.5 w-3.5 text-status-warning-ink"
+            aria-hidden="true"
+          />
           Expiry Alerts
         </CardTitle>
         <CardAction>
@@ -211,7 +243,9 @@ function ExpiryAlertsCard({ count }: { count: number }) {
                 <p className="text-dense font-semibold text-foreground">
                   {count} lot{count !== 1 ? "s" : ""} expiring soon
                 </p>
-                <p className="text-dense text-muted-foreground">within the next 30 days</p>
+                <p className="text-dense text-muted-foreground">
+                  within the next 30 days
+                </p>
               </div>
               <Link href="/inventory/expiry">
                 <Badge
@@ -265,15 +299,6 @@ export function InventoryDashboardClient() {
     void dashRefetch();
   }
 
-  /**
-   * A6. "Denied" and "empty" are different facts.
-   *
-   * Every KPI on this page comes from `GET /inventory/reports/dashboard`, gated on
-   * `inventory:reports:read`. Without that key the query never fires, so the numbers
-   * are all zero — and the onboarding state below used to read that as "this company
-   * has no inventory yet" and invite a stock reader to add their first product. It is
-   * shown only to somebody who could have seen the data and genuinely has none.
-   */
   if (!canReadReports && !canReadStock)
     return (
       <PageWrapper
@@ -301,11 +326,16 @@ export function InventoryDashboardClient() {
           description="Add products, configure warehouses, and start tracking stock levels, movements, and reorder alerts — all in one place."
           action={
             canCreateProduct
-              ? { label: "Add Your First Product", href: "/inventory/products/new" }
+              ? {
+                  label: "Add Your First Product",
+                  href: "/inventory/products/new",
+                }
               : undefined
           }
           secondaryAction={
-            canImport ? { label: "Import Products", href: "/inventory/import" } : undefined
+            canImport
+              ? { label: "Import Products", href: "/inventory/import" }
+              : undefined
           }
           className="flex-1"
         />
@@ -350,28 +380,24 @@ export function InventoryDashboardClient() {
               value={totalSkus}
               icon={Package}
               tone="blue"
-              href="/inventory/products"
             />
             <StatCard
               label="Total On Hand"
               value={totalOnHand.toLocaleString()}
               icon={Layers}
               tone="emerald"
-              href="/inventory/stock"
             />
             <StatCard
               label="Low Stock Items"
               value={lowStockCount}
               icon={AlertTriangle}
               tone={lowStockCount > 0 ? "red" : "emerald"}
-              href="/inventory/stock"
             />
             <StatCard
               label="Open Sales Orders"
               value={openSalesOrders}
               icon={ShoppingCart}
               tone="amber"
-              href="/inventory/sales-orders"
             />
             <StatCard
               label="Stock Value"
@@ -396,36 +422,59 @@ export function InventoryDashboardClient() {
 
         {hasAlerts && (
           <div className="flex flex-wrap items-center gap-2 rounded-lg border border-status-warning-rule bg-status-warning-surface px-3 py-2">
-            <span className="text-dense font-semibold text-status-warning-ink shrink-0">Attention needed:</span>
+            <span className="text-dense font-semibold text-status-warning-ink shrink-0">
+              Attention needed:
+            </span>
             {expiringLotsCount > 0 && (
               <Link href="/inventory/expiry">
-                <Badge variant="outline" className="bg-status-warning-surface border-status-warning-rule text-status-warning-ink text-micro h-5 cursor-pointer hover:bg-status-warning-surface transition-colors">
+                <Badge
+                  variant="outline"
+                  className="bg-status-warning-surface border-status-warning-rule text-status-warning-ink text-micro h-5 cursor-pointer hover:bg-status-warning-surface transition-colors"
+                >
                   <Calendar className="h-2.5 w-2.5 mr-1" aria-hidden="true" />
-                  {expiringLotsCount} expiring lot{expiringLotsCount !== 1 ? "s" : ""}
+                  {expiringLotsCount} expiring lot
+                  {expiringLotsCount !== 1 ? "s" : ""}
                 </Badge>
               </Link>
             )}
             {qualityHoldQty > 0 && (
               <Link href="/inventory/stock">
-                <Badge variant="outline" className="bg-status-warning-surface border-status-warning-rule text-status-warning-ink text-micro h-5 cursor-pointer hover:bg-status-warning-surface transition-colors">
-                  <ShieldAlert className="h-2.5 w-2.5 mr-1" aria-hidden="true" />
+                <Badge
+                  variant="outline"
+                  className="bg-status-warning-surface border-status-warning-rule text-status-warning-ink text-micro h-5 cursor-pointer hover:bg-status-warning-surface transition-colors"
+                >
+                  <ShieldAlert
+                    className="h-2.5 w-2.5 mr-1"
+                    aria-hidden="true"
+                  />
                   {qualityHoldQty} on quality hold
                 </Badge>
               </Link>
             )}
             {failedChannelSyncsCount > 0 && (
               <Link href="/inventory">
-                <Badge variant="outline" className="bg-status-danger-surface border-status-danger-rule text-status-danger-ink text-micro h-5 cursor-pointer hover:bg-status-danger-surface transition-colors">
-                  <AlertTriangle className="h-2.5 w-2.5 mr-1" aria-hidden="true" />
-                  {failedChannelSyncsCount} failed sync{failedChannelSyncsCount !== 1 ? "s" : ""}
+                <Badge
+                  variant="outline"
+                  className="bg-status-danger-surface border-status-danger-rule text-status-danger-ink text-micro h-5 cursor-pointer hover:bg-status-danger-surface transition-colors"
+                >
+                  <AlertTriangle
+                    className="h-2.5 w-2.5 mr-1"
+                    aria-hidden="true"
+                  />
+                  {failedChannelSyncsCount} failed sync
+                  {failedChannelSyncsCount !== 1 ? "s" : ""}
                 </Badge>
               </Link>
             )}
             {openInspectionsCount > 0 && (
               <Link href="/inventory/stock">
-                <Badge variant="outline" className="bg-status-info-surface border-status-info-rule text-status-info-ink text-micro h-5 cursor-pointer hover:bg-status-info-surface transition-colors">
+                <Badge
+                  variant="outline"
+                  className="bg-status-info-surface border-status-info-rule text-status-info-ink text-micro h-5 cursor-pointer hover:bg-status-info-surface transition-colors"
+                >
                   <BookOpen className="h-2.5 w-2.5 mr-1" aria-hidden="true" />
-                  {openInspectionsCount} open inspection{openInspectionsCount !== 1 ? "s" : ""}
+                  {openInspectionsCount} open inspection
+                  {openInspectionsCount !== 1 ? "s" : ""}
                 </Badge>
               </Link>
             )}
@@ -466,7 +515,10 @@ export function InventoryDashboardClient() {
           <Card className="lg:col-span-2">
             <CardHeader className="border-b border-border/60 pb-3">
               <CardTitle className="text-sm font-semibold text-foreground flex items-center gap-2">
-                <AlertTriangle className="h-3.5 w-3.5 text-status-warning-ink" aria-hidden="true" />
+                <AlertTriangle
+                  className="h-3.5 w-3.5 text-status-warning-ink"
+                  aria-hidden="true"
+                />
                 Low Stock Alerts
               </CardTitle>
               <CardAction>

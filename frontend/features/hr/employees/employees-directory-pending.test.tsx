@@ -25,8 +25,6 @@ jest.mock("@/hooks/api/hr/employee-list", () => ({
   useHrEmployeeCounts: (...args: unknown[]) => mockUseHrEmployeeCounts(...args),
 }));
 
-const statusHref = (status: "active" | "pending" | "inactive") => `/hr/employees?status=${status}`;
-
 function renderStats(
   data: { active: number; pending: number; inactive: number },
   statusFilter: "all" | "active" | "pending" | "inactive" = "all",
@@ -38,7 +36,6 @@ function renderStats(
       hasMore={false}
       statusFilter={statusFilter}
       filters={{}}
-      statusHref={statusHref}
     />,
   );
 }

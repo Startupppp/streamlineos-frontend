@@ -178,56 +178,48 @@ export default function CrmHubPage() {
               value={leadStats?.total ?? 0}
               icon={UserPlus}
               tone="blue"
-              href="/crm/leads"
             />
             <StatCard
               label="Qualified"
               value={leadStats?.byStatus.QUALIFIED ?? 0}
               icon={CheckCircle2}
               tone="emerald"
-              href="/crm/leads"
             />
             <StatCard
               label="Pipeline Value"
               value={formatINRCompact(dealStats?.pipelineValue ?? 0)}
               icon={IndianRupee}
               tone="blue"
-              href="/crm/deals"
             />
             <StatCard
               label="Open Deals"
               value={dealStats?.active ?? 0}
               icon={Briefcase}
               tone="amber"
-              href="/crm/deals"
             />
             <StatCard
               label="Won Deals"
               value={wonCount}
               icon={TrendingUp}
               tone="emerald"
-              href="/crm/deals"
             />
             <StatCard
               label="Lost Deals"
               value={lostCount}
               icon={TrendingDown}
               tone="red"
-              href="/crm/deals"
             />
             <StatCard
               label="Tasks Due"
               value={tasksDue}
               icon={Clock}
               tone="amber"
-              href="/crm/tasks"
             />
             <StatCard
               label="Win Rate"
               value={`${winRate}%`}
               icon={BarChart3}
               tone={winRate >= 50 ? "emerald" : "blue"}
-              href="/crm/reports"
             />
           </StatCardGrid>
         </motion.div>

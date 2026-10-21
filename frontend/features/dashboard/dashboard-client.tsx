@@ -223,7 +223,6 @@ export function DashboardClient({
                       value={stat.value}
                       hint={stat.hint}
                       icon={stat.icon}
-                      href={stat.href}
                     />
                   ))}
                 </StatCardGrid>

@@ -69,7 +69,6 @@ export function DarkStoresClient() {
                 value={formatDecimal(data.skuCount, 0)}
                 icon={Boxes}
                 tone="emerald"
-                href="/inventory/stock"
               />
               <StatCard
                 label="Stock value at cost"

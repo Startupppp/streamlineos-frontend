@@ -2,6 +2,20 @@ import { render, screen } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import type { ReactNode } from "react";
 
+jest.mock("next/link", () => ({
+  __esModule: true,
+  default: ({
+    href,
+    children,
+  }: {
+    href: string;
+    children: unknown;
+  }) => {
+    const React = require("react") as typeof import("react");
+    return React.createElement("a", { href }, children);
+  },
+}));
+
 jest.mock("next-auth/react", () => ({
   useSession: () => ({
     data: { user: { id: "u1", name: "Ada" }, orgId: "org-1" },

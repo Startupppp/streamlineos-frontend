@@ -59,12 +59,7 @@ interface InsightPanelProps {
   insights: ManagedProductInsights | null | undefined;
 }
 
-function productHref(managedProductId: number, path: string) {
-  return `/build/managed-products/${managedProductId}/${path}`;
-}
-
 export function InsightOverviewPanel({
-  managedProductId,
   insights,
   rangeLabel,
 }: InsightPanelProps & { rangeLabel: string }) {
@@ -90,7 +85,6 @@ export function InsightOverviewPanel({
             icon={Inbox}
             tone="amber"
             subtitle="Open customer submissions below"
-            href={productHref(managedProductId, "feedback?status=open")}
           />
           <StatCard
             label="Planned or underway"
@@ -98,7 +92,6 @@ export function InsightOverviewPanel({
             icon={Clock}
             tone="blue"
             subtitle="Roadmap items"
-            href={productHref(managedProductId, "roadmap")}
           />
           <StatCard
             label="Delivered"
@@ -106,7 +99,6 @@ export function InsightOverviewPanel({
             icon={CheckCircle2}
             tone="emerald"
             subtitle="Completed roadmap items"
-            href={productHref(managedProductId, "roadmap?status=completed")}
           />
         </StatCardGrid>
       </div>
@@ -151,7 +143,6 @@ export function InsightOverviewPanel({
 }
 
 export function InsightDeliveryPanel({
-  managedProductId,
   insights,
 }: InsightPanelProps) {
   const linkedFeedback = Object.values(insights?.feedbackByStatus ?? {}).reduce(
@@ -171,24 +162,18 @@ export function InsightDeliveryPanel({
             value={insights?.linkedProjectCount ?? 0}
             icon={LayoutGrid}
             tone="default"
-            href={productHref(managedProductId, "projects")}
           />
           <StatCard
             label="Active"
             value={insights?.projectsByStatus.active ?? 0}
             icon={FolderOpen}
             tone="emerald"
-            href={productHref(managedProductId, "projects?pp_status=ACTIVE")}
           />
           <StatCard
             label="Completed"
             value={insights?.projectsByStatus.completed ?? 0}
             icon={CheckCircle2}
             tone="blue"
-            href={productHref(
-              managedProductId,
-              "projects?pp_status=COMPLETED",
-            )}
           />
         </StatCardGrid>
       </div>
@@ -206,28 +191,24 @@ export function InsightDeliveryPanel({
             value={insights?.roadmapItemCount ?? 0}
             icon={LayoutGrid}
             tone="default"
-            href={productHref(managedProductId, "roadmap")}
           />
           <StatCard
             label="Completed items"
             value={insights?.roadmapItemsByStatus.completed ?? 0}
             icon={CheckCircle2}
             tone="blue"
-            href={productHref(managedProductId, "roadmap?status=completed")}
           />
           <StatCard
             label="Linked feedback"
             value={linkedFeedback}
             icon={MessageSquare}
             tone="amber"
-            href={productHref(managedProductId, "roadmap")}
           />
           <StatCard
             label="Feedback votes"
             value={insights?.linkedFeedbackVoteCount ?? 0}
             icon={ThumbsUp}
             tone="emerald"
-            href={productHref(managedProductId, "roadmap")}
           />
         </StatCardGrid>
       </div>
@@ -260,7 +241,7 @@ export function InsightFeedbackPanel({
         Customer response
       </h2>
       <p className="mb-3 max-w-[65ch] text-sm text-muted-foreground text-pretty">
-        Widget submissions for this product. Each count opens that status.
+        Widget submissions for this product, grouped by status.
       </p>
       <StatCardGrid cols={4}>
         <StatCard
@@ -268,28 +249,24 @@ export function InsightFeedbackPanel({
           value={insights?.submissionsByStatus.open ?? 0}
           icon={Inbox}
           tone="default"
-          href={productHref(managedProductId, "feedback?status=open")}
         />
         <StatCard
           label="In progress"
           value={insights?.submissionsByStatus.in_progress ?? 0}
           icon={BarChart2}
           tone="amber"
-          href={productHref(managedProductId, "feedback?status=in_progress")}
         />
         <StatCard
           label="Resolved"
           value={insights?.submissionsByStatus.resolved ?? 0}
           icon={CheckCircle2}
           tone="emerald"
-          href={productHref(managedProductId, "feedback?status=resolved")}
         />
         <StatCard
           label="Archived"
           value={insights?.submissionsByStatus.archived ?? 0}
           icon={FolderOpen}
           tone="default"
-          href={productHref(managedProductId, "feedback?status=archived")}
         />
       </StatCardGrid>
       <div className="mt-4 flex flex-col gap-4">

@@ -47,7 +47,7 @@ export function EmployeesListPage() {
   const canExport = useCan("hr:export:manage");
 
   const urlState = useEmployeeListUrlState(PAGE_SIZE);
-  const { filters, search, updateSearch, updateParams, statusHref, clearFilters } = urlState;
+  const { filters, search, updateSearch, updateParams, clearFilters } = urlState;
 
   const view: EmployeesListView =
     VIEW_MODES.find((candidate) => candidate === searchParams.get("view")) ?? "grid";
@@ -233,7 +233,6 @@ export function EmployeesListPage() {
               hasMore={Boolean(hasNextPage)}
               statusFilter={filters.status}
               filters={countsFilters}
-              statusHref={statusHref}
             />
           </div>
 

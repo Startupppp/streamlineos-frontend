@@ -44,7 +44,6 @@ export function HrHubMetrics({
         value={data.headcount.total}
         icon={Users}
         tone="default"
-        href={access.canEmployees ? "/hr/employees" : undefined}
       />
       <StatCard
         label="Active"
@@ -52,35 +51,30 @@ export function HrHubMetrics({
         icon={UserCheck}
         tone="emerald"
         hint={`${data.headcount.probation} on probation`}
-        href={access.canEmployees ? "/hr/employees" : undefined}
       />
       <StatCard
         label="Attrition 12mo"
         value={attritionPct}
         icon={TrendingDown}
         tone={data.attritionRate12mo > 15 ? "amber" : "default"}
-        href="/hr/analytics"
       />
       <StatCard
         label="Attendance rate"
         value={attendancePct}
         icon={ClipboardList}
         tone={data.attendanceRatePct < 80 ? "amber" : "emerald"}
-        href={access.canAttendanceView ? "/hr/attendance" : undefined}
       />
       <StatCard
         label="Leave utilization"
         value={leavePct}
         icon={BarChart2}
         tone="default"
-        href={access.canLeaves ? "/hr/leaves" : undefined}
       />
       <StatCard
         label="Open cases"
         value={data.openCasesCount}
         icon={Inbox}
         tone={data.openCasesCount > 0 ? "amber" : "default"}
-        href={access.canCases ? "/hr/cases" : undefined}
       />
     </StatCardGrid>
   );

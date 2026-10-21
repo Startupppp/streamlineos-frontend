@@ -166,10 +166,6 @@ function MobileHeader({
         <HeaderBrand />
       </div>
       <div className="flex shrink-0 items-center gap-1 rounded-xl border border-sidebar-border/70 bg-sidebar-accent/30 p-1">
-        <div
-          id="mobile-header-checklist-slot"
-          className="relative inline-flex items-center"
-        />
         <SearchButton compact />
         {!hideAdminChrome ? <QuickCreateButton compact /> : null}
         {afterLoad ? (notificationBellSlot ?? null) : <NotificationBellPlaceholder />}

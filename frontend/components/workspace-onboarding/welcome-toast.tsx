@@ -20,7 +20,7 @@ export function WelcomeToast() {
 
     toast.success(`Welcome to ${name}!`, {
       description:
-        "Your organization is live. Explore the dashboard or pick up Getting Started tips on the right.",
+        "Your organization is live. Explore the dashboard.",
       duration: 6000,
       icon: <PartyPopper className="h-4 w-4 text-status-info-ink" />,
     });

@@ -51,7 +51,6 @@ function BusinessPulseCard() {
           icon={Target}
           color="purple"
           index={0}
-          href="/crm/leads"
         />
         {data?.mrr !== undefined && (
           <StatCard
@@ -69,7 +68,6 @@ function BusinessPulseCard() {
             icon={TrendingUp}
             color="blue"
             index={2}
-            href="/crm/deals"
           />
         )}
         {data?.newLeadsThisWeek !== undefined && (
@@ -79,7 +77,6 @@ function BusinessPulseCard() {
             icon={Zap}
             color="cyan"
             index={3}
-            href="/crm/leads"
           />
         )}
       </StatCardGrid>

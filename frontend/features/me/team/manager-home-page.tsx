@@ -75,18 +75,19 @@ export function ManagerHomePage() {
             </RichPanel>
 
             <StatCardGrid cols={3}>
-              <StatCard label="On leave today" value={data.reports.filter((report) => report.onLeaveToday).length} />
+              <StatCard
+                label="On leave today"
+                value={data.reports.filter((report) => report.onLeaveToday).length}
+              />
               <StatCard
                 label="Missing timesheets"
                 value={data.missingTimesheets.length}
                 tone={data.missingTimesheets.length > 0 ? "red" : "default"}
-                href="/timesheets/overdue"
               />
               <StatCard
                 label="Probation ending soon"
                 value={data.probationDue.length}
                 tone={data.probationDue.length > 0 ? "amber" : "default"}
-                href="/hr/onboarding/probation"
               />
             </StatCardGrid>
 

@@ -126,6 +126,18 @@ describe("StatCard tones", () => {
   });
 });
 
+describe("StatCard", () => {
+  it("shows the figure without becoming a link", () => {
+    const { getByText, queryByRole } = render(
+      <StatCard label="Total Employees" value={5} />,
+    );
+    const card = getByText("Total Employees").closest("[data-slot=stat-card]");
+    expect(card).toHaveTextContent("5");
+    expect(card).not.toHaveClass("cursor-pointer");
+    expect(queryByRole("link")).not.toBeInTheDocument();
+  });
+});
+
 describe("StatCard label", () => {
   it("wraps to two lines instead of cutting a label at one (QA 2026-10-13, 768px)", () => {
     const { getByText } = render(<StatCard label="Total Employees" value={4} />);

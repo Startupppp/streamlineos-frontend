@@ -228,22 +228,15 @@ jest.mock("@/components/ui/empty-state", () => ({
 jest.mock("@/components/ui/stat-card", () => ({
   StatCard: ({
     label,
-    href,
     value,
   }: {
     label: string;
-    href?: string;
     value?: number;
-  }) =>
-    href ? (
-      <a data-testid="stat-card-link" data-label={label} href={href}>
-        {label}: {value}
-      </a>
-    ) : (
-      <div data-testid="stat-card" data-label={label}>
-        {label}: {value}
-      </div>
-    ),
+  }) => (
+    <div data-testid="stat-card" data-label={label}>
+      {label}: {value}
+    </div>
+  ),
   StatCardGrid: ({ children }: { children: React.ReactNode }) => (
     <div>{children}</div>
   ),
