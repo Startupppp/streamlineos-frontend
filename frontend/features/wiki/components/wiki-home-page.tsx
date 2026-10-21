@@ -144,31 +144,17 @@ export default function WikiHomePage({ projectId }: WikiHomePageProps) {
     searchInputRef: searchInputRef,
   });
 
-  const askAction = isProjectScoped ? null : (
-    <Button asChild variant="outline" size="sm">
-      <Link href={KB_CHAT}>Ask documents</Link>
-    </Button>
-  );
-
-  const newPageAction = canCreate ? (
-    <AnimatedIconButton
-      type="button"
-      icon={KbPlusIcon}
-      iconSize={16}
-      iconClassName="mr-1.5"
-      size="sm"
-      onClick={handleNewPage}
-      disabled={createPage.isSubmitting}
-      suppressHydrationWarning
-    >
-      New document
-    </AnimatedIconButton>
-  ) : null;
-
-  const headerActions = askAction === null && newPageAction === null ? undefined : (
+  const headerActions = (
     <div className="flex items-center gap-2">
-      {askAction}
-      {newPageAction}
+      {isProjectScoped ? null : (
+        <Button asChild variant="outline" size="sm"><Link href={KB_CHAT}>Ask documents</Link></Button>
+      )}
+      {canCreate ? (
+        <AnimatedIconButton type="button" icon={KbPlusIcon} iconSize={16} iconClassName="mr-1.5" size="sm"
+          onClick={handleNewPage} disabled={createPage.isSubmitting} suppressHydrationWarning>
+          New document
+        </AnimatedIconButton>
+      ) : null}
     </div>
   );
 
