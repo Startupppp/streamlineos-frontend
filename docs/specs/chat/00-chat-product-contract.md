@@ -118,7 +118,7 @@ Rollback order is frontend first, then backend; migrations 2490/2495/2500 are ad
 
 | Removed | Where it went |
 |---|---|
-| `/chat/channels` browse page | Redirects to the search dialog's Channels view; join from there. |
+| `/chat/channels` browse page | Redirects to the search dialog's Channels view; join from there. The redirect stays until 90 days after GA, then is removed. |
 | Huddle chat panel | Use the Meet/Teams meeting chat. Conversation messages stay in Chat. |
 | Huddle "kick" | Remove people inside Meet/Teams; StreamlineOS no longer claims meeting moderation. |
 | In-app participant cap / attendance | Roster shows only "Joined through StreamlineOS"; attendance lives in the provider. |
@@ -137,151 +137,151 @@ Rollback order is frontend first, then backend; migrations 2490/2495/2500 are ad
 
 ### CHAT-002 Huddle data model
 
-- [ ] `chat_huddles` has nullable `meeting_provider`, provider event id and integration connection id.
-- [ ] A partial unique index allows one active Huddle per org and channel.
-- [ ] Migration has a journal entry and rollback; legacy rows keep null provider and still load.
+- [x] `chat_huddles` has nullable `meeting_provider`, provider event id and integration connection id.
+- [x] A partial unique index allows one active Huddle per org and channel.
+- [x] Migration has a journal entry and rollback; legacy rows keep null provider and still load.
 - [ ] A spec proves a second active insert for the same org and channel fails.
 
 ### CHAT-003 Provider selection
 
-- [ ] Resolver reads `googlecalendar` and `outlook` together.
-- [ ] Tests cover: Google only, Outlook only, both primary, one primary, user vs org scope, no account.
-- [ ] Ordering is `isPrimary`, `createdAt`, stable ID, user scope first; the decision is logged without tokens.
-- [ ] No fallback to the other provider after the chosen one fails.
+- [x] Resolver reads `googlecalendar` and `outlook` together.
+- [x] Tests cover: Google only, Outlook only, both primary, one primary, user vs org scope, no account.
+- [x] Ordering is `isPrimary`, `createdAt`, stable ID, user scope first; the decision is logged without tokens.
+- [x] No fallback to the other provider after the chosen one fails.
 
 ### CHAT-004 Link minting
 
-- [ ] Google returns provider event id and Meet URL.
-- [ ] Outlook returns provider event id and Teams URL after preflight.
-- [ ] Skype-only or conference-disabled Outlook returns 412, not a plain event.
-- [ ] No usable account returns 412 with Calendar accounts action; reauth returns 412 with reconnect copy.
-- [ ] Composio outage returns 503 marked retryable.
-- [ ] Pending Teams URL is polled within a bound; success responses never lack a URL.
+- [x] Google returns provider event id and Meet URL.
+- [x] Outlook returns provider event id and Teams URL after preflight.
+- [x] Skype-only or conference-disabled Outlook returns 412, not a plain event.
+- [x] No usable account returns 412 with Calendar accounts action; reauth returns 412 with reconnect copy.
+- [x] Composio outage returns 503 marked retryable.
+- [x] Pending Teams URL is polled within a bound; success responses never lack a URL.
 
 ### CHAT-005 Idempotent start
 
-- [ ] Two concurrent starts on one channel yield one active Huddle and the same response.
-- [ ] The race loser's provider event is deleted or queued for reconciliation; a test asserts one of the two.
+- [x] Two concurrent starts on one channel yield one active Huddle and the same response.
+- [x] The race loser's provider event is deleted or queued for reconciliation; a test asserts one of the two.
 - [ ] Retrying a start after a network failure creates no second provider event.
 
 ### CHAT-006 Lifecycle and fan-out
 
-- [ ] The internal calendar event stores the provider identity.
+- [x] The internal calendar event stores the provider identity.
 - [ ] End and cancel update the provider event where supported; UI claims "ended" only on provider confirmation.
 - [ ] Ably publish and notifications run after commit; a test shows no publish on rollback.
-- [ ] No provider call runs inside a tenant transaction.
+- [x] No provider call runs inside a tenant transaction.
 
 ### CHAT-007 Contracts
 
-- [ ] Backend DTO, OpenAPI, generated contracts, frontend Zod and `types/chat.ts` carry provider fields additively.
-- [ ] `meetingProvider: null` parses on the frontend.
-- [ ] Response-contract and parity gates pass.
+- [x] Backend DTO, OpenAPI, generated contracts, frontend Zod and `types/chat.ts` carry provider fields additively.
+- [x] `meetingProvider: null` parses on the frontend.
+- [x] Response-contract and parity gates pass.
 
 ### CHAT-008 Server-side Huddle validation
 
-- [ ] Invite rejects users who are not active in the organization or channel.
-- [ ] Heartbeat rejects when no active Huddle, no active membership, or no open participant row.
+- [x] Invite rejects users who are not active in the organization or channel.
+- [x] Heartbeat rejects when no active Huddle, no active membership, or no open participant row.
 - [ ] Join, leave and end enforce tenant and membership; each writes an audit entry with no token or join URL.
-- [ ] One backend entitlement source gates Huddle creation and group invites.
+- [x] One backend entitlement source gates Huddle creation and group invites.
 
 ### CHAT-009 Message reliability
 
 - [ ] Send retry and offline queue deliver each message exactly once after reconnect.
-- [ ] After realtime reconnect the client refetches and shows no gap and no duplicate.
+- [x] After realtime reconnect the client refetches and shows no gap and no duplicate.
 - [ ] Read marker and unread counts agree across list, sidebar and inbox after send, receive, and reconnect.
-- [ ] Typing shows only for other members, from presence, and clears on leave.
+- [x] Typing shows only for other members, from presence, and clears on leave.
 
 ### CHAT-010 URL and history
 
 - [ ] `channel`, `message`, `inbox`, `dm=1`, `joinHuddle=1` follow the plan's URL contract.
-- [ ] `message` is ignored without its channel and cleared on channel change.
+- [x] `message` is ignored without its channel and cleared on channel change.
 - [ ] Action params are consumed once and removed without losing other params.
-- [ ] Selecting a conversation pushes history; filter and panel changes replace it.
-- [ ] Browser back/forward and mobile Back restore the prior conversation or the list.
-- [ ] No effect mirrors URL state into component state.
+- [x] Selecting a conversation pushes history; filter and panel changes replace it.
+- [x] Browser back/forward and mobile Back restore the prior conversation or the list.
+- [x] No effect mirrors URL state into component state.
 
 ### CHAT-011 Exact-message context
 
-- [ ] An endpoint returns a bounded window around a message id after checking channel membership.
-- [ ] A message outside loaded pages opens and scrolls into view from a link.
+- [x] An endpoint returns a bounded window around a message id after checking channel membership.
+- [x] A message outside loaded pages opens and scrolls into view from a link.
 - [ ] Non-member, wrong-org and deleted-message requests return no content (403/404 per contract).
-- [ ] Saved-message and search-result clicks use this path.
+- [x] Saved-message and search-result clicks use this path.
 
 ### CHAT-012 Unified search
 
-- [ ] One dialog searches messages, channels and people; the sidebar has no search scopes.
-- [ ] Message hits only come from channels the user can read.
-- [ ] Selecting a public channel the user is not in joins it, then opens it.
-- [ ] Selecting a person opens or creates the DM.
+- [x] One dialog searches messages, channels and people; the sidebar has no search scopes.
+- [x] Message hits only come from channels the user can read.
+- [x] Selecting a public channel the user is not in joins it, then opens it.
+- [x] Selecting a person opens or creates the DM.
 
 ### CHAT-013 New dialog and sidebar
 
-- [ ] Exactly one New DM/Channel dialog is mounted; home, sidebar, mobile and quick-create open it.
-- [ ] Sidebar shows Starred and one Conversations list with URL-backed All/Unread/DMs/Channels; Archive is separate.
-- [ ] The four accordion sections and compact duplicate action rail are gone.
+- [x] Exactly one New DM/Channel dialog is mounted; home, sidebar, mobile and quick-create open it.
+- [x] Sidebar shows Starred and one Conversations list with URL-backed All/Unread/DMs/Channels; Archive is separate.
+- [x] The four accordion sections and compact duplicate action rail are gone.
 
 ### CHAT-014 Shell and redirect
 
-- [ ] `/chat` renders one ChatShell on desktop and mobile; conversations are selected with `?channel=`, `?message=`, `?inbox=` and action params `dm=1`, `joinHuddle=1`, not path segments.
-- [ ] `/chat/channels` redirects via `next.config` to the unified channel-search state on `/chat`.
-- [ ] Channel links (`/chat?channel=`), message links (`/chat?channel=&message=`) and invite links (`/chat/invite/[inviteToken]`) keep working.
-- [ ] The redirect has a documented deprecation window.
+- [x] `/chat` renders one ChatShell on desktop and mobile; conversations are selected with `?channel=`, `?message=`, `?inbox=` and action params `dm=1`, `joinHuddle=1`, not path segments.
+- [x] `/chat/channels` redirects via `next.config` to the unified channel-search state on `/chat`.
+- [x] Channel links (`/chat?channel=`), message links (`/chat?channel=&message=`) and invite links (`/chat/invite/[inviteToken]`) keep working.
+- [x] The redirect has a documented deprecation window.
 
 ### CHAT-015 Page states
 
-- [ ] `/chat` uses PageState with a layout-matching skeleton.
-- [ ] Loading, denied, error and empty states each render distinctly.
-- [ ] A failed read shows an error, not an empty state.
+- [x] `/chat` uses PageState with a layout-matching skeleton.
+- [x] Loading, denied, error and empty states each render distinctly.
+- [x] A failed read shows an error, not an empty state.
 
 ### CHAT-016 Message actions
 
-- [ ] Hover and focus show Reply and React; More holds save, pin, copy, link, forward, edit, delete and permission-gated entity actions.
-- [ ] All actions work by keyboard and on touch without hover.
-- [ ] Icon buttons have aria-labels. Entity actions appear only with the module permission.
+- [x] Hover and focus show Reply and React; More holds save, pin, copy, link, forward, edit, delete and permission-gated entity actions.
+- [x] All actions work by keyboard and on touch without hover.
+- [x] Icon buttons have aria-labels. Entity actions appear only with the module permission.
 
 ### CHAT-017 Lifecycle confirmations
 
-- [ ] Delete message, leave, archive, hide and member removal use `ConfirmDialog destructive`.
-- [ ] Cancel performs no mutation; confirm performs exactly one.
+- [x] Delete message, leave, archive, hide and member removal use `ConfirmDialog destructive`.
+- [x] Cancel performs no mutation; confirm performs exactly one.
 - [ ] Confirm copy names the target.
 
 ### CHAT-018 Composer and history
 
-- [ ] Composer has an accessible label; no exposed markdown button strip.
+- [x] Composer has an accessible label; no exposed markdown button strip.
 - [ ] Older messages load on scroll with no "Load more" or "load older" control.
 - [ ] Thread replies load the same way.
 
 ### CHAT-019 Details and Saved
 
-- [ ] Details own members, pins, shared files and notification settings.
-- [ ] Saved is user-global and each item jumps to its exact message.
-- [ ] AI summarize is in conversation overflow only.
+- [x] Details own members, pins, shared files and notification settings.
+- [x] Saved is user-global and each item jumps to its exact message.
+- [x] AI summarize is in conversation overflow only.
 
 ### CHAT-020 Huddle chat removal
 
-- [ ] `huddle-chat-panel.tsx` is deleted with no remaining importer.
-- [ ] Ably capability for huddle and notification channels is `subscribe` only; chat channels are `subscribe` + `presence`.
+- [x] `huddle-chat-panel.tsx` is deleted with no remaining importer.
+- [x] Ably capability for huddle and notification channels is `subscribe` only; chat channels are `subscribe` + `presence`.
 - [ ] A test shows a client publish attempt on each is rejected.
 
 ### CHAT-021 Provider-aware UI
 
 - [ ] UI shows Google Meet or Teams join, connect, or reconnect states from the provider field; null shows "External meeting".
-- [ ] No kick, end-meeting, provider attendance or two-person cap claims remain.
-- [ ] Any in-app roster is labelled "Joined through StreamlineOS".
+- [x] No kick, end-meeting, provider attendance or two-person cap claims remain.
+- [x] Any in-app roster is labelled "Joined through StreamlineOS".
 
 ### CHAT-022 Cross-module boundaries
 
-- [ ] A conversation linked to a record shows preview and snippets only when the viewer passes the record check.
+- [x] A conversation linked to a record shows preview and snippets only when the viewer passes the record check.
 - [ ] After record access is revoked, search, notifications, AI citations and exports omit that record's metadata within the gate windows.
-- [ ] Build embed uses the canonical Chat backend; no new module-local chat screen or table exists.
-- [ ] Knowledge Ask Chat, Ask OS and live chat are not reachable from employee Chat navigation.
+- [x] Build embed uses the canonical Chat backend; no new module-local chat screen or table exists.
+- [x] Knowledge Ask Chat, Ask OS and live chat are not reachable from employee Chat navigation.
 
 ### CHAT-023 Tests
 
-- [ ] Backend specs cover the CHAT-002..008 matrix, tenant isolation, wire parity and Ably capability.
+- [x] Backend specs cover the CHAT-002..008 matrix, tenant isolation, wire parity and Ably capability.
 - [ ] Frontend specs cover URL, search, dialog ownership, redirect, PageState, confirmations, actions, provider copy, removed UI.
 - [ ] Accessibility checks cover keyboard, focus, screen reader and touch on core flows.
-- [ ] Mocked-provider tests are mandatory; live Meet/Teams smoke runs only with approved credentials.
+- [x] Mocked-provider tests are mandatory; live Meet/Teams smoke runs only with approved credentials.
 
 ### CHAT-024 Quality gates
 
@@ -292,6 +292,6 @@ Rollback order is frontend first, then backend; migrations 2490/2495/2500 are ad
 ### CHAT-025 Rollout
 
 - [ ] Order: baseline telemetry, additive contracts and migration, internal cohort, agency/service pilots, staged release, GA.
-- [ ] Each stage has a metric threshold and rollback trigger from Release gates.
-- [ ] Support notes exist for every removed control.
+- [x] Each stage has a metric threshold and rollback trigger from Release gates.
+- [x] Support notes exist for every removed control.
 - [ ] GA is marked only when every release gate holds for a full cohort period.
