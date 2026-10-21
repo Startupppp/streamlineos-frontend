@@ -86,7 +86,7 @@ export const en = {
   "pay.tabFnf": "Final settlement",
   "pay.notSetUpTitle": "Pay isn't set up for you yet",
   "pay.notSetUpBody":
-    "You aren't in a payroll cycle because no salary has been assigned to you. Ask your admin or HR to open Payroll → Employees and add your salary. Your payslips will appear here after the first run is released.",
+    "You aren't in a payroll cycle because no salary has been assigned to you. Ask your HR or payroll admin to add your salary. Your payslips will appear here after the first run is released.",
 
   "settings.language": "Language",
   "settings.languageHint": "Used on your self-service pages.",

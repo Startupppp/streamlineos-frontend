@@ -18,6 +18,7 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { DatePicker } from "@/components/ui/date-picker";
 import { Button } from "@/components/ui/button";
+import { useCan } from "@/hooks/api/access";
 import { FileUpload } from "@/components/storage/file-upload";
 import Link from "next/link";
 
@@ -67,6 +68,7 @@ export function LeaveRequestFormFields({
   pastDatesBlocked,
 }: LeaveRequestFormFieldsProps) {
   const noApproverAction = useNoApproverFix(approvalRoute);
+  const canManageLeaveTypes = useCan("hr:leaves:manage");
   const halfDay = form.watch("halfDay");
 
   return (
@@ -83,16 +85,20 @@ export function LeaveRequestFormFields({
                   No leave types configured
                 </p>
                 <p className="text-xs leading-relaxed text-muted-foreground">
-                  Set up leave types before employees can request leave.
+                  {canManageLeaveTypes
+                    ? "Set up leave types before employees can request leave."
+                    : "Ask HR to set up leave types, then try again."}
                 </p>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="h-8 w-full sm:w-auto"
-                  asChild
-                >
-                  <Link href="/hr/leave-policies">Configure leave types</Link>
-                </Button>
+                {canManageLeaveTypes ? (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-8 w-full sm:w-auto"
+                    asChild
+                  >
+                    <Link href="/hr/leave-policies">Configure leave types</Link>
+                  </Button>
+                ) : null}
               </div>
             ) : (
               <Select onValueChange={field.onChange} value={field.value}>

@@ -166,7 +166,7 @@ export function DatePicker({
             toDate={toDate}
             fromYear={yearBounds.fromYear}
             toYear={yearBounds.toYear}
-            defaultMonth={selected ?? effectiveFromDate}
+            defaultMonth={selected ?? (effectiveFromDate && effectiveFromDate > new Date() ? effectiveFromDate : new Date())}
             initialFocus
             disabled={hasDisabledDates ? isDateDisabled : undefined}
             compact={compactCalendar}
