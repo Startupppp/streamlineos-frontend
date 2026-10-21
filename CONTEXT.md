@@ -26,7 +26,7 @@
 
 **Actor standing**: who the actor is for Docs purposes (membership, roles, admin flags, reachable spaces, permissions version). Cached across requests and keyed by ACL revision; page decisions are not.
 
-**Owner**: the member who controls a page's sharing and visibility through manage access. Ownership can transfer; today the creator still holds manage access alongside the owner.
+**Owner**: the member who controls a page's sharing and visibility through manage access. Ownership can transfer; manage belongs exclusively to the current owner, members with an explicit manage grant, and org/module admins — the creator receives no extra manage right beyond what ownership, grants or admin status give them.
 
 **Deleter**: the member who moved a page to Trash; may restore it alongside anyone with manage.
 
