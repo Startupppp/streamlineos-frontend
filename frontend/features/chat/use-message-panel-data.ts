@@ -55,7 +55,6 @@ export function useMessagePanelData({
   const history = useChatMessages(channelId);
   const { channels: myChannels } = useChatChannels();
   const canReadChannel = history.isSuccess || myChannels.some((row) => row.id === channelId);
-  const memberChannelId = canReadChannel ? channelId : 0;
   const { data: channel } = useChatChannel(channelId, canReadChannel);
   const {
     isLoading,
@@ -75,7 +74,7 @@ export function useMessagePanelData({
   const toggleReaction = useToggleReaction(channelId);
   const pinMessage = usePinMessage();
   const unpinMessage = useUnpinMessage();
-  const { data: pins } = useChatPins(memberChannelId);
+  const { data: pins } = useChatPins(channelId, canReadChannel);
   const { data: savedData } = useSavedMessages();
   const saveMessage = useSaveMessage();
   const unsaveMessage = useUnsaveMessage();
@@ -83,8 +82,8 @@ export function useMessagePanelData({
   const { isConnected: ablyConnected, typingUserIds, publishTyping } = useChatRealtime(channelId, !canReadChannel);
   const { isConnected: ablySocketConnected } = useAblyConnection();
 
-  useHuddleRealtime(memberChannelId);
-  const { data: activeHuddle } = useActiveHuddle(memberChannelId);
+  useHuddleRealtime(canReadChannel ? channelId : null);
+  const { data: activeHuddle } = useActiveHuddle(channelId, canReadChannel);
   const startHuddle = useStartHuddle();
   const joinHuddle = useJoinHuddle();
   const summarize = useChatSummarize();

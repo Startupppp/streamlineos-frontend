@@ -66,7 +66,7 @@ import type { ChatSendResponse } from "@/hooks/api/chat-schema";
 import { NO_ID_CURSOR_YET } from "@/hooks/api/cursor-page-param";
 import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
 
-export function useChatPins(channelId: number) {
+export function useChatPins(channelId: number, enabled = true) {
   const canRead = useCan("chat:messages:read");
   return useQuery({
     ...INLINE_READ_ERROR,
@@ -74,7 +74,7 @@ export function useChatPins(channelId: number) {
     queryFn: ({ signal }) =>
       apiClient.get<PinnedMessage[]>(`/chat/channels/${channelId}/pins`, undefined, signal, chatPinsContract),
     staleTime: 2 * 60_000,
-    enabled: canRead && channelId > 0,
+    enabled: enabled && canRead && channelId > 0,
   });
 }
 

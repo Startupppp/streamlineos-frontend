@@ -60,7 +60,7 @@ function refreshActiveHuddle(queryClient: QueryClient, channelId: number): void 
   });
 }
 
-export function useActiveHuddle(channelId: number) {
+export function useActiveHuddle(channelId: number, enabled = true) {
   const canRead = useCan("chat:channels:read");
   return useQuery({
     ...INLINE_READ_ERROR,
@@ -73,7 +73,7 @@ export function useActiveHuddle(channelId: number) {
         activeHuddleContract,
       ),
     staleTime: 10_000,
-    enabled: canRead && channelId > 0,
+    enabled: enabled && canRead && channelId > 0,
   });
 }
 
