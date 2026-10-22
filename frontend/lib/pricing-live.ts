@@ -107,7 +107,12 @@ export function applyLivePrices(
 
   return tiers.map((tier) => {
     const live = byPlan.get(tier.planId);
-    if (!live) return tier;
+    if (!live) {
+      // The API never prices Free; keep it in the same currency as the rest (#3).
+      if (tier.monthly !== 0) return tier;
+      const zero = formatMinor(0, pricing.currency, locale);
+      return { ...tier, priceLabel: { monthly: zero, annual: zero }, price: zero };
+    }
 
     const annualMonthlyMinor = Math.round(live.annualMinor / 12);
 

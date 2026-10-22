@@ -73,17 +73,19 @@ interface SalaryStructureTemplateSheetProps {
 }
 
 function FieldGroup({
+  htmlFor,
   label,
   error,
   children,
 }: {
+  htmlFor: string;
   label: React.ReactNode;
   error?: string;
   children: React.ReactNode;
 }) {
   return (
     <div className="space-y-1.5">
-      <Label className="text-dense font-semibold text-muted-foreground uppercase tracking-wider">
+      <Label htmlFor={htmlFor} className="text-dense font-semibold text-muted-foreground uppercase tracking-wider">
         {label}
       </Label>
       {children}
@@ -258,8 +260,9 @@ export function SalaryStructureTemplateSheet({
       isPending={isPending}
       submitDisabled={!canSubmit}
     >
-      <FieldGroup label={<>Template Name <span className="text-destructive">*</span></>} error={errors.name?.message ?? nameError}>
+      <FieldGroup htmlFor="salary-template-name" label={<>Template Name <span className="text-destructive">*</span></>} error={errors.name?.message ?? nameError}>
         <Input
+          id="salary-template-name"
           {...register("name")}
           placeholder="e.g. Senior Engineer L3"
           className=""
@@ -267,8 +270,9 @@ export function SalaryStructureTemplateSheet({
       </FieldGroup>
 
       <div className="grid grid-cols-2 gap-3">
-        <FieldGroup label={<>Basic Salary (₹) <span className="text-destructive">*</span></>} error={errors.basicSalary?.message}>
+        <FieldGroup htmlFor="salary-template-basic-salary" label={<>Basic Salary (₹) <span className="text-destructive">*</span></>} error={errors.basicSalary?.message}>
           <Input
+            id="salary-template-basic-salary"
             {...register("basicSalary")}
             type="number"
             min="0"
@@ -277,8 +281,9 @@ export function SalaryStructureTemplateSheet({
             className=""
           />
         </FieldGroup>
-        <FieldGroup label="HRA %" error={errors.hraPercent?.message}>
+        <FieldGroup htmlFor="salary-template-hra-percent" label="HRA %" error={errors.hraPercent?.message}>
           <Input
+            id="salary-template-hra-percent"
             {...register("hraPercent")}
             type="number"
             min="0"
@@ -303,8 +308,9 @@ export function SalaryStructureTemplateSheet({
       </p>
 
       <div className="grid grid-cols-2 gap-3">
-        <FieldGroup label="Special Allowance (₹)" error={errors.specialAllowance?.message}>
+        <FieldGroup htmlFor="salary-template-special-allowance" label="Special Allowance (₹)" error={errors.specialAllowance?.message}>
           <Input
+            id="salary-template-special-allowance"
             {...register("specialAllowance")}
             type="number"
             min="0"
@@ -313,8 +319,9 @@ export function SalaryStructureTemplateSheet({
             className=""
           />
         </FieldGroup>
-        <FieldGroup label="Medical Allowance (₹)" error={errors.medicalAllowance?.message}>
+        <FieldGroup htmlFor="salary-template-medical-allowance" label="Medical Allowance (₹)" error={errors.medicalAllowance?.message}>
           <Input
+            id="salary-template-medical-allowance"
             {...register("medicalAllowance")}
             type="number"
             min="0"
@@ -323,8 +330,9 @@ export function SalaryStructureTemplateSheet({
             className=""
           />
         </FieldGroup>
-        <FieldGroup label="Travel Allowance (₹)" error={errors.travelAllowance?.message}>
+        <FieldGroup htmlFor="salary-template-travel-allowance" label="Travel Allowance (₹)" error={errors.travelAllowance?.message}>
           <Input
+            id="salary-template-travel-allowance"
             {...register("travelAllowance")}
             type="number"
             min="0"
@@ -333,8 +341,9 @@ export function SalaryStructureTemplateSheet({
             className=""
           />
         </FieldGroup>
-        <FieldGroup label="Other Allowances (₹)" error={errors.otherAllowances?.message}>
+        <FieldGroup htmlFor="salary-template-other-allowances" label="Other Allowances (₹)" error={errors.otherAllowances?.message}>
           <Input
+            id="salary-template-other-allowances"
             {...register("otherAllowances")}
             type="number"
             min="0"
@@ -352,8 +361,9 @@ export function SalaryStructureTemplateSheet({
       </p>
 
       <div className="grid grid-cols-2 gap-3">
-        <FieldGroup label="PF Deduction %" error={errors.pfDeductionPercent?.message}>
+        <FieldGroup htmlFor="salary-template-pf-deduction-percent" label="PF Deduction %" error={errors.pfDeductionPercent?.message}>
           <Input
+            id="salary-template-pf-deduction-percent"
             {...register("pfDeductionPercent")}
             type="number"
             min="0"
@@ -363,8 +373,9 @@ export function SalaryStructureTemplateSheet({
             className=""
           />
         </FieldGroup>
-        <FieldGroup label="Professional Tax (₹)" error={errors.professionalTax?.message}>
+        <FieldGroup htmlFor="salary-template-professional-tax" label="Professional Tax (₹)" error={errors.professionalTax?.message}>
           <Input
+            id="salary-template-professional-tax"
             {...register("professionalTax")}
             type="number"
             min="0"
@@ -388,21 +399,21 @@ export function SalaryStructureTemplateSheet({
       </p>
 
       <div className="grid grid-cols-2 gap-3">
-        <FieldGroup label={<>Effective From <span className="text-destructive">*</span></>} error={errors.effectiveFrom?.message}>
+        <FieldGroup htmlFor="salary-template-effective-from" label={<>Effective From <span className="text-destructive">*</span></>} error={errors.effectiveFrom?.message}>
           <Controller
             name="effectiveFrom"
             control={control}
             render={({ field }) => (
-              <DatePicker value={field.value ?? ""} onChange={field.onChange} placeholder="Pick a date" className="text-sm" />
+              <DatePicker id="salary-template-effective-from" value={field.value ?? ""} onChange={field.onChange} placeholder="Pick a date" className="text-sm" />
             )}
           />
         </FieldGroup>
-        <FieldGroup label="Effective To (optional)">
+        <FieldGroup htmlFor="salary-template-effective-to" label="Effective To (optional)">
           <Controller
             name="effectiveTo"
             control={control}
             render={({ field }) => (
-              <DatePicker value={field.value ?? ""} onChange={field.onChange} placeholder="Pick a date" className="text-sm" />
+              <DatePicker id="salary-template-effective-to" value={field.value ?? ""} onChange={field.onChange} placeholder="Pick a date" className="text-sm" />
             )}
           />
         </FieldGroup>

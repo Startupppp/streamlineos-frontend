@@ -5,7 +5,7 @@ import { requirePermission } from "@/lib/rbac/require-permission";
 import { prefetchWorkers } from "@/lib/prefetch/directory";
 
 export const metadata: Metadata = {
-  title: "Workers | StreamlineOS",
+  title: "Workers",
 };
 
 export default async function WorkersRoute() {

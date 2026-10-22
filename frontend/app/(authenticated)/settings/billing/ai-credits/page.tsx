@@ -6,7 +6,7 @@ import { requirePermission } from "@/lib/rbac/require-permission";
 import { prefetchAiCreditsSettings } from "@/lib/prefetch/settings-billing";
 
 export const metadata: Metadata = {
-  title: "AI Credits | StreamlineOS",
+  title: "AI Credits",
 };
 
 export default async function AiCreditsSettingsRoute() {

@@ -23,6 +23,7 @@ jest.mock("@/features/payroll/runs/mobile-lifecycle-bar", () => ({ MobileLifecyc
 jest.mock("@/features/payroll/payout", () => ({ ApprovalStagePanel: () => null, MarkPaidPanel: () => null }));
 jest.mock("@/features/payroll/runs/employees-tab", () => ({ EmployeesTab: () => <div>employees-tab</div> }));
 jest.mock("@/features/payroll/runs/exceptions-tab", () => ({ ExceptionsTab: () => null }));
+jest.mock("@/features/payroll/runs/blocker-fix-card", () => ({ BlockerFixCard: () => null }));
 jest.mock("@/features/payroll/runs/inputs-tab", () => ({ InputsTab: () => null }));
 jest.mock("@/features/payroll/runs/variance-tab", () => ({ VarianceTab: () => null }));
 jest.mock("@/features/payroll/shared/readiness-rail", () => ({ ReadinessRail: () => null }));

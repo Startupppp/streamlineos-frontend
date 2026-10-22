@@ -58,11 +58,12 @@ describe("EssFnfSection — a failed final settlement read is an error, not sile
     expect(screen.getByRole("alert")).toBeInTheDocument();
   });
 
-  it("renders nothing when the member simply has no settlement", () => {
+  it("says there is no settlement yet, without an error, when the member simply has none", () => {
     mockUseEssFnf.mockReturnValue({ data: null, isLoading: false, isError: false, error: undefined, refetch: jest.fn() });
 
-    const { container } = render(<EssFnfSection hideToolbar />);
+    render(<EssFnfSection hideToolbar />);
 
-    expect(container).toBeEmptyDOMElement();
+    expect(screen.getByText("No final settlement")).toBeInTheDocument();
+    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
   });
 });

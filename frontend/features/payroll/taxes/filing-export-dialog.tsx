@@ -125,11 +125,11 @@ export function FilingExportDialog({
         </DialogHeader>
         <div className="space-y-3 py-3">
           <div className="space-y-1.5">
-            <label className="block text-label font-medium text-foreground">
+            <label htmlFor="filing-export-type" className="block text-label font-medium text-foreground">
               Filing type
             </label>
             <Select value={exportType} onValueChange={handleTypeChange}>
-              <SelectTrigger className="w-full">
+              <SelectTrigger id="filing-export-type" className="w-full">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -142,10 +142,10 @@ export function FilingExportDialog({
             </Select>
           </div>
           <div className="space-y-1.5">
-            <label className="block text-label font-medium text-foreground">
+            <label htmlFor="filing-export-month" className="block text-label font-medium text-foreground">
               Payroll month
             </label>
-            <MonthPicker value={exportMonth} onChange={setExportMonth} className="w-full" />
+            <MonthPicker id="filing-export-month" value={exportMonth} onChange={setExportMonth} className="w-full" />
             <p className="text-dense text-muted-foreground">
               Uses the REGULAR run for this month when present. Empty CSV if no run/lines
               match.
@@ -153,11 +153,11 @@ export function FilingExportDialog({
           </div>
           {indiaEntities.length > 0 && (
             <div className="space-y-1.5">
-              <label className="block text-label font-medium text-foreground">
+              <label htmlFor="filing-export-entity" className="block text-label font-medium text-foreground">
                 Legal entity (India)
               </label>
               <Select value={exportEntityId || undefined} onValueChange={setExportEntityId}>
-                <SelectTrigger className="w-full">
+                <SelectTrigger id="filing-export-entity" className="w-full">
                   <SelectValue placeholder="Optional — prefer entity run" />
                 </SelectTrigger>
                 <SelectContent>

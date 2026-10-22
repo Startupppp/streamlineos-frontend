@@ -10,6 +10,7 @@ import {
 import { cn } from "@/lib/utils";
 
 type MonthPickerProps = {
+  id?: string;
   value: string;
   onChange: (value: string) => void;
   className?: string;
@@ -50,6 +51,7 @@ export function monthFromToday(offsetMonths: number): string {
 }
 
 export function MonthPicker({
+  id,
   value,
   onChange,
   className,
@@ -63,7 +65,7 @@ export function MonthPicker({
 
   return (
     <Select value={value} onValueChange={onChange} disabled={disabled}>
-      <SelectTrigger className={cn("text-sm", className)}>
+      <SelectTrigger id={id} className={cn("text-sm", className)}>
         <SelectValue placeholder="Select month" />
       </SelectTrigger>
       <SelectContent>

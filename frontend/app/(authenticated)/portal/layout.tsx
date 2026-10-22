@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { enforceRouteAccess } from "@/lib/rbac/route-access/enforce-route-access";
 
 export const metadata: Metadata = {
-  title: "Client portal | StreamlineOS",
+  title: "Client portal",
 };
 
 export default async function PortalLayout({

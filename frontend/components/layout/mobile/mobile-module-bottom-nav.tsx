@@ -9,9 +9,11 @@ import { useProductSidebarVisibility } from "../sidebar/use-product-sidebar-visi
 import {
   getMobileModuleBottomTabs,
   getMobileModuleOverflowTabs,
+  getMobileGroupTabs,
   getOverflowTabsByGroup,
   isMobileNavRouteActive,
   shouldShowMobileModuleBottomNav,
+  usesMobileGroupTabs,
 } from "./mobile-module-nav-items";
 import type { NavRoute } from "../sidebar/sidebar-nav-items";
 import {
@@ -225,13 +227,16 @@ function MoreDrawer({
 
 export function MobileModuleBottomNav({ className }: { className?: string }) {
   const pathname = usePathname() ?? "";
-  const { navGroups } = useProductSidebarVisibility();
+  const { navGroups, activeProduct } = useProductSidebarVisibility();
   const [moreOpen, setMoreOpen] = useState(false);
 
   const isChatRoute = pathname.startsWith("/chat");
   const show = shouldShowMobileModuleBottomNav(navGroups, { isChatRoute });
+  const groupTabs = activeProduct && usesMobileGroupTabs(activeProduct, navGroups)
+    ? getMobileGroupTabs(navGroups, pathname)
+    : null;
   const tabs = getMobileModuleBottomTabs(navGroups);
-  const overflowTabs = getMobileModuleOverflowTabs(navGroups);
+  const overflowTabs = groupTabs ? [] : getMobileModuleOverflowTabs(navGroups);
   const overflowGroups = getOverflowTabsByGroup(navGroups);
   const hasOverflow = overflowTabs.length > 0;
   const moreTabActive =
@@ -254,13 +259,17 @@ export function MobileModuleBottomNav({ className }: { className?: string }) {
         aria-label="Module navigation"
       >
         <div className="flex h-11 w-full items-stretch gap-0.5 bg-muted px-1">
-          {tabs.map((route) => (
-            <ModuleNavLink
-              key={route.href}
-              route={route}
-              isActive={isMobileNavRouteActive(pathname, route, tabs)}
-            />
-          ))}
+          {groupTabs
+            ? groupTabs.map((tab) => (
+                <ModuleNavLink key={tab.route.label} route={tab.route} isActive={tab.isActive} />
+              ))
+            : tabs.map((route) => (
+                <ModuleNavLink
+                  key={route.href}
+                  route={route}
+                  isActive={isMobileNavRouteActive(pathname, route, tabs)}
+                />
+              ))}
           {hasOverflow && (
             <MoreTab
               onOpen={openMoreDrawer}

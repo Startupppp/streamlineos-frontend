@@ -240,7 +240,7 @@ export function RunsPageContent() {
     >
       {(entities?.length ?? 0) > 0 ? (
         <div className="mb-2 flex items-center gap-2">
-          <label className="text-xs text-muted-foreground">Entity</label>
+          <label htmlFor="payroll-runs-entity-filter" className="text-xs text-muted-foreground">Entity</label>
           <Select
             value={filterEntityId}
             onValueChange={(v) => {
@@ -248,7 +248,7 @@ export function RunsPageContent() {
               setCursor(undefined);
             }}
           >
-            <SelectTrigger className="w-[240px]">
+            <SelectTrigger id="payroll-runs-entity-filter" className="w-[240px]">
               <SelectValue placeholder="All entities" />
             </SelectTrigger>
             <SelectContent>
@@ -331,11 +331,11 @@ export function RunsPageContent() {
           </DialogHeader>
           <div className="py-3 space-y-4">
             <div className="space-y-1.5">
-              <label className="text-label font-medium text-foreground block">
+              <label htmlFor="new-run-type" className="text-label font-medium text-foreground block">
                 Run type
               </label>
               <Select value={newRunType} onValueChange={handleNewRunTypeChange}>
-                <SelectTrigger className="w-full">
+                <SelectTrigger id="new-run-type" className="w-full">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -352,10 +352,11 @@ export function RunsPageContent() {
             </div>
 
             <div className="space-y-1.5">
-              <label className="text-label font-medium text-foreground block">
+              <label htmlFor="new-run-month" className="text-label font-medium text-foreground block">
                 Payroll month
               </label>
               <MonthPicker
+                id="new-run-month"
                 value={newRunMonth}
                 onChange={setNewRunMonth}
                 yearRange={[-1, 0]}
@@ -365,11 +366,11 @@ export function RunsPageContent() {
 
             {(entities?.length ?? 0) > 0 && (
               <div className="space-y-1.5">
-                <label className="text-label font-medium text-foreground block">
+                <label htmlFor="new-run-entity" className="text-label font-medium text-foreground block">
                   Legal entity
                 </label>
                 <Select value={newEntityId || undefined} onValueChange={setNewEntityId}>
-                  <SelectTrigger className="w-full">
+                  <SelectTrigger id="new-run-entity" className="w-full">
                     <SelectValue placeholder="Optional — scopes statutory pack" />
                   </SelectTrigger>
                   <SelectContent>
@@ -390,11 +391,11 @@ export function RunsPageContent() {
 
             {needsSource && (
               <div className="space-y-1.5">
-                <label className="text-label font-medium text-foreground block">
+                <label htmlFor="new-run-source" className="text-label font-medium text-foreground block">
                   Source run <span className="text-destructive">*</span>
                 </label>
                 <Select value={sourceRunId} onValueChange={setSourceRunId}>
-                  <SelectTrigger className="w-full">
+                  <SelectTrigger id="new-run-source" className="w-full">
                     <SelectValue placeholder="Select the run this adjusts" />
                   </SelectTrigger>
                   <SelectContent>

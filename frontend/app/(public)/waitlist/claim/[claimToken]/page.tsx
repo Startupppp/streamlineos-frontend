@@ -6,7 +6,7 @@ import { GlassButton } from "@/features/landing/relay/components/ui/glass-button
 import { BRAND_NAME } from "@/lib/branding";
 
 export const metadata: Metadata = {
-  title: `Waitlist sign-up has closed — ${BRAND_NAME}`,
+  title: "Waitlist sign-up has closed",
   robots: { index: false, follow: false },
 };
 

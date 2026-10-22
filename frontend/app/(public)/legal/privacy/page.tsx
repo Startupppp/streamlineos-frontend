@@ -5,7 +5,7 @@ import { SubprocessorNoticeForm } from "@/features/landing/subprocessor-notice-f
 import { BRAND_NAME, BRAND_DOMAIN, BRAND_SUPPORT_EMAIL } from "@/lib/branding";
 
 export const metadata: Metadata = {
-  title: `Privacy Policy — ${BRAND_NAME}`,
+  title: "Privacy Policy",
   description: `How ${BRAND_NAME} collects, uses, and protects your data.`,
   alternates: { canonical: "/legal/privacy" },
 };

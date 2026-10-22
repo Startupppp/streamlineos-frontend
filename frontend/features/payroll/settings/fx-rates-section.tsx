@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useId, useState } from "react";
 import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -57,6 +57,7 @@ function serializeRates(raw: unknown): Array<{ currency: string; rate: string }>
 const AVAILABLE_CURRENCIES = CURRENCIES.filter((c) => c.value !== "INR");
 
 export function FxRatesSection({ policy, activeVersion }: FxRatesSectionProps) {
+  const idPrefix = useId();
   const [editing, setEditing] = useState(false);
   const update = useUpdateFxRates();
 
@@ -150,12 +151,12 @@ export function FxRatesSection({ policy, activeVersion }: FxRatesSectionProps) {
           {fields.map((field, idx) => (
             <div key={field.id} className="flex items-end gap-2">
               <div className="space-y-1 flex-1">
-                {idx === 0 && <Label className="text-xs">Currency</Label>}
+                {idx === 0 && <Label htmlFor={`${idPrefix}-currency-${idx}`} className="text-xs">Currency</Label>}
                 <Select
                   value={watch(`rates.${idx}.currency`)}
                   onValueChange={(val) => handleCurrencyChange(idx, val)}
                 >
-                  <SelectTrigger className="h-9 text-sm">
+                  <SelectTrigger id={`${idPrefix}-currency-${idx}`} className="h-9 text-sm">
                     <SelectValue placeholder="Select currency" />
                   </SelectTrigger>
                   <SelectContent>
@@ -172,9 +173,10 @@ export function FxRatesSection({ policy, activeVersion }: FxRatesSectionProps) {
               </div>
               <div className="space-y-1 flex-1">
                 {idx === 0 && (
-                  <Label className="text-xs">Rate (1 {baseCurrency} =)</Label>
+                  <Label htmlFor={`${idPrefix}-rate-${idx}`} className="text-xs">Rate (1 {baseCurrency} =)</Label>
                 )}
                 <Input
+                  id={`${idPrefix}-rate-${idx}`}
                   {...register(`rates.${idx}.rate`)}
                   type="number"
                   step="any"

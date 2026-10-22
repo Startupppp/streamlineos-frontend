@@ -3,7 +3,7 @@ import { IncomingTransferPage } from "@/features/settings/organization/incoming-
 import { requirePermission } from "@/lib/rbac/require-permission";
 
 export const metadata: Metadata = {
-  title: "Incoming Ownership Transfer | StreamlineOS",
+  title: "Incoming Ownership Transfer",
 };
 
 export default async function IncomingTransferRoute() {

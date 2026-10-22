@@ -15,8 +15,6 @@ import { PricingBillingToggle } from "./pricing-billing-toggle";
 import { IncludedAppsGrid } from "./included-apps-grid";
 import { EASE_OUT } from "./motion/variants";
 
-const fmt = (n: number) => `${PRICING.currency}${n.toLocaleString("en-IN")}`;
-
 type PricingTierGridProps = {
   showAppsGrid?: boolean;
   defaultPeriod?: BillingPeriod;
@@ -76,7 +74,7 @@ function PricingCard({
     period === "annual" ? tier.priceLabel.annual : tier.priceLabel.monthly;
   const comparePrice =
     period === "annual" && tier.monthly && tier.annual && tier.monthly > tier.annual
-      ? fmt(tier.monthly)
+      ? tier.priceLabel.monthly
       : null;
 
   return (

@@ -133,10 +133,11 @@ function FnfDetailSheetInner({ settlementId, onClose }: FnfDetailSheetInnerProps
             <FnfStatementView settlement={settlement} statement={statement} />
             {showApprove && (
               <div className="flex flex-col gap-1.5">
-                <label className="text-dense font-medium text-muted-foreground">
+                <label htmlFor="fnf-approval-notes" className="text-dense font-medium text-muted-foreground">
                   Approval Notes (optional)
                 </label>
                 <Textarea
+                  id="fnf-approval-notes"
                   value={notes}
                   onChange={handleNotesChange}
                   placeholder="Add notes for this settlement approval…"

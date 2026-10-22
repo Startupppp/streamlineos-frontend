@@ -20,6 +20,7 @@ import { MobileLifecycleBar } from "@/features/payroll/runs/mobile-lifecycle-bar
 import { ApprovalStagePanel, MarkPaidPanel } from "@/features/payroll/payout";
 import { EmployeesTab } from "@/features/payroll/runs/employees-tab";
 import { ExceptionsTab } from "@/features/payroll/runs/exceptions-tab";
+import { BlockerFixCard } from "@/features/payroll/runs/blocker-fix-card";
 import { InputsTab } from "@/features/payroll/runs/inputs-tab";
 import { VarianceTab } from "@/features/payroll/runs/variance-tab";
 import { formatMoney, formatMonth } from "@/features/payroll/shared/payroll-format";
@@ -229,6 +230,7 @@ export function RunDetailContent({ runId }: RunDetailContentProps) {
           <RunStatusStepper status={run.status} />
         </div>
 
+        <BlockerFixCard runId={runId} month={run.month} isLocked={isLocked} />
         <ApprovalStagePanel runId={runId} status={run.status} />
         <MarkPaidPanel runId={runId} status={run.status} />
 

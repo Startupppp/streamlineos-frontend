@@ -83,6 +83,15 @@ describe("applyLivePrices", () => {
     expect(after).toEqual(before);
   });
 
+  it("labels an unpriced free plan in the live currency, not rupees", () => {
+    const { plans, ...rest } = EUR;
+    const usdNoFree: PublicPricing = { ...rest, currency: "USD", plans: plans.filter((p) => p.plan !== "FREE") };
+    const free = applyLivePrices(usdNoFree).find((tier) => tier.monthly === 0);
+
+    expect(free?.price).toBe(formatMinor(0, "USD", "en"));
+    expect(free?.priceLabel.annual).not.toContain("₹");
+  });
+
   it("keeps the copy, which no API owns", () => {
     const before = PRICING_TIERS.find((tier) => tier.planId === "STARTER");
     const after = applyLivePrices(EUR).find((tier) => tier.planId === "STARTER");

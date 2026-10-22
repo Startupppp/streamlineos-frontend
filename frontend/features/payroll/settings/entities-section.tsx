@@ -105,12 +105,12 @@ export function EntitiesSection() {
       ) : (
         <div className="space-y-3">
           <div className="max-w-sm">
-            <label className="text-dense font-medium text-muted-foreground">Entity</label>
+            <label htmlFor="payroll-entity-filing-select" className="text-dense font-medium text-muted-foreground">Entity</label>
             <Select
               value={entityId != null ? String(entityId) : undefined}
               onValueChange={numericSelectChange(setSelectedId)}
             >
-              <SelectTrigger className="mt-1">
+              <SelectTrigger id="payroll-entity-filing-select" className="mt-1">
                 <SelectValue placeholder="Select entity" />
               </SelectTrigger>
               <SelectContent>

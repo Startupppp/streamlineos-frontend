@@ -12,6 +12,9 @@ import {
 import { HR_INSIGHTS_ROUTES } from "./sidebar-nav-routes-hr-governance";
 import { HR_SETTINGS_ROUTES } from "./sidebar-nav-routes-hr-settings";
 
+// Five groups (spec: People, Time Off & Attendance, …): lifecycle and
+// documents fold into HR People, insights into People Ops. Every HR route
+// carries its own requiredPermission, so a group's union never widens a gate.
 export const HR_NAV_GROUPS: NavGroup[] = [
   {
     label: "HR Overview",
@@ -35,24 +38,20 @@ export const HR_NAV_GROUPS: NavGroup[] = [
       "hr:positions:view",
       "hr:reporting-lines:review",
       "hr:reporting-lines:manage",
-    ],
-    routes: HR_PEOPLE_ROUTES,
-  },
-  {
-    label: "Lifecycle",
-    product: "hrms",
-    module: "hrms",
-    requiredPermission: [
       "hr:onboarding:manage",
       "hr:exit:view",
       "hr:exit:manage",
       "hr:payroll:approve",
       "hr:assets:view",
+      "hr:documents:view",
+      "hr:documents:manage",
+      "hr:email-templates:manage",
+      "hr:sensitive:view",
     ],
-    routes: HR_LIFECYCLE_ROUTES,
+    routes: [...HR_PEOPLE_ROUTES, ...HR_LIFECYCLE_ROUTES, ...HR_DOCUMENTS_ROUTES],
   },
   {
-    label: "Time",
+    label: "Time Off & Attendance",
     product: "hrms",
     module: "hrms",
     requiredPermission: [
@@ -65,18 +64,6 @@ export const HR_NAV_GROUPS: NavGroup[] = [
       "self:attendance",
     ],
     routes: HR_TIME_ROUTES,
-  },
-  {
-    label: "Documents",
-    product: "hrms",
-    module: "hrms",
-    requiredPermission: [
-      "hr:documents:view",
-      "hr:documents:manage",
-      "hr:email-templates:manage",
-      "hr:sensitive:view",
-    ],
-    routes: HR_DOCUMENTS_ROUTES,
   },
   {
     label: "People Ops",
@@ -93,21 +80,13 @@ export const HR_NAV_GROUPS: NavGroup[] = [
       "hr:benefits:view",
       "hr:compensation:manage",
       "hr:equity:view",
-    ],
-    routes: HR_PEOPLE_OPS_ROUTES,
-  },
-  {
-    label: "Insights",
-    product: "hrms",
-    module: "hrms",
-    requiredPermission: [
       "hr:analytics:read",
       "hr:contracts:view",
       "hr:performance:manage",
       "hr:performance:view",
       "hr:feedback:view",
     ],
-    routes: HR_INSIGHTS_ROUTES,
+    routes: [...HR_PEOPLE_OPS_ROUTES, ...HR_INSIGHTS_ROUTES],
   },
   {
     label: "Settings",

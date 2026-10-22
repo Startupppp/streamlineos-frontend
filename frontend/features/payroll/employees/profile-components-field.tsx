@@ -8,6 +8,7 @@ import { getErrorMessage } from "@/lib/get-error-message";
 import { usePayrollComponents } from "@/hooks/api/payroll/components";
 import type { SalaryComponentListItem } from "@/hooks/api/payroll/components-schema";
 import { componentRole, duplicatedRoles } from "@/features/payroll/components/lib/component-role";
+import { ProfileTemplatePicker } from "./profile-template-picker";
 
 interface ProfileComponentsFieldProps {
   value: readonly number[];
@@ -77,6 +78,7 @@ export function ProfileComponentsField({ value, onChange }: ProfileComponentsFie
 
   return (
     <div className="space-y-2">
+      <ProfileTemplatePicker components={items} onApply={onChange} />
       <ul className="max-h-56 space-y-1.5 overflow-y-auto rounded-md border border-border p-2">
         {items.map((component) => (
           <ComponentOption

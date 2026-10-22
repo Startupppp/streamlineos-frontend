@@ -1,8 +1,10 @@
 import {
+  flattenNavRoutes,
   isNavRouteActive,
   type NavGroup,
   type NavRoute,
 } from "../sidebar/sidebar-nav-items";
+import type { ProductKey } from "../sidebar/sidebar-nav-types";
 
 export const MAX_MOBILE_MODULE_TABS = 5;
 
@@ -91,4 +93,33 @@ export function getMobileModuleContentPaddingClassName(
 ): string | undefined {
   if (!showModuleBottomNav) return undefined;
   return MOBILE_MODULE_CONTENT_PADDING_CLASS;
+}
+
+// Products whose sidebar is a handful of groups: the bar shows one tab per
+// group (People, Time Off & Attendance, …) rather than the first few links.
+const GROUP_TAB_PRODUCTS: ReadonlySet<ProductKey> = new Set<ProductKey>(["hrms", "payroll"]);
+
+export function usesMobileGroupTabs(product: ProductKey, navGroups: NavGroup[]): boolean {
+  return GROUP_TAB_PRODUCTS.has(product) && navGroups.length > 1 && navGroups.length <= MAX_MOBILE_MODULE_TABS;
+}
+
+export type MobileGroupTab = { route: NavRoute; isActive: boolean };
+
+/** One tab per group, linking to its first route; the active tab owns the longest matching route. */
+export function getMobileGroupTabs(navGroups: NavGroup[], pathname: string): MobileGroupTab[] {
+  let activeIndex = -1;
+  let longest = -1;
+  navGroups.forEach((group, index) => {
+    for (const route of flattenNavRoutes(group.routes)) {
+      if (route.href.length > longest && isNavRouteActive(route, pathname)) {
+        longest = route.href.length;
+        activeIndex = index;
+      }
+    }
+  });
+  return navGroups.flatMap((group, index) => {
+    const first = group.routes[0];
+    if (!first) return [];
+    return [{ route: { ...first, label: group.label, children: undefined }, isActive: index === activeIndex }];
+  });
 }

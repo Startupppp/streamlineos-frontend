@@ -19,7 +19,7 @@ interface AccessDeniedPageProps {
   searchParams: Promise<AccessDeniedSearchParams>;
 }
 
-export const metadata = { title: "Access Denied | StreamlineOS" };
+export const metadata = { title: "Access Denied" };
 
 function resolveAccessDeniedState(
   required: string | undefined,
