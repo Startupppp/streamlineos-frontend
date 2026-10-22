@@ -85,7 +85,7 @@ export function useInfiniteSelectorProjects(
     queryFn: ({ pageParam, signal }) => {
       const qp: Record<string, string> = {};
       if (search) qp["search"] = search;
-      if (typeof pageParam === "string" && pageParam) qp["cursor"] = pageParam;
+      if (typeof pageParam === "string") qp["cursor"] = pageParam;
       return apiClient.get<ManagedProductRelationsListLinkedProjectsResponse>(
         `/build/managed-products/${managedProductId}/projects`,
         Object.keys(qp).length ? qp : undefined,
@@ -121,7 +121,7 @@ export function useInfiniteSelectorOpportunities(
     queryFn: ({ pageParam, signal }) => {
       const qp: Record<string, string> = {};
       if (search) qp["search"] = search;
-      if (typeof pageParam === "string" && pageParam) qp["cursor"] = pageParam;
+      if (typeof pageParam === "string") qp["cursor"] = pageParam;
       return apiClient.get<DiscoveryListOpportunitiesResponse>(
         `/build/managed-products/${managedProductId}/opportunities`,
         Object.keys(qp).length ? qp : undefined,
@@ -155,7 +155,7 @@ export function useInfiniteSelectorRoadmapItems(
     queryFn: ({ pageParam, signal }) => {
       const qp: Record<string, string | number> = { managedProductId };
       if (search) qp["search"] = search;
-      if (typeof pageParam === "string" && pageParam) qp["cursor"] = pageParam;
+      if (typeof pageParam === "string") qp["cursor"] = pageParam;
       return apiClient.get<ProjectsRoadmapListRoadmapResponse>(
         "/build/roadmap",
         qp,
@@ -185,7 +185,7 @@ export function useInfiniteSelectorProjectReleases(
     queryFn: ({ pageParam, signal }) => {
       const qp: Record<string, string> = {};
       if (search) qp["q"] = search;
-      if (typeof pageParam === "string" && pageParam) qp["cursor"] = pageParam;
+      if (typeof pageParam === "string") qp["cursor"] = pageParam;
       return apiClient.get<ProjectsReleasesListReleasesResponse>(
         `/build/${projectId}/releases`,
         Object.keys(qp).length ? qp : undefined,
@@ -217,7 +217,7 @@ export function useAddProductMemberCandidates({
       apiClient.get<BuildMembersResponse>(
         "/build/members",
         {
-          ...(pageParam ? { cursor: pageParam } : {}),
+          ...(pageParam !== NO_CURSOR_YET ? { cursor: pageParam } : {}),
           ...(search ? { search } : {}),
         },
         signal,
@@ -254,9 +254,7 @@ export function useLinkGoalCandidates({
         {
           ...(search ? { search } : {}),
           ...(managedProductId ? { managedProductId } : {}),
-          ...(typeof pageParam === "string" && pageParam
-            ? { cursor: pageParam }
-            : {}),
+          ...(pageParam !== NO_CURSOR_YET ? { cursor: pageParam } : {}),
         },
         signal,
         goalsPageContract,

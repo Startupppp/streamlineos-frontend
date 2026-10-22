@@ -7,6 +7,7 @@ import { lazyContract } from "@/lib/api-envelope";
 import { useCan } from "@/hooks/api/access";
 import { platformHierarchyQueryKeys } from "@/lib/query-keys/platform-hierarchy";
 import type { CalendarCapacity, CalendarPersonalCapacity, CalendarResourceList, CalendarWarehouseCapacity } from "./calendar-capacity-schema";
+import { NO_CURSOR_YET } from "@/hooks/api/cursor-page-param";
 
 const resourcesContract = lazyContract(() => import("./calendar-capacity-schema").then((module) => module.calendarResourceListContract));
 const capacityContract = lazyContract(() => import("./calendar-capacity-schema").then((module) => module.calendarCapacityContract));
@@ -20,8 +21,8 @@ export function useCalendarResources(enabled = true) {
   const userId = session?.user?.id ?? "";
   return useInfiniteQuery({
     queryKey: platformHierarchyQueryKeys.calendar.capacity(orgId, userId, { kind: "resources" }),
-    initialPageParam: "",
-    queryFn: ({ pageParam, signal }) => apiClient.get<CalendarResourceList>("/calendar/resources", { limit: 50, ...(pageParam ? { cursor: pageParam } : {}) }, signal, resourcesContract),
+    initialPageParam: NO_CURSOR_YET,
+    queryFn: ({ pageParam, signal }) => apiClient.get<CalendarResourceList>("/calendar/resources", { limit: 50, ...(pageParam !== NO_CURSOR_YET ? { cursor: pageParam } : {}) }, signal, resourcesContract),
     getNextPageParam: (page) => page.nextCursor ?? undefined,
     enabled: enabled && Boolean(orgId && userId) && canRead,
     staleTime: 30_000,

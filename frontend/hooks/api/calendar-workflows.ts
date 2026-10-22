@@ -18,6 +18,7 @@ import type {
   CalendarWorkflowRule,
   CalendarWorkflowTrigger,
 } from "./calendar-workflows-schema";
+import { NO_CURSOR_YET } from "@/hooks/api/cursor-page-param";
 
 const policyContract = lazyContract(() => import("./calendar-workflows-schema").then((module) => module.calendarWorkflowPolicyContract));
 const ruleContract = lazyContract(() => import("./calendar-workflows-schema").then((module) => module.calendarWorkflowRuleContract));
@@ -92,17 +93,17 @@ export function useCalendarWorkflowEffects(status?: CalendarWorkflowEffect["stat
   const access = usePermissionGate("calendar:admin:manage");
   const query = useInfiniteQuery({
     queryKey: [...workflowKeys.effects, status ?? "all"],
-    initialPageParam: "",
+    initialPageParam: NO_CURSOR_YET,
     queryFn: async ({ pageParam, signal }) => {
       try {
         return await apiClient.get<CalendarWorkflowEffectPage>(
           "/calendar/admin/workflows/effects/page",
-          { limit: 50, ...(status ? { status } : {}), ...(pageParam ? { cursor: pageParam } : {}) },
+          { limit: 50, ...(status ? { status } : {}), ...(pageParam !== NO_CURSOR_YET ? { cursor: pageParam } : {}) },
           signal,
           effectsContract,
         );
       } catch (error) {
-        if (pageParam || !isApiError(error) || error.status !== 404) throw error;
+        if (pageParam !== NO_CURSOR_YET || !isApiError(error) || error.status !== 404) throw error;
         const items = await apiClient.get<CalendarWorkflowEffect[]>(
           "/calendar/admin/workflows/effects",
           status ? { status } : undefined,

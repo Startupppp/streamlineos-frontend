@@ -16,6 +16,7 @@ import type {
   CalendarSavedViewDefinition,
   CalendarSavedViewList,
 } from "./calendar-saved-view-schema";
+import { NO_CURSOR_YET } from "@/hooks/api/cursor-page-param";
 
 const listContract = lazyContract(() =>
   import("./calendar-saved-view-schema").then(
@@ -46,11 +47,11 @@ export function useCalendarSavedViews(enabled = true) {
       access?.scopes["calendar:admin:manage"] ?? "none",
       access?.isOrgOwner ?? false,
     ),
-    initialPageParam: "" as string,
+    initialPageParam: NO_CURSOR_YET,
     queryFn: ({ pageParam, signal }) =>
       apiClient.get<CalendarSavedViewList>(
         "/calendar/saved-views",
-        pageParam ? { cursor: pageParam } : {},
+        pageParam !== NO_CURSOR_YET ? { cursor: pageParam } : {},
         signal,
         listContract,
       ),
