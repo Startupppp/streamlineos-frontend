@@ -45,7 +45,7 @@ export function AttendanceTodayCard({
   }, [cutoff, lastPunchLabel, now]);
   const { data: monthRows, isLoading } = useHrMonthlyAttendance({
     year: now.getFullYear(),
-    month: now.getMonth() + 1,
+    month: now.getMonth(),
   });
 
   const week = useMemo(

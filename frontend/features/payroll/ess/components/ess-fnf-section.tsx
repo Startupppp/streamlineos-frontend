@@ -8,6 +8,7 @@ import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PAGE_BODY_SKELETON_CLASS } from "@/components/ui/content-fill-panel";
 import { ErrorState } from "@/components/shared/error-state";
+import { EmptyState } from "@/components/ui/empty-state";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { EssStatusBadge } from "./ess-status-badge";
 import { useEssFnf } from "@/hooks/api/payroll/ess";
@@ -76,7 +77,17 @@ export function EssFnfSection({ hideToolbar = false }: { hideToolbar?: boolean }
     );
   }
 
-  if (!settlement) return null;
+  if (!settlement) {
+    return (
+      <section id="fnf" className="flex min-h-0 w-full flex-1 flex-col gap-3">
+        <EmptyState
+          compact
+          title="No final settlement"
+          description="A final settlement appears here only after an exit is processed."
+        />
+      </section>
+    );
+  }
 
   return (
     <section id="fnf" className="flex min-h-0 w-full flex-1 flex-col gap-3">

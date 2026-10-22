@@ -145,7 +145,7 @@ export function useCreateProfile(employeeUserId: string) {
   return useAuthorizedMutation("payroll:salaries:update", {
     mutationKey: ["payroll", "employees", employeeUserId, "create-profile"],
     mutationFn: (body: CreateProfileBody) =>
-      apiClient.post<{ id: number }>(`/payroll/employees/${employeeUserId}/profiles`, body, undefined, idResponseC),
+      apiClient.post<{ profileId: number }>(`/payroll/employees/${employeeUserId}/profiles`, body, undefined, profileCreateC),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: payrollQueryKeys.payroll.employee(employeeUserId) });
       void qc.invalidateQueries({ queryKey: payrollQueryKeys.payroll.employeeHistory(employeeUserId) });

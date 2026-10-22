@@ -42,7 +42,7 @@ function access(over: Partial<DashboardAccess> = {}): DashboardAccess {
     canViewCrmLeads: false,
     canViewCrmReports: false,
     canViewTickets: true,
-    canViewPayrollSelf: false,
+    canViewPayrollSelf: false, canRunPayroll: false, canViewPayslips: false,
     canViewSignEnvelopes: false,
     ...over,
   };

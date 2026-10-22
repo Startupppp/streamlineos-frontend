@@ -85,7 +85,7 @@ jest.mock("@/features/dashboard/use-dashboard-access", () => ({
     canViewCrmLeads: true,
     canViewCrmReports: true,
     canViewTickets: true,
-    canViewPayrollSelf: true,
+    canViewPayrollSelf: true, canRunPayroll: false, canViewPayslips: false,
     canViewSignEnvelopes: true,
   }),
 }));

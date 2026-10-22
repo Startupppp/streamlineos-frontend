@@ -97,7 +97,12 @@ export function ManagerHomePage() {
               probationDue={data.probationDue}
             />
           </RichPageContent>
-        ) : null}
+        ) : (
+          <EmptyState
+            title="No one reports to you yet"
+            description="Your team shows up here once HR sets a reporting line under you."
+          />
+        )}
       </PageState>
     </PageWrapper>
   );

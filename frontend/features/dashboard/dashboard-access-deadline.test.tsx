@@ -40,7 +40,7 @@ function unresolvedAccess(): DashboardAccess {
     canViewCrmLeads: false,
     canViewCrmReports: false,
     canViewTickets: false,
-    canViewPayrollSelf: false,
+    canViewPayrollSelf: false, canRunPayroll: false, canViewPayslips: false,
     canViewSignEnvelopes: false,
   };
 }

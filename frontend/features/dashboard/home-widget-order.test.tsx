@@ -296,7 +296,7 @@ function makeAccess(overrides: Partial<DashboardAccess> = {}): DashboardAccess {
     canViewAttendance: false, canSelfAttendance: false,
     canViewLeaves: false, canApproveLeaves: false,
     canViewExecutive: false, canViewCrmLeads: false, canViewCrmReports: false,
-    canViewTickets: false, canViewPayrollSelf: false, canViewSignEnvelopes: false,
+    canViewTickets: false, canViewPayrollSelf: false, canRunPayroll: false, canViewPayslips: false, canViewSignEnvelopes: false,
     ...overrides,
   };
 }

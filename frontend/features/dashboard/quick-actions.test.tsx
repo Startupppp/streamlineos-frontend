@@ -53,7 +53,7 @@ const accessDefaults = {
   canViewCrmLeads: true,
   canViewCrmReports: true,
   canViewTickets: true,
-  canViewPayrollSelf: false,
+  canViewPayrollSelf: false, canRunPayroll: false, canViewPayslips: false,
   canViewSignEnvelopes: false,
 };
 

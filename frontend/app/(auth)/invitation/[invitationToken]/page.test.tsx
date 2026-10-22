@@ -100,6 +100,7 @@ describe("InvitationPage — a rejected name tells the invitee why", () => {
     const firstName = screen.getByRole("textbox", { name: /first name/i });
     await user.click(firstName);
     await user.paste(OVER_LIMIT_NAME);
+    await user.type(screen.getByRole("textbox", { name: /last name/i }), "Sharma");
     await user.click(screen.getByRole("button", { name: /continue/i }));
 
     const message = await screen.findByRole("alert");
@@ -119,6 +120,7 @@ describe("InvitationPage — a rejected name tells the invitee why", () => {
 
     const firstName = screen.getByRole("textbox", { name: /first name/i });
     await user.type(firstName, "Priya");
+    await user.type(screen.getByRole("textbox", { name: /last name/i }), "Sharma");
     await user.click(screen.getByRole("button", { name: /continue/i }));
 
     expect(screen.queryByRole("alert")).toBeNull();

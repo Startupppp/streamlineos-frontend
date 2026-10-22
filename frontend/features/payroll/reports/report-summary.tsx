@@ -79,7 +79,7 @@ export function ReportSummary({ month, department, costCenter, workerType }: Rep
           tone="blue"
         />
         <StatCard
-          label="Employer Cost"
+          label="Employer contributions (PF/ESI)"
           value={formatMoney(run.employerCostTotal)}
           icon={Building2}
           tone="default"

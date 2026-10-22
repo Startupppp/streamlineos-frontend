@@ -43,6 +43,7 @@ import { useCan } from "@/hooks/api/access";
 import { useRunExceptions, useResolveException, useOverrideException } from "@/hooks/api/payroll/run-exceptions";
 import type { PayrollExceptionSeverity, PayrollExceptionStatus } from "@/types/payroll/runs";
 import type { RunException } from "@/hooks/api/payroll/run-exceptions-schema";
+import { exceptionCodeLabel } from "@/features/payroll/readiness/readiness-categories";
 
 const SEVERITY_CONFIG: Record<
   PayrollExceptionSeverity,
@@ -227,8 +228,8 @@ export function ExceptionsTab({ runId, isLocked }: ExceptionsTabProps) {
                     key={ex.id}
                     className={`flex items-center gap-3 px-3 py-2 text-dense ${idx > 0 ? "border-t border-border" : ""}`}
                   >
-                    <span className="font-mono text-micro text-muted-foreground shrink-0">
-                      {ex.code}
+                    <span className="text-micro text-muted-foreground shrink-0" title={ex.code}>
+                      {exceptionCodeLabel(ex.code)}
                     </span>
                     <TruncatedText text={ex.message ?? ""} className="flex-1 text-foreground min-w-0" />
                     {ex.status === "OPEN" && ex.userId && PROFILE_FIX_CODES.has(ex.code) && (
@@ -285,7 +286,7 @@ export function ExceptionsTab({ runId, isLocked }: ExceptionsTabProps) {
           <AlertDialogHeader>
             <AlertDialogTitle>Override exception</AlertDialogTitle>
             <AlertDialogDescription>
-              You are overriding a {overrideTarget?.severity} exception: {overrideTarget?.code}.
+              You are overriding a {overrideTarget?.severity} exception: {overrideTarget ? exceptionCodeLabel(overrideTarget.code) : ""}.
               Provide a reason for the audit log.
             </AlertDialogDescription>
           </AlertDialogHeader>

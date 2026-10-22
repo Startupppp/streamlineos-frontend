@@ -120,3 +120,13 @@ describe("next.config.ts redirects — PM Workspace is removed, and every deep l
     expect(existsSync(join(build, "my-work"))).toBe(true);
   });
 });
+
+describe("next.config.ts redirects — leave alias", () => {
+  test("/me/leave redirects to /me/time-off", async () => {
+    const redirects = await getRedirects();
+    const entry = redirects.find((r) => r.source === "/me/leave");
+    expect(entry).toBeDefined();
+    expect(entry?.destination).toBe("/me/time-off");
+    expect(entry?.permanent).toBe(false);
+  });
+});

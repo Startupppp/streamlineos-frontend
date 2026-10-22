@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/dialog";
 import { useCan } from "@/hooks/api/access";
 import { useSubmitApproval } from "@/hooks/api/payroll";
+import { useRunExceptions } from "@/hooks/api/payroll/run-exceptions";
 import { getErrorMessage } from "@/lib/get-error-message";
 
 interface Props {
@@ -26,10 +27,13 @@ interface Props {
 
 const SUBMIT_STATUSES = new Set(["PREVIEW_READY", "EXCEPTIONS_FOUND"]);
 
-export function SubmitApprovalAction({ runId, status, openBlockers = 0 }: Props) {
+export function SubmitApprovalAction({ runId, status, openBlockers: openBlockersProp }: Props) {
   const canUpdate = useCan("payroll:runs:update");
   const [open, setOpen] = useState(false);
   const { mutate, isPending } = useSubmitApproval();
+  const { data: blockerPage, isPending: blockersPending } = useRunExceptions(runId, { severity: "BLOCKER", status: "OPEN" });
+  const blockersUnknown = openBlockersProp === undefined && blockersPending;
+  const openBlockers = openBlockersProp ?? blockerPage?.data.length ?? 0;
 
   if (!SUBMIT_STATUSES.has(status)) return null;
   if (!canUpdate) return null;
@@ -62,8 +66,9 @@ export function SubmitApprovalAction({ runId, status, openBlockers = 0 }: Props)
     );
   }
 
-  const blockedReason =
-    openBlockers > 0
+  const blockedReason = blockersUnknown
+    ? "Checking for open blockers"
+    : openBlockers > 0
       ? `Resolve ${openBlockers} open ${openBlockers === 1 ? "blocker" : "blockers"} before submitting`
       : null;
 

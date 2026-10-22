@@ -4,6 +4,7 @@ import { SubmitApprovalAction } from "./submit-approval-action";
 jest.mock("sonner", () => ({ toast: { success: jest.fn(), error: jest.fn() } }));
 jest.mock("@/hooks/api/access", () => ({ useCan: () => true }));
 jest.mock("@/hooks/api/payroll", () => ({ useSubmitApproval: () => ({ mutate: jest.fn(), isPending: false }) }));
+jest.mock("@/hooks/api/payroll/run-exceptions", () => ({ useRunExceptions: () => ({ data: undefined, isPending: false }) }));
 
 describe("UX-R1-5 Submit for Approval says why it cannot be used", () => {
   it("is disabled and names the open blockers while any remain", () => {

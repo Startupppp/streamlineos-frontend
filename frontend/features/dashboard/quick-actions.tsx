@@ -13,6 +13,9 @@ import {
   Briefcase,
   CheckSquare,
   Network,
+  CalendarCheck,
+  Wallet,
+  FileText,
   Pin,
   PinOff,
 } from "lucide-react";
@@ -123,6 +126,30 @@ export function useQuickActions(): {
         icon: UserPlus,
         href: "/hr/onboarding",
         baseScore: isAdmin ? 10 : 2,
+      });
+    }
+    if (access.hrEnabled && access.canApproveLeaves) {
+      items.push({
+        label: "Approve Leave",
+        icon: CalendarCheck,
+        href: "/hr/approvals",
+        baseScore: isAdmin ? 10 : 9,
+      });
+    }
+    if (access.payrollEnabled && access.canRunPayroll) {
+      items.push({
+        label: "Run Payroll",
+        icon: Wallet,
+        href: "/payroll/runs",
+        baseScore: isAdmin ? 10 : 9,
+      });
+    }
+    if (access.payrollEnabled && access.canViewPayslips) {
+      items.push({
+        label: "Payslips",
+        icon: FileText,
+        href: "/payroll/payslips",
+        baseScore: isAdmin ? 9 : 8,
       });
     }
     if (access.crmEnabled && access.canViewCrmLeads) {
