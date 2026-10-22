@@ -8,4 +8,6 @@ export const chatUnreadTotalQueryOptions = {
 export const chatChannelsQueryOptions = {
   queryKey: collaborationQueryKeys.chat.myChannels(),
   staleTime: 300_000,
+  getNextPageParam: (lastPage: { nextCursor: string | null }) =>
+    lastPage.nextCursor ?? undefined,
 } as const;

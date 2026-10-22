@@ -78,7 +78,6 @@ function toNavGroup(
   const requiredPermission = unionPermission(routable);
   const group: NavGroup = {
     label,
-    product: "build",
     module: "build",
     routes: routable.map(toNavRoute),
   };

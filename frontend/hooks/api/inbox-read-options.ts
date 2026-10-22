@@ -20,5 +20,7 @@ export function unifiedInboxListQueryOptions(params: {
   return {
     queryKey: platformCoreQueryKeys.inbox.unified({ ...params, infinite: true }),
     staleTime: 30_000,
+    getNextPageParam: (lastPage: { hasMore: boolean; nextCursor: string | null }) =>
+      lastPage.hasMore ? (lastPage.nextCursor ?? undefined) : undefined,
   } as const;
 }

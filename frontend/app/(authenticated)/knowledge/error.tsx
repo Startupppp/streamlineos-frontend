@@ -19,7 +19,7 @@ export default function KnowledgeBaseError({
   }, [error]);
 
   return (
-    <div className="flex h-full items-center justify-center p-8">
+    <div className="flex h-full min-h-full w-full flex-1 flex-col">
       <ErrorState
         title="Something went wrong"
         description="Failed to load the wiki. Please try again."

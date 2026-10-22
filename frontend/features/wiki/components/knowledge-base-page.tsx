@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useSession } from "next-auth/react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { toast } from "sonner";
@@ -256,10 +256,10 @@ export default function KnowledgeBasePage() {
     };
   }
 
-  const pageState = usePageState({ permission: "kb:ask:view" });
+  const pageState = usePageState({ permission: "kb:ai:generate" });
 
   return (
-    <PageState resolution={pageState}>
+    <PageState resolution={pageState} loading={null}>
     <PageWrapper
       title="Ask documents"
       subtitle="Ask across your files and docs. Every answer stays grounded in content you can access."

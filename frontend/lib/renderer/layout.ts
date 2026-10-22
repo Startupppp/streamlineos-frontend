@@ -15,29 +15,9 @@ export type FieldKind =
   | "longText"
   | "reference"
   | "lines"
-    A field whose value is a run of figures rather than one.
 
-    A rep's talk ratio across the reporting window is a real field of that
-    record -- it is what the row is about -- and until this existed a
-    description had no way to say so, which is why the one table that shows one
-    stayed hand-written after the CRM was migrated. Both alternatives were
-    worse: a `text` field whose value is secretly an array is a description
-    lying about its own shape, and dropping the column to migrate the screen
-    would be losing a feature to satisfy a count.
 
-    The engine deliberately does not draw it. What a chart of a series *means* --
-    that these are basis points, that the buckets are weeks, that a gap is a
-    fortnight nobody called anybody rather than a flat line -- is domain the
-    layout layer does not have and should not acquire; a sparkline drawn from
-    those numbers alone would join the line straight through the quiet week and
-    claim nothing changed. So the surface draws it through `RecordList`'s
-    `cells`, and the description owns everything around it: the header, the
-    width, the position, the mobile card, and whether the tenant sees the column
-    at all.
 
-    Read-only always. There is no control that types a series, and
-    `validateLayout` reports one that is not rather than letting a form render an
-    input over it.
   | "series";
 
 export type FieldTone = "success" | "warning" | "danger" | "info" | "neutral";

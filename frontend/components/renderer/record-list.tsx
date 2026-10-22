@@ -32,17 +32,7 @@ type BorrowedProps<T extends RecordValue = RecordValue> = Pick<
   | "onRowClick"
   | "minWidth"
   | "className"
-    Selection is borrowed rather than described. Which rows a person may pick,
-    and what picking them does, depends on the caller's permissions and on the
-    action being staged — a screen concern, like the row actions beside it. The
-    table already owns the checkbox column and select-all; forwarding is what
-    stops every list growing its own.
   | "selection"
-    A load-more control under the rows. Borrowed rather than described for the
-    same reason selection is: whether there is another page to fetch is a fact
-    about the caller's query, not about the shape of the record. Two nurture
-    lists page by cursor and had nowhere to put the control, which is the only
-    reason a keyset list could not be described.
   | "footer"
 >;
 

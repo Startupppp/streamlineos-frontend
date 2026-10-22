@@ -30,11 +30,19 @@ export function PageDocumentSkeleton() {
             </div>
           </div>
         </div>
-        <div className="hidden w-64 shrink-0 flex-col gap-4 border-l border-border p-4 lg:flex">
-          <Skeleton className="h-4 w-28" />
-          {Array.from({ length: 4 }, (_, index) => (
-            <Skeleton key={index} className="h-9 w-full rounded-md" />
-          ))}
+        <div className="hidden w-72 shrink-0 flex-col border-l border-border bg-muted/20 xl:flex">
+          <div className="space-y-2 border-b border-border/80 px-4 py-3">
+            <Skeleton className="h-3 w-14" />
+            <Skeleton className="h-4 w-36" />
+          </div>
+          <div className="flex flex-col gap-3 px-4 py-4">
+            {Array.from({ length: 5 }, (_, index) => (
+              <div key={index} className="grid grid-cols-[5.5rem_1fr] gap-3">
+                <Skeleton className="h-3 w-12" />
+                <Skeleton className="h-4 w-full" />
+              </div>
+            ))}
+          </div>
         </div>
       </div>
     </div>

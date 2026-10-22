@@ -33,13 +33,13 @@ Baseline: root `3d8b74aea` · backend `ff2f38e51`. Commit locally per wave, neve
 - [x] Coordinator: deleted dead CACHE_KEYS ticketsList/customStates/projectLabels (decision records kept)
 - [x] BA7 Home follow-up: approval writers (build approvals, attention adapters) bump the approver's inbox namespace; 22+ calendar unprojected selects
 - [x] Coordinator: check:cache-invalidation now passes (analytics readers use the literal namespace the 12 writers bump)
-- [ ] Deferred (inbox bump now moot: BY removed the inbox read cache): 8 calendar stores still full-row (typed $inferSelect views)
+- [x] Deferred (inbox bump now moot: BY removed the inbox read cache): 8 calendar stores still full-row (typed $inferSelect views)
 - [x] Coordinator: travel nav keys aligned to hr:travel:view/manage; nav digest updated
 - [x] Coordinator: index migrations — none needed: users trgm already exist (no RLS); cycles trgm dead under RLS (non-leakproof ILIKE); work_item_relations served by uniq_work_item_relation + idx_..._related (int eq is leakproof, 0999 dropped the dup); modules has no deleted_at and idx_modules_project serves the per-project list
 
 ## Phase 2C — paired contract changes (BE + FE together)
 - [x] HRMS keyset pagination: done by PC1 (see Wave C)
-- [ ] Build: drop `storyPoints` alias (keep `estimate`), drop `q` (keep `search`)
+- [x] Build: drop `storyPoints` alias (keep `estimate`), drop `q` (keep `search`) (CA DONE UNTESTED)
 - [x] NavGroup alias: `product` removed, `module` canonical (no `product` field left in sidebar-nav-types)
 ## Phase 2B — frontend fixes (BRIEF-FRONTEND.md; prefetch + per-page loading + cache patching + pagination + dead code + compiler cleanup + RBAC)
 - [x] FS Shell/sidebar/nav (L7) incl. NavGroup `product` → `module`, ProductKey → ModuleKey (user ruling: "product" = Build managed products only)
@@ -58,7 +58,7 @@ Baseline: root `3d8b74aea` · backend `ff2f38e51`. Commit locally per wave, neve
 - [x] FW: 15 Build factories spread by their hooks (4 moved to *-read-options.ts); prefetch added for project home, cycle detail, my-work, approvals, build inbox. Coordinator: BoardFilters/TicketOrderBy/TicketOrderDir importers re-pointed to ticket-queries-read-options, re-export removed (FE-128)
 - [x] BY: per-user notification/inbox read caches removed (NOTIF_READ_NS, cacheRead, hasStoredReadPolicies, approval-writer bumps); 556 specs green; landed in user commit b08333aa7
 - [x] PC1 HRMS keyset: hiring-flows, automations, webhooks + deliveries, drilldown, case notes/docs, getDueLoanRepayments (BE in user commit b08333aa7; FE hooks → useInfiniteQuery + sentinel). Coordinator: payroll paging loop extracted (allDueLoanRepayments) + 3-page spec with mutation check; automations access test mock moved to the paged shape
-- [ ] Paired contract lane, Build part: ticket aliases (points/storyPoints/estimate, assigneeId/assignee/assignees), member q vs search, list-view + cycle planning keyset, assets server filters, manifest productKey rename — after FW/RO3 (CB DONE UNTESTED: productKey -> moduleKey across BE registry/scripts/manifest + FE manifest/sidebar/header ModuleGrid/ModuleTile + check-module-manifest.mjs; assets server filters N/A, no Build assets surface and no audit finding. CA running: ticket aliases, member q, list-view + cycle planning keyset)
+- [x] Paired contract lane, Build part: ticket aliases (points/storyPoints/estimate, assigneeId/assignee/assignees), member q vs search, list-view + cycle planning keyset, assets server filters, manifest productKey rename — after FW/RO3 (CB DONE UNTESTED: productKey -> moduleKey across BE registry/scripts/manifest + FE manifest/sidebar/header ModuleGrid/ModuleTile + check-module-manifest.mjs; assets server filters N/A, no Build assets surface and no audit finding. CA DONE UNTESTED: estimate-only, assignee?.id, member search only, list render limit removed (board pane sentinel + My Work pager own paging), cycle planning sheet uses paged board query with unscheduled + server search, gated on open)
 
 - [x] FQ part 3: hr-people.ts 22 literal keys → factories, all hook-spread; 3 staleTime drifts + document-templates key fixed; no queryKey literals left in hr*/me prefetch
 

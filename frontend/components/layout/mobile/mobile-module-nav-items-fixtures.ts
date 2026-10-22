@@ -10,7 +10,7 @@ import type { NavGroup } from "../sidebar/sidebar-nav-items";
 export const projectsNav: NavGroup[] = [
   {
     label: "Projects",
-    product: "build",
+    module: "build",
     routes: [
       { label: "Home", icon: LayoutDashboard, href: "/build/command-center" },
       { label: "Inbox", icon: Inbox, href: "/build/inbox" },
@@ -25,7 +25,7 @@ export const projectsNav: NavGroup[] = [
 export const smallNav: NavGroup[] = [
   {
     label: "Small",
-    product: "build",
+    module: "build",
     routes: [
       { label: "A", icon: LayoutDashboard, href: "/a" },
       { label: "B", icon: Inbox, href: "/b" },
@@ -37,7 +37,7 @@ export const smallNav: NavGroup[] = [
 export const exactFiveNav: NavGroup[] = [
   {
     label: "Five",
-    product: "build",
+    module: "build",
     routes: [
       { label: "One", icon: LayoutDashboard, href: "/one" },
       { label: "Two", icon: Inbox, href: "/two" },

@@ -110,7 +110,7 @@ export function useBoardFilterParams() {
   );
 
   useEffect(() => {
-    if (/\/tickets\
+    if (/\/tickets\//.test(pathname)) return;
     const updates: Record<string, string | null> = {};
     let changed = false;
     if (rawPriority && !filterPriority) {

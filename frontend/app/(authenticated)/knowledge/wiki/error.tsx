@@ -19,7 +19,7 @@ export default function KnowledgeWikiPageError({
   }, [error]);
 
   return (
-    <div className="flex flex-1 min-h-0 items-center justify-center p-8">
+    <div className="flex h-full min-h-full w-full flex-1 flex-col">
       <ErrorState
         title="Something went wrong"
         description="Failed to load this page. Please try again."

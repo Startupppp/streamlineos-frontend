@@ -23,11 +23,11 @@ const ICON_WITHOUT_PRODUCT: Record<string, ProductDefinition["icon"]> = {
 
 export function getModuleCatalogEntry(moduleKey: string): ModuleCatalogEntry {
   const manifestEntry = moduleById(moduleKey);
-  const moduleKey = manifestEntry?.moduleKey ?? null;
+  const manifestModuleKey = manifestEntry?.moduleKey ?? null;
 
-  if (moduleKey !== null) {
+  if (manifestModuleKey !== null) {
     const definition = PRODUCT_DEFINITIONS.find(
-      (product) => product.key === moduleKey,
+      (product) => product.key === manifestModuleKey,
     );
     if (definition) {
       const accent = MODULE_ACCENTS[definition.key];

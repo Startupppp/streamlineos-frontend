@@ -429,7 +429,7 @@ export async function prefetchKbConversations() {
       createServerQueryClient(),
       resolvePrefetchGate(),
     ]);
-    if (!gate.can("kb:ask:view"))
+    if (!gate.can("kb:ai:generate"))
       return dehydrate(await createServerQueryClient());
     await queryClient.prefetchQuery({
       ...kbConversationsQueryOptions,

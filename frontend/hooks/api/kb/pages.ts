@@ -23,7 +23,7 @@ import {
   kbPagesTrashQueryOptions,
   kbPageQueryOptions,
 } from "./kb-read-options";
-import type { KbSpaceListPage } from "./spaces";
+import type { KbSpaceListPage } from "@/hooks/api/kb/kb-spaces-settings-schema";
 import type { KbPageTrashPurgeImpact } from "./kb-pages-schema";
 import type {
   CreateKbPageInput,
@@ -68,11 +68,15 @@ const kbPageListContract = lazyContract(() =>
   import("@/hooks/api/kb/kb-pages-schema").then((m) => m.kbPageListContract),
 );
 const kbFavoritePageListContract = lazyContract(() =>
-  import("@/hooks/api/kb/kb-pages-schema").then((m) => m.kbFavoritePageListContract),
+  import("@/hooks/api/kb/kb-pages-schema").then(
+    (m) => m.kbFavoritePageListContract,
+  ),
 );
 
 const kbTrashDeletersContract = lazyContract(() =>
-  import("@/hooks/api/kb/kb-pages-schema").then((m) => m.kbTrashDeletersContract),
+  import("@/hooks/api/kb/kb-pages-schema").then(
+    (m) => m.kbTrashDeletersContract,
+  ),
 );
 
 const kbPageBacklinkContract = lazyContract(() =>
@@ -159,8 +163,7 @@ export function useKbPageTreeInfinite(params: {
         kbPageTreeLevelContract,
       ),
     initialPageParam: NO_CURSOR_YET,
-    getNextPageParam: (lastPage) =>
-      lastPage.pagination.nextCursor ?? undefined,
+    getNextPageParam: (lastPage) => lastPage.pagination.nextCursor ?? undefined,
     staleTime: 30_000,
     enabled: canView,
   });
@@ -175,7 +178,11 @@ export function useKbPageChildrenLevel(
   const canView = useCan("kb:pages:view");
   return useInfiniteQuery({
     ...INLINE_READ_ERROR,
-    queryKey: knowledgeAndSurveysQueryKeys.kb.pagesTreeLevelInfinite({ parentId: nodeId, spaceId, projectId }),
+    queryKey: knowledgeAndSurveysQueryKeys.kb.pagesTreeLevelInfinite({
+      parentId: nodeId,
+      spaceId,
+      projectId,
+    }),
     queryFn: ({ pageParam, signal }) =>
       apiClient.get<KbPageTreeLevel>(
         "/kb/pages/tree",
@@ -189,8 +196,7 @@ export function useKbPageChildrenLevel(
         kbPageTreeLevelContract,
       ),
     initialPageParam: NO_CURSOR_YET,
-    getNextPageParam: (lastPage) =>
-      lastPage.pagination.nextCursor ?? undefined,
+    getNextPageParam: (lastPage) => lastPage.pagination.nextCursor ?? undefined,
     staleTime: 30_000,
     enabled: canView && enabled,
   });
@@ -270,16 +276,27 @@ export type KbTrashDeletersPage = Page<KbTrashDeleter> & {
   selected: KbTrashDeleter | null;
 };
 
-export function useKbTrashDeleters(search: string, selectedMembershipId?: number) {
+export function useKbTrashDeleters(
+  search: string,
+  selectedMembershipId?: number,
+) {
   const canView = useCan("kb:pages:view");
   return useInfiniteQuery({
     ...INLINE_READ_ERROR,
-    queryKey: knowledgeAndSurveysQueryKeys.kb.pagesTrashDeleters(search, selectedMembershipId),
+    queryKey: knowledgeAndSurveysQueryKeys.kb.pagesTrashDeleters(
+      search,
+      selectedMembershipId,
+    ),
     initialPageParam: NO_CURSOR_YET,
     queryFn: ({ signal, pageParam }) =>
       apiClient.get<KbTrashDeletersPage>(
         "/kb/pages/trash/deleters",
-        { limit: 50, search: search || undefined, selectedMembershipId, cursor: pageParam },
+        {
+          limit: 50,
+          search: search || undefined,
+          selectedMembershipId,
+          cursor: pageParam,
+        },
         signal,
         kbTrashDeletersContract,
       ),
@@ -449,7 +466,13 @@ export function useCreateKbPage() {
           ancestors: [],
           isFavorite: false,
           canEdit: true,
-          can: { view: true, comment: true, edit: true, manage: true, restore: false },
+          can: {
+            view: true,
+            comment: true,
+            edit: true,
+            manage: true,
+            restore: false,
+          },
           access: { via: "creator", grantExpiresAt: null },
         },
         { updatedAt: 0 },
@@ -739,7 +762,13 @@ export function usePublishKbPage() {
   const operation = useIdempotentOperation();
   return useAuthorizedMutation("kb:pages:update", {
     mutationKey: ["kb", "pages", "publish"],
-    mutationFn: ({ pageId, expectedContentRevision }: { pageId: number; expectedContentRevision: number }) =>
+    mutationFn: ({
+      pageId,
+      expectedContentRevision,
+    }: {
+      pageId: number;
+      expectedContentRevision: number;
+    }) =>
       apiClient.post<KbPage>(
         `/kb/pages/${pageId}/publish`,
         { expectedContentRevision },
@@ -762,7 +791,13 @@ export function useArchiveKbPage() {
   const qc = useQueryClient();
   return useAuthorizedMutation("kb:pages:update", {
     mutationKey: ["kb", "pages", "archive"],
-    mutationFn: ({ pageId, expectedContentRevision }: { pageId: number; expectedContentRevision: number }) =>
+    mutationFn: ({
+      pageId,
+      expectedContentRevision,
+    }: {
+      pageId: number;
+      expectedContentRevision: number;
+    }) =>
       apiClient.post<KbPage>(
         `/kb/pages/${pageId}/archive`,
         { expectedContentRevision },
@@ -784,7 +819,13 @@ export function useUnarchiveKbPage() {
   const qc = useQueryClient();
   return useAuthorizedMutation("kb:pages:update", {
     mutationKey: ["kb", "pages", "unarchive"],
-    mutationFn: ({ pageId, expectedContentRevision }: { pageId: number; expectedContentRevision: number }) =>
+    mutationFn: ({
+      pageId,
+      expectedContentRevision,
+    }: {
+      pageId: number;
+      expectedContentRevision: number;
+    }) =>
       apiClient.post<KbPage>(
         `/kb/pages/${pageId}/unarchive`,
         { expectedContentRevision },

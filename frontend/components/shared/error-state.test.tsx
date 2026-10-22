@@ -1,5 +1,6 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import { ApiError } from "@/lib/api-envelope";
+import { ErrorAppearanceProvider } from "./error-appearance";
 import { ErrorState } from "./error-state";
 
 describe("ErrorState — accessibility", () => {
@@ -47,6 +48,33 @@ describe("ErrorState — accessibility", () => {
   it("renders in compact mode without the full-height flex-1 structure", () => {
     const { container } = render(<ErrorState compact />);
     expect(container.firstElementChild).not.toHaveClass("flex-1");
+  });
+
+  it("fills the page with a knowledge illustration inside the knowledge error appearance", () => {
+    render(
+      <ErrorAppearanceProvider>
+        <ErrorState
+          title="Something went wrong"
+          description="Failed to load this page. Please try again."
+          onRetry={jest.fn()}
+        />
+      </ErrorAppearanceProvider>,
+    );
+
+    const alert = screen.getByRole("alert");
+    expect(alert).toHaveClass("h-full", "min-h-80", "flex-1");
+    expect(alert).not.toHaveClass("border-destructive/30");
+    expect(alert.querySelector("img")).toBeTruthy();
+  });
+
+  it("keeps compact knowledge errors as a small alert", () => {
+    const { container } = render(
+      <ErrorAppearanceProvider>
+        <ErrorState compact title="Couldn't load files" />
+      </ErrorAppearanceProvider>,
+    );
+    expect(container.firstElementChild).toHaveClass("border-dashed");
+    expect(container.firstElementChild).not.toHaveClass("min-h-full");
   });
 
   it("renders the full-page workspace error with a retry action", () => {

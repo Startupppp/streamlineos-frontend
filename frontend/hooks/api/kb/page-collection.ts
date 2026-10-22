@@ -30,7 +30,7 @@ export const KB_PAGE_COLLECTION_QUERY_FIELDS = [
   "facets",
 ] as const;
 
-export interface KbPageCollectionParams {
+export type KbPageCollectionParams = {
   q?: string;
   spaceId?: number;
   projectId?: number;
@@ -45,7 +45,7 @@ export interface KbPageCollectionParams {
   cursor?: string;
   limit?: number;
   facets?: boolean;
-}
+};
 
 const kbPageCollectionContract = lazyContract(() =>
   import("@/hooks/api/kb/kb-page-collection-schema").then(

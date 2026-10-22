@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { PageState } from "@/components/shared/page-state";
 import { ErrorReference } from "@/components/shared/error-reference";
 import { usePageState } from "@/hooks/api/use-page-state";
@@ -34,7 +35,7 @@ import {
   KB_STATUS_BADGE_CLASS,
 } from "@/features/wiki/lib/kb-page-status";
 import { TrustBadge } from "./kb-collection-badges";
-import { getUserDisplayName } from "@/lib/person-display";
+import { getUserDisplayName, getUserInitials } from "@/lib/person-display";
 import { cn } from "@/lib/utils";
 
 const STORAGE_KEY = "wiki-right-panel-collapsed";
@@ -74,25 +75,61 @@ function StatusBadge({ status }: { status: string }) {
   );
 }
 
-function Stat({
+function PropertyRow({
   label,
-  value,
+  children,
   suppressHydrationWarning,
 }: {
   label: string;
-  value: string;
+  children: React.ReactNode;
   suppressHydrationWarning?: boolean;
 }) {
   return (
-    <div className="min-w-0">
-      <p className="text-xs text-muted-foreground">{label}</p>
-      <p
-        className="mt-0.5 truncate text-sm tabular-nums text-foreground"
+    <div className="grid grid-cols-[5.5rem_minmax(0,1fr)] items-start gap-x-3 gap-y-0.5 py-1.5">
+      <dt className="pt-0.5 text-micro font-medium uppercase tracking-[0.06em] text-muted-foreground">
+        {label}
+      </dt>
+      <dd
+        className="min-w-0 text-sm text-foreground"
         suppressHydrationWarning={suppressHydrationWarning}
       >
-        {value}
-      </p>
+        {children}
+      </dd>
     </div>
+  );
+}
+
+function SectionHeading({
+  title,
+  count,
+}: {
+  title: string;
+  count?: string | number;
+}) {
+  return (
+    <div className="mb-2 flex items-baseline justify-between gap-2">
+      <h3 className="text-micro font-semibold uppercase tracking-[0.08em] text-muted-foreground">
+        {title}
+      </h3>
+      {count === undefined ? null : (
+        <span className="text-micro tabular-nums text-muted-foreground/80">
+          {count}
+        </span>
+      )}
+    </div>
+  );
+}
+
+function PersonValue({ name }: { name: string }) {
+  return (
+    <span className="inline-flex min-w-0 items-center gap-2">
+      <Avatar className="h-5 w-5 shrink-0">
+        <AvatarFallback className="bg-muted text-[0.625rem] font-medium text-muted-foreground">
+          {getUserInitials({ name })}
+        </AvatarFallback>
+      </Avatar>
+      <span className="truncate">{name}</span>
+    </span>
   );
 }
 
@@ -177,62 +214,76 @@ function PanelContent({
     : "Not scheduled";
 
   return (
-    <div className="flex flex-col gap-5 px-4 py-4">
-      <section className="grid grid-cols-2 gap-x-4 gap-y-3">
-        <div className="min-w-0">
-          <p className="text-xs text-muted-foreground">Status</p>
-          <div className="mt-1 flex flex-wrap items-center gap-1.5">
-            <StatusBadge status={page.status} />
-            {page.trustState ? (
-              <TrustBadge trustState={page.trustState} />
-            ) : null}
-          </div>
-        </div>
-        <Stat label="Visibility" value={visibilityValue} />
-        {wordCount === undefined ? null : (
-          <Stat label="Words" value={wordCount.toLocaleString()} />
-        )}
-        <Stat
-          label="Created"
-          value={kbTimeAgo(page.createdAt)}
-          suppressHydrationWarning
-        />
-        <Stat label="Edited" value={editedValue} suppressHydrationWarning />
-        <Stat label="Owner" value={ownerValue} />
-        <Stat
-          label="Next review"
-          value={reviewValue}
-          suppressHydrationWarning
-        />
+    <div className="flex flex-col gap-6 px-4 py-4">
+      <section aria-label="Page properties">
+        <dl className="divide-y divide-border/60">
+          <PropertyRow label="Status">
+            <div className="flex flex-wrap items-center gap-1.5">
+              <StatusBadge status={page.status} />
+              {page.trustState ? (
+                <TrustBadge trustState={page.trustState} />
+              ) : null}
+            </div>
+          </PropertyRow>
+          <PropertyRow label="Visibility">{visibilityValue}</PropertyRow>
+          {wordCount === undefined ? null : (
+            <PropertyRow label="Words">
+              <span className="tabular-nums">{wordCount.toLocaleString()}</span>
+            </PropertyRow>
+          )}
+          <PropertyRow label="Created" suppressHydrationWarning>
+            <span className="tabular-nums">{kbTimeAgo(page.createdAt)}</span>
+          </PropertyRow>
+          <PropertyRow label="Edited" suppressHydrationWarning>
+            <span className="tabular-nums">{editedValue}</span>
+          </PropertyRow>
+          <PropertyRow label="Owner">
+            {ownerValue === "Unassigned" ||
+            ownerValue === "Member unavailable" ? (
+              <span className="text-muted-foreground">{ownerValue}</span>
+            ) : (
+              <PersonValue name={ownerValue} />
+            )}
+          </PropertyRow>
+          <PropertyRow label="Next review" suppressHydrationWarning>
+            <span
+              className={cn(
+                "tabular-nums",
+                page.nextReviewAt ? "text-foreground" : "text-muted-foreground",
+              )}
+            >
+              {reviewValue}
+            </span>
+          </PropertyRow>
+        </dl>
       </section>
 
-      <section className="border-t border-border/70 pt-4">
-        <div className="mb-2 flex items-baseline justify-between gap-2">
-          <h3 className="text-sm font-medium text-foreground">Backlinks</h3>
-          {(backlinksState.kind === "ready" ||
-            backlinksState.kind === "empty") && (
-            <span className="text-xs tabular-nums text-muted-foreground">
-              {backlinks.length}
-            </span>
-          )}
-        </div>
+      <section>
+        <SectionHeading
+          title="Backlinks"
+          count={
+            backlinksState.kind === "ready" || backlinksState.kind === "empty"
+              ? backlinks.length
+              : undefined
+          }
+        />
         <PageState
           resolution={backlinksState}
           compact
           onRetry={handleRetryBacklinks}
-          loading={<Skeleton className="h-12 w-full" />}
+          loading={<Skeleton className="h-12 w-full rounded-md" />}
           empty={
             <p className="text-xs text-muted-foreground">No files link here.</p>
           }
         >
           <>
-            <ul className="flex flex-col">
+            <ul className="flex flex-col gap-0.5">
               {backlinks.slice(0, BACKLINK_DISPLAY_LIMIT).map((bl) => (
                 <li key={bl.id}>
                   <button
                     type="button"
                     data-page-id={bl.id}
-                    className="flex w-full items-center gap-2 rounded-md px-1.5 py-1.5 text-left text-sm hover:bg-muted"
+                    className="flex w-full items-center gap-2 rounded-md px-1.5 py-1.5 text-left text-sm text-foreground transition-colors hover:bg-muted"
                     onClick={handleBacklinkClick}
                   >
                     <span className="shrink-0 text-sm leading-none">
@@ -251,7 +302,7 @@ function PanelContent({
               </p>
             ) : null}
             {backlinksError && (
-              <div role="alert" className="space-y-2 text-xs text-destructive">
+              <div role="alert" className="mt-2 space-y-2 text-xs text-destructive">
                 <p>Could not refresh backlinks.</p>
                 <ErrorReference error={backlinksReadError} />
                 <Button
@@ -268,23 +319,21 @@ function PanelContent({
         </PageState>
       </section>
 
-      <section className="border-t border-border/70 pt-4">
-        <div className="mb-2 flex items-baseline justify-between gap-2">
-          <h3 className="text-sm font-medium text-foreground">
-            Linked records
-          </h3>
-          <span className="text-xs tabular-nums text-muted-foreground">
-            {recordLinks.length}
-            {hasMoreRecordLinks ? "+" : ""}
-          </span>
-        </div>
+      <section>
+        <SectionHeading
+          title="Linked records"
+          count={`${recordLinks.length}${hasMoreRecordLinks ? "+" : ""}`}
+        />
         {recordLinks.length === 0 ? (
           <p className="text-xs text-muted-foreground">No linked records.</p>
         ) : (
           <>
-            <ul className="flex flex-col gap-1">
+            <ul className="flex flex-col gap-0.5">
               {recordLinks.slice(0, RECORD_LINK_DISPLAY_LIMIT).map((rl) => (
-                <li key={rl.id} className="px-1.5 py-1 text-sm text-foreground">
+                <li
+                  key={rl.id}
+                  className="rounded-md px-1.5 py-1.5 text-sm text-foreground"
+                >
                   <TruncatedText
                     text={rl.label ?? rl.targetType}
                     className="capitalize"
@@ -302,28 +351,39 @@ function PanelContent({
         )}
       </section>
 
-      <section className="border-t border-border/70 pt-4">
-        <h3 className="mb-2 text-sm font-medium text-foreground">Activity</h3>
+      <section>
+        <SectionHeading title="Activity" />
         {activityLoading ? (
-          <Skeleton className="h-16 w-full" />
+          <Skeleton className="h-16 w-full rounded-md" />
         ) : activityError ? (
           <p className="text-xs text-destructive">Could not load activity.</p>
         ) : activityEntries.length === 0 ? (
           <p className="text-xs text-muted-foreground">No recent activity.</p>
         ) : (
-          <ul className="flex flex-col gap-1.5">
-            {activityEntries.map((entry) => (
+          <ul className="relative flex flex-col gap-0">
+            {activityEntries.map((entry, index) => (
               <li
                 key={entry.id}
-                className="flex flex-col gap-0.5 rounded-md px-1.5 py-1 text-xs hover:bg-muted"
+                className="relative flex gap-2.5 rounded-md px-1 py-1.5 text-xs transition-colors hover:bg-muted"
               >
-                <span className="font-medium text-foreground">
-                  {activityLabel(entry.action)}
-                  {entry.actor ? ` · ${entry.actor.name}` : ""}
+                <span className="relative mt-1.5 flex h-2 w-2 shrink-0">
+                  {index < activityEntries.length - 1 ? (
+                    <span
+                      aria-hidden
+                      className="absolute left-1/2 top-2 h-[calc(100%+0.375rem)] w-px -translate-x-1/2 bg-border"
+                    />
+                  ) : null}
+                  <span className="relative z-[1] h-2 w-2 rounded-full bg-muted-foreground/40 ring-2 ring-background" />
                 </span>
-                <span className="tabular-nums text-muted-foreground">
-                  {kbTimeAgo(entry.at)}
-                </span>
+                <div className="min-w-0 flex-1">
+                  <p className="font-medium text-foreground">
+                    {activityLabel(entry.action)}
+                    {entry.actor ? ` · ${entry.actor.name}` : ""}
+                  </p>
+                  <p className="mt-0.5 tabular-nums text-muted-foreground">
+                    {kbTimeAgo(entry.at)}
+                  </p>
+                </div>
               </li>
             ))}
           </ul>
@@ -383,16 +443,21 @@ export default function PageRightPanel({
 
       <div className="hidden shrink-0 flex-col xl:flex">
         {!collapsed ? (
-          <div className="flex w-64 flex-col border-l border-border">
-            <div className="flex items-center justify-between gap-2 border-b border-border px-3 py-2">
-              <p className="truncate text-sm font-medium text-foreground">
-                {title}
-              </p>
+          <aside className="flex h-full w-72 flex-col border-l border-border bg-muted/20">
+            <div className="flex items-start justify-between gap-2 border-b border-border/80 px-4 py-3">
+              <div className="min-w-0 flex-1">
+                <p className="text-micro font-semibold uppercase tracking-[0.08em] text-muted-foreground">
+                  Details
+                </p>
+                <p className="mt-0.5 truncate text-sm font-medium leading-snug text-foreground">
+                  {title}
+                </p>
+              </div>
               <Button
                 type="button"
                 variant="ghost"
                 size="icon"
-                className="h-7 w-7 shrink-0"
+                className="h-7 w-7 shrink-0 text-muted-foreground hover:text-foreground"
                 onClick={handleToggle}
                 aria-label="Close details panel"
               >
@@ -407,14 +472,14 @@ export default function PageRightPanel({
                 onNavigate={onNavigate}
               />
             </div>
-          </div>
+          </aside>
         ) : (
-          <div className="sticky top-0 pt-3 pr-2">
+          <div className="sticky top-0 border-l border-border bg-muted/20 px-2 pt-3">
             <Button
               type="button"
               variant="ghost"
               size="icon"
-              className="h-7 w-7"
+              className="h-8 w-8 text-muted-foreground hover:text-foreground"
               onClick={handleToggle}
               aria-label="Open details panel"
             >

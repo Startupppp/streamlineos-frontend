@@ -7,6 +7,9 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { ErrorReference } from "@/components/shared/error-reference";
 import { isApiError } from "@/lib/api-envelope";
+import { StateIllustration } from "@/components/illustrations/state-illustration";
+import { useIllustratedErrors } from "@/components/shared/error-appearance";
+import { SURFACE_EMPTY } from "@/lib/ui-surface-chrome";
 
 export interface ErrorStateForStatus {
   title: string;
@@ -100,6 +103,7 @@ export function ErrorState({
   const description = descriptionProp ?? mapped?.description ?? "An error occurred while loading this data. Please try again.";
   const iconKey = mapped?.icon ?? "generic";
   const IconComponent = STATUS_ICONS[iconKey];
+  const illustrated = useIllustratedErrors() && !compact && !fullPage;
   const Container = fullPage ? "main" : "div";
   const Heading = fullPage ? "h1" : "h2";
 
@@ -109,8 +113,10 @@ export function ErrorState({
         "flex flex-col items-center justify-center text-center",
         fullPage
           ? "min-h-0 w-full flex-1 bg-background px-6"
-          : "rounded-xl border border-dashed border-destructive/30 bg-destructive/5",
-        !fullPage && (compact ? "py-8 px-4" : "min-h-0 w-full flex-1 py-14 px-6"),
+          : illustrated
+            ? SURFACE_EMPTY
+            : "rounded-xl border border-dashed border-destructive/30 bg-destructive/5",
+        !fullPage && !illustrated && (compact ? "py-8 px-4" : "min-h-0 w-full flex-1 py-14 px-6"),
         className
       )}
       role="alert"
@@ -124,6 +130,11 @@ export function ErrorState({
           height={56}
           priority
           className="h-14 w-14 rounded-xl"
+        />
+      ) : illustrated ? (
+        <StateIllustration
+          preset="knowledge"
+          className="mb-5 size-48 sm:size-56"
         />
       ) : (
         <div
@@ -145,7 +156,11 @@ export function ErrorState({
       <Heading
         className={cn(
           "font-semibold text-foreground",
-          fullPage ? "mt-8 text-2xl tracking-tight sm:text-3xl" : "text-sm"
+          fullPage
+            ? "mt-8 text-2xl tracking-tight sm:text-3xl"
+            : illustrated
+              ? "text-sm font-medium"
+              : "text-sm"
         )}
       >
         {title}
@@ -156,7 +171,9 @@ export function ErrorState({
           "w-full min-w-0 break-words leading-relaxed [overflow-wrap:anywhere]",
           fullPage
             ? "mt-3 max-w-sm text-sm text-muted-foreground"
-            : cn("text-status-neutral-ink-strong mt-1 max-w-xs", compact ? "text-xs" : "text-sm")
+            : illustrated
+              ? "mt-1 max-w-md text-sm text-muted-foreground"
+              : cn("text-status-neutral-ink-strong mt-1 max-w-xs", compact ? "text-xs" : "text-sm")
         )}
       >
         {description}
@@ -166,9 +183,9 @@ export function ErrorState({
 
       {onRetryProp && (
         <Button
-          variant={fullPage ? "default" : "outline"}
+          variant={fullPage || illustrated ? "default" : "outline"}
           size={compact && !fullPage ? "sm" : "default"}
-          className={cn(fullPage ? "mt-7" : "mt-4", compact && !fullPage && "h-7 text-xs")}
+          className={cn(fullPage ? "mt-7" : illustrated ? "mt-5" : "mt-4", compact && !fullPage && "h-7 text-xs")}
           onClick={onRetryProp}
         >
           <RefreshCw className={cn(compact && !fullPage ? "h-3 w-3 mr-1.5" : "h-4 w-4 mr-2")} aria-hidden />
