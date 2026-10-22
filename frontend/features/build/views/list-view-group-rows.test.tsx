@@ -1,7 +1,6 @@
 
-import { render, screen, fireEvent } from "@testing-library/react";
+import { render, screen } from "@testing-library/react";
 import { GroupRows } from "./list-view-group-rows";
-import { LIST_RENDER_PAGE_SIZE } from "./list-view-shared";
 import type { Ticket } from "./list-view-shared";
 
 jest.mock("./list-view-item", () => ({
@@ -39,20 +38,13 @@ describe("GroupRows", () => {
     expect(screen.queryByRole("button")).not.toBeInTheDocument();
   });
 
-  it("caps a large group at the same page size the flat path uses", () => {
+  it("renders a large group in full without a client-side cap", () => {
     renderRows(500);
-    expect(screen.getAllByTestId("list-row")).toHaveLength(LIST_RENDER_PAGE_SIZE);
+    expect(screen.getAllByTestId("list-row")).toHaveLength(500);
   });
 
-  it("says how much of the group is showing, and reveals the next page on demand", () => {
+  it("shows no show-more button regardless of group size", () => {
     renderRows(500);
-
-    const more = screen.getByRole("button");
-    expect(more).toHaveTextContent(`${LIST_RENDER_PAGE_SIZE} more`);
-    expect(more).toHaveTextContent(`(${LIST_RENDER_PAGE_SIZE} of 500)`);
-
-    fireEvent.click(more);
-
-    expect(screen.getAllByTestId("list-row")).toHaveLength(LIST_RENDER_PAGE_SIZE * 2);
+    expect(screen.queryByRole("button")).not.toBeInTheDocument();
   });
 });

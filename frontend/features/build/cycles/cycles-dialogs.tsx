@@ -104,7 +104,6 @@ export function CyclesDialogs({
 
       <CyclePlanningSheet
         cycle={planningTarget}
-        tickets={tickets}
         projectId={projectId}
         open={planningTarget !== null}
         onOpenChange={onPlanningOpenChange}

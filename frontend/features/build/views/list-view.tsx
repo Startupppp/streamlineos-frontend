@@ -1,6 +1,5 @@
 "use client";
 
-import { InfiniteScrollSentinel } from "@/components/ui/infinite-scroll-sentinel";
 import {
   Accordion,
   AccordionContent,
@@ -12,7 +11,6 @@ import {
 } from "@hello-pangea/dnd";
 import {
   type ListViewProps,
-  LIST_RENDER_PAGE_SIZE,
   getGroupStatus,
   encodeNestedAccordionValue,
 } from "./list-view-shared";
@@ -49,9 +47,7 @@ export function ListView({
     visibleOuterKeys,
     flatGroupKeys,
     handleDragEnd,
-    handleShowMoreFlat,
     handleItemSelect,
-    visibleFlatCount,
   } = useListView({ tickets, groupBy, rowBy, projectId, showEmptyRows, selection });
   const RowComponent = itemLayout === "work-index" ? WorkIndexTicketRow : ListViewItem;
 
@@ -219,7 +215,7 @@ export function ListView({
       ) : (
         <div className="flex flex-col gap-2">
           <div className="overflow-hidden rounded-lg border border-border bg-card shadow-sm divide-y divide-border">
-            {optimisticTickets.slice(0, visibleFlatCount).map((ticket) => (
+            {optimisticTickets.map((ticket) => (
               <RowComponent
                 key={ticket.id}
                 ticket={ticket}
@@ -235,12 +231,6 @@ export function ListView({
               />
             ))}
           </div>
-          <InfiniteScrollSentinel
-            hasNextPage={optimisticTickets.length > visibleFlatCount}
-            isFetchingNextPage={false}
-            onLoadMore={handleShowMoreFlat}
-            label={`Show ${Math.min(LIST_RENDER_PAGE_SIZE, Math.max(0, optimisticTickets.length - visibleFlatCount))} more rows`}
-          />
         </div>
       )}
       {tickets.length === 0 && (

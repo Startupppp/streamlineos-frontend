@@ -174,8 +174,6 @@ function isValidPriority(v: string): v is ValidPriority {
 
 export const DROPPABLE_MODES = new Set(["status", "priority", "assignee"]);
 
-export const LIST_RENDER_PAGE_SIZE = 100;
-
 export function getGroupKey(ticket: Ticket, groupBy: string): string {
   switch (groupBy) {
     case "status":

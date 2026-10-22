@@ -16,7 +16,6 @@ import {
   type ReorderContext,
   isReorderContext,
   DROPPABLE_MODES,
-  LIST_RENDER_PAGE_SIZE,
   getGroupKey,
   buildGroupFieldPatch,
   applyLocalPatch,
@@ -48,14 +47,6 @@ export function useListView({
   const queryClient = useQueryClient();
 
   const [optimisticTickets, setOptimisticTickets] = useSourceOverride(tickets, tickets);
-  const [visibleFlatCount, setVisibleFlatCount] = useSourceOverride(
-    tickets,
-    LIST_RENDER_PAGE_SIZE,
-  );
-
-  const handleShowMoreFlat = useCallback(() => {
-    setVisibleFlatCount((count) => count + LIST_RENDER_PAGE_SIZE);
-  }, [setVisibleFlatCount]);
 
   const handleItemSelect = useItemSelectHandler(selection);
 
@@ -222,8 +213,6 @@ export function useListView({
     visibleOuterKeys,
     flatGroupKeys,
     handleDragEnd,
-    handleShowMoreFlat,
     handleItemSelect,
-    visibleFlatCount,
   };
 }

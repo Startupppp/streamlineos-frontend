@@ -28,7 +28,7 @@ const DETAIL_RESPONSE = {
   assigneeMembershipId: 4,
   reporterId: "user-a",
   points: null,
-  storyPoints: null,
+  
   link: null,
   rank: "1000",
   parentTicketId: null,

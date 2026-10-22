@@ -162,7 +162,7 @@ it("renders epic cards when epics are present and user has view access", async (
   const epicTicket = {
     id: 1, orgId: "org-1", projectId: 1, title: "Epic A", type: "EPIC",
     status: "TODO", priority: "MEDIUM", ticketNumber: 1, epicId: null,
-    reporterId: "user-1", points: null, storyPoints: null, link: null,
+    reporterId: "user-1", points: null, link: null,
     rank: "1000", parentTicketId: null, originalEstimate: null, timeSpent: null,
     startDate: null, dueDate: null, moduleId: null, cycleId: null,
     sequenceId: "PROJ-1", estimate: null, createdAt: "2026-09-01", updatedAt: "2026-09-01",
@@ -182,7 +182,7 @@ it("enables keyboard navigation bound to the epic count when epics are present a
   const epicTicket = {
     id: 2, orgId: "org-1", projectId: 1, title: "Epic B", type: "EPIC",
     status: "TODO", priority: "MEDIUM", ticketNumber: 2, epicId: null,
-    reporterId: "user-1", points: null, storyPoints: null, link: null,
+    reporterId: "user-1", points: null, link: null,
     rank: "1001", parentTicketId: null, originalEstimate: null, timeSpent: null,
     startDate: null, dueDate: null, moduleId: null, cycleId: null,
     sequenceId: "PROJ-2", estimate: null, createdAt: "2026-09-01", updatedAt: "2026-09-01",

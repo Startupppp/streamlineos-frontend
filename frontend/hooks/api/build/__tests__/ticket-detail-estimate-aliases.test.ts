@@ -58,20 +58,14 @@ const BASE = {
   members: [],
 };
 
-describe("ticketDetailContract — key detail may omit storyPoints/estimate", () => {
-  it("parses a live key-detail payload without storyPoints/estimate", () => {
+describe("ticketDetailContract — key detail estimate field", () => {
+  it("parses a live key-detail payload without estimate and defaults to null", () => {
     const parsed = ticketDetailContract.parse(BASE);
-    expect(parsed.storyPoints).toBeNull();
     expect(parsed.estimate).toBeNull();
   });
 
-  it("still accepts explicit null aliases", () => {
-    const parsed = ticketDetailContract.parse({
-      ...BASE,
-      storyPoints: null,
-      estimate: null,
-    });
-    expect(parsed.storyPoints).toBeNull();
-    expect(parsed.estimate).toBeNull();
+  it("preserves an explicit estimate value from the server response", () => {
+    const parsed = ticketDetailContract.parse({ ...BASE, estimate: 8 });
+    expect(parsed.estimate).toBe(8);
   });
 });

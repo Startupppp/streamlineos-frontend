@@ -19,6 +19,7 @@ export type BoardFilters = {
   orderBy?: TicketOrderBy;
   orderDir?: TicketOrderDir;
   cursor?: string;
+  unscheduled?: boolean;
 };
 
 export function projectBoardTicketsQueryOptions(projectId: number, filters?: BoardFilters) {

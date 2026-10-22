@@ -28,7 +28,7 @@ const BASE_DETAIL = {
   assigneeMembershipId: null,
   reporterId: "user-a",
   points: null,
-  storyPoints: null,
+  
   link: null,
   rank: "1000",
   parentTicketId: null,

@@ -49,7 +49,7 @@ export function useTickets(
 }
 
 
-export function useProjectBoardTickets(projectId: number, filters?: BoardFilters) {
+export function useProjectBoardTickets(projectId: number, filters?: BoardFilters, enabled?: boolean) {
   const canView = useCan("build:tickets:view");
   const query = useInfiniteQuery({
     ...projectBoardTicketsQueryOptions(projectId, filters),
@@ -70,9 +70,10 @@ export function useProjectBoardTickets(projectId: number, filters?: BoardFilters
       if (filters?.module) params.moduleIds = filters.module;
       if (filters?.dueDateFrom) params.dueDateFrom = filters.dueDateFrom;
       if (filters?.dueDateTo) params.dueDateTo = filters.dueDateTo;
+      if (filters?.unscheduled) params.unscheduled = true;
       return apiClient.get<CursorPageResponse<Ticket>>(`/build/${projectId}/tickets`, params, signal, ticketListPageLazy);
     },
-    enabled: canView && !!projectId,
+    enabled: (enabled ?? true) && canView && !!projectId,
   });
   const data = query.data?.pages.flatMap((p) => p.data ?? []) ?? [];
   return {

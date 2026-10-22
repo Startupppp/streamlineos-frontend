@@ -19,8 +19,6 @@ import { statusConfig } from "@/features/build/shared/types";
 import { InlineGroupCreate } from "./list-view-group-create";
 import {
   GroupRows,
-  ShowMoreRowsButton,
-  useGroupRenderLimit,
 } from "./list-view-group-rows";
 
 export function formatGroupLabel(groupKey: string): string {
@@ -115,11 +113,6 @@ export function DroppableGroup({
   selection,
   focusedTicketId,
 }: DroppableGroupProps) {
-  const { visibleCount, hiddenCount, showMore } = useGroupRenderLimit(
-    items.length,
-  );
-  const visibleItems = items.slice(0, visibleCount);
-
   const handleItemSelect = useItemSelectHandler(selection);
 
   return (
@@ -143,7 +136,7 @@ export function DroppableGroup({
             snapshot.isDraggingOver && "ring-1 ring-inset ring-primary/20",
           )}
         >
-          {visibleItems.map((ticket, index) => (
+          {items.map((ticket, index) => (
             <Draggable key={ticket.id} draggableId={String(ticket.id)} index={index}>
               {(dragProvided, dragSnapshot) => (
                 <div
@@ -169,13 +162,6 @@ export function DroppableGroup({
             </Draggable>
           ))}
           {provided.placeholder}
-          {hiddenCount > 0 && (
-            <ShowMoreRowsButton
-              visibleCount={visibleCount}
-              total={items.length}
-              onShowMore={showMore}
-            />
-          )}
           {items.length === 0 && !snapshot.isDraggingOver && (
             <div className="py-4 text-center text-xs text-muted-foreground">Drop tickets here</div>
           )}

@@ -288,7 +288,7 @@ describe("OpportunityAcceptDialog — form submission (BSN-ACCEPT-DIALOG)", () =
 
   it("does not show the epic select when no project is selected even if epics exist so epicTicketId cannot be set without a project", () => {
     mockUseEpics.mockReturnValue({
-      data: [{ id: 7, title: "Epic A", type: "EPIC", status: "Todo", priority: "MEDIUM", projectId: 42, ticketNumber: 1, orgId: "org-1", health: null, cycleId: null, epicId: null, assigneeMembershipId: null, points: null, storyPoints: null, startDate: null, dueDate: null, estimate: null, completionPercentage: null, assignee: null, description: null }],
+      data: [{ id: 7, title: "Epic A", type: "EPIC", status: "Todo", priority: "MEDIUM", projectId: 42, ticketNumber: 1, orgId: "org-1", health: null, cycleId: null, epicId: null, assigneeMembershipId: null, points: null, startDate: null, dueDate: null, estimate: null, completionPercentage: null, assignee: null, description: null }],
     } as unknown as ReturnType<typeof useEpics>);
     withProjects([{ id: 42, name: "Platform Q3" }]);
 

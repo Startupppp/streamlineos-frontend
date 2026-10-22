@@ -13,7 +13,6 @@ const base: Ticket = {
   epicId: null,
   reporterId: null,
   points: null,
-  storyPoints: null,
   link: null,
   rank: "a0",
   parentTicketId: null,

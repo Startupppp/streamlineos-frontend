@@ -54,7 +54,7 @@ export const WorkloadView = memo(function WorkloadView({
     if (filters.statCard === "over-capacity") {
       memberList = members.filter((m) => {
         const count = filteredTickets.filter(
-          (t) => t.assigneeId === m.id,
+          (t) => t.assignee?.id === m.id,
         ).length;
         return isMemberOverCapacity(count, capacityByMemberId?.get(m.id));
       });
@@ -64,7 +64,7 @@ export const WorkloadView = memo(function WorkloadView({
     }
     return memberList.map((member) => {
       const memberTickets = filteredTickets.filter(
-        (t) => t.assigneeId === member.id,
+        (t) => t.assignee?.id === member.id,
       );
       const ticketsByDay = days.map((day) => {
         const count = memberTickets.filter((t) =>

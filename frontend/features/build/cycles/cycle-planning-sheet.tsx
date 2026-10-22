@@ -1,19 +1,24 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useState } from "react";
+import type { Dispatch, SetStateAction } from "react";
 import { Check, Plus, Search, X } from "lucide-react";
 import { toast } from "sonner";
 import { Sheet, SheetBody, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { LoadingButton } from "@/components/ui/loading-button";
-import { useBulkUpdateTickets } from "@/hooks/api/build/tickets";
+import { InfiniteScrollSentinel } from "@/components/ui/infinite-scroll-sentinel";
+import { useBulkUpdateTickets } from "@/hooks/api/build/ticket-bulk-update-mutation";
+import { useProjectBoardTickets } from "@/hooks/api/build/ticket-queries";
+import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import { getErrorMessage } from "@/lib/get-error-message";
 import type { Cycle, Ticket } from "@/types/projects";
 
+const PLANNING_TICKET_TYPES = "STORY,TASK,BUG";
+
 interface CyclePlanningSheetProps {
   cycle: Cycle | null;
-  tickets: Ticket[];
   projectId: number;
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -26,7 +31,7 @@ function TicketRow({ ticket, action, onClick }: { ticket: Ticket; action: "add" 
         <p className="truncate text-sm">{ticket.title}</p>
         <p className="text-xs text-muted-foreground">
           {ticket.ticketNumber ? `#${ticket.ticketNumber}` : "Ticket"}
-          {ticket.points != null ? ` · ${ticket.points} pt` : ""}
+          {ticket.estimate != null ? ` · ${ticket.estimate} pt` : ""}
         </p>
       </div>
       <Button type="button" variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={onClick} aria-label={`${action === "add" ? "Add" : "Remove"} ${ticket.title}`}>
@@ -36,27 +41,26 @@ function TicketRow({ ticket, action, onClick }: { ticket: Ticket; action: "add" 
   );
 }
 
-export function CyclePlanningSheet({ cycle, tickets, projectId, open, onOpenChange }: CyclePlanningSheetProps) {
+export function CyclePlanningSheet({ cycle, projectId, open, onOpenChange }: CyclePlanningSheetProps) {
   const [query, setQuery] = useState("");
   const [selectedBacklog, setSelectedBacklog] = useState<Set<number>>(new Set());
   const [selectedCycle, setSelectedCycle] = useState<Set<number>>(new Set());
   const bulkUpdate = useBulkUpdateTickets(projectId);
+  const debouncedQuery = useDebouncedValue(query, 300);
 
-  const cycleTickets = useMemo(
-    () => cycle ? tickets.filter((ticket) => ticket.cycleId === cycle.id && ticket.type !== "EPIC") : [],
-    [cycle, tickets],
+  const cycleQuery = useProjectBoardTickets(
+    projectId,
+    { cycle: String(cycle?.id ?? 0), type: PLANNING_TICKET_TYPES, ...(debouncedQuery ? { q: debouncedQuery } : {}) },
+    open && cycle != null,
   );
-  const backlogTickets = useMemo(
-    () => tickets.filter((ticket) => ticket.cycleId == null && ticket.type !== "EPIC"),
-    [tickets],
+  const backlogQuery = useProjectBoardTickets(
+    projectId,
+    { unscheduled: true, type: PLANNING_TICKET_TYPES, ...(debouncedQuery ? { q: debouncedQuery } : {}) },
+    open && cycle != null,
   );
-  const normalizedQuery = query.trim().toLowerCase();
-  const visibleBacklog = normalizedQuery
-    ? backlogTickets.filter((ticket) => ticket.title.toLowerCase().includes(normalizedQuery))
-    : backlogTickets;
-  const visibleCycleTickets = normalizedQuery
-    ? cycleTickets.filter((ticket) => ticket.title.toLowerCase().includes(normalizedQuery))
-    : cycleTickets;
+
+  const cycleTickets = cycleQuery.data;
+  const backlogTickets = backlogQuery.data;
 
   const moveTickets = (ticketIds: number[], cycleId: number | null) => {
     if (ticketIds.length === 0) return;
@@ -73,7 +77,7 @@ export function CyclePlanningSheet({ cycle, tickets, projectId, open, onOpenChan
     );
   };
 
-  const toggle = (setter: React.Dispatch<React.SetStateAction<Set<number>>>, id: number) => {
+  const toggle = (setter: Dispatch<SetStateAction<Set<number>>>, id: number) => {
     setter((current) => {
       const next = new Set(current);
       if (next.has(id)) next.delete(id); else next.add(id);
@@ -102,7 +106,7 @@ export function CyclePlanningSheet({ cycle, tickets, projectId, open, onOpenChan
                 </Button>
               </div>
               <div className="space-y-2">
-                {visibleBacklog.map((ticket) => (
+                {backlogTickets.map((ticket) => (
                   <div key={ticket.id} className="flex items-center gap-2">
                     <Button type="button" variant={selectedBacklog.has(ticket.id) ? "secondary" : "ghost"} size="icon" className="h-8 w-8 shrink-0" onClick={() => toggle(setSelectedBacklog, ticket.id)} aria-label={`${selectedBacklog.has(ticket.id) ? "Deselect" : "Select"} ${ticket.title}`}>
                       {selectedBacklog.has(ticket.id) ? <Check className="h-4 w-4" /> : <span className="h-4 w-4 rounded border border-border" />}
@@ -110,7 +114,13 @@ export function CyclePlanningSheet({ cycle, tickets, projectId, open, onOpenChan
                     <div className="min-w-0 flex-1"><TicketRow ticket={ticket} action="add" onClick={() => moveTickets([ticket.id], cycle?.id ?? null)} /></div>
                   </div>
                 ))}
-                {visibleBacklog.length === 0 ? <p className="rounded-md border border-dashed border-border p-4 text-sm text-muted-foreground">No backlog tickets match.</p> : null}
+                {backlogTickets.length === 0 && !backlogQuery.isLoading ? <p className="rounded-md border border-dashed border-border p-4 text-sm text-muted-foreground">No backlog tickets match.</p> : null}
+                <InfiniteScrollSentinel
+                  hasNextPage={backlogQuery.hasNextPage ?? false}
+                  isFetchingNextPage={backlogQuery.isFetchingNextPage}
+                  onLoadMore={backlogQuery.fetchNextPage}
+                  label="Load more backlog tickets"
+                />
               </div>
             </section>
             <section className="space-y-2" aria-labelledby="cycle-planning-cycle">
@@ -121,7 +131,7 @@ export function CyclePlanningSheet({ cycle, tickets, projectId, open, onOpenChan
                 </Button>
               </div>
               <div className="space-y-2">
-                {visibleCycleTickets.map((ticket) => (
+                {cycleTickets.map((ticket) => (
                   <div key={ticket.id} className="flex items-center gap-2">
                     <Button type="button" variant={selectedCycle.has(ticket.id) ? "secondary" : "ghost"} size="icon" className="h-8 w-8 shrink-0" onClick={() => toggle(setSelectedCycle, ticket.id)} aria-label={`${selectedCycle.has(ticket.id) ? "Deselect" : "Select"} ${ticket.title}`}>
                       {selectedCycle.has(ticket.id) ? <Check className="h-4 w-4" /> : <span className="h-4 w-4 rounded border border-border" />}
@@ -129,7 +139,13 @@ export function CyclePlanningSheet({ cycle, tickets, projectId, open, onOpenChan
                     <div className="min-w-0 flex-1"><TicketRow ticket={ticket} action="remove" onClick={() => moveTickets([ticket.id], null)} /></div>
                   </div>
                 ))}
-                {visibleCycleTickets.length === 0 ? <p className="rounded-md border border-dashed border-border p-4 text-sm text-muted-foreground">No tickets in this cycle.</p> : null}
+                {cycleTickets.length === 0 && !cycleQuery.isLoading ? <p className="rounded-md border border-dashed border-border p-4 text-sm text-muted-foreground">No tickets in this cycle.</p> : null}
+                <InfiniteScrollSentinel
+                  hasNextPage={cycleQuery.hasNextPage ?? false}
+                  isFetchingNextPage={cycleQuery.isFetchingNextPage}
+                  onLoadMore={cycleQuery.fetchNextPage}
+                  label="Load more cycle tickets"
+                />
               </div>
             </section>
           </div>

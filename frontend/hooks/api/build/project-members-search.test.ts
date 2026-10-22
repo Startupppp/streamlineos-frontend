@@ -15,8 +15,6 @@ jest.mock("@/hooks/api/authorized-mutation", () => ({
 }));
 jest.mock("@/lib/api-envelope", () => ({
   lazyContract: (factory: unknown) => factory,
-  isApiError: (error: unknown) =>
-    typeof error === "object" && error !== null && "status" in error,
 }));
 jest.mock("@/lib/api-client", () => ({ apiClient: { get: jest.fn() } }));
 
@@ -41,21 +39,6 @@ describe("useProjectMembers server-side search", () => {
     jest.clearAllMocks();
     mockCan.mockReturnValue(true);
     mockQuery.mockImplementation((options: unknown) => options);
-  });
-
-  it("normalizes the q compatibility alias into the canonical search API parameter", async () => {
-    mockGet.mockResolvedValue({ data: [], pagination: {} });
-    const options = useCapturedOptions({ cursor: "next-page", q: "  Alice  " });
-    const signal = new AbortController().signal;
-
-    await options.queryFn({ signal });
-
-    expect(mockGet).toHaveBeenCalledWith(
-      "/build/42/members",
-      { cursor: "next-page", search: "Alice" },
-      signal,
-      expect.anything(),
-    );
   });
 
   it("isolates different search terms and cursors in the cache", () => {
@@ -84,37 +67,18 @@ describe("useProjectMembers server-side search", () => {
     expect(options.queryKey).toEqual(useCapturedOptions().queryKey);
   });
 
-  it("retries without search when the deployed API has not accepted the new query contract yet", async () => {
-    mockGet
-      .mockRejectedValueOnce({ status: 400, code: "VALIDATION_FAILED" })
-      .mockResolvedValueOnce({ data: [], pagination: {} });
-    const options = useCapturedOptions({ search: "Alice", cursor: "next" });
+  it("sends trimmed search and cursor to the API", async () => {
+    mockGet.mockResolvedValue({ data: [], pagination: {} });
+    const options = useCapturedOptions({ cursor: "next-page", search: "  Alice  " });
     const signal = new AbortController().signal;
 
     await options.queryFn({ signal });
 
-    expect(mockGet).toHaveBeenNthCalledWith(
-      1,
+    expect(mockGet).toHaveBeenCalledWith(
       "/build/42/members",
-      { cursor: "next", search: "Alice" },
+      { cursor: "next-page", search: "Alice" },
       signal,
       expect.anything(),
     );
-    expect(mockGet).toHaveBeenNthCalledWith(
-      2,
-      "/build/42/members",
-      { cursor: "next" },
-      signal,
-      expect.anything(),
-    );
-  });
-
-  it("does not mask non-validation failures", async () => {
-    const requestError = { status: 500, code: "INTERNAL" };
-    mockGet.mockRejectedValueOnce(requestError);
-    const options = useCapturedOptions({ search: "Alice" });
-
-    await expect(options.queryFn({})).rejects.toBe(requestError);
-    expect(mockGet).toHaveBeenCalledTimes(1);
   });
 });

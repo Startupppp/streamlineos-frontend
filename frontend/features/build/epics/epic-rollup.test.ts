@@ -14,7 +14,6 @@ const BASE_TICKET: Ticket = {
   epicId: 10,
   reporterId: null,
   points: null,
-  storyPoints: null,
   link: null,
   rank: "a0",
   parentTicketId: null,

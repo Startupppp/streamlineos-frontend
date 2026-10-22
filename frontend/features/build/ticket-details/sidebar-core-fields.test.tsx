@@ -12,7 +12,7 @@ const TICKET = {
   status: "IN_REVIEW",
   priority: "URGENT",
   type: "BUG",
-  points: 8,
+  estimate: 8,
   epicId: 4,
   moduleId: 5,
   cycleId: 6,
@@ -224,7 +224,7 @@ describe("Issue detail sidebar — the core fields the page contract lists are o
     fireEvent.blur(input);
     expect(screen.getByRole("alert")).toBeInTheDocument();
     expect(onPointsChange).not.toHaveBeenCalled();
-    expect(input).toHaveValue(TICKET.points);
+    expect(input).toHaveValue(TICKET.estimate);
   });
 
   it("shows an error and reverts when a value above the max is blurred", () => {
@@ -250,7 +250,7 @@ describe("Issue detail sidebar — the core fields the page contract lists are o
     fireEvent.blur(input);
     expect(screen.getByRole("alert")).toBeInTheDocument();
     expect(onPointsChange).not.toHaveBeenCalled();
-    expect(input).toHaveValue(TICKET.points);
+    expect(input).toHaveValue(TICKET.estimate);
   });
 
   it("hides the add and remove assignee controls from a viewer who cannot assign, while still showing who is assigned", () => {

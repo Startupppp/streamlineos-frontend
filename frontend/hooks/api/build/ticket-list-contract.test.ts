@@ -19,11 +19,11 @@ it("parses light ticket rows and preserves board assignees, labels and cursor", 
   const row = {
     id: 1, orgId: "org-1", title: "Ticket", type: "BUG", status: "OPEN", priority: "HIGH",
     projectId: 42, ticketNumber: 1, epicId: null, assigneeMembershipId: 7,
-    reporterId: null, points: null, storyPoints: null, link: null, rank: "a0", parentTicketId: null,
+    reporterId: null, points: null, link: null, rank: "a0", parentTicketId: null,
     originalEstimate: null, timeSpent: "0", startDate: null, dueDate: null, moduleId: null,
     cycleId: null, health: null, sequenceId: null, estimate: null, version: 1, createdAt: "2026-09-09T00:00:00Z", updatedAt: "2026-09-09T00:00:00Z",
     descriptionExcerpt: "A short plain-text excerpt of the ticket body",
-    assigneeId: user.id, assignee: user, assignees: [{ id: 1, ticketId: 1, assignedAt: "2026-09-09T00:00:00Z", assignedBy: null, userId: user.id, user }],
+    assignee: user, assignees: [{ id: 1, ticketId: 1, assignedAt: "2026-09-09T00:00:00Z", assignedBy: null, userId: user.id, user }],
     labels: [{ id: 1, ticketId: 1, labelId: 3, createdAt: "2026-09-09T00:00:00Z", label: { id: 3, orgId: "org-1", createdAt: "2026-09-09T00:00:00Z", name: "Bug", color: "#3B82F6" } }], cycle: null,
   };
   const result = ticketListPageContract.parse({ data: [row], pagination: { limit: 25, hasMore: true, nextCursor: "next" } });
@@ -40,10 +40,10 @@ it("requires descriptionExcerpt on every list row, so the board preview never re
   const row = {
     id: 1, orgId: "org-1", title: "Ticket", type: "BUG", status: "OPEN", priority: "HIGH",
     projectId: 42, ticketNumber: 1, epicId: null, assigneeMembershipId: 7,
-    reporterId: null, points: null, storyPoints: null, link: null, rank: "a0", parentTicketId: null,
+    reporterId: null, points: null, link: null, rank: "a0", parentTicketId: null,
     originalEstimate: null, timeSpent: "0", startDate: null, dueDate: null, moduleId: null,
     cycleId: null, health: null, sequenceId: null, estimate: null, version: 1, createdAt: "2026-09-09T00:00:00Z", updatedAt: "2026-09-09T00:00:00Z",
-    assigneeId: user.id, assignee: user, assignees: [], labels: [], cycle: null,
+    assignee: user, assignees: [], labels: [], cycle: null,
   };
 
   const pagination = { limit: 25, hasMore: false, nextCursor: null };

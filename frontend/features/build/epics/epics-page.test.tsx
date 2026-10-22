@@ -265,7 +265,7 @@ describe("EpicsPage — the c and e shortcuts have a real target", () => {
   const EPIC = {
     id: 3, orgId: "org-1", projectId: 1, title: "Epic C", type: "EPIC",
     status: "TODO", priority: "MEDIUM", ticketNumber: 3, epicId: null,
-    reporterId: "user-1", points: null, storyPoints: null, link: null,
+    reporterId: "user-1", points: null, link: null,
     rank: "1002", parentTicketId: null, originalEstimate: null, timeSpent: null,
     startDate: null, dueDate: null, moduleId: null, cycleId: null,
     sequenceId: "PROJ-3", estimate: null, createdAt: "2026-09-01", updatedAt: "2026-09-01",

@@ -40,20 +40,14 @@ const BASE = {
   timeSpent: "0",
 };
 
-describe("ticketRowContract — create response may omit storyPoints/estimate", () => {
-  it("parses a live create payload without storyPoints/estimate", () => {
+describe("ticketRowContract — create response estimate field", () => {
+  it("parses a live create payload without estimate and defaults to null", () => {
     const parsed = ticketRowContract.parse(BASE);
-    expect(parsed.storyPoints).toBeNull();
     expect(parsed.estimate).toBeNull();
   });
 
-  it("still accepts explicit null aliases", () => {
-    const parsed = ticketRowContract.parse({
-      ...BASE,
-      storyPoints: null,
-      estimate: null,
-    });
-    expect(parsed.storyPoints).toBeNull();
-    expect(parsed.estimate).toBeNull();
+  it("preserves an explicit estimate value from the server response", () => {
+    const parsed = ticketRowContract.parse({ ...BASE, estimate: 5 });
+    expect(parsed.estimate).toBe(5);
   });
 });
