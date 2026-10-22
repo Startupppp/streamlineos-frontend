@@ -62,6 +62,8 @@ export const te: Record<MessageKey, string> = {
   "timeOff.tabWfh": "ఇంటి నుండి పని",
   "timeOff.requestLeave": "సెలవు కోసం అభ్యర్థించండి",
   "timeOff.requestWfh": "WFH కోసం అభ్యర్థించండి",
+  "timeOff.shortLeave": "సెలవు",
+  "timeOff.shortWfh": "WFH",
   "timeOff.overview": "సారాంశం",
   "timeOff.noRequestsTitle": "సెలవు అభ్యర్థనలు లేవు",
   "timeOff.noRequestsDescription": "మీరు ఇంకా ఏ సెలవు అభ్యర్థనా పంపలేదు.",

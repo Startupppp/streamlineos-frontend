@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback } from "react";
+import { useCallback, type ReactNode } from "react";
 import { Briefcase, MapPin } from "lucide-react";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
@@ -63,7 +63,7 @@ function JobOpeningCard({ opening, onApply, applyingJobId }: JobOpeningCardProps
   );
 }
 
-export function MyJobOpeningsPage() {
+export function MyJobOpeningsPage({ sectionSelector }: { sectionSelector?: ReactNode } = {}) {
   const openings = useSelfJobOpenings();
   const { mutate: apply, isPending, variables } = useApplyToJobOpening();
 
@@ -95,7 +95,7 @@ export function MyJobOpeningsPage() {
 
   return (
     <PageWrapper
-      title="Internal Job Openings"
+      title={sectionSelector ?? "Internal Job Openings"}
       subtitle="Open roles across the organization you can apply to."
       state={state}
       onRetry={openings.refetch}

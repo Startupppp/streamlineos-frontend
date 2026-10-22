@@ -3,6 +3,7 @@
 import {
   Children,
   Fragment,
+  cloneElement,
   isValidElement,
   memo,
   useEffect,
@@ -25,6 +26,15 @@ import {
   OVERFLOW_EDGE_FADE_CLASS,
   useHorizontalOverflow,
 } from "@/hooks/common/use-horizontal-overflow";
+import {
+  resolveStatCardWash,
+  statCardPaletteWash,
+  type StatCardWash,
+  type StatColor,
+  type StatTone,
+} from "@/components/ui/stat-card-wash";
+
+export type { StatColor, StatTone };
 
 function countGridChildren(node: ReactNode): number {
   let count = 0;
@@ -39,37 +49,8 @@ function countGridChildren(node: ReactNode): number {
   return count;
 }
 
-export type StatTone =
-  | "default"
-  | "accent"
-  | "emerald"
-  | "amber"
-  | "red"
-  | "blue"
-  | "violet";
-
-export type StatColor = StatTone | "cyan" | "green" | "gold" | "purple";
-
 const success = statusToneClasses("success");
-const warning = statusToneClasses("warning");
 const danger = statusToneClasses("danger");
-
-const TONE_MAP: Record<StatTone, { bg: string; text: string }> = {
-  default: { bg: "bg-muted", text: "text-muted-foreground" },
-  accent: { bg: "bg-primary/10", text: "text-primary" },
-  blue: { bg: "bg-primary/10", text: "text-primary" },
-  violet: { bg: "bg-primary/10", text: "text-primary" },
-  emerald: { bg: success.surface, text: success.ink },
-  amber: { bg: warning.surface, text: warning.ink },
-  red: { bg: danger.surface, text: danger.ink },
-};
-
-const COLOR_TONE: Partial<Record<StatColor, StatTone>> = {
-  cyan: "accent",
-  green: "emerald",
-  gold: "amber",
-  purple: "accent",
-};
 
 interface GridTemplateStyle extends CSSProperties {
   "--stat-card-grid-template": string;
@@ -79,15 +60,25 @@ function gridTemplateVar(template: string): GridTemplateStyle {
   return { "--stat-card-grid-template": template };
 }
 
-function isStatTone(color: StatColor): color is StatTone {
-  return color in TONE_MAP;
-}
-
-function resolveTone(tone?: StatTone, color?: StatColor): StatTone {
-  if (tone) return tone;
-  if (!color) return "default";
-  if (isStatTone(color)) return color;
-  return COLOR_TONE[color] ?? "default";
+function stampStatCards(node: ReactNode, counter: { n: number }): ReactNode {
+  return Children.map(node, (child) => {
+    if (!isValidElement<{ children?: ReactNode; index?: number; label?: string }>(child)) {
+      return child;
+    }
+    if (child.type === Fragment) {
+      return cloneElement(
+        child,
+        undefined,
+        stampStatCards(child.props.children, counter),
+      );
+    }
+    if (typeof child.props.label !== "string") return child;
+    const given = child.props.index;
+    const index = typeof given === "number" ? given : counter.n;
+    counter.n = Math.max(counter.n, Math.trunc(index) + 1);
+    if (given === index) return child;
+    return cloneElement(child, { index });
+  });
 }
 
 function StatSparkLine({ data, color }: { data: number[]; color: string }) {
@@ -109,7 +100,7 @@ function StatSparkLine({ data, color }: { data: number[]; color: string }) {
     <svg
       width={w}
       height={h}
-      className="shrink-0 text-primary"
+      className="shrink-0"
       aria-hidden="true"
     >
       <polyline
@@ -213,7 +204,7 @@ export function StatCardGrid({
           : { gridTemplateColumns: template }
       }
     >
-      {children}
+      {stampStatCards(children, { n: 0 })}
     </div>
   );
 }
@@ -224,17 +215,29 @@ export function StatCardGrid({
  * previous shape was 8px shorter, which pushed every row below the stat grid
  * down the moment the data landed.
  */
-export function StatCardSkeleton({ className }: { className?: string }) {
+export function StatCardSkeleton({
+  className,
+  index = 0,
+}: {
+  className?: string;
+  index?: number;
+}) {
+  const wash = statCardPaletteWash(index);
   return (
     <div
       data-slot="stat-card"
       className={cn(
-        "flex h-full items-start gap-3 rounded-xl border border-border/80 bg-card px-3.5 py-3 shadow-sm",
+        "relative flex h-full items-start gap-3 overflow-hidden rounded-xl border bg-card px-3.5 py-3 shadow-sm",
+        wash.rule,
         className,
       )}
     >
-      <Skeleton className="mt-0.5 h-9 w-9 shrink-0 rounded-lg" />
-      <div className="min-w-0 flex-1 space-y-0.5">
+      <span
+        aria-hidden="true"
+        className={cn("pointer-events-none absolute inset-0", wash.surface)}
+      />
+      <Skeleton className="relative mt-0.5 h-9 w-9 shrink-0 rounded-lg" />
+      <div className="relative min-w-0 flex-1 space-y-0.5">
         <Skeleton className="h-5 w-20" />
         <Skeleton className="h-5 w-12" />
       </div>
@@ -256,7 +259,7 @@ export function StatCardGridSkeleton({
       stackOnMobile={stackOnMobile}
     >
       {Array.from({ length: itemCount }).map((_, i) => (
-        <StatCardSkeleton key={i} />
+        <StatCardSkeleton key={i} index={i} />
       ))}
     </StatCardGrid>
   );
@@ -295,13 +298,15 @@ export const StatCard = memo(function StatCard({
   isLoading,
   featured,
   className,
-  index: _index,
+  index,
   trend,
   subtitle,
   sparkData,
   sparkColor = "var(--primary)",
 }: StatCardProps) {
-  const t = TONE_MAP[resolveTone(tone, color)];
+  const wash: StatCardWash | null = featured
+    ? null
+    : resolveStatCardWash({ tone, color, index, label });
   const effectiveHint = hint ?? subtitle;
 
   const effectiveDelta:
@@ -320,27 +325,47 @@ export const StatCard = memo(function StatCard({
       data-slot="stat-card"
       data-featured={featured ? "true" : undefined}
       className={cn(
-        "flex h-full items-start gap-3 rounded-xl border border-border/80 bg-card px-3.5 py-3 shadow-sm",
-        featured && "border-primary bg-primary text-primary-foreground",
+        "relative flex h-full items-start gap-3 overflow-hidden rounded-xl border bg-card px-3.5 py-3 shadow-sm",
+        featured
+          ? "border-primary bg-primary text-primary-foreground"
+          : wash
+            ? wash.rule
+            : "border-border/80",
         className,
       )}
     >
+      {wash ? (
+        <span
+          aria-hidden="true"
+          data-slot="stat-card-wash"
+          className={cn("pointer-events-none absolute inset-0", wash.surface)}
+        />
+      ) : null}
       {Icon && (
         <div
+          aria-hidden="true"
           className={cn(
-            "mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg",
-            featured ? "bg-primary-foreground/15" : t.bg,
+            "relative mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg",
+            featured
+              ? "bg-primary-foreground/15"
+              : wash
+                ? "bg-card"
+                : "bg-muted",
           )}
         >
           <Icon
             className={cn(
               "h-4 w-4",
-              featured ? "text-primary-foreground" : t.text,
+              featured
+                ? "text-primary-foreground"
+                : wash
+                  ? wash.ink
+                  : "text-muted-foreground",
             )}
           />
         </div>
       )}
-      <div className="min-w-0 flex-1 space-y-0.5">
+      <div className="relative min-w-0 flex-1 space-y-0.5">
         <TruncatedTooltipText
           text={label}
           className={cn(
@@ -385,7 +410,12 @@ export const StatCard = memo(function StatCard({
         )}
       </div>
       {!isLoading && sparkData && sparkData.length > 1 ? (
-        <StatSparkLine data={sparkData} color={sparkColor} />
+        <span className={cn("relative", wash?.ink)}>
+          <StatSparkLine
+            data={sparkData}
+            color={wash ? "currentColor" : sparkColor}
+          />
+        </span>
       ) : null}
     </div>
   );

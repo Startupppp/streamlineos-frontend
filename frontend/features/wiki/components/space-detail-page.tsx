@@ -4,7 +4,7 @@ import { useMemo, useState } from "react";
 import { toast } from "sonner";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Badge } from "@/components/ui/badge";
-import { Skeleton } from "@/components/ui/skeleton";
+import { SpaceDetailSkeleton } from "./space-detail-skeleton";
 import { PageState } from "@/components/shared/page-state";
 import { usePageState } from "@/hooks/api/use-page-state";
 import { useCan } from "@/hooks/api/access";
@@ -106,7 +106,7 @@ export default function SpaceDetailPage({ spaceId }: SpaceDetailPageProps) {
   const canManage = useCan("kb:spaces:manage");
   const archiveSpace = useArchiveKbSpace();
   const restoreSpace = useRestoreKbSpace();
-  const { data: spacePolicy } = useKbSpaceSharingPolicy(spaceId);
+  const { data: spacePolicy } = useKbSpaceSharingPolicy(spaceId, canManage);
   const updateSharingPolicy = useUpdateKbSpaceSharingPolicy(spaceId);
   const [membersOpen, setMembersOpen] = useState(false);
   const [archiveConfirmOpen, setArchiveConfirmOpen] = useState(false);
@@ -228,12 +228,7 @@ export default function SpaceDetailPage({ spaceId }: SpaceDetailPageProps) {
       <PageState
         resolution={pageState}
         onRetry={handleRetry}
-        loading={
-          <div className="space-y-4">
-            <Skeleton className="h-24 w-full rounded-xl" />
-            <Skeleton className="h-64 w-full rounded-xl" />
-          </div>
-        }
+        loading={<SpaceDetailSkeleton />}
         notFound={
           <EmptyState
             illustration={

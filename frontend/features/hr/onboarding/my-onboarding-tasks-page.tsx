@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import Link from "next/link";
 import { CheckCircle2, PartyPopper } from "lucide-react";
 import { toast } from "sonner";
@@ -43,7 +43,7 @@ function AllDoneBanner() {
   );
 }
 
-export function MyOnboardingTasksPage() {
+export function MyOnboardingTasksPage({ sectionSelector }: { sectionSelector?: ReactNode } = {}) {
   const canManageOnboarding = useCan("hr:onboarding:manage");
   const {
     data: onboardingTasks,
@@ -119,7 +119,7 @@ export function MyOnboardingTasksPage() {
 
   return (
     <PageWrapper
-      title="My Onboarding"
+      title={sectionSelector ?? "My Onboarding"}
       subtitle="Complete these tasks to finish your onboarding journey"
       actions={
         canManageOnboarding ? (

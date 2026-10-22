@@ -11,6 +11,7 @@ import { usePageState } from "@/hooks/api/use-page-state";
 import { useAccess } from "@/hooks/api/access";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Skeleton } from "@/components/ui/skeleton";
+import { ContentHealthSkeleton, SignalRowSkeleton } from "./content-health-skeleton";
 import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
 import {
@@ -122,32 +123,6 @@ function CountChip({ label, count, active, onSelect }: CountChipProps) {
       </span>
       <span className="text-xs text-muted-foreground">{label}</span>
     </button>
-  );
-}
-
-function SignalRowSkeleton() {
-  return (
-    <div className="flex items-center gap-3 px-3 py-2.5">
-      <Skeleton className="h-4 w-3/4" />
-      <Skeleton className="h-4 w-16 ml-auto shrink-0" />
-    </div>
-  );
-}
-
-function ContentHealthSkeleton() {
-  return (
-    <div className="space-y-4">
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-        {Array.from({ length: 8 }).map((_, i) => (
-          <Skeleton key={i} className="h-16 rounded-xl" />
-        ))}
-      </div>
-      <div className="rounded-xl border border-border bg-card divide-y divide-border/60">
-        {Array.from({ length: 8 }).map((_, i) => (
-          <SignalRowSkeleton key={i} />
-        ))}
-      </div>
-    </div>
   );
 }
 

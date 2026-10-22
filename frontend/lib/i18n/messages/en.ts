@@ -60,6 +60,8 @@ export const en = {
   "timeOff.tabWfh": "Work from home",
   "timeOff.requestLeave": "Request leave",
   "timeOff.requestWfh": "Request WFH",
+  "timeOff.shortLeave": "Leave",
+  "timeOff.shortWfh": "WFH",
   "timeOff.overview": "Overview",
   "timeOff.noRequestsTitle": "No leave requests",
   "timeOff.noRequestsDescription": "You haven't submitted any leave requests yet.",

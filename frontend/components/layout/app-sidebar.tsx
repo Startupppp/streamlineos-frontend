@@ -22,7 +22,6 @@ import {
 } from "./sidebar/sidebar-nav-items";
 import type { BuildSidebarSlotProps } from "./sidebar/build-sidebar-slot";
 import { SidebarSection } from "./sidebar/sidebar-section";
-import { HrSidebarNav } from "./sidebar/hr-sidebar-nav";
 import { ProductSwitcherMenu } from "./header/product-switcher-menu";
 import { WorkspaceSwitcher } from "./header/org-switcher";
 
@@ -143,7 +142,7 @@ export function AppSidebar({
   const { data: entitlements } = useEntitlements();
   const lockedModules = entitlements?.lockedModules ?? [];
 
-  const [showAdvancedHr, setShowAdvancedHr] = useHrSettingsMode();
+  const [showAdvancedHr] = useHrSettingsMode();
   const navGroups = useMemo(() => {
     if (isBuildProduct) return [];
     const groups = getNavGroupsForProduct(
@@ -217,12 +216,6 @@ export function AppSidebar({
     } catch {}
   }
 
-  function openGroup(label: string) {
-    if (openGroupLabel === label) return;
-    setOpenGroupLabel(label);
-    persistOpenLabel(label);
-  }
-
   function toggleGroup(label: string) {
     const next = openGroupLabel === label ? "" : label;
     setOpenGroupLabel(next);
@@ -293,62 +286,43 @@ export function AppSidebar({
           </div>
         )}
 
-        {activeProduct === "hrms" ? (
-          <HrSidebarNav
-            groups={navGroups}
-            isCollapsed={effectiveCollapsed}
-            collapsedGroups={collapsedGroups}
-            onToggleGroup={toggleGroup}
-            onOpenGroup={openGroup}
-            pendingLeaves={pendingLeaves}
-            inboxCount={unreadInboxCount}
-            onNavigate={onNavigate}
-            accent={accent}
-            showAdvanced={showAdvancedHr}
-            onShowAdvancedChange={setShowAdvancedHr}
-          />
-        ) : (
-          <ScrollArea className="flex-1 min-h-0">
-            {isBuildProduct ? (
-              <nav aria-label="Build navigation">
-                {buildSidebarSlot?.({
-                  isCollapsed: effectiveCollapsed,
-                  onNavigate: onNavigate ?? noop,
-                })}
-              </nav>
-            ) : (
-              <nav className={cn("py-2", effectiveCollapsed ? "px-1" : "px-2.5")}>
-                {navGroups.map((group, i) => {
-                  const multiGroup = navGroups.length > 1;
-                  return (
-                    <SidebarSection
-                      key={group.label}
-                      group={group}
-                      groupIndex={i}
-                      isCollapsed={effectiveCollapsed}
-                      showLabel={multiGroup}
-                      isGroupCollapsed={
-                        multiGroup
-                          ? !isSidebarGroupOpen(collapsedGroups, group.label)
-                          : false
-                      }
-                      onToggleGroup={
-                        multiGroup ? () => toggleGroup(group.label) : undefined
-                      }
-                      onOpenGroup={
-                        multiGroup ? () => openGroup(group.label) : undefined
-                      }
-                      pendingLeaves={pendingLeaves}
-                      inboxCount={unreadInboxCount}
-                      onNavigate={onNavigate}
-                      accent={accent}
-                    />
-                  );
-                })}
-              </nav>
-            )}
-          </ScrollArea>
-        )}
+        <ScrollArea className="flex-1 min-h-0">
+          {isBuildProduct ? (
+            <nav aria-label="Build navigation">
+              {buildSidebarSlot?.({
+                isCollapsed: effectiveCollapsed,
+                onNavigate: onNavigate ?? noop,
+              })}
+            </nav>
+          ) : (
+            <nav className={cn("py-2", effectiveCollapsed ? "px-1" : "px-2.5")}>
+              {navGroups.map((group, i) => {
+                const multiGroup = navGroups.length > 1;
+                return (
+                  <SidebarSection
+                    key={group.label}
+                    group={group}
+                    groupIndex={i}
+                    isCollapsed={effectiveCollapsed}
+                    showLabel={multiGroup}
+                    isGroupCollapsed={
+                      multiGroup
+                        ? !isSidebarGroupOpen(collapsedGroups, group.label)
+                        : false
+                    }
+                    onToggleGroup={
+                      multiGroup ? () => toggleGroup(group.label) : undefined
+                    }
+                    pendingLeaves={pendingLeaves}
+                    inboxCount={unreadInboxCount}
+                    onNavigate={onNavigate}
+                    accent={accent}
+                  />
+                );
+              })}
+            </nav>
+          )}
+        </ScrollArea>
       </div>
     </TooltipProvider>
   );

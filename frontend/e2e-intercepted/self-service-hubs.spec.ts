@@ -132,7 +132,7 @@ async function installBrowserFixtures(page: Page) {
 }
 
 for (const viewport of VIEWPORTS) {
-  test(`merged self-service navigation fits ${viewport.width}px`, async ({ context, page, baseURL }) => {
+  test(`merged self-service navigation fits ${viewport.width}px`, async ({ context, page, baseURL }, testInfo) => {
     test.setTimeout(600_000);
     await signIn(context, baseURL as string);
     const serverSession = await context.request.get(`${baseURL}/api/auth/session`);
@@ -143,22 +143,25 @@ for (const viewport of VIEWPORTS) {
     await installBrowserFixtures(page);
     await page.setViewportSize(viewport);
 
-    for (const [path, label, section] of [
-      ["/me/workday", "Attendance & Time Off sections", "Time off"],
-      ["/me/records", "Documents & Onboarding sections", "Onboarding"],
-      ["/me/money", "Pay & Expenses sections", "Pay"],
-      ["/me/career", "Career sections", "Job openings"],
+    for (const [path, section] of [
+      ["/me/workday", "Time off"],
+      ["/me/records", "Onboarding"],
+      ["/me/money", "Pay"],
+      ["/me/career", "Job openings"],
     ] as const) {
       await page.goto(path, { waitUntil: "domcontentloaded" });
-      const navigation = page.getByRole("navigation", { name: label });
-      await expect(navigation).toBeVisible({ timeout: 60_000 });
-      const sectionLink = navigation.getByRole("link", { name: section });
+      const switcher = page.getByRole("button", { name: /switch section/ });
+      await expect(switcher).toBeVisible({ timeout: 60_000 });
+      await switcher.focus();
+      await switcher.press("Enter");
+      const sectionLink = page.getByRole("menuitem", { name: section });
       await expect(sectionLink).toBeVisible();
       await sectionLink.click();
       await expect(page).toHaveURL(/section=/, { timeout: 60_000 });
-      await expect(navigation.getByRole("link", { name: section })).toHaveAttribute("aria-current", "page");
+      await expect(page.getByRole("button", { name: `${section}; switch section` })).toBeVisible();
       const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
       expect(overflow).toBeLessThanOrEqual(1);
+      await page.screenshot({ path: testInfo.outputPath(`${path.slice(4)}-${viewport.width}.png`) });
     }
   });
 }

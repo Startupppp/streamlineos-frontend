@@ -280,4 +280,17 @@ describe("PresenceStatusPicker inside the account menu (ORG UX keyboard)", () =>
     await userEvent.keyboard("{ArrowDown}");
     expect(items[1]).toHaveFocus();
   });
+
+  it("lays the picker out as three rows, with the long rows scrolling sideways", () => {
+    renderInMenu();
+    const availability = screen.getByRole("group", { name: "Availability" });
+    const clearAfter = screen.getByRole("group", { name: "Clear after" });
+    const message = screen.getByLabelText("Status message");
+
+    expect(availability).toHaveClass("overflow-x-auto", "scrollbar-hide", "flex-nowrap");
+    expect(availability).not.toHaveClass("grid-cols-2", "flex-wrap");
+    expect(clearAfter).toHaveClass("overflow-x-auto", "scrollbar-hide", "flex-nowrap");
+    expect(message.compareDocumentPosition(availability) & Node.DOCUMENT_POSITION_FOLLOWING).toBe(0);
+    expect(message.compareDocumentPosition(clearAfter) & Node.DOCUMENT_POSITION_PRECEDING).toBe(0);
+  });
 });

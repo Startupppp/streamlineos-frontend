@@ -1,12 +1,13 @@
 "use client";
 
-import { useCallback, type ReactNode } from "react";
+import { createContext, useCallback, useContext, type ReactNode } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
+import { Check, ChevronDown } from "lucide-react";
 import { PageState } from "@/components/shared/page-state";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { EmptyState } from "@/components/ui/empty-state";
 import { PageWrapper } from "@/components/ui/page-wrapper";
-import { TabsNavigation, TabsNavigationLink } from "@/components/ui/tabs";
 import { useAccess, useModuleEnabled } from "@/hooks/api/access";
 import { usePageState } from "@/hooks/api/use-page-state";
 import { SelfServiceHubSkeleton } from "./self-service-hub-skeleton";
@@ -37,9 +38,48 @@ const SECTIONS: Record<Hub, readonly Section[]> = {
 const HUB_TITLES: Record<Hub, string> = {
   workday: "Attendance & Time Off",
   records: "Documents & Onboarding",
-  money: "Pay & Expenses",
-  career: "Career",
+  money: "Expenses & Pay",
+  career: "Hiring & Referrals",
 };
+
+const SelfServiceHubContext = createContext<{ hub: Hub; available: readonly Section[]; active: string } | null>(null);
+
+export function SelfServiceSectionSelector() {
+  const context = useContext(SelfServiceHubContext);
+  if (!context) throw new Error("SelfServiceSectionSelector must be rendered inside SelfServiceHub");
+  const { hub, available, active } = context;
+  const activeLabel = available.find((section) => section.value === active)?.label ?? HUB_TITLES[hub];
+
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <button
+          type="button"
+          aria-label={`${activeLabel}; switch section`}
+          className="inline-flex max-w-full items-center gap-1.5 rounded-md text-left hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        >
+          <span className="truncate">{activeLabel}</span>
+          <ChevronDown className="size-4 shrink-0 text-muted-foreground" aria-hidden="true" />
+        </button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="start" className="min-w-52">
+        <DropdownMenuLabel className="text-xs text-muted-foreground">{HUB_TITLES[hub]}</DropdownMenuLabel>
+        {available.map(({ value, label }) => (
+          <DropdownMenuItem key={value} asChild>
+            <Link
+              href={value === SECTIONS[hub][0].value ? `/me/${hub}` : `/me/${hub}?section=${value}`}
+              aria-current={value === active ? "page" : undefined}
+              className="justify-between"
+            >
+              {label}
+              {value === active ? <Check className="size-4" aria-hidden="true" /> : null}
+            </Link>
+          </DropdownMenuItem>
+        ))}
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+}
 
 export function SelfServiceHub({ hub, content }: { hub: Hub; content: Record<string, ReactNode> }) {
   const searchParams = useSearchParams();
@@ -70,7 +110,7 @@ export function SelfServiceHub({ hub, content }: { hub: Hub; content: Record<str
   return (
     <PageState
       resolution={pageState}
-      loading={<SelfServiceHubSkeleton title={HUB_TITLES[hub]} />}
+      loading={<SelfServiceHubSkeleton title={SECTIONS[hub][0].label} />}
       onRetry={handleRetry}
     >
       {!active || !available.some((section) => section.value === active.value) ? (
@@ -82,20 +122,9 @@ export function SelfServiceHub({ hub, content }: { hub: Hub; content: Record<str
           />
         </PageWrapper>
       ) : (
-        <div className="flex min-h-0 min-w-0 flex-1 flex-col">
-          <div className="min-w-0 shrink-0 border-b border-border px-4 py-2 sm:px-6">
-            <TabsNavigation aria-label={`${HUB_TITLES[hub]} sections`} className="w-full max-w-full md:w-fit">
-              {available.map((section) => (
-                <TabsNavigationLink key={section.value} active={active.value === section.value}>
-                  <Link href={section.value === SECTIONS[hub][0].value ? `/me/${hub}` : `/me/${hub}?section=${section.value}`}>
-                    {section.label}
-                  </Link>
-                </TabsNavigationLink>
-              ))}
-            </TabsNavigation>
-          </div>
+        <SelfServiceHubContext.Provider value={{ hub, available, active: active.value }}>
           {content[active.value]}
-        </div>
+        </SelfServiceHubContext.Provider>
       )}
     </PageState>
   );

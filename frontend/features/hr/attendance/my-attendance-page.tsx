@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useState, type ReactNode } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { CalendarDays, FilePen } from "lucide-react";
@@ -26,7 +26,7 @@ const TAB_PANEL_CLASS = `${TABS_CONTENT_PAGE_BODY_CLASS} mt-0 h-full min-h-0 w-f
 const MY_ATTENDANCE_TABS = ["today", "history"] as const;
 const WFH_REQUEST_HREF = "/me/workday?section=time-off&tab=wfh&wfh=1";
 
-export function MyAttendancePage() {
+export function MyAttendancePage({ sectionSelector }: { sectionSelector?: ReactNode } = {}) {
   const t = useT();
   const router = useRouter();
   const { activeTab, onTabChange } = useUrlTab(MY_ATTENDANCE_TABS, "today");
@@ -47,7 +47,7 @@ export function MyAttendancePage() {
         className="flex min-h-0 flex-1 flex-col gap-0"
       >
         <PageWrapper
-          title={t("attendance.title")}
+          title={sectionSelector ?? t("attendance.title")}
           subtitle={t("attendance.subtitle")}
           noInternalScroll
           contentClassName="flex min-h-0 flex-1 flex-col"

@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useMemo, useState, type ReactNode } from "react";
 import Link from "next/link";
 import {
   Wallet,
@@ -78,7 +78,7 @@ function getYear(month: string): string {
   return month.split("-")[0] ?? "";
 }
 
-export function MyPayrollPageContent() {
+export function MyPayrollPageContent({ sectionSelector }: { sectionSelector?: ReactNode } = {}) {
   const t = useT();
   const payrollModuleEnabled = useModuleEnabled("payroll");
   const { data: fnf, isError: fnfFailed } = useEssFnf();
@@ -212,7 +212,7 @@ export function MyPayrollPageContent() {
       className="flex min-h-0 flex-1 flex-col gap-0"
     >
       <PageWrapper
-        title={t("pay.title")}
+        title={sectionSelector ?? t("pay.title")}
         subtitle={t("pay.subtitle", { month: formatMonth(currentYearMonth()) })}
         noInternalScroll
         contentClassName="flex min-h-0 flex-1 flex-col max-md:pb-[calc(5.5rem+env(safe-area-inset-bottom))]"

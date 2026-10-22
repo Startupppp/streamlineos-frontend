@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useState, type ReactNode } from "react";
 import { format } from "date-fns";
 import { useSession } from "next-auth/react";
 import { toast } from "sonner";
@@ -41,9 +41,10 @@ const LEAVE_TABS = ["my-leaves", "wfh", "approvals"] as const;
 
 interface LeavesWfhContentProps {
   selfService?: boolean;
+  sectionSelector?: ReactNode;
 }
 
-export function LeavesWfhContent({ selfService = false }: LeavesWfhContentProps) {
+export function LeavesWfhContent({ selfService = false, sectionSelector }: LeavesWfhContentProps) {
   const t = useT();
   const { data: session } = useSession();
   const data = useLeavesWfhData(selfService);
@@ -112,6 +113,7 @@ export function LeavesWfhContent({ selfService = false }: LeavesWfhContentProps)
   );
   const headerActions = (
     <LeavesWfhActions
+      compact={selfService}
       canRequestLeave={data.canRequestLeave}
       canRequestWfh={data.canRequestWfh}
       onRequestLeave={handleOpenLeaveSheet}
@@ -122,9 +124,10 @@ export function LeavesWfhContent({ selfService = false }: LeavesWfhContentProps)
   if (data.isLoading) {
     return (
       <PageWrapper
-        title={title}
+        title={sectionSelector ?? title}
         subtitle={subtitle}
         noInternalScroll
+        actionsInline={selfService}
         contentClassName="flex min-h-0 flex-1 flex-col"
         actions={headerActions}
       >
@@ -140,9 +143,10 @@ export function LeavesWfhContent({ selfService = false }: LeavesWfhContentProps)
   if (data.isError) {
     return (
       <PageWrapper
-        title={title}
+        title={sectionSelector ?? title}
         subtitle={subtitle}
         noInternalScroll
+        actionsInline={selfService}
         contentClassName="flex min-h-0 flex-1 flex-col"
         actions={headerActions}
       >
@@ -166,9 +170,10 @@ export function LeavesWfhContent({ selfService = false }: LeavesWfhContentProps)
         className="flex min-h-0 flex-1 flex-col gap-0"
       >
         <PageWrapper
-          title={title}
+          title={sectionSelector ?? title}
           subtitle={subtitle}
           noInternalScroll
+          actionsInline={selfService}
           contentClassName="flex min-h-0 flex-1 flex-col"
           filtersClassName="flex-col items-stretch gap-3 overflow-visible pb-3 [&>*]:w-full"
           filters={

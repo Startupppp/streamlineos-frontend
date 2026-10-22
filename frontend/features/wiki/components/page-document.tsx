@@ -41,6 +41,7 @@ import { PageCoverPickerDialog } from "./page-cover-picker";
 import PageIconPicker from "./page-icon-picker";
 import PageDocumentHeader from "./page-document-header";
 import PageRightPanel from "./page-right-panel";
+import { PageDocumentSkeleton } from "./page-document-skeleton";
 import { PageDocumentPropertyActions } from "./page-document-property-actions";
 import { PageDocumentOutline } from "./page-document-outline";
 import {
@@ -354,13 +355,7 @@ export default function PageDocument({
   }
 
   if (viewAccess === "loading" || isLoading) {
-    return (
-      <div className="w-full px-3 py-4 space-y-4">
-        <Skeleton className="h-4 w-3/4" />
-        <Skeleton className="h-4 w-1/2" />
-        <Skeleton className="h-64 w-full" />
-      </div>
-    );
+    return <PageDocumentSkeleton />;
   }
 
   if (viewAccess === "denied") {

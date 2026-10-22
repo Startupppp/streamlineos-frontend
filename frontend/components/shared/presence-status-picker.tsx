@@ -1,6 +1,13 @@
 "use client";
 
-import { useId, useState, type ChangeEvent, type KeyboardEvent, type PointerEvent } from "react";
+import {
+  useId,
+  useState,
+  type ChangeEvent,
+  type FocusEvent,
+  type KeyboardEvent,
+  type PointerEvent,
+} from "react";
 import { useSourceOverride } from "@/hooks/common/use-source-override";
 import { Input } from "@/components/ui/input";
 import { DropdownMenuRadioGroup, DropdownMenuRadioItem } from "@/components/ui/dropdown-menu";
@@ -27,6 +34,21 @@ const MANUAL_STATUSES = PRESENCE_STATUSES.filter(
 );
 
 const PICKER_STATUSES: PresenceStatus[] = [AUTO_STATUS, ...MANUAL_STATUSES];
+
+const CHIP_ROW =
+  "flex w-full min-w-0 max-w-full flex-nowrap items-center gap-1 overflow-x-auto overscroll-x-contain scrollbar-hide touch-pan-x";
+
+function revealChip(event: FocusEvent<HTMLElement>) {
+  const row = event.currentTarget.parentElement;
+  if (!row) return;
+  const rowRect = row.getBoundingClientRect();
+  const chipRect = event.currentTarget.getBoundingClientRect();
+  if (chipRect.left < rowRect.left) {
+    row.scrollLeft -= rowRect.left - chipRect.left + 8;
+  } else if (chipRect.right > rowRect.right) {
+    row.scrollLeft += chipRect.right - rowRect.right + 8;
+  }
+}
 
 interface PresenceStatusPickerProps {
   layout: "menu" | "list";
@@ -99,7 +121,7 @@ export function PresenceStatusPicker({ layout, className }: PresenceStatusPicker
   return (
     <div
       className={cn(
-        "min-w-0",
+        "flex min-w-0 flex-col gap-1",
         layout === "menu" ? "px-1 py-1" : "px-2 py-1.5",
         className,
       )}
@@ -112,7 +134,7 @@ export function PresenceStatusPicker({ layout, className }: PresenceStatusPicker
           value={status}
           onValueChange={handleStatusValueChange}
           aria-label="Availability"
-          className="grid grid-cols-2 gap-1"
+          className={CHIP_ROW}
         >
           {PICKER_STATUSES.map((option) => (
             <DropdownMenuRadioItem
@@ -120,15 +142,16 @@ export function PresenceStatusPicker({ layout, className }: PresenceStatusPicker
               value={option}
               disabled={isPending}
               onSelect={keepMenuOpen}
-              className="h-7 min-w-0 gap-1.5 rounded-md pl-7 text-dense font-medium"
+              onFocus={revealChip}
+              className="h-7 w-auto shrink-0 gap-1.5 rounded-md py-0 pr-2 pl-7 text-dense font-medium whitespace-nowrap"
             >
               <span className={cn("size-1.5 shrink-0 rounded-full", presenceDotClass(option))} />
-              <span className="truncate">{PRESENCE_LABELS[option]}</span>
+              {PRESENCE_LABELS[option]}
             </DropdownMenuRadioItem>
           ))}
         </DropdownMenuRadioGroup>
       ) : (
-        <div className="grid grid-cols-2 gap-1">
+        <div className={CHIP_ROW} role="group" aria-label="Availability">
           {PICKER_STATUSES.map((option) => (
             <PresenceStatusChip
               key={option}
@@ -140,58 +163,63 @@ export function PresenceStatusPicker({ layout, className }: PresenceStatusPicker
           ))}
         </div>
       )}
-      <div className="mt-2 flex flex-col gap-1.5">
-        <label htmlFor={messageInputId} className="sr-only">
-          Status message
-        </label>
-        <Input
-          id={messageInputId}
-          value={messageDraft}
-          onChange={handleMessageChange}
-          onBlur={handleMessageBlur}
-          onKeyDown={handleMessageKeyDown}
-          maxLength={PRESENCE_STATUS_MESSAGE_MAX_LENGTH}
-          placeholder="What's your status?"
-          disabled={isPending}
-        />
-        {layout === "menu" ? (
-          <DropdownMenuRadioGroup
-            value={clearAfter}
-            onValueChange={handleClearAfterValueChange}
-            aria-label="Clear after"
-            className="flex flex-wrap gap-1"
-          >
-            {PRESENCE_CLEAR_AFTER_OPTIONS.map((option) => (
-              <DropdownMenuRadioItem
-                key={option}
-                value={option}
-                disabled={isPending}
-                onSelect={keepMenuOpen}
-                className="h-6 rounded-md py-0 pr-1.5 pl-6 text-micro font-medium"
-              >
-                {PRESENCE_CLEAR_AFTER_LABELS[option]}
-              </DropdownMenuRadioItem>
-            ))}
-          </DropdownMenuRadioGroup>
-        ) : (
-          <div className="flex flex-wrap gap-1" role="group" aria-label="Clear after">
-            {PRESENCE_CLEAR_AFTER_OPTIONS.map((option) => (
-              <PresenceDurationChip
-                key={option}
-                value={option}
-                current={clearAfter}
-                disabled={isPending}
-                onSelect={handleClearAfterSelect}
-              />
-            ))}
-          </div>
-        )}
-        {statusMessage ? (
-          <p className="text-micro text-muted-foreground">
-            {expiryLabel ? `Clears ${expiryLabel}` : "Stays until you clear it"}
-          </p>
-        ) : null}
-      </div>
+      <label htmlFor={messageInputId} className="sr-only">
+        Status message
+      </label>
+      <Input
+        id={messageInputId}
+        value={messageDraft}
+        onChange={handleMessageChange}
+        onBlur={handleMessageBlur}
+        onKeyDown={handleMessageKeyDown}
+        maxLength={PRESENCE_STATUS_MESSAGE_MAX_LENGTH}
+        placeholder="What's your status?"
+        disabled={isPending}
+        className="h-7 px-2 text-dense"
+      />
+      {layout === "menu" ? (
+        <DropdownMenuRadioGroup
+          value={clearAfter}
+          onValueChange={handleClearAfterValueChange}
+          aria-label="Clear after"
+          className={CHIP_ROW}
+        >
+          {PRESENCE_CLEAR_AFTER_OPTIONS.map((option) => (
+            <DropdownMenuRadioItem
+              key={option}
+              value={option}
+              disabled={isPending}
+              onSelect={keepMenuOpen}
+              onFocus={revealChip}
+              className="h-6 w-auto shrink-0 rounded-md py-0 pr-1.5 pl-6 text-micro font-medium whitespace-nowrap"
+            >
+              {PRESENCE_CLEAR_AFTER_LABELS[option]}
+            </DropdownMenuRadioItem>
+          ))}
+          {statusMessage ? (
+            <p className="shrink-0 px-1 text-micro whitespace-nowrap text-muted-foreground">
+              {expiryLabel ? `Clears ${expiryLabel}` : "Stays until you clear it"}
+            </p>
+          ) : null}
+        </DropdownMenuRadioGroup>
+      ) : (
+        <div className={CHIP_ROW} role="group" aria-label="Clear after">
+          {PRESENCE_CLEAR_AFTER_OPTIONS.map((option) => (
+            <PresenceDurationChip
+              key={option}
+              value={option}
+              current={clearAfter}
+              disabled={isPending}
+              onSelect={handleClearAfterSelect}
+            />
+          ))}
+          {statusMessage ? (
+            <p className="shrink-0 px-1 text-micro whitespace-nowrap text-muted-foreground">
+              {expiryLabel ? `Clears ${expiryLabel}` : "Stays until you clear it"}
+            </p>
+          ) : null}
+        </div>
+      )}
     </div>
   );
 }
@@ -219,18 +247,19 @@ function PresenceStatusChip({
     <button
       type="button"
       onClick={handleSelect}
+      onFocus={revealChip}
       disabled={disabled}
       aria-pressed={isCurrent}
       aria-label={PRESENCE_LABELS[status]}
       className={cn(
-        "inline-flex h-7 min-w-0 w-full items-center gap-1.5 rounded-md border px-2 text-dense font-medium transition-colors",
+        "inline-flex h-7 w-auto shrink-0 items-center gap-1.5 rounded-md border px-2 text-dense font-medium whitespace-nowrap transition-colors",
         isCurrent
           ? "border-primary/30 bg-primary/10 text-foreground"
           : "border-border bg-card text-muted-foreground hover:bg-muted hover:text-foreground",
       )}
     >
       <span className={cn("size-1.5 shrink-0 rounded-full", presenceDotClass(status))} />
-      <span className="truncate">{PRESENCE_LABELS[status]}</span>
+      {PRESENCE_LABELS[status]}
     </button>
   );
 }
@@ -258,10 +287,11 @@ function PresenceDurationChip({
     <button
       type="button"
       onClick={handleSelect}
+      onFocus={revealChip}
       disabled={disabled}
       aria-pressed={isCurrent}
       className={cn(
-        "inline-flex h-6 items-center rounded-md px-1.5 text-micro font-medium transition-colors",
+        "inline-flex h-6 shrink-0 items-center rounded-md px-1.5 text-micro font-medium whitespace-nowrap transition-colors",
         isCurrent
           ? "bg-muted text-foreground"
           : "text-muted-foreground hover:bg-muted/60 hover:text-foreground",

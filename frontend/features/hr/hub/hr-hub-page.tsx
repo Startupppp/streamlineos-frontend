@@ -1,17 +1,11 @@
 "use client";
 
-import { useMemo } from "react";
-import { AlertCircle, Banknote, RefreshCcw } from "lucide-react";
+import { AlertCircle, RefreshCcw } from "lucide-react";
 import Link from "next/link";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
-import {
-  HrHero,
-  HrPageContent,
-  HrQuickAction,
-} from "@/features/hr/shared/hr-ui";
-import { cn } from "@/lib/utils";
+import { HrPageContent } from "@/features/hr/shared/hr-ui";
 import { StalledReadNotice } from "@/components/shared/stalled-read-notice";
 import { PANEL_STALLED_AFTER_MS, useStalledAfter } from "@/hooks/common/use-stalled-after";
 import { useHrHubSnapshot } from "@/hooks/api/hr/hub";
@@ -26,18 +20,6 @@ import { HrHubQueues } from "./hr-hub-queues";
 import { HrHubMetrics } from "./hr-hub-metrics";
 import { HrHubToday } from "./hr-hub-today";
 import { HrHubActivity } from "./hr-hub-activity";
-
-const ALL_QUICK_ACTIONS = [
-  {
-    actionKey: "run-payroll" as const,
-    href: "/payroll/runs",
-    icon: Banknote,
-    label: "Run payroll",
-    description: "Execute payroll cycle",
-    tone: "emerald" as const,
-    permKey: "canPayrollRunsCreate" as const,
-  },
-] as const;
 
 // The hub snapshot still reports hiring capabilities, but no HR hub panel reads
 // them: recruitment lives in Recruitment OS. They must not count as a panel.
@@ -62,11 +44,6 @@ export function HrHubPage() {
   };
   const hubLoading = hub.isPending;
   const hubStalled = useStalledAfter(hubLoading, PANEL_STALLED_AFTER_MS);
-
-  const visibleActions = useMemo(
-    () => ALL_QUICK_ACTIONS.filter((a) => access[a.permKey]),
-    [access],
-  );
 
   const hasAnyPanel = Object.entries(access).some(
     ([capability, granted]) => granted && !RECRUITMENT_CAPABILITIES.has(capability),
@@ -101,31 +78,6 @@ export function HrHubPage() {
     >
       <div className="flex flex-1 min-h-0 flex-col">
         <HrPageContent>
-          {!setupEmpty && visibleActions.length > 0 ? (
-            <HrHero>
-              <div
-                className={cn(
-                  "flex min-h-0 w-full gap-2.5 overflow-x-auto overscroll-x-contain pb-0.5 scrollbar-hide",
-                  "[&>*]:min-w-[min(100%,15.5rem)] [&>*]:shrink-0",
-                  "min-[420px]:grid min-[420px]:grid-cols-2 min-[420px]:overflow-visible min-[420px]:pb-0",
-                  "min-[420px]:[&>*]:min-w-0 min-[420px]:[&>*]:shrink",
-                  "xl:grid-cols-4",
-                )}
-              >
-                {visibleActions.map((action) => (
-                  <HrQuickAction
-                    key={action.actionKey}
-                    href={action.href}
-                    icon={action.icon}
-                    label={action.label}
-                    description={action.description}
-                    tone={action.tone}
-                  />
-                ))}
-              </div>
-            </HrHero>
-          ) : null}
-
           <HrStartHereChecklist signals={setupSignals} />
 
           {hub.isError ? (

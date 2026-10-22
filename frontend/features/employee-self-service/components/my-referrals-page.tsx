@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useState, type ReactNode } from "react";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -36,7 +36,7 @@ const EMPTY_FORM = {
   notes: "",
 };
 
-export function MyReferralsPage() {
+export function MyReferralsPage({ sectionSelector }: { sectionSelector?: ReactNode } = {}) {
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState(EMPTY_FORM);
   const referrals = useSelfReferrals();
@@ -144,7 +144,7 @@ export function MyReferralsPage() {
 
   return (
     <PageWrapper
-      title="My Referrals"
+      title={sectionSelector ?? "My Referrals"}
       subtitle="Candidates you have referred and where they stand."
       actions={referAction}
       state={state}

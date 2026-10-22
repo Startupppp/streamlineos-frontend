@@ -43,7 +43,8 @@ import {
   analyticsSpaceIdFrom,
 } from "@/features/wiki/lib/analytics-range";
 import { pageHref } from "@/lib/knowledge-routes";
-import { AnalyticsSkeleton, KnowledgeAnalyticsLists } from "./knowledge-analytics-lists";
+import { KnowledgeAnalyticsLists } from "./knowledge-analytics-lists";
+import { AnalyticsSkeleton } from "./knowledge-analytics-skeleton";
 import { KnowledgeAnalyticsGapsList } from "./knowledge-analytics-gaps-list";
 import {
   KbBarChart2Icon,
@@ -236,16 +237,9 @@ export default function KnowledgeAnalyticsPage() {
 
   const pageState = usePageState({
     permission: "kb:analytics:view",
-    isLoading:
-      overviewLoading || noResultsLoading || pagesLoading || gapsLoading,
-    isError: overviewError || noResultsPageError || pagesError || gapsError,
-    error: overviewError
-      ? overviewQueryError
-      : noResultsPageError
-        ? noResultsQueryError
-        : pagesError
-          ? pagesQueryError
-          : gapsQueryError,
+    isLoading: overviewLoading,
+    isError: overviewError,
+    error: overviewQueryError,
     isEmpty: !overview,
   });
 
@@ -391,6 +385,9 @@ export default function KnowledgeAnalyticsPage() {
         <div className="space-y-4">
         <KnowledgeAnalyticsLists
           noResults={noResults}
+          noResultsLoading={noResultsLoading}
+          noResultsError={noResultsPageError}
+          onRetryNoResults={() => void refetchNoResults()}
           noResultsScopeComplete={noResultsResponse?.scopeComplete}
           noResultsNextError={noResultsNextError}
           noResultsAccessLost={noResultsAccessLost}
@@ -399,6 +396,10 @@ export default function KnowledgeAnalyticsPage() {
           isFetchingNextNoResults={isFetchingNextNoResults}
           fetchNextNoResults={fetchNextNoResults}
           pageAnalytics={pageAnalytics}
+          pagesLoading={pagesLoading}
+          pagesError={pagesError}
+          pagesQueryError={pagesQueryError}
+          onRetryPages={() => void refetchPages()}
           hasNextPage={!!hasNextPage}
           isFetchingNextPage={isFetchingNextPage}
           handleLoadMorePages={handleLoadMorePages}
@@ -407,6 +408,9 @@ export default function KnowledgeAnalyticsPage() {
         />
         <KnowledgeAnalyticsGapsList
           gaps={gaps}
+          gapsError={gapsError}
+          gapsQueryError={gapsQueryError}
+          onRetryGaps={() => void refetchGaps()}
           gapsScopeComplete={gapsScopeComplete}
           gapsLoading={gapsLoading}
           hasNextGaps={!!hasNextGaps}

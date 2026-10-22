@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useMemo, useState, type ReactNode } from "react";
 import { format } from "date-fns";
 import { CheckCircle2, ExternalLink, MessageSquareText } from "lucide-react";
 import { ErrorState } from "@/components/shared";
@@ -33,7 +33,7 @@ function safeMeetingLink(value: string | null): string | null {
   }
 }
 
-export function MyRecruitmentPage() {
+export function MyRecruitmentPage({ sectionSelector }: { sectionSelector?: ReactNode } = {}) {
   const [page, setPage] = useState(1);
   const [feedbackInterview, setFeedbackInterview] =
     useState<AssignedInterview | null>(null);
@@ -60,7 +60,7 @@ export function MyRecruitmentPage() {
 
   return (
     <PageWrapper
-      title="My Recruitment"
+      title={sectionSelector ?? "My Recruitment"}
       subtitle="Your assigned interviews and hiring feedback actions."
     >
       <div className="flex flex-1 min-h-0 flex-col gap-3">

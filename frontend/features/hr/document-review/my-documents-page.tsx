@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useState, type ReactNode } from "react";
 import { UploadIcon } from "@animateicons/react/lucide";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { PageState } from "@/components/shared/page-state";
@@ -31,7 +31,7 @@ function DocumentsSkeleton() {
   );
 }
 
-export function MyDocumentsPage() {
+export function MyDocumentsPage({ sectionSelector }: { sectionSelector?: ReactNode } = {}) {
   const [uploadOpen, setUploadOpen] = useState(false);
   const [pendingOnly, setPendingOnly] = useState(false);
   const [cursors, setCursors] = useState<Array<string | undefined>>([undefined]);
@@ -71,7 +71,7 @@ export function MyDocumentsPage() {
 
   return (
     <PageWrapper
-      title="My Documents"
+      title={sectionSelector ?? "My Documents"}
       subtitle="Track the documents requested for your employment record."
       noInternalScroll
       contentClassName="flex min-h-0 flex-1 flex-col"

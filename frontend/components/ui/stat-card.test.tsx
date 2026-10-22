@@ -123,6 +123,38 @@ describe("StatCard tones", () => {
   it("keeps neutral tones on the existing surface tokens", () => {
     const { container } = render(<StatCard label="Total" value={9} icon={Users} tone="default" />);
     expect(container.innerHTML).toContain("bg-muted");
+    expect(container.innerHTML).not.toContain("bg-category-");
+  });
+
+  it("gives each untoned card in a row its own category color", () => {
+    const { container } = render(
+      <StatCardGrid>
+        <StatCard label="Total Employees" value={5} icon={Users} />
+        <StatCard label="Present Today" value={0} icon={Users} />
+        <StatCard label="Active Projects" value={2} icon={Users} />
+        <StatCard label="My Open Tasks" value={0} icon={Users} />
+      </StatCardGrid>,
+    );
+    const cards = container.querySelectorAll("[data-slot=stat-card]");
+    expect(cards[0]?.innerHTML).toContain("bg-category-blue-surface");
+    expect(cards[1]?.innerHTML).toContain("bg-category-emerald-surface");
+    expect(cards[2]?.innerHTML).toContain("bg-category-amber-surface");
+    expect(cards[3]?.innerHTML).toContain("bg-category-violet-surface");
+    expect(container.innerHTML).not.toContain("dark:bg-");
+    expect(cards[0]?.innerHTML).toContain("text-foreground");
+  });
+
+  it("keeps an explicit tone when the card is first in the row", () => {
+    const { container } = render(
+      <StatCardGrid>
+        <StatCard label="Completed" value={3} icon={Users} tone="emerald" />
+        <StatCard label="Waiting" value={1} icon={Users} />
+      </StatCardGrid>,
+    );
+    const cards = container.querySelectorAll("[data-slot=stat-card]");
+    expect(cards[0]?.innerHTML).toContain("bg-status-success-surface");
+    expect(cards[0]?.innerHTML).not.toContain("bg-category-blue-surface");
+    expect(cards[1]?.innerHTML).toContain("bg-category-emerald-surface");
   });
 });
 

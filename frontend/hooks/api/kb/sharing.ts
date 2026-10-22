@@ -81,7 +81,7 @@ export function useUpdateKbSharingSettings() {
   });
 }
 
-export function useKbSpaceSharingPolicy(spaceId: number) {
+export function useKbSpaceSharingPolicy(spaceId: number, enabled = true) {
   const canView = useCan("kb:spaces:view");
   return useQuery({
     ...INLINE_READ_ERROR,
@@ -94,7 +94,7 @@ export function useKbSpaceSharingPolicy(spaceId: number) {
         spaceSharingPolicyC,
       ),
     staleTime: 60_000,
-    enabled: canView && spaceId > 0,
+    enabled: canView && enabled && spaceId > 0,
   });
 }
 

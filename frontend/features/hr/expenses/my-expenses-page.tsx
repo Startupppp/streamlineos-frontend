@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useState, type ReactNode } from "react";
 import { PlusIcon } from "@animateicons/react/lucide";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { ErrorState } from "@/components/shared";
@@ -47,7 +47,7 @@ function toStatusFilter(value: string): StatusFilter {
   }
 }
 
-export function MyExpensesPage() {
+export function MyExpensesPage({ sectionSelector }: { sectionSelector?: ReactNode } = {}) {
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState<StatusFilter>("ALL");
@@ -181,7 +181,7 @@ export function MyExpensesPage() {
 
   return (
     <PageWrapper
-      title="My Expenses"
+      title={sectionSelector ?? "My Expenses"}
       subtitle="Submit and track your reimbursement claims."
       filters={filters}
       noInternalScroll

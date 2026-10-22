@@ -40,19 +40,11 @@ function SearchButton({ compact = false }: { compact?: boolean }) {
       {...hoverHandlers}
       aria-label="Search (⌘K)"
       className={cn(
-        "group flex items-center justify-center overflow-hidden rounded-lg border border-sidebar-border text-sidebar-foreground/70 outline-none transition-[color,background-color,box-shadow,transform] duration-200 hover:-translate-y-px hover:bg-sidebar-accent hover:text-sidebar-foreground hover:shadow-sm focus-visible:ring-2 focus-visible:ring-sidebar-ring motion-reduce:transform-none motion-reduce:transition-none",
-        compact ? "size-9 shrink-0" : "h-8 w-full min-w-0 max-w-full gap-2 px-3",
+        "group flex shrink-0 items-center justify-center overflow-hidden rounded-lg border border-sidebar-border text-sidebar-foreground/70 outline-none transition-[color,background-color,box-shadow,transform] duration-200 hover:-translate-y-px hover:bg-sidebar-accent hover:text-sidebar-foreground hover:shadow-sm focus-visible:ring-2 focus-visible:ring-sidebar-ring motion-reduce:transform-none motion-reduce:transition-none",
+        compact ? "size-9" : "size-8",
       )}
     >
-      <SearchIcon ref={iconRef} size={16} className="shrink-0" />
-      {!compact ? (
-        <>
-          <span className="min-w-0 flex-1 truncate text-left text-xs">Search…</span>
-          <kbd className="hidden h-4 shrink-0 items-center rounded border border-sidebar-border bg-sidebar px-1 font-mono text-micro text-sidebar-foreground/65 lg:inline-flex">
-            ⌘K
-          </kbd>
-        </>
-      ) : null}
+      <SearchIcon ref={iconRef} size={16} className="shrink-0" aria-hidden />
     </button>
   );
 }
@@ -121,9 +113,7 @@ function DesktopHeader({
       </div>
 
       <div className="flex min-w-0 flex-1 justify-center px-4">
-        <div className="w-full min-w-0 max-w-xs">
-          <SearchButton />
-        </div>
+        <SearchButton />
       </div>
 
       <div className="flex shrink-0 items-center gap-1 rounded-xl border border-sidebar-border/70 bg-sidebar-accent/30 p-1">

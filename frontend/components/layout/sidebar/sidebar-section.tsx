@@ -46,7 +46,6 @@ interface SidebarSectionProps {
   showLabel?: boolean;
   isGroupCollapsed?: boolean;
   onToggleGroup?: () => void;
-  onOpenGroup?: () => void;
   pendingLeaves: number;
   inboxCount: number;
   onNavigate?: () => void;
@@ -69,7 +68,6 @@ export function SidebarSection({
   showLabel,
   isGroupCollapsed,
   onToggleGroup,
-  onOpenGroup,
   pendingLeaves,
   inboxCount,
   onNavigate,
@@ -79,10 +77,7 @@ export function SidebarSection({
   const showItems = isCollapsed || !isGroupCollapsed;
 
   return (
-    <div
-      className={cn(groupIndex > 0 && "mt-2")}
-      onMouseEnter={onOpenGroup}
-    >
+    <div className={cn(groupIndex > 0 && "mt-2")}>
       {!isCollapsed && showLabel && (
         onToggleGroup ? (
           <button

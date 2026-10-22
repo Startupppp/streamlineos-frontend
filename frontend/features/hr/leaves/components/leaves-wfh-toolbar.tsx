@@ -200,11 +200,13 @@ function LeaveLinksMenu() {
 }
 
 export function LeavesWfhActions({
+  compact = false,
   canRequestLeave,
   canRequestWfh,
   onRequestLeave,
   onRequestWfh,
 }: {
+  compact?: boolean;
   canRequestLeave: boolean;
   canRequestWfh: boolean;
   onRequestLeave: () => void;
@@ -222,9 +224,15 @@ export function LeavesWfhActions({
           variant="outline"
           size="sm"
           onClick={onRequestWfh}
+          aria-label={t("timeOff.requestWfh")}
           className="min-h-11 gap-1.5 md:min-h-0"
         >
-          {t("timeOff.requestWfh")}
+          {compact ? (
+            <>
+              <span className="sm:hidden">{t("timeOff.shortWfh")}</span>
+              <span className="hidden sm:inline">{t("timeOff.requestWfh")}</span>
+            </>
+          ) : t("timeOff.requestWfh")}
         </AnimatedIconButton>
       ) : null}
       {canRequestLeave ? (
@@ -234,9 +242,15 @@ export function LeavesWfhActions({
           iconClassName="mr-1.5"
           size="sm"
           onClick={onRequestLeave}
+          aria-label={t("timeOff.requestLeave")}
           className="min-h-11 gap-1.5 md:min-h-0"
         >
-          {t("timeOff.requestLeave")}
+          {compact ? (
+            <>
+              <span className="sm:hidden">{t("timeOff.shortLeave")}</span>
+              <span className="hidden sm:inline">{t("timeOff.requestLeave")}</span>
+            </>
+          ) : t("timeOff.requestLeave")}
         </AnimatedIconButton>
       ) : null}
     </>

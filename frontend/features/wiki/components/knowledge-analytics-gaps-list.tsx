@@ -14,6 +14,9 @@ export interface KnowledgeAnalyticsGapsListProps {
   gaps: KbGapRow[];
   gapsScopeComplete: boolean;
   gapsLoading: boolean;
+  gapsError: boolean;
+  gapsQueryError: unknown;
+  onRetryGaps: () => void;
   hasNextGaps: boolean;
   isFetchingNextGaps: boolean;
   handleLoadMoreGaps: () => void;
@@ -42,7 +45,8 @@ export interface KnowledgeAnalyticsGapsListProps {
 }
 
 export function KnowledgeAnalyticsGapsList({
-  gaps, gapsScopeComplete, gapsLoading, hasNextGaps, isFetchingNextGaps,
+  gaps, gapsScopeComplete, gapsLoading, gapsError, gapsQueryError, onRetryGaps,
+  hasNextGaps, isFetchingNextGaps,
   handleLoadMoreGaps, selectedGapQuery, handleCreatePageFromGap, createPagePending,
   handleGapRowSelect, handleAssignGap, assignGapPending, handleDismissGap,
   dismissGapPending, handleCreateGapFix, createGapFixPending, canCreatePage, canManageAnalytics,
@@ -68,7 +72,11 @@ export function KnowledgeAnalyticsGapsList({
                 </span>
               )}
             </div>
-            {spaceId !== undefined && !gapsScopeComplete && !gapsLoading ? (
+            {gapsLoading ? (
+              <Skeleton className="h-48 w-full rounded-xl" />
+            ) : gapsError && gaps.length === 0 ? (
+              <ErrorState compact title="Couldn't load knowledge gaps" error={gapsQueryError} onRetry={onRetryGaps} />
+            ) : spaceId !== undefined && !gapsScopeComplete ? (
               <p role="status" className="text-sm text-muted-foreground">
                 Knowledge gaps for this team folder are unavailable because older events lack team folder information.
               </p>
@@ -180,12 +188,14 @@ export function KnowledgeAnalyticsGapsList({
                     )}
                   </div>
                 ))}
-                <InfiniteScrollSentinel
+                {gapsError ? (
+                  <ErrorState compact title="Couldn't load more gaps" error={gapsQueryError} onRetry={onRetryGaps} />
+                ) : <InfiniteScrollSentinel
                   hasNextPage={!!hasNextGaps}
                   isFetchingNextPage={isFetchingNextGaps}
                   onLoadMore={handleLoadMoreGaps}
                   label="Load more gaps"
-                />
+                />}
               </div>
             )}
           </section>

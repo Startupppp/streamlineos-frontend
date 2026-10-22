@@ -41,6 +41,10 @@ jest.mock("@/hooks/api/kb/spaces", () => ({
   useKbSpaces: () => useKbSpaces(),
 }));
 
+jest.mock("@/features/wiki/hooks/use-guarded-create-kb-page", () => ({
+  useGuardedCreateKbPage: () => ({ submit: jest.fn(), isSubmitting: false }),
+}));
+
 jest.mock("@/hooks/api/access", () => ({
   useCan: (permission: string) => useCan(permission),
   useAccess: () => useAccess(),
@@ -58,7 +62,6 @@ jest.mock("@/hooks/api/kb", () => ({
   useGapRelatedPages: (...args: unknown[]) => useGapRelatedPages(...args),
   useCitationReuse: (...args: unknown[]) => useCitationReuse(...args),
   useReviewSla: (...args: unknown[]) => useReviewSla(...args),
-  useCreateKbPage: () => ({ mutate: jest.fn(), isPending: false }),
   useAssignGap: () => ({ mutate: mockAssignGapMutate, isPending: false }),
   useDismissGap: () => ({ mutate: jest.fn(), isPending: false }),
   useCreateGapFix: () => ({ mutate: jest.fn(), isPending: false }),
@@ -155,6 +158,22 @@ beforeEach(() => {
 });
 
 describe("KnowledgeAnalyticsPage — access is three-valued, not a boolean", () => {
+  it("shows the overview while independent analytics lists are still loading", () => {
+    useKbNoResults.mockReturnValue({ ...settled(undefined), isLoading: true });
+    usePageAnalytics.mockReturnValue({ ...settledPages(undefined), isLoading: true });
+    useKnowledgeGaps.mockReturnValue({ ...settledGaps([]), isLoading: true });
+
+    render(<KnowledgeAnalyticsPage />);
+
+    expect(screen.getByText("Article views")).toBeInTheDocument();
+    expect(screen.getByText("No-result searches")).toBeInTheDocument();
+    expect(screen.getByText("Top pages")).toBeInTheDocument();
+    expect(screen.getByText("Knowledge gaps")).toBeInTheDocument();
+    expect(screen.queryByText("No zero-result searches")).not.toBeInTheDocument();
+    expect(screen.queryByText("No file data yet")).not.toBeInTheDocument();
+    expect(screen.queryByText("No knowledge gaps")).not.toBeInTheDocument();
+  });
+
   it("shows no-result search count as a lower bound and can continue the list", () => {
     const fetchNextPage = jest.fn();
     useKbNoResults.mockReturnValue({

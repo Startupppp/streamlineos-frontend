@@ -42,13 +42,20 @@ export const HOME_NAV_GROUPS: NavGroup[] = [
         label: "Calendar",
         href: "/calendar",
         icon: CalendarDays,
-        inactivePrefixes: ["/calendar/settings", "/calendar/resource-approvals"],
+        inactivePrefixes: [
+          "/calendar/settings",
+          "/calendar/resource-approvals",
+        ],
       },
       {
         label: "Calendar resource approvals",
         href: "/calendar/resource-approvals",
         icon: ListChecks,
-        requiredPermission: ["calendar:admin:manage", "hr:assets:manage", "inventory:warehouses:manage"],
+        requiredPermission: [
+          "calendar:admin:manage",
+          "hr:assets:manage",
+          "inventory:warehouses:manage",
+        ],
       },
       {
         label: "Chat",
@@ -69,6 +76,7 @@ export const HOME_NAV_GROUPS: NavGroup[] = [
       {
         label: "Attendance & Time Off",
         href: "/me/workday",
+        searchTerms: ["attendance", "time off", "leave", "work from home"],
         modulesAny: ["hrms"],
         icon: Clock,
         badge: "leaves" as const,
@@ -76,17 +84,20 @@ export const HOME_NAV_GROUPS: NavGroup[] = [
       {
         label: "Documents & Onboarding",
         href: "/me/records",
+        searchTerms: ["my documents", "onboarding", "employee files"],
         icon: FileText,
       },
       {
-        label: "Pay & Expenses",
+        label: "Expenses & Pay",
         href: "/me/money",
+        searchTerms: ["expenses", "pay", "payslips", "reimbursements"],
         modulesAny: ["hrms", "payroll"],
         icon: Receipt,
       },
       {
-        label: "Career",
+        label: "Hiring & Referrals",
         href: "/me/career",
+        searchTerms: ["interviews", "job openings", "recruitment", "referrals"],
         modulesAny: ["hrms"],
         icon: Briefcase,
       },

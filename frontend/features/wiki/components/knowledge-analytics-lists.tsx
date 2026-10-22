@@ -6,11 +6,9 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/shared/error-state";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { TruncatedText } from "@/components/ui/truncated-text";
-import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
 import { InfiniteScrollSentinel } from "@/components/ui/infinite-scroll-sentinel";
-import { StatCardGridSkeleton } from "@/components/ui/stat-card";
 import { KbSearchIcon, KbFileTextIcon } from "@/features/wiki/lib/kb-icons";
 import { pageHref } from "@/lib/knowledge-routes";
 import type { KbNoResultRow, KbPageAnalyticsRow } from "@/types/kb";
@@ -83,23 +81,10 @@ const PageAnalyticsTableRow = memo(function PageAnalyticsTableRow({
   );
 });
 
-export function AnalyticsSkeleton() {
-  return (
-    <div className="space-y-4">
-      <StatCardGridSkeleton cols={6} count={6} />
-      {Array.from({ length: 3 }).map((_, s) => (
-        <div key={s} className="space-y-2">
-          <Skeleton className="h-4 w-36" />
-          {Array.from({ length: 5 }).map((_, i) => (
-            <Skeleton key={i} className="h-9 w-full rounded-md" />
-          ))}
-        </div>
-      ))}
-    </div>
-  );
-}
-
 interface KnowledgeAnalyticsListsProps {
+  noResultsLoading: boolean;
+  noResultsError: boolean;
+  onRetryNoResults: () => void;
   noResults: KbNoResultRow[];
   noResultsScopeComplete: boolean | undefined;
   noResultsNextError: boolean;
@@ -109,6 +94,10 @@ interface KnowledgeAnalyticsListsProps {
   isFetchingNextNoResults: boolean;
   fetchNextNoResults: () => unknown;
   pageAnalytics: KbPageAnalyticsRow[];
+  pagesLoading: boolean;
+  pagesError: boolean;
+  pagesQueryError: unknown;
+  onRetryPages: () => void;
   hasNextPage: boolean;
   isFetchingNextPage: boolean;
   handleLoadMorePages: () => void;
@@ -117,9 +106,11 @@ interface KnowledgeAnalyticsListsProps {
 }
 
 export function KnowledgeAnalyticsLists({
+  noResultsLoading, noResultsError, onRetryNoResults,
   noResults, noResultsScopeComplete, noResultsNextError, noResultsAccessLost,
   noResultsQueryError, hasNextNoResults, isFetchingNextNoResults, fetchNextNoResults,
-  pageAnalytics, hasNextPage, isFetchingNextPage, handleLoadMorePages,
+  pageAnalytics, pagesLoading, pagesError, pagesQueryError, onRetryPages,
+  hasNextPage, isFetchingNextPage, handleLoadMorePages,
   spaceId, isFiltered,
 }: KnowledgeAnalyticsListsProps) {
   function handleLoadMoreNoResults() {
@@ -139,7 +130,11 @@ export function KnowledgeAnalyticsLists({
                 </span>
               )}
             </div>
-            {spaceId !== undefined && noResultsScopeComplete === false ? (
+            {noResultsLoading ? (
+              <Skeleton className="h-48 w-full rounded-xl" />
+            ) : noResultsError ? (
+              <ErrorState compact title="Couldn't load searches" error={noResultsQueryError} onRetry={onRetryNoResults} />
+            ) : spaceId !== undefined && noResultsScopeComplete === false ? (
               <p role="status" className="text-sm text-muted-foreground">
                 Zero-result searches for this team folder are unavailable because older events lack team folder information.
               </p>
@@ -184,16 +179,14 @@ export function KnowledgeAnalyticsLists({
                     error={noResultsQueryError}
                     onRetry={handleLoadMoreNoResults}
                   />
-                ) : hasNextNoResults ? (
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={handleLoadMoreNoResults}
-                    disabled={isFetchingNextNoResults}
-                  >
-                    {isFetchingNextNoResults ? "Loading searches..." : "Load more searches"}
-                  </Button>
-                ) : null}
+                ) : (
+                  <InfiniteScrollSentinel
+                    hasNextPage={hasNextNoResults}
+                    isFetchingNextPage={isFetchingNextNoResults}
+                    onLoadMore={handleLoadMoreNoResults}
+                    label="Load more searches"
+                  />
+                )}
               </div>
             )}
           </section>
@@ -209,7 +202,11 @@ export function KnowledgeAnalyticsLists({
                 </span>
               )}
             </div>
-            {pageAnalytics.length === 0 ? (
+            {pagesLoading ? (
+              <Skeleton className="h-48 w-full rounded-xl" />
+            ) : pagesError && pageAnalytics.length === 0 ? (
+              <ErrorState compact title="Couldn't load top pages" error={pagesQueryError} onRetry={onRetryPages} />
+            ) : pageAnalytics.length === 0 ? (
               <EmptyState
                 illustration={
                   <KbFileTextIcon className="h-6 w-6 text-muted-foreground" />
@@ -251,12 +248,14 @@ export function KnowledgeAnalyticsLists({
                 {pageAnalytics.map((row) => (
                   <PageAnalyticsTableRow key={row.id} row={row} />
                 ))}
-                <InfiniteScrollSentinel
+                {pagesError ? (
+                  <ErrorState compact title="Couldn't load more pages" error={pagesQueryError} onRetry={onRetryPages} />
+                ) : <InfiniteScrollSentinel
                   hasNextPage={!!hasNextPage}
                   isFetchingNextPage={isFetchingNextPage}
                   onLoadMore={handleLoadMorePages}
                   label="Load more files"
-                />
+                />}
               </div>
             )}
           </section>

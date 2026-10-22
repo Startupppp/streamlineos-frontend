@@ -62,6 +62,8 @@ export const hi: Record<MessageKey, string> = {
   "timeOff.tabWfh": "घर से काम",
   "timeOff.requestLeave": "छुट्टी का अनुरोध करें",
   "timeOff.requestWfh": "WFH का अनुरोध करें",
+  "timeOff.shortLeave": "छुट्टी",
+  "timeOff.shortWfh": "WFH",
   "timeOff.overview": "सारांश",
   "timeOff.noRequestsTitle": "छुट्टी का कोई अनुरोध नहीं",
   "timeOff.noRequestsDescription": "आपने अभी तक छुट्टी का कोई अनुरोध नहीं भेजा है।",
