@@ -18,8 +18,8 @@ export default function GoalsLoading() {
           <Skeleton className="h-9 w-44 rounded-md shrink-0" />
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-          {Array.from({ length: 9 }).map((_, i) => (
-            <div key={i} className="bg-card rounded-lg border border-border p-5 flex flex-col gap-4">
+          {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((n) => (
+            <div key={n} className="bg-card rounded-lg border border-border p-5 flex flex-col gap-4">
               <div className="flex items-start gap-4">
                 <Skeleton className="h-[72px] w-[72px] rounded-full shrink-0" />
                 <div className="flex-1 min-w-0 flex flex-col gap-2">

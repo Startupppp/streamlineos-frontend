@@ -40,7 +40,7 @@ describe("a pathname resolves to a product through the navigation model", () => 
   it("keeps no exception that the navigation model already answers", () => {
     const redundant = PRODUCT_PATH_EXCEPTIONS.filter((exception) =>
       NAVIGABLE_HREFS.has(exception.prefix),
-    ).map((exception) => `${exception.prefix} -> ${exception.product}`);
+    ).map((exception) => `${exception.prefix} -> ${exception.module}`);
 
     expect(redundant).toEqual([]);
   });
@@ -55,7 +55,7 @@ describe("a pathname resolves to a product through the navigation model", () => 
 
   it("resolves every exception to the product it declares", () => {
     for (const exception of PRODUCT_PATH_EXCEPTIONS) {
-      expect(getProductFromPathname(exception.prefix)).toBe(exception.product);
+      expect(getProductFromPathname(exception.prefix)).toBe(exception.module);
     }
   });
 });

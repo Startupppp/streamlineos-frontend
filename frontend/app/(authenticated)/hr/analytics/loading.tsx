@@ -13,8 +13,8 @@ export default function HrAnalyticsLoading() {
 
         <div className="flex items-center gap-3 shrink-0">
           <div className="flex items-center gap-1">
-            {Array.from({ length: 6 }).map((_, i) => (
-              <Skeleton key={i} className="h-7 w-24 rounded-md" />
+            {[1, 2, 3, 4, 5, 6].map((n) => (
+              <Skeleton key={n} className="h-7 w-24 rounded-md" />
             ))}
           </div>
           <Skeleton className="ml-auto h-9 w-36 rounded-md" />

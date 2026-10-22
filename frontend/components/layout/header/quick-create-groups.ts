@@ -18,7 +18,7 @@ import {
   Wallet,
 } from "lucide-react"
 import type { PermissionKey } from "@/lib/rbac/permissions"
-import type { ProductKey } from "@/components/layout/sidebar/sidebar-nav-types"
+import type { ModuleKey } from "@/components/layout/sidebar/sidebar-nav-types"
 
 export interface CreateAction {
   id: string
@@ -33,11 +33,11 @@ export interface CreateAction {
 export interface CreateGroup {
   id: string
   label: string
-  products: readonly ProductKey[]
+  products: readonly ModuleKey[]
   items: CreateAction[]
 }
 
-export function orderGroupsForProduct(groups: CreateGroup[], product: ProductKey): CreateGroup[] {
+export function orderGroupsForProduct(groups: CreateGroup[], product: ModuleKey): CreateGroup[] {
   const inContext = groups.filter((group) => group.products.includes(product))
   const outOfContext = groups.filter((group) => !group.products.includes(product))
   return [...inContext, ...outOfContext]

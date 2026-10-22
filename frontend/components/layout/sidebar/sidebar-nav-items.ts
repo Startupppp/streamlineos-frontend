@@ -26,14 +26,14 @@ import type {
   NavRoute,
   NavRouteAccess,
   PermissionRequirement,
-  ProductKey,
+  ModuleKey,
 } from "./sidebar-nav-types";
 
 export type {
   NavGroup,
   NavRoute,
   NavRouteAccess,
-  ProductKey,
+  ModuleKey,
 } from "./sidebar-nav-types";
 export {
   isModuleEnabled,
@@ -46,51 +46,51 @@ export type { ModuleAccent, ProductDefinition } from "./sidebar-products";
 
 export interface ProductPathException {
   prefix: string;
-  product: ProductKey;
+  module: ModuleKey;
   reason: string;
 }
 
 /** Paths with no navigation entry to derive from. Longest prefix wins over these too. */
 export const PRODUCT_PATH_EXCEPTIONS: ProductPathException[] = [
-  { prefix: "/build", product: "build", reason: "Build entry resolves to the authorized landing page." },
-  { prefix: "/knowledge", product: "documents", reason: "Knowledge index; nav lists /knowledge/chat and /knowledge/wiki." },
-  { prefix: "/sales", product: "crm", reason: "CRM operational surface with no nav entry." },
-  { prefix: "/customer-executive", product: "crm", reason: "CRM operational surface with no nav entry." },
-  { prefix: "/billing/invoices", product: "finance", reason: "The org's own customer invoicing, not platform billing." },
-  { prefix: "/portal", product: "build", reason: "Client portal for delivery work." },
-  { prefix: "/client-portal", product: "home", reason: "Portal surfaces a client sees outside a product." },
-  { prefix: "/accept-invitation", product: "home", reason: "Portal surfaces a client sees outside a product." },
+  { prefix: "/build", module: "build", reason: "Build entry resolves to the authorized landing page." },
+  { prefix: "/knowledge", module: "documents", reason: "Knowledge index; nav lists /knowledge/chat and /knowledge/wiki." },
+  { prefix: "/sales", module: "crm", reason: "CRM operational surface with no nav entry." },
+  { prefix: "/customer-executive", module: "crm", reason: "CRM operational surface with no nav entry." },
+  { prefix: "/billing/invoices", module: "finance", reason: "The org's own customer invoicing, not platform billing." },
+  { prefix: "/portal", module: "build", reason: "Client portal for delivery work." },
+  { prefix: "/client-portal", module: "home", reason: "Portal surfaces a client sees outside a product." },
+  { prefix: "/accept-invitation", module: "home", reason: "Portal surfaces a client sees outside a product." },
 ];
 
 /** The root and any path the navigation does not own answer Home. */
-const PRODUCT_FALLBACK: ProductKey = "home";
+const MODULE_FALLBACK: ModuleKey = "home";
 
-let productPrefixIndex: { prefix: string; product: ProductKey }[] | null = null;
+let modulePrefixIndex: { prefix: string; module: ModuleKey }[] | null = null;
 
-function getProductPrefixIndex(): { prefix: string; product: ProductKey }[] {
-  if (productPrefixIndex) return productPrefixIndex;
+function getModulePrefixIndex(): { prefix: string; module: ModuleKey }[] {
+  if (modulePrefixIndex) return modulePrefixIndex;
   const fromNavigation = [...NAV_GROUPS, ...HOME_NAV_GROUPS].flatMap((group) =>
     flattenNavRoutes(group.routes).map((route) => ({
       prefix: route.href,
-      product: group.product,
+      module: group.module,
     })),
   );
-  const fromExceptions = PRODUCT_PATH_EXCEPTIONS.map(({ prefix, product }) => ({
+  const fromExceptions = PRODUCT_PATH_EXCEPTIONS.map(({ prefix, module }) => ({
     prefix,
-    product,
+    module,
   }));
-  productPrefixIndex = [...fromNavigation, ...fromExceptions].sort(
+  modulePrefixIndex = [...fromNavigation, ...fromExceptions].sort(
     (a, b) => b.prefix.length - a.prefix.length,
   );
-  return productPrefixIndex;
+  return modulePrefixIndex;
 }
 
-export function getProductFromPathname(pathname: string): ProductKey {
-  for (const entry of getProductPrefixIndex()) {
+export function getProductFromPathname(pathname: string): ModuleKey {
+  for (const entry of getModulePrefixIndex()) {
     if (pathname === entry.prefix || pathname.startsWith(`${entry.prefix}/`))
-      return entry.product;
+      return entry.module;
   }
-  return PRODUCT_FALLBACK;
+  return MODULE_FALLBACK;
 }
 
 export function isNavRouteActive(
@@ -141,7 +141,7 @@ function matchesPermission(
   return reqs.some((p) => granted(p));
 }
 
-function isPlanLocked(product: ProductKey, lockedModules: string[]): boolean {
+function isPlanLocked(product: ModuleKey, lockedModules: string[]): boolean {
   const moduleKey = PRODUCT_MODULE_KEY[product];
   if (!moduleKey) return false;
   return matchesOrgModule(lockedModules, moduleKey);
@@ -209,11 +209,11 @@ export function filterNavGroupsForUser(
 
   return groups.filter(
     (group) =>
-      isPlanLocked(group.product, lockedModules) ||
-      isModuleEnabled(group.product, enabledModules),
+      isPlanLocked(group.module, lockedModules) ||
+      isModuleEnabled(group.module, enabledModules),
   )
     .map((group) => {
-      const groupLocked = isPlanLocked(group.product, lockedModules);
+      const groupLocked = isPlanLocked(group.module, lockedModules);
       const visibleRoutes = group.routes
         .flatMap((route) =>
           filterRoute(
@@ -343,7 +343,7 @@ export function resolveNavRouteAccess(pathname: string): NavRouteAccess {
   function visit(
     routes: NavRoute[],
     inheritedPermission?: PermissionRequirement,
-    inheritedModule?: ProductKey,
+    inheritedModule?: ModuleKey,
   ) {
     for (const route of routes) {
       const requiredPermission =
@@ -365,10 +365,10 @@ export function resolveNavRouteAccess(pathname: string): NavRouteAccess {
   }
 
   for (const group of NAV_GROUPS) {
-    visit(group.routes, group.requiredPermission, group.product);
+    visit(group.routes, group.requiredPermission, group.module);
   }
   for (const group of HOME_NAV_GROUPS) {
-    visit(group.routes, group.requiredPermission, group.product);
+    visit(group.routes, group.requiredPermission, group.module);
   }
 
   if (!best) return { matched: false };
@@ -386,7 +386,7 @@ function getHomeNavGroups(
   const granted = grantedFrom(scopes);
 
   return HOME_NAV_GROUPS.map((group) => {
-    const groupLocked = isPlanLocked(group.product, lockedModules);
+    const groupLocked = isPlanLocked(group.module, lockedModules);
     return {
       ...group,
       routes: group.routes.flatMap((route) =>
@@ -405,7 +405,7 @@ function getHomeNavGroups(
 }
 
 export function getNavGroupsForProduct(
-  productKey: ProductKey,
+  productKey: ModuleKey,
   role: string | undefined,
   scopes: GrantedScopes | undefined,
   enabledModules: string[] = [],
@@ -415,5 +415,5 @@ export function getNavGroupsForProduct(
     return getHomeNavGroups(role, scopes, enabledModules, lockedModules);
 
   const allGroups = getNavGroupsForUser(role, scopes, enabledModules, lockedModules);
-  return allGroups.filter((group) => group.product === productKey);
+  return allGroups.filter((group) => group.module === productKey);
 }

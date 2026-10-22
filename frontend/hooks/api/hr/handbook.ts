@@ -53,6 +53,8 @@ const handbookKeys = {
   list: () => [...handbookKeys.all, "list"] as const,
 };
 
+export const handbookListKey = handbookKeys.list;
+
 export function useHandbookVersions() {
   return useGatedQuery("hr:employees:view", {
     queryKey: handbookKeys.list(),

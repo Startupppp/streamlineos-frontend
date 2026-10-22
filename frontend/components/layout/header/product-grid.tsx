@@ -8,7 +8,7 @@ import {
   getNavGroupsForProduct,
   isModuleEnabled,
   flattenNavRoutes,
-  type ProductKey,
+  type ModuleKey,
 } from "../sidebar/sidebar-nav-items";
 import { ProductTile } from "./product-tile";
 import { hasAssignedProductAccess } from "@/lib/rbac/route-access/route-access";
@@ -23,7 +23,7 @@ import {
 } from "../last-product-path";
 
 export interface ProductGridProps {
-  activeProduct: ProductKey;
+  activeProduct: ModuleKey;
   enabledModules: string[];
   lockedModules: string[];
   canManageModules: boolean;

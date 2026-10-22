@@ -4,7 +4,7 @@ import {
 } from "@/components/layout/sidebar/sidebar-nav-items";
 import type {
   PermissionRequirement,
-  ProductKey,
+  ModuleKey,
 } from "@/components/layout/sidebar/sidebar-nav-types";
 import { moduleById, moduleByProductKey } from "@/lib/module-manifest";
 import { namespaceOf } from "@/lib/rbac/administering-module";
@@ -21,7 +21,7 @@ export type RouteAccessDecision =
     }
   | { kind: "unknown" };
 
-const ALWAYS_ENABLED_PRODUCTS: ReadonlySet<ProductKey> = new Set<ProductKey>([
+const ALWAYS_ENABLED_MODULES: ReadonlySet<ModuleKey> = new Set<ModuleKey>([
   "home",
   "administration",
 ]);
@@ -30,28 +30,28 @@ const MEMBER_DEFAULT_PERMISSIONS = new Set(
   permissionCatalog.memberDefaultPermissions,
 );
 
-// A product with no manifest module of its own (its routes were carved out of
+// A module with no manifest module of its own (its routes were carved out of
 // another module's, e.g. recruitment out of "hr") resolves through that
 // module's backend id instead.
-function manifestModuleForProduct(product: ProductKey) {
-  const direct = moduleByProductKey(product);
+function manifestModuleFor(module: ModuleKey) {
+  const direct = moduleByProductKey(module);
   if (direct) return direct;
-  const fallbackModuleId = PRODUCT_MODULE_KEY[product];
+  const fallbackModuleId = PRODUCT_MODULE_KEY[module];
   return fallbackModuleId ? moduleById(fallbackModuleId) : undefined;
 }
 
-export function orgModuleKeyForProduct(product: ProductKey): string | null {
-  if (ALWAYS_ENABLED_PRODUCTS.has(product)) return null;
-  return manifestModuleForProduct(product)?.id ?? null;
+export function orgModuleKeyForModule(module: ModuleKey): string | null {
+  if (ALWAYS_ENABLED_MODULES.has(module)) return null;
+  return manifestModuleFor(module)?.id ?? null;
 }
 
 export function hasAssignedProductAccess(
-  product: ProductKey,
+  module: ModuleKey,
   scopes: Readonly<Record<string, unknown>> | undefined,
 ): boolean {
-  if (product === "home") return true;
+  if (module === "home") return true;
   if (!scopes) return false;
-  const manifestModule = manifestModuleForProduct(product);
+  const manifestModule = manifestModuleFor(module);
   if (!manifestModule) return false;
   const namespaces = new Set([
     manifestModule.id,
@@ -67,8 +67,8 @@ export function hasAssignedProductAccess(
 export function resolveRouteAccess(pathname: string): RouteAccessDecision {
   const extension = matchRouteAccessExtension(pathname);
   if (extension) {
-    const orgModuleKey = extension.product
-      ? orgModuleKeyForProduct(extension.product)
+    const orgModuleKey = extension.module
+      ? orgModuleKeyForModule(extension.module)
       : null;
     const permission = extension.permission ?? null;
     if (orgModuleKey !== null || permission !== null)
@@ -80,7 +80,7 @@ export function resolveRouteAccess(pathname: string): RouteAccessDecision {
 
   const nav = resolveNavRouteAccess(pathname);
   if (nav.matched) {
-    const orgModuleKey = nav.module ? orgModuleKeyForProduct(nav.module) : null;
+    const orgModuleKey = nav.module ? orgModuleKeyForModule(nav.module) : null;
     const permission = nav.requiredPermission ?? null;
     if (orgModuleKey !== null || permission !== null)
       return { kind: "permission", orgModuleKey, permission };

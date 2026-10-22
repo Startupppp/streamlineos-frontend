@@ -1,6 +1,6 @@
 import type {
   PermissionRequirement,
-  ProductKey,
+  ModuleKey,
 } from "@/components/layout/sidebar/sidebar-nav-types";
 
 export interface BackendRouteRef {
@@ -12,7 +12,7 @@ export interface RouteAccessExtension {
   readonly prefix: string;
   readonly exact?: boolean;
   readonly descendantsOnly?: boolean;
-  readonly product?: ProductKey;
+  readonly module?: ModuleKey;
   readonly permission?: PermissionRequirement;
   readonly reason: string;
   // Set it and the suite asserts this operation's backend x-permission equals `permission`.

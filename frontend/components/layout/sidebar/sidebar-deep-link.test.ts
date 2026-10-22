@@ -7,7 +7,7 @@ import {
   getProductFromPathname,
 } from "./sidebar-nav-items";
 import { PRODUCT_DEFINITIONS } from "./sidebar-products";
-import type { NavGroup, NavRoute, ProductKey } from "./sidebar-nav-types";
+import type { NavGroup, NavRoute, ModuleKey } from "./sidebar-nav-types";
 
 /**
  * The chain, not its links. `getProductFromPathname` and `getNavGroupsForProduct`
@@ -22,7 +22,7 @@ import type { NavGroup, NavRoute, ProductKey } from "./sidebar-nav-types";
 const EVERY_MODULE = [...Object.keys(ORG_MODULE_NAME), "timesheets", "workflows"];
 const DECLARED_GROUPS: NavGroup[] = [...NAV_GROUPS, ...HOME_NAV_GROUPS];
 
-function groupsShownFor(product: ProductKey): NavGroup[] {
+function groupsShownFor(product: ModuleKey): NavGroup[] {
   return getNavGroupsForProduct(product, "OWNER", {}, EVERY_MODULE);
 }
 

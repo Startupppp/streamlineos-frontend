@@ -42,7 +42,7 @@ Baseline: root `3d8b74aea` · backend `ff2f38e51`. Commit locally per wave, neve
 ## Phase 2B — frontend fixes (BRIEF-FRONTEND.md; prefetch + per-page loading + cache patching + pagination + dead code + compiler cleanup + RBAC)
 - [ ] (running) FS Shell/sidebar/nav (L7) incl. NavGroup `product` → `module`, ProductKey → ModuleKey (user ruling: "product" = Build managed products only)
 - [ ] (running) FH1 HR people & documents (employees, org, onboarding, exit, termination, fnf, bgv, documents…)
-- [ ] (running) FH2 HR time & settings (attendance, leaves, holidays, shifts, rosters, overtime, comp-off, geofencing, settings…)
+- [ ] (running, follow-up: prefetch N's + gate parity) FH2 HR time & settings (attendance, leaves, holidays, shifts, rosters, overtime, comp-off, geofencing, settings…)
 - [x] FH3 HR talent & analytics (performance, goals, kpis, benefits, engagement, analytics, workforce, hub)
 - [ ] (running) FH4 HR pay, cases & ops (expenses, travel, cases, safety, assets, service-delivery, enterprise ops)
 - [ ] FME Employee self-service `/me`
@@ -52,6 +52,7 @@ Baseline: root `3d8b74aea` · backend `ff2f38e51`. Commit locally per wave, neve
 - [ ] FHM Home: dashboard, calendar, chat, inbox, mail (L5)
 - [ ] FKB Knowledge: docs/wiki/Ask OS/research briefs (L6)
 ## Phase 3 — verification
+- [ ] (running) BX backend spec repair: 48 suites failing after Wave A (mostly mock drift; checking real regressions)
 - [ ] Backend tsc · lint · focused jest
 - [ ] Frontend type-check · lint · knip · focused jest · next build
 - [ ] Unwired-module sweep · RBAC gate parity

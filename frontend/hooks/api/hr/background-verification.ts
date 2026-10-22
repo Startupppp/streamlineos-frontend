@@ -36,6 +36,8 @@ const bgvKeys = {
   list: () => [...bgvKeys.all, "list"] as const,
 };
 
+export const bgvListKey = bgvKeys.list;
+
 export function useBackgroundVerifications() {
   const canView = useCan("hr:sensitive:view");
   const hrEnabled = useModuleEnabled("hr");

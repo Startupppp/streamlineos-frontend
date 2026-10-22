@@ -9,8 +9,8 @@ export default function CompensationPlanningLoading() {
       actions={<Skeleton className="h-9 w-32 rounded-md" />}
     >
       <div className="space-y-3">
-        {Array.from({ length: 10 }).map((_, i) => (
-          <Skeleton key={i} className="h-20 w-full rounded-xl" />
+        {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((n) => (
+          <Skeleton key={n} className="h-20 w-full rounded-xl" />
         ))}
       </div>
     </PageWrapper>

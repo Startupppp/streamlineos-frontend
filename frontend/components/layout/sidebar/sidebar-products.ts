@@ -17,17 +17,17 @@ import {
 import type { ComponentType } from "react";
 import { matchesOrgModule } from "@/lib/org-module-keys";
 import { MANIFEST, moduleByProductKey } from "@/lib/module-manifest";
-import type { ProductKey } from "./sidebar-nav-types";
+import type { ModuleKey } from "./sidebar-nav-types";
 
 export interface ProductDefinition {
-  key: ProductKey;
+  key: ModuleKey;
   label: string;
   href: string;
   icon: ComponentType<{ className?: string; strokeWidth?: number }>;
 }
 
 export const PRODUCT_HREF_EXCEPTIONS: Readonly<
-  Partial<Record<ProductKey, string>>
+  Partial<Record<ModuleKey, string>>
 > = {
   administration: "/settings",
   documents: "/knowledge/wiki",
@@ -35,19 +35,19 @@ export const PRODUCT_HREF_EXCEPTIONS: Readonly<
 };
 
 // Products with no manifest module counterpart (not in any module's productKey set).
-export const PRODUCT_KEY_EXCEPTIONS = new Set<ProductKey>([
+export const PRODUCT_KEY_EXCEPTIONS = new Set<ModuleKey>([
   "administration",
   "recruitment",
 ]);
 
-function resolveProductHref(key: ProductKey): string {
+function resolveProductHref(key: ModuleKey): string {
   const exception = PRODUCT_HREF_EXCEPTIONS[key];
   if (exception !== undefined) return exception;
   const manifestModule = moduleByProductKey(key);
   return manifestModule?.route ?? `/${key}`;
 }
 
-const manifestProductKeys = new Set(
+const manifestModuleKeys = new Set(
   MANIFEST.modules
     .filter((m) => m.productKey !== null)
     .map((m) => m.productKey as string),
@@ -144,7 +144,7 @@ if (process.env.NODE_ENV !== "production") {
   for (const definition of PRODUCT_DEFINITIONS) {
     if (
       !PRODUCT_KEY_EXCEPTIONS.has(definition.key) &&
-      !manifestProductKeys.has(definition.key)
+      !manifestModuleKeys.has(definition.key)
     ) {
       console.warn(
         `[sidebar-products] product key "${definition.key}" is not in the manifest productKey set and not in PRODUCT_KEY_EXCEPTIONS`,
@@ -153,7 +153,7 @@ if (process.env.NODE_ENV !== "production") {
   }
 }
 
-export const PRODUCT_DESCRIPTIONS: Record<ProductKey, string> = {
+export const PRODUCT_DESCRIPTIONS: Record<ModuleKey, string> = {
   home: "Overview & activity",
   crm: "Leads, deals & contacts",
   hrms: "People",
@@ -178,7 +178,7 @@ export interface ModuleAccent {
   border: string;
 }
 
-export const MODULE_ACCENTS: Record<ProductKey, ModuleAccent> = {
+export const MODULE_ACCENTS: Record<ModuleKey, ModuleAccent> = {
   home: {
     text: "!text-category-slate-ink",
     bg: "bg-muted",
@@ -271,7 +271,7 @@ export const MODULE_ACCENTS: Record<ProductKey, ModuleAccent> = {
   },
 };
 
-export const PRODUCT_MODULE_KEY: Partial<Record<ProductKey, string>> = {
+export const PRODUCT_MODULE_KEY: Partial<Record<ModuleKey, string>> = {
   crm: "crm",
   hrms: "hr",
   recruitment: "hr",
@@ -286,7 +286,7 @@ export const PRODUCT_MODULE_KEY: Partial<Record<ProductKey, string>> = {
 };
 
 export function isModuleEnabled(
-  key: ProductKey,
+  key: ModuleKey,
   enabledModules: string[],
 ): boolean {
   if (key === "home" || key === "administration") return true;

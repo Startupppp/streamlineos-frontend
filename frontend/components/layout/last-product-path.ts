@@ -1,4 +1,4 @@
-import type { ProductKey } from "./sidebar/sidebar-nav-types";
+import type { ModuleKey } from "./sidebar/sidebar-nav-types";
 import {
   getProductFromPathname,
   isPortalChromelessPath,
@@ -6,7 +6,7 @@ import {
 
 export const LAST_PRODUCT_PATHS_STORAGE = "last-product-paths";
 
-export type LastProductPaths = Partial<Record<ProductKey, string>>;
+export type LastProductPaths = Partial<Record<ModuleKey, string>>;
 
 const SKIP_PREFIXES = [
   "/access-denied",
@@ -30,7 +30,7 @@ export function parseLastProductPaths(raw: unknown): LastProductPaths {
   const next: LastProductPaths = {};
   for (const [key, value] of Object.entries(raw)) {
     if (typeof value !== "string" || !isRelativeAppPath(value)) continue;
-    next[key as ProductKey] = value;
+    next[key as ModuleKey] = value;
   }
   return next;
 }
@@ -48,7 +48,7 @@ export function readLastProductPaths(storageKey: string): LastProductPaths {
 
 export function writeLastProductPath(
   storageKey: string,
-  product: ProductKey,
+  product: ModuleKey,
   href: string,
 ): void {
   if (typeof window === "undefined") return;
@@ -83,7 +83,7 @@ export function shouldRememberProductPath(pathname: string): boolean {
 }
 
 export function resolveRememberedProductHref(
-  product: ProductKey,
+  product: ModuleKey,
   rememberedHref: string | undefined,
   fallbackHref: string,
 ): string {

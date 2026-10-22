@@ -4,7 +4,7 @@ import {
   type NavGroup,
   type NavRoute,
 } from "../sidebar/sidebar-nav-items";
-import type { ProductKey } from "../sidebar/sidebar-nav-types";
+import type { ModuleKey } from "../sidebar/sidebar-nav-types";
 
 export const MAX_MOBILE_MODULE_TABS = 5;
 
@@ -97,9 +97,9 @@ export function getMobileModuleContentPaddingClassName(
 
 // Products whose sidebar is a handful of groups: the bar shows one tab per
 // group (People, Time Off & Attendance, …) rather than the first few links.
-const GROUP_TAB_PRODUCTS: ReadonlySet<ProductKey> = new Set<ProductKey>(["hrms", "payroll"]);
+const GROUP_TAB_PRODUCTS: ReadonlySet<ModuleKey> = new Set<ModuleKey>(["hrms", "payroll"]);
 
-export function usesMobileGroupTabs(product: ProductKey, navGroups: NavGroup[]): boolean {
+export function usesMobileGroupTabs(product: ModuleKey, navGroups: NavGroup[]): boolean {
   return GROUP_TAB_PRODUCTS.has(product) && navGroups.length > 1 && navGroups.length <= MAX_MOBILE_MODULE_TABS;
 }
 

@@ -10,8 +10,8 @@ export default function FeedbackLoading() {
       <div className="flex flex-col flex-1 min-h-0 gap-4">
         <Skeleton className="h-9 w-56 rounded-md" />
         <div className="space-y-3">
-          {Array.from({ length: 8 }).map((_, i) => (
-            <div key={i} className="rounded-2xl border border-border bg-card p-5 space-y-3 shadow-sm">
+          {[1, 2, 3, 4, 5, 6, 7, 8].map((n) => (
+            <div key={n} className="rounded-2xl border border-border bg-card p-5 space-y-3 shadow-sm">
               <div className="flex items-center justify-between gap-3">
                 <div className="flex items-center gap-2">
                   <Skeleton className="h-5 w-40" />

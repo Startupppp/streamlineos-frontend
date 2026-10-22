@@ -6,7 +6,7 @@ export const ROUTE_ACCESS_EXTENSIONS: readonly RouteAccessExtension[] = [
   {
     prefix: "/build",
     exact: true,
-    product: "build",
+    module: "build",
     permission: "build:view",
     reason: "Build entry requires enabled-module access before choosing its landing page.",
     backendRoute: { method: "get", path: "/build" },
@@ -14,14 +14,14 @@ export const ROUTE_ACCESS_EXTENSIONS: readonly RouteAccessExtension[] = [
   {
     prefix: "/build/search",
     exact: true,
-    product: "build",
+    module: "build",
     permission: "build:view",
     reason: "Build search reads the caller's accessible project list and applies narrower product and ticket gates inside the page.",
     backendRoute: { method: "get", path: "/build" },
   },
   {
     prefix: "/billing/invoices",
-    product: "finance",
+    module: "finance",
     permission: "accounting:read",
     reason:
       "The organization's own customer invoicing is an Accounting surface even though the route sits under /billing. Navigation has no entry for it. The key is the one the page's own reads declare — GET /invoices, /invoices/stats and /invoices/:id are all accounting:read. It used to be accounting:receivables:read, which no role template grants and which gates only the finance AR endpoints (/accounting/ar-payments, /accounting/customer-statements), so the gate denied every non-owner including the ACCOUNTANT who holds every key this page calls.",
@@ -30,7 +30,7 @@ export const ROUTE_ACCESS_EXTENSIONS: readonly RouteAccessExtension[] = [
   {
     prefix: "/billing/invoices/new",
     exact: true,
-    product: "finance",
+    module: "finance",
     permission: "accounting:create",
     reason:
       "Raising an invoice is a create, not a read. The parent /billing/invoices gate is the read key, so without this entry the create surface inherited a read gate. Matches the backend gate on POST /invoices.",
@@ -38,7 +38,7 @@ export const ROUTE_ACCESS_EXTENSIONS: readonly RouteAccessExtension[] = [
   },
   {
     prefix: "/portal",
-    product: "build",
+    module: "build",
     permission: "build:portal:view",
     reason:
       "The client portal renders delivery work under project ids that navigation cannot enumerate.",
@@ -70,38 +70,38 @@ export const ROUTE_ACCESS_EXTENSIONS: readonly RouteAccessExtension[] = [
   },
   {
     prefix: "/settings/notifications/providers",
-    product: "administration",
+    module: "administration",
     permission: "notifications:providers:view",
     reason: "Canonical settings route for notification provider administration. Mirrors /notifications/providers which remains as a compatibility redirect.",
   },
   {
     prefix: "/settings/notifications/templates",
-    product: "administration",
+    module: "administration",
     permission: "notifications:templates:view",
     reason: "Canonical settings route for notification template administration. Mirrors /notifications/templates which remains as a compatibility redirect.",
   },
   {
     prefix: "/settings/notifications/email-templates",
-    product: "administration",
+    module: "administration",
     permission: "settings:email-templates:manage",
     reason: "Built-in transactional email preview and test send. Matches the backend gate on GET /settings/email-templates/preview and POST /settings/email-templates/test.",
     backendRoute: { method: "get", path: "/settings/email-templates/preview" },
   },
   {
     prefix: "/settings/notifications/events",
-    product: "administration",
+    module: "administration",
     permission: "notifications:events:view",
     reason: "Canonical settings route for notification event administration. Mirrors /notifications/events which remains as a compatibility redirect.",
   },
   {
     prefix: "/settings/notifications/policy",
-    product: "administration",
+    module: "administration",
     permission: "notifications:policy:view",
     reason: "Canonical settings route for notification policy administration. Mirrors /notifications/policy which remains as a compatibility redirect.",
   },
   {
     prefix: "/settings/notifications/broadcasts",
-    product: "administration",
+    module: "administration",
     permission: "notifications:broadcasts:view",
     reason: "Canonical settings route for broadcast administration. Mirrors /notifications/broadcasts which remains as a compatibility redirect.",
   },
@@ -127,50 +127,50 @@ export const ROUTE_ACCESS_EXTENSIONS: readonly RouteAccessExtension[] = [
   },
   {
     prefix: "/knowledge/wiki/import",
-    product: "administration",
+    module: "administration",
     permission: "kb:pages:import",
     reason: "Knowledge import is an administrative mutation surface.",
   },
   {
     prefix: "/knowledge/wiki/analytics",
-    product: "administration",
+    module: "administration",
     permission: "kb:analytics:view",
     reason: "Knowledge analytics are administrative reporting.",
   },
   {
     prefix: "/knowledge/wiki/reviews",
-    product: "administration",
+    module: "administration",
     permission: "kb:reviews:view",
     reason: "Knowledge reviews are an administrative workflow.",
   },
   {
     prefix: "/knowledge/wiki/spaces",
     exact: true,
-    product: "administration",
+    module: "administration",
     permission: "kb:spaces:view",
     reason: "Knowledge space management list is administrative. Individual space pages (/knowledge/wiki/spaces/[id]) are universal reading surfaces; only this listing is gated.",
   },
   {
     prefix: "/knowledge/wiki/templates",
-    product: "administration",
+    module: "administration",
     permission: "kb:templates:manage",
     reason: "Knowledge template management is administrative.",
   },
   {
     prefix: "/knowledge/wiki/trash",
-    product: "administration",
+    module: "administration",
     permission: "kb:pages:purge",
     reason: "Knowledge purge is an administrative destructive surface.",
   },
   {
     prefix: "/knowledge/wiki/manage",
-    product: "administration",
+    module: "administration",
     permission: "kb:pages:manage",
     reason: "Content Health reports unowned, stale and overexposed pages across the whole org, so it is an administrative surface. Key matches kb-content-health.controller.ts.",
   },
   {
     prefix: "/knowledge/wiki/manage/sharing",
-    product: "administration",
+    module: "administration",
     permission: "kb:settings:manage",
     reason: "External sharing settings and the org-wide sharing inventory are tenant policy. Key matches kb-sharing-policy.controller.ts and kb-sharing-inventory.controller.ts.",
   },
@@ -195,7 +195,7 @@ export const ROUTE_ACCESS_EXTENSIONS: readonly RouteAccessExtension[] = [
   },
   {
     prefix: "/build/managed-products/[managedProductId]/projects",
-    product: "build",
+    module: "build",
     permission: "build:view",
     reason:
       "Linked projects under a product read the project list, so the gate is the project read key rather than the build:managed-products:view the parent product route owns.",
@@ -217,7 +217,7 @@ export const ROUTE_ACCESS_EXTENSIONS: readonly RouteAccessExtension[] = [
   },
   {
     prefix: "/build/[projectId]/qa",
-    product: "build",
+    module: "build",
     permission: "build:qa:view",
     reason:
       "Project-scoped QA. Without a dynamic-segment entry the whole /build/[projectId]/* tree collapsed to the generic build:view the /build nav entry owns, so the granular key the sidebar checks was never enforced on arrival.",
@@ -225,63 +225,63 @@ export const ROUTE_ACCESS_EXTENSIONS: readonly RouteAccessExtension[] = [
   },
   {
     prefix: "/build/[projectId]/incidents",
-    product: "build",
+    module: "build",
     permission: "build:incidents:view",
     reason: "Project-scoped incident records carry their own read key, not the generic build:view.",
     backendRoute: { method: "get", path: "/build/{projectId}/incidents" },
   },
   {
     prefix: "/build/[projectId]/change-requests",
-    product: "build",
+    module: "build",
     permission: "build:changerequests:view",
     reason: "Project-scoped change requests carry their own read key, not the generic build:view.",
     backendRoute: { method: "get", path: "/build/{projectId}/change-requests" },
   },
   {
     prefix: "/build/[projectId]/approvals",
-    product: "build",
+    module: "build",
     permission: "build:approvals:view",
     reason: "Project-scoped approval queues carry their own read key, not the generic build:view.",
     backendRoute: { method: "get", path: "/build/{projectId}/approvals" },
   },
   {
     prefix: "/build/[projectId]/forms",
-    product: "build",
+    module: "build",
     permission: "build:forms:view",
     reason: "Project-scoped intake forms carry their own read key, not the generic build:view.",
     backendRoute: { method: "get", path: "/build/{projectId}/forms" },
   },
   {
     prefix: "/build/[projectId]/risks",
-    product: "build",
+    module: "build",
     permission: "build:risks:view",
     reason: "Project-scoped risk register carries its own read key, not the generic build:view.",
     backendRoute: { method: "get", path: "/build/{projectId}/risks" },
   },
   {
     prefix: "/build/[projectId]/decisions",
-    product: "build",
+    module: "build",
     permission: "build:decisions:view",
     reason: "Project-scoped decision log carries its own read key, not the generic build:view.",
     backendRoute: { method: "get", path: "/build/{projectId}/decisions" },
   },
   {
     prefix: "/build/[projectId]/meetings",
-    product: "build",
+    module: "build",
     permission: "build:meetings:view",
     reason: "Project-scoped meeting records carry their own read key, not the generic build:view.",
     backendRoute: { method: "get", path: "/build/{projectId}/meetings" },
   },
   {
     prefix: "/build/[projectId]/cycles",
-    product: "build",
+    module: "build",
     permission: "build:cycles:view",
     reason: "Cycles supersede sprints and share their iteration-planning read key; the generic build:view let a role without sprint access open cycle planning.",
     backendRoute: { method: "get", path: "/build/{projectId}/cycles" },
   },
   {
     prefix: "/build/[projectId]/settings",
-    product: "build",
+    module: "build",
     permission: "build:update",
     reason:
       "Project configuration is a mutation surface, so it takes the update key its own PATCH declares. It resolved to generic build:view, letting anyone who can read a project open its settings, while navigation implied the global settings:manage — the wrong scope, since §8 keeps module configuration under the module.",
@@ -289,7 +289,7 @@ export const ROUTE_ACCESS_EXTENSIONS: readonly RouteAccessExtension[] = [
   },
   {
     prefix: "/build/[projectId]/settings/access",
-    product: "build",
+    module: "build",
     permission: "build:members:view",
     reason:
       "Membership administration takes the members key the page itself declares at project-settings-access-page.tsx:38, and GET /build/members is the route that gates on it. The parent /build/[projectId]/settings entry resolves to build:update, which strands a role that may administer membership without holding the project-update key.",
@@ -297,7 +297,7 @@ export const ROUTE_ACCESS_EXTENSIONS: readonly RouteAccessExtension[] = [
   },
   {
     prefix: "/build/[projectId]/settings/agents/credentials",
-    product: "build",
+    module: "build",
     permission: "settings:api-tokens:read",
     reason:
       "Agent credentials are API tokens, and the route that lists them declares settings:api-tokens:read. Inheriting build:update from the parent settings entry would let anyone who can edit a project read its agent tokens, which is a secret-bearing surface and a different scope from project configuration.",
@@ -305,7 +305,7 @@ export const ROUTE_ACCESS_EXTENSIONS: readonly RouteAccessExtension[] = [
   },
   {
     prefix: "/build/[projectId]/settings/portal",
-    product: "build",
+    module: "build",
     permission: "build:clientvisibility:manage",
     reason:
       "Portal settings decide what an external client can see, which is the client-visibility key the backend gates on, not generic project update. Inheriting build:update would let any project editor change the external disclosure boundary.",
@@ -313,14 +313,14 @@ export const ROUTE_ACCESS_EXTENSIONS: readonly RouteAccessExtension[] = [
   },
   {
     prefix: "/build/[projectId]/budget",
-    product: "build",
+    module: "build",
     permission: "build:manage",
     reason: "Project budget is delivery administration, so it takes the manage key rather than any read key.",
     backendRoute: { method: "get", path: "/build/{projectId}/budget" },
   },
   {
     prefix: "/build/[projectId]/client-portal",
-    product: "build",
+    module: "build",
     permission: "build:clientvisibility:manage",
     reason:
       "Controls what an external client sees of a project. It had no permission check anywhere in its render path — no server gate and no client useCan — while navigation already declared this key.",
@@ -328,7 +328,7 @@ export const ROUTE_ACCESS_EXTENSIONS: readonly RouteAccessExtension[] = [
   },
   {
     prefix: "/build/[projectId]/feedbucket",
-    product: "build",
+    module: "build",
     permission: "feedbucket:widgets:view",
     reason:
       "Feedbucket widget administration inside a project. The key is the one its own first read declares; the Build module toggle is enforced separately by the backend module guard.",
@@ -336,7 +336,7 @@ export const ROUTE_ACCESS_EXTENSIONS: readonly RouteAccessExtension[] = [
   },
   {
     prefix: "/build/[projectId]/chat",
-    product: "build",
+    module: "build",
     permission: "chat:channels:read",
     reason:
       "A project's chat channel. Its first read is GET /chat/channels/entity/{entityType}/{entityId}, which requires chat:channels:read, and navigation already declares that key; without this entry the route inherits build:view and a member without chat access lands on a failed read.",
@@ -344,14 +344,14 @@ export const ROUTE_ACCESS_EXTENSIONS: readonly RouteAccessExtension[] = [
   },
   {
     prefix: "/calendar/settings",
-    product: "administration",
+    module: "administration",
     permission: "calendar:admin:manage",
     reason:
       "Organisation-wide calendar configuration (source integrations, defaults) is administration, so it takes the admin key. calendar:write cannot gate it: that key sits in EMPLOYEE_SELF_SERVICE, which is merged before any role is read, so every active member holds it unrevokably.",
   },
   {
     prefix: "/build/[projectId]/backlog",
-    product: "build",
+    module: "build",
     permission: "build:tickets:view",
     reason:
       "Project backlog renders the same ticket dataset as the issues board. First read is GET /build/{projectId}/tickets, which requires build:tickets:view.",
@@ -359,7 +359,7 @@ export const ROUTE_ACCESS_EXTENSIONS: readonly RouteAccessExtension[] = [
   },
   {
     prefix: "/build/[projectId]/epics",
-    product: "build",
+    module: "build",
     permission: "build:tickets:view",
     reason:
       "Epics page calls useProjectBoardTickets, whose first read is GET /build/{projectId}/tickets requiring build:tickets:view.",
@@ -367,7 +367,7 @@ export const ROUTE_ACCESS_EXTENSIONS: readonly RouteAccessExtension[] = [
   },
   {
     prefix: "/build/[projectId]/triage",
-    product: "build",
+    module: "build",
     permission: "build:tickets:view",
     reason:
       "Triage page calls useTickets, whose first read is GET /build/{projectId}/tickets requiring build:tickets:view.",
@@ -375,7 +375,7 @@ export const ROUTE_ACCESS_EXTENSIONS: readonly RouteAccessExtension[] = [
   },
   {
     prefix: "/build/[projectId]/issues",
-    product: "build",
+    module: "build",
     permission: "build:tickets:view",
     reason:
       "Project issues board moved from the project root to /issues as part of BSN-01-023. Without this entry the route inherits the parent project scope resolution which returns build:view, letting in callers who hold build:view but not build:tickets:view. First read is GET /build/{projectId}/tickets, which carries build:tickets:view.",
@@ -383,7 +383,7 @@ export const ROUTE_ACCESS_EXTENSIONS: readonly RouteAccessExtension[] = [
   },
   {
     prefix: "/build/[projectId]/workload",
-    product: "build",
+    module: "build",
     permission: "build:tickets:view",
     reason:
       "Project workload renders the project ticket dataset. First read is GET /build/{projectId}/tickets, which requires build:tickets:view.",
@@ -391,7 +391,7 @@ export const ROUTE_ACCESS_EXTENSIONS: readonly RouteAccessExtension[] = [
   },
   {
     prefix: "/build/managed-products/[managedProductId]/roadmap",
-    product: "build",
+    module: "build",
     permission: "build:roadmap:view",
     reason:
       "Product-scoped roadmap. Without this entry the route falls back to the managed-products permission, allowing callers who hold build:managed-products:view but not build:roadmap:view to reach the roadmap board. First read is GET /build/roadmap, which carries build:roadmap:view.",
@@ -399,7 +399,7 @@ export const ROUTE_ACCESS_EXTENSIONS: readonly RouteAccessExtension[] = [
   },
   {
     prefix: "/build/managed-products/[managedProductId]/goals",
-    product: "build",
+    module: "build",
     permission: "build:goals:view",
     reason:
       "Product-scoped goals and OKRs. Without this entry the route falls back to the managed-products permission, allowing callers who hold build:managed-products:view but not build:goals:view to reach the goals board. First read is GET /goals, which carries build:goals:view.",
@@ -407,7 +407,7 @@ export const ROUTE_ACCESS_EXTENSIONS: readonly RouteAccessExtension[] = [
   },
   {
     prefix: "/build/managed-products/[managedProductId]/feedback",
-    product: "build",
+    module: "build",
     permission: "feedbucket:submissions:view",
     reason:
       "Product-scoped feedback submission list. First read is GET /feedbucket/submissions?managedProductId=:id, which requires feedbucket:submissions:view. Without this entry the route inherits the parent managed-products gate (build:managed-products:view), letting callers who hold build:managed-products:view but not feedbucket:submissions:view reach the inbox.",
@@ -415,7 +415,7 @@ export const ROUTE_ACCESS_EXTENSIONS: readonly RouteAccessExtension[] = [
   },
   {
     prefix: "/build/managed-products/[managedProductId]/insights",
-    product: "build",
+    module: "build",
     permission: "build:managed-products:view",
     reason:
       "Product insights aggregates. First read is GET /build/managed-products/{managedProductId}/insights, which requires build:managed-products:view. The parent product route already carries this key; this entry keeps the nav key and route-access resolution in agreement for the parity gate.",
@@ -423,7 +423,7 @@ export const ROUTE_ACCESS_EXTENSIONS: readonly RouteAccessExtension[] = [
   },
   {
     prefix: "/build/managed-products/[managedProductId]/releases",
-    product: "build",
+    module: "build",
     permission: "build:managed-products:view",
     reason:
       "Product releases page. First read is GET /build/managed-products/{managedProductId}/releases, which requires build:managed-products:view. Create, edit, mark-released, archive and restore gate separately on build:managed-products:update; this entry keeps the nav key and route-access resolution in agreement.",
@@ -431,7 +431,7 @@ export const ROUTE_ACCESS_EXTENSIONS: readonly RouteAccessExtension[] = [
   },
   {
     prefix: "/build/managed-products/[managedProductId]/settings",
-    product: "build",
+    module: "build",
     permission: "build:managed-products:view",
     reason:
       "Product settings page. First read is GET /build/managed-products/{managedProductId}, which requires build:managed-products:view. Edit controls gate separately on build:managed-products:update; this entry keeps the nav key and route-access resolution in agreement.",
@@ -439,7 +439,7 @@ export const ROUTE_ACCESS_EXTENSIONS: readonly RouteAccessExtension[] = [
   },
   {
     prefix: "/build/[projectId]/updates",
-    product: "build",
+    module: "build",
     permission: "build:updates:view",
     reason:
       "Project updates feed. First read is GET /build/{projectId}/updates, which requires build:updates:view. Without this entry the route inherits the project gate (build:tickets:view), so a caller holding tickets but not updates would reach the feed and the nav key would disagree with the route key.",
@@ -447,7 +447,7 @@ export const ROUTE_ACCESS_EXTENSIONS: readonly RouteAccessExtension[] = [
   },
   {
     prefix: "/build/[projectId]/files",
-    product: "build",
+    module: "build",
     permission: "build:files:view",
     reason:
       "Project file list. First read is GET /build/{projectId}/files, which requires build:files:view. Without this entry the route inherits the project gate (build:tickets:view), so a caller holding tickets but not files would reach the list and the nav key would disagree with the route key.",

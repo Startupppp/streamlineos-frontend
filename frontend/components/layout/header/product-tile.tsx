@@ -8,7 +8,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { MODULE_ACCENTS, PRODUCT_DESCRIPTIONS, type ProductKey } from "../sidebar/sidebar-nav-items";
+import { MODULE_ACCENTS, PRODUCT_DESCRIPTIONS, type ModuleKey } from "../sidebar/sidebar-nav-items";
 import { NavLockBadge } from "../nav-lock-badge";
 import { useNavIntentPrefetch } from "../nav-intent-prefetch";
 import { cn } from "@/lib/utils";
@@ -16,7 +16,7 @@ import { cn } from "@/lib/utils";
 export const ICON_STROKE = 1.75;
 
 export interface ProductTileProps {
-  productKey: ProductKey;
+  productKey: ModuleKey;
   label: string;
   href: string;
   icon: React.ComponentType<{ className?: string; strokeWidth?: number }>;

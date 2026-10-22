@@ -9,9 +9,9 @@ export default function AnnouncementsLoading() {
       actions={<Skeleton className="h-9 w-[140px] rounded-md" />}
     >
       <div className="space-y-3">
-        {Array.from({ length: 12 }).map((_, i) => (
+        {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map((n) => (
           <div
-            key={i}
+            key={n}
             className="bg-card rounded-lg border border-border shadow-sm p-5"
           >
             <div className="flex items-start gap-4">

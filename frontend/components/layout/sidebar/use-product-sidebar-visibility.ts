@@ -22,7 +22,7 @@ import {
   isPortalChromelessPath,
   resolveProductSidebarChrome,
   type NavGroup,
-  type ProductKey,
+  type ModuleKey,
 } from "./sidebar-nav-items";
 
 const EMPTY_PINS: readonly string[] = [];
@@ -31,7 +31,7 @@ export function useProductSidebarVisibility(): {
   hideSidebar: boolean;
   showSidebarToggle: boolean;
   navGroups: NavGroup[];
-  activeProduct: ProductKey;
+  activeProduct: ModuleKey;
   isLoading: boolean;
 } {
   const { status } = useSession();

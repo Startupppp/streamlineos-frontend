@@ -17,14 +17,14 @@ export default function WorkforceCostLoading() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <div className="rounded-xl border bg-card p-4 space-y-2">
             <Skeleton className="h-4 w-40 mb-3" />
-            {Array.from({ length: 12 }).map((_, i) => (
-              <Skeleton key={i} className="h-10 rounded-lg" />
+            {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map((n) => (
+              <Skeleton key={n} className="h-10 rounded-lg" />
             ))}
           </div>
           <div className="rounded-xl border bg-card p-4 space-y-2">
             <Skeleton className="h-4 w-32 mb-3" />
-            {Array.from({ length: 12 }).map((_, i) => (
-              <Skeleton key={i} className="h-10 rounded-lg" />
+            {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map((n) => (
+              <Skeleton key={`loc-${n}`} className="h-10 rounded-lg" />
             ))}
           </div>
         </div>

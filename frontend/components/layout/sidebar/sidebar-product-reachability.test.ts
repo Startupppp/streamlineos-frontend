@@ -2,22 +2,22 @@ import { ORG_MODULE_NAME } from "@/lib/org-module-keys";
 import { HOME_NAV_GROUPS } from "./sidebar-home-nav";
 import { NAV_GROUPS, getNavGroupsForProduct } from "./sidebar-nav-items";
 import { PRODUCT_DEFINITIONS } from "./sidebar-products";
-import type { NavGroup, ProductKey } from "./sidebar-nav-types";
+import type { NavGroup, ModuleKey } from "./sidebar-nav-types";
 
 const EVERY_MODULE = [...Object.keys(ORG_MODULE_NAME), "timesheets", "workflows"];
 
-const EVERY_PRODUCT: ProductKey[] = PRODUCT_DEFINITIONS.map(
+const EVERY_PRODUCT: ModuleKey[] = PRODUCT_DEFINITIONS.map(
   (product) => product.key,
 );
 
 const DECLARED_GROUPS: NavGroup[] = [...NAV_GROUPS, ...HOME_NAV_GROUPS];
 
-function groupsShownFor(product: ProductKey): NavGroup[] {
+function groupsShownFor(product: ModuleKey): NavGroup[] {
   return getNavGroupsForProduct(product, "OWNER", {}, EVERY_MODULE);
 }
 
 describe("every navigation group is reachable from a product", () => {
-  const productsByGroupLabel = new Map<string, ProductKey[]>();
+  const productsByGroupLabel = new Map<string, ModuleKey[]>();
   for (const product of EVERY_PRODUCT) {
     for (const group of groupsShownFor(product)) {
       const found = productsByGroupLabel.get(group.label) ?? [];

@@ -288,8 +288,8 @@ describe("module-gate completeness", () => {
       if (ALWAYS_ENABLED_MODULE_IDS.has(modulePrefix)) continue;
       const isManifestModule = MANIFEST.modules.some((m) => m.id === modulePrefix);
       if (!isManifestModule) continue;
-      if (group.product !== modulePrefix && group.product !== "administration")
-        violations.push(`"${group.label}" (product=${group.product}) requires "${permStr}" but product doesn't gate the module`);
+      if (group.module !== modulePrefix && group.module !== "administration")
+        violations.push(`"${group.label}" (module=${group.module}) requires "${permStr}" but module doesn't gate the module`);
     }
     expect(violations).toEqual([]);
   });
