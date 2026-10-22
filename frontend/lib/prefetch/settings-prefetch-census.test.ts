@@ -309,7 +309,7 @@ const CENSUS: readonly CensusEntry[] = [
       kind: "prefetch",
       helper: "prefetchSettingsUsers",
       module: SETTINGS_ADMIN,
-      gate: "settings:view",
+      gate: "settings:organization:manage",
     },
   },
   {
