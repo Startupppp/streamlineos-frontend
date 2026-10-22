@@ -38,6 +38,7 @@ import { getGreeting, getFirstName } from "@/lib/format-utils";
 import { QuickActions } from "@/features/dashboard/quick-actions";
 import { FocusStrip } from "@/features/dashboard/focus-strip";
 import { WidgetSkeleton } from "@/components/dashboard/widget-skeleton";
+import { FirstRunChecklist } from "./first-run-checklist";
 import {
   ModuleSetupBanners,
   useModuleSetupBannersPending,
@@ -267,6 +268,8 @@ export function DashboardClient({
           <motion.div variants={fadeUp} initial="hidden" animate="visible">
             <QuickActions />
           </motion.div>
+
+          <FirstRunChecklist />
 
           <FocusStrip access={access} />
 
