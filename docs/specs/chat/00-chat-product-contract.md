@@ -261,7 +261,7 @@ Rollback order is frontend first, then backend; migrations 2490/2495/2500 are ad
 
 - [x] `huddle-chat-panel.tsx` is deleted with no remaining importer.
 - [x] Ably capability for huddle and notification channels is `subscribe` only; chat channels are `subscribe` + `presence`.
-- [ ] A test shows a client publish attempt on each is rejected.
+- [x] A test shows a client publish attempt on each is rejected.
 
 ### CHAT-021 Provider-aware UI
 
@@ -272,7 +272,7 @@ Rollback order is frontend first, then backend; migrations 2490/2495/2500 are ad
 ### CHAT-022 Cross-module boundaries
 
 - [x] A conversation linked to a record shows preview and snippets only when the viewer passes the record check.
-- [ ] After record access is revoked, search, notifications, AI citations and exports omit that record's metadata within the gate windows.
+- [x] After record access is revoked, search, notifications, AI citations and exports omit that record's metadata within the gate windows.
 - [x] Build embed uses the canonical Chat backend; no new module-local chat screen or table exists.
 - [x] Knowledge Ask Chat, Ask OS and live chat are not reachable from employee Chat navigation.
 
