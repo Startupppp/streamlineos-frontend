@@ -14,19 +14,32 @@ function MembershipLifecycleSync() {
   const { data } = useSession();
   const pathname = usePathname();
   const previous = useRef({
+    userId: data?.user?.id ?? null,
     orgId: data?.orgId ?? null,
     access: data?.organizationAccess,
   });
 
   useEffect(() => {
     const current = {
+      userId: data?.user?.id ?? null,
       orgId: data?.orgId ?? null,
       access: data?.organizationAccess,
     };
+    // Another account signed in from a different tab: the token, query cache
+    // and avatar all still belong to the previous user, so start clean (#22).
+    const userSwitched =
+      previous.current.userId !== null &&
+      current.userId !== null &&
+      previous.current.userId !== current.userId;
     const orgChanged = previous.current.orgId !== current.orgId;
     const accessChanged = previous.current.access !== current.access;
     previous.current = current;
 
+    if (userSwitched) {
+      clearBackendTokenCache();
+      window.location.reload();
+      return;
+    }
     if (!orgChanged && !accessChanged) return;
     clearBackendTokenCache();
 
@@ -37,7 +50,7 @@ function MembershipLifecycleSync() {
     if (destination) {
       window.location.replace(destination);
     }
-  }, [data?.orgId, data?.organizationAccess, pathname]);
+  }, [data?.user?.id, data?.orgId, data?.organizationAccess, pathname]);
 
   return null;
 }
