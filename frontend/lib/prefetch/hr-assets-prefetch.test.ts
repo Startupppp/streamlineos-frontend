@@ -17,6 +17,7 @@ const assetRow = {
   location: null,
   notes: null,
   expectedReturnDate: null,
+  version: 1,
   createdAt: "2026-09-17T00:00:00Z",
   updatedAt: "2026-09-17T00:00:00Z",
 };

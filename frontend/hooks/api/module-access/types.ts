@@ -1,10 +1,6 @@
-"use client";
-
 import type { PermissionKey } from "@/lib/rbac/permissions";
 
 import type { DataScope } from "@/hooks/api/access-schema";
-
-export type { DataScope };
 
 export interface ModulePermission {
   name: string;
@@ -106,7 +102,7 @@ export interface AuditCursorPage<T> {
 }
 
 export interface AuditLogEntry {
-  id: string | number;
+  id: number;
   action: string;
   actorUserId: string;
   actorName: string;

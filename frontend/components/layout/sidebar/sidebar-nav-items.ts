@@ -209,13 +209,11 @@ export function filterNavGroupsForUser(
 
   return groups.filter(
     (group) =>
-      !group.module ||
-      isPlanLocked(group.module, lockedModules) ||
-      isModuleEnabled(group.module, enabledModules),
+      isPlanLocked(group.product, lockedModules) ||
+      isModuleEnabled(group.product, enabledModules),
   )
     .map((group) => {
-      const groupLocked =
-        group.module !== undefined && isPlanLocked(group.module, lockedModules);
+      const groupLocked = isPlanLocked(group.product, lockedModules);
       const visibleRoutes = group.routes
         .flatMap((route) =>
           filterRoute(
@@ -367,10 +365,10 @@ export function resolveNavRouteAccess(pathname: string): NavRouteAccess {
   }
 
   for (const group of NAV_GROUPS) {
-    visit(group.routes, group.requiredPermission, group.module);
+    visit(group.routes, group.requiredPermission, group.product);
   }
   for (const group of HOME_NAV_GROUPS) {
-    visit(group.routes, group.requiredPermission, group.module);
+    visit(group.routes, group.requiredPermission, group.product);
   }
 
   if (!best) return { matched: false };
@@ -388,8 +386,7 @@ function getHomeNavGroups(
   const granted = grantedFrom(scopes);
 
   return HOME_NAV_GROUPS.map((group) => {
-    const groupLocked =
-      group.module !== undefined && isPlanLocked(group.module, lockedModules);
+    const groupLocked = isPlanLocked(group.product, lockedModules);
     return {
       ...group,
       routes: group.routes.flatMap((route) =>

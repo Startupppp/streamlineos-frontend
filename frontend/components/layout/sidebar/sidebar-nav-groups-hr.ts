@@ -12,13 +12,9 @@ import {
 import { HR_INSIGHTS_ROUTES } from "./sidebar-nav-routes-hr-governance";
 import { HR_SETTINGS_ROUTES } from "./sidebar-nav-routes-hr-settings";
 
-// Five groups (spec: People, Time Off & Attendance, …): lifecycle and
-// documents fold into HR People, insights into People Ops. Every HR route
-// carries its own requiredPermission, so a group's union never widens a gate.
 export const HR_NAV_GROUPS: NavGroup[] = [
   {
     label: "HR Overview",
-    product: "hrms",
     module: "hrms",
     requiredPermission: [
       "hr:employees:view",
@@ -31,7 +27,6 @@ export const HR_NAV_GROUPS: NavGroup[] = [
   },
   {
     label: "HR People",
-    product: "hrms",
     module: "hrms",
     requiredPermission: [
       "hr:employees:view",
@@ -48,11 +43,14 @@ export const HR_NAV_GROUPS: NavGroup[] = [
       "hr:email-templates:manage",
       "hr:sensitive:view",
     ],
-    routes: [...HR_PEOPLE_ROUTES, ...HR_LIFECYCLE_ROUTES, ...HR_DOCUMENTS_ROUTES],
+    routes: [
+      ...HR_PEOPLE_ROUTES,
+      ...HR_LIFECYCLE_ROUTES,
+      ...HR_DOCUMENTS_ROUTES,
+    ],
   },
   {
     label: "Time Off & Attendance",
-    product: "hrms",
     module: "hrms",
     requiredPermission: [
       "hr:attendance:view",
@@ -67,7 +65,6 @@ export const HR_NAV_GROUPS: NavGroup[] = [
   },
   {
     label: "People Ops",
-    product: "hrms",
     module: "hrms",
     requiredPermission: [
       "hr:cases:view",
@@ -90,7 +87,6 @@ export const HR_NAV_GROUPS: NavGroup[] = [
   },
   {
     label: "Settings",
-    product: "hrms",
     module: "hrms",
     requiredPermission: [
       "hr:policies:view",

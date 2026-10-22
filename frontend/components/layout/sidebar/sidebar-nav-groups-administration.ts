@@ -26,7 +26,7 @@ import type { NavGroup } from "./sidebar-nav-types";
 export const ADMINISTRATION_NAV_GROUPS: NavGroup[] = [
   {
     label: "Account",
-    product: "administration",
+    module: "administration",
     routes: [
       {
         label: "My Account",
@@ -43,7 +43,7 @@ export const ADMINISTRATION_NAV_GROUPS: NavGroup[] = [
   },
   {
     label: "Workspace",
-    product: "administration",
+    module: "administration",
     requiredPermission: ["settings:manage", "ownership:transfer:respond"],
     routes: [
       {
@@ -63,7 +63,7 @@ export const ADMINISTRATION_NAV_GROUPS: NavGroup[] = [
   },
   {
     label: "People",
-    product: "administration",
+    module: "administration",
     requiredPermission: [
       "directory:people:view",
       "settings:view",
@@ -95,7 +95,7 @@ export const ADMINISTRATION_NAV_GROUPS: NavGroup[] = [
   },
   {
     label: "Access",
-    product: "administration",
+    module: "administration",
     requiredPermission: ["settings:rbac:manage", "settings:manage"],
     routes: [
       {
@@ -114,7 +114,7 @@ export const ADMINISTRATION_NAV_GROUPS: NavGroup[] = [
   },
   {
     label: "Organization",
-    product: "administration",
+    module: "administration",
     requiredPermission: ["settings:manage", "settings:view"],
     routes: [
       {
@@ -170,7 +170,7 @@ export const ADMINISTRATION_NAV_GROUPS: NavGroup[] = [
   },
   {
     label: "Modules",
-    product: "administration",
+    module: "administration",
     requiredPermission: "settings:manage",
     routes: [
       {
@@ -183,7 +183,7 @@ export const ADMINISTRATION_NAV_GROUPS: NavGroup[] = [
   },
   {
     label: "Billing",
-    product: "administration",
+    module: "administration",
     requiredPermission: [
       "billing:subscription:view",
       "billing:ai-credits:view",
@@ -206,7 +206,7 @@ export const ADMINISTRATION_NAV_GROUPS: NavGroup[] = [
   },
   {
     label: "Security",
-    product: "administration",
+    module: "administration",
     requiredPermission: "settings:manage",
     routes: [
       {
@@ -219,7 +219,7 @@ export const ADMINISTRATION_NAV_GROUPS: NavGroup[] = [
   },
   {
     label: "Privacy",
-    product: "administration",
+    module: "administration",
     requiredPermission: ["hr:retention:manage", "compliance:subject-requests:view", "storage:quarantine:view"],
     routes: [
       {
@@ -238,7 +238,7 @@ export const ADMINISTRATION_NAV_GROUPS: NavGroup[] = [
   },
   {
     label: "Developer",
-    product: "administration",
+    module: "administration",
     requiredPermission: [
       "settings:manage",
       "settings:api-tokens:read",

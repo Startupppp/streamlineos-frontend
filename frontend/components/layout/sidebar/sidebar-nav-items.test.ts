@@ -277,23 +277,19 @@ describe("module-gate completeness", () => {
     "settings", "tasks",
   ]);
 
-  it("every nav group gated on an independently-enabled module permission carries a module property", () => {
+  it("every nav group gated on an independently-enabled module permission uses product-level gating", () => {
     const violations: string[] = [];
     for (const group of NAV_GROUPS) {
       const perm = group.requiredPermission;
       if (!perm) continue;
       const permStr = Array.isArray(perm) ? perm[0] : perm;
       const modulePrefix = permStr.split(":")[0] ?? "";
-      // Skip if the module prefix has a product key (gating handled at the product level)
-      // or is a platform-internal service that is always available.
       if (PRODUCT_KEYED_MODULE_IDS.has(modulePrefix)) continue;
       if (ALWAYS_ENABLED_MODULE_IDS.has(modulePrefix)) continue;
-      // Any remaining manifest module with no product key and no always-enabled exemption
-      // must gate its nav group via the module property so disabled tenants don't see it.
       const isManifestModule = MANIFEST.modules.some((m) => m.id === modulePrefix);
       if (!isManifestModule) continue;
-      if (!group.module)
-        violations.push(`"${group.label}" (product=${group.product}) requires "${permStr}" but has no module property`);
+      if (group.product !== modulePrefix && group.product !== "administration")
+        violations.push(`"${group.label}" (product=${group.product}) requires "${permStr}" but product doesn't gate the module`);
     }
     expect(violations).toEqual([]);
   });

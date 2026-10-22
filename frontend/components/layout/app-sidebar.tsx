@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
@@ -141,7 +141,7 @@ export function AppSidebar({
   const lockedModules = entitlements?.lockedModules ?? [];
 
   const [showAdvancedHr] = useHrSettingsMode();
-  const navGroups = useMemo(() => {
+  const navGroups = (() => {
     if (isBuildProduct) return [];
     const groups = getNavGroupsForProduct(
       activeProduct,
@@ -151,20 +151,9 @@ export function AppSidebar({
       lockedModules,
     );
     return activeProduct === "hrms" ? applyHrWeekOneNav(groups, showAdvancedHr) : groups;
-  }, [
-    isBuildProduct,
-    activeProduct,
-    effectiveRole,
-    scopes,
-    enabledModules,
-    lockedModules,
-    showAdvancedHr,
-  ]);
+  })();
 
-  const groupLabels = useMemo(
-    () => navGroups.map((group) => group.label),
-    [navGroups],
-  );
+  const groupLabels = navGroups.map((group) => group.label);
 
   const [storedCollapsedGroups] = useState(readStoredCollapsedGroups);
   const [collapsedOverride, setCollapsedOverride] = useState<Record<
@@ -172,13 +161,9 @@ export function AppSidebar({
     boolean
   > | null>(null);
 
-  const collapsedGroups = useMemo(
-    () =>
-      mergeCollapsedGroups(
-        groupLabels,
-        collapsedOverride ?? storedCollapsedGroups,
-      ),
-    [groupLabels, collapsedOverride, storedCollapsedGroups],
+  const collapsedGroups = mergeCollapsedGroups(
+    groupLabels,
+    collapsedOverride ?? storedCollapsedGroups,
   );
 
   function persistCollapsedGroups(next: Record<string, boolean>) {

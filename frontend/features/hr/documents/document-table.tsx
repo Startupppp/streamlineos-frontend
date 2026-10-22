@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
+import { useState } from "react";
 import { Download, Folder } from "lucide-react";
 import { EmptyState } from "@/components/ui/empty-state";
 import { LoadingButton } from "@/components/ui/loading-button";
@@ -10,7 +10,7 @@ import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import type { Document } from "@/types/hr";
 import { FOLDER_COLORS } from "./document-table-constants";
-import { getProtectedFileUrl } from "@/hooks/common/use-file-url";
+import { downloadHrDocumentsZip } from "@/hooks/api/hr/documents";
 import { CursorPageControls } from "@/components/ui/cursor-page-controls";
 import { createDocumentColumns } from "./document-columns";
 
@@ -59,61 +59,31 @@ export function DocumentTable({
 
   const filesWithUrl = documents.filter((document) => document.hasFile);
 
-  const handleDownloadZip = useCallback(async () => {
+  async function handleDownloadZip() {
     if (filesWithUrl.length === 0) return;
     setIsZipping(true);
     try {
-      const JSZip = (await import("jszip")).default;
-      const zip = new JSZip();
-      const results = await Promise.allSettled(
-        filesWithUrl.map(async (doc) => {
-          const response = await fetch(
-            await getProtectedFileUrl(`/hr/documents/${doc.id}/file`),
-          );
-          if (!response.ok)
-            throw new Error(`Failed to fetch ${doc.fileName ?? doc.name}`);
-          const blob = await response.blob();
-          // An empty body is a failed fetch, not an empty document (HRMS-E2E-009).
-          if (blob.size === 0)
-            throw new Error(`${doc.fileName ?? doc.name} came back empty`);
-          zip.file(doc.fileName ?? `${doc.name}.bin`, blob);
-        }),
-      );
-      const failed = results.filter(
-        (downloadResult) => downloadResult.status === "rejected",
-      ).length;
-      if (failed === filesWithUrl.length) {
+      const { downloaded, failed } = await downloadHrDocumentsZip(filesWithUrl);
+      if (downloaded === 0) {
         toast.error(`None of the ${failed} files could be downloaded. Nothing was saved.`);
         return;
       }
-      const zipBlob = await zip.generateAsync({ type: "blob" });
-      const url = URL.createObjectURL(zipBlob);
-      const anchor = document.createElement("a");
-      anchor.href = url;
-      anchor.download = "documents.zip";
-      anchor.click();
-      URL.revokeObjectURL(url);
       if (failed > 0) {
-        toast.warning(
-          `${filesWithUrl.length - failed} downloaded; ${failed} failed.`,
-        );
+        toast.warning(`${downloaded} downloaded; ${failed} failed.`);
       } else {
-        toast.success(`${filesWithUrl.length} file(s) packaged into ZIP`);
+        toast.success(`${downloaded} file(s) packaged into ZIP`);
       }
     } catch {
       toast.error("Failed to create ZIP archive");
     } finally {
       setIsZipping(false);
     }
-  }, [filesWithUrl]);
+  }
 
   const showFolders =
     page === 1 && selectedCategory === "All Files" && searchTerm === "";
 
-  const columns = useMemo(
-    () => createDocumentColumns(onDelete, onEdit, onSendForSignature, onClassify),
-    [onDelete, onEdit, onSendForSignature, onClassify],
-  );
+  const columns = createDocumentColumns(onDelete, onEdit, onSendForSignature, onClassify);
 
   const emptyState = (
     <EmptyState

@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useCallback, useEffect, useState, startTransition } from "react";
+import { useEffect, useState, startTransition } from "react";
 import { ChevronRight, ChevronDown } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
@@ -171,10 +171,9 @@ function CollapsedItem({ route, pathname, pendingLeaves, inboxCount, onNavigate,
   const displayBadge = badge.count > 99 ? "99+" : badge.count;
   const href = route.locked ? BILLING_UPGRADE_HREF : route.href;
   const prefetchOnIntent = useNavIntentPrefetch();
-  const handleIntent = useCallback(
-    () => prefetchOnIntent(href),
-    [prefetchOnIntent, href],
-  );
+  function handleIntent() {
+    prefetchOnIntent(href);
+  }
 
   return (
     <Tooltip delayDuration={0}>
@@ -240,11 +239,11 @@ function ExpandedItem({ route, depth, pathname, pendingLeaves, inboxCount, onNav
     if (containsActive || isActive) startTransition(() => setExpanded(true));
   }, [containsActive, isActive]);
 
-  const toggle = useCallback((e: React.MouseEvent) => {
+  function toggle(e: React.MouseEvent) {
     e.preventDefault();
     e.stopPropagation();
     setExpanded((v) => !v);
-  }, []);
+  }
 
   const badge = computeBadge(route, pendingLeaves, inboxCount);
   const hasBadge = badge.count > 0 && !route.locked;
@@ -252,10 +251,9 @@ function ExpandedItem({ route, depth, pathname, pendingLeaves, inboxCount, onNav
   const paddingLeft = depth === 0 ? "0.625rem" : `${0.625 + depth * 0.75}rem`;
   const href = route.locked ? BILLING_UPGRADE_HREF : route.href;
   const prefetchOnIntent = useNavIntentPrefetch();
-  const handleIntent = useCallback(
-    () => prefetchOnIntent(href),
-    [prefetchOnIntent, href],
-  );
+  function handleIntent() {
+    prefetchOnIntent(href);
+  }
 
   return (
     <div>

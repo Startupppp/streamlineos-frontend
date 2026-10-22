@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useMemo } from "react";
+import { useState } from "react";
 import { Package, CheckCircle2, Laptop, Wrench, Plus, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { PageWrapper } from "@/components/ui/page-wrapper";
@@ -8,15 +8,9 @@ import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
 import { useCursorPager } from "@/components/ui/table-pagination";
 import { ConfirmSheet } from "@/components/ui/confirm-sheet";
 import { useQueryClient } from "@tanstack/react-query";
-import {
-  useHrAssetList,
-  useCreateAsset,
-  useUpdateAsset,
-  useAssignAsset,
-  useHrEmployees,
-  unwrapEmployees,
-} from "@/hooks/api";
-import { hrAssetListPrefix } from "@/hooks/api/hr/assets";
+import { useHrAssetList, hrAssetListPrefix } from "@/hooks/api/hr/assets";
+import { useCreateAsset, useUpdateAsset, useAssignAsset } from "@/hooks/api/hr/hr-settings";
+import { useHrEmployees, unwrapEmployees } from "@/hooks/api/hr/employee-list";
 import { AccessRequestsTab } from "@/features/hr/assets/access-requests-tab";
 import { useCan } from "@/hooks/api/access";
 import { Card, CardContent } from "@/components/ui/card";
@@ -68,135 +62,120 @@ export function AssetsPage() {
   const { data: employeesRaw } = useHrEmployees(undefined);
   const pageState = usePageState({ permission: "hr:assets:view", isLoading, isError, error });
 
-  const employees = useMemo(() => unwrapEmployees(employeesRaw), [employeesRaw]);
+  const employees = unwrapEmployees(employeesRaw);
   const addForm = useAssetForm();
   const editForm = useEditAssetForm();
 
-  const invalidateAssetList = useCallback(() => {
+  function invalidateAssetList() {
     void qc.invalidateQueries({ queryKey: hrAssetListPrefix });
-  }, [qc]);
+  }
 
-  const items = useMemo<Asset[]>(() => data?.data ?? [], [data]);
-  const filteredItems = useMemo(() => {
-    let result = items;
-    if (categoryFilter) result = result.filter((a) => a.type === categoryFilter);
-    if (assignmentFilter === "assigned") result = result.filter((a) => !!a.assignedTo);
-    if (assignmentFilter === "unassigned") result = result.filter((a) => !a.assignedTo);
-    return result;
-  }, [items, categoryFilter, assignmentFilter]);
+  const items: Asset[] = data?.data ?? [];
+  let filteredItems = items;
+  if (categoryFilter) filteredItems = filteredItems.filter((a) => a.type === categoryFilter);
+  if (assignmentFilter === "assigned") filteredItems = filteredItems.filter((a) => !!a.assignedTo);
+  if (assignmentFilter === "unassigned") filteredItems = filteredItems.filter((a) => !a.assignedTo);
 
   const hasMore = data?.pagination.hasMore ?? false;
   const nextCursor = data?.pagination.nextCursor ?? null;
   const counts = data?.counts ?? { total: 0, available: 0, assigned: 0, maintenance: 0, retired: 0 };
 
-  const handleOpenAdd = useCallback(() => {
+  function handleOpenAdd() {
     addForm.reset();
     setAddOpen(true);
-  }, [addForm]);
+  }
 
-  const handleCloseAdd = useCallback(
-    (open: boolean) => {
-      if (!open) { setAddOpen(false); addForm.reset(); }
-    },
-    [addForm],
-  );
+  function handleCloseAdd(open: boolean) {
+    if (!open) { setAddOpen(false); addForm.reset(); }
+  }
 
-  const handleCreateSubmit = useCallback(
-    (values: AssetFormValues) => {
-      createAsset.mutate(
-        {
-          name: values.name,
-          type: values.type,
-          brand: values.brand,
-          model: values.model,
-          serialNumber: values.serialNumber,
-          purchaseDate: values.purchaseDate || undefined,
-          purchaseCost: values.purchaseCost,
-          location: values.location || undefined,
-          notes: values.notes || undefined,
+  function handleCreateSubmit(values: AssetFormValues) {
+    createAsset.mutate(
+      {
+        name: values.name,
+        type: values.type,
+        brand: values.brand,
+        model: values.model,
+        serialNumber: values.serialNumber,
+        purchaseDate: values.purchaseDate || undefined,
+        purchaseCost: values.purchaseCost,
+        location: values.location || undefined,
+        notes: values.notes || undefined,
+      },
+      {
+        onSuccess: () => {
+          toast.success("Asset registered successfully");
+          invalidateAssetList();
+          setAddOpen(false);
+          addForm.reset();
         },
-        {
-          onSuccess: () => {
-            toast.success("Asset registered successfully");
-            invalidateAssetList();
-            setAddOpen(false);
-            addForm.reset();
-          },
-          onError: (e) => toast.error(getErrorMessage(e)),
-        },
-      );
-    },
-    [createAsset, addForm, invalidateAssetList],
-  );
+        onError: (e) => toast.error(getErrorMessage(e)),
+      },
+    );
+  }
 
-  const handleOpenEdit = useCallback(
-    (asset: Asset) => {
-      setEditAsset(asset);
-      editForm.reset({
-        name: asset.name,
-        type: asset.type,
-        brand: asset.brand ?? "",
-        model: asset.model ?? "",
-        serialNumber: asset.serialNumber ?? "",
-        purchaseDate: asset.purchaseDate ?? "",
-        purchaseCost: asset.purchaseCost != null ? Number(asset.purchaseCost) : undefined,
-        location: asset.location ?? "",
-        notes: asset.notes ?? "",
-      });
-    },
-    [editForm],
-  );
+  function handleOpenEdit(asset: Asset) {
+    setEditAsset(asset);
+    editForm.reset({
+      name: asset.name,
+      type: asset.type,
+      brand: asset.brand ?? "",
+      model: asset.model ?? "",
+      serialNumber: asset.serialNumber ?? "",
+      purchaseDate: asset.purchaseDate ?? "",
+      purchaseCost: asset.purchaseCost != null ? Number(asset.purchaseCost) : undefined,
+      location: asset.location ?? "",
+      notes: asset.notes ?? "",
+    });
+  }
 
-  const handleCloseEdit = useCallback((open: boolean) => {
+  function handleCloseEdit(open: boolean) {
     if (!open) setEditAsset(null);
-  }, []);
+  }
 
-  const handleEditSubmit = useCallback(
-    (values: AssetFormValues) => {
-      if (!editAsset) return;
-      updateAsset.mutate(
-        {
-          assetId: editAsset.id,
-          name: values.name,
-          type: values.type,
-          brand: values.brand,
-          model: values.model,
-          serialNumber: values.serialNumber,
-          purchaseDate: values.purchaseDate || undefined,
-          purchaseCost: values.purchaseCost,
-          location: values.location || undefined,
-          notes: values.notes || undefined,
-          expectedVersion: editAsset.version,
+  function handleEditSubmit(values: AssetFormValues) {
+    if (!editAsset) return;
+    updateAsset.mutate(
+      {
+        assetId: editAsset.id,
+        name: values.name,
+        type: values.type,
+        brand: values.brand,
+        model: values.model,
+        serialNumber: values.serialNumber,
+        purchaseDate: values.purchaseDate || undefined,
+        purchaseCost: values.purchaseCost,
+        location: values.location || undefined,
+        notes: values.notes || undefined,
+        expectedVersion: editAsset.version,
+      },
+      {
+        onSuccess: () => {
+          toast.success("Asset updated");
+          invalidateAssetList();
+          setEditAsset(null);
         },
-        {
-          onSuccess: () => {
-            toast.success("Asset updated");
-            invalidateAssetList();
-            setEditAsset(null);
-          },
-          onError: (e) => {
-            if (isApiError(e) && getApiErrorCode(e) === "HR_ASSET_CONFLICT") {
-              toast.error("This record changed since you opened it. Please reload and try again.");
-            } else {
-              toast.error(getErrorMessage(e));
-            }
-          },
+        onError: (e) => {
+          if (isApiError(e) && getApiErrorCode(e) === "HR_ASSET_CONFLICT") {
+            toast.error("This record changed since you opened it. Please reload and try again.");
+          } else {
+            toast.error(getErrorMessage(e));
+          }
         },
-      );
-    },
-    [editAsset, updateAsset, invalidateAssetList],
-  );
+      },
+    );
+  }
 
-  const handleOpenAssign = useCallback((asset: Asset) => {
+  function handleOpenAssign(asset: Asset) {
     setAssignDialog({ assetId: asset.id, assetName: asset.name, currentAssignedTo: asset.assignedTo });
     setAssignEmpId(asset.assignedTo ?? "");
-  }, []);
+  }
 
-  const handleCloseAssign = useCallback((open: boolean) => {
+  function handleCloseAssign(open: boolean) {
     if (!open) { setAssignDialog(null); setAssignEmpId(""); }
-  }, []);
+  }
 
-  const handleConfirmAssign = useCallback(() => {
+  function handleConfirmAssign() {
     if (!assignDialog) return;
     setAssignPending(true);
     assignAsset.mutate(
@@ -212,9 +191,9 @@ export function AssetsPage() {
         onSettled: () => setAssignPending(false),
       },
     );
-  }, [assignDialog, assignEmpId, assignAsset, invalidateAssetList]);
+  }
 
-  const handleUnassign = useCallback(() => {
+  function handleUnassign() {
     if (!assignDialog) return;
     setAssignPending(true);
     assignAsset.mutate(
@@ -230,9 +209,9 @@ export function AssetsPage() {
         onSettled: () => setAssignPending(false),
       },
     );
-  }, [assignDialog, assignAsset, invalidateAssetList]);
+  }
 
-  const handleConfirmDelete = useCallback(() => {
+  function handleConfirmDelete() {
     if (deleteAssetId === null) return;
     updateAsset.mutate(
       { assetId: deleteAssetId, status: "RETIRED" },
@@ -245,15 +224,15 @@ export function AssetsPage() {
         onError: (e) => toast.error(getErrorMessage(e)),
       },
     );
-  }, [deleteAssetId, updateAsset, invalidateAssetList]);
+  }
 
-  const handleCloseDelete = useCallback((open: boolean) => {
+  function handleCloseDelete(open: boolean) {
     if (!open) setDeleteAssetId(null);
-  }, []);
+  }
 
-  const handleSetDeleteId = useCallback((id: number) => setDeleteAssetId(id), []);
+  function handleSetDeleteId(id: number) { setDeleteAssetId(id); }
 
-  const handleExport = useCallback(async () => {
+  async function handleExport() {
     try {
       const { count, filtered } = await exportAssetsToXlsx(employees, {
         statusFilter,
@@ -264,31 +243,28 @@ export function AssetsPage() {
     } catch {
       toast.error("Export failed");
     }
-  }, [employees, statusFilter, categoryFilter, assignmentFilter]);
+  }
 
-  const handleStatusFilterChange = useCallback((v: string) => {
+  function handleStatusFilterChange(v: string) {
     setStatusFilter(v === "all" ? undefined : v);
     pager.reset();
-  }, [pager]);
+  }
 
-  const handleNextPage = useCallback(() => {
+  function handleNextPage() {
     pager.goNext(nextCursor);
-  }, [pager, nextCursor]);
+  }
 
-  const handleCategoryFilterChange = useCallback((v: string) => {
+  function handleCategoryFilterChange(v: string) {
     setCategoryFilter(v === "all" ? undefined : v);
-  }, []);
+  }
 
-  const handleAssignmentFilterChange = useCallback((v: string) => {
+  function handleAssignmentFilterChange(v: string) {
     setAssignmentFilter(v === "all" ? undefined : v);
-  }, []);
+  }
 
   function handleRetry() { void refetch(); }
 
-  const columns = useMemo(
-    () => buildAssetColumns(employees, handleOpenAssign, handleOpenEdit, handleSetDeleteId, canManageAssets),
-    [employees, handleOpenAssign, handleOpenEdit, handleSetDeleteId, canManageAssets],
-  );
+  const columns = buildAssetColumns(employees, handleOpenAssign, handleOpenEdit, handleSetDeleteId, canManageAssets);
 
   return (
     <PageWrapper

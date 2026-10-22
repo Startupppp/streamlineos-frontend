@@ -26,26 +26,6 @@ const WORKFLOW_LABELS: Record<string, string> = {
   custom: "Custom",
 };
 
-const FEATURE_LABELS: Record<string, string> = {
-  backlog: "Backlog",
-  kanban: "Kanban Board",
-  epics: "Epics",
-  bugs: "Bug Tracker",
-  qa: "QA / Testing",
-  releases: "Releases",
-  timeTracking: "Time Tracking",
-  approvals: "Approvals",
-  devops: "DevOps / CI",
-  chat: "Chat",
-  docs: "Docs / Wiki",
-  budget: "Budget",
-  clientPortal: "Client Portal",
-  changeRequests: "Change Requests",
-  forms: "Forms",
-  automations: "Automations",
-  ai: "AI Assistant",
-};
-
 export function StepReview({ draft, keyConflictMessage, onGoToBasics }: StepReviewProps) {
   const sessionUser = useWizardSessionUser();
   const { data: templatePages } = useProjectTemplates();
@@ -67,15 +47,6 @@ export function StepReview({ draft, keyConflictMessage, onGoToBasics }: StepRevi
     if (!draft.clientId) return "No client";
     return clientsList?.find((client) => String(client.id) === draft.clientId)?.name ?? "Unknown client";
   }, [draft.clientId, clientsList]);
-  const enabledFeatures = useMemo(() => {
-    const labels = Object.entries(draft.features)
-      .filter(([, enabled]) => enabled)
-      .flatMap(([key]) => FEATURE_LABELS[key] ? [FEATURE_LABELS[key]] : []);
-    if (draft.modules.epics && !draft.features.epics) labels.push("Epics");
-    if (draft.modules.wiki && !draft.features.docs) labels.push("Docs");
-    return labels;
-  }, [draft.features, draft.modules]);
-
   return (
     <div className="space-y-4">
       <p className="text-sm text-muted-foreground">Review the details before creating the project.</p>
@@ -127,15 +98,8 @@ export function StepReview({ draft, keyConflictMessage, onGoToBasics }: StepRevi
         <ReviewGrid>
           <ReviewField label="Workflow" value={WORKFLOW_LABELS[draft.workflow] ?? draft.workflow} />
           <ReviewField label="Schedule" value={formatSchedule(draft.startDate, draft.endDate)} muted={!draft.startDate && !draft.endDate} />
+          <ReviewField label="Features" value="All available features" />
         </ReviewGrid>
-        <div className="mt-3 border-t border-border pt-3">
-          <p className="mb-2 text-micro font-medium uppercase tracking-wide text-muted-foreground">Enabled features</p>
-          <div className="flex flex-wrap gap-1.5">
-            {enabledFeatures.length ? enabledFeatures.map((feature) => (
-              <Badge key={feature} variant="secondary" className="font-normal">{feature}</Badge>
-            )) : <span className="text-xs text-muted-foreground">None</span>}
-          </div>
-        </div>
       </ReviewSection>
 
       <ReviewSection icon={<Users className="size-4" />} title="People">

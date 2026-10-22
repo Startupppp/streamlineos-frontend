@@ -1,7 +1,7 @@
 import type { ComponentType } from "react";
 import type { PermissionKey } from "@/lib/rbac/permissions";
 
-export type ProductKey =
+export type ModuleKey =
   | "home"
   | "crm"
   | "hrms"
@@ -22,7 +22,7 @@ export type PermissionRequirement = PermissionKey | PermissionKey[];
 
 export interface NavRouteAccess {
   matched: boolean;
-  module?: ProductKey;
+  module?: ModuleKey;
   requiredPermission?: PermissionRequirement;
 }
 
@@ -34,9 +34,9 @@ export interface NavRoute {
   badge?: "leaves" | "inbox";
   requiredPermission?: PermissionRequirement;
   children?: NavRoute[];
-  module?: ProductKey;
-  /** Show the route when at least one of these products is enabled. */
-  modulesAny?: ProductKey[];
+  module?: ModuleKey;
+  /** Show the route when at least one of these modules is enabled. */
+  modulesAny?: ModuleKey[];
   locked?: boolean;
   hideForOwner?: boolean;
   exact?: boolean;
@@ -51,6 +51,5 @@ export interface NavGroup {
   routes: NavRoute[];
   defaultCollapsed?: boolean;
   requiredPermission?: PermissionRequirement;
-  product: ProductKey;
-  module?: ProductKey;
+  module: ModuleKey;
 }

@@ -1,6 +1,5 @@
 "use client";
 
-import { useCallback, useMemo } from "react";
 import { useSession } from "next-auth/react";
 import { usePathname } from "next/navigation";
 import { useAccess, useModuleEnabled } from "@/hooks/api/access";
@@ -49,58 +48,35 @@ export function useProductSidebarVisibility(): {
 
   const activeProduct = getProductFromPathname(pathname);
   const isFeedbackEnabled = useModuleEnabled(BUILD_FEEDBACK_ORG_MODULE);
-  const buildScope = useMemo(
-    () => resolveBuildScope(pathname ?? ""),
-    [pathname],
-  );
+  const buildScope = resolveBuildScope(pathname ?? "");
   const { data: activeProject } = useProject(buildScope.projectId ?? 0);
   const projectFeatures = activeProject?.settings?.features;
 
-  const can = useCallback(
-    (permission: PermissionKey) =>
-      isOrgOwner || (scopes !== undefined && permission in scopes),
-    [isOrgOwner, scopes],
-  );
-  const isOrgModuleEnabled = useCallback(
-    (orgModuleKey: string) =>
-      orgModuleKey === BUILD_FEEDBACK_ORG_MODULE ? isFeedbackEnabled : true,
-    [isFeedbackEnabled],
-  );
-  const isCapabilityEnabled = useCallback(
-    (capability: BuildNavCapability) =>
-      capability === "client-portal"
-        ? projectFeatures?.["clientPortal"] !== false
-        : true,
-    [projectFeatures],
-  );
+  const can = (permission: PermissionKey) =>
+    isOrgOwner || (scopes !== undefined && permission in scopes);
+  const isOrgModuleEnabled = (orgModuleKey: string) =>
+    orgModuleKey === BUILD_FEEDBACK_ORG_MODULE ? isFeedbackEnabled : true;
+  const isCapabilityEnabled = (capability: BuildNavCapability) =>
+    capability === "client-portal"
+      ? projectFeatures?.["clientPortal"] !== false
+      : true;
 
-  const navGroups = useMemo(() => {
-    if (activeProduct === "build")
-      return toBuildNavGroups(
-        resolveBuildNavModel({
-          scope: buildScope,
-          access: { can, isOrgModuleEnabled, isCapabilityEnabled },
-          pinnedIds: EMPTY_PINS,
-        }),
-      );
-    return getNavGroupsForProduct(
-      activeProduct,
-      effectiveRole,
-      scopes,
-      enabledModules,
-      lockedModules,
-    );
-  }, [
-    activeProduct,
-    buildScope,
-    can,
-    isOrgModuleEnabled,
-    isCapabilityEnabled,
-    effectiveRole,
-    scopes,
-    enabledModules,
-    lockedModules,
-  ]);
+  const navGroups =
+    activeProduct === "build"
+      ? toBuildNavGroups(
+          resolveBuildNavModel({
+            scope: buildScope,
+            access: { can, isOrgModuleEnabled, isCapabilityEnabled },
+            pinnedIds: EMPTY_PINS,
+          }),
+        )
+      : getNavGroupsForProduct(
+          activeProduct,
+          effectiveRole,
+          scopes,
+          enabledModules,
+          lockedModules,
+        );
 
   const { hideSidebar, showSidebarToggle } = resolveProductSidebarChrome({
     sessionReady: status !== "loading",

@@ -255,15 +255,15 @@ export interface HrDrilldownData {
   limit: number;
 }
 
-export function useHrDrilldown(metric: string, page: number, departmentId?: number) {
+export function useHrDrilldown(metric: string, page: number, departmentId?: number, limit = 20) {
   const canAnalytics = useCan("hr:analytics:read");
   return useQuery({
-    queryKey: [...humanResourcesQueryKeys.hr.all, "drilldown", metric, page, departmentId] as const,
+    queryKey: [...humanResourcesQueryKeys.hr.all, "drilldown", metric, page, departmentId, limit] as const,
     queryFn: ({ signal }) =>
       apiClient.get<HrDrilldownData>("/hr/analytics-plus/drilldown", {
         metric,
         page: String(page),
-        limit: "20",
+        limit: String(limit),
         ...(departmentId ? { departmentId: String(departmentId) } : {}),
       }, signal, hrDrilldownC),
     staleTime: 60_000,

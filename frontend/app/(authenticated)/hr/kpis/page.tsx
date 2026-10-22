@@ -1,3 +1,4 @@
+import { requirePermission } from "@/lib/rbac/require-permission";
 import { AnimatePresence } from "framer-motion";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { PageWrapper } from "@/components/ui/page-wrapper";
@@ -5,6 +6,7 @@ import { KpiLibraryTab } from "@/features/hr/kpis/kpi-library-tab";
 import { CompetencyFrameworksTab } from "@/features/hr/kpis/competency-frameworks-tab";
 
 export default async function KpisPage() {
+  await requirePermission("hr:performance:view");
   return (
     <PageWrapper title="KPIs & Competencies" subtitle="Define performance indicators and competency frameworks">
       <Tabs defaultValue="kpis">

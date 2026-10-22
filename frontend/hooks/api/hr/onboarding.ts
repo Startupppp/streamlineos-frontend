@@ -255,14 +255,15 @@ interface OnboardingChecklistDocsResponse {
   pagination: { limit: number; nextCursor: string | null; hasMore: boolean };
 }
 
-export function useMyOnboardingDocList() {
+export function useMyOnboardingDocList(options?: { limit?: number }) {
   const canViewOwnDocs = useCan("self:onboarding-docs");
+  const limit = options?.limit ?? 50;
   return useQuery<OnboardingChecklistDoc[]>({
-    queryKey: humanResourcesQueryKeys.hr.myOnboardingDocs(),
+    queryKey: [...humanResourcesQueryKeys.hr.myOnboardingDocs(), { limit }] as const,
     queryFn: async ({ signal }) => {
       const res = await apiClient.get<OnboardingChecklistDocsResponse>(
         "/hr/onboarding-docs/me",
-        { limit: 100 },
+        { limit },
         signal,
         myOnboardingDocsC,
       );

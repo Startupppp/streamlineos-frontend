@@ -10,6 +10,10 @@ export default function LeavesLoading() {
     >
       <div className="space-y-4">
         <StatCardGridSkeleton cols={3} count={3} />
+        <div className="flex gap-2">
+          <Skeleton className="h-9 w-24 rounded-md" />
+          <Skeleton className="h-9 w-24 rounded-md" />
+        </div>
         <Skeleton className="h-64" />
       </div>
     </PageWrapper>

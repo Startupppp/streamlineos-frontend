@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo, useCallback, useRef } from "react";
+import { useState, useEffect } from "react";
 import { getDay } from "date-fns";
 import { useOrgTimeZone } from "@/hooks/api/org-display";
 import { formatTimeInOrgTz, todayInOrgTz } from "@/lib/date-utils";
@@ -14,6 +14,7 @@ import {
 } from "@/hooks/api/hr";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { classifyPunchFailure, type PunchFailureKind } from "./punch-failure";
+import { useSourceOverride } from "@/hooks/common/use-source-override";
 
 export interface PunchFailure {
   kind: PunchFailureKind;
@@ -21,15 +22,7 @@ export interface PunchFailure {
 }
 
 export function useAttendanceTimer() {
-  const [now, setNow] = useState(new Date());
-  const [localCooldown, setLocalCooldown] = useState(0);
   const orgTz = useOrgTimeZone();
-
-  const today = useMemo(() => new Date(), []);
-  const todayYear = today.getFullYear();
-  const todayMonth = today.getMonth();
-  const todayStr = todayInOrgTz(orgTz);
-  const isSundayToday = getDay(today) === 0;
 
   const {
     data: statusData,
@@ -38,16 +31,19 @@ export function useAttendanceTimer() {
     error: statusError,
     refetch: refetchStatus,
   } = useHrAttendanceStatus();
+
+  const today = new Date();
+  const todayYear = today.getFullYear();
+  const todayMonth = today.getMonth();
+  const todayStr = todayInOrgTz(orgTz);
+  const isSundayToday = getDay(today) === 0;
+
   const { data: holidaysList } = useHrHolidaysForCalendar({
     year: todayYear,
     month: todayMonth,
   });
 
-  const todayHolidayName = useMemo(() => {
-    if (!holidaysList) return null;
-    const match = holidaysList.find((h) => h.date === todayStr);
-    return match?.name ?? null;
-  }, [holidaysList, todayStr]);
+  const todayHolidayName = holidaysList?.find((h) => h.date === todayStr)?.name ?? null;
 
   const isBlockedDay = isSundayToday || !!todayHolidayName;
   const blockedReason = isSundayToday
@@ -56,13 +52,18 @@ export function useAttendanceTimer() {
       ? `Today is a holiday (${todayHolidayName}) — check-in is not available`
       : null;
 
+  const [now, setNow] = useState(new Date());
+  const serverCooldown = statusData?.cooldownRemaining ?? 0;
+  const [mutationCooldown, setMutationCooldown] = useState(0);
+  const localCooldown = Math.max(serverCooldown, mutationCooldown);
+
   const [punchFailure, setPunchFailure] = useState<PunchFailure | null>(null);
   const [punchAcknowledgement, setPunchAcknowledgement] = useState(0);
 
   const checkInMutation = useHrCheckIn({
     onSuccess: () => {
       toast.success("Clocked in successfully");
-      setLocalCooldown(0);
+      setMutationCooldown(0);
       setPunchFailure(null);
       setPunchAcknowledgement((count) => count + 1);
     },
@@ -75,7 +76,7 @@ export function useAttendanceTimer() {
   const checkOutMutation = useHrCheckOut({
     onSuccess: () => {
       toast.success("Clocked out successfully");
-      setLocalCooldown(120);
+      setMutationCooldown(120);
       setPunchAcknowledgement((count) => count + 1);
     },
     onError: (err) => {
@@ -84,9 +85,14 @@ export function useAttendanceTimer() {
     },
   });
 
-  const [localBreakOverride, setLocalBreakOverride] = useState<boolean | null>(
-    null,
-  );
+  const statusSource = statusData?.status ?? null;
+  const [localBreakOverride, setLocalBreakOverride] = useSourceOverride<
+    string | null,
+    boolean | null
+  >(statusSource, null);
+
+  const [breakStart, setBreakStart] = useState<number | null>(null);
+  const [localExtraBreakMs, setLocalExtraBreakMs] = useState(0);
 
   const breakMutation = useHrToggleBreak({
     onSuccess: () => toast.success("Break toggled"),
@@ -97,23 +103,13 @@ export function useAttendanceTimer() {
   });
 
   useEffect(() => {
-    if (statusData?.cooldownRemaining && statusData.cooldownRemaining > 0) {
-      setLocalCooldown(statusData.cooldownRemaining);
-    }
-  }, [statusData?.cooldownRemaining]);
-
-  useEffect(() => {
-    if (localCooldown <= 0) return;
+    if (mutationCooldown <= 0) return;
     const timer = setTimeout(
-      () => setLocalCooldown((prev) => Math.max(0, prev - 1)),
+      () => setMutationCooldown((prev) => Math.max(0, prev - 1)),
       1000,
     );
     return () => clearTimeout(timer);
-  }, [localCooldown]);
-
-  useEffect(() => {
-    if (statusData) setLocalBreakOverride(null);
-  }, [statusData?.status, statusData]);
+  }, [mutationCooldown]);
 
   const isCheckedIn =
     statusData?.status === "PRESENT" ||
@@ -125,44 +121,22 @@ export function useAttendanceTimer() {
   const isActive = isCheckedIn || isOnBreak;
   const isInCooldown = localCooldown > 0;
 
-  const [breakStart, setBreakStart] = useState<number | null>(null);
-  const [localExtraBreakMs, setLocalExtraBreakMs] = useState(0);
-  const prevBreakHoursRef = useRef<number>(0);
-
-  useEffect(() => {
-    if (isOnBreak && breakStart === null) {
-      setBreakStart(Date.now());
-    } else if (!isOnBreak && breakStart !== null) {
-      const duration = Date.now() - breakStart;
-      setLocalExtraBreakMs((prev) => prev + duration);
-      setBreakStart(null);
-    }
-  }, [isOnBreak, breakStart]);
-
-  useEffect(() => {
-    const serverBreakHours = Number(statusData?.todayLog?.breakHours) || 0;
-    if (serverBreakHours > prevBreakHoursRef.current) {
-      setLocalExtraBreakMs(0);
-      prevBreakHoursRef.current = serverBreakHours;
-    }
-  }, [statusData?.todayLog?.breakHours]);
-
   useEffect(() => {
     const timer = setInterval(() => setNow(new Date()), 1000);
     return () => clearInterval(timer);
   }, []);
 
-  const sessionTimer = useMemo(() => {
+  const currentBreakMs =
+    isOnBreak && breakStart !== null ? now.getTime() - breakStart : 0;
+
+  const sessionTimer = (() => {
     if (!statusData?.todayLog?.checkIn || statusData?.todayLog?.checkOut) {
       return { hours: 0, minutes: 0, seconds: 0 };
     }
     const checkInTime = new Date(statusData.todayLog.checkIn);
     const serverBreakMs =
       (Number(statusData.todayLog.breakHours) || 0) * 3600000;
-    const totalBreakMs = serverBreakMs + localExtraBreakMs;
-    const currentBreakMs =
-      isOnBreak && breakStart ? now.getTime() - breakStart : 0;
-    const allBreakMs = totalBreakMs + currentBreakMs;
+    const allBreakMs = serverBreakMs + localExtraBreakMs + currentBreakMs;
     const diffMs = Math.max(
       0,
       now.getTime() - checkInTime.getTime() - allBreakMs,
@@ -172,30 +146,37 @@ export function useAttendanceTimer() {
       minutes: Math.floor((diffMs % 3600000) / 60000),
       seconds: Math.floor((diffMs % 60000) / 1000),
     };
-  }, [now, statusData?.todayLog, localExtraBreakMs, isOnBreak, breakStart]);
+  })();
 
-  const handleCheckIn = useCallback(() => {
+  function handleCheckIn() {
     checkInMutation.mutate({});
-  }, [checkInMutation]);
+  }
 
-  const handleCheckOut = useCallback(() => {
+  function handleCheckOut() {
     checkOutMutation.mutate();
-  }, [checkOutMutation]);
+  }
 
-  const handleBreakToggle = useCallback(() => {
+  function handleBreakToggle() {
     const goingOnBreak = !isOnBreak;
     setLocalBreakOverride(goingOnBreak);
     if (goingOnBreak) {
       setBreakStart(Date.now());
+    } else {
+      if (breakStart !== null) {
+        setLocalExtraBreakMs((prev) => prev + Date.now() - breakStart);
+      }
+      setBreakStart(null);
     }
     breakMutation.mutate();
-  }, [breakMutation, isOnBreak]);
+  }
 
-  const handleRetryStatus = useCallback(() => {
+  function handleRetryStatus() {
     void refetchStatus();
-  }, [refetchStatus]);
+  }
 
-  const dismissPunchFailure = useCallback(() => setPunchFailure(null), []);
+  function dismissPunchFailure() {
+    setPunchFailure(null);
+  }
 
   const dailyStats = statusData?.dailyStats;
   const checkInTime = statusData?.todayLog?.checkIn;

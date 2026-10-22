@@ -123,7 +123,7 @@ export function useHrLeavesThisWeek(options?: { enabled?: boolean }) {
   });
 }
 
-export function useHrMyLeaveRequests(enabled = true) {
+export function useHrMyLeaveRequests(enabled = true, limit = 30) {
   const canSelf = useCan("self:leaves");
   const hrEnabled = useModuleEnabled("hr");
   const identity = useLeaveQueryIdentity();
@@ -132,7 +132,7 @@ export function useHrMyLeaveRequests(enabled = true) {
     queryFn: ({ signal }) =>
       apiClient.get<LeaveRequestsPageResult>(
         "/me/time-off/requests",
-        { limit: 100 }, signal, leaveRequestsPageC,
+        { limit }, signal, leaveRequestsPageC,
       ),
     select: (response) => ({ requests: response.data }),
     staleTime: 2 * 60_000,

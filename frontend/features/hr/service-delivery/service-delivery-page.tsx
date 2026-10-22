@@ -1,0 +1,218 @@
+"use client";
+
+import Link from "next/link";
+import { AlertTriangle, Info, LifeBuoy, Shield, Briefcase } from "lucide-react";
+import { PageWrapper } from "@/components/ui/page-wrapper";
+import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
+import { Skeleton } from "@/components/ui/skeleton";
+import { EmptyState } from "@/components/ui/empty-state";
+import { PageState } from "@/components/shared/page-state";
+import { usePageState } from "@/hooks/api/use-page-state";
+import { useCan, useCanState } from "@/hooks/api/access";
+import {
+  useServiceDeliveryOpsInbox,
+  useServiceDeliveryMyItems,
+  type ServiceDeliveryItem,
+  type AgingBucket,
+} from "@/hooks/api/hr/service-delivery";
+import { cn } from "@/lib/utils";
+
+const BUCKET_STYLE: Record<AgingBucket, string> = {
+  fresh: "bg-status-success-surface text-status-success-ink border-status-success-rule",
+  watch:
+    "bg-status-warning-surface text-status-warning-ink border-status-warning-rule",
+  overdue:
+    "bg-status-warning-surface text-status-warning-ink border-status-warning-rule",
+  critical:
+    "bg-status-danger-surface text-status-danger-ink border-status-danger-rule",
+};
+
+const KIND_LABEL: Record<ServiceDeliveryItem["kind"], string> = {
+  case: "Case",
+  safety_incident: "Safety",
+  helpdesk: "Helpdesk",
+};
+
+const LOADING_ROWS = [1, 2, 3, 4, 5] as const;
+
+function ItemRow({ item }: { item: ServiceDeliveryItem }) {
+  return (
+    <Link
+      href={item.href}
+      className="flex flex-wrap items-start justify-between gap-2 px-3 py-2.5 hover:bg-muted/40 transition-colors border-b border-border last:border-0"
+    >
+      <div className="min-w-0 flex-1">
+        <div className="flex flex-wrap items-center gap-1.5">
+          <span className="text-micro font-medium uppercase tracking-wide text-muted-foreground">
+            {KIND_LABEL[item.kind]}
+          </span>
+          <span className="text-dense font-mono text-muted-foreground">{item.ref}</span>
+          <span
+            className={cn(
+              "inline-flex items-center rounded border px-1.5 py-0.5 text-micro font-medium",
+              BUCKET_STYLE[item.aging.bucket],
+            )}
+          >
+            {item.aging.bucket}
+            {item.aging.slaBreached ? " · SLA" : ""}
+          </span>
+        </div>
+        <p className="text-label font-medium text-foreground mt-0.5 line-clamp-2">
+          {item.title}
+        </p>
+        <p className="text-dense text-muted-foreground mt-0.5">
+          {item.status}
+          {item.severity ? ` · ${item.severity}` : ""} · {item.aging.ageDays}d old
+        </p>
+      </div>
+    </Link>
+  );
+}
+
+export function ServiceDeliveryPage() {
+  const opsAccess = useCanState("hr:cases:view");
+  const myAccess = useCanState("hr:helpdesk:view");
+  const canOps = opsAccess === "granted";
+  const canMy = myAccess === "granted";
+  const canSafety = useCan("hr:safety:view");
+  const {
+    data: ops,
+    isLoading: opsLoading,
+    error: opsError,
+    refetch: refetchOps,
+  } = useServiceDeliveryOpsInbox(canOps);
+  const {
+    data: mine,
+    isLoading: myLoading,
+    error: myError,
+    refetch: refetchMine,
+  } = useServiceDeliveryMyItems(canMy && !canOps);
+
+  const showOps = canOps;
+  const data = showOps ? ops : mine;
+  const isLoading = showOps ? opsLoading : myLoading;
+  const error = showOps ? opsError : myError;
+  const refetch = showOps ? refetchOps : refetchMine;
+  const items = data?.items ?? [];
+  const isError = !!error;
+  const pageState = usePageState({
+    permission: opsAccess === "denied" ? "hr:helpdesk:view" : "hr:cases:view",
+    isLoading: isLoading || (opsAccess === "denied" && myAccess === "loading"),
+    isError,
+    error,
+    isEmpty: items.length === 0,
+  });
+
+  function handleRetry() { void refetch(); }
+
+  return (
+    <PageWrapper
+      title="Service delivery"
+      subtitle={showOps ? "Unified HR ops inbox" : "My open requests"}
+    >
+      <div className="space-y-4">
+        <div
+          role="status"
+          className="flex gap-2.5 rounded-lg border border-border bg-card px-3 py-2.5"
+        >
+          <Info className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
+          <p className="text-dense text-muted-foreground leading-snug">
+            {data?.honestyNote ??
+              "Aggregates cases, safety incidents, and helpdesk tickets within your permissions."}
+          </p>
+        </div>
+
+        {showOps && ops && (
+          <StatCardGrid cols={4}>
+            <StatCard
+              label="Cases"
+              value={String(ops.totals.cases)}
+              icon={Briefcase}
+              tone="blue"
+              isLoading={opsLoading}
+            />
+            <StatCard
+              label="Safety"
+              value={String(ops.totals.safety)}
+              icon={Shield}
+              tone="amber"
+              isLoading={opsLoading}
+            />
+            <StatCard
+              label="Helpdesk"
+              value={String(ops.totals.helpdesk)}
+              icon={LifeBuoy}
+              tone="default"
+              isLoading={opsLoading}
+            />
+            <StatCard
+              label="Critical / SLA"
+              value={`${ops.totals.criticalAging} / ${ops.totals.slaBreached}`}
+              icon={AlertTriangle}
+              tone="default"
+              isLoading={opsLoading}
+              hint="Aging critical · SLA breached"
+            />
+          </StatCardGrid>
+        )}
+
+        <PageState
+          resolution={pageState}
+          loading={
+            <div className="space-y-2">
+              {LOADING_ROWS.map((n) => (
+                <Skeleton key={n} className="h-14 w-full rounded-lg" />
+              ))}
+            </div>
+          }
+          onRetry={handleRetry}
+          empty={
+            <EmptyState
+              title="Nothing open"
+              description={
+                showOps
+                  ? "No open cases, safety incidents, or helpdesk tickets in your view."
+                  : "You have no open helpdesk tickets or reported cases."
+              }
+              action={
+                showOps
+                  ? { label: "Open cases", href: "/hr/cases" }
+                  : { label: "Employee support", href: "/me/support" }
+              }
+            />
+          }
+        >
+          <div className="rounded-lg border border-border bg-card overflow-hidden">
+            <div className="px-3 py-2 border-b border-border flex items-center justify-between">
+              <p className="text-xs font-semibold">
+                {showOps ? "Prioritized queue" : "My open items"} ({items.length})
+              </p>
+              <div className="flex gap-2 text-micro text-muted-foreground">
+                {canOps && (
+                  <Link href="/hr/cases" className="underline underline-offset-2">
+                    Cases
+                  </Link>
+                )}
+                {canSafety && (
+                  <Link href="/hr/safety" className="underline underline-offset-2">
+                    Safety
+                  </Link>
+                )}
+                {canMy && (
+                  <Link href="/hr/helpdesk" className="underline underline-offset-2">
+                    Employee support
+                  </Link>
+                )}
+              </div>
+            </div>
+            <div className="max-h-[32rem] overflow-y-auto">
+              {items.map((item) => (
+                <ItemRow key={`${item.kind}-${item.id}`} item={item} />
+              ))}
+            </div>
+          </div>
+        </PageState>
+      </div>
+    </PageWrapper>
+  );
+}

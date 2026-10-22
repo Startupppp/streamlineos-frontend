@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useEffect, useRef, useMemo } from "react";
+import { useState, useEffect, useRef } from "react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -117,63 +117,63 @@ export function DashboardShell({
 
   const rafIdRef = useRef<number | null>(null);
 
-  const handleRetryAccess = useCallback(() => {
+  function handleRetryAccess() {
     void refetchAccess();
-  }, [refetchAccess]);
+  }
 
-  const handleToggleSidebar = useCallback(() => {
+  function handleToggleSidebar() {
     setIsSidebarCollapsed((prev) => {
       const next = !prev;
       setSidebarCookie(next);
       return next;
     });
-  }, []);
+  }
 
-  const handleOpenMobileMenu = useCallback(() => {
+  function handleOpenMobileMenu() {
     if (hideSidebar) {
       setProductSwitcherOpen(true);
       return;
     }
     setMobileMenuOpen(true);
-  }, [hideSidebar]);
+  }
 
-  const handleToggleMobileMenu = useCallback(() => {
+  function handleToggleMobileMenu() {
     if (hideSidebar) {
       setProductSwitcherOpen(true);
       return;
     }
     setMobileMenuOpen((open) => !open);
-  }, [hideSidebar]);
-  const handleCloseMobileMenu = useCallback(() => setMobileMenuOpen(false), []);
+  }
 
-  const deferCloseMobileMenu = useCallback(() => {
+  function handleCloseMobileMenu() {
+    setMobileMenuOpen(false);
+  }
+
+  function deferCloseMobileMenu() {
     if (rafIdRef.current !== null) cancelAnimationFrame(rafIdRef.current);
     rafIdRef.current = requestAnimationFrame(() => {
       rafIdRef.current = null;
       setMobileMenuOpen(false);
     });
-  }, []);
+  }
 
-  const handleRequestProductSwitcher = useCallback(() => {
+  function handleRequestProductSwitcher() {
     setProductSwitcherOpen(true);
     deferCloseMobileMenu();
-  }, [deferCloseMobileMenu]);
+  }
 
-  const handleRequestOrgSwitcher = useCallback(() => {
+  function handleRequestOrgSwitcher() {
     setOrgSwitcherOpen(true);
     deferCloseMobileMenu();
-  }, [deferCloseMobileMenu]);
+  }
 
   const sidebarW = isSidebarCollapsed
     ? SIDEBAR_COLLAPSED_W
     : SIDEBAR_EXPANDED_W;
   const isChatRoute = route.startsWith("/chat");
-  const showModuleBottomNav = useMemo(
-    () =>
-      !isPortalRoute &&
-      shouldShowMobileModuleBottomNav(navGroups, { isChatRoute }),
-    [navGroups, isChatRoute, isPortalRoute],
-  );
+  const showModuleBottomNav =
+    !isPortalRoute &&
+    shouldShowMobileModuleBottomNav(navGroups, { isChatRoute });
   const showChatBottomNav = isChatRoute && !isChatConversationOpen;
   const showAboveBottomNav = showModuleBottomNav || showChatBottomNav;
 

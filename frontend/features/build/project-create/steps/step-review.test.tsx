@@ -70,30 +70,11 @@ afterEach(() => {
   jest.clearAllMocks();
 });
 
-describe("StepReview features row — BUG-004", () => {
-  it("shows enabled feature labels in the Features row so the Review step reflects choices from the Features step", () => {
-    const draft: WizardDraft = {
-      ...makeDraft([]),
-      features: { backlog: true, kanban: true, bugs: false, qa: true },
-      modules: { epics: false, timeTracking: false, wiki: false },
-    };
-    render(<StepReview draft={draft} />);
+describe("StepReview features row", () => {
+  it("summarizes the all-on default instead of repeating every feature", () => {
+    render(<StepReview draft={makeDraft([])} />);
 
-    expect(document.body.textContent).toContain("Backlog");
-    expect(document.body.textContent).toContain("Kanban Board");
-    expect(document.body.textContent).toContain("QA / Testing");
-    expect(document.body.textContent).not.toContain("Bug Tracker");
-  });
-
-  it("shows None in the Features row when all features are disabled", () => {
-    const draft: WizardDraft = {
-      ...makeDraft([]),
-      features: { backlog: false, kanban: false },
-      modules: { epics: false, timeTracking: false, wiki: false },
-    };
-    render(<StepReview draft={draft} />);
-
-    expect(screen.getByText("None")).toBeInTheDocument();
+    expect(screen.getByText("All available features")).toBeInTheDocument();
   });
 });
 

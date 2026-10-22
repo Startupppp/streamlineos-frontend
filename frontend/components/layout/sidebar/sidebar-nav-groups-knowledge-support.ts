@@ -4,7 +4,6 @@ import type { NavGroup } from "./sidebar-nav-types";
 export const KNOWLEDGE_SUPPORT_NAV_GROUPS: NavGroup[] = [
 {
     label: "Support",
-    product: "helpdesk",
     module: "helpdesk",
     requiredPermission: [
       "support:tickets:view",
@@ -111,7 +110,6 @@ export const KNOWLEDGE_SUPPORT_NAV_GROUPS: NavGroup[] = [
   },
 {
     label: "SignOS",
-    product: "sign",
     module: "sign",
     // The group opens for any key one of its routes needs: a member holding only
     // `sign:audit:view` or `sign:access:view` used to see no SignOS entry at all.
@@ -171,7 +169,7 @@ export const KNOWLEDGE_SUPPORT_NAV_GROUPS: NavGroup[] = [
   },
 {
     label: "Knowledge",
-    product: "documents",
+    module: "documents",
     routes: [
       {
         label: "Docs",
@@ -187,7 +185,6 @@ export const KNOWLEDGE_SUPPORT_NAV_GROUPS: NavGroup[] = [
   },
 {
     label: "Surveys",
-    product: "surveys",
     module: "surveys",
     requiredPermission: "surveys:view",
     routes: [

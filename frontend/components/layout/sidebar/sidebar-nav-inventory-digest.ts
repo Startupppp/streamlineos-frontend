@@ -4,5 +4,6 @@
 // People Ops, Settings); Payroll's single list splits into Payroll, Salaries, Payslips & reports,
 // Payroll settings, with "Payroll home" and "Before you run payroll" as plain labels. No href or
 // permission changed. (The digest was already stale on main before this change.)
+// 2026-10-22: NavGroup.module alias removed (FE-143); group inventory no longer includes module field.
 export const EXPECTED_NAVIGATION_INVENTORY_DIGEST =
-  "73deaa800a721071cdad6363cd87a84db4822ce77bf1c6027708acae27aee34f";
+  "118bd8be256a9813be81dbf29271de2fdacc69bdb9d78ef0223cc8d96fc77735";

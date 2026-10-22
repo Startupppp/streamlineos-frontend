@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useMemo } from "react";
+import { useState } from "react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { SearchInput } from "@/components/ui/search-input";
 import { Button } from "@/components/ui/button";
@@ -66,15 +66,15 @@ export function FindExpertPage() {
     error,
   });
 
-  const handleRetry = useCallback(() => {
+  function handleRetry() {
     void refetch();
-  }, [refetch]);
+  }
 
-  const handleQueryChange = useCallback((value: string) => {
+  function handleQueryChange(value: string) {
     setQuery(value);
-  }, []);
+  }
 
-  const handleSearch = useCallback((e: React.FormEvent) => {
+  function handleSearch(e: React.FormEvent) {
     e.preventDefault();
     if (!query.trim()) return;
     setActiveParams({
@@ -82,39 +82,31 @@ export function FindExpertPage() {
       department: department === "__all__" ? "" : department,
       role: role === "__all__" ? "" : role,
     });
-  }, [query, department, role]);
+  }
 
-  const handleClearFilters = useCallback(() => {
+  function handleClearFilters() {
     setDepartment("__all__");
     setRole("__all__");
-  }, []);
+  }
 
   const hasActiveFilters = department !== "__all__" || role !== "__all__";
 
-  const groupedByMatchedSkill = useMemo((): Map<string, ExpertResult[]> => {
-    if (!experts || experts.length === 0) return new Map<string, ExpertResult[]>();
-    const groups = new Map<string, ExpertResult[]>();
-    for (const expert of experts) {
-      const key = expert.matchedSkill.toLowerCase().replace(/[.\s-]+/g, "");
-      const existing = groups.get(key);
-      if (existing) {
-        existing.push(expert);
-      } else {
-        groups.set(key, [expert]);
-      }
+  const groupedByMatchedSkill = new Map<string, ExpertResult[]>();
+  for (const expert of (experts ?? [])) {
+    const key = expert.matchedSkill.toLowerCase().replace(/[.\s-]+/g, "");
+    const existing = groupedByMatchedSkill.get(key);
+    if (existing) {
+      existing.push(expert);
+    } else {
+      groupedByMatchedSkill.set(key, [expert]);
     }
-    return groups;
-  }, [experts]);
+  }
 
-  const skillGroupNames = useMemo(() => {
-    const nameMap = new Map<string, string>();
-    if (!experts) return nameMap;
-    for (const expert of experts) {
-      const key = expert.matchedSkill.toLowerCase().replace(/[.\s-]+/g, "");
-      if (!nameMap.has(key)) nameMap.set(key, expert.matchedSkill);
-    }
-    return nameMap;
-  }, [experts]);
+  const skillGroupNames = new Map<string, string>();
+  for (const expert of (experts ?? [])) {
+    const key = expert.matchedSkill.toLowerCase().replace(/[.\s-]+/g, "");
+    if (!skillGroupNames.has(key)) skillGroupNames.set(key, expert.matchedSkill);
+  }
 
   const hasMultipleGroups = groupedByMatchedSkill.size > 1;
 
@@ -183,8 +175,8 @@ export function FindExpertPage() {
           />
         ) : isLoading ? (
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            {Array.from({ length: 10 }).map((_, i) => (
-              <Skeleton key={i} className="h-28 w-full rounded-lg" />
+            {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((n) => (
+              <Skeleton key={n} className="h-28 w-full rounded-lg" />
             ))}
           </div>
         ) : !experts || experts.length === 0 ? (

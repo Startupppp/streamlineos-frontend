@@ -1,5 +1,5 @@
 import { render, screen } from "@testing-library/react";
-import ServiceDeliveryPage from "./page";
+import { ServiceDeliveryPage } from "@/features/hr/service-delivery/service-delivery-page";
 
 /**
  * FE-47: a caller holding neither hr:cases:view nor hr:helpdesk:view has both

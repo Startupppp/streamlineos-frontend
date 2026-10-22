@@ -42,19 +42,20 @@ function unwrapDocumentTypes(
   return Array.isArray(res?.data) ? res.data : [];
 }
 
-export function useHrDocumentTypes(options?: { enabled?: boolean }) {
+export function useHrDocumentTypes(options?: { enabled?: boolean; limit?: number }) {
   const canManageDocuments = useCan("hr:documents:manage");
   const canViewDocuments = useCan("hr:documents:view");
   const canViewOwnDocuments = useCan("self:onboarding-docs");
+  const limit = options?.limit ?? 50;
   return useQuery<HrDocumentType[]>({
     enabled:
       (canManageDocuments || canViewDocuments || canViewOwnDocuments) &&
       (options?.enabled ?? true),
-    queryKey: [...humanResourcesQueryKeys.hr.documentTypes(), "all"] as const,
+    queryKey: [...humanResourcesQueryKeys.hr.documentTypes(), { limit }] as const,
     queryFn: async ({ signal }) => {
       const res = await apiClient.get<PaginatedHrDocumentTypes>(
         "/hr/document-types",
-        { limit: 100 },
+        { limit },
         signal,
         documentTypeListPageLazy,
       );

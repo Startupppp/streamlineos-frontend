@@ -1,7 +1,8 @@
 "use client";
 
+export type { DataScope } from "@/hooks/api/access-schema";
+
 export type {
-  DataScope,
   ModulePermission,
   ModuleRolePermission,
   ModuleRoleGroup,

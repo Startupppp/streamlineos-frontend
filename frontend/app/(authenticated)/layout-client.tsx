@@ -9,7 +9,6 @@ import { useNotificationEvents } from "@/features/notifications/use-notification
 import { useLogoutBroadcastListener } from "@/hooks/common/auth-hooks";
 import { I18nProvider } from "@/lib/i18n/i18n";
 import { BuildSidebarSkeleton } from "@/components/layout/sidebar/build-sidebar-skeleton";
-import type { BuildSidebarSlotProps } from "@/components/layout/sidebar/build-sidebar-slot";
 import { AuthenticatedProviders } from "@/components/providers/authenticated-providers";
 
 const BuildSidebar = dynamic(
@@ -44,14 +43,6 @@ interface LayoutClientProps {
   createTicketDialog?: ReactNode;
 }
 
-function renderBuildSidebar(props: BuildSidebarSlotProps) {
-  return <BuildSidebar {...props} />;
-}
-
-function renderChatMobileNav(onOpenMobileMenu: () => void) {
-  return <ChatMobileBottomNav onOpenMobileMenu={onOpenMobileMenu} />;
-}
-
 const notificationBellSlot = <NotificationBell />;
 
 function AccessVersionSync() {
@@ -67,8 +58,8 @@ export function LayoutClient({ children, ...shellProps }: LayoutClientProps) {
       <AuthenticatedProviders>
         <DashboardShell
           {...shellProps}
-          buildSidebarSlot={renderBuildSidebar}
-          chatMobileNavSlot={renderChatMobileNav}
+          buildSidebarSlot={BuildSidebar}
+          chatMobileNavSlot={(onOpenMobileMenu) => <ChatMobileBottomNav onOpenMobileMenu={onOpenMobileMenu} />}
           notificationBellSlot={notificationBellSlot}
         >
           <AccessVersionSync />

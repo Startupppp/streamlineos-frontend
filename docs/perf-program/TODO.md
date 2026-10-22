@@ -22,25 +22,29 @@ Baseline: root `3d8b74aea` · backend `ff2f38e51`. Commit locally per wave, neve
 - [x] L8 Per-page loading.tsx inventory across all in-scope routes
 
 ## Phase 2A — backend fixes (non-contract)
-- [ ] BA1 HRMS caching + invalidation (L2 cat 3) — REWORK: targeted invalidation (per-policy ns, aggregates only from source writers)
+- [x] BA1 HRMS caching + invalidation (L2 cat 3) — reworked: per-policy ns, hire/exit fan-out 15→8, unrelated aggregates TTL-only
 - [x] BA2 HRMS projections + Promise.all (L2 cat 2); pagination specs for paired lane
-- [ ] BA3 HRMS dead code, orgId alias, controller RBAC → service, N+1 applier (L2 cat 1/5/6)
-- [ ] BA4 Build: roadmap N+1, getProject cache, DONE literal, sprints, analytics key (L4)
-- [ ] BA5 Home: notifications/inbox cache, projections, PAGE_SIZE_MAX (L5 C/D/I)
-- [ ] BA6 Docs/KB/Ask backend caching + invalidation + queries (L6)
-- [ ] Coordinator: hr-policies.controller → HrPolicyConflictService direct; delete detectConflicts/detectOrgConflicts wrappers
+- [x] BA3 HRMS dead code, orgId alias, controller RBAC → service, N+1 applier (L2 cat 1/5/6)
+- [x] BA4 Build: roadmap N+1, getProject cache, DONE literal, sprints, analytics key (L4)
+- [x] BA5 Home: notifications/inbox cache, projections, PAGE_SIZE_MAX (L5 C/D/I)
+- [x] BA6 Docs/KB/Ask backend caching + invalidation + queries (L6)
+- [x] Coordinator: hr-policies.controller → HrPolicyConflictService direct; delete detectConflicts/detectOrgConflicts wrappers
 - [ ] Coordinator/paired: getDueLoanRepayments bounded page + payroll-inputs-build caller
+- [x] Coordinator: deleted dead CACHE_KEYS ticketsList/customStates/projectLabels (decision records kept)
+- [ ] BA7 (running) Home follow-up: approval writers (build approvals, attention adapters) bump the approver's inbox namespace; 22+ calendar unprojected selects
+- [x] Coordinator: check:cache-invalidation now passes (analytics readers use the literal namespace the 12 writers bump)
 - [ ] Coordinator: index migrations (modules, cycles trgm, workItemRelations, members search)
 
 ## Phase 2C — paired contract changes (BE + FE together)
 - [ ] HRMS keyset pagination: hiring-flows, automations rules/webhooks, analytics drilldown, case notes/documents
 - [ ] Build: drop `storyPoints` alias (keep `estimate`), drop `q` (keep `search`)
-- [ ] NavGroup `module` alias → `product`
+- [ ] NavGroup alias: keep `module`, delete `product` (in FS)
 ## Phase 2B — frontend fixes (BRIEF-FRONTEND.md; prefetch + per-page loading + cache patching + pagination + dead code + compiler cleanup + RBAC)
-- [ ] FS Shell/sidebar/nav (L7) incl. NavGroup `module` → `product`
-- [ ] FH1 HR people & documents (employees, org, onboarding, exit, termination, fnf, bgv, documents…)
-- [ ] FH2 HR time & settings (attendance, leaves, holidays, shifts, rosters, overtime, comp-off, geofencing, settings…)
-- [ ] FH3 HR talent, pay, ops (performance, goals, benefits, expenses, cases, assets, analytics, enterprise…)
+- [ ] (running) FS Shell/sidebar/nav (L7) incl. NavGroup `product` → `module`, ProductKey → ModuleKey (user ruling: "product" = Build managed products only)
+- [ ] (running) FH1 HR people & documents (employees, org, onboarding, exit, termination, fnf, bgv, documents…)
+- [ ] (running) FH2 HR time & settings (attendance, leaves, holidays, shifts, rosters, overtime, comp-off, geofencing, settings…)
+- [x] FH3 HR talent & analytics (performance, goals, kpis, benefits, engagement, analytics, workforce, hub)
+- [ ] (running) FH4 HR pay, cases & ops (expenses, travel, cases, safety, assets, service-delivery, enterprise ops)
 - [ ] FME Employee self-service `/me`
 - [ ] FBA Build cross-project pages (all-work, command-center, goals, roadmap, portfolios, managed-products…)
 - [ ] FBB Build project tickets/board/list/cycles/ticket-details

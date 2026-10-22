@@ -31,7 +31,6 @@ import type { NavGroup } from "./sidebar-nav-types";
 export const FINANCE_NAV_GROUPS: NavGroup[] = [
   {
     label: "Accounting & Finance",
-    product: "finance",
     module: "finance",
     // `accounting:read` and not `accounting:view`: no route enforces the
     // latter, so the group offered itself on a key the server never checks.

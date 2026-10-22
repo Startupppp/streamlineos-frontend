@@ -142,7 +142,6 @@ function routesFor(hrefs: readonly string[]): NavRoute[] {
 // salaries, pay out and report, configure. Each route keeps its own permission,
 // so regrouping changes no route gate.
 const PAYROLL_GROUP_BASE = {
-  product: "payroll",
   module: "payroll",
   requiredPermission: ["payroll:runs:view", "payroll:salaries:view", "self:payroll"],
 } satisfies Omit<NavGroup, "label" | "routes">;

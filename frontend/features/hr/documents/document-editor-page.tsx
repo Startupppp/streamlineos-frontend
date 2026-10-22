@@ -1,9 +1,10 @@
 "use client";
 
 import { getErrorMessage } from "@/lib/get-error-message";
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useRichDocument, useUpdateRichDocument, usePublishRichDocument } from "@/hooks/api/hr";
+import type { RichDocument } from "@/hooks/api/hr/rich-documents";
 import dynamic from "next/dynamic";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { LoadingButton } from "@/components/ui/loading-button";
@@ -23,72 +24,50 @@ const TiptapEditor = dynamic(
   { ssr: false, loading: () => <Skeleton className="h-96 w-full rounded-lg" /> },
 );
 
-export function DocumentEditorPage() {
-  const params = useParams<{ documentId: string }>();
-  const documentId = Number(params.documentId);
+interface DocumentEditorFormProps {
+  doc: RichDocument;
+  documentId: number;
+}
+
+function DocumentEditorForm({ doc, documentId }: DocumentEditorFormProps) {
+  const [title, setTitle] = useState(doc.title);
+  const [contentJson, setContentJson] = useState<unknown>(doc.contentJson);
+  const [isDirty, setIsDirty] = useState(false);
+  const router = useRouter();
 
   const updateDoc = useUpdateRichDocument();
   const publishDoc = usePublishRichDocument();
-  const { data: doc, isLoading, isError, error, refetch } = useRichDocument(documentId);
-  const router = useRouter();
-  const pageState = usePageState({ permission: "hr:documents:view", isLoading, isError, error });
 
-  const [title, setTitle] = useState("");
-  const [contentJson, setContentJson] = useState<unknown>(null);
-  const [isDirty, setIsDirty] = useState(false);
-  const autoSaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  useEffect(() => {
-    if (!doc) return;
-    const timeoutId = window.setTimeout(() => {
-      setTitle(doc.title);
-      setContentJson(doc.contentJson);
-    }, 0);
-    return () => window.clearTimeout(timeoutId);
-  }, [doc]);
-
-  const handleSave = useCallback(async () => {
+  async function handleSave() {
     if (!isDirty) return;
     await updateDoc.mutateAsync({ documentId, title, contentJson });
     setIsDirty(false);
     toast.success("Document saved");
-  }, [documentId, title, contentJson, isDirty, updateDoc]);
+  }
 
-  const saveAndReportFailure = useCallback((): void => {
+  function saveAndReportFailure(): void {
     void handleSave().catch((error) => toast.error(getErrorMessage(error)));
-  }, [handleSave]);
+  }
 
   useEffect(() => {
     if (!isDirty) return;
-    if (autoSaveTimer.current) clearTimeout(autoSaveTimer.current);
-    autoSaveTimer.current = setTimeout(saveAndReportFailure, 30_000);
-    return () => {
-      if (autoSaveTimer.current) clearTimeout(autoSaveTimer.current);
-    };
-  }, [isDirty, saveAndReportFailure]);
-
-  const handleContentChange = useCallback((json: Record<string, unknown>) => {
-    setContentJson(json);
-    setIsDirty(true);
-  }, []);
-
-  const handleTitleChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    setTitle(e.target.value);
-    setIsDirty(true);
-  }, []);
-
-  const handlePublish = useCallback(() => {
-    publishDoc.mutate(documentId, {
-      onSuccess: () => toast.success(doc?.isPublished ? "Document unpublished" : "Document published"),
-      onError: (e) => toast.error(getErrorMessage(e)),
-    });
-  }, [documentId, publishDoc, doc?.isPublished]);
+    const timer = setTimeout(async () => {
+      try {
+        await updateDoc.mutateAsync({ documentId, title, contentJson });
+        setIsDirty(false);
+        toast.success("Document saved");
+      } catch (error) {
+        toast.error(getErrorMessage(error));
+      }
+    }, 30_000);
+    return () => clearTimeout(timer);
+  }, [isDirty, documentId, title, contentJson, updateDoc]);
 
   const { requestLeave, dialogProps } = useUnsavedChangesGuard({
     isDirty,
     onDiscard: () => {
-      setTitle(doc?.title ?? "");
-      setContentJson(doc?.contentJson ?? null);
+      setTitle(doc.title);
+      setContentJson(doc.contentJson);
       setIsDirty(false);
     },
     onSave: async () => {
@@ -101,43 +80,25 @@ export function DocumentEditorPage() {
     },
   });
 
-  const handleBackToDocuments = useCallback(() => {
+  function handleBackToDocuments() {
     requestLeave(() => router.push("/hr/documents"));
-  }, [requestLeave, router]);
-
-  if (pageState.kind === "loading") {
-    return (
-      <PageWrapper title="Document Editor" subtitle="Loading...">
-        <div className="flex flex-1 min-h-0 flex-col gap-4">
-          <Skeleton className="h-10 w-full" />
-          <Skeleton className="h-100 w-full" />
-        </div>
-      </PageWrapper>
-    );
   }
 
-  if (pageState.kind !== "ready" && pageState.kind !== "empty") {
-    return (
-      <PageWrapper title="Document Editor" backHref="/hr/documents">
-        <PageState resolution={pageState} loading={null} onRetry={() => void refetch()} className="flex-1">
-          {null}
-        </PageState>
-      </PageWrapper>
-    );
+  function handlePublish() {
+    publishDoc.mutate(documentId, {
+      onSuccess: () => toast.success(doc.isPublished ? "Document unpublished" : "Document published"),
+      onError: (e) => toast.error(getErrorMessage(e)),
+    });
   }
 
-  if (!doc) {
-    return (
-      <PageWrapper title="Document Editor" backHref="/hr/documents">
-        <EmptyState
-          className="flex-1"
-          illustrationPreset="documents"
-          title="Document not found"
-          description="This document no longer exists or has been removed."
-          action={{ label: "Back to Documents", href: "/hr/documents" }}
-        />
-      </PageWrapper>
-    );
+  function handleContentChange(json: Record<string, unknown>) {
+    setContentJson(json);
+    setIsDirty(true);
+  }
+
+  function handleTitleChange(e: React.ChangeEvent<HTMLInputElement>) {
+    setTitle(e.target.value);
+    setIsDirty(true);
   }
 
   return (
@@ -197,4 +158,49 @@ export function DocumentEditorPage() {
       <UnsavedChangesDialog {...dialogProps} />
     </>
   );
+}
+
+export function DocumentEditorPage() {
+  const params = useParams<{ documentId: string }>();
+  const documentId = Number(params.documentId);
+
+  const { data: doc, isLoading, isError, error, refetch } = useRichDocument(documentId);
+  const pageState = usePageState({ permission: "hr:documents:view", isLoading, isError, error });
+
+  if (pageState.kind === "loading") {
+    return (
+      <PageWrapper title="Document Editor" subtitle="Loading...">
+        <div className="flex flex-1 min-h-0 flex-col gap-4">
+          <Skeleton className="h-10 w-full" />
+          <Skeleton className="h-100 w-full" />
+        </div>
+      </PageWrapper>
+    );
+  }
+
+  if (pageState.kind !== "ready" && pageState.kind !== "empty") {
+    return (
+      <PageWrapper title="Document Editor" backHref="/hr/documents">
+        <PageState resolution={pageState} loading={null} onRetry={() => void refetch()} className="flex-1">
+          {null}
+        </PageState>
+      </PageWrapper>
+    );
+  }
+
+  if (!doc) {
+    return (
+      <PageWrapper title="Document Editor" backHref="/hr/documents">
+        <EmptyState
+          className="flex-1"
+          illustrationPreset="documents"
+          title="Document not found"
+          description="This document no longer exists or has been removed."
+          action={{ label: "Back to Documents", href: "/hr/documents" }}
+        />
+      </PageWrapper>
+    );
+  }
+
+  return <DocumentEditorForm key={doc.id} doc={doc} documentId={documentId} />;
 }

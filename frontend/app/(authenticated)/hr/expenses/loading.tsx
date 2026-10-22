@@ -2,6 +2,8 @@ import { PageWrapper } from "@/components/ui/page-wrapper";
 import { StatCardGridSkeleton } from "@/components/ui/stat-card";
 import { Skeleton } from "@/components/ui/skeleton";
 
+const EXPENSE_ROWS = [1, 2, 3, 4] as const;
+
 export default function ExpensesLoading() {
   return (
     <PageWrapper
@@ -34,8 +36,8 @@ export default function ExpensesLoading() {
             <Skeleton className="h-3 w-28" />
           </div>
           <div className="divide-y divide-border">
-            {Array.from({ length: 4 }).map((_, i) => (
-              <div key={i} className="flex items-start gap-4 px-4 py-4 border-l-4 border-l-border">
+            {EXPENSE_ROWS.map((n) => (
+              <div key={n} className="flex items-start gap-4 px-4 py-4 border-l-4 border-l-border">
                 <div className="flex-shrink-0">
                   <Skeleton className="w-[96px] h-[76px] rounded-xl" />
                 </div>

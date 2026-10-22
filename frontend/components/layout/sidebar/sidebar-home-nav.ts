@@ -19,12 +19,12 @@ import type { NavGroup } from "./sidebar-nav-types";
 export const HOME_NAV_GROUPS: NavGroup[] = [
   {
     label: "Overview",
-    product: "home",
+    module: "home",
     routes: [{ label: "Home", href: "/dashboard", icon: LayoutDashboard }],
   },
   {
     label: "Communication",
-    product: "home",
+    module: "home",
     routes: [
       {
         label: "Inbox",
@@ -54,7 +54,7 @@ export const HOME_NAV_GROUPS: NavGroup[] = [
   },
   {
     label: "For Me",
-    product: "home",
+    module: "home",
     routes: [
       {
         label: "My Team",
@@ -109,7 +109,7 @@ export const HOME_NAV_GROUPS: NavGroup[] = [
   },
   {
     label: "Company",
-    product: "home",
+    module: "home",
     routes: [
       {
         label: "Announcements",

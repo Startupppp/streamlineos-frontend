@@ -1,6 +1,8 @@
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Skeleton } from "@/components/ui/skeleton";
 
+const PLAN_CARDS = [1, 2, 3, 4, 5, 6, 7, 8];
+
 export default function BenefitsLoading() {
   return (
     <PageWrapper
@@ -14,8 +16,8 @@ export default function BenefitsLoading() {
           <Skeleton className="h-7 w-28 rounded-md" />
         </div>
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {Array.from({ length: 8 }).map((_, i) => (
-            <Skeleton key={i} className="h-40 rounded-xl" />
+          {PLAN_CARDS.map((n) => (
+            <Skeleton key={n} className="h-40 rounded-xl" />
           ))}
         </div>
       </div>

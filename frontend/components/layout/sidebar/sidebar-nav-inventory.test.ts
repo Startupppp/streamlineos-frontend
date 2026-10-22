@@ -29,7 +29,6 @@ describe("sidebar navigation inventory", () => {
       defaultCollapsed: group.defaultCollapsed,
       requiredPermission: group.requiredPermission,
       product: group.product,
-      module: group.module,
       routes: group.routes.map(serializeNavigationRoute),
     }));
     const inventoryDigest = createHash("sha256")

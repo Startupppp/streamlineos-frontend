@@ -3,18 +3,18 @@ import { refineDateOrder } from "@/lib/date-refinements";
 
 export const reviewFormSchema = z
   .object({
-    employeeId: z.string(),
+    userId: z.string(),
     cycleId: z.string(),
     periodStart: z.string().min(1, "Period start is required"),
     periodEnd: z.string().min(1, "Period end is required"),
     isEdit: z.boolean(),
   })
   .superRefine((data, ctx) => {
-    if (!data.isEdit && !data.employeeId.trim()) {
+    if (!data.isEdit && !data.userId.trim()) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
         message: "Employee is required",
-        path: ["employeeId"],
+        path: ["userId"],
       });
     }
     refineDateOrder(data, ctx, {

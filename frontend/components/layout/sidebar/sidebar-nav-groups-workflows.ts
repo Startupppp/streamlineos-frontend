@@ -4,8 +4,7 @@ import type { NavGroup } from "./sidebar-nav-types";
 export const WORKFLOWS_NAV_GROUPS: NavGroup[] = [
 {
     label: "Workflows",
-    product: "administration",
-    module: "workflows",
+    module: "administration",
     requiredPermission: "workflows:workflows:view",
     routes: [
       {

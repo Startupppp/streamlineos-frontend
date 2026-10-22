@@ -5,6 +5,7 @@ import { apiClient } from "@/lib/api-client";
 import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
 import { lazyContract } from "@/lib/api-envelope";
 import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
+import { getProtectedFileUrl } from "@/hooks/common/use-file-url";
 
 const documentListLazy = lazyContract(() =>
   import("@/hooks/api/hr/documents-schema").then((m) => m.documentListContract),
@@ -190,4 +191,46 @@ export function useMissingOnboardingDocsCount(options?: { enabled?: boolean }) {
     missingCount: counts ? counts.PENDING + counts.IN_PROGRESS : undefined,
     isLoading: summaryQuery.isLoading,
   };
+}
+
+export interface DownloadableDocument {
+  id: number;
+  fileName: string | null | undefined;
+  name: string;
+}
+
+export interface DownloadZipResult {
+  downloaded: number;
+  failed: number;
+}
+
+export async function downloadHrDocumentsZip(
+  docs: DownloadableDocument[],
+): Promise<DownloadZipResult> {
+  const JSZip = (await import("jszip")).default;
+  const zip = new JSZip();
+  const results = await Promise.allSettled(
+    docs.map(async (doc) => {
+      const url = await getProtectedFileUrl(`/hr/documents/${doc.id}/file`);
+      const response = await fetch(url);
+      if (!response.ok)
+        throw new Error(`Failed to fetch ${doc.fileName ?? doc.name}`);
+      const blob = await response.blob();
+      if (blob.size === 0)
+        throw new Error(`${doc.fileName ?? doc.name} came back empty`);
+      zip.file(doc.fileName ?? `${doc.name}.bin`, blob);
+    }),
+  );
+  const failed = results.filter((r) => r.status === "rejected").length;
+  const downloaded = docs.length - failed;
+  if (downloaded > 0) {
+    const zipBlob = await zip.generateAsync({ type: "blob" });
+    const objectUrl = URL.createObjectURL(zipBlob);
+    const anchor = window.document.createElement("a");
+    anchor.href = objectUrl;
+    anchor.download = "documents.zip";
+    anchor.click();
+    URL.revokeObjectURL(objectUrl);
+  }
+  return { downloaded, failed };
 }

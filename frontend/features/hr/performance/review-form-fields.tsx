@@ -33,7 +33,7 @@ interface ReviewFormFieldsProps {
   editReview: PerformanceReviewListItem | null;
   employees: EmployeeListItem[];
   cycles: ReviewCycle[];
-  employeeId: string;
+  userId: string;
   onEmployeeChange: (id: string) => void;
   employeePickerOpen: boolean;
   onEmployeePickerOpenChange: (v: boolean) => void;
@@ -52,7 +52,7 @@ export function ReviewFormFields({
   editReview,
   employees,
   cycles,
-  employeeId,
+  userId,
   onEmployeeChange,
   employeePickerOpen,
   onEmployeePickerOpenChange,
@@ -66,7 +66,7 @@ export function ReviewFormFields({
   periodStartBounds,
   periodEndBounds,
 }: ReviewFormFieldsProps) {
-  const selectedEmployee = employees.find((e) => e.id === employeeId);
+  const selectedEmployee = employees.find((e) => e.id === userId);
 
   return (
     <>
@@ -83,7 +83,7 @@ export function ReviewFormFields({
                 aria-label="Employee"
                 className={cn(
                   "w-full justify-between font-normal",
-                  fieldErrors.employeeId && "border-destructive",
+                  fieldErrors.userId && "border-destructive",
                 )}
               >
                 <span className="truncate">
@@ -108,7 +108,7 @@ export function ReviewFormFields({
                         }}
                       >
                         <Check
-                          className={cn("mr-2 h-4 w-4", employeeId === e.id ? "opacity-100" : "opacity-0")}
+                          className={cn("mr-2 h-4 w-4", userId === e.id ? "opacity-100" : "opacity-0")}
                         />
                         {e.name ?? e.email}
                       </CommandItem>
@@ -118,8 +118,8 @@ export function ReviewFormFields({
               </Command>
             </PopoverContent>
           </Popover>
-          {fieldErrors.employeeId && (
-            <p id="review-employee-error" role="alert" className="text-xs text-destructive">{fieldErrors.employeeId}</p>
+          {fieldErrors.userId && (
+            <p id="review-employee-error" role="alert" className="text-xs text-destructive">{fieldErrors.userId}</p>
           )}
         </div>
       )}
@@ -185,13 +185,13 @@ export function ReviewFormFields({
         </div>
       </div>
 
-      {employeeId && periodStart && periodEnd && (
+      {userId && periodStart && periodEnd && (
         <div className="pt-2 border-t border-border">
           <p className="text-micro font-medium text-muted-foreground uppercase tracking-wider mb-2">
             AI Assist
           </p>
           <AIGenerateReviewButton
-            userId={employeeId}
+            userId={userId}
             userName={selectedEmployee?.name ?? "Employee"}
             periodStart={periodStart}
             periodEnd={periodEnd}

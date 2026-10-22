@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useMemo } from "react";
+import { useState } from "react";
 import {
   useHrPerformanceReviews,
   useReviewCycles,
@@ -59,7 +59,7 @@ export function ReviewsTab() {
   const [deleteId, setDeleteId] = useState<number | null>(null);
   const [statusFilter, setStatusFilter] = useState<StatusTab>("all");
   const [cursorHistory, setCursorHistory] = useState<Array<string | undefined>>([undefined]);
-  const [employeeId, setEmployeeId] = useState("");
+  const [userId, setUserId] = useState("");
   const [employeePickerOpen, setEmployeePickerOpen] = useState(false);
   const [cycleId, setCycleId] = useState("none");
   const [periodStart, setPeriodStart] = useState("");
@@ -81,35 +81,32 @@ export function ReviewsTab() {
   const updateReview = useUpdatePerformanceReview();
   const deleteReview = useDeletePerformanceReview();
 
-  const employees = useMemo(
-    () => unwrapEmployees(employeesRaw).filter((e) => !!e.id),
-    [employeesRaw],
-  );
+  const employees = unwrapEmployees(employeesRaw).filter((e) => !!e.id);
 
-  const handleStatusChange = useCallback((value: string) => {
+  function handleStatusChange(value: string) {
     setStatusFilter(isStatusTab(value) ? value : "all");
     setCursorHistory([undefined]);
-  }, []);
+  }
 
-  const handleEmployeeChange = useCallback((id: string) => {
-    setEmployeeId(id);
+  function handleEmployeeChange(id: string) {
+    setUserId(id);
     setFieldErrors((prev) => {
       const next = { ...prev };
-      delete next.employeeId;
+      delete next.userId;
       return next;
     });
-  }, []);
+  }
 
-  const handleNextPage = useCallback(() => {
+  function handleNextPage() {
     const nextCursor = data?.pagination.nextCursor;
     if (nextCursor) setCursorHistory((h) => [...h, nextCursor]);
-  }, [data?.pagination.nextCursor]);
+  }
 
-  const handlePreviousPage = useCallback(() => {
+  function handlePreviousPage() {
     setCursorHistory((h) => (h.length > 1 ? h.slice(0, -1) : h));
-  }, []);
+  }
 
-  const handleCycleChange = useCallback((value: string) => {
+  function handleCycleChange(value: string) {
     setCycleId(value);
     if (value !== "none") {
       const cycle = (Array.isArray(cycles) ? cycles : []).find((c: ReviewCycle) => String(c.id) === value);
@@ -129,20 +126,20 @@ export function ReviewsTab() {
         });
       }
     }
-  }, [cycles]);
+  }
 
-  const resetForm = useCallback(() => {
-    setEmployeeId("");
+  function resetForm() {
+    setUserId("");
     setCycleId("none");
     setPeriodStart("");
     setPeriodEnd("");
     setEditReview(null);
     setFieldErrors({});
-  }, []);
+  }
 
-  const handleCreate = useCallback(() => {
+  function handleCreate() {
     const parsed = reviewFormSchema.safeParse({
-      employeeId,
+      userId,
       cycleId,
       periodStart,
       periodEnd,
@@ -179,59 +176,59 @@ export function ReviewsTab() {
       return;
     }
 
-    const selectedEmployee = employees.find((e) => e.id === employeeId);
+    const selectedEmployee = employees.find((e) => e.id === userId);
     if (selectedEmployee?.joiningDate && periodStart < selectedEmployee.joiningDate.toString().slice(0, 10)) {
       setFieldErrors({ periodStart: "Period start cannot be earlier than the employee's joining date" });
       return;
     }
     createReview.mutate(
-      { userId: employeeId, cycleId: cycleId !== "none" ? Number(cycleId) : undefined, periodStart, periodEnd },
+      { userId, cycleId: cycleId !== "none" ? Number(cycleId) : undefined, periodStart, periodEnd },
       {
         onSuccess: () => { toast.success("Review created"); setSheetOpen(false); resetForm(); },
         onError: (e) => toast.error(getErrorMessage(e)),
       },
     );
-  }, [editReview, employeeId, cycleId, periodStart, periodEnd, createReview, updateReview, employees, cycles, resetForm]);
+  }
 
-  const handleOpenEdit = useCallback((review: PerformanceReviewListItem) => {
+  function handleOpenEdit(review: PerformanceReviewListItem) {
     setEditReview(review);
     setCycleId(review.cycleId ? String(review.cycleId) : "none");
     setPeriodStart(review.periodStart);
     setPeriodEnd(review.periodEnd);
     setFieldErrors({});
     setSheetOpen(true);
-  }, []);
+  }
 
-  const handleComplete = useCallback((id: number) => {
+  function handleComplete(id: number) {
     updateReview.mutate({ reviewId: id, status: "COMPLETED" }, {
       onSuccess: () => toast.success("Review marked as completed"),
       onError: (e) => toast.error(getErrorMessage(e)),
     });
-  }, [updateReview]);
+  }
 
-  const handleDelete = useCallback(() => {
+  function handleDelete() {
     if (!deleteId) return;
     deleteReview.mutate(deleteId, {
       onSuccess: () => { toast.success("Review deleted"); setDeleteId(null); },
       onError: (e) => toast.error(getErrorMessage(e)),
     });
-  }, [deleteId, deleteReview]);
+  }
 
-  const handleOpenSheet = useCallback(() => { resetForm(); setSheetOpen(true); }, [resetForm]);
+  function handleOpenSheet() { resetForm(); setSheetOpen(true); }
 
   const periodStartBounds = planningStartPickerProps({ existingValue: editReview ? periodStart : undefined });
   const periodEndBounds = planningEndPickerProps({ startDate: periodStart, mode: "after", existingValue: editReview ? periodEnd : undefined });
 
-  const handlePeriodStartChange = useCallback((value: string) => {
+  function handlePeriodStartChange(value: string) {
     setPeriodStart(value);
     setPeriodEnd((prev) => clearEndIfInvalid(value, prev, "after"));
     setFieldErrors((prev) => { const next = { ...prev }; delete next.periodStart; delete next.periodEnd; return next; });
-  }, []);
+  }
 
-  const handlePeriodEndChange = useCallback((value: string) => {
+  function handlePeriodEndChange(value: string) {
     setPeriodEnd(value);
     setFieldErrors((prev) => { const next = { ...prev }; delete next.periodEnd; return next; });
-  }, []);
+  }
 
   if (pageState.kind !== "ready" && pageState.kind !== "empty" && pageState.kind !== "loading") {
     const handleRetry = () => { void refetch(); };
@@ -354,7 +351,7 @@ export function ReviewsTab() {
           editReview={editReview}
           employees={employees}
           cycles={Array.isArray(cycles) ? cycles : []}
-          employeeId={employeeId}
+          userId={userId}
           onEmployeeChange={handleEmployeeChange}
           employeePickerOpen={employeePickerOpen}
           onEmployeePickerOpenChange={setEmployeePickerOpen}

@@ -5,7 +5,6 @@ import type { NavGroup } from "./sidebar-nav-types";
 const TIMESHEETS_NAV_GROUPS: NavGroup[] = [
 {
     label: "Timesheets",
-    product: "timesheets",
     module: "timesheets",
     requiredPermission: [
       "timesheets:entries:view",

@@ -127,7 +127,9 @@ export function useCreateBenefitPlan() {
     mutationKey: ["hr", "benefits", "plans", "create"],
     mutationFn: (data: Omit<BenefitPlan, "id" | "orgId" | "createdAt" | "updatedAt">) =>
       apiClient.post<BenefitPlan>("/hr/benefits/plans", data, undefined, benefitPlanC),
-    onSuccess: () => qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.benefitsAll }),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.benefitPlans() });
+    },
   });
 }
 
@@ -137,7 +139,12 @@ export function useUpdateBenefitPlan() {
     mutationKey: ["hr", "benefits", "plans", "update"],
     mutationFn: ({ planId, ...data }: Partial<BenefitPlan> & { planId: number }) =>
       apiClient.patch<BenefitPlan>(`/hr/benefits/plans/${planId}`, data, undefined, benefitPlanC),
-    onSuccess: () => qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.benefitsAll }),
+    onSuccess: (updatedPlan) => {
+      qc.setQueriesData<BenefitsCursorPage<BenefitPlan>>(
+        { queryKey: humanResourcesQueryKeys.hr.benefitPlans() },
+        (old) => old ? { ...old, data: old.data.map((p) => p.id === updatedPlan.id ? updatedPlan : p) } : old,
+      );
+    },
   });
 }
 
@@ -159,7 +166,21 @@ export function useEnroll() {
     mutationKey: ["hr", "benefits", "enroll"],
     mutationFn: (data: { planId: number; effectiveFrom?: string; dependentsCovered?: number }) =>
       apiClient.post<BenefitEnrollment>("/hr/benefits/enroll", data, undefined, enrollmentC),
-    onSuccess: () => qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.benefitMy }),
+    onSuccess: (enrollment) => {
+      qc.setQueryData<{ enrollments: BenefitEnrollment[]; dependents: Dependent[] }>(
+        humanResourcesQueryKeys.hr.benefitMy,
+        (old) => {
+          if (!old) return old;
+          const exists = old.enrollments.some((e) => e.id === enrollment.id);
+          return {
+            ...old,
+            enrollments: exists
+              ? old.enrollments.map((e) => e.id === enrollment.id ? enrollment : e)
+              : [...old.enrollments, enrollment],
+          };
+        },
+      );
+    },
   });
 }
 
@@ -169,7 +190,12 @@ export function useWaive() {
     mutationKey: ["hr", "benefits", "waive"],
     mutationFn: (data: { planId: number }) =>
       apiClient.post<BenefitEnrollment>("/hr/benefits/waive", data, undefined, waiveC),
-    onSuccess: () => qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.benefitMy }),
+    onSuccess: (enrollment) => {
+      qc.setQueryData<{ enrollments: BenefitEnrollment[]; dependents: Dependent[] }>(
+        humanResourcesQueryKeys.hr.benefitMy,
+        (old) => old ? { ...old, enrollments: old.enrollments.map((e) => e.id === enrollment.id ? enrollment : e) } : old,
+      );
+    },
   });
 }
 
@@ -190,9 +216,15 @@ export function useAddDependent() {
     mutationKey: ["hr", "benefits", "dependents", "add"],
     mutationFn: (data: { name: string; relationship: string; dateOfBirth?: string; isCovered?: boolean }) =>
       apiClient.post<Dependent>("/hr/benefits/dependents", data, undefined, dependentSingleC),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.benefitDependents });
-      qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.benefitMy });
+    onSuccess: (dependent) => {
+      qc.setQueryData<Dependent[]>(
+        humanResourcesQueryKeys.hr.benefitDependents,
+        (old) => old ? [...old, dependent] : [dependent],
+      );
+      qc.setQueryData<{ enrollments: BenefitEnrollment[]; dependents: Dependent[] }>(
+        humanResourcesQueryKeys.hr.benefitMy,
+        (old) => old ? { ...old, dependents: [...old.dependents, dependent] } : old,
+      );
     },
   });
 }
@@ -202,7 +234,16 @@ export function useDeleteDependent() {
   return useAuthorizedMutation("hr:benefits:view", {
     mutationKey: ["hr", "benefits", "dependents", "delete"],
     mutationFn: (dependentId: number) => apiClient.delete<{ ok: boolean }>(`/hr/benefits/dependents/${dependentId}`, undefined, undefined, deleteDependentC),
-    onSuccess: () => qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.benefitDependents }),
+    onSuccess: (_, dependentId) => {
+      qc.setQueryData<Dependent[]>(
+        humanResourcesQueryKeys.hr.benefitDependents,
+        (old) => old ? old.filter((d) => d.id !== dependentId) : old,
+      );
+      qc.setQueryData<{ enrollments: BenefitEnrollment[]; dependents: Dependent[] }>(
+        humanResourcesQueryKeys.hr.benefitMy,
+        (old) => old ? { ...old, dependents: old.dependents.filter((d) => d.id !== dependentId) } : old,
+      );
+    },
   });
 }
 
@@ -241,7 +282,12 @@ export function useReviewClaim() {
       rejectionReason?: string;
       payoutRoute?: string;
     }) => apiClient.patch<InsuranceClaim>(`/hr/benefits/claims/${claimId}/review`, data, undefined, claimSingleC),
-    onSuccess: () => qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.benefitsAll }),
+    onSuccess: (updatedClaim) => {
+      qc.setQueriesData<BenefitsCursorPage<InsuranceClaim>>(
+        { queryKey: humanResourcesQueryKeys.hr.benefitClaims() },
+        (old) => old ? { ...old, data: old.data.map((c) => c.id === updatedClaim.id ? updatedClaim : c) } : old,
+      );
+    },
   });
 }
 

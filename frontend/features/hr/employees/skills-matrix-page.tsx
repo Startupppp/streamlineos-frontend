@@ -1,10 +1,10 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState } from "react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Skeleton } from "@/components/ui/skeleton";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { SkillsMatrixSkeleton } from "./skills-matrix-skeleton";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { usePageState } from "@/hooks/api/use-page-state";
@@ -48,15 +48,14 @@ export function SkillsMatrixPage() {
   });
   const [compact, setCompact] = useState(false);
 
-  const toggleCompact = useCallback(
-    () => setCompact((currentCompact) => !currentCompact),
-    [],
-  );
-  const handleRetry = useCallback(() => { void refetch(); }, [refetch]);
-  const handlePreviousPage = useCallback(() => {
+  function toggleCompact() {
+    setCompact((currentCompact) => !currentCompact);
+  }
+  function handleRetry() { void refetch(); }
+  function handlePreviousPage() {
     setPage((currentPage) => Math.max(1, currentPage - 1));
-  }, []);
-  const handleNextPage = useCallback(() => {
+  }
+  function handleNextPage() {
     const nextCursor = data?.pageInfo.nextCursor;
     if (!nextCursor) return;
     setCursorHistory((currentHistory) => {
@@ -65,12 +64,12 @@ export function SkillsMatrixPage() {
       return retainedHistory;
     });
     setPage((currentPage) => currentPage + 1);
-  }, [data?.pageInfo.nextCursor, page]);
-  const handlePageSizeChange = useCallback((nextPageSize: number) => {
+  }
+  function handlePageSizeChange(nextPageSize: number) {
     setPageSize(nextPageSize);
     setCursorHistory([undefined]);
     setPage(1);
-  }, []);
+  }
 
   // No server-side requirePermission guards this route; a caller without
   // hr:employees:view must see the refusal, not "No skills data yet" (FE-47).
@@ -81,27 +80,7 @@ export function SkillsMatrixPage() {
     error,
   });
 
-  const loadingSkeleton = (
-    <div className="rounded-xl border border-border overflow-hidden">
-      <div className="flex border-b bg-muted/40 px-3 py-2 gap-4">
-        <Skeleton className="h-4 w-32" />
-        {Array.from({ length: 10 }).map((_, columnSkeletonIndex) => (
-          <Skeleton key={columnSkeletonIndex} className="h-4 w-16" />
-        ))}
-      </div>
-      {Array.from({ length: 5 }).map((_, rowSkeletonIndex) => (
-        <div key={rowSkeletonIndex} className="flex items-center border-b last:border-0 px-3 py-2.5 gap-4">
-          <div className="flex items-center gap-2 w-40 shrink-0">
-            <Skeleton className="h-6 w-6 rounded-full" />
-            <Skeleton className="h-4 w-24" />
-          </div>
-          {Array.from({ length: 10 }).map((_, cellSkeletonIndex) => (
-            <Skeleton key={cellSkeletonIndex} className="h-5 w-16 rounded" />
-          ))}
-        </div>
-      ))}
-    </div>
-  );
+  const loadingSkeleton = <SkillsMatrixSkeleton />;
 
   const employees = data?.employees ?? [];
   const skills = data?.skills ?? [];
