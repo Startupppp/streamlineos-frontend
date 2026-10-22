@@ -8,7 +8,7 @@ import { toSearchParams, type RouteSearchParams } from "@/lib/route-search-param
 import { prefetchBillingSettings } from "@/lib/prefetch/settings-billing";
 
 export const metadata: Metadata = {
-  title: "Billing & Plan | StreamlineOS",
+  title: "Billing & Plan",
 };
 
 export default async function BillingSettingsRoute({

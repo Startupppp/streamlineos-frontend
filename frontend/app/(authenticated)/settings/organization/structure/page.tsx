@@ -6,7 +6,7 @@ import { OrganizationStructurePage } from "@/features/organization/organization-
 import { prefetchOrgStructure } from "@/lib/prefetch/settings";
 
 export const metadata: Metadata = {
-  title: "Organization Structure | StreamlineOS",
+  title: "Organization Structure",
 };
 
 export default async function OrganizationStructureRoute() {

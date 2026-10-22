@@ -7,7 +7,7 @@ import { ContactForm } from "@/features/landing/contact-form";
 import { BRAND_NAME, BRAND_SUPPORT_EMAIL } from "@/lib/branding";
 
 export const metadata: Metadata = {
-  title: `Contact ${BRAND_NAME}`,
+  title: "Contact",
   description: `Reach the ${BRAND_NAME} team — sales, support, partnerships, and press.`,
   alternates: { canonical: "/contact" },
 };

@@ -29,7 +29,7 @@ import {
 } from "@/features/landing/components/pricing-page-sections";
 
 export const metadata: Metadata = {
-  title: `Pricing — ${BRAND_NAME}`,
+  title: "Pricing",
   description: `From ${cheapestAnnualLabel()} per organisation / month on annual billing. Free for ${PRICING.freeSeatLimit} seats. Every app in one plan.`,
   alternates: { canonical: "/pricing" },
   openGraph: {

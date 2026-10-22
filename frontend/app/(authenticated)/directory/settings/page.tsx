@@ -3,7 +3,7 @@ import { PeopleDirectoryPage } from "@/features/directory/people/people-director
 import { requirePermission } from "@/lib/rbac/require-permission";
 
 export const metadata: Metadata = {
-  title: "Directory | StreamlineOS",
+  title: "Directory",
 };
 
 export default async function DirectorySettingsRoute() {

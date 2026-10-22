@@ -3,7 +3,7 @@ import { LegalShell, LegalSection, PlainEnglish } from "@/features/landing/legal
 import { BRAND_NAME, BRAND_SUPPORT_EMAIL } from "@/lib/branding";
 
 export const metadata: Metadata = {
-  title: `Security — ${BRAND_NAME}`,
+  title: "Security",
   description: `How ${BRAND_NAME} secures customer data, infrastructure, and the development pipeline.`,
   alternates: { canonical: "/legal/security" },
 };

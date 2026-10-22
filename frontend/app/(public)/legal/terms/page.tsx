@@ -5,7 +5,7 @@ import { BRAND_NAME, BRAND_DOMAIN, BRAND_SUPPORT_EMAIL } from "@/lib/branding";
 import { PRICING } from "@/lib/pricing";
 
 export const metadata: Metadata = {
-  title: `Terms of Service — ${BRAND_NAME}`,
+  title: "Terms of Service",
   description: `The agreement between you and ${BRAND_NAME} for use of the platform.`,
   alternates: { canonical: "/legal/terms" },
 };

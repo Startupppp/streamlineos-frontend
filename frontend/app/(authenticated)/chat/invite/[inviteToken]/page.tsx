@@ -2,7 +2,7 @@ import { Metadata } from "next";
 import { ChatInviteJoinPage } from "@/features/chat/chat-invite-join-page";
 
 export const metadata: Metadata = {
-  title: "Join Channel | StreamlineOS",
+  title: "Join Channel",
 };
 
 export default async function Page({
