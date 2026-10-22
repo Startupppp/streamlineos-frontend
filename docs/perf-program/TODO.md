@@ -34,7 +34,7 @@ Baseline: root `3d8b74aea` · backend `ff2f38e51`. Commit locally per wave, neve
 - [x] BA7 Home follow-up: approval writers (build approvals, attention adapters) bump the approver's inbox namespace; 22+ calendar unprojected selects
 - [x] Coordinator: check:cache-invalidation now passes (analytics readers use the literal namespace the 12 writers bump)
 - [ ] Deferred: hr-workflow-engine approval writers inbox bump; 8 calendar stores still full-row (typed $inferSelect views)
-- [ ] Coordinator (after FS): HR nav travel entries use hr:expenses:view/manage but pages gate hr:travel:view/manage — align nav to page keys
+- [x] Coordinator: travel nav keys aligned to hr:travel:view/manage; nav digest updated
 - [ ] Coordinator: index migrations (modules, cycles trgm, workItemRelations, members search)
 
 ## Phase 2C — paired contract changes (BE + FE together)
@@ -42,20 +42,22 @@ Baseline: root `3d8b74aea` · backend `ff2f38e51`. Commit locally per wave, neve
 - [ ] Build: drop `storyPoints` alias (keep `estimate`), drop `q` (keep `search`)
 - [ ] NavGroup alias: keep `module`, delete `product` (in FS)
 ## Phase 2B — frontend fixes (BRIEF-FRONTEND.md; prefetch + per-page loading + cache patching + pagination + dead code + compiler cleanup + RBAC)
-- [ ] (running) FS Shell/sidebar/nav (L7) incl. NavGroup `product` → `module`, ProductKey → ModuleKey (user ruling: "product" = Build managed products only)
+- [x] FS Shell/sidebar/nav (L7) incl. NavGroup `product` → `module`, ProductKey → ModuleKey (user ruling: "product" = Build managed products only)
 - [ ] (running, follow-up: prefetch 7→31 pages; editor gate restored to manage) FH1 HR people & documents (employees, org, onboarding, exit, termination, fnf, bgv, documents…)
-- [ ] (follow-up: shared queryOptions keys + page-gate check) FH2 HR time & settings (attendance, leaves, holidays, shifts, rosters, overtime, comp-off, geofencing, settings…)
+- [x] FH2 HR time & settings (attendance, leaves, holidays, shifts, rosters, overtime, comp-off, geofencing, settings…)
 - [x] FH3 HR talent & analytics (performance, goals, kpis, benefits, engagement, analytics, workforce, hub)
-- [ ] (follow-up: shared queryOptions keys) FH4 HR pay, cases & ops (expenses, travel, cases, safety, assets, service-delivery, enterprise ops)
-- [ ] (running) FME Employee self-service `/me`
-- [ ] FBA Build cross-project pages (all-work, command-center, goals, roadmap, portfolios, managed-products…)
-- [ ] FBB Build project tickets/board/list/cycles/ticket-details
-- [ ] FBC Build project other pages (wiki, files, intake, qa, releases, risks, meetings…)
+- [x] FH4 HR pay, cases & ops (expenses, travel, cases, safety, assets, service-delivery, enterprise ops)
+- [x] FME Employee self-service `/me` (7/7 pages prefetched, orphan me/loading.tsx + 9 empty dirs removed)
+- [ ] (running) FBA Build cross-project pages (all-work, command-center, goals, roadmap, portfolios, managed-products…)
+- [ ] (running) FBB Build project tickets/board/list/cycles/ticket-details
+- [ ] (running) FBC Build project other pages (wiki, files, intake, qa, releases, risks, meetings…)
 - [ ] (running) FHM Home: dashboard, calendar, chat, inbox, mail (L5)
-- [ ] FKB Knowledge: docs/wiki/Ask OS/research briefs (L6)
+- [ ] (running) FKB Knowledge: docs/wiki/Ask OS/research briefs (L6)
 ## Phase 3 — verification
 - [ ] (running) BX backend spec repair: 48 suites failing after Wave A (mostly mock drift; checking real regressions)
 - [ ] Backend tsc · lint · focused jest
 - [ ] Frontend type-check · lint · knip · focused jest · next build
+- [x] Coordinator fixes after FS: nav groups computed once (hook applies HR week-one, AppSidebar takes prop); restored named slot renderers (FS passed a dynamic component to a function-called slot → hooks-order crash); removed 3 added comments; getNavGroupsForProduct → getNavGroupsForModule
+- [ ] Coordinator (after FH1/FH3): export queryOptions from hr exit/attendance/expenses/documents/manager-home hooks; replace hand-typed keys in lib/prefetch/me.ts
 - [ ] Unwired-module sweep · RBAC gate parity
 - [ ] Local commits (root + backend)

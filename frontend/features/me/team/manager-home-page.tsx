@@ -1,6 +1,5 @@
 "use client";
 
-import { useCallback } from "react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { PageState } from "@/components/shared/page-state";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -14,14 +13,14 @@ import { PendingDecisionsStrip } from "./pending-decisions-strip";
 import { TeamCoveragePanels } from "./team-coverage-panels";
 import { TeamRoster } from "./team-roster";
 
-function ManagerHomeSkeleton() {
+export function ManagerHomeSkeleton() {
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-4">
       <StatCardGridSkeleton cols={3} count={3} />
       <div className={PAGE_BODY_SKELETON_CLASS}>
         <Skeleton className="h-10 w-48 max-w-full rounded-lg" />
-        {Array.from({ length: 5 }, (_, index) => (
-          <Skeleton key={index} className="h-14 w-full rounded-lg" />
+        {Array.from({ length: 5 }, (_, i) => (
+          <Skeleton key={"row-" + String(i)} className="h-14 w-full rounded-lg" />
         ))}
       </div>
     </div>
@@ -31,9 +30,10 @@ function ManagerHomeSkeleton() {
 export function ManagerHomePage() {
   const { data, isLoading, isError, error, refetch } = useManagerHome();
   const pageState = usePageState({ isLoading, isError, error });
-  const handleRetry = useCallback(() => {
+
+  function handleRetry() {
     void refetch();
-  }, [refetch]);
+  }
 
   const pendingTotal = data
     ? data.approvals.leave + data.approvals.wfh + data.approvals.timesheets + data.approvals.workflows

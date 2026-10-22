@@ -275,8 +275,13 @@ export function restoreMailCaches(
 }
 
 export function invalidateAfterMailSend(qc: QueryClient): void {
-  void qc.invalidateQueries({ queryKey: directoryAndOwnershipQueryKeys.mail.all });
-  void qc.invalidateQueries({ queryKey: platformCoreQueryKeys.inbox.all });
+  const messagesPrefix = [...directoryAndOwnershipQueryKeys.mail.all, "messages"] as const;
+  void qc.invalidateQueries({ queryKey: messagesPrefix });
+  void qc.invalidateQueries({
+    queryKey: platformCoreQueryKeys.inbox.unified({ count: true }),
+    exact: true,
+    refetchType: "none",
+  });
 }
 
 const SEEDED_UPDATED_AT = 0;

@@ -36,10 +36,6 @@ export interface ProbationReview {
   workEmail: string | null;
 }
 
-const probationKeys = {
-  all: [...humanResourcesQueryKeys.hr.all, "probation"] as const,
-  list: (params: ProbationListParams) => [...humanResourcesQueryKeys.hr.all, "probation", "list", params] as const,
-};
 
 export interface ProbationListParams {
   cursor?: string;
@@ -59,7 +55,7 @@ export function useProbationList(params: ProbationListParams = {}) {
   const canProbation = useCan("hr:probation:view");
   const hrEnabled = useModuleEnabled("hr");
   return useQuery<ProbationListResponse>({
-    queryKey: probationKeys.list(params),
+    queryKey: humanResourcesQueryKeys.hr.probationList(params),
     queryFn: ({ signal }) => {
       const searchParams = new URLSearchParams();
       searchParams.set("limit", String(params.limit ?? 20));
@@ -89,7 +85,7 @@ export function useExtendProbation() {
         reason,
       }, undefined, extendProbationC),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: probationKeys.all });
+      qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.probationAll });
     },
   });
 }
@@ -112,7 +108,7 @@ export function useConfirmProbation() {
         notes,
       }, undefined, confirmProbationC),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: probationKeys.all });
+      qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.probationAll });
     },
   });
 }

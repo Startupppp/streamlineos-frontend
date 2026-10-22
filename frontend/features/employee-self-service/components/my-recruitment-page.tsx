@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
+import { useState } from "react";
 import type { SelfServiceHubChrome } from "@/lib/self-service-hub-chrome";
 import { format } from "date-fns";
 import { CheckCircle2, ExternalLink, MessageSquareText } from "lucide-react";
@@ -49,23 +49,20 @@ export function MyRecruitmentPage({ hubChrome }: { hubChrome?: SelfServiceHubChr
     isEmpty: data?.items.length === 0,
   });
 
-  const upcomingCount = useMemo(
-    () =>
-      data?.items.filter(
-        (interview) =>
-          interview.result === "PENDING" &&
-          new Date(interview.scheduledAt).getTime() >= referenceNow,
-      ).length ?? 0,
-    [data?.items, referenceNow],
-  );
+  const upcomingCount =
+    data?.items.filter(
+      (interview) =>
+        interview.result === "PENDING" &&
+        new Date(interview.scheduledAt).getTime() >= referenceNow,
+    ).length ?? 0;
 
-  const handleSheetChange = useCallback((open: boolean) => {
+  function handleSheetChange(open: boolean) {
     if (!open) setFeedbackInterview(null);
-  }, []);
+  }
 
-  const handlePreviousPage = useCallback(() => {
+  function handlePreviousPage() {
     setPage((value) => Math.max(1, value - 1));
-  }, []);
+  }
 
   return (
     <PageWrapper
@@ -79,8 +76,8 @@ export function MyRecruitmentPage({ hubChrome }: { hubChrome?: SelfServiceHubChr
         className="flex-1"
         loading={
           <div className={PAGE_BODY_SKELETON_CLASS}>
-            {Array.from({ length: 6 }, (_, index) => (
-              <Skeleton key={index} className="h-20 rounded-lg" />
+            {Array.from({ length: 6 }, (_, i) => (
+              <Skeleton key={"row-" + String(i)} className="h-20 rounded-lg" />
             ))}
           </div>
         }

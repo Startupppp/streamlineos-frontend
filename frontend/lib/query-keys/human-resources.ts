@@ -117,6 +117,44 @@ export const humanResourcesQueryKeys = {
         : ([...base, "hr", "oneOnOnes", params] as const),
     termination: (terminationId: number) =>
       [...base, "hr", "termination", terminationId] as const,
+    terminationAll: [...base, "hr", "termination"] as const,
+    terminationList: (params: QueryKeyParams) =>
+      [...base, "hr", "termination", "list", params] as const,
+    terminationDetail: (terminationId: number) =>
+      [...base, "hr", "termination", "detail", terminationId] as const,
+    terminationCandidate: (userId: string) =>
+      [...base, "hr", "termination", "candidate", userId] as const,
+    probationAll: [...base, "hr", "probation"] as const,
+    probationList: (params: QueryKeyParams) =>
+      [...base, "hr", "probation", "list", params] as const,
+    handbookAll: [...base, "hr", "handbook"] as const,
+    handbookList: () => [...base, "hr", "handbook", "list"] as const,
+    bgvAll: [...base, "hr", "bgv"] as const,
+    bgvList: () => [...base, "hr", "bgv", "list"] as const,
+    exitAll: [...base, "hr", "exit"] as const,
+    exitList: (params?: QueryKeyParams) =>
+      params === undefined
+        ? ([...base, "hr", "exit", "list"] as const)
+        : ([...base, "hr", "exit", "list", params] as const),
+    exitMine: () => [...base, "hr", "exit", "mine"] as const,
+    exitDetail: (resignationId: number) =>
+      [...base, "hr", "exit", "detail", resignationId] as const,
+    exitProgress: (resignationId: number) =>
+      [...base, "hr", "exit", "progress", resignationId] as const,
+    exitOffboardingChecklists: () =>
+      [...base, "hr", "exit", "offboarding-checklists"] as const,
+    skillsMatrix: (params?: QueryKeyParams) =>
+      params === undefined
+        ? ([...base, "hr", "skillsMatrix"] as const)
+        : ([...base, "hr", "skillsMatrix", params] as const),
+    findExpert: (params: QueryKeyParams) =>
+      [...base, "hr", "findExpert", params] as const,
+    richDocumentsAll: [...base, "hr", "richDocuments"] as const,
+    richDocumentLists: () => [...base, "hr", "richDocuments", "list"] as const,
+    richDocumentList: (params: QueryKeyParams) =>
+      [...base, "hr", "richDocuments", "list", params] as const,
+    richDocumentDetail: (documentId: number) =>
+      [...base, "hr", "richDocuments", "detail", documentId] as const,
     documentTypes: () => [...base, "hr", "documentTypes"] as const,
     onboardingDocsAll: [...base, "hr", "onboardingDocs"] as const,
     onboardingDocs: (params?: QueryKeyParams) =>

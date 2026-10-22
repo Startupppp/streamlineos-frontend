@@ -2,7 +2,6 @@ import "server-only";
 
 import { dehydrate, QueryClient } from "@tanstack/react-query";
 import { createServerQueryClient } from "./server-query-client";
-import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
 import { serverGet } from "@/lib/server-fetch";
 import { listCyclesContract } from "@/hooks/api/hr/performance-schema";
 import { benefitPlansPageContract } from "@/hooks/api/hr/benefits-schema";
@@ -15,29 +14,25 @@ import { workforcePlansContract } from "@/hooks/api/hr/workforce-schema";
 import { recognitionListContract } from "@/features/hr/engagement/engagement-schema";
 import { costSummaryContract } from "@/hooks/api/hr/enterprise-comp-schema";
 import { hrHubSnapshotContract } from "@/hooks/api/hr/hub-schema";
-import { localDateKey } from "@/hooks/api/hr/hub";
-
-import type { z } from "zod";
-
-type ReviewCycleList = z.infer<typeof listCyclesContract>;
-type BenefitPlansPage = z.infer<typeof benefitPlansPageContract>;
-type GoalList = z.infer<typeof goalListContract>;
-type FeedbackCycleList = z.infer<typeof feedbackListCyclesContract>;
-type HrAnalyticsOverview = z.infer<typeof hrAnalyticsOverviewContract>;
-type AnnouncementList = z.infer<typeof announcementListContract>;
-type KpiList = z.infer<typeof kpiListContract>;
-type WorkforcePlanList = z.infer<typeof workforcePlansContract>;
-type RecognitionList = z.infer<typeof recognitionListContract>;
-type CostSummary = z.infer<typeof costSummaryContract>;
-type HrHubSnapshot = z.infer<typeof hrHubSnapshotContract>;
+import { reviewCyclesQueryOptions } from "@/hooks/api/hr/performance";
+import { benefitPlansQueryOptions } from "@/hooks/api/hr/benefits";
+import { hrGoalsQueryOptions } from "@/hooks/api/hr/goals";
+import { feedbackCyclesQueryOptions } from "@/hooks/api/hr/feedback";
+import { hrAnalyticsQueryOptions } from "@/hooks/api/hr/analytics";
+import { hrAnnouncementsQueryOptions } from "@/hooks/api/hr/announcements";
+import { hrKpisQueryOptions } from "@/hooks/api/hr/kpis";
+import { hrWorkforcePlansQueryOptions } from "@/hooks/api/hr/workforce";
+import { recognitionQueryOptions } from "@/hooks/api/hr/engagement";
+import { workforceCostSummaryQueryOptions } from "@/hooks/api/hr/enterprise-comp";
+import { hrHubQueryOptions, localDateKey } from "@/hooks/api/hr/hub";
 
 export async function prefetchHrReviewCycles() {
   try {
+    const opts = reviewCyclesQueryOptions();
     const queryClient = await createServerQueryClient();
     await queryClient.prefetchQuery({
-      queryKey: humanResourcesQueryKeys.hr.reviewCycles(),
-      queryFn: () => serverGet<ReviewCycleList>("/hr/performance/cycles", listCyclesContract),
-      staleTime: 2 * 60_000,
+      ...opts,
+      queryFn: () => serverGet("/hr/performance/cycles", listCyclesContract),
     });
     return dehydrate(queryClient);
   } catch {
@@ -47,11 +42,11 @@ export async function prefetchHrReviewCycles() {
 
 export async function prefetchHrBenefitPlans() {
   try {
+    const opts = benefitPlansQueryOptions();
     const queryClient = await createServerQueryClient();
     await queryClient.prefetchQuery({
-      queryKey: humanResourcesQueryKeys.hr.benefitPlans(),
-      queryFn: () => serverGet<BenefitPlansPage>("/hr/benefits/plans", benefitPlansPageContract),
-      staleTime: 2 * 60_000,
+      ...opts,
+      queryFn: () => serverGet("/hr/benefits/plans", benefitPlansPageContract),
     });
     return dehydrate(queryClient);
   } catch {
@@ -61,11 +56,11 @@ export async function prefetchHrBenefitPlans() {
 
 export async function prefetchHrGoals() {
   try {
+    const opts = hrGoalsQueryOptions();
     const queryClient = await createServerQueryClient();
     await queryClient.prefetchQuery({
-      queryKey: humanResourcesQueryKeys.hr.goals(),
-      queryFn: () => serverGet<GoalList>("/hr/performance/goals", goalListContract),
-      staleTime: 2 * 60_000,
+      ...opts,
+      queryFn: () => serverGet("/hr/performance/goals", goalListContract),
     });
     return dehydrate(queryClient);
   } catch {
@@ -75,11 +70,11 @@ export async function prefetchHrGoals() {
 
 export async function prefetchHrFeedbackCycles() {
   try {
+    const opts = feedbackCyclesQueryOptions();
     const queryClient = await createServerQueryClient();
     await queryClient.prefetchQuery({
-      queryKey: humanResourcesQueryKeys.hr.feedbackCycles(),
-      queryFn: () => serverGet<FeedbackCycleList>("/hr/feedback/cycles", feedbackListCyclesContract),
-      staleTime: 2 * 60_000,
+      ...opts,
+      queryFn: () => serverGet("/hr/feedback/cycles", feedbackListCyclesContract),
     });
     return dehydrate(queryClient);
   } catch {
@@ -89,11 +84,11 @@ export async function prefetchHrFeedbackCycles() {
 
 export async function prefetchHrAnalyticsOverview() {
   try {
+    const opts = hrAnalyticsQueryOptions();
     const queryClient = await createServerQueryClient();
     await queryClient.prefetchQuery({
-      queryKey: [...humanResourcesQueryKeys.hr.all, "analytics"] as const,
-      queryFn: () => serverGet<HrAnalyticsOverview>("/hr/analytics", hrAnalyticsOverviewContract),
-      staleTime: 5 * 60_000,
+      ...opts,
+      queryFn: () => serverGet("/hr/analytics", hrAnalyticsOverviewContract),
     });
     return dehydrate(queryClient);
   } catch {
@@ -103,11 +98,11 @@ export async function prefetchHrAnalyticsOverview() {
 
 export async function prefetchHrAnnouncements() {
   try {
+    const opts = hrAnnouncementsQueryOptions();
     const queryClient = await createServerQueryClient();
     await queryClient.prefetchQuery({
-      queryKey: humanResourcesQueryKeys.hr.announcements(),
-      queryFn: () => serverGet<AnnouncementList>("/org/announcements", announcementListContract),
-      staleTime: 2 * 60_000,
+      ...opts,
+      queryFn: () => serverGet("/org/announcements", announcementListContract),
     });
     return dehydrate(queryClient);
   } catch {
@@ -117,11 +112,11 @@ export async function prefetchHrAnnouncements() {
 
 export async function prefetchHrKpis() {
   try {
+    const opts = hrKpisQueryOptions();
     const queryClient = await createServerQueryClient();
     await queryClient.prefetchQuery({
-      queryKey: humanResourcesQueryKeys.hr.kpis(),
-      queryFn: () => serverGet<KpiList>("/hr/kpis", kpiListContract),
-      staleTime: 5 * 60_000,
+      ...opts,
+      queryFn: () => serverGet("/hr/kpis", kpiListContract),
     });
     return dehydrate(queryClient);
   } catch {
@@ -131,11 +126,12 @@ export async function prefetchHrKpis() {
 
 export async function prefetchHrWorkforcePlans() {
   try {
+    const opts = hrWorkforcePlansQueryOptions();
     const queryClient = await createServerQueryClient();
     await queryClient.prefetchQuery({
-      queryKey: [...humanResourcesQueryKeys.hr.all, "workforce", "plans"] as const,
-      queryFn: () => serverGet<WorkforcePlanList>("/hr/analytics-plus/workforce/plans", workforcePlansContract),
-      staleTime: 5 * 60_000,
+      ...opts,
+      queryFn: () =>
+        serverGet("/hr/analytics-plus/workforce/plans", workforcePlansContract),
     });
     return dehydrate(queryClient);
   } catch {
@@ -145,11 +141,11 @@ export async function prefetchHrWorkforcePlans() {
 
 export async function prefetchHrRecognition() {
   try {
+    const opts = recognitionQueryOptions();
     const queryClient = await createServerQueryClient();
     await queryClient.prefetchQuery({
-      queryKey: humanResourcesQueryKeys.hr.hrRecognition,
-      queryFn: () => serverGet<RecognitionList>("/hr/recognition", recognitionListContract),
-      staleTime: 2 * 60_000,
+      ...opts,
+      queryFn: () => serverGet("/hr/recognition", recognitionListContract),
     });
     return dehydrate(queryClient);
   } catch {
@@ -159,12 +155,12 @@ export async function prefetchHrRecognition() {
 
 export async function prefetchHrWorkforceCostSummary() {
   try {
+    const opts = workforceCostSummaryQueryOptions();
     const queryClient = await createServerQueryClient();
     await queryClient.prefetchQuery({
-      queryKey: [...humanResourcesQueryKeys.hr.hrEnterpriseCostingAll, "summary"] as const,
+      ...opts,
       queryFn: () =>
-        serverGet<CostSummary>("/hr/enterprise/comp/costing/summary", costSummaryContract),
-      staleTime: 5 * 60_000,
+        serverGet("/hr/enterprise/comp/costing/summary", costSummaryContract),
     });
     return dehydrate(queryClient);
   } catch {
@@ -175,11 +171,11 @@ export async function prefetchHrWorkforceCostSummary() {
 export async function prefetchHrHub() {
   try {
     const today = localDateKey();
+    const opts = hrHubQueryOptions(today);
     const queryClient = await createServerQueryClient();
     await queryClient.prefetchQuery({
-      queryKey: humanResourcesQueryKeys.hr.hub(today),
-      queryFn: () => serverGet<HrHubSnapshot>(`/hr/hub?today=${today}`, hrHubSnapshotContract),
-      staleTime: 30_000,
+      ...opts,
+      queryFn: () => serverGet(`/hr/hub?today=${today}`, hrHubSnapshotContract),
     });
     return dehydrate(queryClient);
   } catch {

@@ -19,6 +19,10 @@ import { safetyIncidentListContract } from "@/hooks/api/hr/safety-schema";
 import { helpdeskTicketListContract } from "@/hooks/api/hr/helpdesk-schema";
 import { opsInboxContract, myItemsContract } from "@/hooks/api/hr/service-delivery-schema";
 import { assetReturnListContract } from "@/hooks/api/hr/asset-returns-schema";
+import { expensePageDataQueryOptions } from "@/hooks/api/hr/expenses";
+import { reimbursementsListQueryOptions } from "@/hooks/api/hr/reimbursements";
+import { hrCasesListQueryOptions } from "@/hooks/api/hr/cases";
+import { serviceDeliveryKeys } from "@/hooks/api/hr/service-delivery";
 
 type HrDocumentListResponse = z.infer<typeof hrDocumentListContract>;
 type HrAssetListResponse = z.infer<typeof assetListPageContract>;
@@ -57,9 +61,8 @@ export async function prefetchHrExpenses() {
   const queryClient = await createServerQueryClient();
   if (gate.can("hr:expenses:view")) {
     await queryClient.prefetchQuery({
-      queryKey: [...humanResourcesQueryKeys.hr.expenses(), "pageData", "org", {}] as const,
+      ...expensePageDataQueryOptions({}, false),
       queryFn: () => serverGet<ExpensePageDataResponse>("/hr/expenses/page-data", expensePageDataContract),
-      staleTime: 30_000,
     });
   }
   return dehydrate(queryClient);
@@ -68,12 +71,11 @@ export async function prefetchHrExpenses() {
 export async function prefetchHrReimbursements() {
   const queryClient = await createServerQueryClient();
   await queryClient.prefetchQuery({
-    queryKey: [...humanResourcesQueryKeys.hr.all, "reimbursements", "list"] as const,
+    ...reimbursementsListQueryOptions(),
     queryFn: async () => {
       const page = await serverGet<ReimbursementsListResponse>("/hr/reimbursements", reimbursementsListContract);
       return page.items;
     },
-    staleTime: 2 * 60_000,
   });
   return dehydrate(queryClient);
 }
@@ -101,9 +103,8 @@ export async function prefetchHrTravelApprovals() {
 export async function prefetchHrCases() {
   const queryClient = await createServerQueryClient();
   await queryClient.prefetchQuery({
-    queryKey: ["streamlineos", "hr", "cases", "list", {}] as const,
+    ...hrCasesListQueryOptions(),
     queryFn: () => serverGet<HrCaseListResponse>("/hr/cases", hrCaseListContract),
-    staleTime: 30_000,
   });
   return dehydrate(queryClient);
 }
@@ -134,14 +135,14 @@ export async function prefetchHrServiceDelivery() {
   await Promise.all([
     gate.can("hr:cases:view")
       ? queryClient.prefetchQuery({
-          queryKey: ["hr", "service-delivery", "ops-inbox"] as const,
+          queryKey: serviceDeliveryKeys.opsInbox,
           queryFn: () => serverGet<OpsInboxResponse>("/hr/service-delivery/ops-inbox", opsInboxContract),
           staleTime: 30_000,
         })
       : Promise.resolve(),
     gate.can("hr:helpdesk:view")
       ? queryClient.prefetchQuery({
-          queryKey: ["hr", "service-delivery", "my-items"] as const,
+          queryKey: serviceDeliveryKeys.myItems,
           queryFn: () => serverGet<MyItemsResponse>("/hr/service-delivery/my-items", myItemsContract),
           staleTime: 30_000,
         })

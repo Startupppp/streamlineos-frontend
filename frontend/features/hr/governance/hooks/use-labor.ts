@@ -69,10 +69,17 @@ export interface LaborCase {
 
 const LABOR_KEY = ["hr", "governance", "labor"] as const;
 
+export function unionMembershipsListQueryOptions(params?: { unionName?: string; status?: string; cursor?: string; limit?: number }) {
+  return {
+    queryKey: [...humanResourcesQueryKeys.hr.hrLaborMembershipsAll, params] as const,
+    staleTime: 30_000,
+  };
+}
+
 export function useUnionMemberships(params?: { unionName?: string; status?: string; cursor?: string; limit?: number }) {
   const canViewLabor = useCan("hr:labor:view");
   return useQuery({
-    queryKey: [...humanResourcesQueryKeys.hr.hrLaborMembershipsAll, params],
+    ...unionMembershipsListQueryOptions(params),
     queryFn: ({ signal }) => {
       const p: Record<string, unknown> = {};
       if (params?.unionName) p["unionName"] = params.unionName;
@@ -81,7 +88,6 @@ export function useUnionMemberships(params?: { unionName?: string; status?: stri
       if (params?.limit) p["limit"] = params.limit;
       return apiClient.get("/hr/governance/labor/memberships", p, signal, unionMembershipListContract);
     },
-    staleTime: 30_000,
     enabled: canViewLabor,
   });
 }

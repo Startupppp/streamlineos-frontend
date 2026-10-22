@@ -9,6 +9,7 @@ import { useNotificationEvents } from "@/features/notifications/use-notification
 import { useLogoutBroadcastListener } from "@/hooks/common/auth-hooks";
 import { I18nProvider } from "@/lib/i18n/i18n";
 import { BuildSidebarSkeleton } from "@/components/layout/sidebar/build-sidebar-skeleton";
+import type { BuildSidebarSlotProps } from "@/components/layout/sidebar/build-sidebar-slot";
 import { AuthenticatedProviders } from "@/components/providers/authenticated-providers";
 
 const BuildSidebar = dynamic(
@@ -52,14 +53,22 @@ function AccessVersionSync() {
   return null;
 }
 
+function renderBuildSidebar(props: BuildSidebarSlotProps) {
+  return <BuildSidebar {...props} />;
+}
+
+function renderChatMobileNav(onOpenMobileMenu: () => void) {
+  return <ChatMobileBottomNav onOpenMobileMenu={onOpenMobileMenu} />;
+}
+
 export function LayoutClient({ children, ...shellProps }: LayoutClientProps) {
   return (
     <I18nProvider>
       <AuthenticatedProviders>
         <DashboardShell
           {...shellProps}
-          buildSidebarSlot={BuildSidebar}
-          chatMobileNavSlot={(onOpenMobileMenu) => <ChatMobileBottomNav onOpenMobileMenu={onOpenMobileMenu} />}
+          buildSidebarSlot={renderBuildSidebar}
+          chatMobileNavSlot={renderChatMobileNav}
           notificationBellSlot={notificationBellSlot}
         >
           <AccessVersionSync />

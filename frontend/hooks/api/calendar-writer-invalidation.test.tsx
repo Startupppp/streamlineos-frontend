@@ -33,7 +33,7 @@ const mockedDelete = apiClient.delete as jest.Mock;
 const RANGE_START = "2027-03-01T00:00:00.000Z";
 const RANGE_END = "2027-03-31T00:00:00.000Z";
 
-const SOURCES_KEY = queryKeys.calendar.sources("org-1", "user-1");
+const SOURCES_KEY = queryKeys.calendar.sources();
 const EXTERNAL_EVENTS_KEY = queryKeys.calendar.externalEvents(
   "org-1",
   "user-1",
@@ -42,7 +42,7 @@ const EXTERNAL_EVENTS_KEY = queryKeys.calendar.externalEvents(
 );
 const ROSTER_KEY = queryKeys.calendar.orgMembers(100);
 const SEARCH_KEY = queryKeys.calendar.memberSearch("jo", 25);
-const EVENTS_KEY = queryKeys.calendar.events("org-1", "user-1", RANGE_START, RANGE_END);
+const EVENTS_KEY = queryKeys.calendar.events(RANGE_START, RANGE_END);
 
 function createSeededClient(): QueryClient {
   const client = new QueryClient({

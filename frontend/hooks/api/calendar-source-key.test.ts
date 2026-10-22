@@ -57,13 +57,11 @@ describe("the calendar events key fires immediately on permission", () => {
     expect(opts.enabled).toBe(true);
   });
 
-  it("key binds the organization, actor, and date range", () => {
+  it("key binds the date range and timezone (tenant-free per FE-20)", () => {
     const opts = useCaptureEventsOptions();
 
     expect(opts.queryKey).toEqual(
       queryKeys.calendar.events(
-        "org-1",
-        "user-1",
         START.toISOString(),
         END.toISOString(),
         undefined,
@@ -83,8 +81,6 @@ describe("the calendar events key fires immediately on permission", () => {
       partialMatchKey(
         opts.queryKey as QueryKey,
         queryKeys.calendar.events(
-          "org-1",
-          "user-1",
           START.toISOString(),
           END.toISOString(),
         ) as QueryKey,

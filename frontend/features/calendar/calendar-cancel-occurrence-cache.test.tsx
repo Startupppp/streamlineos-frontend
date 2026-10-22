@@ -32,8 +32,8 @@ function occurrence(start: string): CalendarListItem {
 it("removes the cancelled occurrence from every cached Calendar window before refetch", async () => {
   mockDelete.mockResolvedValue({ id: 1 });
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
-  const firstKey = platformHierarchyQueryKeys.calendar.events("org", "member", "2026-10-01", "2026-11-01");
-  const secondKey = platformHierarchyQueryKeys.calendar.events("org", "member", "2026-11-01", "2026-12-01");
+  const firstKey = platformHierarchyQueryKeys.calendar.events("2026-10-01", "2026-11-01");
+  const secondKey = platformHierarchyQueryKeys.calendar.events("2026-11-01", "2026-12-01");
   const response: CalendarEventsResponse = {
     events: [occurrence(firstStart), occurrence(cancelledStart), occurrence(laterStart)],
     failures: [],
@@ -43,7 +43,7 @@ it("removes the cancelled occurrence from every cached Calendar window before re
   };
   queryClient.setQueryData(firstKey, response);
   queryClient.setQueryData(secondKey, response);
-  const historyKey = platformHierarchyQueryKeys.calendar.history("org", "member", "");
+  const historyKey = platformHierarchyQueryKeys.calendar.history("");
   const history = { pages: [{ events: [occurrence(cancelledStart)] }], pageParams: [""] };
   queryClient.setQueryData(historyKey, history);
   const wrapper = ({ children }: { children: ReactNode }) => (

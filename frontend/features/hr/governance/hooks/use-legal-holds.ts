@@ -43,10 +43,17 @@ export interface LegalHold {
 
 const HOLDS_KEY = ["hr", "governance", "legal-holds"] as const;
 
+export function legalHoldsListQueryOptions(params?: { status?: string; subjectUserId?: string; cursor?: string; limit?: number }) {
+  return {
+    queryKey: [...humanResourcesQueryKeys.hr.hrLegalHoldsBase, params] as const,
+    staleTime: 30_000,
+  };
+}
+
 export function useLegalHolds(params?: { status?: string; subjectUserId?: string; cursor?: string; limit?: number }) {
   const canViewHolds = useCan("hr:legalhold:view");
   return useQuery({
-    queryKey: [...humanResourcesQueryKeys.hr.hrLegalHoldsBase, params],
+    ...legalHoldsListQueryOptions(params),
     queryFn: ({ signal }) => {
       const p: Record<string, unknown> = {};
       if (params?.status) p["status"] = params.status;
@@ -55,7 +62,6 @@ export function useLegalHolds(params?: { status?: string; subjectUserId?: string
       if (params?.limit) p["limit"] = params.limit;
       return apiClient.get("/hr/governance/legal-holds", p, signal, legalHoldListContract);
     },
-    staleTime: 30_000,
     enabled: canViewHolds,
   });
 }

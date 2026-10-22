@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import { act, renderHook, waitFor } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useCalendarHistory } from "./calendar";
+import { authenticatedScope, scopedQueryKeyHashFn } from "@/lib/query-scope";
 
 const get = jest.fn();
 let session = { orgId: "org-1", user: { id: "user-1" } };

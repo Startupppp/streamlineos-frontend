@@ -39,16 +39,6 @@ interface ResignationListParams {
   status?: string;
 }
 
-const exitKeys = {
-  all: [...humanResourcesQueryKeys.hr.all, "exit"] as const,
-  lists: () => [...exitKeys.all, "list"] as const,
-  mine: () => [...exitKeys.all, "mine"] as const,
-  list: (params?: ResignationListParams) => [...exitKeys.lists(), params] as const,
-  offboardingChecklists: () => [...exitKeys.all, "offboarding-checklists"] as const,
-  detail: (resignationId: number) => [...exitKeys.all, "detail", resignationId] as const,
-  progress: (resignationId: number) =>
-    [...exitKeys.all, "progress", resignationId] as const,
-};
 
 const _resignationListContract = lazyContract(() =>
   import("@/hooks/api/hr/exit-schema").then((m) => m.resignationListContract),
@@ -76,7 +66,7 @@ export function useResignations(params?: ResignationListParams) {
   const canExit = useCan("hr:exit:view");
   const hrEnabled = useModuleEnabled("hr");
   return useQuery({
-    queryKey: exitKeys.list(params),
+    queryKey: humanResourcesQueryKeys.hr.exitList(params),
     queryFn: ({ signal }) => {
       const search = new URLSearchParams();
       if (params?.cursor) search.set("cursor", params.cursor);
@@ -105,7 +95,7 @@ export function useOffboardingChecklists() {
   const canExit = useCan("hr:exit:view");
   const hrEnabled = useModuleEnabled("hr");
   return useQuery({
-    queryKey: exitKeys.offboardingChecklists(),
+    queryKey: humanResourcesQueryKeys.hr.exitOffboardingChecklists(),
     queryFn: ({ signal }) =>
       apiClient.get(
         "/hr/exit/offboarding-checklists",
@@ -121,7 +111,7 @@ export function useOffboardingChecklists() {
 
 export function useMyResignations() {
   return useGatedQuery("self:resignation", {
-    queryKey: exitKeys.mine(),
+    queryKey: humanResourcesQueryKeys.hr.exitMine(),
     queryFn: ({ signal }) => apiClient.get("/me/resignations", undefined, signal, _resignationListContract),
     staleTime: 60_000,
   });
@@ -133,7 +123,7 @@ export function useSubmitMyResignation() {
     mutationKey: ["me", "resignations", "create"],
     mutationFn: (data, idempotencyKey) =>
       apiClient.post("/me/resignations", data, { headers: { [IDEMPOTENCY_HEADER]: idempotencyKey } }, _resignationContract),
-    onSuccess: () => qc.invalidateQueries({ queryKey: exitKeys.all }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.exitAll }),
   });
 }
 
@@ -143,7 +133,7 @@ export function useWithdrawMyResignation() {
     mutationKey: ["me", "resignations", "withdraw"],
     mutationFn: ({ resignationId }: { resignationId: number }) =>
       apiClient.patch(`/me/resignations/${resignationId}/withdraw`, {}, undefined, _successContract),
-    onSuccess: () => qc.invalidateQueries({ queryKey: exitKeys.all }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.exitAll }),
   });
 }
 
@@ -161,7 +151,7 @@ export function useAdminRecordResignation() {
       companyFeedback?: string;
       resignationLetterUrl?: string;
     }) => apiClient.post("/hr/exit/admin-record", data, undefined, _resignationContract),
-    onSuccess: () => qc.invalidateQueries({ queryKey: exitKeys.all }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.exitAll }),
   });
 }
 
@@ -171,7 +161,7 @@ export function useHrReviewResignation() {
     mutationKey: ["hr", "exit", "hr-review"],
     mutationFn: ({ exitId, action, remarks }: { exitId: number; action: "approve" | "reject"; remarks?: string }) =>
       apiClient.patch(`/hr/exit/${exitId}/hr-review`, { decision: action, remarks }, undefined, _successContract),
-    onSuccess: () => qc.invalidateQueries({ queryKey: exitKeys.all }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.exitAll }),
   });
 }
 
@@ -181,7 +171,7 @@ export function useFinalReviewResignation() {
     mutationKey: ["hr", "exit", "final-review"],
     mutationFn: ({ exitId, action, remarks }: { exitId: number; action: "approve" | "reject"; remarks?: string }) =>
       apiClient.patch(`/hr/exit/${exitId}/final-review`, { decision: action, remarks }, undefined, _successContract),
-    onSuccess: () => qc.invalidateQueries({ queryKey: exitKeys.all }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.exitAll }),
   });
 }
 
@@ -191,7 +181,7 @@ export function useWithdrawResignation() {
     mutationKey: ["hr", "exit", "withdraw"],
     mutationFn: ({ exitId }: { exitId: number }) =>
       apiClient.patch(`/hr/exit/${exitId}/withdraw`, {}, undefined, _successContract),
-    onSuccess: () => qc.invalidateQueries({ queryKey: exitKeys.all }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.exitAll }),
   });
 }
 
@@ -199,7 +189,7 @@ export function useResignation(resignationId: number) {
   const canView = useCan("hr:exit:view");
   const hrEnabled = useModuleEnabled("hr");
   return useQuery({
-    queryKey: exitKeys.detail(resignationId),
+    queryKey: humanResourcesQueryKeys.hr.exitDetail(resignationId),
     queryFn: ({ signal }) =>
       apiClient.get(`/hr/exit/${resignationId}`, undefined, signal, _resignationDetailContract),
     staleTime: 60_000,
@@ -225,8 +215,8 @@ export function useUpdateExitChecklistItem() {
         _exitChecklistItemContract,
       ),
     onSuccess: (_item, variables) => {
-      void qc.invalidateQueries({ queryKey: exitKeys.detail(variables.resignationId) });
-      void qc.invalidateQueries({ queryKey: exitKeys.lists() });
+      void qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.exitDetail(variables.resignationId) });
+      void qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.exitList() });
     },
   });
 }
@@ -248,8 +238,8 @@ export function useCompleteExit() {
         _successContract,
       ),
     onSuccess: (_result, variables) => {
-      void qc.invalidateQueries({ queryKey: exitKeys.detail(variables.exitId) });
-      void qc.invalidateQueries({ queryKey: exitKeys.lists() });
+      void qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.exitDetail(variables.exitId) });
+      void qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.exitList() });
     },
   });
 }
@@ -261,7 +251,7 @@ export function useResignationProgress(
   const canView = useCan("hr:exit:view");
   const hrEnabled = useModuleEnabled("hr");
   return useQuery({
-    queryKey: exitKeys.progress(resignationId),
+    queryKey: humanResourcesQueryKeys.hr.exitProgress(resignationId),
     queryFn: ({ signal }) =>
       apiClient.get(`/hr/exit/${resignationId}/progress`, undefined, signal, _resignationProgressContract),
     staleTime: 2 * 60_000,

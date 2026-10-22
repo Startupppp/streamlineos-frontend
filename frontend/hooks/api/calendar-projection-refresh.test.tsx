@@ -73,9 +73,9 @@ describe("calendar projection refresh", () => {
     await waitFor(() => expect(mockedGet).toHaveBeenCalledTimes(2));
   });
 
-  it("refreshes on focus, reconnect, organization switch, and a second tab signal", async () => {
+  it("refreshes on focus, reconnect, and a second tab signal", async () => {
     const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
-    const hook = renderHook(() => useCalendarEvents(START, END), {
+    renderHook(() => useCalendarEvents(START, END), {
       wrapper: wrapperFor(client),
     });
     await waitFor(() => expect(mockedGet).toHaveBeenCalledTimes(1));
@@ -88,19 +88,13 @@ describe("calendar projection refresh", () => {
     act(() => onlineManager.setOnline(true));
     await waitFor(() => expect(mockedGet).toHaveBeenCalledTimes(3));
 
-    mockOrgId = "org-2";
-    hook.rerender();
-    await waitFor(() => expect(mockedGet).toHaveBeenCalledTimes(4));
-
     act(() => window.dispatchEvent(new StorageEvent("storage", {
       key: CALENDAR_PROJECTION_SIGNAL_KEY,
       newValue: "1728777600000:0.5",
     })));
-    await waitFor(() => expect(mockedGet).toHaveBeenCalledTimes(5));
+    await waitFor(() => expect(mockedGet).toHaveBeenCalledTimes(4));
     expect(client.getQueryState(
       platformHierarchyQueryKeys.calendar.events(
-        "org-2",
-        "user-1",
         START.toISOString(),
         END.toISOString(),
         undefined,
@@ -111,14 +105,12 @@ describe("calendar projection refresh", () => {
 
   it("updates source metadata and removes disabled events before the request settles", async () => {
     const client = new QueryClient({ defaultOptions: { mutations: { retry: false } } });
-    const sourceKey = platformHierarchyQueryKeys.calendar.sources("org-1", "user-1");
+    const sourceKey = platformHierarchyQueryKeys.calendar.sources();
     const eventsKey = platformHierarchyQueryKeys.calendar.events(
-      "org-1",
-      "user-1",
       START.toISOString(),
       END.toISOString(),
     );
-    const historyKey = platformHierarchyQueryKeys.calendar.history("org-1", "user-1", END.toISOString());
+    const historyKey = platformHierarchyQueryKeys.calendar.history(END.toISOString());
     const historyPage = { pages: [{ events: [{ id: "history-1", sourceKey: "tasks" }], nextCursor: null }], pageParams: [null] };
     client.setQueryData(historyKey, historyPage);
     client.setQueryData(sourceKey, [

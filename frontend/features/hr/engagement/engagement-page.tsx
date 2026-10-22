@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useSession } from "next-auth/react";
@@ -25,9 +25,6 @@ import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
 import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
 
-const recognitionListContract = lazyContract(() =>
-  import("@/features/hr/engagement/engagement-schema").then((m) => m.recognitionListContract),
-);
 const recognitionRowContract = lazyContract(() =>
   import("@/features/hr/engagement/engagement-schema").then((m) => m.recognitionContract),
 );
@@ -40,7 +37,7 @@ import { usePageState } from "@/hooks/api/use-page-state";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { useMotionVariants } from "@/lib/motion-variants";
 import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
-import { useEngagementOverview, useMyMoodHistory, useOrgMoodAggregate } from "@/hooks/api/hr/engagement";
+import { useEngagementOverview, useMyMoodHistory, useOrgMoodAggregate, recognitionQueryOptions } from "@/hooks/api/hr/engagement";
 import { useOrgMembers } from "@/hooks/api/organization";
 import {
   getUserDisplayName,
@@ -86,9 +83,7 @@ function useRecognitions() {
   const canView = useCan("hr:engagement:view");
   const hrEnabled = useModuleEnabled("hr");
   return useQuery({
-    queryKey: humanResourcesQueryKeys.hr.hrRecognition,
-    queryFn: ({ signal }) => apiClient.get("/hr/recognition", undefined, signal, recognitionListContract),
-    staleTime: 60_000,
+    ...recognitionQueryOptions(),
     enabled: canView && hrEnabled,
     ...INLINE_READ_ERROR,
   });
@@ -141,13 +136,12 @@ function OverviewTab() {
   const { data: membersData } = useOrgMembers(1, 200);
   const canManage = useCan("hr:engagement:manage");
 
-  const memberById = useMemo(() => {
-    const map = new Map<string, NamedUser>();
-    for (const member of membersData?.data ?? []) {
-      map.set(member.userId, { name: member.name, email: member.email });
-    }
-    return map;
-  }, [membersData]);
+  const memberById = new Map<string, NamedUser>(
+    (membersData?.data ?? []).map((member) => [
+      member.userId,
+      { name: member.name, email: member.email },
+    ]),
+  );
 
   const moodPoints = moodData?.points ?? [];
   const recentMoodPoints = moodPoints.slice(-7);
@@ -418,7 +412,7 @@ export function HrEngagementPage() {
   const currentUserId = session?.user?.id ?? "";
   const pageState = usePageState({ permission: "hr:engagement:view", isLoading: false, isError: false });
 
-  const tabContent = useMemo(() => {
+  const tabContent = (() => {
     switch (activeTab) {
       case "overview": return <OverviewTab />;
       case "recognition": return <RecognitionTab />;
@@ -427,7 +421,7 @@ export function HrEngagementPage() {
       case "communities": return <CommunitiesTab currentUserId={currentUserId} />;
       case "campaigns": return <CampaignsTab />;
     }
-  }, [activeTab, currentUserId]);
+  })();
 
   return (
     <PageWrapper

@@ -211,13 +211,13 @@ export const HR_PEOPLE_OPS_ROUTES: NavRoute[] = [
         icon: Globe,
         href: "/hr/travel",
         exact: true,
-        requiredPermission: "hr:expenses:view",
+        requiredPermission: "hr:travel:view",
       },
       {
         label: "Travel Approvals",
         icon: CheckSquare,
         href: "/hr/travel/approvals",
-        requiredPermission: "hr:expenses:manage",
+        requiredPermission: "hr:travel:manage",
       },
       {
         label: "Reimbursements",

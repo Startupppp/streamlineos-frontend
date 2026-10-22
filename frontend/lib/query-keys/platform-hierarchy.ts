@@ -4,11 +4,7 @@ export const platformHierarchyQueryKeys = {
   calendar: {
     all: [...base, "calendar"] as const,
     eventsAll: [...base, "calendar", "events"] as const,
-    eventsForIdentity: (orgId: string, userId: string) =>
-      [...base, "calendar", "events", orgId, userId] as const,
     events: (
-      orgId: string,
-      userId: string,
       start: string,
       end: string,
       sources?: readonly string[],
@@ -16,30 +12,26 @@ export const platformHierarchyQueryKeys = {
       filter?: { q?: string; sourceKey?: string },
     ) =>
       filter?.q || filter?.sourceKey
-        ? ([...base, "calendar", "events", orgId, userId, start, end, timeZone ?? null, { q: filter.q ?? null, sourceKey: filter.sourceKey ?? null }] as const)
+        ? ([...base, "calendar", "events", start, end, timeZone ?? null, { q: filter.q ?? null, sourceKey: filter.sourceKey ?? null }] as const)
         : sources === undefined
         ? (timeZone === undefined
-            ? ([...base, "calendar", "events", orgId, userId, start, end] as const)
-            : ([...base, "calendar", "events", orgId, userId, start, end, timeZone] as const))
+            ? ([...base, "calendar", "events", start, end] as const)
+            : ([...base, "calendar", "events", start, end, timeZone] as const))
         : ([
             ...base,
             "calendar",
             "events",
-            orgId,
-            userId,
             start,
             end,
             sources,
             ...(timeZone === undefined ? [] : [timeZone]),
           ] as const),
-    history: (orgId: string, userId: string, before: string) =>
+    history: (before: string) =>
       [
         ...base,
         "calendar",
         "events",
         "history",
-        orgId,
-        userId,
         before,
       ] as const,
     searchAll: [...base, "calendar", "search"] as const,
@@ -81,8 +73,8 @@ export const platformHierarchyQueryKeys = {
       [...base, "calendar", "hr-supplemental", orgId, from, to] as const,
     hrSupplementalAll: [...base, "calendar", "hr-supplemental"] as const,
     sourcesAll: [...base, "calendar", "sources"] as const,
-    sources: (orgId: string, userId: string) =>
-      [...base, "calendar", "sources", orgId, userId] as const,
+    sources: () =>
+      [...base, "calendar", "sources"] as const,
     eventDetail: (eventId: number) =>
       [...base, "calendar", "event", eventId] as const,
     sourceActionCapabilities: [

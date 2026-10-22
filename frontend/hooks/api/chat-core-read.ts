@@ -1,6 +1,5 @@
 "use client";
 
-import { useCallback, useMemo } from "react";
 import {
   infiniteQueryOptions,
   queryOptions,
@@ -12,6 +11,7 @@ import { useSession } from "next-auth/react";
 import { apiClient } from "@/lib/api-client";
 import { lazyContract, type ContractSource } from "@/lib/api-envelope";
 import { collaborationQueryKeys } from "@/lib/query-keys/collaboration";
+import { chatUnreadTotalQueryOptions } from "@/hooks/api/chat-read-options";
 import { reportError } from "@/lib/observability/error-reporter";
 import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
 import { useCan, useModuleEnabled } from "@/hooks/api/access";
@@ -136,21 +136,18 @@ function useChannelPages<TChannel>({
   });
 
   const pages = query.data?.pages;
-  const channels = useMemo(
-    () => (pages === undefined ? [] : pages.flatMap((p) => p.channels)),
-    [pages],
-  );
+  const channels = pages === undefined ? [] : pages.flatMap((p) => p.channels);
 
   const { hasNextPage, isFetchingNextPage, fetchNextPage, refetch } = query;
 
-  const loadMore = useCallback(() => {
+  function loadMore() {
     if (!hasNextPage || isFetchingNextPage) return;
     void fetchNextPage();
-  }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
+  }
 
-  const handleRefetch = useCallback(() => {
+  function handleRefetch() {
     void refetch();
-  }, [refetch]);
+  }
 
   return {
     channels,
@@ -255,15 +252,12 @@ export function usePrefetchChatChannel(): (channelId: number) => void {
   const queryClient = useQueryClient();
   const canReadChannels = useCan("chat:channels:read");
   const canReadMessages = useCan("chat:messages:read");
-  return useCallback(
-    (channelId: number) => {
-      if (chatChannelReadEnabled(canReadMessages, channelId))
-        void queryClient.prefetchInfiniteQuery(chatMessagesQueryOptions(channelId));
-      if (chatChannelReadEnabled(canReadChannels, channelId))
-        void queryClient.prefetchQuery(chatChannelQueryOptions(channelId));
-    },
-    [queryClient, canReadChannels, canReadMessages],
-  );
+  return (channelId: number) => {
+    if (chatChannelReadEnabled(canReadMessages, channelId))
+      void queryClient.prefetchInfiniteQuery(chatMessagesQueryOptions(channelId));
+    if (chatChannelReadEnabled(canReadChannels, channelId))
+      void queryClient.prefetchQuery(chatChannelQueryOptions(channelId));
+  };
 }
 
 export function useChatUnreadTotal(enabled = true) {
@@ -273,9 +267,8 @@ export function useChatUnreadTotal(enabled = true) {
   const chatEnabled = useModuleEnabled("chat");
   return useQuery({
     ...INLINE_READ_ERROR,
-    queryKey: collaborationQueryKeys.chat.unreadTotal(),
+    ...chatUnreadTotalQueryOptions,
     queryFn: ({ signal }) => apiClient.get<{ total: number }>("/chat/unread", undefined, signal, chatUnreadContract),
-    staleTime: 300_000,
     refetchOnWindowFocus: true,
     enabled: !!orgId && enabled && chatEnabled && canRead,
   });
@@ -306,13 +299,11 @@ export function useChatOrgUsers(enabled = true) {
 
 export function usePresenceMap(enabled = true): ReadonlyMap<string, PresenceStatus> {
   const result = useChatOnlineUsers(enabled);
-  return useMemo(() => {
-    const map = new Map<string, PresenceStatus>();
-    for (const user of result.data ?? []) {
-      if (isPresenceStatus(user.status)) map.set(user.userId, user.status);
-    }
-    return map;
-  }, [result.data]);
+  const map = new Map<string, PresenceStatus>();
+  for (const user of result.data ?? []) {
+    if (isPresenceStatus(user.status)) map.set(user.userId, user.status);
+  }
+  return map;
 }
 
 interface PresenceCustomStatus {
@@ -325,14 +316,12 @@ export function usePresenceCustomStatus(
   enabled = true,
 ): PresenceCustomStatus {
   const result = useChatOnlineUsers(enabled);
-  return useMemo(() => {
-    const row = userId
-      ? result.data?.find((user) => user.userId === userId)
-      : undefined;
-    return {
-      statusMessage: row?.statusMessage ?? null,
-      statusExpiresAt: row?.statusExpiresAt ?? null,
-    };
-  }, [result.data, userId]);
+  const row = userId
+    ? result.data?.find((user) => user.userId === userId)
+    : undefined;
+  return {
+    statusMessage: row?.statusMessage ?? null,
+    statusExpiresAt: row?.statusExpiresAt ?? null,
+  };
 }
 

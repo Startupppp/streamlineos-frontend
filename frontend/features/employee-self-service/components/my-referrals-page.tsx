@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useState } from "react";
 import type { SelfServiceHubChrome } from "@/lib/self-service-hub-chrome";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
@@ -43,27 +43,27 @@ export function MyReferralsPage({ hubChrome }: { hubChrome?: SelfServiceHubChrom
   const referrals = useSelfReferrals();
   const { mutate: submit, isPending } = useSubmitReferral();
 
-  const handleFirstName = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
+  function handleFirstName(event: React.ChangeEvent<HTMLInputElement>) {
     setForm((current) => ({ ...current, firstName: event.target.value }));
-  }, []);
+  }
 
-  const handleLastName = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
+  function handleLastName(event: React.ChangeEvent<HTMLInputElement>) {
     setForm((current) => ({ ...current, lastName: event.target.value }));
-  }, []);
+  }
 
-  const handleEmail = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
+  function handleEmail(event: React.ChangeEvent<HTMLInputElement>) {
     setForm((current) => ({ ...current, email: event.target.value }));
-  }, []);
+  }
 
-  const handleRelationship = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
+  function handleRelationship(event: React.ChangeEvent<HTMLInputElement>) {
     setForm((current) => ({ ...current, relationship: event.target.value }));
-  }, []);
+  }
 
-  const handleNotes = useCallback((event: React.ChangeEvent<HTMLTextAreaElement>) => {
+  function handleNotes(event: React.ChangeEvent<HTMLTextAreaElement>) {
     setForm((current) => ({ ...current, notes: event.target.value }));
-  }, []);
+  }
 
-  const handleSubmit = useCallback(() => {
+  function handleSubmit() {
     submit(
       {
         firstName: form.firstName.trim(),
@@ -83,7 +83,7 @@ export function MyReferralsPage({ hubChrome }: { hubChrome?: SelfServiceHubChrom
         },
       },
     );
-  }, [form, submit]);
+  }
 
   const rows = referrals.data ?? [];
   const state = usePageState({
@@ -153,8 +153,8 @@ export function MyReferralsPage({ hubChrome }: { hubChrome?: SelfServiceHubChrom
       onRetry={referrals.refetch}
       loading={
         <div className={PAGE_BODY_SKELETON_CLASS}>
-          {Array.from({ length: 4 }, (_, index) => (
-            <Skeleton key={index} className="h-16 rounded-lg" />
+          {Array.from({ length: 4 }, (_, i) => (
+            <Skeleton key={"row-" + String(i)} className="h-16 rounded-lg" />
           ))}
         </div>
       }

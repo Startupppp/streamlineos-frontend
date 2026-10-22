@@ -13,6 +13,7 @@ const unifiedInboxCountContract = lazyContract(() =>
   import("@/hooks/api/inbox-schema").then((m) => m.unifiedInboxCountContract),
 );
 import { platformCoreQueryKeys } from "@/lib/query-keys/platform-core";
+import { inboxCountQueryOptions } from "@/hooks/api/inbox-read-options";
 import { INLINE_READ_ERROR, isTransientNetworkError } from "@/lib/query-error-policy";
 import type { InboxKind, UnifiedInboxCount, UnifiedInboxResponse } from "@/types/inbox";
 import { NO_CURSOR_YET } from "@/hooks/api/cursor-page-param";
@@ -58,7 +59,7 @@ export function useUnifiedInboxCount(
   const orgId = session?.orgId;
   return useQuery<UnifiedInboxCount, Error>({
     ...options,
-    queryKey: platformCoreQueryKeys.inbox.unified({ count: true }),
+    ...inboxCountQueryOptions,
     queryFn: ({ signal }) =>
       apiClient.get<UnifiedInboxCount>(
         "/me/inbox/unified/count",
@@ -66,7 +67,6 @@ export function useUnifiedInboxCount(
         signal,
         unifiedInboxCountContract,
       ),
-    staleTime: 15_000,
     enabled: !!orgId && (options?.enabled ?? true),
   });
 }

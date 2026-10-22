@@ -194,11 +194,7 @@ export function useFindExpert(params: FindExpertParams) {
   const canView = useCan("hr:employees:view");
   const hrEnabled = useModuleEnabled("hr");
   return useQuery({
-    queryKey: [
-      ...humanResourcesQueryKeys.hr.all,
-      "findExpert",
-      params,
-    ] as const,
+    queryKey: humanResourcesQueryKeys.hr.findExpert(params),
     queryFn: ({ signal }) =>
       apiClient.get<ExpertResult[]>(
         "/hr/employees/find-expert",
@@ -217,11 +213,7 @@ export function useSkillsMatrix(params: SkillsMatrixParams = {}) {
   const { cursor, limit = 20, enabled = true } = params;
   const requestParams = { cursor, limit };
   return useQuery({
-    queryKey: [
-      ...humanResourcesQueryKeys.hr.all,
-      "skillsMatrix",
-      requestParams,
-    ] as const,
+    queryKey: humanResourcesQueryKeys.hr.skillsMatrix(requestParams),
     queryFn: ({ signal }) =>
       apiClient.get<SkillsMatrixData>(
         "/hr/employees/skills-matrix",

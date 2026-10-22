@@ -26,6 +26,7 @@ const calendarOrgMembersContract = lazyContract(() =>
   import("@/hooks/api/calendar-schema").then((m) => m.calendarOrgMembersContract),
 );
 import { platformHierarchyQueryKeys } from "@/lib/query-keys/platform-hierarchy";
+import { calendarSourcesQueryOptions } from "@/hooks/api/calendar-read-options";
 import {
   invalidateCalendarProjectionWindows,
   subscribeToCalendarProjectionChanges,
@@ -164,8 +165,6 @@ export function useCalendarEvents(start: Date, end: Date, enabled = true, filter
   const eventsQuery = useQuery({
     ...INLINE_READ_ERROR,
     queryKey: platformHierarchyQueryKeys.calendar.events(
-      orgId,
-      userId,
       start.toISOString(),
       end.toISOString(),
       undefined,
@@ -237,7 +236,7 @@ export function useCalendarHistory(before: string, enabled = true) {
   );
   return useInfiniteQuery({
     ...INLINE_READ_ERROR,
-    queryKey: platformHierarchyQueryKeys.calendar.history(orgId, userId, before),
+    queryKey: platformHierarchyQueryKeys.calendar.history(before),
     queryFn: ({ pageParam, signal }) =>
       apiClient.get<CalendarHistoryResponse>(
         "/calendar/history",
@@ -268,10 +267,9 @@ export function useCalendarSources(enabled = true) {
   );
   return useQuery({
     ...INLINE_READ_ERROR,
-    queryKey: platformHierarchyQueryKeys.calendar.sources(orgId, userId),
+    ...calendarSourcesQueryOptions,
     queryFn: ({ signal }) =>
       apiClient.get<CalendarSource[]>("/calendar/sources", undefined, signal, calendarSourcesContract),
-    staleTime: 30_000,
     enabled: Boolean(orgId && userId) && canView && enabled,
   });
 }

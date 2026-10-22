@@ -1,6 +1,6 @@
 "use client";
 
-import { memo, useCallback, useMemo, useState } from "react";
+import { useState } from "react";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { PlusIcon } from "@animateicons/react/lucide";
@@ -32,13 +32,25 @@ interface ResignationRowProps {
   onWithdraw: (resignationId: number) => void;
 }
 
-const ResignationRow = memo(function ResignationRow({
+export function MyResignationSkeleton() {
+  return (
+    <div className={PAGE_BODY_SKELETON_CLASS}>
+      {Array.from({ length: 4 }, (_, i) => (
+        <Skeleton key={"row-" + String(i)} className="h-16 w-full rounded-lg" />
+      ))}
+    </div>
+  );
+}
+
+function ResignationRow({
   resignation,
   canWithdraw,
   isWithdrawing,
   onWithdraw,
 }: ResignationRowProps) {
-  const handleWithdraw = useCallback(() => onWithdraw(resignation.id), [onWithdraw, resignation.id]);
+  function handleWithdraw() {
+    onWithdraw(resignation.id);
+  }
   return (
     <li className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border bg-card p-4">
       <div className="flex min-w-0 flex-col gap-1">
@@ -59,7 +71,7 @@ const ResignationRow = memo(function ResignationRow({
       ) : null}
     </li>
   );
-});
+}
 
 export function MyResignationPage() {
   const { data, isLoading, isError, error, refetch } = useMyResignations();
@@ -69,17 +81,19 @@ export function MyResignationPage() {
   const [sheetOpen, setSheetOpen] = useState(false);
   const [withdrawId, setWithdrawId] = useState<number | null>(null);
 
-  const resignations = useMemo(() => data?.data ?? [], [data]);
+  const resignations = data?.data ?? [];
   const hasActive = resignations.some((r) => ACTIVE_STATUSES.has(r.status ?? ""));
 
-  const handleOpenSheet = useCallback(() => setSheetOpen(true), []);
-  const handleRetry = useCallback(() => {
+  function handleOpenSheet() {
+    setSheetOpen(true);
+  }
+  function handleRetry() {
     void refetch();
-  }, [refetch]);
-  const handleWithdrawOpenChange = useCallback((open: boolean) => {
+  }
+  function handleWithdrawOpenChange(open: boolean) {
     if (!open) setWithdrawId(null);
-  }, []);
-  const handleConfirmWithdraw = useCallback(() => {
+  }
+  function handleConfirmWithdraw() {
     if (withdrawId === null) return;
     withdraw.mutate(
       { resignationId: withdrawId },
@@ -91,7 +105,7 @@ export function MyResignationPage() {
         onError: (e) => toast.error(getErrorMessage(e)),
       },
     );
-  }, [withdraw, withdrawId]);
+  }
 
   const action =
     canResign && !hasActive ? (
@@ -111,13 +125,7 @@ export function MyResignationPage() {
       <PageState
         resolution={pageState}
         className="flex min-h-0 flex-1 flex-col"
-        loading={
-          <div className={PAGE_BODY_SKELETON_CLASS}>
-            {Array.from({ length: 4 }, (_, index) => (
-              <Skeleton key={index} className="h-16 w-full rounded-lg" />
-            ))}
-          </div>
-        }
+        loading={<MyResignationSkeleton />}
         onRetry={handleRetry}
       >
         {resignations.length === 0 ? (

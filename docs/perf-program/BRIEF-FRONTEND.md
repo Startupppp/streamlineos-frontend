@@ -42,3 +42,11 @@ Repo: `D:\projects\personal\Streamlineos\frontend`. Next.js 16 App Router, React
 
 ## Targeted cache updates (user rule, overrides anything above)
 Touch only the cache entries the mutation changed (FE-148): `setQueryData` on the entity's detail key and the list pages containing it. Never invalidate a module/entity prefix or sibling entities; mark an aggregate stale only if the mutation changes its inputs.
+
+## Lessons from Wave B part 1 (mandatory)
+- **Coverage:** every page.tsx you own gets all 8 steps. "Dynamic route" is not a reason to skip prefetch (await params). Neither is "paginated" (prefetch page 1 with default params), "no list key" (export one), "key is private" (export a queryOptions factory), nor "inline Suspense" (prefetch in the server component). Valid skips: pure create forms with no read, localStorage-only pages, input-driven tools. Your report carries a per-page table covering EVERY page.
+- **Keys:** a prefetch never restates a query key. Export a `queryOptions` factory (key + fetcher + staleTime) from the owning hook module and use it on both sides. The prefetch's cached shape must equal what the hook's queryFn returns (e.g. `.items`, not the page object). If you change a hook to use `queryOptions`, keep its tests green: partial `jest.mock("@tanstack/react-query")` mocks must spread `jest.requireActual`.
+- **Gates:** never loosen, replace or remove a gate that existed before this program. A gate you ADD uses exactly the key(s) the page itself checks on the client (its usePageState/useCan), including any-of.
+- **Slots:** a slot prop invoked as a function (`slot?.(props)`) must receive a named render function, never a component (that runs the component's hooks inside the caller and breaks hook order).
+- **No comments**, including "changelog" comments in digest/test files.
+- Do not edit docs/perf-program/TODO.md.

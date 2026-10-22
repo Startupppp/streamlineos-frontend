@@ -1,6 +1,5 @@
 "use client";
 
-import { useCallback } from "react";
 import type { SelfServiceHubChrome } from "@/lib/self-service-hub-chrome";
 import { Briefcase, MapPin } from "lucide-react";
 import { toast } from "sonner";
@@ -26,9 +25,9 @@ interface JobOpeningCardProps {
 }
 
 function JobOpeningCard({ opening, onApply, applyingJobId }: JobOpeningCardProps) {
-  const handleApply = useCallback(() => {
+  function handleApply() {
     onApply(opening.id);
-  }, [onApply, opening.id]);
+  }
 
   return (
     <Card>
@@ -68,22 +67,19 @@ export function MyJobOpeningsPage({ hubChrome }: { hubChrome?: SelfServiceHubChr
   const openings = useSelfJobOpenings();
   const { mutate: apply, isPending, variables } = useApplyToJobOpening();
 
-  const handleApply = useCallback(
-    (jobId: number) => {
-      apply(
-        { jobId },
-        {
-          onSuccess: () => {
-            toast.success("Application submitted");
-          },
-          onError: (error) => {
-            toast.error(getErrorMessage(error));
-          },
+  function handleApply(jobId: number) {
+    apply(
+      { jobId },
+      {
+        onSuccess: () => {
+          toast.success("Application submitted");
         },
-      );
-    },
-    [apply],
-  );
+        onError: (error) => {
+          toast.error(getErrorMessage(error));
+        },
+      },
+    );
+  }
 
   const rows = openings.data ?? [];
   const state = usePageState({
@@ -103,8 +99,8 @@ export function MyJobOpeningsPage({ hubChrome }: { hubChrome?: SelfServiceHubChr
       onRetry={openings.refetch}
       loading={
         <div className={PAGE_BODY_SKELETON_CLASS}>
-          {Array.from({ length: 5 }, (_, index) => (
-            <Skeleton key={index} className="h-20 rounded-lg" />
+          {Array.from({ length: 5 }, (_, i) => (
+            <Skeleton key={"row-" + String(i)} className="h-20 rounded-lg" />
           ))}
         </div>
       }

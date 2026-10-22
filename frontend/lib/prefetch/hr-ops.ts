@@ -17,6 +17,12 @@ import {
 import { listComplianceRequirementsContract, listContractsContract } from "@/hooks/api/hr/global-schema";
 import { unionMembershipListContract } from "@/features/hr/governance/hooks/labor-schema";
 import { legalHoldListContract } from "@/features/hr/governance/hooks/legal-holds-schema";
+import { accommodationsListQueryOptions } from "@/hooks/api/hr/enterprise-ops-accommodations";
+import { emergencyEventsListQueryOptions } from "@/hooks/api/hr/enterprise-ops-emergency";
+import { hrEventsListQueryOptions } from "@/hooks/api/hr/enterprise-ops-event-stream";
+import { accessProvisioningQueryOptions } from "@/hooks/api/hr/enterprise-ops-identity";
+import { unionMembershipsListQueryOptions } from "@/features/hr/governance/hooks/use-labor";
+import { legalHoldsListQueryOptions } from "@/features/hr/governance/hooks/use-legal-holds";
 
 type AccommodationsListResponse = z.infer<typeof listAccommodationsContract>;
 type ComplianceRequirementsResponse = z.infer<typeof listComplianceRequirementsContract>;
@@ -31,9 +37,8 @@ type ProvisioningListResponse = z.infer<typeof listProvisioningContract>;
 export async function prefetchHrAccommodations() {
   const queryClient = await createServerQueryClient();
   await queryClient.prefetchQuery({
-    queryKey: ["streamlineos", "hr-accommodations", "list", {}] as const,
+    ...accommodationsListQueryOptions(),
     queryFn: () => serverGet<AccommodationsListResponse>("/hr/enterprise/ops/accommodations", listAccommodationsContract),
-    staleTime: 30_000,
   });
   return dehydrate(queryClient);
 }
@@ -61,9 +66,8 @@ export async function prefetchHrContingent() {
 export async function prefetchHrEmergency() {
   const queryClient = await createServerQueryClient();
   await queryClient.prefetchQuery({
-    queryKey: ["streamlineos", "hr-emergency", "list", {}] as const,
+    ...emergencyEventsListQueryOptions(),
     queryFn: () => serverGet<EmergencyEventsResponse>("/hr/enterprise/ops/emergency/events", listEmergencyEventsContract),
-    staleTime: 30_000,
   });
   return dehydrate(queryClient);
 }
@@ -71,9 +75,8 @@ export async function prefetchHrEmergency() {
 export async function prefetchHrEventStream() {
   const queryClient = await createServerQueryClient();
   await queryClient.prefetchQuery({
-    queryKey: ["streamlineos", "hr-event-stream", "list", {}] as const,
+    ...hrEventsListQueryOptions(),
     queryFn: () => serverGet<HrEventsResponse>("/hr/enterprise/ops/event-stream/events", listHrEventsContract),
-    staleTime: 30_000,
   });
   return dehydrate(queryClient);
 }
@@ -81,9 +84,8 @@ export async function prefetchHrEventStream() {
 export async function prefetchHrLaborRelations() {
   const queryClient = await createServerQueryClient();
   await queryClient.prefetchQuery({
-    queryKey: [...humanResourcesQueryKeys.hr.hrLaborMembershipsAll, undefined] as const,
+    ...unionMembershipsListQueryOptions(),
     queryFn: () => serverGet<UnionMembershipListResponse>("/hr/governance/labor/memberships", unionMembershipListContract),
-    staleTime: 30_000,
   });
   return dehydrate(queryClient);
 }
@@ -91,9 +93,8 @@ export async function prefetchHrLaborRelations() {
 export async function prefetchHrLegalHolds() {
   const queryClient = await createServerQueryClient();
   await queryClient.prefetchQuery({
-    queryKey: [...humanResourcesQueryKeys.hr.hrLegalHoldsBase, undefined] as const,
+    ...legalHoldsListQueryOptions(),
     queryFn: () => serverGet<LegalHoldListResponse>("/hr/governance/legal-holds", legalHoldListContract),
-    staleTime: 30_000,
   });
   return dehydrate(queryClient);
 }
@@ -111,9 +112,8 @@ export async function prefetchHrSimulator() {
 export async function prefetchHrIdentity() {
   const queryClient = await createServerQueryClient();
   await queryClient.prefetchQuery({
-    queryKey: ["streamlineos", "hr-identity", "provisioning", {}] as const,
+    ...accessProvisioningQueryOptions(),
     queryFn: () => serverGet<ProvisioningListResponse>("/hr/enterprise/ops/identity/provisioning", listProvisioningContract),
-    staleTime: 30_000,
   });
   return dehydrate(queryClient);
 }

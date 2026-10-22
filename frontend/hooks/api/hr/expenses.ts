@@ -48,6 +48,21 @@ const _expenseExportJobContract = lazyContract(() =>
   import("@/hooks/api/hr/expenses-schema").then((m) => m.expenseExportJobContract),
 );
 
+export function expensePageDataQueryOptions(
+  params: Record<string, unknown> = {},
+  selfService = false,
+) {
+  return {
+    queryKey: [
+      ...humanResourcesQueryKeys.hr.expenses(),
+      "pageData",
+      selfService ? "self" : "org",
+      params,
+    ] as const,
+    staleTime: 30_000,
+  };
+}
+
 export function useExpensePageData(
   filters: ExpensePageFilters = {},
   options?: { enabled?: boolean; selfService?: boolean },
@@ -59,25 +74,13 @@ export function useExpensePageData(
   }
   return useQuery({
     enabled: (options?.selfService === true || canExpenses) && (options?.enabled ?? true),
-    // The scope segment is load-bearing: `selfService` selects between a
-    // one-person endpoint and an org-wide one, and without it in the key the
-    // approver's first render (permissions still in flight -> selfService true)
-    // parks `/me/expenses` under the key the org read then reuses.
-    // It sits INSIDE the `hr.expenses()` prefix so both entries still answer to
-    // the invalidation every expense mutation issues.
-    queryKey: [
-      ...humanResourcesQueryKeys.hr.expenses(),
-      "pageData",
-      options?.selfService ? "self" : "org",
-      params,
-    ] as const,
+    ...expensePageDataQueryOptions(params, options?.selfService),
     queryFn: ({ signal }) => {
       const qData = Object.keys(params).length ? params : undefined;
       if (options?.selfService)
         return apiClient.get("/me/expenses", qData, signal, _expensePageDataContract);
       return apiClient.get("/hr/expenses/page-data", qData, signal, _expensePageDataContract);
     },
-    staleTime: 30_000,
     placeholderData: keepPreviousData,
   });
 }

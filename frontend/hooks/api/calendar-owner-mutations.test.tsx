@@ -24,8 +24,6 @@ const mockedPost = apiClient.post as jest.Mock;
 const mockedPatch = apiClient.patch as jest.Mock;
 const mockedDelete = apiClient.delete as jest.Mock;
 const CALENDAR_KEY = platformHierarchyQueryKeys.calendar.events(
-  "org-1",
-  "user-1",
   "2026-10-01T00:00:00.000Z",
   "2026-11-01T00:00:00.000Z",
 );

@@ -31,16 +31,11 @@ export interface BackgroundVerification {
   user?: { id: string; name: string | null; email: string | null } | null;
 }
 
-const bgvKeys = {
-  all: [...humanResourcesQueryKeys.hr.all, "bgv"] as const,
-  list: () => [...bgvKeys.all, "list"] as const,
-};
-
 export function useBackgroundVerifications() {
   const canView = useCan("hr:sensitive:view");
   const hrEnabled = useModuleEnabled("hr");
   return useQuery({
-    queryKey: bgvKeys.list(),
+    queryKey: humanResourcesQueryKeys.hr.bgvList(),
     queryFn: ({ signal }) => apiClient.get<BackgroundVerification[]>("/hr/background-verification", undefined, signal, bgvListC),
     staleTime: 2 * 60_000,
     enabled: canView && hrEnabled,
@@ -53,7 +48,7 @@ export function useCreateBackgroundVerification() {
     mutationKey: ["hr", "background-verification", "create"],
     mutationFn: (data: { userId: string; type: string; provider?: string; referenceNumber?: string; notes?: string }) =>
       apiClient.post<BackgroundVerification>("/hr/background-verification", data, undefined, bgvRowC),
-    onSuccess: () => qc.invalidateQueries({ queryKey: bgvKeys.list() }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.bgvList() }),
   });
 }
 
@@ -63,6 +58,6 @@ export function useUpdateBackgroundVerification() {
     mutationKey: ["hr", "background-verification", "update"],
     mutationFn: (data: { id: number; status?: string; result?: string; notes?: string }) =>
       apiClient.patch<{ success: boolean }>("/hr/background-verification", data, undefined, bgvSuccessC),
-    onSuccess: () => qc.invalidateQueries({ queryKey: bgvKeys.list() }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.bgvList() }),
   });
 }

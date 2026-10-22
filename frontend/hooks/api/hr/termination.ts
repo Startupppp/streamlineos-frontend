@@ -64,18 +64,6 @@ export interface UseTerminationsParams {
   status?: TerminationStatus;
 }
 
-const terminationKeys = {
-  all: [...humanResourcesQueryKeys.hr.all, "termination"] as const,
-  list: (
-    params: Required<Omit<UseTerminationsParams, "status">> & {
-      status: string;
-    },
-  ) => [...terminationKeys.all, "list", params] as const,
-  detail: (terminationId: number) =>
-    [...terminationKeys.all, "detail", terminationId] as const,
-  candidate: (employeeUserId: string) =>
-    [...terminationKeys.all, "candidate", employeeUserId] as const,
-};
 
 export function useTerminations(params: UseTerminationsParams = {}) {
   const canView = useCan("hr:exit:manage");
@@ -86,7 +74,7 @@ export function useTerminations(params: UseTerminationsParams = {}) {
   if (cursor) search.set("cursor", cursor);
   if (params.status) search.set("status", params.status);
   return useQuery({
-    queryKey: terminationKeys.list({
+    queryKey: humanResourcesQueryKeys.hr.terminationList({
       cursor,
       limit,
       status: params.status ?? "ALL",
@@ -104,7 +92,7 @@ export function useTerminationCandidate(employeeUserId: string | null) {
   const canView = useCan("hr:employees:view");
   const hrEnabled = useModuleEnabled("hr");
   return useQuery({
-    queryKey: terminationKeys.candidate(employeeUserId ?? ""),
+    queryKey: humanResourcesQueryKeys.hr.terminationCandidate(employeeUserId ?? ""),
     queryFn: ({ signal }) =>
       apiClient.get(`/hr/employees/${employeeUserId ?? ""}`, undefined, signal, terminationCandidateContract),
     enabled: hrEnabled && canView && !!employeeUserId,
@@ -116,14 +104,14 @@ export function useCreateTermination() {
   const qc = useQueryClient();
   const operation = useIdempotentOperation();
   return useAuthorizedMutation("hr:exit:manage", {
-    mutationKey: [...terminationKeys.all, "create"],
+    mutationKey: [...humanResourcesQueryKeys.hr.terminationAll, "create"],
     mutationFn: ({ employeeUserId, ...terminationInput }: CreateTerminationInput) => {
       const body = { ...terminationInput, userId: employeeUserId };
       return apiClient.post("/hr/termination", body, operation.configFor(body), terminationRowContract);
     },
     onSuccess: (created) => {
       operation.settle();
-      void qc.invalidateQueries({ queryKey: terminationKeys.all });
+      void qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.terminationAll });
       if (created.status === "COMPLETED") void invalidateHrWorkforceQueries(qc, created.userId);
     },
   });
@@ -133,7 +121,7 @@ export function useRehireEmployee() {
   const qc = useQueryClient();
   const operation = useIdempotentOperation();
   return useAuthorizedMutation("hr:exit:manage", {
-    mutationKey: [...terminationKeys.all, "rehire"],
+    mutationKey: [...humanResourcesQueryKeys.hr.terminationAll, "rehire"],
     mutationFn: ({ employeeUserId, joiningDate }: { employeeUserId: string; joiningDate: string }) =>
       apiClient.post(
         `/hr/employees/${employeeUserId}/rehire`,
@@ -143,7 +131,7 @@ export function useRehireEmployee() {
       ),
     onSuccess: (_, { employeeUserId }) => {
       operation.settle();
-      void qc.invalidateQueries({ queryKey: terminationKeys.all });
+      void qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.terminationAll });
       void invalidateHrWorkforceQueries(qc, employeeUserId);
     },
   });
@@ -154,7 +142,7 @@ export function useArchiveEmployee() {
   const qc = useQueryClient();
   const operation = useIdempotentOperation();
   return useAuthorizedMutation("hr:exit:manage", {
-    mutationKey: [...terminationKeys.all, "archive"],
+    mutationKey: [...humanResourcesQueryKeys.hr.terminationAll, "archive"],
     mutationFn: ({ employeeUserId, reason }: { employeeUserId: string; reason?: string }) =>
       apiClient.post(
         `/hr/employees/${employeeUserId}/archive`,
@@ -172,15 +160,15 @@ export function useArchiveEmployee() {
 export function useSubmitTermination() {
   const qc = useQueryClient();
   return useAuthorizedMutation("hr:exit:manage", {
-    mutationKey: [...terminationKeys.all, "submit"],
+    mutationKey: [...humanResourcesQueryKeys.hr.terminationAll, "submit"],
     mutationFn: (terminationId: number) =>
       apiClient.patch(
         `/hr/termination/${terminationId}/submit`, undefined, undefined, terminationSuccessContract,
       ),
     onSuccess: (_, terminationId) => {
-      void qc.invalidateQueries({ queryKey: terminationKeys.all });
+      void qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.terminationAll });
       void qc.invalidateQueries({
-        queryKey: terminationKeys.detail(terminationId),
+        queryKey: humanResourcesQueryKeys.hr.terminationDetail(terminationId),
       });
     },
   });
@@ -189,7 +177,7 @@ export function useSubmitTermination() {
 export function useFinalReviewTermination() {
   const qc = useQueryClient();
   return useAuthorizedMutation("hr:exit:approve", {
-    mutationKey: [...terminationKeys.all, "final-review"],
+    mutationKey: [...humanResourcesQueryKeys.hr.terminationAll, "final-review"],
     mutationFn: ({
       terminationId,
       decision,
@@ -206,9 +194,9 @@ export function useFinalReviewTermination() {
         terminationSuccessContract,
       ),
     onSuccess: (_, { terminationId }) => {
-      void qc.invalidateQueries({ queryKey: terminationKeys.all });
+      void qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.terminationAll });
       void qc.invalidateQueries({
-        queryKey: terminationKeys.detail(terminationId),
+        queryKey: humanResourcesQueryKeys.hr.terminationDetail(terminationId),
       });
       void invalidateHrWorkforceQueries(qc);
     },
@@ -218,7 +206,7 @@ export function useFinalReviewTermination() {
 export function useSendTerminationEmail() {
   const qc = useQueryClient();
   return useAuthorizedMutation("hr:exit:manage", {
-    mutationKey: [...terminationKeys.all, "send-email"],
+    mutationKey: [...humanResourcesQueryKeys.hr.terminationAll, "send-email"],
     mutationFn: (terminationId: number) =>
       apiClient.post(
         `/hr/termination/${terminationId}/send-email`,
@@ -227,9 +215,9 @@ export function useSendTerminationEmail() {
         terminationSuccessContract,
       ),
     onSuccess: (_, terminationId) => {
-      void qc.invalidateQueries({ queryKey: terminationKeys.all });
+      void qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.terminationAll });
       void qc.invalidateQueries({
-        queryKey: terminationKeys.detail(terminationId),
+        queryKey: humanResourcesQueryKeys.hr.terminationDetail(terminationId),
       });
     },
   });
@@ -238,15 +226,15 @@ export function useSendTerminationEmail() {
 export function useCompleteTermination() {
   const qc = useQueryClient();
   return useAuthorizedMutation("hr:exit:manage", {
-    mutationKey: [...terminationKeys.all, "complete"],
+    mutationKey: [...humanResourcesQueryKeys.hr.terminationAll, "complete"],
     mutationFn: ({ terminationId }: { terminationId: number; userId: string }) =>
       apiClient.patch(
         `/hr/termination/${terminationId}/complete`, undefined, undefined, terminationSuccessContract,
       ),
     onSuccess: (_, { terminationId, userId }) => {
-      void qc.invalidateQueries({ queryKey: terminationKeys.all });
+      void qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.terminationAll });
       void qc.invalidateQueries({
-        queryKey: terminationKeys.detail(terminationId),
+        queryKey: humanResourcesQueryKeys.hr.terminationDetail(terminationId),
       });
       void invalidateHrWorkforceQueries(qc, userId);
       void qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.fnfList() });

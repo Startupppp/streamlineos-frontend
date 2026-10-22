@@ -48,14 +48,9 @@ interface UpdateHandbookVersionInput {
   changelog?: string;
 }
 
-const handbookKeys = {
-  all: [...humanResourcesQueryKeys.hr.all, "handbook"] as const,
-  list: () => [...handbookKeys.all, "list"] as const,
-};
-
 export function useHandbookVersions() {
   return useGatedQuery("hr:employees:view", {
-    queryKey: handbookKeys.list(),
+    queryKey: humanResourcesQueryKeys.hr.handbookList(),
     queryFn: ({ signal }) => apiClient.get<HandbookVersion[]>("/hr/handbook", undefined, signal, handbookListLazy),
     staleTime: 2 * 60_000,
   });
@@ -67,7 +62,7 @@ export function useCreateHandbookVersion() {
     mutationKey: ["hr", "handbook", "create"],
     mutationFn: (data: CreateHandbookVersionInput) =>
       apiClient.post<HandbookVersion>("/hr/handbook", data, undefined, handbookRowLazy),
-    onSuccess: () => qc.invalidateQueries({ queryKey: handbookKeys.list() }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.handbookList() }),
   });
 }
 
@@ -77,7 +72,7 @@ export function useUpdateHandbookVersion() {
     mutationKey: ["hr", "handbook", "update"],
     mutationFn: ({ handbookId, ...data }: UpdateHandbookVersionInput) =>
       apiClient.patch<{ success: boolean }>(`/hr/handbook/${handbookId}`, data, undefined, handbookSuccessLazy),
-    onSuccess: () => qc.invalidateQueries({ queryKey: handbookKeys.list() }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.handbookList() }),
   });
 }
 
@@ -87,6 +82,6 @@ export function useDeleteHandbookVersion() {
     mutationKey: ["hr", "handbook", "delete"],
     mutationFn: (handbookId: number) =>
       apiClient.delete<void>(`/hr/handbook/${handbookId}`, undefined, undefined, noContentC),
-    onSuccess: () => qc.invalidateQueries({ queryKey: handbookKeys.list() }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.handbookList() }),
   });
 }

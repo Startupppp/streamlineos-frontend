@@ -36,6 +36,7 @@ const mailActionSuccessContract = lazyContract(() =>
   import("@/hooks/api/mail-schema").then((m) => m.mailActionSuccessContract),
 );
 import { directoryAndOwnershipQueryKeys, mailListingSearchParams } from "@/lib/query-keys/directory-and-ownership";
+import { mailAccountsQueryOptions } from "@/hooks/api/mail-read-options";
 import { useIdempotentOperation } from "@/hooks/common/use-idempotent-operation";
 import { useCan } from "@/hooks/api/access";
 import type {
@@ -56,9 +57,8 @@ import { NO_CURSOR_YET } from "@/hooks/api/cursor-page-param";
 export function useMailAccounts(options?: { enabled?: boolean }) {
   const can = useCan("mail:inbox:view");
   return useQuery({
-    queryKey: directoryAndOwnershipQueryKeys.mail.accounts(),
+    ...mailAccountsQueryOptions,
     queryFn: ({ signal }) => apiClient.get<MailAccount[]>("/mail/accounts", undefined, signal, mailAccountListContract),
-    staleTime: 5 * 60_000,
     enabled: can && (options?.enabled ?? true),
   });
 }
